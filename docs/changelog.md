@@ -40,6 +40,12 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ### Fixed
 
+- CI gives `lychee` a `GITHUB_TOKEN`, so its three-thousand-odd link checks are
+  authenticated rather than sharing an unauthenticated per-IP budget with every
+  other job on the runner. Two of this repository's own documents were coming
+  back `503` on most runs and failing the whole ubuntu job, reported as
+  "Rejected status code", which reads like a dead link rather than a throttle.
+  Closes issue #236. (PR #235)
 - The `Release minor` workflow's closing step printed `$next`, a variable that
   step never sets — it reads the released version into `released` and derives
   `dev` from it — so `set -u` aborted the run *after* the release had already
