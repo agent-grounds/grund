@@ -70,6 +70,17 @@ jobs:
       # pre-commit hook remains enforced remotely (§AR-ci.1).
       - name: pre-commit
         if: matrix.os == 'ubuntu-latest'
+        # lychee checks upwards of three thousand links, a large share of them
+        # to github.com. Unauthenticated, they share a low per-IP budget with
+        # every other job on the runner, and a handful come back 503 - which it
+        # reports as "Rejected status code", reading like a dead link rather
+        # than a throttle. The links were this repository's own documents, and
+        # they resolved in a browser the whole time. lychee reads GITHUB_TOKEN
+        # from the environment; the workflow-scoped one is enough, because the
+        # point is the authenticated rate limit rather than access to anything
+        # private.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pre-commit run --all-files
 
       - name: cargo build
