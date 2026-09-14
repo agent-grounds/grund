@@ -40,6 +40,11 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ### Fixed
 
+- `Auto bump`'s closing step printed `$next`, the same variable `Release minor`
+  got wrong: the step reads the released version into `released` and derives
+  `dev` from it, so `set -u` aborted the run after the patch release had already
+  been published. The weekly bump would have reported failure every Monday while
+  succeeding. (PR #237)
 - CI gives `lychee` a `GITHUB_TOKEN`, so its three-thousand-odd link checks are
   authenticated rather than sharing an unauthenticated per-IP budget with every
   other job on the runner. Two of this repository's own documents were coming
