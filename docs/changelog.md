@@ -40,6 +40,14 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ### Fixed
 
+- The `Release minor` workflow's closing step printed `$next`, a variable that
+  step never sets — it reads the released version into `released` and derives
+  `dev` from it — so `set -u` aborted the run *after* the release had already
+  succeeded: version commit pushed, tag created, `release.yml` dispatched,
+  `main` advanced. `fissile` carries the identical line and hit exactly that on
+  its v0.10.0, which reported failure while publishing correctly. The message
+  now names what the step did and the version the previous step dispatched for.
+  (PR #235)
 - [§FS-init.2.2](functional-spec/FS-init.md#22-stdout--stderr): keep the `grund init` no-`--docs` scaffold advice but omit its “nothing to scan” suffix when the effective configured scanner can already read a file. Closes issue #231. (PR #233)
 - [§FS-integrations.3.1](functional-spec/FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2), [§FS-integrations.4.3](functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions): correct clickable-citations guidance for resolver PATH failures, configuration keys, per-agent link gates, and write-report annotations. (PR #228)
 - [§REQ-readme.2](requirements/REQ-readme.md#2-every-example-is-real), [§FS-init.2.2](functional-spec/FS-init.md#22-stdout--stderr): refresh the README's captured `grund` output and correct the `init` next-step guidance to name `tests/`. (PR #228)
