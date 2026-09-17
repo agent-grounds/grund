@@ -1,111 +1,35 @@
-/// One `[workspace] optional_members` entry whose directory this checkout does
-/// not have, and therefore one namespace this run did not read
-/// (§FS-workspace.2.2, §FS-workspace.2.2.1).
-///
-/// This file is the `optional_members` rule set: the entry shapes the key adds to
-/// the ones `members` already has, the alias an optional entry carries, and the
-/// announcement an absent one earns. It rides on this first item rather than a
-/// `//!` module doc because the crate is assembled by `include!`
-/// (§AR-core-module-layout.2).
-///
-/// Split out of `workspace_members.rs` rather than added to it: that file is one
-/// list's expansion and the invariants that list has to satisfy, and this is a
-/// second list with a grammar rule of its own (no glob), an alias rule of its own
-/// (the entry's last segment, not the member's `project_name`), and an outcome the
-/// other list has no shape for — a member that is simply not there, and a report
-/// that has to say so (§AR-core-module-layout.1, §FS-check.4.9).
-#[derive(Clone)]
-pub struct AbsentOptionalNamespace {
-    /// The entry **as the config wrote it** — the string an author can edit
-    /// (§FS-errors.4).
-    pub written: String,
-    /// The whole alias path this run spells the namespace with: one segment per
-    /// workspace level, so an entry one `[workspace]` block down is `sub/vendored`
-    /// while the entry itself stays `vendored` (§FS-check.4.9). Expansion sets it
-    /// to the bare segment; the walk that knows the enclosing path composes the
-    /// rest ([`qualify_absent_optional`]).
-    pub alias_path: String,
-    /// The `optional_members` line of the block that holds the entry.
-    pub source: ConfigLocation,
-}
+//! The `optional_members` rule set (§AR-system.2.4): what the second
+//! `[workspace]` list means once the checkout is looked at — the alias an
+//! optional entry carries, the absence an entry is allowed to have, and the
+//! announcement an absent one earns (§FS-workspace.2.2, §FS-check.4.9).
+//!
+//! Split out of `members.rs` rather than added to it: that file is one list's
+//! expansion and the invariants that list has to satisfy, and this is a second
+//! list with an alias rule of its own (the entry's last segment, not the
+//! member's `project_name`) and an outcome the other list has no shape for — a
+//! member that is simply not there, and a report that has to say so
+//! (§AR-core-module-layout.1).
+//!
+//! The entry *text* rules are not here. They are properties of the config alone,
+//! so `config/workspace_block.rs` takes them at load time and this file reads
+//! them downward — which is what makes the same pair of lists refused in the
+//! checkout that has the member and in the checkout that does not
+//! (§FS-workspace.2.2).
 
-/// §FS-workspace.2.2 / §FS-workspace.2.2.2: the four refusals `optional_members`
-/// adds to the shape rules `members` already carries. All four are properties of
-/// the entry text alone, which is why they are taken at config load — before any
-/// directory is looked for, so the same config is rejected in the checkout that
-/// has the member and in the checkout that does not.
-///
-/// The both-lists refusal is here for that reason above all. Behind the `is_dir`
-/// test it could only fire in the checkout that *has* the member, and the other
-/// checkout — where the `members` entry fails first — was told to list the entry
-/// in `optional_members`, which is where the author had already put it
-/// (§FS-config.4.3). What is wrong is the pair of lists, and the pair reads the
-/// same in every checkout. The canonical comparison in [`expand_optional_members`]
-/// stays for the collisions no entry text shows: a `members` glob that expands
-/// onto this entry, or two paths that resolve to one directory.
-fn validate_optional_workspace_member(
-    path: &Path,
-    line: usize,
-    member: &str,
-    plain: &[String],
-) -> Result<()> {
-    validate_workspace_member(path, line, member)?;
-    // §FS-workspace.2.2 "one entry belongs to one list": compared as paths, so a
-    // trailing slash is the same entry rather than a second one.
-    if plain.iter().any(|entry| Path::new(entry) == Path::new(member)) {
-        return Err(anyhow!(
-            "{}:{line}: {}",
-            format_path(path),
-            both_member_lists_message(member),
-        ));
-    }
-    // §FS-workspace.2.2: an absent parent directory names no namespaces, so a
-    // glob here would appear to work and do nothing. The message names the shape
-    // that works, because a user who has just been refused needs the form to write.
-    if member.contains('*') {
-        return Err(anyhow!(
-            "{}:{line}: [workspace] optional_members may not use a glob: `{member}` — an absent \
-             parent names no namespaces; list one concrete entry per namespace instead",
-            format_path(path),
-        ));
-    }
-    let alias = optional_member_alias_segment(member);
-    if !is_valid_project_alias(alias) {
-        return Err(anyhow!(
-            "{}:{line}: {} for workspace member `{member}`",
-            format_path(path),
-            invalid_project_alias_message(alias),
-        ));
-    }
-    Ok(())
-}
+use anyhow::Result;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 
-/// §FS-workspace.2.2.2: the alias of an optional member is the entry's last path
-/// segment. An absent member has no config to read `project_name` from and no
-/// directory to take a basename from, so the entry text is the only name the
-/// block that lists it can recover — and taking it in both checkouts is what makes
-/// one citation text mean one thing in a full tree and a partial one.
-fn optional_member_alias_segment(member: &str) -> &str {
-    member.rsplit('/').next().unwrap_or(member)
-}
+use super::expand::qualify_alias;
+use super::members::{WorkspaceMember, canonical_workspace_path, workspace_member_root};
+use super::scope::{config_location_error, duplicate_alias_sites};
+use crate::config::{
+    AbsentOptionalNamespace, Config, both_member_lists_message, optional_member_alias_segment,
+};
+use crate::model::Diagnostic;
 
-/// The `invalid workspace project alias` sentence, shared with [`derive_alias`] so
-/// an entry refused for its segment and a member refused for its `project_name`
-/// read as one rule (§AR-workspace.5.3).
-fn invalid_project_alias_message(alias: &str) -> String {
-    format!("invalid workspace project alias `{alias}` (expected [a-z][a-z0-9-]*)")
-}
-
-fn workspace_optional_members_error(config: &Config, message: String) -> anyhow::Error {
+pub(super) fn workspace_optional_members_error(config: &Config, message: String) -> anyhow::Error {
     config_location_error(config.workspace_optional_members_source.as_ref(), message)
-}
-
-/// §FS-workspace.2.2 "one entry belongs to one list": one sentence for the two
-/// places that can catch the contradiction — the entry text at config load and the
-/// canonical roots at expansion — because it is one rule, and which of the two saw
-/// it is not something the author has to know.
-fn both_member_lists_message(entry: &str) -> String {
-    format!("`{entry}` is listed in both [workspace] members and optional_members")
 }
 
 /// §FS-workspace.2.2: fold this block's `optional_members` into the expanded
@@ -132,7 +56,7 @@ fn both_member_lists_message(entry: &str) -> String {
 /// leaves for an uninitialized submodule is *present*, and deliberately so —
 /// widening the test would put a typo'd directory on the unverified path and move
 /// the blind spot's edge somewhere no line of the repository records.
-fn expand_optional_members(
+pub(super) fn expand_optional_members(
     config: &Config,
     members: &mut Vec<WorkspaceMember>,
 ) -> Result<Vec<AbsentOptionalNamespace>> {
@@ -205,7 +129,7 @@ fn expand_optional_members(
 /// folds a repeated absent entry the way expansion folds a repeated present one
 /// (§FS-workspace.2.2), so the two aliases this compares always come from two
 /// directories.
-fn register_absent_optional_aliases(
+pub(super) fn register_absent_optional_aliases(
     block: &Config,
     top_config: &Config,
     prefix: &str,
@@ -241,7 +165,11 @@ fn register_absent_optional_aliases(
 /// has the member and quietly name nothing in the tree that does not, which is a
 /// trap only the checkout least equipped to notice can spring. Either name may be
 /// the one the existing citations already write, so the repository picks.
-fn optional_member_alias(member_config: &Config, block: &Config, written: &str) -> Result<String> {
+pub(super) fn optional_member_alias(
+    member_config: &Config,
+    block: &Config,
+    written: &str,
+) -> Result<String> {
     let segment = optional_member_alias_segment(written);
     match &member_config.project_name {
         Some(name) if name != segment => Err(workspace_optional_members_error(
@@ -264,7 +192,10 @@ fn optional_member_alias(member_config: &Config, block: &Config, written: &str) 
 /// a present optional member reads its alias path out of that claim, so without
 /// this it would spell the subtree one way and the workspace root another —
 /// exactly the disagreement §FS-workspace.6.1 exists to prevent.
-fn optional_entry_naming<'a>(block: &'a Config, child_root: &Path) -> Option<&'a String> {
+pub(super) fn optional_entry_naming<'a>(
+    block: &'a Config,
+    child_root: &Path,
+) -> Option<&'a String> {
     block
         .workspace_optional_members
         .iter()
@@ -274,7 +205,7 @@ fn optional_entry_naming<'a>(block: &'a Config, child_root: &Path) -> Option<&'a
 /// §FS-check.4.9: the alias path a namespace is announced by, composed one level
 /// at a time exactly as a project's alias is (§FS-workspace.6.1) — `vendored` at
 /// the outermost root, `sub/vendored` for the same entry one block down.
-fn qualify_absent_optional(
+pub(super) fn qualify_absent_optional(
     absent: Vec<AbsentOptionalNamespace>,
     prefix: &str,
 ) -> Vec<AbsentOptionalNamespace> {
@@ -303,7 +234,7 @@ fn qualify_absent_optional(
 /// It names no remedy and no release: the only thing that would "fix" it is a
 /// checkout with the member in it, which is not grund's to ask for, and the skip
 /// is the standing price of the opt-out rather than a state to migrate off.
-fn absent_optional_member_warnings(config: &Config) -> Vec<Diagnostic> {
+pub(crate) fn absent_optional_member_warnings(config: &Config) -> Vec<Diagnostic> {
     config
         .workspace_absent_optional
         .iter()
@@ -341,7 +272,10 @@ fn absent_optional_member_message(written: &str, alias_path: &str) -> String {
 /// never reached `[scan] include`, so it did not look there and find nothing, and
 /// the `grund init --docs` tree it would offer to scaffold is not what is missing.
 /// A checkout is, and that is not grund's to ask for (§FS-check.4.9).
-fn absent_only_workspace_caution(config: &Config, no_projects: bool) -> Option<Diagnostic> {
+pub(crate) fn absent_only_workspace_caution(
+    config: &Config,
+    no_projects: bool,
+) -> Option<Diagnostic> {
     (no_projects && !config.workspace_absent_optional.is_empty()).then(|| Diagnostic {
         code: "empty-scan",
         path: None,
@@ -367,7 +301,7 @@ fn absent_only_workspace_caution(config: &Config, no_projects: bool) -> Option<D
 /// `[workspace]` and the run cannot know how many levels it had or what they were
 /// called (§FS-workspace.2.2.2) — `hardware/AR-bus` and `hardware/sprayer/FS-nozzle`
 /// alike when `hardware` is the absent entry.
-fn namespace_is_unverified(config: &Config, namespace: &str) -> bool {
+pub(crate) fn namespace_is_unverified(config: &Config, namespace: &str) -> bool {
     config.workspace_absent_optional.iter().any(|absent| {
         namespace == absent.alias_path
             || namespace

@@ -16,7 +16,7 @@ Not a component: the rule for how the engine's files are named, owned and sized,
 
 What each category implements, consumes and must not know is its component's subsection in [§AR-system.2](README.md#2-components), and the table's third column says which. A category is named by the module directory that holds it, and until it has one, by the file-name prefixes it owns.
 
-A file belongs to the category it sits under where that category is a module directory — `model/records.rs` to **model** — and otherwise to the category whose prefix its name carries: `scanner_walk.rs` to **scanner**, `init_block.rs` to **init**. A category that has become a directory leaves no file of its former prefixes at the top level, except a prefix the row still lists beside the directory: that is how a file the move deliberately left flat is recorded, and the only one today is a deprecated renderer waiting for `compat/` ([§AR-system.2.9](README.md#29-api)). `lib.rs` is the one file outside every category, as the crate entrypoint. What each category owns:
+A file belongs to the category it sits under where that category is a module directory — `model/records.rs` to **model** — and otherwise to the category whose prefix its name carries: `scanner_walk.rs` to **scanner**, `init_block.rs` to **init**. A category that has become a directory leaves no file of its former prefixes at the top level, except a prefix the row still lists beside the directory: that is how a file the move deliberately left flat is recorded, and every one today is a deprecated renderer waiting for `compat/` ([§AR-system.2.9](README.md#29-api)) — a whole command adapter, or the stream-writing half of a file whose data half moved. `lib.rs` is the one file outside every category, as the crate entrypoint. What each category owns:
 
 | Category | Module directory, or file-name prefixes | Component |
 |---|---|---|
@@ -35,7 +35,7 @@ A file belongs to the category it sits under where that category is a module dir
 | **completions** | `completions` | [§AR-system.2.7](README.md#27-queries) |
 | **api** | `api` | [§AR-system.2.9](README.md#29-api) |
 | **grammar** | `grammar/` | [§AR-system.2.1](README.md#21-grammar) |
-| **workspace** | `workspace` | [§AR-system.2.4](README.md#24-workspace) |
+| **workspace** | `workspace/`, `workspace_members_cmd` | [§AR-system.2.4](README.md#24-workspace) |
 | **integrations** | `integrations`, `fetch`, `fetch_write` | [§AR-system.2.8](README.md#28-writers) |
 | **lsp** | `lsp`, `on_type` | [§AR-system.2.7](README.md#27-queries) |
 | **compat** | `compat` | [§AR-system.2.9](README.md#29-api) |

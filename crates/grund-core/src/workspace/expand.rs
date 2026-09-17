@@ -1,18 +1,40 @@
-/// The `[workspace]` expansion walk: turning one block into the list of
-/// projects a run operates on, and naming each of them. Split out of
-/// `workspace_context.rs` along the seam that was already there — that file
-/// answers "what does a query command hold?", this one answers "which projects
-/// are there, and what is each one called?" (§AR-workspace.6.1,
-/// §AR-core-module-layout.1). Included into the same module, so the two halves
-/// still share `WorkspaceProject` and the config helpers.
+//! The `[workspace]` expansion walk (§AR-system.2.4): turning one block into the
+//! list of projects a run operates on, and naming each of them.
+//!
+//! Split out of `context.rs` along the seam that was already there — that file
+//! answers "what does a query command hold?", this one answers "which projects
+//! are there, and what is each one called?" (§AR-workspace.6.1,
+//! §AR-core-module-layout.1).
+
+use anyhow::Result;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
+
+use super::members::{
+    AncestorWorkspaces, UnreadBlockProbe, WorkspaceMember, canonical_workspace_path,
+    expand_workspace_member_list, unread_block_probe,
+};
+use super::optional_members::{
+    optional_entry_naming, optional_member_alias, qualify_absent_optional,
+    register_absent_optional_aliases, workspace_optional_members_error,
+};
+use super::scope::{
+    RootMode, config_location_error, derive_alias, duplicate_alias_sites, project_label,
+    project_name_error, workspace_members_error,
+};
+use crate::config::{AbsentOptionalNamespace, Config, load_config_at_with_report_base};
+// §AR-system.4: three upward reads through the crate root, because their owners
+// are still flat — `display_path` and the printing of the two `[workspace]`
+// findings this walk gathers, both the renderer's (§AR-system.2.9).
+use crate::{display_path, warn_if_members_absorb_scan, warn_unread_block};
 
 /// One project the workspace walk reached: the alias path qualified citations
 /// name it by — one segment per workspace level, so a nested project carries
 /// its whole chain (§FS-workspace.3, §FS-workspace.6.1) — and its own loaded
 /// config, whose `root` is the canonical project root.
-struct WorkspaceProjectEntry {
-    alias: String,
-    config: Config,
+pub(crate) struct WorkspaceProjectEntry {
+    pub(crate) alias: String,
+    pub(crate) config: Config,
 }
 
 /// §FS-workspace.6.1: the alias path of `config`'s own root, read from the
@@ -91,7 +113,7 @@ fn enclosing_alias_prefix(config: &Config) -> Result<String> {
 /// run like any other claim it cannot answer, while one that names nothing here is
 /// climbed past however broken it is — this walk reaches the filesystem root, and a
 /// stray `grund.toml` above the repository must not break every run beneath it.
-fn enclosing_workspace_of(
+pub(crate) fn enclosing_workspace_of(
     child: &Path,
     cli_base: &Path,
     ancestors: &mut AncestorWorkspaces,
@@ -115,7 +137,7 @@ fn enclosing_workspace_of(
 /// The outermost root contributes no segment: its members are named from the
 /// top of the workspace, which is what keeps a single-level workspace's
 /// citations byte-identical to what they were (§FS-workspace.6.1).
-fn qualify_alias(prefix: &str, alias: &str) -> String {
+pub(super) fn qualify_alias(prefix: &str, alias: &str) -> String {
     if prefix.is_empty() {
         alias.to_string()
     } else {
@@ -153,7 +175,9 @@ fn qualify_alias(prefix: &str, alias: &str) -> String {
 /// was launched in (§AR-workspace.5.1), so the run's root and the top of the
 /// tree it expands are one directory. `init` is the route where they are not —
 /// see [`expand_workspace_tree_with_report_base`].
-fn expand_workspace_tree(root_config: &mut Config) -> Result<Vec<WorkspaceProjectEntry>> {
+pub(crate) fn expand_workspace_tree(
+    root_config: &mut Config,
+) -> Result<Vec<WorkspaceProjectEntry>> {
     let report_base = root_config.root.clone();
     expand_workspace_tree_with_report_base(root_config, &report_base)
 }
@@ -187,7 +211,7 @@ fn expand_workspace_tree(root_config: &mut Config) -> Result<Vec<WorkspaceProjec
 /// either way (§FS-check.2.1), and a tree whose expansion fails is never cautioned
 /// about, which is the same line §FS-check.4.10 already draws around a block the
 /// run refuses outright.
-fn expand_workspace_tree_with_report_base(
+pub(crate) fn expand_workspace_tree_with_report_base(
     root_config: &mut Config,
     report_base: &Path,
 ) -> Result<Vec<WorkspaceProjectEntry>> {
@@ -214,8 +238,10 @@ fn expand_workspace_tree_with_report_base(
     if root_config.workspace_include_root {
         let alias = if self_path.is_empty() {
             derive_alias(root_config, None, RootMode::Root).map_err(|err| {
-                let message =
-                    format!("{err} for {}", project_label(root_config, &root_config.root));
+                let message = format!(
+                    "{err} for {}",
+                    project_label(root_config, &root_config.root)
+                );
                 project_name_error(root_config, message)
             })?
         } else {

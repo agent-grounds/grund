@@ -1,18 +1,42 @@
+//! Member-list expansion (§AR-system.2.4): turning one `[workspace] members`
+//! list into the canonical project roots it names, and enforcing the invariants
+//! that list has to satisfy (§FS-workspace.2, §FS-workspace.6.1).
+//!
+//! Split out of `checker_cmd.rs`, which is the `check` command's argument
+//! adapter: carrying each entry's *written* spelling so a diagnostic can name it
+//! (§FS-errors.4) turned expansion into a small rule set of its own, and rules
+//! are not what that file is for. Every `[workspace]` block — outermost root or
+//! nested member — expands through here, so the invariants hold at every depth
+//! (§AR-workspace.5.1, §AR-workspace.6.1).
+//!
+//! The three findings this rule set produces are *printed* one level up, in the
+//! flat `workspace_members_cmd.rs`, because rendering inside the engine belongs
+//! to the deprecated path of §AR-system.2.9. Every sentence is built here and
+//! apart from its printing, which is what lets a test read it
+//! (§AR-core-module-layout.1).
+
+use anyhow::{Result, anyhow};
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::optional_members::expand_optional_members;
+use super::scope::{config_location_error, workspace_members_error};
+use crate::config::{
+    AbsentOptionalNamespace, Config, ConfigLocation, config_file_in,
+    load_config_at_with_report_base, parse_string_list, strip_comment,
+};
+// §AR-system.4: eight upward reads through the crate root, because their owners
+// are still flat — the walk's scope roots, prune test, canonical root and
+// hidden test from the scanner, the path helpers and one printer from the renderer.
+use crate::{
+    canonical_config_root, format_path, is_hidden, relative_from_base, root_scope_roots,
+    sort_path_key, walk_reads_any_file, warn_undecidable_ancestor_claim,
+};
+
 /// The canonical form of `path` — the root a project is identified by — or the path
 /// unchanged when it does not resolve.
-///
-/// This file is member-list expansion: turning one `[workspace] members` list into
-/// the canonical project roots it names, and enforcing the invariants that list has
-/// to satisfy (§FS-workspace.2, §FS-workspace.6.1). It rides on this first item
-/// rather than a `//!` module doc because the crate is assembled by `include!`.
-///
-/// Split out of `checker_cmd.rs`, which is the `check` command's argument
-/// adapter: carrying each entry's *written* spelling so a diagnostic can name it
-/// (§FS-errors.4) turned expansion into a small rule set of its own, and rules
-/// are not what that file is for. Every `[workspace]` block — outermost root or
-/// nested member — expands through here, so the invariants hold at every depth
-/// (§AR-workspace.5.1, §AR-workspace.6.1).
-fn canonical_workspace_path(path: &Path) -> PathBuf {
+pub(super) fn canonical_workspace_path(path: &Path) -> PathBuf {
     fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
@@ -22,26 +46,26 @@ fn canonical_workspace_path(path: &Path) -> PathBuf {
 /// path when it lies outside it, and neither is something an author can act on
 /// (§FS-errors.4, §FS-workspace.6.1).
 #[derive(Clone)]
-struct WorkspaceMember {
-    written: String,
-    root: PathBuf,
+pub(crate) struct WorkspaceMember {
+    pub(crate) written: String,
+    pub(crate) root: PathBuf,
     /// §FS-workspace.2.2: whether the entry came from `optional_members`. Every
     /// rule below treats it the same — it is present, so it is an ordinary member
     /// — but its alias is the entry's last segment rather than its `project_name`
     /// (§FS-workspace.2.2.2), and only the entry knows which list it was written in.
-    optional: bool,
+    pub(crate) optional: bool,
 }
 
 /// One `[workspace]` block expanded: the member roots it names, and the optional
 /// entries this checkout does not have (§FS-workspace.2.2).
-struct ExpandedMembers {
-    members: Vec<WorkspaceMember>,
-    absent: Vec<AbsentOptionalNamespace>,
+pub(super) struct ExpandedMembers {
+    pub(super) members: Vec<WorkspaceMember>,
+    pub(super) absent: Vec<AbsentOptionalNamespace>,
 }
 
 /// The canonical roots of an expanded member list — the boundary-root form, for
 /// the callers that only need to know where a scan stops (§AR-workspace.6).
-fn expand_workspace_members(config: &Config) -> Result<Vec<PathBuf>> {
+pub(crate) fn expand_workspace_members(config: &Config) -> Result<Vec<PathBuf>> {
     Ok(expand_workspace_member_list(config)?
         .members
         .into_iter()
@@ -49,7 +73,7 @@ fn expand_workspace_members(config: &Config) -> Result<Vec<PathBuf>> {
         .collect())
 }
 
-fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMembers> {
+pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMembers> {
     let mut roots = Vec::new();
     for member in &config.workspace_members {
         if let Some(glob_parent) = member.strip_suffix("/*") {
@@ -145,7 +169,10 @@ fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMembers> {
     })
 }
 
-fn reject_overlapping_workspace_members(config: &Config, members: &[WorkspaceMember]) -> Result<()> {
+fn reject_overlapping_workspace_members(
+    config: &Config,
+    members: &[WorkspaceMember],
+) -> Result<()> {
     for (i, parent) in members.iter().enumerate() {
         for (j, child) in members.iter().enumerate() {
             if i != j && child.root.starts_with(&parent.root) {
@@ -162,41 +189,15 @@ fn reject_overlapping_workspace_members(config: &Config, members: &[WorkspaceMem
     Ok(())
 }
 
-/// The release the finding below stops being a warning and becomes an error in
+/// The release the finding this file builds the sentence for stops being a
+/// warning and becomes an error in
 /// (§FS-check.4.7, §RM-workspace-absorbed-scan-error). The deprecation path
 /// §REQ-backwards-compatibility.2 requires puts it one minor past the release the
 /// warning ships in; the message names it, because a warning that does not say
 /// when it bites tells a maintainer they have a problem and not that they have a
 /// deadline, and a unit test holds it ahead of the running version so the window
 /// cannot expire unnoticed.
-const ABSORBED_SCAN_ERROR_RELEASE: &str = "0.14.0";
-
-/// §FS-workspace.2.1, §FS-check.4.7: say so when this block's own `members` list
-/// covers every walk root the block has. Its project then reads nothing at all —
-/// the declarations reach no catalog and the dangling citations pass
-/// (§GOAL-no-dangling-refs) — which is the consequence [`workspace_member_root`]
-/// below already rejects a member root outright for, one step stronger.
-///
-/// A CLI-level `warning:` on stderr, like [`warn_undecidable_ancestor_claim`]
-/// below (§FS-errors.2.2): the question is settled before a report exists, which
-/// is also why it keeps its text under `--format json` and carries no code
-/// (§FS-errors.5). Asked at the two places a run first populates a block's
-/// boundary — `apply_workspace_boundary` for the block the run is rooted at,
-/// `collect_workspace_members` for each block below it — which is what puts the
-/// finding on every command that walks while leaving each block asked once.
-fn warn_if_members_absorb_scan(config: &Config, members: &[WorkspaceMember]) {
-    let covered = absorbed_scan_roots(config, members);
-    if covered.is_empty() {
-        return;
-    }
-    eprintln!(
-        "warning: {}",
-        config_location_message(
-            config.workspace_members_source.as_ref(),
-            absorbed_scan_warning(&covered),
-        )
-    );
-}
+pub(crate) const ABSORBED_SCAN_ERROR_RELEASE: &str = "0.14.0";
 
 /// §FS-workspace.2.1: each of the block's own walk roots that a member root
 /// covers, rendered `` `<root>` in `<member>` `` — empty unless **every** root
@@ -221,7 +222,7 @@ fn warn_if_members_absorb_scan(config: &Config, members: &[WorkspaceMember]) {
 /// actually lands on. Each root is named by its path under the block root, and
 /// the member beside it is the entry as written, which is what it was resolved
 /// from.
-fn absorbed_scan_roots(config: &Config, members: &[WorkspaceMember]) -> Vec<String> {
+pub(crate) fn absorbed_scan_roots(config: &Config, members: &[WorkspaceMember]) -> Vec<String> {
     // §FS-workspace.2.1: a block with `include_root = false` is not a project, so
     // it has no scan of its own to lose — what its own files cost is the same
     // question asked from the other side, and §FS-check.4.10 is where it is asked.
@@ -286,11 +287,11 @@ fn block_relative_root<'a>(config: &Config, root: &'a Path) -> &'a Path {
     root.strip_prefix(&config.root).unwrap_or(root)
 }
 
-/// The sentence [`warn_if_members_absorb_scan`] prints, built apart from the
-/// printing so a test can read it (§FS-check.4.7): what was swallowed by what,
+/// The sentence `warn_if_members_absorb_scan` prints, built apart from the
+/// printing — in `workspace_members_cmd.rs` — so a test can read it (§FS-check.4.7): what was swallowed by what,
 /// what that costs the project, the two ways out, and the release the finding
 /// stops being a warning in.
-fn absorbed_scan_warning(covered: &[String]) -> String {
+pub(crate) fn absorbed_scan_warning(covered: &[String]) -> String {
     format!(
         "[workspace] members swallows this project's whole scan — every scan root \
          is inside a member: {} — so its declarations are unreachable and its \
@@ -308,11 +309,11 @@ fn absorbed_scan_warning(covered: &[String]) -> String {
 /// a block *below* the run's root that is one step too early to answer it: the
 /// expansion assigns `workspace_project_roots` only once it has reached every
 /// block, so the question is posed there and answered by
-/// [`warn_unread_block`] afterwards. Holding the block rather than the answer is
+/// `warn_unread_block` afterwards. Holding the block rather than the answer is
 /// what keeps the order the two sites print in — the run's own block first, then
 /// the blocks below it as the run reaches them (§FS-check.4.10).
-struct UnreadBlockProbe {
-    config: Config,
+pub(crate) struct UnreadBlockProbe {
+    pub(crate) config: Config,
     members: Vec<WorkspaceMember>,
 }
 
@@ -324,57 +325,14 @@ struct UnreadBlockProbe {
 /// with no members is already a config error at that block's own line
 /// (§FS-workspace.6.1), and a configuration the run refuses is not one it also
 /// cautions about — the caution's two remedies are not the repair that block needs.
-fn unread_block_probe(config: &Config, members: &[WorkspaceMember]) -> Option<UnreadBlockProbe> {
+pub(super) fn unread_block_probe(
+    config: &Config,
+    members: &[WorkspaceMember],
+) -> Option<UnreadBlockProbe> {
     (!config.workspace_include_root && !members.is_empty()).then(|| UnreadBlockProbe {
         config: config.clone(),
         members: members.to_vec(),
     })
-}
-
-/// §FS-check.4.10: say so when a block that set `include_root = false` still holds
-/// files of its own. It is no project, and the enclosing scan stops at the member
-/// boundary (§FS-workspace.6), so those files are read by nobody — a declaration
-/// there reaches no catalog and a citation there is never checked
-/// (§GOAL-no-dangling-refs). grund#71 reproduced exactly that: `check`,
-/// `check --full` and `list` all silent over two dangling citations, all exiting 0.
-///
-/// The mirror of [`warn_if_members_absorb_scan`] above — *would this block have
-/// read something, had it been a project?* — and it takes that finding's shape: a
-/// CLI-level `warning:` on stderr, asked where a run first populates a block's
-/// boundary, which is what puts it on every command that walks while leaving each
-/// block asked once.
-///
-/// `project_roots` is where the *rest* of this run's projects are, and it is the
-/// other half of the counterfactual: the block's own root is added to it here,
-/// because a block that were a project would own its own tree and stop at every
-/// other project of the run (§FS-workspace.6). Handing an incomplete list would
-/// report a directory somebody else reads.
-///
-/// It returns how many lines it printed. This is the one of the two that can fire
-/// on an otherwise clean run — §FS-workspace.2.1's block always earns the
-/// empty-scan caution beside it — so it is the one whose caller has to know that
-/// stderr is no longer empty and `success` must not be printed (§FS-check.2.1).
-///
-/// It names no release, deliberately. A grouping directory holding a README it
-/// does not need checked is a correct configuration and no key records that
-/// intent, so the finding is never eligible to become an error
-/// (§DF-unread-opted-out-block.2.3) — unlike both of its siblings.
-fn warn_unread_block(probe: &UnreadBlockProbe, project_roots: &[PathBuf]) -> usize {
-    let Some(root) = unread_block_scope_root(probe, project_roots) else {
-        return 0;
-    };
-    let config = &probe.config;
-    eprintln!(
-        "warning: {}",
-        config_location_message(
-            config
-                .workspace_include_root_source
-                .as_ref()
-                .or(config.workspace_section_source.as_ref()),
-            unread_block_warning(&root),
-        )
-    );
-    1
 }
 
 /// §FS-check.4.10: the first root of this block's own scope that holds a file the
@@ -400,7 +358,10 @@ fn warn_unread_block(probe: &UnreadBlockProbe, project_roots: &[PathBuf]) -> usi
 /// the scan it is standing in for. `scan_full` is off for the same reason
 /// [`block_scope_roots`] asks the default scope — this is a property of the
 /// configuration rather than of one walk (§FS-check.1.3).
-fn unread_block_scope_root(probe: &UnreadBlockProbe, project_roots: &[PathBuf]) -> Option<String> {
+pub(crate) fn unread_block_scope_root(
+    probe: &UnreadBlockProbe,
+    project_roots: &[PathBuf],
+) -> Option<String> {
     let config = &probe.config;
     let mut walk = config.clone();
     walk.workspace_boundary_roots = probe
@@ -419,8 +380,8 @@ fn unread_block_scope_root(probe: &UnreadBlockProbe, project_roots: &[PathBuf]) 
         .map(|(root, _)| format_path(block_relative_root(config, &root)))
 }
 
-/// The sentence [`warn_if_no_project_scans_the_block`] prints, built apart from
-/// the printing so a test can read it (§FS-check.4.10): the tree no scan reaches,
+/// The sentence `warn_unread_block` prints, built apart from the printing — in
+/// `workspace_members_cmd.rs` — so a test can read it (§FS-check.4.10): the tree no scan reaches,
 /// what that costs, and the two remedies the ticket itself named.
 ///
 /// Shorter than [`absorbed_scan_warning`] above, and without its "declarations are
@@ -428,7 +389,7 @@ fn unread_block_scope_root(probe: &UnreadBlockProbe, project_roots: &[PathBuf]) 
 /// one stands beside an error in three cases of the corpus, so it keeps to the
 /// 180-byte cap a non-zero case's stderr is held to (§DF-unread-opted-out-block.2.4).
 /// It names no release: there is none.
-fn unread_block_warning(root: &str) -> String {
+pub(crate) fn unread_block_warning(root: &str) -> String {
     format!(
         "no project scans `{root}`, so its citations are never checked. \
          Set include_root = true, or point another project's [scan] include at it."
@@ -459,7 +420,7 @@ fn unread_block_warning(root: &str) -> String {
 /// there is the same fatal config error it has always been, at the same line; only
 /// the sentence grows, by the one clause that stops a CI author having to guess an
 /// escape hatch exists (§FS-config.4.3).
-fn workspace_member_root(
+pub(super) fn workspace_member_root(
     config: &Config,
     source: Option<&ConfigLocation>,
     written: &str,
@@ -555,7 +516,7 @@ fn member_claims(root: &Path, entries: &[String]) -> Vec<MemberClaim> {
 /// collapsed. `Err` is the residue where even this read cannot answer — the file
 /// cannot be read, or the value is not a list — and carries the reason the
 /// warning that says so has to name.
-fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>, String> {
+pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>, String> {
     let text = fs::read_to_string(config_path).map_err(|err| err.to_string())?;
     let mut in_workspace = false;
     let mut entries = Vec::new();
@@ -613,7 +574,7 @@ struct AncestorBlock {
 /// so, a run narrowed deep into a 40-level tree taking longer than checking the
 /// whole tree from its root. One cache belongs to one climb, which is also why it
 /// needs no invalidation.
-struct AncestorWorkspaces {
+pub(crate) struct AncestorWorkspaces {
     /// The base a diagnostic from one of these blocks renders its config path
     /// against: the root this run was launched at. An ancestor's config lies
     /// *above* that root, so it renders with `..` — without this it rendered
@@ -621,7 +582,7 @@ struct AncestorWorkspaces {
     /// same-shaped file in the reader's own directory (§FS-errors.4).
     report_base: PathBuf,
     /// Whether a `members` value this climb cannot read is said out loud
-    /// ([`warn_undecidable_ancestor_claim`]). True for a climb whose answer
+    /// (`warn_undecidable_ancestor_claim`). True for a climb whose answer
     /// *names* the tree below it — an alias path is built from it, so a segment
     /// that may be missing is the reader's business. False for a climb that only
     /// asks whether some directory is claimed and treats "cannot say" as "no
@@ -633,7 +594,7 @@ struct AncestorWorkspaces {
 }
 
 impl AncestorWorkspaces {
-    fn for_run_at(root: &Path) -> Self {
+    pub(crate) fn for_run_at(root: &Path) -> Self {
         Self {
             report_base: root.to_path_buf(),
             warn_undecidable: true,
@@ -643,7 +604,7 @@ impl AncestorWorkspaces {
 
     /// The same cache for a climb that asks its question quietly — see
     /// [`Self::warn_undecidable`].
-    fn quiet_for_run_at(root: &Path) -> Self {
+    pub(super) fn quiet_for_run_at(root: &Path) -> Self {
         Self {
             warn_undecidable: false,
             ..Self::for_run_at(root)
@@ -664,7 +625,7 @@ impl AncestorWorkspaces {
     /// The claim is confirmed against the expanded roots, not the entry text:
     /// what a glob names and where a symlinked entry lands are answers only
     /// expansion has.
-    fn claiming_block(
+    pub(super) fn claiming_block(
         &mut self,
         dir: &Path,
         child: &Path,
@@ -743,26 +704,11 @@ fn read_ancestor_workspace_block(
     })
 }
 
-/// §FS-workspace.6.1: the one residue of the members-only read — a config whose
-/// `members` text cannot be obtained, so the claim is undecidable in *both*
-/// directions. Failing would let one unreadable `grund.toml` above a repository
-/// break every run inside it; staying silent is what let a claiming ancestor
-/// re-spell the subtree below it. So the run continues and says what it could not
-/// answer, in the CLI-level `warning:` shape on stderr (§FS-errors.2.2) —
-/// naming the config against the root this run was launched at, like every other
-/// diagnostic from an ancestor block (§FS-errors.4).
-fn warn_undecidable_ancestor_claim(config_path: &Path, report_base: &Path, reason: &str) {
-    eprintln!(
-        "warning: {}",
-        undecidable_ancestor_claim_warning(config_path, report_base, reason)
-    );
-}
-
-/// The sentence [`warn_undecidable_ancestor_claim`] prints, built apart from the
-/// printing so a test can read it: what could not be answered, and what that
+/// The sentence `warn_undecidable_ancestor_claim` prints, built apart from the
+/// printing — in `workspace_members_cmd.rs` — so a test can read it: what could not be answered, and what that
 /// costs the reader — the alias paths below this directory, which is the
 /// difference between a citation that passes here and one that passes at the root.
-fn undecidable_ancestor_claim_warning(
+pub(crate) fn undecidable_ancestor_claim_warning(
     config_path: &Path,
     report_base: &Path,
     reason: &str,

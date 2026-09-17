@@ -1,21 +1,34 @@
-/// The unlisted-`[workspace]` rule (§FS-check.4.8), in a file of its own beside
-/// the rest of the workspace machinery (§AR-core-module-layout.1, §AR-workspace.6.1):
-/// a directory this run's walk reached that declares `[workspace]` and that no
-/// enclosing block lists among its `members` is claimed by nobody, so its subtree
-/// is absorbed into the enclosing namespace instead of named under its own alias
-/// path (§FS-workspace.6.1).
-///
-/// The rule sits **above** the walk, never inside it: the scanner carries out the
-/// directories it reached and asks nothing of them (§AR-workspace.1), and every
-/// question about claims, configs and messages is answered here.
-///
-/// Three filters in cost order, so a tree with no nested config pays the probe and
-/// nothing else (§GOAL-fast-feedback): one `config_file_in` probe per walked
-/// directory, a text-only `[workspace]`-header read for the directories that carry
-/// a config, and the ancestor claim climb only for the ones that declare the table.
-/// `load_config_at` is deliberately not used for a candidate — a config that will
-/// not parse must not fail the run, and a full load rebuilds the grammar regex set
-/// per candidate.
+//! The unlisted-`[workspace]` rule (§FS-check.4.8), in a file of its own beside
+//! the rest of the workspace machinery (§AR-system.2.4, §AR-core-module-layout.1,
+//! §AR-workspace.6.1): a directory this run's walk reached that declares
+//! `[workspace]` and that no enclosing block lists among its `members` is
+//! claimed by nobody, so its subtree is absorbed into the enclosing namespace
+//! instead of named under its own alias path (§FS-workspace.6.1).
+//!
+//! The rule sits **above** the walk, never inside it: the scanner carries out the
+//! directories it reached and asks nothing of them (§AR-workspace.1), and every
+//! question about claims, configs and messages is answered here.
+//!
+//! Three filters in cost order, so a tree with no nested config pays the probe and
+//! nothing else (§GOAL-fast-feedback): one `config_file_in` probe per walked
+//! directory, a text-only `[workspace]`-header read for the directories that carry
+//! a config, and the ancestor claim climb only for the ones that declare the table.
+//! `load_config_at` is deliberately not used for a candidate — a config that will
+//! not parse must not fail the run, and a full load rebuilds the grammar regex set
+//! per candidate.
+
+use std::collections::BTreeSet;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::expand::enclosing_workspace_of;
+use super::members::{AncestorWorkspaces, canonical_workspace_path};
+use super::scope::{RootMode, derive_alias};
+use crate::config::{Config, config_file_in, strip_comment};
+use crate::model::Diagnostic;
+// §AR-system.4: three upward reads through the crate root, because `output.rs`
+// is still flat — path rendering is the renderer's (§AR-system.2.9).
+use crate::{display_path, format_path, relative_from_base};
 
 /// The release §FS-check.4.8's warning becomes an error in
 /// (§REQ-backwards-compatibility.2, §DF-unlisted-workspace-block.2.1,
@@ -39,7 +52,7 @@ const UNLISTED_WORKSPACE_BLOCK_ERROR_RELEASE: &str = "0.14.0";
 /// Outermost-only falls out of the claim test rather than needing a pass of its
 /// own: a block below an unlisted one *is* claimed — by the unlisted block — so
 /// `enclosing_workspace_of` answers it, and one edit fixes the chain.
-fn unlisted_workspace_block_warnings(
+pub(crate) fn unlisted_workspace_block_warnings(
     config: &Config,
     render: &Config,
     alias: Option<&str>,

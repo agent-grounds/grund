@@ -464,7 +464,7 @@ pub fn print_config_warnings(config: &Config) {
 /// a consumer greps for does not depend on which command produced it.
 ///
 /// Here rather than beside the rule for the reason `print_config_warnings` above is
-/// here: rendering belongs to the output category, and `workspace_unlisted.rs`
+/// here: rendering belongs to the output category, and `workspace/unlisted.rs`
 /// builds the message and prints nothing (§AR-core-module-layout.1, §AR-bindings.2).
 fn print_unlisted_workspace_block_warnings(
     config: &Config,

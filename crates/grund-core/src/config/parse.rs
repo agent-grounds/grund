@@ -19,11 +19,12 @@ use super::grounding::{
 use super::kind_table::{ParsedKind, apply_parsed_kinds, parse_kinds_key};
 use super::point_sizes::parse_lead_size_warning;
 use super::record::{Config, ConfigLocation, ShorthandPolicy};
+use super::workspace_block::validate_workspace_lists;
 use crate::grammar::{id_grammar_key_slash_error, is_escaped};
-// §AR-system.4: `format_path` is the renderer's (§AR-system.2.9), the `[fmt]
-// exclude` glob rule the formatter's (§FS-fmt.2.5.1) and the optional-member
-// grammar the workspace's; all three read through the crate root until then.
-use crate::{format_path, validate_fmt_exclude, validate_optional_workspace_member};
+// §AR-system.4: `format_path` is the renderer's (§AR-system.2.9) and the `[fmt]
+// exclude` glob rule the formatter's (§FS-fmt.2.5.1); both read through the
+// crate root until those components are modules.
+use crate::{format_path, validate_fmt_exclude};
 
 /// Parse one `grund.toml` over `config` — the schema of §FS-config.3 and its
 /// subsections (`[reference]` 3.1, `[id]` 3.2/3.3, `[[kinds]]` 3.4, `[scan]` 3.5,
@@ -429,73 +430,14 @@ pub(super) fn parse_config_file(
             .with_context(|| format!("{}: invalid [id] grammar", format_path(path)))?;
     }
     // §AR-workspace.5.2: post-parse invariants run on every load, not gated on which
-    // section appeared. Free-form `project_name` (§FS-config.3) is slug-checked against
-    // the alias grammar later (§AR-workspace.5.3); members are shape-checked here.
-    if let Some(source) = &config.workspace_members_source {
-        for member in &config.workspace_members {
-            validate_workspace_member(&source.path, source.line, member)?;
-        }
-    }
-    // §FS-workspace.2.2: the same shape check, plus the three refusals the optional
-    // list adds — no glob, a last segment that can be an alias, and no entry that
-    // `members` already carries.
-    if let Some(source) = &config.workspace_optional_members_source {
-        for member in &config.workspace_optional_members {
-            validate_optional_workspace_member(
-                &source.path,
-                source.line,
-                member,
-                &config.workspace_members,
-            )?;
-        }
-    }
+    // section appeared. Free-form `project_name` is slug-checked later
+    // (§AR-workspace.5.3); both member lists are shape-checked in `workspace_block.rs`.
+    validate_workspace_lists(config)?;
     // §FS-config.3.9.5: validate `[citations]` after the kind set is final.
     if config.citations.declared {
         validate_citation_rules(path, config)?;
     }
     Ok(())
-}
-
-pub(crate) fn validate_workspace_member(path: &Path, line: usize, member: &str) -> Result<()> {
-    let member_path = Path::new(member);
-    if member.is_empty()
-        || member_path.is_absolute()
-        || member_path.components().any(|component| {
-            matches!(
-                component,
-                std::path::Component::Prefix(_)
-                    | std::path::Component::RootDir
-                    | std::path::Component::CurDir
-                    | std::path::Component::ParentDir
-            )
-        })
-        || member.contains('\\')
-        || member.split('/').enumerate().any(|(index, part)| {
-            part.is_empty()
-                || part == "."
-                || part == ".."
-                || (index == 0 && looks_like_windows_drive_prefix(part))
-        })
-        || member.matches('*').count() > 1
-        || (member.contains('*') && !member.ends_with("/*"))
-    {
-        return Err(anyhow!(
-            "{}:{line}: invalid [workspace] member `{member}` (expected relative path or trailing /* glob)",
-            format_path(path),
-        ));
-    }
-    Ok(())
-}
-
-fn looks_like_windows_drive_prefix(part: &str) -> bool {
-    let bytes = part.as_bytes();
-    bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':'
-}
-
-pub(crate) fn is_valid_project_alias(alias: &str) -> bool {
-    let mut chars = alias.chars();
-    matches!(chars.next(), Some(ch) if ch.is_ascii_lowercase())
-        && chars.all(|ch| ch.is_ascii_lowercase() || ch.is_ascii_digit() || ch == '-')
 }
 
 /// Drop a trailing `#`-comment from a `grund.toml` line (§FS-config.3).

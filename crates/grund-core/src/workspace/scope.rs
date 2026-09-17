@@ -1,20 +1,35 @@
+//! Which project a path belongs to, and how that project is named in a message
+//! (§AR-system.2.4): upward discovery, the member-scope rewrite, the
+//! boundary-root population, and the alias every diagnostic spells the result
+//! with (§AR-workspace.5.1, §AR-workspace.6, §AR-workspace.8).
+//!
+//! Split out of `checker_cmd.rs` the way `members.rs` was: that file is the
+//! `check` command's argument adapter, and resolving a scope to a config is
+//! config work every walking command shares, not something `check` owns
+//! (§AR-core-module-layout.1).
+
+use anyhow::{Result, anyhow};
+use std::fs;
+use std::path::{Component, Path, PathBuf};
+
+use super::members::{
+    WorkspaceMember, canonical_workspace_path, expand_workspace_member_list, unread_block_probe,
+};
+use crate::config::{
+    Config, ConfigLocation, invalid_project_alias_message, is_valid_project_alias, load_config,
+    load_config_at,
+};
+// §AR-system.4: four upward reads through the crate root, because their owners
+// are still flat — the two path renderers, and the printing of the two
+// `[workspace]` findings this file populates a boundary for (§AR-system.2.9).
+use crate::{display_path, format_path, warn_if_members_absorb_scan, warn_unread_block};
+
 /// Whether the requested scope *is* the config root — the scope `[scan] include`
 /// governs, and therefore the only one `grund check --full` can widen
 /// (§FS-check.1.3). It is also what decides a workspace-wide run
 /// (§FS-workspace.5): both questions are "did the caller ask for the whole
 /// project, however they spelled it?".
-///
-/// This file answers which project a path belongs to, and how that project is named
-/// in a message. The file-level prose rides on this first item rather than a `//!`
-/// module doc because the crate is assembled by `include!` (§AR-core-module-layout.2).
-///
-/// Split out of `checker_cmd.rs` the way `workspace_members.rs` was: that file is
-/// the `check` command's argument adapter, and resolving a scope to a config —
-/// upward discovery, the member-scope rewrite, the boundary-root population, and
-/// the alias a diagnostic spells the result with — is config work every walking
-/// command shares, not something `check` owns (§AR-workspace.5.1,
-/// §AR-workspace.6, §AR-workspace.8).
-fn scope_is_config_root(config: &Config, path: &Path, path_provided: bool) -> bool {
+pub(crate) fn scope_is_config_root(config: &Config, path: &Path, path_provided: bool) -> bool {
     !path_provided
         || fs::canonicalize(path)
             .map(|path| path == config.root)
@@ -27,7 +42,7 @@ fn scope_is_config_root(config: &Config, path: &Path, path_provided: bool) -> bo
 /// completions. The three steps are upward discovery, the member-scope
 /// rewrite, and boundary-root population — the last is what stops a root-scope
 /// scan from absorbing member declarations into the parent namespace.
-fn resolve_workspace_config(path: &Path) -> Result<Config> {
+pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
     let mut config = load_config(path)?;
     config = config_for_member_scope(config, path)?;
     apply_workspace_boundary(&mut config)?;
@@ -57,7 +72,7 @@ fn resolve_workspace_config(path: &Path) -> Result<Config> {
 /// of project roots would add nothing to it (§FS-workspace.6). The count lands on
 /// the run's own config, which is the one `check` still holds when it decides
 /// whether to print `success` (§FS-check.2.1).
-fn apply_workspace_boundary(config: &mut Config) -> Result<()> {
+pub(crate) fn apply_workspace_boundary(config: &mut Config) -> Result<()> {
     let Some(members) = populate_workspace_boundary(config)? else {
         return Ok(());
     };
@@ -73,7 +88,9 @@ fn apply_workspace_boundary(config: &mut Config) -> Result<()> {
 
 /// Populate the exact §AR-workspace.6 boundary the scanner consumes, without
 /// choosing whether the caller should emit the check-time workspace diagnostics.
-fn populate_workspace_boundary(config: &mut Config) -> Result<Option<Vec<WorkspaceMember>>> {
+pub(crate) fn populate_workspace_boundary(
+    config: &mut Config,
+) -> Result<Option<Vec<WorkspaceMember>>> {
     if !config.workspace_declared {
         return Ok(None);
     }
@@ -124,7 +141,11 @@ fn configured_member_root_for_scope(config: &Config, scope: &Path) -> Option<Pat
         .max_by_key(|root| root.components().count())
 }
 
-fn configured_member_root_candidate(config: &Config, member: &str, scope: &Path) -> Option<PathBuf> {
+fn configured_member_root_candidate(
+    config: &Config,
+    member: &str,
+    scope: &Path,
+) -> Option<PathBuf> {
     if let Some(parent) = member.strip_suffix("/*") {
         let parent = canonical_workspace_path(&config.root.join(parent));
         let relative = scope.strip_prefix(&parent).ok()?;
@@ -142,15 +163,18 @@ fn configured_member_root_candidate(config: &Config, member: &str, scope: &Path)
     }
 }
 
-fn workspace_members_error(config: &Config, message: String) -> anyhow::Error {
+pub(super) fn workspace_members_error(config: &Config, message: String) -> anyhow::Error {
     config_location_error(config.workspace_members_source.as_ref(), message)
 }
 
-fn project_name_error(config: &Config, message: String) -> anyhow::Error {
+pub(super) fn project_name_error(config: &Config, message: String) -> anyhow::Error {
     config_location_error(config.project_name_source.as_ref(), message)
 }
 
-fn config_location_error(source: Option<&ConfigLocation>, message: String) -> anyhow::Error {
+pub(super) fn config_location_error(
+    source: Option<&ConfigLocation>,
+    message: String,
+) -> anyhow::Error {
     anyhow!("{}", config_location_message(source, message))
 }
 
@@ -158,14 +182,14 @@ fn config_location_error(source: Option<&ConfigLocation>, message: String) -> an
 /// ahead of the sentence (§FS-config.4.3) — built apart from the error above
 /// because a *warning* about such a key needs the same one and is not an error
 /// (§FS-check.4.8).
-fn config_location_message(source: Option<&ConfigLocation>, message: String) -> String {
+pub(crate) fn config_location_message(source: Option<&ConfigLocation>, message: String) -> String {
     match source {
         Some(source) => format!("{}:{}: {message}", format_path(&source.path), source.line),
         None => message,
     }
 }
 
-enum RootMode {
+pub(super) enum RootMode {
     Root,
     Member,
 }
@@ -175,7 +199,7 @@ enum RootMode {
 /// `<rel-path>``. §GOAL-friendliness-first.1 — duplicate-alias and
 /// invalid-alias errors are CLI-level (no `path:line:`), so they have to name
 /// the source project in the message itself.
-fn project_label(root_config: &Config, project_root: &Path) -> String {
+pub(super) fn project_label(root_config: &Config, project_root: &Path) -> String {
     if project_root == root_config.root {
         "workspace root".to_string()
     } else {
@@ -190,7 +214,7 @@ fn project_label(root_config: &Config, project_root: &Path) -> String {
 /// alias`. When both are members we fold the shared `workspace member` prefix
 /// (`workspace members `a` and `b``); when one side is the root we keep the
 /// asymmetric pairing (`workspace root and workspace member `b``).
-fn duplicate_alias_sites(root_config: &Config, first: &Path, second: &Path) -> String {
+pub(super) fn duplicate_alias_sites(root_config: &Config, first: &Path, second: &Path) -> String {
     let first_is_root = first == root_config.root;
     let second_is_root = second == root_config.root;
     if !first_is_root && !second_is_root {
@@ -212,7 +236,7 @@ fn duplicate_alias_sites(root_config: &Config, first: &Path, second: &Path) -> S
 /// basename, or the literal `root` for an unnamed workspace root. Whichever
 /// source fires, the result is validated against the alias slug grammar so a
 /// bad name fails fast at workspace expansion, not later inside a citation.
-fn derive_alias(
+pub(super) fn derive_alias(
     config: &Config,
     member_root: Option<&Path>,
     mode: RootMode,

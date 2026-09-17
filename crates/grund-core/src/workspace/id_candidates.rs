@@ -1,3 +1,20 @@
+//! The member-candidate clause (§AR-system.2.4): when an unqualified `ID not
+//! found:` refusal can name the projects of this run that *do* declare the ID
+//! (§FS-workspace.8.1.1).
+//!
+//! It sits with the workspace rather than with `show`, because the question it
+//! answers is about the project set: which of the run's projects declares this
+//! text under its own `[id]` grammar, and whether the run saw the whole tree at
+//! all (§AR-workspace.8).
+
+use anyhow::anyhow;
+
+use super::context::{WorkspaceContext, WorkspaceProject};
+// §AR-system.4: three upward reads through the crate root, because their owners
+// are still flat — the argument resolver from the scanner, the candidate joiner
+// from the checker, and the ID renderer from the writers.
+use crate::{join_alternatives, render_id, resolve_id_arg};
+
 /// The literal a §FS-workspace.8.1.1 candidate clause opens with. The builder
 /// below writes it and [`names_member_id_candidate`] reads it back, so the two
 /// shapes an `ID not found:` refusal now has cannot be told apart wrongly.
@@ -25,7 +42,7 @@ pub fn names_member_id_candidate(message: &str) -> bool {
 /// its project, an ID the current grammar rejects fails earlier as `invalid ID`,
 /// and the `ID not found:` prefix stays the first token because it is what
 /// selects the `not-found` code (§FS-errors.5).
-fn with_member_id_candidates(
+pub(crate) fn with_member_id_candidates(
     err: anyhow::Error,
     context: &WorkspaceContext,
     qualified_alias: Option<&str>,
@@ -48,8 +65,12 @@ fn with_member_id_candidates(
 /// ID — where there is nothing to name, the refusal is printed unchanged.
 fn member_id_candidate_clause(context: &WorkspaceContext, raw_id: &str) -> Option<String> {
     let candidates = member_id_candidates(context, raw_id);
-    (!candidates.is_empty())
-        .then(|| format!("{MEMBER_CANDIDATE_CLAUSE}{}?", join_alternatives(&candidates)))
+    (!candidates.is_empty()).then(|| {
+        format!(
+            "{MEMBER_CANDIDATE_CLAUSE}{}?",
+            join_alternatives(&candidates)
+        )
+    })
 }
 
 /// Every project other than the one the lookup ran against that declares the ID
