@@ -554,3 +554,14 @@ pub(crate) fn id_shape(id_format: &str) -> String {
         .replace("{number}", "<NNN>")
         .replace("{slug}", "<slug>")
 }
+
+/// The literal text between `{kind}` and the next placeholder in `[id] format`
+/// (e.g. `-` in `{kind}-{slug}`) — the glue an `E2E-<dirname>` ID is reassembled
+/// with (§AR-scanner.6).
+pub(crate) fn literal_after_kind_placeholder(format: &str) -> Option<&str> {
+    let marker = "{kind}";
+    let start = format.find(marker)? + marker.len();
+    let rest = &format[start..];
+    let end = rest.find('{').unwrap_or(rest.len());
+    Some(&rest[..end])
+}

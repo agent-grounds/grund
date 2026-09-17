@@ -1,8 +1,13 @@
+use anyhow::Result;
 use regex::Regex;
 
 use super::compiled::Grammar;
 use super::ids::parse_id;
 use crate::model::Id;
+// §AR-system.4: `KindConfig` is config's record, above this component and
+// reachable through the crate root until the glob goes. `LegacyGrammar` below is
+// this component's own, moved down out of the scanner with §AR-system.2.5.
+use crate::KindConfig;
 
 /// The near-miss half of the compiled [`Grammar`] (§FS-check.4.6): the
 /// declaration patterns with the ID grammar replaced by "a configured kind, the
@@ -248,4 +253,45 @@ pub(crate) fn declaration_id_on_line(
     let (text, _, kind) = near_miss_heading(grammar, line, in_py_docstring, is_md)?;
     let start = line.find(text)?;
     Some((Id::legacy(kind.to_string(), text), start + text.len()))
+}
+
+/// Grammar-side state used only by persisted off-grammar compatibility
+/// (§FS-config.3.2, §FS-check.4.6), kept out of the canonical parser's fields.
+#[derive(Clone)]
+pub(super) struct LegacyGrammar {
+    decl_re: Regex,
+    docstring_decl_re: Regex,
+    kinds: Vec<(String, String)>,
+    pub(super) section_path_re: Regex,
+}
+
+impl LegacyGrammar {
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn build(
+        kinds: &[KindConfig],
+        format: &str,
+        section_pattern: &str,
+        comment_prefix: &str,
+    ) -> Result<Self> {
+        let decl_re = Regex::new(&format!(
+            r"^\s*(?:{comment_prefix}\s+|(?P<mdhashes>#+)\s+)(?P<near>[^\s:`]+):"
+        ))?;
+        let docstring_decl_re = Regex::new(r"^\s*(?P<near>[^\s:`]+):")?;
+        let kinds_and_formats = kinds
+            .iter()
+            .filter(|kind| kind.citable)
+            .map(|kind| {
+                (
+                    kind.kind.clone(),
+                    kind.format.clone().unwrap_or_else(|| format.to_string()),
+                )
+            })
+            .collect();
+        Ok(Self {
+            decl_re,
+            docstring_decl_re,
+            kinds: kinds_and_formats,
+            section_path_re: Regex::new(&format!(r"^{section_pattern}$"))?,
+        })
+    }
 }

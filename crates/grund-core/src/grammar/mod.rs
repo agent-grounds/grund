@@ -10,7 +10,11 @@
 //! (§AR-core-module-layout.1). The submodules are the former `grammar*`,
 //! `markdown_fence`, `comment_line`, `comment_block`, `shorthand*`,
 //! `inline_note_layout`, `never_rewrite` and ID-grammar category files, one per
-//! lexical fact §AR-system.2.1 names.
+//! lexical fact §AR-system.2.1 names. Five items the flat layout parked in
+//! scanner files came down here when §AR-system.2.5 became a module: the
+//! off-grammar `LegacyGrammar`, the `{kind}` literal reader of the `[id] format`
+//! template, the member-local fallback ID parser, the qualified-citation
+//! suppression rule, and the two shorthand questions asked of a catalog.
 
 mod comment_block;
 mod comment_line;
@@ -41,9 +45,11 @@ pub(crate) use compiled::{
     QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, reduce_heading_text, section_path,
 };
 pub(crate) use fence::markdown_fence_delimiter;
-pub(crate) use id_format::{id_shape, id_token_end_at, parse_longest_id_prefix};
+pub(crate) use id_format::{
+    id_shape, id_token_end_at, literal_after_kind_placeholder, parse_longest_id_prefix,
+};
 pub(crate) use id_rules::{id_grammar_key_slash_error, id_grammar_literal_slash_error};
-pub(crate) use ids::{parse_id, parse_id_arg};
+pub(crate) use ids::{parse_id, parse_id_arg, parse_loose_qualified_id_prefix};
 pub(crate) use inline_note_layout::{
     BlockCitations, block_has_inline_note_memoized, check_inline_citation_style,
     inline_layout_violations, inline_note_layout_sentence, inline_note_verdicts,
@@ -52,15 +58,15 @@ pub(crate) use inline_note_layout::{
 pub(crate) use near_miss::{declaration_captures, declaration_id_on_line, near_miss_heading};
 pub(crate) use never_rewrite::{
     DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, is_escaped,
-    is_inside_inline_code, is_inside_markdown_link_destination, is_inside_string_literal,
-    never_rewrite_context, never_rewrite_context_in, scanned_citation_rewritable,
+    is_inside_inline_code, is_inside_markdown_link_destination, never_rewrite_context,
+    never_rewrite_context_in, qualified_suppressed_in_source, scanned_citation_rewritable,
     string_literal_in,
 };
 pub(crate) use shorthand::{
-    IdArgError, ParsedId, ShorthandIndex, ShorthandIndexes,
-    expand_shorthand_citations_with_origins, parse_id_arg_with_shorthand,
-    report_shorthand_citation, resolve_qualified_shorthand_citations, resolve_shorthand_citations,
-    scan_shorthand_citations, shorthand_candidates, shorthand_names, shorthand_token_expansion,
+    IdArgError, ShorthandIndex, ShorthandIndexes, expand_shorthand_citations_with_origins,
+    parse_id_arg_with_shorthand, report_shorthand_citation, resolve_qualified_shorthand_citations,
+    resolve_shorthand_citations, scan_shorthand_citations, shorthand_candidates, shorthand_names,
+    shorthand_token_expansion,
 };
 pub(crate) use shorthand_targets::ShorthandTargets;
 pub(crate) use source_line::{PythonDocstringScanState, source_scan_line};

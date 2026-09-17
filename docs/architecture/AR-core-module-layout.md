@@ -16,13 +16,13 @@ Not a component: the rule for how the engine's files are named, owned and sized,
 
 What each category implements, consumes and must not know is its component's subsection in [§AR-system.2](README.md#2-components), and the table's third column says which. A category is named by the module directory that holds it, and until it has one, by the file-name prefixes it owns.
 
-A file belongs to the category it sits under where that category is a module directory — `model/records.rs` to **model** — and otherwise to the category whose prefix its name carries: `scanner_walk.rs` to **scanner**, `init_block.rs` to **init**. A category that has become a directory leaves no file of its former prefixes at the top level, except a prefix the row still lists beside the directory: that is how a file the move deliberately left flat is recorded, and every one today is a deprecated renderer waiting for `compat/` ([§AR-system.2.9](README.md#29-api)) — a whole command adapter, or the stream-writing half of a file whose data half moved. `lib.rs` is the one file outside every category, as the crate entrypoint. What each category owns:
+A file belongs to the category it sits under where that category is a module directory — `model/records.rs` to **model** — and otherwise to the category whose prefix its name carries: `checker_homes.rs` to **checker**, `init_block.rs` to **init**. A category that has become a directory leaves no file of its former prefixes at the top level, except a prefix the row still lists beside the directory: that is how a file the move deliberately left flat is recorded, and every one today is a deprecated renderer waiting for `compat/` ([§AR-system.2.9](README.md#29-api)) — a whole command adapter, or the stream-writing half of a file whose data half moved. `lib.rs` is the one file outside every category, as the crate entrypoint. What each category owns:
 
 | Category | Module directory, or file-name prefixes | Component |
 |---|---|---|
 | **model** | `model/` | [§AR-system.2.2](README.md#22-model) |
 | **config** | `config/`, `config_cmd` | [§AR-system.2.3](README.md#23-config) |
-| **scanner** | `scanner`, `value_json` | [§AR-system.2.5](README.md#25-scanner) |
+| **scanner** | `scanner/` | [§AR-system.2.5](README.md#25-scanner) |
 | **checker** | `checker` | [§AR-system.2.6](README.md#26-checker) |
 | **output** | `output` | [§AR-system.2.9](README.md#29-api) |
 | **show** | `show` | [§AR-system.2.7](README.md#27-queries) |

@@ -1,3 +1,25 @@
+use anyhow::{Result, anyhow};
+use ignore::WalkBuilder;
+use std::collections::BTreeSet;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::e2e::e2e_id_from_case_dir_name;
+use super::tree::ScanError;
+use super::walk_boundaries::{
+    is_directory_symlink, is_hidden, is_scannable, outward_directory_link_root,
+    owned_by_another_project,
+};
+use super::walk_errors::{symlink_loop_report, walk_error_report};
+use crate::config::Config;
+use crate::model::normalize_path_lexically;
+// §AR-system.4: four upward reads, through the crate root until their owners are
+// modules — three home path keys of the checker's placement rules, and the
+// report's path sort key from `output.rs`.
+use crate::{
+    configured_home_path_key, physical_path_key, scanned_decl_relative_path, sort_path_key,
+};
+
 /// The tree walk for the callers that ask a yes/no question about the tree and
 /// nothing else — today the `--cross-refs` auto-enable probe, which wants to know
 /// whether the scope holds any Markdown (§FS-fmt.6.6). Every caller that *reports*
@@ -7,11 +29,11 @@
 /// for, so repeating its errors would print each of them twice.
 ///
 /// The tree walk: which roots a scan starts from, which files it yields, and what
-/// it does with a path it cannot read (§AR-scanner.1). It sits beside `scanner.rs`
-/// rather than inside it because the two are different machines — that one is a
-/// line-by-line pass over a file's text, this one is a directory traversal — and
-/// they meet only at the file list one hands the other.
-fn walk_scannable_files(
+/// it does with a path it cannot read (§AR-scanner.1). It sits beside
+/// `file_pass.rs` rather than inside it because the two are different machines —
+/// that one is a line-by-line pass over a file's text, this one is a directory
+/// traversal — and they meet only at the file list one hands the other.
+pub(crate) fn walk_scannable_files(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
@@ -20,22 +42,22 @@ fn walk_scannable_files(
 }
 
 /// What one walk of the tree produced (§AR-scanner.1).
-struct WalkedTree {
+pub(crate) struct WalkedTree {
     /// The scannable files, sorted, one entry per physical file (§FS-errors.4).
-    files: Vec<PathBuf>,
+    pub(crate) files: Vec<PathBuf>,
     /// The paths the walk could not read, for the caller to report (§FS-check.2).
-    errors: Vec<ScanError>,
+    pub(crate) errors: Vec<ScanError>,
     /// The files that are in this tree only by a link: their physical path is
     /// outside the config root. Read like any other file (§FS-config.3.5.1) —
     /// `fmt --write` is the caller that treats them differently, because
     /// rewriting one edits a file the project does not own (§FS-fmt.2.3.2).
-    outside_root: BTreeSet<PathBuf>,
+    pub(crate) outside_root: BTreeSet<PathBuf>,
     /// Every directory the walk descended into, scan roots included, sorted and
     /// deduplicated (§FS-errors.4). Carried out rather than asked about here: the
     /// scanner never asks "am I in a workspace?" (§AR-workspace.1), and the one
     /// caller of this list — the unlisted-`[workspace]` rule of §FS-check.4.8 —
     /// probes each directory for a config and answers the claim above the walk.
-    dirs: Vec<PathBuf>,
+    pub(crate) dirs: Vec<PathBuf>,
 }
 
 /// The tree walk (§AR-scanner.1): from each scan root, descend skipping hidden and
@@ -68,7 +90,7 @@ struct WalkedTree {
 /// Why `outside_root` compares physical paths on both sides: a config root reached
 /// through a link contains none of the paths its own files resolve to, and
 /// `fmt --write` would then refuse to rewrite the whole repository.
-fn walk_scannable_files_reporting(
+pub(crate) fn walk_scannable_files_reporting(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
@@ -105,8 +127,7 @@ fn walk_scannable_files_reporting(
             &canonical_scan_root,
             &config.root,
             &physical_root,
-        )
-            || config
+        ) || config
             .workspace_boundary_roots
             .iter()
             .any(|root| canonical_scan_root.starts_with(root))
@@ -340,7 +361,7 @@ fn scannable_walker(
 /// [`walk_scannable_files_reporting`]: no run is scanning this tree, so there is no
 /// report to raise it into, and the question — would a project have read something
 /// — is answered by the files that can be read.
-fn walk_reads_any_file(config: &Config, scan_root: &Path) -> bool {
+pub(crate) fn walk_reads_any_file(config: &Config, scan_root: &Path) -> bool {
     if !scan_root.exists() {
         return false;
     }
@@ -355,8 +376,7 @@ fn walk_reads_any_file(config: &Config, scan_root: &Path) -> bool {
         &canonical_scan_root,
         &config.root,
         &physical_root,
-    )
-        || config
+    ) || config
         .workspace_boundary_roots
         .iter()
         .any(|root| canonical_scan_root.starts_with(root))
@@ -456,11 +476,8 @@ impl WalkDirFilter {
         // well as left out of `kind_home_roots`, on the in-tree path the way
         // §AR-scanner.2.4 decides which home a file is in (§GOAL-fast-feedback).
         if !self.unwalked_homes.is_empty()
-            && let Some(relative) = scanned_decl_relative_path(
-                entry.path(),
-                &self.config.root,
-                &self.physical_root,
-            )
+            && let Some(relative) =
+                scanned_decl_relative_path(entry.path(), &self.config.root, &self.physical_root)
             && self
                 .unwalked_homes
                 .iter()
@@ -543,8 +560,8 @@ impl WalkDirFilter {
             !resolved.starts_with(&self.physical_root)
                 || self
                     .boundary_roots
-                .iter()
-                .any(|root| resolved.starts_with(root))
+                    .iter()
+                    .any(|root| resolved.starts_with(root))
                 || owned_by_another_project(&self.config, &self.physical_root, resolved)
         })
     }
@@ -609,7 +626,11 @@ fn dedup_by_file_identity(files: &mut Vec<PathBuf>, resolved: &AliasTargets) {
 
 /// Direct `e2e/cases/<name>/` directories are E2E manifest declarations
 /// (§AR-scanner.6), so the ordinary file walk must not scan their fixture repos.
-fn is_direct_e2e_case_dir(path: &Path, cases_root: Option<&Path>, config: &Config) -> bool {
+pub(super) fn is_direct_e2e_case_dir(
+    path: &Path,
+    cases_root: Option<&Path>,
+    config: &Config,
+) -> bool {
     let Some(cases_root) = cases_root else {
         return false;
     };
@@ -625,7 +646,11 @@ fn is_direct_e2e_case_dir(path: &Path, cases_root: Option<&Path>, config: &Confi
 /// The directories (or single file) the walk starts from: a `[path]` argument when
 /// given (narrowing the default scope), otherwise `[scan] include` resolved against
 /// the repo root, otherwise the whole root (§FS-config.3.5, §AR-scanner.1).
-fn scan_roots(config: &Config, scope: Option<&Path>, explicit_scope: bool) -> Result<Vec<PathBuf>> {
+pub(super) fn scan_roots(
+    config: &Config,
+    scope: Option<&Path>,
+    explicit_scope: bool,
+) -> Result<Vec<PathBuf>> {
     scan_roots_for(config, scope, explicit_scope, config.scan_full)
 }
 
@@ -634,7 +659,7 @@ fn scan_roots(config: &Config, scope: Option<&Path>, explicit_scope: bool) -> Re
 /// and `extensions` are untouched. `check --full` asks both ways: once with
 /// `true` to walk the whole root, and once with `false` to learn which of what it
 /// read was inside the configured scope (§FS-check.3.14).
-fn scan_roots_for(
+pub(crate) fn scan_roots_for(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
@@ -655,13 +680,12 @@ fn scan_roots_for(
         let resolved = fs::canonicalize(scope).unwrap_or_else(|_| lexical_scope.clone());
         // §FS-config.3.5.1, §FS-config.3.5.2: keep the lexical spelling for an
         // in-tree link and an external directory-link root; resolve other roots.
-        let scope = if lexical_scope.starts_with(&config.root)
-            || is_directory_symlink(&lexical_scope)
-        {
-            lexical_scope
-        } else {
-            walk_root_under_config_root(config, &resolved)
-        };
+        let scope =
+            if lexical_scope.starts_with(&config.root) || is_directory_symlink(&lexical_scope) {
+                lexical_scope
+            } else {
+                walk_root_under_config_root(config, &resolved)
+            };
         if scope.is_file() {
             return Ok(vec![scope]);
         }
@@ -696,7 +720,7 @@ fn walk_root_under_config_root(config: &Config, resolved: &Path) -> PathBuf {
 /// Where the config root physically is, for the comparisons that have to be made
 /// against a resolved path. Equal to `config.root` for every root `grund`
 /// discovers, which is canonical already (§FS-config.1).
-fn canonical_config_root(config: &Config) -> PathBuf {
+pub(crate) fn canonical_config_root(config: &Config) -> PathBuf {
     fs::canonicalize(&config.root).unwrap_or_else(|_| config.root.clone())
 }
 
@@ -733,7 +757,7 @@ fn canonical_config_root(config: &Config) -> PathBuf {
 /// homes are ordered after `include` so the first-seen spelling of a file reached two
 /// ways is still `include`'s, which keeps the dedup and `--full`'s additivity
 /// unchanged.
-fn root_scope_roots(config: &Config, full: bool) -> Vec<PathBuf> {
+pub(crate) fn root_scope_roots(config: &Config, full: bool) -> Vec<PathBuf> {
     // §FS-config.3.4.7: an `include` entry at or inside an unwalked home is the one
     // way such a home is still a *root*, where the walk's own prune cannot reach it.
     // The narrower key, the one written on the kind itself, wins.
@@ -775,7 +799,7 @@ fn root_scope_roots(config: &Config, full: bool) -> Vec<PathBuf> {
 /// Every home the config lists without walking (`scan = false`,
 /// §FS-config.3.4.7), as an absolute path under the config root — the
 /// complement of `kind_home_roots` over the kinds that have a home.
-fn unwalked_home_roots(config: &Config) -> Vec<PathBuf> {
+pub(crate) fn unwalked_home_roots(config: &Config) -> Vec<PathBuf> {
     unwalked_homes(config)
         .map(|home| config.root.join(home).components().collect::<PathBuf>())
         .collect()

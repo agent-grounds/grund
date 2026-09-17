@@ -1,3 +1,13 @@
+use std::collections::BTreeSet;
+
+use super::file_pass::CitationLine;
+use crate::grammar::{
+    QUALIFIED_CITATION_PREFIX, parse_longest_id_prefix, parse_loose_qualified_id_prefix,
+    qualified_suppressed_in_source, scanned_citation_rewritable,
+};
+use crate::model::{Citation, Findings, LegacyCitationCandidate};
+use crate::workspace::WorkspaceCitationTarget;
+
 /// §FS-workspace.5: a member-local scan must still recognize marker-qualified
 /// citations before the member's own ID grammar is applied. Without this
 /// fallback, `§root/FS-root` in a default member can disappear just because the
@@ -18,7 +28,7 @@
 /// exists at — the full-ID pass's on entry, this pass's own on return. The
 /// shorthand pass reads the union to decide whether a qualified marker is
 /// already spoken for (§AR-scanner.2.6).
-fn scan_fallback_qualified_citations(
+pub(super) fn scan_fallback_qualified_citations(
     line: &CitationLine<'_>,
     qualified_claimed: &mut BTreeSet<usize>,
     findings: &mut Findings,
@@ -74,81 +84,11 @@ fn scan_fallback_qualified_citations(
     }
 }
 
-/// The member-local fallback ID parser (§FS-workspace.5). Recognises the
-/// conventional `KIND[-NUM]-SLUG` shape — uppercase-or-digit kind, optional
-/// numeric middle component, non-empty slug — because the member has no
-/// access to the citing or target project's `[id] format` at this point.
-/// A workspace-root run uses `parse_longest_id_prefix` with the target's
-/// grammar (`scan_workspace_qualified_pass`) and is not affected by this
-/// fallback's assumptions.
-fn parse_loose_qualified_id_prefix(raw: &str) -> Option<(Id, Option<String>, usize)> {
-    let mut end = raw
-        .char_indices()
-        .find(|(_, ch)| !(ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.')))
-        .map(|(idx, _)| idx)
-        .unwrap_or(raw.len());
-    while end > 0
-        && raw[..end]
-            .chars()
-            .next_back()
-            .is_some_and(|ch| matches!(ch, '.' | ',' | ';' | ':' | '!' | '?'))
-    {
-        end -= raw[..end].chars().next_back().map(char::len_utf8).unwrap_or(1);
-    }
-    let token = raw.get(..end)?;
-    let (id_text, section) = split_loose_section(token);
-    let (kind, rest) = id_text
-        .split_once(['-', '_'])
-        .filter(|(kind, rest)| !kind.is_empty() && !rest.is_empty())?;
-    if !kind.chars().all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit()) {
-        return None;
-    }
-    let (num, slug) = match rest.split_once(['-', '_']) {
-        Some((maybe_num, slug)) if maybe_num.chars().all(|ch| ch.is_ascii_digit()) => {
-            (maybe_num.parse::<u32>().ok(), slug)
-        }
-        _ => (None, rest),
-    };
-    if slug.is_empty() {
-        return None;
-    }
-    Some((
-        Id {
-            kind: kind.to_string(),
-            num,
-            slug: Some(slug.to_string()),
-        },
-        section.map(str::to_string),
-        end,
-    ))
-}
-
-fn split_loose_section(token: &str) -> (&str, Option<&str>) {
-    let suffix_start = token
-        .char_indices()
-        .rev()
-        .find(|(_, ch)| !(ch.is_ascii_digit() || *ch == '.'))
-        .map(|(idx, ch)| idx + ch.len_utf8())
-        .unwrap_or(0);
-    let suffix = &token[suffix_start..];
-    let Some(section) = suffix.strip_prefix('.') else {
-        return (token, None);
-    };
-    if section.is_empty()
-        || !section
-            .split('.')
-            .all(|part| !part.is_empty() && part.chars().all(|ch| ch.is_ascii_digit()))
-    {
-        return (token, None);
-    }
-    (&token[..suffix_start], Some(section))
-}
-
 /// One line's worth of marker-qualified workspace citations: a `§<alias>/<ID>`
 /// token whose ID tail parses with the target project's grammar
 /// (§FS-workspace.1, §AR-workspace.2). Runs inline during `scan_file` in
 /// workspace mode so the file is read once, not twice.
-fn scan_workspace_qualified_pass(
+pub(super) fn scan_workspace_qualified_pass(
     line: &CitationLine<'_>,
     targets: &[WorkspaceCitationTarget],
     findings: &mut Findings,
@@ -229,10 +169,7 @@ fn scan_workspace_qualified_pass(
 /// catalog reconciliation promotes only exact declaration-backed spellings
 /// (§FS-check.1.1, §FS-config.3.2). The remainder of the already-read line is
 /// enough to defer token/section precedence without a second file read.
-fn scan_legacy_citation_candidates(
-    line: &CitationLine<'_>,
-    findings: &mut Findings,
-) {
+pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings: &mut Findings) {
     if line.config.marker.is_empty() || !line.scan_line.contains(&line.config.marker) {
         return;
     }
@@ -280,7 +217,7 @@ fn scan_legacy_citation_candidates(
 /// bracketed live citation, not an intended illustration. IDs are parsed with
 /// the citing project's grammar; a cross-namespace target with an exotic grammar
 /// may be missed, which only ever costs a suggestion, never a false error.
-fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Findings) {
+pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Findings) {
     if line.config.marker.is_empty() {
         return;
     }
@@ -293,18 +230,19 @@ fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Findings) {
         let Some(rest) = line.scan_line.get(token_start..) else {
             continue;
         };
-        let (namespace, id_rest, alias_len) = match QUALIFIED_CITATION_PREFIX
-            .captures(rest)
-            .and_then(|p| p.name("namespace").map(|m| (m.as_str().to_string(), p.get(0).unwrap().end())))
-        {
-            Some((alias, alias_len)) => {
-                let Some(id_rest) = rest.get(alias_len..) else {
-                    continue;
-                };
-                (Some(alias), id_rest, alias_len)
-            }
-            None => (None, rest, 0),
-        };
+        let (namespace, id_rest, alias_len) =
+            match QUALIFIED_CITATION_PREFIX.captures(rest).and_then(|p| {
+                p.name("namespace")
+                    .map(|m| (m.as_str().to_string(), p.get(0).unwrap().end()))
+            }) {
+                Some((alias, alias_len)) => {
+                    let Some(id_rest) = rest.get(alias_len..) else {
+                        continue;
+                    };
+                    (Some(alias), id_rest, alias_len)
+                }
+                None => (None, rest, 0),
+            };
         let Some(parsed) = parse_longest_id_prefix(id_rest, &line.config.grammar) else {
             continue;
         };

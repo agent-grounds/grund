@@ -1,12 +1,18 @@
-/// Host-context recognition and heading normalization for embedded values
-/// (§FS-values.2.4, §FS-values.9).
+//! Host-context recognition and heading normalization for embedded values
+//! (§FS-values.2.4, §FS-values.9).
 
-const EMBEDDED_VALUE_MARKER: &str = "<!-- grund:value -->";
+use std::path::Path;
+
+use super::value_context::SourceValueLineContext;
+use crate::config::Config;
+use crate::model::{DeclarationSource, Findings, Id, InvalidValueSite};
+
+pub(crate) const EMBEDDED_VALUE_MARKER: &str = "<!-- grund:value -->";
 
 /// Return the marker's byte offset only for the one authored suffix that grants
 /// authority: one ASCII separator space, exact lowercase marker bytes, then
 /// optional trailing whitespace (§FS-values.2.4). Lookalikes stay prose.
-fn exact_embedded_value_marker(line: &str) -> Option<usize> {
+pub(crate) fn exact_embedded_value_marker(line: &str) -> Option<usize> {
     let trimmed = line.trim_end_matches([' ', '\t']);
     // `strip_suffix` proves the byte boundary as well as the suffix. Computing
     // an arbitrary byte offset and slicing there can land inside any preceding
@@ -34,7 +40,7 @@ fn without_source_block_close(line: &str, block_comment: bool) -> &str {
 /// Enroll a marker only after the host line has been classified. Markdown and
 /// enabled Python docstrings already provide semantic content; every other
 /// source form must put the marker bytes inside the recognized comment span.
-fn embedded_value_marker_for_line(
+pub(super) fn embedded_value_marker_for_line(
     line: &str,
     markdown: bool,
     in_py_docstring: bool,
@@ -51,7 +57,7 @@ fn embedded_value_marker_for_line(
         .then_some(marker)
 }
 
-fn push_invalid_embedded_marker(
+pub(super) fn push_invalid_embedded_marker(
     findings: &mut Findings,
     id: Option<Id>,
     path: &Path,
@@ -72,7 +78,7 @@ fn push_invalid_embedded_marker(
     });
 }
 
-fn component_without_block_close(component: &str, block_comment: bool) -> &str {
+pub(super) fn component_without_block_close(component: &str, block_comment: bool) -> &str {
     without_source_block_close(component, block_comment)
 }
 
@@ -80,7 +86,7 @@ fn component_without_block_close(component: &str, block_comment: bool) -> &str {
 /// section scanning has been removed (§FS-values.2.4). This deliberately does
 /// not decide whether the heading is citable; it also identifies plain/named
 /// headings that are forbidden inside a strict embedded root.
-fn authored_heading_level(
+pub(super) fn authored_heading_level(
     line: &str,
     markdown: bool,
     block_comment: bool,
@@ -106,7 +112,7 @@ fn authored_heading_level(
 /// A numeric heading coordinate before title validation. This recognizes the
 /// physical child slot even when the title is absent, so the component's own
 /// error does not manufacture a second zero-component error at its root.
-fn authored_numeric_heading_path(
+pub(super) fn authored_numeric_heading_path(
     line: &str,
     markdown: bool,
     block_comment: bool,
@@ -130,7 +136,7 @@ fn authored_numeric_heading_path(
         .then(|| coordinate.to_string())
 }
 
-fn semantic_comment_content<'a>(
+pub(super) fn semantic_comment_content<'a>(
     line: &'a str,
     markdown: bool,
     block_comment: bool,

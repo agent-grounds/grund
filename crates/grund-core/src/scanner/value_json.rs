@@ -1,7 +1,21 @@
-/// Discovery and one-read enrollment of home-derived JSON value sources
-/// (§FS-values.2.2, §AR-scanner.2.1, §AR-scanner.3).
+//! Discovery and one-read enrollment of home-derived JSON value sources
+//! (§FS-values.2.2, §AR-scanner.2.1, §AR-scanner.3).
 
-fn scan_value_json_sources(
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::json::{JsonNode, JsonReader};
+use super::tree::{ScanError, overlay_text};
+use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
+use crate::config::{Config, KindConfig};
+use crate::model::{DeclarationSource, Findings, TextOverlays, normalize_path_lexically};
+// §AR-system.4: three upward reads, through the crate root until their owners
+// are modules — two path keys of the checker's home rules, and the report's path
+// sort key from `output.rs`.
+use crate::{paths_same_location, physical_path_key, sort_path_key};
+
+pub(super) fn scan_value_json_sources(
     config: &Config,
     overlays: &TextOverlays,
     findings: &mut Findings,
@@ -32,12 +46,18 @@ fn scan_value_json_sources(
     grouped.sort_by_key(|(paths, _)| sort_path_key(&paths[0]));
     for (paths, owners) in grouped {
         let path = &paths[0];
-        let text = match paths.iter().find_map(|candidate| overlay_text(overlays, candidate)) {
+        let text = match paths
+            .iter()
+            .find_map(|candidate| overlay_text(overlays, candidate))
+        {
             Some(text) => text.to_string(),
             None => match fs::read_to_string(path) {
                 Ok(text) => text,
                 Err(error) => {
-                    errors.push((path.clone(), format!("could not read value JSON source: {error}")));
+                    errors.push((
+                        path.clone(),
+                        format!("could not read value JSON source: {error}"),
+                    ));
                     continue;
                 }
             },
@@ -65,13 +85,17 @@ fn scan_value_json_sources(
                 })
                 .collect::<Vec<_>>();
             for (id, declaration) in duplicated {
-                findings.declarations.entry(id).or_default().push(declaration);
+                findings
+                    .declarations
+                    .entry(id)
+                    .or_default()
+                    .push(declaration);
             }
         }
     }
 }
 
-fn value_json_sources<'a>(
+pub(super) fn value_json_sources<'a>(
     config: &'a Config,
     overlays: &TextOverlays,
 ) -> std::result::Result<Vec<(PathBuf, &'a KindConfig)>, (PathBuf, String)> {
@@ -99,7 +123,9 @@ fn value_json_sources<'a>(
             }
         }
         for path in overlays.keys() {
-            if path.parent().is_some_and(|parent| paths_same_location(parent, &folder))
+            if path
+                .parent()
+                .is_some_and(|parent| paths_same_location(parent, &folder))
                 && path.extension().and_then(|extension| extension.to_str()) == Some("json")
             {
                 sources.push((path.clone(), kind));
@@ -123,11 +149,25 @@ fn enroll_json_root(
 ) {
     let JsonNode::Object(members, span) = root else {
         let span = root.span();
-        push_json_invalid(findings, None, path, text, span, "value JSON root must be an object");
+        push_json_invalid(
+            findings,
+            None,
+            path,
+            text,
+            span,
+            "value JSON root must be an object",
+        );
         return;
     };
     if members.is_empty() {
-        push_json_invalid(findings, None, path, text, span, "value JSON object must not be empty");
+        push_json_invalid(
+            findings,
+            None,
+            path,
+            text,
+            span,
+            "value JSON object must not be empty",
+        );
     }
     for member in members {
         enroll_json_member(config, path, owners, text, member, findings);

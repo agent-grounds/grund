@@ -4,18 +4,18 @@ use regex::Regex;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::id_format::{
-    IdElement, ShorthandGrammar, id_pattern, parse_id_format, shorthand_elements,
+    IdElement, ShorthandGrammar, id_pattern, literal_after_kind_placeholder, parse_id_format,
+    shorthand_elements,
 };
 use super::id_rules::{
     id_grammar_literal_slash_error, id_grammar_pattern_slash_error, section_separator_slash_error,
 };
-use super::near_miss::NearMissGrammar;
+use super::near_miss::{LegacyGrammar, NearMissGrammar};
 use super::source_line::comment_prefix_regex;
 use crate::model::Id;
-// §AR-system.4: `KindConfig` is config's record, and `LegacyGrammar` and
-// `literal_after_kind_placeholder` are this component's own parked in scanner
-// files by the flat layout; all three stay reachable through the crate root.
-use crate::{KindConfig, LegacyGrammar, literal_after_kind_placeholder};
+// §AR-system.4: `KindConfig` is config's record, above this component and
+// reachable through the crate root until the glob goes.
+use crate::KindConfig;
 
 const NUMERIC_SECTION_PATTERN: &str = r"\d+(?:\.\d+)*";
 const NAMED_SECTION_PATTERN: &str = r"[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*(?:\.\d+)*";

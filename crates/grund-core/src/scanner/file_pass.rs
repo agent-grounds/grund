@@ -1,58 +1,76 @@
-/// A dotfile or dot-directory — same convention used by the scanner walker
-/// and by `expand_workspace_members` to skip `.git`, `.agents`, `.cache`, etc.
-const PARALLEL_SCAN_MIN_FILES: usize = 256;
+//! The per-file scan (§AR-scanner.2): one line-by-line pass over one file's
+//! text, producing every declaration, section, citation and value candidate in
+//! it. Named for what it is rather than for the component, because the component
+//! is the directory now (§AR-core-module-layout.1): `walk.rs` is the directory
+//! traversal of §AR-scanner.1 and this is the state machine it hands each file
+//! to, and the two meet only at the file list one passes the other.
+//!
+//! The eight pieces of mutable state advance together per line, which is why the
+//! loop is not broken apart; what is not that state has left for a sibling, and
+//! `docs/file-size-human-exceptions.toml` records what is still to go.
 
-fn is_hidden(path: &Path) -> bool {
-    path.file_name()
-        .and_then(|n| n.to_str())
-        .is_some_and(|n| n.starts_with('.'))
-}
+use anyhow::Result;
+use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
+use std::path::{Path, PathBuf};
 
-/// Whether a file is one the scanner reads: a non-hidden name with an extension in
-/// `[scan] extensions` (§FS-config.3.5, §AR-scanner.1).
-fn is_scannable(path: &Path, config: &Config) -> bool {
-    if is_hidden(path) {
-        return false;
-    }
-    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-    config.extensions.iter().any(|allowed| allowed == ext)
-}
+use super::citations::{
+    scan_escaped_citations, scan_fallback_qualified_citations, scan_legacy_citation_candidates,
+    scan_workspace_qualified_pass,
+};
+use super::context::{
+    assign_declaration_bodies, classify_citation_sources, inline_citation_sites,
+    markdown_heading_level, retain_in_body_sections,
+};
+use super::embedded_value_context::{
+    EMBEDDED_VALUE_MARKER, authored_heading_level, embedded_value_marker_for_line,
+    push_invalid_embedded_marker,
+};
+use super::embedded_values::validate_embedded_value_roots;
+use super::tree::heading_level_for_line;
+use super::units::{heading_text, record_file_structure};
+use super::unmarked_headings::assign_unmarked_heading_owners;
+use super::value_context::recognized_source_value_contexts;
+use super::values::{scan_value_bindings, validate_markdown_value_declarations};
+use crate::config::{Config, kind_uses_values};
+use crate::grammar::{
+    DocstringContent, PythonDocstringScanState, STUB_LINK_HEADING,
+    bare_token_in_never_rewrite_zone, declaration_captures, markdown_fence_delimiter,
+    near_miss_heading, parse_id, qualified_suppressed_in_source, scan_shorthand_citations,
+    section_path, source_scan_line,
+};
+use crate::model::{
+    Citation, Declaration, DeclarationSource, EmbeddedValueRoot, Findings, Id, InlineCitationSite,
+    NearMissHeading, SectionInfo, UnmarkedHeadingCandidate,
+};
+use crate::workspace::WorkspaceCitationTarget;
+// §AR-system.4: one upward read, through the crate root until its owner is a
+// module — the section-heading anchor text a `fmt` link target is slugged from.
+use crate::section_anchor_text;
 
-struct CitationLine<'a> {
-    scan_line: &'a str,
+pub(crate) struct CitationLine<'a> {
+    pub(crate) scan_line: &'a str,
     /// The untransformed source line. `scan_line` may be a *slice* of it — a
     /// Python docstring's interior with the quotes stripped (§AR-scanner.4) — so a
     /// position on this line and a position on that one are not the same number.
     /// Every never-rewrite question is asked at a **raw-line** offset and routed to
     /// the right text by `docstring` below (§FS-fmt.2.3.1).
-    raw_line: &'a str,
+    pub(crate) raw_line: &'a str,
     /// Where this line's Python docstring content sits in `raw_line`
     /// (§FS-fmt.2.3.1) — the view every never-rewrite question is asked through,
     /// so a docstring line is judged on the text `fmt` reads there too.
-    docstring: DocstringContent<'a>,
-    column_offset: usize,
-    lineno: usize,
-    path: &'a Path,
-    config: &'a Config,
-    is_md: bool,
+    pub(crate) docstring: DocstringContent<'a>,
+    pub(crate) column_offset: usize,
+    pub(crate) lineno: usize,
+    pub(crate) path: &'a Path,
+    pub(crate) config: &'a Config,
+    pub(crate) is_md: bool,
     /// The bytes on this physical source line that the scanner's shared block
     /// walk recognizes as comment content. Markdown and Python docstrings use
     /// their already-normalized `scan_line` instead (§FS-values.3.2).
-    value_comment_range: Option<(usize, usize)>,
-    inline_sites: &'a BTreeMap<usize, InlineCitationSite>,
-    inline_block_lines: &'a BTreeMap<usize, std::sync::Arc<[String]>>,
-}
-
-/// §AR-scanner.2.3: the qualified `alias/ID` form collides with a path, module
-/// reference, or URL, so in a **source** file a marked qualified citation whose
-/// start column falls inside an inline-code span or a string literal is not a
-/// citation (the same path-collision caution as §AR-workspace.3.1). Markdown has
-/// no string literals and its inline code is prose formatting, so a marked
-/// qualified citation there is always a citation. Shared by every detection pass
-/// so the rule lives in one place; returns whether the citation at `pos` must be
-/// suppressed.
-fn qualified_suppressed_in_source(scan_line: &str, is_md: bool, pos: usize) -> bool {
-    !is_md && (is_inside_inline_code(scan_line, pos) || is_inside_string_literal(scan_line, pos))
+    pub(crate) value_comment_range: Option<(usize, usize)>,
+    pub(crate) inline_sites: &'a BTreeMap<usize, InlineCitationSite>,
+    pub(crate) inline_block_lines: &'a BTreeMap<usize, std::sync::Arc<[String]>>,
 }
 
 /// The per-file scan (§AR-scanner.2): line by line, find declaration headings
@@ -76,7 +94,7 @@ fn qualified_suppressed_in_source(scan_line: &str, is_md: bool, pos: usize) -> b
 /// one disk read for both unqualified and qualified citations
 /// (§AR-workspace.5.1). An empty slice falls back to the loose qualified
 /// parser used by member-local scans (§FS-workspace.5).
-fn scan_file(
+pub(super) fn scan_file(
     path: &Path,
     config: &Config,
     findings: &mut Findings,
@@ -106,7 +124,7 @@ fn scan_file(
 /// Text section headings also require the spans, because the shared coordinate
 /// catalog is body-local (§FS-show.2.1.2). `scan_one_file` gives this call a fresh
 /// `Findings`, so `findings` holds exactly this file's records.
-fn scan_file_text(
+pub(super) fn scan_file_text(
     path: &Path,
     text: &str,
     config: &Config,
@@ -172,7 +190,8 @@ fn scan_file_text(
             source_value_context,
         );
 
-        if let Some(caps) = declaration_captures(&config.grammar, scan_line, scan.in_py_docstring, is_md)
+        if let Some(caps) =
+            declaration_captures(&config.grammar, scan_line, scan.in_py_docstring, is_md)
             && let Some(id) = parse_id(&caps, &config.grammar)
         {
             if let Some(prev) = current.take() {
@@ -203,7 +222,11 @@ fn scan_file_text(
                 id,
                 file: path.to_path_buf(),
                 line: lineno,
-                heading_level: heading_level_for_line(scan_line, is_md || scan.in_py_docstring, &caps),
+                heading_level: heading_level_for_line(
+                    scan_line,
+                    is_md || scan.in_py_docstring,
+                    &caps,
+                ),
                 sections: BTreeMap::new(),
                 duplicate_sections: Vec::new(),
                 is_stub,
@@ -251,7 +274,10 @@ fn scan_file_text(
                 text: text.to_string(),
                 format: format.to_string(),
             });
-            let token_end = scan_line.find(text).map(|start| start + text.len()).unwrap_or(0);
+            let token_end = scan_line
+                .find(text)
+                .map(|start| start + text.len())
+                .unwrap_or(0);
             let tail = &scan_line[token_end..];
             let mut is_stub = false;
             let mut defined_in = None;
@@ -301,16 +327,14 @@ fn scan_file_text(
         }
 
         let section_caps = config.grammar.section_re.captures(scan_line);
-        let recognized_section = section_caps
-            .as_ref()
-            .and_then(section_path)
-            .is_some();
+        let recognized_section = section_caps.as_ref().and_then(section_path).is_some();
         let mut embedded_marker_attached = false;
         if let Some(caps) = section_caps
             && let Some(decl) = current.as_mut()
             && let Some(sec) = section_path(&caps)
         {
-            let heading_level = heading_level_for_line(scan_line, is_md || scan.in_py_docstring, &caps);
+            let heading_level =
+                heading_level_for_line(scan_line, is_md || scan.in_py_docstring, &caps);
             if heading_level > decl.heading_level {
                 let section_path = sec.to_string();
                 let numeric = sec
@@ -408,7 +432,10 @@ fn scan_file_text(
             // §FS-check.1.1 / §AR-scanner.2.3: a reserved `number.name`
             // candidate is consumed as one rejected token, never shortened to
             // the valid numeric prefix the regex necessarily matched.
-            if config.grammar.has_reserved_named_tail(scan_line, full.end()) {
+            if config
+                .grammar
+                .has_reserved_named_tail(scan_line, full.end())
+            {
                 continue;
             }
             // In workspace mode, the qualified branch is parsed below with the
@@ -438,7 +465,9 @@ fn scan_file_text(
             if !has_marker && bare_token_in_never_rewrite_zone(scan_line, is_md, full.start()) {
                 continue;
             }
-            let Some(id) = parse_id(&caps, &config.grammar) else { continue };
+            let Some(id) = parse_id(&caps, &config.grammar) else {
+                continue;
+            };
             let start = if has_marker {
                 full.start().saturating_sub(config.marker.len())
             } else {
@@ -492,11 +521,7 @@ fn scan_file_text(
             inline_block_lines: &inline_block_lines,
         };
         if workspace_mode {
-            scan_workspace_qualified_pass(
-                &citation_line,
-                workspace_targets,
-                findings,
-            );
+            scan_workspace_qualified_pass(&citation_line, workspace_targets, findings);
         } else {
             // §AR-scanner.2.6: the fallback records what it claimed into the same
             // set, so the shorthand pass below can tell a qualified marker that
@@ -551,12 +576,16 @@ fn scan_file_text(
             .flatten()
             .any(|decl| kind_uses_values(config, &decl.id.kind));
     let has_unmarked_headings = !unmarked_heading_candidates.is_empty();
-    if classify
-        || has_text_sections
-        || has_value_declarations
-        || has_embedded_roots
-    {
-        assign_declaration_bodies(findings, is_md, is_py, config, &text, &md_headings, total_lines);
+    if classify || has_text_sections || has_value_declarations || has_embedded_roots {
+        assign_declaration_bodies(
+            findings,
+            is_md,
+            is_py,
+            config,
+            &text,
+            &md_headings,
+            total_lines,
+        );
     }
     if has_text_sections {
         retain_in_body_sections(findings);
