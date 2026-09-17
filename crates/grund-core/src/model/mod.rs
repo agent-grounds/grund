@@ -35,7 +35,7 @@ pub(crate) use records::{
     CODE_SOURCE_KIND, DEFAULT_GROUNDING_LEVEL, GROUNDING_LEVELS, LegacyCitationCandidate,
     ShowRenderMode, TextOverlays, WorkspaceCitationTarget, citing_kind_names,
     declared_homeless_kind, kind_prefixes, non_citable_kind_error, normalize_path_lexically,
-    parse_id, parse_id_arg, render_qualified_id, resolve_stub_target,
+    render_qualified_id, resolve_stub_target,
 };
 pub(crate) use report::{CheckReport, Diagnostic, Site};
 pub(crate) use values::{

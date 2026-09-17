@@ -1,3 +1,11 @@
+use super::compiled::QUALIFIED_CITATION_PREFIX;
+use super::id_format::parse_longest_id_prefix;
+use super::never_rewrite::{is_inside_inline_code, is_inside_string_literal};
+use crate::model::{Config, WorkspaceCitationTarget};
+// §AR-system.4: the loose qualified-ID prefix reader belongs to the scanner, one
+// component above, and stays reachable through the crate root until it moves.
+use crate::parse_loose_qualified_id_prefix;
+
 /// Every recognized citation token on one line, as byte ranges into it
 /// (§FS-check.1.1): the configured marker, `[reference] strict`, the
 /// string-literal exclusion, and workspace-qualified `§<alias>/<ID>` tokens
@@ -83,7 +91,10 @@ fn citation_token_ranges(
         let parsed = if workspace_targets.is_empty() {
             parse_loose_qualified_id_prefix(id_rest).map(|(_, _, len)| len)
         } else {
-            match workspace_targets.iter().find(|target| target.alias == alias) {
+            match workspace_targets
+                .iter()
+                .find(|target| target.alias == alias)
+            {
                 Some(target) => parse_longest_id_prefix(id_rest, &target.config.grammar),
                 None => workspace_targets
                     .iter()
@@ -101,7 +112,7 @@ fn citation_token_ranges(
 
 /// One line's citation tokens, sorted and deduplicated, so every reader of that
 /// line sees the same tokenization.
-fn line_citation_ranges(
+pub(crate) fn line_citation_ranges(
     line: &str,
     config: &Config,
     workspace_targets: &[WorkspaceCitationTarget],
@@ -117,7 +128,7 @@ fn line_citation_ranges(
 /// half — is dropped rather than reported at a shifted offset. The ranges arrive
 /// already sorted and deduplicated, so this is a translation, never a second
 /// reading of the line.
-fn content_citation_tokens(
+pub(super) fn content_citation_tokens(
     ranges: &[(usize, usize)],
     start: usize,
     end: usize,
@@ -129,7 +140,7 @@ fn content_citation_tokens(
         .collect()
 }
 
-fn remove_inline_citation_tokens(line: &str, ranges: &[(usize, usize)]) -> String {
+pub(super) fn remove_inline_citation_tokens(line: &str, ranges: &[(usize, usize)]) -> String {
     let mut out = String::with_capacity(line.len());
     let mut cursor = 0;
     let mut after_token = false;
@@ -159,7 +170,7 @@ fn is_citation_run_separator(gap: &str) -> bool {
         && gap.chars().all(|ch| ch == ',' || ch.is_whitespace())
 }
 
-fn strip_comment_tokens<'a>(line: &'a str, prefixes: &[&str]) -> &'a str {
+pub(crate) fn strip_comment_tokens<'a>(line: &'a str, prefixes: &[&str]) -> &'a str {
     let (start, end) = comment_content_range(line, prefixes);
     &line[start..end]
 }
@@ -174,7 +185,7 @@ fn strip_comment_tokens<'a>(line: &'a str, prefixes: &[&str]) -> &'a str {
 /// down: it is a pure function of the configured comment prefixes, so rebuilding
 /// and re-sorting it per line — twice per line, once the layout pass runs — bought
 /// nothing (§GOAL-fast-feedback).
-fn comment_content_range(line: &str, prefixes: &[&str]) -> (usize, usize) {
+pub(crate) fn comment_content_range(line: &str, prefixes: &[&str]) -> (usize, usize) {
     let body_start = line
         .char_indices()
         .find_map(|(idx, ch)| (!ch.is_whitespace()).then_some(idx))
@@ -205,7 +216,7 @@ fn comment_content_range(line: &str, prefixes: &[&str]) -> (usize, usize) {
     (offset, offset + rest.len())
 }
 
-fn comment_strip_prefixes(config: &Config) -> Vec<&str> {
+pub(crate) fn comment_strip_prefixes(config: &Config) -> Vec<&str> {
     let mut prefixes = vec!["/**", "/*", "*/", "\"\"\"", "'''"];
     for prefix in &config.comment_prefixes {
         if prefix == "//" {

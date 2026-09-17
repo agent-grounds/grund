@@ -832,3 +832,16 @@ fn citation_namespace_label(namespace: &NamespaceMatch) -> String {
 fn render_citation_target(target: &CitationTarget) -> String {
     format!("{}{}", citation_namespace_label(&target.namespace), target.kind)
 }
+
+/// The `[scan]` defaults a `Config` starts from (§FS-config.3.5): what a repo
+/// with no `include` walks, the extensions it reads, and the comment prefixes a
+/// declaration or an inline note may sit behind. Config defaults rather than
+/// grammar, so they live beside the reader that overrides them — the compiled
+/// grammar takes `comment_prefixes` as an argument and holds no opinion about
+/// what it should be (§AR-system.2.1, §AR-system.2.3).
+const DEFAULT_INCLUDE: &[&str] = &["requirements.md", "docs", "e2e", "src"];
+const DEFAULT_SCAN_EXTENSIONS: &[&str] = &[
+    "md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "swift", "scala",
+    "rb", "php", "cs", "lisp", "scm", "clj", "sql", "hs", "lhs", "lua", "ada", "adb", "ads",
+];
+const DEFAULT_COMMENT_PREFIXES: &[&str] = &["//", "#", ";", "--", "*", "/*"];

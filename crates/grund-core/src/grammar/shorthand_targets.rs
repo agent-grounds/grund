@@ -1,3 +1,11 @@
+use std::collections::BTreeMap;
+
+use super::shorthand::ShorthandIndex;
+use crate::model::{Config, Findings};
+// §AR-system.4: `WorkspaceContext` is the workspace component's, one above this
+// one, and stays reachable through the crate root until it moves.
+use crate::WorkspaceContext;
+
 /// Everything one `grund fmt` walk needs to expand a shorthand: this project's
 /// declaration index, plus one per workspace alias for the qualified form
 /// (§FS-fmt.2.4, §FS-workspace.8.5).
@@ -6,29 +14,28 @@
 /// scanned file, so resolving each against a linear scan of the declaration set
 /// is quadratic on exactly the tree this rewrite exists to clean up
 /// (§GOAL-fast-feedback).
-struct ShorthandTargets<'a> {
+pub(crate) struct ShorthandTargets<'a> {
     /// `None` until the walk has a declaration set — §FS-fmt.2.4 defers that scan
     /// until a shorthand is actually met, so a repo without one never pays for it.
-    local: Option<ShorthandIndex<'a>>,
-    by_alias: BTreeMap<&'a str, ShorthandAliasTarget<'a>>,
+    pub(crate) local: Option<ShorthandIndex<'a>>,
+    pub(crate) by_alias: BTreeMap<&'a str, ShorthandAliasTarget<'a>>,
 }
 
 /// One aliased project's half of `ShorthandTargets`: its declarations, and the
 /// config the canonical ID renders under (a workspace may mix `[id] format`s).
-struct ShorthandAliasTarget<'a> {
-    config: &'a Config,
-    index: ShorthandIndex<'a>,
+pub(crate) struct ShorthandAliasTarget<'a> {
+    pub(crate) config: &'a Config,
+    pub(crate) index: ShorthandIndex<'a>,
 }
 
 impl<'a> ShorthandTargets<'a> {
-    fn new(
+    pub(crate) fn new(
         config: &Config,
         findings: Option<&'a Findings>,
         workspace: Option<&'a WorkspaceContext>,
     ) -> Self {
         Self {
-            local: findings
-                .map(|found| ShorthandIndex::build(config, found.declarations.keys())),
+            local: findings.map(|found| ShorthandIndex::build(config, found.declarations.keys())),
             by_alias: workspace
                 .map(|workspace| {
                     workspace

@@ -1,3 +1,8 @@
+use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_line};
+// §AR-system.4: `CitationLine` is the scanner's per-line record and `is_escaped`
+// a config-parser helper; both stay reachable through the crate root.
+use crate::{CitationLine, is_escaped};
+
 /// The never-rewrite predicates shared by the scanner (§AR-scanner.2.3), `fmt`
 /// (§FS-fmt.2.3), and the LSP on-type path (§FS-lsp.1.4): where a citation-shaped
 /// token sits in a context none of the three may touch — a string literal, an
@@ -11,7 +16,7 @@
 /// to agree: `fmt` is forbidden to canonicalize a shorthand here, so
 /// §FS-check.3.13 must not demand it here either — an error whose named fix the
 /// tool refuses to perform is an error a repository can never clear.
-fn never_rewrite_context(line: &str, is_md: bool, marker_start: usize) -> bool {
+pub(crate) fn never_rewrite_context(line: &str, is_md: bool, marker_start: usize) -> bool {
     if is_md {
         is_inside_inline_code(line, marker_start)
             || is_inside_markdown_link_destination(line, marker_start)
@@ -33,7 +38,7 @@ fn never_rewrite_context(line: &str, is_md: bool, marker_start: usize) -> bool {
 /// §AR-scanner.2.6's "one predicate serving both" true now that the predicate has
 /// two texts to choose between.
 #[derive(Clone, Copy, Default)]
-struct DocstringContent<'a> {
+pub(crate) struct DocstringContent<'a> {
     span: Option<(usize, &'a str)>,
 }
 
@@ -41,7 +46,7 @@ impl<'a> DocstringContent<'a> {
     /// The content span of a line the scanner has already normalized
     /// (§AR-scanner.4). `SourceScanLine::text` is a slice of the raw line starting
     /// at `column_offset`, which is exactly the pair this view is.
-    fn of(scan: &SourceScanLine<'a>) -> Self {
+    pub(crate) fn of(scan: &SourceScanLine<'a>) -> Self {
         Self {
             span: scan
                 .in_py_docstring
@@ -51,12 +56,12 @@ impl<'a> DocstringContent<'a> {
 
     /// The text a whole-line reader sees here: the docstring's content on a
     /// docstring line, the raw line everywhere else (§AR-scanner.4).
-    fn text_of(self, raw_line: &'a str) -> &'a str {
+    pub(crate) fn text_of(self, raw_line: &'a str) -> &'a str {
         self.span.map_or(raw_line, |(_, text)| text)
     }
 
     /// Whether this line is docstring content at all.
-    fn is_docstring(self) -> bool {
+    pub(crate) fn is_docstring(self) -> bool {
         self.span.is_some()
     }
 
@@ -78,7 +83,7 @@ impl<'a> DocstringContent<'a> {
 /// describes, at the raw-line offset `marker_start` (§FS-fmt.2.3.1). Every surface
 /// that asks "may `fmt` rewrite here?" goes through this, so all three reach one
 /// verdict per site.
-fn never_rewrite_context_in(
+pub(crate) fn never_rewrite_context_in(
     docstring: DocstringContent<'_>,
     line: &str,
     is_md: bool,
@@ -93,7 +98,7 @@ fn never_rewrite_context_in(
 /// they are scanning (§FS-fmt.2.3, §FS-check.3.13). One place asks it, so the
 /// qualified pass and the unqualified one can never reach different verdicts about
 /// one site; the recorded column stays a raw-file column either way.
-fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> bool {
+pub(crate) fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> bool {
     !never_rewrite_context_in(
         line.docstring,
         line.raw_line,
@@ -105,7 +110,7 @@ fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> 
 /// `is_inside_string_literal` asked of the same view (§FS-fmt.2.3.1) — what the
 /// two `fmt` passes with no Markdown branch of their own, `replace_trigger` and
 /// `add_markers`, use.
-fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos: usize) -> bool {
+pub(crate) fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos: usize) -> bool {
     let (text, pos) = docstring.view(line, pos);
     is_inside_string_literal(text, pos)
 }
@@ -120,7 +125,7 @@ fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos: usize) ->
 /// content's *start* never moves — only indentation and the delimiter precede it —
 /// so replaying `source_scan_line` from the entry state is exact.
 #[derive(Clone, Copy, Default)]
-struct DocstringCursor {
+pub(crate) struct DocstringCursor {
     /// `true` only for a `.py` file in a project that scans docstrings; otherwise
     /// every line yields an empty view and no work is done.
     scanning: bool,
@@ -128,7 +133,7 @@ struct DocstringCursor {
 }
 
 impl DocstringCursor {
-    fn new(is_py: bool, docstring_python: bool) -> Self {
+    pub(crate) fn new(is_py: bool, docstring_python: bool) -> Self {
         Self {
             scanning: is_py && docstring_python,
             quote: None,
@@ -136,7 +141,7 @@ impl DocstringCursor {
     }
 
     /// Advance over one raw line, returning its content view.
-    fn advance<'a>(&mut self, line: &'a str) -> DocstringContent<'a> {
+    pub(crate) fn advance<'a>(&mut self, line: &'a str) -> DocstringContent<'a> {
         if !self.scanning {
             return DocstringContent::default();
         }
@@ -148,7 +153,7 @@ impl DocstringCursor {
 
     /// The content view of `line` read from this cursor's *current* state, leaving
     /// the cursor where it is — the per-stage replay `fmt` needs.
-    fn peek<'a>(self, line: &'a str) -> DocstringContent<'a> {
+    pub(crate) fn peek<'a>(self, line: &'a str) -> DocstringContent<'a> {
         let mut probe = self;
         probe.advance(line)
     }
@@ -163,7 +168,7 @@ impl DocstringCursor {
 /// are prose formatting rather than a rewrite hazard, so a bare token there stays
 /// a citation off strict mode — this predicate is narrower than
 /// `never_rewrite_context`, which also withholds the marked case from code.
-fn bare_token_in_never_rewrite_zone(line: &str, is_md: bool, pos: usize) -> bool {
+pub(crate) fn bare_token_in_never_rewrite_zone(line: &str, is_md: bool, pos: usize) -> bool {
     if is_md {
         is_inside_markdown_link_destination(line, pos)
     } else {
@@ -175,7 +180,7 @@ fn bare_token_in_never_rewrite_zone(line: &str, is_md: bool, pos: usize) -> bool
 /// this line — the source-code exclusion that keeps an ID printed in a string
 /// from being treated as a citation by the scanner or rewritten by `fmt`
 /// (§FS-fmt.2.3.1).
-fn is_inside_string_literal(line: &str, pos: usize) -> bool {
+pub(crate) fn is_inside_string_literal(line: &str, pos: usize) -> bool {
     let bytes = line.as_bytes();
     let mut single = false;
     let mut double = false;
@@ -196,7 +201,7 @@ fn is_inside_string_literal(line: &str, pos: usize) -> bool {
 /// Whether byte offset `pos` falls inside a `` `…` `` inline-code span in Markdown
 /// — citations there are illustrative, not real, so `fmt` leaves them alone
 /// (§FS-fmt.2.3, §FS-fmt.6.4).
-fn is_inside_inline_code(line: &str, pos: usize) -> bool {
+pub(crate) fn is_inside_inline_code(line: &str, pos: usize) -> bool {
     let bytes = line.as_bytes();
     let mut in_code = false;
     let mut i = 0;
@@ -213,7 +218,7 @@ fn is_inside_inline_code(line: &str, pos: usize) -> bool {
 /// Markdown link (`[text](destination)`). URLs are presentation syntax, not
 /// citations, so `fmt --marker` must not rewrite ID-shaped file names there
 /// (§FS-fmt.2.3).
-fn is_inside_markdown_link_destination(line: &str, pos: usize) -> bool {
+pub(crate) fn is_inside_markdown_link_destination(line: &str, pos: usize) -> bool {
     let bytes = line.as_bytes();
     let mut i = 0;
     while i + 1 < bytes.len() {

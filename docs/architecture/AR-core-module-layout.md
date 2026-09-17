@@ -34,7 +34,7 @@ A file belongs to the category it sits under where that category is a module dir
 | **init** | `init` | [§AR-system.2.8](README.md#28-writers) |
 | **completions** | `completions` | [§AR-system.2.7](README.md#27-queries) |
 | **api** | `api` | [§AR-system.2.9](README.md#29-api) |
-| **grammar** | `grammar`, `markdown_fence`, `comment_line`, `comment_block`, `shorthand`, `inline_note_layout`, `never_rewrite` | [§AR-system.2.1](README.md#21-grammar) |
+| **grammar** | `grammar/` | [§AR-system.2.1](README.md#21-grammar) |
 | **workspace** | `workspace` | [§AR-system.2.4](README.md#24-workspace) |
 | **integrations** | `integrations`, `fetch`, `fetch_write` | [§AR-system.2.8](README.md#28-writers) |
 | **lsp** | `lsp`, `on_type` | [§AR-system.2.7](README.md#27-queries) |

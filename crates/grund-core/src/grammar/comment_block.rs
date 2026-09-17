@@ -1,3 +1,11 @@
+use std::path::Path;
+
+use super::near_miss::declaration_id_on_line;
+use super::source_line::{
+    PythonDocstringScanState, SourceScanLine, python_docstring_quote, source_scan_line,
+};
+use crate::model::Config;
+
 /// One comment block, classified: what opens it, where a docstring closes it,
 /// whether it declares an ID, and whether the language it is written in calls it
 /// documentation (§AR-scanner.4, §FS-inline-citation-style.1.1).
@@ -10,7 +18,7 @@
 /// questions about the same block: the one that bounds a declaration body, and
 /// the one that decides whether a block is an inline citation site.
 #[derive(Clone)]
-enum CommentBlockKind {
+pub(crate) enum CommentBlockKind {
     Line(String),
     Block,
     PythonDocstring,
@@ -57,7 +65,7 @@ fn line_comment_marker(trimmed: &str, config: &Config) -> Option<String> {
 /// (§AR-scanner.2.7). They asked the same question three times, and a block
 /// boundary that answered differently for one of them would put a declaration,
 /// its note budget, and its grounding in three different places.
-fn comment_blocks(
+pub(crate) fn comment_blocks(
     lines: &[&str],
     is_py: bool,
     config: &Config,
@@ -117,7 +125,7 @@ fn python_docstring_closes(line: &str, quote: &str, is_opening_line: bool) -> bo
     search.contains(quote)
 }
 
-fn block_declares_id(lines: &[&str], in_py_docstring: bool, config: &Config) -> bool {
+pub(crate) fn block_declares_id(lines: &[&str], in_py_docstring: bool, config: &Config) -> bool {
     let mut py_docstring = PythonDocstringScanState::default();
     lines.iter().any(|line| {
         let scan = if in_py_docstring {
@@ -147,7 +155,7 @@ fn block_declares_id(lines: &[&str], in_py_docstring: bool, config: &Config) -> 
 /// spells it like any other comment, so where it sits decides. Neither parses
 /// the host language (§FS-non-goals.3).
 #[derive(Clone, Copy)]
-enum DocCommentRule {
+pub(crate) enum DocCommentRule {
     /// The C family: a `///` or `//!` line run, a `/**` or `/*!` block.
     CFamily,
     /// Python: a `"""`/`'''` docstring and nothing else — under PEP 257 a `#`
@@ -174,7 +182,7 @@ enum DocCommentRule {
 /// Ruby `private def` does not. A miss only means a block is measured that need
 /// not be; it never changes what a citation resolves to.
 #[derive(Clone, Copy)]
-enum DefinitionStart {
+pub(crate) enum DefinitionStart {
     /// Keywords, each matched at an identifier boundary so `func(` and
     /// `func main` open a definition while `functional` does not.
     Keywords(&'static [&'static str]),
@@ -200,7 +208,7 @@ const RUBY_DEFINITION_STARTERS: &[&str] = &["class", "module", "def"];
 /// (§FS-non-goals.13). An extension this table does not name has no doc notion,
 /// so every one of its comment blocks stays an inline site and nothing a tree
 /// already passes changes.
-fn doc_comment_rule(path: &Path) -> DocCommentRule {
+pub(crate) fn doc_comment_rule(path: &Path) -> DocCommentRule {
     let Some(extension) = path.extension().and_then(|ext| ext.to_str()) else {
         return DocCommentRule::None;
     };
@@ -238,7 +246,7 @@ fn doc_comment_rule(path: &Path) -> DocCommentRule {
 /// javac's `-Xlint:dangling-doc-comments` and rustc's unused-doc-comment lint
 /// already warn about — is a doc comment by its marker here too, and is not
 /// measured. The language's own lint is the tool for that mistake.
-fn block_is_doc_comment(
+pub(crate) fn block_is_doc_comment(
     rule: DocCommentRule,
     kind: &CommentBlockKind,
     block: &[&str],
@@ -265,8 +273,7 @@ fn block_is_doc_comment(
         DocCommentRule::Haddock => haddock_block_opens(first),
         DocCommentRule::Roxygen => first.starts_with("#'"),
         DocCommentRule::Position(start) => {
-            is_leading
-                || next_line.is_some_and(|line| definition_opens(start, line.trim_start()))
+            is_leading || next_line.is_some_and(|line| definition_opens(start, line.trim_start()))
         }
         DocCommentRule::None => false,
     }
@@ -355,7 +362,7 @@ fn shell_identifier_len(line: &str) -> usize {
 /// One scan of the file, taken only where a position language will ask
 /// (§GOAL-fast-feedback), rather than a walk back over every earlier line once
 /// per block.
-fn first_content_line(lines: &[&str]) -> usize {
+pub(crate) fn first_content_line(lines: &[&str]) -> usize {
     lines
         .iter()
         .enumerate()

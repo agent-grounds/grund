@@ -6,7 +6,7 @@
 /// Remembering both fields prevents a tilde run or a shorter backtick run from
 /// ending a fence it did not open.
 #[derive(Clone, Copy)]
-struct MarkdownFence {
+pub(crate) struct MarkdownFence {
     byte: u8,
     len: usize,
 }
@@ -15,7 +15,7 @@ struct MarkdownFence {
 /// this line is the opener or closer itself (§FS-check.1.1). Scanning,
 /// formatting, on-type rewrites, and body rendering share this state machine so
 /// every surface agrees on which lines are examples rather than live text.
-fn markdown_fence_delimiter(open: &mut Option<MarkdownFence>, line: &str) -> bool {
+pub(crate) fn markdown_fence_delimiter(open: &mut Option<MarkdownFence>, line: &str) -> bool {
     let bytes = line.as_bytes();
     let indent = bytes.iter().take_while(|byte| **byte == b' ').count();
     if indent > 3 || indent == bytes.len() {

@@ -1,3 +1,18 @@
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
+
+use super::comment_line::{
+    comment_content_range, comment_strip_prefixes, content_citation_tokens, line_citation_ranges,
+    remove_inline_citation_tokens, strip_comment_tokens,
+};
+use crate::model::{
+    CheckReport, Citation, Config, Diagnostic, Findings, InlineCitationSite,
+    WorkspaceCitationTarget,
+};
+// §AR-system.4: `plural` is a message helper of the writers component above,
+// reachable through the crate root until it moves.
+use crate::plural;
+
 /// The layouts `[reference] inline_note_layout` selects, as the two dimensions a
 /// value picks: where the citation run sits on the line, and what separates it
 /// from the note (§FS-inline-citation-style.3.3). Only `citation-first-colon`
@@ -20,7 +35,7 @@
 /// its content and its citation tokens is the same question for note presence and
 /// for layout, and for the scanner walk that asked it first.
 #[derive(Clone, Copy, Eq, PartialEq)]
-enum InlineNoteLayout {
+pub(crate) enum InlineNoteLayout {
     /// `any`: no constraint, and no line is ever classified.
     Any,
     /// The line opens with its citation run, then `delimiter`, then the note.
@@ -31,7 +46,7 @@ impl InlineNoteLayout {
     /// An unrecognized value cannot reach here — `[reference] inline_note_layout`
     /// is a closed enum validated on load (§FS-inline-citation-style.2.2) — so an
     /// unknown spelling falls back to the inert layout rather than inventing one.
-    fn from_config(config: &Config) -> Self {
+    pub(crate) fn from_config(config: &Config) -> Self {
         match config.inline_note_layout.as_str() {
             "citation-first-colon" => Self::CitationFirst { delimiter: ':' },
             _ => Self::Any,
@@ -47,12 +62,12 @@ impl InlineNoteLayout {
 /// (§FS-inline-citation-style.2.2); this is what keeps the two halves agreeing
 /// anyway, for a `Config` built in memory.
 #[derive(Clone, Copy, Eq, PartialEq)]
-enum LayoutChannel {
+pub(crate) enum LayoutChannel {
     Warn,
     Error,
 }
 
-fn layout_channel(config: &Config) -> Option<LayoutChannel> {
+pub(crate) fn layout_channel(config: &Config) -> Option<LayoutChannel> {
     match config.inline_note_layout_check.as_str() {
         "warn" => Some(LayoutChannel::Warn),
         "error" => Some(LayoutChannel::Error),
@@ -66,7 +81,7 @@ fn layout_channel(config: &Config) -> Option<LayoutChannel> {
 /// line is looked at — the default `any`, a layout left at `off`, and
 /// `citation-only` each cost this comparison and nothing else
 /// (§GOAL-fast-feedback).
-fn layout_pass_enabled(config: &Config) -> bool {
+pub(crate) fn layout_pass_enabled(config: &Config) -> bool {
     InlineNoteLayout::from_config(config) != InlineNoteLayout::Any
         && config.inline_style != "citation-only"
         && layout_channel(config).is_some()
@@ -88,7 +103,7 @@ const CITATION_RUN_SEPARATOR: &str = ", ";
 /// citation opens the note and is always judged; a later one is judged only when
 /// it *opens* with a citation, since a line that opens with prose and names an ID
 /// further along is the continuation of a note that already opened correctly.
-fn inline_layout_violations(
+pub(crate) fn inline_layout_violations(
     block: &mut BlockCitations<'_>,
     prefixes: &[&str],
     first_line: usize,
@@ -122,7 +137,7 @@ fn inline_layout_violations(
 /// (§FS-inline-citation-style.3.3, rule 5), translated rather than re-tokenized
 /// in the stripped copy. `None` when no citation falls inside the window, which
 /// is rule 1's unconstrained line.
-fn line_layout_view<'a>(
+pub(crate) fn line_layout_view<'a>(
     line: &'a str,
     ranges: &[(usize, usize)],
     prefixes: &[&str],
@@ -135,7 +150,11 @@ fn line_layout_view<'a>(
 
 /// The form itself: `L <delimiter> ( W T | ε )` over one line's content
 /// (§FS-inline-citation-style.3.3).
-fn content_conforms(layout: InlineNoteLayout, content: &str, tokens: &[(usize, usize)]) -> bool {
+pub(crate) fn content_conforms(
+    layout: InlineNoteLayout,
+    content: &str,
+    tokens: &[(usize, usize)],
+) -> bool {
     let InlineNoteLayout::CitationFirst { delimiter } = layout else {
         return true;
     };
@@ -217,7 +236,7 @@ fn citation_run_end(content: &str, tokens: &[(usize, usize)]) -> Option<usize> {
 /// none does, which is every default-configured tree, the note walk reads each
 /// line once and keeps nothing, so the memo is never allocated
 /// (§GOAL-fast-feedback).
-fn inline_note_verdicts(
+pub(crate) fn inline_note_verdicts(
     lines: &[&str],
     first_line: usize,
     config: &Config,
@@ -246,15 +265,15 @@ fn inline_note_verdicts(
 /// is tokenized until a pass actually looks at it, so a block the note-presence
 /// walk leaves early tokenizes only the lines that were read and leaves the rest
 /// of the memo empty (§GOAL-fast-feedback).
-struct BlockCitations<'a> {
-    lines: &'a [&'a str],
-    config: &'a Config,
-    workspace_targets: &'a [WorkspaceCitationTarget],
-    ranges: Vec<Option<Vec<(usize, usize)>>>,
+pub(crate) struct BlockCitations<'a> {
+    pub(crate) lines: &'a [&'a str],
+    pub(crate) config: &'a Config,
+    pub(crate) workspace_targets: &'a [WorkspaceCitationTarget],
+    pub(crate) ranges: Vec<Option<Vec<(usize, usize)>>>,
 }
 
 impl<'a> BlockCitations<'a> {
-    fn new(
+    pub(crate) fn new(
         lines: &'a [&'a str],
         config: &'a Config,
         workspace_targets: &'a [WorkspaceCitationTarget],
@@ -286,7 +305,7 @@ impl<'a> BlockCitations<'a> {
 /// neither a comment token nor part of a citation (§FS-inline-citation-style.2.3).
 /// The walk stops at the first line that says something, so the block is read only
 /// as far as the answer needs it.
-fn block_has_inline_note(
+pub(crate) fn block_has_inline_note(
     lines: &[&str],
     config: &Config,
     workspace_targets: &[WorkspaceCitationTarget],
@@ -300,7 +319,10 @@ fn block_has_inline_note(
 
 /// The same walk where a layout pass will read these lines again, so each
 /// tokenization is kept rather than dropped.
-fn block_has_inline_note_memoized(block: &mut BlockCitations<'_>, prefixes: &[&str]) -> bool {
+pub(crate) fn block_has_inline_note_memoized(
+    block: &mut BlockCitations<'_>,
+    prefixes: &[&str],
+) -> bool {
     (0..block.len()).any(|index| {
         let (line, ranges) = block.line(index);
         line_says_something(line, ranges, prefixes)
@@ -309,7 +331,11 @@ fn block_has_inline_note_memoized(block: &mut BlockCitations<'_>, prefixes: &[&s
 
 /// Whether one line says anything once its comment tokens and its citations are
 /// taken out of it (§FS-inline-citation-style.2.3).
-fn line_says_something(line: &str, ranges: &[(usize, usize)], prefixes: &[&str]) -> bool {
+pub(crate) fn line_says_something(
+    line: &str,
+    ranges: &[(usize, usize)],
+    prefixes: &[&str],
+) -> bool {
     let tokenless = remove_inline_citation_tokens(line, ranges);
     !strip_comment_tokens(&tokenless, prefixes).trim().is_empty()
 }
@@ -361,7 +387,11 @@ const BLOCK_SPLIT_CLAUSE: &str = "; a blank line splits a note, an empty comment
 /// verdict are read off the site the scanner recorded, and so are the per-line
 /// layout deviations, so nothing here re-reads a file
 /// (§FS-inline-citation-style.4).
-fn check_inline_citation_style(findings: &Findings, config: &Config, report: &mut CheckReport) {
+pub(crate) fn check_inline_citation_style(
+    findings: &Findings,
+    config: &Config,
+    report: &mut CheckReport,
+) {
     // A site is identified by the file and the line it opens on — two blocks in
     // one file cannot share an opener — so the key stays two cheap fields rather
     // than a clone of the whole recorded site.
@@ -499,7 +529,7 @@ fn layout_violation_message(config: &Config) -> String {
 /// Empty under `any`, and the same at every `inline_note_layout_check` — the
 /// house style is what the agent is asked to write, and the gate it is measured
 /// by is not an instruction (§DF-inline-note-layout.2.1).
-fn inline_note_layout_sentence(config: &Config) -> String {
+pub(crate) fn inline_note_layout_sentence(config: &Config) -> String {
     let marker = &config.marker;
     match config.inline_note_layout.as_str() {
         "citation-first-colon" => format!(

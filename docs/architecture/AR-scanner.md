@@ -301,7 +301,7 @@ Matched by the matching stub `docs/architecture/AR-<event-bus>.md`:
 
 ### 4.2 Doc comment or inline comment
 
-The block classifiers above answer a second question, for the inline citation sites of §3: is this block a **doc comment** — documentation of the definition below it, or of the file — or an **inline comment**? Only the second is a site ([§FS-inline-citation-style.1.1](../functional-spec/FS-inline-citation-style.md#11-doc-comments-are-not-sites)). The classifier lives in `crates/grund-core/src/comment_block.rs`, beside `CommentBlockKind` and the block-boundary helpers the declaration pass already shares, and it is asked once per block — and only for a block that carries a citation, which is where `inline_citation_sites` already has the block in hand.
+The block classifiers above answer a second question, for the inline citation sites of §3: is this block a **doc comment** — documentation of the definition below it, or of the file — or an **inline comment**? Only the second is a site ([§FS-inline-citation-style.1.1](../functional-spec/FS-inline-citation-style.md#11-doc-comments-are-not-sites)). The classifier lives in `crates/grund-core/src/grammar/comment_block.rs`, beside `CommentBlockKind` and the block-boundary helpers the declaration pass already shares, and it is asked once per block — and only for a block that carries a citation, which is where `inline_citation_sites` already has the block in hand.
 
 Which rule applies is keyed on the **file extension** and resolved once per file. There are three:
 

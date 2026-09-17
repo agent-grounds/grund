@@ -1,7 +1,6 @@
 use anyhow::{Context, Result, anyhow};
 use ignore::WalkBuilder;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{BTreeMap, BTreeSet};
@@ -14,21 +13,20 @@ use unicode_normalization::UnicodeNormalization;
 // declared in `model/` and what crosses the boundary is what `model/mod.rs`
 // re-exports (§AR-core-module-layout.1).
 mod model;
-// Temporary re-export for the duration of this migration: it keeps every name
+// §AR-system.2.1: the grammar component is one Rust module too, so the lexical
+// facts are declared in `grammar/` and what crosses the boundary is what
+// `grammar/mod.rs` re-exports (§AR-core-module-layout.1).
+mod grammar;
+// Temporary re-exports for the duration of this migration: they keep every name
 // the flat crate root exposed reachable at `grund_core::<name>` while the other
-// components are still `include!`d flat. The finalize task replaces it with an
+// components are still `include!`d flat. The finalize task replaces them with an
 // explicit list.
+pub use grammar::*;
 pub use model::*;
 
 // §AR-bindings.1: `grund-core` is the shared implementation crate used by the
 // published `grund` CLI and, next, the optional LSP server. The category files
 // are still included flat to keep this first package split behavior-preserving.
-include!("grammar.rs");
-include!("grammar_near_miss.rs");
-include!("id_format.rs");
-include!("id_grammar_rules.rs");
-include!("shorthand.rs");
-include!("shorthand_fmt_targets.rs");
 include!("config_kind_model.rs");
 include!("value_json.rs");
 include!("config_discovery.rs");
@@ -37,10 +35,6 @@ include!("config_point_sizes.rs");
 include!("config_kinds.rs");
 include!("config_grounding.rs");
 include!("config_cmd.rs");
-include!("comment_line.rs");
-include!("comment_block.rs");
-include!("inline_note_layout.rs");
-include!("markdown_fence.rs");
 include!("scanner_walk.rs");
 include!("scanner_scope_probe.rs");
 include!("scanner_walk_boundaries.rs");
@@ -86,7 +80,6 @@ include!("output.rs");
 include!("show.rs");
 include!("show_render.rs");
 include!("show_body.rs");
-include!("never_rewrite.rs");
 include!("fmt_complete_findings.rs");
 include!("fmt.rs");
 include!("fmt_suppress.rs");

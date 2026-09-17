@@ -1,13 +1,25 @@
+use anyhow::{Result, anyhow};
+use once_cell::sync::Lazy;
+use regex::Regex;
+use std::collections::{BTreeMap, BTreeSet};
+
+use super::id_format::{
+    IdElement, ShorthandGrammar, id_pattern, parse_id_format, shorthand_elements,
+};
+use super::id_rules::{
+    id_grammar_literal_slash_error, id_grammar_pattern_slash_error, section_separator_slash_error,
+};
+use super::near_miss::NearMissGrammar;
+use super::source_line::comment_prefix_regex;
+use crate::model::Id;
+// §AR-system.4: `KindConfig` is config's record, and `LegacyGrammar` and
+// `literal_after_kind_placeholder` are this component's own parked in scanner
+// files by the flat layout; all three stay reachable through the crate root.
+use crate::{KindConfig, LegacyGrammar, literal_after_kind_placeholder};
+
 const NUMERIC_SECTION_PATTERN: &str = r"\d+(?:\.\d+)*";
-const NAMED_SECTION_PATTERN: &str =
-    r"[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*(?:\.\d+)*";
-const DEFAULT_INCLUDE: &[&str] = &["requirements.md", "docs", "e2e", "src"];
-const DEFAULT_SCAN_EXTENSIONS: &[&str] = &[
-    "md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "swift", "scala",
-    "rb", "php", "cs", "lisp", "scm", "clj", "sql", "hs", "lhs", "lua", "ada", "adb", "ads",
-];
-const DEFAULT_COMMENT_PREFIXES: &[&str] = &["//", "#", ";", "--", "*", "/*"];
-static STUB_LINK_HEADING: Lazy<Regex> =
+const NAMED_SECTION_PATTERN: &str = r"[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*(?:\.\d+)*";
+pub(crate) static STUB_LINK_HEADING: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^\s*:\s*\[[^\]]*\]\(\s*(?P<path>[^)\s]+)\s*\)\s*$").unwrap());
 /// An inline Markdown link `[text](url)` — used to reduce a heading to the text a
 /// renderer would slugify (the destination URL is not part of that text), so an
@@ -30,7 +42,7 @@ static HTML_TAG: Lazy<Regex> = Lazy::new(|| Regex::new(r"<[^>]*>").unwrap());
 /// `81-grund-`: the angle brackets are content there, not a tag. Stripping them
 /// anyway produced an anchor that resolves nowhere, and every heading that
 /// documents a placeholder-carrying command has that shape.
-fn reduce_heading_text(text: &str) -> String {
+pub(crate) fn reduce_heading_text(text: &str) -> String {
     let mut out = String::new();
     for (segment, is_code) in inline_code_segments(text) {
         if is_code {
@@ -96,24 +108,21 @@ fn inline_code_segments(text: &str) -> Vec<(&str, bool)> {
 /// §DF-managed-block-delimiters): standard `BEGIN`/`END` HTML-comment lines
 /// bound the managed region from block v4 on. Legacy v3-and-earlier blocks have
 /// no delimiters and are found by `AGENTS_BLOCK_H2` alone.
-static AGENTS_BLOCK_BEGIN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?m)^<!-- BEGIN GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap()
-});
-static AGENTS_BLOCK_END: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?m)^<!-- END GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap()
-});
+pub(crate) static AGENTS_BLOCK_BEGIN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?m)^<!-- BEGIN GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap());
+pub(crate) static AGENTS_BLOCK_END: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?m)^<!-- END GRUND MANAGED BLOCK -->[ \t]*\r?$").unwrap());
 /// The managed block's version marker: an H2 heading carrying the block
 /// version. Inside a delimited block it names the schema version; for a legacy
 /// block it is also the begin marker, and the block runs until the next H1/H2
 /// or EOF (§FS-init.2.3.1).
-static AGENTS_BLOCK_H2: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?m)^##[ \t]+Grounding with grund[ \t]+\(v(?P<version>\d+)\)[ \t]*\r?$")
-        .unwrap()
+pub(crate) static AGENTS_BLOCK_H2: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?m)^##[ \t]+Grounding with grund[ \t]+\(v(?P<version>\d+)\)[ \t]*\r?$").unwrap()
 });
 /// The next H1 or H2 heading after a position — the implicit end of a legacy
 /// managed section. A legacy block ends at this line's start, or at EOF if no
 /// such line follows.
-static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
+pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?m)^#{1,2}[ \t]+\S").unwrap());
 /// ID grammar compiled from [id].format + [[kinds]] — the single place that knows the
 /// shape of a declaration heading or a citation. Built once per config load.
@@ -130,51 +139,50 @@ const PROJECT_ALIAS_PATTERN: &str = "[a-z][a-z0-9-]*";
 /// the boundary between the project path and the ID.
 static PROJECT_PATH_PATTERN: Lazy<String> =
     Lazy::new(|| format!("{PROJECT_ALIAS_PATTERN}(?:/{PROJECT_ALIAS_PATTERN})*"));
-static QUALIFIED_CITATION_PREFIX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(&format!(r"^(?P<namespace>{})/", *PROJECT_PATH_PATTERN)).unwrap()
-});
+pub(crate) static QUALIFIED_CITATION_PREFIX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(&format!(r"^(?P<namespace>{})/", *PROJECT_PATH_PATTERN)).unwrap());
 
 #[derive(Clone)]
 pub struct Grammar {
-    decl_re: Regex,
-    docstring_decl_re: Regex,
-    section_re: Regex,
+    pub(super) decl_re: Regex,
+    pub(super) docstring_decl_re: Regex,
+    pub(crate) section_re: Regex,
     /// One citation regex, capturing an optional `<namespace>/` prefix
     /// (§FS-workspace.1, §AR-workspace.3.1). The scanner decides whether to
     /// emit a qualified citation based on whether the marker `§` precedes the
     /// match; this regex never has two modes.
-    citation_re: Regex,
-    id_input_re: Regex,
+    pub(crate) citation_re: Regex,
+    pub(super) id_input_re: Regex,
     /// The compiled grammar remembers the gate so every token consumer can
     /// enforce the same whole-token suppression rule (§AR-scanner.2.3).
-    named_sections: bool,
+    pub(crate) named_sections: bool,
     /// The per-kind near-miss patterns (§FS-check.4.6): a heading that opens
     /// with a configured kind and the literal its effective ID format puts
     /// after it, without parsing as an ID. Absent for a kind whose format puts
     /// no literal there — then "looks like a declaration" cannot be told from
     /// prose beginning with the kind name, and the rule declines rather than guess.
-    near_misses: Vec<NearMissGrammar>,
-    legacy: LegacyGrammar,
+    pub(super) near_misses: Vec<NearMissGrammar>,
+    pub(super) legacy: LegacyGrammar,
     /// The number-only shorthand patterns (§FS-check.1.2, §AR-scanner.2.6),
     /// present only when `[id] format` carries both `{number}` and `{slug}`.
     /// `None` is the whole opt-out: every shorthand pass downstream is gated on
     /// this being `Some`, so a `{kind}-{slug}` repo like `grund` itself compiles
     /// nothing extra and pays nothing (§FS-id.4.1).
-    shorthand: Option<ShorthandGrammar>,
+    pub(super) shorthand: Option<ShorthandGrammar>,
     /// Number-only shorthand grammars for kinds whose override carries both a
     /// number and a slug (§FS-config.3.2). Kept beside the legacy/default
     /// shorthand so all consumers can select by the token's kind.
-    override_shorthands: Vec<ShorthandGrammar>,
+    pub(super) override_shorthands: Vec<ShorthandGrammar>,
     /// The parsed `[id] format`. Kept so `render_id` reduces a partial `Id` by
     /// the same rule the shorthand pattern was derived from, rather than a
     /// second interpretation of the template (§AR-scanner.2.6).
-    elements: Vec<IdElement>,
+    pub(super) elements: Vec<IdElement>,
     /// Per-kind full-ID parsers and render templates. Detection uses one union
     /// regex, then parsing selects the already-known kind's exact grammar
     /// (§FS-config.3.2, §FS-config.3.4.10).
     kind_parsers: Vec<(String, Regex)>,
-    kind_elements: BTreeMap<String, Vec<IdElement>>,
-    overridden_kinds: BTreeSet<String>,
+    pub(super) kind_elements: BTreeMap<String, Vec<IdElement>>,
+    pub(super) overridden_kinds: BTreeSet<String>,
 }
 
 impl Grammar {
@@ -197,7 +205,7 @@ impl Grammar {
     /// a bare prose line `AR-foo: title` in markdown does not. And a namespace only
     /// ever precedes a citation, never being the second number of a run, which is
     /// why the shorthand's unqualified pattern is a separate string, not a reuse.
-    fn build(
+    pub(crate) fn build(
         format: &str,
         kinds: &[KindConfig],
         number_pattern: &str,
@@ -249,9 +257,8 @@ impl Grammar {
             ) {
                 return Err(anyhow!("{message}"));
             }
-            let kind_format = parse_id_format(effective).map_err(|err| {
-                anyhow!("[[kinds]] kind `{}` format: {err}", kind.kind)
-            })?;
+            let kind_format = parse_id_format(effective)
+                .map_err(|err| anyhow!("[[kinds]] kind `{}` format: {err}", kind.kind))?;
             let literal_kind = regex::escape(&kind.kind);
             let detection = id_pattern(
                 &kind_format,
@@ -350,11 +357,9 @@ impl Grammar {
         // numeric headings retain optional full stops. Rust regexes lack lookahead, so
         // punctuation stays captured and `section_path` removes it (§AR-scanner.2.2).
         let section_heading = if named_sections {
-            format!(
-                r"(?P<sec>(?:{NUMERIC_SECTION_PATTERN}\.?|{NAMED_SECTION_PATTERN}:))"
-            )
+            format!(r"(?P<sec>(?:{NUMERIC_SECTION_PATTERN}\.?|{NAMED_SECTION_PATTERN}:))")
         } else {
-            format!(r"(?P<sec>{NUMERIC_SECTION_PATTERN})\.?" )
+            format!(r"(?P<sec>{NUMERIC_SECTION_PATTERN})\.?")
         };
         let section_re = Regex::new(&format!(
             r"^\s*(?:{})?\s*(?P<hashes>#+)\s+{}\s+\S",
@@ -364,15 +369,9 @@ impl Grammar {
         // citation grammar, not a separate parser pass, and the scanner gates it on
         // the marker (§AR-workspace.3.1, §FS-workspace.6.1).
         let namespace_prefix = format!(r"(?:(?P<namespace>{})/)?", *PROJECT_PATH_PATTERN);
-        let citation_re =
-            Regex::new(&format!(r"\b{}{}{}", namespace_prefix, id_pat, sec_suffix))?;
+        let citation_re = Regex::new(&format!(r"\b{}{}{}", namespace_prefix, id_pat, sec_suffix))?;
         let id_input_re = Regex::new(&format!(r"^{}{}$", id_pat, sec_suffix))?;
-        let legacy = LegacyGrammar::build(
-            kinds,
-            format,
-            &section_pattern,
-            &comment_prefix,
-        )?;
+        let legacy = LegacyGrammar::build(kinds, format, &section_pattern, &comment_prefix)?;
 
         // §FS-check.1.2: the same two shapes over the slug-less element list.
         // Compiled only where the format has a shorthand at all, so `has_shorthand`
@@ -386,28 +385,31 @@ impl Grammar {
             .then(|| shorthand_elements(&elements))
             .flatten()
             .map(|short| {
-            let kind_group = format!("(?P<kind>{})", global_kinds.join("|"));
-            let num_group = format!("(?P<num>{})", number_pattern);
-            let slug_group = format!("(?P<slug>{})", slug_pattern);
-            let global_id_pat = id_pattern(&elements, &kind_group, &num_group, &slug_group);
-            let short_pat = id_pattern(&short, &kind_group, &num_group, &slug_group);
-            ShorthandGrammar {
-                full_prefix_pattern: format!(r"\A{}{}{}", namespace_prefix, global_id_pat, sec_suffix),
-                prefix_pattern: format!(r"\A{}{}{}", namespace_prefix, short_pat, sec_suffix),
-                // §FS-fmt.2.4.1 clause 2: the same shorthand shape with no
-                // `<alias>/` in front of it — reusing `prefix_pattern` here would
-                // count every path ending in an ID-shaped segment.
-                unqualified_prefix_pattern: format!(r"\A{}{}", short_pat, sec_suffix),
-                // Non-capturing: this one is only ever asked `is_match`, and a
-                // second `(?P<num>…)` beside the one in `short_pat` would be a
-                // duplicate group name if the two ever met in one pattern.
-                number_prefix_pattern: format!(r"\A(?:{})", number_pattern),
-                full_prefix_re: once_cell::sync::OnceCell::new(),
-                prefix_re: once_cell::sync::OnceCell::new(),
-                unqualified_prefix_re: once_cell::sync::OnceCell::new(),
-                number_prefix_re: once_cell::sync::OnceCell::new(),
-            }
-        });
+                let kind_group = format!("(?P<kind>{})", global_kinds.join("|"));
+                let num_group = format!("(?P<num>{})", number_pattern);
+                let slug_group = format!("(?P<slug>{})", slug_pattern);
+                let global_id_pat = id_pattern(&elements, &kind_group, &num_group, &slug_group);
+                let short_pat = id_pattern(&short, &kind_group, &num_group, &slug_group);
+                ShorthandGrammar {
+                    full_prefix_pattern: format!(
+                        r"\A{}{}{}",
+                        namespace_prefix, global_id_pat, sec_suffix
+                    ),
+                    prefix_pattern: format!(r"\A{}{}{}", namespace_prefix, short_pat, sec_suffix),
+                    // §FS-fmt.2.4.1 clause 2: the same shorthand shape with no
+                    // `<alias>/` in front of it — reusing `prefix_pattern` here would
+                    // count every path ending in an ID-shaped segment.
+                    unqualified_prefix_pattern: format!(r"\A{}{}", short_pat, sec_suffix),
+                    // Non-capturing: this one is only ever asked `is_match`, and a
+                    // second `(?P<num>…)` beside the one in `short_pat` would be a
+                    // duplicate group name if the two ever met in one pattern.
+                    number_prefix_pattern: format!(r"\A(?:{})", number_pattern),
+                    full_prefix_re: once_cell::sync::OnceCell::new(),
+                    prefix_re: once_cell::sync::OnceCell::new(),
+                    unqualified_prefix_re: once_cell::sync::OnceCell::new(),
+                    number_prefix_re: once_cell::sync::OnceCell::new(),
+                }
+            });
         let override_shorthands = kinds
             .iter()
             .filter_map(|kind| {
@@ -469,7 +471,7 @@ impl Grammar {
 
     /// Parse one already-delimited full ID using the exact grammar configured
     /// for its kind (§FS-config.3.2).
-    fn parse_token(&self, token: &str) -> Option<Id> {
+    pub(super) fn parse_token(&self, token: &str) -> Option<Id> {
         self.kind_parsers.iter().find_map(|(kind, parser)| {
             let caps = parser.captures(token)?;
             let num = caps
@@ -486,19 +488,17 @@ impl Grammar {
         })
     }
 
-    fn shorthands(&self) -> impl Iterator<Item = &ShorthandGrammar> {
-        self.shorthand
-            .iter()
-            .chain(self.override_shorthands.iter())
+    pub(super) fn shorthands(&self) -> impl Iterator<Item = &ShorthandGrammar> {
+        self.shorthand.iter().chain(self.override_shorthands.iter())
     }
 
-    fn shorthand_for(&self, token: &str) -> Option<&ShorthandGrammar> {
+    pub(crate) fn shorthand_for(&self, token: &str) -> Option<&ShorthandGrammar> {
         self.shorthands()
             .find(|shorthand| shorthand.prefix_re().is_match(token))
     }
 
     /// A name-shaped section matched by the opted-in grammar (§FS-check.1.1).
-    fn is_named_section(&self, section: Option<&str>) -> bool {
+    pub(crate) fn is_named_section(&self, section: Option<&str>) -> bool {
         self.named_sections
             && section.is_some_and(|path| {
                 path.split('.')
@@ -509,7 +509,7 @@ impl Grammar {
     /// Whether a valid prefix is followed by the reserved `number.name` order.
     /// The regex crate has no lookahead, so this whole-token rejection is the
     /// post-match half of the grammar (§AR-scanner.2.3, §FS-config.3.3).
-    fn has_reserved_named_tail(&self, text: &str, end: usize) -> bool {
+    pub(crate) fn has_reserved_named_tail(&self, text: &str, end: usize) -> bool {
         self.named_sections
             && text[end..]
                 .strip_prefix('.')
@@ -517,129 +517,18 @@ impl Grammar {
                 .is_some_and(u8::is_ascii_lowercase)
     }
 
-    fn is_section_path(&self, section: &str) -> bool {
+    pub(crate) fn is_section_path(&self, section: &str) -> bool {
         self.legacy.section_path_re.is_match(section)
     }
 }
 
 /// The normalized complete path from a citable section heading. In named mode
 /// the grammar captures the discriminating `:`; numeric `.` remains optional.
-fn section_path<'a>(caps: &'a regex::Captures<'a>) -> Option<&'a str> {
+pub(crate) fn section_path<'a>(caps: &'a regex::Captures<'a>) -> Option<&'a str> {
     let raw = caps.name("sec")?.as_str();
     Some(
         raw.strip_suffix('.')
             .or_else(|| raw.strip_suffix(':'))
             .unwrap_or(raw),
     )
-}
-
-/// Build the alternation a declaration/section heading may be prefixed by — one
-/// entry per `[scan] comment_prefixes` value (§FS-config.3.5), with `//` widened to
-/// also catch Rust/JS doc-comment forms `///` and `//!` so inline declarations in
-/// code are seen (§AR-scanner.4). Longest-first so `//` does not shadow `///`.
-fn comment_prefix_regex(comment_prefixes: &[String]) -> String {
-    let mut prefixes = comment_prefixes
-        .iter()
-        .filter(|prefix| !prefix.is_empty())
-        .map(|prefix| {
-            if prefix == "//" {
-                r"//[/!]?".to_string()
-            } else {
-                regex::escape(prefix)
-            }
-        })
-        .collect::<Vec<_>>();
-    prefixes.sort_by_key(|prefix| std::cmp::Reverse(prefix.len()));
-    if prefixes.is_empty() {
-        "(?!)".to_string()
-    } else {
-        format!("(?:{})", prefixes.join("|"))
-    }
-}
-
-#[derive(Default)]
-struct PythonDocstringScanState {
-    quote: Option<&'static str>,
-}
-
-struct SourceScanLine<'a> {
-    text: &'a str,
-    in_py_docstring: bool,
-    column_offset: usize,
-    closed_py_docstring: bool,
-}
-
-/// Normalize one source line for scanner-style declaration/section/citation
-/// detection while preserving the original-file column offset for emitted
-/// ranges (§AR-scanner.4).
-fn source_scan_line<'a>(
-    line: &'a str,
-    is_py: bool,
-    docstring_python: bool,
-    py_docstring: &mut PythonDocstringScanState,
-) -> SourceScanLine<'a> {
-    if !docstring_python || !is_py {
-        return SourceScanLine {
-            text: line,
-            in_py_docstring: false,
-            column_offset: 0,
-            closed_py_docstring: false,
-        };
-    }
-
-    let trimmed = line.trim_start();
-    let indent = line.len() - trimmed.len();
-    if let Some(quote) = py_docstring.quote {
-        if let Some(close) = trimmed.find(quote) {
-            py_docstring.quote = None;
-            return SourceScanLine {
-                text: &trimmed[..close],
-                in_py_docstring: true,
-                column_offset: indent,
-                closed_py_docstring: true,
-            };
-        }
-        return SourceScanLine {
-            text: trimmed,
-            in_py_docstring: true,
-            column_offset: indent,
-            closed_py_docstring: false,
-        };
-    }
-
-    let Some(quote) = python_docstring_quote(line) else {
-        return SourceScanLine {
-            text: line,
-            in_py_docstring: false,
-            column_offset: 0,
-            closed_py_docstring: false,
-        };
-    };
-    let after_open = &trimmed[quote.len()..];
-    if let Some(close) = after_open.find(quote) {
-        return SourceScanLine {
-            text: &after_open[..close],
-            in_py_docstring: true,
-            column_offset: indent + quote.len(),
-            closed_py_docstring: true,
-        };
-    }
-    py_docstring.quote = Some(quote);
-    SourceScanLine {
-        text: after_open,
-        in_py_docstring: true,
-        column_offset: indent + quote.len(),
-        closed_py_docstring: false,
-    }
-}
-
-fn python_docstring_quote(line: &str) -> Option<&'static str> {
-    let trimmed = line.trim_start();
-    if trimmed.starts_with("\"\"\"") {
-        Some("\"\"\"")
-    } else if trimmed.starts_with("'''") {
-        Some("'''")
-    } else {
-        None
-    }
 }
