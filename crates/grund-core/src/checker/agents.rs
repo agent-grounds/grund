@@ -2,14 +2,16 @@ use std::fs;
 use std::path::Path;
 
 use crate::config::Config;
-use crate::grammar::AGENTS_BLOCK_END;
+use crate::grammar::{
+    AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
+};
 use crate::model::{CheckReport, Diagnostic};
-// §AR-system.4: seven upward reads through the crate root — the managed block's
-// version, lookup and finder, the companion entrypoint list, and the two
-// generated sections this rule compares, all the writers' (§FS-init).
+// §AR-system.4: four upward reads through the crate root — the companion
+// entrypoint list and the three template renderers this rule byte-compares a
+// fresh render of, all the writers' (§FS-init).
 use crate::{
-    AGENTS_BLOCK_VERSION, AgentsBlockLookup, ConversationSurface, citation_directions_section,
-    clickable_citations_section, companion_agent_entrypoints, find_agents_block,
+    ConversationSurface, citation_directions_section, clickable_citations_section,
+    companion_agent_entrypoints,
 };
 
 const AGENTS_INIT_COMPATIBILITY_TAIL: &str =

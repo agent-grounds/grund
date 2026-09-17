@@ -26,16 +26,6 @@ reason = """
 The file mixes two things §AR-core-module-layout.2 keeps distinct: the published embedding contract (ShowOpts, CheckOpts, Report, check, show, scan), which genuinely belongs in one file an embedder can read end to end, and the private adapters that convert core types into it (public_report, public_finding, show_with_scope_and_overlays). The contract is the reason to keep one file; the adapters are why it is oversized. Missing boundary: an adapter module for the conversion layer, leaving api.rs as the surface it is documented to be.
 """
 [[exceptions]]
-path = "crates/grund-core/src/integrations.rs"
-match = "exact"
-rules = ["core-source"]
-kind = "deferred"
-max_accepted = { value = 1525, unit = "lines" }
-until = "extract the managed-block protocol as the shared implementation, then split detection from per-client writers"
-reason = """
-Three responsibilities with no boundary between them: client detection, the managed-block protocol (find, version, migrate, rewrite a delimited block inside a foreign config file), and per-client artifact writing. The middle one is a general mechanism, not an integrations concern — init.rs implements the same protocol again for AGENTS.md — and it is trapped here as private helpers. Missing boundary: the managed-block protocol as one module both callers use.
-"""
-[[exceptions]]
 path = "crates/grund-lsp/tests/shutdown.rs"
 match = "exact"
 rules = ["tests"]
@@ -56,14 +46,14 @@ reason = """
 The handlers behind the 12 dispatch arms (6 requests, 6 notifications) share &mut self on one impl Server whose snapshot, open_docs, and line_cache carry an invariant: the per-snapshot line cache is valid only between refreshes (§AR-lsp.5). That invariant is why they read as one unit, but Rust allows several impl Server blocks across include!d files, so it does not require one file — it requires the contract to be written down before they move. Missing boundary: that contract stated explicitly, after which handlers split by request family and transport stays in lib.rs.
 """
 [[exceptions]]
-path = "crates/grund-core/src/init.rs"
+path = "crates/grund-core/src/writers/init.rs"
 match = "exact"
 rules = ["core-source"]
 kind = "deferred"
 max_accepted = { value = 529, unit = "lines" }
-until = "unify init_block.rs with the second implementation of the same protocol in integrations.rs"
+until = "the --docs scaffold's file list and the next: guidance leave the run that writes them"
 reason = """
-Half of this entry is paid: the managed agent-entrypoint block — locate, version, migrate, rewrite a document in place — left for init_block.rs, and the ceiling dropped from 776 with it; the run's entrypoint plan then left for init_plan.rs, taking it to 529. What is left here is scaffold writing, the run, and its report, which is one job. The debt that remains is the one this file cannot pay alone: integrations.rs implements the same locate-version-splice protocol a second time for foreign config files, and two implementations of in-place rewriting of a user's file is the risk worth naming. Missing boundary: one managed-block protocol both callers use. The deprecated init command adapter has since left for init_cmd.rs as well, taking the file to 447; the ceiling stays at 529 because the debt named here is the one that has not been paid.
+Most of this entry is paid, and the debt it used to name is gone. The managed agent-entrypoint block — locate, version, migrate, rewrite a document in place — left for init_block.rs and the ceiling dropped from 776 with it; the run's entrypoint plan left for init_plan.rs, taking it to 529; the deprecated command adapter left for init_cmd.rs, taking it to 447. The second implementation of the locate-version protocol this entry was waiting on is no longer a second implementation: finding a managed block and reading its version is grammar/managed_block.rs now, one module that init, integrations and the checker all read downward. What is left in this file is three things rather than one: the public report vocabulary both frontends consume (InitOpts, InitEvent, InitNext, InitFsHome, InitOutput, InitError and their predicates), the run itself, and the --docs scaffold — which paths exist and which template each gets — with the next: guidance rendered beside it. Missing boundary: that scaffold data, which is what FS-init.2.1 pins rather than anything the run decides, apart from the run that writes it. The ceiling stays at 529 against a 526-line file: it measured 470 before AR-system.2.8 became a Rust module and pays a 26-line import block for it, so nothing was added here that a split could take away.
 """
 [[exceptions]]
 path = "scripts/local-benchmark-report.py"

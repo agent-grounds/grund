@@ -17,6 +17,11 @@
 //! `[[kinds]]` lookup that the flat layout parked in `homes.rs` and
 //! `grounding.rs`, which the scanner below read upward, went down into `model/`
 //! and `config/`, and the candidate joiner went down into `workspace/`.
+//!
+//! One more item came up when §AR-system.2.8 became a module: `plural`, the
+//! plural `s` a count earns, which `inline_style.rs` had been reading out of the
+//! writers' template renderer. This is the lowest component that reads it, so it
+//! lands here and the writers read it downward (§AR-system.4).
 
 mod agents;
 mod citations;
@@ -42,6 +47,7 @@ pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
 pub(crate) use homes::{file_declares_inline_home, is_stub_for_inline_decl};
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
+pub(crate) use inline_style::plural;
 pub(crate) use references::{
     ReferenceTier, WorkspaceCheckTarget, configured_scope, out_of_scope_references,
     retain_findings_in_scope, workspace_out_of_scope_references,

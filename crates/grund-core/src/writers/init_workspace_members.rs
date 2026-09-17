@@ -1,3 +1,15 @@
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::init_templates::markdown_link_destination;
+use crate::config::{Config, config_file_in, is_valid_project_alias, load_config_at};
+use crate::model::normalize_path_lexically;
+use crate::workspace::{
+    AncestorWorkspaces, apply_workspace_boundary, enclosing_workspace_of,
+    expand_workspace_tree_with_report_base,
+};
+
 /// One resolved workspace project — the alias, canonical root, and optional
 /// one-line description — collected by [`find_init_workspace_context`] so the
 /// workspace-members renderer never has to talk to the config layer directly
@@ -148,18 +160,16 @@ fn find_init_workspace_root(target: &Path) -> Option<(Config, PathBuf)> {
 /// when `target` is not inside a workspace. The leading `\n\n` is the
 /// separator from the preceding namespace guidance block, so an empty value
 /// leaves the surrounding spacing unchanged.
-fn render_workspace_members_section(
+pub(crate) fn render_workspace_members_section(
     target: &Path,
     pending_project_name: Option<&str>,
     pending_project_description: Option<&str>,
     citation_marker: &str,
     _canonical_agent_entrypoint_selected: bool,
 ) -> String {
-    let Some(projects) = find_init_workspace_context(
-        target,
-        pending_project_name,
-        pending_project_description,
-    ) else {
+    let Some(projects) =
+        find_init_workspace_context(target, pending_project_name, pending_project_description)
+    else {
         return String::new();
     };
     // `find_init_workspace_context` already required `target` to canonicalize
@@ -188,7 +198,11 @@ fn render_workspace_members_section(
                 format!("{dir_rel}/")
             }
         };
-        let suffix = if initialized { "" } else { " *(not yet initialized)*" };
+        let suffix = if initialized {
+            ""
+        } else {
+            " *(not yet initialized)*"
+        };
         // §FS-init.2.3.4.15: the alias is the link label so the path appears
         // once, mirroring the Project Map's `- [x](y): …` shape; the one-line
         // description follows `: `, before the trailing marker.

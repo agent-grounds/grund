@@ -1,3 +1,13 @@
+use anyhow::{Context, Result, anyhow};
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::integrations_agents::GLOBAL_AGENT_INSTRUCTION_TARGETS;
+use super::integrations_clients::expand_target;
+// §AR-system.4: one upward read through the crate root — the English list
+// renderer, which is `output.rs`'s (§AR-system.2.9).
+use crate::format_list;
+
 /// §FS-init.1.2: the version-control markers whose presence in the target or
 /// any ancestor says it is inside a working tree. Presence is what is tested,
 /// not type — a linked worktree and a submodule both write `.git` as a file.
@@ -29,7 +39,7 @@ const INIT_VCS_MARKERS: [&str; 4] = [".git", ".hg", ".jj", ".svn"];
 /// uses `std::env::home_dir` rather than `$HOME` directly: the variable is the
 /// Unix spelling, and a Windows runner that never sets it would silently lose
 /// the rule that stops the accident this exists for.
-fn refuse_init_target(target: &Path, no_vcs: bool) -> Option<String> {
+pub(crate) fn refuse_init_target(target: &Path, no_vcs: bool) -> Option<String> {
     if !target.exists() {
         return Some(format!(
             "target directory does not exist: {}",
@@ -80,7 +90,7 @@ fn refuse_init_target(target: &Path, no_vcs: bool) -> Option<String> {
 /// user-global files carry machine-wide policy and are `grund integrations
 /// --write`'s to manage, the repository entrypoint carries this project's syntax
 /// and is `init`'s.
-fn refuse_init_global_instruction_paths(entrypoints: &[PathBuf]) -> Option<String> {
+pub(crate) fn refuse_init_global_instruction_paths(entrypoints: &[PathBuf]) -> Option<String> {
     entrypoints.iter().find_map(|entrypoint| {
         let resolved = resolve_for_target_compare(entrypoint);
         let owned = GLOBAL_AGENT_INSTRUCTION_TARGETS.iter().any(|target| {
@@ -98,7 +108,7 @@ fn refuse_init_global_instruction_paths(entrypoints: &[PathBuf]) -> Option<Strin
 
 /// The default project name when `--name` is omitted: the basename of `<path>`
 /// resolved to an absolute path (§FS-init.1).
-fn derive_default_name(target: &Path) -> Result<String> {
+pub(super) fn derive_default_name(target: &Path) -> Result<String> {
     let absolute =
         fs::canonicalize(target).with_context(|| format!("resolve {}", target.display()))?;
     absolute

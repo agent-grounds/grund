@@ -1,10 +1,6 @@
 use std::path::{Path, PathBuf};
 
 use super::record::Config;
-// §AR-system.4: `escape_toml_basic` is the TOML writer's string escaper, in the
-// scaffold that emits `grund.toml` (§FS-init.2.4) — read through the crate root
-// until the writers are a module.
-use crate::escape_toml_basic;
 
 /// One `[[kinds]]` entry: the kind name plus the folder its declarations live in
 /// and the human title `grund id` prints (§FS-config.3.4). When `file` is set,
@@ -138,4 +134,14 @@ impl KindConfig {
         };
         Some(Path::new(folder).join(name))
     }
+}
+
+/// Escape a string for a TOML basic (double-quoted) value: the two characters
+/// the quoting itself makes ambiguous (§FS-config.4.2). Config is where TOML is
+/// both read and written back out — `index_toml_value` above, `grund config
+/// show`'s round-trippable dump, and the `grund.toml` the scaffold generates
+/// (§FS-init.2.4) — so the escaper sits beside them rather than in the writer
+/// that was holding it when §AR-system.2.8 became a module (§AR-system.4).
+pub(crate) fn escape_toml_basic(raw: &str) -> String {
+    raw.replace('\\', "\\\\").replace('"', "\\\"")
 }

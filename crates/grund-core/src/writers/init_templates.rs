@@ -1,24 +1,36 @@
+use anyhow::Result;
+use std::path::Path;
+
+use super::init_citation_directions::citation_directions_section;
+use super::init_workspace_members::render_workspace_members_section;
+use crate::checker::plural;
+use crate::config::{Config, config_file_in, escape_toml_basic, kind_prefixes, load_config};
+use crate::grammar::{id_shape, inline_note_layout_sentence};
+
 // The scaffold templates `grund init` writes are embedded in the binary; the
 // reference copies live under `templates/` in the source tree (§FS-init.2.1).
-const AGENTS_TEMPLATE: &str = include_str!("../assets/templates/AGENTS.md");
+const AGENTS_TEMPLATE: &str = include_str!("../../assets/templates/AGENTS.md");
 /// The scaffold config. Its `[citations]` block comment explains the five levels
 /// and hands the reader `CITATION_DIRECTIONS_URL` below, where it used to cite
 /// §FS-config.3.9 by ID: the file lands verbatim in the adopting repository, so
 /// an ID of this one names a document that reader does not have — or an
 /// unrelated one of their own (§REQ-shipped-surfaces.1).
-const GRUND_TOML_TEMPLATE: &str = include_str!("../assets/templates/grund.toml");
-const GRUND_DOC_TEMPLATE: &str = include_str!("../assets/templates/grund.md");
-const GOALS_TEMPLATE: &str = include_str!("../assets/templates/goals.md");
-const REQUIREMENTS_TEMPLATE: &str = include_str!("../assets/templates/requirements.md");
-const FS_README_TEMPLATE: &str = include_str!("../assets/templates/functional-spec-README.md");
-const E2E_README_TEMPLATE: &str = include_str!("../assets/templates/e2e-README.md");
-const AS_README_TEMPLATE: &str = include_str!("../assets/templates/architecture-README.md");
-const DF_README_TEMPLATE: &str =
-    include_str!("../assets/templates/decisions-functional-README.md");
-const DA_README_TEMPLATE: &str =
-    include_str!("../assets/templates/decisions-architectural-README.md");
-const GITKEEP_TEMPLATE: &str = include_str!("../assets/templates/gitkeep.md");
-const CITATION_DIRECTIONS_URL: &str =
+const GRUND_TOML_TEMPLATE: &str = include_str!("../../assets/templates/grund.toml");
+pub(super) const GRUND_DOC_TEMPLATE: &str = include_str!("../../assets/templates/grund.md");
+pub(super) const GOALS_TEMPLATE: &str = include_str!("../../assets/templates/goals.md");
+pub(super) const REQUIREMENTS_TEMPLATE: &str =
+    include_str!("../../assets/templates/requirements.md");
+pub(super) const FS_README_TEMPLATE: &str =
+    include_str!("../../assets/templates/functional-spec-README.md");
+pub(super) const E2E_README_TEMPLATE: &str = include_str!("../../assets/templates/e2e-README.md");
+pub(super) const AS_README_TEMPLATE: &str =
+    include_str!("../../assets/templates/architecture-README.md");
+pub(super) const DF_README_TEMPLATE: &str =
+    include_str!("../../assets/templates/decisions-functional-README.md");
+pub(super) const DA_README_TEMPLATE: &str =
+    include_str!("../../assets/templates/decisions-architectural-README.md");
+pub(super) const GITKEEP_TEMPLATE: &str = include_str!("../../assets/templates/gitkeep.md");
+pub(super) const CITATION_DIRECTIONS_URL: &str =
     "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md";
 /// The setup skill, printed byte-for-byte by `grund agent-setup-instructions`
 /// into whatever repository the agent is standing in (§FS-init.5). That is why
@@ -34,39 +46,7 @@ const CITATION_DIRECTIONS_URL: &str =
 /// synchronizes (§FS-integrations.4.3), and the committable repository opinion
 /// with its per-agent gate (§DF-repo-conversation-opinion,
 /// §DF-conversation-link-target.2.4).
-pub const AGENT_SETUP_INSTRUCTIONS: &str = include_str!("../assets/skills/grund-init/SKILL.md");
-/// v5 (§FS-init.2.3.6, §DF-integrations-command, §DF-repo-conversation-opinion):
-/// the block gains the `### Clickable citations` section — the fixed
-/// repository-web convention, plus a config-derived local-conversation sentence
-/// when `[reference] conversation = "link"` is set. v4 (§FS-init.2.3,
-/// §DF-managed-block-delimiters): explicit `<!-- BEGIN/END GRUND MANAGED BLOCK -->`
-/// delimiters replace the implicit H2-to-next-heading region, and the worked
-/// citation example is `<§>`-escaped so generated output passes `grund check`
-/// unmodified. v3 (§FS-init.2.3.5, §DF-citation-directions) replaced the
-/// hand-written climbing-rule bullet with a generated `### Citation directions`
-/// section derived from `[citations]`.
-/// v6 (§FS-init.2.3.6, §DF-conversation-link-target): the local-conversation
-/// sentence became the gated link form — a Markdown link over the `file` target
-/// on the Claude entrypoints, the plain location everywhere else.
-/// v7 (§FS-config.1, §DF-config-file-location.2.3): the namespace rule tells an
-/// agent to give a new subproject a bare `grund.toml` rather than
-/// `.agents/grund.toml`. That is the taught workflow changing — an agent
-/// following a v6 block creates a config in the form `init` no longer
-/// generates — so it carries a version bump rather than a silent rewrite
-/// (§FS-init.2.3).
-/// v8 (§FS-init.2.3.5, §DF-directions-render): the generated
-/// `### Citation directions` section is re-rendered exactly — a unit per bullet,
-/// a grouped conjunction of alternatives, `*/K` said in words, a closed per-kind
-/// default folded into its permission, a legend for what gates, and the
-/// grounding sentence `[reference] require_grounding` was never rendering. The
-/// rules an agent reads changed, so it carries a bump rather than a silent
-/// rewrite (§FS-init.2.3).
-/// v9 (§FS-init.2.3.4.3): the cheap-read ladder gains the point-size sweep so
-/// oversized leads are discoverable before an agent pays to read them.
-/// v10 (§FS-init.2.3.4.5): Markdown declaration bodies teach that ATX headings
-/// need section coordinates, with the body/fence/source exemptions and bold
-/// label alternative of §FS-check.4.14.
-const AGENTS_BLOCK_VERSION: u32 = 10;
+pub const AGENT_SETUP_INSTRUCTIONS: &str = include_str!("../../assets/skills/grund-init/SKILL.md");
 
 pub fn canonical_template_text(template: &str) -> String {
     template.replace("\r\n", "\n").replace('\r', "\n")
@@ -149,7 +129,7 @@ fn agents_template_substitutions(
 ///
 /// Canonical target identity omits self regardless of whether this run selected
 /// the canonical `AGENTS.md` or only a companion.
-fn agents_workspace_members_section(
+pub(super) fn agents_workspace_members_section(
     name: &str,
     config: &Config,
     target: &Path,
@@ -213,7 +193,7 @@ const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a doc
 const BLOCK_SENTENCE: &str =
     " A note is one comment block: a blank line splits it, an empty comment line does not.";
 
-fn inline_citation_style_sentence(config: &Config) -> String {
+pub(crate) fn inline_citation_style_sentence(config: &Config) -> String {
     if config.inline_style == "citation-only" {
         return format!(
             "Inline citations carry no prose — put rationale in the spec.{DOC_COMMENT_SENTENCE}"
@@ -244,17 +224,13 @@ fn inline_citation_style_sentence(config: &Config) -> String {
     )
 }
 
-fn plural(value: usize) -> &'static str {
-    if value == 1 { "" } else { "s" }
-}
-
 fn markdown_link_label(raw: &str) -> String {
     raw.replace('\\', r"\\")
         .replace('[', r"\[")
         .replace(']', r"\]")
 }
 
-fn markdown_link_destination(raw: &str) -> String {
+pub(super) fn markdown_link_destination(raw: &str) -> String {
     if raw
         .chars()
         .any(|ch| ch.is_whitespace() || matches!(ch, '(' | ')' | '<' | '>'))
@@ -353,20 +329,27 @@ fn declaration_map(config: &Config) -> String {
     // place, and it is the one kind that is not a place — the complement of all
     // of them. Its citation directions still render (§FS-init.2.3.5).
     let homeless = config.homeless_kind();
-    let rows = config.kinds.iter().filter(|kind| kind.kind != homeless).map(|kind| {
-        let title = kind.title.as_deref().unwrap_or("Declaration");
-        // A non-citable kind is labelled by its home, which `place_label`
-        // already renders. An unwalked kind (§FS-config.3.4.7) is one of them;
-        // its missing directions bullet is §2.3.5's.
-        match (kind.file.as_deref().or(kind.folder.as_deref()), kind.citable) {
-            (Some(home), true) => row(&kind.kind, home, title),
-            (Some(home), false) => row(&kind.place_label().unwrap_or_default(), home, title),
-            (None, _) => format!(
-                "- `{}`: {title} (inline / configured by convention)",
-                kind.kind.replace('`', "\\`")
-            ),
-        }
-    });
+    let rows = config
+        .kinds
+        .iter()
+        .filter(|kind| kind.kind != homeless)
+        .map(|kind| {
+            let title = kind.title.as_deref().unwrap_or("Declaration");
+            // A non-citable kind is labelled by its home, which `place_label`
+            // already renders. An unwalked kind (§FS-config.3.4.7) is one of them;
+            // its missing directions bullet is §2.3.5's.
+            match (
+                kind.file.as_deref().or(kind.folder.as_deref()),
+                kind.citable,
+            ) {
+                (Some(home), true) => row(&kind.kind, home, title),
+                (Some(home), false) => row(&kind.place_label().unwrap_or_default(), home, title),
+                (None, _) => format!(
+                    "- `{}`: {title} (inline / configured by convention)",
+                    kind.kind.replace('`', "\\`")
+                ),
+            }
+        });
     rows.collect::<Vec<_>>().join("\n")
 }
 
@@ -385,7 +368,7 @@ fn row(label: &str, home: &str, title: &str) -> String {
 /// `workspace_members` is the §FS-init.2.3.4.15 section, rendered once per `init`
 /// invocation by [`agents_workspace_members_section`] against the directory being
 /// initialized and handed to every surface that block is written to.
-fn render_agents_append_block(
+pub(super) fn render_agents_append_block(
     name: &str,
     config: &Config,
     workspace_members: &str,
@@ -405,7 +388,7 @@ fn render_agents_append_block(
 /// substitutions, kept for the tests that render one block from a target and have
 /// no second surface for the walk-up to be repeated by.
 #[cfg(test)]
-fn render_agents_append_block_at(
+pub(crate) fn render_agents_append_block_at(
     name: &str,
     config: &Config,
     target: &Path,
@@ -423,7 +406,7 @@ fn render_agents_append_block_at(
 /// `--name`, same effective config, same workspace state ⇒ byte-identical
 /// output (§FS-non-goals.13).
 #[cfg(test)]
-fn render_agents_md(
+pub(crate) fn render_agents_md(
     name: &str,
     config: &Config,
     target: &Path,
@@ -443,7 +426,7 @@ fn render_agents_md(
 /// so `command_init` can render the block once and reuse it as both the full
 /// `AGENTS.md` body *and* the append/update payload — the workspace-members
 /// walk-up (§FS-init.2.3.4.15) only runs once per `init` invocation.
-fn render_agents_md_from_block(name: &str, block: &str) -> String {
+pub(super) fn render_agents_md_from_block(name: &str, block: &str) -> String {
     format!("# {name} — agent instructions\n\n{block}")
 }
 
@@ -463,7 +446,7 @@ fn render_agents_md_from_block(name: &str, block: &str) -> String {
 /// the user does not have — an invalid `[reference] conversation`, marker, or
 /// kind set would drop the guidance it selects while `init` still reported
 /// success. `grund check` rejects the same file with exit `2`.
-fn init_pending_effective_config(
+pub(super) fn init_pending_effective_config(
     target: &Path,
     name: &str,
     description: Option<&str>,
@@ -482,7 +465,7 @@ fn init_pending_effective_config(
 /// teaching surface, with only `project_name` substituted (§FS-init.2.4). With
 /// `--description`, the commented `project_description` teaching line becomes
 /// the real key (§FS-init.2.4, §DF-workspace-member-descriptions).
-fn render_grund_toml(name: &str, description: Option<&str>) -> String {
+pub(crate) fn render_grund_toml(name: &str, description: Option<&str>) -> String {
     let mut rendered =
         canonical_template_text(GRUND_TOML_TEMPLATE).replace("{NAME}", &escape_toml_basic(name));
     if let Some(description) = description {
@@ -495,8 +478,4 @@ fn render_grund_toml(name: &str, description: Option<&str>) -> String {
         );
     }
     rendered
-}
-
-fn escape_toml_basic(raw: &str) -> String {
-    raw.replace('\\', "\\\\").replace('"', "\\\"")
 }

@@ -23,16 +23,6 @@ reason = """
 Soft twin of this path's entry in docs/file-size-human-exceptions.toml, which carries the argument. This entry holds no judgment of its own: same ceiling, retires with its twin. Edit the reason there, not here.
 """
 [[exceptions]]
-path = "crates/grund-core/src/integrations.rs"
-match = "exact"
-rules = ["core-source"]
-kind = "deferred"
-max_accepted = { value = 1525, unit = "lines" }
-until = "the entry for this path in docs/file-size-human-exceptions.toml is retired"
-reason = """
-Soft twin of this path's entry in docs/file-size-human-exceptions.toml, which carries the argument. This entry holds no judgment of its own: same ceiling, retires with its twin. Edit the reason there, not here.
-"""
-[[exceptions]]
 path = "crates/grund-core/src/scanner/file_pass.rs"
 match = "exact"
 rules = ["core-source"]
@@ -73,7 +63,7 @@ reason = """
 The hard twin is retired: the fixture builder moved to tests/support/init_fixture.rs and the entrypoint-selection cases to tests/init_agent_entrypoints.rs, which took this file from 1023 lines to 630 and under the hard budget. This entry now carries the argument alone. What is left is one area — what `init` writes and what it reports — whose cases are long because each builds a tree, runs the binary, and reads the bytes back, not because two areas share a file. Missing boundary: a second axis inside that area worth naming, most likely the scaffold contents against the report (`--docs`, `--force`, `--dry-run`, determinism).
 """
 [[exceptions]]
-path = "crates/grund-core/src/init.rs"
+path = "crates/grund-core/src/writers/init.rs"
 match = "exact"
 rules = ["core-source"]
 kind = "deferred"

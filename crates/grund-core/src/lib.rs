@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Result, anyhow};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -32,9 +32,9 @@ mod checker;
 // from `Findings` is declared in `queries/` and what crosses the boundary is
 // what `queries/mod.rs` re-exports (§FS-show, §FS-list, §FS-lsp).
 mod queries;
-// §AR-system.2.8: the writers are one Rust module too, so the formatter, the ID
-// proposal and the fetch snapshot are declared in `writers/` and what crosses
-// the boundary is what `writers/mod.rs` re-exports (§FS-fmt, §FS-id, §FS-fetch).
+// §AR-system.2.8: the writers are one Rust module too — the formatter, the ID
+// proposal, the init scaffold (§FS-init) and the integrations artifacts
+// (§FS-integrations) — and `writers/mod.rs` says what crosses the boundary.
 mod writers;
 // Temporary re-exports for the duration of this migration: they keep every name
 // the flat crate root exposed reachable at `grund_core::<name>` while the other
@@ -66,16 +66,8 @@ include!("completions_cmd.rs");
 include!("output.rs");
 include!("fmt_cmd.rs");
 include!("id_cmd.rs");
-include!("integrations.rs");
-include!("init_templates.rs");
-include!("init_citation_directions.rs");
-include!("init_entrypoints.rs");
-include!("init_workspace_members.rs");
-include!("init_plan.rs");
-include!("init_block.rs");
-include!("init_notes.rs");
-include!("init_target.rs");
-include!("init.rs");
+include!("integrations_cmd.rs");
+include!("integrations_cmd_write.rs");
 include!("init_cmd.rs");
 include!("api.rs");
 include!("api_list.rs");

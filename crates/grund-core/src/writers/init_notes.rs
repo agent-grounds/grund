@@ -1,3 +1,15 @@
+use std::path::{Path, PathBuf};
+
+use super::init_entrypoints::{
+    AgentEntrypoint, CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS,
+    CanonicalSurfaceReach, CompanionAgentEntrypoint, is_file_or_symlink, is_symlink_to,
+    path_missing_without_following_symlinks,
+};
+use super::init_plan::SelectedInitAgentEntrypoints;
+// §AR-system.4: one upward read through the crate root — the English list
+// renderer, which is `output.rs`'s (§AR-system.2.9).
+use crate::format_list;
+
 /// The `note:` for a repository whose committed `link` opinion cannot reach
 /// Claude, because a Claude entrypoint is a symlink to the canonical file
 /// (§FS-init.2.3.4.17). Silence here reads as the opinion not working, on the
@@ -77,7 +89,11 @@ pub(crate) fn shadowed_claude_entrypoint_note(
         "delete the symlinks"
     };
     Ok(Some(
-        match planned.first().map(String::as_str).or(on_disk.first().map(String::as_str)) {
+        match planned
+            .first()
+            .map(String::as_str)
+            .or(on_disk.first().map(String::as_str))
+        {
             Some(entrypoint) if carries_the_block => format!(
                 "{head} from there as well as the linked form from {entrypoint}; {delete_symlinks} to leave {entrypoint} as Claude's only entrypoint"
             ),
@@ -118,7 +134,7 @@ fn claude_entrypoint_rows() -> impl Iterator<Item = &'static CompanionAgentEntry
 /// not want" is the wrong sentence for a repository that committed the `link`
 /// opinion and just asked for the second file: one of the two is a symlink to
 /// the entrypoint every other agent reads, and only the specific note says which.
-pub(crate) fn duplicate_agent_entrypoint_notes(
+pub(super) fn duplicate_agent_entrypoint_notes(
     target: &Path,
     plan: &SelectedInitAgentEntrypoints,
     reach: CanonicalSurfaceReach,
@@ -128,9 +144,7 @@ pub(crate) fn duplicate_agent_entrypoint_notes(
         .iter()
         .filter(|entrypoint| {
             let path = target.join(entrypoint.rel);
-            plan.companions
-                .iter()
-                .any(|planned| planned.path() == path)
+            plan.companions.iter().any(|planned| planned.path() == path)
                 || (plan.canonical
                     && !reach.leaves_uncovered(&path)
                     && plan.canonical_symlinks.contains(&path))
@@ -157,7 +171,11 @@ pub(crate) fn duplicate_agent_entrypoint_notes(
         let (all, times, spare) = if rels.len() == 2 {
             ("both", "twice".to_string(), "the one you do not want")
         } else {
-            ("all", format!("{} times", rels.len()), "the ones you do not want")
+            (
+                "all",
+                format!("{} times", rels.len()),
+                "the ones you do not want",
+            )
         };
         let (carry, reads) = if dry_run {
             (format!("would {all} carry"), "would read")

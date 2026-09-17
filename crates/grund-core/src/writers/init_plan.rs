@@ -1,3 +1,16 @@
+use std::path::{Path, PathBuf};
+
+use super::init_entrypoints::{
+    AgentEntrypoint, CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS,
+    CanonicalSurfaceReach, InitCompanionAgentEntrypoint, agents_with_own_entrypoint,
+    companion_workspace_exists, existing_init_companion_agent_entrypoints, is_file_or_symlink,
+    is_symlink_to, path_missing_without_following_symlinks,
+};
+use super::init_templates::ConversationSurface;
+// §AR-system.4: one upward read through the crate root — the report path
+// renderer, which is `output.rs`'s (§AR-system.2.9).
+use crate::format_path;
+
 /// The plan one `grund init` run makes: which entrypoint files *this*
 /// invocation writes, appends to, or updates (§FS-init.2.1, §FS-init.2.1.1).
 /// Its input is what the repository has — `init_entrypoints.rs` answers that —
@@ -42,23 +55,23 @@ impl InitAgentEntrypointSelection {
     }
 }
 
-struct SelectedInitAgentEntrypoints {
-    canonical: bool,
-    companions: Vec<InitCompanionAgentEntrypoint>,
+pub(super) struct SelectedInitAgentEntrypoints {
+    pub(super) canonical: bool,
+    pub(super) companions: Vec<InitCompanionAgentEntrypoint>,
     /// The companion paths that are symlinks to the canonical entrypoint. Never
     /// in `companions` — writing `AGENTS.md` is what reaches them — but they are
     /// copies of the block for their agent all the same, which is what the
     /// duplicate-entrypoint note counts (§FS-init.2.1.1). Carried on the plan so
     /// that note is built from what the selection already learned rather than
     /// from a second walk of the same table.
-    canonical_symlinks: Vec<PathBuf>,
+    pub(super) canonical_symlinks: Vec<PathBuf>,
 }
 
 impl SelectedInitAgentEntrypoints {
     /// The `<path>`-relative entrypoints in this plan that Claude reads
     /// (§FS-init.2.3.4.17) — what tells the shadowed-entrypoint note which file
     /// this run makes current for Claude, when it makes one current.
-    fn companions_of_claude(&self, target: &Path) -> Vec<String> {
+    pub(super) fn companions_of_claude(&self, target: &Path) -> Vec<String> {
         self.companions
             .iter()
             .map(|companion| companion.path())
@@ -73,7 +86,7 @@ impl SelectedInitAgentEntrypoints {
     /// here as a flag rather than a path, so a caller that reasons about paths
     /// cannot see it at all unless it is rebuilt: `<path>/AGENTS.md` with
     /// `<path>` at `~/.codex` is the machine-global Codex instruction file.
-    fn planned_paths(&self, target: &Path) -> Vec<PathBuf> {
+    pub(super) fn planned_paths(&self, target: &Path) -> Vec<PathBuf> {
         self.canonical
             .then(|| target.join(CANONICAL_AGENT_ENTRYPOINT))
             .into_iter()
@@ -86,7 +99,7 @@ impl SelectedInitAgentEntrypoints {
     }
 }
 
-fn selected_init_agent_entrypoints(
+pub(super) fn selected_init_agent_entrypoints(
     target: &Path,
     selection: &InitAgentEntrypointSelection,
     reach: CanonicalSurfaceReach,
@@ -133,7 +146,7 @@ fn selected_init_agent_entrypoints(
 /// workspace directory already exists; generic project metadata directories
 /// remain existing-file-only. At most one alias per agent (§FS-init.2.1.1) —
 /// `.claude/` proves Claude is in use, which is one fact, not two files.
-fn workspace_init_companion_agent_entrypoints(
+pub(crate) fn workspace_init_companion_agent_entrypoints(
     root: &Path,
     reach: CanonicalSurfaceReach,
 ) -> Result<Vec<InitCompanionAgentEntrypoint>, (PathBuf, String)> {
@@ -161,7 +174,7 @@ fn workspace_init_companion_agent_entrypoints(
 /// the normal automatic detection would not choose them — one per agent
 /// (§FS-init.2.1.1): every entrypoint the repository already has is updated,
 /// and a missing one is created only for an agent that has none.
-fn requested_init_companion_agent_entrypoints(
+pub(crate) fn requested_init_companion_agent_entrypoints(
     root: &Path,
     selection: &InitAgentEntrypointSelection,
     reach: CanonicalSurfaceReach,
