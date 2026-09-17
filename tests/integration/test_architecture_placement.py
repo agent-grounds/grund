@@ -2,8 +2,9 @@
 `placement` chapter that names its box in the system: for each `AR-` ID the
 index at `docs/architecture/README.md` links, the file the link names — a
 Markdown page under the folder, or the source file an inline declaration lives
-in — has a `## placement:` named section, and that section cites `AR-system`.
-The index page is the system itself and is the one page exempt."""
+in — has a `## placement:` named section, that section opens with a fenced
+diagram of the component's box, and it cites `AR-system`. The index page is
+the system itself and is the one page exempt."""
 
 import re
 import unittest
@@ -51,6 +52,12 @@ def _placement_chapter(lines):
     return None
 
 
+def _opens_with_a_diagram(chapter):
+    """True when the chapter's first non-blank line opens a fenced text block."""
+    first = next((line for line in chapter if line.strip()), "")
+    return first.strip().startswith("```")
+
+
 class ArchitecturePlacementTests(unittest.TestCase):
     def test_the_index_links_the_pages(self):
         self.assertGreaterEqual(len(_pages()), 8, "index entries not found; parser broken?")
@@ -66,6 +73,8 @@ class ArchitecturePlacementTests(unittest.TestCase):
                 problems.append(f"{ident}: no `## placement:` chapter in {path.name}")
             elif f"§{SYSTEM}" not in "\n".join(chapter):
                 problems.append(f"{ident}: the placement chapter does not cite §{SYSTEM}")
+            elif not _opens_with_a_diagram(chapter):
+                problems.append(f"{ident}: the placement chapter does not open with a fenced diagram")
         self.assertEqual([], problems, "\n".join(problems))
 
 

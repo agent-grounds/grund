@@ -4,7 +4,12 @@ Goals say what matters and requirements say what must never break; this page nam
 
 ## placement: What the meters measure
 
-Not a component: the map from every goal and requirement to the spec, fixture or gate that measures it ([§AR-system.5](README.md#5-what-holds-the-shape)). It takes the goal and requirement pages and gives one meter row each. The rows point outward — at behavior specs, e2e cases, [§AR-ci](AR-ci.md#ar-ci-ci-mirrors-the-local-pre-commit-gate) and [§AR-benchmarks](AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) — and never into a component's design, so this page knows nothing of the pipeline ([§AR-system.1](README.md#1-the-pipeline)) beyond which measurement sits on which surface.
+```text
+goals, requirements ─► [ meters ] ─► one row each ─┬─► functional specs, e2e cases
+                                                   └─► AR-ci, AR-benchmarks
+```
+
+Not a component: the map from every goal and requirement to the spec, fixture or gate that measures it ([§AR-system.5](README.md#5-what-holds-the-shape)). It takes the goal and requirement pages and gives one meter row each. The rows point outward — at behavior specs, e2e cases, [§AR-ci](AR-ci.md#ar-ci-ci-mirrors-the-local-pre-commit-gate) and [§AR-benchmarks](AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) — and never into a component's design, so this page knows nothing of the pipeline ([§AR-system.1](README.md#1-the-system)) beyond which measurement sits on which surface.
 
 ## 1. Rule
 

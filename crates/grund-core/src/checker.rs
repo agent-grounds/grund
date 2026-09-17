@@ -5,6 +5,11 @@
 ///
 /// ## placement: Where the checker sits
 ///
+/// ```text
+/// scanner ─► Findings ─┐
+/// config ──────────────┴─► [ checker ] ─► Report ─► api ─► cli, lsp
+/// ```
+///
 /// The sixth box of the pipeline (§AR-system.2.6). It takes `Findings` from the
 /// scanner (§AR-system.2.5) and the config it needs to resolve them, and gives
 /// one `Report` to the api (§AR-system.2.9), which every frontend renders
