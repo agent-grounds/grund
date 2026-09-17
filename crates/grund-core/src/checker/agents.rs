@@ -1,3 +1,17 @@
+use std::fs;
+use std::path::Path;
+
+use crate::config::Config;
+use crate::grammar::AGENTS_BLOCK_END;
+use crate::model::{CheckReport, Diagnostic};
+// §AR-system.4: seven upward reads through the crate root — the managed block's
+// version, lookup and finder, the companion entrypoint list, and the two
+// generated sections this rule compares, all the writers' (§FS-init).
+use crate::{
+    AGENTS_BLOCK_VERSION, AgentsBlockLookup, ConversationSurface, citation_directions_section,
+    clickable_citations_section, companion_agent_entrypoints, find_agents_block,
+};
+
 const AGENTS_INIT_COMPATIBILITY_TAIL: &str =
     " — repo maintenance; citation checks still ran; wording changes in grund 0.14.0";
 
@@ -12,7 +26,7 @@ fn agents_init_compatibility_message(legacy: String) -> String {
 /// binary — an older `vN` is "run `grund init`" (§FS-init.2.3), a newer one is
 /// fatal. `AGENTS.md` is canonical; known companion entrypoints are checked when
 /// present and not symlinked to `AGENTS.md`.
-fn check_agents_block_version(config: &Config, report: &mut CheckReport) {
+pub(super) fn check_agents_block_version(config: &Config, report: &mut CheckReport) {
     let root = &config.root;
     let canonical = root.join("AGENTS.md");
     let canonical_exists = canonical.exists();
@@ -50,7 +64,7 @@ fn check_agents_block_version(config: &Config, report: &mut CheckReport) {
 /// `[reference] conversation` without re-running `grund init` must surface as
 /// drift, and the sentence also varies by entrypoint — so the comparison derives
 /// the surface from the path, the same way `init` chose it.
-fn check_agent_block_path(
+pub(crate) fn check_agent_block_path(
     config: &Config,
     path: &Path,
     report: &mut CheckReport,
@@ -180,7 +194,7 @@ fn check_agent_block_path(
 /// two adjacent config-derived `###` sections (Citation directions, Clickable
 /// citations — §FS-init.2.3.5/2.3.6) do not bleed into each other; neither
 /// rendered section contains a `#`-led line, so this cannot cut one short.
-fn section_in_block<'a>(block_text: &'a str, heading: &str) -> Option<&'a str> {
+pub(crate) fn section_in_block<'a>(block_text: &'a str, heading: &str) -> Option<&'a str> {
     let start = block_text.match_indices(heading).find_map(|(index, _)| {
         let at_line_start = index == 0 || block_text.as_bytes().get(index - 1) == Some(&b'\n');
         let after = index + heading.len();

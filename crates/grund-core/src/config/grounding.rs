@@ -181,6 +181,22 @@ pub(super) fn validate_global_grounding(
     )
 }
 
+/// The effective grounding level of the row named `kind` (§FS-config.3.4.8) —
+/// including the homeless kind, whose row a config need not have declared.
+///
+/// A `[[kinds]]` lookup over the pair below, and the one reading of it a caller
+/// does by kind name rather than by row: the scanner asks it per file
+/// (§AR-scanner.2.7) and the checker per citing kind (§FS-check.3.11), which is
+/// why it sits with the keys rather than with either of them.
+pub(crate) fn grounding_level_for_kind(config: &Config, kind: &str) -> usize {
+    config
+        .kinds
+        .iter()
+        .find(|configured| configured.kind == kind)
+        .map(|configured| config.kind_grounding(configured).1)
+        .unwrap_or_else(|| config.homeless_grounding().1)
+}
+
 impl Config {
     /// The effective grounding pair for one `[[kinds]]` row (§FS-config.3.4.8):
     /// the row's word where it has one, else the `[reference]` default — which is

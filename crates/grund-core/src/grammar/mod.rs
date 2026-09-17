@@ -14,7 +14,10 @@
 //! scanner files came down here when §AR-system.2.5 became a module: the
 //! off-grammar `LegacyGrammar`, the `{kind}` literal reader of the `[id] format`
 //! template, the member-local fallback ID parser, the qualified-citation
-//! suppression rule, and the two shorthand questions asked of a catalog.
+//! suppression rule, and the two shorthand questions asked of a catalog. One
+//! item went the other way when §AR-system.2.6 became a module: the inline
+//! citation style rule, which is the checker's (§AR-checker.2.14). What stays
+//! here is the classifier both stages read.
 
 mod comment_block;
 mod comment_line;
@@ -51,8 +54,8 @@ pub(crate) use id_format::{
 pub(crate) use id_rules::{id_grammar_key_slash_error, id_grammar_literal_slash_error};
 pub(crate) use ids::{parse_id, parse_id_arg, parse_loose_qualified_id_prefix};
 pub(crate) use inline_note_layout::{
-    BlockCitations, block_has_inline_note_memoized, check_inline_citation_style,
-    inline_layout_violations, inline_note_layout_sentence, inline_note_verdicts,
+    BlockCitations, CITATION_RUN_SEPARATOR, LayoutChannel, block_has_inline_note_memoized,
+    inline_layout_violations, inline_note_layout_sentence, inline_note_verdicts, layout_channel,
     layout_pass_enabled, line_says_something,
 };
 pub(crate) use near_miss::{declaration_captures, declaration_id_on_line, near_miss_heading};
@@ -78,7 +81,7 @@ pub(crate) use source_line::{PythonDocstringScanState, source_scan_line};
 pub(crate) use comment_line::{comment_content_range, line_citation_ranges};
 #[cfg(test)]
 pub(crate) use inline_note_layout::{
-    InlineNoteLayout, block_has_inline_note, content_conforms, layout_channel, line_layout_view,
+    InlineNoteLayout, block_has_inline_note, content_conforms, line_layout_view,
 };
 #[cfg(test)]
 pub(crate) use shorthand::expand_shorthand_citations;

@@ -1,9 +1,17 @@
+use super::homes::is_stub_for_inline_decl;
+use crate::config::{Config, LeadSizeWarning};
+use crate::model::{CheckReport, Declaration, Diagnostic, Findings, Id, SectionInfo, TextOverlays};
+// §AR-system.4: four upward reads through the crate root — the ID renderer from
+// the writers (§FS-id), and the point-body pair, its cache and its measure from
+// `show_body.rs`, the query that owns slicing a lead (§FS-show).
+use crate::{PointBodyCache, measure_point_text, point_body_pair, render_id};
+
 /// Opt-in point-lead budget checking (§FS-check.4.13).
 ///
 /// The scanner owns the site set and `show_body.rs` owns slicing/counting. This
 /// pass only applies the configured strict threshold and constructs the fixed
 /// warning, keeping CLI and LSP on the same checker path.
-fn check_oversized_leads(
+pub(super) fn check_oversized_leads(
     findings: &Findings,
     config: &Config,
     current_alias: Option<&str>,

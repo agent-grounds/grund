@@ -1,9 +1,20 @@
+use std::collections::BTreeMap;
+use std::fs;
+
+use super::references::WorkspaceCheckTarget;
+use crate::config::Config;
+use crate::grammar::is_inside_inline_code;
+use crate::model::{Citation, Diagnostic, Findings, Id, render_qualified_id};
+// §AR-system.4: two upward reads through the crate root — the ID renderer from
+// the writers (§FS-id) and the sort key from `output.rs`.
+use crate::{render_id, sort_path_key};
+
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
 /// Markdown inline-code context is a likely illustration. Offer whichever
 /// applies — and both when a dangling citation in backticks also has a near
 /// match. Outside inline code the escape hint is withheld so a prose typo is
 /// nudged toward the near ID, not toward escaping.
-fn dangling_message(
+pub(crate) fn dangling_message(
     config: &Config,
     namespace: Option<&str>,
     findings: &Findings,
@@ -28,7 +39,7 @@ fn dangling_message(
 /// §FS-check.3.1 / §FS-check.4.12: a missing declaration in a fetch-enabled
 /// home. Existing typo/illustration hints replace the fetch action while the
 /// snapshot-specific base and fixed finding class remain.
-fn missing_snapshot_message(
+pub(super) fn missing_snapshot_message(
     config: &Config,
     namespace: Option<&str>,
     findings: &Findings,
@@ -46,9 +57,9 @@ fn missing_snapshot_message(
     let near = nearest_declared_id(config, namespace, findings, missing);
     let escape = in_inline_code.then(|| format!("<{}>{rendered}", config.marker));
     match (near, escape) {
-        (Some(near), Some(escape)) => format!(
-            "{base}; did you mean {near}? (or write {escape} if this is an illustration)"
-        ),
+        (Some(near), Some(escape)) => {
+            format!("{base}; did you mean {near}? (or write {escape} if this is an illustration)")
+        }
         (Some(near), None) => format!("{base}; did you mean {near}?"),
         (None, Some(escape)) => format!("{base}; write {escape} if this is an illustration"),
         (None, None) => format!("{base} — run grund fetch {rendered}"),
@@ -60,7 +71,7 @@ fn missing_snapshot_message(
 /// the rare dangling path asks, so this re-reads the one line rather than
 /// widening every `Citation`; source files (columns shifted by stripped comment
 /// prefixes) never qualify. Any read/bounds failure yields `false` — no hint.
-fn citation_in_markdown_inline_code(cite: &Citation) -> bool {
+pub(super) fn citation_in_markdown_inline_code(cite: &Citation) -> bool {
     if cite.file.extension().and_then(|e| e.to_str()) != Some("md") {
         return false;
     }
@@ -106,11 +117,11 @@ fn nearest_declared_id(
     best.map(|(_, rendered)| rendered)
 }
 
-fn close_enough_for_hint(distance: usize, left_len: usize, right_len: usize) -> bool {
+pub(super) fn close_enough_for_hint(distance: usize, left_len: usize, right_len: usize) -> bool {
     distance > 0 && distance <= 3 && distance * 3 <= left_len.max(right_len)
 }
 
-fn edit_distance(left: &str, right: &str) -> usize {
+pub(super) fn edit_distance(left: &str, right: &str) -> usize {
     let right_chars: Vec<char> = right.chars().collect();
     let mut previous: Vec<usize> = (0..=right_chars.len()).collect();
     let mut current = vec![0; right_chars.len() + 1];
@@ -129,15 +140,15 @@ fn edit_distance(left: &str, right: &str) -> usize {
     previous[right_chars.len()]
 }
 
-fn section_depth(section_path: &str) -> usize {
+pub(super) fn section_depth(section_path: &str) -> usize {
     section_path.split('.').count()
 }
 
-fn heading_marks(level: usize) -> String {
+pub(super) fn heading_marks(level: usize) -> String {
     "#".repeat(level)
 }
 
-fn target_for_citation<'a>(
+pub(super) fn target_for_citation<'a>(
     cite: &Citation,
     local: &'a Findings,
     local_config: &'a Config,
@@ -155,7 +166,7 @@ fn target_for_citation<'a>(
     }
 }
 
-fn citation_resolves(
+pub(super) fn citation_resolves(
     cite: &Citation,
     local: &Findings,
     local_config: &Config,
@@ -169,11 +180,11 @@ fn citation_resolves(
 /// Put diagnostics in the one fixed order `grund` ever prints them in — by path, then
 /// line, then message text — so two runs over the same tree agree byte-for-byte
 /// (§FS-errors.4) and ordering is not a knob (§FS-non-goals.9).
-fn sort_diagnostics(diagnostics: &mut [Diagnostic]) {
+pub(crate) fn sort_diagnostics(diagnostics: &mut [Diagnostic]) {
     diagnostics.sort_by(diagnostic_cmp);
 }
 
-fn diagnostic_cmp(a: &Diagnostic, b: &Diagnostic) -> std::cmp::Ordering {
+pub(crate) fn diagnostic_cmp(a: &Diagnostic, b: &Diagnostic) -> std::cmp::Ordering {
     (
         a.path.as_ref().map(|p| sort_path_key(p)),
         a.line.unwrap_or(0),

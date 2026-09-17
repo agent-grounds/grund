@@ -11,7 +11,9 @@
 //! which projects the whole tree holds, what a query command therefore holds,
 //! and the two findings about a block nobody lists or nobody reads. The
 //! `AbsentOptionalNamespace` record went the other way, down into `config/`
-//! beside the `Config` field that carries it.
+//! beside the `Config` field that carries it, and `join_alternatives` came down
+//! out of `checker/references.rs` when §AR-system.2.6 became a module, this
+//! being the lowest component that spells a candidate list.
 
 mod context;
 mod expand;
@@ -34,7 +36,7 @@ pub(crate) use context::{
 pub(crate) use expand::{
     enclosing_workspace_of, expand_workspace_tree, expand_workspace_tree_with_report_base,
 };
-pub(crate) use id_candidates::with_member_id_candidates;
+pub(crate) use id_candidates::{join_alternatives, with_member_id_candidates};
 pub(crate) use members::{
     AncestorWorkspaces, UnreadBlockProbe, WorkspaceMember, absorbed_scan_roots,
     absorbed_scan_warning, undecidable_ancestor_claim_warning, unread_block_scope_root,

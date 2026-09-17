@@ -1,10 +1,26 @@
-/// The citation-direction half of the checker (§FS-config.3.9), in a file of its
-/// own beside `checker_references.rs` and `checker_sections.rs`
-/// (§AR-core-module-layout.1): the obligation pass (§FS-check.3.11), the
-/// prohibition pass (§FS-check.3.12), and the two questions both of them ask —
-/// what kind of place a citation sits in, and whether it matches a rule's
-/// target. `checker.rs` keeps the declaration-shape rules and the diagnostic
-/// helpers they share.
+//! The citation-direction half of the checker (§FS-config.3.9), in a file of its
+//! own beside `references.rs` and `sections.rs`
+//! (§AR-core-module-layout.1): the obligation pass (§FS-check.3.11), the
+//! prohibition pass (§FS-check.3.12), and the two questions both of them ask —
+//! what kind of place a citation sits in, and whether it matches a rule's
+//! target. `report.rs` keeps the declaration-shape rules and the diagnostic
+//! helpers they share.
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::{Path, PathBuf};
+
+use super::grounding::file_obligation_units;
+use crate::config::{
+    CitationDisjunction, CitationLevel, CitationTarget, Config, KindCitationRules, KindConfig,
+    NamespaceMatch, render_citation_target,
+};
+use crate::model::{
+    CheckReport, Citation, Diagnostic, E2eSpecRef, Findings, Id, paths_same_location,
+};
+use crate::scanner::file_home_kind;
+// §AR-system.4: one upward read through the crate root — `render_id`, the ID
+// renderer, which is the writers' (§FS-id).
+use crate::render_id;
 
 /// How a citing kind is named in a finding (§FS-check.3.11, §FS-check.3.12): a
 /// citable kind by its name, which is the prefix of every ID in it; a
@@ -28,7 +44,11 @@ fn citing_side_label(config: &Config, kind: &str) -> String {
 /// Why the citation indexes are built up front: the per-declaration and per-case
 /// rescans they replace were O(kinds × declarations × citations) and dominated
 /// `grund check` on a large tree.
-fn check_citation_obligations(findings: &Findings, config: &Config, report: &mut CheckReport) {
+pub(super) fn check_citation_obligations(
+    findings: &Findings,
+    config: &Config,
+    report: &mut CheckReport,
+) {
     // Index every citation once, up front, so each citing kind's obligation pass
     // is a map lookup rather than a fresh O(citations) scan per declaration
     // (§AR-benchmarks).
@@ -87,7 +107,8 @@ fn check_citation_obligations(findings: &Findings, config: &Config, report: &mut
         // §FS-check.2.2.1: a walked folder with real non-entry content must not
         // silently pass when this obligation has no unit to evaluate.
         if units.is_empty()
-            && let Some(warning) = empty_citation_obligation_warning(config, findings, citing_kind, rules)
+            && let Some(warning) =
+                empty_citation_obligation_warning(config, findings, citing_kind, rules)
         {
             report.warnings.push(warning);
         }
@@ -140,7 +161,11 @@ fn empty_citation_obligation_warning(
         return None;
     }
 
-    let level = if rules.must.is_empty() { "should" } else { "must" };
+    let level = if rules.must.is_empty() {
+        "should"
+    } else {
+        "must"
+    };
     let place = format!("{folder}/");
     let message = if kind.citable {
         format!(
@@ -187,15 +212,15 @@ fn kind_entry_file(file: &Path, config: &Config, kind: &KindConfig) -> bool {
 /// body, a `code` source file, or an `E2E` case — together with the citations
 /// that count toward it, the `path:line` a finding anchors at, and the subject
 /// `id` (a declaration) or `None` (a `code` source file).
-struct ObligationUnit<'a> {
-    id: Option<&'a Id>,
+pub(super) struct ObligationUnit<'a> {
+    pub(super) id: Option<&'a Id>,
     /// The place a non-citable kind's unit is named by (§FS-check.3.11) — its
     /// home, since the unit is a file in it and the kind has no ID to print.
-    place: Option<String>,
-    path: PathBuf,
-    line: usize,
-    citations: Vec<&'a Citation>,
-    e2e_spec_refs: Vec<&'a E2eSpecRef>,
+    pub(super) place: Option<String>,
+    pub(super) path: PathBuf,
+    pub(super) line: usize,
+    pub(super) citations: Vec<&'a Citation>,
+    pub(super) e2e_spec_refs: Vec<&'a E2eSpecRef>,
 }
 
 impl ObligationUnit<'_> {
@@ -231,11 +256,7 @@ impl ObligationUnit<'_> {
 ///   the kinds that are usually all Markdown, which is most of them: the
 ///   exemption reasons about implementation-versus-document, and a home the
 ///   maintainer named is neither guess.
-fn file_is_obligation_unit(
-    non_citable: &BTreeSet<&str>,
-    homeless: &str,
-    cite: &Citation,
-) -> bool {
+fn file_is_obligation_unit(non_citable: &BTreeSet<&str>, homeless: &str, cite: &Citation) -> bool {
     if cite.source_kind == homeless {
         return cite.file.extension().and_then(|ext| ext.to_str()) != Some("md");
     }
@@ -269,12 +290,11 @@ fn obligation_units<'a>(
     by_file: &BTreeMap<(&'a str, &'a Path), Vec<&'a Citation>>,
     e2e_by_case: &BTreeMap<&'a Path, Vec<&'a Citation>>,
 ) -> Vec<ObligationUnit<'a>> {
-    if citing_kind == config.homeless_kind()
-        || non_citable_kind_names(config).contains(citing_kind)
+    if citing_kind == config.homeless_kind() || non_citable_kind_names(config).contains(citing_kind)
     {
         // §FS-check.3.11: a kind with no declarations answers with its files,
         // cut by the row's `grounding_level` — the same unit §FS-check.3.6 asks
-        // for grounding, in `checker_grounding.rs`.
+        // for grounding, in `grounding.rs`.
         return file_obligation_units(citing_kind, config, findings, by_file);
     }
 
@@ -344,7 +364,11 @@ fn obligation_diagnostic(
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
 /// its target is a `forbidden-citation` error (`must-not`) or a
 /// `discouraged-citation` suggestion (`should-not`).
-fn check_citation_prohibitions(findings: &Findings, config: &Config, report: &mut CheckReport) {
+pub(super) fn check_citation_prohibitions(
+    findings: &Findings,
+    config: &Config,
+    report: &mut CheckReport,
+) {
     for cite in &findings.citations {
         match citation_site_level(config, cite) {
             Some(CitationLevel::MustNot) => report.errors.push(prohibition_diagnostic(

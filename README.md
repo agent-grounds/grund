@@ -17,7 +17,7 @@
 2. **Re-read before you edit.** `grund <ID>.<section>` pulls just that subsection into context — no full-file reads, no token bloat.
 3. **No dangling pointers.** `grund check` validates that every cited ID resolves — in `.md`, Rust `///`, Java doc-comments, Python docstrings, Go `//`, JSDoc, every doc-comment form `grund` knows about.
 
-Off-the-shelf Markdown link checkers (`lychee`, `markdown-link-check`) only handle `.md` and only validate `[text](url)`. A `§`-marked citation of `FS-check.3.2` in `crates/grund-core/src/checker_references.rs` is invisible to them. That gap is what `grund` exists to close: Lychee checks whether Markdown links still open; `grund` checks whether your code still knows why it exists. Lychee is the link checker; `grund` is the intent checker. Both belong in CI; they guard different failure modes. [§GRUND-grund.1](docs/grund.md#1-what-grund-does-about-it)
+Off-the-shelf Markdown link checkers (`lychee`, `markdown-link-check`) only handle `.md` and only validate `[text](url)`. A `§`-marked citation of `FS-check.3.2` in `crates/grund-core/src/checker/references.rs` is invisible to them. That gap is what `grund` exists to close: Lychee checks whether Markdown links still open; `grund` checks whether your code still knows why it exists. Lychee is the link checker; `grund` is the intent checker. Both belong in CI; they guard different failure modes. [§GRUND-grund.1](docs/grund.md#1-what-grund-does-about-it)
 
 ## 0. Specify your intent
 
@@ -30,14 +30,14 @@ Keep agents grounded in the spec — fewer bugs, cheaper LLM context,
 faster onboarding. …
 ```
 
-That heading lives in the configured home for its kind (`GRUND` → `docs/grund.md`, `FS` → `requirements.md`, `GOAL` → `docs/goals.md`, and so on — see [§4](#4-the-structure-that-gets-cited)). Once it's declared, any code, doc, or test can cite `§GRUND-grund` and `grund check` will resolve it. A declaration can live in code too: drop the `#` in a doc-comment — `grund`'s own architecture spec [`AR-checker`](crates/grund-core/src/checker.rs) opens with `/// AR-checker: how grund validates the scanner's findings`, right on the code it describes ([§4](#4-the-structure-that-gets-cited) shows the wiring).
+That heading lives in the configured home for its kind (`GRUND` → `docs/grund.md`, `FS` → `requirements.md`, `GOAL` → `docs/goals.md`, and so on — see [§4](#4-the-structure-that-gets-cited)). Once it's declared, any code, doc, or test can cite `§GRUND-grund` and `grund check` will resolve it. A declaration can live in code too: drop the `#` in a doc-comment — `grund`'s own architecture spec [`AR-checker`](crates/grund-core/src/checker/report.rs) opens with `/// AR-checker: how grund validates the scanner's findings`, right on the code it describes ([§4](#4-the-structure-that-gets-cited) shows the wiring).
 
 ## 1. Cite as you write
 
 When code realizes a named behavior, it carries a `§<ID>` citation — on its doc-comment for a whole behavior, or inline beside the line that enforces one clause. From `grund`'s own source — the code implementing the missing-section check is grounded in [`FS-check.3.2`](docs/functional-spec/FS-check.md#32-missing-section), the spec section that defines that very check:
 
 ```rust
-// crates/grund-core/src/checker_references.rs
+// crates/grund-core/src/checker/references.rs
 
 /// The reference-resolution rule family — dangling citations (§FS-check.3.1),
 /// missing sections (§FS-check.3.2), unknown project aliases (§FS-check.3.8), …
@@ -104,12 +104,12 @@ Renumber the heading `### 3.2 Missing section` in [`FS-check.md`](docs/functiona
 ```
 $ grund check
 crates/grund-cli/tests/index_entry_round_trip.rs:229: error: missing section FS-check.3.2
-crates/grund-core/src/checker.rs:50: error: missing section FS-check.3.2
-crates/grund-core/src/checker.rs:448: error: missing section FS-check.3.2
-crates/grund-core/src/checker_index.rs:136: error: missing section FS-check.3.2
-crates/grund-core/src/checker_index.rs:242: error: missing section FS-check.3.2
-crates/grund-core/src/checker_references.rs:2: error: missing section FS-check.3.2
-crates/grund-core/src/checker_references.rs:359: error: missing section FS-check.3.2
+crates/grund-core/src/checker/index.rs:152: error: missing section FS-check.3.2
+crates/grund-core/src/checker/index.rs:258: error: missing section FS-check.3.2
+crates/grund-core/src/checker/references.rs:2: error: missing section FS-check.3.2
+crates/grund-core/src/checker/references.rs:378: error: missing section FS-check.3.2
+crates/grund-core/src/checker/report.rs:85: error: missing section FS-check.3.2
+crates/grund-core/src/checker/report.rs:486: error: missing section FS-check.3.2
 docs/decisions/functional/DF-duplicate-section-path.md:26: error: missing section FS-check.3.2
 docs/decisions/functional/DF-require-grounding.md:8: error: missing section FS-check.3.2
 docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.2
@@ -357,7 +357,7 @@ pub struct EventBus { /* … */ }
 ```
 `grund AR-event-bus` reads the source declaration directly, strips the `///` markers, and prints the Rustdoc prose. The same goes for Javadoc, JSDoc, Python docstrings, Go doc blocks, KDoc, Doxygen — every comment form enumerated in `grund`'s scanner spec. A one-line Markdown stub remains supported when a separate pointer file is useful.
 
-`grund` does this itself: [§AR-checker](crates/grund-core/src/checker.rs) lives only in the doc-comment of `fn check` in [`crates/grund-core/src/checker.rs`](crates/grund-core/src/checker.rs), and its canonical row in [`docs/architecture/README.md`](docs/architecture/README.md) enrolls it without a stub — `grund AR-checker` prints the source prose.
+`grund` does this itself: [§AR-checker](crates/grund-core/src/checker/report.rs) lives only in the doc-comment of `fn check` in [`crates/grund-core/src/checker/report.rs`](crates/grund-core/src/checker/report.rs), and its canonical row in [`docs/architecture/README.md`](docs/architecture/README.md) enrolls it without a stub — `grund AR-checker` prints the source prose.
 
 ## 5. Reviewing code
 
@@ -366,9 +366,9 @@ Before changing or removing a declaration, see what leans on it:
 ```bash
 $ grund refs FS-check.3.2 --summary
 crates/grund-cli/tests/index_entry_round_trip.rs: 1 (line 229)
-crates/grund-core/src/checker.rs: 2 (lines 49, 447)
-crates/grund-core/src/checker_index.rs: 2 (lines 136, 242)
-crates/grund-core/src/checker_references.rs: 2 (lines 2, 359)
+crates/grund-core/src/checker/index.rs: 2 (lines 152, 258)
+crates/grund-core/src/checker/references.rs: 2 (lines 2, 378)
+crates/grund-core/src/checker/report.rs: 2 (lines 85, 486)
 docs/decisions/functional/DF-duplicate-section-path.md: 1 (line 26)
 docs/decisions/functional/DF-require-grounding.md: 1 (line 8)
 docs/requirements/REQ-no-wrong-citation.md: 1 (line 7)
@@ -377,8 +377,8 @@ docs/requirements/REQ-no-wrong-citation.md: 1 (line 7)
 Before reviewing a diff, group the citation graph by file so you can join changed files to the specs they touch:
 
 ```bash
-$ grund cover --format json | jq -c 'select(.path == "crates/grund-core/src/checker_references.rs") | .citations |= map(select(.id == "FS-check" and .section == "3.2"))'
-{"path":"crates/grund-core/src/checker_references.rs","citations":[{"path":"crates/grund-core/src/checker_references.rs","line":2,"column":23,"id":"FS-check","section":"3.2","marker":true,"text":"§FS-check.3.2"},{"path":"crates/grund-core/src/checker_references.rs","line":359,"column":12,"id":"FS-check","section":"3.2","marker":true,"text":"§FS-check.3.2"}]}
+$ grund cover --format json | jq -c 'select(.path == "crates/grund-core/src/checker/references.rs") | .citations |= map(select(.id == "FS-check" and .section == "3.2"))'
+{"path":"crates/grund-core/src/checker/references.rs","citations":[{"path":"crates/grund-core/src/checker/references.rs","line":2,"column":23,"id":"FS-check","section":"3.2","marker":true,"text":"§FS-check.3.2"},{"path":"crates/grund-core/src/checker/references.rs","line":378,"column":12,"id":"FS-check","section":"3.2","marker":true,"text":"§FS-check.3.2"}]}
 ```
 
 For an agent reviewing a code change, the loop is mechanical: list the `§…` citations in the changed files, run `grund <ID>` on each, and ask "does the code still match what the spec claims?"
@@ -513,6 +513,6 @@ That rule plus a clean `grund check` is the whole contract: every reference reso
 - [`docs/roadmap.md`](docs/roadmap.md) — what's next
 - [`docs/changelog.md`](docs/changelog.md) — what changed
 - [`docs/functional-spec/`](docs/functional-spec/) — external behavior
-- [`docs/architecture/`](docs/architecture/) — internals: [§AR-scanner](docs/architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations) for discovery, [§AR-checker](crates/grund-core/src/checker.rs) for validation, and [§AR-core-module-layout](docs/architecture/AR-core-module-layout.md#ar-core-module-layout-core-implementation-is-split-by-category) for the core source layout
+- [`docs/architecture/`](docs/architecture/) — internals: [§AR-scanner](docs/architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations) for discovery, [§AR-checker](crates/grund-core/src/checker/report.rs) for validation, and [§AR-core-module-layout](docs/architecture/AR-core-module-layout.md#ar-core-module-layout-core-implementation-is-split-by-category) for the core source layout
 - [`docs/decisions/`](docs/decisions/) — how we got here
 - [`tests/e2e/`](tests/e2e/) — executable proof that the spec holds; [`tests/integration/`](tests/integration/) — proof that the parts fit as designed

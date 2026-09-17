@@ -1,13 +1,24 @@
-/// The grounding pass (§FS-check.3.6), in a file of its own beside
-/// `checker_citations.rs` and `checker_sections.rs` (§AR-core-module-layout.1):
-/// which `[[kinds]]` row governs each scanned file, what unit that row's
-/// `grounding_level` cuts the file into, and which of those units carry no
-/// citation to a declared ID.
-///
-/// It is the sixth rule to leave `check_with_workspace` as a named function
-/// rather than an inline block, and it leaves because it stopped being one: the
-/// per-file test became a per-unit one over structure the scanner records
-/// (§AR-scanner.2.7), with a row lookup in front of it.
+//! The grounding pass (§FS-check.3.6), in a file of its own beside
+//! `citations.rs` and `sections.rs` (§AR-core-module-layout.1):
+//! which `[[kinds]]` row governs each scanned file, what unit that row's
+//! `grounding_level` cuts the file into, and which of those units carry no
+//! citation to a declared ID.
+//!
+//! It is the sixth rule to leave `check_with_workspace` as a named function
+//! rather than an inline block, and it leaves because it stopped being one: the
+//! per-file test became a per-unit one over structure the scanner records
+//! (§AR-scanner.2.7), with a row lookup in front of it.
+
+use std::collections::BTreeMap;
+use std::path::Path;
+
+use super::citations::ObligationUnit;
+use super::homes::{DeclarationHome, KindHomeIndex};
+use super::references::WorkspaceCheckTarget;
+use super::support::citation_resolves;
+use crate::config::{Config, DEFAULT_GROUNDING_LEVEL, KindConfig, grounding_level_for_kind};
+use crate::model::{CheckReport, Citation, Diagnostic, FileStructure, Findings};
+use crate::workspace::namespace_is_unverified;
 
 /// One thing a row's `grounding_level` asks for a citation (§FS-check.3.6.2):
 /// where it starts, where it ends, the line a finding anchors at, and how the
@@ -36,7 +47,7 @@ enum GroundingSubject {
 /// It cannot be resolved here, but it resolves in the checkout that has the member
 /// — and a unit that lost its grounding to a missing directory would be a finding
 /// at the site the run is required to say nothing about.
-fn check_grounding(
+pub(super) fn check_grounding(
     findings: &Findings,
     config: &Config,
     kind_homes: &KindHomeIndex<'_>,
@@ -57,7 +68,10 @@ fn check_grounding(
             .as_deref()
             .is_some_and(|namespace| namespace_is_unverified(config, namespace));
         if unverified || citation_resolves(cite, findings, config, workspace) {
-            cited.entry(cite.file.as_path()).or_default().push(cite.line);
+            cited
+                .entry(cite.file.as_path())
+                .or_default()
+                .push(cite.line);
         }
     }
     let mut declared: BTreeMap<&Path, Vec<usize>> = BTreeMap::new();
@@ -78,7 +92,10 @@ fn check_grounding(
         if !require {
             continue;
         }
-        let place = home.as_ref().filter(|home| !home.citable).map(|home| home.place());
+        let place = home
+            .as_ref()
+            .filter(|home| !home.citable)
+            .map(|home| home.place());
         let none: &[usize] = &[];
         let cited_lines = cited.get(file.as_path()).map_or(none, Vec::as_slice);
         // §FS-check.3.6.2: no inline-declaration escape in a non-citable home —
@@ -203,17 +220,6 @@ fn grounding_unit_spans(structure: Option<&FileStructure>, level: usize) -> Vec<
         .collect()
 }
 
-/// The effective grounding level of the row named `kind` (§FS-config.3.4.8) —
-/// including the homeless kind, whose row a config need not have declared.
-fn grounding_level_for_kind(config: &Config, kind: &str) -> usize {
-    config
-        .kinds
-        .iter()
-        .find(|configured| configured.kind == kind)
-        .map(|configured| config.kind_grounding(configured).1)
-        .unwrap_or_else(|| config.homeless_grounding().1)
-}
-
 /// The obligation units of one citing kind that has no declarations to attach
 /// an obligation to — the homeless kind and every non-citable one
 /// (§FS-check.3.11). Their unit is the file, cut by the row's
@@ -222,7 +228,7 @@ fn grounding_level_for_kind(config: &Config, kind: &str) -> usize {
 /// unit carrying no citation is not a unit: obligations constrain what a file
 /// cites, never whether it cites at all. At level 1 — every configuration
 /// written before the key existed — this is one unit per file at line 1.
-fn file_obligation_units<'a>(
+pub(super) fn file_obligation_units<'a>(
     citing_kind: &str,
     config: &Config,
     findings: &'a Findings,

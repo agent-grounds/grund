@@ -10,10 +10,23 @@
 use anyhow::anyhow;
 
 use super::context::{WorkspaceContext, WorkspaceProject};
-// §AR-system.4: three upward reads through the crate root, because their owners
-// are still flat — the argument resolver from the scanner, the candidate joiner
-// from the checker, and the ID renderer from the writers.
-use crate::{join_alternatives, render_id, resolve_id_arg};
+// §AR-system.4: two upward reads through the crate root, because their owners
+// are still flat — the argument resolver from the scanner and the ID renderer
+// from the writers.
+use crate::{render_id, resolve_id_arg};
+
+/// A list of candidates as one clause: `a`, `a or b`, `a, b or c`. A string
+/// helper with no workspace in it, but this is the lowest component that reads
+/// it — the candidate clause below and the unknown-project hint of
+/// §FS-check.3.8.1, which is the checker's and reads it downward. It came out of
+/// `checker/references.rs` with §AR-system.2.6 for that reason.
+pub(crate) fn join_alternatives(items: &[String]) -> String {
+    match items {
+        [] => String::new(),
+        [only] => only.clone(),
+        [rest @ .., last] => format!("{} or {last}", rest.join(", ")),
+    }
+}
 
 /// The literal a §FS-workspace.8.1.1 candidate clause opens with. The builder
 /// below writes it and [`names_member_id_candidate`] reads it back, so the two

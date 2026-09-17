@@ -285,5 +285,5 @@ engine already understands).
   errors; [§FS-check.1](../../functional-spec/FS-check.md#1-inputs) the `--suggestions` flag; [§FS-check.2.3](../../functional-spec/FS-check.md#23-suggestions-channel-opt-in) the suggestions channel.
 - [§FS-errors.5](../../functional-spec/FS-errors.md#5-json-format): the JSON `"channel"` field.
 - [§AR-scanner.2.4](../../architecture/AR-scanner.md#24-citing-side-classification): the citing-side classification rules and declaration body ranges.
-- [§AR-checker.2.9](../../../crates/grund-core/src/checker.rs) / [§AR-checker.2.10](../../../crates/grund-core/src/checker.rs): the obligation and prohibition passes.
+- [§AR-checker.2.9](../../../crates/grund-core/src/checker/report.rs) / [§AR-checker.2.10](../../../crates/grund-core/src/checker/report.rs): the obligation and prohibition passes.
 - [§FS-init.2.3.5](../../functional-spec/FS-init.md#235-citation-directions): the generated Citation directions section and its drift check.

@@ -1,6 +1,22 @@
-// The membership half of the kind-index invariant (§AR-checker.2.16), split
-// from `checker_index.rs` so adding external enrollment does not push that rule
-// family past the core-source file budget (§AR-core-module-layout.3).
+//! The membership half of the kind-index invariant (§AR-checker.2.16), split
+//! from `index.rs` so adding external enrollment does not push that rule
+//! family past the core-source file budget (§AR-core-module-layout.3).
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::homes::is_stub_for_inline_decl;
+use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
+use crate::config::Config;
+use crate::grammar::never_rewrite_context;
+use crate::model::{
+    Citation, Declaration, Findings, Id, physical_path_key, scanned_decl_relative_path,
+    scanned_path_key,
+};
+// §AR-system.4: one upward read through the crate root — the Markdown link
+// target reader, which is the formatter's (§FS-fmt.6).
+use crate::markdown_link_target;
 
 /// The IDs each kind index owes an entry for, keyed by the index's
 /// config-root-relative path (§FS-check.3.18). `folder_owed` preserves the
@@ -8,7 +24,7 @@
 /// declarations enrolled by a canonical link. Their exact sites stay separate
 /// so another citation of the same external ID on the page remains real use
 /// (§DF-index-not-an-inbound-citation.2.2).
-struct KindIndexEntries {
+pub(crate) struct KindIndexEntries {
     configured_root: PathBuf,
     physical_root: PathBuf,
     owed: BTreeMap<PathBuf, BTreeSet<Id>>,
@@ -17,7 +33,7 @@ struct KindIndexEntries {
 }
 
 impl KindIndexEntries {
-    fn new(findings: &Findings, config: &Config) -> Self {
+    pub(crate) fn new(findings: &Findings, config: &Config) -> Self {
         let configured_root = scanned_path_key(&config.root);
         let physical_root = physical_path_key(&config.root);
         let targets = kind_index_targets(config);
@@ -61,7 +77,7 @@ impl KindIndexEntries {
     /// configured index (§FS-fmt.6.1). What the always-linkify carve-out wraps:
     /// declarations under the folder plus an external inline ID only after its
     /// canonical enrollment link exists (§FS-check.3.18).
-    fn entries_in(&self, path: &Path) -> Option<&BTreeSet<Id>> {
+    pub(crate) fn entries_in(&self, path: &Path) -> Option<&BTreeSet<Id>> {
         if self.owed.is_empty() {
             return None;
         }
@@ -73,15 +89,13 @@ impl KindIndexEntries {
     /// §FS-check.4.1 / §DF-index-not-an-inbound-citation.2.2: folder-owned IDs
     /// keep PR #134's accounting. For an external ID only the canonical link site
     /// is navigation; a second same-ID citation in the index is ordinary use.
-    fn is_index_entry(&self, citation: &Citation) -> bool {
+    pub(crate) fn is_index_entry(&self, citation: &Citation) -> bool {
         if citation.namespace.is_some() || self.owed.is_empty() {
             return false;
         }
-        let Some(relative) = scanned_decl_relative_path(
-            &citation.file,
-            &self.configured_root,
-            &self.physical_root,
-        ) else {
+        let Some(relative) =
+            scanned_decl_relative_path(&citation.file, &self.configured_root, &self.physical_root)
+        else {
             return false;
         };
         self.folder_owed
@@ -133,17 +147,17 @@ fn enroll_external_inline_declarations(
         {
             continue;
         }
-        let Some(relative) = scanned_decl_relative_path(
-            &citation.file,
-            configured_root,
-            physical_root,
-        ) else {
+        let Some(relative) =
+            scanned_decl_relative_path(&citation.file, configured_root, physical_root)
+        else {
             continue;
         };
-        let Some(target) = targets_by_index
-            .get(relative.as_ref())
-            .and_then(|targets| targets.iter().copied().find(|target| target.kind == citation.id.kind))
-        else {
+        let Some(target) = targets_by_index.get(relative.as_ref()).and_then(|targets| {
+            targets
+                .iter()
+                .copied()
+                .find(|target| target.kind == citation.id.kind)
+        }) else {
             continue;
         };
         let Some(decls) = findings.declarations.get(&citation.id) else {
@@ -169,20 +183,15 @@ fn enroll_external_inline_declarations(
         let Some(written_target) = link_target_at_citation(line, citation) else {
             continue;
         };
-        let Some(canonical_target) = markdown_link_target(
-            &target.index_file,
-            &citation.id,
-            None,
-            config,
-            findings,
-        ) else {
+        let Some(canonical_target) =
+            markdown_link_target(&target.index_file, &citation.id, None, config, findings)
+        else {
             continue;
         };
         if written_target != canonical_target {
             continue;
         }
-        owed
-            .entry(target.index_key.clone())
+        owed.entry(target.index_key.clone())
             .or_default()
             .insert(citation.id.clone());
         sites

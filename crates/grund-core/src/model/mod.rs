@@ -10,10 +10,14 @@
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
 //! (§AR-core-module-layout.1). The submodules are the former `model*` and
-//! `values` category files, one per record family §AR-system.2.2 names.
+//! `values` category files, one per record family §AR-system.2.2 names, plus
+//! `paths.rs`: the path keys a file is compared by, which came down out of
+//! `checker/homes.rs` when §AR-system.2.6 became a module because the scanner
+//! read five of them upward (§AR-system.4).
 
 mod e2e;
 mod headings;
+mod paths;
 mod records;
 mod report;
 mod values;
@@ -33,9 +37,12 @@ pub use values::{
 // flat (§AR-system.4). The finalize task narrows this as each caller moves into
 // a module of its own.
 pub(crate) use headings::UnmarkedHeadingCandidate;
+pub(crate) use paths::{
+    configured_home_path_key, normalize_path_lexically, paths_same_location, physical_path_key,
+    scanned_decl_relative_path, scanned_path_key,
+};
 pub(crate) use records::{
-    LegacyCitationCandidate, ShowRenderMode, TextOverlays, normalize_path_lexically,
-    render_qualified_id, resolve_stub_target,
+    LegacyCitationCandidate, ShowRenderMode, TextOverlays, render_qualified_id, resolve_stub_target,
 };
 pub(crate) use report::{CheckReport, Diagnostic, Site};
 pub(crate) use values::{

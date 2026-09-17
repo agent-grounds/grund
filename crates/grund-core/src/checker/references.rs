@@ -1,17 +1,36 @@
-/// The reference-resolution rule family — dangling citations (§FS-check.3.1),
-/// missing sections (§FS-check.3.2), unknown project aliases (§FS-check.3.8),
-/// and unresolved number-only shorthands (§FS-check.3.13) — together with the
-/// scope layer that decides where it is reported (§FS-check.1.3, §FS-check.3.14,
-/// §AR-checker.2.13).
-///
-/// It sits beside `checker.rs` rather than inside it because `grund check --full`
-/// runs this one family a second time, over the part of the tree `[scan] include`
-/// leaves out, while every other rule stays inside the configured scope
-/// (§AR-core-module-layout.1).
+//! The reference-resolution rule family — dangling citations (§FS-check.3.1),
+//! missing sections (§FS-check.3.2), unknown project aliases (§FS-check.3.8),
+//! and unresolved number-only shorthands (§FS-check.3.13) — together with the
+//! scope layer that decides where it is reported (§FS-check.1.3, §FS-check.3.14,
+//! §AR-checker.2.13).
+//!
+//! It sits beside `report.rs` rather than inside it because `grund check --full`
+//! runs this one family a second time, over the part of the tree `[scan] include`
+//! leaves out, while every other rule stays inside the configured scope
+//! (§AR-core-module-layout.1).
 
-struct WorkspaceCheckTarget<'a> {
-    findings: &'a Findings,
-    config: &'a Config,
+use anyhow::Result;
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::sections::retain_heading_findings_in_scope;
+use super::support::{
+    citation_in_markdown_inline_code, close_enough_for_hint, dangling_message, edit_distance,
+    missing_snapshot_message, target_for_citation,
+};
+use crate::config::{Config, KindResolution};
+use crate::grammar::{ShorthandIndexes, report_shorthand_citation};
+use crate::model::{CheckReport, DeclarationSource, Diagnostic, Findings, render_qualified_id};
+use crate::scanner::{scan_roots_for, unwalked_home_roots};
+use crate::workspace::{WorkspaceProject, join_alternatives, namespace_is_unverified};
+// §AR-system.4: two upward reads through the crate root — the report path
+// spelling and the sort key, both `output.rs`'s (§AR-system.2.9).
+use crate::{display_path, sort_path_key};
+
+pub(crate) struct WorkspaceCheckTarget<'a> {
+    pub(crate) findings: &'a Findings,
+    pub(crate) config: &'a Config,
 }
 
 /// Which of a `--full` run's two scopes a citation site is being judged on
@@ -19,7 +38,7 @@ struct WorkspaceCheckTarget<'a> {
 /// `grund fmt --write` will not rewrite the site either, so the mechanical
 /// shorthand form is withheld there (§FS-check.3.14).
 #[derive(Clone, Copy, Eq, PartialEq)]
-enum ReferenceTier {
+pub(crate) enum ReferenceTier {
     Configured,
     OutOfScope,
 }
@@ -33,7 +52,7 @@ enum ReferenceTier {
 /// paths built from `config.root`, while `E2E` case declarations carry
 /// canonicalized directories (§AR-scanner.6), and a scope test has to answer the
 /// same for both.
-struct ScanScope {
+pub(crate) struct ScanScope {
     roots: Vec<PathBuf>,
     /// The `scan = false` homes under those roots (§FS-config.3.4.7): listed by
     /// the config, and read by this run only because `--full` widened the walk.
@@ -41,7 +60,7 @@ struct ScanScope {
 }
 
 impl ScanScope {
-    fn contains(&self, path: &Path) -> bool {
+    pub(super) fn contains(&self, path: &Path) -> bool {
         // §FS-config.3.4.7: a file in a home the config lists without walking is
         // outside the configured scope even when a root above it is inside — the
         // scope is a set of roots, less the homes a run without `--full` never reads.
@@ -57,7 +76,7 @@ impl ScanScope {
 /// §FS-check.1.3: the configured scope of this run, or `None` when the walk was
 /// already the configured one — without `--full` there is no second tier, and no
 /// narrowing to do.
-fn configured_scope(
+pub(crate) fn configured_scope(
     config: &Config,
     path: &Path,
     path_provided: bool,
@@ -98,16 +117,14 @@ fn configured_scope(
 /// `report_shorthand_citation` judges a site against — one predicate covering the
 /// unqualified and the cross-member qualified form alike, where an undo pass here
 /// could only reach the unqualified one.
-fn retain_findings_in_scope(findings: &mut Findings, scope: Option<&ScanScope>) {
+pub(crate) fn retain_findings_in_scope(findings: &mut Findings, scope: Option<&ScanScope>) {
     let Some(scope) = scope else { return };
-    findings
-        .declarations
-        .retain(|_, decls| {
-            decls.retain(|decl| {
-                matches!(decl.source, DeclarationSource::Json { .. }) || scope.contains(&decl.file)
-            });
-            !decls.is_empty()
+    findings.declarations.retain(|_, decls| {
+        decls.retain(|decl| {
+            matches!(decl.source, DeclarationSource::Json { .. }) || scope.contains(&decl.file)
         });
+        !decls.is_empty()
+    });
     findings.citations.retain(|cite| scope.contains(&cite.file));
     retain_heading_findings_in_scope(findings, scope);
     findings
@@ -140,7 +157,7 @@ fn retain_findings_in_scope(findings: &mut Findings, scope: Option<&ScanScope>) 
 /// over the citation sites the wider `--full` walk found outside the configured
 /// scope, resolved against the *whole* walk so a citation whose declaration is
 /// also out there still resolves. Empty without `--full`.
-fn out_of_scope_references(
+pub(crate) fn out_of_scope_references(
     findings: &Findings,
     config: &Config,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
@@ -167,7 +184,7 @@ fn out_of_scope_references(
 /// against every project's *whole* walk, which is why it runs before the
 /// findings are narrowed. `include` is a per-project statement, so a member
 /// widens past its own and no other.
-fn workspace_out_of_scope_references(
+pub(crate) fn workspace_out_of_scope_references(
     projects: &[WorkspaceProject],
     scopes: &[Option<ScanScope>],
 ) -> Vec<Diagnostic> {
@@ -209,7 +226,7 @@ fn workspace_out_of_scope_references(
 /// usually to widen `[scan] include`, so a rule's own fix-it hint ("did you
 /// mean …?") is the fact most likely to be wrong and least deserving of being
 /// read first.
-fn tag_out_of_scope(mut diagnostic: Diagnostic) -> Diagnostic {
+pub(crate) fn tag_out_of_scope(mut diagnostic: Diagnostic) -> Diagnostic {
     diagnostic.code = match diagnostic.code {
         "dangling" => "out-of-scope-dangling",
         "missing-section" => "out-of-scope-missing-section",
@@ -233,7 +250,7 @@ fn tag_out_of_scope(mut diagnostic: Diagnostic) -> Diagnostic {
 /// resolved nor unknown — it is *unverified*, and the run says so once at the entry
 /// that made the skip legal rather than at every site (§FS-check.4.9). Every other
 /// unknown alias still errors here.
-fn check_citation_resolution(
+pub(super) fn check_citation_resolution(
     findings: &Findings,
     config: &Config,
     path_config: &Config,
@@ -304,9 +321,11 @@ fn check_citation_resolution(
                 // a target kind's in-scope `should` must not demote this opt-in tier.
                 let should_warn = tier == ReferenceTier::Configured
                     && kind.resolve == Some(KindResolution::Should);
-                let home = kind.file.as_deref().or(kind.folder.as_deref()).expect(
-                    "fetch-enabled kind has exactly one home after config validation",
-                );
+                let home = kind
+                    .file
+                    .as_deref()
+                    .or(kind.folder.as_deref())
+                    .expect("fetch-enabled kind has exactly one home after config validation");
                 let home = display_path(path_config, &target.config.root.join(home));
                 let message = missing_snapshot_message(
                     target.config,
@@ -408,7 +427,7 @@ fn check_citation_resolution(
 /// run loaded for that path is inside the subtree it can judge
 /// (§FS-check.3.8.1). Ineligible paths keep the scope-only message
 /// (§FS-check.3.8, §FS-workspace.6.1).
-fn unknown_project_message<'a>(
+pub(crate) fn unknown_project_message<'a>(
     namespace: &str,
     known: impl Iterator<Item = &'a str>,
     scope_path: &str,
@@ -446,7 +465,10 @@ fn alias_strictly_extends_scope(namespace: &str, scope_path: &str) -> bool {
 /// act on. The outermost root always asks; a narrowed run asks only for a
 /// strict extension of its scope (§FS-check.3.8.1), so no tier here is
 /// conditional on scope.
-fn nearest_project_aliases<'a>(namespace: &str, known: impl Iterator<Item = &'a str>) -> Vec<String> {
+pub(crate) fn nearest_project_aliases<'a>(
+    namespace: &str,
+    known: impl Iterator<Item = &'a str>,
+) -> Vec<String> {
     let written: Vec<&str> = namespace.split('/').collect();
     let (mut prefix, mut suffix, mut same_leaf, mut near) =
         (Vec::new(), Vec::new(), Vec::new(), Vec::new());
@@ -481,12 +503,4 @@ fn nearest_project_aliases<'a>(namespace: &str, known: impl Iterator<Item = &'a 
     // turning one finding into a catalogue; `grund list` is the catalogue.
     best.truncate(3);
     best
-}
-
-fn join_alternatives(items: &[String]) -> String {
-    match items {
-        [] => String::new(),
-        [only] => only.clone(),
-        [rest @ .., last] => format!("{} or {last}", rest.join(", ")),
-    }
 }
