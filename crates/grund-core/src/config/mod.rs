@@ -16,6 +16,11 @@
 //! `exclude` glob compiler and the validator this reader refuses a malformed
 //! pattern with, which were the formatter's and which `parse.rs` had been
 //! reading upward (§AR-system.4).
+//! The TOML basic-string escaper came the same way with the second half of that
+//! component: config reads TOML and writes it back out — the `index` literal in
+//! `kind.rs`, `grund config show`'s dump, and the `grund.toml` the scaffold
+//! generates (§FS-init.2.4) — so the escaper belongs beside them rather than in
+//! the writer that held it, which `kind.rs` had been reading upward.
 
 mod citations;
 mod discovery;
@@ -46,6 +51,7 @@ pub(crate) use discovery::{
 };
 pub(crate) use fmt_block::build_fmt_exclude_matcher;
 pub(crate) use grounding::grounding_level_for_kind;
+pub(crate) use kind::escape_toml_basic;
 pub(crate) use parse::{parse_string_list, strip_comment};
 pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{

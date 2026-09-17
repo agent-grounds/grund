@@ -27,6 +27,15 @@
 //! writer's plan. The ID renderer and its qualified form joined `ids.rs`, which
 //! also took the record of one marked citation found on a Markdown line
 //! (§AR-system.4).
+//!
+//! `managed_block.rs` came down with the rest of §AR-system.2.8: finding the
+//! block grund owns inside somebody else's document and reading the `vN` version
+//! it carries is lexical, and it was implemented twice up there — once for the
+//! agent entrypoint (§FS-init.2.3) and once for a client dotfile
+//! (§FS-integrations.4.1) — while the checker's agent-entrypoint rule read the
+//! first copy upward (§FS-check.3.5). Both copies are here now, so all three
+//! callers read one module downward; what differs between them is in that file's
+//! own doc comment.
 
 mod anchors;
 mod comment_block;
@@ -37,6 +46,7 @@ mod id_format;
 mod id_rules;
 mod ids;
 mod inline_note_layout;
+mod managed_block;
 mod near_miss;
 mod never_rewrite;
 mod shorthand;
@@ -55,8 +65,8 @@ pub(crate) use comment_block::{
 };
 pub(crate) use comment_line::{comment_strip_prefixes, strip_comment_tokens};
 pub(crate) use compiled::{
-    AGENTS_BLOCK_BEGIN, AGENTS_BLOCK_END, AGENTS_BLOCK_H2, AGENTS_SECTION_BOUNDARY,
-    QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, reduce_heading_text, section_path,
+    AGENTS_BLOCK_END, QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, reduce_heading_text,
+    section_path,
 };
 pub(crate) use fence::markdown_fence_delimiter;
 pub(crate) use id_format::{
@@ -71,6 +81,11 @@ pub(crate) use inline_note_layout::{
     BlockCitations, CITATION_RUN_SEPARATOR, LayoutChannel, block_has_inline_note_memoized,
     inline_layout_violations, inline_note_layout_sentence, inline_note_verdicts, layout_channel,
     layout_pass_enabled, line_says_something,
+};
+pub(crate) use managed_block::{
+    AGENT_GUIDANCE_BLOCK_VERSION, AGENTS_BLOCK_VERSION, AgentsBlockLookup,
+    INTEGRATIONS_BLOCK_VERSION, agent_guidance_markers, find_agent_guidance_block,
+    find_agents_block, find_managed_block, integrations_block_markers,
 };
 pub(crate) use near_miss::{declaration_captures, declaration_id_on_line, near_miss_heading};
 pub(crate) use never_rewrite::{

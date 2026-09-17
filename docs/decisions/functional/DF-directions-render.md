@@ -161,7 +161,7 @@ The whole file is `tests/e2e/cases/init-citation-directions-canonical/repo/grund
 - Editing `[reference] require_grounding` now drifts the managed block, because the grounding sentence is rendered from it. Flipping the key without re-running `grund init` is an `agents-init` finding, the same way editing `[citations]` already was ([§FS-check.3.5](../../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)).
 - The grounding sentence renders whether or not `[citations]` is declared. A repository with the key on and no direction rules gets the sentence appended to the static citation-direction sentence ([§FS-init.2.3.4.10](../../functional-spec/FS-init.md#23410-citation-direction)) — that is where the defect was actually visible, and gating it on an unrelated section would leave it there.
 - The homeless kind's fixed phrase *any file outside a kind home* is gone: the subject says it. [§FS-config.3.9.2](../../functional-spec/FS-config.md#392-the-homeless-kind) is updated to match.
-- `citation_directions_section` and its helpers moved out of `init_templates.rs` into `init_citation_directions.rs` ([§AR-core-module-layout.1](../../architecture/AR-core-module-layout.md#1-module-categories)) — the payload/renderer split that file's size exception was waiting for.
+- `citation_directions_section` and its helpers moved out of the template renderer into `writers/init_citation_directions.rs` ([§AR-core-module-layout.1](../../architecture/AR-core-module-layout.md#1-module-categories)) — the payload/renderer split that file's size exception was waiting for.
 
 ## 5. Alternatives considered
 

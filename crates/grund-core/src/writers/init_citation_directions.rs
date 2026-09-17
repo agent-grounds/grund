@@ -1,3 +1,9 @@
+use super::init_templates::CITATION_DIRECTIONS_URL;
+use crate::config::{
+    CitationDisjunction, CitationLevel, CitationTarget, Config, KindCitationRules, KindConfig,
+    NamespaceMatch,
+};
+
 /// The `### Citation directions` renderer of the managed block (§FS-init.2.3.5),
 /// split out of `init_templates.rs` so the payload constants and the renderer
 /// that composes them stop sharing a file (§AR-core-module-layout.1).
@@ -18,7 +24,7 @@
 /// errors and which are suggestions. Fixed text, rendered whenever `[citations]`
 /// is declared, because a bullet's verb is unreadable without it — an agent that
 /// cannot tell `should` from `must` treats every rule as one or the other.
-const CITATION_LEVEL_LEGEND: &str = "`must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).";
+pub(crate) const CITATION_LEVEL_LEGEND: &str = "`must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).";
 
 /// Render the `### Citation directions` managed-block section (§FS-init.2.3.5)
 /// from the effective config. When no `[citations]` section is declared, the
@@ -26,7 +32,7 @@ const CITATION_LEVEL_LEGEND: &str = "`must`/`never` are `grund check` errors; `s
 /// feature keeps a stable block (§FS-init.2.3.4.10); the grounding sentence
 /// renders under either, because it is generated from `[reference]
 /// require_grounding` and not from the direction rules (§FS-check.3.6).
-fn citation_directions_section(config: &Config) -> String {
+pub(crate) fn citation_directions_section(config: &Config) -> String {
     // Built as lines joined with `\n` and returned without a trailing newline:
     // the `{CITATION_DIRECTIONS}` placeholder in the template supplies the single
     // block-final newline, so `grund init` stays idempotent on re-run.
@@ -134,7 +140,9 @@ fn citation_direction_subject(config: &Config, kind: &str, homeless: &str) -> St
             .find(|configured| configured.kind == kind)
             .and_then(|configured| configured.title.as_deref())
             .map_or_else(String::new, |title| format!(": {title}"));
-        return format!("Each source file outside the Project map (**{kind}**{scope}) that cites anything");
+        return format!(
+            "Each source file outside the Project map (**{kind}**{scope}) that cites anything"
+        );
     }
     let configured = config
         .kinds
@@ -142,7 +150,10 @@ fn citation_direction_subject(config: &Config, kind: &str, homeless: &str) -> St
         .find(|configured| configured.kind == kind && !configured.citable);
     match configured {
         Some(place) if place.folder.is_some() => {
-            format!("Each file in **{}**", place.place_label().unwrap_or_default())
+            format!(
+                "Each file in **{}**",
+                place.place_label().unwrap_or_default()
+            )
         }
         // A single-file non-citable home is one file, so "each file in" would
         // promise a directory that is not there.
@@ -166,22 +177,39 @@ fn citation_direction_clauses(config: &Config, rules: &KindCitationRules) -> Opt
         clauses.push(format!("must cite {}", citation_rule_targets(&rules.must)));
     }
     if !rules.should.is_empty() {
-        clauses.push(format!("should cite {}", citation_rule_targets(&rules.should)));
+        clauses.push(format!(
+            "should cite {}",
+            citation_rule_targets(&rules.should)
+        ));
     }
     if !rules.may.is_empty() {
         // §FS-init.2.3.5: a closed per-kind default plus a `may` list is one
         // rule — "only these" — and takes one clause, not a permission followed
         // by a prohibition of everything else.
         let only = if folded { "only " } else { "" };
-        clauses.push(format!("may cite {only}{}", citation_rule_targets(&rules.may)));
+        clauses.push(format!(
+            "may cite {only}{}",
+            citation_rule_targets(&rules.may)
+        ));
     }
     if !rules.must_not.is_empty() {
-        let verb = if clauses.is_empty() { "must not cite" } else { "never cite" };
+        let verb = if clauses.is_empty() {
+            "must not cite"
+        } else {
+            "never cite"
+        };
         clauses.push(format!("{verb} {}", citation_rule_targets(&rules.must_not)));
     }
     if !rules.should_not.is_empty() {
-        let verb = if clauses.is_empty() { "should not cite" } else { "avoid citing" };
-        clauses.push(format!("{verb} {}", citation_rule_targets(&rules.should_not)));
+        let verb = if clauses.is_empty() {
+            "should not cite"
+        } else {
+            "avoid citing"
+        };
+        clauses.push(format!(
+            "{verb} {}",
+            citation_rule_targets(&rules.should_not)
+        ));
     }
     if !folded && let Some(clause) = citation_default_clause(config, rules, clauses.is_empty()) {
         clauses.push(clause);

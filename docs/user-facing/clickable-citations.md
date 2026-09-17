@@ -201,7 +201,7 @@ left looking at a tail that may contain none, which reports no matches and reads
 exactly like a broken install.
 
 ```bash
-grep -n '§FS-\|§DF-' crates/grund-core/src/integrations.rs | head -20
+grep -n '§FS-\|§DF-' crates/grund-core/src/writers/integrations_agents.rs | head -20
 ```
 
 Now trigger your client — `ctrl+shift+p` then `g` in kitty, ctrl-click in

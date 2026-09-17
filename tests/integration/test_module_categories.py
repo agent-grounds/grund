@@ -78,7 +78,7 @@ def _category_of(stem, table):
 
 class ModuleCategoryTests(unittest.TestCase):
     def test_the_page_carries_the_category_table(self):
-        self.assertGreaterEqual(len(_table()), 13, "category table not found on the page")
+        self.assertGreaterEqual(len(_table()), 11, "category table not found on the page")
 
     def test_every_implementation_file_has_exactly_one_category(self):
         table = _table()

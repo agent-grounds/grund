@@ -1,3 +1,31 @@
+use std::fs;
+use std::path::PathBuf;
+
+use super::init_block::{
+    AgentsUpdateResult, update_agents_block, write_or_update_canonical_agent_entrypoint,
+};
+use super::init_entrypoints::{
+    CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
+};
+use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
+use super::init_plan::{InitAgentEntrypointSelection, selected_init_agent_entrypoints};
+use super::init_target::{
+    derive_default_name, refuse_init_global_instruction_paths, refuse_init_target,
+};
+use super::init_templates::{
+    AS_README_TEMPLATE, ConversationSurface, DA_README_TEMPLATE, DF_README_TEMPLATE,
+    E2E_README_TEMPLATE, FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE,
+    REQUIREMENTS_TEMPLATE, agents_workspace_members_section, canonical_template_text,
+    init_pending_effective_config, render_agents_append_block, render_agents_md_from_block,
+    render_grund_toml,
+};
+use crate::config::{Config, config_file_in};
+use crate::scanner::effective_scope_reads_any_file;
+use crate::workspace::populate_workspace_boundary;
+// §AR-system.4: one upward read through the crate root — the report path
+// renderer, which is `output.rs`'s (§AR-system.2.9).
+use crate::format_path;
+
 #[derive(Clone)]
 pub struct InitOpts {
     pub target: PathBuf,
@@ -79,8 +107,14 @@ impl InitNext {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum InitFsHome {
-    File { path: String, heading_name: &'static str, heading_marker: &'static str },
-    Folder { path: String },
+    File {
+        path: String,
+        heading_name: &'static str,
+        heading_marker: &'static str,
+    },
+    Folder {
+        path: String,
+    },
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -268,8 +302,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     // §FS-init.2.1.1, §FS-init.2.3.4.17: both computed before the companion loop
     // consumes the plan.
     let claude_companions = agent_entrypoints.companions_of_claude(&target);
-    let mut notes =
-        duplicate_agent_entrypoint_notes(&target, &agent_entrypoints, reach, dry_run);
+    let mut notes = duplicate_agent_entrypoint_notes(&target, &agent_entrypoints, reach, dry_run);
     let mut workflow_entrypoint = None;
     // Track whether any path changed (or, under --dry-run, *would* change).
     // The `next:` block is suppressed when every reported path is `exists `,
@@ -302,7 +335,10 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
             ConversationSurface::Linked => claude_block.as_deref().unwrap_or(&agents_block),
             ConversationSurface::Plain => &agents_block,
         };
-        let rel = path_ref.strip_prefix(&target).unwrap_or(path_ref).to_path_buf();
+        let rel = path_ref
+            .strip_prefix(&target)
+            .unwrap_or(path_ref)
+            .to_path_buf();
         let rel = format_path(&rel);
         if workflow_entrypoint.is_none() {
             workflow_entrypoint = Some(rel.clone());
@@ -311,14 +347,23 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
             InitCompanionAgentEntrypoint::Existing(path) => {
                 match update_agents_block(&path, entrypoint_block, &rel, dry_run) {
                     Ok(AgentsUpdateResult::Appended) => {
-                        events.push(InitEvent { verb: verb_appended(dry_run), path: rel });
+                        events.push(InitEvent {
+                            verb: verb_appended(dry_run),
+                            path: rel,
+                        });
                         any_change = true;
                     }
                     Ok(AgentsUpdateResult::Updated) => {
-                        events.push(InitEvent { verb: verb_updated(dry_run), path: rel });
+                        events.push(InitEvent {
+                            verb: verb_updated(dry_run),
+                            path: rel,
+                        });
                         any_change = true;
                     }
-                    Ok(AgentsUpdateResult::Unchanged) => events.push(InitEvent { verb: "exists", path: rel }),
+                    Ok(AgentsUpdateResult::Unchanged) => events.push(InitEvent {
+                        verb: "exists",
+                        path: rel,
+                    }),
                     Err(err) => {
                         return Err(InitError::with_events(
                             events,
@@ -340,15 +385,16 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
                         format!("create {}: {err}", parent.display()),
                     ));
                 }
-                if !dry_run
-                    && let Err(err) = fs::write(&path, entrypoint_block)
-                {
+                if !dry_run && let Err(err) = fs::write(&path, entrypoint_block) {
                     return Err(InitError::with_events(
                         events,
                         format!("write {}: {err}", path.display()),
                     ));
                 }
-                events.push(InitEvent { verb: verb_wrote(dry_run), path: rel });
+                events.push(InitEvent {
+                    verb: verb_wrote(dry_run),
+                    path: rel,
+                });
                 any_change = true;
             }
         }
@@ -358,8 +404,14 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     // only when the target has none (§FS-config.1), never overwritten, reported
     // under the name found (§FS-init.2.4, §FS-check.4.3, §FS-init.3).
     if let Some(existing) = config_file_in(&target) {
-        let rel = existing.strip_prefix(&target).unwrap_or(&existing).to_path_buf();
-        events.push(InitEvent { verb: "exists", path: format_path(&rel) });
+        let rel = existing
+            .strip_prefix(&target)
+            .unwrap_or(&existing)
+            .to_path_buf();
+        events.push(InitEvent {
+            verb: "exists",
+            path: format_path(&rel),
+        });
     } else {
         // §DF-config-file-location.2.3: the bare, root-visible form is the one
         // `init` generates, so the default a new project meets is the one the
@@ -379,7 +431,10 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
                 format!("write {}: {err}", config_dest.display()),
             ));
         }
-        events.push(InitEvent { verb: verb_wrote(dry_run), path: config_rel.to_string() });
+        events.push(InitEvent {
+            verb: verb_wrote(dry_run),
+            path: config_rel.to_string(),
+        });
         any_change = true;
     }
 
@@ -392,7 +447,10 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     for (rel, contents) in &files {
         let dest = target.join(rel);
         if !force && dest.exists() {
-            events.push(InitEvent { verb: "exists", path: rel.clone() });
+            events.push(InitEvent {
+                verb: "exists",
+                path: rel.clone(),
+            });
             continue;
         }
         if !dry_run
@@ -404,15 +462,16 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
                 format!("create {}: {err}", parent.display()),
             ));
         }
-        if !dry_run
-            && let Err(err) = fs::write(&dest, contents)
-        {
+        if !dry_run && let Err(err) = fs::write(&dest, contents) {
             return Err(InitError::with_events(
                 events,
                 format!("write {}: {err}", dest.display()),
             ));
         }
-        events.push(InitEvent { verb: verb_wrote(dry_run), path: rel.clone() });
+        events.push(InitEvent {
+            verb: verb_wrote(dry_run),
+            path: rel.clone(),
+        });
         any_change = true;
     }
 
@@ -467,7 +526,11 @@ fn render_next_block_for_home(
     if docs {
         output.push_str("  1. run `grund check` — a freshly scaffolded tree is clean\n");
         match fs_home {
-            InitFsHome::File { path, heading_name, heading_marker } => {
+            InitFsHome::File {
+                path,
+                heading_name,
+                heading_marker,
+            } => {
                 output.push_str(&format!(
                     "  2. allocate an ID:  ID=$(grund id FS \"…\")  then add it to {path}\n"
                 ));
@@ -519,15 +582,15 @@ fn render_next_block_for_home(
 
 /// Stderr verb for a newly written file. `--dry-run` reports `would-write `
 /// instead of `wrote `; otherwise the verbs match a real run (§FS-init.2.2).
-fn verb_wrote(dry_run: bool) -> &'static str {
+pub(super) fn verb_wrote(dry_run: bool) -> &'static str {
     if dry_run { "would-write" } else { "wrote" }
 }
 
-fn verb_appended(dry_run: bool) -> &'static str {
+pub(super) fn verb_appended(dry_run: bool) -> &'static str {
     if dry_run { "would-append" } else { "appended" }
 }
 
-fn verb_updated(dry_run: bool) -> &'static str {
+pub(super) fn verb_updated(dry_run: bool) -> &'static str {
     if dry_run { "would-update" } else { "updated" }
 }
 
@@ -536,7 +599,7 @@ fn verb_updated(dry_run: bool) -> &'static str {
 /// README for each folder kind that has one — architecture and the two decision
 /// folders), plus the two test homes — the file list of §FS-init.2.1, each a
 /// minimal starter that leaves `grund check` clean.
-fn init_fs_home(config: &Config) -> InitFsHome {
+pub(crate) fn init_fs_home(config: &Config) -> InitFsHome {
     if let Some(kind) = config.kinds.iter().find(|kind| kind.kind == "FS") {
         if let Some(file) = &kind.file {
             let (heading_name, heading_marker) = if file == "docs/grund.md" {
@@ -551,7 +614,9 @@ fn init_fs_home(config: &Config) -> InitFsHome {
             };
         }
         if let Some(folder) = &kind.folder {
-            return InitFsHome::Folder { path: folder.clone() };
+            return InitFsHome::Folder {
+                path: folder.clone(),
+            };
         }
     }
     InitFsHome::File {
@@ -570,61 +635,56 @@ fn init_fs_home(config: &Config) -> InitFsHome {
 /// What the two test homes get instead: `tests/e2e/README.md` is the layout
 /// note, and `tests/integration` gets the placeholder that makes an empty
 /// directory survive `git add`.
-fn docs_scaffold(fs_home: &InitFsHome) -> Vec<(String, String)> {
+pub(crate) fn docs_scaffold(fs_home: &InitFsHome) -> Vec<(String, String)> {
     let mut files = Vec::new();
     match fs_home {
-        InitFsHome::File { path, .. } => files.push((
-            path.clone(),
-            canonical_template_text(REQUIREMENTS_TEMPLATE),
-        )),
+        InitFsHome::File { path, .. } => {
+            files.push((path.clone(), canonical_template_text(REQUIREMENTS_TEMPLATE)))
+        }
         InitFsHome::Folder { path } => files.push((
             format!("{path}/README.md"),
             canonical_template_text(FS_README_TEMPLATE),
         )),
     }
-    files.extend([
-        ("docs/grund.md", canonical_template_text(GRUND_DOC_TEMPLATE)),
-        (
-            "docs/goals.md",
-            canonical_template_text(GOALS_TEMPLATE),
-        ),
-        (
-            "docs/roadmap.md",
-            "# Roadmap\n\n<!-- placeholder - replace with real content -->\n".to_string(),
-        ),
-        (
-            "docs/changelog.md",
-            "# Changelog\n\n<!-- placeholder - replace with real content -->\n".to_string(),
-        ),
-        (
-            "docs/architecture/README.md",
-            canonical_template_text(AS_README_TEMPLATE),
-        ),
-        // §FS-init.2.1 / §FS-check.3.18: every folder kind the generated config
-        // leaves at the default `index` gets its index README scaffolded, not a
-        // bare `.gitkeep` (§FS-config.3.4).
-        (
-            "docs/decisions/architectural/README.md",
-            canonical_template_text(DA_README_TEMPLATE),
-        ),
-        (
-            "docs/decisions/functional/README.md",
-            canonical_template_text(DF_README_TEMPLATE),
-        ),
-        // §FS-init.2.1: the two test homes the generated config names
-        // (§FS-config.3.4). Both are non-citable kinds, so neither gets an index
-        // README.
-        (
-            "tests/e2e/README.md",
-            render_e2e_readme(fs_home),
-        ),
-        (
-            "tests/integration/.gitkeep",
-            canonical_template_text(GITKEEP_TEMPLATE),
-        ),
-    ]
-    .into_iter()
-    .map(|(path, contents)| (path.to_string(), contents)));
+    files.extend(
+        [
+            ("docs/grund.md", canonical_template_text(GRUND_DOC_TEMPLATE)),
+            ("docs/goals.md", canonical_template_text(GOALS_TEMPLATE)),
+            (
+                "docs/roadmap.md",
+                "# Roadmap\n\n<!-- placeholder - replace with real content -->\n".to_string(),
+            ),
+            (
+                "docs/changelog.md",
+                "# Changelog\n\n<!-- placeholder - replace with real content -->\n".to_string(),
+            ),
+            (
+                "docs/architecture/README.md",
+                canonical_template_text(AS_README_TEMPLATE),
+            ),
+            // §FS-init.2.1 / §FS-check.3.18: every folder kind the generated config
+            // leaves at the default `index` gets its index README scaffolded, not a
+            // bare `.gitkeep` (§FS-config.3.4).
+            (
+                "docs/decisions/architectural/README.md",
+                canonical_template_text(DA_README_TEMPLATE),
+            ),
+            (
+                "docs/decisions/functional/README.md",
+                canonical_template_text(DF_README_TEMPLATE),
+            ),
+            // §FS-init.2.1: the two test homes the generated config names
+            // (§FS-config.3.4). Both are non-citable kinds, so neither gets an index
+            // README.
+            ("tests/e2e/README.md", render_e2e_readme(fs_home)),
+            (
+                "tests/integration/.gitkeep",
+                canonical_template_text(GITKEEP_TEMPLATE),
+            ),
+        ]
+        .into_iter()
+        .map(|(path, contents)| (path.to_string(), contents)),
+    );
     files
 }
 

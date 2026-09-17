@@ -16,7 +16,7 @@ Not a component: the rule for how the engine's files are named, owned and sized,
 
 What each category implements, consumes and must not know is its component's subsection in [§AR-system.2](README.md#2-components), and the table's third column says which. A category is named by the module directory that holds it, and until it has one, by the file-name prefixes it owns.
 
-A file belongs to the category it sits under where that category is a module directory — `model/records.rs` to **model** — and otherwise to the category whose prefix its name carries: `api_list.rs` to **api**, `init_block.rs` to **init**. A category that has become a directory leaves no file of its former prefixes at the top level, except a prefix the row still lists beside the directory: that is how a file the move deliberately left flat is recorded, and every one today is a deprecated renderer waiting for `compat/` ([§AR-system.2.9](README.md#29-api)) — a whole command adapter, or the stream-writing half of a file whose data half moved. `lib.rs` is the one file outside every category, as the crate entrypoint. What each category owns:
+A file belongs to the category it sits under where that category is a module directory — `model/records.rs` to **model** — and otherwise to the category whose prefix its name carries: `api_list.rs` to **api**, `config_cmd.rs` to **config**. A category that has become a directory leaves no file of its former prefixes at the top level, except a prefix the row still lists beside the directory: that is how a file the move deliberately left flat is recorded, and every one today is a deprecated renderer waiting for `compat/` ([§AR-system.2.9](README.md#29-api)) — a whole command adapter, or the stream-writing half of a file whose data half moved. `lib.rs` is the one file outside every category, as the crate entrypoint. What each category owns:
 
 | Category | Module directory, or file-name prefixes | Component |
 |---|---|---|
@@ -26,12 +26,10 @@ A file belongs to the category it sits under where that category is a module dir
 | **checker** | `checker/`, `checker_cmd` | [§AR-system.2.6](README.md#26-checker) |
 | **queries** | `queries/`, `show_cmd`, `refs_cmd`, `cover_cmd`, `list_cmd`, `completions_cmd` | [§AR-system.2.7](README.md#27-queries) |
 | **output** | `output` | [§AR-system.2.9](README.md#29-api) |
-| **writers** | `writers/`, `fmt_cmd`, `id_cmd` | [§AR-system.2.8](README.md#28-writers) |
-| **init** | `init` | [§AR-system.2.8](README.md#28-writers) |
+| **writers** | `writers/`, `fmt_cmd`, `id_cmd`, `init_cmd`, `integrations_cmd` | [§AR-system.2.8](README.md#28-writers) |
 | **api** | `api` | [§AR-system.2.9](README.md#29-api) |
 | **grammar** | `grammar/` | [§AR-system.2.1](README.md#21-grammar) |
 | **workspace** | `workspace/`, `workspace_members_cmd` | [§AR-system.2.4](README.md#24-workspace) |
-| **integrations** | `integrations` | [§AR-system.2.8](README.md#28-writers) |
 | **compat** | `compat` | [§AR-system.2.9](README.md#29-api) |
 
 `tests/integration/test_module_categories.py` holds this table against the tree: every top-level implementation file owned by exactly one row, every prefix owning a file, and every named module directory present with none of its former prefixes left at the top level but the ones its row still lists.
