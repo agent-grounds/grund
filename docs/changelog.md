@@ -30,6 +30,7 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ### Changed
 
+- [§AR-core-module-layout.1](architecture/AR-core-module-layout.md#1-module-categories), [§AR-system.2](architecture/README.md#2-components): assemble `grund-core` from one Rust module per component instead of a flat `include!` list, one component at a time. A component's internals are private to its module and only what crosses a boundary is `pub(crate)`, so the dependency direction of [§AR-system.4](architecture/README.md#4-dependency-direction) is the compiler's to hold rather than a file-name test's, and a category row on the page names a module directory instead of prefixes. The public API is unchanged: every name reachable as `grund_core::<name>` before the move is reachable after it, and nothing new becomes public.
 - [§FS-check.2.1](functional-spec/FS-check.md#21-report-format), [§FS-errors.4](functional-spec/FS-errors.md#4-determinism): make every default-text `grund check` finding's channel explicit and group errors before warnings before opt-in suggestions, keeping the jump-friendly location prefix and every full diagnostic. This intentionally changes exact text output; migrate byte-sensitive consumers to `--format=json`, whose bytes, shape, global location order, selectors, and verdict behavior are unchanged. Closes issue #232. (PR #234)
 - The repository moved to the `agent-grounds` GitHub organization, along with
   `ephor`, `fissile` and `rhei`, and every reference now names it. That includes

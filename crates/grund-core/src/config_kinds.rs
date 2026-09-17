@@ -8,7 +8,7 @@
 /// `[[kinds]]` entry, and the whole-list validation that runs once the file is read.
 /// The last two are pure functions over the parsed entries — the discovery, the
 /// section walk, and every other section's keys stay in `config.rs`. The defaults
-/// live here rather than in `model.rs` because they are config defaults
+/// live here rather than in `model/records.rs` because they are config defaults
 /// (§AR-core-module-layout.1) and because this is the file that resolves them onto a
 /// declared block.
 const DEFAULT_KINDS: &[&str] = &[

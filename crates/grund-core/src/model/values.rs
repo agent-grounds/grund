@@ -1,3 +1,9 @@
+use once_cell::sync::Lazy;
+use regex::Regex;
+use std::path::PathBuf;
+
+use super::records::{Config, Id};
+
 /// Exact component classification and equality for first-class values
 /// (§FS-values.2, §FS-values.4). Decimals stay as normalized coefficient and
 /// arbitrary-size decimal exponent strings; no binary float or exponent
@@ -69,25 +75,24 @@ pub struct InvalidValueSite {
     pub binding_section: Option<String>,
 }
 
-static JSON_NUMBER_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$").unwrap()
-});
+pub(crate) static JSON_NUMBER_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$").unwrap());
 
-fn kind_uses_values(config: &Config, kind: &str) -> bool {
+pub(crate) fn kind_uses_values(config: &Config, kind: &str) -> bool {
     config
         .kinds
         .iter()
         .any(|configured| configured.kind == kind && configured.values)
 }
 
-fn component_text_is_valid(text: &str) -> bool {
+pub(crate) fn component_text_is_valid(text: &str) -> bool {
     !text.is_empty()
         && text.trim() == text
         && !text.contains('`')
         && !text.chars().any(char::is_control)
 }
 
-fn authored_component(text: &str, column: usize) -> ValueComponent {
+pub(crate) fn authored_component(text: &str, column: usize) -> ValueComponent {
     ValueComponent {
         decoded: text.to_string(),
         kind: if JSON_NUMBER_RE.is_match(text) {
@@ -100,7 +105,7 @@ fn authored_component(text: &str, column: usize) -> ValueComponent {
     }
 }
 
-fn value_components_equal(left: &ValueComponent, right: &ValueComponent) -> bool {
+pub(crate) fn value_components_equal(left: &ValueComponent, right: &ValueComponent) -> bool {
     match (left.kind, right.kind) {
         (ValueComponentKind::Number, ValueComponentKind::Number) => {
             ExactDecimal::parse(&left.decoded) == ExactDecimal::parse(&right.decoded)
@@ -132,7 +137,9 @@ impl ExactDecimal {
             .split_once('.')
             .map_or((mantissa, ""), |(whole, fraction)| (whole, fraction));
         let mut coefficient = format!("{whole}{fraction}");
-        let first_nonzero = coefficient.find(|ch| ch != '0').unwrap_or(coefficient.len());
+        let first_nonzero = coefficient
+            .find(|ch| ch != '0')
+            .unwrap_or(coefficient.len());
         coefficient.drain(..first_nonzero);
         if coefficient.is_empty() {
             return Some(Self {

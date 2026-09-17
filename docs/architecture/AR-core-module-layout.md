@@ -14,13 +14,13 @@ Not a component: the rule for how the engine's files are named, owned and sized,
 
 `crates/grund-core/src/lib.rs` stays the engine crate entrypoint and public Rust API surface (`check`, `show`, `scan`, and the shared data types), while implementation code lives in smaller category files under `crates/grund-core/src/`.
 
-What each category implements, consumes and must not know is its component's subsection in [§AR-system.2](README.md#2-components), and the table's third column says which. The categories are the file-name prefixes below.
+What each category implements, consumes and must not know is its component's subsection in [§AR-system.2](README.md#2-components), and the table's third column says which. A category is named by the module directory that holds it, and until it has one, by the file-name prefixes it owns.
 
-A file belongs to the category whose prefix its name carries — `scanner_walk.rs` to **scanner**, `init_block.rs` to **init** — and `lib.rs` is the one file outside them, as the crate entrypoint. The prefixes each category owns:
+A file belongs to the category it sits under where that category is a module directory — `model/records.rs` to **model** — and otherwise to the category whose prefix its name carries: `scanner_walk.rs` to **scanner**, `init_block.rs` to **init**. A category that has become a directory leaves no file of its former prefixes at the top level. `lib.rs` is the one file outside every category, as the crate entrypoint. What each category owns:
 
-| Category | File-name prefixes | Component |
+| Category | Module directory, or file-name prefixes | Component |
 |---|---|---|
-| **model** | `model`, `values` | [§AR-system.2.2](README.md#22-model) |
+| **model** | `model/` | [§AR-system.2.2](README.md#22-model) |
 | **config** | `config` | [§AR-system.2.3](README.md#23-config) |
 | **scanner** | `scanner`, `value_json` | [§AR-system.2.5](README.md#25-scanner) |
 | **checker** | `checker` | [§AR-system.2.6](README.md#26-checker) |
@@ -40,7 +40,7 @@ A file belongs to the category whose prefix its name carries — `scanner_walk.r
 | **lsp** | `lsp`, `on_type` | [§AR-system.2.7](README.md#27-queries) |
 | **compat** | `compat` | [§AR-system.2.9](README.md#29-api) |
 
-`tests/integration/test_module_categories.py` holds this table against the tree: every implementation file owned by exactly one row, every prefix owning a file.
+`tests/integration/test_module_categories.py` holds this table against the tree: every top-level implementation file owned by exactly one row, every prefix owning a file, and every named module directory present with none of its former prefixes left at the top level.
 
 ## 2. Refactor boundary
 

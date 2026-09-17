@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 /// Scanner/catalog records for executable scenario declarations
 /// (§AR-scanner.6, §AR-core-module-layout.1).
 
