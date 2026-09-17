@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 
 use super::e2e::E2eCase;
 use super::headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
+use super::paths::normalize_path_lexically;
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
 };
@@ -326,20 +327,6 @@ pub(crate) fn resolve_stub_target(root: &Path, stub_file: &Path, target: &Path) 
     } else {
         normalize_path_lexically(&root.join(target))
     }
-}
-
-pub(crate) fn normalize_path_lexically(path: &Path) -> PathBuf {
-    let mut normalized = PathBuf::new();
-    for component in path.components() {
-        match component {
-            Component::CurDir => {}
-            Component::ParentDir => {
-                normalized.pop();
-            }
-            other => normalized.push(other.as_os_str()),
-        }
-    }
-    normalized
 }
 
 pub(crate) fn render_qualified_id(config: &Config, namespace: Option<&str>, id: &Id) -> String {

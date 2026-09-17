@@ -27,10 +27,15 @@ mod workspace;
 // pass and everything they record are declared in `scanner/` and what crosses
 // the boundary is what `scanner/mod.rs` re-exports (§AR-scanner).
 mod scanner;
+// §AR-system.2.6: the checker is one Rust module too, so every rule and the
+// report they fill are declared in `checker/` and what crosses the boundary is
+// what `checker/mod.rs` re-exports (§AR-checker).
+mod checker;
 // Temporary re-exports for the duration of this migration: they keep every name
 // the flat crate root exposed reachable at `grund_core::<name>` while the other
 // components are still `include!`d flat. The finalize task replaces them with an
 // explicit list.
+pub use checker::*;
 pub use config::*;
 pub use grammar::*;
 pub use model::*;
@@ -44,20 +49,6 @@ pub use workspace::*;
 // published `grund` CLI and, next, the optional LSP server. The category files
 // are still included flat to keep this first package split behavior-preserving.
 include!("config_cmd.rs");
-include!("checker.rs");
-include!("checker_support.rs");
-include!("checker_agents.rs");
-include!("checker_homes.rs");
-include!("checker_values.rs");
-include!("checker_sections.rs");
-include!("checker_references.rs");
-include!("checker_citations.rs");
-include!("checker_grounding.rs");
-include!("checker_index.rs");
-include!("checker_near_miss.rs");
-include!("checker_index_entries.rs");
-include!("checker_selection.rs");
-include!("checker_sizes.rs");
 include!("checker_cmd.rs");
 include!("workspace_members_cmd.rs");
 include!("output.rs");

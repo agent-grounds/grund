@@ -6,7 +6,7 @@
 //! This is a *description* of a file, not a list of units: the level that turns
 //! headings and doc-comment blocks into units belongs to the `[[kinds]]` row that
 //! governs the file (§FS-config.3.4.8), and the cut is made in
-//! `checker_grounding.rs` so the level rule is written once. It runs per file,
+//! `checker/grounding.rs` so the level rule is written once. It runs per file,
 //! only where that file's own row asks for a unit finer than the file, so one
 //! fine-grained place does not describe the whole tree and a project at level `1`
 //! — every configuration written before the keys existed — records nothing and

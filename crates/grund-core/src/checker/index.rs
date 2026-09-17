@@ -1,21 +1,37 @@
-/// The kind-index invariant, in a file of its own beside the section and
-/// reference families (§AR-checker.2.16, §AR-core-module-layout.1): a kind with a
-/// `folder` and an `index` (§FS-config.3.4) promises that the index names every
-/// declaration in that folder, and may enroll an external inline declaration by
-/// canonical source link, as full Markdown links. §FS-check.3.18 is the coverage
-/// half and §FS-check.3.17 the link half; this module owns both, plus
-/// the set of citations they make navigational rather than referential
-/// (§FS-check.4.1, §DF-index-not-an-inbound-citation).
+//! The kind-index invariant, in a file of its own beside the section and
+//! reference families (§AR-checker.2.16, §AR-core-module-layout.1): a kind with a
+//! `folder` and an `index` (§FS-config.3.4) promises that the index names every
+//! declaration in that folder, and may enroll an external inline declaration by
+//! canonical source link, as full Markdown links. §FS-check.3.18 is the coverage
+//! half and §FS-check.3.17 the link half; this module owns both, plus
+//! the set of citations they make navigational rather than referential
+//! (§FS-check.4.1, §DF-index-not-an-inbound-citation).
+
+use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::homes::is_stub_for_inline_decl;
+use super::index_entries::KindIndexEntries;
+use crate::config::Config;
+use crate::grammar::{declaration_id_on_line, is_inside_inline_code, never_rewrite_context};
+use crate::model::{
+    CheckReport, Citation, Declaration, Diagnostic, Findings, Id, configured_home_path_key,
+    physical_path_key, scanned_decl_relative_path, scanned_path_key,
+};
+// §AR-system.4: two upward reads through the crate root — the ID renderer from
+// the writers (§FS-id) and the report path spelling from `output.rs`.
+use crate::{display_path, render_id};
 
 /// One kind's index obligation, resolved against the config root
 /// (§FS-config.3.4). `folder_key` and `index_key` are config-root-relative and
 /// lexically normalized, so they compare against the paths the scanner recorded;
 /// `index_file` is the readable path.
-struct KindIndexTarget<'a> {
-    kind: &'a str,
-    folder_key: PathBuf,
-    index_key: PathBuf,
-    index_file: PathBuf,
+pub(super) struct KindIndexTarget<'a> {
+    pub(super) kind: &'a str,
+    pub(super) folder_key: PathBuf,
+    pub(super) index_key: PathBuf,
+    pub(super) index_file: PathBuf,
 }
 
 /// Every `[[kinds]]` entry that carries both a `folder` and an enabled `index`
@@ -27,7 +43,7 @@ struct KindIndexTarget<'a> {
 /// runs on `.md` files only (§FS-fmt.6.1). A non-Markdown index is a file the
 /// formatter can never repair, and the honest report about one is no report at
 /// all rather than a finding with no fix.
-fn kind_index_targets(config: &Config) -> Vec<KindIndexTarget<'_>> {
+pub(super) fn kind_index_targets(config: &Config) -> Vec<KindIndexTarget<'_>> {
     config
         .kinds
         .iter()
@@ -185,7 +201,7 @@ fn index_home_declaration<'a>(
 /// Whether any of `decls` sits under `folder_key` — the recursive membership
 /// test of §FS-check.3.18: a stub in the folder is what puts an inline-homed ID
 /// in it, and a folder's whole subtree counts, not its top level.
-fn declarations_under_folder(
+pub(super) fn declarations_under_folder(
     decls: &[Declaration],
     folder_key: &Path,
     configured_root: &Path,
@@ -214,11 +230,11 @@ fn declarations_under_folder(
 /// The last release before `check` knew anything about a kind's index — the
 /// "from" half of the pair §REQ-backwards-compatibility.3 requires a
 /// verdict-flipping finding to name.
-const INDEX_RULE_PRIOR_RELEASE: &str = "0.11.0";
+pub(crate) const INDEX_RULE_PRIOR_RELEASE: &str = "0.11.0";
 
 /// The release the kind-index rules arrive in, and in which §FS-check.3.17 is an
 /// error on arrival — the "to" half of that pair.
-const INDEX_RULE_RELEASE: &str = "0.12.0";
+pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 
 /// §AR-checker.2.16 — the kind-index rule (§FS-check.3.18, §FS-check.3.17). One
 /// pass per configured index: read the file once, classify the citations the
@@ -245,7 +261,7 @@ const INDEX_RULE_RELEASE: &str = "0.12.0";
 /// Why the unlinked-entry message names `grund fmt --write`: that command is only
 /// ever named on a site the pass will in fact rewrite, which is what
 /// `IndexCitationForm::Bare` is narrowed to mean.
-fn check_kind_indexes(
+pub(super) fn check_kind_indexes(
     findings: &Findings,
     config: &Config,
     path_config: &Config,
@@ -324,7 +340,10 @@ fn check_kind_indexes(
             None if target.index_file.exists() => " (the index file could not be read)",
             None => " (the index file does not exist)",
         };
-        let lines: Vec<&str> = text.as_deref().map(|text| text.lines().collect()).unwrap_or_default();
+        let lines: Vec<&str> = text
+            .as_deref()
+            .map(|text| text.lines().collect())
+            .unwrap_or_default();
         let mut entries: BTreeMap<&Id, IndexEntryState> = BTreeMap::new();
         for citation in cited_in_index
             .get(target.index_key.as_path())
@@ -347,13 +366,12 @@ fn check_kind_indexes(
             // §FS-fmt.6.2: the pass has to compute a link target, and a citation
             // naming a section no declaration declares has none — `fmt` skips the
             // line and answers `rewrote 0 lines`. Only the bare form is gated.
-            let form = if form == IndexCitationForm::Bare
-                && !index_section_resolves(findings, citation)
-            {
-                IndexCitationForm::Ignored
-            } else {
-                form
-            };
+            let form =
+                if form == IndexCitationForm::Bare && !index_section_resolves(findings, citation) {
+                    IndexCitationForm::Ignored
+                } else {
+                    form
+                };
             if form == IndexCitationForm::Ignored {
                 continue;
             }
@@ -415,14 +433,14 @@ fn check_kind_indexes(
 /// whatever `[fmt.cross_refs] enabled` says (§FS-fmt.6.1,
 /// §DF-index-always-linkified) — the one region the formatter always writes,
 /// mirroring §FS-fmt.2.3's regions it never writes.
-struct KindIndexFiles {
+pub(crate) struct KindIndexFiles {
     configured_root: PathBuf,
     physical_root: PathBuf,
     keys: BTreeSet<PathBuf>,
 }
 
 impl KindIndexFiles {
-    fn new(config: &Config) -> Self {
+    pub(crate) fn new(config: &Config) -> Self {
         Self {
             configured_root: scanned_path_key(&config.root),
             physical_root: physical_path_key(&config.root),
@@ -435,7 +453,7 @@ impl KindIndexFiles {
 
     /// The set a run that already linkifies everything needs — no config read,
     /// no allocation, and `contains` short-circuits on it.
-    fn empty() -> Self {
+    pub(crate) fn empty() -> Self {
         Self {
             configured_root: PathBuf::new(),
             physical_root: PathBuf::new(),
@@ -443,11 +461,11 @@ impl KindIndexFiles {
         }
     }
 
-    fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.keys.is_empty()
     }
 
-    fn contains(&self, path: &Path) -> bool {
+    pub(crate) fn contains(&self, path: &Path) -> bool {
         if self.keys.is_empty() {
             return false;
         }

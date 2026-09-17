@@ -5,7 +5,7 @@
 
 ## 1. Context
 
-First-class values must catch content drift without asking a line-oriented citation tool to infer intent from arbitrary prose. The contract also needs one source that application code can read without introducing generated artifacts or historical state. This decision narrows [§FS-non-goals.2](../../functional-spec/FS-non-goals.md#2-spelling-grammar-prose-quality) only as far as [§FS-values](../../functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value) requires and extends the scanner/checker boundary of [§AR-scanner.3](../../architecture/AR-scanner.md#3-output) and [§AR-checker.2](../../../crates/grund-core/src/checker.rs).
+First-class values must catch content drift without asking a line-oriented citation tool to infer intent from arbitrary prose. The contract also needs one source that application code can read without introducing generated artifacts or historical state. This decision narrows [§FS-non-goals.2](../../functional-spec/FS-non-goals.md#2-spelling-grammar-prose-quality) only as far as [§FS-values](../../functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value) requires and extends the scanner/checker boundary of [§AR-scanner.3](../../architecture/AR-scanner.md#3-output) and [§AR-checker.2](../../../crates/grund-core/src/checker/report.rs).
 
 ## 2. Decision
 

@@ -1,19 +1,31 @@
-/// The section-shape rule family: what `grund check` says about a declaration's
-/// own citable headings, rather than about a citation of one.
-///
-/// - **Heading level** (§FS-check.3.9) — the Markdown depth a heading writes must
-///   mirror the dotted path it claims, as strictly as `[id] section_heading_levels`
-///   asks (§FS-config.3.3).
-/// - **Duplicate path** (§FS-check.3.16) — two headings claiming one path give a
-///   section citation two destinations, which is §FS-check.3.3's ambiguity one
-///   level down, and is reported rather than ranked (§DF-duplicate-section-path).
-/// - **Outside declaration** (§FS-check.3.23) — a section-like heading rejected
-///   by the scanner's body-span post-pass is a located hard finding.
-///
-/// They sit beside `checker.rs` as one family because they read the same two
-/// things and nothing else does: the recorded section map, and the
-/// `duplicate_sections` list the scanner keeps beside it (§AR-scanner.2.2,
-/// §AR-core-module-layout.1).
+//! The section-shape rule family: what `grund check` says about a declaration's
+//! own citable headings, rather than about a citation of one.
+//!
+//! - **Heading level** (§FS-check.3.9) — the Markdown depth a heading writes must
+//!   mirror the dotted path it claims, as strictly as `[id] section_heading_levels`
+//!   asks (§FS-config.3.3).
+//! - **Duplicate path** (§FS-check.3.16) — two headings claiming one path give a
+//!   section citation two destinations, which is §FS-check.3.3's ambiguity one
+//!   level down, and is reported rather than ranked (§DF-duplicate-section-path).
+//! - **Outside declaration** (§FS-check.3.23) — a section-like heading rejected
+//!   by the scanner's body-span post-pass is a located hard finding.
+//!
+//! They sit beside `report.rs` as one family because they read the same two
+//! things and nothing else does: the recorded section map, and the
+//! `duplicate_sections` list the scanner keeps beside it (§AR-scanner.2.2,
+//! §AR-core-module-layout.1).
+
+use std::collections::BTreeMap;
+
+use super::references::ScanScope;
+use super::support::{heading_marks, section_depth};
+use crate::config::Config;
+use crate::model::{CheckReport, Diagnostic, Findings, SectionHeadingOutsideDeclaration, Site};
+use crate::scanner::section_path_is_numeric;
+use crate::workspace::WorkspaceProject;
+// §AR-system.4: two upward reads through the crate root — the ID renderer from
+// the writers (§FS-id) and the report path spelling from `output.rs`.
+use crate::{display_path, render_id};
 
 /// The section-shape rules, as independent passes over the declarations
 /// (§AR-checker.2.15). Order does not matter — the report is sorted before it is
@@ -33,7 +45,7 @@
 /// written not to depend on it (§REQ-no-missed-citation). `lines` is non-empty
 /// either way, since a path is in `colliding` only because a heading claimed it
 /// twice.
-fn check_section_headings(
+pub(super) fn check_section_headings(
     findings: &Findings,
     config: &Config,
     path_config: &Config,
@@ -222,7 +234,7 @@ fn section_outside_declaration_diagnostic(
     }
 }
 
-fn retain_heading_findings_in_scope(findings: &mut Findings, scope: &ScanScope) {
+pub(super) fn retain_heading_findings_in_scope(findings: &mut Findings, scope: &ScanScope) {
     findings
         .section_headings_outside_declarations
         .retain(|heading| scope.contains(&heading.file));
@@ -236,7 +248,7 @@ fn retain_heading_findings_in_scope(findings: &mut Findings, scope: &ScanScope) 
 /// §FS-check.3.23: unlike the reference tier, an outside-declaration heading
 /// keeps the same public code and message when `--full` discovers it beyond
 /// `[scan] include`.
-fn out_of_scope_section_headings(
+pub(crate) fn out_of_scope_section_headings(
     findings: &Findings,
     scope: Option<&ScanScope>,
 ) -> Vec<Diagnostic> {
@@ -251,7 +263,7 @@ fn out_of_scope_section_headings(
         .collect()
 }
 
-fn workspace_out_of_scope_section_headings(
+pub(crate) fn workspace_out_of_scope_section_headings(
     projects: &[WorkspaceProject],
     scopes: &[Option<ScanScope>],
 ) -> Vec<Diagnostic> {

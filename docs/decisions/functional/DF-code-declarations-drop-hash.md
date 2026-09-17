@@ -71,7 +71,7 @@ Landing now:
 - [§FS-show.2.3](../../functional-spec/FS-show.md#23-inline-declarations-in-code-and-doc-comments) describes the inline declaration forms and their section behavior.
 - [§FS-show.2.3](../../functional-spec/FS-show.md#23-inline-declarations-in-code-and-doc-comments) documents the multi-declaration-per-comment shape with a Rust example, surfacing a capability the scanner already had.
 - E2E fixtures cover (a) a single declaration in code, (b) two declarations in one doc-comment, and (c) the supported polyglot doc-comment forms.
-- The project's own [crates/grund-core/src/checker.rs](../../../crates/grund-core/src/checker.rs) declaration is migrated to the new form as the first dogfood.
+- The project's own [crates/grund-core/src/checker/report.rs](../../../crates/grund-core/src/checker/report.rs) declaration is migrated to the new form as the first dogfood.
 
 Follow-ups (each tracked above as *(follow-up)*):
 

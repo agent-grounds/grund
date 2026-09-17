@@ -1,8 +1,22 @@
+use std::collections::BTreeMap;
+use std::path::Path;
+
+use super::homes::is_stub_for_inline_decl;
+use super::references::WorkspaceCheckTarget;
+use crate::config::{Config, kind_uses_values};
+use crate::model::{
+    CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Findings, Id, Site, ValueBinding,
+    render_qualified_id, value_components_equal,
+};
+// §AR-system.4: two upward reads through the crate root — the ID renderer from
+// the writers (§FS-id) and the report path spelling from `output.rs`.
+use crate::{display_path, render_id};
+
 /// The independent explicit-value checker pass (§AR-checker.2.18,
 /// §FS-values.5). It consumes scanner records, resolves through the same
 /// workspace catalog as ordinary citations, and compares only one valid,
 /// unique numbered target.
-fn check_values(
+pub(super) fn check_values(
     findings: &Findings,
     config: &Config,
     path_config: &Config,
@@ -96,8 +110,7 @@ fn check_values(
                 continue;
             }
             Some((_, EmbeddedBindingRelation::InvalidImmediateComponent)) => continue,
-            None if whole_authority && !binding.section.contains('.') =>
-            {
+            None if whole_authority && !binding.section.contains('.') => {
                 if declaration.value_valid != Some(true) {
                     continue;
                 }
@@ -215,7 +228,7 @@ fn binding_target_reports_invalid_attempt(
         })
 }
 
-fn binding_target_has_any_value_authority(
+pub(crate) fn binding_target_has_any_value_authority(
     findings: &Findings,
     config: &Config,
     id: &Id,

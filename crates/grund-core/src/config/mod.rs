@@ -9,7 +9,9 @@
 //! files plus the `Config` record that sat in `model/`: discovery, the record,
 //! the reader, and one file per section of `grund.toml` that carries a grammar
 //! and cross-key rules of its own — `[[kinds]]` with its built-in defaults,
-//! `[citations]`, `[workspace]`, and the grounding pair.
+//! `[citations]`, `[workspace]`, and the grounding pair — which gained the
+//! per-kind level lookup `grounding_level_for_kind` when §AR-system.2.6 became a
+//! module, the scanner having read it upward out of a checker file.
 
 mod citations;
 mod discovery;
@@ -37,6 +39,7 @@ pub(crate) use citations::render_citation_target;
 pub(crate) use discovery::{
     config_file_in, home_form_of, load_config, load_config_at, load_config_at_with_report_base,
 };
+pub(crate) use grounding::grounding_level_for_kind;
 pub(crate) use parse::{parse_string_list, strip_comment};
 pub(crate) use record::{
     DEFAULT_GROUNDING_LEVEL, kind_prefixes, kind_uses_values, non_citable_kind_error,

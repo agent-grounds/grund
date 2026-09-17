@@ -1,3 +1,6 @@
+use anyhow::{Result, anyhow};
+use std::collections::BTreeSet;
+
 /// The exact public code vocabulary accepted by `grund check --only` and
 /// `--ignore`, kept sorted for deterministic help output (§FS-errors.5).
 #[doc(hidden)]
@@ -87,9 +90,12 @@ fn validate_check_finding_code(flag: &str, value: &str) -> Result<()> {
     if value.is_empty() {
         return Err(anyhow!("{flag} requires a finding code"));
     }
-    let valid_shape = value
-        .split('-')
-        .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit()));
+    let valid_shape = value.split('-').all(|part| {
+        !part.is_empty()
+            && part
+                .bytes()
+                .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+    });
     if !valid_shape {
         return Err(anyhow!(
             "invalid finding code \"{value}\" (expected lowercase kebab-case)"

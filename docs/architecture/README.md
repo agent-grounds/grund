@@ -79,7 +79,7 @@ Consumes the scope and the grammar. Produces `Findings`: every declaration, sect
 
 ### 2.6 checker
 
-Consumes `Findings`. Produces the `Report`: errors, warnings and suggestions, each rule one pass over part of the findings ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-reference-in-a-repo)). Reads no file except in the two rules that must, and knows no frontend. Design: [§AR-checker](../../crates/grund-core/src/checker.rs). Categories: `checker`.
+Consumes `Findings`. Produces the `Report`: errors, warnings and suggestions, each rule one pass over part of the findings ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-reference-in-a-repo)). Reads no file except in the two rules that must, and knows no frontend. Design: [§AR-checker](../../crates/grund-core/src/checker/report.rs). Module: `crates/grund-core/src/checker/`.
 
 ### 2.7 queries
 
@@ -113,7 +113,7 @@ One rule: **no component reads one above it.** The stack in section 1 is the rul
 
 # Index
 
-One file per page; each H1 declares an `AR-<slug>` ID and the body is its contract, and `§AR-<slug>.<section>` from anywhere in the tree resolves into it. A page may live inline in the doc-comment of the file it describes: its canonical link in this index enrolls it directly, with no stub file ([§FS-check.3.18](../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)), and `grund <ID>` resolves the source declaration and strips its comment markers ([§AR-scanner.4](AR-scanner.md#4-inline-declarations-in-language-doc-comments) lists the doc-comment forms). [§AR-checker](../../crates/grund-core/src/checker.rs) is the worked example: its only declaration is the doc-comment of `fn check` in [`crates/grund-core/src/checker.rs`](../../crates/grund-core/src/checker.rs).
+One file per page; each H1 declares an `AR-<slug>` ID and the body is its contract, and `§AR-<slug>.<section>` from anywhere in the tree resolves into it. A page may live inline in the doc-comment of the file it describes: its canonical link in this index enrolls it directly, with no stub file ([§FS-check.3.18](../functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)), and `grund <ID>` resolves the source declaration and strips its comment markers ([§AR-scanner.4](AR-scanner.md#4-inline-declarations-in-language-doc-comments) lists the doc-comment forms). [§AR-checker](../../crates/grund-core/src/checker/report.rs) is the worked example: its only declaration is the doc-comment of `fn check` in [`crates/grund-core/src/checker/report.rs`](../../crates/grund-core/src/checker/report.rs).
 
 The system:
 
@@ -126,7 +126,7 @@ The components and frontends:
 | ID | Subject |
 |---|---|
 | [§AR-scanner](AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations) | how grund discovers declarations and citations |
-| [§AR-checker](../../crates/grund-core/src/checker.rs) | how grund validates the scanner's findings — declared and enrolled directly from `crates/grund-core/src/checker.rs` |
+| [§AR-checker](../../crates/grund-core/src/checker/report.rs) | how grund validates the scanner's findings — declared and enrolled directly from `crates/grund-core/src/checker/report.rs` |
 | [§AR-workspace](AR-workspace.md#ar-workspace-how-the-resolver-config-loader-and-scanner-compose-across-projects) | how the resolver, config loader, and scanner compose across projects |
 | [§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms) | the engine's contract with its frontends, and the shape of the planned ones |
 | [§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built) | how the LSP server is built |

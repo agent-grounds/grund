@@ -1,8 +1,25 @@
+use anyhow::Result;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use crate::config::Config;
+use crate::grammar::{
+    PythonDocstringScanState, STUB_LINK_HEADING, declaration_id_on_line, source_scan_line,
+};
+use crate::model::{
+    Declaration, Id, configured_home_path_key, paths_same_location, physical_path_key,
+    resolve_stub_target, scanned_decl_relative_path, scanned_path_key,
+};
+
 /// Whether this stub heading is the one-line pointer to an inline declaration in
 /// code (`# <ID>: [text](src/foo.rs)` whose target also declares `<ID>`) — such a
 /// stub does not count as a second home, so it is not a duplicate (§AR-scanner.4,
 /// §FS-show.2.3).
-fn is_stub_for_inline_decl(root: &Path, decl: &Declaration, decls: &[Declaration]) -> bool {
+pub(crate) fn is_stub_for_inline_decl(
+    root: &Path,
+    decl: &Declaration,
+    decls: &[Declaration],
+) -> bool {
     if !decl.is_stub {
         return false;
     }
@@ -15,16 +32,16 @@ fn is_stub_for_inline_decl(root: &Path, decl: &Declaration, decls: &[Declaration
         .any(|other| paths_same_location(&other.file, &resolved) && other.file != decl.file)
 }
 
-struct DeclarationHome<'a> {
-    kind: &'a str,
-    path: &'a str,
+pub(super) struct DeclarationHome<'a> {
+    pub(super) kind: &'a str,
+    pub(super) path: &'a str,
     /// Whether the home's kind declares IDs (§FS-config.3.4). A non-citable home
     /// admits no declaration at all, so the finding it produces names the home
     /// rather than a kind the author was supposed to have written.
-    citable: bool,
+    pub(super) citable: bool,
     /// Whether the home is one exact `file` rather than a `folder`, so the label
     /// below reads as the directory it is.
-    exact: bool,
+    pub(super) exact: bool,
 }
 
 impl DeclarationHome<'_> {
@@ -32,7 +49,7 @@ impl DeclarationHome<'_> {
     /// §FS-check.3.6) — the same `<folder>/` label the citation-direction
     /// findings and the generated block use, so one home reads one way
     /// everywhere.
-    fn place(&self) -> String {
+    pub(super) fn place(&self) -> String {
         if self.exact {
             self.path.to_string()
         } else {
@@ -41,10 +58,10 @@ impl DeclarationHome<'_> {
     }
 }
 
-struct SingleFileHome<'a> {
+pub(super) struct SingleFileHome<'a> {
     kind: &'a str,
-    path: &'a str,
-    physical_path: PathBuf,
+    pub(super) path: &'a str,
+    pub(super) physical_path: PathBuf,
 }
 
 struct ConfiguredHome<'a> {
@@ -55,7 +72,7 @@ struct ConfiguredHome<'a> {
     citable: bool,
 }
 
-struct KindHomeIndex<'a> {
+pub(super) struct KindHomeIndex<'a> {
     configured_root: PathBuf,
     physical_root: PathBuf,
     single_files: Vec<SingleFileHome<'a>>,
@@ -64,7 +81,7 @@ struct KindHomeIndex<'a> {
 }
 
 impl<'a> KindHomeIndex<'a> {
-    fn new(config: &'a Config) -> Self {
+    pub(super) fn new(config: &'a Config) -> Self {
         let configured_root = scanned_path_key(&config.root);
         let physical_root = physical_path_key(&config.root);
         let mut single_files = Vec::new();
@@ -119,7 +136,7 @@ impl<'a> KindHomeIndex<'a> {
     /// The `[[kinds]].file` setting for `kind`, if any — the single document every
     /// declaration of that kind must live in (§FS-config.3.4). Returns `None` for
     /// multi-file kinds (those configured with `folder` instead).
-    fn single_file_for_kind(&self, kind: &str) -> Option<&SingleFileHome<'a>> {
+    pub(super) fn single_file_for_kind(&self, kind: &str) -> Option<&SingleFileHome<'a>> {
         self.single_files.iter().find(|home| home.kind == kind)
     }
 
@@ -127,7 +144,7 @@ impl<'a> KindHomeIndex<'a> {
     /// `[[kinds]]` home matches it. `file` homes are exact; `folder` homes are
     /// path-prefix matches against the scanner-recorded path, not the symlink
     /// target (§FS-config.3.4, §FS-check.3.7).
-    fn unique_decl_home_for_file(&self, path: &Path) -> Option<DeclarationHome<'a>> {
+    pub(super) fn unique_decl_home_for_file(&self, path: &Path) -> Option<DeclarationHome<'a>> {
         let path = scanned_decl_relative_path(path, &self.configured_root, &self.physical_root)?;
         if !self.overlapping_homes {
             return self
@@ -185,52 +202,18 @@ fn homes_overlap(left: &ConfiguredHome<'_>, right: &ConfiguredHome<'_>) -> bool 
     }
 }
 
-fn paths_same_location(left: &Path, right: &Path) -> bool {
-    physical_path_key(left) == physical_path_key(right)
-}
-
-fn paths_same_location_key(left: &Path, right: &Path) -> bool {
+/// The one location test written against a key that has already been taken
+/// (§FS-check.3.7): the single-file rule holds one `physical_path` per kind home
+/// and compares every declaration's file to it, so re-deriving the right-hand
+/// side per declaration would canonicalize the same home once per ID.
+pub(super) fn paths_same_location_key(left: &Path, right: &Path) -> bool {
     physical_path_key(left) == right
-}
-
-fn physical_path_key(path: &Path) -> PathBuf {
-    fs::canonicalize(path).unwrap_or_else(|_| normalize_path_lexically(path))
-}
-
-fn scanned_path_key(path: &Path) -> PathBuf {
-    normalize_path_lexically(path)
-}
-
-fn configured_home_path_key(home: &str) -> PathBuf {
-    scanned_path_key(Path::new(home))
-}
-
-fn scanned_decl_relative_path<'a>(
-    path: &'a Path,
-    configured_root: &Path,
-    physical_root: &Path,
-) -> Option<std::borrow::Cow<'a, Path>> {
-    if let Ok(relative) = path.strip_prefix(physical_root) {
-        return Some(std::borrow::Cow::Borrowed(relative));
-    }
-    if let Ok(relative) = path.strip_prefix(configured_root) {
-        return Some(std::borrow::Cow::Owned(scanned_path_key(relative)));
-    }
-
-    let path = scanned_path_key(path);
-    if let Ok(relative) = path.strip_prefix(physical_root) {
-        return Some(std::borrow::Cow::Owned(scanned_path_key(relative)));
-    }
-    if let Ok(relative) = path.strip_prefix(configured_root) {
-        return Some(std::borrow::Cow::Owned(scanned_path_key(relative)));
-    }
-    None
 }
 
 /// Whether `path` contains a real (non-stub) inline declaration of `id` —
 /// the check that a stub's link target actually carries the inline home it claims
 /// (§FS-check.3.4, §AR-checker.2.4, §AR-scanner.4).
-fn file_declares_inline_home(path: &Path, id: &Id, config: &Config) -> Result<bool> {
+pub(crate) fn file_declares_inline_home(path: &Path, id: &Id, config: &Config) -> Result<bool> {
     let text = fs::read_to_string(path)?;
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");

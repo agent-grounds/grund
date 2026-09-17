@@ -1,3 +1,30 @@
+use std::collections::{BTreeMap, BTreeSet};
+
+use super::agents::check_agents_block_version;
+use super::citations::{check_citation_obligations, check_citation_prohibitions};
+use super::grounding::check_grounding;
+use super::homes::{
+    KindHomeIndex, file_declares_inline_home, is_stub_for_inline_decl, paths_same_location_key,
+};
+use super::index::check_kind_indexes;
+use super::index_entries::KindIndexEntries;
+use super::inline_style::check_inline_citation_style;
+use super::near_miss::check_declaration_near_misses;
+use super::references::{ReferenceTier, WorkspaceCheckTarget, check_citation_resolution};
+use super::sections::check_section_headings;
+use super::sizes::check_oversized_leads;
+use super::support::{citation_resolves, sort_diagnostics};
+use super::values::check_values;
+use crate::config::Config;
+use crate::model::{
+    CheckReport, Declaration, Diagnostic, Findings, Id, Site, TextOverlays, render_qualified_id,
+    resolve_stub_target,
+};
+use crate::scanner::is_scannable;
+// §AR-system.4: four upward reads through the crate root — the ID renderer from
+// the writers (§FS-id), and the three path spellings from `output.rs`.
+use crate::{display_path, format_path, render_id, sort_path_key};
+
 /// AR-checker: how grund validates the scanner's findings
 ///
 /// The checker takes the `Findings` produced by §AR-scanner and produces a
@@ -99,7 +126,7 @@
 /// inline declaration, anchored at line 1. Above it the units are the heading
 /// subtrees the scanner recorded for a Markdown file, or its doc-comment blocks
 /// for a source one (§AR-scanner.2.7), each finding anchored at its own unit. The
-/// pass is `checker_grounding.rs`; `[citations]` obligations read the same cut
+/// pass is `grounding.rs`; `[citations]` obligations read the same cut
 /// (§2.9), so *whether* and *what* are asked of one thing.
 ///
 /// ### 2.9 Citation-direction obligations (§FS-check.3.11, §FS-config.3.9, §DF-citation-directions)
@@ -166,7 +193,7 @@
 /// `[scan] include` decides which roots the walk starts from, so a citation
 /// outside it is invisible rather than merely unchecked. `grund check --full`
 /// widens the walk to the whole config root and the run then has two scopes.
-/// `checker_references.rs` owns both halves of that: the tier is read off the
+/// `references.rs` owns both halves of that: the tier is read off the
 /// *whole* walk first — resolution failures only, so a directory nobody
 /// configured is never judged against conventions it never adopted — and the
 /// findings are then narrowed in place to the configured scope, so every rule
@@ -191,9 +218,12 @@
 /// of the three tiers are opt-in and silent by default: the soft cap under
 /// `warn_on_suggested`, the layout under `inline_note_layout_check`.
 ///
-/// The rule lives in `inline_note_layout.rs` with the classifier the scanner
-/// annotates from, rather than here — one file per invariant, the arrangement
-/// §2.12's shorthand rule already uses for the same reason.
+/// The rule is `inline_style.rs` rather than here — one file per invariant, the
+/// arrangement §2.12's shorthand rule already uses for the same reason. The
+/// classifier it judges by stays in `grammar/inline_note_layout.rs`, which is
+/// what the scanner annotates a site from: the two stages read one answer about
+/// what a well-laid-out note is, and only this component turns it into a
+/// finding (§AR-system.2.1).
 ///
 /// ### 2.15 Duplicate section paths (§FS-check.3.16, §DF-duplicate-section-path)
 ///
@@ -235,8 +265,8 @@
 /// that keeps §2.6 honest: an index entry is not an inbound citation, so the
 /// unused warning still fires for a declaration only its own index names
 /// (§DF-index-not-an-inbound-citation). The finding pass lives in
-/// `checker_index.rs` and its shared membership derivation in
-/// `checker_index_entries.rs`, one file per invariant family and bounded helper
+/// `index.rs` and its shared membership derivation in
+/// `index_entries.rs`, one file per invariant family and bounded helper
 /// (§AR-core-module-layout.1, §AR-core-module-layout.3).
 ///
 /// ### 2.17 Named section prefixes (§FS-check.3.19)
@@ -299,13 +329,13 @@
 /// - The optional LSP server (§AR-lsp) can run a subset of checks (e.g., only
 ///   dangling references on the active file's citations) against a cached scan.
 /// - Tests can feed synthetic `Findings` directly to the checker without disk I/O.
-fn check_findings(findings: &Findings, config: &Config) -> CheckReport {
+pub(crate) fn check_findings(findings: &Findings, config: &Config) -> CheckReport {
     check_with_workspace(findings, config, config, None, &BTreeMap::new())
 }
 
 /// Disk-backed compatibility entry for the shared checker; the LSP sibling
 /// below supplies overlays so §FS-check.4.13 measures the editor's live text.
-fn check_with_workspace(
+pub(crate) fn check_with_workspace(
     findings: &Findings,
     config: &Config,
     path_config: &Config,
@@ -344,7 +374,7 @@ fn check_with_workspace(
 /// maintainer declared matters and is usually all Markdown, so the exemption
 /// would make the rule inert exactly where it was asked for. Which place is
 /// asked, and how finely, is a `[[kinds]]` row's to say (§FS-config.3.4.8).
-fn check_with_workspace_and_overlays(
+pub(crate) fn check_with_workspace_and_overlays(
     findings: &Findings,
     config: &Config,
     path_config: &Config,
@@ -459,7 +489,7 @@ fn check_with_workspace_and_overlays(
     }
 
     // §FS-check.3.1 / §FS-check.3.2 / §FS-check.3.8 / §FS-check.3.13: the
-    // reference-resolution family, in `checker_references.rs` (§AR-checker.2.13,
+    // reference-resolution family, in `references.rs` (§AR-checker.2.13,
     // §FS-check.3.14) because `check --full` reruns it outside `[scan] include`.
     check_citation_resolution(
         findings,
@@ -497,7 +527,7 @@ fn check_with_workspace_and_overlays(
 
     // §FS-check.3.9 / §FS-check.3.16: the depth a declaration's own section
     // headings write, and whether two claim one path. One file per invariant
-    // family in `checker_sections.rs` (§AR-checker.2.15, §AR-core-module-layout.1).
+    // family in `sections.rs` (§AR-checker.2.15, §AR-core-module-layout.1).
     check_section_headings(findings, config, path_config, &mut report);
 
     // §FS-inline-citation-style.4: inline source-comment citation sites are
@@ -508,13 +538,7 @@ fn check_with_workspace_and_overlays(
     // §FS-check.4.13: an absent key stops before any body read; an opted-in
     // project judges only the already-scoped scanner sites, including duplicate
     // claimants, through the shared show slicer. Warnings never affect exit.
-    check_oversized_leads(
-        findings,
-        config,
-        current_alias,
-        overlays,
-        &mut report,
-    );
+    check_oversized_leads(findings, config, current_alias, overlays, &mut report);
 
     // §FS-check.3.4: a `# <ID>: [text](path)` stub is broken if `path` does not
     // exist, or exists but does not itself declare `<ID>` inline (§AR-checker.2.4).
@@ -561,7 +585,7 @@ fn check_with_workspace_and_overlays(
     }
 
     // §FS-check.3.18 / §FS-check.3.17: a kind's index must list every declaration
-    // in its folder, as a full link. In `checker_index.rs` — one file per
+    // in its folder, as a full link. In `index.rs` — one file per
     // invariant family, the arrangement §2.15's section rules already use.
     check_kind_indexes(findings, config, path_config, &mut report);
 
@@ -609,7 +633,7 @@ fn check_with_workspace_and_overlays(
     }
 
     // §FS-check.3.6 / §DF-require-grounding: the grounding pass, per `[[kinds]]`
-    // row and per unit, in `checker_grounding.rs` (§AR-checker.2.8).
+    // row and per unit, in `grounding.rs` (§AR-checker.2.8).
     check_grounding(findings, config, &kind_homes, workspace, &mut report);
 
     // §FS-check.4.6: headings that open like a declaration and parse as none.
