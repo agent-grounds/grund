@@ -37,16 +37,13 @@ use crate::grammar::{
     DocstringContent, PythonDocstringScanState, STUB_LINK_HEADING,
     bare_token_in_never_rewrite_zone, declaration_captures, markdown_fence_delimiter,
     near_miss_heading, parse_id, qualified_suppressed_in_source, scan_shorthand_citations,
-    section_path, source_scan_line,
+    section_anchor_text, section_path, source_scan_line,
 };
 use crate::model::{
     Citation, Declaration, DeclarationSource, EmbeddedValueRoot, Findings, Id, InlineCitationSite,
     NearMissHeading, SectionInfo, UnmarkedHeadingCandidate,
 };
 use crate::workspace::WorkspaceCitationTarget;
-// §AR-system.4: one upward read, through the crate root until its owner is a
-// module — the section-heading anchor text a `fmt` link target is slugged from.
-use crate::section_anchor_text;
 
 pub(crate) struct CitationLine<'a> {
     pub(crate) scan_line: &'a str,

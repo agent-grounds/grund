@@ -4,13 +4,14 @@ use std::path::Path;
 use super::homes::is_stub_for_inline_decl;
 use super::references::WorkspaceCheckTarget;
 use crate::config::{Config, kind_uses_values};
+use crate::grammar::{render_id, render_qualified_id};
 use crate::model::{
     CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Findings, Id, Site, ValueBinding,
-    render_qualified_id, value_components_equal,
+    value_components_equal,
 };
-// §AR-system.4: two upward reads through the crate root — the ID renderer from
-// the writers (§FS-id) and the report path spelling from `output.rs`.
-use crate::{display_path, render_id};
+// §AR-system.4: one upward read through the crate root — the report path
+// spelling, which is `output.rs`'s (§AR-system.2.9).
+use crate::display_path;
 
 /// The independent explicit-value checker pass (§AR-checker.2.18,
 /// §FS-values.5). It consumes scanner records, resolves through the same

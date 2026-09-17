@@ -1,5 +1,16 @@
-// Snapshot-home discovery, declaration ownership, and atomic installation for
-// the explicit materializer (§FS-fetch.4, §FS-fetch.5, §REQ-no-data-loss.2).
+//! Snapshot-home discovery, declaration ownership, and atomic installation for
+//! the explicit materializer (§FS-fetch.4, §FS-fetch.5, §REQ-no-data-loss.2).
+
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::fetch::{FetchFailure, fetch_operational};
+use crate::config::Config;
+use crate::grammar::{
+    Grammar, markdown_fence_delimiter, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
+};
+use crate::model::Id;
+use crate::scanner::{markdown_heading_level, walk_scannable_files_reporting};
 
 #[derive(Clone)]
 struct SnapshotDeclaration {
@@ -21,7 +32,9 @@ fn declarations_at_depth(
     let mut fence = None;
     for line in text.split_inclusive('\n') {
         let without_newline = line.strip_suffix('\n').unwrap_or(line);
-        let content = without_newline.strip_suffix('\r').unwrap_or(without_newline);
+        let content = without_newline
+            .strip_suffix('\r')
+            .unwrap_or(without_newline);
         let trimmed = content.trim_start();
         if markdown_fence_delimiter(&mut fence, content) {
             offset += line.len();
@@ -92,7 +105,7 @@ fn declarations_at_depth(
 }
 
 /// §FS-fetch.4: replace only the named H2 or insert it in ID order.
-fn write_file_home(
+pub(super) fn write_file_home(
     path: &Path,
     grammar: &Grammar,
     requested: &Id,
@@ -101,7 +114,12 @@ fn write_file_home(
     let original = match fs::read(path) {
         Ok(bytes) => bytes,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => Vec::new(),
-        Err(err) => return Err(fetch_operational(format!("cannot read {}: {err}", path.display()))),
+        Err(err) => {
+            return Err(fetch_operational(format!(
+                "cannot read {}: {err}",
+                path.display()
+            )));
+        }
     };
     let declarations = declarations_at_depth(&original, grammar, 2)?;
     let matching = declarations
@@ -150,7 +168,7 @@ fn write_file_home(
 }
 
 /// §FS-fetch.5: replace the unique declaring file or create `<ID>.md`.
-fn write_folder_home(
+pub(super) fn write_folder_home(
     folder: &Path,
     config: &Config,
     requested: &Id,
@@ -184,8 +202,9 @@ fn write_folder_home(
             if path.extension().and_then(|extension| extension.to_str()) != Some("md") {
                 continue;
             }
-            let bytes = fs::read(&path)
-                .map_err(|err| fetch_operational(format!("cannot read {}: {err}", path.display())))?;
+            let bytes = fs::read(&path).map_err(|err| {
+                fetch_operational(format!("cannot read {}: {err}", path.display()))
+            })?;
             let declarations = declarations_at_depth(&bytes, &config.grammar, 1)?;
             let contains_requested = declarations
                 .iter()
@@ -256,10 +275,7 @@ fn atomic_install(path: &Path, bytes: &[u8]) -> std::result::Result<(), FetchFai
     let created_directories = create_parent_directories(parent, path)?;
     let mut temporary = None;
     for attempt in 0..100u32 {
-        let candidate = parent.join(format!(
-            ".grund-fetch-{}-{attempt}.tmp",
-            std::process::id()
-        ));
+        let candidate = parent.join(format!(".grund-fetch-{}-{attempt}.tmp", std::process::id()));
         match std::fs::OpenOptions::new()
             .write(true)
             .create_new(true)

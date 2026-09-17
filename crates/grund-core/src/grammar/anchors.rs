@@ -1,7 +1,26 @@
+//! The anchor a heading gets (§FS-fmt.6.7, §DF-md-link-anchor-strategy): the
+//! heading text a section anchor is built from, and the slug each configured
+//! `anchor_format` profile derives from that text. Both are pure functions of
+//! text — no file, no config record, no findings — which is what makes them
+//! lexical facts and puts them in this component rather than in the formatter
+//! that emits the link (§AR-system.2.1).
+//!
+//! They were the `fmt` category's while the crate was flat, and the scanner read
+//! the first one upward to fill a section's stored title (§AR-scanner.2.2). Both
+//! came down when §AR-system.2.8 became a module, so the scanner reads it
+//! downward and the formatter's link target (`writers/fmt_link_targets.rs`)
+//! reads the second one the same way. Reproducing a renderer's slugger
+//! byte-for-byte is the whole of §DF-github-anchor-fidelity, and nothing about
+//! it is a writer's plan.
+
+use unicode_normalization::UnicodeNormalization;
+
+use super::compiled::reduce_heading_text;
+
 /// Slugify a heading into a fragment anchor, dispatching on the configured
 /// `[fmt.cross_refs] anchor_format` profile (github / gitlab / mkdocs / pandoc) —
 /// §FS-fmt.6.7, §DF-md-link-anchor-strategy.
-fn anchor_slug(text: &str, profile: &str) -> String {
+pub(crate) fn anchor_slug(text: &str, profile: &str) -> String {
     match profile {
         "pandoc" => anchor_slug_pandoc(text),
         "mkdocs" => anchor_slug_mkdocs(text),
@@ -19,7 +38,7 @@ fn anchor_slug(text: &str, profile: &str) -> String {
 /// `#fragment` navigates only if it is the slug GitHub itself renders
 /// (§DF-github-anchor-fidelity, correcting the "collapse consecutive `-`" wording
 /// in §DF-md-link-anchor-strategy.2.3).
-fn anchor_slug_github(text: &str) -> String {
+pub(crate) fn anchor_slug_github(text: &str) -> String {
     let mut out = String::new();
     for ch in text.chars().flat_map(char::to_lowercase) {
         if ch.is_alphanumeric() || ch == '_' || ch == '-' {
@@ -79,4 +98,37 @@ fn anchor_slug_pandoc(text: &str) -> String {
         out.pop();
     }
     out
+}
+
+/// The heading text a section anchor is built from — `<number> <title>` taken
+/// straight off the heading line, since anchors are derived from heading text, not
+/// stored (§DF-md-link-anchor-strategy). The title is reduced to its rendered form
+/// (`reduce_heading_text`: `[§FS-<x>.1](path)` → `§FS-<x>.1`, `<ID>` dropped) so
+/// the anchor is stable whether or not a citation in this heading has been wrapped
+/// by `grund fmt --cross-refs` (§DF-github-anchor-fidelity).
+pub(crate) fn section_anchor_text(line: &str, section: &str) -> String {
+    let trimmed = line.trim_start();
+    // §FS-fmt.6.2: named anchors derive from the complete rendered heading, so
+    // its explicit colon reaches the renderer (`goals: Scope`). Numeric paths
+    // retain their historical normalized stored text byte for byte.
+    if section
+        .as_bytes()
+        .first()
+        .is_some_and(u8::is_ascii_lowercase)
+    {
+        return reduce_heading_text(trimmed.trim_start_matches('#').trim_start());
+    }
+    let heading = trimmed
+        .trim_start_matches('#')
+        .trim_start()
+        .trim_start_matches(section)
+        .trim_start_matches('.')
+        .trim_start();
+    format!(
+        "{} {}",
+        section.replace('.', ""),
+        reduce_heading_text(heading)
+    )
+    .trim()
+    .to_string()
 }

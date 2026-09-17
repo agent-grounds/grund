@@ -42,7 +42,7 @@ pub(crate) use paths::{
     scanned_decl_relative_path, scanned_path_key,
 };
 pub(crate) use records::{
-    LegacyCitationCandidate, ShowRenderMode, TextOverlays, render_qualified_id, resolve_stub_target,
+    LegacyCitationCandidate, ShowRenderMode, TextOverlays, resolve_stub_target,
 };
 pub(crate) use report::{CheckReport, Diagnostic, Site};
 pub(crate) use values::{

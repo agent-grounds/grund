@@ -10,7 +10,7 @@ use crate::grammar::{
 use crate::workspace::resolve_workspace_config;
 // §AR-system.4: three reads through the crate root — the snapshot path
 // normalization from `api.rs`, and the formatter's suppression and exclusion
-// state from `fmt_suppress.rs`, whose verdicts this keystroke rule must match.
+// state from `writers/fmt_suppress.rs`, a sibling this rule must match.
 use crate::{FmtDirectives, FmtExcluded, canonical_snapshot_path};
 
 /// Check the same context exclusions as `grund fmt` before an LSP on-type

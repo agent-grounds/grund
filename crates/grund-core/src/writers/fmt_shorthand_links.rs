@@ -1,7 +1,19 @@
+//! An accepted local shorthand as a link target (§FS-fmt.2.4, §FS-fmt.6.2): the
+//! short span stays as written while its canonical `Id` selects the link, so the
+//! expansion pass and the wrapper pass read one answer about what a shorthand
+//! names.
+
+use crate::config::{Config, ShorthandPolicy};
+use crate::grammar::{
+    MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, ShorthandIndex, is_inside_inline_code,
+    is_inside_markdown_link_destination, parse_id,
+};
+use crate::model::Id;
+
 /// §FS-fmt.2.4 / §FS-fmt.6.2: accepted local shorthand survives the expansion
 /// pass but remains a resolved citation eligible for cross-reference wrapping.
 /// Its visible short span is retained while its canonical `Id` selects the link.
-fn collect_local_accepted_shorthand_links(
+pub(super) fn collect_local_accepted_shorthand_links(
     line: &str,
     config: &Config,
     index: Option<&ShorthandIndex<'_>>,
@@ -40,7 +52,7 @@ fn collect_local_accepted_shorthand_links(
 /// Resolve one accepted shorthand through the same grammar/index pair used by
 /// §FS-fmt.2.4. Unknown, ambiguous, numeric-run, and non-whole-token candidates
 /// stay absent, so link wrapping never becomes a second resolver or guesses.
-fn accepted_shorthand_link(
+pub(super) fn accepted_shorthand_link(
     rest: &str,
     citing_config: &Config,
     target_config: &Config,

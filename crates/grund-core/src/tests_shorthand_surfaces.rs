@@ -7,6 +7,8 @@
 /// its mind about one (§AR-core-module-layout.1).
 #[cfg(test)]
 mod tests_shorthand_surfaces {
+    use regex::Regex;
+
     use super::tests_support::*;
     use super::*;
 

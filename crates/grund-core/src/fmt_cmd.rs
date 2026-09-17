@@ -1,35 +1,9 @@
-/// §FS-fmt.6.6: whether this invocation turns the cross-reference pass on by
-/// itself — `[fmt.cross_refs] enabled` and at least one Markdown file in its
-/// scope, identically for dry-run and write mode. It answers a question about
-/// the *command*, so it lives beside the command surface rather than in the
-/// rewrite walk.
-///
 /// The compatibility CLI's `fmt` command: flags, the per-project walk, the report
-/// on stdout, and the exit code (§FS-fmt.1, §FS-fmt.3). It sits beside `fmt.rs`
-/// for the reason `config_cmd.rs` sits beside `config/` — that module is the
-/// normalizer, this one is the command surface wrapped around it, and only this
-/// one knows about argv, stdout, and `ExitCode`.
-fn auto_cross_refs_for_scope(
-    config: &Config,
-    scope: Option<&Path>,
-    explicit_scope: bool,
-) -> Result<bool> {
-    if !config.fmt_cross_refs_enabled {
-        return Ok(false);
-    }
-    scope_contains_markdown(config, scope, explicit_scope)
-}
-
-fn scope_contains_markdown(
-    config: &Config,
-    scope: Option<&Path>,
-    explicit_scope: bool,
-) -> Result<bool> {
-    Ok(walk_scannable_files(config, scope, explicit_scope)?
-        .iter()
-        .any(|path| path.extension().and_then(|ext| ext.to_str()) == Some("md")))
-}
-
+/// on stdout, and the exit code (§FS-fmt.1, §FS-fmt.3). It sits beside
+/// `writers/fmt_rewrite.rs` for the reason `config_cmd.rs` sits beside `config/`
+/// — that module is the rewrite walk, this one is the command surface wrapped
+/// around it, and only this one knows about argv, stdout, and `ExitCode`.
+///
 /// Run the `fmt` command: parse the flags, walk each project in scope, print the
 /// report, and map the exit code.
 ///

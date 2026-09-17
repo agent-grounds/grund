@@ -1,3 +1,10 @@
+use anyhow::Result;
+
+use super::fmt_error::FmtScanAbort;
+use super::fmt_rewrite::{FmtRunOpts, FmtTreeOutcome, auto_cross_refs_for_scope, fmt_tree};
+use crate::config::Config;
+use crate::workspace::WorkspaceContext;
+
 /// Run one formatter pass across every project in a workspace-root scope.
 ///
 /// A write-capable caller first invokes this with `perform_writes = false`.
@@ -6,7 +13,7 @@
 /// errors from both strict and ordinary project walks become one strict abort
 /// in the root-then-members order established by `WorkspaceContext`
 /// (§FS-fmt.3).
-fn fmt_workspace_projects(
+pub(crate) fn fmt_workspace_projects(
     context: &WorkspaceContext,
     render: &Config,
     add_marker: bool,
@@ -22,11 +29,8 @@ fn fmt_workspace_projects(
     let mut strict_abort = false;
 
     for project in &context.projects {
-        let auto_cross_refs = auto_cross_refs_for_scope(
-            &project.config,
-            Some(&project.config.root),
-            true,
-        )?;
+        let auto_cross_refs =
+            auto_cross_refs_for_scope(&project.config, Some(&project.config.root), true)?;
         let run_opts = FmtRunOpts {
             add_marker,
             cross_refs: explicit_cross_refs || auto_cross_refs,
@@ -37,12 +41,7 @@ fn fmt_workspace_projects(
             // §FS-fmt.6.1: check previews the same index carve-out write applies.
             index_cross_refs: true,
         };
-        match fmt_tree(
-            &project.config,
-            Some(&project.config.root),
-            true,
-            &run_opts,
-        ) {
+        match fmt_tree(&project.config, Some(&project.config.root), true, &run_opts) {
             Ok(mut walked) => {
                 preflight_scan_errors.extend(walked.scan_errors.iter().cloned());
                 outcome.changes.append(&mut walked.changes);

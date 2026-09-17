@@ -1,8 +1,14 @@
-/// Formatter protection for exact value bindings. Authority comes from the
-/// scanner's local/workspace records so formatting cannot turn a binding into a
-/// link and silently disable comparison (§FS-values.8, §AR-scanner.2.3).
+//! Formatter protection for exact value bindings. Authority comes from the
+//! scanner's local/workspace records so formatting cannot turn a binding into a
+//! link and silently disable comparison (§FS-values.8, §AR-scanner.2.3).
 
-fn markdown_citation_is_value_binding(
+use crate::checker::binding_target_has_any_value_authority;
+use crate::config::Config;
+use crate::grammar::MarkdownLineCitation;
+use crate::model::{Findings, component_text_is_valid};
+use crate::workspace::WorkspaceContext;
+
+pub(super) fn markdown_citation_is_value_binding(
     line: &str,
     citation: &MarkdownLineCitation,
     config: &Config,
@@ -23,9 +29,7 @@ fn markdown_citation_is_value_binding(
         return false;
     };
     if !section.split('.').all(|part| {
-        !part.is_empty()
-            && !part.starts_with('0')
-            && part.bytes().all(|byte| byte.is_ascii_digit())
+        !part.is_empty() && !part.starts_with('0') && part.bytes().all(|byte| byte.is_ascii_digit())
     }) || !binding_target_has_any_value_authority(
         target_findings,
         target_config,
