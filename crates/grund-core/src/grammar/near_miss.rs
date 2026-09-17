@@ -1,3 +1,9 @@
+use regex::Regex;
+
+use super::compiled::Grammar;
+use super::ids::parse_id;
+use crate::model::Id;
+
 /// The near-miss half of the compiled [`Grammar`] (§FS-check.4.6): the
 /// declaration patterns with the ID grammar replaced by "a configured kind, the
 /// separator an ID puts after it, and whatever follows". Two of them for the
@@ -13,7 +19,7 @@
 /// alternation of `regex::escape`d kinds and the comment-prefix group
 /// [`Grammar::build`] has already compiled on its own.
 #[derive(Clone)]
-struct NearMissGrammar {
+pub(super) struct NearMissGrammar {
     format: String,
     decl_pattern: String,
     docstring_pattern: String,
@@ -38,7 +44,12 @@ impl NearMissGrammar {
     /// that found this, and the rule says nothing about the rest. The token
     /// stopping at a backtick likewise keeps an inline-code mention
     /// (`` `FS-login`: ``) from being one, and keeps the quoted token as written.
-    fn build(kind_alt: &str, comment_prefix: &str, after_kind: &str, format: &str) -> Self {
+    pub(super) fn build(
+        kind_alt: &str,
+        comment_prefix: &str,
+        after_kind: &str,
+        format: &str,
+    ) -> Self {
         // §FS-check.4.6 reads only the shape it names, `<KIND>-…: <title>`: the
         // trailing `:` is the discriminator, and the token stops at whitespace, at
         // the colon, and at a backtick.
@@ -96,9 +107,7 @@ impl NearMissGrammar {
                 .captures(line)
         } else {
             self.decl_re
-                .get_or_init(|| {
-                    Regex::new(&self.decl_pattern).expect("near-miss pattern compiles")
-                })
+                .get_or_init(|| Regex::new(&self.decl_pattern).expect("near-miss pattern compiles"))
                 .captures(line)
                 .filter(|caps| is_md || caps.name("mdhashes").is_none())
         }?;
@@ -129,25 +138,21 @@ fn first_declaration_bytes(comment_prefix: &str) -> Vec<u8> {
 /// The heading token §FS-check.4.6 reports, or `None` when this line is not one.
 /// Asked only where [`declaration_captures`] already declined, so a hit is by
 /// construction a heading that came close and missed.
-fn near_miss_heading<'line, 'grammar>(
+pub(crate) fn near_miss_heading<'line, 'grammar>(
     grammar: &'grammar Grammar,
     line: &'line str,
     in_py_docstring: bool,
     is_md: bool,
 ) -> Option<(&'line str, &'grammar str, &'grammar str)> {
-    if let Some(found) = grammar
-        .near_misses
-        .iter()
-        .find_map(|near_miss| {
-            near_miss
-                .heading_text(line, in_py_docstring, is_md)
-                .and_then(|text| {
-                    grammar
-                        .legacy_kind_and_format(text)
-                        .map(|(kind, _)| (text, near_miss.format.as_str(), kind))
-                })
-        })
-    {
+    if let Some(found) = grammar.near_misses.iter().find_map(|near_miss| {
+        near_miss
+            .heading_text(line, in_py_docstring, is_md)
+            .and_then(|text| {
+                grammar
+                    .legacy_kind_and_format(text)
+                    .map(|(kind, _)| (text, near_miss.format.as_str(), kind))
+            })
+    }) {
         return Some(found);
     }
 
@@ -162,7 +167,7 @@ fn near_miss_heading<'line, 'grammar>(
 }
 
 impl Grammar {
-    fn legacy_kind_and_format<'a>(&'a self, token: &str) -> Option<(&'a str, &'a str)> {
+    pub(crate) fn legacy_kind_and_format<'a>(&'a self, token: &str) -> Option<(&'a str, &'a str)> {
         let mut matches = self.legacy.kinds.iter().filter(|(kind, _)| {
             token.strip_prefix(kind).is_some_and(|rest| {
                 !rest.is_empty()
@@ -173,11 +178,14 @@ impl Grammar {
             })
         });
         let first = matches.next()?;
-        matches.next().is_none().then_some((first.0.as_str(), first.1.as_str()))
+        matches
+            .next()
+            .is_none()
+            .then_some((first.0.as_str(), first.1.as_str()))
     }
 }
 
-fn declaration_captures<'a>(
+pub(crate) fn declaration_captures<'a>(
     grammar: &Grammar,
     line: &'a str,
     in_py_docstring: bool,
@@ -226,7 +234,7 @@ fn legacy_declaration_captures<'a>(
 /// from a declaration-position line, returning the end of its written ID token
 /// (§FS-config.3.2). Re-read consumers use this instead of inventing their own
 /// compatibility fallback.
-fn declaration_id_on_line(
+pub(crate) fn declaration_id_on_line(
     grammar: &Grammar,
     line: &str,
     in_py_docstring: bool,

@@ -21,8 +21,10 @@
 /// a question about a *config key* and are the same answer whether it is asked at
 /// the line that wrote the key (`config.rs`, located) or of a `Config` assembled
 /// in code (`Grammar::build`, the backstop). One rule, one place, two callers.
-fn id_grammar_literal_slash_error(label: &str, value: &str) -> Option<String> {
-    value.contains('/').then(|| id_grammar_slash_message(label, "contain"))
+pub(crate) fn id_grammar_literal_slash_error(label: &str, value: &str) -> Option<String> {
+    value
+        .contains('/')
+        .then(|| id_grammar_slash_message(label, "contain"))
 }
 
 /// The pattern half: `number_pattern` and `slug_pattern` are *regexes*, where the
@@ -31,7 +33,7 @@ fn id_grammar_literal_slash_error(label: &str, value: &str) -> Option<String> {
 /// one freely — that second case is the defect this rule exists to close, and a
 /// substring test left it wide open while rejecting configs that had always
 /// loaded. So ask what the pattern can *match*.
-fn id_grammar_pattern_slash_error(label: &str, pattern: &str) -> Option<String> {
+pub(super) fn id_grammar_pattern_slash_error(label: &str, pattern: &str) -> Option<String> {
     pattern_admits_slash(pattern).then(|| id_grammar_slash_message(label, "match"))
 }
 
@@ -42,7 +44,7 @@ fn id_grammar_pattern_slash_error(label: &str, pattern: &str) -> Option<String> 
 /// `root` — reads as alias path `root/fs-x` and ID `1`. That citation resolved before
 /// alias *paths* existed, so a `[citations]` obligation resting on it turns red with
 /// no config change (§FS-workspace.1).
-fn section_separator_slash_error(separator: &str) -> Option<String> {
+pub(super) fn section_separator_slash_error(separator: &str) -> Option<String> {
     separator.contains('/').then(|| {
         "[id].section_separator must not contain `/` (a citation's alias path ends at the last `/`, so a `/` here would put the ID/section boundary inside it)".to_string()
     })
@@ -94,9 +96,7 @@ fn hir_admits_slash(hir: &regex_syntax::hir::Hir) -> bool {
             repetition.max != Some(0) && hir_admits_slash(&repetition.sub)
         }
         HirKind::Capture(capture) => hir_admits_slash(&capture.sub),
-        HirKind::Concat(parts) | HirKind::Alternation(parts) => {
-            parts.iter().any(hir_admits_slash)
-        }
+        HirKind::Concat(parts) | HirKind::Alternation(parts) => parts.iter().any(hir_admits_slash),
     }
 }
 
@@ -104,7 +104,7 @@ fn hir_admits_slash(hir: &regex_syntax::hir::Hir) -> bool {
 /// point `config.rs` needs, so the caller that reads a TOML line does not also
 /// have to know which shape of rule that line's key takes. An unknown key has no
 /// rule.
-fn id_grammar_key_slash_error(key: &str, value: &str) -> Option<String> {
+pub(crate) fn id_grammar_key_slash_error(key: &str, value: &str) -> Option<String> {
     match key {
         "format" => id_grammar_literal_slash_error("[id].format", value),
         "section_separator" => section_separator_slash_error(value),

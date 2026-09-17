@@ -59,7 +59,7 @@ One subsection per box. Each says what the box consumes, what it produces, what 
 
 ### 2.1 grammar
 
-Consumes text. Produces the lexical facts every other component shares: the ID grammar and its near-miss detection, comment-line and comment-block recognition, fenced-block boundaries, the number-only shorthand, inline-note layout, and the never-rewrite predicates ([§FS-fmt.2.3](../functional-spec/FS-fmt.md#23-what-is-never-rewritten)). Knows no file, no config and no rule. Categories: `grammar`, `shorthand`, `comment_line`, `comment_block`, `markdown_fence`, `inline_note_layout`, `never_rewrite`.
+Consumes text. Produces the lexical facts every other component shares: the ID grammar and its near-miss detection, comment-line and comment-block recognition, fenced-block boundaries, the number-only shorthand, inline-note layout, and the never-rewrite predicates ([§FS-fmt.2.3](../functional-spec/FS-fmt.md#23-what-is-never-rewritten)). Knows no file, no config and no rule. Module: `crates/grund-core/src/grammar/`.
 
 ### 2.2 model
 

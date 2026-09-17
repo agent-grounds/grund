@@ -1,32 +1,53 @@
+//! The number-only citation shorthand (§FS-check.1.2, §FS-fmt.2.4,
+//! §DF-number-only-citation-shorthand), gathered here rather than spread across
+//! the seven passes it plugs into.
+//!
+//! The categories in §AR-core-module-layout.1 cut by *stage* — scanner, checker,
+//! fmt, api. This rule is one contract that has to hold identically at every one
+//! of them: the shape recognized in a file, the shape accepted as a CLI
+//! argument, the shape reported, and the shape rewritten are the same shape, and
+//! a divergence between any two of them is the defect the rule exists to fix.
+//! Split by stage, the four halves of one invariant would sit in four files with
+//! nothing naming the invariant — so it lives as a module of the grammar
+//! component and each stage keeps a one-line call into it.
+//!
+//! What is *not* the rule sits in `id_format.rs`: the `[id] format` template and
+//! the post-match tests for where a token of that grammar ends — questions about
+//! the shape, which the rule here then serves.
+//!
+//! Everything here is crate-private and reached through what `grammar/mod.rs`
+//! re-exports; the public embedding surface stays in `api.rs`
+//! (§AR-core-module-layout.2).
+
+use anyhow::{Result, anyhow};
+use std::collections::{BTreeMap, BTreeSet};
+
+use super::compiled::{Grammar, QUALIFIED_CITATION_PREFIX};
+use super::ids::{parse_id, parse_id_arg};
+use super::never_rewrite::{
+    DocstringContent, never_rewrite_context_in, scanned_citation_rewritable,
+};
+use super::shorthand_targets::ShorthandTargets;
+use crate::model::{
+    CheckReport, Citation, Config, Declaration, Diagnostic, Findings, Id, ShorthandPolicy,
+    render_qualified_id,
+};
+// §AR-system.4: every name below belongs to a component above this one — the
+// scanner, the checker, the workspace and the writers — and stays reachable
+// through the crate root until each of those becomes a module of its own.
+use crate::{
+    CitationLine, ReferenceTier, WorkspaceCheckTarget, WorkspaceProject,
+    qualified_suppressed_in_source, render_id, shorthand_index_number,
+    unique_shorthand_expansion_target,
+};
+
 /// One parsed ID token: the `Id`, its optional section path, and whether it was
 /// written in the number-only shorthand (§FS-check.1.2). A shorthand `Id` carries
 /// `slug: None` until the resolution pass fills it in (§AR-scanner.2.6).
-///
-/// The number-only citation shorthand (§FS-check.1.2, §FS-fmt.2.4,
-/// §DF-number-only-citation-shorthand), gathered here rather than spread across
-/// the seven passes it plugs into.
-///
-/// The categories in §AR-core-module-layout.1 cut by *stage* — scanner, checker,
-/// fmt, api. This rule is one contract that has to hold identically at every one
-/// of them: the shape recognized in a file, the shape accepted as a CLI
-/// argument, the shape reported, and the shape rewritten are the same shape, and
-/// a divergence between any two of them is the defect the rule exists to fix.
-/// Split by stage, the four halves of one invariant would sit in four files with
-/// nothing naming the invariant — so it lives as a feature module and each stage
-/// keeps a one-line call into it.
-///
-/// What is *not* the rule sits in `id_format.rs`: the `[id] format` template and
-/// the post-match tests for where a token of that grammar ends — questions about
-/// the shape, which the rule here then serves.
-///
-/// The crate is assembled by a flat `include!` in `lib.rs`
-/// (§AR-core-module-layout.2), which makes an inner `//!` illegal here, so this
-/// file-level prose hangs off the first item. Everything here is crate-private and
-/// reached that way; the public embedding surface stays in `api.rs`.
-struct ParsedId {
-    id: Id,
-    section: Option<String>,
-    shorthand: bool,
+pub(crate) struct ParsedId {
+    pub(crate) id: Id,
+    pub(crate) section: Option<String>,
+    pub(crate) shorthand: bool,
 }
 
 /// `parse_id_arg` widened to also accept the number-only shorthand
@@ -34,7 +55,7 @@ struct ParsedId {
 /// unconditionally when it matches, which is what makes "the full ID always wins"
 /// (§DF-number-only-citation-shorthand.2.6) true by construction rather than by a
 /// separate check.
-fn parse_id_arg_with_shorthand(raw: &str, grammar: &Grammar) -> Result<ParsedId> {
+pub(crate) fn parse_id_arg_with_shorthand(raw: &str, grammar: &Grammar) -> Result<ParsedId> {
     let full = match parse_id_arg(raw, grammar) {
         Ok((id, section)) => {
             return Ok(ParsedId {
@@ -83,7 +104,7 @@ fn parse_id_arg_with_shorthand(raw: &str, grammar: &Grammar) -> Result<ParsedId>
 /// several declarations; repeating the format there would be advice for a problem
 /// the caller does not have, so the candidate list stands alone.
 #[derive(Debug)]
-enum IdArgError {
+pub(crate) enum IdArgError {
     Unparsable(anyhow::Error),
     Ambiguous(anyhow::Error),
 }
@@ -96,7 +117,7 @@ impl IdArgError {
     }
 
     /// Whether the caller should follow this with its `[id] format` hint.
-    fn wants_format_hint(&self) -> bool {
+    pub(crate) fn wants_format_hint(&self) -> bool {
         matches!(self, Self::Unparsable(_))
     }
 }
@@ -114,17 +135,20 @@ impl std::fmt::Display for IdArgError {
 /// One-shot lookup, for the sites that answer a single question — a CLI
 /// argument, one report line. A pass that asks per citation must build a
 /// `ShorthandIndex` instead: this walks every declaration in the project.
-fn shorthand_candidates<'a>(
+pub(crate) fn shorthand_candidates<'a>(
     id: &Id,
     declarations: &'a BTreeMap<Id, Vec<Declaration>>,
 ) -> Vec<&'a Id> {
-    declarations.keys().filter(|declared| shorthand_names(declared, id)).collect()
+    declarations
+        .keys()
+        .filter(|declared| shorthand_names(declared, id))
+        .collect()
 }
 
 /// Whether `declared` is a declaration the shorthand `id` could name: same kind,
 /// same number, and a slug to stand in for (§FS-check.1.2). The slug test is what
 /// keeps a partially-parsed `Id` out of its own candidate set.
-fn shorthand_names(declared: &Id, id: &Id) -> bool {
+pub(crate) fn shorthand_names(declared: &Id, id: &Id) -> bool {
     declared.kind == id.kind && declared.num == id.num && declared.slug.is_some()
 }
 
@@ -137,7 +161,7 @@ fn shorthand_names(declared: &Id, id: &Id) -> bool {
 /// shorthands being migrated to canonical form. Measured on a synthetic tree at
 /// 8k declarations and 8k shorthand citations, the linear-scan form spent 3.6s in
 /// `check` where a canonical tree spent 0.11s (§GOAL-fast-feedback).
-struct ShorthandIndex<'a> {
+pub(crate) struct ShorthandIndex<'a> {
     by_number: BTreeMap<(&'a str, Option<u32>), Vec<&'a Id>>,
 }
 
@@ -146,7 +170,7 @@ impl<'a> ShorthandIndex<'a> {
     /// themselves valid shorthand tokens under the effective grammar
     /// (§FS-config.3.2). The latter must join the target set so a shorthand
     /// collision cannot silently resolve to its conforming neighbor.
-    fn build(config: &Config, declarations: impl IntoIterator<Item = &'a Id>) -> Self {
+    pub(crate) fn build(config: &Config, declarations: impl IntoIterator<Item = &'a Id>) -> Self {
         let mut by_number: BTreeMap<(&'a str, Option<u32>), Vec<&'a Id>> = BTreeMap::new();
         for declared in declarations {
             let Some(number) = shorthand_index_number(config, declared) else {
@@ -170,7 +194,7 @@ impl<'a> ShorthandIndex<'a> {
 
     /// The single declaration `id` names, or `None` when zero or several match —
     /// the only outcome that resolves (§DF-number-only-citation-shorthand.2.7).
-    fn unique(&self, id: &Id) -> Option<&'a Id> {
+    pub(crate) fn unique(&self, id: &Id) -> Option<&'a Id> {
         match self.candidates(id) {
             [unique] => Some(unique),
             _ => None,
@@ -209,7 +233,7 @@ impl<'a> ShorthandIndex<'a> {
 /// workspace mode there is no such pass to defer to unconditionally, so the
 /// deferral is by record: `qualified_claimed` holds the markers a qualified pass
 /// actually emitted at, and only those are skipped.
-fn scan_shorthand_citations(
+pub(crate) fn scan_shorthand_citations(
     line: &CitationLine<'_>,
     workspace_mode: bool,
     claimed_markers: &[usize],
@@ -237,11 +261,7 @@ fn scan_shorthand_citations(
             continue;
         };
         let match_end = caps.get(0).map_or(0, |found| found.end());
-        if line
-            .config
-            .grammar
-            .has_reserved_named_tail(rest, match_end)
-        {
+        if line.config.grammar.has_reserved_named_tail(rest, match_end) {
             continue;
         }
         // §DF-number-only-citation-shorthand.2.6: the pattern is anchored only at
@@ -251,11 +271,10 @@ fn scan_shorthand_citations(
             continue;
         }
         // §FS-fmt.2.4.1: the token ended, which does not make it a citation.
-        let numeric_run = line.config.grammar.shorthand_sits_in_numeric_run(
-            &line.config.marker,
-            rest,
-            match_end,
-        );
+        let numeric_run =
+            line.config
+                .grammar
+                .shorthand_sits_in_numeric_run(&line.config.marker, rest, match_end);
         // §AR-scanner.2.6: a qualified marker a qualified pass already claimed —
         // the workspace one, or the loose fallback (§FS-workspace.5) — belongs to
         // that pass alone (§REQ-no-missed-citation.1, §AR-scanner.2.3).
@@ -267,7 +286,9 @@ fn scan_shorthand_citations(
         {
             continue;
         }
-        let Some(id) = parse_id(&caps, &line.config.grammar) else { continue };
+        let Some(id) = parse_id(&caps, &line.config.grammar) else {
+            continue;
+        };
         let token_end = token_start + match_end;
         findings.citations.push(Citation {
             namespace,
@@ -304,7 +325,7 @@ fn scan_shorthand_citations(
 /// The escaped citations are resolved too. Without that, `<§>FS-042` escaping a
 /// real declaration is silently exempt from a check that catches
 /// `<§>FS-042-user-login`.
-fn resolve_shorthand_citations(config: &Config, findings: &mut Findings) {
+pub(crate) fn resolve_shorthand_citations(config: &Config, findings: &mut Findings) {
     let pending = |citations: &[Citation]| {
         citations
             .iter()
@@ -435,7 +456,7 @@ fn shorthand_diagnostic(
 /// Declaration indexes for the checker's shorthand pass, keyed by the citation's
 /// target namespace and populated on first use — so a tree without shorthands
 /// builds none (§FS-check.3.13).
-type ShorthandIndexes<'a> = BTreeMap<Option<String>, ShorthandIndex<'a>>;
+pub(crate) type ShorthandIndexes<'a> = BTreeMap<Option<String>, ShorthandIndex<'a>>;
 
 /// §FS-check.3.13 / §AR-checker.2.12: report one citation's shorthand finding, if
 /// it earns one. Returns `true` when the citation resolved to nothing and the
@@ -456,7 +477,7 @@ type ShorthandIndexes<'a> = BTreeMap<Option<String>, ShorthandIndex<'a>>;
 /// candidate set by walking every declaration each time is quadratic on a tree
 /// mid-migration, which is precisely the tree this rule asks people to run
 /// (§GOAL-fast-feedback).
-fn report_shorthand_citation<'a>(
+pub(crate) fn report_shorthand_citation<'a>(
     cite: &Citation,
     config: &Config,
     target: &WorkspaceCheckTarget<'a>,
@@ -464,11 +485,9 @@ fn report_shorthand_citation<'a>(
     indexes: &mut ShorthandIndexes<'a>,
     report: &mut CheckReport,
 ) -> bool {
-    let index = indexes
-        .entry(cite.namespace.clone())
-        .or_insert_with(|| {
-            ShorthandIndex::build(target.config, target.findings.declarations.keys())
-        });
+    let index = indexes.entry(cite.namespace.clone()).or_insert_with(|| {
+        ShorthandIndex::build(target.config, target.findings.declarations.keys())
+    });
     let candidates = index.candidates(&cite.id);
     let resolved = cite.id.slug.is_some() && candidates.len() == 1;
     if let Some(diagnostic) = shorthand_diagnostic(config, cite, target.config, tier, candidates) {
@@ -512,7 +531,7 @@ fn report_shorthand_citation<'a>(
 /// that never writes a shorthand pays nothing at all. The expansion report is what
 /// makes a rewrite reviewable before it is written.
 #[cfg(test)]
-fn expand_shorthand_citations(
+pub(crate) fn expand_shorthand_citations(
     line: &str,
     docstring: DocstringContent<'_>,
     config: &Config,
@@ -537,7 +556,7 @@ fn expand_shorthand_citations(
 /// markers produced from triggers so accepted persisted forms and authoring
 /// sugar remain distinct even when they share one line.
 #[allow(clippy::too_many_arguments)]
-fn expand_shorthand_citations_with_origins(
+pub(crate) fn expand_shorthand_citations_with_origins(
     line: &str,
     docstring: DocstringContent<'_>,
     config: &Config,
@@ -630,7 +649,9 @@ fn expand_shorthand_citations_with_origins(
         if never_rewrite_context_in(docstring, line, is_md, marker_start) {
             continue;
         }
-        let Some(id) = parse_id(&caps, &target_config.grammar) else { continue };
+        let Some(id) = parse_id(&caps, &target_config.grammar) else {
+            continue;
+        };
         // §FS-fmt.2.4: only *now* are declarations needed — every gate above rejects
         // on the line text alone, and reaching for them earlier was a measured 79%
         // regression on the benchmark fixture (§GOAL-fast-feedback, §AR-ci.5).
@@ -702,11 +723,13 @@ fn expand_shorthand_citations_with_origins(
 /// declaration set — so the cross-namespace half of the shorthand rule lands
 /// here, once every project has been scanned. Unqualified shorthands were
 /// already resolved inside each project's own walk.
-fn resolve_qualified_shorthand_citations(projects: &mut [WorkspaceProject]) {
+pub(crate) fn resolve_qualified_shorthand_citations(projects: &mut [WorkspaceProject]) {
     let pending = |project: &WorkspaceProject| {
-        project.findings.citations.iter().any(|cite| {
-            cite.shorthand && cite.namespace.is_some() && cite.id.slug.is_none()
-        })
+        project
+            .findings
+            .citations
+            .iter()
+            .any(|cite| cite.shorthand && cite.namespace.is_some() && cite.id.slug.is_none())
     };
     if !projects.iter().any(pending) {
         return;
@@ -727,10 +750,7 @@ fn resolve_qualified_shorthand_citations(projects: &mut [WorkspaceProject]) {
                 .iter()
                 .find(|project| project.alias == *alias)
                 .map(|project| &project.config)?;
-            Some((
-                alias.as_str(),
-                ShorthandIndex::build(config, ids.iter()),
-            ))
+            Some((alias.as_str(), ShorthandIndex::build(config, ids.iter())))
         })
         .collect();
     for project in projects.iter_mut() {
@@ -757,7 +777,7 @@ fn resolve_qualified_shorthand_citations(projects: &mut [WorkspaceProject]) {
 /// (§FS-lsp.1.4). Candidates are matched by re-parsing each declared ID under
 /// the same grammar, so the editor and `grund fmt` agree on what resolves
 /// (§FS-fmt.2.4).
-fn shorthand_token_expansion(
+pub(crate) fn shorthand_token_expansion(
     config: &Config,
     token: &str,
     declared_ids: &[&str],

@@ -1,3 +1,10 @@
+use anyhow::{Result, anyhow};
+use regex::Regex;
+
+use super::compiled::Grammar;
+use super::shorthand::parse_id_arg_with_shorthand;
+use crate::model::Id;
+
 /// One component of a parsed `[id] format` template (§FS-config.3.2). Parsing the
 /// template into elements once gives the regexes and `render_id` a single shared
 /// reading of it, which is what lets the shorthand pattern and the shorthand
@@ -13,7 +20,7 @@
 /// keeps the pattern and the rendering two readings of one template rather than
 /// two rules that can disagree (§AR-scanner.2.6).
 #[derive(Clone, Debug, Eq, PartialEq)]
-enum IdElement {
+pub(super) enum IdElement {
     Literal(String),
     Kind,
     Number,
@@ -22,7 +29,7 @@ enum IdElement {
 
 /// Parse an `[id] format` template into its element sequence, rejecting the
 /// malformed shapes of §FS-config.3.2.
-fn parse_id_format(format: &str) -> Result<Vec<IdElement>> {
+pub(super) fn parse_id_format(format: &str) -> Result<Vec<IdElement>> {
     let mut elements = Vec::new();
     let mut cursor = 0;
     while cursor < format.len() {
@@ -90,7 +97,7 @@ fn elements_without(elements: &[IdElement], dropped: &IdElement) -> Vec<IdElemen
 
 /// Compile an element list into its regex body, substituting the capture groups
 /// the `Id` parser reads back.
-fn id_pattern(
+pub(super) fn id_pattern(
     elements: &[IdElement],
     kind_group: &str,
     num_group: &str,
@@ -120,7 +127,7 @@ impl Grammar {
     /// not a missing component, it is a component the format never had. And
     /// `render_id` is on the report and `list` paths, so the common case has to
     /// borrow the parsed element list rather than clone it.
-    fn render(&self, id: &Id, width: usize) -> String {
+    pub(crate) fn render(&self, id: &Id, width: usize) -> String {
         // §FS-config.3.2: catalog reads preserve a persisted off-grammar ID's
         // raw spelling; the effective format remains only its conformance rule.
         if let Some(spelling) = id.legacy_spelling() {
@@ -140,21 +147,16 @@ impl Grammar {
     /// Render a newly allocated ID with the caller's explicit minimum width
     /// even when its kind overrides the repository format (§FS-id.1,
     /// §FS-id.2.1).
-    fn render_allocation(&self, id: &Id, width: usize) -> String {
+    pub(crate) fn render_allocation(&self, id: &Id, width: usize) -> String {
         self.render_with_width(id, width)
     }
 
     fn render_with_width(&self, id: &Id, width: usize) -> String {
-        let configured = self
-            .kind_elements
-            .get(&id.kind)
-            .unwrap_or(&self.elements);
+        let configured = self.kind_elements.get(&id.kind).unwrap_or(&self.elements);
         // Reduce only when a placeholder the format *carries* has no value — the
         // shorthand `Id` and nothing else — so the common path borrows the parsed
         // element list and allocates nothing extra (§GOAL-fast-feedback).
-        let missing = |value_absent: bool, element| {
-            value_absent && configured.contains(element)
-        };
+        let missing = |value_absent: bool, element| value_absent && configured.contains(element);
         let reduced = (missing(id.num.is_none(), &IdElement::Number)
             || missing(id.slug.is_none(), &IdElement::Slug))
         .then(|| {
@@ -201,7 +203,7 @@ impl Grammar {
 /// something longer. Without the token-end test `§api/FS-042-Session`, whose slug
 /// the target grammar rejects, would be read as `§api/FS-042` with `-Session` left
 /// dangling off the end of the citation.
-fn parse_longest_id_prefix(raw: &str, grammar: &Grammar) -> Option<ParsedIdPrefix> {
+pub(crate) fn parse_longest_id_prefix(raw: &str, grammar: &Grammar) -> Option<ParsedIdPrefix> {
     let search_end = raw
         .char_indices()
         .find(|(_, ch)| ch.is_whitespace())
@@ -242,11 +244,11 @@ fn parse_longest_id_prefix(raw: &str, grammar: &Grammar) -> Option<ParsedIdPrefi
 
 /// `parse_longest_id_prefix`'s result: the parsed ID and section, how many bytes
 /// of the input it consumed, and whether it came from the shorthand branch.
-struct ParsedIdPrefix {
-    id: Id,
-    section: Option<String>,
-    len: usize,
-    shorthand: bool,
+pub(crate) struct ParsedIdPrefix {
+    pub(crate) id: Id,
+    pub(crate) section: Option<String>,
+    pub(crate) len: usize,
+    pub(crate) shorthand: bool,
 }
 
 /// The compiled number-only shorthand: the shape as a *prefix* of the text
@@ -263,25 +265,25 @@ struct ParsedIdPrefix {
 /// §GOAL-fast-feedback, which is why the pass is driven from marker positions
 /// (§AR-scanner.2.6) rather than from its own scan of the line.
 #[derive(Clone)]
-struct ShorthandGrammar {
+pub(crate) struct ShorthandGrammar {
     /// The *full* ID as a prefix of the same slice. Tried first, so a canonical
     /// citation — the overwhelmingly common token after a marker — costs exactly
     /// one anchored match and never reaches the shorthand pattern.
-    full_prefix_pattern: String,
-    prefix_pattern: String,
+    pub(super) full_prefix_pattern: String,
+    pub(super) prefix_pattern: String,
     /// `prefix_pattern` without the `<alias>/` namespace — the shorthand shape
     /// on its own, which is what §FS-fmt.2.4.1 clause 2 asks the token after a
     /// run's delimiters to have.
-    unqualified_prefix_pattern: String,
+    pub(super) unqualified_prefix_pattern: String,
     /// Bare `[id] number_pattern` as a prefix of the same slice — the second
     /// half of the numeric-run test (§FS-fmt.2.4.1), which asks whether the
     /// token glued after a shorthand is another number (`§SPEC-001/003`) as
     /// well as whether it is another shorthand (`§SPEC-001→SPEC-003`).
-    number_prefix_pattern: String,
-    full_prefix_re: once_cell::sync::OnceCell<Regex>,
-    prefix_re: once_cell::sync::OnceCell<Regex>,
-    unqualified_prefix_re: once_cell::sync::OnceCell<Regex>,
-    number_prefix_re: once_cell::sync::OnceCell<Regex>,
+    pub(super) number_prefix_pattern: String,
+    pub(super) full_prefix_re: once_cell::sync::OnceCell<Regex>,
+    pub(super) prefix_re: once_cell::sync::OnceCell<Regex>,
+    pub(super) unqualified_prefix_re: once_cell::sync::OnceCell<Regex>,
+    pub(super) number_prefix_re: once_cell::sync::OnceCell<Regex>,
 }
 
 impl ShorthandGrammar {
@@ -298,12 +300,12 @@ impl ShorthandGrammar {
     /// group in `id_pat` is self-contained and dropping one whole group leaves a
     /// balanced pattern. Without that check two patterns could balance only
     /// against each other and the removal would produce an unclosed group.
-    fn prefix_re(&self) -> &Regex {
+    pub(crate) fn prefix_re(&self) -> &Regex {
         self.prefix_re
             .get_or_init(|| Regex::new(&self.prefix_pattern).expect("shorthand pattern compiles"))
     }
 
-    fn full_prefix_re(&self) -> &Regex {
+    pub(crate) fn full_prefix_re(&self) -> &Regex {
         self.full_prefix_re.get_or_init(|| {
             Regex::new(&self.full_prefix_pattern).expect("full-ID prefix pattern compiles")
         })
@@ -312,7 +314,7 @@ impl ShorthandGrammar {
     /// Compiled on first use like the others, and reached later still: only a
     /// shorthand that has already passed every gate of §FS-fmt.2.4 asks the
     /// numeric-run question, so a tree without shorthands never builds it.
-    fn unqualified_prefix_re(&self) -> &Regex {
+    pub(super) fn unqualified_prefix_re(&self) -> &Regex {
         self.unqualified_prefix_re.get_or_init(|| {
             Regex::new(&self.unqualified_prefix_pattern)
                 .expect("unqualified shorthand prefix pattern compiles")
@@ -320,7 +322,7 @@ impl ShorthandGrammar {
     }
 
     /// The other half of that question, compiled on the same terms.
-    fn number_prefix_re(&self) -> &Regex {
+    pub(super) fn number_prefix_re(&self) -> &Regex {
         self.number_prefix_re.get_or_init(|| {
             Regex::new(&self.number_prefix_pattern).expect("number prefix pattern compiles")
         })
@@ -330,9 +332,8 @@ impl ShorthandGrammar {
 /// The number-only shorthand's element list, or `None` when the format has no
 /// shorthand: without `{number}` nothing is left to name the declaration, and
 /// without `{slug}` there is nothing to omit (§FS-check.1.2, §FS-id.4.1).
-fn shorthand_elements(elements: &[IdElement]) -> Option<Vec<IdElement>> {
-    let has_both =
-        elements.contains(&IdElement::Number) && elements.contains(&IdElement::Slug);
+pub(super) fn shorthand_elements(elements: &[IdElement]) -> Option<Vec<IdElement>> {
+    let has_both = elements.contains(&IdElement::Number) && elements.contains(&IdElement::Slug);
     has_both.then(|| elements_without(elements, &IdElement::Slug))
 }
 
@@ -353,7 +354,7 @@ fn shorthand_elements(elements: &[IdElement]) -> Option<Vec<IdElement>> {
 impl Grammar {
     /// Whether this repo's `[id] format` has a number-only shorthand at all
     /// (§FS-check.1.2) — the gate every shorthand pass checks first.
-    fn has_shorthand(&self) -> bool {
+    pub(crate) fn has_shorthand(&self) -> bool {
         self.shorthand.is_some() || !self.override_shorthands.is_empty()
     }
 
@@ -380,7 +381,7 @@ impl Grammar {
     /// shorthand and the canonical form disagree about the same boundary — and the
     /// shorthand would be the one silently dropped, which is the false negative
     /// §GOAL-no-dangling-refs exists to forbid.
-    fn id_token_continues_with(&self, ch: char) -> bool {
+    pub(crate) fn id_token_continues_with(&self, ch: char) -> bool {
         ch.is_alphanumeric()
             || ch == '_'
             || self
@@ -399,7 +400,7 @@ impl Grammar {
     /// with a literal `.`, and reading that as a continuation would drop a real
     /// citation. `see §FS.042.User-Login` has a component after the separator and
     /// is correctly refused.
-    fn id_token_ends_cleanly(&self, rest: &str, end: usize) -> bool {
+    pub(crate) fn id_token_ends_cleanly(&self, rest: &str, end: usize) -> bool {
         let tail = &rest[end..];
         let Some(next) = tail.chars().next() else {
             return true;
@@ -438,7 +439,12 @@ impl Grammar {
     /// The neighbour is matched **unqualified**, never with `prefix_re`, whose
     /// optional `<alias>/` would make any path ending in an ID-shaped segment a
     /// second number — `docs/functional-spec/FS-042-user-login.md` among them.
-    fn shorthand_sits_in_numeric_run(&self, marker: &str, rest: &str, end: usize) -> bool {
+    pub(crate) fn shorthand_sits_in_numeric_run(
+        &self,
+        marker: &str,
+        rest: &str,
+        end: usize,
+    ) -> bool {
         let Some(shorthand) = self.shorthand_for(rest) else {
             return false;
         };
@@ -511,7 +517,7 @@ fn bounds_a_construct(ch: char) -> bool {
 /// (§FS-check.1.2). One definition of "a real ID follows here", shared by `fmt`'s
 /// trigger pass (§FS-fmt.2.1) and the LSP's live transform (§FS-lsp.1.4), so the
 /// two cannot disagree about which `$$` to consume.
-fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Option<usize> {
+pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Option<usize> {
     if let Some(found) = grammar
         .citation_re
         .find_at(line, at)
@@ -542,7 +548,7 @@ fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Option<usize> {
 ///
 /// Shared by the managed entrypoint block and the nothing-recognized caution so
 /// the shape a user is taught and the shape a diagnostic names are one string.
-fn id_shape(id_format: &str) -> String {
+pub(crate) fn id_shape(id_format: &str) -> String {
     id_format
         .replace("{kind}", "<KIND>")
         .replace("{number}", "<NNN>")
