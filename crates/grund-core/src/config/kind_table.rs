@@ -1,116 +1,42 @@
-/// The canonical kind set (§FS-config.3.4). `e2e` and `integration` are
-/// *non-citable*: a test proves a claim someone else wrote, so it cites and is
-/// never cited, and lowercase names them as places rather than ID prefixes.
-///
-/// This file is the `[[kinds]]` half of the config parser (§FS-config.3.4), beside
-/// `config_discovery.rs` and `config_cmd.rs` (§AR-core-module-layout.1): the built-in
-/// kind table and its per-name defaults, the per-key reader that fills one
-/// `[[kinds]]` entry, and the whole-list validation that runs once the file is read.
-/// The last two are pure functions over the parsed entries — the discovery, the
-/// section walk, and every other section's keys stay in `config.rs`. The defaults
-/// live here rather than in `model/records.rs` because they are config defaults
-/// (§AR-core-module-layout.1) and because this is the file that resolves them onto a
-/// declared block.
-const DEFAULT_KINDS: &[&str] = &[
-    "GRUND",
-    "GOAL",
-    "FS",
-    "AR",
-    "DF",
-    "DA",
-    "e2e",
-    "integration",
-    "RM",
-];
+//! The `[[kinds]]` half of the config (§FS-config.3.4), beside `grounding.rs`
+//! and `citations.rs` (§AR-core-module-layout.1): the per-key reader that fills
+//! one `[[kinds]]` entry and the whole-list validation that runs once the file
+//! is read. Both are pure functions over the parsed entries — the discovery and
+//! the section walk stay in `discovery.rs` and `parse.rs`, and the per-name
+//! defaults a declared row picks up in `kind_defaults.rs`.
 
-/// §FS-config.3.4: `E2E` is the canonical `index = false` kind — its home holds
-/// case directories rather than a navigable document set, and the `e2e/README.md`
-/// one level up describes the case layout in English instead of naming `E2E-` IDs.
-/// Every other default folder kind takes the `README.md` default.
-///
-/// `E2E` is no longer one of the [`DEFAULT_KINDS`], but the default stays keyed
-/// on the name: it exists for the configs that declare `E2E` themselves, which
-/// is every config `grund init` wrote before the kind left the default set.
-fn default_kind_index(kind: &str) -> KindIndex {
-    match kind {
-        "E2E" => KindIndex::Disabled,
-        _ => KindIndex::Default,
-    }
-}
+use anyhow::{Result, anyhow};
+use std::fs;
+use std::path::{Component, Path};
 
-/// Whether a built-in kind declares IDs (§FS-config.3.4). The two test kinds do
-/// not: a test is evidence for a claim declared elsewhere, so it has a home and
-/// citation directions but no ID namespace.
-fn default_kind_citable(kind: &str) -> bool {
-    !matches!(kind, "e2e" | "integration")
-}
-
-/// Default home folder for each built-in kind — the directory `grund id` proposes
-/// a path under and `grund check` expects the declaration to live in (§FS-config.3.4).
-fn default_kind_folder(kind: &str) -> Option<&'static str> {
-    match kind {
-        "AR" => Some("docs/architecture"),
-        "DA" => Some("docs/decisions/architectural"),
-        "DF" => Some("docs/decisions/functional"),
-        "E2E" => Some("e2e/cases"),
-        "e2e" => Some("tests/e2e"),
-        "integration" => Some("tests/integration"),
-        // GRUND, GOAL, RM are single-file kinds — see `default_kind_file`. A
-        // kind can always be broken up later by swapping `file = "…"` for
-        // `folder = "…"` and moving the document into the folder.
-        _ => None,
-    }
-}
-
-/// Default single-file home for kinds whose declarations all live in one
-/// document — `GRUND` in `docs/grund.md`, `GOAL` in `docs/goals.md`, `FS` in
-/// `requirements.md`, and `RM` in `docs/roadmap.md` (§FS-config.3.4). Other
-/// built-in kinds have no `file` (each declaration is its own file).
-fn default_kind_file(kind: &str) -> Option<&'static str> {
-    match kind {
-        "GRUND" => Some("docs/grund.md"),
-        "GOAL" => Some("docs/goals.md"),
-        "FS" => Some("requirements.md"),
-        "RM" => Some("docs/roadmap.md"),
-        _ => None,
-    }
-}
-
-/// Default human title for each built-in kind, printed by `grund id` (§FS-config.3.4,
-/// §FS-id.2).
-fn default_kind_title(kind: &str) -> Option<&'static str> {
-    match kind {
-        "GRUND" => Some("Why: project motivation"),
-        "GOAL" => Some("Where: project direction and outcomes"),
-        "FS" => Some("What: behavior, requirements, and constraints"),
-        "AR" => Some("How: high-level implementation, structure, and design"),
-        "DA" => Some("Architecture decisions and tradeoffs"),
-        "DF" => Some("Product behavior decisions and tradeoffs"),
-        "E2E" => Some("Executable user scenarios"),
-        "e2e" => Some("User scenarios: black-box proof of the spec"),
-        "integration" => Some("Integration tests: proof that the parts fit as designed"),
-        "RM" => Some("Planned milestones and sequencing"),
-        _ => None,
-    }
-}
+use super::grounding::{ParsedGrounding, validate_kind_grounding};
+use super::kind::{KindConfig, KindIndex, KindResolution};
+use super::kind_defaults::default_kind_index;
+use super::parse::{bail_config, parse_bool, parse_string};
+use super::record::{CODE_SOURCE_KIND, Config};
+use crate::grammar::id_grammar_literal_slash_error;
+use crate::model::normalize_path_lexically;
+// §AR-system.4: `format_path` renders a path for a report and is the renderer's
+// (§AR-system.2.9) — read through the crate root until `output` is a module.
+use crate::format_path;
 
 /// One `[[kinds]]` entry as the parser has it so far: the entry itself, the line
 /// its `[[kinds]]` header sat on (what an entry-level error anchors at), and
 /// whether the entry has already named its kind — the one thing "sets `kind`
 /// twice" needs to know (§FS-config.3.4).
-struct ParsedKind {
-    config: KindConfig,
-    header_line: usize,
+pub(super) struct ParsedKind {
+    pub(super) config: KindConfig,
+    pub(super) header_line: usize,
     named: bool,
     /// The row's `require_grounding` / `grounding_level`, each with the line it
-    /// was written on (§FS-config.3.4.8) — read by `config_grounding.rs`, which
+    /// was written on (§FS-config.3.4.8) — read by `grounding.rs`, which
     /// owns both keys and every rule about them.
-    grounding: ParsedGrounding,
+    pub(super) grounding: ParsedGrounding,
     values_line: Option<usize>,
 }
 
 impl ParsedKind {
-    fn new(header_line: usize) -> Self {
+    pub(super) fn new(header_line: usize) -> Self {
         Self {
             config: KindConfig {
                 kind: String::new(),
@@ -138,7 +64,7 @@ impl ParsedKind {
 /// Read one `key = value` line inside a `[[kinds]]` block into `slot`
 /// (§FS-config.3.4). Returns `false` for a key this section does not define, so
 /// the caller reports it as an unknown config key (§FS-config.4.3).
-fn parse_kinds_key(
+pub(super) fn parse_kinds_key(
     path: &Path,
     line_no: usize,
     key: &str,
@@ -211,7 +137,11 @@ fn parse_kinds_key(
         "values" => {
             let values = parse_bool(path, line_no, value)?;
             let Some(slot) = current_kind.as_mut() else {
-                bail_config(path, line_no, "`values` outside of [[kinds]] block".to_string())?;
+                bail_config(
+                    path,
+                    line_no,
+                    "`values` outside of [[kinds]] block".to_string(),
+                )?;
                 unreachable!();
             };
             if slot.values_line.replace(line_no).is_some() {
@@ -291,7 +221,11 @@ fn parse_kinds_key(
         "format" => {
             let format = parse_string(path, line_no, value)?;
             let Some(slot) = current_kind.as_mut() else {
-                bail_config(path, line_no, "`format` outside of [[kinds]] block".to_string())?;
+                bail_config(
+                    path,
+                    line_no,
+                    "`format` outside of [[kinds]] block".to_string(),
+                )?;
                 unreachable!();
             };
             slot.config.format = Some(format);
@@ -308,7 +242,11 @@ fn parse_kinds_key(
                 )?,
             };
             let Some(slot) = current_kind.as_mut() else {
-                bail_config(path, line_no, "`resolve` outside of [[kinds]] block".to_string())?;
+                bail_config(
+                    path,
+                    line_no,
+                    "`resolve` outside of [[kinds]] block".to_string(),
+                )?;
                 unreachable!();
             };
             slot.config.resolve = Some(resolution);
@@ -316,7 +254,11 @@ fn parse_kinds_key(
         "fetch" => {
             let fetch = parse_string(path, line_no, value)?;
             let Some(slot) = current_kind.as_mut() else {
-                bail_config(path, line_no, "`fetch` outside of [[kinds]] block".to_string())?;
+                bail_config(
+                    path,
+                    line_no,
+                    "`fetch` outside of [[kinds]] block".to_string(),
+                )?;
                 unreachable!();
             };
             slot.config.fetch = Some(fetch);
@@ -378,7 +320,11 @@ fn kind_index_name_error(name: &str) -> Option<String> {
 /// would mean one thing when the file omits the key and another when the file spells
 /// it out — and every repository whose config predates the key would inherit an
 /// obligation the built-in default deliberately declines.
-fn apply_parsed_kinds(path: &Path, parsed: Vec<ParsedKind>, config: &mut Config) -> Result<()> {
+pub(super) fn apply_parsed_kinds(
+    path: &Path,
+    parsed: Vec<ParsedKind>,
+    config: &mut Config,
+) -> Result<()> {
     // [[kinds]] replaces defaults entirely, per §FS-config.3.4.
     if let Some(nameless) = parsed.iter().find(|entry| entry.config.kind.is_empty()) {
         return Err(anyhow!(

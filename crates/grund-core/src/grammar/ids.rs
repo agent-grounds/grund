@@ -3,8 +3,8 @@
 //! CLI argument. They sat in the model's record file while the crate was flat,
 //! calling `Grammar::parse_token` and the `id_input_re` from there; they are
 //! grammar operations over model's types, which is the direction §AR-system.4
-//! allows, so they live here and `model` now reads nothing of this component
-//! but the `Grammar` its `Config` record carries.
+//! allows, so they live here rather than on the record. The `Config` they read
+//! the compiled grammar off is config's own (§AR-system.2.3).
 
 use anyhow::{Result, anyhow};
 

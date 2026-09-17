@@ -6,7 +6,7 @@
 ///
 /// The compatibility CLI's `fmt` command: flags, the per-project walk, the report
 /// on stdout, and the exit code (§FS-fmt.1, §FS-fmt.3). It sits beside `fmt.rs`
-/// for the reason `config_cmd.rs` sits beside `config.rs` — that file is the
+/// for the reason `config_cmd.rs` sits beside `config/` — that module is the
 /// normalizer, this one is the command surface wrapped around it, and only this
 /// one knows about argv, stdout, and `ExitCode`.
 fn auto_cross_refs_for_scope(

@@ -16,12 +16,12 @@ Not a component: the rule for how the engine's files are named, owned and sized,
 
 What each category implements, consumes and must not know is its component's subsection in [§AR-system.2](README.md#2-components), and the table's third column says which. A category is named by the module directory that holds it, and until it has one, by the file-name prefixes it owns.
 
-A file belongs to the category it sits under where that category is a module directory — `model/records.rs` to **model** — and otherwise to the category whose prefix its name carries: `scanner_walk.rs` to **scanner**, `init_block.rs` to **init**. A category that has become a directory leaves no file of its former prefixes at the top level. `lib.rs` is the one file outside every category, as the crate entrypoint. What each category owns:
+A file belongs to the category it sits under where that category is a module directory — `model/records.rs` to **model** — and otherwise to the category whose prefix its name carries: `scanner_walk.rs` to **scanner**, `init_block.rs` to **init**. A category that has become a directory leaves no file of its former prefixes at the top level, except a prefix the row still lists beside the directory: that is how a file the move deliberately left flat is recorded, and the only one today is a deprecated renderer waiting for `compat/` ([§AR-system.2.9](README.md#29-api)). `lib.rs` is the one file outside every category, as the crate entrypoint. What each category owns:
 
 | Category | Module directory, or file-name prefixes | Component |
 |---|---|---|
 | **model** | `model/` | [§AR-system.2.2](README.md#22-model) |
-| **config** | `config` | [§AR-system.2.3](README.md#23-config) |
+| **config** | `config/`, `config_cmd` | [§AR-system.2.3](README.md#23-config) |
 | **scanner** | `scanner`, `value_json` | [§AR-system.2.5](README.md#25-scanner) |
 | **checker** | `checker` | [§AR-system.2.6](README.md#26-checker) |
 | **output** | `output` | [§AR-system.2.9](README.md#29-api) |
@@ -40,7 +40,7 @@ A file belongs to the category it sits under where that category is a module dir
 | **lsp** | `lsp`, `on_type` | [§AR-system.2.7](README.md#27-queries) |
 | **compat** | `compat` | [§AR-system.2.9](README.md#29-api) |
 
-`tests/integration/test_module_categories.py` holds this table against the tree: every top-level implementation file owned by exactly one row, every prefix owning a file, and every named module directory present with none of its former prefixes left at the top level.
+`tests/integration/test_module_categories.py` holds this table against the tree: every top-level implementation file owned by exactly one row, every prefix owning a file, and every named module directory present with none of its former prefixes left at the top level but the ones its row still lists.
 
 ## 2. Refactor boundary
 

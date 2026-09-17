@@ -3,12 +3,16 @@ fissile_exceptions_version = 2
 # is identified by this registry and its `path`, which is why it carries no name
 # of its own.
 #
-# Three entries were retired when their files were split: crates/grund-core/src/
+# Four entries were retired when their files were split: crates/grund-core/src/
 # tests.rs (4111 lines) into thirteen `tests_*` category modules plus
 # `tests_support`, crates/grund-cli/src/cli.rs (1735 lines) into one file per
-# command, and crates/grund-cli/tests/init.rs (1023 lines) into the scaffold
+# command, crates/grund-cli/tests/init.rs (1023 lines) into the scaffold
 # cases and the entrypoint-selection cases over a shared fixture, which is what
-# its `until` asked for. All three are now under budget with no exception.
+# its `until` asked for, and crates/grund-core/src/config.rs (732 lines) into
+# the module directory of §AR-system.2.3, where the reader at config/parse.rs
+# measures 499. All four are now under the hard budget with no exception; the
+# last keeps a soft entry in docs/file-size-agent-exceptions.toml, because the
+# boundary its `until` named is still unpaid.
 [[exceptions]]
 path = "crates/grund-core/src/api.rs"
 match = "exact"
@@ -68,16 +72,6 @@ max_accepted = { value = 728, unit = "lines" }
 until = "the five rule bodies still inline in check_with_workspace become named functions"
 reason = """
 The reference-resolution family has already left, to checker_references.rs, the inline citation style rule with it, to inline_note_layout.rs, and the section-shape family — heading-level strictness beside the new duplicate-section rule — to checker_sections.rs, which is what dropped the ceiling 1083 -> 1013 -> 1000, and the citation-direction family — the obligation and prohibition passes — to checker_citations.rs, taking it to 770; the §FS-check.4.6 call added one back. The grounding floor then left too, to checker_grounding.rs (771 -> 728), because it stopped being a statement: §FS-config.3.4.8 made it a row lookup and a per-unit test over structure the scanner records, which is a function with a name. What remains is blocked for a different reason. Five rules — duplicate homes, configured kind homes, the escaped-citation suggestion, broken stub links, and unused declarations — are written as inline blocks inside one body of check_with_workspace, sharing a KindHomeIndex, repeated passes over findings.declarations, and one &mut CheckReport. They are statements, not functions, so there is nothing to move yet. Missing boundary: each of them named, after which the declaration-placement rules leave as one family and this file keeps the citation-side rules and the shared diagnostic helpers.
-"""
-[[exceptions]]
-path = "crates/grund-core/src/config.rs"
-match = "exact"
-rules = ["core-source"]
-kind = "deferred"
-max_accepted = { value = 732, unit = "lines" }
-until = "extract the parser with its state made explicit, leaving discovery and defaults here"
-reason = """
-`parse_config_file` is a 409-line hand-written TOML reader: one line-oriented state machine over section and key context, correct only because every branch observes the same state. Splitting it by key group would thread that state through a wider interface, trading a long function for a worse one. Missing boundary: the parser as its own module with its state made explicit, leaving discovery, defaults, and validation here. The ceiling dropped from 936 after the deprecated config command adapter moved to config_cmd.rs.
 """
 [[exceptions]]
 path = "crates/grund-core/src/init.rs"

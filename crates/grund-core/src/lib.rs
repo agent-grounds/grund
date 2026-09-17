@@ -17,23 +17,22 @@ mod model;
 // facts are declared in `grammar/` and what crosses the boundary is what
 // `grammar/mod.rs` re-exports (§AR-core-module-layout.1).
 mod grammar;
+// §AR-system.2.3: config is one Rust module too, so the effective `Config` and
+// the reader that fills it are declared in `config/` and what crosses the
+// boundary is what `config/mod.rs` re-exports (§AR-core-module-layout.1).
+mod config;
 // Temporary re-exports for the duration of this migration: they keep every name
 // the flat crate root exposed reachable at `grund_core::<name>` while the other
 // components are still `include!`d flat. The finalize task replaces them with an
 // explicit list.
+pub use config::*;
 pub use grammar::*;
 pub use model::*;
 
 // §AR-bindings.1: `grund-core` is the shared implementation crate used by the
 // published `grund` CLI and, next, the optional LSP server. The category files
 // are still included flat to keep this first package split behavior-preserving.
-include!("config_kind_model.rs");
 include!("value_json.rs");
-include!("config_discovery.rs");
-include!("config.rs");
-include!("config_point_sizes.rs");
-include!("config_kinds.rs");
-include!("config_grounding.rs");
 include!("config_cmd.rs");
 include!("scanner_walk.rs");
 include!("scanner_scope_probe.rs");

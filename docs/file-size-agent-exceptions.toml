@@ -93,14 +93,14 @@ reason = """
 Soft twin of this path's entry in docs/file-size-human-exceptions.toml, which carries the argument. This entry holds no judgment of its own: same ceiling, retires with its twin. Edit the reason there, not here.
 """
 [[exceptions]]
-path = "crates/grund-core/src/config.rs"
+path = "crates/grund-core/src/config/parse.rs"
 match = "exact"
 rules = ["core-source"]
 kind = "deferred"
-max_accepted = { value = 732, unit = "lines" }
-until = "the entry for this path in docs/file-size-human-exceptions.toml is retired"
+max_accepted = { value = 499, unit = "lines" }
+until = "extract the parser with its state made explicit, leaving discovery and validation here"
 reason = """
-Soft twin of this path's entry in docs/file-size-human-exceptions.toml, which carries the argument. This entry holds no judgment of its own: same ceiling, retires with its twin. Edit the reason there, not here.
+`parse_config_file` is a hand-written TOML reader: one line-oriented state machine over section and key context, correct only because every branch observes the same state. Splitting it by key group would thread that state through a wider interface, trading a long function for a worse one. Missing boundary: the parser as its own module with its state made explicit, leaving discovery and validation here. This is the argument the hard entry in docs/file-size-human-exceptions.toml carried at 732 lines while the whole config category was one file; that entry retired when config became a Rust module (§AR-system.2.3) took the file to 499, under the hard budget. What left: the `[citations]` section for config/citations.rs with the rule records it fills, beside the `[[kinds]]` and grounding sections that were already their own files, and the `[scan]` defaults for config/record.rs beside the `Config` they start. Nothing of the state machine left, which is why the boundary is still named here.
 """
 [[exceptions]]
 path = "scripts/local-benchmark-report.py"
@@ -151,16 +151,6 @@ until = "a third emission profile lands and the planner gains real branching"
 max_accepted = { value = 427, unit = "lines" }
 reason = """
 Link planning (which citations need a link, and to which anchor) and link writing (splice text without disturbing surrounding bytes) are two phases communicating through a plan type, so the seam exists and is clean. It is simply not worth taking at 77 lines over: two files whose combined interface is larger than today's. Revisit when a third emission profile lands (§FS-fmt.6) and the planner gains real branching. The ceiling moved 423 -> 427 when the wrapper learned to honour the always-linkify carve-out's ID filter (§FS-fmt.6.1) — four lines inside the planning phase, which is the phase that would move out.
-"""
-[[exceptions]]
-path = "crates/grund-core/src/model/records.rs"
-match = "exact"
-rules = ["core-source"]
-kind = "structural"
-max_accepted = { value = 500, unit = "lines" }
-until = "indefinite"
-reason = """
-`Model` is the shared vocabulary layer of §AR-core-module-layout.1: 21 type definitions against 9 free functions, read by every other component in the crate. It is the module's record file since `model` became a Rust module (§AR-system.2.2): the `Report` records left with the move, into `model/report.rs`, and the explicit imports the module costs took about as many lines back. Its size is the width of the domain, not accumulated logic, and a type registry has no internal seam. The ceiling therefore tracks that width and moves with it: adding a `Config` key or a field to a recorded type raises it (429 rather than 424 once the two `inline_note_layout` keys landed, 433 once the run's workspace scope path and the `[workspace]` block's own source location joined `Config`, 434 once `Citation` recorded whether a shorthand sits in a numeric run, 436 once `Config` learned where the run's other workspace projects are, 437 once `Declaration` recorded the headings that claimed a section path a second time, 457 once `KindConfig` learned which file indexes its folder, the `KindIndex` states that key takes, and how `grund config show` spells it, 455 once a kind could declare no IDs at all — `KindConfig.citable`, the place label a kind with no name to print is rendered by, and the split of the kind list into "every citing kind" and "the citable ones", less the built-in kind table and its per-name defaults, which left for config_kinds.rs because they are config defaults rather than shared vocabulary; 464 once the homeless kind could be named, which is one lookup over the same registry; 470 once the scanner recorded the headings that came close, §FS-check.4.6; 472 once a kind could be listed without being walked — `KindConfig.scan`, §FS-config.3.4.7), which is the registry growing, not this file accreting logic. Any split groups types by a taxonomy the compiler does not enforce and a reader has to memorise, while every dependent module gains a second place to look. The boundary that would justify splitting is a sub-domain no other category depends on; none exists. Revisit only if such a sub-domain appears.
 """
 [[exceptions]]
 path = "skills/grund-init/SKILL.md"

@@ -1,0 +1,44 @@
+//! The config component (§AR-system.2.3): one validated `Config` per project,
+//! read from `grund.toml` and the built-in defaults (§FS-config). It consumes
+//! the config file and knows nothing of the tree it describes — no walk, no
+//! rule, no frontend.
+//!
+//! The module boundary is what §AR-system.4 asks for: an item another component
+//! reads is re-exported below, and everything else is the component's own
+//! (§AR-core-module-layout.1). The submodules are the former `config*` category
+//! files plus the `Config` record that sat in `model/`: discovery, the record,
+//! the reader, and one file per section of `grund.toml` that carries a grammar
+//! and cross-key rules of its own — `[[kinds]]` with its built-in defaults,
+//! `[citations]`, and the grounding pair.
+
+mod citations;
+mod discovery;
+mod grounding;
+mod kind;
+mod kind_defaults;
+mod kind_table;
+mod parse;
+mod point_sizes;
+mod record;
+
+pub use citations::{
+    CitationDisjunction, CitationLevel, CitationRules, CitationTarget, KindCitationRules,
+    NamespaceMatch,
+};
+pub use kind::{KindConfig, KindIndex, KindResolution};
+pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
+pub use record::{Config, ConfigLocation, ShorthandPolicy};
+
+// What the other components read, still through the crate root while they are
+// flat (§AR-system.4). The finalize task narrows this as each caller moves into
+// a module of its own.
+pub(crate) use citations::render_citation_target;
+pub(crate) use discovery::{
+    config_file_in, home_form_of, load_config, load_config_at, load_config_at_with_report_base,
+};
+pub(crate) use parse::{
+    is_valid_project_alias, parse_string_list, strip_comment, validate_workspace_member,
+};
+pub(crate) use record::{
+    DEFAULT_GROUNDING_LEVEL, kind_prefixes, kind_uses_values, non_citable_kind_error,
+};

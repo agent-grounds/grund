@@ -29,14 +29,13 @@ use super::never_rewrite::{
 };
 use super::shorthand_targets::ShorthandTargets;
 use crate::model::{
-    CheckReport, Citation, Config, Declaration, Diagnostic, Findings, Id, ShorthandPolicy,
-    render_qualified_id,
+    CheckReport, Citation, Declaration, Diagnostic, Findings, Id, render_qualified_id,
 };
-// §AR-system.4: every name below belongs to a component above this one — the
-// scanner, the checker, the workspace and the writers — and stays reachable
+// §AR-system.4: every name below belongs to a component above this one — config,
+// the scanner, the checker, the workspace and the writers — and stays reachable
 // through the crate root until each of those becomes a module of its own.
 use crate::{
-    CitationLine, ReferenceTier, WorkspaceCheckTarget, WorkspaceProject,
+    CitationLine, Config, ReferenceTier, ShorthandPolicy, WorkspaceCheckTarget, WorkspaceProject,
     qualified_suppressed_in_source, render_id, shorthand_index_number,
     unique_shorthand_expansion_target,
 };

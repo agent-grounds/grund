@@ -19,7 +19,7 @@
 ///
 /// Split out of `grammar.rs`, which compiles the regexes: these functions answer
 /// a question about a *config key* and are the same answer whether it is asked at
-/// the line that wrote the key (`config.rs`, located) or of a `Config` assembled
+/// the line that wrote the key (`config/parse.rs`, located) or of a `Config` assembled
 /// in code (`Grammar::build`, the backstop). One rule, one place, two callers.
 pub(crate) fn id_grammar_literal_slash_error(label: &str, value: &str) -> Option<String> {
     value
@@ -101,7 +101,7 @@ fn hir_admits_slash(hir: &regex_syntax::hir::Hir) -> bool {
 }
 
 /// §FS-config.3.2: the `/` rule for one `[id]` key, by key name — the one entry
-/// point `config.rs` needs, so the caller that reads a TOML line does not also
+/// point `config/parse.rs` needs, so the caller that reads a TOML line does not also
 /// have to know which shape of rule that line's key takes. An unknown key has no
 /// rule.
 pub(crate) fn id_grammar_key_slash_error(key: &str, value: &str) -> Option<String> {

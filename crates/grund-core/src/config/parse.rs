@@ -1,8 +1,39 @@
+//! The `grund.toml` reader (§FS-config.3): one line-oriented pass over the file
+//! that fills a `Config`, the scalar value parsers every section shares, and the
+//! `[workspace]` member and alias validation.
+//!
+//! The reader rather than the record or the discovery: `discovery.rs` says which
+//! file governs a directory and `record.rs` says what a filled `Config` means,
+//! while the three sections with a grammar of their own — `[[kinds]]`,
+//! `[citations]` and the grounding pair — read their own keys in
+//! `kind_table.rs`, `citations.rs` and `grounding.rs` (§AR-core-module-layout.1).
+
+use anyhow::{Context, Result, anyhow};
+use std::fs;
+use std::path::Path;
+
+use super::citations::{parse_citation_entry, validate_citation_rules};
+use super::grounding::{
+    check_grounding_level, parse_kind_grounding_key, validate_global_grounding,
+};
+use super::kind_table::{ParsedKind, apply_parsed_kinds, parse_kinds_key};
+use super::point_sizes::parse_lead_size_warning;
+use super::record::{Config, ConfigLocation, ShorthandPolicy};
+use crate::grammar::{id_grammar_key_slash_error, is_escaped};
+// §AR-system.4: `format_path` is the renderer's (§AR-system.2.9), the `[fmt]
+// exclude` glob rule the formatter's (§FS-fmt.2.5.1) and the optional-member
+// grammar the workspace's; all three read through the crate root until then.
+use crate::{format_path, validate_fmt_exclude, validate_optional_workspace_member};
+
 /// Parse one `grund.toml` over `config` — the schema of §FS-config.3 and its
 /// subsections (`[reference]` 3.1, `[id]` 3.2/3.3, `[[kinds]]` 3.4, `[scan]` 3.5,
 /// `[output]` 3.6, `[fmt.cross_refs]` 3.7, `[fmt]` 3.10). Any unknown section/key or malformed
 /// value is a hard error reported as `path:line:` (§FS-config.4.3, §FS-errors.2.1).
-fn parse_config_file(read_path: &Path, report_path: &Path, config: &mut Config) -> Result<()> {
+pub(super) fn parse_config_file(
+    read_path: &Path,
+    report_path: &Path,
+    config: &mut Config,
+) -> Result<()> {
     let text = fs::read_to_string(read_path)
         .with_context(|| format!("read {}", format_path(report_path)))?;
     // Everything below reports problems against the stable relative path.
@@ -28,14 +59,9 @@ fn parse_config_file(read_path: &Path, report_path: &Path, config: &mut Config) 
             let is_array_table = line.starts_with("[[") && line.ends_with("]]");
             section = line.trim_matches(['[', ']']).to_string();
             match section.as_str() {
-                "reference" | "scan" | "output" | "id" | "fmt" | "fmt.cross_refs"
-                | "workspace" => {
+                "reference" | "scan" | "output" | "id" | "fmt" | "fmt.cross_refs" | "workspace" => {
                     if section == "workspace" && is_array_table {
-                        bail_config(
-                            path,
-                            line_no,
-                            "expected `[workspace]` (table)".to_string(),
-                        )?;
+                        bail_config(path, line_no, "expected `[workspace]` (table)".to_string())?;
                     }
                     if section == "workspace" {
                         config.workspace_declared = true;
@@ -149,7 +175,7 @@ fn parse_config_file(read_path: &Path, report_path: &Path, config: &mut Config) 
                 config.require_grounding = parse_bool(path, line_no, value)?
             }
             // §FS-config.3.4.8: the default unit inside every governed file; the
-            // key's own rules live in `config_grounding.rs` with its row twin.
+            // key's own rules live in `grounding.rs` with its row twin.
             ("reference", "grounding_level") => {
                 config.grounding_level = parse_usize(path, line_no, value)?;
                 check_grounding_level(path, line_no, config.grounding_level)?;
@@ -261,13 +287,13 @@ fn parse_config_file(read_path: &Path, report_path: &Path, config: &mut Config) 
                 }
                 config.section_heading_levels = mode;
             }
-            // §FS-config.3.4.8: the two grounding keys are `config_grounding.rs`'s
+            // §FS-config.3.4.8: the two grounding keys are `grounding.rs`'s
             // on both sides — the row and the `[reference]` default — so the
             // section walk hands them there rather than through the row reader.
             ("kinds", key @ ("require_grounding" | "grounding_level")) => {
                 parse_kind_grounding_key(path, line_no, key, value, &mut current_kind)?;
             }
-            // §FS-config.3.4: the `[[kinds]]` keys, in `config_kinds.rs`
+            // §FS-config.3.4: the `[[kinds]]` keys, in `kind_table.rs`
             // (§AR-core-module-layout.1).
             ("kinds", key) => {
                 if !parse_kinds_key(path, line_no, key, value, &mut current_kind)? {
@@ -430,7 +456,7 @@ fn parse_config_file(read_path: &Path, report_path: &Path, config: &mut Config) 
     Ok(())
 }
 
-fn validate_workspace_member(path: &Path, line: usize, member: &str) -> Result<()> {
+pub(crate) fn validate_workspace_member(path: &Path, line: usize, member: &str) -> Result<()> {
     let member_path = Path::new(member);
     if member.is_empty()
         || member_path.is_absolute()
@@ -466,14 +492,14 @@ fn looks_like_windows_drive_prefix(part: &str) -> bool {
     bytes.len() >= 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':'
 }
 
-fn is_valid_project_alias(alias: &str) -> bool {
+pub(crate) fn is_valid_project_alias(alias: &str) -> bool {
     let mut chars = alias.chars();
     matches!(chars.next(), Some(ch) if ch.is_ascii_lowercase())
         && chars.all(|ch| ch.is_ascii_lowercase() || ch.is_ascii_digit() || ch == '-')
 }
 
 /// Drop a trailing `#`-comment from a `grund.toml` line (§FS-config.3).
-fn strip_comment(line: &str) -> &str {
+pub(crate) fn strip_comment(line: &str) -> &str {
     // A `#` inside a quoted string is not a comment marker. Walk the line and stop at the
     // first unquoted `#`; otherwise return the line unchanged.
     let bytes = line.as_bytes();
@@ -490,23 +516,13 @@ fn strip_comment(line: &str) -> &str {
     line
 }
 
-fn is_escaped(bytes: &[u8], pos: usize) -> bool {
-    let mut count = 0;
-    let mut j = pos;
-    while j > 0 && bytes[j - 1] == b'\\' {
-        count += 1;
-        j -= 1;
-    }
-    count % 2 == 1
-}
-
 /// Fail config parsing with a `path:line: message` error — the located-finding
 /// shape applied to a malformed `grund.toml` (§FS-config.4.3, §FS-errors.2.1).
-fn bail_config<T>(path: &Path, line: usize, message: String) -> Result<T> {
+pub(super) fn bail_config<T>(path: &Path, line: usize, message: String) -> Result<T> {
     Err(anyhow!("{}:{}: {}", format_path(path), line, message))
 }
 
-fn parse_string(path: &Path, line: usize, value: &str) -> Result<String> {
+pub(super) fn parse_string(path: &Path, line: usize, value: &str) -> Result<String> {
     if !(value.starts_with('"') && value.ends_with('"') && value.len() >= 2) {
         return bail_config(path, line, "expected string".to_string());
     }
@@ -539,7 +555,7 @@ fn parse_string(path: &Path, line: usize, value: &str) -> Result<String> {
     Ok(out)
 }
 
-fn parse_bool(path: &Path, line: usize, value: &str) -> Result<bool> {
+pub(super) fn parse_bool(path: &Path, line: usize, value: &str) -> Result<bool> {
     match value {
         "true" => Ok(true),
         "false" => Ok(false),
@@ -547,13 +563,17 @@ fn parse_bool(path: &Path, line: usize, value: &str) -> Result<bool> {
     }
 }
 
-fn parse_usize(path: &Path, line: usize, value: &str) -> Result<usize> {
-    value
-        .parse::<usize>()
-        .map_err(|_| anyhow!("{}:{}: expected non-negative integer", format_path(path), line))
+pub(super) fn parse_usize(path: &Path, line: usize, value: &str) -> Result<usize> {
+    value.parse::<usize>().map_err(|_| {
+        anyhow!(
+            "{}:{}: expected non-negative integer",
+            format_path(path),
+            line
+        )
+    })
 }
 
-fn parse_string_list(path: &Path, line: usize, value: &str) -> Result<Vec<String>> {
+pub(crate) fn parse_string_list(path: &Path, line: usize, value: &str) -> Result<Vec<String>> {
     if !value.starts_with('[') || !value.ends_with(']') {
         return bail_config(path, line, "expected string list".to_string());
     }
@@ -566,282 +586,3 @@ fn parse_string_list(path: &Path, line: usize, value: &str) -> Result<Vec<String
         .map(|part| parse_string(path, line, part.trim()))
         .collect()
 }
-
-/// Parse one `[citations]` / `[citations.<KIND>]` key (§FS-config.3.9). The
-/// top-level table takes only `default`; a per-kind table takes `default` plus
-/// the five level lists.
-fn parse_citation_entry(
-    path: &Path,
-    line_no: usize,
-    section: &str,
-    key: &str,
-    value: &str,
-    citations: &mut CitationRules,
-) -> Result<()> {
-    if section == "citations" {
-        return match key {
-            "default" => {
-                citations.global_default = Some(parse_citation_level(path, line_no, value)?);
-                Ok(())
-            }
-            other => bail_config(
-                path,
-                line_no,
-                format!(
-                    "unknown key `{other}` in [citations] (expected `default`, or a [citations.<KIND>] table)"
-                ),
-            ),
-        };
-    }
-    let kind = section
-        .strip_prefix("citations.")
-        .expect("caller guarantees a citations. section");
-    let rules = citations.per_kind.entry(kind.to_string()).or_default();
-    match key {
-        "default" => rules.default = Some(parse_citation_level(path, line_no, value)?),
-        "must" => rules.must = parse_citation_disjunctions(path, line_no, value)?,
-        "should" => rules.should = parse_citation_disjunctions(path, line_no, value)?,
-        "may" => rules.may = parse_citation_disjunctions(path, line_no, value)?,
-        "should-not" => rules.should_not = parse_citation_disjunctions(path, line_no, value)?,
-        "must-not" => rules.must_not = parse_citation_disjunctions(path, line_no, value)?,
-        other => bail_config(
-            path,
-            line_no,
-            format!(
-                "unknown key `{other}` in [citations.{kind}] (expected must, should, may, should-not, must-not, or default)"
-            ),
-        )?,
-    }
-    Ok(())
-}
-
-fn parse_citation_level(path: &Path, line_no: usize, value: &str) -> Result<CitationLevel> {
-    let level = parse_string(path, line_no, value)?;
-    match level.as_str() {
-        "must" => Ok(CitationLevel::Must),
-        "should" => Ok(CitationLevel::Should),
-        "may" => Ok(CitationLevel::May),
-        "should-not" => Ok(CitationLevel::ShouldNot),
-        "must-not" => Ok(CitationLevel::MustNot),
-        other => bail_config(
-            path,
-            line_no,
-            format!(
-                "unknown citation level `{other}` (expected must, should, may, should-not, or must-not)"
-            ),
-        ),
-    }
-}
-
-fn parse_citation_disjunctions(
-    path: &Path,
-    line_no: usize,
-    value: &str,
-) -> Result<Vec<CitationDisjunction>> {
-    parse_string_list(path, line_no, value)?
-        .iter()
-        .map(|entry| parse_citation_disjunction(path, line_no, entry))
-        .collect()
-}
-
-fn parse_citation_disjunction(
-    path: &Path,
-    line_no: usize,
-    entry: &str,
-) -> Result<CitationDisjunction> {
-    let mut targets = Vec::new();
-    for token in entry.split('|') {
-        let token = token.trim();
-        if token.is_empty() {
-            bail_config(path, line_no, "empty citation target".to_string())?;
-        }
-        targets.push(parse_citation_target(path, line_no, token)?);
-    }
-    Ok(CitationDisjunction { targets })
-}
-
-fn parse_citation_target(path: &Path, line_no: usize, token: &str) -> Result<CitationTarget> {
-    // §FS-config.3.9: the kind is the last segment, so a nested member is pinned
-    // by its whole alias path (`group/api/AR`) exactly as it is cited
-    // (§FS-workspace.6.1).
-    let (namespace, kind) = match token.rsplit_once('/') {
-        Some((qualifier, kind)) => {
-            let namespace = if qualifier == "*" {
-                NamespaceMatch::Any
-            } else {
-                // §FS-config.3.9.3: config diagnostics name the citation target's
-                // qualifier and kind, while the CLI keeps its own `<alias>/<ID>`
-                // vocabulary. Both surfaces use the same segment validation.
-                if let Some(message) = invalid_citation_target_message(token, qualifier, kind) {
-                    bail_config(path, line_no, message)?;
-                }
-                NamespaceMatch::Alias(qualifier.to_string())
-            };
-            (namespace, kind)
-        }
-        None => (NamespaceMatch::Local, token),
-    };
-    if kind.is_empty() {
-        bail_config(
-            path,
-            line_no,
-            format!("citation target `{token}` names no kind"),
-        )?;
-    }
-    Ok(CitationTarget {
-        namespace,
-        kind: kind.to_string(),
-    })
-}
-
-/// Render the `[citations]` form of an invalid namespace qualifier
-/// (§FS-config.3.9.3). This is intentionally separate from the CLI alias-path
-/// message: the final segment here is a citation kind, not an ID.
-fn invalid_citation_target_message(token: &str, qualifier: &str, kind: &str) -> Option<String> {
-    let bad = invalid_alias_path_segment(qualifier)?;
-    let detail = if qualifier.is_empty() {
-        format!("namespace qualifier before kind `{kind}` is empty")
-    } else if bad.is_empty() {
-        format!(
-            "invalid namespace qualifier segment (empty) in `{qualifier}` before kind `{kind}`"
-        )
-    } else {
-        format!(
-            "invalid namespace qualifier segment `{bad}` in `{qualifier}` before kind `{kind}`"
-        )
-    };
-    let wildcard = if bad == "*" {
-        "; `*` may only be the whole qualifier"
-    } else {
-        ""
-    };
-    Some(format!(
-        "citation target `{token}`: {detail} ({INVALID_ALIAS_PATH_EXPECTED}){wildcard}"
-    ))
-}
-
-/// Validate the parsed `[citations]` rules against the finalized kind set
-/// (§FS-config.3.9.5): every citing kind is a configured kind or `code`, every
-/// target names a *citable* configured kind, and no two targets of the same
-/// cited kind whose namespace matchers overlap sit at different levels.
-fn validate_citation_rules(path: &Path, config: &Config) -> Result<()> {
-    // The citing side is any name in the table plus `code` — a non-citable kind
-    // cites like any other place (§FS-config.3.9). The cited side is narrower:
-    // only a citable kind has IDs to be the target of a citation.
-    let citing_known: BTreeSet<&str> = citing_kind_names(&config.kinds).into_iter().collect();
-    let known: BTreeSet<&str> = config
-        .kinds
-        .iter()
-        .filter(|k| k.citable)
-        .map(|k| k.kind.as_str())
-        .collect();
-    for (citing, rules) in &config.citations.per_kind {
-        if !citing_known.contains(citing.as_str()) {
-            return Err(anyhow!(
-                "{}: [citations.{citing}] names an unknown kind `{citing}`",
-                format_path(path)
-            ));
-        }
-        // §FS-config.3.4.7: a rule on a kind whose home is not walked could
-        // never fire — the vacuous pass §DF-non-citable-kinds.2.5 refused, one
-        // level up — so the config is refused where it makes the promise.
-        if config.kinds.iter().any(|k| k.kind == *citing && !k.scan) {
-            return Err(anyhow!(
-                "{}: [citations.{citing}] names an unwalked kind `{citing}` (its home is `scan = false`, so no file in it is checked and the rule could never fire)",
-                format_path(path)
-            ));
-        }
-        // Flatten every target with the level it was declared at, rejecting any
-        // that names an unconfigured kind on the way.
-        let mut targets: Vec<(&'static str, &CitationTarget)> = Vec::new();
-        let levels: [(&'static str, &[CitationDisjunction]); 5] = [
-            ("must", &rules.must),
-            ("should", &rules.should),
-            ("may", &rules.may),
-            ("should-not", &rules.should_not),
-            ("must-not", &rules.must_not),
-        ];
-        for (level_name, disjunctions) in levels {
-            for disjunction in disjunctions {
-                for target in &disjunction.targets {
-                    if !known.contains(target.kind.as_str()) {
-                        // A non-citable kind is a name the table knows and a
-                        // citation can never carry, so say which of the two it
-                        // is rather than calling a configured kind unknown.
-                        let why = if citing_known.contains(target.kind.as_str()) {
-                            "a non-citable target kind"
-                        } else {
-                            "an unknown target kind"
-                        };
-                        return Err(anyhow!(
-                            "{}: [citations.{citing}] {level_name} names {why} `{}`",
-                            format_path(path),
-                            target.kind
-                        ));
-                    }
-                    targets.push((level_name, target));
-                }
-            }
-        }
-        // Two targets of one kind whose matchers can match the same citation (e.g.
-        // bare `AR` and `*/AR`) must not sit at different levels — such a citation
-        // would have no single level (§FS-config.3.9.5). Identical entries are fine.
-        for (index, (level_a, a)) in targets.iter().enumerate() {
-            for (level_b, b) in targets.iter().skip(index + 1) {
-                if level_a != level_b
-                    && a.kind == b.kind
-                    && namespaces_overlap(&a.namespace, &b.namespace)
-                {
-                    return Err(anyhow!(
-                        "{}: [citations.{citing}] `{}` ({level_a}) and `{}` ({level_b}) overlap (a citation matching both has no single level)",
-                        format_path(path),
-                        render_citation_target(a),
-                        render_citation_target(b)
-                    ));
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-/// Whether two rule-target namespace matchers can match the same citation
-/// (§FS-config.3.9.3): `*/` (any namespace) overlaps every qualifier; otherwise
-/// two matchers overlap only when identical — both local, or the same pinned
-/// alias. A local matcher and a pinned-alias matcher are disjoint, so permitting
-/// a local kind while forbidding one member's same kind is allowed.
-fn namespaces_overlap(a: &NamespaceMatch, b: &NamespaceMatch) -> bool {
-    match (a, b) {
-        (NamespaceMatch::Any, _) | (_, NamespaceMatch::Any) => true,
-        (NamespaceMatch::Local, NamespaceMatch::Local) => true,
-        (NamespaceMatch::Alias(left), NamespaceMatch::Alias(right)) => left == right,
-        _ => false,
-    }
-}
-
-/// The namespace qualifier as written in config — for round-tripping in
-/// `grund config show` and for the duplicate-target message (§FS-config.3.9).
-fn citation_namespace_label(namespace: &NamespaceMatch) -> String {
-    match namespace {
-        NamespaceMatch::Local => String::new(),
-        NamespaceMatch::Any => "*/".to_string(),
-        NamespaceMatch::Alias(alias) => format!("{alias}/"),
-    }
-}
-
-fn render_citation_target(target: &CitationTarget) -> String {
-    format!("{}{}", citation_namespace_label(&target.namespace), target.kind)
-}
-
-/// The `[scan]` defaults a `Config` starts from (§FS-config.3.5): what a repo
-/// with no `include` walks, the extensions it reads, and the comment prefixes a
-/// declaration or an inline note may sit behind. Config defaults rather than
-/// grammar, so they live beside the reader that overrides them — the compiled
-/// grammar takes `comment_prefixes` as an argument and holds no opinion about
-/// what it should be (§AR-system.2.1, §AR-system.2.3).
-const DEFAULT_INCLUDE: &[&str] = &["requirements.md", "docs", "e2e", "src"];
-const DEFAULT_SCAN_EXTENSIONS: &[&str] = &[
-    "md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "swift", "scala",
-    "rb", "php", "cs", "lisp", "scm", "clj", "sql", "hs", "lhs", "lua", "ada", "adb", "ads",
-];
-const DEFAULT_COMMENT_PREFIXES: &[&str] = &["//", "#", ";", "--", "*", "/*"];

@@ -1,10 +1,11 @@
 use super::compiled::QUALIFIED_CITATION_PREFIX;
 use super::id_format::parse_longest_id_prefix;
 use super::never_rewrite::{is_inside_inline_code, is_inside_string_literal};
-use crate::model::{Config, WorkspaceCitationTarget};
-// §AR-system.4: the loose qualified-ID prefix reader belongs to the scanner, one
-// component above, and stays reachable through the crate root until it moves.
-use crate::parse_loose_qualified_id_prefix;
+use crate::model::WorkspaceCitationTarget;
+// §AR-system.4: `Config` is config's own record and the loose qualified-ID
+// prefix reader belongs to the scanner, both components above this one; each
+// stays reachable through the crate root until it moves.
+use crate::{Config, parse_loose_qualified_id_prefix};
 
 /// Every recognized citation token on one line, as byte ranges into it
 /// (§FS-check.1.1): the configured marker, `[reference] strict`, the

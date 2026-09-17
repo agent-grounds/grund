@@ -1,3 +1,11 @@
+use std::path::{Path, PathBuf};
+
+use super::record::Config;
+// §AR-system.4: `escape_toml_basic` is the TOML writer's string escaper, in the
+// scaffold that emits `grund.toml` (§FS-init.2.4) — read through the crate root
+// until the writers are a module.
+use crate::escape_toml_basic;
+
 /// One `[[kinds]]` entry: the kind name plus the folder its declarations live in
 /// and the human title `grund id` prints (§FS-config.3.4). When `file` is set,
 /// every declaration of this kind must live in that exact file — a *single-file
@@ -118,7 +126,7 @@ impl KindConfig {
     /// with no `folder` or with `index = false` (§FS-config.3.4). Joined onto
     /// `folder`, because the key names a file *in* the folder it indexes, which
     /// is what `kind_index_name_error` holds the value to.
-    fn index_path(&self) -> Option<PathBuf> {
+    pub(crate) fn index_path(&self) -> Option<PathBuf> {
         if !self.citable {
             return None;
         }

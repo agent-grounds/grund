@@ -130,7 +130,7 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// stance of §AR-scanner.5.
 /// The pattern one alias segment must match (§FS-workspace.1, §AR-workspace.2).
 /// One canonical place — also referenced by the config-load alias validator
-/// (`is_valid_project_alias` in `config.rs`).
+/// (`is_valid_project_alias` in `config/parse.rs`).
 const PROJECT_ALIAS_PATTERN: &str = "[a-z][a-z0-9-]*";
 /// The namespace a qualified citation carries: one alias segment per workspace
 /// level, so a project nested inside a member workspace is named by its whole
@@ -193,7 +193,7 @@ impl Grammar {
     /// on declaration/section regexes is §AR-scanner.4 (declarations live in code
     /// doc-comments too).
     ///
-    /// The `/` rejections repeat `config.rs` because the whole namespace grammar
+    /// The `/` rejections repeat `config/parse.rs` because the whole namespace grammar
     /// rests on "an ID never contains `/`". Each component pattern is compiled on
     /// its own because two patterns whose parentheses balance only against each
     /// other — `number_pattern = "("` with `slug_pattern = "a)"` — compile fine as
@@ -223,7 +223,7 @@ impl Grammar {
             return Err(anyhow!("[id] grammar needs at least one [[kinds]] entry"));
         }
         // §FS-config.3.2: the "an ID never contains `/`" invariant, enforced over
-        // every component an ID is built from. `config.rs` rejects each key at its
+        // every component an ID is built from. `config/parse.rs` rejects each key at its
         // own line first; this is the backstop for a `Config` assembled in code.
         if let Some(message) = id_grammar_literal_slash_error("[id].format", format) {
             return Err(anyhow!("{message}"));

@@ -1,14 +1,24 @@
+//! Config *discovery*: which file governs a directory, and where the walk stops
+//! (§FS-config.1, §DF-config-file-location). Kept apart from the reader in
+//! `parse.rs` because the two answer different questions — "which file" versus
+//! "what does this file say" — and only this half knows there are two names
+//! (§AR-core-module-layout.1).
+
+use anyhow::Result;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::parse::parse_config_file;
+use super::record::Config;
+// §AR-system.4: path rendering for a report is the renderer's
+// (§AR-system.2.9) — read through the crate root until `output` is a module.
+use crate::relative_from_base;
+
 /// The two names one directory may hold its config under, in probe order
 /// (§FS-config.1): the bare root-visible `grund.toml` first, then
 /// `.agents/grund.toml`. Fixed order, not a search — §DF-config-file-location.2.2
 /// gives the tie to the form `grund init` generates, so the file a project is
 /// told to write is the file that governs it.
-///
-/// Config *discovery*: which file governs a directory, and where the walk stops
-/// (§FS-config.1, §DF-config-file-location). Kept apart from the parser in
-/// `config.rs` because the two answer different questions — "which file" versus
-/// "what does this file say" — and only this half knows there are two names
-/// (§AR-core-module-layout.1).
 const CONFIG_NAMES: [&[&str]; 2] = [&["grund.toml"], &[".agents", "grund.toml"]];
 
 /// Every config name `dir` actually carries, in precedence order (§FS-config.1).
@@ -23,14 +33,18 @@ const CONFIG_NAMES: [&[&str]; 2] = [&["grund.toml"], &[".agents", "grund.toml"]]
 fn config_files_in(dir: &Path) -> impl Iterator<Item = PathBuf> + use<'_> {
     CONFIG_NAMES
         .iter()
-        .map(|segments| segments.iter().fold(dir.to_path_buf(), |acc, s| acc.join(s)))
+        .map(|segments| {
+            segments
+                .iter()
+                .fold(dir.to_path_buf(), |acc, s| acc.join(s))
+        })
         .filter(|candidate| candidate.is_file())
 }
 
 /// The config file `dir` carries, or `None` — the one probe every discovery site
 /// funnels through, so root and workspace member ask the same question
 /// (§FS-config.1).
-fn config_file_in(dir: &Path) -> Option<PathBuf> {
+pub(crate) fn config_file_in(dir: &Path) -> Option<PathBuf> {
     config_files_in(dir).next()
 }
 
@@ -50,7 +64,7 @@ fn redundant_config_file_in(dir: &Path) -> Option<PathBuf> {
 /// answer is a fact about the pair of names rather than about how it reads. The
 /// directory two components up is the config root, which the move leaves where
 /// it is: relative paths never resolved against `.agents/` (§FS-config.1).
-fn home_form_of(config_file: &Path) -> Option<PathBuf> {
+pub(crate) fn home_form_of(config_file: &Path) -> Option<PathBuf> {
     let deprecated: PathBuf = CONFIG_NAMES[1].iter().collect();
     if !config_file.ends_with(deprecated) {
         return None;
@@ -67,7 +81,7 @@ fn home_form_of(config_file: &Path) -> Option<PathBuf> {
 /// Why the fallback root is the working directory: `[scan] include` must resolve
 /// against the repository, so `grund check src/` scopes *into* `src/` instead of
 /// looking for `src/docs`, `src/e2e`, `src/src`.
-fn load_config(start: &Path) -> Result<Config> {
+pub(crate) fn load_config(start: &Path) -> Result<Config> {
     let start_dir = if start.is_file() {
         start.parent().unwrap_or(Path::new(".")).to_path_buf()
     } else {
@@ -102,7 +116,7 @@ fn load_config(start: &Path) -> Result<Config> {
 /// Load the config rooted at `root` (no upward walk), using `cli_base` for
 /// path rendering. The one shared loader both upward discovery (`load_config`)
 /// and direct workspace-member loading funnel through (§AR-workspace.5.1).
-fn load_config_at(root: &Path, cli_base: &Path) -> Result<Config> {
+pub(crate) fn load_config_at(root: &Path, cli_base: &Path) -> Result<Config> {
     load_config_at_with_report_base(root, cli_base, None)
 }
 
@@ -114,7 +128,7 @@ fn load_config_at(root: &Path, cli_base: &Path) -> Result<Config> {
 /// climb, and that renders with `..` so the reader lands on the file that holds the
 /// offending line rather than on a same-named one in their own directory
 /// (§FS-workspace.6.1).
-fn load_config_at_with_report_base(
+pub(crate) fn load_config_at_with_report_base(
     root: &Path,
     cli_base: &Path,
     report_base: Option<&Path>,
@@ -139,7 +153,8 @@ fn load_config_at_with_report_base(
     };
     // §FS-check.4.3: the loser of a two-name tie is recorded, not read, so every
     // surface that reports on the config can name the file grund ignored.
-    config.redundant_config_file = redundant_config_file_in(&root).map(|path| report_relative(&path));
+    config.redundant_config_file =
+        redundant_config_file_in(&root).map(|path| report_relative(&path));
     if let Some(candidate) = candidate {
         let report_path = report_relative(&candidate);
         config.config_file = Some(report_path.clone());

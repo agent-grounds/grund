@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use std::path::PathBuf;
 
-use super::records::{Config, Id};
+use super::records::Id;
 
 /// Exact component classification and equality for first-class values
 /// (§FS-values.2, §FS-values.4). Decimals stay as normalized coefficient and
@@ -77,13 +77,6 @@ pub struct InvalidValueSite {
 
 pub(crate) static JSON_NUMBER_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$").unwrap());
-
-pub(crate) fn kind_uses_values(config: &Config, kind: &str) -> bool {
-    config
-        .kinds
-        .iter()
-        .any(|configured| configured.kind == kind && configured.values)
-}
 
 pub(crate) fn component_text_is_valid(text: &str) -> bool {
     !text.is_empty()

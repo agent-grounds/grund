@@ -6,12 +6,12 @@ use super::comment_line::{
     remove_inline_citation_tokens, strip_comment_tokens,
 };
 use crate::model::{
-    CheckReport, Citation, Config, Diagnostic, Findings, InlineCitationSite,
-    WorkspaceCitationTarget,
+    CheckReport, Citation, Diagnostic, Findings, InlineCitationSite, WorkspaceCitationTarget,
 };
-// §AR-system.4: `plural` is a message helper of the writers component above,
-// reachable through the crate root until it moves.
-use crate::plural;
+// §AR-system.4: `Config` is config's own record and `plural` a message helper of
+// the writers component, both above this one and reachable through the crate
+// root until they move.
+use crate::{Config, plural};
 
 /// The layouts `[reference] inline_note_layout` selects, as the two dimensions a
 /// value picks: where the citation run sits on the line, and what separates it
