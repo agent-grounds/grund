@@ -3,6 +3,14 @@
 /// The checker takes the `Findings` produced by §AR-scanner and produces a
 /// `CheckReport`. It implements the rules in §FS-check.
 ///
+/// ## placement: Where the checker sits
+///
+/// The sixth box of the pipeline (§AR-system.2.6). It takes `Findings` from the
+/// scanner (§AR-system.2.5) and the config it needs to resolve them, and gives
+/// one `Report` to the api (§AR-system.2.9), which every frontend renders
+/// unchanged. It knows no frontend and reads no file, except in the two rules
+/// below that must re-read one (§2.5, §2.16).
+///
 /// ## 1. Inputs and outputs
 ///
 /// - Input: `Findings` from the scanner, plus the repo root and config (needed

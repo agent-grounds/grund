@@ -2,55 +2,39 @@
 
 The core implementation lives in `crates/grund-core/src/`, while `crates/grund-cli/src/main.rs` is the published `grund` CLI entrypoint described by [§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms). Inside `grund-core`, the source layout should match the same category boundaries the later LSP and binding frontends need. A single large crate root hides ownership and makes spec-to-code citations harder to place.
 
+## placement: Where the file layout sits
+
+Not a component: the rule for how the engine's files are named, owned and sized, whichever component they implement. It takes the component list of [§AR-system.2](README.md#2-components) and gives each file exactly one owner among the categories below, which is what a reader and `fissile` need to find and bound a file ([§AR-system.5](README.md#5-what-holds-the-shape)). It says nothing about what a component may know; that is [§AR-system.4](README.md#4-dependency-direction).
+
 ## 1. Module categories
 
 `crates/grund-core/src/lib.rs` stays the engine crate entrypoint and public Rust API surface (`check`, `show`, `scan`, and the shared data types), while implementation code lives in smaller category files under `crates/grund-core/src/`.
 
-The categories are:
-
-- **model** — shared data types and tiny helpers used across commands, including value declaration/binding records and exact-decimal components ([§FS-values.2](../functional-spec/FS-values.md#2-value-declarations), [§FS-values.4](../functional-spec/FS-values.md#4-exact-equality)).
-- **config** — defaults, config discovery, config parsing, and TOML rendering helpers.
-- **scanner** — tree walking, per-file scanning, e2e case discovery, scan error handling, and span-preserving home JSON ingestion.
-- **checker** — validation rules that turn scanner findings into diagnostics, including the focused value-check pass.
-- **output** — shared path formatting, JSON escaping, diagnostics, and report rendering.
-- **show** — declaration and section retrieval/rendering.
-- **refs** — reverse-reference query rendering.
-- **cover** — per-file citation coverage query rendering.
-- **list** — declaration catalog query rendering.
-- **fmt** — citation normalization and cross-reference planning/writing.
-- **id** — ID allocation, slug derivation, and ID rendering.
-- **init** — scaffold/template rendering, agent-entrypoint selection ([§FS-init.2.1](../functional-spec/FS-init.md#21-files-written-updated-or-left-in-place): which entrypoints a repository has, and which of them one run writes, appends to, or updates), and managed agent-entrypoint updates.
-- **completions** — shell completion scripts and dynamic completion helpers.
-- **api** — public embedding API that runs the engine without CLI argument parsing or stdout/stderr rendering.
-- **grammar** — the ID grammar and the lexical helpers the scanner, checker and formatter share: fenced-block, comment-line, and comment-block recognition — which marker opens a block, where it ends, and whether it is a doc comment or an inline comment — number-only shorthand, the inline-note layout rules, and the never-rewrite context predicates ([§FS-fmt.2.3](../functional-spec/FS-fmt.md#23-what-is-never-rewritten)) shared by the scanner, `fmt`, and the LSP on-type path.
-- **workspace** — `[workspace]` expansion, member claims, scope narrowing, and the multi-project scan context.
-- **integrations** — the clickable-citation client artifacts and their managed writes.
-- **lsp** — the snapshot-backed hover and on-type helpers `grund-lsp` calls, kept here so the server stays a transport.
-- **compat** — the deprecated `main_entry()` command adapters kept for 0.4 consumers ([§AR-bindings.2](AR-bindings.md#2-grund-core-the-only-place-logic-lives)); the `*_cmd` files beside `checker`, `config` and `fmt` are the same path's per-command halves.
+What each category implements, consumes and must not know is its component's subsection in [§AR-system.2](README.md#2-components), and the table's third column says which. The categories are the file-name prefixes below.
 
 A file belongs to the category whose prefix its name carries — `scanner_walk.rs` to **scanner**, `init_block.rs` to **init** — and `lib.rs` is the one file outside them, as the crate entrypoint. The prefixes each category owns:
 
-| Category | File-name prefixes |
-|---|---|
-| **model** | `model`, `values` |
-| **config** | `config` |
-| **scanner** | `scanner`, `value_json` |
-| **checker** | `checker` |
-| **output** | `output` |
-| **show** | `show` |
-| **refs** | `refs` |
-| **cover** | `cover` |
-| **list** | `list` |
-| **fmt** | `fmt` |
-| **id** | `id` |
-| **init** | `init` |
-| **completions** | `completions` |
-| **api** | `api` |
-| **grammar** | `grammar`, `markdown_fence`, `comment_line`, `comment_block`, `shorthand`, `inline_note_layout`, `never_rewrite` |
-| **workspace** | `workspace` |
-| **integrations** | `integrations`, `fetch`, `fetch_write` |
-| **lsp** | `lsp`, `on_type` |
-| **compat** | `compat` |
+| Category | File-name prefixes | Component |
+|---|---|---|
+| **model** | `model`, `values` | [§AR-system.2.2](README.md#22-model) |
+| **config** | `config` | [§AR-system.2.3](README.md#23-config) |
+| **scanner** | `scanner`, `value_json` | [§AR-system.2.5](README.md#25-scanner) |
+| **checker** | `checker` | [§AR-system.2.6](README.md#26-checker) |
+| **output** | `output` | [§AR-system.2.9](README.md#29-api) |
+| **show** | `show` | [§AR-system.2.7](README.md#27-queries) |
+| **refs** | `refs` | [§AR-system.2.7](README.md#27-queries) |
+| **cover** | `cover` | [§AR-system.2.7](README.md#27-queries) |
+| **list** | `list` | [§AR-system.2.7](README.md#27-queries) |
+| **fmt** | `fmt` | [§AR-system.2.8](README.md#28-writers) |
+| **id** | `id` | [§AR-system.2.8](README.md#28-writers) |
+| **init** | `init` | [§AR-system.2.8](README.md#28-writers) |
+| **completions** | `completions` | [§AR-system.2.7](README.md#27-queries) |
+| **api** | `api` | [§AR-system.2.9](README.md#29-api) |
+| **grammar** | `grammar`, `markdown_fence`, `comment_line`, `comment_block`, `shorthand`, `inline_note_layout`, `never_rewrite` | [§AR-system.2.1](README.md#21-grammar) |
+| **workspace** | `workspace` | [§AR-system.2.4](README.md#24-workspace) |
+| **integrations** | `integrations`, `fetch`, `fetch_write` | [§AR-system.2.8](README.md#28-writers) |
+| **lsp** | `lsp`, `on_type` | [§AR-system.2.7](README.md#27-queries) |
+| **compat** | `compat` | [§AR-system.2.9](README.md#29-api) |
 
 `tests/integration/test_module_categories.py` holds this table against the tree: every implementation file owned by exactly one row, every prefix owning a file.
 

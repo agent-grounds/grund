@@ -2,6 +2,10 @@
 
 The CI workflow is the remote form of the local pre-commit gate. Anything that can abort a local commit must also abort CI, so a contributor cannot bypass the repository's local checks by skipping hooks or editing through a web UI. This supports [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) and keeps the link-checking boundary from [§FS-non-goals.1](../functional-spec/FS-non-goals.md#1-markdown-link-validation) enforced alongside `grund check`.
 
+## placement: What CI measures
+
+Not a component: CI is the remote form of the local gate over the whole tree, and it measures the system rather than sits in it ([§AR-system.5](README.md#5-what-holds-the-shape)). It takes the pre-commit hook list and gives one verdict per push or pull request. The only `grund` it runs is the one the tree builds, through `cargo run`, so the gate never depends on a released binary; it knows nothing of the pipeline ([§AR-system.1](README.md#1-the-pipeline)) beyond the commands the hooks spell (section 1).
+
 ## 1. Pre-commit is the source of truth
 
 The hook list lives in `.pre-commit-config.yaml`. CI must invoke that list directly with `pre-commit run --all-files`, rather than hand-copying each hook into separate workflow steps. The workflow may install hook prerequisites first, but the set of checks is defined by the pre-commit config.

@@ -2,16 +2,13 @@
 
 Implements [§FS-lsp](../functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server). The LSP server is a separate crate (`grund-lsp`) in the workspace defined by [§AR-bindings.1](AR-bindings.md#1-target-workspace-layout), depending only on `grund-core`. It has no shared runtime with `grund-cli`, no shared state with the bindings, and no own engine logic — everything it does delegates to `grund-core`.
 
+## placement: Where the LSP server sits
+
+A frontend ([§AR-system.3](README.md#3-frontends)): a binary that depends on `grund-core` and on nothing of `grund-cli`. It takes LSP requests over stdio and gives back what the api's editor queries return ([§AR-system.2.7](README.md#27-queries), [§AR-system.2.9](README.md#29-api)) — the snapshot, the hover body, the on-type edits — and the check report as diagnostics. It has no scanner, no checker, no `show` extraction and no `fmt` planning of its own: all four are imports from `grund-core`. It has no filesystem walk outside `grund-core::scan` and no second config loader: batch rendering calls `grund-core` for upward discovery and effective scan extensions, and a focused integration module owns only deterministic rendering and conflict-safe materialization. And `grund-core` has no `lsp-server` or `lsp-types` reference — the JSON-RPC loop and the protocol types live entirely here, and `grund-cli` stays synchronous and pulls none of it in — which is what keeps the server optional ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary), [§AR-system.4](README.md#4-dependency-direction)).
+
 ## 1. Crate boundary
 
-`grund-lsp` is a binary crate with one product boundary: the optional server and the editor-client configuration that launches it. Its no-argument path speaks LSP over stdio and translates each request into a `grund-core` call; a thin pre-transport batch path lists, renders, or materializes the embedded integration artifacts of [§FS-lsp.2.4](../functional-spec/FS-lsp.md#24-installed-editor-integrations). The crate has:
-
-- No scanner, no checker, no `show` extraction, no `fmt` planning. All four are imports from `grund-core`.
-- No `lsp-server`/`lsp-types` references in `grund-core`. The JSON-RPC loop and LSP protocol data types live entirely in `grund-lsp`. `grund-cli` continues to be synchronous and pulls none of this in.
-- No filesystem walking outside what `grund-core::scan` already does. The LSP server does not invent its own walker.
-- No second config loader. Batch rendering calls `grund-core` for upward discovery and effective scan extensions, while a focused integration module owns only deterministic rendering and conflict-safe materialization.
-
-This is the architectural shape that lets the LSP be optional ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary)): the dependency cost stays in `grund-lsp`, and a user installing only `grund` (the CLI) pays none of it.
+`grund-lsp` is a binary crate with one product boundary: the optional server and the editor-client configuration that launches it. Its no-argument path speaks LSP over stdio and translates each request into a `grund-core` call; a thin pre-transport batch path lists, renders, or materializes the embedded integration artifacts of [§FS-lsp.2.4](../functional-spec/FS-lsp.md#24-installed-editor-integrations). What the crate does not contain is its placement chapter above; the dependency cost stays in `grund-lsp`, and a user installing only `grund` (the CLI) pays none of it ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary)).
 
 ## 2. State
 

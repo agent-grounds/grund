@@ -656,7 +656,7 @@ pub struct LspCitation {
 
 /// Programmatic snapshot for `grund-lsp`: all scanner-derived declaration and
 /// citation ranges plus their resolved navigation targets. This keeps the LSP
-/// transport from re-implementing the reference grammar (§AR-lsp.1).
+/// transport from re-implementing the reference grammar (§AR-lsp.placement).
 pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
     let overlays = normalized_overlays(opts.open_documents);
     // §FS-lsp.1.1: classify citing sides so the citation-direction checks
