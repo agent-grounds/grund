@@ -1,3 +1,7 @@
+use std::path::PathBuf;
+
+use super::records::Id;
+
 /// One section-like heading rejected from a declaration's shared coordinate
 /// maps because it lies beyond that declaration's body (§FS-show.2.1.2).
 pub struct SectionHeadingOutsideDeclaration {
@@ -25,13 +29,13 @@ pub struct UnmarkedHeading {
 /// A fence-filtered Markdown heading awaiting body ownership and coordinate
 /// assignment after all declarations and sections in its file are known
 /// (§AR-scanner.2.2).
-struct UnmarkedHeadingCandidate {
-    file: PathBuf,
-    line: usize,
-    column: usize,
-    heading: String,
-    heading_level: usize,
-    title: String,
+pub(crate) struct UnmarkedHeadingCandidate {
+    pub(crate) file: PathBuf,
+    pub(crate) line: usize,
+    pub(crate) column: usize,
+    pub(crate) heading: String,
+    pub(crate) heading_level: usize,
+    pub(crate) title: String,
 }
 
 /// One heading that opens with a configured kind and the literal an ID puts

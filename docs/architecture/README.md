@@ -63,7 +63,7 @@ Consumes text. Produces the lexical facts every other component shares: the ID g
 
 ### 2.2 model
 
-Consumes nothing. Produces the data every component passes along: `Findings`, `Declaration`, `Citation`, `Report`, and the value records ([§FS-values.2](../functional-spec/FS-values.md#2-value-declarations)). Knows nothing else; it is types and tiny helpers. Categories: `model`, `values`.
+Consumes nothing. Produces the data every component passes along: `Findings`, `Declaration`, `Citation`, `Report`, and the value records ([§FS-values.2](../functional-spec/FS-values.md#2-value-declarations)). Knows nothing else; it is types and tiny helpers. Module: `crates/grund-core/src/model/`.
 
 ### 2.3 config
 

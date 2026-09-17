@@ -10,6 +10,16 @@ use std::path::{Component, Path, PathBuf};
 use std::process::ExitCode;
 use unicode_normalization::UnicodeNormalization;
 
+// §AR-system.2.2: the model component is one Rust module, so its records are
+// declared in `model/` and what crosses the boundary is what `model/mod.rs`
+// re-exports (§AR-core-module-layout.1).
+mod model;
+// Temporary re-export for the duration of this migration: it keeps every name
+// the flat crate root exposed reachable at `grund_core::<name>` while the other
+// components are still `include!`d flat. The finalize task replaces it with an
+// explicit list.
+pub use model::*;
+
 // §AR-bindings.1: `grund-core` is the shared implementation crate used by the
 // published `grund` CLI and, next, the optional LSP server. The category files
 // are still included flat to keep this first package split behavior-preserving.
@@ -19,11 +29,7 @@ include!("id_format.rs");
 include!("id_grammar_rules.rs");
 include!("shorthand.rs");
 include!("shorthand_fmt_targets.rs");
-include!("model.rs");
-include!("model_headings.rs");
 include!("config_kind_model.rs");
-include!("model_e2e.rs");
-include!("values.rs");
 include!("value_json.rs");
 include!("config_discovery.rs");
 include!("config.rs");

@@ -1,3 +1,21 @@
+use anyhow::{Result, anyhow};
+use std::collections::BTreeMap;
+use std::path::{Component, Path, PathBuf};
+
+use super::e2e::E2eCase;
+use super::headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
+use super::values::{
+    DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
+};
+// Upward reads §AR-system.4 forbids once their owners are modules, kept working
+// through the crate root until then; `Grammar` and the scan tables are grammar's.
+use crate::{
+    AbsentOptionalNamespace, DEFAULT_COMMENT_PREFIXES, DEFAULT_INCLUDE, DEFAULT_KINDS,
+    DEFAULT_SCAN_EXTENSIONS, FileStructure, Grammar, KindConfig, LeadSizeWarning,
+    default_kind_citable, default_kind_file, default_kind_folder, default_kind_index,
+    default_kind_title, render_id,
+};
+
 /// A parsed ID: its kind plus whichever of `{number}` / `{slug}` the configured
 /// `[id] format` carries (§FS-config.3.2).
 ///
@@ -19,7 +37,7 @@ impl Id {
     /// the configured authoring grammar (§FS-config.3.2). The spelling lives in
     /// the otherwise grammar-owned slug slot behind an impossible sentinel, so
     /// existing `Id` construction and kind-based graph rules stay unchanged.
-    fn legacy(kind: String, spelling: &str) -> Self {
+    pub(crate) fn legacy(kind: String, spelling: &str) -> Self {
         Self {
             kind,
             num: None,
@@ -27,7 +45,7 @@ impl Id {
         }
     }
 
-    fn legacy_spelling(&self) -> Option<&str> {
+    pub(crate) fn legacy_spelling(&self) -> Option<&str> {
         self.slug
             .as_deref()
             .and_then(|slug| slug.strip_prefix(LEGACY_ID_SENTINEL))
@@ -163,16 +181,16 @@ pub struct Citation {
 /// the same file scan until the project catalog can prove it names an exact
 /// persisted declaration (§FS-check.1.1, §FS-config.3.2).
 #[derive(Debug)]
-struct LegacyCitationCandidate {
-    namespace: Option<String>,
-    tail: String,
-    file: PathBuf,
-    line: usize,
-    column: usize,
-    inline_site: Option<InlineCitationSite>,
-    inline_block_lines: Option<std::sync::Arc<[String]>>,
-    source_kind: String,
-    enclosing_declaration: Option<Id>,
+pub(crate) struct LegacyCitationCandidate {
+    pub(crate) namespace: Option<String>,
+    pub(crate) tail: String,
+    pub(crate) file: PathBuf,
+    pub(crate) line: usize,
+    pub(crate) column: usize,
+    pub(crate) inline_site: Option<InlineCitationSite>,
+    pub(crate) inline_block_lines: Option<std::sync::Arc<[String]>>,
+    pub(crate) source_kind: String,
+    pub(crate) enclosing_declaration: Option<Id>,
 }
 
 /// The enclosing source-comment citation site for one citation
@@ -216,12 +234,12 @@ pub struct InlineCitationSite {
 }
 
 #[derive(Clone)]
-struct WorkspaceCitationTarget {
-    alias: String,
-    config: Config,
+pub(crate) struct WorkspaceCitationTarget {
+    pub(crate) alias: String,
+    pub(crate) config: Config,
 }
 
-type TextOverlays = BTreeMap<PathBuf, String>;
+pub(crate) type TextOverlays = BTreeMap<PathBuf, String>;
 
 /// Everything the scanner found in one tree walk — declarations grouped by ID
 /// (so duplicates surface, §FS-check.3.3) and citations in encounter order. This
@@ -240,7 +258,7 @@ pub struct Findings {
     /// §AR-scanner.2.2). The scanner assigns the owner and a collision-free
     /// suggested coordinate before any checker consumes this list.
     pub unmarked_headings: Vec<UnmarkedHeading>,
-    legacy_citation_candidates: Vec<LegacyCitationCandidate>,
+    pub(crate) legacy_citation_candidates: Vec<LegacyCitationCandidate>,
     pub value_bindings: Vec<ValueBinding>,
     pub invalid_value_declarations: Vec<InvalidValueSite>,
     pub invalid_value_bindings: Vec<InvalidValueSite>,
@@ -278,7 +296,7 @@ pub struct Findings {
 /// adds every subsection body. `Outline` is an internal-only mode used by `Toc`
 /// to collect the section map; the CLI does not expose it.
 #[derive(Clone, Copy, Eq, PartialEq)]
-enum ShowRenderMode {
+pub(crate) enum ShowRenderMode {
     Brief,
     Default,
     Toc,
@@ -291,7 +309,6 @@ pub struct ShowSection {
     pub title: String,
     pub depth: usize,
 }
-
 
 #[derive(Clone)]
 pub struct ConfigLocation {
@@ -556,14 +573,14 @@ pub struct Config {
 /// repositories and the wrong one for a Terraform, SQL, or prose tree, so a
 /// project may declare the homeless kind itself and name it (`src`,
 /// `modules`, …). See [`Config::homeless_kind`].
-const CODE_SOURCE_KIND: &str = "code";
+pub(crate) const CODE_SOURCE_KIND: &str = "code";
 /// The default `grounding_level` (§FS-config.3.4.8): the file — the H1's own
 /// subtree, so one citation anywhere under it. It is the unit every config had
 /// before the key existed, which is what keeps the key additive.
-const DEFAULT_GROUNDING_LEVEL: usize = 1;
+pub(crate) const DEFAULT_GROUNDING_LEVEL: usize = 1;
 /// The heading levels a `grounding_level` may name (§FS-config.3.4.8). Markdown
 /// has six, and a value outside them names no heading.
-const GROUNDING_LEVELS: std::ops::RangeInclusive<usize> = 1..=6;
+pub(crate) const GROUNDING_LEVELS: std::ops::RangeInclusive<usize> = 1..=6;
 const DEFAULT_ID_FORMAT: &str = "{kind}-{number}-{slug}";
 const DEFAULT_SECTION_SEPARATOR: &str = ".";
 const DEFAULT_NUMBER_PATTERN: &str = r"\d+";
@@ -573,7 +590,7 @@ impl Config {
     /// The built-in defaults — the canonical grammar a conformant tree gets with
     /// no config at all (§FS-config.2, §GOAL-zero-config). `grund init`
     /// writes these same values out verbatim as a teaching surface (§FS-init.2.4).
-    fn default_for(root: PathBuf) -> Self {
+    pub(crate) fn default_for(root: PathBuf) -> Self {
         let kinds: Vec<KindConfig> = DEFAULT_KINDS
             .iter()
             .map(|kind| KindConfig {
@@ -692,7 +709,7 @@ impl Config {
     /// New zero-config projects and freshly generated configs use
     /// [`Config::default_for`]; existing configs without explicit kind homes keep
     /// the old implicit FS folder until they opt into `file = "requirements.md"`.
-    fn default_for_existing_config(root: PathBuf) -> Self {
+    pub(crate) fn default_for_existing_config(root: PathBuf) -> Self {
         let mut config = Self::default_for(root);
         if let Some(fs_kind) = config.kinds.iter_mut().find(|kind| kind.kind == "FS") {
             fs_kind.folder = Some("docs/functional-spec".to_string());
@@ -704,14 +721,14 @@ impl Config {
     /// The homeless kind for this config (§FS-config.3.9.2) — the citing kind
     /// every site outside every configured home resolves to. The declared entry
     /// when the table has one, else the reserved `code`.
-    fn homeless_kind(&self) -> &str {
+    pub(crate) fn homeless_kind(&self) -> &str {
         declared_homeless_kind(&self.kinds).map_or(CODE_SOURCE_KIND, |kind| kind.kind.as_str())
     }
 
     /// Recompile the `Grammar` after `[id]` / `[[kinds]]` / `[scan].comment_prefixes`
     /// keys are read from a config file (§FS-config.3) — keeps the regexes and the
     /// scalar config in lockstep.
-    fn rebuild_grammar(&mut self) -> Result<()> {
+    pub(crate) fn rebuild_grammar(&mut self) -> Result<()> {
         self.grammar = Grammar::build(
             &self.id_format,
             &self.kinds,
@@ -729,7 +746,7 @@ impl Config {
 /// *citable* kind, in `[[kinds]]` order. A non-citable kind declares no IDs, so
 /// its name never tokenizes and never enters the grammar, the `KIND ∈ {…}`
 /// vocabulary, or the kind lists `grund id` and `grund list --kind` accept.
-fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
+pub(crate) fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
     kinds
         .iter()
         .filter(|kind| kind.citable)
@@ -742,7 +759,7 @@ fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
 /// in `[[kinds]]` that will never have a declaration — so the message says that
 /// rather than calling it unknown, and names the home, which is the thing the
 /// caller can actually go and open.
-fn non_citable_kind_error(kind: &KindConfig) -> String {
+pub(crate) fn non_citable_kind_error(kind: &KindConfig) -> String {
     match kind.place_label() {
         Some(place) => format!(
             "kind `{}` declares no IDs — {place} is not a citable home",
@@ -757,7 +774,7 @@ fn non_citable_kind_error(kind: &KindConfig) -> String {
 /// not declare the homeless kind itself. A config that names its complement
 /// `src` has no `code`, and `[citations.code]` in it is a rule about nothing
 /// (§FS-config.3.9.2).
-fn citing_kind_names(kinds: &[KindConfig]) -> Vec<&str> {
+pub(crate) fn citing_kind_names(kinds: &[KindConfig]) -> Vec<&str> {
     let named = declared_homeless_kind(kinds).is_some();
     kinds
         .iter()
@@ -770,47 +787,10 @@ fn citing_kind_names(kinds: &[KindConfig]) -> Vec<&str> {
 /// (§FS-config.3.9.2): non-citable, and with no `folder` or `file`, because it
 /// is the complement of every home rather than one of them. At most one entry
 /// can be this, which the config validator holds.
-fn declared_homeless_kind(kinds: &[KindConfig]) -> Option<&KindConfig> {
+pub(crate) fn declared_homeless_kind(kinds: &[KindConfig]) -> Option<&KindConfig> {
     kinds
         .iter()
         .find(|kind| !kind.citable && kind.folder.is_none() && kind.file.is_none())
-}
-
-/// A secondary location attached to a diagnostic — e.g. the other declaration in a
-/// duplicate pair, or the citation that pointed at a missing section (§FS-errors.2.1).
-#[derive(Clone)]
-struct Site {
-    path: PathBuf,
-    line: usize,
-}
-
-/// One finding in the located-finding shape of §FS-errors.2.1: a fixed `code`, the
-/// `path:line` it occurred at, the message text, and any cross-reference `sites`.
-/// `column` is the 1-based start column of the offending token when the finding
-/// concerns a specific citation, so a consumer can anchor on that token rather
-/// than the first one on the line (§FS-lsp.1.1); it is `None` for line-anchored
-/// findings.
-struct Diagnostic {
-    code: &'static str,
-    path: Option<PathBuf>,
-    line: Option<usize>,
-    column: Option<usize>,
-    message: String,
-    sites: Vec<Site>,
-}
-
-/// The outcome of `check`: errors and warnings, kept apart so the exit code keys
-/// off errors only (§FS-check.2, §FS-check.4) and the printed order is fixed
-/// (§FS-errors.4, §FS-non-goals.9). `suggestions` is the third, non-severity
-/// advisory channel (§FS-check.2.3, §DF-citation-directions.2.3): the
-/// `should` / `should-not` citation-direction findings, withheld from the
-/// default run and surfaced only under `--suggestions`. It never affects the
-/// exit code.
-#[derive(Default)]
-struct CheckReport {
-    errors: Vec<Diagnostic>,
-    warnings: Vec<Diagnostic>,
-    suggestions: Vec<Diagnostic>,
 }
 
 /// What an ID query resolved to: the body text to print, the `path:line` it
@@ -824,7 +804,7 @@ pub struct ShowOutput {
     pub sections: Vec<ShowSection>,
 }
 
-fn resolve_stub_target(root: &Path, stub_file: &Path, target: &Path) -> PathBuf {
+pub(crate) fn resolve_stub_target(root: &Path, stub_file: &Path, target: &Path) -> PathBuf {
     if target.is_absolute() {
         return target.to_path_buf();
     }
@@ -842,7 +822,7 @@ fn resolve_stub_target(root: &Path, stub_file: &Path, target: &Path) -> PathBuf 
     }
 }
 
-fn normalize_path_lexically(path: &Path) -> PathBuf {
+pub(crate) fn normalize_path_lexically(path: &Path) -> PathBuf {
     let mut normalized = PathBuf::new();
     for component in path.components() {
         match component {
@@ -858,7 +838,7 @@ fn normalize_path_lexically(path: &Path) -> PathBuf {
 
 /// Pull an `Id` out of a `Grammar` regex match — the `kind` / `num` / `slug`
 /// capture groups the `[id] format` defined (§FS-config.3.2, §AR-scanner.2.1).
-fn parse_id(caps: &regex::Captures, grammar: &Grammar) -> Option<Id> {
+pub(crate) fn parse_id(caps: &regex::Captures, grammar: &Grammar) -> Option<Id> {
     if let Some(token) = caps.name("id") {
         return grammar.parse_token(token.as_str());
     }
@@ -875,7 +855,7 @@ fn parse_id(caps: &regex::Captures, grammar: &Grammar) -> Option<Id> {
 
 /// Parse a CLI `<ID>[.<section>]` argument (the form ID queries and `grund refs` take,
 /// §FS-show.1, §FS-refs.1) into an `Id` and an optional section path (§FS-config.3.3).
-fn parse_id_arg(raw: &str, grammar: &Grammar) -> Result<(Id, Option<String>)> {
+pub(crate) fn parse_id_arg(raw: &str, grammar: &Grammar) -> Result<(Id, Option<String>)> {
     let caps = grammar
         .id_input_re
         .captures(raw)
@@ -884,7 +864,7 @@ fn parse_id_arg(raw: &str, grammar: &Grammar) -> Result<(Id, Option<String>)> {
     Ok((id, caps.name("sec").map(|m| m.as_str().to_string())))
 }
 
-fn render_qualified_id(config: &Config, namespace: Option<&str>, id: &Id) -> String {
+pub(crate) fn render_qualified_id(config: &Config, namespace: Option<&str>, id: &Id) -> String {
     match namespace {
         Some(namespace) => format!("{}/{}", namespace, render_id(config, id)),
         None => render_id(config, id),

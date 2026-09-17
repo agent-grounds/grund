@@ -1,8 +1,11 @@
 """§AR-core-module-layout.1 — the source layout matches the category
 boundaries the page names: every implementation file under
-`crates/grund-core/src/` belongs to exactly one category by its file-name
-prefix, every prefix the page lists owns at least one file, and `lib.rs` is
-the one file outside the categories, as the crate entrypoint."""
+`crates/grund-core/src/` belongs to exactly one category, by the module
+directory it sits under or, until its category has one, by its file-name
+prefix; every prefix the page lists owns at least one file; every module
+directory the page names exists and has emptied the top level of its
+category; and `lib.rs` is the one file outside the categories, as the crate
+entrypoint."""
 
 import re
 import unittest
@@ -14,15 +17,36 @@ PAGE = REPO_ROOT / "docs" / "architecture" / "AR-core-module-layout.md"
 CORE = REPO_ROOT / "crates" / "grund-core" / "src"
 ROW = re.compile(r"^\|\s*\*\*([a-z]+)\*\*\s*\|\s*([^|]*?)\s*\|")
 PREFIX = re.compile(r"`([a-z][a-z0-9_]*)`")
+MODULE = re.compile(r"`([a-z][a-z0-9_]*)/`")
 
 
-def _categories():
+def _table():
+    """Every category row: category -> (module directories, file-name prefixes).
+
+    A cell names a module directory as `model/` and a file-name prefix as
+    `model`; the trailing slash is what tells the two apart, so a row that has
+    become a module lists no prefixes and a row that has not lists no
+    directory.
+    """
     table = {}
     for line in PAGE.read_text(encoding="utf-8").splitlines():
         match = ROW.match(line)
         if match:
-            table[match.group(1)] = PREFIX.findall(match.group(2))
+            cell = match.group(2)
+            table[match.group(1)] = (MODULE.findall(cell), PREFIX.findall(cell))
     return table
+
+
+def _categories():
+    return {category: prefixes for category, (_, prefixes) in _table().items()}
+
+
+def _modules():
+    return {
+        category: directories
+        for category, (directories, _) in _table().items()
+        if directories
+    }
 
 
 def _implementation_stems():
@@ -33,21 +57,31 @@ def _implementation_stems():
     )
 
 
+def _claims(stem, names):
+    return any(stem == name or stem.startswith(name + "_") for name in names)
+
+
 def _category_of(stem, table):
-    owners = {
-        category
-        for category, prefixes in table.items()
-        if any(stem == prefix or stem.startswith(prefix + "_") for prefix in prefixes)
-    }
+    """The categories that claim a top-level file.
+
+    A category claims a stem by one of its listed prefixes, and a category that
+    has become a module directory still claims the flat files named after it —
+    so a leftover `model_headings.rs` is reported by the module test as a file
+    that failed to move, rather than by the orphan test as a file nobody owns.
+    """
+    owners = set()
+    for category, (directories, prefixes) in table.items():
+        if _claims(stem, prefixes) or _claims(stem, directories):
+            owners.add(category)
     return owners
 
 
 class ModuleCategoryTests(unittest.TestCase):
     def test_the_page_carries_the_category_table(self):
-        self.assertGreaterEqual(len(_categories()), 14, "category table not found on the page")
+        self.assertGreaterEqual(len(_table()), 14, "category table not found on the page")
 
     def test_every_implementation_file_has_exactly_one_category(self):
-        table = _categories()
+        table = _table()
         problems = []
         for stem in _implementation_stems():
             owners = _category_of(stem, table)
@@ -64,9 +98,29 @@ class ModuleCategoryTests(unittest.TestCase):
                     stale.append(f"{category}: `{prefix}`")
         self.assertEqual([], stale, "\n".join(stale))
 
+    def test_every_module_directory_holds_its_category(self):
+        problems = []
+        for category, directories in _modules().items():
+            for directory in directories:
+                path = CORE / directory
+                if not path.is_dir():
+                    problems.append(f"{category}: `{directory}/` is not a directory")
+                elif not any(path.glob("*.rs")):
+                    problems.append(f"{category}: `{directory}/` holds no .rs file")
+        self.assertEqual([], problems, "\n".join(problems))
+
+    def test_a_module_directory_leaves_no_file_of_its_category_flat(self):
+        stale = []
+        for category, directories in _modules().items():
+            for stem in _implementation_stems():
+                if _claims(stem, directories):
+                    stale.append(f"{category}: {stem}.rs is still at the crate root")
+        self.assertEqual([], stale, "\n".join(stale))
+
     def test_lib_rs_is_the_entrypoint_outside_the_categories(self):
         self.assertTrue((CORE / "lib.rs").is_file())
-        self.assertNotIn("lib", {p for ps in _categories().values() for p in ps})
+        named = {name for names, prefixes in _table().values() for name in (*names, *prefixes)}
+        self.assertNotIn("lib", named)
 
 
 if __name__ == "__main__":
