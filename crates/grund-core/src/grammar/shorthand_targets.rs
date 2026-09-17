@@ -1,10 +1,11 @@
 use std::collections::BTreeMap;
 
 use super::shorthand::ShorthandIndex;
-use crate::model::{Config, Findings};
-// §AR-system.4: `WorkspaceContext` is the workspace component's, one above this
-// one, and stays reachable through the crate root until it moves.
-use crate::WorkspaceContext;
+use crate::model::Findings;
+// §AR-system.4: `Config` is config's own record and `WorkspaceContext` the
+// workspace component's, both above this one and reachable through the crate
+// root until they move.
+use crate::{Config, WorkspaceContext};
 
 /// Everything one `grund fmt` walk needs to expand a shorthand: this project's
 /// declaration index, plus one per workspace alias for the qualified form

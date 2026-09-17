@@ -67,7 +67,7 @@ Consumes nothing. Produces the data every component passes along: `Findings`, `D
 
 ### 2.3 config
 
-Consumes `grund.toml` and the defaults. Produces one validated `Config` per project ([§FS-config](../functional-spec/FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)). Knows nothing of the tree it describes. Categories: `config`.
+Consumes `grund.toml` and the defaults. Produces one validated `Config` per project ([§FS-config](../functional-spec/FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)). Knows nothing of the tree it describes. Module: `crates/grund-core/src/config/`.
 
 ### 2.4 workspace
 

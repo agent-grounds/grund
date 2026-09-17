@@ -1,6 +1,15 @@
+use anyhow::{Result, anyhow};
+use std::path::Path;
+
+use super::parse::{bail_config, parse_string, parse_usize};
+// §AR-system.4: `format_path` renders a path for a report and is the renderer's
+// (§AR-system.2.9) — read through the crate root until `output` is a module.
+use crate::format_path;
+
 /// The closed built-in point-size vocabulary and its opt-in warning policy
-/// (§FS-list.3.4, §FS-config.3.1). These config-facing types stay with the
-/// parser so the general model remains reserved for scan and declaration data.
+/// (§FS-list.3.4, §FS-config.3.1). These config-facing types stay in this
+/// component so the general model remains reserved for scan and declaration
+/// data (§AR-system.2.2, §AR-system.2.3).
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum PointSizeUnit {
     Lines,
@@ -36,13 +45,16 @@ pub struct LeadSizeWarning {
 /// Parse the one inline table in grund's line-oriented config surface
 /// (§FS-config.3.1). Keeping this parser specific makes duplicate, missing, and
 /// extra fields loud without silently widening the rest of the TOML subset.
-fn parse_lead_size_warning(path: &Path, line: usize, value: &str) -> Result<LeadSizeWarning> {
+pub(super) fn parse_lead_size_warning(
+    path: &Path,
+    line: usize,
+    value: &str,
+) -> Result<LeadSizeWarning> {
     if !(value.starts_with('{') && value.ends_with('}')) {
         return bail_config(
             path,
             line,
-            "lead_size_warning must be `{ max = <N>, unit = \"lines|words|bytes\" }`"
-                .to_string(),
+            "lead_size_warning must be `{ max = <N>, unit = \"lines|words|bytes\" }`".to_string(),
         );
     }
     let inner = value[1..value.len() - 1].trim();

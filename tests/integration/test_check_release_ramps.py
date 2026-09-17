@@ -113,7 +113,7 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertEqual(floor, "0.13.0")
         report = ramps.report(self.claims, "0.12.4")
         self.assertTrue(
-            any("config_kinds.rs" in line for line in report),
+            any("config/kind_table.rs" in line for line in report),
             "the `prefix` removal must be what refuses a 0.12.x release of this tree",
         )
 

@@ -51,9 +51,10 @@ pub(crate) use inline_note_layout::{
 };
 pub(crate) use near_miss::{declaration_captures, declaration_id_on_line, near_miss_heading};
 pub(crate) use never_rewrite::{
-    DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, is_inside_inline_code,
-    is_inside_markdown_link_destination, is_inside_string_literal, never_rewrite_context,
-    never_rewrite_context_in, scanned_citation_rewritable, string_literal_in,
+    DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, is_escaped,
+    is_inside_inline_code, is_inside_markdown_link_destination, is_inside_string_literal,
+    never_rewrite_context, never_rewrite_context_in, scanned_citation_rewritable,
+    string_literal_in,
 };
 pub(crate) use shorthand::{
     IdArgError, ParsedId, ShorthandIndex, ShorthandIndexes,

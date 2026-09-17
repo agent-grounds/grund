@@ -1,7 +1,7 @@
 use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_line};
-// §AR-system.4: `CitationLine` is the scanner's per-line record and `is_escaped`
-// a config-parser helper; both stay reachable through the crate root.
-use crate::{CitationLine, is_escaped};
+// §AR-system.4: `CitationLine` is the scanner's per-line record, reachable
+// through the crate root until the scanner is a module.
+use crate::CitationLine;
 
 /// The never-rewrite predicates shared by the scanner (§AR-scanner.2.3), `fmt`
 /// (§FS-fmt.2.3), and the LSP on-type path (§FS-lsp.1.4): where a citation-shaped
@@ -250,4 +250,21 @@ pub(crate) fn is_inside_markdown_link_destination(line: &str, pos: usize) -> boo
         i += 1;
     }
     false
+}
+
+/// Whether the byte at `pos` is backslash-escaped — an odd run of `\` in front
+/// of it (§FS-fmt.2.3).
+///
+/// The one lexical fact the three predicates above are all written in terms of:
+/// a quote, a backtick or a bracket that is escaped opens nothing. Shared with
+/// the `grund.toml` reader, which asks the same question of a `"` before
+/// deciding whether a `#` starts a comment (§FS-config.3).
+pub(crate) fn is_escaped(bytes: &[u8], pos: usize) -> bool {
+    let mut count = 0;
+    let mut j = pos;
+    while j > 0 && bytes[j - 1] == b'\\' {
+        count += 1;
+        j -= 1;
+    }
+    count % 2 == 1
 }

@@ -4,8 +4,8 @@ boundaries the page names: every implementation file under
 directory it sits under or, until its category has one, by its file-name
 prefix; every prefix the page lists owns at least one file; every module
 directory the page names exists and has emptied the top level of its
-category; and `lib.rs` is the one file outside the categories, as the crate
-entrypoint."""
+category but for the prefixes its row still lists; and `lib.rs` is the one
+file outside the categories, as the crate entrypoint."""
 
 import re
 import unittest
@@ -24,9 +24,9 @@ def _table():
     """Every category row: category -> (module directories, file-name prefixes).
 
     A cell names a module directory as `model/` and a file-name prefix as
-    `model`; the trailing slash is what tells the two apart, so a row that has
-    become a module lists no prefixes and a row that has not lists no
-    directory.
+    `model`; the trailing slash is what tells the two apart. A row that has not
+    become a module lists no directory, and one that has lists only the
+    prefixes whose files it deliberately left flat.
     """
     table = {}
     for line in PAGE.read_text(encoding="utf-8").splitlines():
@@ -110,10 +110,16 @@ class ModuleCategoryTests(unittest.TestCase):
         self.assertEqual([], problems, "\n".join(problems))
 
     def test_a_module_directory_leaves_no_file_of_its_category_flat(self):
+        """A file of a category that has a directory and is still flat failed to
+        move — unless the row lists its prefix beside the directory, which is
+        how the page records a file the move deliberately left behind (today, a
+        deprecated renderer waiting for `compat/`)."""
         stale = []
-        for category, directories in _modules().items():
+        for category, (directories, prefixes) in _table().items():
+            if not directories:
+                continue
             for stem in _implementation_stems():
-                if _claims(stem, directories):
+                if _claims(stem, directories) and not _claims(stem, prefixes):
                     stale.append(f"{category}: {stem}.rs is still at the crate root")
         self.assertEqual([], stale, "\n".join(stale))
 
