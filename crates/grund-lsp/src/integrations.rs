@@ -97,7 +97,7 @@ struct RenderedIntegration {
 }
 
 /// Render the effective extension snapshot without editor or transport state.
-/// Configuration discovery remains in `grund-core`. §AR-lsp.1 §FS-lsp.2.4
+/// Configuration discovery remains in `grund-core`. §AR-lsp.placement §FS-lsp.2.4
 fn render_lsp4ij() -> Result<RenderedIntegration> {
     let cwd = std::env::current_dir().context("read the current working directory")?;
     let config = grund_core::effective_config(&cwd)?;

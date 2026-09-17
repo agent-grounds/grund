@@ -12,7 +12,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PAGE = REPO_ROOT / "docs" / "architecture" / "AR-core-module-layout.md"
 CORE = REPO_ROOT / "crates" / "grund-core" / "src"
-ROW = re.compile(r"^\|\s*\*\*([a-z]+)\*\*\s*\|\s*(.*?)\s*\|\s*$")
+ROW = re.compile(r"^\|\s*\*\*([a-z]+)\*\*\s*\|\s*([^|]*?)\s*\|")
 PREFIX = re.compile(r"`([a-z][a-z0-9_]*)`")
 
 

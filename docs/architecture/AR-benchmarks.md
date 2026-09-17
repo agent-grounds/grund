@@ -2,6 +2,10 @@
 
 How `grund` turns the [§GOAL-fast-feedback.1](../goals.md#1-performance-targets) targets into a number CI records on every commit. The goal-meter map points here from [§AR-goal-measurement.2](AR-goal-measurement.md#2-goal-meters); this spec pins what is measured, with what tool, and why the meter counts CPU instructions rather than wall-clock seconds. The synthetic large fixture, the committed baseline and the CI gate shipped in 0.4.1 (`docs/changelog/0.4.1.md`); the decision that picks instruction counting over a wall-clock harness is [§DA-benchmark-instruction-counting](../decisions/architectural/DA-benchmark-instruction-counting.md#da-benchmark-instruction-counting-the-performance-harness-counts-instructions-not-wall-clock-seconds).
 
+## placement: What the benchmarks measure
+
+Not a component: a meter on the pipeline ([§AR-system.1](README.md#1-the-pipeline)), taken through the CLI frontend so that it counts what a user's invocation counts ([§AR-system.3](README.md#3-frontends), [§AR-system.5](README.md#5-what-holds-the-shape)). It takes a generated fixture and the committed baseline and gives one instruction count per hot command, recorded by the CI job of [§AR-ci.5](AR-ci.md#5-benchmark-job). It knows nothing of the engine's internals: each benchmark runs the built `grund` binary as a subprocess (section 1).
+
 ## 1. What is benched
 
 A `cargo bench` harness at `crates/grund-cli/benches/instructions.rs`, gated behind the `grund` package's `bench` Cargo feature so a plain `cargo test --all-targets` compiles only a no-op bench target and never tries to run the Callgrind body (it needs Valgrind). Each benchmark runs the **freshly built `grund` binary** as a subprocess under Callgrind — not a library call — because the figure we care about is the cost of an invocation an agent or a CI step actually makes, including process start-up, argument parsing, the walk, and output formatting.

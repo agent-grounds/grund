@@ -2,6 +2,10 @@
 
 The scanner is the single tree-walk that produces all of grund's input data. Every check in [§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-reference-in-a-repo) and every retrieval in [§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id) derives from what the scanner finds. Speed ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)) is set here.
 
+## placement: Where the scanner sits
+
+The fifth box of the pipeline ([§AR-system.2.5](README.md#25-scanner)). It takes the scope from workspace and config ([§AR-system.2.4](README.md#24-workspace), [§AR-system.2.3](README.md#23-config)) and the lexical facts from grammar ([§AR-system.2.1](README.md#21-grammar)), and gives one `Findings` (section 3) to the checker, the queries and the writers ([§AR-system.2.6](README.md#26-checker), [§AR-system.2.7](README.md#27-queries), [§AR-system.2.8](README.md#28-writers)). It knows no rule and no frontend, and never asks whether it is in a workspace: the resolver above it answers that ([§AR-workspace.3](AR-workspace.md#3-the-scanner-marker-anchored-qualification)).
+
 ## 1. Tree walk
 
 Recursive walk from a root path using the `ignore` crate (the same walker that powers `ripgrep`). The walker is chosen specifically because it gives us `.gitignore` support for free — see 1.1 below.

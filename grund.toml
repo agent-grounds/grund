@@ -19,6 +19,7 @@ warn_on_suggested = false
 # in illustrative prose) are not picked up as citations.
 format = "{kind}-{slug}"
 section_separator = "."
+named_sections = true
 section_heading_levels = "strict"
 slug_pattern = "[a-z][a-z0-9-]*"
 

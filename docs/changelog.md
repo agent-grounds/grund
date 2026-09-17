@@ -24,6 +24,10 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ## Unreleased
 
+### Added
+
+- [§AR-system](architecture/README.md#ar-system-one-engine-nine-components-three-frontends): the architecture index declares the system — one page naming every component with what it consumes, produces and must not know, the frontends, and the dependency direction — and every architecture page now opens with a named `placement` chapter that cites its box there, held by `tests/integration/test_architecture_placement.py`. `[id] named_sections = true` is switched on for this repository so the chapter has a stable coordinate. [§AR-workspace.1](architecture/AR-workspace.md#1-layering), [§AR-lsp.1](architecture/AR-lsp.md#1-crate-boundary) and [§AR-bindings.1](architecture/AR-bindings.md#1-target-workspace-layout) point at the overview instead of repeating it, and [§AR-core-module-layout.1](architecture/AR-core-module-layout.md#1-module-categories) maps each file category to its component.
+
 ### Changed
 
 - [§FS-check.2.1](functional-spec/FS-check.md#21-report-format), [§FS-errors.4](functional-spec/FS-errors.md#4-determinism): make every default-text `grund check` finding's channel explicit and group errors before warnings before opt-in suggestions, keeping the jump-friendly location prefix and every full diagnostic. This intentionally changes exact text output; migrate byte-sensitive consumers to `--format=json`, whose bytes, shape, global location order, selectors, and verdict behavior are unchanged. Closes issue #232. (PR #234)
