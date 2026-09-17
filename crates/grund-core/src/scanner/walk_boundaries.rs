@@ -1,5 +1,16 @@
-/// Ownership and canonical-root boundaries shared by the scanner's reporting
-/// walk and its read-any-file probe (§AR-scanner.1, §FS-workspace.6).
+//! The §AR-scanner.1 predicates that are not the traversal itself: which files
+//! the walk reads at all, and the ownership and canonical-root boundaries it may
+//! not carry a scan root across, shared by the reporting walk and the
+//! read-any-file probe (§FS-workspace.6).
+//!
+//! The two file tests sat in the per-file pass while the scanner was a file-name
+//! category, which is what made a §AR-scanner.2 file answer a §AR-scanner.1
+//! question; they read a path and the `[scan]` table and nothing of a line.
+
+use std::fs;
+use std::path::Path;
+
+use crate::config::Config;
 
 /// Whether a canonical path belongs to a project of this run that is **not** the
 /// one doing the walking (§FS-workspace.6, §AR-workspace.6). The owner is the
@@ -8,7 +19,7 @@
 /// ownership boundary; the canonical project-root fence is answered separately
 /// by the caller (§FS-config.3.5.1). Empty list — every run that loaded no
 /// workspace — answers `false` without a comparison.
-fn owned_by_another_project(config: &Config, own_root: &Path, canonical: &Path) -> bool {
+pub(super) fn owned_by_another_project(config: &Config, own_root: &Path, canonical: &Path) -> bool {
     config
         .workspace_project_roots
         .iter()
@@ -24,7 +35,7 @@ fn owned_by_another_project(config: &Config, own_root: &Path, canonical: &Path) 
 /// rejected only when the named root itself is a link, so a plain parent-relative
 /// external root remains intentional scope. Comparing the resolved roots first
 /// keeps an aliased config root and in-root links readable.
-fn outward_directory_link_root(
+pub(super) fn outward_directory_link_root(
     scan_root: &Path,
     canonical_scan_root: &Path,
     project_root: &Path,
@@ -43,8 +54,25 @@ fn outward_directory_link_root(
     })
 }
 
-fn is_directory_symlink(path: &Path) -> bool {
+pub(super) fn is_directory_symlink(path: &Path) -> bool {
     path.is_dir()
-        && fs::symlink_metadata(path)
-            .is_ok_and(|metadata| metadata.file_type().is_symlink())
+        && fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink())
+}
+
+/// A dotfile or dot-directory — same convention used by the scanner walker
+/// and by `expand_workspace_members` to skip `.git`, `.agents`, `.cache`, etc.
+pub(crate) fn is_hidden(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.starts_with('.'))
+}
+
+/// Whether a file is one the scanner reads: a non-hidden name with an extension in
+/// `[scan] extensions` (§FS-config.3.5, §AR-scanner.1).
+pub(crate) fn is_scannable(path: &Path, config: &Config) -> bool {
+    if is_hidden(path) {
+        return false;
+    }
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+    config.extensions.iter().any(|allowed| allowed == ext)
 }

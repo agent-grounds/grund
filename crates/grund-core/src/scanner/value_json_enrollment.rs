@@ -1,7 +1,18 @@
-/// Enrollment helpers for JSON value members discovered by the value scanner
-/// (§FS-values.2.2, §AR-scanner.2.1, §AR-scanner.3).
+//! Enrollment helpers for JSON value members discovered by the value scanner
+//! (§FS-values.2.2, §AR-scanner.2.1, §AR-scanner.3).
 
-fn enroll_json_member(
+use std::collections::BTreeMap;
+use std::path::Path;
+
+use super::json::{JsonMember, JsonNode, JsonSpan, json_line_column};
+use crate::config::{Config, KindConfig};
+use crate::grammar::parse_id_arg;
+use crate::model::{
+    Declaration, DeclarationSource, Findings, Id, InvalidValueSite, SectionInfo, ValueComponent,
+    ValueComponentKind, component_text_is_valid,
+};
+
+pub(super) fn enroll_json_member(
     config: &Config,
     path: &Path,
     owners: &[&KindConfig],
@@ -70,7 +81,11 @@ fn enroll_json_member(
             member.value.span(),
             "JSON value member must be a nonempty array",
         );
-        findings.declarations.entry(id).or_default().push(declaration);
+        findings
+            .declarations
+            .entry(id)
+            .or_default()
+            .push(declaration);
         return;
     };
     if elements.is_empty() {
@@ -119,7 +134,10 @@ fn enroll_json_member(
         declaration.sections.insert(
             (index + 1).to_string(),
             SectionInfo {
-                title: value.as_ref().map(|value| value.decoded.clone()).unwrap_or_default(),
+                title: value
+                    .as_ref()
+                    .map(|value| value.decoded.clone())
+                    .unwrap_or_default(),
                 line,
                 heading_level: 2,
                 value,
@@ -127,10 +145,14 @@ fn enroll_json_member(
             },
         );
     }
-    findings.declarations.entry(id).or_default().push(declaration);
+    findings
+        .declarations
+        .entry(id)
+        .or_default()
+        .push(declaration);
 }
 
-fn push_json_invalid(
+pub(super) fn push_json_invalid(
     findings: &mut Findings,
     id: Option<Id>,
     path: &Path,

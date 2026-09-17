@@ -1,7 +1,11 @@
-/// Source comment-span classification for explicit value bindings
-/// (§FS-values.3.2, §AR-scanner.2.3).
+//! Source comment-span classification for explicit value bindings
+//! (§FS-values.3.2, §AR-scanner.2.3).
 
-fn value_binding_context(line: &CitationLine<'_>) -> Option<(usize, usize)> {
+use super::file_pass::CitationLine;
+use crate::config::Config;
+use crate::grammar::{CommentBlockKind, comment_blocks};
+
+pub(super) fn value_binding_context(line: &CitationLine<'_>) -> Option<(usize, usize)> {
     if line.is_md || line.docstring.is_docstring() {
         return Some((0, line.scan_line.len()));
     }
@@ -9,18 +13,18 @@ fn value_binding_context(line: &CitationLine<'_>) -> Option<(usize, usize)> {
 }
 
 #[derive(Clone, Copy)]
-struct SourceValueLineContext {
-    range: (usize, usize),
-    block_comment: bool,
+pub(super) struct SourceValueLineContext {
+    pub(super) range: (usize, usize),
+    pub(super) block_comment: bool,
 }
 
 impl SourceValueLineContext {
-    fn contains(self, start: usize, end: usize) -> bool {
+    pub(super) fn contains(self, start: usize, end: usize) -> bool {
         self.range.0 <= start && start < end && end <= self.range.1
     }
 }
 
-fn binding_span_is_inside(context: (usize, usize), start: usize, end: usize) -> bool {
+pub(super) fn binding_span_is_inside(context: (usize, usize), start: usize, end: usize) -> bool {
     context.0 <= start && start < end && end <= context.1
 }
 
@@ -29,7 +33,7 @@ fn binding_span_is_inside(context: (usize, usize), start: usize, end: usize) -> 
 /// interior remains recognized without a decorative `*`; the first `*/` ends
 /// the range so host expressions or strings after it can neither bind nor
 /// declare embedded values (§FS-values.2.4, §FS-values.3.2).
-fn recognized_source_value_contexts(
+pub(super) fn recognized_source_value_contexts(
     text: &str,
     is_py: bool,
     config: &Config,

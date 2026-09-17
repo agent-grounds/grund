@@ -1,13 +1,23 @@
+use ignore::WalkBuilder;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::tree::ScanError;
+use super::walk_boundaries::{is_hidden, is_scannable};
+use crate::config::Config;
+// §AR-system.4: one upward read, through the crate root until its owner is a
+// module — the report path renderer from `output.rs`.
+use crate::display_path;
+
 /// The per-file scan failure a walker error becomes (§FS-check.2), or `None` when
 /// the walk was never going to read through the path it names (§FS-config.3.5.6).
 ///
 /// What the walk does with a path it cannot read (§AR-scanner.1, §FS-check.2):
 /// which walker errors become per-file scan failures, which stay silent because
 /// the ordinary walk was never going to read the path anyway, and which link a
-/// loop is reported at. It sits beside `scanner_walk.rs` because it is the other
-/// half of the scanner category §AR-core-module-layout.1 names — the traversal
-/// there, its scan error handling here — and the two meet only at the error list
-/// one hands the other.
+/// loop is reported at. It sits beside `walk.rs` because it is the other half of
+/// the walk §AR-scanner.1 describes — the traversal there, its scan error
+/// handling here — and the two meet only at the error list one hands the other.
 ///
 /// `follow_links` hands back an error in place of the entry for a link it cannot
 /// resolve — a broken target, or a loop, which the `ignore` crate detects and
@@ -22,7 +32,7 @@
 /// is reported as it stands, at the walk root when the error names no path of its
 /// own: it is a hole in the walk either way, and a silent one is what
 /// §REQ-no-missed-citation.1 rules out.
-fn walk_error_report(
+pub(super) fn walk_error_report(
     err: &ignore::Error,
     config: &Config,
     scan_root: &Path,
@@ -70,7 +80,11 @@ fn walk_error_report(
 /// all, and a target at or above the walk root has no in-tree name below it
 /// either. Both read the same way — the target is not somewhere inside the tree,
 /// it is the tree.
-fn symlink_loop_report(link: &Path, ancestor: Option<&Path>, config: &Config) -> Option<ScanError> {
+pub(super) fn symlink_loop_report(
+    link: &Path,
+    ancestor: Option<&Path>,
+    config: &Config,
+) -> Option<ScanError> {
     let name = link.file_name().and_then(|name| name.to_str())?;
     if is_hidden(link)
         || config.exclude.iter().any(|item| item == name)

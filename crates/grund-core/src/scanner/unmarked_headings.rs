@@ -1,7 +1,11 @@
+use std::collections::BTreeMap;
+
+use crate::model::{Declaration, Findings, UnmarkedHeading, UnmarkedHeadingCandidate};
+
 /// Retain only Markdown headings owned by a declaration body, choose the
 /// nearest nested owner, and assign deterministic unused section paths
 /// (§AR-scanner.2.2, §AR-scanner.2.4, §FS-check.4.14).
-fn assign_unmarked_heading_owners(
+pub(super) fn assign_unmarked_heading_owners(
     findings: &mut Findings,
     mut candidates: Vec<UnmarkedHeadingCandidate>,
     md_headings: &[(usize, usize)],
@@ -115,7 +119,10 @@ fn assign_unmarked_heading_owners(
                     return None;
                 }
                 let child = *parts.last()?;
-                child.bytes().all(|byte| byte.is_ascii_digit()).then_some(child)
+                child
+                    .bytes()
+                    .all(|byte| byte.is_ascii_digit())
+                    .then_some(child)
             })
             .max_by(|left, right| compare_decimal(left, right))
             .map(increment_decimal)
@@ -128,14 +135,16 @@ fn assign_unmarked_heading_owners(
     fn compare_decimal(left: &str, right: &str) -> std::cmp::Ordering {
         let left = normalize_decimal(left);
         let right = normalize_decimal(right);
-        left.len()
-            .cmp(&right.len())
-            .then_with(|| left.cmp(right))
+        left.len().cmp(&right.len()).then_with(|| left.cmp(right))
     }
 
     fn normalize_decimal(value: &str) -> &str {
         let normalized = value.trim_start_matches('0');
-        if normalized.is_empty() { "0" } else { normalized }
+        if normalized.is_empty() {
+            "0"
+        } else {
+            normalized
+        }
     }
 
     fn increment_decimal(value: &str) -> String {
@@ -156,7 +165,7 @@ fn assign_unmarked_heading_owners(
 /// Compute an unmarked-heading ownership boundary without publishing it on the
 /// declaration model. Read-only `show` and `list --size` scans intentionally
 /// keep their lazy whole-declaration slicing (§FS-check.4.14, §FS-show.2.1.3).
-fn markdown_declaration_body_end(
+pub(super) fn markdown_declaration_body_end(
     decl: &Declaration,
     md_headings: &[(usize, usize)],
     total_lines: usize,

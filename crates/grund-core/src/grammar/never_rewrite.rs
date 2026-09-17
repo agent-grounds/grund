@@ -268,3 +268,15 @@ pub(crate) fn is_escaped(bytes: &[u8], pos: usize) -> bool {
     }
     count % 2 == 1
 }
+
+/// §AR-scanner.2.3: the qualified `alias/ID` form collides with a path, module
+/// reference, or URL, so in a **source** file a marked qualified citation whose
+/// start column falls inside an inline-code span or a string literal is not a
+/// citation (the same path-collision caution as §AR-workspace.3.1). Markdown has
+/// no string literals and its inline code is prose formatting, so a marked
+/// qualified citation there is always a citation. Shared by every detection pass
+/// so the rule lives in one place; returns whether the citation at `pos` must be
+/// suppressed.
+pub(crate) fn qualified_suppressed_in_source(scan_line: &str, is_md: bool, pos: usize) -> bool {
+    !is_md && (is_inside_inline_code(scan_line, pos) || is_inside_string_literal(scan_line, pos))
+}

@@ -1,8 +1,25 @@
-/// First-class value inputs: Markdown component validation, exact authored
-/// binding recognition, and home-derived JSON catalog enrollment
-/// (§FS-values.2, §FS-values.3, §AR-scanner.2.1–§AR-scanner.3).
+//! First-class value inputs: Markdown component validation, exact authored
+//! binding recognition, and home-derived JSON catalog enrollment
+//! (§FS-values.2, §FS-values.3, §AR-scanner.2.1–§AR-scanner.3).
 
-fn value_declaration_is_in_home(config: &Config, path: &Path, id: &Id) -> bool {
+use std::collections::BTreeSet;
+use std::path::Path;
+
+use super::file_pass::CitationLine;
+use super::tree::path_starts_with;
+use super::value_context::{binding_span_is_inside, value_binding_context};
+use crate::config::Config;
+use crate::grammar::{QUALIFIED_CITATION_PREFIX, parse_id_arg, parse_longest_id_prefix};
+use crate::model::{
+    DeclarationSource, Findings, Id, InvalidValueSite, ValueBinding, authored_component,
+    component_text_is_valid,
+};
+use crate::workspace::WorkspaceCitationTarget;
+// §AR-system.4: one upward read, through the crate root until its owner is a
+// module — the same-location path test of the checker's home rules.
+use crate::paths_same_location;
+
+pub(super) fn value_declaration_is_in_home(config: &Config, path: &Path, id: &Id) -> bool {
     config.kinds.iter().any(|kind| {
         kind.values
             && kind.kind == id.kind
@@ -17,7 +34,7 @@ fn value_declaration_is_in_home(config: &Config, path: &Path, id: &Id) -> bool {
 /// Validate opted-in Markdown declarations after body spans are known, so a
 /// later sibling heading cannot accidentally become a value field
 /// (§FS-values.2.1).
-fn validate_markdown_value_declarations(
+pub(super) fn validate_markdown_value_declarations(
     path: &Path,
     text: &str,
     is_md: bool,
@@ -81,9 +98,7 @@ fn validate_markdown_value_declarations(
         }
         for (index, (coordinate, info)) in fields.into_iter().enumerate() {
             let expected = index + 1;
-            if coordinate != &expected.to_string()
-                || info.heading_level != decl.heading_level + 1
-            {
+            if coordinate != &expected.to_string() || info.heading_level != decl.heading_level + 1 {
                 valid = false;
                 invalid.push(invalid_for(
                     info.line,
@@ -148,21 +163,23 @@ fn empty_citable_value_heading(line: &str, declaration_level: usize, config: &Co
         && token.strip_suffix(':').is_some_and(|coordinate| {
             coordinate.split('.').all(|part| {
                 !part.is_empty()
-                    && part
-                        .bytes()
-                        .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+                    && part.bytes().all(|byte| {
+                        byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-'
+                    })
             })
         });
     (numeric || named) && rest[token.len()..].trim().is_empty()
 }
 
-fn markdown_component<'a>(line: &'a str, config: &Config) -> Option<(&'a str, usize)> {
+pub(crate) fn markdown_component<'a>(line: &'a str, config: &Config) -> Option<(&'a str, usize)> {
     let captures = config.grammar.section_re.captures(line)?;
     let coordinate = captures.name("sec")?;
     // Numeric heading punctuation is optional and intentionally sits outside
     // the `sec` capture; it delimits the title but is not part of it
     // (§FS-values.2.1).
-    let tail = line[coordinate.end()..].strip_prefix('.').unwrap_or(&line[coordinate.end()..]);
+    let tail = line[coordinate.end()..]
+        .strip_prefix('.')
+        .unwrap_or(&line[coordinate.end()..]);
     let component = tail.trim_start_matches([' ', '\t']);
     let start = line.len() - component.len();
     Some((component, start + 1))
@@ -172,7 +189,7 @@ fn markdown_component<'a>(line: &'a str, config: &Config) -> Option<(&'a str, us
 /// source comment. The citation remains in `Findings::citations`; this record
 /// adds the component and binding span without a second resolver
 /// (§FS-values.3, §DA-explicit-value-bindings.2).
-fn scan_value_bindings(
+pub(super) fn scan_value_bindings(
     line: &CitationLine<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
     citation_start: usize,
@@ -225,7 +242,10 @@ fn scan_value_bindings(
             continue;
         };
         let literal = &before_marker[open_tick + 1..close_tick];
-        let closes = line.scan_line.get(token_end..).is_some_and(|tail| tail.starts_with(')'));
+        let closes = line
+            .scan_line
+            .get(token_end..)
+            .is_some_and(|tail| tail.starts_with(')'));
         let binding_end = token_end.saturating_add(usize::from(closes));
         if !binding_span_is_inside(context, open_tick, binding_end) {
             continue;
@@ -244,10 +264,7 @@ fn scan_value_bindings(
             classified_openings.insert(open_tick);
             continue;
         }
-        if !closes
-            || !valid_section
-            || !component_text_is_valid(literal)
-        {
+        if !closes || !valid_section || !component_text_is_valid(literal) {
             classified_openings.insert(open_tick);
             invalid.push(invalid_value_binding_site(
                 line,
@@ -305,7 +322,9 @@ fn scan_noncanonical_value_binding_attempts(
         // Without an opener on this physical line, this is the closing half of
         // a multiline literal—the binding is still an invalid attempted
         // delimited form (§FS-values.3.1).
-        let open_tick = line.scan_line[..close_tick].rfind('`').unwrap_or(close_tick);
+        let open_tick = line.scan_line[..close_tick]
+            .rfind('`')
+            .unwrap_or(close_tick);
         if !binding_span_is_inside(context, open_tick, close_tick + 1) {
             continue;
         }
@@ -323,9 +342,9 @@ fn scan_noncanonical_value_binding_attempts(
 }
 
 fn unmatched_open_tick(prefix: &str) -> Option<usize> {
-    prefix
-        .match_indices('`')
-        .fold(None, |opening, (index, _)| opening.map_or(Some(index), |_| None))
+    prefix.match_indices('`').fold(None, |opening, (index, _)| {
+        opening.map_or(Some(index), |_| None)
+    })
 }
 
 fn invalid_value_binding_site(
@@ -371,7 +390,9 @@ fn attempted_value_target(
 
     if let Some(prefix) = QUALIFIED_CITATION_PREFIX.captures(rest) {
         let alias = prefix.name("namespace")?.as_str();
-        let target = workspace_targets.iter().find(|target| target.alias == alias)?;
+        let target = workspace_targets
+            .iter()
+            .find(|target| target.alias == alias)?;
         let id_rest = &rest[prefix.get(0)?.end()..];
         let (id, section) = attempted_value_id(id_rest, &target.config)?;
         return Some(AttemptedValueTarget {

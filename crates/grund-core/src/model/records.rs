@@ -6,10 +6,10 @@ use super::headings::{NearMissHeading, SectionHeadingOutsideDeclaration, Unmarke
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
 };
-// §AR-system.4: three upward reads, through the crate root until their owners
+// §AR-system.4: two upward reads, through the crate root until their owners
 // are modules — `Config` for the qualified-ID renderer, which is the writers'
-// (§FS-id), `FileStructure` from the scanner, `render_id` from the writers.
-use crate::{Config, FileStructure, render_id};
+// (§FS-id), and `render_id` itself from the writers.
+use crate::{Config, render_id};
 
 /// A parsed ID: its kind plus whichever of `{number}` / `{slug}` the configured
 /// `[id] format` carries (§FS-config.3.2).
@@ -347,4 +347,34 @@ pub(crate) fn render_qualified_id(config: &Config, namespace: Option<&str>, id: 
         Some(namespace) => format!("{}/{}", namespace, render_id(config, id)),
         None => render_id(config, id),
     }
+}
+
+/// One Markdown heading outside a fence (§AR-scanner.2.7): its line, its level,
+/// and its text without the leading `#`s, which is what a section finding quotes
+/// back (§FS-check.3.6.3).
+pub struct FileHeading {
+    pub line: usize,
+    pub level: usize,
+    pub text: String,
+}
+
+/// One doc-comment block in a source file (§AR-scanner.2.7): its 1-indexed
+/// inclusive line span, and whether its first line starts at column 0.
+/// Indentation is the parse-free stand-in for "top-level item" that
+/// §FS-check.3.6.2 reads at level 2 — it holds across Rust, Python, Java, Go, and
+/// Kotlin without knowing any of them (§FS-non-goals.3).
+pub struct DocCommentBlock {
+    pub start: usize,
+    pub end: usize,
+    pub indented: bool,
+}
+
+/// One file's grounding structure (§AR-scanner.2.7). A Markdown file fills
+/// `headings` and a source file `doc_comments`; `total_lines` closes the last
+/// subtree or block, which would otherwise have no end.
+#[derive(Default)]
+pub struct FileStructure {
+    pub headings: Vec<FileHeading>,
+    pub doc_comments: Vec<DocCommentBlock>,
+    pub total_lines: usize,
 }

@@ -1,13 +1,22 @@
-/// Reconcile promoted persisted citations with inline-note classification
-/// (§FS-inline-citation-style.3.1, §FS-config.3.2). Kept beside scanner
-/// compatibility because this is the post-catalog half of that pass, not a new
-/// inline-style rule.
+//! Reconcile promoted persisted citations with inline-note classification
+//! (§FS-inline-citation-style.3.1, §FS-config.3.2). Kept beside `legacy.rs`
+//! because this is the post-catalog half of that pass, not a new inline-style
+//! rule.
+
+use std::path::Path;
+
+use crate::config::Config;
+use crate::grammar::{
+    BlockCitations, block_has_inline_note_memoized, comment_strip_prefixes,
+    inline_layout_violations, layout_pass_enabled, line_says_something,
+};
+use crate::model::{Citation, InlineCitationSite};
 
 /// Refresh note-presence and layout from the final citation set after a legacy
 /// candidate becomes catalog-backed. The file pass retained this one affected
 /// block, so overlays and LSP scans use the same bytes and promotion never
 /// re-reads the filesystem.
-fn reconcile_promoted_inline_site(
+pub(super) fn reconcile_promoted_inline_site(
     config: &Config,
     citations: &mut [Citation],
     file: &Path,

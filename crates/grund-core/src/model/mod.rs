@@ -3,7 +3,9 @@
 //! records (§FS-values.2). It consumes nothing and is types plus tiny helpers,
 //! so it knows nothing of the tree, the rules or a frontend. The `Config` record
 //! sat here while config was a file-name category and is config's own since
-//! §AR-system.2.3 became a module.
+//! §AR-system.2.3 became a module; the grounding-structure records `Findings`
+//! carries came the other way, out of the scanner, when §AR-system.2.5 became
+//! one (§AR-scanner.2.7).
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
@@ -19,7 +21,8 @@ mod values;
 pub use e2e::{E2eCase, E2eSpecRef};
 pub use headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
 pub use records::{
-    Citation, Declaration, Findings, Id, InlineCitationSite, SectionInfo, ShowOutput, ShowSection,
+    Citation, Declaration, DocCommentBlock, FileHeading, FileStructure, Findings, Id,
+    InlineCitationSite, SectionInfo, ShowOutput, ShowSection,
 };
 pub use values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,

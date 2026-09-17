@@ -1,13 +1,29 @@
+use anyhow::{Context, Result};
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use crate::config::Config;
+use crate::grammar::{literal_after_kind_placeholder, parse_id_arg};
+use crate::model::{Declaration, DeclarationSource, E2eCase, E2eSpecRef, Findings, Id};
+// §AR-system.4: two upward reads, through the crate root until their owner is a
+// module — the report path renderer and its sort key from `output.rs`.
+use crate::{format_path, sort_path_key};
+
 /// Discover `e2e/cases/<name>/` directories and register each as an `E2E-<name>`
 /// declaration whose body is the case manifest (§AR-scanner.6, §FS-show.2.4) — so
 /// `grund check` sees `§E2E-…` citations resolve and `grund refs` finds e2e tests.
-fn scan_e2e_cases(
+pub(super) fn scan_e2e_cases(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
     findings: &mut Findings,
 ) -> Result<()> {
-    let Some(kind) = config.kinds.iter().find(|kind| kind.kind == "E2E" && kind.citable) else {
+    let Some(kind) = config
+        .kinds
+        .iter()
+        .find(|kind| kind.kind == "E2E" && kind.citable)
+    else {
         return Ok(());
     };
     let Some(folder) = kind.folder.as_deref() else {
@@ -95,7 +111,7 @@ fn scan_e2e_cases(
 
 /// Map an `e2e/cases/<name>/` directory name to its `E2E-<name>` `Id` under the
 /// repo's `[id] format` (§AR-scanner.6, §FS-config.3.4).
-fn e2e_id_from_case_dir_name(config: &Config, name: &str) -> Option<Id> {
+pub(super) fn e2e_id_from_case_dir_name(config: &Config, name: &str) -> Option<Id> {
     let after_kind_literal = literal_after_kind_placeholder(&config.id_format)?;
     let raw = format!("E2E{after_kind_literal}{name}");
     let (id, section) = parse_id_arg(&raw, &config.grammar).ok()?;
@@ -106,21 +122,10 @@ fn e2e_id_from_case_dir_name(config: &Config, name: &str) -> Option<Id> {
     }
 }
 
-/// The literal text between `{kind}` and the next placeholder in `[id] format`
-/// (e.g. `-` in `{kind}-{slug}`) — the glue an `E2E-<dirname>` ID is reassembled
-/// with (§AR-scanner.6).
-fn literal_after_kind_placeholder(format: &str) -> Option<&str> {
-    let marker = "{kind}";
-    let start = format.find(marker)? + marker.len();
-    let rest = &format[start..];
-    let end = rest.find('{').unwrap_or(rest.len());
-    Some(&rest[..end])
-}
-
 /// Inverse of `e2e_id_from_case_dir_name`: strip the `E2E` prefix off a rendered ID
 /// to get the `e2e/cases/<name>/` directory `grund id` tells the author to create
 /// (§FS-id.2, §AR-scanner.6).
-fn e2e_case_dir_name(config: &Config, rendered: &str) -> String {
+pub(crate) fn e2e_case_dir_name(config: &Config, rendered: &str) -> String {
     let prefix = format!(
         "E2E{}",
         literal_after_kind_placeholder(&config.id_format).unwrap_or("-")

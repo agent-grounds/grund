@@ -1,11 +1,9 @@
 use anyhow::{Context, Result, anyhow};
-use ignore::WalkBuilder;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use unicode_normalization::UnicodeNormalization;
 
@@ -25,6 +23,10 @@ mod config;
 // claims and the loaded project set are declared in `workspace/` and what
 // crosses the boundary is what `workspace/mod.rs` re-exports.
 mod workspace;
+// §AR-system.2.5: the scanner is one Rust module too, so the walk, the per-file
+// pass and everything they record are declared in `scanner/` and what crosses
+// the boundary is what `scanner/mod.rs` re-exports (§AR-scanner).
+mod scanner;
 // Temporary re-exports for the duration of this migration: they keep every name
 // the flat crate root exposed reachable at `grund_core::<name>` while the other
 // components are still `include!`d flat. The finalize task replaces them with an
@@ -32,32 +34,16 @@ mod workspace;
 pub use config::*;
 pub use grammar::*;
 pub use model::*;
+// The scanner's glob is `pub(crate)`: the component's three public records —
+// `FileStructure` and the two it holds — went down into `model/` with this move,
+// so it exposes no name of its own to an embedder (§AR-core-module-layout.2).
+pub(crate) use scanner::*;
 pub use workspace::*;
 
 // §AR-bindings.1: `grund-core` is the shared implementation crate used by the
 // published `grund` CLI and, next, the optional LSP server. The category files
 // are still included flat to keep this first package split behavior-preserving.
-include!("value_json.rs");
 include!("config_cmd.rs");
-include!("scanner_walk.rs");
-include!("scanner_scope_probe.rs");
-include!("scanner_walk_boundaries.rs");
-include!("scanner_walk_errors.rs");
-include!("scanner.rs");
-include!("scanner_value_context.rs");
-include!("scanner_embedded_value_context.rs");
-include!("scanner_embedded_values.rs");
-include!("scanner_values.rs");
-include!("scanner_value_json.rs");
-include!("scanner_value_json_enrollment.rs");
-include!("scanner_context.rs");
-include!("scanner_unmarked_headings.rs");
-include!("scanner_citations.rs");
-include!("scanner_compat.rs");
-include!("scanner_inline_compat.rs");
-include!("scanner_e2e.rs");
-include!("scanner_tree.rs");
-include!("scanner_units.rs");
 include!("checker.rs");
 include!("checker_support.rs");
 include!("checker_agents.rs");

@@ -1,6 +1,8 @@
 /// Test module: config parsing, kind homes, and the parallel scan path (§FS-config, §FS-check)
 #[cfg(test)]
 mod tests_config_scan {
+    use rayon::prelude::*;
+
     use super::*;
     use super::tests_support::*;
 

@@ -33,14 +33,14 @@ reason = """
 Soft twin of this path's entry in docs/file-size-human-exceptions.toml, which carries the argument. This entry holds no judgment of its own: same ceiling, retires with its twin. Edit the reason there, not here.
 """
 [[exceptions]]
-path = "crates/grund-core/src/scanner.rs"
+path = "crates/grund-core/src/scanner/file_pass.rs"
 match = "exact"
 rules = ["core-source"]
 kind = "deferred"
-max_accepted = { value = 1156, unit = "lines" }
-until = "the entry for this path in docs/file-size-human-exceptions.toml is retired"
+max_accepted = { value = 495, unit = "lines" }
+until = "the per-line record leaves for a sibling, leaving the state machine alone in this file"
 reason = """
-Soft twin of this path's entry in docs/file-size-human-exceptions.toml, which carries the argument. This entry holds no judgment of its own: same ceiling, retires with its twin. Edit the reason there, not here.
+The `scan_file_text` loop is a genuine single pass: eight pieces of mutable state (fence, Python docstring, current declaration, heading stack, counters) advance together per line, and that loop must not be broken apart. This is the argument the hard entry in docs/file-size-human-exceptions.toml carried at 1156 lines while the whole scanner category was one file; that entry retired when the scanner became a Rust module (§AR-system.2.5) took the file to 495, under the hard budget even after the explicit imports a module costs. Every boundary that entry named has now been taken: the note-reading helpers and the citation tokenizer left for grammar/inline_note_layout.rs and grammar/comment_line.rs, the comment-block classifiers and the block walk for grammar/comment_block.rs, the tree walk for scanner/walk.rs — §AR-scanner.1 is a directory traversal and §AR-scanner.2 is this line-by-line pass, and they meet only at the file list one hands the other — the qualified and escaped citation passes for scanner/citations.rs, the e2e case discovery of §AR-scanner.6 for scanner/e2e.rs, the qualified-suppression rule for grammar/never_rewrite.rs, and, with the module move, the two file tests of §AR-scanner.1 for scanner/walk_boundaries.rs, where a path and the `[scan]` table are the only inputs. What is left over the soft budget is §AR-scanner.2 and one thing that is not it: `CitationLine`, the per-line record the citation, value and shorthand passes all read, which four files and the grammar component share and only this one fills. Missing boundary: that record in a sibling, leaving the state machine as the whole file.
 """
 [[exceptions]]
 path = "crates/grund-lsp/tests/shutdown.rs"
@@ -183,10 +183,10 @@ path = "crates/grund-core/src/grammar/shorthand.rs"
 match = "exact"
 rules = ["core-source"]
 kind = "structural"
-max_accepted = { value = 495, unit = "lines" }
+max_accepted = { value = 496, unit = "lines" }
 until = "indefinite"
 reason = """
-One rule that has to hold identically at four stages: the shape recognized in a file (scanner), accepted as a CLI argument (show/refs), reported (checker), and rewritten (fmt). A divergence between any two of them is precisely the defect DF-number-only-citation-shorthand exists to fix, so the file's cohesion is the invariant, not a stage. The available split is by stage — which is what the categories in AR-core-module-layout.1 already cut by — and it would put the four halves of one contract back in four files with nothing naming the contract, recreating the drift the feature module prevents. What was separable has been separated, and the boundary that separates it is "shape, not rule": the `[id] format` template parser, the ID renderer, and the post-match tests for where a token of that grammar ends — `id_token_ends_cleanly` and the numeric-run test of FS-fmt.2.4.1, both pure functions of the compiled grammar and a string — are grammar rather than shorthand and live in id_format.rs; the live on-type transform is in on_type.rs. What is left is the rule and nothing else, and no sub-part of it is reachable without the derivation above it. The ceiling moved 485 -> 495 when `grammar` became a Rust module (§AR-system.2.1) and the file paid for its own imports; it tracks that cost, not accumulated logic.
+One rule that has to hold identically at four stages: the shape recognized in a file (scanner), accepted as a CLI argument (show/refs), reported (checker), and rewritten (fmt). A divergence between any two of them is precisely the defect DF-number-only-citation-shorthand exists to fix, so the file's cohesion is the invariant, not a stage. The available split is by stage — which is what the categories in AR-core-module-layout.1 already cut by — and it would put the four halves of one contract back in four files with nothing naming the contract, recreating the drift the feature module prevents. What was separable has been separated, and the boundary that separates it is "shape, not rule": the `[id] format` template parser, the ID renderer, and the post-match tests for where a token of that grammar ends — `id_token_ends_cleanly` and the numeric-run test of FS-fmt.2.4.1, both pure functions of the compiled grammar and a string — are grammar rather than shorthand and live in id_format.rs; the live on-type transform is in on_type.rs. What is left is the rule and nothing else, and no sub-part of it is reachable without the derivation above it. The ceiling moved 485 -> 495 when `grammar` became a Rust module (§AR-system.2.1) and the file paid for its own imports; it tracks that cost, not accumulated logic. It moved 495 -> 496 for the same reason when the scanner became one (§AR-system.2.5): the two shorthand questions asked of a declaration catalog came down into grammar/shorthand_targets.rs, and naming them where they now live costs this file one import line.
 """
 [[exceptions]]
 path = "crates/grund-core/src/tests_shorthand.rs"
@@ -204,10 +204,10 @@ path = "crates/grund-core/src/grammar/compiled.rs"
 match = "exact"
 rules = ["core-source"]
 kind = "deferred"
-max_accepted = { value = 387, unit = "lines" }
+max_accepted = { value = 388, unit = "lines" }
 until = "the heading-text reduction and the managed-block markers leave, so this file is the compiled grammar and nothing else"
 reason = """
-The compiled ID grammar: `Grammar::build` turning `[id] format`, the kinds and the comment prefixes into one set of regexes. It is the module's grammar file since `grammar` became a Rust module (§AR-system.2.1): the per-line readers — the comment-prefix alternation and the Python-docstring normalization of §AR-scanner.4 — left with the move, into `grammar/source_line.rs`, which was the boundary the previous entry named, and the three `[scan]` defaults left for config.rs because they are config defaults rather than grammar. That took the ceiling 411 -> 387 even after the explicit imports a module costs. What is left over the budget is two groups that are not the grammar either: the heading-text reduction a renderer's anchor is slugged from (§DF-github-anchor-fidelity) and the managed-block delimiters of §FS-init.2.3, both regexes over text that `Grammar::build` never reads. Missing boundary: each of those as its own file. Not taken with the module move, because a component's first commit moves files rather than inventing them.
+The compiled ID grammar: `Grammar::build` turning `[id] format`, the kinds and the comment prefixes into one set of regexes. It is the module's grammar file since `grammar` became a Rust module (§AR-system.2.1): the per-line readers — the comment-prefix alternation and the Python-docstring normalization of §AR-scanner.4 — left with the move, into `grammar/source_line.rs`, which was the boundary the previous entry named, and the three `[scan]` defaults left for config.rs because they are config defaults rather than grammar. That took the ceiling 411 -> 387 even after the explicit imports a module costs. What is left over the budget is two groups that are not the grammar either: the heading-text reduction a renderer's anchor is slugged from (§DF-github-anchor-fidelity) and the managed-block delimiters of §FS-init.2.3, both regexes over text that `Grammar::build` never reads. Missing boundary: each of those as its own file. Not taken with the module move, because a component's first commit moves files rather than inventing them. The ceiling moved 387 -> 388 when the scanner became a module (§AR-system.2.5) and two of this component's own items came down out of scanner files — `LegacyGrammar` to grammar/near_miss.rs and the `{kind}` literal reader of the `[id] format` template to grammar/id_format.rs: one more import line, no more logic.
 """
 [[exceptions]]
 path = "crates/grund-core/src/tests_citation_directions.rs"

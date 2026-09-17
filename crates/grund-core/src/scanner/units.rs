@@ -1,50 +1,41 @@
-/// The per-file structure a grounding unit is cut out of (§AR-scanner.2.7),
-/// beside `scanner.rs` in the scanner category (§AR-core-module-layout.1).
-///
-/// This is a *description* of a file, not a list of units: the level that turns
-/// headings and doc-comment blocks into units belongs to the `[[kinds]]` row that
-/// governs the file (§FS-config.3.4.8), and the cut is made in
-/// `checker_grounding.rs` so the level rule is written once. It runs per file,
-/// only where that file's own row asks for a unit finer than the file, so one
-/// fine-grained place does not describe the whole tree and a project at level `1`
-/// — every configuration written before the keys existed — records nothing and
-/// pays nothing (§GOAL-fast-feedback).
+//! The per-file structure a grounding unit is cut out of (§AR-scanner.2.7): the
+//! pass that fills the `FileStructure` records `model` carries on `Findings`
+//! (§AR-system.2.2). The records themselves are plain data and sit there; what
+//! is here is the reading of a file that produces one.
+//!
+//! This is a *description* of a file, not a list of units: the level that turns
+//! headings and doc-comment blocks into units belongs to the `[[kinds]]` row that
+//! governs the file (§FS-config.3.4.8), and the cut is made in
+//! `checker_grounding.rs` so the level rule is written once. It runs per file,
+//! only where that file's own row asks for a unit finer than the file, so one
+//! fine-grained place does not describe the whole tree and a project at level `1`
+//! — every configuration written before the keys existed — records nothing and
+//! pays nothing (§GOAL-fast-feedback).
 
-/// One Markdown heading outside a fence (§AR-scanner.2.7): its line, its level,
-/// and its text without the leading `#`s, which is what a section finding quotes
-/// back (§FS-check.3.6.3).
-pub struct FileHeading {
-    pub line: usize,
-    pub level: usize,
-    pub text: String,
-}
+use std::path::Path;
 
-/// One doc-comment block in a source file (§AR-scanner.2.7): its 1-indexed
-/// inclusive line span, and whether its first line starts at column 0.
-/// Indentation is the parse-free stand-in for "top-level item" that
-/// §FS-check.3.6.2 reads at level 2 — it holds across Rust, Python, Java, Go, and
-/// Kotlin without knowing any of them (§FS-non-goals.3).
-pub struct DocCommentBlock {
-    pub start: usize,
-    pub end: usize,
-    pub indented: bool,
-}
-
-/// One file's grounding structure (§AR-scanner.2.7). A Markdown file fills
-/// `headings` and a source file `doc_comments`; `total_lines` closes the last
-/// subtree or block, which would otherwise have no end.
-#[derive(Default)]
-pub struct FileStructure {
-    pub headings: Vec<FileHeading>,
-    pub doc_comments: Vec<DocCommentBlock>,
-    pub total_lines: usize,
-}
+use super::context::{file_home_kind, markdown_heading_level};
+use crate::config::{Config, DEFAULT_GROUNDING_LEVEL};
+use crate::grammar::{
+    DocCommentRule, block_is_doc_comment, comment_blocks, doc_comment_rule, first_content_line,
+    markdown_fence_delimiter,
+};
+use crate::model::{DocCommentBlock, FileHeading, FileStructure, Findings};
+// §AR-system.4: one upward read, through the crate root until its owner is a
+// module — the per-kind grounding level, which the checker cuts the units this
+// file describes out of (§FS-check.3.6).
+use crate::grounding_level_for_kind;
 
 /// Record `path`'s grounding structure into `findings`, or do nothing when the
 /// row this file belongs to asks for no unit finer than the file
 /// (§AR-scanner.2.7). Called once per file from the per-file scan, with the text
 /// it already read.
-fn record_file_structure(path: &Path, text: &str, config: &Config, findings: &mut Findings) {
+pub(super) fn record_file_structure(
+    path: &Path,
+    text: &str,
+    config: &Config,
+    findings: &mut Findings,
+) {
     // The project-wide answer first: one field read exempts every file of a
     // level-1 tree — every configuration written before the keys existed — from
     // the per-file lookup below (§GOAL-fast-feedback).
@@ -57,7 +48,9 @@ fn record_file_structure(path: &Path, text: &str, config: &Config, findings: &mu
     } else {
         source_structure(path, text, extension == Some("py"), config)
     };
-    findings.file_structure.insert(path.to_path_buf(), structure);
+    findings
+        .file_structure
+        .insert(path.to_path_buf(), structure);
 }
 
 /// The effective `grounding_level` of the row `path` belongs to (§AR-scanner.2.7)
@@ -102,7 +95,7 @@ fn markdown_structure(text: &str) -> FileStructure {
 /// A heading's text: the line without its opening `#`s and without the optional
 /// closing run Markdown allows (`## Steps ##`), so a finding quotes the title
 /// rather than the syntax (§FS-check.3.6.3).
-fn heading_text(trimmed: &str, level: usize) -> String {
+pub(super) fn heading_text(trimmed: &str, level: usize) -> String {
     let suffix = trimmed[level..].trim_end_matches([' ', '\t']);
     let closing_start = suffix.trim_end_matches('#').len();
     let without_closing = if closing_start < suffix.len()

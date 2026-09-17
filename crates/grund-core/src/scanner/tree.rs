@@ -1,6 +1,35 @@
+use anyhow::{Result, anyhow};
+use rayon::prelude::*;
+use std::fs;
+use std::path::{Component, Path, PathBuf};
+
+use super::e2e::scan_e2e_cases;
+use super::file_pass::{scan_file, scan_file_text};
+use super::legacy::promote_local_legacy_citations;
+use super::value_json::{scan_value_json_sources, value_json_sources};
+use super::walk::{is_direct_e2e_case_dir, scan_roots, walk_scannable_files_reporting};
+use super::walk_boundaries::is_scannable;
+use crate::config::Config;
+use crate::grammar::resolve_shorthand_citations;
+use crate::model::{Findings, TextOverlays, normalize_path_lexically};
+use crate::workspace::WorkspaceCitationTarget;
+// §AR-system.4: three upward reads, through the crate root until their owners
+// are modules — the same-location path test of the checker's home rules, and the
+// report path renderer and its sort key from `output.rs`.
+use crate::{display_path, paths_same_location, sort_path_key};
+
+/// The file count above which one tree scan is worth splitting across threads
+/// (§AR-scanner.1, §GOAL-fast-feedback): below it the rayon fan-out costs more
+/// than the pass it parallelizes.
+const PARALLEL_SCAN_MIN_FILES: usize = 256;
+
 /// Depth of a heading line — count of leading `#` — used to decide whether a
 /// section heading nests under the current declaration (§AR-scanner.2.2).
-fn heading_level_for_line(line: &str, markdown_heading: bool, caps: &regex::Captures) -> usize {
+pub(super) fn heading_level_for_line(
+    line: &str,
+    markdown_heading: bool,
+    caps: &regex::Captures,
+) -> usize {
     if markdown_heading {
         return line
             .trim_start()
@@ -20,7 +49,7 @@ fn heading_level_for_line(line: &str, markdown_heading: bool, caps: &regex::Capt
 /// A file that could not be read or decoded during the walk. The walk continues
 /// past it (§FS-check.2); callers that are point queries treat any entry here as
 /// fatal, `check` and `refs` report it and exit 2 with a still-printed report.
-type ScanError = (PathBuf, String);
+pub(crate) type ScanError = (PathBuf, String);
 
 type FileScanResult = (PathBuf, std::result::Result<Findings, String>);
 
@@ -57,7 +86,9 @@ fn merge_findings(target: &mut Findings, mut source: Findings) {
     target
         .section_headings_outside_declarations
         .append(&mut source.section_headings_outside_declarations);
-    target.unmarked_headings.append(&mut source.unmarked_headings);
+    target
+        .unmarked_headings
+        .append(&mut source.unmarked_headings);
     target
         .legacy_citation_candidates
         .append(&mut source.legacy_citation_candidates);
@@ -68,7 +99,9 @@ fn merge_findings(target: &mut Findings, mut source: Findings) {
     target
         .invalid_value_bindings
         .append(&mut source.invalid_value_bindings);
-    target.escaped_citations.append(&mut source.escaped_citations);
+    target
+        .escaped_citations
+        .append(&mut source.escaped_citations);
     target
         .near_miss_headings
         .append(&mut source.near_miss_headings);
@@ -93,7 +126,7 @@ fn scan_file_results(
 /// so `check` can report them and keep going (§FS-check.2). The wrapper around
 /// the workspace-aware variant with no targets — single-project scans and
 /// member-local scans share this path.
-fn scan_tree(
+pub(crate) fn scan_tree(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
@@ -105,7 +138,7 @@ fn scan_tree(
 /// target's grammar inline, so the workspace layer (§FS-workspace.1,
 /// §AR-workspace.2) never needs to re-read the files the initial scan
 /// already read.
-fn scan_tree_with_workspace(
+pub(crate) fn scan_tree_with_workspace(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
@@ -121,7 +154,7 @@ fn scan_tree_with_workspace(
     )
 }
 
-fn scan_tree_with_workspace_threshold(
+pub(crate) fn scan_tree_with_workspace_threshold(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
@@ -135,14 +168,22 @@ fn scan_tree_with_workspace_threshold(
     // §FS-check.4.8: the walk's directories travel with its files, for the rule that
     // asks which of them holds a `[workspace]` block nothing claims. Carried, not
     // judged: the scanner never asks that question itself (§AR-workspace.1).
-    let mut findings = Findings { walked_dirs: walked.dirs, ..Findings::default() };
+    let mut findings = Findings {
+        walked_dirs: walked.dirs,
+        ..Findings::default()
+    };
     let (mut files, mut errors) = (walked.files, walked.errors);
     add_overlay_scan_files(config, scope, explicit_scope, overlays, &mut files)?;
     // §FS-values.2.2: home JSON is a declaration input, never a general text
     // scan input even when a repository adds `json` to `[scan].extensions`.
     if config.kinds.iter().any(|kind| kind.values) {
         let home_json = value_json_sources(config, overlays)
-            .map(|sources| sources.into_iter().map(|(path, _)| path).collect::<Vec<_>>())
+            .map(|sources| {
+                sources
+                    .into_iter()
+                    .map(|(path, _)| path)
+                    .collect::<Vec<_>>()
+            })
             .unwrap_or_default();
         files.retain(|file| {
             !home_json
@@ -196,7 +237,7 @@ fn scan_tree_with_workspace_threshold(
     Ok((findings, errors))
 }
 
-fn scan_tree_with_workspace_overlays(
+pub(crate) fn scan_tree_with_workspace_overlays(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
@@ -341,13 +382,13 @@ fn path_ignored_by_gitignore(config: &Config, root: &Path, path: &Path) -> bool 
     ignored
 }
 
-fn path_starts_with(path: &Path, root: &Path) -> bool {
+pub(super) fn path_starts_with(path: &Path, root: &Path) -> bool {
     let path = canonicalize_existing_prefix(path);
     let root = canonicalize_existing_prefix(root);
     path == root || path.starts_with(root)
 }
 
-fn canonicalize_existing_prefix(path: &Path) -> PathBuf {
+pub(crate) fn canonicalize_existing_prefix(path: &Path) -> PathBuf {
     let path = if path.is_absolute() {
         normalize_path_lexically(path)
     } else {
@@ -375,7 +416,7 @@ fn canonicalize_existing_prefix(path: &Path) -> PathBuf {
         .join(suffix)
 }
 
-fn overlay_text<'a>(overlays: &'a TextOverlays, path: &Path) -> Option<&'a str> {
+pub(crate) fn overlay_text<'a>(overlays: &'a TextOverlays, path: &Path) -> Option<&'a str> {
     overlays
         .get(&normalize_path_lexically(path))
         .or_else(|| overlays.get(path))
@@ -385,7 +426,7 @@ fn overlay_text<'a>(overlays: &'a TextOverlays, path: &Path) -> Option<&'a str> 
 /// Scan helper for point-query subcommands (`show`, `id`): any unreadable file
 /// is fatal — a partial view of the tree could miss the declaration entirely or
 /// allocate a colliding number (§FS-show.3, §FS-id.4).
-fn scan_tree_strict(
+pub(crate) fn scan_tree_strict(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,

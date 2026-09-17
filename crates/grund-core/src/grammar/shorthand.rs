@@ -25,9 +25,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::compiled::{Grammar, QUALIFIED_CITATION_PREFIX};
 use super::ids::{parse_id, parse_id_arg};
 use super::never_rewrite::{
-    DocstringContent, never_rewrite_context_in, scanned_citation_rewritable,
+    DocstringContent, never_rewrite_context_in, qualified_suppressed_in_source,
+    scanned_citation_rewritable,
 };
-use super::shorthand_targets::ShorthandTargets;
+use super::shorthand_targets::{
+    ShorthandTargets, shorthand_index_number, unique_shorthand_expansion_target,
+};
 use crate::model::{
     CheckReport, Citation, Declaration, Diagnostic, Findings, Id, render_qualified_id,
 };
@@ -36,8 +39,7 @@ use crate::model::{
 // through the crate root until each of those becomes a module of its own.
 use crate::{
     CitationLine, Config, ReferenceTier, ShorthandPolicy, WorkspaceCheckTarget, WorkspaceProject,
-    qualified_suppressed_in_source, render_id, shorthand_index_number,
-    unique_shorthand_expansion_target,
+    render_id,
 };
 
 /// One parsed ID token: the `Id`, its optional section path, and whether it was

@@ -1,30 +1,32 @@
-/// A small span-preserving JSON reader for value homes (§FS-values.2.2,
-/// §REQ-never-crashes.1). It preserves ordered and duplicate object members,
-/// raw scalar spellings, decoded strings, and byte spans before catalog maps
-/// are built; syntax failures remain scan-incomplete rather than semantic value
-/// findings.
+//! A small span-preserving JSON reader for value homes (§FS-values.2.2,
+//! §REQ-never-crashes.1). It preserves ordered and duplicate object members,
+//! raw scalar spellings, decoded strings, and byte spans before catalog maps
+//! are built; syntax failures remain scan-incomplete rather than semantic value
+//! findings.
+
+use crate::model::JSON_NUMBER_RE;
 
 #[derive(Clone, Copy, Debug)]
-struct JsonSpan {
-    start: usize,
-    end: usize,
+pub(super) struct JsonSpan {
+    pub(super) start: usize,
+    pub(super) end: usize,
 }
 
 #[derive(Debug)]
-struct JsonStringValue {
-    decoded: String,
-    span: JsonSpan,
+pub(super) struct JsonStringValue {
+    pub(super) decoded: String,
+    pub(super) span: JsonSpan,
 }
 
 #[derive(Debug)]
-struct JsonMember {
-    key: JsonStringValue,
-    value: JsonNode,
-    span: JsonSpan,
+pub(super) struct JsonMember {
+    pub(super) key: JsonStringValue,
+    pub(super) value: JsonNode,
+    pub(super) span: JsonSpan,
 }
 
 #[derive(Debug)]
-enum JsonNode {
+pub(super) enum JsonNode {
     Object(Vec<JsonMember>, JsonSpan),
     Array(Vec<JsonNode>, JsonSpan),
     String(JsonStringValue),
@@ -35,7 +37,7 @@ enum JsonNode {
 }
 
 impl JsonNode {
-    fn span(&self) -> JsonSpan {
+    pub(super) fn span(&self) -> JsonSpan {
         match self {
             Self::Object(_, span)
             | Self::Array(_, span)
@@ -48,13 +50,13 @@ impl JsonNode {
     }
 }
 
-struct JsonReader<'a> {
+pub(super) struct JsonReader<'a> {
     text: &'a str,
     pos: usize,
 }
 
 impl<'a> JsonReader<'a> {
-    fn parse(text: &'a str) -> std::result::Result<JsonNode, String> {
+    pub(super) fn parse(text: &'a str) -> std::result::Result<JsonNode, String> {
         let mut reader = Self { text, pos: 0 };
         reader.ws();
         let value = reader.value()?;
@@ -87,7 +89,13 @@ impl<'a> JsonReader<'a> {
         self.ws();
         let mut members = Vec::new();
         if self.take(b'}') {
-            return Ok(JsonNode::Object(members, JsonSpan { start, end: self.pos }));
+            return Ok(JsonNode::Object(
+                members,
+                JsonSpan {
+                    start,
+                    end: self.pos,
+                },
+            ));
         }
         loop {
             self.ws();
@@ -130,7 +138,13 @@ impl<'a> JsonReader<'a> {
         self.ws();
         let mut values = Vec::new();
         if self.take(b']') {
-            return Ok(JsonNode::Array(values, JsonSpan { start, end: self.pos }));
+            return Ok(JsonNode::Array(
+                values,
+                JsonSpan {
+                    start,
+                    end: self.pos,
+                },
+            ));
         }
         loop {
             values.push(self.value()?);
@@ -176,7 +190,10 @@ impl<'a> JsonReader<'a> {
                 0x00..=0x1f => return Err(self.error("control character in JSON string")),
                 _ => {
                     let rest = &self.text[self.pos..];
-                    let ch = rest.chars().next().ok_or_else(|| self.error("invalid UTF-8"))?;
+                    let ch = rest
+                        .chars()
+                        .next()
+                        .ok_or_else(|| self.error("invalid UTF-8"))?;
                     decoded.push(ch);
                     self.pos += ch.len_utf8();
                 }
@@ -186,7 +203,9 @@ impl<'a> JsonReader<'a> {
     }
 
     fn escape(&mut self, out: &mut String) -> std::result::Result<(), String> {
-        let escaped = self.peek().ok_or_else(|| self.error("unterminated JSON escape"))?;
+        let escaped = self
+            .peek()
+            .ok_or_else(|| self.error("unterminated JSON escape"))?;
         self.pos += 1;
         match escaped {
             b'"' => out.push('"'),
@@ -214,7 +233,9 @@ impl<'a> JsonReader<'a> {
                 } else {
                     first as u32
                 };
-                out.push(char::from_u32(scalar).ok_or_else(|| self.error("invalid Unicode escape"))?);
+                out.push(
+                    char::from_u32(scalar).ok_or_else(|| self.error("invalid Unicode escape"))?,
+                );
             }
             _ => return Err(self.error("invalid JSON escape")),
         }
@@ -324,7 +345,7 @@ impl<'a> JsonReader<'a> {
     }
 }
 
-fn json_line_column(text: &str, byte: usize) -> (usize, usize) {
+pub(super) fn json_line_column(text: &str, byte: usize) -> (usize, usize) {
     let prefix = &text[..byte.min(text.len())];
     let line = prefix.bytes().filter(|byte| *byte == b'\n').count() + 1;
     let line_start = prefix.rfind('\n').map_or(0, |index| index + 1);

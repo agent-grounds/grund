@@ -1,11 +1,27 @@
-/// Strict subtree validation for embedded section values. A root is metadata
-/// on the scanner's existing section record, never another resolver or
-/// declaration (§FS-values.2.4, §FS-values.5.1, §FS-values.6).
+//! Strict subtree validation for embedded section values. A root is metadata
+//! on the scanner's existing section record, never another resolver or
+//! declaration (§FS-values.2.4, §FS-values.5.1, §FS-values.6).
+
+use std::collections::BTreeSet;
+use std::path::Path;
+
+use super::embedded_value_context::{
+    EMBEDDED_VALUE_MARKER, authored_heading_level, authored_numeric_heading_path,
+    component_without_block_close, semantic_comment_content,
+};
+use super::value_context::SourceValueLineContext;
+use super::values::{markdown_component, value_declaration_is_in_home};
+use crate::config::Config;
+use crate::grammar::{PythonDocstringScanState, source_scan_line};
+use crate::model::{Findings, InvalidValueSite, authored_component, component_text_is_valid};
+// §AR-system.4: one upward read, through the crate root until its owner is a
+// module — the same-location path test of the checker's home rules.
+use crate::paths_same_location;
 
 /// Validate every marked section against its physical one-level subtree and
 /// place decoded components on the existing descendant section records
 /// (§FS-values.2.4, §FS-values.5.2). No alternate section map is built.
-fn validate_embedded_value_roots(
+pub(super) fn validate_embedded_value_roots(
     path: &Path,
     text: &str,
     is_md: bool,
@@ -39,11 +55,7 @@ fn validate_embedded_value_roots(
         let mut roots = decl
             .sections
             .iter()
-            .filter_map(|(path, info)| {
-                info.value_root
-                    .as_ref()
-                    .map(|_| (path.clone(), info.line))
-            })
+            .filter_map(|(path, info)| info.value_root.as_ref().map(|_| (path.clone(), info.line)))
             .collect::<Vec<_>>();
         roots.sort_by_key(|(_, line)| *line);
 
@@ -104,16 +116,20 @@ fn validate_embedded_value_roots(
                 root.valid = false;
             }
         }
-        invalid.extend(overlap_sites.into_iter().map(|(line, column)| InvalidValueSite {
-            id: Some(decl.id.clone()),
-            file: decl.file.clone(),
-            line,
-            column,
-            message: "embedded value roots may not be nested or overlap".to_string(),
-            source: decl.source.clone(),
-            binding_namespace: None,
-            binding_section: None,
-        }));
+        invalid.extend(
+            overlap_sites
+                .into_iter()
+                .map(|(line, column)| InvalidValueSite {
+                    id: Some(decl.id.clone()),
+                    file: decl.file.clone(),
+                    line,
+                    column,
+                    message: "embedded value roots may not be nested or overlap".to_string(),
+                    source: decl.source.clone(),
+                    binding_namespace: None,
+                    binding_section: None,
+                }),
+        );
 
         // A whole-declaration authority owns its complete section tree; an
         // embedded mark inside it is invalid and never competes for ownership.
@@ -127,7 +143,8 @@ fn validate_embedded_value_roots(
                         .get(&root_path)
                         .and_then(|info| info.value_root.as_ref())
                         .map(|root| root.marker_column),
-                    "embedded value root may not occur inside a whole-declaration value".to_string(),
+                    "embedded value root may not occur inside a whole-declaration value"
+                        .to_string(),
                 ));
             }
             // The nested marker is the complete overlap finding; do not also
@@ -153,10 +170,7 @@ fn validate_embedded_value_roots(
                 continue;
             };
             let root_level = root_info.heading_level;
-            let root_marker_column = root_info
-                .value_root
-                .as_ref()
-                .map(|root| root.marker_column);
+            let root_marker_column = root_info.value_root.as_ref().map(|root| root.marker_column);
             let root_title_valid = normalized
                 .get(root_line.saturating_sub(1))
                 .and_then(|(line, _, _, block_comment)| {
@@ -179,7 +193,8 @@ fn validate_embedded_value_roots(
                 reasons.push((
                     root_line,
                     root_marker_column,
-                    "embedded value marker must follow a nonempty numeric section title".to_string(),
+                    "embedded value marker must follow a nonempty numeric section title"
+                        .to_string(),
                 ));
             }
 
@@ -220,12 +235,7 @@ fn validate_embedded_value_roots(
                 if content.is_empty() || matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
                     continue;
                 }
-                let child = authored_numeric_heading_path(
-                    line,
-                    markdown,
-                    *block_comment,
-                    config,
-                );
+                let child = authored_numeric_heading_path(line, markdown, *block_comment, config);
                 let level = authored_heading_level(line, markdown, *block_comment, config);
                 let expected_path = format!("{root_path}.{expected}");
                 let immediate_numeric = child.as_deref().is_some_and(|path| {
@@ -274,12 +284,14 @@ fn validate_embedded_value_roots(
                     reasons.push((
                         line_no,
                         None,
-                        "embedded value component must be a valid one-line heading title".to_string(),
+                        "embedded value component must be a valid one-line heading title"
+                            .to_string(),
                     ));
                     continue;
                 };
                 let component = component_without_block_close(component, *block_comment);
-                if !component_text_is_valid(component) || component.contains(EMBEDDED_VALUE_MARKER) {
+                if !component_text_is_valid(component) || component.contains(EMBEDDED_VALUE_MARKER)
+                {
                     reasons.push((
                         line_no,
                         Some(column_offset + column),

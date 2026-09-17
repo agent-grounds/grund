@@ -75,7 +75,7 @@ Consumes configs. Produces the multi-project scope — member expansion, claims,
 
 ### 2.5 scanner
 
-Consumes the scope and the grammar. Produces `Findings`: every declaration, section, citation, value binding and grounding unit in the tree, from one walk ([§FS-check.1](../functional-spec/FS-check.md#1-inputs)). Knows no rule and no frontend, and never asks whether it is in a workspace. Design: [§AR-scanner](AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations). Categories: `scanner`, `value_json`.
+Consumes the scope and the grammar. Produces `Findings`: every declaration, section, citation, value binding and grounding unit in the tree, from one walk ([§FS-check.1](../functional-spec/FS-check.md#1-inputs)). Knows no rule and no frontend, and never asks whether it is in a workspace. Design: [§AR-scanner](AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations). Module: `crates/grund-core/src/scanner/`.
 
 ### 2.6 checker
 

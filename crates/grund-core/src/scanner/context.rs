@@ -1,3 +1,20 @@
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::Path;
+
+use super::unmarked_headings::markdown_declaration_body_end;
+use crate::config::Config;
+use crate::grammar::{
+    CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
+    doc_comment_rule, first_content_line, inline_note_verdicts,
+};
+use crate::model::{Findings, Id, InlineCitationSite, SectionHeadingOutsideDeclaration};
+use crate::workspace::WorkspaceCitationTarget;
+// §AR-system.4: three upward reads, through the crate root until their owners
+// are modules — the two home path keys of the checker's placement rules, and the
+// report's path sort key from `output.rs`.
+use crate::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
+
 /// Narrow the shared coordinate catalog to each declaration's body and retain
 /// every rejected heading as one check site (§FS-show.2.1.2, §FS-check.3.23).
 ///
@@ -6,7 +23,7 @@
 /// here makes every map reader agree without a surface-local guard. Rejected
 /// duplicate claimants become outside-heading sites too, never stale
 /// `duplicate-section` collisions.
-fn retain_in_body_sections(findings: &mut Findings) {
+pub(super) fn retain_in_body_sections(findings: &mut Findings) {
     let mut rejected = Vec::new();
     for decl in findings.declarations.values_mut().flatten() {
         let body = decl.body_start..=decl.body_end;
@@ -42,7 +59,7 @@ fn retain_in_body_sections(findings: &mut Findings) {
         .extend(rejected);
 }
 
-fn section_path_is_numeric(path: &str) -> bool {
+pub(crate) fn section_path_is_numeric(path: &str) -> bool {
     path.split('.')
         .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
 }
@@ -50,7 +67,7 @@ fn section_path_is_numeric(path: &str) -> bool {
 /// The level of a Markdown ATX heading line (`#` count), or `None` when the line
 /// is not a heading (§FS-check.4.14). ATX syntax permits at most three leading
 /// ASCII spaces and one through six `#`s followed by an ASCII space/tab or EOL.
-fn markdown_heading_level(line: &str) -> Option<usize> {
+pub(crate) fn markdown_heading_level(line: &str) -> Option<usize> {
     let indentation = line.bytes().take_while(|byte| *byte == b' ').count();
     if indentation > 3 {
         return None;
@@ -71,7 +88,7 @@ fn markdown_heading_level(line: &str) -> Option<usize> {
 /// In Markdown the body runs until the next heading at the same or higher level;
 /// in a source file it is bounded by the comment/docstring block the declaration
 /// opens, capped before the next declaration sharing that block.
-fn assign_declaration_bodies(
+pub(super) fn assign_declaration_bodies(
     findings: &mut Findings,
     is_md: bool,
     is_py: bool,
@@ -138,7 +155,7 @@ fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize,
 /// declaration whose body contains the site), else the file's unique kind home,
 /// else the homeless kind — `code`, or whatever the project named it
 /// (§FS-config.3.9.2).
-fn classify_citation_sources(findings: &mut Findings, config: &Config, path: &Path) {
+pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config, path: &Path) {
     // (body_start, body_end, id) for this file's declarations, so the enclosing
     // lookup is a scan of a small local list.
     let bodies: Vec<(usize, usize, Id)> = findings
@@ -163,9 +180,7 @@ fn classify_citation_sources(findings: &mut Findings, config: &Config, path: &Pa
                 cite.enclosing_declaration = Some(id.clone());
             }
             None => {
-                cite.source_kind = file_home
-                    .clone()
-                    .unwrap_or_else(|| homeless.to_string());
+                cite.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());
             }
         }
     }
@@ -180,9 +195,7 @@ fn classify_citation_sources(findings: &mut Findings, config: &Config, path: &Pa
                 candidate.enclosing_declaration = Some(id.clone());
             }
             None => {
-                candidate.source_kind = file_home
-                    .clone()
-                    .unwrap_or_else(|| homeless.to_string());
+                candidate.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());
             }
         }
     }
@@ -191,7 +204,7 @@ fn classify_citation_sources(findings: &mut Findings, config: &Config, path: &Pa
 /// The kind whose configured home (`[[kinds]] folder` / `file`, §FS-config.3.4)
 /// uniquely contains `path` — step 2 of §AR-scanner.2.4. `None` when no home or
 /// more than one home matches, so the citation falls through to `code`.
-fn file_home_kind(path: &Path, config: &Config) -> Option<String> {
+pub(crate) fn file_home_kind(path: &Path, config: &Config) -> Option<String> {
     // Walked file paths are canonicalized against the scan root (`scan_roots`
     // resolves an explicit scope), while `config.root` is the configured,
     // possibly-symlinked root — so on macOS a temp dir resolves through
@@ -224,7 +237,7 @@ fn file_home_kind(path: &Path, config: &Config) -> Option<String> {
 /// and so is a *doc comment*: documentation is not a note about a clause, so
 /// nothing the inline citation style says applies to one
 /// (§FS-inline-citation-style.1.1, §AR-scanner.4).
-fn inline_citation_sites(
+pub(super) fn inline_citation_sites(
     path: &Path,
     text: &str,
     is_md: bool,
@@ -265,7 +278,11 @@ fn inline_citation_sites(
             start <= leading_limit,
         );
         if !is_doc_comment
-            && !block_declares_id(block, matches!(kind, CommentBlockKind::PythonDocstring), config)
+            && !block_declares_id(
+                block,
+                matches!(kind, CommentBlockKind::PythonDocstring),
+                config,
+            )
         {
             // §FS-inline-citation-style.3.3: both verdicts are taken here, while
             // the block's lines are in hand, so the checker never re-reads one
@@ -277,7 +294,11 @@ fn inline_citation_sites(
                 last_line: end + 1,
                 // §FS-inline-citation-style.2.3: a column is one character, not one
                 // byte — `é` and `§` cost one each (§DF-note-columns-are-characters).
-                max_columns: block.iter().map(|line| line.chars().count()).max().unwrap_or(0),
+                max_columns: block
+                    .iter()
+                    .map(|line| line.chars().count())
+                    .max()
+                    .unwrap_or(0),
                 has_note,
                 layout_violations,
             };
