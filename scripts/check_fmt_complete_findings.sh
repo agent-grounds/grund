@@ -20,7 +20,7 @@
 set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-target="$repo_root/crates/grund-core/src/fmt_workspace.rs"
+target="$repo_root/crates/grund-core/src/writers/fmt_workspace.rs"
 backup_dir="$repo_root/target/check-fmt-complete-findings"
 backup="$backup_dir/fmt_workspace.rs.orig"
 bypass='precomputed_findings: Some(&project.findings),'

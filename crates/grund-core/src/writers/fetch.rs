@@ -1,6 +1,13 @@
-/// The explicit external-snapshot materializer (§FS-fetch). This module owns
-/// integration execution and output validation; every scanner and query remains
-/// a reader under §REQ-runs-offline.
+//! The explicit external-snapshot materializer (§FS-fetch). This module owns
+//! integration execution and output validation; every scanner and query remains
+//! a reader under §REQ-runs-offline. The snapshot-home discovery and the atomic
+//! install it ends in are `fetch_write.rs`.
+
+use std::path::{Path, PathBuf};
+
+use super::fetch_write::{write_file_home, write_folder_home};
+use crate::grammar::parse_id_arg;
+use crate::workspace::{expand_workspace_tree, resolve_workspace_config};
 
 /// Which public CLI exit class a fetch refusal belongs to (§FS-fetch.7).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -31,7 +38,7 @@ fn fetch_query(message: impl Into<String>) -> FetchFailure {
     }
 }
 
-fn fetch_operational(message: impl Into<String>) -> FetchFailure {
+pub(super) fn fetch_operational(message: impl Into<String>) -> FetchFailure {
     FetchFailure {
         kind: FetchFailureKind::Operational,
         message: message.into(),
@@ -40,11 +47,11 @@ fn fetch_operational(message: impl Into<String>) -> FetchFailure {
 
 /// Materialize exactly one local or qualified external ID (§FS-fetch.1).
 pub fn fetch_snapshot(raw: &str, path: &Path) -> std::result::Result<(), FetchFailure> {
-    let mut root_config = resolve_workspace_config(path)
-        .map_err(|err| fetch_operational(format!("{err:#}")))?;
-    let (namespace, local) = raw.rsplit_once('/').map_or((None, raw), |(ns, id)| {
-        (Some(ns), id)
-    });
+    let mut root_config =
+        resolve_workspace_config(path).map_err(|err| fetch_operational(format!("{err:#}")))?;
+    let (namespace, local) = raw
+        .rsplit_once('/')
+        .map_or((None, raw), |(ns, id)| (Some(ns), id));
     let selected = if let Some(namespace) = namespace {
         if !root_config.workspace_declared {
             return Err(fetch_operational(format!(
@@ -63,8 +70,8 @@ pub fn fetch_snapshot(raw: &str, path: &Path) -> std::result::Result<(), FetchFa
         root_config
     };
 
-    let (id, section) = parse_id_arg(local, &selected.grammar)
-        .map_err(|err| fetch_query(format!("{err:#}")))?;
+    let (id, section) =
+        parse_id_arg(local, &selected.grammar).map_err(|err| fetch_query(format!("{err:#}")))?;
     if section.is_some() {
         return Err(fetch_query(format!("invalid ID `{raw}`")));
     }
@@ -123,7 +130,9 @@ pub fn fetch_snapshot(raw: &str, path: &Path) -> std::result::Result<(), FetchFa
     };
     validate_fetched_declaration(snapshot, local, depth)?;
     match home {
-        FetchHome::File(path) => write_file_home(&path, &selected.grammar, &id, snapshot.as_bytes()),
+        FetchHome::File(path) => {
+            write_file_home(&path, &selected.grammar, &id, snapshot.as_bytes())
+        }
         FetchHome::Folder(path) => {
             write_folder_home(&path, &selected, &id, local, snapshot.as_bytes())
         }
@@ -180,9 +189,7 @@ fn validate_fetched_declaration(
                     )));
                 }
                 if title.trim().is_empty() {
-                    return Err(fetch_operational(
-                        "fetch output declaration title is empty",
-                    ));
+                    return Err(fetch_operational("fetch output declaration title is empty"));
                 }
             } else if declaration_count == 0 || hashes != native_depth + 1 {
                 return Err(fetch_operational(format!(

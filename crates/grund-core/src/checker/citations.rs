@@ -14,13 +14,11 @@ use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Config, KindCitationRules, KindConfig,
     NamespaceMatch, render_citation_target,
 };
+use crate::grammar::render_id;
 use crate::model::{
     CheckReport, Citation, Diagnostic, E2eSpecRef, Findings, Id, paths_same_location,
 };
 use crate::scanner::file_home_kind;
-// §AR-system.4: one upward read through the crate root — `render_id`, the ID
-// renderer, which is the writers' (§FS-id).
-use crate::render_id;
 
 /// How a citing kind is named in a finding (§FS-check.3.11, §FS-check.3.12): a
 /// citable kind by its name, which is the prefix of every ID in it; a

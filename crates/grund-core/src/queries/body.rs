@@ -7,17 +7,17 @@ use super::show::{
 };
 use crate::config::Config;
 use crate::grammar::{
-    PythonDocstringScanState, declaration_id_on_line, markdown_fence_delimiter, section_path,
-    source_scan_line,
+    PythonDocstringScanState, declaration_id_on_line, markdown_fence_delimiter, render_id,
+    section_path, source_scan_line,
 };
 use crate::model::{
     Declaration, DeclarationSource, Id, SectionInfo, ShowOutput, ShowRenderMode, ShowSection,
     TextOverlays,
 };
-// §AR-system.4: two reads through the crate root — the ID renderer from the
-// writers' `id.rs`, and the cross-reference flattening of §DF-show-cross-ref-flattening
-// from `fmt_links.rs`, which is the inverse of the formatter's own wrapper.
-use crate::{flatten_cross_ref_links, render_id};
+// §AR-system.4: one read through the crate root — the cross-reference
+// flattening of §DF-show-cross-ref-flattening from the writers'
+// `fmt_links.rs`, the inverse of the formatter's own wrapper.
+use crate::flatten_cross_ref_links;
 
 /// Declaration-body extraction: where a declaration's body begins and ends in
 /// the file that holds it, across Markdown and every supported comment dialect

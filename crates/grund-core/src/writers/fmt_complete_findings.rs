@@ -1,3 +1,14 @@
+use anyhow::Result;
+
+use super::fmt_error::FmtScanAbort;
+use crate::config::Config;
+use crate::model::Findings;
+use crate::scanner::scan_tree;
+use crate::workspace::WorkspaceProject;
+// §AR-system.4: two reads through the crate root — the scan-error record and its
+// builder, both `api.rs`'s (§AR-system.2.9).
+use crate::{ApiScanError, api_scan_error};
+
 /// The one place a declaration set is proven complete (§FS-fmt.7.4).
 ///
 /// A rewrite that expands a shorthand (§FS-fmt.2.4) or wraps a cross-reference
@@ -9,12 +20,14 @@
 /// not the findings, so a call site that has a `Findings` at hand and skips the
 /// check does not compile (issue #105).
 ///
-/// That guarantee is why this is a real `mod` and not a newtype beside the rest.
-/// `grund-core` is one flat module assembled by `include!()`, so a private field
-/// written in any of those files is still constructible by every sibling file,
-/// and the rule would be a convention wearing a type's clothes. Here the field
-/// is reachable only from inside this module, which makes the two constructors
-/// below the only ways a proof comes into being:
+/// That guarantee is why this is a real `mod` and not a newtype beside the rest
+/// (§DF-fmt-one-model.2.5). `grund-core` was one flat module assembled by
+/// `include!()` when the rule landed, so a private field written in any of those
+/// files was still constructible by every sibling file, and the rule would have
+/// been a convention wearing a type's clothes. The nested `mod` stays now that
+/// §AR-system.2.8 is a Rust module and a file would already be boundary enough:
+/// the field is then unreachable from this file's own items too, so the two
+/// constructors below are the only ways a proof comes into being:
 ///
 /// - `CompleteScan::of_tree_or_abort` — scan the whole project and refuse the
 ///   run when the scan met an error;
@@ -28,6 +41,9 @@ mod complete_findings {
         ApiScanError, Config, Findings, FmtScanAbort, Result, WorkspaceProject, api_scan_error,
         scan_tree,
     };
+    // Everything above is imported by the file this module sits in; the module
+    // is nested inside it so the field below is private to the two constructors
+    // (§FS-fmt.7.4).
 
     /// A whole-project scan that met no unreadable path, owning its findings
     /// (§FS-fmt.7.4). `fmt_tree` holds one when it had to scan for itself.
@@ -106,13 +122,11 @@ mod complete_findings {
         /// code that reads both halves of the pair: no call site is trusted to
         /// remember to check.
         pub(crate) fn complete_findings(&self) -> Option<CompleteFindings<'_>> {
-            self.scan_errors
-                .is_empty()
-                .then_some(CompleteFindings {
-                    findings: &self.findings,
-                })
+            self.scan_errors.is_empty().then_some(CompleteFindings {
+                findings: &self.findings,
+            })
         }
     }
 }
 
-use complete_findings::{CompleteFindings, CompleteScan};
+pub(super) use complete_findings::{CompleteFindings, CompleteScan};

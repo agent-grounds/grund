@@ -26,13 +26,12 @@ A file belongs to the category it sits under where that category is a module dir
 | **checker** | `checker/`, `checker_cmd` | [§AR-system.2.6](README.md#26-checker) |
 | **queries** | `queries/`, `show_cmd`, `refs_cmd`, `cover_cmd`, `list_cmd`, `completions_cmd` | [§AR-system.2.7](README.md#27-queries) |
 | **output** | `output` | [§AR-system.2.9](README.md#29-api) |
-| **fmt** | `fmt` | [§AR-system.2.8](README.md#28-writers) |
-| **id** | `id` | [§AR-system.2.8](README.md#28-writers) |
+| **writers** | `writers/`, `fmt_cmd`, `id_cmd` | [§AR-system.2.8](README.md#28-writers) |
 | **init** | `init` | [§AR-system.2.8](README.md#28-writers) |
 | **api** | `api` | [§AR-system.2.9](README.md#29-api) |
 | **grammar** | `grammar/` | [§AR-system.2.1](README.md#21-grammar) |
 | **workspace** | `workspace/`, `workspace_members_cmd` | [§AR-system.2.4](README.md#24-workspace) |
-| **integrations** | `integrations`, `fetch`, `fetch_write` | [§AR-system.2.8](README.md#28-writers) |
+| **integrations** | `integrations` | [§AR-system.2.8](README.md#28-writers) |
 | **compat** | `compat` | [§AR-system.2.9](README.md#29-api) |
 
 `tests/integration/test_module_categories.py` holds this table against the tree: every top-level implementation file owned by exactly one row, every prefix owning a file, and every named module directory present with none of its former prefixes left at the top level but the ones its row still lists.

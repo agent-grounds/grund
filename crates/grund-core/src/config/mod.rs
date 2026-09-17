@@ -11,10 +11,15 @@
 //! and cross-key rules of its own — `[[kinds]]` with its built-in defaults,
 //! `[citations]`, `[workspace]`, and the grounding pair — which gained the
 //! per-kind level lookup `grounding_level_for_kind` when §AR-system.2.6 became a
-//! module, the scanner having read it upward out of a checker file.
+//! module, the scanner having read it upward out of a checker file. The `[fmt]`
+//! section gained a file of the same shape when §AR-system.2.8 became one: the
+//! `exclude` glob compiler and the validator this reader refuses a malformed
+//! pattern with, which were the formatter's and which `parse.rs` had been
+//! reading upward (§AR-system.4).
 
 mod citations;
 mod discovery;
+mod fmt_block;
 mod grounding;
 mod kind;
 mod kind_defaults;
@@ -39,6 +44,7 @@ pub(crate) use citations::render_citation_target;
 pub(crate) use discovery::{
     config_file_in, home_form_of, load_config, load_config_at, load_config_at_with_report_base,
 };
+pub(crate) use fmt_block::build_fmt_exclude_matcher;
 pub(crate) use grounding::grounding_level_for_kind;
 pub(crate) use parse::{parse_string_list, strip_comment};
 pub(crate) use point_sizes::measure_point_text;
@@ -49,3 +55,8 @@ pub(crate) use workspace_block::{
     INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, invalid_alias_path_segment,
     invalid_project_alias_message, is_valid_project_alias, optional_member_alias_segment,
 };
+
+// What only the crate's own test modules read (§AR-core-module-layout.1): the
+// `[fmt] exclude` validator, which the suppression cases drive directly.
+#[cfg(test)]
+pub(crate) use fmt_block::validate_fmt_exclude;

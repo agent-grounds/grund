@@ -1,3 +1,27 @@
+//! Where a cross-reference link points (§FS-fmt.6.2): the repo-relative path to
+//! the declaration's home file — following an inline-spec stub to its real
+//! source file — and the heading anchor a Markdown home takes.
+//!
+//! It is the formatter's plan rather than a lexical fact, which is why the
+//! checker's index-entry rule reads it upward through the crate root
+//! (§FS-check.3.18, §AR-system.4): it resolves the ID against the whole
+//! project's declarations, asks the checker which declaration is a stub for an
+//! inline home, and re-reads a home file when the cited section is not already
+//! in the section map. The derivation of an anchor *from* heading text is the
+//! lexical half and went down into `grammar/anchors.rs`.
+
+use anyhow::{Context, Result};
+use std::fs;
+use std::path::Path;
+
+use crate::checker::is_stub_for_inline_decl;
+use crate::config::Config;
+use crate::grammar::{
+    PythonDocstringScanState, anchor_slug, declaration_id_on_line, reduce_heading_text, render_id,
+    section_anchor_text, section_path, source_scan_line,
+};
+use crate::model::{Declaration, Findings, Id, resolve_stub_target};
+
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
 /// home file — following an inline-spec stub to its real source file — plus a
 /// heading anchor whenever the home is Markdown: the cited section's heading for a
@@ -5,7 +29,7 @@
 /// (§FS-fmt.6.2, §DF-md-link-anchor-strategy, §DF-declaration-anchor). A source-file
 /// home (a stub's target) and the `none` profile both get a bare file link.
 /// `None` if the ID does not resolve (§FS-fmt.6.3).
-fn markdown_link_target(
+pub(crate) fn markdown_link_target(
     from_file: &Path,
     id: &Id,
     section: Option<&str>,
@@ -20,7 +44,7 @@ fn markdown_link_target(
 /// still drives anchor profile (§FS-fmt.6.7) and stub resolution, but the
 /// link path is anchored at `path_root` (the workspace root) when the
 /// citing file and the target's home live in different projects.
-fn markdown_link_target_with_root(
+pub(super) fn markdown_link_target_with_root(
     from_file: &Path,
     id: &Id,
     section: Option<&str>,
@@ -95,8 +119,7 @@ fn relative_url_under(from_file: &Path, to_file: &Path, root: &Path) -> String {
             let root = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
             let from_file =
                 std::fs::canonicalize(from_file).unwrap_or_else(|_| from_file.to_path_buf());
-            let to_file =
-                std::fs::canonicalize(to_file).unwrap_or_else(|_| to_file.to_path_buf());
+            let to_file = std::fs::canonicalize(to_file).unwrap_or_else(|_| to_file.to_path_buf());
             let from_rel = from_file
                 .strip_prefix(&root)
                 .map(Path::to_path_buf)
@@ -140,39 +163,6 @@ fn path_components(path: &Path) -> Vec<String> {
             _ => None,
         })
         .collect()
-}
-
-/// The heading text a section anchor is built from — `<number> <title>` taken
-/// straight off the heading line, since anchors are derived from heading text, not
-/// stored (§DF-md-link-anchor-strategy). The title is reduced to its rendered form
-/// (`reduce_heading_text`: `[§FS-<x>.1](path)` → `§FS-<x>.1`, `<ID>` dropped) so
-/// the anchor is stable whether or not a citation in this heading has been wrapped
-/// by `grund fmt --cross-refs` (§DF-github-anchor-fidelity).
-fn section_anchor_text(line: &str, section: &str) -> String {
-    let trimmed = line.trim_start();
-    // §FS-fmt.6.2: named anchors derive from the complete rendered heading, so
-    // its explicit colon reaches the renderer (`goals: Scope`). Numeric paths
-    // retain their historical normalized stored text byte for byte.
-    if section
-        .as_bytes()
-        .first()
-        .is_some_and(u8::is_ascii_lowercase)
-    {
-        return reduce_heading_text(trimmed.trim_start_matches('#').trim_start());
-    }
-    let heading = trimmed
-        .trim_start_matches('#')
-        .trim_start()
-        .trim_start_matches(section)
-        .trim_start_matches('.')
-        .trim_start();
-    format!(
-        "{} {}",
-        section.replace('.', ""),
-        reduce_heading_text(heading)
-    )
-    .trim()
-    .to_string()
 }
 
 /// Re-read a home file to find the heading text of a cited section — the fallback

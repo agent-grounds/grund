@@ -1,38 +1,94 @@
+//! Citation normalization (§FS-fmt.2): one pass over a document that rewrites
+//! triggers to markers, marks bare citations, expands shorthands, and keeps
+//! cross-reference links current. The modes share the traversal — each line is
+//! asked every question once — so what lives here is the walk and the per-line
+//! decisions inside it. The link construction §FS-fmt.6 needs is
+//! `fmt_links.rs`, the two suppressed scopes are `fmt_suppress.rs`, and the
+//! deprecated command surface around all of it is the flat `fmt_cmd.rs`
+//! (§AR-system.2.9).
+//!
+//! Named for the rewrite rather than for the category, because the category is
+//! the `writers/` directory now (§AR-core-module-layout.1). The
+//! §FS-fmt.6.6 auto-enable pair came in from `fmt_cmd.rs` with the move: it
+//! reads a `[fmt.cross_refs]` key and asks the walk whether its scope holds
+//! Markdown, which is a question about the run rather than about argv, and
+//! `api.rs` and `fmt_workspace.rs` are the two callers — neither of them the
+//! command.
+
+use anyhow::{Context, Result};
+use std::collections::BTreeSet;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use super::fmt_complete_findings::{CompleteFindings, CompleteScan};
+use super::fmt_links::wrap_markdown_links_with_targets;
+use super::fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
+use crate::checker::{KindIndexEntries, KindIndexFiles};
+use crate::config::Config;
+use crate::grammar::{
+    DocstringContent, DocstringCursor, ShorthandTargets, declaration_id_on_line,
+    expand_shorthand_citations_with_origins, id_token_end_at, is_inside_inline_code,
+    is_inside_markdown_link_destination, markdown_fence_delimiter, string_literal_in,
+};
+use crate::model::{Findings, Id};
+use crate::scanner::{walk_scannable_files, walk_scannable_files_reporting};
+use crate::workspace::WorkspaceContext;
+// §AR-system.4: three reads through the crate root — the scan-error record and
+// its builder from `api.rs`, and the report path spelling from `output.rs`.
+use crate::{ApiScanError, api_scan_error, display_path};
+
+/// §FS-fmt.6.6: whether this invocation turns the cross-reference pass on by
+/// itself — `[fmt.cross_refs] enabled` and at least one Markdown file in its
+/// scope, identically for dry-run and write mode.
+pub(crate) fn auto_cross_refs_for_scope(
+    config: &Config,
+    scope: Option<&Path>,
+    explicit_scope: bool,
+) -> Result<bool> {
+    if !config.fmt_cross_refs_enabled {
+        return Ok(false);
+    }
+    scope_contains_markdown(config, scope, explicit_scope)
+}
+
+fn scope_contains_markdown(
+    config: &Config,
+    scope: Option<&Path>,
+    explicit_scope: bool,
+) -> Result<bool> {
+    Ok(walk_scannable_files(config, scope, explicit_scope)?
+        .iter()
+        .any(|path| path.extension().and_then(|ext| ext.to_str()) == Some("md")))
+}
+
 /// What one `fmt` walk produced (§FS-fmt.3). Every path here is already rendered
 /// against the run's config, because that is where the config naming it is at
 /// hand; the command surface prints them and maps the exit code.
-///
-/// Citation normalization: one pass over a document that rewrites triggers to
-/// markers, marks bare citations, expands shorthands, and keeps cross-reference
-/// links current (§FS-fmt.2). The modes share the traversal — each line is asked
-/// every question once — so what lives here is the walk and the per-line
-/// decisions inside it. The command surface around it is `fmt_cmd.rs`, and the
-/// link construction §FS-fmt.6 needs is `fmt_links.rs`.
-struct FmtTreeOutcome {
+pub(crate) struct FmtTreeOutcome {
     /// The lines it rewrote — or, in a dry run, would have.
-    changes: Vec<(PathBuf, usize, String)>,
+    pub(crate) changes: Vec<(PathBuf, usize, String)>,
     /// The paths it could not read at all (§FS-check.2).
-    scan_errors: Vec<ApiScanError>,
+    pub(crate) scan_errors: Vec<ApiScanError>,
     /// The files it read and would not rewrite, because a link reaches them from
     /// outside the config root (§FS-fmt.2.3.2). Named in both modes: `--write`
     /// did not write them, and the dry run is saying `--write` will not.
-    refused_writes: Vec<String>,
+    pub(crate) refused_writes: Vec<String>,
 }
 
 /// What `fmt_tree` rewrites and against what context — grouped so the walk
 /// inputs (config + scope) and the rewrite knobs travel separately.
-struct FmtRunOpts<'a> {
-    add_marker: bool,
-    cross_refs: bool,
-    write: bool,
+pub(crate) struct FmtRunOpts<'a> {
+    pub(crate) add_marker: bool,
+    pub(crate) cross_refs: bool,
+    pub(crate) write: bool,
     /// The config every path in the *report* is rendered against — the workspace
     /// root's, where `check` renders too (§FS-fmt.3). Each project is walked and
     /// rewritten under its own config, and rendering against that one instead
     /// spelled a member's file from the member root: `docs/FS-003.md` for
     /// `packages/sub/docs/FS-003.md`, which is a different real file in the same
     /// run's output.
-    render: &'a Config,
-    workspace: Option<&'a WorkspaceContext>,
+    pub(crate) render: &'a Config,
+    pub(crate) workspace: Option<&'a WorkspaceContext>,
     /// Whole-project findings the caller has already produced, carrying the
     /// proof that the scan making them met no error (§FS-fmt.7.4) — a
     /// workspace-root `fmt` reuses each project's `WorkspaceContext` scan this
@@ -40,13 +96,13 @@ struct FmtRunOpts<'a> {
     /// see `complete_findings`. `None` falls back to a complete scan inside
     /// `fmt_tree`, whose errors become one structured strict abort rather than
     /// a partial result.
-    precomputed_findings: Option<CompleteFindings<'a>>,
+    pub(crate) precomputed_findings: Option<CompleteFindings<'a>>,
     /// §FS-fmt.6.1 / §DF-index-always-linkified: run the cross-reference pass on
     /// a kind's index file even where `[fmt.cross_refs] enabled = false` turned
     /// `cross_refs` off. It decides *which files* the pass touches when the pass
     /// runs at all; dry-run and write mode both enable this carve-out so the
     /// former previews the exact index-entry wraps the latter applies.
-    index_cross_refs: bool,
+    pub(crate) index_cross_refs: bool,
 }
 
 /// Walk the tree and rewrite each scannable file line by line — never touching a
@@ -80,7 +136,7 @@ struct FmtRunOpts<'a> {
 /// rewrite for it: a dry run predicts what `--write` does, and a pending rewrite
 /// `--write` will never perform is one no edit can clear, so `fmt --check` would
 /// exit `1` on this tree forever and a gate built on it could never pass.
-fn fmt_tree(
+pub(crate) fn fmt_tree(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
@@ -170,15 +226,22 @@ fn fmt_tree(
             .flatten();
         let cross_refs = cross_refs && !file_excluded;
         let file_changes_start = changes.len();
-        let mut rewritten = rewrite_file(&original, &path, config, is_md, &FmtLineOpts {
-            add_marker,
-            cross_refs,
-            excluded: file_excluded,
-            index_entry_ids,
-            findings,
-            workspace,
-            shorthand_targets: &shorthand_targets,
-        }, &mut changes);
+        let mut rewritten = rewrite_file(
+            &original,
+            &path,
+            config,
+            is_md,
+            &FmtLineOpts {
+                add_marker,
+                cross_refs,
+                excluded: file_excluded,
+                index_entry_ids,
+                findings,
+                workspace,
+                shorthand_targets: &shorthand_targets,
+            },
+            &mut changes,
+        );
         // §FS-fmt.2.4: a shorthand to expand and no declarations yet. Scan once,
         // then redo *this* file — every file already walked is final, because
         // having no candidate is exactly why the scan had not happened by then.
@@ -187,15 +250,22 @@ fn fmt_tree(
             findings = shorthand_findings.as_ref().map(CompleteScan::findings);
             shorthand_targets = ShorthandTargets::new(config, findings, workspace);
             changes.truncate(file_changes_start);
-            rewritten = rewrite_file(&original, &path, config, is_md, &FmtLineOpts {
-                add_marker,
-                cross_refs,
-                excluded: file_excluded,
-                index_entry_ids,
-                findings,
-                workspace,
-                shorthand_targets: &shorthand_targets,
-            }, &mut changes);
+            rewritten = rewrite_file(
+                &original,
+                &path,
+                config,
+                is_md,
+                &FmtLineOpts {
+                    add_marker,
+                    cross_refs,
+                    excluded: file_excluded,
+                    index_entry_ids,
+                    findings,
+                    workspace,
+                    shorthand_targets: &shorthand_targets,
+                },
+                &mut changes,
+            );
         }
         if write && rewritten.changed {
             let mut output = rewritten.lines.join("\n");
@@ -280,8 +350,16 @@ fn rewrite_file(
         // §FS-fmt.2.5: the file's own `[fmt] exclude` verdict, or the region the
         // directives above have opened. Either one leaves only the index carve-out.
         let suppressed = opts.excluded || !directives.rewriting();
-        let (new_line, label) =
-            fmt_line(line, entry, path, config, is_md, opts, suppressed, &mut saw_shorthand_candidate);
+        let (new_line, label) = fmt_line(
+            line,
+            entry,
+            path,
+            config,
+            is_md,
+            opts,
+            suppressed,
+            &mut saw_shorthand_candidate,
+        );
         if new_line != line {
             changes.push((path.to_path_buf(), idx + 1, label));
             changed = true;
@@ -298,13 +376,13 @@ fn rewrite_file(
 /// The rewrites `fmt_line` runs and their inputs — grouped so `fmt_line` has
 /// one logical "what to rewrite" parameter instead of three flags plus two
 /// optional findings handles.
-struct FmtLineOpts<'a> {
-    add_marker: bool,
-    cross_refs: bool,
+pub(crate) struct FmtLineOpts<'a> {
+    pub(crate) add_marker: bool,
+    pub(crate) cross_refs: bool,
     /// §FS-fmt.2.5.1: this file is named by `[fmt] exclude`, so every line of it
     /// is suppressed. The per-region directives (§FS-fmt.2.5.2) are the other half
     /// of the same verdict and are read line by line in `rewrite_file`.
-    excluded: bool,
+    pub(crate) excluded: bool,
     /// §FS-fmt.6.1: when this file is a kind's index the always-linkify carve-out
     /// may have to reach, the IDs that index owes an entry for — the only citations
     /// the pass wraps where the ordinary one is off. `None` for every other file,
@@ -312,13 +390,13 @@ struct FmtLineOpts<'a> {
     /// `[fmt.cross_refs] enabled = false`, or inside a suppressed scope
     /// (§FS-fmt.2.5.3). Elsewhere `cross_refs` already means "wrap what this file
     /// has" and the carve-out has nothing to add.
-    index_entry_ids: Option<&'a BTreeSet<Id>>,
-    findings: Option<&'a Findings>,
-    workspace: Option<&'a WorkspaceContext>,
+    pub(crate) index_entry_ids: Option<&'a BTreeSet<Id>>,
+    pub(crate) findings: Option<&'a Findings>,
+    pub(crate) workspace: Option<&'a WorkspaceContext>,
     /// The declaration indexes the shorthand rewrite resolves against, built once
     /// per walk (§FS-fmt.2.4). Separate from `findings` because a qualified
     /// shorthand reads another project's declarations entirely.
-    shorthand_targets: &'a ShorthandTargets<'a>,
+    pub(crate) shorthand_targets: &'a ShorthandTargets<'a>,
 }
 
 /// Apply the `fmt` rewrites to one line, in order: trigger→marker (§FS-fmt.2.1),
@@ -341,7 +419,7 @@ struct FmtLineOpts<'a> {
 /// still see a mistake in them; this one writes the slug *into* the token, and a
 /// wrong one is a well-formed citation of the wrong declaration.
 #[allow(clippy::too_many_arguments)]
-fn fmt_line(
+pub(crate) fn fmt_line(
     line: &str,
     docstrings: DocstringCursor,
     path: &Path,
@@ -388,7 +466,11 @@ fn fmt_line(
     let mut link_changed = false;
     // §FS-fmt.6.1: the carve-out narrows the pass to the index's own entries only
     // where the ordinary pass is off; where it runs, it already wraps the page.
-    let entry_ids = if opts.cross_refs { None } else { opts.index_entry_ids };
+    let entry_ids = if opts.cross_refs {
+        None
+    } else {
+        opts.index_entry_ids
+    };
     if (opts.cross_refs || entry_ids.is_some())
         && is_md
         && let Some(findings) = opts.findings

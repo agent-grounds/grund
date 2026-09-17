@@ -31,7 +31,7 @@ Citations remain the source of truth; this is still a presentation layer ([§DF-
 
 ## 4. Consequences
 
-- `markdown_link_target` in `crates/grund-core/src/fmt_links.rs` derives a declaration-heading anchor for a sectionless citation to a Markdown home; new helper `declaration_heading_text`.
+- `markdown_link_target` in `crates/grund-core/src/writers/fmt_link_targets.rs` derives a declaration-heading anchor for a sectionless citation to a Markdown home; new helper `declaration_heading_text`.
 - [§FS-fmt.6.2](../../functional-spec/FS-fmt.md#62-form)'s anchor bullet is rewritten: the `#<anchor>` is present whenever the home is Markdown and the profile is not `none` — the section heading for a `.<section>` citation, the declaration heading for a bare ID. The "no section → no anchor" sentence is replaced.
 - [§FS-fmt.6.8](../../functional-spec/FS-fmt.md#68-measurable)'s curated e2e set gains a bare-ID citation whose link carries the declaration-heading anchor.
 - Running `grund fmt --cross-refs --write` over this repo rewrites every bare-ID `.md` citation from `(<file>)` to `(<file>#<decl-anchor>)`.

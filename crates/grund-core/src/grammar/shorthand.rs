@@ -23,7 +23,7 @@ use anyhow::{Result, anyhow};
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::compiled::{Grammar, QUALIFIED_CITATION_PREFIX};
-use super::ids::{parse_id, parse_id_arg};
+use super::ids::{parse_id, parse_id_arg, render_id, render_qualified_id};
 use super::never_rewrite::{
     DocstringContent, never_rewrite_context_in, qualified_suppressed_in_source,
     scanned_citation_rewritable,
@@ -31,15 +31,12 @@ use super::never_rewrite::{
 use super::shorthand_targets::{
     ShorthandTargets, shorthand_index_number, unique_shorthand_expansion_target,
 };
-use crate::model::{
-    CheckReport, Citation, Declaration, Diagnostic, Findings, Id, render_qualified_id,
-};
+use crate::model::{CheckReport, Citation, Declaration, Diagnostic, Findings, Id};
 // §AR-system.4: every name below belongs to a component above this one — config,
-// the scanner, the checker, the workspace and the writers — and stays reachable
-// through the crate root until each of those becomes a module of its own.
+// the scanner, the checker and the workspace — and stays reachable through the
+// crate root until each of those becomes a module of its own.
 use crate::{
     CitationLine, Config, ReferenceTier, ShorthandPolicy, WorkspaceCheckTarget, WorkspaceProject,
-    render_id,
 };
 
 /// One parsed ID token: the `Id`, its optional section path, and whether it was

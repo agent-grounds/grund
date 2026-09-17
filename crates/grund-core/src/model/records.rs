@@ -7,10 +7,6 @@ use super::paths::normalize_path_lexically;
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
 };
-// §AR-system.4: two upward reads, through the crate root until their owners
-// are modules — `Config` for the qualified-ID renderer, which is the writers'
-// (§FS-id), and `render_id` itself from the writers.
-use crate::{Config, render_id};
 
 /// A parsed ID: its kind plus whichever of `{number}` / `{slug}` the configured
 /// `[id] format` carries (§FS-config.3.2).
@@ -326,13 +322,6 @@ pub(crate) fn resolve_stub_target(root: &Path, stub_file: &Path, target: &Path) 
         markdown_relative
     } else {
         normalize_path_lexically(&root.join(target))
-    }
-}
-
-pub(crate) fn render_qualified_id(config: &Config, namespace: Option<&str>, id: &Id) -> String {
-    match namespace {
-        Some(namespace) => format!("{}/{}", namespace, render_id(config, id)),
-        None => render_id(config, id),
     }
 }
 

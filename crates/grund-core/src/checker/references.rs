@@ -20,8 +20,8 @@ use super::support::{
     missing_snapshot_message, target_for_citation,
 };
 use crate::config::{Config, KindResolution};
-use crate::grammar::{ShorthandIndexes, report_shorthand_citation};
-use crate::model::{CheckReport, DeclarationSource, Diagnostic, Findings, render_qualified_id};
+use crate::grammar::{ShorthandIndexes, render_qualified_id, report_shorthand_citation};
+use crate::model::{CheckReport, DeclarationSource, Diagnostic, Findings};
 use crate::scanner::{scan_roots_for, unwalked_home_roots};
 use crate::workspace::{WorkspaceProject, join_alternatives, namespace_is_unverified};
 // §AR-system.4: two upward reads through the crate root — the report path

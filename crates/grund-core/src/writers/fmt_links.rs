@@ -1,3 +1,36 @@
+//! The cross-reference link pass (§FS-fmt.6): which citations on a Markdown
+//! line get a link, and the splice that writes one without disturbing the bytes
+//! around it. `fmt_link_targets.rs` computes the URL each one points at,
+//! `fmt_shorthand_links.rs` resolves an accepted shorthand into a linkable
+//! citation, and the record of one citation found on a line is
+//! `grammar/ids.rs`'s (§AR-system.2.1).
+//!
+//! The inverse, `flatten_cross_ref_links`, is here too
+//! (§DF-show-cross-ref-flattening): it undoes exactly the wrap
+//! `wrap_markdown_links` writes, recognizing a wrapper label by the scanner's
+//! `formatter_wrapper_label_is_citation`, so it is the formatter's plan read
+//! backwards rather than a lexical fact that could live lower. `queries/body.rs`
+//! and `queries/batch.rs` read it through the crate root, a sibling edge
+//! §AR-system.4 leaves for the finalize task.
+
+use std::collections::BTreeSet;
+use std::path::Path;
+
+use super::fmt_link_targets::{markdown_link_target, markdown_link_target_with_root};
+use super::fmt_shorthand_links::{accepted_shorthand_link, collect_local_accepted_shorthand_links};
+use super::fmt_value_bindings::markdown_citation_is_value_binding;
+use crate::config::Config;
+use crate::grammar::{
+    MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, ShorthandTargets, is_inside_inline_code,
+    parse_id, parse_longest_id_prefix,
+};
+use crate::model::{Findings, Id};
+use crate::scanner::{
+    collect_local_legacy_markdown_citations, formatter_wrapper_label_is_citation,
+    legacy_catalog_ids, match_legacy_tail,
+};
+use crate::workspace::WorkspaceContext;
+
 /// Wrap each `§<ID>[.<section>]` citation on this Markdown line as `[§<ID>…](url)`
 /// — the `--cross-refs` rewrite (§FS-fmt.6.2): re-derive an existing wrapper's URL,
 /// skip citations in inline code (§FS-fmt.6.4), and emit nothing when the target
@@ -9,7 +42,7 @@
 /// the relative path crossing the workspace and the anchor computed
 /// against the target project's config (§FS-workspace.8.5).
 #[cfg(test)]
-fn wrap_markdown_links(
+pub(crate) fn wrap_markdown_links(
     line: &str,
     path: &Path,
     config: &Config,
@@ -18,14 +51,12 @@ fn wrap_markdown_links(
     only_ids: Option<&BTreeSet<Id>>,
 ) -> String {
     let targets = ShorthandTargets::new(config, Some(findings), workspace);
-    wrap_markdown_links_with_targets(
-        line, path, config, findings, workspace, only_ids, &targets,
-    )
+    wrap_markdown_links_with_targets(line, path, config, findings, workspace, only_ids, &targets)
 }
 
 /// The production §FS-fmt.6 wrapper pass, sharing §FS-fmt.2.4's already-built
 /// target indexes so accepted shorthand adds no per-citation catalog scan.
-fn wrap_markdown_links_with_targets(
+pub(super) fn wrap_markdown_links_with_targets(
     line: &str,
     path: &Path,
     config: &Config,
@@ -36,9 +67,7 @@ fn wrap_markdown_links_with_targets(
 ) -> String {
     let mut output = String::new();
     let mut cursor = 0;
-    for citation in
-        markdown_link_citations(line, config, findings, workspace, shorthand_targets)
-    {
+    for citation in markdown_link_citations(line, config, findings, workspace, shorthand_targets) {
         if citation.marker_start < cursor {
             continue;
         }
@@ -110,14 +139,6 @@ fn wrap_markdown_links_with_targets(
     output
 }
 
-struct MarkdownLineCitation {
-    marker_start: usize,
-    token_end: usize,
-    namespace: Option<String>,
-    id: Id,
-    section: Option<String>,
-}
-
 fn markdown_link_citations(
     line: &str,
     config: &Config,
@@ -147,7 +168,9 @@ fn markdown_link_citations(
         if is_inside_inline_code(line, marker_start) {
             continue;
         }
-        let Some(id) = parse_id(&caps, &config.grammar) else { continue };
+        let Some(id) = parse_id(&caps, &config.grammar) else {
+            continue;
+        };
         citations.push(MarkdownLineCitation {
             marker_start,
             token_end: full.end(),
@@ -164,10 +187,8 @@ fn markdown_link_citations(
     );
     collect_local_legacy_markdown_citations(line, config, findings, &mut citations);
     citations.sort_by(|a, b| {
-        (a.marker_start, std::cmp::Reverse(a.token_end)).cmp(&(
-            b.marker_start,
-            std::cmp::Reverse(b.token_end),
-        ))
+        (a.marker_start, std::cmp::Reverse(a.token_end))
+            .cmp(&(b.marker_start, std::cmp::Reverse(b.token_end)))
     });
     citations.dedup_by(|a, b| a.marker_start == b.marker_start && a.token_end == b.token_end);
     citations
@@ -225,15 +246,14 @@ fn collect_workspace_markdown_link_citations(
             Some(parsed) => Some((parsed.id, parsed.section, parsed.len)),
             None => {
                 let catalog = legacy_catalog_ids(&target_project.findings.declarations);
-                match_legacy_tail(id_rest, &target_project.config, &catalog)
-                    .or_else(|| {
-                        accepted_shorthand_link(
-                            id_rest,
-                            config,
-                            &target_project.config,
-                            target_index.map(|target| &target.index),
-                        )
-                    })
+                match_legacy_tail(id_rest, &target_project.config, &catalog).or_else(|| {
+                    accepted_shorthand_link(
+                        id_rest,
+                        config,
+                        &target_project.config,
+                        target_index.map(|target| &target.index),
+                    )
+                })
             }
         };
         let Some((id, section, len)) = parsed else {
@@ -260,7 +280,7 @@ fn collect_workspace_markdown_link_citations(
 /// §FS-fmt.6.4), and `--format md` output (kept verbatim by the caller) are all
 /// left untouched. Purely textual: the citation is never resolved, so a dangling
 /// one is flattened just the same and `grund check` still reports it.
-fn flatten_cross_ref_links(body: &str, config: &Config) -> String {
+pub(crate) fn flatten_cross_ref_links(body: &str, config: &Config) -> String {
     if !body.contains("](") {
         return body.to_string();
     }

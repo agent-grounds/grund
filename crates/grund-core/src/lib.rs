@@ -1,11 +1,8 @@
 use anyhow::{Context, Result, anyhow};
-use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use regex::Regex;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-use unicode_normalization::UnicodeNormalization;
 
 // §AR-system.2.2: the model component is one Rust module, so its records are
 // declared in `model/` and what crosses the boundary is what `model/mod.rs`
@@ -35,6 +32,10 @@ mod checker;
 // from `Findings` is declared in `queries/` and what crosses the boundary is
 // what `queries/mod.rs` re-exports (§FS-show, §FS-list, §FS-lsp).
 mod queries;
+// §AR-system.2.8: the writers are one Rust module too, so the formatter, the ID
+// proposal and the fetch snapshot are declared in `writers/` and what crosses
+// the boundary is what `writers/mod.rs` re-exports (§FS-fmt, §FS-id, §FS-fetch).
+mod writers;
 // Temporary re-exports for the duration of this migration: they keep every name
 // the flat crate root exposed reachable at `grund_core::<name>` while the other
 // components are still `include!`d flat. The finalize task replaces them with an
@@ -49,6 +50,7 @@ pub use queries::*;
 // so it exposes no name of its own to an embedder (§AR-core-module-layout.2).
 pub(crate) use scanner::*;
 pub use workspace::*;
+pub use writers::*;
 
 // §AR-bindings.1: `grund-core` is the shared implementation crate used by the
 // published `grund` CLI and, next, the optional LSP server. The category files
@@ -62,20 +64,8 @@ include!("cover_cmd.rs");
 include!("list_cmd.rs");
 include!("completions_cmd.rs");
 include!("output.rs");
-include!("fmt_complete_findings.rs");
-include!("fmt.rs");
-include!("fmt_suppress.rs");
-include!("fmt_error.rs");
-include!("fmt_workspace.rs");
 include!("fmt_cmd.rs");
-include!("fmt_links.rs");
-include!("fmt_link_anchors.rs");
-include!("fmt_shorthand_links.rs");
-include!("fmt_link_targets.rs");
-include!("fmt_value_bindings.rs");
-include!("id.rs");
-include!("fetch.rs");
-include!("fetch_write.rs");
+include!("id_cmd.rs");
 include!("integrations.rs");
 include!("init_templates.rs");
 include!("init_citation_directions.rs");

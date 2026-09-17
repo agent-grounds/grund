@@ -3,11 +3,11 @@ use std::fs;
 
 use super::references::WorkspaceCheckTarget;
 use crate::config::Config;
-use crate::grammar::is_inside_inline_code;
-use crate::model::{Citation, Diagnostic, Findings, Id, render_qualified_id};
-// §AR-system.4: two upward reads through the crate root — the ID renderer from
-// the writers (§FS-id) and the sort key from `output.rs`.
-use crate::{render_id, sort_path_key};
+use crate::grammar::{is_inside_inline_code, render_id, render_qualified_id};
+use crate::model::{Citation, Diagnostic, Findings, Id};
+// §AR-system.4: one upward read through the crate root — the sort key, which is
+// `output.rs`'s (§AR-system.2.9).
+use crate::sort_path_key;
 
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
 /// Markdown inline-code context is a likely illustration. Offer whichever

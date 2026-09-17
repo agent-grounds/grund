@@ -14,14 +14,16 @@ use std::path::{Path, PathBuf};
 use super::homes::is_stub_for_inline_decl;
 use super::index_entries::KindIndexEntries;
 use crate::config::Config;
-use crate::grammar::{declaration_id_on_line, is_inside_inline_code, never_rewrite_context};
+use crate::grammar::{
+    declaration_id_on_line, is_inside_inline_code, never_rewrite_context, render_id,
+};
 use crate::model::{
     CheckReport, Citation, Declaration, Diagnostic, Findings, Id, configured_home_path_key,
     physical_path_key, scanned_decl_relative_path, scanned_path_key,
 };
-// §AR-system.4: two upward reads through the crate root — the ID renderer from
-// the writers (§FS-id) and the report path spelling from `output.rs`.
-use crate::{display_path, render_id};
+// §AR-system.4: one upward read through the crate root — the report path
+// spelling, which is `output.rs`'s (§AR-system.2.9).
+use crate::display_path;
 
 /// One kind's index obligation, resolved against the config root
 /// (§FS-config.3.4). `folder_key` and `index_key` are config-root-relative and

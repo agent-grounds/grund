@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 
 use super::show::{render_show_output_json, show_declaration_with_overlays};
+use crate::grammar::render_id;
 use crate::model::{ShowOutput, TextOverlays};
 use crate::scanner::resolve_id_arg;
 use crate::workspace::{
@@ -9,10 +10,9 @@ use crate::workspace::{
 };
 // §AR-system.4: five reads through the crate root — the option record, its
 // format and the refusal carrier from `api.rs`, the report path from
-// `output.rs`, and the ID renderer and link flattening from the writers.
+// `output.rs`, and the link flattening from the writers, a sibling.
 use crate::{
     FindingSite, ShowFormat, ShowOpts, ShowQueryError, display_path, flatten_cross_ref_links,
-    render_id,
 };
 
 /// One input coordinate for the CLI-only batch-show adapter

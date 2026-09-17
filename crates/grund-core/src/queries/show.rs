@@ -5,15 +5,16 @@ use std::path::Path;
 use super::body::extract_declaration_body;
 use crate::checker::{file_declares_inline_home, is_stub_for_inline_decl};
 use crate::config::Config;
+use crate::grammar::render_id;
 use crate::model::{
     Declaration, DeclarationSource, E2eCase, Findings, Id, ShowOutput, ShowRenderMode,
     TextOverlays, paths_same_location, resolve_stub_target,
 };
 use crate::scanner::overlay_text;
-// §AR-system.4: five upward reads through the crate root — the typed refusal
-// carrier and its site record from `api.rs` (§FS-errors.5), the three path and
-// JSON spellings from `output.rs`, and the ID renderer from the writers' `id.rs`.
-use crate::{FindingSite, ShowQueryError, display_path, format_path, json_escape, render_id};
+// §AR-system.4: four upward reads through the crate root — the typed refusal
+// carrier and its site record from `api.rs` (§FS-errors.5), and the three path
+// and JSON spellings from `output.rs`.
+use crate::{FindingSite, ShowQueryError, display_path, format_path, json_escape};
 
 pub(crate) fn show_declaration(
     config: &Config,

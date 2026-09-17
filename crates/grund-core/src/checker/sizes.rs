@@ -1,10 +1,11 @@
 use super::homes::is_stub_for_inline_decl;
 use crate::config::{Config, LeadSizeWarning, measure_point_text};
+use crate::grammar::render_id;
 use crate::model::{CheckReport, Declaration, Diagnostic, Findings, Id, SectionInfo, TextOverlays};
-// §AR-system.4: three upward reads through the crate root — the ID renderer from
-// the writers (§FS-id), and the point-body pair with its cache from
-// `queries/body.rs`, the query that owns slicing a lead (§FS-show).
-use crate::{PointBodyCache, point_body_pair, render_id};
+// §AR-system.4: two upward reads through the crate root — the point-body pair
+// with its cache, from `queries/body.rs`, the query that owns slicing a lead
+// (§FS-show).
+use crate::{PointBodyCache, point_body_pair};
 
 /// Opt-in point-lead budget checking (§FS-check.4.13).
 ///

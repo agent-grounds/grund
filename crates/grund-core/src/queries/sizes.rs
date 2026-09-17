@@ -6,12 +6,12 @@ use super::body::{PointBodyCache, point_body_pair};
 use super::citation_counts::ListCitationCounts;
 use crate::checker::is_stub_for_inline_decl;
 use crate::config::{Config, PointSizeUnit, measure_point_text, non_citable_kind_error};
+use crate::grammar::render_id;
 use crate::model::{Declaration, Id, SectionInfo, TextOverlays};
 use crate::workspace::{WorkspaceContext, load_workspace_context};
-// §AR-system.4: six reads through the crate root — the scan-error record and its
-// builder from `api.rs`, three path spellings from `output.rs`, and the ID
-// renderer from the writers' `id.rs`.
-use crate::{ApiScanError, api_scan_error, display_path, format_path, render_id, sort_path_key};
+// §AR-system.4: five reads through the crate root — the scan-error record and
+// its builder from `api.rs`, and three path spellings from `output.rs`.
+use crate::{ApiScanError, api_scan_error, display_path, format_path, sort_path_key};
 
 /// Options for the additive per-point size catalog (§FS-list.1, §FS-list.3.4).
 #[derive(Clone)]

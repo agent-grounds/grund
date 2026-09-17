@@ -1,21 +1,37 @@
-//! Reading an `Id` back out of text (§FS-config.3.2): the two `Grammar`
-//! operations over a match the compiled grammar produced or a CLI argument, and
-//! the one parser that has no grammar to consult at all. The first two sat in
-//! the model's record file while the crate was flat, calling
-//! `Grammar::parse_token` and the `id_input_re` from there; they are grammar
-//! operations over model's types, which is the direction §AR-system.4 allows, so
-//! they live here rather than on the record. The `Config` they read the compiled
-//! grammar off is config's own (§AR-system.2.3).
+//! An `Id` and text, in both directions (§FS-config.3.2): the two `Grammar`
+//! operations that read one out of a match the compiled grammar produced or out
+//! of a CLI argument, the one parser that has no grammar to consult at all, the
+//! two renderers that print one back, and the record of one citation token found
+//! on a Markdown line. The first two sat in the model's record file while the
+//! crate was flat, calling `Grammar::parse_token` and the `id_input_re` from
+//! there; they are grammar operations over model's types, which is the direction
+//! §AR-system.4 allows, so they live here rather than on the record. The
+//! `Config` they read the compiled grammar off is config's own
+//! (§AR-system.2.3).
 //!
-//! The third, the member-local fallback of §FS-workspace.5, was parked in the
-//! scanner's citation pass while §AR-system.2.5 was a file-name category; it is
-//! a lexical reading of the conventional ID shape over plain text, with neither
-//! scan state nor a compiled grammar, so it came down here with the move.
+//! The member-local fallback of §FS-workspace.5 was parked in the scanner's
+//! citation pass while §AR-system.2.5 was a file-name category; it is a lexical
+//! reading of the conventional ID shape over plain text, with neither scan state
+//! nor a compiled grammar, so it came down here with the move.
+//!
+//! The last three came down out of the writers when §AR-system.2.8 became a
+//! module. `render_id` is one line over `Grammar::render` that the scanner, the
+//! checker, the workspace, the queries and this component all read, and
+//! `render_qualified_id` is the same line with an alias in front of it
+//! (§FS-workspace.1) — it sat on the model's record and was the last reason that
+//! file read `Config`. `MarkdownLineCitation` is where one marked citation
+//! starts and ends on a line, plus what it parsed to: a lexical fact the
+//! formatter's link pass, its shorthand pass and the scanner's off-grammar pass
+//! each record and only the link pass reads (§FS-fmt.6.2).
 
 use anyhow::{Result, anyhow};
 
 use super::compiled::Grammar;
 use crate::model::Id;
+// §AR-system.4: `Config` is config's record, above this component and reachable
+// through the crate root until the glob goes; the two renderers below read the
+// compiled grammar off it.
+use crate::Config;
 
 /// Pull an `Id` out of a `Grammar` regex match — the `kind` / `num` / `slug`
 /// capture groups the `[id] format` defined (§FS-config.3.2, §AR-scanner.2.1).
@@ -120,4 +136,33 @@ fn split_loose_section(token: &str) -> (&str, Option<&str>) {
         return (token, None);
     }
     (&token[..suffix_start], Some(section))
+}
+
+/// One marked citation token as it sits on a Markdown line: where the marker
+/// starts, where the token ends, the project alias it named if it was qualified
+/// (§FS-workspace.1), and what it parsed to. Three passes record these — the
+/// formatter's link pass, its accepted-shorthand pass (§FS-fmt.2.4) and the
+/// scanner's off-grammar pass (§FS-config.3.2) — and the wrapper of §FS-fmt.6.2
+/// reads them, which is why the record is here rather than with any one of them.
+pub(crate) struct MarkdownLineCitation {
+    pub(crate) marker_start: usize,
+    pub(crate) token_end: usize,
+    pub(crate) namespace: Option<String>,
+    pub(crate) id: Id,
+    pub(crate) section: Option<String>,
+}
+
+/// Render an existing `Id` for a report, listing, or message, preserving the
+/// provider spelling policy of a per-kind override (§FS-config.3.2).
+pub(crate) fn render_id(config: &Config, id: &Id) -> String {
+    config.grammar.render(id, 3)
+}
+
+/// The same spelling with the project alias a qualified citation writes in front
+/// of it (§FS-workspace.1), and the bare one when there is no alias.
+pub(crate) fn render_qualified_id(config: &Config, namespace: Option<&str>, id: &Id) -> String {
+    match namespace {
+        Some(namespace) => format!("{}/{}", namespace, render_id(config, id)),
+        None => render_id(config, id),
+    }
 }

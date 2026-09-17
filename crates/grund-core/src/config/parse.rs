@@ -13,6 +13,7 @@ use std::fs;
 use std::path::Path;
 
 use super::citations::{parse_citation_entry, validate_citation_rules};
+use super::fmt_block::validate_fmt_exclude;
 use super::grounding::{
     check_grounding_level, parse_kind_grounding_key, validate_global_grounding,
 };
@@ -21,10 +22,9 @@ use super::point_sizes::parse_lead_size_warning;
 use super::record::{Config, ConfigLocation, ShorthandPolicy};
 use super::workspace_block::validate_workspace_lists;
 use crate::grammar::{id_grammar_key_slash_error, is_escaped};
-// §AR-system.4: `format_path` is the renderer's (§AR-system.2.9) and the `[fmt]
-// exclude` glob rule the formatter's (§FS-fmt.2.5.1); both read through the
-// crate root until those components are modules.
-use crate::{format_path, validate_fmt_exclude};
+// §AR-system.4: `format_path` is the renderer's (§AR-system.2.9) and reads
+// through the crate root until that component is a module.
+use crate::format_path;
 
 /// Parse one `grund.toml` over `config` — the schema of §FS-config.3 and its
 /// subsections (`[reference]` 3.1, `[id]` 3.2/3.3, `[[kinds]]` 3.4, `[scan]` 3.5,
