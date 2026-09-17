@@ -4,6 +4,10 @@ The core implementation lives in `crates/grund-core/src/`, while `crates/grund-c
 
 ## placement: Where the file layout sits
 
+```text
+components (AR-system.2) ─► [ file layout rule ] ─► one owner per file ─► reader, fissile
+```
+
 Not a component: the rule for how the engine's files are named, owned and sized, whichever component they implement. It takes the component list of [§AR-system.2](README.md#2-components) and gives each file exactly one owner among the categories below, which is what a reader and `fissile` need to find and bound a file ([§AR-system.5](README.md#5-what-holds-the-shape)). It says nothing about what a component may know; that is [§AR-system.4](README.md#4-dependency-direction).
 
 ## 1. Module categories

@@ -4,7 +4,13 @@ The CI workflow is the remote form of the local pre-commit gate. Anything that c
 
 ## placement: What CI measures
 
-Not a component: CI is the remote form of the local gate over the whole tree, and it measures the system rather than sits in it ([§AR-system.5](README.md#5-what-holds-the-shape)). It takes the pre-commit hook list and gives one verdict per push or pull request. The only `grund` it runs is the one the tree builds, through `cargo run`, so the gate never depends on a released binary; it knows nothing of the pipeline ([§AR-system.1](README.md#1-the-pipeline)) beyond the commands the hooks spell (section 1).
+```text
+pre-commit hook list ─► [ CI ] ─► one verdict per push or pull request
+                         │
+                         └─ runs the tree's own grund through cargo run; outside the pipeline
+```
+
+Not a component: CI is the remote form of the local gate over the whole tree, and it measures the system rather than sits in it ([§AR-system.5](README.md#5-what-holds-the-shape)). It takes the pre-commit hook list and gives one verdict per push or pull request. The only `grund` it runs is the one the tree builds, through `cargo run`, so the gate never depends on a released binary; it knows nothing of the pipeline ([§AR-system.1](README.md#1-the-system)) beyond the commands the hooks spell (section 1).
 
 ## 1. Pre-commit is the source of truth
 

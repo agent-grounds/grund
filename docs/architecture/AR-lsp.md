@@ -4,6 +4,12 @@ Implements [§FS-lsp](../functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optiona
 
 ## placement: Where the LSP server sits
 
+```text
+editor ◄── LSP over stdio ──► [ grund-lsp ] ──► api ──┬─► queries: snapshot, hover, on-type edits
+                                                      └─► checker: diagnostics
+                              grund-cli: no shared code, no shared dependency
+```
+
 A frontend ([§AR-system.3](README.md#3-frontends)): a binary that depends on `grund-core` and on nothing of `grund-cli`. It takes LSP requests over stdio and gives back what the api's editor queries return ([§AR-system.2.7](README.md#27-queries), [§AR-system.2.9](README.md#29-api)) — the snapshot, the hover body, the on-type edits — and the check report as diagnostics. It has no scanner, no checker, no `show` extraction and no `fmt` planning of its own: all four are imports from `grund-core`. It has no filesystem walk outside `grund-core::scan` and no second config loader: batch rendering calls `grund-core` for upward discovery and effective scan extensions, and a focused integration module owns only deterministic rendering and conflict-safe materialization. And `grund-core` has no `lsp-server` or `lsp-types` reference — the JSON-RPC loop and the protocol types live entirely here, and `grund-cli` stays synchronous and pulls none of it in — which is what keeps the server optional ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary), [§AR-system.4](README.md#4-dependency-direction)).
 
 ## 1. Crate boundary

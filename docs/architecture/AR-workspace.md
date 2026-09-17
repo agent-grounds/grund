@@ -18,11 +18,16 @@ invariants below.
 
 ## placement: Where the workspace layer sits
 
+```text
+config ─► Config ─► [ workspace ] ─┬─► scope, boundary roots ─► scanner
+                                   └─► resolver ─────────────► checker, queries
+```
+
 The fourth box of the pipeline ([§AR-system.2.4](README.md#24-workspace)). It takes the configs that config produced ([§AR-system.2.3](README.md#23-config)) and gives the scanner its scope and boundary roots ([§AR-system.2.5](README.md#25-scanner)) and the checker and the queries one resolver (section 4). It knows no rule and no rendering: the namespace is one dimension that flows through the single-project pipeline unchanged, which is what the rest of this page holds ([§AR-system.4](README.md#4-dependency-direction)).
 
 ## 1. Layering
 
-The single-project pipeline ([§AR-system.1](README.md#1-the-pipeline)) gains one dimension and no new layer. Read top down: the CLI decides workspace versus single-project run and assembles the project map and current alias; the resolver (`target_findings_for_citation`, section 4) is the one function that knows what "qualified" means at runtime; the checker calls the resolver and does not branch on "is workspace?"; the scanner emits `Citation { namespace, … }` from one regex and obeys the workspace boundary roots in one walk. No layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)). The scanner never asks "am I in a workspace?"; the checker never asks "what alias am I?"; the CLI never reaches into a regex.
+The single-project pipeline ([§AR-system.1](README.md#1-the-system)) gains one dimension and no new layer. Read top down: the CLI decides workspace versus single-project run and assembles the project map and current alias; the resolver (`target_findings_for_citation`, section 4) is the one function that knows what "qualified" means at runtime; the checker calls the resolver and does not branch on "is workspace?"; the scanner emits `Citation { namespace, … }` from one regex and obeys the workspace boundary roots in one walk. No layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)). The scanner never asks "am I in a workspace?"; the checker never asks "what alias am I?"; the CLI never reaches into a regex.
 
 ## 2. Single citation grammar
 

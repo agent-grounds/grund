@@ -4,7 +4,13 @@ How `grund` turns the [§GOAL-fast-feedback.1](../goals.md#1-performance-targets
 
 ## placement: What the benchmarks measure
 
-Not a component: a meter on the pipeline ([§AR-system.1](README.md#1-the-pipeline)), taken through the CLI frontend so that it counts what a user's invocation counts ([§AR-system.3](README.md#3-frontends), [§AR-system.5](README.md#5-what-holds-the-shape)). It takes a generated fixture and the committed baseline and gives one instruction count per hot command, recorded by the CI job of [§AR-ci.5](AR-ci.md#5-benchmark-job). It knows nothing of the engine's internals: each benchmark runs the built `grund` binary as a subprocess (section 1).
+```text
+generated fixture, committed baseline ─► [ benchmarks ] ─► instruction count per hot command ─► CI job (AR-ci.5)
+                                            │
+                                            └─ runs the built grund binary as a subprocess: the CLI, end to end
+```
+
+Not a component: a meter on the pipeline ([§AR-system.1](README.md#1-the-system)), taken through the CLI frontend so that it counts what a user's invocation counts ([§AR-system.3](README.md#3-frontends), [§AR-system.5](README.md#5-what-holds-the-shape)). It takes a generated fixture and the committed baseline and gives one instruction count per hot command, recorded by the CI job of [§AR-ci.5](AR-ci.md#5-benchmark-job). It knows nothing of the engine's internals: each benchmark runs the built `grund` binary as a subprocess (section 1).
 
 ## 1. What is benched
 

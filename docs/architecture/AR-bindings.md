@@ -4,11 +4,19 @@ Implements the planned distribution shape in [§FS-distribution](../functional-s
 
 ## placement: Where the frontends sit
 
+```text
+      ┌─► [ grund-cli ]  ─► text, JSON, exit codes
+api ──┼─► [ grund-lsp ]  ─► LSP over stdio
+      ├─► [ grund-node ] ─► Promise-returning functions   (planned)
+      └─► [ grund-py ]   ─► Python functions              (planned)
+      no frontend depends on another; every regex, walk and rule stays in the engine
+```
+
 The frontends' side of [§AR-system.3](README.md#3-frontends) and the api's contract of [§AR-system.2.9](README.md#29-api). Every frontend takes the data the api returns and gives back a rendering or a transport of it; none holds a regex, a walk or a rule, and none depends on another. The engine's side of the contract is section 2, and each shipped or planned frontend has a section of its own below.
 
 ## 1. Target workspace layout
 
-The shipped split ([§AR-system.1](README.md#1-the-pipeline)) keeps one checked report behind every frontend while giving `grund-lsp` and the language bindings a library package they can depend on. `grund-core` exposes data-returning APIs for the CLI and LSP surfaces (`check`, `show`, `refs`, `list`, `cover`, `fmt`, `id`, `init`, config inspection, and LSP snapshots); the user-facing binary, help text, version handling, SIGPIPE setup, top-level command dispatch, flag parsing, text/JSON rendering, and exit-code mapping live in `grund-cli`. The CLI renderer gives text and JSON their deliberately distinct deterministic orders—severity groups for text and global location order for compatible JSON—without changing the shared report or LSP messages ([§FS-errors.4](../functional-spec/FS-errors.md#4-determinism)).
+The shipped split ([§AR-system.1](README.md#1-the-system)) keeps one checked report behind every frontend while giving `grund-lsp` and the language bindings a library package they can depend on. `grund-core` exposes data-returning APIs for the CLI and LSP surfaces (`check`, `show`, `refs`, `list`, `cover`, `fmt`, `id`, `init`, config inspection, and LSP snapshots); the user-facing binary, help text, version handling, SIGPIPE setup, top-level command dispatch, flag parsing, text/JSON rendering, and exit-code mapping live in `grund-cli`. The CLI renderer gives text and JSON their deliberately distinct deterministic orders—severity groups for text and global location order for compatible JSON—without changing the shared report or LSP messages ([§FS-errors.4](../functional-spec/FS-errors.md#4-determinism)).
 
 Final frontend layout:
 

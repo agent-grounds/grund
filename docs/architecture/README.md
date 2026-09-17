@@ -2,7 +2,40 @@
 
 `grund` is one pipeline. A single tree walk reads every file once and produces `Findings`; rules turn `Findings` into a `Report`; queries and writers answer from the same `Findings`; and thin frontends render or transport what the engine returns. Everything that decides lives in the engine crate `grund-core`, so the CLI, the LSP server and the planned bindings are the same verdicts behind different surfaces ([§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms), [§FS-distribution](../functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets)). Speed is set by the walk, which is why the walk happens once ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). This page is the whole system on one page: every architecture page in the index below carries a `placement` chapter that names its box here and reads no wider than it, so the system is described once and each page describes one part.
 
-## 1. The pipeline
+## 1. The system
+
+Nine components in one crate, stacked in the order they may read each other, and the frontends above them:
+
+```text
+             ┌───────────┐  ┌───────────┐  ┌──────────────────────┐
+ frontends   │ grund-cli │  │ grund-lsp │  │ grund-node, grund-py │  planned
+             └─────┬─────┘  └─────┬─────┘  └──────────┬───────────┘
+                   └──────────────┼───────────────────┘
+                                  ▼
+             ┌────────────────────────────────────────────────────┐
+ grund-core  │ 2.9  api                                           │
+             ├─────────────────────────┬──────────────────────────┤
+             │ 2.7  queries            │ 2.8  writers             │
+             │      show, refs, list,  │      fmt, id, init,      │
+             │      cover, completions,│      fetch, integrations │
+             │      editor answers     │                          │
+             ├─────────────────────────┴──────────────────────────┤
+             │ 2.6  checker                                       │
+             ├────────────────────────────────────────────────────┤
+             │ 2.5  scanner                                       │
+             ├────────────────────────────────────────────────────┤
+             │ 2.4  workspace                                     │
+             ├────────────────────────────────────────────────────┤
+             │ 2.3  config                                        │
+             ├────────────────────────────────────────────────────┤
+             │ 2.1  grammar                                       │
+             ├────────────────────────────────────────────────────┤
+             │ 2.2  model                                         │
+             └────────────────────────────────────────────────────┘
+             a component reads only what is below it (section 4)
+```
+
+The same components as the data moves through them:
 
 ```text
                   grund.toml ──► config ──► workspace ──┐
@@ -66,7 +99,7 @@ Three today, two planned, and none has engine logic ([§AR-bindings](AR-bindings
 
 ## 4. Dependency direction
 
-One rule: **no component reads one above it.** From the top, the frontends sit above api; api above the queries and the writers; those above the checker; the checker above the scanner; the scanner above workspace and config; and all of them above grammar and model, which read nothing but text and types. Three consequences are held by tests today, and by the compiler once the categories are modules:
+One rule: **no component reads one above it.** The stack in section 1 is the rule drawn: the frontends sit above api; api above the queries and the writers, which are siblings and read nothing of each other; those above the checker; the checker above the scanner; the scanner above workspace; workspace above config; config above grammar; and grammar above model, which reads nothing but std. Three consequences are held by tests today, and by the compiler once the categories are modules:
 
 - The engine writes no stream and exits no process; the frontends render (`tests/integration/test_engine_boundary.py`).
 - The engine names no frontend's protocol: no LSP types in `grund-core`, no CLI in `grund-lsp` (`tests/integration/test_frontend_isolation.py`).
@@ -74,7 +107,7 @@ One rule: **no component reads one above it.** From the top, the frontends sit a
 
 ## 5. What holds the shape
 
-- **Placement.** Every page in the index below opens with a `## placement:` chapter — a named section, so `grund <ID>.placement` is the question — that names its box in section 2 or 3, what it takes and from whom, what it gives and to whom, and what it must not know. Anything wider than that belongs on this page. `tests/integration/test_architecture_placement.py` holds it: every page but this one has the chapter, and the chapter cites this page.
+- **Placement.** Every page in the index below opens with a `## placement:` chapter — a named section, so `grund <ID>.placement` is the question — that opens with a diagram in the notation of section 1 — what feeds the component on the left, its box in the middle, what it feeds on the right — and then says, in four facts, its box in section 2 or 3, what it takes and from whom, what it gives and to whom, and what it must not know. Anything wider than that belongs on this page. `tests/integration/test_architecture_placement.py` holds it: every page but this one has the chapter, the chapter opens with a fenced diagram, and it cites this page.
 - **Files.** How the engine's files are named, owned and sized is [§AR-core-module-layout](AR-core-module-layout.md#ar-core-module-layout-core-implementation-is-split-by-category); `tests/integration/test_module_categories.py` holds the ownership table and `fissile` holds the size.
 - **Assurance is not a component.** [§AR-ci](AR-ci.md#ar-ci-ci-mirrors-the-local-pre-commit-gate), [§AR-benchmarks](AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) and [§AR-goal-measurement](AR-goal-measurement.md#ar-goal-measurement-goal-and-requirement-meters-live-outside-goals) measure the system rather than sit in it, and are listed apart below; their placement chapters say what each measures.
 
