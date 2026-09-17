@@ -5,13 +5,11 @@ use super::comment_line::{
     comment_content_range, comment_strip_prefixes, content_citation_tokens, line_citation_ranges,
     remove_inline_citation_tokens, strip_comment_tokens,
 };
-use crate::model::{
-    CheckReport, Citation, Diagnostic, Findings, InlineCitationSite, WorkspaceCitationTarget,
-};
-// §AR-system.4: `Config` is config's own record and `plural` a message helper of
-// the writers component, both above this one and reachable through the crate
-// root until they move.
-use crate::{Config, plural};
+use crate::model::{CheckReport, Citation, Diagnostic, Findings, InlineCitationSite};
+// §AR-system.4: `Config` is config's own record, `WorkspaceCitationTarget`
+// workspace's and `plural` a message helper of the writers, all above this one
+// and reachable through the crate root until they move.
+use crate::{Config, WorkspaceCitationTarget, plural};
 
 /// The layouts `[reference] inline_note_layout` selects, as the two dimensions a
 /// value picks: where the citation run sits on the line, and what separates it

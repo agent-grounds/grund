@@ -71,7 +71,7 @@ Consumes `grund.toml` and the defaults. Produces one validated `Config` per proj
 
 ### 2.4 workspace
 
-Consumes configs. Produces the multi-project scope — member expansion, claims, scope narrowing — and the one resolver that maps a citation to its target project ([§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)). Knows no rule and no rendering; its own invariants are [§AR-workspace](AR-workspace.md#ar-workspace-how-the-resolver-config-loader-and-scanner-compose-across-projects). Categories: `workspace`.
+Consumes configs. Produces the multi-project scope — member expansion, claims, scope narrowing — and the one resolver that maps a citation to its target project ([§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)). Knows no rule and no rendering; its own invariants are [§AR-workspace](AR-workspace.md#ar-workspace-how-the-resolver-config-loader-and-scanner-compose-across-projects). Module: `crates/grund-core/src/workspace/`.
 
 ### 2.5 scanner
 

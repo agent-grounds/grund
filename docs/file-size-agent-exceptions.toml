@@ -97,10 +97,10 @@ path = "crates/grund-core/src/config/parse.rs"
 match = "exact"
 rules = ["core-source"]
 kind = "deferred"
-max_accepted = { value = 499, unit = "lines" }
-until = "extract the parser with its state made explicit, leaving discovery and validation here"
+max_accepted = { value = 447, unit = "lines" }
+until = "extract the parser with its state made explicit, leaving discovery here"
 reason = """
-`parse_config_file` is a hand-written TOML reader: one line-oriented state machine over section and key context, correct only because every branch observes the same state. Splitting it by key group would thread that state through a wider interface, trading a long function for a worse one. Missing boundary: the parser as its own module with its state made explicit, leaving discovery and validation here. This is the argument the hard entry in docs/file-size-human-exceptions.toml carried at 732 lines while the whole config category was one file; that entry retired when config became a Rust module (§AR-system.2.3) took the file to 499, under the hard budget. What left: the `[citations]` section for config/citations.rs with the rule records it fills, beside the `[[kinds]]` and grounding sections that were already their own files, and the `[scan]` defaults for config/record.rs beside the `Config` they start. Nothing of the state machine left, which is why the boundary is still named here.
+`parse_config_file` is a hand-written TOML reader: one line-oriented state machine over section and key context, correct only because every branch observes the same state. Splitting it by key group would thread that state through a wider interface, trading a long function for a worse one. Missing boundary: the parser as its own module with its state made explicit, leaving discovery here. This is the argument the hard entry in docs/file-size-human-exceptions.toml carried at 732 lines while the whole config category was one file; that entry retired when config became a Rust module (§AR-system.2.3) took the file to 499, under the hard budget. What left: the `[citations]` section for config/citations.rs with the rule records it fills, beside the `[[kinds]]` and grounding sections that were already their own files, and the `[scan]` defaults for config/record.rs beside the `Config` they start. The `[workspace]` section followed when workspace became a module (§AR-system.2.4) and the block's entry grammar came down to the reader that validates it — both member lists, the alias slug predicate and one entry point the reader calls, in config/workspace_block.rs — which took the file 499 -> 447. Nothing of the state machine left, which is why the boundary is still named here.
 """
 [[exceptions]]
 path = "scripts/local-benchmark-report.py"

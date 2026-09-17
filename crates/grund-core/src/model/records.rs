@@ -7,8 +7,8 @@ use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
 };
 // §AR-system.4: three upward reads, through the crate root until their owners
-// are modules — `Config` for `WorkspaceCitationTarget` and the qualified-ID
-// renderer, `FileStructure` from the scanner, `render_id` from the writers.
+// are modules — `Config` for the qualified-ID renderer, which is the writers'
+// (§FS-id), `FileStructure` from the scanner, `render_id` from the writers.
 use crate::{Config, FileStructure, render_id};
 
 /// A parsed ID: its kind plus whichever of `{number}` / `{slug}` the configured
@@ -226,12 +226,6 @@ pub struct InlineCitationSite {
     /// question and has to gate it, or classify the lines itself — reading an
     /// empty list here is not evidence that the tree conforms.
     pub layout_violations: Vec<usize>,
-}
-
-#[derive(Clone)]
-pub(crate) struct WorkspaceCitationTarget {
-    pub(crate) alias: String,
-    pub(crate) config: Config,
 }
 
 pub(crate) type TextOverlays = BTreeMap<PathBuf, String>;

@@ -31,7 +31,7 @@ COMPAT_RENDERERS = {
     "output.rs",
     "refs.rs",
     "show.rs",
-    "workspace_members.rs",
+    "workspace_members_cmd.rs",
 }
 ENGINE_ONLY_SYMBOLS = ("grund_core::main_entry", "compat_cli", "grund_core::command_")
 

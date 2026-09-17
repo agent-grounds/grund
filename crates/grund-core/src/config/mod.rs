@@ -9,7 +9,7 @@
 //! files plus the `Config` record that sat in `model/`: discovery, the record,
 //! the reader, and one file per section of `grund.toml` that carries a grammar
 //! and cross-key rules of its own — `[[kinds]]` with its built-in defaults,
-//! `[citations]`, and the grounding pair.
+//! `[citations]`, `[workspace]`, and the grounding pair.
 
 mod citations;
 mod discovery;
@@ -20,6 +20,7 @@ mod kind_table;
 mod parse;
 mod point_sizes;
 mod record;
+mod workspace_block;
 
 pub use citations::{
     CitationDisjunction, CitationLevel, CitationRules, CitationTarget, KindCitationRules,
@@ -27,7 +28,7 @@ pub use citations::{
 };
 pub use kind::{KindConfig, KindIndex, KindResolution};
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
-pub use record::{Config, ConfigLocation, ShorthandPolicy};
+pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
 
 // What the other components read, still through the crate root while they are
 // flat (§AR-system.4). The finalize task narrows this as each caller moves into
@@ -36,9 +37,11 @@ pub(crate) use citations::render_citation_target;
 pub(crate) use discovery::{
     config_file_in, home_form_of, load_config, load_config_at, load_config_at_with_report_base,
 };
-pub(crate) use parse::{
-    is_valid_project_alias, parse_string_list, strip_comment, validate_workspace_member,
-};
+pub(crate) use parse::{parse_string_list, strip_comment};
 pub(crate) use record::{
     DEFAULT_GROUNDING_LEVEL, kind_prefixes, kind_uses_values, non_citable_kind_error,
+};
+pub(crate) use workspace_block::{
+    INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, invalid_alias_path_segment,
+    invalid_project_alias_message, is_valid_project_alias, optional_member_alias_segment,
 };

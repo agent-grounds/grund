@@ -21,6 +21,10 @@ mod grammar;
 // the reader that fills it are declared in `config/` and what crosses the
 // boundary is what `config/mod.rs` re-exports (§AR-core-module-layout.1).
 mod config;
+// §AR-system.2.4: workspace is one Rust module too, so member expansion, the
+// claims and the loaded project set are declared in `workspace/` and what
+// crosses the boundary is what `workspace/mod.rs` re-exports.
+mod workspace;
 // Temporary re-exports for the duration of this migration: they keep every name
 // the flat crate root exposed reachable at `grund_core::<name>` while the other
 // components are still `include!`d flat. The finalize task replaces them with an
@@ -28,6 +32,7 @@ mod config;
 pub use config::*;
 pub use grammar::*;
 pub use model::*;
+pub use workspace::*;
 
 // §AR-bindings.1: `grund-core` is the shared implementation crate used by the
 // published `grund` CLI and, next, the optional LSP server. The category files
@@ -68,13 +73,7 @@ include!("checker_index_entries.rs");
 include!("checker_selection.rs");
 include!("checker_sizes.rs");
 include!("checker_cmd.rs");
-include!("workspace_scope.rs");
-include!("workspace_members.rs");
-include!("workspace_optional_members.rs");
-include!("workspace_context.rs");
-include!("workspace_id_candidates.rs");
-include!("workspace_expand.rs");
-include!("workspace_unlisted.rs");
+include!("workspace_members_cmd.rs");
 include!("output.rs");
 include!("show.rs");
 include!("show_render.rs");

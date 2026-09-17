@@ -31,8 +31,8 @@ pub use values::{
 // a module of its own.
 pub(crate) use headings::UnmarkedHeadingCandidate;
 pub(crate) use records::{
-    LegacyCitationCandidate, ShowRenderMode, TextOverlays, WorkspaceCitationTarget,
-    normalize_path_lexically, render_qualified_id, resolve_stub_target,
+    LegacyCitationCandidate, ShowRenderMode, TextOverlays, normalize_path_lexically,
+    render_qualified_id, resolve_stub_target,
 };
 pub(crate) use report::{CheckReport, Diagnostic, Site};
 pub(crate) use values::{

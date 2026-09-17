@@ -15,10 +15,10 @@ use std::path::Path;
 
 use super::parse::{bail_config, parse_string, parse_string_list};
 use super::record::{Config, citing_kind_names};
-// §AR-system.4: the alias-path grammar a qualifier is validated against is
-// workspace's (§FS-workspace.6.1) and `format_path` the renderer's
-// (§AR-system.2.9); both read through the crate root until those are modules.
-use crate::{INVALID_ALIAS_PATH_EXPECTED, format_path, invalid_alias_path_segment};
+use super::workspace_block::{INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
+// §AR-system.4: `format_path` is the renderer's (§AR-system.2.9) — read through
+// the crate root until `output` is a module.
+use crate::format_path;
 
 /// One RFC-2119 level a `[citations]` rule entry can carry (§FS-config.3.9.1,
 /// §DF-citation-directions.2.1).

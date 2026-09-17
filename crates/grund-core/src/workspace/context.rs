@@ -1,12 +1,55 @@
+//! What a workspace-aware command holds (§AR-system.2.4): the set of projects a
+//! run operates on, loaded and scanned, plus the index that says which of them
+//! an unqualified ID resolves against and the root every path renders from
+//! (§FS-workspace.8 intro, §AR-workspace.8).
+//!
+//! The loaders here are the one seam every walking command enters the workspace
+//! through, whichever of the three shapes a run turns out to be — standalone,
+//! member-local, or the whole workspace — so no command carries a second opinion
+//! about what "the current project" is (§AR-workspace.5.1).
+
+use anyhow::{Result, anyhow};
+use rayon::prelude::*;
+use std::path::{Path, PathBuf};
+
+use super::expand::expand_workspace_tree;
+use super::scope::{resolve_workspace_config, scope_is_config_root};
+use crate::config::{Config, INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
+use crate::grammar::resolve_qualified_shorthand_citations;
+use crate::model::{Findings, TextOverlays};
+// §AR-system.4: four upward reads through the crate root, because their owners
+// are still flat — the walk, its error pair and the qualified-citation promotion
+// from the scanner (§AR-system.2.5), and the §FS-check.4.8 stderr line.
+use crate::{
+    ScanError, print_unlisted_workspace_block_warnings, promote_qualified_legacy_citations,
+    scan_tree_with_workspace_overlays,
+};
+
+/// One project of the run a qualified citation can name, as the scanner needs
+/// it: the alias the citation writes and the whole `Config` its ID is parsed and
+/// rendered with, because a workspace may mix `[id] format`s (§FS-workspace.1,
+/// §AR-workspace.2).
+///
+/// A workspace record that sat in `model/records.rs` while workspace was a
+/// file-name category, which is what made that file read `Config` for something
+/// other than the qualified-ID renderer (§AR-system.4). The list of them is
+/// built once per run, below, so each project's scan parses `§<alias>/<ID>`
+/// with the target's own grammar inline rather than in a second disk pass.
+#[derive(Clone)]
+pub(crate) struct WorkspaceCitationTarget {
+    pub(crate) alias: String,
+    pub(crate) config: Config,
+}
+
 /// One project in scope for a query command — an alias, the loaded config,
 /// and the scanner's findings + scan errors for that project's tree.
 /// Mirrors `ProjectScan` in `checker_cmd.rs`; kept here as the shared shape
 /// every query command consumes (§AR-workspace.8).
-struct WorkspaceProject {
-    alias: String,
-    config: Config,
-    findings: Findings,
-    scan_errors: Vec<ScanError>,
+pub(crate) struct WorkspaceProject {
+    pub(crate) alias: String,
+    pub(crate) config: Config,
+    pub(crate) findings: Findings,
+    pub(crate) scan_errors: Vec<ScanError>,
 }
 
 /// Everything a workspace-aware query command needs (§FS-workspace.8 intro,
@@ -17,25 +60,25 @@ struct WorkspaceProject {
 ///
 /// Member-local and standalone runs collapse to one project at index `0` with
 /// `workspace_loaded == false` — every command can route through one struct.
-struct WorkspaceContext {
-    projects: Vec<WorkspaceProject>,
+pub(crate) struct WorkspaceContext {
+    pub(crate) projects: Vec<WorkspaceProject>,
     /// Index into `projects` for the "current project" — what `<ID>` (no
     /// alias) resolves against (§FS-workspace.8 intro). `None` only for a
     /// workspace-root run with `include_root = false`, where there is no root
     /// project for unqualified lookups (§FS-workspace.8 intro).
-    current: Option<usize>,
+    pub(crate) current: Option<usize>,
     /// `true` only when a `[workspace]` block was discovered AND the
     /// invocation actually loads the workspace (i.e. not pinned member-local
     /// by an explicit path inside a member). When `false`, `projects` is a
     /// single entry and qualified `alias/<ID>` lookups must fail with
     /// `unknown project alias <name>`.
-    workspace_loaded: bool,
+    pub(crate) workspace_loaded: bool,
     /// The repository root used for path rendering in workspace mode (the
     /// `[output] relative_paths` base). For workspace mode this is the
     /// workspace root; for single-project mode it equals
     /// `projects[current].config.root`. Used by `fmt --cross-refs` to
     /// compute a relative URL that spans projects (§FS-workspace.8.5).
-    render_root: PathBuf,
+    pub(crate) render_root: PathBuf,
     /// The config that owns the render root. In workspace mode this is the
     /// root workspace config even when `include_root = false`; commands use it
     /// for output format and path rendering without pretending it is a loaded
@@ -46,19 +89,19 @@ struct WorkspaceContext {
     /// in particular, which is where [`check_workspace_context`] reads the
     /// §FS-check.4.9 announcement from and which no loaded project can supply when
     /// every project in the block was the absent one (§FS-lsp.4).
-    render_config: Config,
+    pub(crate) render_config: Config,
 }
 
 impl WorkspaceContext {
-    fn current_project(&self) -> Option<&WorkspaceProject> {
+    pub(crate) fn current_project(&self) -> Option<&WorkspaceProject> {
         self.current.map(|current| &self.projects[current])
     }
 
-    fn render_config(&self) -> &Config {
+    pub(crate) fn render_config(&self) -> &Config {
         &self.render_config
     }
 
-    fn project_by_alias(&self, alias: &str) -> Option<&WorkspaceProject> {
+    pub(crate) fn project_by_alias(&self, alias: &str) -> Option<&WorkspaceProject> {
         self.projects.iter().find(|project| project.alias == alias)
     }
 
@@ -66,7 +109,7 @@ impl WorkspaceContext {
     /// when `workspace_loaded == false`. Used by completions and by the
     /// "neither declared nor cited" hint in `refs` to suggest the right
     /// `--project` slug.
-    fn aliases(&self) -> Vec<&str> {
+    pub(crate) fn aliases(&self) -> Vec<&str> {
         if !self.workspace_loaded {
             return Vec::new();
         }
@@ -93,7 +136,7 @@ impl WorkspaceContext {
 /// Discovery itself is delegated to the existing `resolve_workspace_config`
 /// — this helper is strictly the "load every project that's in scope" layer
 /// on top of it (§AR-workspace.5.1).
-fn load_workspace_context(path: &Path, path_provided: bool) -> Result<WorkspaceContext> {
+pub(crate) fn load_workspace_context(path: &Path, path_provided: bool) -> Result<WorkspaceContext> {
     record_test_workspace_load();
     load_workspace_context_with_overlays(path, path_provided, &TextOverlays::new(), false)
 }
@@ -118,7 +161,7 @@ fn record_test_workspace_load() {
 #[cfg(not(feature = "test-workspace-load-count"))]
 fn record_test_workspace_load() {}
 
-fn load_workspace_context_with_overlays(
+pub(crate) fn load_workspace_context_with_overlays(
     path: &Path,
     path_provided: bool,
     overlays: &TextOverlays,
@@ -149,7 +192,7 @@ fn load_workspace_context_with_overlays(
 /// drop the flag, so the answer does not depend on where in the workspace the user
 /// invoked the command — `grund alias/FS-x docs/`, `grund refs FS-y .`, and
 /// `grund fmt --cross-refs subdir/` all see the same workspace.
-fn load_resolved_workspace_context(
+pub(crate) fn load_resolved_workspace_context(
     mut config: Config,
     path: &Path,
     path_provided: bool,
@@ -244,7 +287,10 @@ fn single_project_context(
 ///
 /// `list`, `refs`, `show`, completions, and `fmt` keep [`load_workspace_context`]:
 /// their `<path>` selects a project, it does not bound a walk (§FS-workspace.8).
-fn load_narrowable_workspace_context(path: &Path, path_provided: bool) -> Result<WorkspaceContext> {
+pub(crate) fn load_narrowable_workspace_context(
+    path: &Path,
+    path_provided: bool,
+) -> Result<WorkspaceContext> {
     let mut config = resolve_workspace_config(path)?;
     if !config.workspace_declared || scope_is_config_root(&config, path, path_provided) {
         // The resolved config is handed on rather than re-derived:
@@ -272,7 +318,7 @@ fn load_narrowable_workspace_context(path: &Path, path_provided: bool) -> Result
 /// the root first when `include_root = true`, then members in member-glob
 /// order. Mutates `root_config.workspace_boundary_roots` so any subsequent
 /// root scan respects the member boundary (§AR-workspace.6).
-fn load_workspace_projects(root_config: &mut Config) -> Result<Vec<WorkspaceProject>> {
+pub(crate) fn load_workspace_projects(root_config: &mut Config) -> Result<Vec<WorkspaceProject>> {
     load_workspace_projects_with_overlays(root_config, &TextOverlays::new())
 }
 
@@ -314,7 +360,10 @@ fn load_workspace_projects_with_overlays(
             .into_par_iter()
             .enumerate()
             .map(|(index, entry)| {
-                (index, load_workspace_project(entry.alias, entry.config, &targets, overlays))
+                (
+                    index,
+                    load_workspace_project(entry.alias, entry.config, &targets, overlays),
+                )
             })
             .collect::<Vec<_>>()
     } else {
@@ -322,7 +371,10 @@ fn load_workspace_projects_with_overlays(
             .into_iter()
             .enumerate()
             .map(|(index, entry)| {
-                (index, load_workspace_project(entry.alias, entry.config, &targets, overlays))
+                (
+                    index,
+                    load_workspace_project(entry.alias, entry.config, &targets, overlays),
+                )
             })
             .collect::<Vec<_>>()
     };
@@ -358,7 +410,7 @@ fn load_workspace_project(
 /// alias path (§FS-workspace.6.1). Every segment is validated against the slug
 /// grammar here, before resolution; the ID tail is deliberately left raw so the
 /// caller can parse it with the target project's grammar.
-fn split_qualified_id_arg(raw: &str) -> Result<(Option<String>, &str)> {
+pub(crate) fn split_qualified_id_arg(raw: &str) -> Result<(Option<String>, &str)> {
     if let Some((alias, rest)) = raw.rsplit_once('/') {
         if let Some(message) = invalid_alias_path_message(alias) {
             return Err(anyhow!("{message}"));
@@ -392,16 +444,4 @@ fn invalid_alias_path_message(alias: &str) -> Option<String> {
             "invalid project alias segment `{bad}` in `{alias}` ({INVALID_ALIAS_PATH_EXPECTED})"
         )
     })
-}
-
-const INVALID_ALIAS_PATH_EXPECTED: &str =
-    "expected [a-z][a-z0-9-]*, one segment per workspace level";
-
-/// Return the first invalid segment of an alias path, preserving empty segments
-/// so each caller can render its surface's diagnostic without changing the
-/// shared validation rule (§FS-workspace.1).
-fn invalid_alias_path_segment(alias: &str) -> Option<&str> {
-    alias
-        .split('/')
-        .find(|segment| !is_valid_project_alias(segment))
 }

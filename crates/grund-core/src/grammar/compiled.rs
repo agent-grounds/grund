@@ -130,7 +130,7 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// stance of §AR-scanner.5.
 /// The pattern one alias segment must match (§FS-workspace.1, §AR-workspace.2).
 /// One canonical place — also referenced by the config-load alias validator
-/// (`is_valid_project_alias` in `config/parse.rs`).
+/// (`is_valid_project_alias` in `config/workspace_block.rs`).
 const PROJECT_ALIAS_PATTERN: &str = "[a-z][a-z0-9-]*";
 /// The namespace a qualified citation carries: one alias segment per workspace
 /// level, so a project nested inside a member workspace is named by its whole

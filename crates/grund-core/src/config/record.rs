@@ -20,16 +20,37 @@ use super::kind_defaults::{
 };
 use super::point_sizes::LeadSizeWarning;
 use crate::grammar::Grammar;
-// §AR-system.4: `AbsentOptionalNamespace` is workspace's record of a member this
-// checkout does not have, stamped onto every config the run loaded
-// (§FS-workspace.4); read through the crate root until workspace is a module.
-use crate::AbsentOptionalNamespace;
 
 #[derive(Clone)]
 pub struct ConfigLocation {
     pub path: PathBuf,
     pub line: usize,
 }
+
+/// One `[workspace] optional_members` entry whose directory this checkout does
+/// not have, and therefore one namespace this run did not read
+/// (§FS-workspace.2.2, §FS-workspace.2.2.1).
+///
+/// A record rather than a rule: it sits beside the `workspace_absent_optional`
+/// field that carries it, because a `Config` the run loaded is what every reader
+/// of the fact holds (§FS-workspace.4). It was the workspace component's while
+/// `Config` was `model`'s, which made this file read it upward (§AR-system.4);
+/// what workspace owns is the walk that *fills* it (§FS-check.4.9).
+#[derive(Clone)]
+pub struct AbsentOptionalNamespace {
+    /// The entry **as the config wrote it** — the string an author can edit
+    /// (§FS-errors.4).
+    pub written: String,
+    /// The whole alias path this run spells the namespace with: one segment per
+    /// workspace level, so an entry one `[workspace]` block down is `sub/vendored`
+    /// while the entry itself stays `vendored` (§FS-check.4.9). Expansion sets it
+    /// to the bare segment; the walk that knows the enclosing path composes the
+    /// rest.
+    pub alias_path: String,
+    /// The `optional_members` line of the block that holds the entry.
+    pub source: ConfigLocation,
+}
+
 /// The persisted number-only citation policy from `[reference] shorthand`
 /// (§FS-config.3.1). Trigger input remains authoring sugar under both values;
 /// this enum governs only marker-origin shorthand already present in a file.
