@@ -31,6 +31,10 @@ mod scanner;
 // report they fill are declared in `checker/` and what crosses the boundary is
 // what `checker/mod.rs` re-exports (§AR-checker).
 mod checker;
+// §AR-system.2.7: the queries are one Rust module too, so every answer read
+// from `Findings` is declared in `queries/` and what crosses the boundary is
+// what `queries/mod.rs` re-exports (§FS-show, §FS-list, §FS-lsp).
+mod queries;
 // Temporary re-exports for the duration of this migration: they keep every name
 // the flat crate root exposed reachable at `grund_core::<name>` while the other
 // components are still `include!`d flat. The finalize task replaces them with an
@@ -39,6 +43,7 @@ pub use checker::*;
 pub use config::*;
 pub use grammar::*;
 pub use model::*;
+pub use queries::*;
 // The scanner's glob is `pub(crate)`: the component's three public records —
 // `FileStructure` and the two it holds — went down into `model/` with this move,
 // so it exposes no name of its own to an embedder (§AR-core-module-layout.2).
@@ -51,10 +56,12 @@ pub use workspace::*;
 include!("config_cmd.rs");
 include!("checker_cmd.rs");
 include!("workspace_members_cmd.rs");
+include!("show_cmd.rs");
+include!("refs_cmd.rs");
+include!("cover_cmd.rs");
+include!("list_cmd.rs");
+include!("completions_cmd.rs");
 include!("output.rs");
-include!("show.rs");
-include!("show_render.rs");
-include!("show_body.rs");
 include!("fmt_complete_findings.rs");
 include!("fmt.rs");
 include!("fmt_suppress.rs");
@@ -69,11 +76,6 @@ include!("fmt_value_bindings.rs");
 include!("id.rs");
 include!("fetch.rs");
 include!("fetch_write.rs");
-include!("refs.rs");
-include!("cover.rs");
-include!("list.rs");
-include!("list_sizes.rs");
-include!("completions.rs");
 include!("integrations.rs");
 include!("init_templates.rs");
 include!("init_citation_directions.rs");
@@ -88,10 +90,7 @@ include!("init_cmd.rs");
 include!("api.rs");
 include!("api_list.rs");
 include!("api_refs.rs");
-include!("show_batch.rs");
 include!("api_report.rs");
-include!("on_type.rs");
-include!("lsp_hover.rs");
 include!("compat_cli.rs");
 // Tests, one module per category (§AR-core-module-layout.1). `tests_support`
 // holds the fixtures they share and must come first.

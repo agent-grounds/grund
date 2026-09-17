@@ -1,4 +1,21 @@
-fn show_declaration(
+use anyhow::{Context, Result, anyhow};
+use std::fs;
+use std::path::Path;
+
+use super::body::extract_declaration_body;
+use crate::checker::{file_declares_inline_home, is_stub_for_inline_decl};
+use crate::config::Config;
+use crate::model::{
+    Declaration, DeclarationSource, E2eCase, Findings, Id, ShowOutput, ShowRenderMode,
+    TextOverlays, paths_same_location, resolve_stub_target,
+};
+use crate::scanner::overlay_text;
+// §AR-system.4: five upward reads through the crate root — the typed refusal
+// carrier and its site record from `api.rs` (§FS-errors.5), the three path and
+// JSON spellings from `output.rs`, and the ID renderer from the writers' `id.rs`.
+use crate::{FindingSite, ShowQueryError, display_path, format_path, json_escape, render_id};
+
+pub(crate) fn show_declaration(
     config: &Config,
     path_config: &Config,
     findings: &Findings,
@@ -26,7 +43,7 @@ fn show_declaration(
 /// against the root the rest of the run spells its paths from
 /// (§FS-workspace.8.1). `config` stays the *project's*: it owns the ID grammar
 /// `render_id` reads and the tree the body is read out of.
-fn show_declaration_with_overlays(
+pub(crate) fn show_declaration_with_overlays(
     config: &Config,
     path_config: &Config,
     findings: &Findings,
@@ -59,7 +76,11 @@ fn show_declaration_with_overlays(
         let message = format!(
             "ambiguous ID: {} (declared at {})",
             render_id(config, id),
-            sites.iter().map(|(rendered, ..)| rendered.as_str()).collect::<Vec<_>>().join(", ")
+            sites
+                .iter()
+                .map(|(rendered, ..)| rendered.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
         );
         // §FS-errors.5: the same `[{ path, line }]` pairs, in the same order, ride
         // along in a typed carrier so the JSON printer never re-parses this prose.
@@ -115,7 +136,8 @@ fn show_declaration_with_overlays(
         decl
     };
     if let Some(section) = section
-        && let Some(refusal) = ambiguous_section_refusal(config, path_config, decls, decl, &file, id, section)
+        && let Some(refusal) =
+            ambiguous_section_refusal(config, path_config, decls, decl, &file, id, section)
     {
         return Err(refusal);
     }
@@ -245,7 +267,10 @@ fn ambiguous_section_refusal(
     // JSON printer to read instead of re-parsing this prose.
     let sites = lines
         .iter()
-        .map(|line| FindingSite { path: rendered.clone(), line: *line })
+        .map(|line| FindingSite {
+            path: rendered.clone(),
+            line: *line,
+        })
         .collect();
     Some(
         ShowQueryError {
@@ -261,7 +286,7 @@ fn ambiguous_section_refusal(
 /// fixture list (or just the invocation with `--brief`), plus the JSON shape — the
 /// case manifest of §FS-show.2.4. E2E declarations have no sections, so any
 /// `.<section>` is "section not found".
-fn show_e2e_case(
+pub(super) fn show_e2e_case(
     config: &Config,
     path_config: &Config,
     id: &Id,
@@ -329,7 +354,7 @@ fn show_e2e_case(
     })
 }
 
-fn read_text_with_overlays(path: &Path, overlays: &TextOverlays) -> Result<String> {
+pub(super) fn read_text_with_overlays(path: &Path, overlays: &TextOverlays) -> Result<String> {
     if let Some(text) = overlay_text(overlays, path) {
         Ok(text.to_string())
     } else {
@@ -341,7 +366,7 @@ fn read_text_with_overlays(path: &Path, overlays: &TextOverlays) -> Result<Strin
 /// blank line. Empty halves are dropped; if both are empty the result is empty.
 /// Each body already ends with `\n`, so `{a}\n{b}` produces `<a>\n\n<b>\n`
 /// (§FS-show.2.1.2).
-fn join_with_blank(default_body: &str, outline_body: &str) -> String {
+pub(super) fn join_with_blank(default_body: &str, outline_body: &str) -> String {
     match (default_body.is_empty(), outline_body.is_empty()) {
         (true, true) => String::new(),
         (true, false) => outline_body.to_string(),
@@ -354,7 +379,7 @@ fn join_with_blank(default_body: &str, outline_body: &str) -> String {
 /// blank-line-separated paragraph (§FS-show.2.1.1). Keeps the heading line and
 /// at most one blank-line separator before the first paragraph; stops at the
 /// next blank line (or end of body).
-fn truncate_to_first_paragraph(body: &str) -> String {
+pub(super) fn truncate_to_first_paragraph(body: &str) -> String {
     let mut lines: Vec<&str> = body.split('\n').collect();
     // `body` ends with `\n`, so the split produces a trailing empty element.
     if lines.last() == Some(&"") {
@@ -385,4 +410,58 @@ fn truncate_to_first_paragraph(body: &str) -> String {
     } else {
         format!("{}\n", out.join("\n"))
     }
+}
+
+/// `config` is the *target project's* config — it owns the ID grammar and marker
+/// that `render_id` needs. `path_config` is the workspace render config, i.e. the
+/// same base `grund list` renders against, so an `<alias>/<ID>` resolved from a
+/// workspace root reports a path relative to that root rather than to the member
+/// (§FS-config.3.6: paths are relative to *the config root*, and §FS-integrations.3.1
+/// joins this path against the root `grund-open` discovered).
+pub(crate) fn render_show_output_json(
+    config: &Config,
+    path_config: &Config,
+    id: &Id,
+    section: Option<&str>,
+    mode: ShowRenderMode,
+    output: &ShowOutput,
+) -> String {
+    // Pre-baked JSON (the §FS-show.2.4 E2E manifest) was rendered by
+    // show_e2e_case against this same `path_config`, so returning it verbatim
+    // keeps the §FS-config.3.6 path promise.
+    if let Some(json) = &output.json {
+        return json.clone();
+    }
+    let mut extra = String::new();
+    if matches!(mode, ShowRenderMode::Toc) {
+        extra.push_str(",\"sections\":[");
+        extra.push_str(
+            &output
+                .sections
+                .iter()
+                .map(|section| {
+                    format!(
+                        "{{\"path\":\"{}\",\"title\":\"{}\",\"depth\":{}}}",
+                        json_escape(&section.path),
+                        json_escape(&section.title),
+                        section.depth
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(","),
+        );
+        extra.push(']');
+    }
+    format!(
+        "{{\"id\":\"{}\",\"section\":{},\"body\":\"{}\",\"path\":\"{}\",\"line\":{}{}}}",
+        json_escape(&render_id(config, id)),
+        match section {
+            Some(section) => format!("\"{}\"", json_escape(section)),
+            None => "null".to_string(),
+        },
+        json_escape(&output.body),
+        json_escape(&display_path(path_config, &output.path)),
+        output.line,
+        extra
+    )
 }

@@ -1,3 +1,18 @@
+use anyhow::Result;
+use std::path::Path;
+
+use crate::config::Config;
+use crate::grammar::{
+    DocstringContent, DocstringCursor, declaration_id_on_line, id_token_end_at,
+    is_inside_inline_code, is_inside_markdown_link_destination, markdown_fence_delimiter,
+    never_rewrite_context_in, shorthand_token_expansion, string_literal_in,
+};
+use crate::workspace::resolve_workspace_config;
+// §AR-system.4: three reads through the crate root — the snapshot path
+// normalization from `api.rs`, and the formatter's suppression and exclusion
+// state from `fmt_suppress.rs`, whose verdicts this keystroke rule must match.
+use crate::{FmtDirectives, FmtExcluded, canonical_snapshot_path};
+
 /// Check the same context exclusions as `grund fmt` before an LSP on-type
 /// `$$` rewrite (§FS-fmt.2.3, §FS-lsp.1.4).
 ///
@@ -348,10 +363,11 @@ fn shorthand_expansion_edit(
     // §FS-fmt.2.4.1: a run already on the line is refused here exactly as it is
     // in the bulk pass; a fresh run expands and is then visible and undoable
     // (§DF-shorthand-numeric-run.5).
-    if config
-        .grammar
-        .shorthand_sits_in_numeric_run(&config.marker, &line[token_start..], token_end - token_start)
-    {
+    if config.grammar.shorthand_sits_in_numeric_run(
+        &config.marker,
+        &line[token_start..],
+        token_end - token_start,
+    ) {
         return None;
     }
     // Scoped to the edited file's own project — see `DeclaredId`. Collected only

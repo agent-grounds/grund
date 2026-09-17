@@ -6,10 +6,10 @@ use super::parse::{bail_config, parse_string, parse_usize};
 // (§AR-system.2.9) — read through the crate root until `output` is a module.
 use crate::format_path;
 
-/// The closed built-in point-size vocabulary and its opt-in warning policy
-/// (§FS-list.3.4, §FS-config.3.1). These config-facing types stay in this
-/// component so the general model remains reserved for scan and declaration
-/// data (§AR-system.2.2, §AR-system.2.3).
+/// The closed built-in point-size vocabulary, its opt-in warning policy and
+/// what counting in one of its units means (§FS-list.3.4, §FS-config.3.1).
+/// These config-facing types stay in this component so the general model remains
+/// reserved for scan and declaration data (§AR-system.2.2, §AR-system.2.3).
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum PointSizeUnit {
     Lines,
@@ -33,6 +33,28 @@ impl PointSizeUnit {
             "bytes" => Some(Self::Bytes),
             _ => None,
         }
+    }
+}
+
+/// Byte-defined size counting with no locale or Unicode-table input
+/// (§FS-list.3.4). It sits beside the unit rather than beside either caller: it
+/// is what `PointSizeUnit` *means*, and the query that slices a lead
+/// (§AR-system.2.7) and the budget rule that judges one (§FS-check.4.13) must
+/// count the same bytes.
+pub(crate) fn measure_point_text(text: &str, unit: PointSizeUnit) -> usize {
+    let ascii_space = |byte: &u8| matches!(*byte, b'\t'..=b'\r' | b' ');
+    match unit {
+        PointSizeUnit::Lines => text
+            .as_bytes()
+            .split(|byte| *byte == b'\n')
+            .filter(|line| line.iter().any(|byte| !ascii_space(byte)))
+            .count(),
+        PointSizeUnit::Words => text
+            .as_bytes()
+            .split(ascii_space)
+            .filter(|word| !word.is_empty())
+            .count(),
+        PointSizeUnit::Bytes => text.len(),
     }
 }
 

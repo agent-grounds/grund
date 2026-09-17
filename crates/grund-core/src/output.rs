@@ -159,7 +159,7 @@ fn render_diagnostic_json(config: &Config, channel: &str, diagnostic: &Diagnosti
 }
 
 /// §FS-errors.5: `sites` here are already display strings from the raise site
-/// in `show_render.rs` (rendered against `path_config`, which may be a
+/// in `queries/show.rs` (rendered against `path_config`, which may be a
 /// workspace root this printer's own `Config` is not), so they are rendered
 /// through the shared [`render_finding_sites_json`] rather than re-derived
 /// from a `Config` the way `render_diagnostic_json` renders `check`'s sites.

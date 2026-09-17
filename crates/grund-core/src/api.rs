@@ -53,7 +53,7 @@ pub struct FindingSite {
 
 /// A failed ID query whose message names sites the JSON diagnostic can also
 /// carry (§FS-errors.5): the two-homes `ambiguous` refusal and the
-/// `ambiguous-section` refusal. Raised from `show_render.rs` and downcast by
+/// `ambiguous-section` refusal. Raised from `queries/show.rs` and downcast by
 /// both printers, so `sites` never needs a second parse of `message`.
 /// `Display` is `message` verbatim — the text form is unchanged by this type.
 #[derive(Clone, Debug)]

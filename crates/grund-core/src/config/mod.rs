@@ -41,6 +41,7 @@ pub(crate) use discovery::{
 };
 pub(crate) use grounding::grounding_level_for_kind;
 pub(crate) use parse::{parse_string_list, strip_comment};
+pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{
     DEFAULT_GROUNDING_LEVEL, kind_prefixes, kind_uses_values, non_citable_kind_error,
 };

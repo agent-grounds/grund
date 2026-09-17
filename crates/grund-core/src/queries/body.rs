@@ -1,12 +1,38 @@
+use anyhow::{Result, anyhow};
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
+
+use super::show::{
+    join_with_blank, read_text_with_overlays, show_e2e_case, truncate_to_first_paragraph,
+};
+use crate::config::Config;
+use crate::grammar::{
+    PythonDocstringScanState, declaration_id_on_line, markdown_fence_delimiter, section_path,
+    source_scan_line,
+};
+use crate::model::{
+    Declaration, DeclarationSource, Id, SectionInfo, ShowOutput, ShowRenderMode, ShowSection,
+    TextOverlays,
+};
+// §AR-system.4: two reads through the crate root — the ID renderer from the
+// writers' `id.rs`, and the cross-reference flattening of §DF-show-cross-ref-flattening
+// from `fmt_links.rs`, which is the inverse of the formatter's own wrapper.
+use crate::{flatten_cross_ref_links, render_id};
+
 /// Declaration-body extraction: where a declaration's body begins and ends in
 /// the file that holds it, across Markdown and every supported comment dialect
 /// (§FS-show.2.1, §FS-show.2.2, §FS-show.2.3).
 ///
 /// This is a question about *source structure*, not about rendering — the same
 /// question §AR-scanner.2.4 answers for the citing side — so it sits beside the
-/// renderer rather than inside it (§AR-core-module-layout.1). `show_render.rs`
+/// renderer rather than inside it (§AR-core-module-layout.1). `queries/show.rs`
 /// keeps what is genuinely rendering: the entry points, the E2E case manifest,
 /// and the `--toc` / `--brief` shaping of what this file returns.
+///
+/// It also keeps the point-body pair and its per-file cache, which the size
+/// catalog (§FS-list.3.4) and the lead-budget rule (§FS-check.4.13) read: both
+/// slice a lead through the exact show slicer below, so neither can be a pure
+/// function that moves down to a lower component (§AR-system.4).
 
 /// Pull the body text of a declaration out of its file: the lines under the
 /// `# <ID>: …` heading down to the next same-or-shallower heading (§FS-show.2.1),
@@ -31,7 +57,7 @@
 /// a query does not reach here at all — it is refused from the scanner's record
 /// before the body is read (`ambiguous_section_refusal`). Before the target section
 /// is found, unrelated headings are scanned past rather than ending anything.
-fn extract_declaration_body(
+pub(super) fn extract_declaration_body(
     path: &Path,
     id: &Id,
     declaration: &Declaration,
@@ -52,10 +78,10 @@ fn extract_declaration_body(
         config,
         Some(PointBodySite {
             declaration_line: declaration.line,
-            declaration_body_end: (section.is_some()
-                || declaration.body_end > declaration.line)
+            declaration_body_end: (section.is_some() || declaration.body_end > declaration.line)
                 .then_some(declaration.body_end),
-            section_line: section.and_then(|path| declaration.sections.get(path).map(|info| info.line)),
+            section_line: section
+                .and_then(|path| declaration.sections.get(path).map(|info| info.line)),
         }),
     )
 }
@@ -77,13 +103,13 @@ struct PointBodySite {
 /// Per-operation source cache shared by list and check point measurements. It
 /// owns no parsing rules: the cached bytes still flow through the exact show
 /// slicer below (§FS-list.3.4, §FS-check.4.13).
-struct PointBodyCache<'a> {
+pub(crate) struct PointBodyCache<'a> {
     overlays: &'a TextOverlays,
     text: BTreeMap<PathBuf, String>,
 }
 
 impl<'a> PointBodyCache<'a> {
-    fn new(overlays: &'a TextOverlays) -> Self {
+    pub(crate) fn new(overlays: &'a TextOverlays) -> Self {
         Self {
             overlays,
             text: BTreeMap::new(),
@@ -104,7 +130,7 @@ impl<'a> PointBodyCache<'a> {
 /// declarations use the cached show slicer. A retained stub is broken (healthy
 /// stub rows collapse onto their inline home) and therefore unmeasurable
 /// (§FS-list.2, §FS-list.3.4).
-fn point_body_pair(
+pub(crate) fn point_body_pair(
     cache: &mut PointBodyCache<'_>,
     config: &Config,
     id: &Id,
@@ -169,25 +195,6 @@ fn point_body_pair(
     lead = flatten_cross_ref_links(&lead, config);
     full = flatten_cross_ref_links(&full, config);
     Ok(Some((lead, full)))
-}
-
-/// Byte-defined size counting with no locale or Unicode-table input
-/// (§FS-list.3.4).
-fn measure_point_text(text: &str, unit: PointSizeUnit) -> usize {
-    let ascii_space = |byte: &u8| matches!(*byte, b'\t'..=b'\r' | b' ');
-    match unit {
-        PointSizeUnit::Lines => text
-            .as_bytes()
-            .split(|byte| *byte == b'\n')
-            .filter(|line| line.iter().any(|byte| !ascii_space(byte)))
-            .count(),
-        PointSizeUnit::Words => text
-            .as_bytes()
-            .split(ascii_space)
-            .filter(|word| !word.is_empty())
-            .count(),
-        PointSizeUnit::Bytes => text.len(),
-    }
 }
 
 /// Shared show slicer, optionally pinned to one scanner-recorded site so the
@@ -274,7 +281,11 @@ fn extract_declaration_body_cached(
         }
         let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
         let scan_line = scan.text;
-        if in_decl && scan.in_py_docstring && scan.closed_py_docstring && scan_line.trim().is_empty() {
+        if in_decl
+            && scan.in_py_docstring
+            && scan.closed_py_docstring
+            && scan_line.trim().is_empty()
+        {
             break;
         }
         // §FS-show.2.5: inside a Markdown fence nothing is structure. The
@@ -328,9 +339,7 @@ fn extract_declaration_body_cached(
                 break;
             }
         }
-        if !fenced
-            && let Some(caps) = config.grammar.section_re.captures(scan_line)
-        {
+        if !fenced && let Some(caps) = config.grammar.section_re.captures(scan_line) {
             let sec = section_path(&caps).unwrap_or("");
             let depth = sec.split('.').count();
             match section {
