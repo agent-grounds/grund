@@ -1,3 +1,18 @@
+use anyhow::{Result, anyhow};
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
+
+use super::body::{PointBodyCache, point_body_pair};
+use super::citation_counts::ListCitationCounts;
+use crate::checker::is_stub_for_inline_decl;
+use crate::config::{Config, PointSizeUnit, measure_point_text, non_citable_kind_error};
+use crate::model::{Declaration, Id, SectionInfo, TextOverlays};
+use crate::workspace::{WorkspaceContext, load_workspace_context};
+// §AR-system.4: six reads through the crate root — the scan-error record and its
+// builder from `api.rs`, three path spellings from `output.rs`, and the ID
+// renderer from the writers' `id.rs`.
+use crate::{ApiScanError, api_scan_error, display_path, format_path, render_id, sort_path_key};
+
 /// Options for the additive per-point size catalog (§FS-list.1, §FS-list.3.4).
 #[derive(Clone)]
 pub struct ListSizeOpts {
@@ -37,7 +52,7 @@ pub struct ListSizeMeasurement {
 }
 
 /// One declaration or section site in the size catalog (§FS-list.2,
-/// §FS-list.3.4). Unlike [`ListEntry`], it deliberately carries no title/ref
+/// §FS-list.3.4). Unlike [`ListEntry`](crate::ListEntry), it deliberately carries no title/ref
 /// fields and never collapses ambiguous sites.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ListSizeEntry {
@@ -66,7 +81,7 @@ pub struct ListSizeOutput {
 }
 
 /// Programmatic point-size catalog. It selects the same declaration set as
-/// [`list`], adds scanner-recorded section sites, and measures show-identical
+/// [`list`](crate::list), adds scanner-recorded section sites, and measures show-identical
 /// lead/full bodies through one per-file cache (§FS-list.2, §FS-list.3.4,
 /// §FS-workspace.8.3).
 pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
@@ -114,9 +129,7 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
             }
             let mut homes: Vec<&Declaration> = declarations
                 .iter()
-                .filter(|decl| {
-                    !is_stub_for_inline_decl(&project.config.root, decl, declarations)
-                })
+                .filter(|decl| !is_stub_for_inline_decl(&project.config.root, decl, declarations))
                 .collect();
             homes.sort_by(|a, b| {
                 (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
@@ -164,14 +177,18 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
             a.id,
             a.section.map(|(section, _)| section),
             sort_path_key(&a.declaration.file),
-            a.section.map(|(_, info)| info.line).unwrap_or(a.declaration.line),
+            a.section
+                .map(|(_, info)| info.line)
+                .unwrap_or(a.declaration.line),
         )
             .cmp(&(
                 b.project_alias,
                 b.id,
                 b.section.map(|(section, _)| section),
                 sort_path_key(&b.declaration.file),
-                b.section.map(|(_, info)| info.line).unwrap_or(b.declaration.line),
+                b.section
+                    .map(|(_, info)| info.line)
+                    .unwrap_or(b.declaration.line),
             ))
     });
 
@@ -267,7 +284,9 @@ fn validate_list_scope_filters(
             return if known.is_empty() {
                 Err(anyhow!("unknown project alias `{alias}`"))
             } else {
-                Err(anyhow!("unknown project alias `{alias}`\nknown aliases: {known}"))
+                Err(anyhow!(
+                    "unknown project alias `{alias}`\nknown aliases: {known}"
+                ))
             };
         }
     }

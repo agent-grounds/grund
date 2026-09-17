@@ -20,17 +20,17 @@ STREAM_OR_EXIT = re.compile(r"\b(e?println!|e?print!\(|io::stdout|io::stderr|pro
 COMPAT_RENDERERS = {
     "checker_cmd.rs",
     "compat_cli.rs",
-    "completions.rs",
+    "completions_cmd.rs",
     "config_cmd.rs",
-    "cover.rs",
+    "cover_cmd.rs",
     "fmt_cmd.rs",
     "id.rs",
     "init_cmd.rs",
     "integrations.rs",
-    "list.rs",
+    "list_cmd.rs",
     "output.rs",
-    "refs.rs",
-    "show.rs",
+    "refs_cmd.rs",
+    "show_cmd.rs",
     "workspace_members_cmd.rs",
 }
 ENGINE_ONLY_SYMBOLS = ("grund_core::main_entry", "compat_cli", "grund_core::command_")

@@ -1,3 +1,20 @@
+use anyhow::{Result, anyhow};
+use std::collections::BTreeSet;
+
+use super::show::{render_show_output_json, show_declaration_with_overlays};
+use crate::model::{ShowOutput, TextOverlays};
+use crate::scanner::resolve_id_arg;
+use crate::workspace::{
+    WorkspaceContext, load_workspace_context, split_qualified_id_arg, with_member_id_candidates,
+};
+// §AR-system.4: five reads through the crate root — the option record, its
+// format and the refusal carrier from `api.rs`, the report path from
+// `output.rs`, and the ID renderer and link flattening from the writers.
+use crate::{
+    FindingSite, ShowFormat, ShowOpts, ShowQueryError, display_path, flatten_cross_ref_links,
+    render_id,
+};
+
 /// One input coordinate for the CLI-only batch-show adapter
 /// (§FS-show.1, §FS-show.2.6).
 #[doc(hidden)]
@@ -166,16 +183,12 @@ fn exhaustive_batch_queries(context: &WorkspaceContext) -> Vec<BatchShowQuery> {
             let sections: BTreeSet<&str> = declarations
                 .iter()
                 .flat_map(|declaration| {
-                    declaration
-                        .sections
-                        .keys()
-                        .map(String::as_str)
-                        .chain(
-                            declaration
-                                .duplicate_sections
-                                .iter()
-                                .map(|(path, _)| path.as_str()),
-                        )
+                    declaration.sections.keys().map(String::as_str).chain(
+                        declaration
+                            .duplicate_sections
+                            .iter()
+                            .map(|(path, _)| path.as_str()),
+                    )
                 })
                 .collect();
             queries.extend(sections.into_iter().map(|section| BatchShowQuery {

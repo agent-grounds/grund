@@ -1,3 +1,10 @@
+use std::collections::BTreeSet;
+use std::path::Path;
+
+// §AR-system.4: the snapshot and its citation record are `api.rs`'s, read
+// through the crate root until the api component is a module (§AR-lsp.5).
+use crate::{LspCitation, LspSnapshot};
+
 /// How much of the tree leans on one declaration-side title: citation sites and
 /// the distinct files those sites live in (§FS-lsp.1.2).
 ///

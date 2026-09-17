@@ -153,20 +153,18 @@ reason = """
 This file cannot be split. It is a shipped artifact, not source: init_templates.rs embeds it verbatim via include_str! as AGENT_SETUP_INSTRUCTIONS, `grund agent-setup-instructions` prints exactly those bytes, and a test asserts it is byte-identical to the mirror under crates/grund-core/assets/ (§FS-init.5). Any split either changes the emitted document or makes the command reassemble it at runtime, which moves document structure into code. Its length is the length of the instructions grund promises to emit; the only honest way to shrink it is to promise less. The ceiling therefore moves with what grund promises to say: 387 -> 394 when `[[kinds]]` gained non-citable kinds (§FS-config.3.4.1) and the setup interview had to learn to ask about the directories that are places rather than ID namespaces.
 """
 [[exceptions]]
-path = "crates/grund-core/src/list.rs"
+path = "crates/grund-core/src/list_cmd.rs"
 match = "exact"
 rules = ["core-source"]
 kind = "deferred"
-until = "the renderers stop changing with the query"
-max_accepted = { value = 409, unit = "lines" }
+until = "the deprecated `grund list` adapter leaves for compat/"
+max_accepted = { value = 415, unit = "lines" }
 reason = """
-The declaration catalog query and its renderers, 57 lines over budget (18 before `--unused` learned to discount a kind's own index entries, §DF-index-not-an-inbound-citation, 30 before that discount stopped being written twice, and 47 before the `--summary` fix below). They change together — every field the query learns to select is a field the output shapes have to show — so splitting now produces two files that are always opened as a pair. What retires this is that coupling ending, not the file growing.
+What is left of the declaration catalog once the query half moved into `queries/` (§AR-system.2.7): the argv parse, the `--kind` and `--project` validation, the four output shapes and the partial-scan exit — all of it the deprecated `main_entry()` renderer of §AR-system.2.9, which is why the argument for it is no longer a split. `compat/` takes this whole adapter, and the budget for a deprecated surface is then that surface's rather than this rule's; nothing narrower retires the entry, because a renderer is not separable from the argv it renders for.
 
-The last +10 is `--summary` learning to sort its rows by alias and size the alias column to the widest one emitted, mirroring the same fix in `api.rs` so the deprecated path cannot re-diverge from the live one on the same bug (§FS-workspace.8.3, issue #68).
+The ceiling is 415 where `crates/grund-core/src/list.rs` recorded 409 and had drifted to 459 — the entry was stale by 50 against a file that had kept accreting renderer branches. Two things moved it back: `ListCitationCounts`, the one pass building the `refs` and `used` counts of §FS-list.3.2, left for `queries/citation_counts.rs` where `api_list.rs` and the size catalog read it downward instead of through the crate root, and `cargo fmt --all` reached the file for the first time now that it is no longer `include!`d. 415 is the renderers and nothing else.
 
-The last +2 is the `--kind` selector learning to tell a typo from a configured kind that declares no IDs (§FS-config.3.4.1) — one more arm on the check that was already there, in the query half rather than the renderers.
-
-The +17 before it is a deduplication, not accretion: `ListCitationCounts` is the one pass that builds both counts, and `api.rs` had carried a byte-identical copy of it. Moving the copy here took `api.rs` from 1854 to 1822 raw lines while this file gained 30, so the pair is 2 lines smaller than before and the two commands can no longer disagree about what `--unused` selects.
+The +10 the old ceiling carried is `--summary` sorting its rows by alias and sizing the alias column to the widest one emitted, mirroring the same fix in `api.rs` so the deprecated path cannot re-diverge from the live one on the same bug (§FS-workspace.8.3, issue #68). The +2 before it is the `--kind` selector learning to tell a typo from a configured kind that declares no IDs (§FS-config.3.4.1) — one more arm on the check that was already there. Both are in what stayed.
 """
 [[exceptions]]
 path = "crates/grund-core/src/grammar/shorthand.rs"
