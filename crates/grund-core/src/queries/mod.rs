@@ -72,3 +72,10 @@ pub use sizes::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput
 // directory that can name any of it.
 pub(crate) use citation_counts::ListCitationCounts;
 pub(crate) use show::{render_show_output_json, show_declaration, show_declaration_with_overlays};
+
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
+#[cfg(test)]
+mod tests_lsp_hover;
+#[cfg(test)]
+mod tests_workspace_message_paths;

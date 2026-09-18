@@ -79,3 +79,8 @@ pub(crate) use integrations::{
 pub(crate) use integrations_write::EffectiveForm;
 #[cfg(test)]
 pub(crate) use refs::command_refs;
+
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
+#[cfg(test)]
+mod tests_check_finding_selection;
