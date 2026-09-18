@@ -54,7 +54,7 @@ pub(crate) fn show_declaration_with_overlays(
     let decls = findings
         .declarations
         .get(id)
-        .ok_or_else(|| anyhow!("ID not found: {}", render_id(config, id)))?;
+        .ok_or_else(|| anyhow!("ID not found: {}", render_id(&config.grammar, id)))?;
     let homes: Vec<&Declaration> = decls
         .iter()
         .filter(|decl| !is_stub_for_inline_decl(root, decl, decls))
@@ -72,7 +72,7 @@ pub(crate) fn show_declaration_with_overlays(
         sites.sort_by(|a, b| a.0.cmp(&b.0));
         let message = format!(
             "ambiguous ID: {} (declared at {})",
-            render_id(config, id),
+            render_id(&config.grammar, id),
             sites
                 .iter()
                 .map(|(rendered, ..)| rendered.as_str())
@@ -107,7 +107,7 @@ pub(crate) fn show_declaration_with_overlays(
         if !file.exists() {
             return Err(anyhow!(
                 "broken stub: {} (stub at {}:{} points at {}, which does not exist)",
-                render_id(config, id),
+                render_id(&config.grammar, id),
                 display_path(path_config, &decl.file),
                 decl.line,
                 format_path(decl.defined_in.as_ref().unwrap())
@@ -116,11 +116,11 @@ pub(crate) fn show_declaration_with_overlays(
         if !file_declares_inline_home(&file, id, config).unwrap_or(false) {
             return Err(anyhow!(
                 "broken stub: {} (stub at {}:{} points at {}, which contains no inline declaration of {})",
-                render_id(config, id),
+                render_id(&config.grammar, id),
                 display_path(path_config, &decl.file),
                 decl.line,
                 format_path(decl.defined_in.as_ref().unwrap()),
-                render_id(config, id)
+                render_id(&config.grammar, id)
             ));
         }
     }
@@ -143,7 +143,7 @@ pub(crate) fn show_declaration_with_overlays(
     {
         return Err(anyhow!(
             "section not found: {}{}{}",
-            render_id(config, id),
+            render_id(&config.grammar, id),
             config.section_separator,
             section
         ));
@@ -174,7 +174,7 @@ fn show_json_value(
             let info = decl.sections.get(section).ok_or_else(|| {
                 anyhow!(
                     "section not found: {}{}{}",
-                    render_id(config, id),
+                    render_id(&config.grammar, id),
                     config.section_separator,
                     section
                 )
@@ -182,7 +182,7 @@ fn show_json_value(
             let value = info.value.as_ref().ok_or_else(|| {
                 anyhow!(
                     "section not found: {}{}{}",
-                    render_id(config, id),
+                    render_id(&config.grammar, id),
                     config.section_separator,
                     section
                 )
@@ -256,7 +256,7 @@ fn ambiguous_section_refusal(
         .join(", ");
     let message = format!(
         "ambiguous section: {}{}{} (declared at {sites_text})",
-        render_id(config, id),
+        render_id(&config.grammar, id),
         config.section_separator,
         section
     );
@@ -321,7 +321,7 @@ pub(crate) fn render_show_output_json(
     }
     format!(
         "{{\"id\":\"{}\",\"section\":{},\"body\":\"{}\",\"path\":\"{}\",\"line\":{}{}}}",
-        json_escape(&render_id(config, id)),
+        json_escape(&render_id(&config.grammar, id)),
         match section {
             Some(section) => format!("\"{}\"", json_escape(section)),
             None => "null".to_string(),

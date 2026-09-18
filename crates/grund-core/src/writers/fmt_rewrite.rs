@@ -27,12 +27,14 @@ use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::Config;
 use crate::config::display_path;
 use crate::grammar::{
-    DocstringContent, DocstringCursor, ShorthandTargets, declaration_id_on_line,
-    expand_shorthand_citations_with_origins, id_token_end_at, is_inside_inline_code,
-    is_inside_markdown_link_destination, markdown_fence_delimiter, string_literal_in,
+    DocstringContent, DocstringCursor, declaration_id_on_line, id_token_end_at,
+    is_inside_inline_code, is_inside_markdown_link_destination, markdown_fence_delimiter,
+    string_literal_in,
 };
 use crate::model::{Findings, Id};
-use crate::resolver::WorkspaceContext;
+use crate::resolver::{
+    ShorthandTargets, WorkspaceContext, expand_shorthand_citations_with_origins,
+};
 use crate::scanner::{
     ApiScanError, api_scan_error, walk_scannable_files, walk_scannable_files_reporting,
 };

@@ -40,7 +40,7 @@ pub(super) fn recognized_source_value_contexts(
 ) -> Vec<Option<SourceValueLineContext>> {
     let lines = text.lines().collect::<Vec<_>>();
     let mut contexts = vec![None; lines.len()];
-    for (start, end, kind) in comment_blocks(&lines, is_py, config) {
+    for (start, end, kind) in comment_blocks(&lines, is_py, config.lexical()) {
         match kind {
             CommentBlockKind::PythonDocstring => {
                 // `source_scan_line` already slices each docstring line to its

@@ -5,9 +5,10 @@ use crate::config::Config;
 use crate::grammar::{
     DocstringContent, DocstringCursor, declaration_id_on_line, id_token_end_at,
     is_inside_inline_code, is_inside_markdown_link_destination, markdown_fence_delimiter,
-    never_rewrite_context_in, shorthand_token_expansion, string_literal_in,
+    never_rewrite_context_in, string_literal_in,
 };
 use crate::model::canonical_snapshot_path;
+use crate::resolver::shorthand_token_expansion;
 use crate::workspace::resolve_workspace_config;
 // §AR-system.4: two sibling reads — the formatter's suppression and exclusion
 // state from `writers/fmt_suppress.rs`, which this rule must match line for

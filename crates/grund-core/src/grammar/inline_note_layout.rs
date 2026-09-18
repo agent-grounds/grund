@@ -2,10 +2,7 @@ use super::comment_line::{
     comment_content_range, comment_strip_prefixes, content_citation_tokens, line_citation_ranges,
     remove_inline_citation_tokens, strip_comment_tokens,
 };
-// §AR-system.4: two upward reads — `Config` is config's own record and
-// `WorkspaceCitationTarget` workspace's, both above this component.
-use crate::config::Config;
-use crate::workspace::WorkspaceCitationTarget;
+use super::settings::{AliasGrammar, LexicalSettings};
 
 /// The layouts `[reference] inline_note_layout` selects, as the two dimensions a
 /// value picks: where the citation run sits on the line, and what separates it
@@ -42,8 +39,8 @@ impl InlineNoteLayout {
     /// An unrecognized value cannot reach here — `[reference] inline_note_layout`
     /// is a closed enum validated on load (§FS-inline-citation-style.2.2) — so an
     /// unknown spelling falls back to the inert layout rather than inventing one.
-    pub(crate) fn from_config(config: &Config) -> Self {
-        match config.inline_note_layout.as_str() {
+    pub(crate) fn from_settings(lexical: LexicalSettings<'_>) -> Self {
+        match lexical.inline_note_layout {
             "citation-first-colon" => Self::CitationFirst { delimiter: ':' },
             _ => Self::Any,
         }
@@ -56,15 +53,15 @@ impl InlineNoteLayout {
 /// outside the enum cannot leave one of them working while the other discards
 /// the result. The load-time check rejects such a value
 /// (§FS-inline-citation-style.2.2); this is what keeps the two halves agreeing
-/// anyway, for a `Config` built in memory.
+/// anyway, for a configuration built in memory.
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum LayoutChannel {
     Warn,
     Error,
 }
 
-pub(crate) fn layout_channel(config: &Config) -> Option<LayoutChannel> {
-    match config.inline_note_layout_check.as_str() {
+pub(crate) fn layout_channel(lexical: LexicalSettings<'_>) -> Option<LayoutChannel> {
+    match lexical.inline_note_layout_check {
         "warn" => Some(LayoutChannel::Warn),
         "error" => Some(LayoutChannel::Error),
         _ => None,
@@ -77,10 +74,10 @@ pub(crate) fn layout_channel(config: &Config) -> Option<LayoutChannel> {
 /// line is looked at — the default `any`, a layout left at `off`, and
 /// `citation-only` each cost this comparison and nothing else
 /// (§GOAL-fast-feedback).
-pub(crate) fn layout_pass_enabled(config: &Config) -> bool {
-    InlineNoteLayout::from_config(config) != InlineNoteLayout::Any
-        && config.inline_style != "citation-only"
-        && layout_channel(config).is_some()
+pub(crate) fn layout_pass_enabled(lexical: LexicalSettings<'_>) -> bool {
+    InlineNoteLayout::from_settings(lexical) != InlineNoteLayout::Any
+        && lexical.inline_style != "citation-only"
+        && layout_channel(lexical).is_some()
 }
 
 /// The separator between two citations of one run: comma, exactly one space
@@ -108,7 +105,7 @@ pub(crate) fn inline_layout_violations(
     if !has_note {
         return Vec::new();
     }
-    let layout = InlineNoteLayout::from_config(block.config);
+    let layout = InlineNoteLayout::from_settings(block.lexical);
     let mut violations = Vec::new();
     let mut note_opened = false;
     for index in 0..block.len() {
@@ -235,17 +232,17 @@ fn citation_run_end(content: &str, tokens: &[(usize, usize)]) -> Option<usize> {
 pub(crate) fn inline_note_verdicts(
     lines: &[&str],
     first_line: usize,
-    config: &Config,
-    workspace_targets: &[WorkspaceCitationTarget],
+    lexical: LexicalSettings<'_>,
+    alias_grammars: &[AliasGrammar<'_>],
 ) -> (bool, Vec<usize>) {
-    let prefixes = comment_strip_prefixes(config);
-    if !layout_pass_enabled(config) {
+    let prefixes = comment_strip_prefixes(lexical);
+    if !layout_pass_enabled(lexical) {
         return (
-            block_has_inline_note(lines, config, workspace_targets, &prefixes),
+            block_has_inline_note(lines, lexical, alias_grammars, &prefixes),
             Vec::new(),
         );
     }
-    let mut block = BlockCitations::new(lines, config, workspace_targets);
+    let mut block = BlockCitations::new(lines, lexical, alias_grammars);
     let has_note = block_has_inline_note_memoized(&mut block, &prefixes);
     let layout_violations = inline_layout_violations(&mut block, &prefixes, first_line, has_note);
     (has_note, layout_violations)
@@ -263,21 +260,21 @@ pub(crate) fn inline_note_verdicts(
 /// of the memo empty (§GOAL-fast-feedback).
 pub(crate) struct BlockCitations<'a> {
     pub(crate) lines: &'a [&'a str],
-    pub(crate) config: &'a Config,
-    pub(crate) workspace_targets: &'a [WorkspaceCitationTarget],
+    pub(crate) lexical: LexicalSettings<'a>,
+    pub(crate) alias_grammars: &'a [AliasGrammar<'a>],
     pub(crate) ranges: Vec<Option<Vec<(usize, usize)>>>,
 }
 
 impl<'a> BlockCitations<'a> {
     pub(crate) fn new(
         lines: &'a [&'a str],
-        config: &'a Config,
-        workspace_targets: &'a [WorkspaceCitationTarget],
+        lexical: LexicalSettings<'a>,
+        alias_grammars: &'a [AliasGrammar<'a>],
     ) -> Self {
         Self {
             lines,
-            config,
-            workspace_targets,
+            lexical,
+            alias_grammars,
             ranges: vec![None; lines.len()],
         }
     }
@@ -289,10 +286,10 @@ impl<'a> BlockCitations<'a> {
     /// Line `index` and its citation-token byte ranges, sorted and deduplicated,
     /// so every reader of that line sees the same tokenization.
     fn line(&mut self, index: usize) -> (&'a str, &[(usize, usize)]) {
-        let (line, config, workspace_targets) =
-            (self.lines[index], self.config, self.workspace_targets);
+        let (line, lexical, alias_grammars) =
+            (self.lines[index], self.lexical, self.alias_grammars);
         let ranges = self.ranges[index]
-            .get_or_insert_with(|| line_citation_ranges(line, config, workspace_targets));
+            .get_or_insert_with(|| line_citation_ranges(line, lexical, alias_grammars));
         (line, ranges)
     }
 }
@@ -303,12 +300,12 @@ impl<'a> BlockCitations<'a> {
 /// as far as the answer needs it.
 pub(crate) fn block_has_inline_note(
     lines: &[&str],
-    config: &Config,
-    workspace_targets: &[WorkspaceCitationTarget],
+    lexical: LexicalSettings<'_>,
+    alias_grammars: &[AliasGrammar<'_>],
     prefixes: &[&str],
 ) -> bool {
     lines.iter().any(|line| {
-        let ranges = line_citation_ranges(line, config, workspace_targets);
+        let ranges = line_citation_ranges(line, lexical, alias_grammars);
         line_says_something(line, &ranges, prefixes)
     })
 }
@@ -342,9 +339,9 @@ pub(crate) fn line_says_something(
 /// Empty under `any`, and the same at every `inline_note_layout_check` — the
 /// house style is what the agent is asked to write, and the gate it is measured
 /// by is not an instruction (§DF-inline-note-layout.2.1).
-pub(crate) fn inline_note_layout_sentence(config: &Config) -> String {
-    let marker = &config.marker;
-    match config.inline_note_layout.as_str() {
+pub(crate) fn inline_note_layout_sentence(lexical: LexicalSettings<'_>) -> String {
+    let marker = lexical.marker;
+    match lexical.inline_note_layout {
         "citation-first-colon" => format!(
             " Lay each note out citation-first: `// {marker}<ID>: <note>` (several citations: `// {marker}<ID>, {marker}<ID>: <note>`)."
         ),

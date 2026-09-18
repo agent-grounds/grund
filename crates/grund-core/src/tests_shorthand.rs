@@ -341,7 +341,7 @@ mod tests_shorthand {
             .expect("escaped shorthand recorded");
         assert_eq!(escaped.text, "<§>FS-042");
         assert_eq!(
-            render_id(&config, &escaped.id),
+            render_id(&config.grammar, &escaped.id),
             "FS-042-user-login",
             "resolved, so the escape check can see that it would be live"
         );
@@ -358,8 +358,7 @@ mod tests_shorthand {
         config.rebuild_grammar().expect("rebuild grammar");
         assert!(config.grammar.has_shorthand());
         assert_eq!(
-            render_id(
-                &config,
+            render_id(&config.grammar,
                 &Id {
                     kind: "FS".into(),
                     num: Some(42),

@@ -18,8 +18,8 @@ use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 use super::legacy_promotion::promote_qualified_legacy_citations;
+use super::shorthand::resolve_qualified_shorthand_citations;
 use crate::config::Config;
-use crate::grammar::resolve_qualified_shorthand_citations;
 use crate::model::{Findings, TextOverlays};
 use crate::scanner::{ScanError, scan_tree_with_workspace_overlays};
 use crate::workspace::{

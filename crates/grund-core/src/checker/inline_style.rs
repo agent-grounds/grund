@@ -185,7 +185,7 @@ fn report_layout_deviations(
     message: &str,
     report: &mut CheckReport,
 ) {
-    let channel = match layout_channel(config) {
+    let channel = match layout_channel(config.lexical()) {
         Some(LayoutChannel::Warn) => &mut report.warnings,
         Some(LayoutChannel::Error) => &mut report.errors,
         None => return,

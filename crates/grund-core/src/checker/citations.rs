@@ -234,7 +234,7 @@ impl ObligationUnit<'_> {
 
     fn subject(&self, config: &Config) -> String {
         match (self.id, &self.place) {
-            (Some(id), _) => render_id(config, id),
+            (Some(id), _) => render_id(&config.grammar, id),
             (None, Some(place)) => place.clone(),
             (None, None) => "source file".to_string(),
         }

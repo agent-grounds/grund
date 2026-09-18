@@ -340,7 +340,7 @@ mod tests_section_body_scope {
             for path in paths {
                 let prefix = format!(
                     "duplicate section {}{}{} (",
-                    render_id(&config, id),
+                    render_id(&config.grammar, id),
                     config.section_separator,
                     path
                 );
@@ -362,7 +362,7 @@ mod tests_section_body_scope {
                     reported,
                     refused,
                     "check and show disagree about {}{}{}",
-                    render_id(&config, id),
+                    render_id(&config.grammar, id),
                     config.section_separator,
                     path
                 );

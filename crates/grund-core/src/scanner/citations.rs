@@ -2,11 +2,26 @@ use std::collections::BTreeSet;
 
 use super::file_pass::CitationLine;
 use crate::grammar::{
-    QUALIFIED_CITATION_PREFIX, parse_longest_id_prefix, parse_loose_qualified_id_prefix,
-    qualified_suppressed_in_source, scanned_citation_rewritable,
+    QUALIFIED_CITATION_PREFIX, never_rewrite_context_in, parse_id, parse_longest_id_prefix,
+    parse_loose_qualified_id_prefix, qualified_suppressed_in_source,
 };
 use crate::model::{Citation, Findings, LegacyCitationCandidate};
 use crate::workspace::WorkspaceCitationTarget;
+
+/// Whether `fmt` may rewrite the citation whose marker starts at `marker_start` —
+/// a **`scan_line`** offset, which is what every pass below holds — on the line
+/// they are scanning (§FS-fmt.2.3, §FS-check.3.13). One place asks it, so the
+/// qualified pass, the unqualified one and the shorthand pass can never reach
+/// different verdicts about one site; the recorded column stays a raw-file column
+/// either way (§AR-scanner.2.6).
+fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> bool {
+    !never_rewrite_context_in(
+        line.docstring,
+        line.raw_line,
+        line.is_md,
+        line.column_offset + marker_start,
+    )
+}
 
 /// §FS-workspace.5: a member-local scan must still recognize marker-qualified
 /// citations before the member's own ID grammar is applied. Without this
@@ -262,6 +277,117 @@ pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Fin
             numeric_run: false,
             text: line.scan_line[escape_start..token_end].to_string(),
             inline_site: None,
+            source_kind: String::new(),
+            enclosing_declaration: None,
+        });
+    }
+}
+
+/// §AR-scanner.2.6: collect number-only shorthand citations — `§FS-042` for
+/// `§FS-042-user-login` — under a `[id] format` that carries both `{number}` and
+/// `{slug}`. Three gates in order, each cheap enough to run per line: the repo
+/// must have a shorthand at all, the line must contain the marker, and the token
+/// must not already be claimed by the full-ID pass (§DF-number-only-citation-shorthand.2.6).
+///
+/// The marker is required unconditionally — there is no bare branch even under
+/// `strict = false`, because `KIND-NNN` carries no slug to make an accidental
+/// match unlikely and occurs constantly as issue keys and part numbers
+/// (§DF-number-only-citation-shorthand.2.4).
+///
+/// Testing `claimed_markers` before the regex is also what keeps the pass cheap on
+/// a well-formed tree, where every marker is claimed and no shorthand pattern is
+/// ever run.
+///
+/// A qualified marker belongs to the pass that claimed it — the workspace one,
+/// which claims every `§<alias>/...` on the line, or the loose fallback outside it,
+/// which records each token it parsed. Without the record the shorthand pattern
+/// matched the same token a second time and it became two identical citations: a
+/// duplicated row in `cover` and a diagnostic `check` printed twice. Skipping
+/// unconditionally instead would delete the citation wherever the loose parser
+/// declines a shape this project's `[id] format` accepts. The qualified form also
+/// collides with a path, so a marked qualified token inside inline code or a string
+/// literal is not a citation at all — the same carve-out the other passes apply.
+///
+/// Qualified `§<alias>/FS-042` is left to the workspace pass, which parses the ID
+/// tail with the *target* project's grammar — the citing project's shorthand
+/// shape would be the wrong one to apply across a namespace boundary. Outside
+/// workspace mode there is no such pass to defer to unconditionally, so the
+/// deferral is by record: `qualified_claimed` holds the markers a qualified pass
+/// actually emitted at, and only those are skipped.
+pub(super) fn scan_shorthand_citations(
+    line: &CitationLine<'_>,
+    workspace_mode: bool,
+    claimed_markers: &[usize],
+    qualified_claimed: &BTreeSet<usize>,
+    findings: &mut Findings,
+) {
+    if line.config.marker.is_empty() {
+        return;
+    }
+    for (marker_start, _) in line.scan_line.match_indices(&line.config.marker) {
+        // §DF-number-only-citation-shorthand.2.6: the full-ID pass owns every token
+        // it can claim, and `claimed_markers` is the record of what it claimed on
+        // this line — tested before the regex (§GOAL-fast-feedback).
+        if claimed_markers.contains(&marker_start) {
+            continue;
+        }
+        let token_start = marker_start + line.config.marker.len();
+        let Some(rest) = line.scan_line.get(token_start..) else {
+            continue;
+        };
+        let Some(shorthand) = line.config.grammar.shorthand_for(rest) else {
+            continue;
+        };
+        let Some(caps) = shorthand.prefix_re().captures(rest) else {
+            continue;
+        };
+        let match_end = caps.get(0).map_or(0, |found| found.end());
+        if line.config.grammar.has_reserved_named_tail(rest, match_end) {
+            continue;
+        }
+        // §DF-number-only-citation-shorthand.2.6: the pattern is anchored only at
+        // the start, so without this the `FS-042` inside the rejected full ID
+        // `§FS-042-User-Login` would be reported as a token the file does not hold.
+        if !line.config.grammar.id_token_ends_cleanly(rest, match_end) {
+            continue;
+        }
+        // §FS-fmt.2.4.1: the token ended, which does not make it a citation.
+        let numeric_run =
+            line.config
+                .grammar
+                .shorthand_sits_in_numeric_run(&line.config.marker, rest, match_end);
+        // §AR-scanner.2.6: a qualified marker a qualified pass already claimed —
+        // the workspace one, or the loose fallback (§FS-workspace.5) — belongs to
+        // that pass alone (§REQ-no-missed-citation.1, §AR-scanner.2.3).
+        let namespace = caps.name("namespace").map(|m| m.as_str().to_string());
+        if namespace.is_some()
+            && (workspace_mode
+                || qualified_claimed.contains(&marker_start)
+                || qualified_suppressed_in_source(line.scan_line, line.is_md, marker_start))
+        {
+            continue;
+        }
+        let Some(id) = parse_id(&caps, &line.config.grammar) else {
+            continue;
+        };
+        let token_end = token_start + match_end;
+        findings.citations.push(Citation {
+            namespace,
+            id,
+            section: caps.name("sec").map(|m| m.as_str().to_string()),
+            file: line.path.to_path_buf(),
+            line: line.lineno,
+            column: line.column_offset + marker_start + 1,
+            has_marker: true,
+            shorthand: true,
+            // §FS-check.3.13: still a citation here — it resolves, it counts, it
+            // grounds its file — but `fmt` may not rewrite it (§FS-fmt.2.3), so the
+            // checker withholds the "write the canonical form" error.
+            shorthand_rewritable: scanned_citation_rewritable(line, marker_start),
+            numeric_run,
+            text: line.scan_line[marker_start..token_end].to_string(),
+            inline_site: line.inline_sites.get(&line.lineno).cloned(),
+            // §AR-scanner.2.4: classified in the post-pass in `scan_file`.
             source_kind: String::new(),
             enclosing_declaration: None,
         });

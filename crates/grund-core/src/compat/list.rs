@@ -220,10 +220,10 @@ pub(super) fn command_list(args: &[String]) -> ExitCode {
             format!(
                 "{}/{}",
                 entry.project_alias,
-                render_id(entry.project_config, entry.id)
+                render_id(&entry.project_config.grammar, entry.id)
             )
         } else {
-            render_id(entry.project_config, entry.id)
+            render_id(&entry.project_config.grammar, entry.id)
         }
     };
 

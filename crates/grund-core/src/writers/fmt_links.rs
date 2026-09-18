@@ -20,11 +20,13 @@ use super::fmt_shorthand_links::{accepted_shorthand_link, collect_local_accepted
 use super::fmt_value_bindings::markdown_citation_is_value_binding;
 use crate::config::Config;
 use crate::grammar::{
-    MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, ShorthandTargets, is_inside_inline_code,
-    parse_id, parse_longest_id_prefix,
+    MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, is_inside_inline_code, parse_id,
+    parse_longest_id_prefix,
 };
 use crate::model::{Findings, Id};
-use crate::resolver::{WorkspaceContext, markdown_link_target, markdown_link_target_with_root};
+use crate::resolver::{
+    ShorthandTargets, WorkspaceContext, markdown_link_target, markdown_link_target_with_root,
+};
 use crate::scanner::{
     collect_local_legacy_markdown_citations, formatter_wrapper_label_is_citation,
     legacy_catalog_ids, match_legacy_tail,

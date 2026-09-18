@@ -19,7 +19,7 @@ use super::kind_defaults::{
     default_kind_index, default_kind_title,
 };
 use super::point_sizes::LeadSizeWarning;
-use crate::grammar::Grammar;
+use crate::grammar::{Grammar, GrammarKind, LexicalSettings};
 
 #[derive(Clone)]
 pub struct ConfigLocation {
@@ -287,7 +287,7 @@ impl Config {
             .collect();
         let grammar = Grammar::build(
             DEFAULT_ID_FORMAT,
-            &kinds,
+            &grammar_kinds(&kinds),
             DEFAULT_NUMBER_PATTERN,
             DEFAULT_SLUG_PATTERN,
             DEFAULT_SECTION_SEPARATOR,
@@ -407,7 +407,7 @@ impl Config {
     pub(crate) fn rebuild_grammar(&mut self) -> Result<()> {
         self.grammar = Grammar::build(
             &self.id_format,
-            &self.kinds,
+            &grammar_kinds(&self.kinds),
             &self.number_pattern,
             &self.slug_pattern,
             &self.section_separator,
@@ -416,6 +416,47 @@ impl Config {
         )?;
         Ok(())
     }
+
+    /// §AR-system.2.1: what the grammar component reads of this record — the
+    /// compiled patterns plus the scalar keys a lexical reader consults beside
+    /// them (§FS-config.3.1, §FS-inline-citation-style.3.3).
+    ///
+    /// A borrowed view rather than a copy, built wherever a reader asks, so the
+    /// grammar always sees the value this record holds *now*: the component
+    /// below must not be able to disagree with the config above it about what a
+    /// citation or a comment looks like, and a snapshot taken when the grammar
+    /// was compiled could (§AR-system.4).
+    pub(crate) fn lexical(&self) -> LexicalSettings<'_> {
+        LexicalSettings {
+            grammar: &self.grammar,
+            marker: &self.marker,
+            strict: self.strict,
+            comment_prefixes: &self.comment_prefixes,
+            docstring_python: self.docstring_python,
+            inline_style: &self.inline_style,
+            inline_note_layout: &self.inline_note_layout,
+            inline_note_layout_check: &self.inline_note_layout_check,
+        }
+    }
+}
+
+/// The citable `[[kinds]]` rows as the ID grammar reads them (§FS-config.3.4):
+/// the name that prefixes every ID of the kind, and the row's `format` override
+/// where it carries one (§FS-config.3.2).
+///
+/// The `citable` filter is applied here, once, rather than at each of the five
+/// places inside `Grammar::build` that used to repeat it: a non-citable kind
+/// declares no IDs, so it enters no pattern, and deciding that is config's
+/// (§AR-system.2.1).
+fn grammar_kinds(kinds: &[KindConfig]) -> Vec<GrammarKind> {
+    kinds
+        .iter()
+        .filter(|kind| kind.citable)
+        .map(|kind| GrammarKind {
+            name: kind.kind.clone(),
+            format: kind.format.clone(),
+        })
+        .collect()
 }
 
 /// The ID prefixes a config recognizes (§FS-config.3.4): the name of every

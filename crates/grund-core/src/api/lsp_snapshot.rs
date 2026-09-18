@@ -111,7 +111,7 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
             }
         }));
         for (id, decls) in &project.findings.declarations {
-            let rendered = render_id(&project.config, id);
+            let rendered = render_id(&project.config.grammar, id);
             let query_id = lsp_query_id(&context, project, &rendered, None);
             let mut homes: Vec<&Declaration> = decls
                 .iter()
@@ -186,7 +186,7 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
                 None => Some(project),
             };
             let rendered_id = target_project
-                .map(|target| render_id(&target.config, &citation.id))
+                .map(|target| render_id(&target.config.grammar, &citation.id))
                 .unwrap_or_else(|| {
                     citation
                         .text

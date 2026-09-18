@@ -32,7 +32,7 @@ pub(crate) fn show_e2e_case(
     if let Some(section) = section {
         return Err(anyhow!(
             "section not found: {}{}{}",
-            render_id(config, id),
+            render_id(&config.grammar, id),
             config.section_separator,
             section
         ));
@@ -71,7 +71,7 @@ pub(crate) fn show_e2e_case(
         .join(",");
     let json = format!(
         "{{\"id\":\"{}\",\"kind\":\"E2E\",\"path\":\"{}\",\"args\":[{}],\"expected_exit\":{},\"fixtures\":[{}]}}",
-        json_escape(&render_id(config, id)),
+        json_escape(&render_id(&config.grammar, id)),
         // path_config, not config: an `<alias>/E2E-x` shown from a workspace
         // root must report the same root-relative path as every other kind
         // (§FS-workspace.8.1) — this baked JSON bypasses render_show_output_json.

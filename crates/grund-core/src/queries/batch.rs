@@ -168,7 +168,7 @@ fn exhaustive_batch_queries(context: &WorkspaceContext) -> Vec<BatchShowQuery> {
     let mut queries = Vec::new();
     for (project_index, project) in context.projects.iter().enumerate() {
         for (id, declarations) in &project.findings.declarations {
-            let local_id = render_id(&project.config, id);
+            let local_id = render_id(&project.config.grammar, id);
             let qualified_id = if context.current == Some(project_index) {
                 local_id
             } else {

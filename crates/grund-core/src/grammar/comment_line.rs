@@ -2,15 +2,12 @@ use super::compiled::QUALIFIED_CITATION_PREFIX;
 use super::id_format::parse_longest_id_prefix;
 use super::ids::parse_loose_qualified_id_prefix;
 use super::never_rewrite::{is_inside_inline_code, is_inside_string_literal};
-// §AR-system.4: two upward reads — `Config` is config's own record and the
-// citation target workspace's, both above this component.
-use crate::config::Config;
-use crate::workspace::WorkspaceCitationTarget;
+use super::settings::{AliasGrammar, LexicalSettings};
 
 /// Every recognized citation token on one line, as byte ranges into it
 /// (§FS-check.1.1): the configured marker, `[reference] strict`, the
-/// string-literal exclusion, and workspace-qualified `§<alias>/<ID>` tokens
-/// (§FS-workspace.1). Ranges may repeat and may arrive in either pass's order —
+/// string-literal exclusion, and workspace-qualified `§<alias>/<ID>` tokens,
+/// each read with the grammar of the project its alias names (§FS-workspace.1). Ranges may repeat and may arrive in either pass's order —
 /// `line_citation_ranges` is what makes them a set.
 ///
 /// One comment line, reduced: where its citation tokens sit, and what it still
@@ -25,25 +22,25 @@ use crate::workspace::WorkspaceCitationTarget;
 /// is how two rules come to disagree about one comment.
 fn citation_token_ranges(
     line: &str,
-    config: &Config,
-    workspace_targets: &[WorkspaceCitationTarget],
+    lexical: LexicalSettings<'_>,
+    alias_grammars: &[AliasGrammar<'_>],
 ) -> Vec<(usize, usize)> {
     let mut ranges = Vec::new();
-    for caps in config.grammar.citation_re.captures_iter(line) {
+    for caps in lexical.grammar.citation_re.captures_iter(line) {
         let Some(full) = caps.get(0) else { continue };
         let namespace = caps.name("namespace");
-        let has_marker = line[..full.start()].ends_with(&config.marker);
-        if config.grammar.has_reserved_named_tail(line, full.end()) {
+        let has_marker = line[..full.start()].ends_with(lexical.marker);
+        if lexical.grammar.has_reserved_named_tail(line, full.end()) {
             continue;
         }
         if namespace.is_some() && !has_marker {
             continue;
         }
-        if config.strict && !has_marker {
+        if lexical.strict && !has_marker {
             continue;
         }
         if !has_marker
-            && config
+            && lexical
                 .grammar
                 .is_named_section(caps.name("sec").map(|sec| sec.as_str()))
         {
@@ -53,7 +50,7 @@ fn citation_token_ranges(
             continue;
         }
         let start = if has_marker {
-            full.start().saturating_sub(config.marker.len())
+            full.start().saturating_sub(lexical.marker.len())
         } else {
             full.start()
         };
@@ -66,16 +63,16 @@ fn citation_token_ranges(
         ranges.push((start, full.end()));
     }
 
-    if config.marker.is_empty() {
+    if lexical.marker.is_empty() {
         return ranges;
     }
-    for (marker_start, _) in line.match_indices(&config.marker) {
+    for (marker_start, _) in line.match_indices(lexical.marker) {
         if ranges.iter().any(|(start, _)| *start == marker_start)
             || is_inside_string_literal(line, marker_start)
         {
             continue;
         }
-        let token_start = marker_start + config.marker.len();
+        let token_start = marker_start + lexical.marker.len();
         let Some(rest) = line.get(token_start..) else {
             continue;
         };
@@ -89,17 +86,14 @@ fn citation_token_ranges(
         let Some(id_rest) = line.get(id_start..) else {
             continue;
         };
-        let parsed = if workspace_targets.is_empty() {
+        let parsed = if alias_grammars.is_empty() {
             parse_loose_qualified_id_prefix(id_rest).map(|(_, _, len)| len)
         } else {
-            match workspace_targets
-                .iter()
-                .find(|target| target.alias == alias)
-            {
-                Some(target) => parse_longest_id_prefix(id_rest, &target.config.grammar),
-                None => workspace_targets
+            match alias_grammars.iter().find(|target| target.alias == alias) {
+                Some(target) => parse_longest_id_prefix(id_rest, target.grammar),
+                None => alias_grammars
                     .iter()
-                    .find_map(|target| parse_longest_id_prefix(id_rest, &target.config.grammar)),
+                    .find_map(|target| parse_longest_id_prefix(id_rest, target.grammar)),
             }
             .map(|parsed| parsed.len)
         };
@@ -115,10 +109,10 @@ fn citation_token_ranges(
 /// line sees the same tokenization.
 pub(crate) fn line_citation_ranges(
     line: &str,
-    config: &Config,
-    workspace_targets: &[WorkspaceCitationTarget],
+    lexical: LexicalSettings<'_>,
+    alias_grammars: &[AliasGrammar<'_>],
 ) -> Vec<(usize, usize)> {
-    let mut ranges = citation_token_ranges(line, config, workspace_targets);
+    let mut ranges = citation_token_ranges(line, lexical, alias_grammars);
     ranges.sort_unstable();
     ranges.dedup();
     ranges
@@ -182,7 +176,7 @@ pub(crate) fn strip_comment_tokens<'a>(line: &'a str, prefixes: &[&str]) -> &'a 
 /// offsets into that line — the citation-token ranges above — can translate them
 /// instead of re-tokenizing the stripped copy and risking a different answer.
 ///
-/// `prefixes` is `comment_strip_prefixes(config)`, built once per block and passed
+/// `prefixes` is `comment_strip_prefixes(lexical)`, built once per block and passed
 /// down: it is a pure function of the configured comment prefixes, so rebuilding
 /// and re-sorting it per line — twice per line, once the layout pass runs — bought
 /// nothing (§GOAL-fast-feedback).
@@ -217,9 +211,9 @@ pub(crate) fn comment_content_range(line: &str, prefixes: &[&str]) -> (usize, us
     (offset, offset + rest.len())
 }
 
-pub(crate) fn comment_strip_prefixes(config: &Config) -> Vec<&str> {
+pub(crate) fn comment_strip_prefixes<'a>(lexical: LexicalSettings<'a>) -> Vec<&'a str> {
     let mut prefixes = vec!["/**", "/*", "*/", "\"\"\"", "'''"];
-    for prefix in &config.comment_prefixes {
+    for prefix in lexical.comment_prefixes {
         if prefix == "//" {
             prefixes.extend(["///", "//!", "//"]);
         } else if prefix == "/*" {

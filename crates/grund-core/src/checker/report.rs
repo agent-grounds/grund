@@ -421,7 +421,10 @@ pub(crate) fn check_with_workspace_and_overlays(
                 path: Some(primary.path),
                 line: Some(primary.line),
                 column: None,
-                message: format!("duplicate declaration of {}{suffix}", render_id(config, id)),
+                message: format!(
+                    "duplicate declaration of {}{suffix}",
+                    render_id(&config.grammar, id)
+                ),
                 sites,
             });
         }
@@ -443,7 +446,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                     column: None,
                     message: format!(
                         "{} must be declared in {} (single-file kind)",
-                        render_id(config, id),
+                        render_id(&config.grammar, id),
                         expected.path
                     ),
                     sites: Vec::new(),
@@ -461,7 +464,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                 let message = if home.citable {
                     format!(
                         "{} declares kind {} inside {} home {}",
-                        render_id(config, id),
+                        render_id(&config.grammar, id),
                         id.kind,
                         home.kind,
                         home.path
@@ -469,7 +472,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                 } else {
                     format!(
                         "{} must not be declared in {} (not a citable home)",
-                        render_id(config, id),
+                        render_id(&config.grammar, id),
                         home.place()
                     )
                 };
@@ -515,7 +518,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                     "escaped citation {} resolves to a declaration; write {}{} for a live citation, or leave it escaped if it is only an illustration",
                     esc.text.trim(),
                     config.marker,
-                    render_qualified_id(config, esc.namespace.as_deref(), &esc.id)
+                    render_qualified_id(&config.grammar, esc.namespace.as_deref(), &esc.id)
                 ),
                 sites: Vec::new(),
             });
@@ -572,7 +575,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                     column: None,
                     message: format!(
                         "stub link target lacks {}: {}",
-                        render_id(config, id),
+                        render_id(&config.grammar, id),
                         format_path(target)
                     ),
                     sites: Vec::new(),
@@ -623,7 +626,10 @@ pub(crate) fn check_with_workspace_and_overlays(
                 path: Some(decl.file.clone()),
                 line: Some(decl.line),
                 column: None,
-                message: format!("declared but never cited: {}", render_id(config, id)),
+                message: format!(
+                    "declared but never cited: {}",
+                    render_id(&config.grammar, id)
+                ),
                 sites: Vec::new(),
             });
         }

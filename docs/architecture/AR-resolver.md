@@ -4,9 +4,9 @@ A workspace is two halves. Reading the configs — expanding one `members` list,
 climbing the claims that spell an alias path, narrowing a scope, computing the
 boundary roots a scan stops at — is [§AR-workspace](AR-workspace.md#ar-workspace-how-the-config-time-workspace-layer-composes-with-the-config-loader-and-the-scanner), and it happens
 before any file is read. *Loading* those projects is this page: scanning every
-one of them, reconciling off-grammar citations across the whole set, and
-answering the questions that are functions of what a run loaded and of nothing
-else ([§FS-workspace.8](../functional-spec/FS-workspace.md#8-other-commands)).
+one of them, reconciling off-grammar citations and cross-namespace shorthands
+across the whole set, and answering the questions that are functions of what a
+run loaded and of nothing else ([§FS-workspace.8](../functional-spec/FS-workspace.md#8-other-commands)).
 
 Because it runs scans, it sits **above** the scanner while the half that reads
 configs stays below it. That is the whole reason the component exists: while
@@ -25,13 +25,14 @@ workspace ─► project map ─┐
 scanner ─► Findings ─► [ resolver ] ─┬─► loaded project set ─► checker, queries, writers
                                      ├─► citation ──► target project
                                      ├─► declaration ──► body by recorded span
-                                     └─► declaration ──► link target
+                                     ├─► declaration ──► link target
+                                     └─► shorthand token ──► the declaration it names
 ```
 
 The tenth box of the pipeline ([§AR-system.2.10](README.md#210-resolver)). It takes the
 project map workspace expanded out of configs ([§AR-system.2.4](README.md#24-workspace)) and each
 project's `Findings` from the scanner ([§AR-system.2.5](README.md#25-scanner)), and gives the
-checker, the queries and the writers the loaded project set with the four
+checker, the queries and the writers the loaded project set with the five
 answers above ([§AR-system.2.6](README.md#26-checker), [§AR-system.2.7](README.md#27-queries), [§AR-system.2.8](README.md#28-writers)). It
 knows no rule and no rendering: it settles which project a coordinate lands in
 and what text is there, never whether that is an error or how to print it
@@ -126,3 +127,32 @@ the workspace-aggregate arm only when `scope_is_config_root` — the same test
 ([§FS-workspace.8.6](../functional-spec/FS-workspace.md#86-grund-cover)). Both
 arms build the single-project context from one helper, so "single project"
 cannot come to mean two things.
+
+## 4. The shorthand a whole run's catalog resolves
+
+Recognizing a number-only shorthand is lexical, and stays in the grammar: the
+shape a token wears, the "same kind, same number" candidate rule, and the index
+a pass builds out of one declaration set so it pays one walk instead of one per
+site ([§AR-system.2.1](README.md#21-grammar), [§FS-check.1.2](../functional-spec/FS-check.md#12-the-number-only-shorthand)). Resolving one lands here wherever the
+answer needs more than the project the token sits in.
+
+- **`§<alias>/FS-042` has no local grammar to expand it with.** A per-project
+  scan sees only its own declarations, so the cross-namespace half of the rule
+  runs once every project has been loaded, against the declaration set of the
+  project the alias names ([§FS-workspace.1](../functional-spec/FS-workspace.md#1-citation-syntax), [§AR-scanner.2.6](AR-scanner.md#26-number-only-shorthand-citations)). The unqualified
+  half stays inside each project's own walk, because there the token and the
+  declarations it could name belong to one project.
+- **What `fmt` writes in its place** is the *target's* canonical form — rendered
+  under the target's `[id] format`, sectioned with the target's separator, and
+  gated by the target's `[reference] shorthand` policy, because a workspace may
+  mix all three ([§FS-fmt.2.4](../functional-spec/FS-fmt.md#24-shorthand-to-canonical), [§FS-workspace.8.5](../functional-spec/FS-workspace.md#85-grund-fmt---cross-refs)). The per-walk index that
+  answers it, this project's declarations plus one per alias, is built here for
+  the same reason.
+- **What an editor offers** for a shorthand being typed is that same expansion
+  asked of a list of declared IDs ([§FS-lsp.1.4](../functional-spec/FS-lsp.md#14-live-trigger-transform)), so the on-type edit and
+  `grund fmt` cannot disagree about what resolves.
+
+What is *not* here is the finding a shorthand site earns. Unique, ambiguous or
+unknown is a verdict, and a verdict is the checker's ([§FS-check.3.13](../functional-spec/FS-check.md#313-number-only-shorthand-citation),
+[§AR-checker.2.12](../../crates/grund-core/src/checker/report.rs)): it reads the candidate set downward out of the grammar's
+index, and which project to read it in out of section 1.

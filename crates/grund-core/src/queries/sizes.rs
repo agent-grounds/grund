@@ -217,7 +217,7 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
                     .map(|(_, full)| measure_point_text(full, *unit)),
             })
             .collect();
-        let rendered = render_id(row.project_config, row.id);
+        let rendered = render_id(&row.project_config.grammar, row.id);
         entries.push(ListSizeEntry {
             project: context
                 .workspace_loaded

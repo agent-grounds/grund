@@ -23,10 +23,9 @@ mod tests_shorthand_surfaces {
             num: Some(42),
             slug: None,
         };
-        assert_eq!(render_id(&config, &shorthand), "FS-042");
+        assert_eq!(render_id(&config.grammar, &shorthand), "FS-042");
         assert_eq!(
-            render_id(
-                &config,
+            render_id(&config.grammar,
                 &Id {
                     kind: "FS".into(),
                     num: Some(42),
@@ -51,17 +50,17 @@ mod tests_shorthand_surfaces {
         let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan");
 
         let (id, section) = resolve_id_arg("FS-042", &config, &findings).expect("resolve");
-        assert_eq!(render_id(&config, &id), "FS-042-user-login");
+        assert_eq!(render_id(&config.grammar, &id), "FS-042-user-login");
         assert_eq!(section, None);
 
         let (id, section) = resolve_id_arg("FS-042.1", &config, &findings).expect("resolve");
-        assert_eq!(render_id(&config, &id), "FS-042-user-login");
+        assert_eq!(render_id(&config.grammar, &id), "FS-042-user-login");
         assert_eq!(section.as_deref(), Some("1"));
 
         // A full ID is unaffected, and an unknown shorthand keeps its written
         // form so the caller's own "not found" path names what was asked for.
         let (id, _) = resolve_id_arg("FS-999", &config, &findings).expect("resolve");
-        assert_eq!(render_id(&config, &id), "FS-999");
+        assert_eq!(render_id(&config.grammar, &id), "FS-999");
     }
 
     // §FS-show.2.2.1: an ambiguous shorthand argument is a query failure that

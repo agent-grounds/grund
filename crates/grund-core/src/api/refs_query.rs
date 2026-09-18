@@ -147,7 +147,7 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
             path: render_path(hit.project, &hit.citation.file),
             line: hit.citation.line,
             column: hit.citation.column,
-            id: render_id(render_config, &hit.citation.id),
+            id: render_id(&render_config.grammar, &hit.citation.id),
             section: hit.citation.section.clone(),
             marker: hit.citation.has_marker,
             text: hit.citation.text.clone(),
@@ -159,14 +159,14 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
             Some(format!(
                 "{}/{} is neither declared nor cited — run `grund list --project {}` to see {}'s declared IDs",
                 target_alias,
-                render_id(render_config, &id),
+                render_id(&render_config.grammar, &id),
                 target_alias,
                 target_alias
             ))
         } else {
             Some(format!(
                 "{} is neither declared nor cited — run `grund list` to see every declared ID",
-                render_id(render_config, &id)
+                render_id(&render_config.grammar, &id)
             ))
         }
     } else {

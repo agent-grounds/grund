@@ -396,7 +396,7 @@ pub(super) fn check_kind_indexes(
                         message: format!(
                             "index entry {}{} is not a link; unchecked in grund {INDEX_RULE_PRIOR_RELEASE}, an error in {INDEX_RULE_RELEASE} — run `grund fmt --write`",
                             config.marker,
-                            render_id(config, id)
+                            render_id(&config.grammar, id)
                         ),
                         sites: Vec::new(),
                     });
@@ -416,7 +416,7 @@ pub(super) fn check_kind_indexes(
                         // — the past-tense form the gate reads.
                         message: format!(
                             "{} is not listed in {index_display}{absent} — became an error in grund 0.13.0",
-                            render_id(config, id)
+                            render_id(&config.grammar, id)
                         ),
                         sites: Vec::new(),
                     });

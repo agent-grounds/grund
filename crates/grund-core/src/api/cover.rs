@@ -108,7 +108,7 @@ impl CoverCitationRow<'_> {
     /// when the citation itself was, never qualified on the file's behalf
     /// (§FS-workspace.8.6).
     fn rendered_id(&self) -> String {
-        let id = render_id(self.target_config, &self.citation.id);
+        let id = render_id(&self.target_config.grammar, &self.citation.id);
         match &self.citation.namespace {
             Some(alias) => format!("{alias}/{id}"),
             None => id,

@@ -48,29 +48,6 @@ NOTE = "§AR-system.4"
 # An entry is (file, `<component>::<item>`) and buys nothing else: the file must
 # still make the read, and the import must still carry its §AR-system.4 note.
 RECORDED_DEBT = {
-    # grammar reads four components above it for records it is *handed*: the
-    # `Config` a compiled grammar hangs off, the `[[kinds]]` row a near miss is
-    # measured against, the scanner's per-line citation record, and the
-    # workspace vocabulary a qualified citation is resolved with.
-
-    # Every one of them is an argument rather than a lookup, so grammar still
-    # opens no file and holds no rule of its own.
-    "grammar/comment_block.rs": ("config::Config",),
-    "grammar/comment_line.rs": ("config::Config", "workspace::WorkspaceCitationTarget"),
-    "grammar/compiled.rs": ("config::KindConfig",),
-    "grammar/ids.rs": ("config::Config",),
-    "grammar/inline_note_layout.rs": ("config::Config", "workspace::WorkspaceCitationTarget"),
-    "grammar/near_miss.rs": ("config::KindConfig",),
-    "grammar/never_rewrite.rs": ("scanner::CitationLine",),
-    "grammar/shorthand.rs": (
-        "checker::ReferenceTier",
-        "config::Config",
-        "config::ShorthandPolicy",
-        "resolver::WorkspaceCheckTarget",
-        "resolver::WorkspaceProject",
-        "scanner::CitationLine",
-    ),
-    "grammar/shorthand_targets.rs": ("config::Config", "resolver::WorkspaceContext"),
     # workspace and the resolver reach `compat/` for four stderr lines:
     # §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and §FS-workspace.6.1 are
     # settled before a report exists.
