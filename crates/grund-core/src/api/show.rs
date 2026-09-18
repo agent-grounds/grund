@@ -20,10 +20,9 @@ use crate::model::{ShowOutput, TextOverlays};
 use crate::queries::{
     ShowFormat, ShowOpts, render_show_output_json, show_declaration_with_overlays,
 };
+use crate::resolver::{load_workspace_context_with_overlays, with_member_id_candidates};
 use crate::scanner::resolve_id_arg;
-use crate::workspace::{
-    load_workspace_context_with_overlays, split_qualified_id_arg, with_member_id_candidates,
-};
+use crate::workspace::split_qualified_id_arg;
 use crate::writers::flatten_cross_ref_links;
 
 /// Programmatic declaration read. This mirrors `grund show` resolution but

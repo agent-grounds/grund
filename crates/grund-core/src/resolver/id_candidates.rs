@@ -1,25 +1,27 @@
-//! The member-candidate clause (§AR-system.2.4): when an unqualified `ID not
+//! The member-candidate clause (§AR-system.2.10): when an unqualified `ID not
 //! found:` refusal can name the projects of this run that *do* declare the ID
 //! (§FS-workspace.8.1.1).
 //!
-//! It sits with the workspace rather than with `show`, because the question it
-//! answers is about the project set: which of the run's projects declares this
-//! text under its own `[id]` grammar, and whether the run saw the whole tree at
-//! all (§AR-workspace.8).
+//! It sits with the loaded project set rather than with `show`, because the
+//! question it answers is about that set: which of the run's projects declares
+//! this text under its own `[id]` grammar, and whether the run saw the whole
+//! tree at all (§AR-resolver.3). It needs every project's `Findings`, which is
+//! what moved it out of `workspace/` with the loader it reads
+//! (§AR-resolver.placement).
 
 use anyhow::anyhow;
 
 use super::context::{WorkspaceContext, WorkspaceProject};
 use crate::grammar::render_id;
-// §AR-system.4: one upward read — the ID-argument resolver, which is the
-// scanner's.
 use crate::scanner::resolve_id_arg;
 
 /// A list of candidates as one clause: `a`, `a or b`, `a, b or c`. A string
 /// helper with no workspace in it, but this is the lowest component that reads
 /// it — the candidate clause below and the unknown-project hint of
 /// §FS-check.3.8.1, which is the checker's and reads it downward. It came out of
-/// `checker/references.rs` with §AR-system.2.6 for that reason.
+/// `checker/references.rs` with §AR-system.2.6 for that reason, and followed the
+/// candidate clause here when §AR-system.2.10 became a component — still the
+/// lowest of its two readers.
 pub(crate) fn join_alternatives(items: &[String]) -> String {
     match items {
         [] => String::new(),

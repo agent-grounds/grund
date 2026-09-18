@@ -10,13 +10,13 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::checker::is_stub_for_inline_decl;
 use crate::model::{
     Citation, Declaration, DeclarationSource, SectionInfo, TextOverlays,
-    canonicalize_existing_prefix, paths_same_location, resolve_stub_target, sort_path_key,
+    canonicalize_existing_prefix, is_stub_for_inline_decl, paths_same_location,
+    resolve_stub_target, sort_path_key,
 };
+use crate::resolver::{WorkspaceContext, WorkspaceProject};
 use crate::scanner::{EMBEDDED_VALUE_MARKER, overlay_text};
-use crate::workspace::{WorkspaceContext, WorkspaceProject};
 
 pub(super) fn lsp_query_id(
     context: &WorkspaceContext,

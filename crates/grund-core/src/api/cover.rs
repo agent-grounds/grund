@@ -10,8 +10,8 @@ use std::path::PathBuf;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{Citation, sort_path_key};
+use crate::resolver::{WorkspaceContext, load_narrowable_workspace_context};
 use crate::scanner::{ApiScanError, api_scan_error};
-use crate::workspace::{WorkspaceContext, load_narrowable_workspace_context};
 
 #[derive(Clone)]
 pub struct CoverOpts {

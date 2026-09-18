@@ -29,6 +29,25 @@ use crate::config::{AbsentOptionalNamespace, Config, load_config_at_with_report_
 // stderr line rather than through a `Report` (§FS-check.4.7, §FS-check.4.10).
 use crate::compat::{warn_if_members_absorb_scan, warn_unread_block};
 
+/// One project of the run a qualified citation can name, as the scanner needs
+/// it: the alias the citation writes and the whole `Config` its ID is parsed and
+/// rendered with, because a workspace may mix `[id] format`s (§FS-workspace.1,
+/// §AR-workspace.2).
+///
+/// The same two facts as [`WorkspaceProjectEntry`] below, which is why it sits
+/// beside it: what the expansion named a project, and the config that spells its
+/// IDs. It sat in `model/records.rs` while workspace was a file-name category,
+/// which is what made that file read `Config` for something other than the
+/// qualified-ID renderer (§AR-system.4). The list of them is built once per run,
+/// by the loader in `resolver/context.rs`, so each project's scan parses
+/// `§<alias>/<ID>` with the target's own grammar inline rather than in a second
+/// disk pass (§AR-system.2.10).
+#[derive(Clone)]
+pub(crate) struct WorkspaceCitationTarget {
+    pub(crate) alias: String,
+    pub(crate) config: Config,
+}
+
 /// One project the workspace walk reached: the alias path qualified citations
 /// name it by — one segment per workspace level, so a nested project carries
 /// its whole chain (§FS-workspace.3, §FS-workspace.6.1) — and its own loaded

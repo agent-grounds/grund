@@ -18,7 +18,6 @@ use crate::grammar::{
 };
 use crate::model::sort_path_key;
 use crate::model::{Citation, Declaration, Findings, Id, LegacyCitationCandidate};
-use crate::workspace::WorkspaceProject;
 
 /// Resolve a query through the canonical grammar first, then combine exact
 /// catalog compatibility with number shorthand (§FS-config.3.2, §FS-show.1).
@@ -88,46 +87,6 @@ pub(super) fn promote_local_legacy_citations(config: &Config, findings: &mut Fin
     sort_citations(&mut findings.citations);
 }
 
-/// The workspace half of the same reconciliation (§FS-workspace.4,
-/// §FS-workspace.8): a qualified candidate consults only the alias-selected
-/// project's catalog and effective section grammar.
-pub(crate) fn promote_qualified_legacy_citations(projects: &mut [WorkspaceProject]) {
-    let catalogs = projects
-        .iter()
-        .map(|project| {
-            (
-                project.alias.clone(),
-                project.config.clone(),
-                configured_catalog_ids(&project.findings.declarations),
-                legacy_catalog_ids(&project.findings.declarations),
-            )
-        })
-        .collect::<Vec<_>>();
-
-    for project in projects {
-        let candidates = std::mem::take(&mut project.findings.legacy_citation_candidates);
-        for candidate in candidates {
-            let Some(alias) = candidate.namespace.as_deref() else {
-                continue;
-            };
-            let Some((_, target_config, configured_catalog, catalog)) =
-                catalogs.iter().find(|(target, _, _, _)| target == alias)
-            else {
-                continue;
-            };
-            promote_legacy_candidate(
-                &project.config,
-                target_config,
-                configured_catalog,
-                catalog,
-                candidate,
-                &mut project.findings.citations,
-            );
-        }
-        sort_citations(&mut project.findings.citations);
-    }
-}
-
 pub(crate) fn legacy_catalog_ids(declarations: &BTreeMap<Id, Vec<Declaration>>) -> Vec<Id> {
     declarations
         .keys()
@@ -136,7 +95,11 @@ pub(crate) fn legacy_catalog_ids(declarations: &BTreeMap<Id, Vec<Declaration>>) 
         .collect()
 }
 
-fn configured_catalog_ids(declarations: &BTreeMap<Id, Vec<Declaration>>) -> Vec<Id> {
+/// The complement of [`legacy_catalog_ids`]: every ID the configured grammar
+/// spells. `pub(crate)` for one reader — the qualified half of this
+/// reconciliation, which takes the whole loaded project set and is therefore
+/// `resolver/legacy_promotion.rs` (§AR-resolver.placement).
+pub(crate) fn configured_catalog_ids(declarations: &BTreeMap<Id, Vec<Declaration>>) -> Vec<Id> {
     declarations
         .keys()
         .filter(|id| id.legacy_spelling().is_none())
@@ -156,7 +119,10 @@ pub(crate) fn formatter_wrapper_label_is_citation(label: &str, config: &Config) 
         || config.grammar.legacy_kind_and_format(tail).is_some()
 }
 
-fn promote_legacy_candidate(
+/// One deferred candidate reconciled against one target catalog — the step both
+/// halves of this pass share, the local one above and the qualified one in
+/// `resolver/legacy_promotion.rs` (§AR-resolver.placement).
+pub(crate) fn promote_legacy_candidate(
     source_config: &Config,
     target_config: &Config,
     configured_catalog: &[Id],
@@ -317,7 +283,9 @@ fn longest_section_prefix<'a>(tail: &'a str, config: &Config) -> Option<(&'a str
         .last()
 }
 
-fn sort_citations(citations: &mut [Citation]) {
+/// The one order citations are kept in, applied after either half of this pass
+/// promotes into the list (§FS-errors.4).
+pub(crate) fn sort_citations(citations: &mut [Citation]) {
     citations.sort_by(|a, b| {
         (sort_path_key(&a.file), a.line, a.column).cmp(&(sort_path_key(&b.file), b.line, b.column))
     });

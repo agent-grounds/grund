@@ -1,50 +1,39 @@
-//! What a workspace-aware command holds (§AR-system.2.4): the set of projects a
+//! What a workspace-aware command holds (§AR-system.2.10): the set of projects a
 //! run operates on, loaded and scanned, plus the index that says which of them
 //! an unqualified ID resolves against and the root every path renders from
-//! (§FS-workspace.8 intro, §AR-workspace.8).
+//! (§FS-workspace.8 intro, §AR-resolver.3).
 //!
 //! The loaders here are the one seam every walking command enters the workspace
 //! through, whichever of the three shapes a run turns out to be — standalone,
 //! member-local, or the whole workspace — so no command carries a second opinion
 //! about what "the current project" is (§AR-workspace.5.1).
+//!
+//! This is the file the resolver exists for: it takes the project map workspace
+//! expanded out of configs and *scans* every project in it, which is what puts
+//! this component above the scanner while the expansion stays below it
+//! (§AR-resolver.placement).
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
-use super::expand::expand_workspace_tree;
-use super::scope::{resolve_workspace_config, scope_is_config_root};
-use crate::config::{Config, INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
+use super::legacy_promotion::promote_qualified_legacy_citations;
+use crate::config::Config;
 use crate::grammar::resolve_qualified_shorthand_citations;
 use crate::model::{Findings, TextOverlays};
-// §AR-system.4: four reads above this component — three of the scanner's, and
-// the §FS-check.4.8 stderr line, which is `compat/`'s because the query surfaces
-// have no report to carry it (§DF-unlisted-workspace-block.2.3).
-use crate::compat::print_unlisted_workspace_block_warnings;
-use crate::scanner::{
-    ScanError, promote_qualified_legacy_citations, scan_tree_with_workspace_overlays,
+use crate::scanner::{ScanError, scan_tree_with_workspace_overlays};
+use crate::workspace::{
+    WorkspaceCitationTarget, expand_workspace_tree, resolve_workspace_config, scope_is_config_root,
 };
-
-/// One project of the run a qualified citation can name, as the scanner needs
-/// it: the alias the citation writes and the whole `Config` its ID is parsed and
-/// rendered with, because a workspace may mix `[id] format`s (§FS-workspace.1,
-/// §AR-workspace.2).
-///
-/// A workspace record that sat in `model/records.rs` while workspace was a
-/// file-name category, which is what made that file read `Config` for something
-/// other than the qualified-ID renderer (§AR-system.4). The list of them is
-/// built once per run, below, so each project's scan parses `§<alias>/<ID>`
-/// with the target's own grammar inline rather than in a second disk pass.
-#[derive(Clone)]
-pub(crate) struct WorkspaceCitationTarget {
-    pub(crate) alias: String,
-    pub(crate) config: Config,
-}
+// §AR-system.4: one read above this component — the §FS-check.4.8 stderr line,
+// which is `compat/`'s because the query surfaces have no report to carry it
+// (§DF-unlisted-workspace-block.2.3).
+use crate::compat::print_unlisted_workspace_block_warnings;
 
 /// One project in scope for a query command — an alias, the loaded config,
 /// and the scanner's findings + scan errors for that project's tree.
 /// Mirrors `ProjectScan` in `api/run.rs`; kept here as the shared shape
-/// every query command consumes (§AR-workspace.8).
+/// every query command consumes (§AR-resolver.3).
 pub(crate) struct WorkspaceProject {
     pub(crate) alias: String,
     pub(crate) config: Config,
@@ -53,7 +42,7 @@ pub(crate) struct WorkspaceProject {
 }
 
 /// Everything a workspace-aware query command needs (§FS-workspace.8 intro,
-/// §AR-workspace.8): every loaded project (the current one plus, when running
+/// §AR-resolver.3): every loaded project (the current one plus, when running
 /// at the workspace root, every member configured under `[workspace]`), an
 /// optional index naming the project unqualified IDs resolve against, and the
 /// canonical render-root used for `[output] relative_paths`.
@@ -141,7 +130,7 @@ pub(crate) fn load_workspace_context(path: &Path, path_provided: bool) -> Result
     load_workspace_context_with_overlays(path, path_provided, &TextOverlays::new(), false)
 }
 
-/// Test-only observation seam for §AR-workspace.8: an opted-in black-box test
+/// Test-only observation seam for §AR-resolver.3: an opted-in black-box test
 /// can count public CLI loader entries without changing the loader's result.
 #[cfg(feature = "test-workspace-load-count")]
 fn record_test_workspace_load() {
@@ -401,47 +390,5 @@ fn load_workspace_project(
         config,
         findings,
         scan_errors,
-    })
-}
-
-/// Split a CLI ID argument that may carry a qualifying `<alias>/` prefix
-/// (§FS-workspace.1). An ID never contains `/`, so the **last** separator is
-/// the boundary — that is what lets a nested project be addressed by its whole
-/// alias path (§FS-workspace.6.1). Every segment is validated against the slug
-/// grammar here, before resolution; the ID tail is deliberately left raw so the
-/// caller can parse it with the target project's grammar.
-pub(crate) fn split_qualified_id_arg(raw: &str) -> Result<(Option<String>, &str)> {
-    if let Some((alias, rest)) = raw.rsplit_once('/') {
-        if let Some(message) = invalid_alias_path_message(alias) {
-            return Err(anyhow!("{message}"));
-        }
-        return Ok((Some(alias.to_string()), rest));
-    }
-    Ok((None, raw))
-}
-
-/// §FS-workspace.8: the diagnostic for an alias path that is not one slug per
-/// level, naming the **segment** that failed. Naming the whole path against a
-/// pattern that forbids `/` would read as "a namespace may not contain `/`",
-/// which is the opposite of the rule (§FS-workspace.1) — and in a nested tree the
-/// path is usually mostly right. A single-segment path is its own segment, so it
-/// is named plainly; an empty segment has nothing to quote and says so.
-fn invalid_alias_path_message(alias: &str) -> Option<String> {
-    let segments: Vec<&str> = alias.split('/').collect();
-    let bad = invalid_alias_path_segment(alias)?;
-    Some(if alias.is_empty() {
-        format!(
-            "invalid project alias: the path before the ID is empty ({INVALID_ALIAS_PATH_EXPECTED})"
-        )
-    } else if bad.is_empty() {
-        format!(
-            "invalid project alias `{alias}`: a segment is empty ({INVALID_ALIAS_PATH_EXPECTED})"
-        )
-    } else if segments.len() == 1 {
-        format!("invalid project alias `{alias}` ({INVALID_ALIAS_PATH_EXPECTED})")
-    } else {
-        format!(
-            "invalid project alias segment `{bad}` in `{alias}` ({INVALID_ALIAS_PATH_EXPECTED})"
-        )
     })
 }

@@ -3,8 +3,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::tree::ScanError;
-use super::walk_boundaries::{is_hidden, is_scannable};
+use super::walk_boundaries::is_scannable;
 use crate::config::{Config, display_path};
+use crate::model::is_hidden;
 
 /// The per-file scan failure a walker error becomes (§FS-check.2), or `None` when
 /// the walk was never going to read through the path it names (§FS-config.3.5.6).

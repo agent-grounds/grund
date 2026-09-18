@@ -6,10 +6,9 @@ use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
 use crate::config::display_path;
 use crate::grammar::render_id;
 use crate::model::{FindingSite, ShowOutput, TextOverlays};
+use crate::resolver::{WorkspaceContext, load_workspace_context, with_member_id_candidates};
 use crate::scanner::resolve_id_arg;
-use crate::workspace::{
-    WorkspaceContext, load_workspace_context, split_qualified_id_arg, with_member_id_candidates,
-};
+use crate::workspace::split_qualified_id_arg;
 // §AR-system.4: one sibling read — the link flattening from the writers, which
 // this query is the inverse of (§DF-show-cross-ref-flattening).
 use crate::writers::flatten_cross_ref_links;
@@ -55,7 +54,7 @@ pub fn show_batch_with_scope(
         return Ok(Vec::new());
     }
 
-    // §AR-workspace.8: this is the batch's only loader entry. Exhaustive
+    // §AR-resolver.3: this is the batch's only loader entry. Exhaustive
     // discovery reads the returned catalog and never starts a preliminary scan.
     let context = load_workspace_context(&opts.path, path_provided)?;
     if let Some((file, message)) = context
@@ -98,7 +97,7 @@ pub fn show_batch_with_scope(
 
 /// Resolve one batch coordinate through the shared context and the same lower
 /// level resolver, body extractor, flattening, and JSON renderer as single show
-/// (§FS-show.2.6, §AR-workspace.8).
+/// (§FS-show.2.6, §AR-resolver.3).
 fn show_batch_query_in_context(
     context: &WorkspaceContext,
     id_arg: &str,

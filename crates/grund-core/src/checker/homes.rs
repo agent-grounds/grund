@@ -7,30 +7,8 @@ use crate::grammar::{
     PythonDocstringScanState, STUB_LINK_HEADING, declaration_id_on_line, source_scan_line,
 };
 use crate::model::{
-    Declaration, Id, configured_home_path_key, paths_same_location, physical_path_key,
-    resolve_stub_target, scanned_decl_relative_path, scanned_path_key,
+    Id, configured_home_path_key, physical_path_key, scanned_decl_relative_path, scanned_path_key,
 };
-
-/// Whether this stub heading is the one-line pointer to an inline declaration in
-/// code (`# <ID>: [text](src/foo.rs)` whose target also declares `<ID>`) — such a
-/// stub does not count as a second home, so it is not a duplicate (§AR-scanner.4,
-/// §FS-show.2.3).
-pub(crate) fn is_stub_for_inline_decl(
-    root: &Path,
-    decl: &Declaration,
-    decls: &[Declaration],
-) -> bool {
-    if !decl.is_stub {
-        return false;
-    }
-    let Some(target) = &decl.defined_in else {
-        return false;
-    };
-    let resolved = resolve_stub_target(root, &decl.file, target);
-    decls
-        .iter()
-        .any(|other| paths_same_location(&other.file, &resolved) && other.file != decl.file)
-}
 
 pub(super) struct DeclarationHome<'a> {
     pub(super) kind: &'a str,

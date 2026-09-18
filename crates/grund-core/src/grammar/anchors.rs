@@ -8,7 +8,7 @@
 //! They were the `fmt` category's while the crate was flat, and the scanner read
 //! the first one upward to fill a section's stored title (§AR-scanner.2.2). Both
 //! came down when §AR-system.2.8 became a module, so the scanner reads it
-//! downward and the formatter's link target (`writers/fmt_link_targets.rs`)
+//! downward and the resolver's link target (`resolver/link_targets.rs`)
 //! reads the second one the same way. Reproducing a renderer's slugger
 //! byte-for-byte is the whole of §DF-github-anchor-fidelity, and nothing about
 //! it is a writer's plan.

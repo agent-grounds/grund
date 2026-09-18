@@ -24,14 +24,13 @@ use super::optional_members::expand_optional_members;
 use super::scope::{config_location_error, workspace_members_error};
 use crate::config::{
     AbsentOptionalNamespace, Config, ConfigLocation, config_file_in,
-    load_config_at_with_report_base, parse_string_list, strip_comment,
+    load_config_at_with_report_base, parse_string_list, root_scope_roots, strip_comment,
 };
-use crate::model::{format_path, relative_from_base, sort_path_key};
-// §AR-system.4: five reads above this component — four of the scanner's, and
-// the printing of the undecidable-claim warning, which is `compat/`'s because it
-// reaches the reader as a stderr line (§FS-workspace.6.1).
+use crate::model::{format_path, is_hidden, relative_from_base, sort_path_key};
+// §AR-system.4: one read above this component — the printing of the
+// undecidable-claim warning, which is `compat/`'s because it reaches the reader
+// as a stderr line (§FS-workspace.6.1).
 use crate::compat::warn_undecidable_ancestor_claim;
-use crate::scanner::{canonical_config_root, is_hidden, root_scope_roots, walk_reads_any_file};
 
 /// The canonical form of `path` — the root a project is identified by — or the path
 /// unchanged when it does not resolve.
@@ -250,7 +249,10 @@ pub(crate) fn absorbed_scan_roots(config: &Config, members: &[WorkspaceMember]) 
 /// own scan comes to: §FS-workspace.2.1 fires when every entry is covered, and
 /// §FS-check.4.10 when an uncovered entry holds a file. Sharing it is what keeps
 /// a `[[kinds]]` home, or a home the config lists without walking, moving both
-/// rules together instead of one of them (§FS-config.3.5).
+/// rules together instead of one of them (§FS-config.3.5) — which is why this
+/// and [`block_relative_root`] are `pub(crate)`: the second of those findings
+/// has to run the walker to answer, so it is `resolver/unread_block.rs` and
+/// reads the one list downward (§AR-resolver.placement).
 ///
 /// The roots are [`root_scope_roots`] at `full = false` rather than a second
 /// reading of `[scan] include`: the question is about the set §FS-workspace.6's
@@ -261,7 +263,7 @@ pub(crate) fn absorbed_scan_roots(config: &Config, members: &[WorkspaceMember]) 
 /// Why a root that is not on disk is dropped: the walk skips it before it prunes,
 /// so it is read by nobody and rescues nobody. Comparison is canonical and by
 /// prefix, exactly as the walk's own prune compares.
-fn block_scope_roots<'a>(
+pub(crate) fn block_scope_roots<'a>(
     config: &Config,
     members: &'a [WorkspaceMember],
 ) -> Vec<(PathBuf, Option<&'a WorkspaceMember>)> {
@@ -282,7 +284,7 @@ fn block_scope_roots<'a>(
 /// spelling normalized rather than the spelling itself, so `./docs/` is named
 /// `docs` — because a canonical root renders as nothing when it equals the render
 /// base and as an absolute path when it does not (§FS-errors.4).
-fn block_relative_root<'a>(config: &Config, root: &'a Path) -> &'a Path {
+pub(crate) fn block_relative_root<'a>(config: &Config, root: &'a Path) -> &'a Path {
     root.strip_prefix(&config.root).unwrap_or(root)
 }
 
@@ -313,7 +315,7 @@ pub(crate) fn absorbed_scan_warning(covered: &[String]) -> String {
 /// the blocks below it as the run reaches them (§FS-check.4.10).
 pub(crate) struct UnreadBlockProbe {
     pub(crate) config: Config,
-    members: Vec<WorkspaceMember>,
+    pub(crate) members: Vec<WorkspaceMember>,
 }
 
 /// §FS-check.4.10: the block to ask, or `None` when this one is not the finding's
@@ -332,51 +334,6 @@ pub(super) fn unread_block_probe(
         config: config.clone(),
         members: members.to_vec(),
     })
-}
-
-/// §FS-check.4.10: the first root of this block's own scope that holds a file the
-/// block would have read as a project, named under the block root — or `None`,
-/// which is every configuration this finding stays silent about.
-///
-/// **One root, not every root.** §FS-workspace.2.1's claim is universal and its
-/// list is the evidence for it; this claim is existential, one edit clears every
-/// root at once, and probing the rest would buy nothing the answer depends on. The
-/// one named is the first in *scope order* — `[scan] include` in config order,
-/// then the `[[kinds]]` homes — because that order is fixed, while which file the
-/// walk hands back first is not (§FS-errors.4).
-///
-/// The walk runs against the block's own config with its member boundary set and
-/// with the run's project roots, its own among them, so [`walk_reads_any_file`]
-/// prunes exactly as the block's own scan would have: at each member on the way
-/// down, and at every other project of the run in the directions the member list
-/// cannot see — which is what a directory symlink out of the block's scope root
-/// takes (§FS-workspace.6). Its own root belongs there because the walker prunes
-/// what *another* project owns, and the block owns its tree in the counterfactual
-/// this finding asks about. Which projects those are is a property of the run: a
-/// run rooted at the block does not know the projects above it, and neither would
-/// the scan it is standing in for. `scan_full` is off for the same reason
-/// [`block_scope_roots`] asks the default scope — this is a property of the
-/// configuration rather than of one walk (§FS-check.1.3).
-pub(crate) fn unread_block_scope_root(
-    probe: &UnreadBlockProbe,
-    project_roots: &[PathBuf],
-) -> Option<String> {
-    let config = &probe.config;
-    let mut walk = config.clone();
-    walk.workspace_boundary_roots = probe
-        .members
-        .iter()
-        .map(|member| member.root.clone())
-        .collect();
-    walk.workspace_project_roots = project_roots.to_vec();
-    walk.workspace_project_roots
-        .push(canonical_config_root(config));
-    walk.scan_full = false;
-    block_scope_roots(config, &probe.members)
-        .into_iter()
-        .filter(|(_, member)| member.is_none())
-        .find(|(root, _)| walk_reads_any_file(&walk, root))
-        .map(|(root, _)| format_path(block_relative_root(config, &root)))
 }
 
 /// The sentence `warn_unread_block` prints, built apart from the printing — in

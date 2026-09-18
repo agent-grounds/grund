@@ -11,13 +11,17 @@ mod grammar;
 // boundary is what `config/mod.rs` re-exports (§AR-core-module-layout.1).
 mod config;
 // §AR-system.2.4: workspace is one Rust module too, so member expansion, the
-// claims and the loaded project set are declared in `workspace/` and what
+// claims and the scope they narrow to are declared in `workspace/` and what
 // crosses the boundary is what `workspace/mod.rs` re-exports.
 mod workspace;
 // §AR-system.2.5: the scanner is one Rust module too, so the walk, the per-file
 // pass and everything they record are declared in `scanner/` and what crosses
 // the boundary is what `scanner/mod.rs` re-exports (§AR-scanner).
 mod scanner;
+// §AR-system.2.10: the resolver is one Rust module too, so the loaded project
+// set, the citation-to-target function and the two answers read off a recorded
+// span are declared in `resolver/` (§AR-resolver).
+mod resolver;
 // §AR-system.2.6: the checker is one Rust module too, so every rule and the
 // report they fill are declared in `checker/` and what crosses the boundary is
 // what `checker/mod.rs` re-exports (§AR-checker).
@@ -69,13 +73,13 @@ pub use config::{
     LeadSizeWarning, NamespaceMatch, PointSizeUnit, ShorthandPolicy,
 };
 
-// §AR-system.2.4 workspace: the one refusal shape a frontend asks about
-// (§FS-workspace.8.1.1).
-pub use workspace::names_member_id_candidate;
-
 // §AR-system.2.5 scanner: the published form of what the walk raises
 // (§FS-check.2).
 pub use scanner::ApiScanError;
+
+// §AR-system.2.10 resolver: the one refusal shape a frontend asks about
+// (§FS-workspace.8.1.1).
+pub use resolver::names_member_id_candidate;
 
 // §AR-system.2.6 checker: the finding-code selection `grund-cli` parses
 // `--only` and `--skip` into. `#[doc(hidden)]`, so it is not one of the 132
@@ -149,8 +153,8 @@ use std::process::ExitCode;
 // what that component re-exports (§AR-system.4).
 #[cfg(test)]
 use {
-    api::*, checker::*, compat::*, config::*, grammar::*, model::*, queries::*, scanner::*,
-    workspace::*, writers::*,
+    api::*, checker::*, compat::*, config::*, grammar::*, model::*, queries::*, resolver::*,
+    scanner::*, workspace::*, writers::*,
 };
 
 // Tests, one module per category (§AR-core-module-layout.1). `tests_support`

@@ -11,13 +11,12 @@ use anyhow::{Result, anyhow};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use crate::checker::is_stub_for_inline_decl;
 use crate::config::{Config, KindConfig, display_path, non_citable_kind_error};
 use crate::grammar::render_id;
-use crate::model::{Declaration, Id, format_path, sort_path_key};
+use crate::model::{Declaration, Id, format_path, is_stub_for_inline_decl, sort_path_key};
 use crate::queries::ListCitationCounts;
+use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::scanner::{ApiScanError, api_scan_error};
-use crate::workspace::{WorkspaceProject, load_workspace_context};
 
 #[derive(Clone)]
 pub struct ListOpts {

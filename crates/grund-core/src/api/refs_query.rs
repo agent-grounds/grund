@@ -16,8 +16,9 @@ use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure};
 use crate::config::display_path;
 use crate::grammar::render_id;
 use crate::model::{Citation, sort_path_key};
+use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::scanner::{api_scan_error, resolve_id_arg};
-use crate::workspace::{WorkspaceProject, load_workspace_context, split_qualified_id_arg};
+use crate::workspace::split_qualified_id_arg;
 
 pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
     let context = load_workspace_context(&opts.path, opts.path_provided)?;

@@ -6,17 +6,14 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::homes::is_stub_for_inline_decl;
 use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
 use crate::config::Config;
 use crate::grammar::never_rewrite_context;
 use crate::model::{
-    Citation, Declaration, Findings, Id, physical_path_key, scanned_decl_relative_path,
-    scanned_path_key,
+    Citation, Declaration, Findings, Id, is_stub_for_inline_decl, physical_path_key,
+    scanned_decl_relative_path, scanned_path_key,
 };
-// §AR-system.4: one upward read — the Markdown link
-// target reader, which is the formatter's (§FS-fmt.6).
-use crate::writers::markdown_link_target;
+use crate::resolver::markdown_link_target;
 
 /// The IDs each kind index owes an entry for, keyed by the index's
 /// config-root-relative path (§FS-check.3.18). `folder_owed` preserves the

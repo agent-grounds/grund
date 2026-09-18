@@ -54,12 +54,13 @@ pub use values::{
 // directory that can name any of it.
 pub(crate) use headings::UnmarkedHeadingCandidate;
 pub(crate) use paths::{
-    canonicalize_existing_prefix, configured_home_path_key, format_path, normalize_path_lexically,
-    paths_same_location, physical_path_key, relative_from_base, scanned_decl_relative_path,
-    scanned_path_key, sort_path_key,
+    canonicalize_existing_prefix, configured_home_path_key, format_path, is_hidden,
+    normalize_path_lexically, paths_same_location, physical_path_key, relative_from_base,
+    scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
 pub(crate) use records::{
-    LegacyCitationCandidate, ShowRenderMode, TextOverlays, resolve_stub_target,
+    LegacyCitationCandidate, ShowRenderMode, TextOverlays, is_stub_for_inline_decl,
+    resolve_stub_target,
 };
 pub(crate) use report::{CheckReport, Diagnostic, Site};
 pub(crate) use text::{format_list, json_escape};

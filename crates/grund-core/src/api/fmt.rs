@@ -8,8 +8,8 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::config::display_path;
+use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::scanner::ApiScanError;
-use crate::workspace::{WorkspaceProject, load_workspace_context};
 use crate::writers::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree, fmt_workspace_projects};
 
 #[derive(Clone)]

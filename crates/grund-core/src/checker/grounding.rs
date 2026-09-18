@@ -14,10 +14,9 @@ use std::path::Path;
 
 use super::citations::ObligationUnit;
 use super::homes::{DeclarationHome, KindHomeIndex};
-use super::references::WorkspaceCheckTarget;
-use super::support::citation_resolves;
 use crate::config::{Config, DEFAULT_GROUNDING_LEVEL, KindConfig, grounding_level_for_kind};
 use crate::model::{CheckReport, Citation, Diagnostic, FileStructure, Findings};
+use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 use crate::workspace::namespace_is_unverified;
 
 /// One thing a row's `grounding_level` asks for a citation (§FS-check.3.6.2):

@@ -47,6 +47,14 @@ pub(crate) fn normalize_path_lexically(path: &Path) -> PathBuf {
     normalized
 }
 
+/// A dotfile or dot-directory — same convention used by the scanner walker
+/// and by `expand_workspace_members` to skip `.git`, `.agents`, `.cache`, etc.
+pub(crate) fn is_hidden(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.starts_with('.'))
+}
+
 /// Whether two paths name one file. Canonicalized where the filesystem can say
 /// so, which is what makes a declaration reached through a symlinked directory
 /// the same home as the one reached directly (§FS-check.3.4).

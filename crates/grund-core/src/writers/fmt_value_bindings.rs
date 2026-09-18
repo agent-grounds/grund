@@ -6,7 +6,7 @@ use crate::checker::binding_target_has_any_value_authority;
 use crate::config::Config;
 use crate::grammar::MarkdownLineCitation;
 use crate::model::{Findings, component_text_is_valid};
-use crate::workspace::WorkspaceContext;
+use crate::resolver::WorkspaceContext;
 
 pub(super) fn markdown_citation_is_value_binding(
     line: &str,

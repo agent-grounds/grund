@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use super::e2e::E2eCase;
 use super::headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
-use super::paths::normalize_path_lexically;
+use super::paths::{normalize_path_lexically, paths_same_location};
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
 };
@@ -305,6 +305,27 @@ pub struct ShowOutput {
     pub line: usize,
     pub json: Option<String>,
     pub sections: Vec<ShowSection>,
+}
+
+/// Whether this stub heading is the one-line pointer to an inline declaration in
+/// code (`# <ID>: [text](src/foo.rs)` whose target also declares `<ID>`) — such a
+/// stub does not count as a second home, so it is not a duplicate (§AR-scanner.4,
+/// §FS-show.2.3).
+pub(crate) fn is_stub_for_inline_decl(
+    root: &Path,
+    decl: &Declaration,
+    decls: &[Declaration],
+) -> bool {
+    if !decl.is_stub {
+        return false;
+    }
+    let Some(target) = &decl.defined_in else {
+        return false;
+    };
+    let resolved = resolve_stub_target(root, &decl.file, target);
+    decls
+        .iter()
+        .any(|other| paths_same_location(&other.file, &resolved) && other.file != decl.file)
 }
 
 pub(crate) fn resolve_stub_target(root: &Path, stub_file: &Path, target: &Path) -> PathBuf {

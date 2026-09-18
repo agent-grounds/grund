@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use crate::grammar::render_id;
-use crate::workspace::load_workspace_context;
+use crate::resolver::load_workspace_context;
 
 pub(super) fn command_complete(args: &[String]) -> ExitCode {
     match args.first().map(|arg| arg.as_str()) {

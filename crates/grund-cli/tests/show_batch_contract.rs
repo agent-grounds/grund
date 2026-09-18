@@ -1,5 +1,5 @@
 //! Black-box contract for one-context batch declaration reads
-//! (§FS-show.1, §FS-show.2.6, §FS-output-shapes.4.1, §AR-workspace.8).
+//! (§FS-show.1, §FS-show.2.6, §FS-output-shapes.4.1, §AR-resolver.3).
 
 use serde_json::Value;
 use std::fs;

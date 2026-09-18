@@ -22,8 +22,8 @@ use super::support::{heading_marks, section_depth};
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{CheckReport, Diagnostic, Findings, SectionHeadingOutsideDeclaration, Site};
+use crate::resolver::WorkspaceProject;
 use crate::scanner::section_path_is_numeric;
-use crate::workspace::WorkspaceProject;
 
 /// The section-shape rules, as independent passes over the declarations
 /// (§AR-checker.2.15). Order does not matter — the report is sorted before it is

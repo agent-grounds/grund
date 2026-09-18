@@ -16,16 +16,17 @@ use std::path::{Path, PathBuf};
 use super::config_findings::config_diagnostics;
 use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
 use crate::checker::{
-    WorkspaceCheckTarget, check_findings, check_with_workspace, configured_scope,
-    out_of_scope_references, out_of_scope_section_headings, retain_findings_in_scope,
-    sort_diagnostics, workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
+    check_findings, check_with_workspace, configured_scope, out_of_scope_references,
+    out_of_scope_section_headings, retain_findings_in_scope, sort_diagnostics,
+    workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Diagnostic};
+use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects};
 use crate::scanner::scan_tree;
 use crate::workspace::{
-    absent_only_workspace_caution, absent_optional_member_warnings, load_workspace_projects,
-    resolve_workspace_config, scope_is_config_root, unlisted_workspace_block_warnings,
+    absent_only_workspace_caution, absent_optional_member_warnings, resolve_workspace_config,
+    scope_is_config_root, unlisted_workspace_block_warnings,
 };
 
 pub(crate) struct CheckRun {

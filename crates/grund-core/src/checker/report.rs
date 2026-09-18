@@ -3,24 +3,23 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::agents::check_agents_block_version;
 use super::citations::{check_citation_obligations, check_citation_prohibitions};
 use super::grounding::check_grounding;
-use super::homes::{
-    KindHomeIndex, file_declares_inline_home, is_stub_for_inline_decl, paths_same_location_key,
-};
+use super::homes::{KindHomeIndex, file_declares_inline_home, paths_same_location_key};
 use super::index::check_kind_indexes;
 use super::index_entries::KindIndexEntries;
 use super::inline_style::check_inline_citation_style;
 use super::near_miss::check_declaration_near_misses;
-use super::references::{ReferenceTier, WorkspaceCheckTarget, check_citation_resolution};
+use super::references::{ReferenceTier, check_citation_resolution};
 use super::sections::check_section_headings;
 use super::sizes::check_oversized_leads;
-use super::support::{citation_resolves, sort_diagnostics};
+use super::support::sort_diagnostics;
 use super::values::check_values;
 use crate::config::{Config, display_path};
 use crate::grammar::{render_id, render_qualified_id};
 use crate::model::{
     CheckReport, Declaration, Diagnostic, Findings, Id, Site, TextOverlays, format_path,
-    resolve_stub_target, sort_path_key,
+    is_stub_for_inline_decl, resolve_stub_target, sort_path_key,
 };
+use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 use crate::scanner::is_scannable;
 
 /// AR-checker: how grund validates the scanner's findings

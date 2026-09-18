@@ -3,7 +3,7 @@ use anyhow::Result;
 use super::fmt_error::FmtScanAbort;
 use super::fmt_rewrite::{FmtRunOpts, FmtTreeOutcome, auto_cross_refs_for_scope, fmt_tree};
 use crate::config::Config;
-use crate::workspace::WorkspaceContext;
+use crate::resolver::WorkspaceContext;
 
 /// Run one formatter pass across every project in a workspace-root scope.
 ///

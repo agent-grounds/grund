@@ -33,11 +33,11 @@ use super::shorthand_targets::{
 };
 use crate::model::{CheckReport, Citation, Declaration, Diagnostic, Findings, Id};
 // §AR-system.4: six upward reads — every name below belongs to a component
-// above this one: config, the scanner, the checker and the workspace.
-use crate::checker::{ReferenceTier, WorkspaceCheckTarget};
+// above this one: config, the scanner, the checker and the resolver.
+use crate::checker::ReferenceTier;
 use crate::config::{Config, ShorthandPolicy};
+use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject};
 use crate::scanner::CitationLine;
-use crate::workspace::WorkspaceProject;
 
 /// One parsed ID token: the `Id`, its optional section path, and whether it was
 /// written in the number-only shorthand (§FS-check.1.2). A shorthand `Id` carries

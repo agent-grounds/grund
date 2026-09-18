@@ -2,16 +2,16 @@ use anyhow::{Result, anyhow};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use super::body::{PointBodyCache, point_body_pair};
 use super::citation_counts::ListCitationCounts;
-use crate::checker::is_stub_for_inline_decl;
 use crate::config::{
     Config, PointSizeUnit, display_path, measure_point_text, non_citable_kind_error,
 };
 use crate::grammar::render_id;
-use crate::model::{Declaration, Id, SectionInfo, TextOverlays, format_path, sort_path_key};
+use crate::model::{
+    Declaration, Id, SectionInfo, TextOverlays, format_path, is_stub_for_inline_decl, sort_path_key,
+};
+use crate::resolver::{PointBodyCache, WorkspaceContext, load_workspace_context, point_body_pair};
 use crate::scanner::{ApiScanError, api_scan_error};
-use crate::workspace::{WorkspaceContext, load_workspace_context};
 
 /// Options for the additive per-point size catalog (§FS-list.1, §FS-list.3.4).
 #[derive(Clone)]

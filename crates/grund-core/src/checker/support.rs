@@ -1,7 +1,5 @@
-use std::collections::BTreeMap;
 use std::fs;
 
-use super::references::WorkspaceCheckTarget;
 use crate::config::Config;
 use crate::grammar::{is_inside_inline_code, render_id, render_qualified_id};
 use crate::model::{Citation, Diagnostic, Findings, Id, sort_path_key};
@@ -143,35 +141,6 @@ pub(super) fn section_depth(section_path: &str) -> usize {
 
 pub(super) fn heading_marks(level: usize) -> String {
     "#".repeat(level)
-}
-
-pub(super) fn target_for_citation<'a>(
-    cite: &Citation,
-    local: &'a Findings,
-    local_config: &'a Config,
-    workspace: &'a BTreeMap<String, WorkspaceCheckTarget<'a>>,
-) -> Option<WorkspaceCheckTarget<'a>> {
-    match cite.namespace.as_deref() {
-        Some(namespace) => workspace.get(namespace).map(|target| WorkspaceCheckTarget {
-            findings: target.findings,
-            config: target.config,
-        }),
-        None => Some(WorkspaceCheckTarget {
-            findings: local,
-            config: local_config,
-        }),
-    }
-}
-
-pub(super) fn citation_resolves(
-    cite: &Citation,
-    local: &Findings,
-    local_config: &Config,
-    workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
-) -> bool {
-    target_for_citation(cite, local, local_config, workspace)
-        .map(|target| target.findings.declarations.contains_key(&cite.id))
-        .unwrap_or(false)
 }
 
 /// Put diagnostics in the one fixed order `grund` ever prints them in — by path, then

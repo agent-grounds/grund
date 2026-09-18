@@ -1,10 +1,10 @@
 use std::path::{Path, PathBuf};
 
 use crate::config::Config;
+use crate::resolver::unread_block_scope_root;
 use crate::workspace::{
     UnreadBlockProbe, WorkspaceMember, absorbed_scan_roots, absorbed_scan_warning,
-    config_location_message, undecidable_ancestor_claim_warning, unread_block_scope_root,
-    unread_block_warning,
+    config_location_message, undecidable_ancestor_claim_warning, unread_block_warning,
 };
 
 pub(crate) fn warn_if_members_absorb_scan(config: &Config, members: &[WorkspaceMember]) {

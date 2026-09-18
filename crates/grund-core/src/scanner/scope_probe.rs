@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use super::walk::{root_scope_roots, walk_reads_any_file};
-use crate::config::Config;
+use super::walk::walk_reads_any_file;
+use crate::config::{Config, root_scope_roots};
 
 /// Whether the effective configured scope contains a file the scanner would read
 /// (§FS-config.3.5, §FS-init.2.2). Root selection stays beside the walk so init

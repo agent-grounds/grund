@@ -1,14 +1,13 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use super::homes::is_stub_for_inline_decl;
-use super::references::WorkspaceCheckTarget;
 use crate::config::{Config, display_path, kind_uses_values};
 use crate::grammar::{render_id, render_qualified_id};
 use crate::model::{
     CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Findings, Id, Site, ValueBinding,
-    value_components_equal,
+    is_stub_for_inline_decl, value_components_equal,
 };
+use crate::resolver::WorkspaceCheckTarget;
 
 /// The independent explicit-value checker pass (§AR-checker.2.18,
 /// §FS-values.5). It consumes scanner records, resolves through the same

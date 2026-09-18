@@ -11,8 +11,8 @@
 //! (§AR-core-module-layout.1). Each file keeps the name of the writer it belongs
 //! to rather than dropping a prefix, because this component holds five: the
 //! `fmt_*` files are the formatter — the rewrite walk, the two suppressed
-//! scopes, the link pass and its target, the value-binding protection, the
-//! workspace pass, the completeness proof and the one refusal it carries out —
+//! scopes, the link pass, the value-binding protection, the workspace pass, the
+//! completeness proof and the one refusal it carries out —
 //! `id.rs` is the ID proposal, the `fetch*` pair is the snapshot, the `init_*`
 //! files are the scaffold (the run and its report, the entrypoint table, the
 //! plan one run makes, the block splice, the templates and the two generated
@@ -44,12 +44,18 @@
 //! into `checker/`, each to the lowest component that reads it. What came the
 //! other way is the §FS-fmt.6.6 auto-enable pair, out of the deprecated `fmt`
 //! adapter: neither of its two callers is the command (§AR-system.2.9).
+//!
+//! `fmt_link_targets.rs` left the same way when §AR-system.2.10 became a
+//! component: where a citation's link points is a function of the loaded
+//! findings, and the checker's index-entry rule was reading it upward out of
+//! this component for the link it compares a page against, so it is
+//! `resolver/link_targets.rs` and the link pass reads it downward
+//! (§FS-check.3.18, §AR-resolver.placement).
 
 mod fetch;
 mod fetch_write;
 mod fmt_complete_findings;
 mod fmt_error;
-mod fmt_link_targets;
 mod fmt_links;
 mod fmt_rewrite;
 mod fmt_shorthand_links;
@@ -81,7 +87,6 @@ pub use init_templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use fmt_link_targets::markdown_link_target;
 pub(crate) use fmt_links::flatten_cross_ref_links;
 pub(crate) use fmt_rewrite::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};
 pub(crate) use fmt_suppress::{FmtDirectives, FmtExcluded};

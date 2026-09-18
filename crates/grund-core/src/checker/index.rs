@@ -11,7 +11,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::homes::is_stub_for_inline_decl;
 use super::index_entries::KindIndexEntries;
 use crate::config::{Config, display_path};
 use crate::grammar::{
@@ -19,7 +18,7 @@ use crate::grammar::{
 };
 use crate::model::{
     CheckReport, Citation, Declaration, Diagnostic, Findings, Id, configured_home_path_key,
-    physical_path_key, scanned_decl_relative_path, scanned_path_key,
+    is_stub_for_inline_decl, physical_path_key, scanned_decl_relative_path, scanned_path_key,
 };
 
 /// One kind's index obligation, resolved against the config root
