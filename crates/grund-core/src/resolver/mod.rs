@@ -88,8 +88,13 @@ pub(crate) use shorthand::{
 };
 pub(crate) use unread_block::unread_block_scope_root;
 
-// What only the crate's own test modules read (§AR-core-module-layout.1): the
-// single-line form of the shorthand rewrite, without the trigger origins the
-// formatter threads through it.
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
 #[cfg(test)]
-pub(crate) use shorthand::expand_shorthand_citations;
+mod tests_shorthand_numeric_run;
+#[cfg(test)]
+mod tests_shorthand_rewrite;
+#[cfg(test)]
+mod tests_unread_opted_out_block;
+#[cfg(test)]
+mod tests_workspace_citations;
