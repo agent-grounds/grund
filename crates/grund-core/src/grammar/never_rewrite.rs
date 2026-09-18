@@ -1,7 +1,7 @@
 use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_line};
-// §AR-system.4: `CitationLine` is the scanner's per-line record, reachable
-// through the crate root until the scanner is a module.
-use crate::CitationLine;
+// §AR-system.4: one upward read — `CitationLine` is the scanner's per-line
+// record, above this component.
+use crate::scanner::CitationLine;
 
 /// The never-rewrite predicates shared by the scanner (§AR-scanner.2.3), `fmt`
 /// (§FS-fmt.2.3), and the LSP on-type path (§FS-lsp.1.4): where a citation-shaped

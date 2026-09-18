@@ -59,9 +59,9 @@ pub use editor_snapshot::{
 pub use show_query::{ShowFormat, ShowMode, ShowOpts, ShowQueryError};
 pub use sizes::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, list_sizes};
 
-// What the other components read, still through the crate root while they are
-// flat (§AR-system.4). The finalize task narrows this as each caller moves into
-// a module of its own.
+// What the other components read, each by this module's path (§AR-system.4):
+// the whole of what crosses this boundary, and the only thing outside the
+// directory that can name any of it.
 pub(crate) use body::{PointBodyCache, point_body_pair};
 pub(crate) use citation_counts::ListCitationCounts;
 pub(crate) use show::{render_show_output_json, show_declaration, show_declaration_with_overlays};

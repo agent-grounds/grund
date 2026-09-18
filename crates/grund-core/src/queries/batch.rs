@@ -10,9 +10,9 @@ use crate::scanner::resolve_id_arg;
 use crate::workspace::{
     WorkspaceContext, load_workspace_context, split_qualified_id_arg, with_member_id_candidates,
 };
-// §AR-system.4: one read through the crate root — the link flattening from the
-// writers, a sibling this query is the inverse of (§DF-show-cross-ref-flattening).
-use crate::flatten_cross_ref_links;
+// §AR-system.4: one sibling read — the link flattening from the writers, which
+// this query is the inverse of (§DF-show-cross-ref-flattening).
+use crate::writers::flatten_cross_ref_links;
 
 /// One input coordinate for the CLI-only batch-show adapter
 /// (§FS-show.1, §FS-show.2.6).

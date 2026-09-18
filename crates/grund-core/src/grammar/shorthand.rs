@@ -32,12 +32,12 @@ use super::shorthand_targets::{
     ShorthandTargets, shorthand_index_number, unique_shorthand_expansion_target,
 };
 use crate::model::{CheckReport, Citation, Declaration, Diagnostic, Findings, Id};
-// §AR-system.4: every name below belongs to a component above this one — config,
-// the scanner, the checker and the workspace — and stays reachable through the
-// crate root until each of those becomes a module of its own.
-use crate::{
-    CitationLine, Config, ReferenceTier, ShorthandPolicy, WorkspaceCheckTarget, WorkspaceProject,
-};
+// §AR-system.4: six upward reads — every name below belongs to a component
+// above this one: config, the scanner, the checker and the workspace.
+use crate::checker::{ReferenceTier, WorkspaceCheckTarget};
+use crate::config::{Config, ShorthandPolicy};
+use crate::scanner::CitationLine;
+use crate::workspace::WorkspaceProject;
 
 /// One parsed ID token: the `Id`, its optional section path, and whether it was
 /// written in the number-only shorthand (§FS-check.1.2). A shorthand `Id` carries

@@ -11,9 +11,9 @@ use anyhow::anyhow;
 
 use super::context::{WorkspaceContext, WorkspaceProject};
 use crate::grammar::render_id;
-// §AR-system.4: one upward read through the crate root, because its owner is
-// still flat — the argument resolver from the scanner.
-use crate::resolve_id_arg;
+// §AR-system.4: one upward read — the ID-argument resolver, which is the
+// scanner's.
+use crate::scanner::resolve_id_arg;
 
 /// A list of candidates as one clause: `a`, `a or b`, `a, b or c`. A string
 /// helper with no workspace in it, but this is the lowest component that reads

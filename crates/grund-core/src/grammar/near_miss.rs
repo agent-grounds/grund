@@ -4,10 +4,12 @@ use regex::Regex;
 use super::compiled::Grammar;
 use super::ids::parse_id;
 use crate::model::Id;
-// §AR-system.4: `KindConfig` is config's record, above this component and
-// reachable through the crate root until the glob goes. `LegacyGrammar` below is
-// this component's own, moved down out of the scanner with §AR-system.2.5.
-use crate::KindConfig;
+// `LegacyGrammar` below is this component's own, moved down out of the scanner
+// with §AR-system.2.5.
+
+// §AR-system.4: one upward read — `KindConfig` is config's record, above this
+// component.
+use crate::config::KindConfig;
 
 /// The near-miss half of the compiled [`Grammar`] (§FS-check.4.6): the
 /// declaration patterns with the ID grammar replaced by "a configured kind, the

@@ -52,9 +52,9 @@ mod walk_errors;
 
 pub use scan_error::ApiScanError;
 
-// What the other components read, still through the crate root while they are
-// flat (§AR-system.4). The finalize task narrows this as each caller moves into
-// a module of its own.
+// What the other components read, each by this module's path (§AR-system.4):
+// the whole of what crosses this boundary, and the only thing outside the
+// directory that can name any of it.
 pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;

@@ -9,10 +9,10 @@ use crate::grammar::{
 };
 use crate::model::canonical_snapshot_path;
 use crate::workspace::resolve_workspace_config;
-// §AR-system.4: two reads through the crate root — the formatter's suppression
-// and exclusion state from `writers/fmt_suppress.rs`, a sibling this rule must
-// match line for line (§FS-lsp.1.4).
-use crate::{FmtDirectives, FmtExcluded};
+// §AR-system.4: two sibling reads — the formatter's suppression and exclusion
+// state from `writers/fmt_suppress.rs`, which this rule must match line for
+// line (§FS-lsp.1.4).
+use crate::writers::{FmtDirectives, FmtExcluded};
 
 /// Check the same context exclusions as `grund fmt` before an LSP on-type
 /// `$$` rewrite (§FS-fmt.2.3, §FS-lsp.1.4).

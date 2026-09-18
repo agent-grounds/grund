@@ -78,9 +78,9 @@ pub use init::{InitError, InitEvent, InitFsHome, InitNext, InitOpts, InitOutput,
 pub use init_plan::InitAgentEntrypointSelection;
 pub use init_templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
 
-// What the other components read, still through the crate root while they are
-// flat (§AR-system.4). The finalize task narrows this as each caller moves into
-// a module of its own.
+// What the other components read, each by this module's path (§AR-system.4):
+// the whole of what crosses this boundary, and the only thing outside the
+// directory that can name any of it.
 pub(crate) use fmt_link_targets::markdown_link_target;
 pub(crate) use fmt_links::flatten_cross_ref_links;
 pub(crate) use fmt_rewrite::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};

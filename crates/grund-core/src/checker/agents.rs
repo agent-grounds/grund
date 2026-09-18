@@ -6,10 +6,10 @@ use crate::grammar::{
     AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
 };
 use crate::model::{CheckReport, Diagnostic};
-// §AR-system.4: four upward reads through the crate root — the companion
+// §AR-system.4: four upward reads — the companion
 // entrypoint list and the three template renderers this rule byte-compares a
 // fresh render of, all the writers' (§FS-init).
-use crate::{
+use crate::writers::{
     ConversationSurface, citation_directions_section, clickable_citations_section,
     companion_agent_entrypoints,
 };

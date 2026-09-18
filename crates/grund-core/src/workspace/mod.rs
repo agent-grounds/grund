@@ -25,9 +25,9 @@ mod unlisted;
 
 pub use id_candidates::names_member_id_candidate;
 
-// What the other components read, still through the crate root while they are
-// flat (§AR-system.4). The finalize task narrows this as each caller moves into
-// a module of its own.
+// What the other components read, each by this module's path (§AR-system.4):
+// the whole of what crosses this boundary, and the only thing outside the
+// directory that can name any of it.
 pub(crate) use context::{
     WorkspaceCitationTarget, WorkspaceContext, WorkspaceProject, load_narrowable_workspace_context,
     load_resolved_workspace_context, load_workspace_context, load_workspace_context_with_overlays,

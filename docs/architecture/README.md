@@ -55,7 +55,7 @@ Data flows along the arrows and so does knowledge: a component knows only what t
 
 ## 2. Components
 
-One subsection per box. Each says what the box consumes, what it produces, what it must not know, and where its design is written. A component whose subsection is its whole architecture has no page of its own; it gets one when it has invariants beyond its placement. The names at the end of each subsection are today's file-name categories in `crates/grund-core/src/` ([§AR-core-module-layout.1](AR-core-module-layout.md#1-module-categories)); the second phase of this shape turns each component into a Rust module, so the compiler holds section 4 instead of a test.
+One subsection per box. Each says what the box consumes, what it produces, what it must not know, and where its design is written. A component whose subsection is its whole architecture has no page of its own; it gets one when it has invariants beyond its placement. Each subsection ends with the component's Rust module in `crates/grund-core/src/`, one directory per box ([§AR-core-module-layout.1](AR-core-module-layout.md#1-module-categories)): a component's own items are private to it, and what crosses a boundary is what its `mod.rs` re-exports, so the compiler is what holds a component shut.
 
 ### 2.1 grammar
 
@@ -99,7 +99,7 @@ Three today, two planned, and none has engine logic ([§AR-bindings](AR-bindings
 
 ## 4. Dependency direction
 
-One rule: **no component reads one above it.** The stack in section 1 is the rule drawn: the frontends sit above api; api above the queries and the writers, which are siblings and read nothing of each other; those above the checker; the checker above the scanner; the scanner above workspace; workspace above config; config above grammar; and grammar above model, which reads nothing but std. Three consequences are held by tests today, and by the compiler once the categories are modules:
+One rule: **no component reads one above it.** The stack in section 1 is the rule drawn: the frontends sit above api; api above the queries and the writers, which are siblings and read nothing of each other; those above the checker; the checker above the scanner; the scanner above workspace; workspace above config; config above grammar; and grammar above model, which reads nothing but std. Two things hold it. The compiler holds a component's privacy — nothing outside a module directory can name what its `mod.rs` does not re-export ([§AR-core-module-layout.1](AR-core-module-layout.md#1-module-categories)) — and `tests/integration/test_dependency_direction.py` holds the order across those directories, with every read that still runs the other way listed one by one and marked at its import, so the list can only shrink. Three consequences are held by tests of their own:
 
 - The engine writes no stream and exits no process; the frontends render (`tests/integration/test_engine_boundary.py`).
 - The engine names no frontend's protocol: no LSP types in `grund-core`, no CLI in `grund-lsp` (`tests/integration/test_frontend_isolation.py`).
@@ -108,7 +108,7 @@ One rule: **no component reads one above it.** The stack in section 1 is the rul
 ## 5. What holds the shape
 
 - **Placement.** Every page in the index below opens with a `## placement:` chapter — a named section, so `grund <ID>.placement` is the question — that opens with a diagram in the notation of section 1 — what feeds the component on the left, its box in the middle, what it feeds on the right — and then says, in four facts, its box in section 2 or 3, what it takes and from whom, what it gives and to whom, and what it must not know. Anything wider than that belongs on this page. `tests/integration/test_architecture_placement.py` holds it: every page but this one has the chapter, the chapter opens with a fenced diagram, and it cites this page.
-- **Files.** How the engine's files are named, owned and sized is [§AR-core-module-layout](AR-core-module-layout.md#ar-core-module-layout-core-implementation-is-split-by-category); `tests/integration/test_module_categories.py` holds the ownership table and `fissile` holds the size.
+- **Files.** How the engine's files are named, owned and sized is [§AR-core-module-layout](AR-core-module-layout.md#ar-core-module-layout-core-implementation-is-split-by-category); `tests/integration/test_module_layout.py` holds one module directory per component with its `mod.rs`, `tests/integration/test_dependency_direction.py` holds the direction across them, and `fissile` holds the size.
 - **Assurance is not a component.** [§AR-ci](AR-ci.md#ar-ci-ci-mirrors-the-local-pre-commit-gate), [§AR-benchmarks](AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) and [§AR-goal-measurement](AR-goal-measurement.md#ar-goal-measurement-goal-and-requirement-meters-live-outside-goals) measure the system rather than sit in it, and are listed apart below; their placement chapters say what each measures.
 
 # Index

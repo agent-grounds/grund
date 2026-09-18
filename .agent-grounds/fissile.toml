@@ -57,16 +57,17 @@ enabled = false
 
 # ---------------------------------------------------------------------------
 # Messages. These name grund's real destinations, because the shipped defaults
-# cannot guess them: `crates/grund-core` is not a module tree — `lib.rs` is a
-# list of `include!()` lines, so a "split" is one more `include!` plus moved
-# items, with no visibility or import churn to pay for.
+# cannot guess them: `crates/grund-core` is one Rust module per component
+# (§AR-core-module-layout.1), so a "split" is a new sibling file inside the same
+# component directory plus one `mod` line in its `mod.rs` — and the visibility
+# that move has to pick is the point of it rather than a cost.
 # ---------------------------------------------------------------------------
 
 [[messages]]
 id = "split-core-soft"
 text = """
-Should split, next time you are in one of these files: move a cohesive group of items into a new sibling file and add one `include!("<new>.rs")` line to the crate's `lib.rs`, next to its category peers. Split along a category boundary from §AR-core-module-layout.1 — read it rather than guessing, it is the list this repository maintains — never at the line count.
-Because the crate is assembled by `include!`, the move needs no `mod`, no `pub(crate)`, and no `use` edits — if a split is costing you visibility churn, you are cutting across the wrong seam.
+Should split, next time you are in one of these files: move a cohesive group of items into a new sibling file in the same component directory, and declare it with one `mod <new>;` line in that directory's `mod.rs`. Split along a seam inside the component — one file, one invariant, named for what it holds (§AR-core-module-layout.1) — never at the line count, and never by moving items to another component: which component something belongs to is §AR-system.2's answer, not the budget's.
+Give the new file's items `pub(super)`, and only what another component reads gets re-exported `pub(crate)` from `mod.rs` — if a split is pushing you to widen visibility past that, you are cutting across the wrong seam.
 If no split leaves the design better than it is now, record the debt instead of forcing one:
 fissile exception add <path> --severity soft --rule {rule}
 """
@@ -74,7 +75,7 @@ fissile exception add <path> --severity soft --rule {rule}
 [[messages]]
 id = "split-core-hard"
 text = """
-Must split before more code lands here: this file is over the 500-line ceiling §AR-core-module-layout.3 sets for implementation files. Move cohesive groups into sibling files registered with `include!()` in `lib.rs`, along the category boundaries in §AR-core-module-layout.1. Keep the public API surface in `api.rs` (§AR-core-module-layout.2) and do not change CLI output, diagnostics, scan behavior, or template bytes — the split is a pure refactor.
+Must split before more code lands here: this file is over the 500-line ceiling §AR-core-module-layout.3 sets for implementation files. Move cohesive groups into sibling files in the same component directory, each declared by one `mod` line in its `mod.rs` and `pub(super)` unless another component reads it (§AR-core-module-layout.1). Keep the crate's public surface exactly as it is — the contract files under `api/` and the explicit `pub use` list in `lib.rs` (§AR-core-module-layout.2) — and do not change CLI output, diagnostics, scan behavior, or template bytes: the split is a pure refactor.
 Do not invent an abstraction or shuffle lines to get under the limit; a worse layout under budget is not the goal.
 If you cannot see a split that leaves the architecture intact, stop and ask a human. The only other way past this gate is a reviewed exception:
 fissile exception add <path> --severity hard --rule {rule}

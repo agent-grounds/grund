@@ -14,10 +14,10 @@ use crate::model::{
     Declaration, DeclarationSource, Id, SectionInfo, ShowOutput, ShowRenderMode, ShowSection,
     TextOverlays,
 };
-// §AR-system.4: one read through the crate root — the cross-reference
-// flattening of §DF-show-cross-ref-flattening from the writers'
-// `fmt_links.rs`, the inverse of the formatter's own wrapper.
-use crate::flatten_cross_ref_links;
+// §AR-system.4: one sibling read — the cross-reference flattening of
+// §DF-show-cross-ref-flattening from the writers' `fmt_links.rs`, the inverse
+// of the formatter's own wrapper.
+use crate::writers::flatten_cross_ref_links;
 
 /// Declaration-body extraction: where a declaration's body begins and ends in
 /// the file that holds it, across Markdown and every supported comment dialect

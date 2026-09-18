@@ -21,10 +21,10 @@ use crate::config::{
     load_config_at,
 };
 use crate::model::format_path;
-// §AR-system.4: two reads of `compat/`, through the crate root — the printing of
+// §AR-system.4: two reads of `compat/`, which nothing may read — the printing of
 // the two `[workspace]` findings this file populates a boundary for, which reach
 // the reader as a stderr line (§FS-check.4.7, §FS-check.4.10).
-use crate::{warn_if_members_absorb_scan, warn_unread_block};
+use crate::compat::{warn_if_members_absorb_scan, warn_unread_block};
 
 /// Whether the requested scope *is* the config root — the scope `[scan] include`
 /// governs, and therefore the only one `grund check --full` can widen

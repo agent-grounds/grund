@@ -27,13 +27,11 @@ use crate::config::{
     load_config_at_with_report_base, parse_string_list, strip_comment,
 };
 use crate::model::{format_path, relative_from_base, sort_path_key};
-// §AR-system.4: five reads through the crate root — four of the scanner's, and
+// §AR-system.4: five reads above this component — four of the scanner's, and
 // the printing of the undecidable-claim warning, which is `compat/`'s because it
 // reaches the reader as a stderr line (§FS-workspace.6.1).
-use crate::{
-    canonical_config_root, is_hidden, root_scope_roots, walk_reads_any_file,
-    warn_undecidable_ancestor_claim,
-};
+use crate::compat::warn_undecidable_ancestor_claim;
+use crate::scanner::{canonical_config_root, is_hidden, root_scope_roots, walk_reads_any_file};
 
 /// The canonical form of `path` — the root a project is identified by — or the path
 /// unchanged when it does not resolve.

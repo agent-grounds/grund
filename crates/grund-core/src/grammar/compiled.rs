@@ -13,9 +13,9 @@ use super::id_rules::{
 use super::near_miss::{LegacyGrammar, NearMissGrammar};
 use super::source_line::comment_prefix_regex;
 use crate::model::Id;
-// §AR-system.4: `KindConfig` is config's record, above this component and
-// reachable through the crate root until the glob goes.
-use crate::KindConfig;
+// §AR-system.4: one upward read — `KindConfig` is config's record, above this
+// component.
+use crate::config::KindConfig;
 
 const NUMERIC_SECTION_PATTERN: &str = r"\d+(?:\.\d+)*";
 const NAMED_SECTION_PATTERN: &str = r"[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*(?:\.\d+)*";
