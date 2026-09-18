@@ -47,6 +47,12 @@ mod api;
 // returns an `ExitCode`. It may read anything; nothing may read it.
 mod compat;
 
+// The fixtures every test module shares — not a component's, because every
+// component's tests read them, and imported as `use crate::testing::{…}`
+// (§AR-core-module-layout.1).
+#[cfg(test)]
+pub(crate) mod testing;
+
 // The crate's public surface, listed rather than globbed
 // (§AR-core-module-layout.1): every name below is reachable as
 // `grund_core::<name>` exactly as it was when the crate root was flat.
@@ -138,9 +144,9 @@ pub use compat::main_entry;
 // compat-retirement step replaces with a copy of its own (§AR-system.2.9).
 pub use compat::{print_config_warnings, run_integrations};
 
-// The crate's own `tests_*` modules are `include!`d into this root and reach
-// their vocabulary through `use super::*`, so the std names their fixtures spell
-// are imported here rather than in each of them (§AR-core-module-layout.1).
+// The `tests_*` modules still spliced in below reach their vocabulary through
+// `use super::*`, so the std names they spell are imported here rather than in
+// each of them (§AR-core-module-layout.1); a moved module names its own.
 #[cfg(test)]
 use anyhow::Result;
 #[cfg(test)]
@@ -152,9 +158,9 @@ use std::path::{Path, PathBuf};
 #[cfg(test)]
 use std::process::ExitCode;
 
-// ...and so is the crate itself. The 69 test modules below read it **flat**, the
-// way they did when `lib.rs` was one `include!` list, so that moving each into
-// the component it tests stays a change of its own (§AR-core-module-layout.1).
+// ...and so are the crate and its fixtures: the modules below read both
+// **flat**, so moving each into the component it tests stays a change of its
+// own (§AR-core-module-layout.1). `testing::*` goes with the prelude, last.
 
 // These globs are private and `#[cfg(test)]`, so they exist only in a test
 // build: production code reads every component by module path and sees only
@@ -162,73 +168,42 @@ use std::process::ExitCode;
 #[cfg(test)]
 use {
     api::*, checker::*, compat::*, config::*, grammar::*, model::*, queries::*, resolver::*,
-    scanner::*, templates::*, workspace::*, writers::*,
+    scanner::*, templates::*, testing::*, workspace::*, writers::*,
 };
 
-// Tests, one module per category (§AR-core-module-layout.1). `tests_support`
-// holds the fixtures they share and must come first.
-include!("tests_support.rs");
-include!("tests_config_discovery.rs");
-include!("tests_config_scan.rs");
-include!("tests_id_grammar.rs");
+// The test modules not yet beside the code they pin, one `include!` per module
+// (§AR-core-module-layout.1).
 include!("tests_check_full.rs");
 include!("tests_kind_index.rs");
-include!("tests_kind_index_config.rs");
-include!("tests_non_citable_kinds.rs");
-include!("tests_unwalked_kinds.rs");
 include!("tests_kind_index_entry_form.rs");
 include!("tests_kind_index_enrollment.rs");
 include!("tests_check_full_scope.rs");
 include!("tests_nothing_recognized.rs");
 include!("tests_declaration_near_miss.rs");
 include!("tests_duplicate_sections.rs");
-include!("tests_section_body_scope.rs");
-include!("tests_section_outside_declaration.rs");
-include!("tests_comment_block.rs");
-include!("tests_comment_block_position.rs");
 include!("tests_grounding_style.rs");
 include!("tests_grounding_per_place.rs");
-include!("tests_grounding_config.rs");
-include!("tests_inline_note_layout.rs");
 include!("tests_inline_note_layout_check.rs");
-include!("tests_scanner.rs");
-include!("tests_unmarked_headings.rs");
-include!("tests_values.rs");
-include!("tests_embedded_values.rs");
-include!("tests_embedded_value_boundaries.rs");
-include!("tests_scanner_walk.rs");
-include!("tests_scanner_walk_roots.rs");
-include!("tests_scanner_walk_errors.rs");
 include!("tests_shorthand.rs");
 include!("tests_shorthand_rewrite.rs");
 include!("tests_shorthand_docstring.rs");
 include!("tests_shorthand_surfaces.rs");
 include!("tests_shorthand_numeric_run.rs");
-include!("tests_fmt_suppression.rs");
 include!("tests_fmt_workspace.rs");
 include!("tests_citation_directions.rs");
-include!("tests_citation_directions_render.rs");
 include!("tests_managed_block_drift.rs");
 include!("tests_check_finding_selection.rs");
 include!("tests_workspace.rs");
 include!("tests_workspace_message_paths.rs");
-include!("tests_workspace_nested.rs");
-include!("tests_workspace_claims.rs");
-include!("tests_workspace_claim_answers.rs");
-include!("tests_workspace_absorbed_scan.rs");
-include!("tests_unlisted_workspace_block.rs");
 include!("tests_unread_opted_out_block.rs");
 include!("tests_alias_hints.rs");
 include!("tests_workspace_members.rs");
-include!("tests_workspace_optional_members.rs");
 include!("tests_cover_workspace.rs");
 include!("tests_init_agents.rs");
-include!("tests_init_scan_guidance.rs");
 include!("tests_init_target.rs");
 include!("tests_integrations.rs");
 include!("tests_integrations_config.rs");
 include!("tests_resolver.rs");
-include!("tests_clickable_citations.rs");
 include!("tests_api.rs");
 include!("tests_refs_query_failures.rs");
 include!("tests_external_facts.rs");

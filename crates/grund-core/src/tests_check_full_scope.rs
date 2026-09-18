@@ -4,10 +4,9 @@
 /// What the wider walk then *reports* out there is in `tests_check_full.rs`.
 #[cfg(test)]
 mod tests_check_full_scope {
-    // Only the shared fixtures are needed here, and they carry their own
-    // imports: a `use super::*` would be unused wherever the `#[cfg(unix)]`
-    // cases below are compiled out.
-    use super::tests_support::*;
+    // Only the shared fixtures are needed here; they reach this module through
+    // the crate root's prelude, which is what `use super::*` imports.
+    use super::*;
 
     #[test]
     fn full_scope_leaves_the_in_scope_report_unchanged() {

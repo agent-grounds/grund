@@ -2,7 +2,6 @@
 /// §AR-bindings.2).
 #[cfg(test)]
 mod tests_external_facts {
-    use super::tests_support::*;
     use super::*;
 
     #[test]

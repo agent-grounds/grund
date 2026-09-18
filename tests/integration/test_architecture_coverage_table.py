@@ -30,7 +30,10 @@ def _table_cells(text):
 
 
 def _test_files():
+    # A unit-test module sits beside the code it pins, in its component
+    # directory (§AR-core-module-layout.1), so the search runs at any depth.
     files = list((REPO_ROOT / "crates").glob("*/src/tests*.rs"))
+    files += list((REPO_ROOT / "crates").glob("*/src/**/tests_*.rs"))
     files += list((REPO_ROOT / "crates").glob("*/tests/**/*.rs"))
     files += list((REPO_ROOT / "tests" / "integration").glob("*.rs"))
     return files

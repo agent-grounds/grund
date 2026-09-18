@@ -5,7 +5,6 @@
 #[cfg(test)]
 mod tests_nothing_recognized {
     use super::*;
-    use super::tests_support::*;
 
     const DEFAULT_CONFIG: &str =
         "grund_config_version = 1\nproject_name = \"acme\"\n\n[scan]\ninclude = [\"docs\"]\n";

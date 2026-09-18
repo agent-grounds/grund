@@ -20,7 +20,7 @@
 /// that reads correctly on paper: the pruning is what the run *would* have done
 /// as a project, not what its config says.
 ///
-/// The sibling `tests_workspace_absorbed_scan` carries two tests this one does
+/// The sibling `workspace/tests_absorbed_scan` carries two tests this one does
 /// not, and both exist to hold a named release ahead of the running version.
 /// This finding names no release (§DF-unread-opted-out-block.2.3), so there is
 /// no deadline to guard and no version constant for a golden to disagree with.
@@ -30,7 +30,7 @@ mod tests_unread_opted_out_block {
     // Only the three symlink cases build a fixture on disk, and all three are
     // `cfg(unix)`; what is left on Windows compares two files in the repository.
     #[cfg(unix)]
-    use super::tests_support::*;
+    use super::*;
 
     /// The case whose golden holds the shipped message byte for byte.
     const GOLDEN: &str =

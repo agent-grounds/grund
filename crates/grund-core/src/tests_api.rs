@@ -2,7 +2,6 @@
 #[cfg(test)]
 mod tests_api {
     use super::*;
-    use super::tests_support::*;
 
     #[test]
     fn public_embedding_api_checks_and_shows_without_cli_dispatch() {

@@ -2,7 +2,6 @@
 #[cfg(test)]
 mod tests_workspace_members {
     use super::*;
-    use super::tests_support::*;
 
     /// §FS-init.2.3.4.15: `render_workspace_members_section` returns the empty
     /// string for a target that is not inside a workspace. The Project Map

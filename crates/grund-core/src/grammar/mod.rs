@@ -122,13 +122,19 @@ pub(crate) use shorthand::{
 };
 pub(crate) use source_line::{PythonDocstringScanState, source_scan_line};
 
-// What only the crate's own test modules read (§AR-core-module-layout.1): the
-// GitHub slugger, the layout classifier's steps, and the citation tokenizer.
+// What another component's tests read (§AR-core-module-layout.1): the GitHub
+// slugger, which the scanner's file-pass cases assert their anchors against.
+// The layout classifier's steps went beside their own cases, below.
 #[cfg(test)]
 pub(crate) use anchors::anchor_slug_github;
+
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
 #[cfg(test)]
-pub(crate) use comment_line::{comment_content_range, line_citation_ranges};
+mod tests_comment_block;
 #[cfg(test)]
-pub(crate) use inline_note_layout::{
-    InlineNoteLayout, block_has_inline_note, content_conforms, line_layout_view,
-};
+mod tests_comment_block_position;
+#[cfg(test)]
+mod tests_fmt_suppression;
+#[cfg(test)]
+mod tests_inline_note_layout;

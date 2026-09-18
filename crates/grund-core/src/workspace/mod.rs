@@ -57,10 +57,23 @@ pub(crate) use scope::{
 };
 pub(crate) use unlisted::unlisted_workspace_block_warnings;
 
-// What only the crate's own test modules read (§AR-core-module-layout.1): the
-// absorbed-scan ramp release, the boundary-root form of an expanded member list,
-// and the members-only text read the ancestor-claim cases drive directly.
+// What another component's tests read (§AR-core-module-layout.1): the
+// boundary-root form of an expanded member list, which the scanner's
+// parallel-scan cases compare against. The other two went beside their cases.
 #[cfg(test)]
-pub(crate) use members::{
-    ABSORBED_SCAN_ERROR_RELEASE, ancestor_member_entries, expand_workspace_members,
-};
+pub(crate) use members::expand_workspace_members;
+
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
+#[cfg(test)]
+mod tests_absorbed_scan;
+#[cfg(test)]
+mod tests_claim_answers;
+#[cfg(test)]
+mod tests_claims;
+#[cfg(test)]
+mod tests_nested;
+#[cfg(test)]
+mod tests_optional_members;
+#[cfg(test)]
+mod tests_unlisted_block;

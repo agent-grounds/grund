@@ -2,7 +2,6 @@
 #[cfg(test)]
 mod tests_citation_directions {
     use super::*;
-    use super::tests_support::*;
 
     // §AR-scanner.2.4: a Markdown declaration's body runs until the next
     // same-or-higher heading; an enclosed citation is classified by the

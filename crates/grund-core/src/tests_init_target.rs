@@ -17,7 +17,6 @@
 /// other case in this binary that reads it.
 #[cfg(test)]
 mod tests_init_target {
-    use super::tests_support::*;
     use super::*;
 
     /// The real home directory, resolved the way the rules under test resolve

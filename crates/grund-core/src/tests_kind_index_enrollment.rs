@@ -4,7 +4,6 @@
 /// `show` / `list` surface.
 #[cfg(test)]
 mod tests_kind_index_enrollment {
-    use super::tests_support::*;
     use super::*;
 
     fn external_index_repo(name: &str, index: &str) -> PathBuf {

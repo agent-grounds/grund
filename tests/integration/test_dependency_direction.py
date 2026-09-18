@@ -7,7 +7,12 @@ siblings that may not read each other either, then api, then compat, which may
 read anything and which nothing may read. The reads that still run the
 other way are listed below, one entry per (file, item), and each one must still
 be in the tree and still carry its §AR-system.4 note — so the list can only
-shrink, and a new upward read fails."""
+shrink, and a new upward read fails.
+
+A component's test modules — `tests_*.rs` beside the code they pin, and the
+shared fixtures in `testing.rs` — are skipped: a test module may read any
+component, because what it exercises is reached from wherever the run that
+produced it starts (§AR-core-module-layout.1)."""
 
 import re
 import unittest
@@ -72,12 +77,22 @@ def _components():
     return sorted(path.name for path in CORE.iterdir() if path.is_dir())
 
 
+def _is_test_module(path):
+    """Whether `path` is a test module rather than implementation.
+
+    A test module may read any component, so the order says nothing about it.
+    """
+    return path.name.startswith("tests_") or path.name == "testing.rs"
+
+
 def _references():
     """Every `crate::<other>::<item>` a component file makes, as
     (file, `<other>::<item>`) -> the line it is written on."""
     found = {}
     for component in _components():
         for path in sorted((CORE / component).glob("**/*.rs")):
+            if _is_test_module(path):
+                continue
             text = path.read_text(encoding="utf-8")
             relative = path.relative_to(CORE).as_posix()
             for match in REFERENCE.finditer(text):

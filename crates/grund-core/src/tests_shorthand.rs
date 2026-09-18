@@ -3,7 +3,6 @@
 /// (§FS-check.1.2, §FS-check.3.13, §FS-fmt.2.4, §DF-number-only-citation-shorthand).
 #[cfg(test)]
 mod tests_shorthand {
-    use super::tests_support::*;
     use super::*;
 
     fn messages(report: &CheckReport) -> Vec<String> {

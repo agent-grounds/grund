@@ -10,7 +10,6 @@
 /// predicate serving both" and the shape neither of those modules has.
 #[cfg(test)]
 mod tests_shorthand_docstring {
-    use super::tests_support::*;
     use super::*;
 
     /// A repo scoped to `docs` and `src`, declaring `FS-042-user-login`, with one

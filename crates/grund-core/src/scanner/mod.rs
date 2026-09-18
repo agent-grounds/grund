@@ -102,14 +102,37 @@ pub(crate) use walk::{
 };
 pub(crate) use walk_boundaries::is_scannable;
 
-// What only the crate's own test modules read (§AR-core-module-layout.1): the
-// exact embedded-value marker test, the scope probe's injectable half, the two
-// narrower tree entry points, and the Markdown value component reader.
+// What another component's tests read (§AR-core-module-layout.1): the
+// workspace-wide tree entry point, which the cross-project citation cases
+// drive. The four narrower reads went beside their own cases, below.
 #[cfg(test)]
-pub(crate) use embedded_value_context::exact_embedded_value_marker;
+pub(crate) use tree::scan_tree_with_workspace;
+
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
 #[cfg(test)]
-pub(crate) use scope_probe::effective_scope_reads_any_file_with;
+mod tests_config_scan;
 #[cfg(test)]
-pub(crate) use tree::{scan_tree_with_workspace, scan_tree_with_workspace_threshold};
+mod tests_embedded_value_boundaries;
 #[cfg(test)]
-pub(crate) use values::markdown_component;
+mod tests_embedded_values;
+#[cfg(test)]
+mod tests_file_pass;
+#[cfg(test)]
+mod tests_scope_probe;
+#[cfg(test)]
+mod tests_section_body_scope;
+#[cfg(test)]
+mod tests_section_outside_declaration;
+#[cfg(test)]
+mod tests_unmarked_headings;
+#[cfg(test)]
+mod tests_unwalked_kinds;
+#[cfg(test)]
+mod tests_values;
+#[cfg(all(test, unix))]
+mod tests_walk;
+#[cfg(all(test, unix))]
+mod tests_walk_errors;
+#[cfg(all(test, unix))]
+mod tests_walk_roots;

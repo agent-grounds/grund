@@ -4,7 +4,6 @@
 #[cfg(test)]
 mod tests_managed_block_drift {
     use super::*;
-    use super::tests_support::*;
 
     // §FS-check.3.5 / §FS-init.2.3.5: a v-current managed block whose generated
     // citation directions no longer match `[citations]` is an agents-init finding.

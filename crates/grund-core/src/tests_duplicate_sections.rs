@@ -5,7 +5,6 @@
 #[cfg(test)]
 mod tests_duplicate_sections {
     use super::*;
-    use super::tests_support::*;
 
     fn alpha() -> Id {
         Id {

@@ -8,7 +8,7 @@
 /// in `tests_kind_index.rs`.
 #[cfg(test)]
 mod tests_kind_index_entry_form {
-    use super::tests_support::*;
+    use super::*;
 
     /// §FS-check.3.17 / §DF-index-entry-form.2.3: an unmarked token is a
     /// recognized citation off strict mode, and `fmt --cross-refs` still leaves

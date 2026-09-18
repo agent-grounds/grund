@@ -2,7 +2,6 @@
 /// that opens like a declaration and parses as none.
 #[cfg(test)]
 mod tests_declaration_near_miss {
-    use super::tests_support::*;
     use super::*;
 
     fn near_miss_repo(name: &str, heading: &str) -> PathBuf {

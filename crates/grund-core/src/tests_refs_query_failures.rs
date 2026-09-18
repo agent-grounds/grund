@@ -2,7 +2,6 @@
 /// compatibility adapter (§FS-refs.4, §FS-errors.2.3).
 #[cfg(test)]
 mod tests_refs_query_failures {
-    use super::tests_support::*;
     use super::*;
 
     fn refs_repo(name: &str) -> PathBuf {
