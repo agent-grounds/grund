@@ -11,7 +11,9 @@ use std::path::{Path, PathBuf};
 use super::*;
 use crate::config::{fmt_excluded, validate_fmt_exclude};
 use crate::queries::{DeclaredId, on_type_line_edits};
-use crate::testing::{legacy_fs_folder_config, physical_test_root, test_root, write};
+#[cfg(unix)]
+use crate::testing::physical_test_root;
+use crate::testing::{legacy_fs_folder_config, test_root, write};
 
 fn excluded(root: &Path, patterns: &[&str]) -> FmtExcluded {
     let mut config = legacy_fs_folder_config(root.to_path_buf());

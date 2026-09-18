@@ -12,7 +12,9 @@ use std::path::Path;
 
 use super::*;
 use crate::config::load_config;
-use crate::testing::{physical_test_root, test_root, write};
+#[cfg(unix)]
+use crate::testing::physical_test_root;
+use crate::testing::{test_root, write};
 
 /// §FS-workspace.6.1: an alias path is read from the outermost workspace at
 /// every scope, three levels deep — so a run narrowed to the middle block

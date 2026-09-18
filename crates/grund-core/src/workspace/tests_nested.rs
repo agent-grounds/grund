@@ -7,11 +7,14 @@
 //! chain that decides which block a path is read from lives in
 //! `tests_claims.rs`.
 
+#[cfg(unix)]
 use std::path::PathBuf;
 
 use super::*;
 use crate::config::load_config;
-use crate::testing::{physical_test_root, test_root, write};
+#[cfg(unix)]
+use crate::testing::physical_test_root;
+use crate::testing::{test_root, write};
 
 /// §FS-workspace.6.1: a member that resolves to an ancestor of the block that
 /// lists it is a located config error naming the entry as written. It has no

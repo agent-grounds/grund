@@ -3,6 +3,7 @@
 #[cfg(unix)]
 use super::integrations_install::set_executable;
 use super::*;
+#[cfg(unix)]
 use crate::testing::{OutputRetryingBusy, physical_test_root, run_resolver, test_root, write};
 
 #[cfg(unix)]

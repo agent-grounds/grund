@@ -12,7 +12,9 @@
 use std::path::PathBuf;
 
 use crate::api::CheckRun;
-use crate::testing::{check_run, codes, only, symlink, test_root, write};
+#[cfg(unix)]
+use crate::testing::symlink;
+use crate::testing::{check_run, codes, only, test_root, write};
 
 /// The ticket's own tree (grund#72): a root listing `a` and scanning `docs`
 /// and `b`, a `b` that declares `[workspace] members = ["c"]` and that the
