@@ -1,6 +1,6 @@
 """§AR-core-module-layout.1 — the engine is one Rust module per component: every
 `.rs` file under `crates/grund-core/src/` is `lib.rs`, one of the crate's own
-`tests_*` modules, or a file inside one of the eleven component directories
+`tests_*` modules, or a file inside one of the twelve component directories
 §AR-system.2 names; each of those directories exists and declares its files in a
 `mod.rs`, which is the whole of what crosses its boundary; and `lib.rs` splices
 in nothing but the test modules, so no implementation file is assembled into the
@@ -14,7 +14,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CORE = REPO_ROOT / "crates" / "grund-core" / "src"
 
-# One directory per component of §AR-system.2, named after it — the ten
+# One directory per component of §AR-system.2, named after it — the eleven
 # components and the deprecated path beside the api (§AR-system.2.9).
 COMPONENTS = (
     "api",
@@ -26,6 +26,7 @@ COMPONENTS = (
     "queries",
     "resolver",
     "scanner",
+    "templates",
     "workspace",
     "writers",
 )

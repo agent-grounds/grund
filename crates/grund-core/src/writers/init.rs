@@ -4,24 +4,24 @@ use std::path::PathBuf;
 use super::init_block::{
     AgentsUpdateResult, update_agents_block, write_or_update_canonical_agent_entrypoint,
 };
-use super::init_entrypoints::{
-    CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
-};
 use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
 use super::init_plan::{InitAgentEntrypointSelection, selected_init_agent_entrypoints};
+use super::init_render::{agents_workspace_members_section, init_pending_effective_config};
 use super::init_target::{
     derive_default_name, refuse_init_global_instruction_paths, refuse_init_target,
 };
-use super::init_templates::{
-    AS_README_TEMPLATE, ConversationSurface, DA_README_TEMPLATE, DF_README_TEMPLATE,
-    E2E_README_TEMPLATE, FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE,
-    REQUIREMENTS_TEMPLATE, agents_workspace_members_section, canonical_template_text,
-    init_pending_effective_config, render_agents_append_block, render_agents_md_from_block,
-    render_grund_toml,
-};
 use crate::config::{Config, config_file_in};
 use crate::model::format_path;
-use crate::scanner::effective_scope_reads_any_file;
+use crate::scanner::{
+    CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
+    effective_scope_reads_any_file,
+};
+use crate::templates::{
+    AS_README_TEMPLATE, ConversationSurface, DA_README_TEMPLATE, DF_README_TEMPLATE,
+    E2E_README_TEMPLATE, FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE,
+    REQUIREMENTS_TEMPLATE, canonical_template_text, render_agents_append_block,
+    render_agents_md_from_block, render_grund_toml,
+};
 use crate::workspace::populate_workspace_boundary;
 
 #[derive(Clone)]

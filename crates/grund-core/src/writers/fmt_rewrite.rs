@@ -3,9 +3,10 @@
 //! cross-reference links current. The modes share the traversal — each line is
 //! asked every question once — so what lives here is the walk and the per-line
 //! decisions inside it. The link construction §FS-fmt.6 needs is
-//! `fmt_links.rs`, the two suppressed scopes are `fmt_suppress.rs`, and the
-//! deprecated command surface around all of it is `compat/fmt.rs`
-//! (§AR-system.2.9).
+//! `fmt_links.rs`, the two suppressed scopes of §FS-fmt.2.5 are
+//! `grammar/fmt_suppress.rs` — recognizing them is lexical, and the editor's
+//! on-type rule reads the same two records (§FS-lsp.1.4) — and the deprecated
+//! command surface around all of it is `compat/fmt.rs` (§AR-system.2.9).
 //!
 //! Named for the rewrite rather than for the category, because the category is
 //! the `writers/` directory now (§AR-core-module-layout.1). The
@@ -22,14 +23,13 @@ use std::path::{Path, PathBuf};
 
 use super::fmt_complete_findings::{CompleteFindings, CompleteScan};
 use super::fmt_links::wrap_markdown_links_with_targets;
-use super::fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
 use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::Config;
-use crate::config::display_path;
+use crate::config::{display_path, fmt_excluded};
 use crate::grammar::{
-    DocstringContent, DocstringCursor, declaration_id_on_line, id_token_end_at,
-    is_inside_inline_code, is_inside_markdown_link_destination, markdown_fence_delimiter,
-    string_literal_in,
+    DocstringContent, DocstringCursor, FMT_DIRECTIVE, FmtDirectives, declaration_id_on_line,
+    id_token_end_at, is_inside_inline_code, is_inside_markdown_link_destination,
+    markdown_fence_delimiter, string_literal_in,
 };
 use crate::model::{Findings, Id};
 use crate::resolver::{
@@ -157,7 +157,7 @@ pub(crate) fn fmt_tree(
     let walked = walk_scannable_files_reporting(config, scope, explicit_scope)?;
     // §FS-fmt.2.5.1: the files this config takes out of every rewrite. The walk
     // above is untouched — only what happens to each file's bytes changes.
-    let excluded = FmtExcluded::new(config)?;
+    let excluded = fmt_excluded(config)?;
     // §FS-fmt.6.1: where the always-linkify carve-out may fire. Built for every
     // run that could need it, since §FS-fmt.2.5.3 makes it outrank a suppressed
     // scope too — a handful of configured paths, so nothing is deferred here.
@@ -312,7 +312,7 @@ fn rewrite_file(
     let mut saw_shorthand_candidate = false;
     // §FS-fmt.2.5.2: every file starts with the rewrite on — a region never
     // carries across files.
-    let mut directives = FmtDirectives::new(config, is_md);
+    let mut directives = FmtDirectives::new(config.lexical(), is_md);
     // §FS-fmt.2.3.1: `fmt` judges a docstring line on its content, so it carries
     // the scanner's docstring state — advanced on *every* line, including the ones
     // passed through untouched, or one unvisited `"""` desynchronizes the file.

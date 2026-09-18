@@ -107,18 +107,6 @@ pub(crate) fn configured_catalog_ids(declarations: &BTreeMap<Id, Vec<Declaration
         .collect()
 }
 
-pub(crate) fn formatter_wrapper_label_is_citation(label: &str, config: &Config) -> bool {
-    let tail = match QUALIFIED_CITATION_PREFIX.captures(label) {
-        Some(prefix) => &label[prefix.get(0).expect("qualified prefix match").end()..],
-        None => label,
-    };
-    if tail.is_empty() || tail.contains('/') {
-        return false;
-    }
-    parse_id_arg_with_shorthand(tail, &config.grammar).is_ok()
-        || config.grammar.legacy_kind_and_format(tail).is_some()
-}
-
 /// One deferred candidate reconciled against one target catalog — the step both
 /// halves of this pass share, the local one above and the qualified one in
 /// `resolver/legacy_promotion.rs` (§AR-resolver.placement).

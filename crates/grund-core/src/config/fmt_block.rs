@@ -7,20 +7,27 @@
 //! (§AR-core-module-layout.1). The validator was the formatter's while
 //! §AR-system.2.8 was a file-name category, and `parse.rs` read it upward to
 //! refuse a malformed glob as it read the key; it came down here when the
-//! writers became a module, and the formatter's own matcher
-//! (`writers/fmt_suppress.rs`) reads the compiler downward instead
-//! (§AR-system.4). Nothing here knows the walk it will be asked about: a
-//! pattern list in, a matcher or a message out.
+//! writers became a module. Nothing here knows the walk it will be asked about:
+//! a pattern list in, and a matcher, a message, or the exclusion scope of
+//! §FS-fmt.2.5.1 out.
+//!
+//! Which is why building that scope is here rather than in the record that
+//! carries it. `grammar/fmt_suppress.rs` recognizes what is out of reach and
+//! reads no `Config` (§AR-system.2.1), so the compiled matcher and the root a
+//! path is rebased against are what config hands it — paired once here rather
+//! than at each of the two callers, where they could come to disagree.
 
+use anyhow::{Result, anyhow};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
+
+use super::record::Config;
+use crate::grammar::FmtExcluded;
 
 /// Compile `[fmt] exclude` into a matcher over config-root-relative paths
 /// (§FS-config.3.10). The root is left empty on purpose: every caller rebases
 /// the path itself, so the matcher never has to guess how much of an absolute
 /// path is the project.
-pub(crate) fn build_fmt_exclude_matcher(
-    patterns: &[String],
-) -> std::result::Result<Gitignore, String> {
+fn build_fmt_exclude_matcher(patterns: &[String]) -> std::result::Result<Gitignore, String> {
     let mut builder = GitignoreBuilder::new("");
     for pattern in patterns {
         builder
@@ -37,4 +44,23 @@ pub(crate) fn validate_fmt_exclude(patterns: &[String]) -> std::result::Result<(
     build_fmt_exclude_matcher(patterns)
         .map(|_| ())
         .map_err(|message| format!("[fmt] exclude: {message}"))
+}
+
+/// One project's §FS-fmt.2.5.1 exclusion scope: the patterns compiled, in the
+/// record the formatter and the editor both ask (§FS-fmt.2.5, §FS-lsp.1.4).
+///
+/// Patterns were already validated at load (§FS-config.3.10), so a failure here
+/// is a grund bug rather than a user error — it is still reported rather than
+/// swallowed, because the alternative is a `--write` that silently rewrites a
+/// protected file.
+pub(crate) fn fmt_excluded(config: &Config) -> Result<FmtExcluded> {
+    let matcher = if config.fmt_exclude.is_empty() {
+        None
+    } else {
+        Some(
+            build_fmt_exclude_matcher(&config.fmt_exclude)
+                .map_err(|message| anyhow!("[fmt] exclude: {message}"))?,
+        )
+    };
+    Ok(FmtExcluded::new(&config.root, matcher))
 }

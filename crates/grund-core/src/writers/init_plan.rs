@@ -1,18 +1,18 @@
 use std::path::{Path, PathBuf};
 
-use super::init_entrypoints::{
+use crate::model::format_path;
+use crate::scanner::{
     AgentEntrypoint, CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS,
     CanonicalSurfaceReach, InitCompanionAgentEntrypoint, agents_with_own_entrypoint,
     companion_workspace_exists, existing_init_companion_agent_entrypoints, is_file_or_symlink,
     is_symlink_to, path_missing_without_following_symlinks,
 };
-use super::init_templates::ConversationSurface;
-use crate::model::format_path;
+use crate::templates::ConversationSurface;
 
 /// The plan one `grund init` run makes: which entrypoint files *this*
 /// invocation writes, appends to, or updates (§FS-init.2.1, §FS-init.2.1.1).
-/// Its input is what the repository has — `init_entrypoints.rs` answers that —
-/// plus the flags the user passed; its output is the one value the writing half
+/// Its input is what the repository has — `scanner/agent_entrypoints.rs` answers
+/// that — plus the flags the user passed; its output is the one value the writing half
 /// in `init.rs` and the `note:` builders in `init_notes.rs` both read, so
 /// neither has to ask the tree a question the selection already answered
 /// (§AR-core-module-layout.1).

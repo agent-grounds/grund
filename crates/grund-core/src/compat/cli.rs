@@ -12,9 +12,8 @@ use super::integrations::run_integrations;
 use super::list::command_list;
 use super::refs::command_refs;
 use super::show::{command_show, command_show_default};
-use crate::writers::{
-    AGENT_SETUP_INSTRUCTIONS, FetchFailureKind, canonical_template_text, fetch_snapshot,
-};
+use crate::templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
+use crate::writers::{FetchFailureKind, fetch_snapshot};
 
 const COMPAT_SUBCOMMANDS: &[&str] = &[
     "check",

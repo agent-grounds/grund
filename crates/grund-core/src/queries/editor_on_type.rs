@@ -1,19 +1,15 @@
 use anyhow::Result;
 use std::path::Path;
 
-use crate::config::Config;
+use crate::config::{Config, fmt_excluded};
 use crate::grammar::{
-    DocstringContent, DocstringCursor, declaration_id_on_line, id_token_end_at,
+    DocstringContent, DocstringCursor, FmtDirectives, declaration_id_on_line, id_token_end_at,
     is_inside_inline_code, is_inside_markdown_link_destination, markdown_fence_delimiter,
     never_rewrite_context_in, string_literal_in,
 };
 use crate::model::canonical_snapshot_path;
 use crate::resolver::shorthand_token_expansion;
 use crate::workspace::resolve_workspace_config;
-// §AR-system.4: two sibling reads — the formatter's suppression and exclusion
-// state from `writers/fmt_suppress.rs`, which this rule must match line for
-// line (§FS-lsp.1.4).
-use crate::writers::{FmtDirectives, FmtExcluded};
 
 /// Check the same context exclusions as `grund fmt` before an LSP on-type
 /// `$$` rewrite (§FS-fmt.2.3, §FS-lsp.1.4).
@@ -172,7 +168,9 @@ fn docstring_content_at<'a>(
 /// inside a fence, a citation in the title of a declaration, or the diagram a
 /// region was written to protect (§FS-lsp.1.4).
 ///
-/// The region state is `rewrite_file`'s own `FmtDirectives`, read in
+/// The region state is `rewrite_file`'s own `FmtDirectives` — one record in
+/// `grammar/fmt_suppress.rs` that both read, rather than a second spelling of
+/// it up here — read in
 /// `rewrite_file`'s own order — the fence first, then the directive, then the
 /// heading — because two spellings of one state machine would drift and the
 /// editor would start disagreeing with the command it previews.
@@ -189,7 +187,7 @@ fn line_is_rewritable(
     let mut docstrings = DocstringCursor::new(is_py, config.docstring_python);
     // §FS-fmt.2.5.2: every file starts with the rewrite on — a region never
     // carries across files, so the walk starts at the top of this one.
-    let mut directives = FmtDirectives::new(config, is_md);
+    let mut directives = FmtDirectives::new(config.lexical(), is_md);
     for (index, line) in text.lines().enumerate() {
         if is_md && markdown_fence_delimiter(&mut markdown_fence, line) {
             if index == line_index {
@@ -238,7 +236,7 @@ fn line_is_rewritable(
 /// here is a grund bug — and of the two ways to be wrong about it, refusing the
 /// edit is the one that cannot damage a protected file.
 fn file_is_fmt_excluded(config: &Config, path: &Path) -> bool {
-    match FmtExcluded::new(config) {
+    match fmt_excluded(config) {
         Ok(excluded) => excluded.contains(path),
         Err(_) => true,
     }

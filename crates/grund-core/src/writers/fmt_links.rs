@@ -5,13 +5,12 @@
 //! citation, and the record of one citation found on a line is
 //! `grammar/ids.rs`'s (§AR-system.2.1).
 //!
-//! The inverse, `flatten_cross_ref_links`, is here too
-//! (§DF-show-cross-ref-flattening): it undoes exactly the wrap
-//! `wrap_markdown_links` writes, recognizing a wrapper label by the scanner's
-//! `formatter_wrapper_label_is_citation`, so it is the formatter's plan read
-//! backwards rather than a lexical fact that could live lower.
-//! `resolver/point_body.rs` and `queries/batch.rs` read it through the crate
-//! root, an edge §AR-system.4 records rather than resolves.
+//! The inverse is not here. Undoing the wrap is recognizing it — a `[` before a
+//! marker-prefixed citation token and `](…)` after it, nothing resolved — so
+//! `flatten_cross_ref_links` is `grammar/fmt_cross_refs.rs`, with the
+//! citation-shaped-label predicate it and this pass used to share, which the
+//! `show` query, the measured point body and the deprecated adapter all read
+//! downward instead of sideways (§DF-show-cross-ref-flattening, §AR-system.4).
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -28,8 +27,7 @@ use crate::resolver::{
     ShorthandTargets, WorkspaceContext, markdown_link_target, markdown_link_target_with_root,
 };
 use crate::scanner::{
-    collect_local_legacy_markdown_citations, formatter_wrapper_label_is_citation,
-    legacy_catalog_ids, match_legacy_tail,
+    collect_local_legacy_markdown_citations, legacy_catalog_ids, match_legacy_tail,
 };
 
 /// Wrap each `§<ID>[.<section>]` citation on this Markdown line as `[§<ID>…](url)`
@@ -268,74 +266,4 @@ fn collect_workspace_markdown_link_citations(
             section,
         });
     }
-}
-
-/// Flatten `grund fmt --cross-refs` link wrappers before an ID query
-/// prints it in `text` / `json` (§FS-show.3.2, §DF-show-cross-ref-flattening):
-/// `[§[alias/]<ID>.<section>](path#anchor)` → `§[alias/]<ID>.<section>`. The inverse of
-/// `wrap_markdown_links` (§FS-fmt.6.2) — the wrap shape is a `[` immediately
-/// before a marker-prefixed citation token and `](…)` immediately after it,
-/// exactly what `grund fmt --cross-refs` emits and re-derives (§FS-fmt.6.3); that
-/// is the only thing flattened. Ordinary Markdown links, an unwrapped citation,
-/// a citation inside an inline-code span (illustrative, like `fmt` itself —
-/// §FS-fmt.6.4), and `--format md` output (kept verbatim by the caller) are all
-/// left untouched. Purely textual: the citation is never resolved, so a dangling
-/// one is flattened just the same and `grund check` still reports it.
-pub(crate) fn flatten_cross_ref_links(body: &str, config: &Config) -> String {
-    if !body.contains("](") {
-        return body.to_string();
-    }
-    let mut out = String::with_capacity(body.len());
-    for line in body.split_inclusive('\n') {
-        out.push_str(&flatten_cross_ref_links_line(line, config));
-    }
-    out
-}
-
-fn flatten_cross_ref_links_line(line: &str, config: &Config) -> String {
-    let marker = config.marker.as_str();
-    if marker.is_empty() {
-        return line.to_string();
-    }
-    let mut output = String::new();
-    let mut cursor = 0usize;
-    let wrapper_start = format!("[{marker}");
-    for (bracket_pos, _) in line.match_indices(&wrapper_start) {
-        let marker_start = bracket_pos + 1;
-        let label_start = marker_start + marker.len();
-        let Some(label_close_rel) = line[label_start..].find("](") else {
-            continue;
-        };
-        let cite_end = label_start + label_close_rel;
-        let token = &line[label_start..cite_end];
-        // §FS-show.3.2: require a citation-shaped label the formatter can emit,
-        // including persisted and qualified legacy spellings but excluding an
-        // ordinary link whose label merely starts with the marker.
-        if token.is_empty()
-            || token
-                .chars()
-                .any(|ch| ch.is_whitespace() || matches!(ch, '[' | ']' | '(' | ')' | '`'))
-            || !formatter_wrapper_label_is_citation(token, config)
-        {
-            continue;
-        }
-        // A citation shown inside `` `…` `` is an illustration, not a citation —
-        // leave it exactly as written, the same call `grund fmt --cross-refs` makes.
-        if is_inside_inline_code(line, bracket_pos) {
-            continue;
-        }
-        let rest = &line[cite_end + 2..];
-        let Some(close_rel) = rest.find(')') else {
-            continue;
-        };
-        let close = cite_end + 2 + close_rel; // index of the `)`
-        if bracket_pos < cursor {
-            continue;
-        }
-        output.push_str(&line[cursor..bracket_pos]);
-        output.push_str(&line[marker_start..cite_end]); // §[alias/]<ID>[.<section>]
-        cursor = close + 1;
-    }
-    output.push_str(&line[cursor..]);
-    output
 }

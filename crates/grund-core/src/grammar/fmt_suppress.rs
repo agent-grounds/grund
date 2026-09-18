@@ -1,26 +1,36 @@
 //! The two scopes a repository takes out of `fmt`'s reach (§FS-fmt.2.5): the
 //! `[fmt] exclude` list, and the `grund:fmt` regions written in the files.
-//! Beside the walk rather than in it, per §AR-core-module-layout.3's file
-//! budget.
 //!
-//! The glob compiler these read and the validator the config reader refused a
-//! malformed pattern with went down into `config/fmt_block.rs` when
-//! §AR-system.2.8 became a module: the pattern grammar of §FS-config.3.10 is the
-//! `[fmt]` section's, and the matcher below reads it downward (§AR-system.4).
+//! Recognizing a suppression directive is lexical — an exact content match in
+//! whatever comment syntax the file is written in (§DF-fmt-suppression.2.2) — so
+//! it is this component's (§AR-system.2.1). Both records were the formatter's
+//! while §AR-system.2.8 was a file-name category, and the editor's on-type rule
+//! read them sideways out of it for the verdict it has to match line for line
+//! (§FS-lsp.1.4); down here the formatter and the query read one module
+//! downward and neither answers for the other (§AR-system.4).
+//!
+//! The two stay in one file because §FS-fmt.2.5 asks one question twice — what
+//! is out of reach — and only the answer's spelling differs: a path against the
+//! compiled `[fmt] exclude` matcher, a line against the fixed directive text.
+//! Neither reads a `Config`. The glob compiler and the validator the config
+//! reader refuses a malformed pattern with are `config/fmt_block.rs`'s, and
+//! config hands the compiled matcher down with the root a path is rebased
+//! against; the directive reader takes the settings record built beside the
+//! grammar (§FS-config.3.10, §AR-system.2.1).
 
-use anyhow::{Result, anyhow};
 use ignore::gitignore::Gitignore;
 use std::path::{Path, PathBuf};
 
-use crate::config::{Config, build_fmt_exclude_matcher};
-use crate::grammar::{DocstringContent, comment_strip_prefixes, strip_comment_tokens};
+use super::comment_line::{comment_strip_prefixes, strip_comment_tokens};
+use super::never_rewrite::DocstringContent;
+use super::settings::LexicalSettings;
 use crate::model::canonical_snapshot_path;
 
 /// The fixed text of a suppression directive (§FS-fmt.2.5.2). Not configurable,
 /// for the same reason the fence syntax is not: a marker that reads differently
 /// per repository is one nobody can recognize on sight
 /// (§DF-fmt-suppression.2.2).
-pub(super) const FMT_DIRECTIVE: &str = "grund:fmt";
+pub(crate) const FMT_DIRECTIVE: &str = "grund:fmt";
 
 /// The files this project's `[fmt] exclude` takes out of every rewrite
 /// (§FS-fmt.2.5.1). Empty — and free — for the repositories that set no key,
@@ -33,23 +43,17 @@ pub(crate) struct FmtExcluded {
 }
 
 impl FmtExcluded {
-    /// The matcher for one project's config. Patterns were already validated at
-    /// load (§FS-config.3.10), so a failure here is a grund bug rather than a
-    /// user error — it is still reported rather than swallowed, because the
-    /// alternative is a `--write` that silently rewrites a protected file.
-    pub(crate) fn new(config: &Config) -> Result<Self> {
-        let matcher = if config.fmt_exclude.is_empty() {
-            None
-        } else {
-            Some(
-                build_fmt_exclude_matcher(&config.fmt_exclude)
-                    .map_err(|message| anyhow!("[fmt] exclude: {message}"))?,
-            )
-        };
-        Ok(Self {
-            root: config.root.clone(),
+    /// One project's exclusion scope, as config compiled it: the root a matched
+    /// path is rebased against, and the matcher for its patterns — `None` where
+    /// the project set no key. Nothing here can fail and nothing here knows
+    /// what a pattern looks like, because both the pattern grammar of
+    /// §FS-config.3.10 and its validation at load are config's
+    /// (`config/fmt_block.rs`, §AR-system.2.1).
+    pub(crate) fn new(root: &Path, matcher: Option<Gitignore>) -> Self {
+        Self {
+            root: root.to_path_buf(),
             matcher,
-        })
+        }
     }
 
     /// Whether `path` is excluded. The patterns are config-root-relative
@@ -107,10 +111,10 @@ pub(crate) struct FmtDirectives<'a> {
 }
 
 impl<'a> FmtDirectives<'a> {
-    pub(crate) fn new(config: &'a Config, is_md: bool) -> Self {
+    pub(crate) fn new(settings: LexicalSettings<'a>, is_md: bool) -> Self {
         Self {
             rewriting: true,
-            prefixes: (!is_md).then(|| comment_strip_prefixes(config.lexical())),
+            prefixes: (!is_md).then(|| comment_strip_prefixes(settings)),
         }
     }
 

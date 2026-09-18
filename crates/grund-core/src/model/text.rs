@@ -1,11 +1,18 @@
-//! The two text spellings every component shares (§AR-system.2.2): the JSON
-//! string escape of §FS-errors.5 and the English list a message reads out.
+//! The text spellings every component shares (§AR-system.2.2): the JSON string
+//! escape of §FS-errors.5, the English list a message reads out, and the plural
+//! `s` a count earns.
 //!
-//! Both sat in the deprecated path's `output` category while the queries, the
-//! writers and the api read them upward (§AR-system.4, §AR-system.2.9). Neither
-//! is a renderer: a function of a `&str` in and a `String` out, with no stream,
-//! no `Config` and no finding between them, which is §AR-system.2.2's own
-//! description of what it holds.
+//! The first two sat in the deprecated path's `output` category while the
+//! queries, the writers and the api read them upward (§AR-system.4,
+//! §AR-system.2.9). None is a renderer: a function of a `&str` or a number in
+//! and a `String` out, with no stream, no `Config` and no finding between them,
+//! which is §AR-system.2.2's own description of what it holds.
+//!
+//! `plural` came here when §AR-system.2.11 became a component. It was the
+//! writers' template renderer's, then the checker's as the lowest component
+//! that read it; the sentence the managed block teaches is the templates' now
+//! (§FS-init.2.3), and the two readers sit in components neither of which is
+//! below the other, so the spelling goes all the way down (§AR-system.4).
 
 /// One string escaped for a JSON document (§FS-errors.5): the five mandatory
 /// escapes, and `\u00XX` for anything else the format calls a control character,
@@ -39,4 +46,11 @@ pub(crate) fn format_list(items: &[&str], conjunction: &str) -> String {
         [first, second] => format!("{first} {conjunction} {second}"),
         [rest @ .., last] => format!("{}, {conjunction} {last}", rest.join(", ")),
     }
+}
+
+/// The plural `s` a count earns, or nothing at one — spelled once, because the
+/// inline-size findings of §FS-inline-citation-style.4 and the budget sentence
+/// the agent entrypoint teaches (§FS-init.2.3) have to read the same way.
+pub(crate) fn plural(value: usize) -> &'static str {
+    if value == 1 { "" } else { "s" }
 }

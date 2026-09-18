@@ -1,8 +1,10 @@
 //! The grammar component (§AR-system.2.1): the lexical facts every other
 //! component shares — the ID grammar compiled from `[id] format` and its
 //! near-miss detection, comment-line and comment-block recognition,
-//! fenced-block boundaries, the number-only shorthand, inline-note layout, and
-//! the never-rewrite predicates (§FS-fmt.2.3). It consumes text and knows no
+//! fenced-block boundaries, the number-only shorthand, inline-note layout, the
+//! never-rewrite predicates and the formatter's own syntax — its cross-reference
+//! wrapper and its suppression directives (§FS-fmt.2.3, §FS-fmt.2.5). It
+//! consumes text and knows no
 //! file, no rule and no frontend — and no `Config` either: what config decides
 //! reaches here as the compiled `Grammar` and the `LexicalSettings` record
 //! beside it, both built above and only read here (`settings.rs`,
@@ -33,6 +35,17 @@
 //! also took the record of one marked citation found on a Markdown line
 //! (§AR-system.4).
 //!
+//! Two more came down when §AR-system.2.11 became a component and the
+//! formatter's own syntax stopped being the formatter's alone.
+//! `fmt_cross_refs.rs` is the `--cross-refs` wrapper read backwards
+//! (§DF-show-cross-ref-flattening) with the label predicate that decides
+//! whether a `[…](…)` label is a citation at all, which the scanner had parked
+//! in `legacy.rs` for it and which is private now that both are one file; `fmt_suppress.rs` is the two scopes §FS-fmt.2.5 takes
+//! out of a rewrite's reach. Recognizing a wrapper and recognizing a directive
+//! are both lexical, and while they sat above, the editor's on-type rule and
+//! three readers of a flattened body reached sideways or upward for them
+//! (§FS-lsp.1.4, §AR-system.4).
+//!
 //! `managed_block.rs` came down with the rest of §AR-system.2.8: finding the
 //! block grund owns inside somebody else's document and reading the `vN` version
 //! it carries is lexical, and it was implemented twice up there — once for the
@@ -47,6 +60,8 @@ mod comment_block;
 mod comment_line;
 mod compiled;
 mod fence;
+mod fmt_cross_refs;
+mod fmt_suppress;
 mod id_format;
 mod id_rules;
 mod ids;
@@ -68,12 +83,14 @@ pub(crate) use comment_block::{
     CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
     doc_comment_rule, first_content_line,
 };
-pub(crate) use comment_line::{comment_strip_prefixes, strip_comment_tokens};
+pub(crate) use comment_line::comment_strip_prefixes;
 pub(crate) use compiled::{
     AGENTS_BLOCK_END, QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, reduce_heading_text,
     section_path,
 };
 pub(crate) use fence::markdown_fence_delimiter;
+pub(crate) use fmt_cross_refs::flatten_cross_ref_links;
+pub(crate) use fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
 pub(crate) use id_format::{
     id_shape, id_token_end_at, literal_after_kind_placeholder, parse_longest_id_prefix,
 };

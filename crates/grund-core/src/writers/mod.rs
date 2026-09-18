@@ -10,13 +10,12 @@
 //! reads is re-exported below, and everything else is the component's own
 //! (§AR-core-module-layout.1). Each file keeps the name of the writer it belongs
 //! to rather than dropping a prefix, because this component holds five: the
-//! `fmt_*` files are the formatter — the rewrite walk, the two suppressed
-//! scopes, the link pass, the value-binding protection, the workspace pass, the
-//! completeness proof and the one refusal it carries out —
-//! `id.rs` is the ID proposal, the `fetch*` pair is the snapshot, the `init_*`
-//! files are the scaffold (the run and its report, the entrypoint table, the
-//! plan one run makes, the block splice, the templates and the two generated
-//! sections, the workspace-members walk-up, the notes, and what the `<path>`
+//! `fmt_*` files are the formatter — the rewrite walk, the link pass, the
+//! value-binding protection, the workspace pass, the completeness proof and the
+//! one refusal it carries out — `id.rs` is the ID proposal, the `fetch*` pair is
+//! the snapshot, the `init_*` files are the scaffold (the run and its report,
+//! the plan one run makes, the block splice, what this run renders the block
+//! from, the workspace-members walk-up, the notes, and what the `<path>`
 //! argument is), and the `integrations_*` files are the clickable-citation
 //! artifacts (the closed client set, detection, the agent instruction surfaces,
 //! the installs and their byte-current probes, and the user configuration).
@@ -40,10 +39,11 @@
 //! agent-entrypoint rule (§FS-check.3.5) now reads downward and which this
 //! component had implemented twice, once for §FS-init.2.3 and once for
 //! §FS-integrations.4.1. The `[fmt] exclude` glob grammar of §FS-config.3.10 and
-//! the TOML basic-string escaper went down into `config/`, and `plural` down
-//! into `checker/`, each to the lowest component that reads it. What came the
-//! other way is the §FS-fmt.6.6 auto-enable pair, out of the deprecated `fmt`
-//! adapter: neither of its two callers is the command (§AR-system.2.9).
+//! the TOML basic-string escaper went down into `config/`, and `plural` — by way
+//! of `checker/` — into `model/text.rs`, each to the lowest component that reads
+//! it. What came the other way is the §FS-fmt.6.6 auto-enable pair, out of the
+//! deprecated `fmt` adapter: neither of its two callers is the command
+//! (§AR-system.2.9).
 //!
 //! `fmt_link_targets.rs` left the same way when §AR-system.2.10 became a
 //! component: where a citation's link points is a function of the loaded
@@ -51,6 +51,24 @@
 //! this component for the link it compares a page against, so it is
 //! `resolver/link_targets.rs` and the link pass reads it downward
 //! (§FS-check.3.18, §AR-resolver.placement).
+//!
+//! Three more left when §AR-system.2.11 became one, all for the same reason: the
+//! checker's agent-entrypoint rule (§FS-check.3.5, §AR-checker.2.7) compares an
+//! `AGENTS.md` block against a fresh render, and it was reading four items
+//! upward out of this component to do it. What a managed block *should say* is
+//! a function of config alone, so `init_templates.rs` and
+//! `init_citation_directions.rs` are `templates/` (§AR-system.2.11) — the
+//! embedded payload, the substitutions and the two generated sections. Which
+//! entrypoint files a repository *has* is a probe over the tree, so
+//! `init_entrypoints.rs` is `scanner/agent_entrypoints.rs`, one walk the plan
+//! here and the checker's companion scan both read. And the two suppressed
+//! scopes of §FS-fmt.2.5 went down into `grammar/fmt_suppress.rs` with the
+//! cross-reference flattening of `fmt_links.rs`, because recognizing a
+//! directive and recognizing a wrapper are lexical and the editor's on-type
+//! rule and three readers of a flattened body were reaching sideways for them
+//! (§FS-lsp.1.4). What stays here is what decides what a run writes: the plan,
+//! the splice, the walk-up, the notes, and the effective config the block is
+//! rendered from (`init_render.rs`).
 
 mod fetch;
 mod fetch_write;
@@ -59,18 +77,15 @@ mod fmt_error;
 mod fmt_links;
 mod fmt_rewrite;
 mod fmt_shorthand_links;
-mod fmt_suppress;
 mod fmt_value_bindings;
 mod fmt_workspace;
 mod id;
 mod init;
 mod init_block;
-mod init_citation_directions;
-mod init_entrypoints;
 mod init_notes;
 mod init_plan;
+mod init_render;
 mod init_target;
-mod init_templates;
 mod init_workspace_members;
 mod integrations_agents;
 mod integrations_clients;
@@ -82,19 +97,13 @@ pub use fetch::{FetchFailure, FetchFailureKind, fetch_snapshot};
 pub use fmt_error::FmtScanAbort;
 pub use init::{InitError, InitEvent, InitFsHome, InitNext, InitOpts, InitOutput, init};
 pub use init_plan::InitAgentEntrypointSelection;
-pub use init_templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
 
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use fmt_links::flatten_cross_ref_links;
 pub(crate) use fmt_rewrite::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};
-pub(crate) use fmt_suppress::{FmtDirectives, FmtExcluded};
 pub(crate) use fmt_workspace::fmt_workspace_projects;
 pub(crate) use id::{format_id, slugify_title};
-pub(crate) use init_citation_directions::citation_directions_section;
-pub(crate) use init_entrypoints::companion_agent_entrypoints;
-pub(crate) use init_templates::{ConversationSurface, clickable_citations_section};
 
 // What the deprecated `compat/init.rs` and `compat/integrations*.rs` renderers read,
 // through the crate root because nothing here may import them
@@ -129,13 +138,6 @@ pub(crate) use fmt_rewrite::{FmtLineOpts, fmt_line};
 pub(crate) use init::{docs_scaffold, init_fs_home};
 #[cfg(test)]
 pub(crate) use init_block::{AgentsUpdateResult, update_agents_text};
-#[cfg(test)]
-pub(crate) use init_citation_directions::CITATION_LEVEL_LEGEND;
-#[cfg(test)]
-pub(crate) use init_entrypoints::{
-    AgentEntrypoint, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
-    agents_with_own_entrypoint,
-};
 #[cfg(all(test, unix))]
 pub(crate) use init_notes::shadowed_claude_entrypoint_note;
 #[cfg(test)]
@@ -143,12 +145,9 @@ pub(crate) use init_plan::{
     requested_init_companion_agent_entrypoints, workspace_init_companion_agent_entrypoints,
 };
 #[cfg(test)]
-pub(crate) use init_target::{refuse_init_global_instruction_paths, refuse_init_target};
+pub(crate) use init_render::{render_agents_append_block_at, render_agents_md};
 #[cfg(test)]
-pub(crate) use init_templates::{
-    inline_citation_style_sentence, render_agents_append_block_at, render_agents_md,
-    render_grund_toml,
-};
+pub(crate) use init_target::{refuse_init_global_instruction_paths, refuse_init_target};
 #[cfg(test)]
 pub(crate) use init_workspace_members::render_workspace_members_section;
 #[cfg(test)]

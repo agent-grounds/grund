@@ -1,39 +1,43 @@
+//! Which agent entrypoint files a repository *has* (§FS-init.2.1): the table of
+//! paths each supported agent reads, and the rules that decide whether a file
+//! standing at one of them is that agent's entrypoint or somebody else's.
+//!
+//! A probe over the tree, which is what puts it in this component
+//! (§AR-system.2.5): it resolves symlinks and, for a filename too generic to
+//! attribute, reads the file for a managed block, so it is no lookup over paths
+//! and config that `config/` could hold and no rendering that `templates/`
+//! could. `writers/init_plan.rs` turns these answers into the plan one run acts
+//! on, `templates/` answers what bytes go in them, and `writers/init.rs`
+//! performs the writes (§AR-core-module-layout.1).
+//!
+//! It is here rather than up there because both `grund init` and `grund check`
+//! ask it, and the checker sits below the writers: while this file was the
+//! writers', the companion scan of §FS-check.3.5 read it upward through the
+//! crate root (§AR-system.4). Down here both read it downward, and there is
+//! still only one walk — `companion_agent_entrypoints` is *derived from*
+//! `existing_init_companion_agent_entrypoints` rather than restating it, so
+//! `check` and `init` cannot come to disagree about what an entrypoint is.
+
 use anyhow::Result;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::init_templates::ConversationSurface;
 use crate::config::Config;
 use crate::grammar::{AgentsBlockLookup, find_agents_block};
 use crate::model::normalize_path_lexically;
+use crate::templates::ConversationSurface;
 
-/// Which agent entrypoint files a repository *has* (§FS-init.2.1): the table of
-/// paths each supported agent reads, and the rules that decide whether a file
-/// standing at one of them is that agent's entrypoint or somebody else's. This
-/// is the half that only ever asks the tree — `init_plan.rs` turns these answers
-/// into the plan one run acts on, `init_templates.rs` answers what bytes go in
-/// them, and `init.rs` performs the writes (§AR-core-module-layout.1).
-///
 /// The table below is the one place the supported agent set is spelled out, and
 /// the agent behind each row is what makes one entrypoint per agent decidable
-/// (§FS-init.2.1.1). `grund check`'s companion scan resolves through the same
-/// rules, so the checker and the writer cannot disagree about what an entrypoint
-/// is (§FS-check.3.5) — which is why `companion_agent_entrypoints` stays here
-/// and the checker reads it upward through the crate root (§AR-system.4) rather
-/// than following the managed-block protocol down. It is not a lookup over
-/// paths and config that `config/` could hold: it resolves symlinks and, for a
-/// filename too generic to attribute, reads the file for a managed block, and
-/// it is *derived from* the run's own existing-entrypoint walk below rather
-/// than restating it. Splitting it out would either duplicate that walk or take
-/// the plan and the surface reach with it.
-pub(super) const CANONICAL_AGENT_ENTRYPOINT: &str = "AGENTS.md";
+/// (§FS-init.2.1.1).
+pub(crate) const CANONICAL_AGENT_ENTRYPOINT: &str = "AGENTS.md";
 /// Why Cursor has two rows: Cursor uses `.cursor/rules/*.mdc` files (the modern
 /// form) and a legacy `.cursorrules` single-file form. We create a
 /// grund-specific `.cursor/rules/grund.mdc` (won't collide with any other rule
 /// file) when `.cursor/` already exists or `--cursor` is passed; the legacy
 /// `.cursorrules` is only updated if it already exists, never created — the
 /// modern path is preferred for new adopters.
-pub(super) const COMPANION_AGENT_ENTRYPOINTS: &[CompanionAgentEntrypoint] = &[
+pub(crate) const COMPANION_AGENT_ENTRYPOINTS: &[CompanionAgentEntrypoint] = &[
     CompanionAgentEntrypoint {
         rel: "AGENTS.override.md",
         workspace: None,
@@ -125,7 +129,7 @@ pub(crate) enum AgentEntrypoint {
 
 impl AgentEntrypoint {
     /// The agent's name as a report spells it (§FS-init.2.1.1).
-    pub(super) fn name(self) -> &'static str {
+    pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Claude => "Claude",
             Self::Gemini => "Gemini",
@@ -157,7 +161,7 @@ pub(crate) enum CanonicalSurfaceReach {
 }
 
 impl CanonicalSurfaceReach {
-    pub(super) fn for_config(config: &Config) -> Self {
+    pub(crate) fn for_config(config: &Config) -> Self {
         if config.conversation.as_deref() == Some("link") {
             Self::PlainEntrypointsOnly
         } else {
@@ -171,25 +175,25 @@ impl CanonicalSurfaceReach {
     /// carry: the surfaces are what differ (§FS-init.2.3.4.17), so a symlink
     /// whose surface is the canonical file's own carries exactly the bytes that
     /// file carries.
-    pub(super) fn leaves_uncovered(self, path: &Path) -> bool {
+    pub(crate) fn leaves_uncovered(self, path: &Path) -> bool {
         self == Self::PlainEntrypointsOnly
             && ConversationSurface::for_entrypoint(path) != ConversationSurface::Plain
     }
 }
 
-pub(super) struct CompanionAgentEntrypoint {
-    pub(super) rel: &'static str,
+pub(crate) struct CompanionAgentEntrypoint {
+    pub(crate) rel: &'static str,
     workspace: Option<&'static str>,
-    pub(super) agent: Option<AgentEntrypoint>,
+    pub(crate) agent: Option<AgentEntrypoint>,
     /// Whether automatic mode should detect this entrypoint by file existence
     /// alone. `false` for entrypoints whose filename is too generic to
     /// attribute to a single tool (e.g. `.rules`) — those rely on the
     /// workspace directory or an explicit agent flag instead.
-    pub(super) discovery: bool,
+    pub(crate) discovery: bool,
     /// Whether an explicit agent flag creates this entrypoint when it is absent.
     /// Legacy Cursor `.cursorrules` is updated when present but never created;
     /// new Cursor installs use `.cursor/rules/grund.mdc` instead (§FS-init.2.1).
-    pub(super) create_on_request: bool,
+    pub(crate) create_on_request: bool,
 }
 
 pub(crate) enum InitCompanionAgentEntrypoint {
@@ -216,7 +220,7 @@ impl InitCompanionAgentEntrypoint {
 /// is derived from it rather than restated: the two answer the same question —
 /// which companion files does this repository have — and a second copy of that
 /// walk is a place for `check` and `init` to disagree about what an entrypoint
-/// is (§FS-check.3.5).
+/// is (§FS-check.3.5, §AR-checker.2.7).
 pub(crate) fn companion_agent_entrypoints(root: &Path) -> Result<Vec<PathBuf>, (PathBuf, String)> {
     let (_, companions) = existing_init_companion_agent_entrypoints(root)?;
     Ok(companions
@@ -237,7 +241,7 @@ pub(crate) fn companion_agent_entrypoints(root: &Path) -> Result<Vec<PathBuf>, (
 /// (§FS-init.2.1.1). Returning them rather than a bare "some companion was a
 /// symlink" flag is what lets that note be built from the plan instead of a
 /// second walk of the same table.
-pub(super) fn existing_init_companion_agent_entrypoints(
+pub(crate) fn existing_init_companion_agent_entrypoints(
     root: &Path,
 ) -> Result<(Vec<PathBuf>, Vec<InitCompanionAgentEntrypoint>), (PathBuf, String)> {
     let mut paths = Vec::new();
@@ -311,7 +315,7 @@ pub(crate) fn agents_with_own_entrypoint(
     Ok(agents)
 }
 
-pub(super) fn companion_workspace_exists(
+pub(crate) fn companion_workspace_exists(
     root: &Path,
     entrypoint: &CompanionAgentEntrypoint,
 ) -> bool {
@@ -345,20 +349,20 @@ fn companion_has_managed_block(path: &Path) -> bool {
         .is_ok_and(|text| !matches!(find_agents_block(&text), AgentsBlockLookup::Absent))
 }
 
-pub(super) fn is_file_or_symlink(path: &Path) -> bool {
+pub(crate) fn is_file_or_symlink(path: &Path) -> bool {
     fs::symlink_metadata(path)
         .map(|m| m.file_type())
         .is_ok_and(|t| t.is_file() || t.is_symlink())
 }
 
-pub(super) fn path_missing_without_following_symlinks(path: &Path) -> bool {
+pub(crate) fn path_missing_without_following_symlinks(path: &Path) -> bool {
     match fs::symlink_metadata(path) {
         Ok(_) => false,
         Err(err) => err.kind() == std::io::ErrorKind::NotFound,
     }
 }
 
-pub(super) fn is_symlink_to(path: &Path, target: &Path) -> Result<bool> {
+pub(crate) fn is_symlink_to(path: &Path, target: &Path) -> Result<bool> {
     let metadata = fs::symlink_metadata(path)?;
     if !metadata.file_type().is_symlink() {
         return Ok(false);

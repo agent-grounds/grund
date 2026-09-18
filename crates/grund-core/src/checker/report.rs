@@ -113,6 +113,16 @@ use crate::scanner::is_scannable;
 /// that already contain a managed block and leave project-owned unmanaged files
 /// alone.
 ///
+/// The text a current block is compared against is not this rule's to know. What
+/// a managed block should say is a function of config alone, so the two
+/// config-derived sections are re-rendered from `templates/` — the same
+/// renderers `grund init` writes through (§AR-system.2.11) — and compared byte
+/// for byte; and which companion files count as entrypoints is the one
+/// entrypoint walk in `scanner/agent_entrypoints.rs`, which `init`'s own
+/// selection is derived from. Both are read downward, so this rule cannot
+/// disagree with the command that is supposed to clear it (§FS-init.2.1,
+/// §FS-init.2.3).
+///
 /// ### 2.8 Ungrounded units — opt-in (§FS-check.3.6, §DF-require-grounding)
 ///
 /// Off by default, and asked per `[[kinds]]` row: each scanned file resolves to

@@ -44,7 +44,7 @@ The flatten pass does not look the citation up. A wrapper whose ID does not reso
 ## 4. Consequences
 
 - New [§FS-show.3.2](../../functional-spec/FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json) states the rule; the `text` / `md` / `json` bullets in [§FS-show.3.1](../../functional-spec/FS-show.md#31-format-variants) point at it.
-- `flatten_cross_ref_links` in `crates/grund-core/src/writers/fmt_links.rs`, applied in `command_show` whenever the format is not `md`.
+- `flatten_cross_ref_links` in `crates/grund-core/src/grammar/fmt_cross_refs.rs`, applied in `command_show` whenever the format is not `md`. It sat beside the wrapper pass it inverts until recognizing a wrapper was read as lexical ([§AR-system.2.1](../../architecture/README.md#21-grammar)): the `show` query, the measured point body and the deprecated adapter all reached sideways or upward for it.
 - E2E fixtures `show-cross-refs-flattened` (text output is flattened) and `show-cross-refs-kept-in-md` (`--format md` keeps the wrapper) cover both halves; the `json` `body` rides the same code path as `text`.
 - `grund show` over this repo's own `--cross-refs`-wrapped `.md` specs now prints bare `§…` citations in `text` and `json`.
 
