@@ -235,6 +235,7 @@ fn an_undecidable_ancestor_claim_anchors_at_the_config_with_no_line() {
     // §FS-errors.4: an anchor above the run's own root renders absolute, the way
     // every other out-of-root reported path does, while the message keeps the
     // `../grund.toml` breadcrumb a reader resolves from where they stand.
+
     // The climb starts from the canonical run root, so the ancestor comes out in
     // the same canonical, forward-slash form `format_path` renders every reported
     // path in: `/private/var/…` on macOS, `//?/C:/…` on Windows, the raw temp
