@@ -38,6 +38,16 @@ knows no rule and no rendering: it settles which project a coordinate lands in
 and what text is there, never whether that is an error or how to print it
 ([§AR-system.4](README.md#4-dependency-direction)).
 
+It is also where the run's warning channel is settled, for the same reason the
+loaded project set is: [§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)
+asks whether a block that opted out of being a project would have read something
+had it been one, which only a walk can answer, so workspace *poses* that question
+and `resolver/unread_block.rs` answers it ([§AR-workspace.placement](AR-workspace.md#placement-where-the-workspace-layer-sits)).
+Assembling the four run-level `[workspace]` warnings there hands every walking
+command one ordered list of `Diagnostic`s to carry on whatever it returns — it
+renders none of them ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate),
+[§DA-engine-renders-nothing](../decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires)).
+
 ## 1. The resolver: one function
 
 `target_for_citation(cite, local, local_config, workspace)` in

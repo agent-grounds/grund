@@ -19,6 +19,7 @@ use super::kind_defaults::{
     default_kind_index, default_kind_title,
 };
 use super::point_sizes::LeadSizeWarning;
+use super::run_warnings::RunWarning;
 use crate::grammar::{Grammar, GrammarKind, LexicalSettings};
 
 #[derive(Clone)]
@@ -207,14 +208,15 @@ pub struct Config {
     /// default `true` makes that unreachable for the one finding that reads it.
     pub workspace_include_root_source: Option<ConfigLocation>,
     pub workspace_boundary_roots: Vec<PathBuf>,
-    /// §FS-check.4.10: how many `[workspace]` blocks this run has already told
-    /// the reader no project scans. Accumulated on the config the run was
-    /// launched with, by the two points a run populates a block's member
-    /// boundary, and read where `check` decides whether to print `success`
-    /// (§FS-check.2.1). The finding is settled before a walk and before a report
-    /// exists, so the report cannot carry it and the count is how the marker
-    /// still learns that stderr is not empty. Not a `grund.toml` key.
-    pub unread_opted_out_blocks: usize,
+    /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
+    /// cautions of §FS-check.4.7, §FS-check.4.10 and §FS-workspace.6.1, in the
+    /// order the run settled them. Accumulated on the config the run was
+    /// launched with, by the points that populate a block's member boundary and
+    /// climb the claimed chain, and handed to whichever frontend asked — which
+    /// is what keeps the engine from writing one of them to a stream
+    /// (§AR-bindings.2). Each stands in place of the `success` marker on an
+    /// otherwise clean run (§FS-check.2.1). Not a `grund.toml` key.
+    pub(crate) run_warnings: Vec<RunWarning>,
     /// §AR-workspace.6: the canonical root of **every** project this run loaded.
     /// `workspace_boundary_roots` above says what lies *below* this project, so a
     /// leaf member has none; this says where the *others* are, which is how a
@@ -370,7 +372,7 @@ impl Config {
             workspace_include_root: true,
             workspace_include_root_source: None,
             workspace_boundary_roots: Vec::new(),
-            unread_opted_out_blocks: 0,
+            run_warnings: Vec::new(),
             workspace_project_roots: Vec::new(),
             citations: CitationRules::default(),
             // On by default so `grund check` (and tests) classify; the read-only

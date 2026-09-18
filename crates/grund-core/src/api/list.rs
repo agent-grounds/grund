@@ -13,9 +13,11 @@ use std::path::PathBuf;
 
 use crate::config::{Config, KindConfig, display_path, non_citable_kind_error};
 use crate::grammar::render_id;
-use crate::model::{Declaration, Id, format_path, is_stub_for_inline_decl, sort_path_key};
+use crate::model::{Declaration, Finding, Id, format_path, is_stub_for_inline_decl, sort_path_key};
 use crate::queries::ListCitationCounts;
 use crate::resolver::{WorkspaceProject, load_workspace_context};
+
+use super::report::context_run_warnings;
 use crate::scanner::{ApiScanError, api_scan_error};
 
 #[derive(Clone)]
@@ -79,6 +81,12 @@ pub struct ListOutput {
     pub entries: Vec<ListEntry>,
     pub summaries: Vec<ListSummary>,
     pub scan_errors: Vec<ApiScanError>,
+    /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
+    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
+    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// names. A frontend renders each as one CLI-level `warning:` on stderr
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    pub warnings: Vec<Finding>,
 }
 
 fn list_summary_home(kind: &KindConfig) -> String {
@@ -92,7 +100,26 @@ fn list_summary_home(kind: &KindConfig) -> String {
 /// Programmatic `list`: return the catalog and per-kind summary rows without
 /// selecting text/JSON rendering or an exit code (§AR-bindings.2).
 pub fn list(opts: ListOpts) -> Result<ListOutput> {
+    list_with_run_warnings(opts).1
+}
+
+/// [`list`] for a frontend that renders the run's `[workspace]` warnings even
+/// when the query is refused (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1).
+///
+/// A refusal `list` settles *after* the workspace pass — an unknown project alias,
+/// an unknown kind — leaves an `Err` with nowhere to carry a caution the reader is
+/// already owed, and the run said it before the query failed. On success the list
+/// returned here is the one [`ListOutput::warnings`] carries.
+#[doc(hidden)]
+pub fn list_with_run_warnings(opts: ListOpts) -> (Vec<Finding>, Result<ListOutput>) {
+    let mut warnings = Vec::new();
+    let output = list_run(opts, &mut warnings);
+    (warnings, output)
+}
+
+fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutput> {
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
+    *run_warnings = context_run_warnings(&context);
     if !opts.project_filter.is_empty() && !context.workspace_loaded {
         return Err(anyhow!(
             "--project requires workspace mode (no [workspace] block discovered)"
@@ -334,5 +361,6 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
         entries: public_entries,
         summaries,
         scan_errors,
+        warnings: run_warnings.clone(),
     })
 }

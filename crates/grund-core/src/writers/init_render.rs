@@ -10,8 +10,9 @@
 use anyhow::Result;
 use std::path::Path;
 
-use super::init_workspace_members::render_workspace_members_section;
+use super::init_workspace_members::render_workspace_members_section_with_run_warnings;
 use crate::config::{Config, config_file_in, load_config};
+use crate::model::Finding;
 #[cfg(test)]
 use crate::templates::{
     ConversationSurface, render_agents_append_block, render_agents_md_from_block,
@@ -32,8 +33,8 @@ pub(super) fn agents_workspace_members_section(
     config: &Config,
     target: &Path,
     canonical_agent_entrypoint_selected: bool,
-) -> String {
-    render_workspace_members_section(
+) -> (String, Vec<Finding>) {
+    render_workspace_members_section_with_run_warnings(
         target,
         Some(name),
         // Collect effective pending metadata. The renderer omits self (and its
@@ -88,7 +89,7 @@ pub(crate) fn render_agents_append_block_at(
     canonical_agent_entrypoint_selected: bool,
     surface: ConversationSurface,
 ) -> String {
-    let workspace_members =
+    let (workspace_members, _) =
         agents_workspace_members_section(name, config, target, canonical_agent_entrypoint_selected);
     render_agents_append_block(name, config, &workspace_members, surface)
 }

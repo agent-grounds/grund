@@ -5,10 +5,12 @@ use std::path::PathBuf;
 use super::citation_counts::ListCitationCounts;
 use crate::config::{
     Config, PointSizeUnit, display_path, measure_point_text, non_citable_kind_error,
+    run_warning_findings,
 };
 use crate::grammar::render_id;
 use crate::model::{
-    Declaration, Id, SectionInfo, TextOverlays, format_path, is_stub_for_inline_decl, sort_path_key,
+    Declaration, Finding, Id, SectionInfo, TextOverlays, format_path, is_stub_for_inline_decl,
+    sort_path_key,
 };
 use crate::resolver::{PointBodyCache, WorkspaceContext, load_workspace_context, point_body_pair};
 use crate::scanner::{ApiScanError, api_scan_error};
@@ -78,6 +80,12 @@ pub struct ListSizeOutput {
     pub workspace: bool,
     pub entries: Vec<ListSizeEntry>,
     pub scan_errors: Vec<ApiScanError>,
+    /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
+    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
+    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// names. A frontend renders each as one CLI-level `warning:` on stderr
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    pub warnings: Vec<Finding>,
 }
 
 /// Programmatic point-size catalog. It selects the same declaration set as
@@ -263,6 +271,7 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
         workspace: context.workspace_loaded,
         entries,
         scan_errors,
+        warnings: run_warning_findings(render_config, context.run_warnings.clone()),
     })
 }
 

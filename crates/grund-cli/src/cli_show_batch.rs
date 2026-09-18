@@ -60,7 +60,7 @@ fn command_show_batch(path: PathBuf, path_provided: bool, mode: ShowMode, all: b
             }
         }
     };
-    let records = match show_batch_with_scope(
+    let (run_warnings, batch) = show_batch_with_scope(
         queries,
         ShowOpts {
             path,
@@ -69,7 +69,9 @@ fn command_show_batch(path: PathBuf, path_provided: bool, mode: ShowMode, all: b
             format: ShowFormat::Json,
         },
         path_provided,
-    ) {
+    );
+    render_run_warnings(&run_warnings);
+    let records = match batch {
         Ok(records) => records,
         Err(error) => {
             eprintln!("error: {error:#}");

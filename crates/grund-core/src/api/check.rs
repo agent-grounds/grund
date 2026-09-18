@@ -11,9 +11,10 @@
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-use super::report::public_report;
+use super::report::{public_report, public_run_warnings};
 use super::run::run_check;
-use crate::model::{Findings, Report};
+use crate::model::{Finding, Findings, Report};
+use crate::resolver::settled_run_warnings;
 use crate::scanner::scan_tree_strict;
 use crate::workspace::resolve_workspace_config;
 
@@ -50,11 +51,16 @@ pub struct CheckOutput {
     pub output_format: String,
     pub report: Report,
     pub had_scan_errors: bool,
-    /// §FS-check.4.10: how many `[workspace]` blocks this run already told the
-    /// reader no project scans, on stderr, before the report existed. Not a
-    /// finding — the report carries none for it — but a caller that prints the
-    /// `success` marker has to know stderr is not empty (§FS-check.2.1).
-    pub unread_opted_out_blocks: usize,
+    /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
+    /// cautions this run settled before any report existed — §FS-check.4.7's
+    /// absorbed scan, §FS-check.4.10's unread opted-out block and
+    /// §FS-workspace.6.1's undecidable ancestor claim, each anchored at the
+    /// `grund.toml` line its message names. Not report findings — the report
+    /// carries none of them, and none enters the §FS-errors.5 selector
+    /// vocabulary — but a caller renders each as a CLI-level `warning:`
+    /// (§FS-check.2.1.1) and a run that earns one prints no `success`
+    /// (§FS-check.2.1). §FS-check.4.8 is a report warning and is not here.
+    pub warnings: Vec<Finding>,
 }
 
 /// Scan one project tree and return the raw scanner findings. This is the
@@ -87,9 +93,10 @@ pub fn check_with_opts(opts: CheckOpts) -> Result<CheckOutput> {
         opts.require_grounding,
         opts.full,
     )?;
+    let warnings = public_run_warnings(&run.config, settled_run_warnings(&run.config));
     Ok(CheckOutput {
         output_format: run.config.output_format.clone(),
-        unread_opted_out_blocks: run.config.unread_opted_out_blocks,
+        warnings,
         report: public_report(&run.config, run.report, opts.include_suggestions),
         had_scan_errors: run.had_scan_errors,
     })

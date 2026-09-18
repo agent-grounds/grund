@@ -13,6 +13,7 @@ use anyhow::Result;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+use super::output::print_published_run_warnings;
 use crate::api::{CoverCitation, CoverOpts, cover};
 use crate::model::json_escape;
 
@@ -86,6 +87,7 @@ pub(super) fn command_cover(args: &[String]) -> ExitCode {
             return ExitCode::from(2);
         }
     };
+    print_published_run_warnings(&output.warnings);
     // The override was validated in the parse; only the configured fallback is
     // left to check, and that one is a property of the tree just loaded.
     let format = format_override.unwrap_or_else(|| output.output_format.clone());

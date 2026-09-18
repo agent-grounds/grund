@@ -14,7 +14,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use crate::model::Report;
+use crate::model::{Finding, Report};
 use crate::scanner::ApiScanError;
 
 /// One snapshot request (§AR-lsp.5): the anchor folder, whether the editor named
@@ -46,6 +46,14 @@ pub struct LspSnapshot {
     pub trigger: String,
     pub workspace: bool,
     pub report: Report,
+    /// The run's warning channel (§FS-distribution.3.1, §FS-lsp.1.1): the four
+    /// `[workspace]` cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
+    /// §FS-workspace.6.1, each anchored at the `grund.toml` it names — at that
+    /// file's anchored line, or at its first line for the undecidable claim,
+    /// which names no line because the line is what it could not read. Not
+    /// report findings: they are settled before a report exists, and the server
+    /// publishes them beside `report` rather than inside it.
+    pub run_warnings: Vec<Finding>,
     pub declarations: Vec<LspDeclaration>,
     /// Citable section headings (`<ID>.<section>`) inside declaration bodies,
     /// each a declaration-side title editors can navigate to its section

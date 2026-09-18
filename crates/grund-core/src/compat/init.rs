@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+use super::output::print_published_run_warnings;
 use crate::writers::InitOpts;
 use crate::writers::{InitAgentEntrypointSelection, InitNext, InitOutput, init};
 
@@ -94,6 +95,7 @@ pub(super) fn command_init(args: &[String]) -> ExitCode {
 }
 
 fn print_init_output(output: &InitOutput) {
+    print_published_run_warnings(&output.warnings);
     for event in &output.events {
         eprintln!("{} {}", event.verb, event.path);
     }

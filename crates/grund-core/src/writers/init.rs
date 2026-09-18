@@ -11,7 +11,7 @@ use super::init_target::{
     derive_default_name, refuse_init_global_instruction_paths, refuse_init_target,
 };
 use crate::config::{Config, config_file_in};
-use crate::model::format_path;
+use crate::model::{Finding, format_path};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
     effective_scope_reads_any_file,
@@ -122,6 +122,14 @@ pub struct InitOutput {
     /// notice for itself (§FS-init.2.3.4.17). Reported, never fatal.
     pub notes: Vec<String>,
     pub next: Option<InitNext>,
+    /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
+    /// cautions the walk-up settled — §FS-check.4.7's absorbed scan,
+    /// §FS-check.4.10's unread opted-out block and §FS-workspace.6.1's
+    /// undecidable ancestor claim. `init` expands the outermost workspace above
+    /// its target to teach the alias set, so it resolves a block's member
+    /// boundary like every other walking command and owes the reader the same
+    /// lines (§FS-check.2.1.1).
+    pub warnings: Vec<Finding>,
 }
 
 impl InitOutput {
@@ -152,8 +160,7 @@ impl InitError {
         Self {
             output: InitOutput {
                 events,
-                notes: Vec::new(),
-                next: None,
+                ..InitOutput::default()
             },
             message: message.into(),
         }
@@ -277,7 +284,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     // §FS-init.2.3.4.15, §FS-check.4.8: walked once and handed to both surfaces —
     // the section does not vary by surface, and this walk is where every block is
     // asked whether its members swallowed its scan, once per run.
-    let workspace_members = agents_workspace_members_section(
+    let (workspace_members, run_warnings) = agents_workspace_members_section(
         &resolved_name,
         &init_config,
         &target,
@@ -506,6 +513,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         events,
         notes,
         next,
+        warnings: run_warnings,
     })
 }
 

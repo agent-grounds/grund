@@ -11,8 +11,10 @@ use std::path::PathBuf;
 
 use crate::config::Config;
 use crate::grammar::render_id;
-use crate::model::Findings;
+use crate::model::{Finding, Findings};
 use crate::resolver::load_workspace_context;
+
+use super::report::context_run_warnings;
 
 #[derive(Clone)]
 pub struct CompleteIdsOpts {
@@ -40,7 +42,24 @@ impl Default for CompleteIdsOpts {
 /// A prefix that lands mid-path completes both: the deeper alias paths still to
 /// be typed, and the IDs of the project already named.
 pub fn complete_ids(opts: CompleteIdsOpts) -> Result<Vec<String>> {
+    complete_ids_with_run_warnings(opts).1
+}
+
+/// [`complete_ids`] for a frontend that also renders the run's `[workspace]`
+/// warnings (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1). The candidate
+/// list is a bare `Vec<String>`, so this is the only channel they have.
+#[doc(hidden)]
+pub fn complete_ids_with_run_warnings(
+    opts: CompleteIdsOpts,
+) -> (Vec<Finding>, Result<Vec<String>>) {
+    let mut run_warnings = Vec::new();
+    let candidates = complete_ids_run(opts, &mut run_warnings);
+    (run_warnings, candidates)
+}
+
+fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> Result<Vec<String>> {
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
+    *run_warnings = context_run_warnings(&context);
     let current_config = context
         .current_project()
         .map(|project| &project.config)

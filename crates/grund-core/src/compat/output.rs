@@ -1,6 +1,8 @@
 //! What the deprecated `main_entry()` path prints (§AR-system.2.9): the text and
 //! JSON report shapes of §FS-errors.1 and §FS-errors.5, the bare query refusal,
-//! and the two CLI-level `warning:` lines that have no report to ride on.
+//! and the CLI-level `warning:` lines that have no report to ride on — the
+//! config warnings of §FS-config.4.2 and the run's `[workspace]` channel, which
+//! this frontend's own workspace loader renders before a command says anything.
 //!
 //! The `output` category was this file, and it held two things §AR-system.4 does
 //! not allow in one place: the spellings every component below needs — the path
@@ -9,31 +11,73 @@
 //! `config/report_paths.rs`, each to the lowest component that reads it; the
 //! `Diagnostic` builders the run folds in went up into `api/scope_cautions.rs`
 //! and `api/config_findings.rs`. What is left is the printing, which is the
-//! deprecated path's and nobody else's — except the two `warning:` lines below,
-//! which the live path still reaches (§FS-check.4.8, §FS-config.4.2) and which
-//! the retirement of this directory has to give a home of their own.
+//! deprecated path's and nobody else's: the run-level `[workspace]` warnings the
+//! live path once reached in here are a data channel now, and this frontend
+//! renders them like any other (§FS-distribution.3.1, §DA-engine-renders-nothing).
 
 /// Print the compatibility CLI's text report in the fixed output shapes
 /// (§FS-errors.1, §FS-errors.2.1, §FS-errors.2.4): channel-bearing located
 /// findings, run-level diagnostics on stderr, and `success` for a clean text
 /// check (§FS-check.2.1). Diagnostic lines stay in the fixed order
 /// (§FS-errors.4).
-use std::path::PathBuf;
+use anyhow::Result;
+use std::path::Path;
 
 use crate::api::{config_warnings, render_finding_sites_json};
 use crate::checker::diagnostic_cmp;
 use crate::config::{Config, display_path};
-use crate::model::{CheckReport, Diagnostic, FindingSite, json_escape};
-use crate::workspace::unlisted_workspace_block_warnings;
+use crate::model::{CheckReport, Diagnostic, Finding, FindingSite, json_escape};
+use crate::resolver::{WorkspaceContext, load_workspace_context};
 
-pub(super) fn print_report(config: &Config, report: &CheckReport, include_suggestions: bool) {
+/// The run's `[workspace]` warnings in §FS-errors.2.2's CLI-level shape — one
+/// `warning: ` line each on stderr, ahead of anything the command itself prints
+/// and with the exit code untouched (§FS-check.4.7, §FS-check.4.8,
+/// §FS-check.4.10, §FS-workspace.6.1).
+///
+/// The deprecated frontend renders the same channel the published one renders,
+/// from the same place, so the two cannot drift on a byte (§FS-lsp.4).
+pub(super) fn print_run_warnings(warnings: &[Diagnostic]) {
+    for warning in warnings {
+        eprintln!("warning: {}", warning.message);
+    }
+}
+
+/// The same channel once it has been published for a caller (§FS-distribution.3.1):
+/// what the api surfaces hand back is a `Finding`, and the line it renders as is
+/// the one above.
+pub(super) fn print_published_run_warnings(warnings: &[Finding]) {
+    for warning in warnings {
+        eprintln!("warning: {}", warning.message);
+    }
+}
+
+/// This frontend's workspace loader: the run's `[workspace]` warnings rendered
+/// before the command prints anything of its own, then the loaded context.
+///
+/// One door rather than one call per adapter, for the reason every other shared
+/// printer here is shared: five commands carry these four findings, and five
+/// copies of the same three lines are five places for them to drift
+/// (§DF-unlisted-workspace-block.2.4).
+pub(super) fn workspace_context(path: &Path, path_provided: bool) -> Result<WorkspaceContext> {
+    let context = load_workspace_context(path, path_provided)?;
+    print_run_warnings(&context.run_warnings);
+    Ok(context)
+}
+
+pub(super) fn print_report(
+    config: &Config,
+    report: &CheckReport,
+    include_suggestions: bool,
+    run_warnings: usize,
+) {
     // §FS-check.2.3: the `success` marker keys off errors and warnings only — a
     // suggestion is not a finding about well-formedness, so it never suppresses
     // `success`, and without `--suggestions` it is not printed at all.
 
-    // §FS-check.4.10: a warning printed before this report existed, so the marker
-    // asks the config too — else stderr says unchecked and stdout says `success`.
-    if config.unread_opted_out_blocks == 0
+    // §FS-check.4.7 / §FS-check.4.10 / §FS-workspace.6.1: a warning this frontend
+    // printed before the report existed, so the marker asks the run's warning
+    // channel too — else stderr says unchecked and stdout says `success`.
+    if run_warnings == 0
         && report.errors.is_empty()
         && report.warnings.is_empty()
         && (!include_suggestions || report.suggestions.is_empty())
@@ -226,25 +270,5 @@ pub(super) fn show_query_error_code(message: &str) -> &'static str {
 pub fn print_config_warnings(config: &Config) {
     for warning in config_warnings(config) {
         eprintln!("warning: {warning}");
-    }
-}
-
-/// §FS-check.4.8, §DF-unlisted-workspace-block.2.4: the unlisted-`[workspace]`
-/// finding on the five surfaces that have no report to carry it — `list`, `refs`,
-/// `cover`, `fmt` and the ID read. One CLI-level `warning:` per block on stderr
-/// (§FS-errors.2.2), the identical text `check` puts in `report.warnings`, so what
-/// a consumer greps for does not depend on which command produced it.
-///
-/// Here rather than beside the rule for the reason `print_config_warnings` above is
-/// here: rendering belongs to the output category, and `workspace/unlisted.rs`
-/// builds the message and prints nothing (§AR-core-module-layout.1, §AR-bindings.2).
-pub(crate) fn print_unlisted_workspace_block_warnings(
-    config: &Config,
-    render: &Config,
-    alias: Option<&str>,
-    walked_dirs: &[PathBuf],
-) {
-    for warning in unlisted_workspace_block_warnings(config, render, alias, walked_dirs) {
-        eprintln!("warning: {}", warning.message);
     }
 }

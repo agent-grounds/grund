@@ -24,6 +24,9 @@
 //! `kind.rs`, `grund config show`'s dump, and the `grund.toml` the scaffold
 //! generates (§FS-init.2.4) — so the escaper belongs beside them rather than in
 //! the writer that held it, which `kind.rs` had been reading upward.
+//! `run_warnings.rs` is the run's warning channel, on the `Config` every walking
+//! command already holds and in the place the `unread_opted_out_blocks` counter
+//! it replaces sat (§DA-engine-renders-nothing, §FS-distribution.3.1).
 //! `report_paths.rs` arrived the same way when §AR-system.2.9 became a module:
 //! `display_path` is what `[output] relative_paths` *means* (§FS-config.3.6), and
 //! every component above this one was reading it out of the deprecated path's
@@ -42,6 +45,7 @@ mod parse;
 mod point_sizes;
 mod record;
 mod report_paths;
+mod run_warnings;
 mod scope_roots;
 mod workspace_block;
 
@@ -68,7 +72,8 @@ pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{
     DEFAULT_GROUNDING_LEVEL, kind_prefixes, kind_uses_values, non_citable_kind_error,
 };
-pub(crate) use report_paths::display_path;
+pub(crate) use report_paths::{display_path, run_warning_findings};
+pub(crate) use run_warnings::RunWarning;
 pub(crate) use scope_roots::{
     canonical_config_root, root_scope_roots, unwalked_home_roots, unwalked_homes,
 };

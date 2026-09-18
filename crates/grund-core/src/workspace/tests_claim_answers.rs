@@ -9,6 +9,7 @@
 //! other about propagation — and only this one has fixtures whose run root has to
 //! declare a block for the outcome to exist.
 
+use super::findings::undecidable_ancestor_claim_warning;
 use super::members::ancestor_member_entries;
 use super::*;
 use crate::config::{load_config, load_config_at};

@@ -1,7 +1,7 @@
 //! The §FS-check.4.10 answer (§AR-system.2.10): whether a block that opted out
 //! of being a project leaves a tree no scan reaches, which only a walk can say.
 //!
-//! The *question* is workspace's and is posed at config time — `unread_block_probe`
+//! The *question* is workspace's and is posed at config time — `RunWarning::unread_block`
 //! reads two config fields and touches no disk (§AR-workspace.6). Answering it
 //! runs the scanner's walker against the block's own config in the
 //! counterfactual where the block had been a project, so the answer sits above
@@ -16,10 +16,10 @@
 
 use std::path::PathBuf;
 
-use crate::config::canonical_config_root;
-use crate::model::format_path;
+use crate::config::{Config, RunWarning, canonical_config_root};
+use crate::model::{Diagnostic, format_path};
 use crate::scanner::walk_reads_any_file;
-use crate::workspace::{UnreadBlockProbe, block_relative_root, block_scope_roots};
+use crate::workspace::{block_relative_root, uncovered_block_scope_roots, unread_block_diagnostic};
 
 /// §FS-check.4.10: the first root of this block's own scope that holds a file the
 /// block would have read as a project, named under the block root — or `None`,
@@ -45,23 +45,40 @@ use crate::workspace::{UnreadBlockProbe, block_relative_root, block_scope_roots}
 /// [`block_scope_roots`] asks the default scope — this is a property of the
 /// configuration rather than of one walk (§FS-check.1.3).
 pub(crate) fn unread_block_scope_root(
-    probe: &UnreadBlockProbe,
+    config: &Config,
     project_roots: &[PathBuf],
 ) -> Option<String> {
-    let config = &probe.config;
     let mut walk = config.clone();
-    walk.workspace_boundary_roots = probe
-        .members
-        .iter()
-        .map(|member| member.root.clone())
-        .collect();
     walk.workspace_project_roots = project_roots.to_vec();
     walk.workspace_project_roots
         .push(canonical_config_root(config));
     walk.scan_full = false;
-    block_scope_roots(config, &probe.members)
+    uncovered_block_scope_roots(config)
         .into_iter()
-        .filter(|(_, member)| member.is_none())
-        .find(|(root, _)| walk_reads_any_file(&walk, root))
-        .map(|(root, _)| format_path(block_relative_root(config, &root)))
+        .find(|root| walk_reads_any_file(&walk, root))
+        .map(|root| format_path(block_relative_root(config, &root)))
+}
+
+/// §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1, §FS-distribution.3.1: the
+/// run's warning channel, settled — every caution the workspace pass already had
+/// in full, and every opted-out block it could only pose, in the one order the
+/// reader sees them in.
+///
+/// This is the lowest component that can answer all four, because §FS-check.4.10's
+/// question is about a walk and the walker sits above the workspace pass
+/// (§AR-resolver.placement). Nothing here renders: what comes back is a
+/// `Diagnostic` per warning, for whichever frontend asked (§AR-bindings.2).
+pub(crate) fn settled_run_warnings(config: &Config) -> Vec<Diagnostic> {
+    config
+        .run_warnings
+        .iter()
+        .filter_map(|warning| match warning {
+            RunWarning::Settled(diagnostic) => Some(diagnostic.clone()),
+            RunWarning::UnreadBlock {
+                config,
+                project_roots,
+            } => unread_block_scope_root(config, project_roots)
+                .map(|root| unread_block_diagnostic(config, &root)),
+        })
+        .collect()
 }

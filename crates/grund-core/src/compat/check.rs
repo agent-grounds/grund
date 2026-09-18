@@ -14,9 +14,10 @@
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use super::output::{print_json_report, print_report};
+use super::output::{print_json_report, print_report, print_run_warnings};
 use crate::api::run_check;
 use crate::checker::CheckFindingSelection;
+use crate::resolver::settled_run_warnings;
 
 pub(crate) fn command_check(args: &[String]) -> ExitCode {
     let mut path = PathBuf::from(".");
@@ -129,10 +130,20 @@ pub(crate) fn command_check(args: &[String]) -> ExitCode {
     run.report
         .suggestions
         .retain(|diagnostic| selection.retains(diagnostic.code));
+    // §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1: the run's warning channel,
+    // rendered ahead of the report exactly where the engine used to print it, in
+    // §FS-check.2.1.1's shape on both formats (§FS-errors.5).
+    let run_warnings = settled_run_warnings(&run.config);
+    print_run_warnings(&run_warnings);
     if format == "json" {
         print_json_report(&run.config, &run.report, include_suggestions);
     } else {
-        print_report(&run.config, &run.report, include_suggestions);
+        print_report(
+            &run.config,
+            &run.report,
+            include_suggestions,
+            run_warnings.len(),
+        );
     }
     if run.had_scan_errors {
         ExitCode::from(2)

@@ -23,6 +23,7 @@ pub(crate) struct Site {
 /// concerns a specific citation, so a consumer can anchor on that token rather
 /// than the first one on the line (§FS-lsp.1.1); it is `None` for line-anchored
 /// findings.
+#[derive(Clone)]
 pub(crate) struct Diagnostic {
     pub(crate) code: &'static str,
     pub(crate) path: Option<PathBuf>,

@@ -7,7 +7,7 @@ use crate::api::{REFS_QUERY_FAILURE_WARNING, RefsQueryFailure, refs_query_failur
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{Citation, json_escape, sort_path_key};
-use crate::resolver::{WorkspaceProject, load_workspace_context};
+use crate::resolver::WorkspaceProject;
 use crate::scanner::resolve_id_arg;
 use crate::workspace::split_qualified_id_arg;
 
@@ -65,7 +65,7 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
         eprintln!("error: refs requires an ID");
         return ExitCode::from(2);
     };
-    let context = match load_workspace_context(&path, path_provided) {
+    let context = match super::output::workspace_context(&path, path_provided) {
         Ok(context) => context,
         Err(err) => {
             eprintln!("error: {err:#}");

@@ -6,9 +6,7 @@ use crate::config::display_path;
 use crate::grammar::{flatten_cross_ref_links, render_id};
 use crate::model::ShowRenderMode;
 use crate::queries::{ShowQueryError, render_show_output_json, show_declaration};
-use crate::resolver::{
-    load_workspace_context, names_member_id_candidate, with_member_id_candidates,
-};
+use crate::resolver::{names_member_id_candidate, with_member_id_candidates};
 use crate::scanner::resolve_id_arg;
 use crate::workspace::split_qualified_id_arg;
 
@@ -129,7 +127,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
         eprintln!("error: show requires an ID");
         return ExitCode::from(2);
     };
-    let context = match load_workspace_context(&path, path_provided) {
+    let context = match super::output::workspace_context(&path, path_provided) {
         Ok(context) => context,
         Err(err) => {
             eprintln!("error: {err:#}");

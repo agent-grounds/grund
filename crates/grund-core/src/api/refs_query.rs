@@ -13,6 +13,7 @@ use anyhow::{Result, anyhow};
 use std::path::Path;
 
 use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure};
+use super::report::context_run_warnings;
 use crate::config::display_path;
 use crate::grammar::render_id;
 use crate::model::{Citation, sort_path_key};
@@ -81,6 +82,7 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
                     hits: Vec::new(),
                     note: None,
                     scan_errors,
+                    warnings: context_run_warnings(&context),
                 },
                 query_failure: Some(RefsQueryFailure::from_resolver_error(
                     &error,
@@ -179,6 +181,7 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
             hits: public_hits,
             note,
             scan_errors,
+            warnings: context_run_warnings(&context),
         },
         query_failure: None,
     })

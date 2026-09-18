@@ -19,16 +19,14 @@ use std::path::{Path, PathBuf};
 
 use super::legacy_promotion::promote_qualified_legacy_citations;
 use super::shorthand::resolve_qualified_shorthand_citations;
+use super::unread_block::settled_run_warnings;
 use crate::config::Config;
-use crate::model::{Findings, TextOverlays};
+use crate::model::{Diagnostic, Findings, TextOverlays};
 use crate::scanner::{ScanError, scan_tree_with_workspace_overlays};
 use crate::workspace::{
     WorkspaceCitationTarget, expand_workspace_tree, resolve_workspace_config, scope_is_config_root,
+    unlisted_workspace_block_run_warnings,
 };
-// §AR-system.4: one read above this component — the §FS-check.4.8 stderr line,
-// which is `compat/`'s because the query surfaces have no report to carry it
-// (§DF-unlisted-workspace-block.2.3).
-use crate::compat::print_unlisted_workspace_block_warnings;
 
 /// One project in scope for a query command — an alias, the loaded config,
 /// and the scanner's findings + scan errors for that project's tree.
@@ -79,6 +77,13 @@ pub(crate) struct WorkspaceContext {
     /// §FS-check.4.9 announcement from and which no loaded project can supply when
     /// every project in the block was the absent one (§FS-lsp.4).
     pub(crate) render_config: Config,
+    /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
+    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
+    /// §FS-workspace.6.1, settled and in the order the run earned them, for
+    /// whichever frontend asked to render. Every command that walks passes
+    /// through this loader, which is what puts all four on `list`, `refs`,
+    /// `cover`, `fmt` and the ID read rather than on `check` alone.
+    pub(crate) run_warnings: Vec<Diagnostic>,
 }
 
 impl WorkspaceContext {
@@ -208,16 +213,17 @@ pub(crate) fn load_resolved_workspace_context(
     // Cloned *after* the expansion, not before: what the walk learns about the
     // tree is what the report is rendered from (§FS-check.4.9).
     let render_config = root_config.clone();
-    // §FS-check.4.8: the query surfaces have no report to carry the finding, so the
-    // same text goes straight to stderr here — the one place every command that
-    // walks and is not `check` passes through (§DF-unlisted-workspace-block.2.3).
+    // §FS-check.4.8: the query surfaces have no report to carry the finding, so it
+    // joins the run's warning channel here (§DF-unlisted-workspace-block.2.3),
+    // after the three the workspace pass settled — the order they were emitted in.
+    let mut run_warnings = settled_run_warnings(&render_config);
     for project in &projects {
-        print_unlisted_workspace_block_warnings(
+        run_warnings.extend(unlisted_workspace_block_run_warnings(
             &project.config,
             &render_config,
             Some(&project.alias),
             &project.findings.walked_dirs,
-        );
+        ));
     }
     Ok(WorkspaceContext {
         projects,
@@ -225,6 +231,7 @@ pub(crate) fn load_resolved_workspace_context(
         workspace_loaded: true,
         render_root,
         render_config,
+        run_warnings,
     })
 }
 
@@ -248,7 +255,13 @@ fn single_project_context(
     // §FS-check.4.8: the same finding for the runs that loaded one project — a
     // narrowed scope inside a workspace, or a repository with no `[workspace]` block
     // of its own that still walks into one.
-    print_unlisted_workspace_block_warnings(&config, &render_config, None, &findings.walked_dirs);
+    let mut run_warnings = settled_run_warnings(&config);
+    run_warnings.extend(unlisted_workspace_block_run_warnings(
+        &config,
+        &render_config,
+        None,
+        &findings.walked_dirs,
+    ));
     Ok(WorkspaceContext {
         projects: vec![WorkspaceProject {
             alias: String::new(),
@@ -260,6 +273,7 @@ fn single_project_context(
         workspace_loaded: false,
         render_root,
         render_config,
+        run_warnings,
     })
 }
 

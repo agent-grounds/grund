@@ -50,12 +50,14 @@ fn command_complete_ids(args: &[String]) -> ExitCode {
         }
         idx += 1;
     }
-    let candidates = match complete_ids(CompleteIdsOpts {
+    let (run_warnings, completed) = complete_ids_with_run_warnings(CompleteIdsOpts {
         path,
         path_provided,
         prefix,
         sections: force_sections,
-    }) {
+    });
+    render_run_warnings(&run_warnings);
+    let candidates = match completed {
         Ok(candidates) => candidates,
         Err(_) => return ExitCode::SUCCESS,
     };

@@ -13,8 +13,9 @@
 use std::path::Path;
 
 use super::lsp_ranges::absolutize_path;
-use crate::config::{Config, display_path};
+use crate::config::{Config, display_path, run_warning_findings};
 use crate::model::{CheckReport, Diagnostic, Finding, FindingSite, Report, json_escape};
+use crate::resolver::WorkspaceContext;
 
 pub(super) fn public_report(
     config: &Config,
@@ -91,6 +92,37 @@ fn public_finding(
             })
             .collect(),
     }
+}
+
+/// The run's warning channel, published (§FS-distribution.3.1): every
+/// `[workspace]` caution the run settled, as the `Finding`s a frontend renders
+/// (§FS-check.4.7, §FS-check.4.8, §FS-check.4.10, §FS-workspace.6.1).
+///
+/// Each keeps the anchor the engine gave it — the `grund.toml` line its own
+/// message already names — so an editor publishes it without reading a location
+/// back out of the text (§FS-lsp.1.1, §AR-bindings.2). A terminal renders the
+/// message alone, in §FS-check.2.1.1's CLI-level shape: the render shape is a
+/// property of the finding rather than a consequence of whether a location is
+/// known, which is why the anchor rides along unused there.
+pub(super) fn public_run_warnings(config: &Config, warnings: Vec<Diagnostic>) -> Vec<Finding> {
+    run_warning_findings(config, warnings)
+}
+
+/// The run's warnings off the context every walking command loads, published
+/// for that command's own output (§FS-distribution.3.1). Rendered against the
+/// run's report base, like every other path a walking command prints
+/// (§FS-errors.4).
+pub(super) fn context_run_warnings(context: &WorkspaceContext) -> Vec<Finding> {
+    public_run_warnings(context.render_config(), context.run_warnings.clone())
+}
+
+/// [`public_run_warnings`] with the absolute paths the editor transport needs,
+/// for the same reason [`public_lsp_report`] takes them (§FS-lsp.1.1).
+pub(super) fn public_lsp_run_warnings(config: &Config, warnings: Vec<Diagnostic>) -> Vec<Finding> {
+    warnings
+        .into_iter()
+        .map(|diagnostic| public_finding(config, "warning", diagnostic, true))
+        .collect()
 }
 
 fn public_path(config: &Config, path: &Path) -> String {

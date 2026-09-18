@@ -57,6 +57,35 @@ pub(crate) fn unlisted_workspace_block_warnings(
     alias: Option<&str>,
     walked_dirs: &[PathBuf],
 ) -> Vec<Diagnostic> {
+    block_warnings(config, render, alias, walked_dirs, false)
+}
+
+/// §FS-check.4.8, §FS-lsp.1.1: the same findings for the five surfaces that have
+/// no report to carry them, **anchored at each block's `[workspace]` line** so a
+/// frontend places one without reading the location back out of the message text.
+///
+/// The anchor is the one thing that differs from the report form above, and it
+/// differs deliberately: in `check` this is one of the report's warnings and its
+/// JSON object keeps `path`, `line` and `sites` `null` (§FS-errors.5), because a
+/// change about which side renders must not move a consumer's filter. Everywhere
+/// else it travels in the run's warning channel, which no surface renders as JSON,
+/// so there it carries the location an editor needs.
+pub(crate) fn unlisted_workspace_block_run_warnings(
+    config: &Config,
+    render: &Config,
+    alias: Option<&str>,
+    walked_dirs: &[PathBuf],
+) -> Vec<Diagnostic> {
+    block_warnings(config, render, alias, walked_dirs, true)
+}
+
+fn block_warnings(
+    config: &Config,
+    render: &Config,
+    alias: Option<&str>,
+    walked_dirs: &[PathBuf],
+    anchored: bool,
+) -> Vec<Diagnostic> {
     // §GOAL-fast-feedback: one cache for the whole rule, the way
     // `enclosing_alias_prefix` shares one per climb — every candidate walks the same
     // ancestors, and without it each ancestor's config is re-read per candidate.
@@ -100,11 +129,11 @@ pub(crate) fn unlisted_workspace_block_warnings(
         }
         warnings.push(Diagnostic {
             code: "unlisted-workspace-block",
-            // §FS-errors.2.2, §DF-unlisted-workspace-block.2.4: the CLI-level shape —
-            // `line`-less, so it prints as one `warning:` on stderr with the location
-            // in the text. A fact about the run's configuration, not about a site.
-            path: None,
-            line: None,
+            // §FS-errors.2.2, §DF-unlisted-workspace-block.2.4: the report form is
+            // `line`-less, so it prints as one `warning:` on stderr with the
+            // location in the text and its JSON object keeps the nulls.
+            path: anchored.then(|| config_path.clone()),
+            line: anchored.then_some(line),
             column: None,
             message: unlisted_workspace_block_message(
                 config,

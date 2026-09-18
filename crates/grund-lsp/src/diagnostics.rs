@@ -18,6 +18,16 @@ impl Server {
                     by_uri.entry(uri).or_default().push(diagnostic);
                 }
             }
+            // §FS-lsp.1.1: the four run-level `[workspace]` warnings, each on the
+            // `grund.toml` it anchors at — the engine's own anchor, never a
+            // location read back out of the message text (§AR-bindings.2).
+            for finding in project.snapshot.run_warnings.clone() {
+                if let Some((uri, diagnostic)) =
+                    self.diagnostic_for_finding(project, finding, DiagnosticSeverity::WARNING)
+                {
+                    by_uri.entry(uri).or_default().push(diagnostic);
+                }
+            }
         }
         let next_diagnostic_uris: BTreeSet<Url> = by_uri.keys().cloned().collect();
         for uri in self.diagnostic_uris.difference(&next_diagnostic_uris) {
