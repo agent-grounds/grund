@@ -78,3 +78,24 @@ pub(crate) use run::run_check;
 // run record, which the fixtures drive directly.
 #[cfg(test)]
 pub(crate) use run::CheckRun;
+
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
+#[cfg(test)]
+mod tests_check_full_scope;
+#[cfg(test)]
+mod tests_cover_workspace;
+#[cfg(test)]
+mod tests_embedding;
+#[cfg(test)]
+mod tests_external_facts;
+#[cfg(all(test, unix))]
+mod tests_fmt_errors;
+#[cfg(all(test, unix))]
+mod tests_fmt_workspace;
+#[cfg(test)]
+mod tests_refs_query_failures;
+#[cfg(test)]
+mod tests_shorthand_docstring;
+#[cfg(test)]
+mod tests_shorthand_surfaces;

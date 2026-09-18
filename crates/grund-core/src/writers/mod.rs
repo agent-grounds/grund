@@ -127,38 +127,31 @@ pub(crate) use integrations_user_config::{
     user_grund_config_path,
 };
 
-// What only the crate's own test modules read (§AR-core-module-layout.1): the
-// per-line rewrite with its options, which the shorthand-rewrite cases drive
-// directly, and the wrapper pass without §FS-fmt.2.4's prebuilt indexes.
+// What another component's tests read (§AR-core-module-layout.1): the rewrite
+// pair, the scaffold, the block render and the terminal snippets. The rest went
+// beside their own cases.
 #[cfg(test)]
 pub(crate) use fmt_links::wrap_markdown_links;
 #[cfg(test)]
 pub(crate) use fmt_rewrite::{FmtLineOpts, fmt_line};
 #[cfg(test)]
-pub(crate) use init::{docs_scaffold, init_fs_home};
+pub(crate) use init::docs_scaffold;
 #[cfg(test)]
-pub(crate) use init_block::{AgentsUpdateResult, update_agents_text};
-#[cfg(all(test, unix))]
-pub(crate) use init_notes::shadowed_claude_entrypoint_note;
-#[cfg(test)]
-pub(crate) use init_plan::{
-    requested_init_companion_agent_entrypoints, workspace_init_companion_agent_entrypoints,
-};
-#[cfg(test)]
-pub(crate) use init_render::{render_agents_append_block_at, render_agents_md};
-#[cfg(test)]
-pub(crate) use init_target::{refuse_init_global_instruction_paths, refuse_init_target};
-#[cfg(test)]
-pub(crate) use init_workspace_members::render_workspace_members_section;
-#[cfg(test)]
-pub(crate) use integrations_agents::LinkSupport;
+pub(crate) use init_render::render_agents_append_block_at;
 #[cfg(test)]
 pub(crate) use integrations_clients::{ITERM2_SNIPPET, KITTY_SNIPPET, WEZTERM_SNIPPET};
+
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
 #[cfg(test)]
-pub(crate) use integrations_detect::value_names_codium;
-#[cfg(all(test, unix))]
-pub(crate) use integrations_install::set_executable;
+mod tests_init_agents;
 #[cfg(test)]
-pub(crate) use integrations_user_config::{
-    conversation_preference, conversation_target_preference, install_conversation_preference,
-};
+mod tests_init_target;
+#[cfg(test)]
+mod tests_integrations;
+#[cfg(test)]
+mod tests_integrations_config;
+#[cfg(test)]
+mod tests_open_resolver;
+#[cfg(test)]
+mod tests_workspace_members;

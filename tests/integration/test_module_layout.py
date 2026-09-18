@@ -1,10 +1,10 @@
 """§AR-core-module-layout.1 — the engine is one Rust module per component: every
 `.rs` file under `crates/grund-core/src/` is `lib.rs`, the shared test fixtures
-in `testing.rs`, one of the crate's own remaining `tests_*` modules, or a file
-inside one of the twelve component directories §AR-system.2 names; each of those directories exists and declares its files in a
+in `testing.rs`, or a file inside one of the twelve component directories
+§AR-system.2 names; each of those directories exists and declares its files in a
 `mod.rs`, which is the whole of what crosses its boundary; and `lib.rs` splices
-in nothing but the test modules, so no implementation file is assembled into the
-crate root any more."""
+in nothing at all, because a test module sits beside the code it pins and is a
+`mod` line in its component's `mod.rs` like any other file."""
 
 import re
 import unittest
@@ -49,16 +49,15 @@ class ModuleLayoutTests(unittest.TestCase):
                 missing.append(f"{component}/mod.rs is missing")
         self.assertEqual([], missing, "\n".join(missing))
 
-    def test_every_source_file_is_lib_a_test_module_or_inside_a_component(self):
-        """A file at the crate root that is not `lib.rs`, `testing.rs` or a
-        `tests_*` module belongs to some component, and the directory is how it
-        says which."""
+    def test_every_source_file_is_lib_the_fixtures_or_inside_a_component(self):
+        """A file at the crate root that is not `lib.rs` or `testing.rs` belongs
+        to some component, and the directory is how it says which. A test module
+        is no exception: it belongs to the component whose entry points its cases
+        exercise."""
         stray = sorted(
             _relative(path)
             for path in CORE.glob("**/*.rs")
-            if path.parent == CORE
-            and path.name not in ("lib.rs", "testing.rs")
-            and not path.name.startswith("tests_")
+            if path.parent == CORE and path.name not in ("lib.rs", "testing.rs")
         )
         self.assertEqual([], stray, "engine files that belong to no component directory")
 
@@ -71,25 +70,12 @@ class ModuleLayoutTests(unittest.TestCase):
         )
         self.assertEqual([], outside, "engine files under a directory that is not a component")
 
-    def test_lib_rs_includes_nothing_but_the_test_modules(self):
-        """`include!` is what the flat crate was assembled from. The crate's own
-        test modules still read it flat and are spliced in here; an
-        implementation file is a `mod` line in its component's `mod.rs`."""
+    def test_lib_rs_includes_nothing(self):
+        """`include!` is what the flat crate was assembled from, and nothing is
+        assembled that way any more: every file, test module included, is a `mod`
+        line in its component's `mod.rs`."""
         spliced = INCLUDE.findall((CORE / "lib.rs").read_text(encoding="utf-8"))
-        self.assertTrue(spliced, "lib.rs splices in no test module at all")
-        self.assertEqual(
-            [],
-            [name for name in spliced if not name.startswith("tests_")],
-            "lib.rs still assembles implementation files with include!()",
-        )
-
-    def test_the_test_modules_lib_rs_includes_are_on_disk(self):
-        missing = [
-            name
-            for name in INCLUDE.findall((CORE / "lib.rs").read_text(encoding="utf-8"))
-            if not (CORE / name).is_file()
-        ]
-        self.assertEqual([], missing, "lib.rs includes a file that is not there")
+        self.assertEqual([], spliced, "lib.rs still splices files into the crate root")
 
 
 if __name__ == "__main__":

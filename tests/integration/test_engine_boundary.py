@@ -61,11 +61,15 @@ class EngineBoundaryTests(unittest.TestCase):
 
     def test_the_compat_directory_is_only_files_that_still_render(self):
         """The set may shrink, and the directory is the set: a file under
-        `compat/` that no longer prints belongs with the component it serves."""
+        `compat/` that no longer prints belongs with the component it serves. The
+        directory's own test module is not one of those files — it pins what the
+        renderers do rather than rendering (§AR-core-module-layout.1)."""
         idle = {
             _relative(path)
-            for path in sorted((CORE / COMPAT).glob("*.rs"))
-            if path.name != "mod.rs" and not _writes_to_a_stream(path)
+            for path in _implementation_files()
+            if path.parent == CORE / COMPAT
+            and path.name != "mod.rs"
+            and not _writes_to_a_stream(path)
         }
         self.assertEqual(set(), idle, "compat files that render nothing: move them out")
 

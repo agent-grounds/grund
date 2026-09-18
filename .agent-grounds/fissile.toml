@@ -191,10 +191,12 @@ hard_message = "split-core-hard"
 # design, and deduplicating them into helpers costs more readability than it
 # saves. Higher priority so it wins over `core-source` for in-tree test files.
 #
-# The budget follows the file: a `tests_<area>.rs` sits in the component
+# The budget follows the file: a `grund-core` test module sits in the component
 # directory of the code it pins (§AR-core-module-layout.1), so the patterns
 # below name a test module at any depth under `src/`, and `testing.rs` — the
-# shared fixtures — by its own name.
+# shared fixtures — by its own name. The crate-root pattern is `grund-lsp`'s:
+# `crates/grund-lsp/src/tests.rs` is the one test file still assembled into a
+# crate root, and it is what keeps that pattern here.
 [[rules]]
 id = "tests"
 include = [

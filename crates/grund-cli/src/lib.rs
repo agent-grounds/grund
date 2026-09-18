@@ -1,7 +1,9 @@
 //! Top-level dispatch, shared output helpers, and `main_entry`. One file per
 //! command follows, in `SUBCOMMANDS` order — the frontend crate is assembled by
-//! `include!` just as `grund-core` is, so a command's file is a flat slice of
-//! the same crate and needs no `mod`/`use` wiring (§AR-core-module-layout.3).
+//! `include!`, so a command's file is a flat slice of the same crate and needs
+//! no `mod`/`use` wiring (§AR-core-module-layout.3). The engine crate is not:
+//! `grund-core` is one Rust module per component and splices in nothing
+//! (§AR-core-module-layout.1).
 
 // §AR-bindings.3: the `grund` frontend crate owns top-level CLI dispatch.
 use std::collections::{BTreeMap, BTreeSet};
