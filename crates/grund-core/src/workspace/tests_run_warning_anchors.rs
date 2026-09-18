@@ -16,6 +16,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::config::ConfigLocation;
+use crate::model::format_path;
 use crate::testing::{test_root, write};
 use crate::{CheckOpts, LspSnapshotOpts, check_with_opts, lsp_snapshot};
 
@@ -234,9 +235,16 @@ fn an_undecidable_ancestor_claim_anchors_at_the_config_with_no_line() {
     // §FS-errors.4: an anchor above the run's own root renders absolute, the way
     // every other out-of-root reported path does, while the message keeps the
     // `../grund.toml` breadcrumb a reader resolves from where they stand.
+    // The climb starts from the canonical run root, so the ancestor comes out in
+    // the same canonical, forward-slash form `format_path` renders every reported
+    // path in: `/private/var/…` on macOS, `//?/C:/…` on Windows, the raw temp
+    // path only where the two coincide. Compare in that form, not in the raw one.
+    let expected = format_path(
+        &std::fs::canonicalize(outer.join("grund.toml")).expect("canonical ancestor config"),
+    );
     assert_eq!(
-        path.as_deref().map(Path::new),
-        Some(outer.join("grund.toml")).as_deref(),
+        path.as_deref(),
+        Some(expected.as_str()),
         "the ancestor config, not the run's own"
     );
 }
