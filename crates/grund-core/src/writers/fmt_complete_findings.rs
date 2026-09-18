@@ -3,11 +3,8 @@ use anyhow::Result;
 use super::fmt_error::FmtScanAbort;
 use crate::config::Config;
 use crate::model::Findings;
-use crate::scanner::scan_tree;
+use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
 use crate::workspace::WorkspaceProject;
-// §AR-system.4: two reads through the crate root — the scan-error record and its
-// builder, both `api.rs`'s (§AR-system.2.9).
-use crate::{ApiScanError, api_scan_error};
 
 /// The one place a declaration set is proven complete (§FS-fmt.7.4).
 ///

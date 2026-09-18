@@ -9,11 +9,8 @@ use crate::grammar::{
     doc_comment_rule, first_content_line, inline_note_verdicts,
 };
 use crate::model::{Findings, Id, InlineCitationSite, SectionHeadingOutsideDeclaration};
+use crate::model::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
 use crate::workspace::WorkspaceCitationTarget;
-// §AR-system.4: three upward reads, through the crate root until their owners
-// are modules — the two home path keys of the checker's placement rules, and the
-// report's path sort key from `output.rs`.
-use crate::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
 
 /// Narrow the shared coordinate catalog to each declaration's body and retain
 /// every rejected heading as one check site (§FS-show.2.1.2, §FS-check.3.23).

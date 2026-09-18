@@ -1,26 +1,10 @@
-/// The deprecated `main_entry()` adapter for `grund init` (§AR-bindings.2): the
-/// argument parsing, the verdict, and the stderr rendering that only this path
-/// uses. The shipped CLI carries its own copy in `grund-cli`; this is the half
-/// of `init` that is a *command* rather than the library function `init()`
-/// beside it, which is why it sits in its own file the way `checker_cmd.rs`,
-/// `config_cmd.rs` and `fmt_cmd.rs` do.
-///
-/// `grund init [path] [--name N] [--docs] [--force] [--dry-run] [--check] [agent flags]` —
-/// scaffold a repo for `grund` (§FS-init.1): write or update the selected agent
-/// entrypoint(s) and `grund.toml` (and, with `--docs`, the `docs/`+`e2e/`
-/// tree, §FS-init.2.1), preserve an existing repo's agent-entrypoint choice by
-/// default (§FS-init.2.1), refuse to clobber edited scaffold files without
-/// `--force` — and never overwrite an existing `grund.toml`, in either discovery
-/// location (§FS-config.1), even with `--force`, since that file is the user's
-/// config (§FS-init.3) — print a `next:`
-/// block (suppressed when every reported path is `exists `, §FS-init.2.2), and
-/// exit `2` on a missing target / refused target (§FS-init.1.2) / CLI error /
-/// unsupported block version
-/// (§FS-init.4). Non-interactive — every choice is a flag (§FS-non-goals.10).
-/// With `--dry-run`, every line is reported with a `would-` prefix and nothing
-/// is written to disk; `--check` prints that same report and exits `1` when any
-/// line of it is a `would-` (§FS-init.4).
-fn command_init(args: &[String]) -> ExitCode {
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+use crate::writers::InitOpts;
+use crate::writers::{InitAgentEntrypointSelection, InitNext, InitOutput, init};
+
+pub(super) fn command_init(args: &[String]) -> ExitCode {
     let mut path: Option<PathBuf> = None;
     let mut name: Option<String> = None;
     let mut description: Option<String> = None;

@@ -1,3 +1,21 @@
+use std::path::Path;
+use std::process::ExitCode;
+
+use super::check::command_check;
+use super::completions::{command_complete, command_completions};
+use super::config::command_config;
+use super::cover::command_cover;
+use super::fmt::command_fmt;
+use super::id::command_id;
+use super::init::command_init;
+use super::integrations::run_integrations;
+use super::list::command_list;
+use super::refs::command_refs;
+use super::show::{command_show, command_show_default};
+use crate::writers::{
+    AGENT_SETUP_INSTRUCTIONS, FetchFailureKind, canonical_template_text, fetch_snapshot,
+};
+
 const COMPAT_SUBCOMMANDS: &[&str] = &[
     "check",
     "show",

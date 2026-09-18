@@ -2,18 +2,17 @@ use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 
 use super::show::{render_show_output_json, show_declaration_with_overlays};
+use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
+use crate::config::display_path;
 use crate::grammar::render_id;
-use crate::model::{ShowOutput, TextOverlays};
+use crate::model::{FindingSite, ShowOutput, TextOverlays};
 use crate::scanner::resolve_id_arg;
 use crate::workspace::{
     WorkspaceContext, load_workspace_context, split_qualified_id_arg, with_member_id_candidates,
 };
-// §AR-system.4: five reads through the crate root — the option record, its
-// format and the refusal carrier from `api.rs`, the report path from
-// `output.rs`, and the link flattening from the writers, a sibling.
-use crate::{
-    FindingSite, ShowFormat, ShowOpts, ShowQueryError, display_path, flatten_cross_ref_links,
-};
+// §AR-system.4: one read through the crate root — the link flattening from the
+// writers, a sibling this query is the inverse of (§DF-show-cross-ref-flattening).
+use crate::flatten_cross_ref_links;
 
 /// One input coordinate for the CLI-only batch-show adapter
 /// (§FS-show.1, §FS-show.2.6).

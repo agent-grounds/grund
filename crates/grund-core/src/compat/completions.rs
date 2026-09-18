@@ -1,6 +1,11 @@
-/// `grund complete <subcommand>` — the namespace for internal completion helpers
-/// the generated shell scripts call (§FS-completions.2).
-fn command_complete(args: &[String]) -> ExitCode {
+use std::collections::BTreeSet;
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+use crate::grammar::render_id;
+use crate::workspace::load_workspace_context;
+
+pub(super) fn command_complete(args: &[String]) -> ExitCode {
     match args.first().map(|arg| arg.as_str()) {
         Some("ids") => command_complete_ids(&args[1..]),
         _ => {
@@ -161,7 +166,7 @@ fn command_complete_ids(args: &[String]) -> ExitCode {
 /// `grund completions <bash|zsh|fish>` — print the completion script for one shell
 /// to stdout, ready to `source` (§FS-completions.1, §FS-completions.4). The scripts
 /// call back into `grund complete ids` for the dynamic ID list.
-fn command_completions(args: &[String]) -> ExitCode {
+pub(super) fn command_completions(args: &[String]) -> ExitCode {
     if args.is_empty() {
         eprintln!("error: completions requires <bash|zsh|fish>");
         return ExitCode::from(2);

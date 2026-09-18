@@ -15,10 +15,7 @@ use super::kind_defaults::default_kind_index;
 use super::parse::{bail_config, parse_bool, parse_string};
 use super::record::{CODE_SOURCE_KIND, Config};
 use crate::grammar::id_grammar_literal_slash_error;
-use crate::model::normalize_path_lexically;
-// §AR-system.4: `format_path` renders a path for a report and is the renderer's
-// (§AR-system.2.9) — read through the crate root until `output` is a module.
-use crate::format_path;
+use crate::model::{format_path, normalize_path_lexically};
 
 /// One `[[kinds]]` entry as the parser has it so far: the entry itself, the line
 /// its `[[kinds]]` header sat on (what an entry-level error anchors at), and

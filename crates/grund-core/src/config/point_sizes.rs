@@ -2,9 +2,7 @@ use anyhow::{Result, anyhow};
 use std::path::Path;
 
 use super::parse::{bail_config, parse_string, parse_usize};
-// §AR-system.4: `format_path` renders a path for a report and is the renderer's
-// (§AR-system.2.9) — read through the crate root until `output` is a module.
-use crate::format_path;
+use crate::model::format_path;
 
 /// The closed built-in point-size vocabulary, its opt-in warning policy and
 /// what counting in one of its units means (§FS-list.3.4, §FS-config.3.1).

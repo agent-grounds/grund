@@ -24,11 +24,10 @@ use std::path::{Path, PathBuf};
 use super::expand::enclosing_workspace_of;
 use super::members::{AncestorWorkspaces, canonical_workspace_path};
 use super::scope::{RootMode, derive_alias};
+use crate::config::display_path;
 use crate::config::{Config, config_file_in, strip_comment};
 use crate::model::Diagnostic;
-// §AR-system.4: three upward reads through the crate root, because `output.rs`
-// is still flat — path rendering is the renderer's (§AR-system.2.9).
-use crate::{display_path, format_path, relative_from_base};
+use crate::model::{format_path, relative_from_base};
 
 /// The release §FS-check.4.8's warning becomes an error in
 /// (§REQ-backwards-compatibility.2, §DF-unlisted-workspace-block.2.1,

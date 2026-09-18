@@ -4,9 +4,7 @@ use std::path::Path;
 
 use super::init::{InitEvent, verb_appended, verb_updated, verb_wrote};
 use crate::grammar::{AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block};
-// §AR-system.4: one upward read through the crate root — the report path
-// renderer, which is `output.rs`'s (§AR-system.2.9).
-use crate::format_path;
+use crate::model::format_path;
 
 /// What `init` did to an existing `AGENTS.md`'s managed block — `appended ` (no
 /// block before), `updated ` (a supported block whose bytes changed: an older

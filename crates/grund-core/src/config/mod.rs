@@ -21,6 +21,12 @@
 //! `kind.rs`, `grund config show`'s dump, and the `grund.toml` the scaffold
 //! generates (§FS-init.2.4) — so the escaper belongs beside them rather than in
 //! the writer that held it, which `kind.rs` had been reading upward.
+//! `report_paths.rs` arrived the same way when §AR-system.2.9 became a module:
+//! `display_path` is what `[output] relative_paths` *means* (§FS-config.3.6), and
+//! every component above this one was reading it out of the deprecated path's
+//! `output` category. The spelling it renders through is a function of a `Path`
+//! alone and went further down, to `model/paths.rs`; this is the half that needs
+//! a `Config`.
 
 mod citations;
 mod discovery;
@@ -32,6 +38,7 @@ mod kind_table;
 mod parse;
 mod point_sizes;
 mod record;
+mod report_paths;
 mod workspace_block;
 
 pub use citations::{
@@ -57,6 +64,7 @@ pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{
     DEFAULT_GROUNDING_LEVEL, kind_prefixes, kind_uses_values, non_citable_kind_error,
 };
+pub(crate) use report_paths::display_path;
 pub(crate) use workspace_block::{
     INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, invalid_alias_path_segment,
     invalid_project_alias_message, is_valid_project_alias, optional_member_alias_segment,

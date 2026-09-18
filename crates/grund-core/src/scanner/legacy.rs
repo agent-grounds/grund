@@ -16,11 +16,9 @@ use crate::grammar::{
     IdArgError, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, is_inside_inline_code,
     parse_id_arg, parse_id_arg_with_shorthand, render_id, shorthand_candidates, shorthand_names,
 };
+use crate::model::sort_path_key;
 use crate::model::{Citation, Declaration, Findings, Id, LegacyCitationCandidate};
 use crate::workspace::WorkspaceProject;
-// §AR-system.4: one upward read, through the crate root until its owner is a
-// module — the report's path sort key, which is `output.rs`'s.
-use crate::sort_path_key;
 
 /// Resolve a query through the canonical grammar first, then combine exact
 /// catalog compatibility with number shorthand (§FS-config.3.2, §FS-show.1).

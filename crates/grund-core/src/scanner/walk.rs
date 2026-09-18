@@ -12,12 +12,9 @@ use super::walk_boundaries::{
 };
 use super::walk_errors::{symlink_loop_report, walk_error_report};
 use crate::config::Config;
-use crate::model::normalize_path_lexically;
-// §AR-system.4: four upward reads, through the crate root until their owners are
-// modules — three home path keys of the checker's placement rules, and the
-// report's path sort key from `output.rs`.
-use crate::{
-    configured_home_path_key, physical_path_key, scanned_decl_relative_path, sort_path_key,
+use crate::model::{
+    configured_home_path_key, normalize_path_lexically, physical_path_key,
+    scanned_decl_relative_path, sort_path_key,
 };
 
 /// The tree walk for the callers that ask a yes/no question about the tree and

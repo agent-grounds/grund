@@ -1,6 +1,5 @@
 use anyhow::{Result, anyhow};
 use rayon::prelude::*;
-use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 use super::e2e::scan_e2e_cases;
@@ -10,13 +9,13 @@ use super::value_json::{scan_value_json_sources, value_json_sources};
 use super::walk::{is_direct_e2e_case_dir, scan_roots, walk_scannable_files_reporting};
 use super::walk_boundaries::is_scannable;
 use crate::config::Config;
+use crate::config::display_path;
 use crate::grammar::resolve_shorthand_citations;
-use crate::model::{Findings, TextOverlays, normalize_path_lexically};
+use crate::model::{
+    Findings, TextOverlays, canonicalize_existing_prefix, normalize_path_lexically,
+    paths_same_location, sort_path_key,
+};
 use crate::workspace::WorkspaceCitationTarget;
-// §AR-system.4: three upward reads, through the crate root until their owners
-// are modules — the same-location path test of the checker's home rules, and the
-// report path renderer and its sort key from `output.rs`.
-use crate::{display_path, paths_same_location, sort_path_key};
 
 /// The file count above which one tree scan is worth splitting across threads
 /// (§AR-scanner.1, §GOAL-fast-feedback): below it the rayon fan-out costs more
@@ -386,34 +385,6 @@ pub(super) fn path_starts_with(path: &Path, root: &Path) -> bool {
     let path = canonicalize_existing_prefix(path);
     let root = canonicalize_existing_prefix(root);
     path == root || path.starts_with(root)
-}
-
-pub(crate) fn canonicalize_existing_prefix(path: &Path) -> PathBuf {
-    let path = if path.is_absolute() {
-        normalize_path_lexically(path)
-    } else {
-        std::env::current_dir()
-            .map(|cwd| normalize_path_lexically(&cwd.join(path)))
-            .unwrap_or_else(|_| normalize_path_lexically(path))
-    };
-    if let Ok(canonical) = fs::canonicalize(&path) {
-        return canonical;
-    }
-    let mut suffix = PathBuf::new();
-    let mut cursor = path.as_path();
-    while !cursor.exists() {
-        let Some(name) = cursor.file_name() else {
-            break;
-        };
-        suffix = Path::new(name).join(suffix);
-        let Some(parent) = cursor.parent() else {
-            break;
-        };
-        cursor = parent;
-    }
-    fs::canonicalize(cursor)
-        .unwrap_or_else(|_| normalize_path_lexically(cursor))
-        .join(suffix)
 }
 
 pub(crate) fn overlay_text<'a>(overlays: &'a TextOverlays, path: &Path) -> Option<&'a str> {

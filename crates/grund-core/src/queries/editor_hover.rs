@@ -1,9 +1,7 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
-// §AR-system.4: the snapshot and its citation record are `api.rs`'s, read
-// through the crate root until the api component is a module (§AR-lsp.5).
-use crate::{LspCitation, LspSnapshot};
+use super::editor_snapshot::{LspCitation, LspSnapshot};
 
 /// How much of the tree leans on one declaration-side title: citation sites and
 /// the distinct files those sites live in (§FS-lsp.1.2).
@@ -12,7 +10,8 @@ use crate::{LspCitation, LspSnapshot};
 /// title, how many sites and files that is, and the exact Markdown body the LSP
 /// hands the editor.
 ///
-/// Split out of `api.rs` for the reason `on_type.rs` was: the public items in
+/// Split out of the api's contract for the reason the on-type rule was: the
+/// public items in
 /// this file are part of the embedding contract §AR-core-module-layout.2 keeps
 /// there, but what they carry is a behavior with its own invariant — one
 /// definition of "is cited by this title", shared by the hover count and the

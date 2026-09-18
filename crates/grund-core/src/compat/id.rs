@@ -1,4 +1,14 @@
-fn command_id(args: &[String]) -> ExitCode {
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+use crate::config::{display_path, kind_prefixes, non_citable_kind_error};
+use crate::model::Id;
+use crate::model::json_escape;
+use crate::scanner::{e2e_case_dir_name, scan_tree_strict};
+use crate::workspace::resolve_workspace_config;
+use crate::writers::{format_id, slugify_title};
+
+pub(super) fn command_id(args: &[String]) -> ExitCode {
     let mut positional = Vec::new();
     let mut width = 3usize;
     let mut format = "text".to_string();

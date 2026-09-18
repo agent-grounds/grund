@@ -8,7 +8,22 @@
 ///
 /// Apply an integration to disk under `--write` (§FS-integrations.4). Reports on
 /// stderr; exit `0` on success, `2` on a newer-block or IO error.
-fn write_integration(
+use anyhow::Result;
+use std::fs;
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+use crate::grammar::INTEGRATIONS_BLOCK_VERSION;
+use crate::writers::{
+    BlockOutcome, ConversationRendering, ConversationTarget, GLOBAL_AGENT_INSTRUCTION_TARGETS,
+    InstallKind, IntegrationClient, USER_CONFIG_TARGET, VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON,
+    WEZTERM_APPLY_CALL, agent_override_table, block_outcome_verb, expand_target,
+    install_agent_guidance_block, install_managed_block, install_reference_key, merge_outcomes,
+    needs_wezterm_wiring, read_optional_text, scan_user_config, user_grund_config_path,
+    vscode_integration_is_current, write_resolver_script,
+};
+
+pub(super) fn write_integration(
     client: IntegrationClient,
     conversation: Option<ConversationRendering>,
     conversation_target: Option<ConversationTarget>,
@@ -26,7 +41,7 @@ fn write_integration(
     write_user_citation_guidance_command(conversation, conversation_target, agent, user_config)
 }
 
-fn write_user_citation_guidance_command(
+pub(super) fn write_user_citation_guidance_command(
     conversation: Option<ConversationRendering>,
     conversation_target: Option<ConversationTarget>,
     agent: Option<&'static str>,
@@ -104,11 +119,7 @@ fn write_terminal_integration(client: IntegrationClient, snippet: &str) -> ExitC
             return ExitCode::from(2);
         }
     }
-    eprintln!(
-        "{} {}",
-        block_outcome_verb(outcome),
-        config_path.display()
-    );
+    eprintln!("{} {}", block_outcome_verb(outcome), config_path.display());
     // Reported rather than silent (§FS-integrations.4.1): the install is
     // otherwise indistinguishable from one that works.
     if needs_wezterm_wiring(client, &updated) {
@@ -157,7 +168,11 @@ fn write_vscode_integration(client: IntegrationClient) -> ExitCode {
             return ExitCode::from(2);
         }
     }
-    let verb = if current.is_some() { "updated" } else { "wrote" };
+    let verb = if current.is_some() {
+        "updated"
+    } else {
+        "wrote"
+    };
     eprintln!("{verb} {}", dir.display());
     ExitCode::SUCCESS
 }
@@ -179,15 +194,15 @@ enum GuidancePlan {
 /// for when it is not (§FS-integrations.4.4). Reported per target, because
 /// unreported an override, a gate downgrade, and an unread key are
 /// indistinguishable from the outside.
-struct EffectiveForm {
-    rendering: ConversationRendering,
-    target: ConversationTarget,
-    requested: ConversationTarget,
-    overridden: bool,
+pub(crate) struct EffectiveForm {
+    pub(crate) rendering: ConversationRendering,
+    pub(crate) target: ConversationTarget,
+    pub(crate) requested: ConversationTarget,
+    pub(crate) overridden: bool,
 }
 
 impl EffectiveForm {
-    fn describe(&self) -> String {
+    pub(crate) fn describe(&self) -> String {
         if self.rendering == ConversationRendering::Plain {
             return ConversationRendering::Plain.name().to_string();
         }
@@ -203,12 +218,12 @@ impl EffectiveForm {
 
 /// The user configuration `--write` reads, loaded once per invocation so its
 /// warnings are reported exactly once (§FS-integrations.4.3).
-struct UserConfig {
-    path: PathBuf,
-    text: String,
-    preference: Option<ConversationRendering>,
-    target: Option<ConversationTarget>,
-    agent_targets: Vec<(String, ConversationTarget)>,
+pub(super) struct UserConfig {
+    pub(super) path: PathBuf,
+    pub(super) text: String,
+    pub(super) preference: Option<ConversationRendering>,
+    pub(super) target: Option<ConversationTarget>,
+    pub(super) agent_targets: Vec<(String, ConversationTarget)>,
 }
 
 /// Read and report on the user configuration without writing anything. Every
@@ -216,7 +231,7 @@ struct UserConfig {
 /// read: nothing else in this file has any effect, and a setting that silently
 /// does nothing is indistinguishable from one that works. Only failing to reach
 /// the file is an error; its contents never are (§FS-integrations.4.3).
-fn load_user_config() -> Result<UserConfig, (PathBuf, String)> {
+pub(super) fn load_user_config() -> Result<UserConfig, (PathBuf, String)> {
     let path = user_grund_config_path().ok_or_else(|| {
         (
             PathBuf::from(USER_CONFIG_TARGET),

@@ -7,9 +7,7 @@ use super::init_entrypoints::{
     is_symlink_to, path_missing_without_following_symlinks,
 };
 use super::init_templates::ConversationSurface;
-// §AR-system.4: one upward read through the crate root — the report path
-// renderer, which is `output.rs`'s (§AR-system.2.9).
-use crate::format_path;
+use crate::model::format_path;
 
 /// The plan one `grund init` run makes: which entrypoint files *this*
 /// invocation writes, appends to, or updates (§FS-init.2.1, §FS-init.2.1.1).

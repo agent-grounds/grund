@@ -17,9 +17,9 @@ use super::scope::{resolve_workspace_config, scope_is_config_root};
 use crate::config::{Config, INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
 use crate::grammar::resolve_qualified_shorthand_citations;
 use crate::model::{Findings, TextOverlays};
-// §AR-system.4: four upward reads through the crate root, because their owners
-// are still flat — the walk, its error pair and the qualified-citation promotion
-// from the scanner (§AR-system.2.5), and the §FS-check.4.8 stderr line.
+// §AR-system.4: four reads through the crate root — three of the scanner's, and
+// the §FS-check.4.8 stderr line, which is `compat/`'s because the query surfaces
+// have no report to carry it (§DF-unlisted-workspace-block.2.3).
 use crate::{
     ScanError, print_unlisted_workspace_block_warnings, promote_qualified_legacy_citations,
     scan_tree_with_workspace_overlays,
@@ -43,7 +43,7 @@ pub(crate) struct WorkspaceCitationTarget {
 
 /// One project in scope for a query command — an alias, the loaded config,
 /// and the scanner's findings + scan errors for that project's tree.
-/// Mirrors `ProjectScan` in `checker_cmd.rs`; kept here as the shared shape
+/// Mirrors `ProjectScan` in `api/run.rs`; kept here as the shared shape
 /// every query command consumes (§AR-workspace.8).
 pub(crate) struct WorkspaceProject {
     pub(crate) alias: String,
@@ -86,7 +86,7 @@ pub(crate) struct WorkspaceContext {
     ///
     /// It is the config **after** the workspace walk, so it carries what the walk
     /// learned about the tree as well as how to spell it — `workspace_absent_optional`
-    /// in particular, which is where [`check_workspace_context`] reads the
+    /// in particular, which is where `check_workspace_context` reads the
     /// §FS-check.4.9 announcement from and which no loaded project can supply when
     /// every project in the block was the absent one (§FS-lsp.4).
     pub(crate) render_config: Config,

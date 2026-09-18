@@ -1,18 +1,26 @@
-/// `grund show <ID>[.<section>] [--brief|--toc|--full] [--section S] [--format text|md|json]`
-/// — print a slice of one declaration's body (§FS-show.1): by default the *lead*
-/// (prose down to the first child heading, §FS-show.2.1); `--brief` for heading + first
-/// paragraph (§FS-show.2.1.1); `--toc` for the lead plus the section map (§FS-show.2.1.2);
-/// `--full` for everything (§FS-show.2.1.3); a section with `.<section>` or `--section`
-/// (§FS-show.2.2). Ambiguous IDs and missing IDs/sections exit `1` with a hint
-/// (§FS-show.2.2.1, §FS-show.3).
-fn command_show(args: &[String]) -> ExitCode {
+use std::path::{Path, PathBuf};
+use std::process::ExitCode;
+
+use super::output::{print_bare_query_json, show_query_error_code};
+use crate::config::display_path;
+use crate::grammar::render_id;
+use crate::model::ShowRenderMode;
+use crate::queries::{ShowQueryError, render_show_output_json, show_declaration};
+use crate::scanner::resolve_id_arg;
+use crate::workspace::{
+    load_workspace_context, names_member_id_candidate, split_qualified_id_arg,
+    with_member_id_candidates,
+};
+use crate::writers::flatten_cross_ref_links;
+
+pub(super) fn command_show(args: &[String]) -> ExitCode {
     command_show_impl(args, false)
 }
 
 /// Default `grund <ID>` dispatch (§FS-cli.1): identical to explicit `show`,
 /// except invalid-ID diagnostics also remind users that path validation is now
 /// explicit as `grund check <path>`.
-fn command_show_default(args: &[String]) -> ExitCode {
+pub(super) fn command_show_default(args: &[String]) -> ExitCode {
     command_show_impl(args, true)
 }
 

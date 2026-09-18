@@ -6,9 +6,7 @@ use super::init_entrypoints::{
     path_missing_without_following_symlinks,
 };
 use super::init_plan::SelectedInitAgentEntrypoints;
-// §AR-system.4: one upward read through the crate root — the English list
-// renderer, which is `output.rs`'s (§AR-system.2.9).
-use crate::format_list;
+use crate::model::format_list;
 
 /// The `note:` for a repository whose committed `link` opinion cannot reach
 /// Claude, because a Claude entrypoint is a symlink to the canonical file

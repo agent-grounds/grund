@@ -14,9 +14,7 @@ use std::path::{Path, PathBuf};
 
 use crate::config::{Config, build_fmt_exclude_matcher};
 use crate::grammar::{DocstringContent, comment_strip_prefixes, strip_comment_tokens};
-// §AR-system.4: one read through the crate root — the request-URI resolution an
-// editor's path is rebased with, which is `api.rs`'s (§AR-lsp.5).
-use crate::canonical_snapshot_path;
+use crate::model::canonical_snapshot_path;
 
 /// The fixed text of a suppression directive (§FS-fmt.2.5.2). Not configurable,
 /// for the same reason the fence syntax is not: a marker that reads differently

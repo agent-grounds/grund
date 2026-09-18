@@ -1,28 +1,13 @@
-/// §FS-workspace.2.1, §FS-check.4.7: say so when this block's own `members` list
-/// covers every walk root the block has. Its project then reads nothing at all —
-/// the declarations reach no catalog and the dangling citations pass
-/// (§GOAL-no-dangling-refs) — which is the consequence `workspace_member_root`
-/// already rejects a member root outright for, one step stronger.
-///
-/// A CLI-level `warning:` on stderr, like `warn_undecidable_ancestor_claim`
-/// below (§FS-errors.2.2): the question is settled before a report exists, which
-/// is also why it keeps its text under `--format json` and carries no code
-/// (§FS-errors.5). Asked at the two places a run first populates a block's
-/// boundary — `apply_workspace_boundary` for the block the run is rooted at,
-/// `collect_workspace_members` for each block below it — which is what puts the
-/// finding on every command that walks while leaving each block asked once.
-///
-/// This file is the rendering half of the member-list rules: the three
-/// `[workspace]` findings that reach the reader as a stderr line rather than
-/// through a `Report`. It is deliberately still flat, the way `config_cmd.rs`
-/// is, because rendering inside the engine belongs to the deprecated path of
-/// §AR-system.2.9 and moves to `compat/` with the rest of it; the data half —
-/// the expansion, the claims and the sentences these three print — is
-/// `workspace/members.rs`, where every sentence is still built apart from the
-/// printing so a test can read it (§AR-core-module-layout.1). The prose rides on
-/// this first item rather than a `//!` module doc because the crate is assembled
-/// by `include!` (§AR-core-module-layout.2).
-fn warn_if_members_absorb_scan(config: &Config, members: &[WorkspaceMember]) {
+use std::path::{Path, PathBuf};
+
+use crate::config::Config;
+use crate::workspace::{
+    UnreadBlockProbe, WorkspaceMember, absorbed_scan_roots, absorbed_scan_warning,
+    config_location_message, undecidable_ancestor_claim_warning, unread_block_scope_root,
+    unread_block_warning,
+};
+
+pub(crate) fn warn_if_members_absorb_scan(config: &Config, members: &[WorkspaceMember]) {
     let covered = absorbed_scan_roots(config, members);
     if covered.is_empty() {
         return;
@@ -62,7 +47,7 @@ fn warn_if_members_absorb_scan(config: &Config, members: &[WorkspaceMember]) {
 /// does not need checked is a correct configuration and no key records that
 /// intent, so the finding is never eligible to become an error
 /// (§DF-unread-opted-out-block.2.3) — unlike both of its siblings.
-fn warn_unread_block(probe: &UnreadBlockProbe, project_roots: &[PathBuf]) -> usize {
+pub(crate) fn warn_unread_block(probe: &UnreadBlockProbe, project_roots: &[PathBuf]) -> usize {
     let Some(root) = unread_block_scope_root(probe, project_roots) else {
         return 0;
     };
@@ -88,7 +73,11 @@ fn warn_unread_block(probe: &UnreadBlockProbe, project_roots: &[PathBuf]) -> usi
 /// answer, in the CLI-level `warning:` shape on stderr (§FS-errors.2.2) —
 /// naming the config against the root this run was launched at, like every other
 /// diagnostic from an ancestor block (§FS-errors.4).
-fn warn_undecidable_ancestor_claim(config_path: &Path, report_base: &Path, reason: &str) {
+pub(crate) fn warn_undecidable_ancestor_claim(
+    config_path: &Path,
+    report_base: &Path,
+    reason: &str,
+) {
     eprintln!(
         "warning: {}",
         undecidable_ancestor_claim_warning(config_path, report_base, reason)

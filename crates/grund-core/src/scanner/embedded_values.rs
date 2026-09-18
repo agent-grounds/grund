@@ -13,10 +13,9 @@ use super::value_context::SourceValueLineContext;
 use super::values::{markdown_component, value_declaration_is_in_home};
 use crate::config::Config;
 use crate::grammar::{PythonDocstringScanState, source_scan_line};
-use crate::model::{Findings, InvalidValueSite, authored_component, component_text_is_valid};
-// §AR-system.4: one upward read, through the crate root until its owner is a
-// module — the same-location path test of the checker's home rules.
-use crate::paths_same_location;
+use crate::model::{
+    Findings, InvalidValueSite, authored_component, component_text_is_valid, paths_same_location,
+};
 
 /// Validate every marked section against its physical one-level subtree and
 /// place decoded components on the existing descendant section records

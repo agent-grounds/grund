@@ -1,30 +1,11 @@
-/// The compatibility CLI's `fmt` command: flags, the per-project walk, the report
-/// on stdout, and the exit code (§FS-fmt.1, §FS-fmt.3). It sits beside
-/// `writers/fmt_rewrite.rs` for the reason `config_cmd.rs` sits beside `config/`
-/// — that module is the rewrite walk, this one is the command surface wrapped
-/// around it, and only this one knows about argv, stdout, and `ExitCode`.
-///
-/// Run the `fmt` command: parse the flags, walk each project in scope, print the
-/// report, and map the exit code.
-///
-/// Why a workspace-root run walks every project: it wraps qualified citations in
-/// *every* project's files, so a heading rename in `api` triggers a `fmt` diff in
-/// any sibling project that wrapped a citation of the renamed declaration. Each
-/// project's `[scan] include`, `[scan] exclude`, and anchor profile still applies
-/// to its own files.
-///
-/// Why each project's findings are passed through: `fmt --cross-refs` would
-/// otherwise re-scan every project. Where a project's set is withheld — its scan
-/// met an error, so `complete_findings` yields no proof of completeness
-/// (§FS-fmt.7.4) — `fmt_tree` falls back to a fresh scan and hits the same
-/// `CompleteScan::of_tree_or_abort` refusal an explicit path already gets here.
-///
-/// Why a scope-narrowed run does not reuse the context's findings: a scope-narrow
-/// scan is too thin for cross-file wrap targets, so `fmt_tree` scans the project
-/// itself. Requiring the whole-project scan to be error-free keeps `--write` and
-/// `--write .` refusing alike on the same tree, instead of one silently resolving
-/// against a set the other just reported as incomplete.
-fn command_fmt(args: &[String]) -> ExitCode {
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+use crate::api::FmtOpts;
+use crate::api::format_references;
+use crate::writers::FmtScanAbort;
+
+pub(crate) fn command_fmt(args: &[String]) -> ExitCode {
     let mut path = PathBuf::from(".");
     let mut path_provided = false;
     let mut write = false;

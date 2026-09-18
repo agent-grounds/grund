@@ -19,9 +19,7 @@ use anyhow::{Result, anyhow};
 use std::path::Path;
 
 use super::record::Config;
-// §AR-system.4: path rendering for a diagnostic is the renderer's
-// (§AR-system.2.9) — read through the crate root until `output` is a module.
-use crate::format_path;
+use crate::model::format_path;
 
 /// §AR-workspace.5.2, §FS-workspace.2.2: both `[workspace]` member lists
 /// shape-checked, on every load and whichever sections the file declared. The

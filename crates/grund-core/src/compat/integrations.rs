@@ -10,23 +10,36 @@
 /// The user-facing setup guide, named by detection (§FS-integrations.2). It
 /// carries what `--write` cannot do for the caller: the prerequisites that fail
 /// silently, and the per-client manual step.
-const SETUP_GUIDE_URL: &str =
+use anyhow::Result;
+use std::process::ExitCode;
+
+use super::integrations_write::{
+    load_user_config, write_integration, write_user_citation_guidance_command,
+};
+use crate::model::json_escape;
+use crate::writers::{
+    ConversationRendering, ConversationTarget, GRUND_OPEN_RESOLVER, IntegrationClient,
+    RESOLVER_TARGET, VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON, detect_clients,
+    integration_is_current, known_agent, known_agents_list, known_clients_line,
+};
+
+pub(crate) const SETUP_GUIDE_URL: &str =
     "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/clickable-citations.md";
 
 /// Parsed `grund integrations` invocation.
-struct IntegrationsInvocation {
-    client: Option<IntegrationClient>,
-    write: bool,
+pub(crate) struct IntegrationsInvocation {
+    pub(crate) client: Option<IntegrationClient>,
+    pub(crate) write: bool,
     json: bool,
-    conversation: Option<ConversationRendering>,
-    conversation_target: Option<ConversationTarget>,
+    pub(crate) conversation: Option<ConversationRendering>,
+    pub(crate) conversation_target: Option<ConversationTarget>,
     /// `--agent <name>`: scope `conversation_target` to one agent instead of
     /// the machine (§FS-integrations.4.4).
-    agent: Option<&'static str>,
+    pub(crate) agent: Option<&'static str>,
 }
 
 /// Parse args, or return an error `ExitCode` after printing a CLI-level message.
-fn parse_integrations_args(args: &[String]) -> Result<IntegrationsInvocation, ExitCode> {
+pub(crate) fn parse_integrations_args(args: &[String]) -> Result<IntegrationsInvocation, ExitCode> {
     let mut client = None;
     let mut write = false;
     let mut format: Option<String> = None;
@@ -68,8 +81,11 @@ fn parse_integrations_args(args: &[String]) -> Result<IntegrationsInvocation, Ex
                 conversation_target = Some(args[idx].clone());
             }
             other if other.starts_with("--conversation-target=") => {
-                conversation_target =
-                    Some(other.trim_start_matches("--conversation-target=").to_string());
+                conversation_target = Some(
+                    other
+                        .trim_start_matches("--conversation-target=")
+                        .to_string(),
+                );
             }
             "--format" => {
                 idx += 1;
@@ -271,7 +287,7 @@ fn print_detection(json: bool) -> ExitCode {
 
 /// The machine-shaped detection plan (§FS-integrations.5): detected clients in
 /// frozen order, then every client with whether it was detected and its install.
-fn detection_plan_json(detected: &[IntegrationClient]) -> String {
+pub(crate) fn detection_plan_json(detected: &[IntegrationClient]) -> String {
     let detected_names = detected
         .iter()
         .map(|client| format!("\"{}\"", client.name()))
@@ -298,7 +314,7 @@ fn detection_plan_json(detected: &[IntegrationClient]) -> String {
 
 /// One JSON object describing a client's artifact and its `--write` targets,
 /// without printing the artifact bytes (§FS-integrations.5).
-fn client_descriptor_json(client: IntegrationClient) -> String {
+pub(crate) fn client_descriptor_json(client: IntegrationClient) -> String {
     let kind = if client.is_terminal() {
         "terminal"
     } else {
@@ -332,7 +348,9 @@ fn print_client_artifact(client: IntegrationClient) {
             println!();
             print!("{snippet}");
             println!();
-            println!("# 2. Resolver — install grund-open to a directory on PATH (e.g. ~/.local/bin):");
+            println!(
+                "# 2. Resolver — install grund-open to a directory on PATH (e.g. ~/.local/bin):"
+            );
             println!();
             print!("{GRUND_OPEN_RESOLVER}");
         }

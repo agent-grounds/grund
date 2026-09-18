@@ -1,7 +1,23 @@
-/// Public programmatic list types and catalog implementation (§FS-list.2,
-/// §FS-list.3, §AR-bindings.2).
-/// This category is included beside the API facade so the public list contract
-/// can evolve without making the facade file exceed its reviewed size budget.
+//! The published `list` contract and the catalog behind it (§AR-system.2.9): the
+//! declaration rows and the per-kind summary rows, with no output format chosen
+//! and no exit code mapped (§FS-list.2, §FS-list.3, §AR-bindings.2).
+//!
+//! Its own file since before the component was a module, so the list contract
+//! could grow without the contract file growing with it
+//! (§AR-core-module-layout.3). The citation counts each row's `refs` is read off
+//! are the catalog query's, read downward (§FS-list.3.2).
+
+use anyhow::{Result, anyhow};
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
+
+use crate::checker::is_stub_for_inline_decl;
+use crate::config::{Config, KindConfig, display_path, non_citable_kind_error};
+use crate::grammar::render_id;
+use crate::model::{Declaration, Id, format_path, sort_path_key};
+use crate::queries::ListCitationCounts;
+use crate::scanner::{ApiScanError, api_scan_error};
+use crate::workspace::{WorkspaceProject, load_workspace_context};
 
 #[derive(Clone)]
 pub struct ListOpts {
@@ -89,7 +105,9 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
             return if known.is_empty() {
                 Err(anyhow!("unknown project alias `{alias}`"))
             } else {
-                Err(anyhow!("unknown project alias `{alias}`\nknown aliases: {known}"))
+                Err(anyhow!(
+                    "unknown project alias `{alias}`\nknown aliases: {known}"
+                ))
             };
         }
     }
@@ -186,12 +204,18 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
     }
     if context.workspace_loaded {
         entries.sort_by(|a, b| {
-            (a.project_alias, a.id, sort_path_key(&a.home.file), a.home.line).cmp(&(
-                b.project_alias,
-                b.id,
-                sort_path_key(&b.home.file),
-                b.home.line,
-            ))
+            (
+                a.project_alias,
+                a.id,
+                sort_path_key(&a.home.file),
+                a.home.line,
+            )
+                .cmp(&(
+                    b.project_alias,
+                    b.id,
+                    sort_path_key(&b.home.file),
+                    b.home.line,
+                ))
         });
     }
 
@@ -219,7 +243,11 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
             line: entry.home.line,
             title: entry.home.title.clone(),
             stub: entry.home.is_stub,
-            defines: entry.home.defined_in.as_ref().map(|target| format_path(target)),
+            defines: entry
+                .home
+                .defined_in
+                .as_ref()
+                .map(|target| format_path(target)),
             refs: entry.refs,
             duplicate: entry.duplicate,
             value_roots: entry
@@ -269,7 +297,10 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
                 summaries.push(ListSummary {
                     project: Some(project.alias.clone()),
                     kind: kind.kind.clone(),
-                    title: kind.title.clone().unwrap_or_else(|| "Declaration".to_string()),
+                    title: kind
+                        .title
+                        .clone()
+                        .unwrap_or_else(|| "Declaration".to_string()),
                     home: list_summary_home(kind),
                     count,
                 });
@@ -288,7 +319,10 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
             summaries.push(ListSummary {
                 project: None,
                 kind: kind.kind.clone(),
-                title: kind.title.clone().unwrap_or_else(|| "Declaration".to_string()),
+                title: kind
+                    .title
+                    .clone()
+                    .unwrap_or_else(|| "Declaration".to_string()),
                 home: list_summary_home(kind),
                 count,
             });

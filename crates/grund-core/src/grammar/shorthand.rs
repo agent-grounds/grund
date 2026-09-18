@@ -16,7 +16,7 @@
 //! the shape, which the rule here then serves.
 //!
 //! Everything here is crate-private and reached through what `grammar/mod.rs`
-//! re-exports; the public embedding surface stays in `api.rs`
+//! re-exports; the public embedding surface stays in `api/`
 //! (§AR-core-module-layout.2).
 
 use anyhow::{Result, anyhow};

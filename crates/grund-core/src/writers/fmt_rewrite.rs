@@ -4,15 +4,15 @@
 //! asked every question once — so what lives here is the walk and the per-line
 //! decisions inside it. The link construction §FS-fmt.6 needs is
 //! `fmt_links.rs`, the two suppressed scopes are `fmt_suppress.rs`, and the
-//! deprecated command surface around all of it is the flat `fmt_cmd.rs`
+//! deprecated command surface around all of it is `compat/fmt.rs`
 //! (§AR-system.2.9).
 //!
 //! Named for the rewrite rather than for the category, because the category is
 //! the `writers/` directory now (§AR-core-module-layout.1). The
-//! §FS-fmt.6.6 auto-enable pair came in from `fmt_cmd.rs` with the move: it
+//! §FS-fmt.6.6 auto-enable pair came in from the `fmt` adapter with the move: it
 //! reads a `[fmt.cross_refs]` key and asks the walk whether its scope holds
 //! Markdown, which is a question about the run rather than about argv, and
-//! `api.rs` and `fmt_workspace.rs` are the two callers — neither of them the
+//! `api/fmt.rs` and `fmt_workspace.rs` are the two callers — neither of them the
 //! command.
 
 use anyhow::{Context, Result};
@@ -25,17 +25,17 @@ use super::fmt_links::wrap_markdown_links_with_targets;
 use super::fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
 use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::Config;
+use crate::config::display_path;
 use crate::grammar::{
     DocstringContent, DocstringCursor, ShorthandTargets, declaration_id_on_line,
     expand_shorthand_citations_with_origins, id_token_end_at, is_inside_inline_code,
     is_inside_markdown_link_destination, markdown_fence_delimiter, string_literal_in,
 };
 use crate::model::{Findings, Id};
-use crate::scanner::{walk_scannable_files, walk_scannable_files_reporting};
+use crate::scanner::{
+    ApiScanError, api_scan_error, walk_scannable_files, walk_scannable_files_reporting,
+};
 use crate::workspace::WorkspaceContext;
-// §AR-system.4: three reads through the crate root — the scan-error record and
-// its builder from `api.rs`, and the report path spelling from `output.rs`.
-use crate::{ApiScanError, api_scan_error, display_path};
 
 /// §FS-fmt.6.6: whether this invocation turns the cross-reference pass on by
 /// itself — `[fmt.cross_refs] enabled` and at least one Markdown file in its
