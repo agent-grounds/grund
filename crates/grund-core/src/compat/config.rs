@@ -1,9 +1,13 @@
-/// `grund config validate` / `grund config show`: the deprecated compatibility
-/// command adapter for §FS-config.4, reached only through
-/// `grund_core::main_entry()` (§AR-bindings.2). The published `grund` CLI owns
-/// its own copy of this rendering in `crates/grund-cli`; the duplication is the
-/// deprecation boundary, not an oversight — `grund-cli` imports no
-/// `grund_core::command_*` symbol.
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+use super::output::print_config_warnings;
+use crate::api::validate_config;
+use crate::config::{
+    CitationDisjunction, CitationLevel, CitationRules, KindResolution, escape_toml_basic,
+    load_config, render_citation_target,
+};
+
 fn render_citation_disjunction(disjunction: &CitationDisjunction) -> String {
     disjunction
         .targets
@@ -23,7 +27,7 @@ fn citation_level_str(level: CitationLevel) -> &'static str {
     }
 }
 
-fn command_config(args: &[String]) -> ExitCode {
+pub(super) fn command_config(args: &[String]) -> ExitCode {
     let Some(action) = args.first().map(|arg| arg.as_str()) else {
         eprintln!("error: expected `config validate` or `config show`");
         return ExitCode::from(2);
@@ -71,7 +75,10 @@ fn command_config(args: &[String]) -> ExitCode {
                     println!("project_name = \"{}\"", escape_toml_basic(name));
                 }
                 if let Some(description) = &config.project_description {
-                    println!("project_description = \"{}\"", escape_toml_basic(description));
+                    println!(
+                        "project_description = \"{}\"",
+                        escape_toml_basic(description)
+                    );
                 }
                 println!();
                 println!("[reference]");
@@ -107,10 +114,7 @@ fn command_config(args: &[String]) -> ExitCode {
                     "inline_note_suggested_lines = {}",
                     config.inline_note_suggested_lines
                 );
-                println!(
-                    "inline_note_max_lines = {}",
-                    config.inline_note_max_lines
-                );
+                println!("inline_note_max_lines = {}", config.inline_note_max_lines);
                 println!(
                     "inline_note_max_columns = {}",
                     config.inline_note_max_columns
@@ -240,10 +244,7 @@ fn command_config(args: &[String]) -> ExitCode {
                 // Ahead of `[fmt.cross_refs]`, so the super-table comes first.
                 if !config.fmt_exclude.is_empty() {
                     println!("[fmt]");
-                    println!(
-                        "exclude = {}",
-                        format_toml_string_list(&config.fmt_exclude)
-                    );
+                    println!("exclude = {}", format_toml_string_list(&config.fmt_exclude));
                     println!();
                 }
                 println!("[fmt.cross_refs]");
@@ -304,7 +305,10 @@ fn print_citation_rules(citations: &CitationRules) {
             if disjunctions.is_empty() {
                 continue;
             }
-            let entries: Vec<String> = disjunctions.iter().map(render_citation_disjunction).collect();
+            let entries: Vec<String> = disjunctions
+                .iter()
+                .map(render_citation_disjunction)
+                .collect();
             println!("{key} = {}", format_toml_string_list(&entries));
         }
     }

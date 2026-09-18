@@ -20,11 +20,9 @@ use super::init_templates::{
     render_grund_toml,
 };
 use crate::config::{Config, config_file_in};
+use crate::model::format_path;
 use crate::scanner::effective_scope_reads_any_file;
 use crate::workspace::populate_workspace_boundary;
-// §AR-system.4: one upward read through the crate root — the report path
-// renderer, which is `output.rs`'s (§AR-system.2.9).
-use crate::format_path;
 
 #[derive(Clone)]
 pub struct InitOpts {

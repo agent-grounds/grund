@@ -22,11 +22,12 @@ use super::scope::{
     RootMode, config_location_error, derive_alias, duplicate_alias_sites, project_label,
     project_name_error, workspace_members_error,
 };
+use crate::config::display_path;
 use crate::config::{AbsentOptionalNamespace, Config, load_config_at_with_report_base};
-// §AR-system.4: three upward reads through the crate root, because their owners
-// are still flat — `display_path` and the printing of the two `[workspace]`
-// findings this walk gathers, both the renderer's (§AR-system.2.9).
-use crate::{display_path, warn_if_members_absorb_scan, warn_unread_block};
+// §AR-system.4: two reads of `compat/`, through the crate root — the printing of
+// the two `[workspace]` findings this walk gathers, which reach the reader as a
+// stderr line rather than through a `Report` (§FS-check.4.7, §FS-check.4.10).
+use crate::{warn_if_members_absorb_scan, warn_unread_block};
 
 /// One project the workspace walk reached: the alias path qualified citations
 /// name it by — one segment per workspace level, so a nested project carries

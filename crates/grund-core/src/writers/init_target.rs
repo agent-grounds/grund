@@ -4,9 +4,7 @@ use std::path::{Path, PathBuf};
 
 use super::integrations_agents::GLOBAL_AGENT_INSTRUCTION_TARGETS;
 use super::integrations_clients::expand_target;
-// §AR-system.4: one upward read through the crate root — the English list
-// renderer, which is `output.rs`'s (§AR-system.2.9).
-use crate::format_list;
+use crate::model::format_list;
 
 /// §FS-init.1.2: the version-control markers whose presence in the target or
 /// any ancestor says it is inside a working tree. Presence is what is tested,

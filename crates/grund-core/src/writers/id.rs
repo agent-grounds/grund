@@ -1,7 +1,7 @@
 //! The proposed ID a `grund id` run allocates (§FS-id): the slug derived from
 //! the title, and the rendering of the allocated `Id` under its effective
-//! `[id] format`. The data half of §FS-id — `api.rs`'s `propose_id` and the
-//! deprecated `id_cmd.rs` adapter both ask these two questions and then print
+//! `[id] format`. The data half of §FS-id — `api/id.rs`'s `propose_id` and the
+//! deprecated `compat/id.rs` adapter both ask these two questions and then print
 //! the answer their own way (§AR-system.2.9).
 //!
 //! `render_id`, which sat in this file while the crate was flat, is not part of

@@ -14,29 +14,28 @@ Not a component: the rule for how the engine's files are named, owned and sized,
 
 `crates/grund-core/src/lib.rs` stays the engine crate entrypoint and public Rust API surface (`check`, `show`, `scan`, and the shared data types), while implementation code lives in smaller category files under `crates/grund-core/src/`.
 
-What each category implements, consumes and must not know is its component's subsection in [§AR-system.2](README.md#2-components), and the table's third column says which. A category is named by the module directory that holds it, and until it has one, by the file-name prefixes it owns.
+What each category implements, consumes and must not know is its component's subsection in [§AR-system.2](README.md#2-components), and the table's third column says which. A category is named by the module directory that holds it; every one has a directory now, so the compiler holds the boundary that a file-name prefix and a test used to.
 
-A file belongs to the category it sits under where that category is a module directory — `model/records.rs` to **model** — and otherwise to the category whose prefix its name carries: `api_list.rs` to **api**, `config_cmd.rs` to **config**. A category that has become a directory leaves no file of its former prefixes at the top level, except a prefix the row still lists beside the directory: that is how a file the move deliberately left flat is recorded, and every one today is a deprecated renderer waiting for `compat/` ([§AR-system.2.9](README.md#29-api)) — a whole command adapter, or the stream-writing half of a file whose data half moved. `lib.rs` is the one file outside every category, as the crate entrypoint. What each category owns:
+A file belongs to the category it sits under: `model/records.rs` to **model**, `compat/list.rs` to **compat**. A row may still name a file-name prefix beside its directory, which is how a file a move deliberately left flat would be recorded; none does today, because the last two — the deprecated renderers of [§AR-system.2.9](README.md#29-api) and the embedding surface beside them — became `compat/` and `api/`. `lib.rs` is the one file outside every category, as the crate entrypoint: module declarations, the public re-exports, and the crate's own test modules. What each category owns:
 
 | Category | Module directory, or file-name prefixes | Component |
 |---|---|---|
 | **model** | `model/` | [§AR-system.2.2](README.md#22-model) |
-| **config** | `config/`, `config_cmd` | [§AR-system.2.3](README.md#23-config) |
+| **config** | `config/` | [§AR-system.2.3](README.md#23-config) |
 | **scanner** | `scanner/` | [§AR-system.2.5](README.md#25-scanner) |
-| **checker** | `checker/`, `checker_cmd` | [§AR-system.2.6](README.md#26-checker) |
-| **queries** | `queries/`, `show_cmd`, `refs_cmd`, `cover_cmd`, `list_cmd`, `completions_cmd` | [§AR-system.2.7](README.md#27-queries) |
-| **output** | `output` | [§AR-system.2.9](README.md#29-api) |
-| **writers** | `writers/`, `fmt_cmd`, `id_cmd`, `init_cmd`, `integrations_cmd` | [§AR-system.2.8](README.md#28-writers) |
-| **api** | `api` | [§AR-system.2.9](README.md#29-api) |
+| **checker** | `checker/` | [§AR-system.2.6](README.md#26-checker) |
+| **queries** | `queries/` | [§AR-system.2.7](README.md#27-queries) |
+| **writers** | `writers/` | [§AR-system.2.8](README.md#28-writers) |
+| **api** | `api/` | [§AR-system.2.9](README.md#29-api) |
 | **grammar** | `grammar/` | [§AR-system.2.1](README.md#21-grammar) |
-| **workspace** | `workspace/`, `workspace_members_cmd` | [§AR-system.2.4](README.md#24-workspace) |
-| **compat** | `compat` | [§AR-system.2.9](README.md#29-api) |
+| **workspace** | `workspace/` | [§AR-system.2.4](README.md#24-workspace) |
+| **compat** | `compat/` | [§AR-system.2.9](README.md#29-api) |
 
 `tests/integration/test_module_categories.py` holds this table against the tree: every top-level implementation file owned by exactly one row, every prefix owning a file, and every named module directory present with none of its former prefixes left at the top level but the ones its row still lists.
 
 ## 2. Refactor boundary
 
-Splitting the core and CLI crates is an architectural refactor only: it must not change CLI output, diagnostics, scan behavior, template bytes, or public entrypoints. The CLI package may keep calling compatibility command adapters while narrower data-returning APIs are introduced, but embedders use the public API in `api.rs`.
+Splitting the core and CLI crates is an architectural refactor only: it must not change CLI output, diagnostics, scan behavior, template bytes, or public entrypoints. The CLI package may keep calling compatibility command adapters while narrower data-returning APIs are introduced, but embedders use the public API in `crates/grund-core/src/api/`, whose contract files carry the published signatures and whose adapter files carry the conversions behind them.
 
 ## 3. File size
 

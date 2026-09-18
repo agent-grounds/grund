@@ -9,7 +9,16 @@
 /// the e2e corpus reaches this copy (§FS-cover.3.2). A function that holds no
 /// path to a loader proves the order to a test —
 /// `the_compat_surface_answers_a_bad_format_before_it_loads_anything`.
-fn parse_compat_cover_args(args: &[String]) -> Result<(CoverOpts, Option<String>), String> {
+use anyhow::Result;
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+use crate::api::{CoverCitation, CoverOpts, cover};
+use crate::model::json_escape;
+
+pub(crate) fn parse_compat_cover_args(
+    args: &[String],
+) -> Result<(CoverOpts, Option<String>), String> {
     let mut path = PathBuf::from(".");
     let mut path_provided = false;
     let mut format_override: Option<String> = None;
@@ -59,7 +68,7 @@ fn parse_compat_cover_args(args: &[String]) -> Result<(CoverOpts, Option<String>
 /// records are real but incomplete, so a caller must treat the whole result as
 /// untrusted. That holds in a workspace that includes a member's unreadable file
 /// too, since the index the run just printed is incomplete for the tree it claimed.
-fn command_cover(args: &[String]) -> ExitCode {
+pub(super) fn command_cover(args: &[String]) -> ExitCode {
     let (opts, format_override) = match parse_compat_cover_args(args) {
         Ok(parsed) => parsed,
         Err(message) => {
@@ -131,13 +140,13 @@ fn command_cover(args: &[String]) -> ExitCode {
 /// (`tests_cover_workspace.rs`) is what holds them there. Not an e2e case: every
 /// case in the corpus drives the `grund` binary, which is `grund-cli`, so
 /// nothing in it reaches this copy.
-fn compat_cover_project_field(alias: Option<&str>) -> String {
+pub(crate) fn compat_cover_project_field(alias: Option<&str>) -> String {
     alias
         .map(|alias| format!("\"project\":\"{}\",", json_escape(alias)))
         .unwrap_or_default()
 }
 
-fn compat_cover_citation_json(citation: &CoverCitation) -> String {
+pub(crate) fn compat_cover_citation_json(citation: &CoverCitation) -> String {
     format!(
         "{{{}\"path\":\"{}\",\"line\":{},\"column\":{},\"id\":\"{}\",\"section\":{},\"marker\":{},\"text\":\"{}\"}}",
         compat_cover_project_field(citation.project.as_deref()),

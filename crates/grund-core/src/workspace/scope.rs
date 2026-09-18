@@ -3,7 +3,7 @@
 //! boundary-root population, and the alias every diagnostic spells the result
 //! with (§AR-workspace.5.1, §AR-workspace.6, §AR-workspace.8).
 //!
-//! Split out of `checker_cmd.rs` the way `members.rs` was: that file is the
+//! Split out of the `check` adapter the way `members.rs` was: that file is the
 //! `check` command's argument adapter, and resolving a scope to a config is
 //! config work every walking command shares, not something `check` owns
 //! (§AR-core-module-layout.1).
@@ -15,14 +15,16 @@ use std::path::{Component, Path, PathBuf};
 use super::members::{
     WorkspaceMember, canonical_workspace_path, expand_workspace_member_list, unread_block_probe,
 };
+use crate::config::display_path;
 use crate::config::{
     Config, ConfigLocation, invalid_project_alias_message, is_valid_project_alias, load_config,
     load_config_at,
 };
-// §AR-system.4: four upward reads through the crate root, because their owners
-// are still flat — the two path renderers, and the printing of the two
-// `[workspace]` findings this file populates a boundary for (§AR-system.2.9).
-use crate::{display_path, format_path, warn_if_members_absorb_scan, warn_unread_block};
+use crate::model::format_path;
+// §AR-system.4: two reads of `compat/`, through the crate root — the printing of
+// the two `[workspace]` findings this file populates a boundary for, which reach
+// the reader as a stderr line (§FS-check.4.7, §FS-check.4.10).
+use crate::{warn_if_members_absorb_scan, warn_unread_block};
 
 /// Whether the requested scope *is* the config root — the scope `[scan] include`
 /// governs, and therefore the only one `grund check --full` can widen

@@ -19,14 +19,11 @@ use std::collections::BTreeMap;
 
 use super::references::ScanScope;
 use super::support::{heading_marks, section_depth};
-use crate::config::Config;
+use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{CheckReport, Diagnostic, Findings, SectionHeadingOutsideDeclaration, Site};
 use crate::scanner::section_path_is_numeric;
 use crate::workspace::WorkspaceProject;
-// §AR-system.4: one upward read through the crate root — the report path
-// spelling, which is `output.rs`'s (§AR-system.2.9).
-use crate::display_path;
 
 /// The section-shape rules, as independent passes over the declarations
 /// (§AR-checker.2.15). Order does not matter — the report is sorted before it is

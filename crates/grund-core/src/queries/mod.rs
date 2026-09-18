@@ -16,16 +16,27 @@
 //! these two hold is the hover body and the keystroke rule of §FS-lsp, which an
 //! LSP server transports but does not own (§AR-lsp).
 //!
+//! Two files came in when §AR-system.2.9 became a module, both because a record
+//! the api's contract declared was produced or read here (§AR-system.4).
+//! `show_query.rs` is what a show query is asked and what it refuses with — the
+//! options of §FS-distribution.3.1 and the typed refusal of §FS-errors.5, which
+//! `show.rs` raises and the batch read upward. `editor_snapshot.rs` is the
+//! editor's snapshot vocabulary of §FS-lsp.1, which the title hover read upward;
+//! the walk that *fills* a snapshot stays in `api/lsp_snapshot.rs`, needing the
+//! whole pipeline beneath it. What went the other way is the snapshot path
+//! canonicalization, down into `model/paths.rs` where the on-type rule and the
+//! formatter's suppression both read it (§AR-lsp.5).
+//!
 //! This is the first component whose files were **split** rather than moved.
 //! Five of them wrote to a stream, because the deprecated `main_entry()` path
 //! renders inside the engine (§AR-system.2.9): the `command_*` adapters that
 //! parse argv, print text or JSON and return an `ExitCode` are the deprecated
-//! path's, not a query's, so they stay flat as `show_cmd.rs`, `refs_cmd.rs`,
-//! `cover_cmd.rs`, `list_cmd.rs` and `completions_cmd.rs`, waiting for
-//! `compat/`. `refs`, `cover` and `completions` had no data half at all — the
-//! citer walk is `command_refs`'s own, the coverage index is `cover` in
-//! `api.rs`, and a completion script is bytes printed to stdout — so those three
-//! files are flat in whole. What crosses back the other way is `measure_point_text`,
+//! path's, not a query's, so they are `compat/show.rs`, `compat/refs.rs`,
+//! `compat/cover.rs`, `compat/list.rs` and `compat/completions.rs`. `refs`,
+//! `cover` and `completions` had no data half at all — the citer walk is
+//! `command_refs`'s own, the coverage index is `cover` in `api/cover.rs`, and a
+//! completion script is bytes printed to stdout — so those three files went to
+//! `compat/` whole. What crosses back the other way is `measure_point_text`,
 //! which went down into `config/point_sizes.rs` beside the `PointSizeUnit` whose
 //! meaning it is.
 
@@ -34,12 +45,18 @@ mod body;
 mod citation_counts;
 mod editor_hover;
 mod editor_on_type;
+mod editor_snapshot;
 mod show;
+mod show_query;
 mod sizes;
 
 pub use batch::{BatchShowFailure, BatchShowQuery, BatchShowRecord, show_batch_with_scope};
 pub use editor_hover::{LspUsage, citation_under_title, lsp_title_hover_body};
 pub use editor_on_type::{DeclaredId, LineEdit, can_replace_trigger_at, on_type_line_edits};
+pub use editor_snapshot::{
+    LspCitation, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts, LspStub,
+};
+pub use show_query::{ShowFormat, ShowMode, ShowOpts, ShowQueryError};
 pub use sizes::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, list_sizes};
 
 // What the other components read, still through the crate root while they are

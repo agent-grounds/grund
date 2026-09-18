@@ -1,9 +1,3 @@
-use anyhow::{Result, anyhow};
-use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::ExitCode;
-
 // §AR-system.2.2: the model component is one Rust module, so its records are
 // declared in `model/` and what crosses the boundary is what `model/mod.rs`
 // re-exports (§AR-core-module-layout.1).
@@ -36,44 +30,64 @@ mod queries;
 // proposal, the init scaffold (§FS-init) and the integrations artifacts
 // (§FS-integrations) — and `writers/mod.rs` says what crosses the boundary.
 mod writers;
+// §AR-system.2.9: the embedding surface is one Rust module too, so the public
+// contract and the adapters that fill it are declared in `api/` and what an
+// embedder reaches is what `api/mod.rs` re-exports (§AR-bindings.2).
+mod api;
+// §AR-system.2.9: and its one exception, the deprecated `main_entry()` path,
+// which is the only directory here that parses argv, writes to a stream or
+// returns an `ExitCode`. It may read anything; nothing may read it.
+mod compat;
+
 // Temporary re-exports for the duration of this migration: they keep every name
 // the flat crate root exposed reachable at `grund_core::<name>` while the other
 // components are still `include!`d flat. The finalize task replaces them with an
 // explicit list.
+pub use api::*;
 pub use checker::*;
 pub use config::*;
 pub use grammar::*;
 pub use model::*;
 pub use queries::*;
-// The scanner's glob is `pub(crate)`: the component's three public records —
-// `FileStructure` and the two it holds — went down into `model/` with this move,
-// so it exposes no name of its own to an embedder (§AR-core-module-layout.2).
-pub(crate) use scanner::*;
 pub use workspace::*;
 pub use writers::*;
 
-// §AR-bindings.1: `grund-core` is the shared implementation crate used by the
-// published `grund` CLI and, next, the optional LSP server. The category files
-// are still included flat to keep this first package split behavior-preserving.
-include!("config_cmd.rs");
-include!("checker_cmd.rs");
-include!("workspace_members_cmd.rs");
-include!("show_cmd.rs");
-include!("refs_cmd.rs");
-include!("cover_cmd.rs");
-include!("list_cmd.rs");
-include!("completions_cmd.rs");
-include!("output.rs");
-include!("fmt_cmd.rs");
-include!("id_cmd.rs");
-include!("integrations_cmd.rs");
-include!("integrations_cmd_write.rs");
-include!("init_cmd.rs");
-include!("api.rs");
-include!("api_list.rs");
-include!("api_refs.rs");
-include!("api_report.rs");
-include!("compat_cli.rs");
+// The scanner's glob is `pub(crate)`: `ApiScanError` came in from the api's
+// contract (§AR-system.2.9) and is its one `pub` name, so that one is listed
+// explicitly (§AR-core-module-layout.2).
+pub use scanner::ApiScanError;
+
+pub(crate) use scanner::*;
+
+// The deprecated frontend's public names, listed rather than globbed: the 0.4
+// process entry point §REQ-backwards-compatibility.2 keeps, and the two below.
+#[allow(deprecated)]
+pub use compat::main_entry;
+
+// The `warning:` shape both `config` frontends share (§FS-config.4.2), and the
+// one renderer `grund-cli` still imports from the engine, which the
+// compat-retirement step replaces with a copy of its own (§AR-system.2.9).
+pub use compat::{print_config_warnings, run_integrations};
+
+// Nothing may *read* `compat/` (§AR-system.4), so its glob is `pub(crate)`: it
+// carries the four stderr lines `workspace/` still reaches on the live path, and
+// the crate's own `tests_*` modules.
+pub(crate) use compat::*;
+
+// The crate's own `tests_*` modules are `include!`d into this root and reach
+// their vocabulary through `use super::*`, so the std names their fixtures spell
+// are imported here rather than in each of them (§AR-core-module-layout.1).
+#[cfg(test)]
+use anyhow::Result;
+#[cfg(test)]
+use std::collections::{BTreeMap, BTreeSet};
+#[cfg(test)]
+use std::fs;
+#[cfg(test)]
+use std::path::{Path, PathBuf};
+#[cfg(test)]
+use std::process::ExitCode;
+
 // Tests, one module per category (§AR-core-module-layout.1). `tests_support`
 // holds the fixtures they share and must come first.
 include!("tests_support.rs");

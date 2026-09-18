@@ -17,9 +17,16 @@
 //! What the component does **not** hold any more: the `FileStructure` records
 //! §AR-scanner.2.7 fills went down into `model/`, because `Findings` carries them
 //! and they are plain data, and five lexical items the flat layout parked here
-//! went down into `grammar/` (§AR-system.2.1). Those three records were also the
-//! only `pub` names the scanner had, so nothing it re-exports below is `pub` and
-//! it adds no name to the embedding surface of §AR-core-module-layout.2.
+//! went down into `grammar/` (§AR-system.2.1). The snapshot canonicalization of
+//! §AR-lsp.5 followed them into `model/paths.rs` when §AR-system.2.9 became a
+//! module, the queries and the writers both rebasing a path against it.
+//!
+//! What came the other way with that move is `scan_error.rs`: the published form
+//! of a scan failure (§FS-check.2), which sat in the api's contract while the
+//! size catalog and the formatter read it upward (§AR-system.4). It carries the
+//! one `pub` name this component now adds to the embedding surface of
+//! §AR-core-module-layout.2, so `lib.rs` re-exports `ApiScanError` explicitly
+//! beside the component's otherwise `pub(crate)` glob.
 
 mod citations;
 mod context;
@@ -30,6 +37,7 @@ mod file_pass;
 mod json;
 mod legacy;
 mod legacy_inline;
+mod scan_error;
 mod scope_probe;
 mod tree;
 mod units;
@@ -42,6 +50,8 @@ mod walk;
 mod walk_boundaries;
 mod walk_errors;
 
+pub use scan_error::ApiScanError;
+
 // What the other components read, still through the crate root while they are
 // flat (§AR-system.4). The finalize task narrows this as each caller moves into
 // a module of its own.
@@ -53,10 +63,10 @@ pub(crate) use legacy::{
     collect_local_legacy_markdown_citations, formatter_wrapper_label_is_citation,
     legacy_catalog_ids, match_legacy_tail, promote_qualified_legacy_citations, resolve_id_arg,
 };
+pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;
 pub(crate) use tree::{
-    ScanError, canonicalize_existing_prefix, overlay_text, scan_tree, scan_tree_strict,
-    scan_tree_with_workspace_overlays,
+    ScanError, overlay_text, scan_tree, scan_tree_strict, scan_tree_with_workspace_overlays,
 };
 pub(crate) use walk::{
     canonical_config_root, root_scope_roots, scan_roots_for, unwalked_home_roots,

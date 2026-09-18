@@ -1,7 +1,25 @@
-/// Data-producing implementation behind [`refs_outcome`]: scan once, select the target
+//! The walk behind the published `refs` contract (§AR-system.2.9): scan once,
+//! select the target grammar, and return either citation data or the typed
+//! resolver rejection (§FS-refs.2, §FS-refs.4, §AR-bindings.2).
+//!
+//! The adapter §AR-core-module-layout.2 keeps out of `refs.rs`, which is the
+//! published surface: what is here is the project selection, the hit walk, the
+//! sort and the breadcrumb a miss earns, none of them a signature a caller sees.
+
+/// Data-producing implementation behind `refs_outcome`: scan once, select the target
 /// grammar, and return either citation data or the typed resolver rejection
 /// (§AR-bindings.2, §FS-refs.2, §FS-refs.4).
-fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
+use anyhow::{Result, anyhow};
+use std::path::Path;
+
+use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure};
+use crate::config::display_path;
+use crate::grammar::render_id;
+use crate::model::{Citation, sort_path_key};
+use crate::scanner::{api_scan_error, resolve_id_arg};
+use crate::workspace::{WorkspaceProject, load_workspace_context, split_qualified_id_arg};
+
+pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
     let current_config = context
         .current_project()
@@ -51,11 +69,8 @@ fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
         .collect::<Vec<_>>();
     // §FS-refs.4: the `[id] format` hint is for an argument that does not match
     // it; an ambiguous shorthand did match and lists its candidates instead.
-    let (id, inline_section) = match resolve_id_arg(
-        raw_id,
-        render_config,
-        &target_project.findings,
-    ) {
+    let (id, inline_section) = match resolve_id_arg(raw_id, render_config, &target_project.findings)
+    {
         Ok(resolved) => resolved,
         Err(error) => {
             return Ok(RefsOutcome {
@@ -106,11 +121,16 @@ fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
         }
     }
     hits.sort_by(|a, b| {
-        (sort_path_key(&a.citation.file), a.citation.line, a.citation.column).cmp(&(
-            sort_path_key(&b.citation.file),
-            b.citation.line,
-            b.citation.column,
-        ))
+        (
+            sort_path_key(&a.citation.file),
+            a.citation.line,
+            a.citation.column,
+        )
+            .cmp(&(
+                sort_path_key(&b.citation.file),
+                b.citation.line,
+                b.citation.column,
+            ))
     });
     let render_path = |project: &WorkspaceProject, path: &Path| -> String {
         if context.workspace_loaded {

@@ -4,10 +4,7 @@ use std::path::{Path, PathBuf};
 
 use super::tree::ScanError;
 use super::walk_boundaries::{is_hidden, is_scannable};
-use crate::config::Config;
-// §AR-system.4: one upward read, through the crate root until its owner is a
-// module — the report path renderer from `output.rs`.
-use crate::display_path;
+use crate::config::{Config, display_path};
 
 /// The per-file scan failure a walker error becomes (§FS-check.2), or `None` when
 /// the walk was never going to read through the path it names (§FS-config.3.5.6).

@@ -10,10 +10,7 @@ use super::tree::{ScanError, overlay_text};
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
 use crate::config::{Config, KindConfig};
 use crate::model::{DeclarationSource, Findings, TextOverlays, normalize_path_lexically};
-// §AR-system.4: three upward reads, through the crate root until their owners
-// are modules — two path keys of the checker's home rules, and the report's path
-// sort key from `output.rs`.
-use crate::{paths_same_location, physical_path_key, sort_path_key};
+use crate::model::{paths_same_location, physical_path_key, sort_path_key};
 
 pub(super) fn scan_value_json_sources(
     config: &Config,

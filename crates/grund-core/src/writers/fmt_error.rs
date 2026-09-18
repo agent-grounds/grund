@@ -3,9 +3,7 @@
 //! It is a `pub` error type of the embedding surface, so `grund-cli` matches on
 //! it and adds its own `error:` prefix (§AR-core-module-layout.2).
 
-// §AR-system.4: one read through the crate root — the scan-error record, which
-// is `api.rs`'s (§AR-system.2.9).
-use crate::ApiScanError;
+use crate::scanner::ApiScanError;
 
 /// A whole-declaration-set rewrite refused because its completed scan found
 /// unreadable paths (§FS-fmt.3). Kept structured so API callers can inspect the

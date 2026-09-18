@@ -12,12 +12,9 @@ use crate::config::Config;
 use crate::grammar::{QUALIFIED_CITATION_PREFIX, parse_id_arg, parse_longest_id_prefix};
 use crate::model::{
     DeclarationSource, Findings, Id, InvalidValueSite, ValueBinding, authored_component,
-    component_text_is_valid,
+    component_text_is_valid, paths_same_location,
 };
 use crate::workspace::WorkspaceCitationTarget;
-// §AR-system.4: one upward read, through the crate root until its owner is a
-// module — the same-location path test of the checker's home rules.
-use crate::paths_same_location;
 
 pub(super) fn value_declaration_is_in_home(config: &Config, path: &Path, id: &Id) -> bool {
     config.kinds.iter().any(|kind| {

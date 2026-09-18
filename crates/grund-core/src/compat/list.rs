@@ -1,24 +1,15 @@
-/// `grund list [path] [--kind K[,K]...] [--unused] [--summary] [--format text|json]` — print every
-/// declared ID with its home `path:line` and one-line title (§FS-list.1,
-/// §FS-list.3), optionally filtered to one kind or to declarations nothing cites
-/// (the same set as the §FS-check.4.1 warning). The discovery side of the loop:
-/// how an agent finds the right `<ID>` before citing it (§FS-list.5).
-/// `grund list` — the declaration catalog and its renderers.
-///
-/// Why `--kind` validation widens in workspace mode: kinds may differ across
-/// projects, each project carrying its own `[[kinds]]`, so a kind only has to
-/// exist somewhere in scope to be a real selector. A configured kind that declares
-/// no IDs is refused rather than accepted, because it would silently select
-/// nothing — exactly the empty-catalog-from-a-typo the check exists to prevent.
-///
-/// Ordering of the workspace summary (§FS-workspace.8.3): rows sorted by
-/// alias — the same byte-wise `str` order the catalog above sorts `entries`
-/// by — then by that project's configured kind order.
-///
-/// Why the JSON is one compact object per line: the shipped `grund-open` resolver
-/// and the VS Code extension parse it by substring/regex (`"id":"…"`, `"path":"…"`,
-/// `"line":N`) rather than with a JSON parser, so the field shape is a contract.
-fn command_list(args: &[String]) -> ExitCode {
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+use crate::checker::is_stub_for_inline_decl;
+use crate::config::{Config, KindConfig, display_path, non_citable_kind_error};
+use crate::grammar::render_id;
+use crate::model::{Declaration, Id, format_path, json_escape, sort_path_key};
+use crate::queries::ListCitationCounts;
+use crate::workspace::{WorkspaceProject, load_workspace_context};
+
+pub(super) fn command_list(args: &[String]) -> ExitCode {
     let mut path = PathBuf::from(".");
     let mut path_provided = false;
     let mut kind_filter: BTreeSet<String> = BTreeSet::new();
@@ -89,9 +80,7 @@ fn command_list(args: &[String]) -> ExitCode {
     // §FS-workspace.8.3: `--project` is only meaningful in workspace mode —
     // a member-local or standalone invocation has no alias namespace.
     if !project_filter.is_empty() && !context.workspace_loaded {
-        eprintln!(
-            "error: --project requires workspace mode (no [workspace] block discovered)"
-        );
+        eprintln!("error: --project requires workspace mode (no [workspace] block discovered)");
         return ExitCode::from(2);
     }
     for alias in &project_filter {
@@ -207,12 +196,18 @@ fn command_list(args: &[String]) -> ExitCode {
     // the workspace catalog deterministic across runs.
     if context.workspace_loaded {
         entries.sort_by(|a, b| {
-            (a.project_alias, a.id, sort_path_key(&a.home.file), a.home.line).cmp(&(
-                b.project_alias,
-                b.id,
-                sort_path_key(&b.home.file),
-                b.home.line,
-            ))
+            (
+                a.project_alias,
+                a.id,
+                sort_path_key(&a.home.file),
+                a.home.line,
+            )
+                .cmp(&(
+                    b.project_alias,
+                    b.id,
+                    sort_path_key(&b.home.file),
+                    b.home.line,
+                ))
         });
     }
 
@@ -421,7 +416,11 @@ fn command_list(args: &[String]) -> ExitCode {
                             entry.project_config.section_separator,
                             section
                         );
-                        if root.valid { id } else { format!("{id} (invalid)") }
+                        if root.valid {
+                            id
+                        } else {
+                            format!("{id} (invalid)")
+                        }
                     })
                 })
                 .collect::<Vec<_>>();

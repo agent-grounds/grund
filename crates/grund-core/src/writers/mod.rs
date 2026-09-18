@@ -21,15 +21,14 @@
 //! artifacts (the closed client set, detection, the agent instruction surfaces,
 //! the installs and their byte-current probes, and the user configuration).
 //!
-//! Two halves of this component are deliberately still flat, as the `init_cmd`
-//! and `integrations_cmd` prefixes of §AR-core-module-layout.1: the deprecated
-//! `main_entry()` adapters, which render inside the engine (§AR-system.2.9) and
-//! nothing here may import. The line is the one `tests/integration/
-//! test_engine_boundary.py` measures — a function that writes to a stream or
-//! returns an `ExitCode` is a renderer and stayed there, so no file under this
-//! directory prints. `run_integrations` is the one exception the published CLI
-//! still forces: it is `pub` and imported by `grund-cli`, so it stays flat and
-//! keeps its name until the CLI carries its own copy.
+//! Two halves of this component are `compat/init.rs` and
+//! `compat/integrations*.rs`: the deprecated `main_entry()` adapters, which
+//! render inside the engine (§AR-system.2.9) and nothing here may import. The
+//! line is the one `tests/integration/test_engine_boundary.py` measures — a
+//! function that writes to a stream or returns an `ExitCode` is a renderer and
+//! went there, so no file under this directory prints. `run_integrations` is the
+//! one exception the published CLI still forces: it is `pub` and imported by
+//! `grund-cli`, so `lib.rs` re-exports it until the CLI carries its own copy.
 //!
 //! What the component does **not** hold any more. Four lexical items went down
 //! into `grammar/` (§AR-system.2.1), because a component below was reading each
@@ -43,8 +42,8 @@
 //! §FS-integrations.4.1. The `[fmt] exclude` glob grammar of §FS-config.3.10 and
 //! the TOML basic-string escaper went down into `config/`, and `plural` down
 //! into `checker/`, each to the lowest component that reads it. What came the
-//! other way is the §FS-fmt.6.6 auto-enable pair, out of the deprecated
-//! `fmt_cmd.rs`: neither of its two callers is the command (§AR-system.2.9).
+//! other way is the §FS-fmt.6.6 auto-enable pair, out of the deprecated `fmt`
+//! adapter: neither of its two callers is the command (§AR-system.2.9).
 
 mod fetch;
 mod fetch_write;
@@ -92,7 +91,7 @@ pub(crate) use init_citation_directions::citation_directions_section;
 pub(crate) use init_entrypoints::companion_agent_entrypoints;
 pub(crate) use init_templates::{ConversationSurface, clickable_citations_section};
 
-// What the deprecated `init_cmd.rs` and `integrations_cmd*.rs` renderers read,
+// What the deprecated `compat/init.rs` and `compat/integrations*.rs` renderers read,
 // through the crate root because nothing here may import them
 // (§AR-system.2.9). This block is what the compat task retires.
 pub(crate) use integrations_agents::{

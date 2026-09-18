@@ -7,11 +7,12 @@ use crate::grammar::{
     is_inside_inline_code, is_inside_markdown_link_destination, markdown_fence_delimiter,
     never_rewrite_context_in, shorthand_token_expansion, string_literal_in,
 };
+use crate::model::canonical_snapshot_path;
 use crate::workspace::resolve_workspace_config;
-// §AR-system.4: three reads through the crate root — the snapshot path
-// normalization from `api.rs`, and the formatter's suppression and exclusion
-// state from `writers/fmt_suppress.rs`, a sibling this rule must match.
-use crate::{FmtDirectives, FmtExcluded, canonical_snapshot_path};
+// §AR-system.4: two reads through the crate root — the formatter's suppression
+// and exclusion state from `writers/fmt_suppress.rs`, a sibling this rule must
+// match line for line (§FS-lsp.1.4).
+use crate::{FmtDirectives, FmtExcluded};
 
 /// Check the same context exclusions as `grund fmt` before an LSP on-type
 /// `$$` rewrite (§FS-fmt.2.3, §FS-lsp.1.4).
@@ -19,8 +20,8 @@ use crate::{FmtDirectives, FmtExcluded, canonical_snapshot_path};
 /// The LSP live on-type transform (§FS-lsp.1.4) — the keystroke-time counterpart
 /// to `grund fmt`'s bulk passes (§FS-fmt.2.1, §FS-fmt.2.4).
 ///
-/// Split out of `api.rs`, which §AR-core-module-layout.2 keeps as the published
-/// embedding contract: the public items in this file are part of that contract,
+/// Split out of the api's contract file, which §AR-core-module-layout.2 keeps as
+/// the published embedding surface: the public items here are part of it,
 /// but the rule deciding *which* keystroke produces *which* edit is a behavior
 /// with its own invariant — the trigger converts eagerly and the shorthand
 /// expands only at a token boundary — and that invariant is what a reader comes

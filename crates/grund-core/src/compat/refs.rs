@@ -1,34 +1,16 @@
-/// `grund refs <ID>[.<section>] [--summary] [--format text|json]` — the reverse of an ID query:
-/// list every place that cites the ID (§FS-refs.1, §FS-refs.2), scheme-aware where
-/// a grep cannot be. Shares the scanner with `check` so the two never disagree on
-/// what counts as a citation (§FS-refs.5). Empty results, including undeclared IDs
-/// with no citations, exit `0`; resolver rejection follows the staged shared
-/// query-failure mapping (§FS-refs.4).
-///
-/// Why a bad ID argument still gets the `[id] format` hint: a format that differs
-/// from the `{kind}-{slug}` `grund` itself uses is the common surprise, so the
-/// stumble is worth naming. The hint is withheld for an ambiguous shorthand, which
-/// matched the format fine and already printed every candidate: repeating the
-/// format there would send the reader to `grund config show` for a config that is
-/// not wrong.
-///
-/// Why the target project is matched by alias string: workspace aliases are unique
-/// and that is enforced at load, so string equality is the canonical "is this the
-/// target project?" check — preferred over pointer identity so a future refactor
-/// that clones a project does not silently drop local hits.
-///
-/// Why an empty result still leaves a note: an ID that is neither cited nor
-/// declared was most likely fat-fingered. In workspace mode that hint points at
-/// `--project <alias>` so the reader sees the namespace.
-///
-/// Where the output goes: the citation list is text and JSON alike on stdout, like
-/// `grund list` / `grund cover` / ID queries, even though a line shares the
-/// `path:line: <text>` shape `check` uses for diagnostics on stderr. In workspace
-/// mode paths render relative to the workspace root so a `--summary` line points at
-/// the same file regardless of which member it lives in, and each citation's
-/// project alias is attached to the JSON object as `"project"` — the *citing*
-/// project, not the target, which is the query argument.
-fn command_refs(args: &[String]) -> ExitCode {
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::{Path, PathBuf};
+use std::process::ExitCode;
+
+use super::output::print_bare_query_json;
+use crate::api::{REFS_QUERY_FAILURE_WARNING, RefsQueryFailure, refs_query_failure_is_exit_one};
+use crate::config::{Config, display_path};
+use crate::grammar::render_id;
+use crate::model::{Citation, json_escape, sort_path_key};
+use crate::scanner::resolve_id_arg;
+use crate::workspace::{WorkspaceProject, load_workspace_context, split_qualified_id_arg};
+
+pub(crate) fn command_refs(args: &[String]) -> ExitCode {
     if args.is_empty() {
         eprintln!("error: refs requires an ID");
         return ExitCode::from(2);
@@ -232,11 +214,16 @@ fn command_refs(args: &[String]) -> ExitCode {
         }
     }
     hits.sort_by(|a, b| {
-        (sort_path_key(&a.citation.file), a.citation.line, a.citation.column).cmp(&(
-            sort_path_key(&b.citation.file),
-            b.citation.line,
-            b.citation.column,
-        ))
+        (
+            sort_path_key(&a.citation.file),
+            a.citation.line,
+            a.citation.column,
+        )
+            .cmp(&(
+                sort_path_key(&b.citation.file),
+                b.citation.line,
+                b.citation.column,
+            ))
     });
     // §FS-refs.2: zero citations is a normal answer, not an error — but if the ID
     // is *also* undeclared, leave a breadcrumb on stderr without changing the
@@ -284,9 +271,7 @@ fn command_refs(args: &[String]) -> ExitCode {
             .map(|hit| (&hit.citation.file, hit.project))
             .collect();
         let mut entries = by_file.iter().collect::<Vec<_>>();
-        entries.sort_by_key(|(file, _)| {
-            render_path(project_for_file[file], file)
-        });
+        entries.sort_by_key(|(file, _)| render_path(project_for_file[file], file));
         if format == "json" {
             for (file, (count, lines)) in entries {
                 let lines_json = lines

@@ -3,28 +3,35 @@ fissile_exceptions_version = 2
 # is identified by this registry and its `path`, which is why it carries no name
 # of its own.
 #
-# Five entries were retired when their files were split: crates/grund-core/src/
+# Six entries were retired when their files were split: crates/grund-core/src/
 # tests.rs (4111 lines) into thirteen `tests_*` category modules plus
 # `tests_support`, crates/grund-cli/src/cli.rs (1735 lines) into one file per
 # command, crates/grund-cli/tests/init.rs (1023 lines) into the scaffold
 # cases and the entrypoint-selection cases over a shared fixture, which is what
 # its `until` asked for, crates/grund-core/src/config.rs (732 lines) into
 # the module directory of §AR-system.2.3, where the reader at config/parse.rs
-# measures 499, and crates/grund-core/src/scanner.rs (1156 lines) into the module
+# measures 499, crates/grund-core/src/scanner.rs (1156 lines) into the module
 # directory of §AR-system.2.5, where the per-file pass at scanner/file_pass.rs
-# measures 495. All five are now under the hard budget with no exception; the last
-# two keep a soft entry in docs/file-size-agent-exceptions.toml, because the
-# boundary each `until` named is still unpaid.
-[[exceptions]]
-path = "crates/grund-core/src/api.rs"
-match = "exact"
-rules = ["core-source"]
-kind = "deferred"
-max_accepted = { value = 1609, unit = "lines" }
-until = "move the private conversion adapters out, keeping the public contract in api.rs"
-reason = """
-The file mixes two things §AR-core-module-layout.2 keeps distinct: the published embedding contract (ShowOpts, CheckOpts, Report, check, show, scan), which genuinely belongs in one file an embedder can read end to end, and the private adapters that convert core types into it (public_report, public_finding, show_with_scope_and_overlays). The contract is the reason to keep one file; the adapters are why it is oversized. Missing boundary: an adapter module for the conversion layer, leaving api.rs as the surface it is documented to be.
-"""
+# measures 495, and crates/grund-core/src/api.rs (1686 lines) into the module
+# directory of §AR-system.2.9. All six are now under the hard budget with no
+# exception; two of them keep a soft entry in
+# docs/file-size-agent-exceptions.toml, because the boundary each `until` named
+# is still unpaid.
+#
+# The api.rs entry is the one that retired because its `until` was *paid*. It
+# asked for the private conversion adapters out of the file, keeping the public
+# contract: api/ is now one file per published surface — check, show,
+# complete_ids, id, config, cover, fmt, refs, list and the editor snapshot —
+# beside the adapters that fill them, in report.rs (the Diagnostic-to-Finding
+# conversion the entry named), refs_query.rs, run.rs with scope_cautions.rs and
+# config_findings.rs, and lsp_ranges.rs. Five record groups the contract declared
+# went down to the component that produces or reads each — the published report
+# records to model/report.rs, the show options and refusal to
+# queries/show_query.rs, the snapshot records to queries/editor_snapshot.rs, the
+# scan error to scanner/scan_error.rs, the snapshot path canonicalization to
+# model/paths.rs — and the check run came up out of the deprecated checker_cmd.rs,
+# which the published `check` had been calling into. The largest file left is
+# api/lsp_snapshot.rs at 335 lines, under the 350-line soft budget.
 [[exceptions]]
 path = "crates/grund-lsp/tests/shutdown.rs"
 match = "exact"

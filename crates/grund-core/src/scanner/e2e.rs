@@ -6,9 +6,7 @@ use std::path::{Path, PathBuf};
 use crate::config::Config;
 use crate::grammar::{literal_after_kind_placeholder, parse_id_arg};
 use crate::model::{Declaration, DeclarationSource, E2eCase, E2eSpecRef, Findings, Id};
-// §AR-system.4: two upward reads, through the crate root until their owner is a
-// module — the report path renderer and its sort key from `output.rs`.
-use crate::{format_path, sort_path_key};
+use crate::model::{format_path, sort_path_key};
 
 /// Discover `e2e/cases/<name>/` directories and register each as an `E2E-<name>`
 /// declaration whose body is the case manifest (§AR-scanner.6, §FS-show.2.4) — so

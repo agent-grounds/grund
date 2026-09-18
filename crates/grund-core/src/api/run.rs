@@ -1,183 +1,37 @@
-/// `grund check [path]`: validate repeatable exact-code selectors before config
-/// discovery (§FS-check.1), scan the whole tree, select the completed report,
-/// and exit `0` clean / `1` on a retained error / `2` on a CLI or I/O failure
-/// (§FS-check.2.1, §FS-cli.5).
-fn command_check(args: &[String]) -> ExitCode {
-    let mut path = PathBuf::from(".");
-    let mut path_provided = false;
-    let mut format_override = None;
-    let mut require_grounding = false;
-    let mut include_suggestions = false;
-    let mut full = false;
-    let mut selection = CheckFindingSelection::default();
-    let mut idx = 0;
-    while idx < args.len() {
-        match args[idx].as_str() {
-            other if other.starts_with("--format=") => {
-                format_override = Some(other.trim_start_matches("--format=").to_string());
-            }
-            "--format" => {
-                idx += 1;
-                if idx >= args.len() {
-                    eprintln!("error: --format requires a value");
-                    return ExitCode::from(2);
-                }
-                format_override = Some(args[idx].clone());
-            }
-            "--require-grounding" => require_grounding = true,
-            "--full" => full = true,
-            "--suggestions" => include_suggestions = true,
-            other if other.starts_with("--only=") => {
-                let value = other
-                    .strip_prefix("--only=")
-                    .expect("guarded by starts_with");
-                if let Err(err) = selection.add_only(value) {
-                    eprintln!("error: {err}");
-                    return ExitCode::from(2);
-                }
-            }
-            "--only" => {
-                idx += 1;
-                if idx >= args.len() {
-                    eprintln!("error: --only requires a finding code");
-                    return ExitCode::from(2);
-                }
-                if let Err(err) = selection.add_only(&args[idx]) {
-                    eprintln!("error: {err}");
-                    return ExitCode::from(2);
-                }
-            }
-            other if other.starts_with("--ignore=") => {
-                let value = other
-                    .strip_prefix("--ignore=")
-                    .expect("guarded by starts_with");
-                if let Err(err) = selection.add_ignore(value) {
-                    eprintln!("error: {err}");
-                    return ExitCode::from(2);
-                }
-            }
-            "--ignore" => {
-                idx += 1;
-                if idx >= args.len() {
-                    eprintln!("error: --ignore requires a finding code");
-                    return ExitCode::from(2);
-                }
-                if let Err(err) = selection.add_ignore(&args[idx]) {
-                    eprintln!("error: {err}");
-                    return ExitCode::from(2);
-                }
-            }
-            other if other.starts_with('-') => {
-                eprintln!("error: unknown flag `{other}`");
-                return ExitCode::from(2);
-            }
-            other => {
-                // §FS-cli.3: a path-taking subcommand accepts at most one path;
-                // a second positional is a CLI error, never a silent drop.
-                if path_provided {
-                    eprintln!("error: check takes at most one path argument");
-                    return ExitCode::from(2);
-                }
-                path = PathBuf::from(other);
-                path_provided = true;
-            }
-        }
-        idx += 1;
-    }
-    if let Some(format) = &format_override
-        && !matches!(format.as_str(), "text" | "json")
-    {
-        eprintln!("error: unsupported check format `{format}`");
-        return ExitCode::from(2);
-    }
-    let mut run = match run_check(&path, path_provided, require_grounding, full) {
-        Ok(run) => run,
-        Err(err) => {
-            eprintln!("error: {err:#}");
-            return ExitCode::from(2);
-        }
-    };
-    let format = format_override.unwrap_or_else(|| run.config.output_format.clone());
-    if !matches!(format.as_str(), "text" | "json") {
-        eprintln!("error: unsupported check format `{format}`");
-        return ExitCode::from(2);
-    }
-    // §FS-check.2.1: filter only after the ordinary checker completed, before
-    // the existing sort, rendering, and selected-report exit decision.
-    run.report
-        .errors
-        .retain(|diagnostic| selection.retains(diagnostic.code));
-    run.report
-        .warnings
-        .retain(|diagnostic| selection.retains(diagnostic.code));
-    run.report
-        .suggestions
-        .retain(|diagnostic| selection.retains(diagnostic.code));
-    if format == "json" {
-        print_json_report(&run.config, &run.report, include_suggestions);
-    } else {
-        print_report(&run.config, &run.report, include_suggestions);
-    }
-    if run.had_scan_errors {
-        ExitCode::from(2)
-    } else if run.report.errors.is_empty() {
-        ExitCode::SUCCESS
-    } else {
-        ExitCode::FAILURE
-    }
-}
+//! One `check` run, single-project and workspace (§AR-system.2.9): resolve the
+//! config, scan, check, and fold in the cautions and the config findings the run
+//! earns (§FS-check.1, §FS-check.2, §FS-workspace.5).
+//!
+//! It sat in the deprecated `check` adapter while `check_with_opts` — the whole
+//! published `check` — called into it, which had the api reading a renderer
+//! (§AR-system.4, §AR-system.2.9). Only `command_check` was the renderer; the run
+//! is what every surface shares, and the api is the lowest component that holds
+//! it, so `compat/check.rs` now reads it downward and the deprecated path and the
+//! embedding surface cannot report different things about one tree.
 
-/// §FS-check.4.5: whether a walk that read files matched nothing in them. It asks
-/// *recognized*, not *declared* — a project that only cites another project's
-/// specs (§FS-workspace.1) declares nothing and is working as intended, so one
-/// citation anywhere answers the question and the caution stays quiet.
-fn nothing_recognized(findings: &Findings) -> bool {
-    !findings.scanned_files.is_empty()
-        && findings.declarations.is_empty()
-        && findings.citations.is_empty()
-}
+use anyhow::Result;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 
-/// The one caution a walk earns for what it did *not* find: §FS-check.2.2 when it
-/// read no files, §FS-check.4.5 when it read files and matched nothing in them.
-/// At most one — the empty scan is asked first, because a walk that read nothing
-/// had nothing to recognize.
-///
-/// One decision for every surface that runs the engine: `grund check`, the
-/// workspace loop beside it, and the LSP snapshot (§FS-lsp.4, `check_workspace_context`).
-/// Spelled once per surface it was already wrong once — the LSP kept the empty
-/// scan and never grew the second caution, so an editor and a terminal disagreed
-/// about one tree.
-///
-/// `report_is_silent` is the caller's own answer to "did this project report
-/// anything about its configured scope?" — findings and unreadable files both.
-/// The out-of-scope tier (§FS-check.3.14) is deliberately not part of it: those
-/// are findings about the tree *outside* the scope, and a run that finds the
-/// citations out there is exactly the one where saying the configured scope is
-/// empty helps most.
-fn scan_scope_caution(
-    config: &Config,
-    findings: &Findings,
-    path: &Path,
-    path_provided: bool,
-    report_is_silent: bool,
-) -> Option<Diagnostic> {
-    if !report_is_silent {
-        return None;
-    }
-    if findings.scanned_files.is_empty() {
-        return Some(empty_scan_warning(config, path, path_provided));
-    }
-    // §FS-check.4.5: only a run over the whole project makes the claim. A narrowed
-    // `grund check <dir>` is a slice the caller chose, and a slice with no
-    // declarations and no citations is an answer, not a misconfiguration.
-    (nothing_recognized(findings) && scope_is_config_root(config, path, path_provided))
-        .then(|| nothing_recognized_warning(config, findings.scanned_files.len()))
-}
+use super::config_findings::config_diagnostics;
+use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
+use crate::checker::{
+    WorkspaceCheckTarget, check_findings, check_with_workspace, configured_scope,
+    out_of_scope_references, out_of_scope_section_headings, retain_findings_in_scope,
+    sort_diagnostics, workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
+};
+use crate::config::Config;
+use crate::model::{CheckReport, Diagnostic};
+use crate::scanner::scan_tree;
+use crate::workspace::{
+    absent_only_workspace_caution, absent_optional_member_warnings, load_workspace_projects,
+    resolve_workspace_config, scope_is_config_root, unlisted_workspace_block_warnings,
+};
 
-struct CheckRun {
-    config: Config,
-    report: CheckReport,
-    had_scan_errors: bool,
+pub(crate) struct CheckRun {
+    pub(crate) config: Config,
+    pub(crate) report: CheckReport,
+    pub(crate) had_scan_errors: bool,
 }
 
 /// One `grund check` run over `path`: resolve the config, scan, check, and fold in
@@ -187,7 +41,7 @@ struct CheckRun {
 /// agent-entrypoint check (§FS-check.3.5) runs even when no source file is scanned,
 /// so a missing or stale `AGENTS.md` block still reports normally and suppresses
 /// both cautions.
-fn run_check(
+pub(crate) fn run_check(
     path: &Path,
     path_provided: bool,
     force_require_grounding: bool,
@@ -236,9 +90,12 @@ fn run_check(
     // §FS-check.1.3, also after the scope caution: `--full` cancels `[scan] include`,
     // and an explicit path other than the config root already bypasses that key — so
     // the flag changed nothing, and the caller who typed it wanted a wider search.
-    report
-        .warnings
-        .extend(full_scope_ignored_warning(&config, path, path_provided, full));
+    report.warnings.extend(full_scope_ignored_warning(
+        &config,
+        path,
+        path_provided,
+        full,
+    ));
     // §FS-check.4.8: the blocks this walk met that no enclosing one lists. A report
     // warning, not a line printed past it: that is what stands it in place of
     // `success` (§FS-check.2.1) and makes §DF-unlisted-workspace-block.2.1's ramp work.
@@ -347,9 +204,10 @@ fn run_workspace_check(
     }
     // §FS-workspace.2.2, §FS-check.4.9: the caution and the announcements — see
     // this function's docs.
-    report
-        .warnings
-        .extend(absent_only_workspace_caution(&root_config, projects.is_empty()));
+    report.warnings.extend(absent_only_workspace_caution(
+        &root_config,
+        projects.is_empty(),
+    ));
     report
         .warnings
         .extend(absent_optional_member_warnings(&root_config));

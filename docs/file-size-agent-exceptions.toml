@@ -2,7 +2,7 @@ fissile_exceptions_version = 2
 # Soft-severity file-size exceptions. An agent may add an entry here on its own;
 # hard entries are a human's (§AR-ci.9).
 #
-# Two shapes live in this file. Most entries carry their own argument. Nine are
+# Two shapes live in this file. Most entries carry their own argument. Eight are
 # *soft twins*: a file past the hard budget is past the soft one too, and a
 # `deferred` hard entry deliberately leaves the soft finding standing, so the file
 # needs an entry in each registry. (A `structural` hard entry silences both tiers
@@ -12,16 +12,6 @@ fissile_exceptions_version = 2
 # on the lines above. Copying the prose instead would give one file two arguments
 # that can silently disagree, and `tests/integration/test_file_size_exceptions.py` enforces
 # the pointer shape.
-[[exceptions]]
-path = "crates/grund-core/src/api.rs"
-match = "exact"
-rules = ["core-source"]
-kind = "deferred"
-max_accepted = { value = 1609, unit = "lines" }
-until = "the entry for this path in docs/file-size-human-exceptions.toml is retired"
-reason = """
-Soft twin of this path's entry in docs/file-size-human-exceptions.toml, which carries the argument. This entry holds no judgment of its own: same ceiling, retires with its twin. Edit the reason there, not here.
-"""
 [[exceptions]]
 path = "crates/grund-core/src/scanner/file_pass.rs"
 match = "exact"
@@ -133,16 +123,16 @@ reason = """
 This file cannot be split. It is a shipped artifact, not source: init_templates.rs embeds it verbatim via include_str! as AGENT_SETUP_INSTRUCTIONS, `grund agent-setup-instructions` prints exactly those bytes, and a test asserts it is byte-identical to the mirror under crates/grund-core/assets/ (§FS-init.5). Any split either changes the emitted document or makes the command reassemble it at runtime, which moves document structure into code. Its length is the length of the instructions grund promises to emit; the only honest way to shrink it is to promise less. The ceiling therefore moves with what grund promises to say: 387 -> 394 when `[[kinds]]` gained non-citable kinds (§FS-config.3.4.1) and the setup interview had to learn to ask about the directories that are places rather than ID namespaces.
 """
 [[exceptions]]
-path = "crates/grund-core/src/list_cmd.rs"
+path = "crates/grund-core/src/compat/list.rs"
 match = "exact"
 rules = ["core-source"]
 kind = "deferred"
-until = "the deprecated `grund list` adapter leaves for compat/"
-max_accepted = { value = 415, unit = "lines" }
+until = "the deprecated `grund list` adapter retires with the rest of compat/"
+max_accepted = { value = 432, unit = "lines" }
 reason = """
-What is left of the declaration catalog once the query half moved into `queries/` (§AR-system.2.7): the argv parse, the `--kind` and `--project` validation, the four output shapes and the partial-scan exit — all of it the deprecated `main_entry()` renderer of §AR-system.2.9, which is why the argument for it is no longer a split. `compat/` takes this whole adapter, and the budget for a deprecated surface is then that surface's rather than this rule's; nothing narrower retires the entry, because a renderer is not separable from the argv it renders for.
+What is left of the declaration catalog once the query half moved into `queries/` (§AR-system.2.7): the argv parse, the `--kind` and `--project` validation, the four output shapes and the partial-scan exit — all of it the deprecated `main_entry()` renderer of §AR-system.2.9, which is why the argument for it is no longer a split. `compat/` holds this whole adapter now, and the budget for a deprecated surface is that surface's rather than this rule's; nothing narrower retires the entry, because a renderer is not separable from the argv it renders for. It retires when §REQ-backwards-compatibility.2 closes the `main_entry()` path and the directory goes.
 
-The ceiling is 415 where `crates/grund-core/src/list.rs` recorded 409 and had drifted to 459 — the entry was stale by 50 against a file that had kept accreting renderer branches. Two things moved it back: `ListCitationCounts`, the one pass building the `refs` and `used` counts of §FS-list.3.2, left for `queries/citation_counts.rs` where `api_list.rs` and the size catalog read it downward instead of through the crate root, and `cargo fmt --all` reached the file for the first time now that it is no longer `include!`d. 415 is the renderers and nothing else.
+The ceiling is 415 where `crates/grund-core/src/list.rs` recorded 409 and had drifted to 459 — the entry was stale by 50 against a file that had kept accreting renderer branches. Two things moved it back: `ListCitationCounts`, the one pass building the `refs` and `used` counts of §FS-list.3.2, left for `queries/citation_counts.rs` where `api_list.rs` and the size catalog read it downward instead of through the crate root, and `cargo fmt --all` reached the file for the first time now that it is no longer `include!`d. 415 was the renderers and nothing else; the move into `compat/` takes it to 432, which is the 17-line import block a module charges and `include!` did not.
 
 The +10 the old ceiling carried is `--summary` sorting its rows by alias and sizing the alias column to the widest one emitted, mirroring the same fix in `api.rs` so the deprecated path cannot re-diverge from the live one on the same bug (§FS-workspace.8.3, issue #68). The +2 before it is the `--kind` selector learning to tell a typo from a configured kind that declares no IDs (§FS-config.3.4.1) — one more arm on the check that was already there. Both are in what stayed.
 """
@@ -186,16 +176,6 @@ max_accepted = { value = 551, unit = "lines" }
 until = "the classification cases move to a scanner-side test file of their own"
 reason = """
 The render half of this file moved out to tests_citation_directions_render.rs, which took it from 659 lines to 551. What is left is the rule half: how the scanner classifies a citing site, the obligation and prohibition passes over those classes, the empty-obligation warning, and config validation. Missing boundary: classification and enforcement are two subjects — the first is scanner behaviour that citation directions happen to consume, the second is the checker's — and a scanner-side file would take the first with it.
-"""
-[[exceptions]]
-path = "crates/grund-core/src/output.rs"
-match = "exact"
-rules = ["core-source"]
-kind = "deferred"
-max_accepted = { value = 400, unit = "lines" }
-until = "an output submodule boundary is specified and landed as a pure refactor"
-reason = """
-The output category has no reviewed boundary separating check rendering from the path, JSON, and query helpers that share this file; establish that boundary in a separately reviewed pure-move change before splitting it.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-workspace.md"

@@ -2,7 +2,7 @@
 //! list into the canonical project roots it names, and enforcing the invariants
 //! that list has to satisfy (§FS-workspace.2, §FS-workspace.6.1).
 //!
-//! Split out of `checker_cmd.rs`, which is the `check` command's argument
+//! Split out of the `check` adapter, which is the `check` command's argument
 //! adapter: carrying each entry's *written* spelling so a diagnostic can name it
 //! (§FS-errors.4) turned expansion into a small rule set of its own, and rules
 //! are not what that file is for. Every `[workspace]` block — outermost root or
@@ -10,7 +10,7 @@
 //! (§AR-workspace.5.1, §AR-workspace.6.1).
 //!
 //! The three findings this rule set produces are *printed* one level up, in the
-//! flat `workspace_members_cmd.rs`, because rendering inside the engine belongs
+//! `compat/workspace_members.rs`, because rendering inside the engine belongs
 //! to the deprecated path of §AR-system.2.9. Every sentence is built here and
 //! apart from its printing, which is what lets a test read it
 //! (§AR-core-module-layout.1).
@@ -26,12 +26,13 @@ use crate::config::{
     AbsentOptionalNamespace, Config, ConfigLocation, config_file_in,
     load_config_at_with_report_base, parse_string_list, strip_comment,
 };
-// §AR-system.4: eight upward reads through the crate root, because their owners
-// are still flat — the walk's scope roots, prune test, canonical root and
-// hidden test from the scanner, the path helpers and one printer from the renderer.
+use crate::model::{format_path, relative_from_base, sort_path_key};
+// §AR-system.4: five reads through the crate root — four of the scanner's, and
+// the printing of the undecidable-claim warning, which is `compat/`'s because it
+// reaches the reader as a stderr line (§FS-workspace.6.1).
 use crate::{
-    canonical_config_root, format_path, is_hidden, relative_from_base, root_scope_roots,
-    sort_path_key, walk_reads_any_file, warn_undecidable_ancestor_claim,
+    canonical_config_root, is_hidden, root_scope_roots, walk_reads_any_file,
+    warn_undecidable_ancestor_claim,
 };
 
 /// The canonical form of `path` — the root a project is identified by — or the path
@@ -288,7 +289,7 @@ fn block_relative_root<'a>(config: &Config, root: &'a Path) -> &'a Path {
 }
 
 /// The sentence `warn_if_members_absorb_scan` prints, built apart from the
-/// printing — in `workspace_members_cmd.rs` — so a test can read it (§FS-check.4.7): what was swallowed by what,
+/// printing — in `compat/workspace_members.rs` — so a test can read it (§FS-check.4.7): what was swallowed by what,
 /// what that costs the project, the two ways out, and the release the finding
 /// stops being a warning in.
 pub(crate) fn absorbed_scan_warning(covered: &[String]) -> String {
@@ -381,7 +382,7 @@ pub(crate) fn unread_block_scope_root(
 }
 
 /// The sentence `warn_unread_block` prints, built apart from the printing — in
-/// `workspace_members_cmd.rs` — so a test can read it (§FS-check.4.10): the tree no scan reaches,
+/// `compat/workspace_members.rs` — so a test can read it (§FS-check.4.10): the tree no scan reaches,
 /// what that costs, and the two remedies the ticket itself named.
 ///
 /// Shorter than [`absorbed_scan_warning`] above, and without its "declarations are
@@ -705,7 +706,7 @@ fn read_ancestor_workspace_block(
 }
 
 /// The sentence `warn_undecidable_ancestor_claim` prints, built apart from the
-/// printing — in `workspace_members_cmd.rs` — so a test can read it: what could not be answered, and what that
+/// printing — in `compat/workspace_members.rs` — so a test can read it: what could not be answered, and what that
 /// costs the reader — the alias paths below this directory, which is the
 /// difference between a citation that passes here and one that passes at the root.
 pub(crate) fn undecidable_ancestor_claim_warning(

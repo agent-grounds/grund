@@ -19,14 +19,11 @@ use super::support::{
     citation_in_markdown_inline_code, close_enough_for_hint, dangling_message, edit_distance,
     missing_snapshot_message, target_for_citation,
 };
-use crate::config::{Config, KindResolution};
+use crate::config::{Config, KindResolution, display_path};
 use crate::grammar::{ShorthandIndexes, render_qualified_id, report_shorthand_citation};
-use crate::model::{CheckReport, DeclarationSource, Diagnostic, Findings};
+use crate::model::{CheckReport, DeclarationSource, Diagnostic, Findings, sort_path_key};
 use crate::scanner::{scan_roots_for, unwalked_home_roots};
 use crate::workspace::{WorkspaceProject, join_alternatives, namespace_is_unverified};
-// §AR-system.4: two upward reads through the crate root — the report path
-// spelling and the sort key, both `output.rs`'s (§AR-system.2.9).
-use crate::{display_path, sort_path_key};
 
 pub(crate) struct WorkspaceCheckTarget<'a> {
     pub(crate) findings: &'a Findings,

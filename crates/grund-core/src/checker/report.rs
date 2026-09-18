@@ -15,15 +15,13 @@ use super::sections::check_section_headings;
 use super::sizes::check_oversized_leads;
 use super::support::{citation_resolves, sort_diagnostics};
 use super::values::check_values;
-use crate::config::Config;
+use crate::config::{Config, display_path};
 use crate::grammar::{render_id, render_qualified_id};
 use crate::model::{
-    CheckReport, Declaration, Diagnostic, Findings, Id, Site, TextOverlays, resolve_stub_target,
+    CheckReport, Declaration, Diagnostic, Findings, Id, Site, TextOverlays, format_path,
+    resolve_stub_target, sort_path_key,
 };
 use crate::scanner::is_scannable;
-// §AR-system.4: three upward reads through the crate root — the two path
-// spellings and the sort key, all `output.rs`'s (§AR-system.2.9).
-use crate::{display_path, format_path, sort_path_key};
 
 /// AR-checker: how grund validates the scanner's findings
 ///

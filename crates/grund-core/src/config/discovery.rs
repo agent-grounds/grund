@@ -10,9 +10,7 @@ use std::path::{Path, PathBuf};
 
 use super::parse::parse_config_file;
 use super::record::Config;
-// §AR-system.4: path rendering for a report is the renderer's
-// (§AR-system.2.9) — read through the crate root until `output` is a module.
-use crate::relative_from_base;
+use crate::model::relative_from_base;
 
 /// The two names one directory may hold its config under, in probe order
 /// (§FS-config.1): the bare root-visible `grund.toml` first, then
