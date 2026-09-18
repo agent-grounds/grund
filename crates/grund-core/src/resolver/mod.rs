@@ -14,8 +14,9 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). Six files came from four components, each because
-//! a component below was reading it upward or a sibling was answering for it:
+//! (§AR-core-module-layout.1). Seven groups came from five components, each
+//! because a component below was reading it upward or a sibling was answering
+//! for it:
 //!
 //! - `context.rs` and `id_candidates.rs` out of `workspace/`, the loaded project
 //!   set and the §FS-workspace.8.1.1 candidate clause that reads it. They are
@@ -36,6 +37,12 @@
 //!   same way (§FS-check.3.18).
 //! - `unread_block.rs` out of `workspace/members.rs`, the one half of
 //!   §FS-check.4.10 that has to run the walker to answer.
+//! - `shorthand.rs` out of `grammar/shorthand.rs`, the half of the number-only
+//!   shorthand that needs the whole run's catalog: whose grammar parses a
+//!   qualified token, whose format renders the canonical ID, whose policy lets a
+//!   persisted spelling stand (§AR-resolver.4). Recognizing the shape stays
+//!   lexical; only resolving it against every loaded project's declarations had
+//!   the grammar naming records three components above it (§AR-system.4).
 //!
 //! What went the other way, down rather than up, when this component was carved
 //! out: three walk-level facts workspace was reading from the scanner at config
@@ -57,6 +64,7 @@ mod id_candidates;
 mod legacy_promotion;
 mod link_targets;
 mod point_body;
+mod shorthand;
 mod unread_block;
 
 pub use id_candidates::names_member_id_candidate;
@@ -75,4 +83,13 @@ pub(crate) use e2e_body::show_e2e_case;
 pub(crate) use id_candidates::{join_alternatives, with_member_id_candidates};
 pub(crate) use link_targets::{markdown_link_target, markdown_link_target_with_root};
 pub(crate) use point_body::point_body_pair;
+pub(crate) use shorthand::{
+    ShorthandTargets, expand_shorthand_citations_with_origins, shorthand_token_expansion,
+};
 pub(crate) use unread_block::unread_block_scope_root;
+
+// What only the crate's own test modules read (§AR-core-module-layout.1): the
+// single-line form of the shorthand rewrite, without the trigger origins the
+// formatter threads through it.
+#[cfg(test)]
+pub(crate) use shorthand::expand_shorthand_citations;

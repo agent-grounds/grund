@@ -124,7 +124,7 @@ fn source_structure(path: &Path, text: &str, is_py: bool, config: &Config) -> Fi
         total_lines: lines.len(),
         ..FileStructure::default()
     };
-    for (start, end, kind) in comment_blocks(&lines, is_py, config) {
+    for (start, end, kind) in comment_blocks(&lines, is_py, config.lexical()) {
         let block = &lines[start..=end];
         if block_is_doc_comment(
             doc_rule,

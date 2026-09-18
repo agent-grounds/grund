@@ -3,13 +3,10 @@ use regex::Regex;
 
 use super::compiled::Grammar;
 use super::ids::parse_id;
+use super::settings::GrammarKind;
 use crate::model::Id;
 // `LegacyGrammar` below is this component's own, moved down out of the scanner
 // with §AR-system.2.5.
-
-// §AR-system.4: one upward read — `KindConfig` is config's record, above this
-// component.
-use crate::config::KindConfig;
 
 /// The near-miss half of the compiled [`Grammar`] (§FS-check.4.6): the
 /// declaration patterns with the ID grammar replaced by "a configured kind, the
@@ -270,7 +267,7 @@ pub(super) struct LegacyGrammar {
 impl LegacyGrammar {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn build(
-        kinds: &[KindConfig],
+        kinds: &[GrammarKind],
         format: &str,
         section_pattern: &str,
         comment_prefix: &str,
@@ -281,10 +278,9 @@ impl LegacyGrammar {
         let docstring_decl_re = Regex::new(r"^\s*(?P<near>[^\s:`]+):")?;
         let kinds_and_formats = kinds
             .iter()
-            .filter(|kind| kind.citable)
             .map(|kind| {
                 (
-                    kind.kind.clone(),
+                    kind.name.clone(),
                     kind.format.clone().unwrap_or_else(|| format.to_string()),
                 )
             })

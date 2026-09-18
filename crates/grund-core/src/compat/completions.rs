@@ -104,7 +104,7 @@ fn command_complete_ids(args: &[String]) -> ExitCode {
             let complete_sections =
                 force_sections || id_prefix.contains(&project.config.section_separator);
             for (id, decls) in &project.findings.declarations {
-                let rendered = render_id(&project.config, id);
+                let rendered = render_id(&project.config.grammar, id);
                 if complete_sections {
                     for decl in decls {
                         for section in decl.sections.keys() {
@@ -131,7 +131,7 @@ fn command_complete_ids(args: &[String]) -> ExitCode {
     let mut candidates = BTreeSet::new();
     if let Some(current_project) = context.current_project() {
         for (id, decls) in &current_project.findings.declarations {
-            let rendered = render_id(current_config, id);
+            let rendered = render_id(&current_config.grammar, id);
             if complete_sections {
                 for decl in decls {
                     for section in decl.sections.keys() {

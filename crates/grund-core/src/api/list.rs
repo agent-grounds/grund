@@ -223,10 +223,10 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
             format!(
                 "{}/{}",
                 entry.project_alias,
-                render_id(entry.project_config, entry.id)
+                render_id(&entry.project_config.grammar, entry.id)
             )
         } else {
-            render_id(entry.project_config, entry.id)
+            render_id(&entry.project_config.grammar, entry.id)
         }
     };
     let render_config = context.render_config();

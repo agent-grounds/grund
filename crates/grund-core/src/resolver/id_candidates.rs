@@ -134,9 +134,11 @@ fn member_id_candidates(context: &WorkspaceContext, raw_id: &str) -> Vec<String>
 /// the clause offers a spelling that resolves, or it offers nothing.
 fn qualified_declared_id(project: &WorkspaceProject, raw_id: &str) -> Option<String> {
     let (id, _section) = resolve_id_arg(raw_id, &project.config, &project.findings).ok()?;
-    project
-        .findings
-        .declarations
-        .contains_key(&id)
-        .then(|| format!("{}/{}", project.alias, render_id(&project.config, &id)))
+    project.findings.declarations.contains_key(&id).then(|| {
+        format!(
+            "{}/{}",
+            project.alias,
+            render_id(&project.config.grammar, &id)
+        )
+    })
 }

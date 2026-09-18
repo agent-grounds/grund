@@ -55,7 +55,7 @@ pub(crate) fn resolve_id_arg(
         many => Err(IdArgError::Ambiguous(anyhow!(
             "ambiguous ID: {raw} (matches {})",
             many.iter()
-                .map(|(id, _)| render_id(config, id))
+                .map(|(id, _)| render_id(&config.grammar, id))
                 .collect::<Vec<_>>()
                 .join(", ")
         ))),

@@ -88,7 +88,7 @@ fn check_oversized_lead_site(
     if actual <= warning.max {
         return;
     }
-    let mut coordinate = render_id(config, id);
+    let mut coordinate = render_id(&config.grammar, id);
     if let Some((section, _)) = section {
         coordinate.push_str(&config.section_separator);
         coordinate.push_str(section);

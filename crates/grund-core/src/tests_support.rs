@@ -121,7 +121,7 @@ mod tests_support {
             for declaration in declarations {
                 rows.push(format!(
                     "decl|{}|{}|{}|{}|{}|{}|{}",
-                    render_id(config, id),
+                    render_id(&config.grammar, id),
                     sort_path_key(&declaration.file),
                     declaration.line,
                     declaration.heading_level,
@@ -136,7 +136,7 @@ mod tests_support {
                 for (section, info) in &declaration.sections {
                     rows.push(format!(
                         "section|{}|{}|{}|{}|{}",
-                        render_id(config, id),
+                        render_id(&config.grammar, id),
                         section,
                         info.title,
                         info.line,
@@ -149,7 +149,7 @@ mod tests_support {
                 for (section, info) in &declaration.duplicate_sections {
                     rows.push(format!(
                         "duplicate-section|{}|{}|{}|{}|{}",
-                        render_id(config, id),
+                        render_id(&config.grammar, id),
                         section,
                         info.title,
                         info.line,
@@ -159,7 +159,7 @@ mod tests_support {
                 if let Some(case) = &declaration.e2e_case {
                     rows.push(format!(
                         "e2e|{}|{}|{}|{}|{}",
-                        render_id(config, id),
+                        render_id(&config.grammar, id),
                         sort_path_key(&case.dir),
                         case.expected_exit,
                         case.args.join(" "),
@@ -176,7 +176,7 @@ mod tests_support {
             rows.push(format!(
                 "cite|{}|{}|{}|{}|{}|{}|{}|{}",
                 citation.namespace.as_deref().unwrap_or(""),
-                render_id(config, &citation.id),
+                render_id(&config.grammar, &citation.id),
                 citation.section.as_deref().unwrap_or(""),
                 sort_path_key(&citation.file),
                 citation.line,

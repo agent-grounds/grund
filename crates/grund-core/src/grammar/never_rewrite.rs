@@ -1,7 +1,4 @@
 use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_line};
-// §AR-system.4: one upward read — `CitationLine` is the scanner's per-line
-// record, above this component.
-use crate::scanner::CitationLine;
 
 /// The never-rewrite predicates shared by the scanner (§AR-scanner.2.3), `fmt`
 /// (§FS-fmt.2.3), and the LSP on-type path (§FS-lsp.1.4): where a citation-shaped
@@ -91,20 +88,6 @@ pub(crate) fn never_rewrite_context_in(
 ) -> bool {
     let (text, pos) = docstring.view(line, marker_start);
     never_rewrite_context(text, is_md, pos)
-}
-
-/// Whether `fmt` may rewrite the citation whose marker starts at `marker_start` —
-/// a **`scan_line`** offset, which is what both scanner passes hold — on the line
-/// they are scanning (§FS-fmt.2.3, §FS-check.3.13). One place asks it, so the
-/// qualified pass and the unqualified one can never reach different verdicts about
-/// one site; the recorded column stays a raw-file column either way.
-pub(crate) fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> bool {
-    !never_rewrite_context_in(
-        line.docstring,
-        line.raw_line,
-        line.is_md,
-        line.column_offset + marker_start,
-    )
 }
 
 /// `is_inside_string_literal` asked of the same view (§FS-fmt.2.3.1) — what the

@@ -234,14 +234,14 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
             eprintln!(
                 "note: {}/{} is neither declared nor cited — run `grund list --project {}` to see {}'s declared IDs",
                 target_alias,
-                render_id(render_config, &id),
+                render_id(&render_config.grammar, &id),
                 target_alias,
                 target_alias
             );
         } else {
             eprintln!(
                 "note: {} is neither declared nor cited — run `grund list` to see every declared ID",
-                render_id(render_config, &id)
+                render_id(&render_config.grammar, &id)
             );
         }
     }
@@ -398,7 +398,7 @@ fn citation_json_body(config: &Config, citation: &Citation, rendered_path: &str)
         json_escape(rendered_path),
         citation.line,
         citation.column,
-        json_escape(&render_id(config, &citation.id)),
+        json_escape(&render_id(&config.grammar, &citation.id)),
         citation
             .section
             .as_deref()

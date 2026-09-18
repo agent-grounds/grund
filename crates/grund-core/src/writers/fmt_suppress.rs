@@ -110,7 +110,7 @@ impl<'a> FmtDirectives<'a> {
     pub(crate) fn new(config: &'a Config, is_md: bool) -> Self {
         Self {
             rewriting: true,
-            prefixes: (!is_md).then(|| comment_strip_prefixes(config)),
+            prefixes: (!is_md).then(|| comment_strip_prefixes(config.lexical())),
         }
     }
 

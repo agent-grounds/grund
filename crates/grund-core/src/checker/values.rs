@@ -37,7 +37,7 @@ pub(super) fn check_values(
             message: match &site.id {
                 Some(id) => format!(
                     "invalid value declaration for {}: {}",
-                    render_id(config, id),
+                    render_id(&config.grammar, id),
                     site.message
                 ),
                 None => format!("invalid value declaration: {}", site.message),
@@ -137,7 +137,11 @@ pub(super) fn check_values(
         }
         let coordinate = format!(
             "{}{}{}",
-            render_qualified_id(target.config, binding.namespace.as_deref(), &binding.id),
+            render_qualified_id(
+                &target.config.grammar,
+                binding.namespace.as_deref(),
+                &binding.id
+            ),
             target.config.section_separator,
             binding.section
         );

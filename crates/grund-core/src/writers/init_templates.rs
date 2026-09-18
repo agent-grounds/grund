@@ -220,7 +220,7 @@ pub(crate) fn inline_citation_style_sentence(config: &Config) -> String {
     // renders the byte-identical block it rendered before that key existed.
     format!(
         "{budgets}{BLOCK_SENTENCE}{}{DOC_COMMENT_SENTENCE}",
-        inline_note_layout_sentence(config)
+        inline_note_layout_sentence(config.lexical())
     )
 }
 

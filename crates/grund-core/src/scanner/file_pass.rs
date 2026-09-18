@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 
 use super::citations::{
     scan_escaped_citations, scan_fallback_qualified_citations, scan_legacy_citation_candidates,
-    scan_workspace_qualified_pass,
+    scan_shorthand_citations, scan_workspace_qualified_pass,
 };
 use super::context::{
     assign_declaration_bodies, classify_citation_sources, inline_citation_sites,
@@ -36,8 +36,8 @@ use crate::config::{Config, kind_uses_values};
 use crate::grammar::{
     DocstringContent, PythonDocstringScanState, STUB_LINK_HEADING,
     bare_token_in_never_rewrite_zone, declaration_captures, markdown_fence_delimiter,
-    near_miss_heading, parse_id, qualified_suppressed_in_source, scan_shorthand_citations,
-    section_anchor_text, section_path, source_scan_line,
+    near_miss_heading, parse_id, qualified_suppressed_in_source, section_anchor_text, section_path,
+    source_scan_line,
 };
 use crate::model::{
     Citation, Declaration, DeclarationSource, EmbeddedValueRoot, Findings, Id, InlineCitationSite,

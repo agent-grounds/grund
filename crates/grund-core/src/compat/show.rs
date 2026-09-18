@@ -317,7 +317,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
                 } else if message.starts_with("section not found:") {
                     eprintln!(
                         "hint: run `grund {} --toc` to print the lead with the section map",
-                        render_id(config, &id)
+                        render_id(&config.grammar, &id)
                     );
                 }
             }

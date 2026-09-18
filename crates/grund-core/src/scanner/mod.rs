@@ -70,7 +70,6 @@ pub use scan_error::ApiScanError;
 pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;
-pub(crate) use file_pass::CitationLine;
 pub(crate) use legacy::{
     collect_local_legacy_markdown_citations, configured_catalog_ids,
     formatter_wrapper_label_is_citation, legacy_catalog_ids, match_legacy_tail,

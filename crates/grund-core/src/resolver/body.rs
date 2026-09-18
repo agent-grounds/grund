@@ -327,12 +327,12 @@ pub(super) fn extract_declaration_body_cached(
     }
 
     if !in_decl {
-        return Err(anyhow!("ID not found: {}", render_id(config, id)));
+        return Err(anyhow!("ID not found: {}", render_id(&config.grammar, id)));
     }
     if !found_section {
         return Err(anyhow!(
             "section not found: {}{}{}",
-            render_id(config, id),
+            render_id(&config.grammar, id),
             config.section_separator,
             section.unwrap_or("")
         ));

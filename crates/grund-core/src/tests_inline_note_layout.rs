@@ -6,26 +6,26 @@ mod tests_inline_note_layout {
     use super::*;
 
     fn conforms(config: &Config, line: &str) -> bool {
-        let ranges = line_citation_ranges(line, config, &[]);
-        let prefixes = comment_strip_prefixes(config);
+        let ranges = line_citation_ranges(line, config.lexical(), &[]);
+        let prefixes = comment_strip_prefixes(config.lexical());
         match line_layout_view(line, &ranges, &prefixes) {
             // §FS-inline-citation-style.3.3, rule 1: no citation in the content,
             // so nothing to lay out.
             None => true,
             Some((content, tokens)) => {
-                content_conforms(InlineNoteLayout::from_config(config), content, &tokens)
+                content_conforms(InlineNoteLayout::from_settings(config.lexical()), content, &tokens)
             }
         }
     }
 
     fn has_note(config: &Config, block: &[&str]) -> bool {
-        block_has_inline_note(block, config, &[], &comment_strip_prefixes(config))
+        block_has_inline_note(block, config.lexical(), &[], &comment_strip_prefixes(config.lexical()))
     }
 
     fn violations(config: &Config, block: &[&str], has_note: bool) -> Vec<usize> {
         inline_layout_violations(
-            &mut BlockCitations::new(block, config, &[]),
-            &comment_strip_prefixes(config),
+            &mut BlockCitations::new(block, config.lexical(), &[]),
+            &comment_strip_prefixes(config.lexical()),
             1,
             has_note,
         )
@@ -146,7 +146,7 @@ mod tests_inline_note_layout {
             ("/* §FS-001-login: reject it */", "§FS-001-login: reject it"),
             ("\"\"\"§FS-001-login: \"\"\"", "§FS-001-login:"),
         ] {
-            let (start, end) = comment_content_range(line, &comment_strip_prefixes(&config));
+            let (start, end) = comment_content_range(line, &comment_strip_prefixes(config.lexical()));
             assert_eq!(&line[start..end], content, "content of `{line}`");
             assert!(conforms(&config, line), "must accept `{line}`");
         }
@@ -347,8 +347,8 @@ mod tests_inline_note_layout {
         assert_eq!(documented_only.inline_note_layout_check, "off");
 
         for config in [any, citation_only, documented_only] {
-            assert!(!layout_pass_enabled(&config));
-            let (_, violations) = inline_note_verdicts(&block, 1, &config, &[]);
+            assert!(!layout_pass_enabled(config.lexical()));
+            let (_, violations) = inline_note_verdicts(&block, 1, config.lexical(), &[]);
             assert!(violations.is_empty(), "the line must not be classified");
         }
     }
@@ -365,9 +365,9 @@ mod tests_inline_note_layout {
 
         let mut config = checked_layout_config(root, "citation-first-colon");
         config.inline_note_layout_check = "info".into();
-        assert!(layout_channel(&config).is_none());
-        assert!(!layout_pass_enabled(&config));
-        let (_, violations) = inline_note_verdicts(&block, 1, &config, &[]);
+        assert!(layout_channel(config.lexical()).is_none());
+        assert!(!layout_pass_enabled(config.lexical()));
+        let (_, violations) = inline_note_verdicts(&block, 1, config.lexical(), &[]);
         assert!(violations.is_empty());
     }
 
@@ -398,8 +398,8 @@ mod tests_inline_note_layout {
         // verdict taken is note presence.
         let documented_only = layout_config(root.clone(), "citation-first-colon");
         assert_eq!(documented_only.inline_note_layout_check, "off");
-        assert!(!layout_pass_enabled(&documented_only));
-        let (has_note, violations) = inline_note_verdicts(&block, 1, &documented_only, &[]);
+        assert!(!layout_pass_enabled(documented_only.lexical()));
+        let (has_note, violations) = inline_note_verdicts(&block, 1, documented_only.lexical(), &[]);
         assert!(has_note);
         assert!(
             violations.is_empty(),
@@ -409,9 +409,9 @@ mod tests_inline_note_layout {
         // Gated: the layout pass judges the lines rule 1 names, so every line is
         // tokenized — and the one the note walk already read is not tokenized twice.
         let gated_config = checked_layout_config(root, "citation-first-colon");
-        assert!(layout_pass_enabled(&gated_config));
-        let prefixes = comment_strip_prefixes(&gated_config);
-        let mut gated = BlockCitations::new(&block, &gated_config, &[]);
+        assert!(layout_pass_enabled(gated_config.lexical()));
+        let prefixes = comment_strip_prefixes(gated_config.lexical());
+        let mut gated = BlockCitations::new(&block, gated_config.lexical(), &[]);
         let has_note = block_has_inline_note_memoized(&mut gated, &prefixes);
         assert_eq!(
             filled_slots(&gated),

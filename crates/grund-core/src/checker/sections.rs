@@ -60,7 +60,7 @@ pub(super) fn check_section_headings(
     // fixed warnings throughout the compatibility window, independent of the
     // marked-section heading-level mode.
     report.warnings.extend(findings.unmarked_headings.iter().map(|heading| {
-        let rendered_owner = render_id(config, &heading.owner);
+        let rendered_owner = render_id(&config.grammar, &heading.owner);
         let separator = if heading
             .suggested_path
             .split('.')
@@ -116,7 +116,7 @@ pub(super) fn check_section_headings(
                             column: None,
                             message: format!(
                                 "section {}{}{} heading level mismatch: expected {} (level {}), found {} (level {})",
-                                render_id(config, id),
+                                render_id(&config.grammar, id),
                                 config.section_separator,
                                 section_path,
                                 heading_marks(expected_level),
@@ -155,10 +155,10 @@ pub(super) fn check_section_headings(
                             column: None,
                             message: format!(
                                 "orphan section {}{}{}: missing prefix {}{}{}",
-                                render_id(config, id),
+                                render_id(&config.grammar, id),
                                 config.section_separator,
                                 path,
-                                render_id(config, id),
+                                render_id(&config.grammar, id),
                                 config.section_separator,
                                 prefix
                             ),
@@ -203,7 +203,7 @@ pub(super) fn check_section_headings(
                     column: None,
                     message: format!(
                         "duplicate section {}{}{} (also declared at {others})",
-                        render_id(config, id),
+                        render_id(&config.grammar, id),
                         config.section_separator,
                         path
                     ),

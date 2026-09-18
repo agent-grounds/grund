@@ -65,8 +65,8 @@ fn inline_note_verdicts_from_ranges(
     config: &Config,
     ranges: Vec<Vec<(usize, usize)>>,
 ) -> (bool, Vec<usize>) {
-    let prefixes = comment_strip_prefixes(config);
-    if !layout_pass_enabled(config) {
+    let prefixes = comment_strip_prefixes(config.lexical());
+    if !layout_pass_enabled(config.lexical()) {
         let has_note = lines
             .iter()
             .zip(&ranges)
@@ -75,8 +75,8 @@ fn inline_note_verdicts_from_ranges(
     }
     let mut block = BlockCitations {
         lines,
-        config,
-        workspace_targets: &[],
+        lexical: config.lexical(),
+        alias_grammars: &[],
         ranges: ranges.into_iter().map(Some).collect(),
     };
     let has_note = block_has_inline_note_memoized(&mut block, &prefixes);

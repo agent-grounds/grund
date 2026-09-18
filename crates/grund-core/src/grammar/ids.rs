@@ -6,8 +6,7 @@
 //! crate was flat, calling `Grammar::parse_token` and the `id_input_re` from
 //! there; they are grammar operations over model's types, which is the direction
 //! §AR-system.4 allows, so they live here rather than on the record. The
-//! `Config` they read the compiled grammar off is config's own
-//! (§AR-system.2.3).
+//! compiled `Grammar` they read is the one config built (§AR-system.2.3).
 //!
 //! The member-local fallback of §FS-workspace.5 was parked in the scanner's
 //! citation pass while §AR-system.2.5 was a file-name category; it is a lexical
@@ -19,7 +18,8 @@
 //! checker, the workspace, the queries and this component all read, and
 //! `render_qualified_id` is the same line with an alias in front of it
 //! (§FS-workspace.1) — it sat on the model's record and was the last reason that
-//! file read `Config`. `MarkdownLineCitation` is where one marked citation
+//! file read `Config`; both take the compiled grammar itself now, so neither
+//! names one either (§AR-system.4). `MarkdownLineCitation` is where one marked citation
 //! starts and ends on a line, plus what it parsed to: a lexical fact the
 //! formatter's link pass, its shorthand pass and the scanner's off-grammar pass
 //! each record and only the link pass reads (§FS-fmt.6.2).
@@ -28,9 +28,6 @@ use anyhow::{Result, anyhow};
 
 use super::compiled::Grammar;
 use crate::model::Id;
-// §AR-system.4: one upward read — `Config` is config's record, above this
-// component, and the two renderers below read the compiled grammar off it.
-use crate::config::Config;
 
 /// Pull an `Id` out of a `Grammar` regex match — the `kind` / `num` / `slug`
 /// capture groups the `[id] format` defined (§FS-config.3.2, §AR-scanner.2.1).
@@ -153,15 +150,15 @@ pub(crate) struct MarkdownLineCitation {
 
 /// Render an existing `Id` for a report, listing, or message, preserving the
 /// provider spelling policy of a per-kind override (§FS-config.3.2).
-pub(crate) fn render_id(config: &Config, id: &Id) -> String {
-    config.grammar.render(id, 3)
+pub(crate) fn render_id(grammar: &Grammar, id: &Id) -> String {
+    grammar.render(id, 3)
 }
 
 /// The same spelling with the project alias a qualified citation writes in front
 /// of it (§FS-workspace.1), and the bare one when there is no alias.
-pub(crate) fn render_qualified_id(config: &Config, namespace: Option<&str>, id: &Id) -> String {
+pub(crate) fn render_qualified_id(grammar: &Grammar, namespace: Option<&str>, id: &Id) -> String {
     match namespace {
-        Some(namespace) => format!("{}/{}", namespace, render_id(config, id)),
-        None => render_id(config, id),
+        Some(namespace) => format!("{}/{}", namespace, render_id(grammar, id)),
+        None => render_id(grammar, id),
     }
 }

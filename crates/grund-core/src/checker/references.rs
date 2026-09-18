@@ -15,12 +15,13 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::sections::retain_heading_findings_in_scope;
+use super::shorthand::{ShorthandIndexes, report_shorthand_citation};
 use super::support::{
     citation_in_markdown_inline_code, close_enough_for_hint, dangling_message, edit_distance,
     missing_snapshot_message,
 };
 use crate::config::{Config, KindResolution, display_path, unwalked_home_roots};
-use crate::grammar::{ShorthandIndexes, render_qualified_id, report_shorthand_citation};
+use crate::grammar::render_qualified_id;
 use crate::model::{CheckReport, DeclarationSource, Diagnostic, Findings, sort_path_key};
 use crate::resolver::{
     WorkspaceCheckTarget, WorkspaceProject, join_alternatives, target_for_citation,
@@ -377,7 +378,11 @@ pub(super) fn check_citation_resolution(
             if !any_match {
                 let coordinate = format!(
                     "{}{}{}",
-                    render_qualified_id(target.config, cite.namespace.as_deref(), &cite.id),
+                    render_qualified_id(
+                        &target.config.grammar,
+                        cite.namespace.as_deref(),
+                        &cite.id
+                    ),
                     target.config.section_separator,
                     sec
                 );

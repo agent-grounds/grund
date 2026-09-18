@@ -43,6 +43,7 @@ mod references;
 mod report;
 mod sections;
 mod selection;
+mod shorthand;
 mod sizes;
 mod support;
 mod values;
@@ -57,7 +58,7 @@ pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
 pub(crate) use inline_style::plural;
 pub(crate) use references::{
-    ReferenceTier, configured_scope, out_of_scope_references, retain_findings_in_scope,
+    configured_scope, out_of_scope_references, retain_findings_in_scope,
     workspace_out_of_scope_references,
 };
 pub(crate) use report::{check_findings, check_with_workspace, check_with_workspace_and_overlays};

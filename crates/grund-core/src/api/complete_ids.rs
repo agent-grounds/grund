@@ -105,7 +105,7 @@ fn add_complete_id_candidates(
 ) {
     let qualifier = alias.map(|alias| format!("{alias}/")).unwrap_or_default();
     for (id, decls) in &findings.declarations {
-        let rendered = render_id(config, id);
+        let rendered = render_id(&config.grammar, id);
         if include_sections {
             for decl in decls {
                 for section in decl.sections.keys() {

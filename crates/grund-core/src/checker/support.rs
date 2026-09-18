@@ -16,7 +16,7 @@ pub(crate) fn dangling_message(
     missing: &Id,
     in_inline_code: bool,
 ) -> String {
-    let unknown = render_qualified_id(config, namespace, missing);
+    let unknown = render_qualified_id(&config.grammar, namespace, missing);
     let near = nearest_declared_id(config, namespace, findings, missing);
     let escape = in_inline_code.then(|| format!("<{}>{unknown}", config.marker));
     match (near, escape) {
@@ -43,7 +43,7 @@ pub(super) fn missing_snapshot_message(
     home: &str,
     must: bool,
 ) -> String {
-    let rendered = render_qualified_id(config, namespace, missing);
+    let rendered = render_qualified_id(&config.grammar, namespace, missing);
     let base = if must {
         format!("unknown reference {rendered}; no snapshot in {home}")
     } else {
@@ -86,13 +86,13 @@ fn nearest_declared_id(
     findings: &Findings,
     missing: &Id,
 ) -> Option<String> {
-    let missing_text = render_id(config, missing);
+    let missing_text = render_id(&config.grammar, missing);
     let mut best: Option<(usize, String)> = None;
     for candidate in findings.declarations.keys() {
         if candidate.kind != missing.kind {
             continue;
         }
-        let candidate_text = render_id(config, candidate);
+        let candidate_text = render_id(&config.grammar, candidate);
         let distance = edit_distance(&missing_text, &candidate_text);
         if !close_enough_for_hint(
             distance,
@@ -101,7 +101,7 @@ fn nearest_declared_id(
         ) {
             continue;
         }
-        let rendered = render_qualified_id(config, namespace, candidate);
+        let rendered = render_qualified_id(&config.grammar, namespace, candidate);
         match &best {
             Some((best_distance, best_rendered))
                 if distance > *best_distance

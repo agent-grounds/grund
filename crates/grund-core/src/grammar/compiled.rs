@@ -11,11 +11,9 @@ use super::id_rules::{
     id_grammar_literal_slash_error, id_grammar_pattern_slash_error, section_separator_slash_error,
 };
 use super::near_miss::{LegacyGrammar, NearMissGrammar};
+use super::settings::GrammarKind;
 use super::source_line::comment_prefix_regex;
 use crate::model::Id;
-// §AR-system.4: one upward read — `KindConfig` is config's record, above this
-// component.
-use crate::config::KindConfig;
 
 const NUMERIC_SECTION_PATTERN: &str = r"\d+(?:\.\d+)*";
 const NAMED_SECTION_PATTERN: &str = r"[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*(?:\.\d+)*";
@@ -207,19 +205,14 @@ impl Grammar {
     /// why the shorthand's unqualified pattern is a separate string, not a reuse.
     pub(crate) fn build(
         format: &str,
-        kinds: &[KindConfig],
+        kinds: &[GrammarKind],
         number_pattern: &str,
         slug_pattern: &str,
         section_separator: &str,
         named_sections: bool,
         comment_prefixes: &[String],
     ) -> Result<Self> {
-        let kind_names = kinds
-            .iter()
-            .filter(|kind| kind.citable)
-            .map(|kind| kind.kind.clone())
-            .collect::<Vec<_>>();
-        if kind_names.is_empty() {
+        if kinds.is_empty() {
             return Err(anyhow!("[id] grammar needs at least one [[kinds]] entry"));
         }
         // §FS-config.3.2: the "an ID never contains `/`" invariant, enforced over
@@ -236,7 +229,7 @@ impl Grammar {
                 return Err(anyhow!("{message}"));
             }
         }
-        for kind in &kind_names {
+        for kind in kinds.iter().map(|kind| &kind.name) {
             if let Some(message) =
                 id_grammar_literal_slash_error(&format!("[[kinds]] kind `{kind}`"), kind)
             {
@@ -249,17 +242,17 @@ impl Grammar {
         let mut kind_elements = BTreeMap::new();
         let mut overridden_kinds = BTreeSet::new();
         let mut detection_patterns = Vec::new();
-        for kind in kinds.iter().filter(|kind| kind.citable) {
+        for kind in kinds {
             let effective = kind.format.as_deref().unwrap_or(format);
             if let Some(message) = id_grammar_literal_slash_error(
-                &format!("[[kinds]] kind `{}` format", kind.kind),
+                &format!("[[kinds]] kind `{}` format", kind.name),
                 effective,
             ) {
                 return Err(anyhow!("{message}"));
             }
             let kind_format = parse_id_format(effective)
-                .map_err(|err| anyhow!("[[kinds]] kind `{}` format: {err}", kind.kind))?;
-            let literal_kind = regex::escape(&kind.kind);
+                .map_err(|err| anyhow!("[[kinds]] kind `{}` format: {err}", kind.name))?;
+            let literal_kind = regex::escape(&kind.name);
             let detection = id_pattern(
                 &kind_format,
                 &literal_kind,
@@ -273,10 +266,10 @@ impl Grammar {
                 &format!("(?P<slug>{})", slug_pattern),
             );
             detection_patterns.push(detection);
-            kind_parsers.push((kind.kind.clone(), Regex::new(&format!("^{parser}$"))?));
-            kind_elements.insert(kind.kind.clone(), kind_format);
+            kind_parsers.push((kind.name.clone(), Regex::new(&format!("^{parser}$"))?));
+            kind_elements.insert(kind.name.clone(), kind_format);
             if kind.format.is_some() {
-                overridden_kinds.insert(kind.kind.clone());
+                overridden_kinds.insert(kind.name.clone());
             }
         }
         let id_pat = format!("(?P<id>(?:{}))", detection_patterns.join("|"));
@@ -378,8 +371,8 @@ impl Grammar {
         // is the single gate the scanner, checker, `fmt`, and the LSP all read.
         let global_kinds = kinds
             .iter()
-            .filter(|kind| kind.citable && kind.format.is_none())
-            .map(|kind| regex::escape(&kind.kind))
+            .filter(|kind| kind.format.is_none())
+            .map(|kind| regex::escape(&kind.name))
             .collect::<Vec<_>>();
         let shorthand = (!global_kinds.is_empty())
             .then(|| shorthand_elements(&elements))
@@ -416,7 +409,7 @@ impl Grammar {
                 let format = kind.format.as_deref()?;
                 let elements = parse_id_format(format).ok()?;
                 let short = shorthand_elements(&elements)?;
-                let kind_group = format!("(?P<kind>{})", regex::escape(&kind.kind));
+                let kind_group = format!("(?P<kind>{})", regex::escape(&kind.name));
                 let num_group = format!("(?P<num>{})", number_pattern);
                 let slug_group = format!("(?P<slug>{})", slug_pattern);
                 let full = id_pattern(&elements, &kind_group, &num_group, &slug_group);
@@ -436,14 +429,13 @@ impl Grammar {
 
         let near_misses = kinds
             .iter()
-            .filter(|kind| kind.citable)
             .filter_map(|kind| {
                 let effective = kind.format.as_deref().unwrap_or(format);
                 literal_after_kind_placeholder(effective)
                     .filter(|literal| !literal.is_empty())
                     .map(|literal| {
                         NearMissGrammar::build(
-                            &regex::escape(&kind.kind),
+                            &regex::escape(&kind.name),
                             &comment_prefix,
                             literal,
                             effective,

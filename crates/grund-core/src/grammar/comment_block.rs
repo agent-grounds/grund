@@ -1,12 +1,10 @@
 use std::path::Path;
 
 use super::near_miss::declaration_id_on_line;
+use super::settings::LexicalSettings;
 use super::source_line::{
     PythonDocstringScanState, SourceScanLine, python_docstring_quote, source_scan_line,
 };
-// §AR-system.4: one upward read — `Config` is config's own record, one
-// component above this one.
-use crate::config::Config;
 
 /// One comment block, classified: what opens it, where a docstring closes it,
 /// whether it declares an ID, and whether the language it is written in calls it
@@ -26,30 +24,31 @@ pub(crate) enum CommentBlockKind {
     PythonDocstring,
 }
 
-fn comment_block_kind(line: &str, is_py: bool, config: &Config) -> Option<CommentBlockKind> {
+fn comment_block_kind(
+    line: &str,
+    is_py: bool,
+    lexical: LexicalSettings<'_>,
+) -> Option<CommentBlockKind> {
     let trimmed = line.trim_start();
     if trimmed.is_empty() {
         return None;
     }
-    if config.docstring_python && is_py && python_docstring_quote(line).is_some() {
+    if lexical.docstring_python && is_py && python_docstring_quote(line).is_some() {
         return Some(CommentBlockKind::PythonDocstring);
     }
-    if config.comment_prefixes.iter().any(|prefix| prefix == "/*") && trimmed.starts_with("/*") {
+    if lexical.comment_prefixes.iter().any(|prefix| prefix == "/*") && trimmed.starts_with("/*") {
         return Some(CommentBlockKind::Block);
     }
-    line_comment_marker(trimmed, config).map(CommentBlockKind::Line)
+    line_comment_marker(trimmed, lexical.comment_prefixes).map(CommentBlockKind::Line)
 }
 
-fn line_comment_marker(trimmed: &str, config: &Config) -> Option<String> {
+fn line_comment_marker(trimmed: &str, comment_prefixes: &[String]) -> Option<String> {
     for marker in ["///", "//!", "//"] {
-        if config.comment_prefixes.iter().any(|prefix| prefix == "//")
-            && trimmed.starts_with(marker)
-        {
+        if comment_prefixes.iter().any(|prefix| prefix == "//") && trimmed.starts_with(marker) {
             return Some(marker.to_string());
         }
     }
-    let mut prefixes = config
-        .comment_prefixes
+    let mut prefixes = comment_prefixes
         .iter()
         .filter(|prefix| !matches!(prefix.as_str(), "" | "//" | "*" | "/*"))
         .collect::<Vec<_>>();
@@ -70,12 +69,12 @@ fn line_comment_marker(trimmed: &str, config: &Config) -> Option<String> {
 pub(crate) fn comment_blocks(
     lines: &[&str],
     is_py: bool,
-    config: &Config,
+    lexical: LexicalSettings<'_>,
 ) -> Vec<(usize, usize, CommentBlockKind)> {
     let mut blocks = Vec::new();
     let mut index = 0;
     while index < lines.len() {
-        let Some(kind) = comment_block_kind(lines[index], is_py, config) else {
+        let Some(kind) = comment_block_kind(lines[index], is_py, lexical) else {
             index += 1;
             continue;
         };
@@ -85,7 +84,7 @@ pub(crate) fn comment_blocks(
                 let mut end = index;
                 while end + 1 < lines.len()
                     && matches!(
-                        comment_block_kind(lines[end + 1], is_py, config),
+                        comment_block_kind(lines[end + 1], is_py, lexical),
                         Some(CommentBlockKind::Line(next)) if next == *marker
                     )
                 {
@@ -127,11 +126,15 @@ fn python_docstring_closes(line: &str, quote: &str, is_opening_line: bool) -> bo
     search.contains(quote)
 }
 
-pub(crate) fn block_declares_id(lines: &[&str], in_py_docstring: bool, config: &Config) -> bool {
+pub(crate) fn block_declares_id(
+    lines: &[&str],
+    in_py_docstring: bool,
+    lexical: LexicalSettings<'_>,
+) -> bool {
     let mut py_docstring = PythonDocstringScanState::default();
     lines.iter().any(|line| {
         let scan = if in_py_docstring {
-            source_scan_line(line, true, config.docstring_python, &mut py_docstring)
+            source_scan_line(line, true, lexical.docstring_python, &mut py_docstring)
         } else {
             SourceScanLine {
                 text: line,
@@ -140,7 +143,7 @@ pub(crate) fn block_declares_id(lines: &[&str], in_py_docstring: bool, config: &
                 closed_py_docstring: false,
             }
         };
-        declaration_id_on_line(&config.grammar, scan.text, scan.in_py_docstring, false).is_some()
+        declaration_id_on_line(lexical.grammar, scan.text, scan.in_py_docstring, false).is_some()
     })
 }
 

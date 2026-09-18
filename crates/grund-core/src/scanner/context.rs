@@ -5,8 +5,8 @@ use std::path::Path;
 use super::unmarked_headings::markdown_declaration_body_end;
 use crate::config::Config;
 use crate::grammar::{
-    CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
-    doc_comment_rule, first_content_line, inline_note_verdicts,
+    AliasGrammar, CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment,
+    comment_blocks, doc_comment_rule, first_content_line, inline_note_verdicts,
 };
 use crate::model::{Findings, Id, InlineCitationSite, SectionHeadingOutsideDeclaration};
 use crate::model::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
@@ -141,7 +141,7 @@ pub(super) fn assign_declaration_bodies(
 /// by the block that hosts it.
 fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize, usize)> {
     let lines = text.lines().collect::<Vec<_>>();
-    comment_blocks(&lines, is_py, config)
+    comment_blocks(&lines, is_py, config.lexical())
         .into_iter()
         .map(|(start, end, _)| (start + 1, end + 1))
         .collect()
@@ -229,6 +229,24 @@ pub(crate) fn file_home_kind(path: &Path, config: &Config) -> Option<String> {
     matched.map(str::to_string)
 }
 
+/// The lexical half of the run's citation targets (§FS-workspace.1): which
+/// project's compiled grammar reads a qualified token's ID tail, and nothing
+/// else about the target.
+///
+/// The scanner is what iterates the loaded projects, so the scanner is what
+/// picks the grammar out of each one — a tokenizer handed a whole `Config` per
+/// target would be the grammar reading two components above it
+/// (§AR-system.2.1, §AR-system.4).
+fn lexical_targets(targets: &[WorkspaceCitationTarget]) -> Vec<AliasGrammar<'_>> {
+    targets
+        .iter()
+        .map(|target| AliasGrammar {
+            alias: &target.alias,
+            grammar: &target.config.grammar,
+        })
+        .collect()
+}
+
 /// Locate the source-comment blocks that can host inline citation sites
 /// (§FS-inline-citation-style.1). Markdown prose is deliberately out of scope,
 /// and so is a *doc comment*: documentation is not a note about a clause, so
@@ -251,6 +269,10 @@ pub(super) fn inline_citation_sites(
         return (sites, site_lines);
     }
     let lines = text.lines().collect::<Vec<_>>();
+    // §FS-workspace.1: the lexical half of the run's citation targets, taken once
+    // per file — which project's grammar reads a qualified token's ID tail is all
+    // the tokenizer below needs of a target (§AR-system.2.1).
+    let alias_grammars = lexical_targets(workspace_targets);
     // §FS-inline-citation-style.1.1: which blocks this file's language calls
     // documentation. Read once from the extension, then applied to each block
     // below with one comparison (§AR-scanner.4).
@@ -262,7 +284,7 @@ pub(super) fn inline_citation_sites(
         DocCommentRule::Position(_) => first_content_line(&lines),
         _ => 0,
     };
-    for (start, end, kind) in comment_blocks(&lines, is_py, config) {
+    for (start, end, kind) in comment_blocks(&lines, is_py, config.lexical()) {
         let block = &lines[start..=end];
         // §FS-inline-citation-style.1.1: a doc comment hosts no site — the same
         // skip a block that *declares* an ID already earned, and for the same
@@ -278,14 +300,14 @@ pub(super) fn inline_citation_sites(
             && !block_declares_id(
                 block,
                 matches!(kind, CommentBlockKind::PythonDocstring),
-                config,
+                config.lexical(),
             )
         {
             // §FS-inline-citation-style.3.3: both verdicts are taken here, while
             // the block's lines are in hand, so the checker never re-reads one
             // (§AR-scanner.3).
             let (has_note, layout_violations) =
-                inline_note_verdicts(block, start + 1, config, workspace_targets);
+                inline_note_verdicts(block, start + 1, config.lexical(), &alias_grammars);
             let site = InlineCitationSite {
                 first_line: start + 1,
                 last_line: end + 1,

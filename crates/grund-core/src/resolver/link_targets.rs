@@ -94,7 +94,7 @@ pub(crate) fn markdown_link_target_with_root(
 /// to its rendered form (`reduce_heading_text`), matching `section_anchor_text`
 /// (§DF-declaration-anchor, §DF-github-anchor-fidelity).
 fn declaration_heading_text(decl: &Declaration, config: &Config) -> String {
-    let id = render_id(config, &decl.id);
+    let id = render_id(&config.grammar, &decl.id);
     match &decl.title {
         Some(title) => format!("{id}: {}", reduce_heading_text(title)),
         None => id,

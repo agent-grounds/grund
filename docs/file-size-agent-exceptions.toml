@@ -137,16 +137,6 @@ The ceiling is 415 where `crates/grund-core/src/list.rs` recorded 409 and had dr
 The +10 the old ceiling carried is `--summary` sorting its rows by alias and sizing the alias column to the widest one emitted, mirroring the same fix in `api.rs` so the deprecated path cannot re-diverge from the live one on the same bug (§FS-workspace.8.3, issue #68). The +2 before it is the `--kind` selector learning to tell a typo from a configured kind that declares no IDs (§FS-config.3.4.1) — one more arm on the check that was already there. Both are in what stayed.
 """
 [[exceptions]]
-path = "crates/grund-core/src/grammar/shorthand.rs"
-match = "exact"
-rules = ["core-source"]
-kind = "structural"
-max_accepted = { value = 496, unit = "lines" }
-until = "indefinite"
-reason = """
-One rule that has to hold identically at four stages: the shape recognized in a file (scanner), accepted as a CLI argument (show/refs), reported (checker), and rewritten (fmt). A divergence between any two of them is precisely the defect DF-number-only-citation-shorthand exists to fix, so the file's cohesion is the invariant, not a stage. The available split is by stage — which is what the categories in AR-core-module-layout.1 already cut by — and it would put the four halves of one contract back in four files with nothing naming the contract, recreating the drift the feature module prevents. What was separable has been separated, and the boundary that separates it is "shape, not rule": the `[id] format` template parser, the ID renderer, and the post-match tests for where a token of that grammar ends — `id_token_ends_cleanly` and the numeric-run test of FS-fmt.2.4.1, both pure functions of the compiled grammar and a string — are grammar rather than shorthand and live in id_format.rs; the live on-type transform is in on_type.rs. What is left is the rule and nothing else, and no sub-part of it is reachable without the derivation above it. The ceiling moved 485 -> 495 when `grammar` became a Rust module (§AR-system.2.1) and the file paid for its own imports; it tracks that cost, not accumulated logic. It moved 495 -> 496 for the same reason when the scanner became one (§AR-system.2.5): the two shorthand questions asked of a declaration catalog came down into grammar/shorthand_targets.rs, and naming them where they now live costs this file one import line.
-"""
-[[exceptions]]
 path = "crates/grund-core/src/tests_shorthand.rs"
 match = "exact"
 rules = ["tests"]
@@ -162,10 +152,10 @@ path = "crates/grund-core/src/grammar/compiled.rs"
 match = "exact"
 rules = ["core-source"]
 kind = "deferred"
-max_accepted = { value = 388, unit = "lines" }
+max_accepted = { value = 382, unit = "lines" }
 until = "the heading-text reduction and the managed-block markers leave, so this file is the compiled grammar and nothing else"
 reason = """
-The compiled ID grammar: `Grammar::build` turning `[id] format`, the kinds and the comment prefixes into one set of regexes. It is the module's grammar file since `grammar` became a Rust module (§AR-system.2.1): the per-line readers — the comment-prefix alternation and the Python-docstring normalization of §AR-scanner.4 — left with the move, into `grammar/source_line.rs`, which was the boundary the previous entry named, and the three `[scan]` defaults left for config.rs because they are config defaults rather than grammar. That took the ceiling 411 -> 387 even after the explicit imports a module costs. What is left over the budget is two groups that are not the grammar either: the heading-text reduction a renderer's anchor is slugged from (§DF-github-anchor-fidelity) and the managed-block delimiters of §FS-init.2.3, both regexes over text that `Grammar::build` never reads. Missing boundary: each of those as its own file. Not taken with the module move, because a component's first commit moves files rather than inventing them. The ceiling moved 387 -> 388 when the scanner became a module (§AR-system.2.5) and two of this component's own items came down out of scanner files — `LegacyGrammar` to grammar/near_miss.rs and the `{kind}` literal reader of the `[id] format` template to grammar/id_format.rs: one more import line, no more logic.
+The compiled ID grammar: `Grammar::build` turning `[id] format`, the kinds and the comment prefixes into one set of regexes. It is the module's grammar file since `grammar` became a Rust module (§AR-system.2.1): the per-line readers — the comment-prefix alternation and the Python-docstring normalization of §AR-scanner.4 — left with the move, into `grammar/source_line.rs`, which was the boundary the previous entry named, and the three `[scan]` defaults left for config.rs because they are config defaults rather than grammar. That took the ceiling 411 -> 387 even after the explicit imports a module costs. What is left over the budget is two groups that are not the grammar either: the heading-text reduction a renderer's anchor is slugged from (§DF-github-anchor-fidelity) and the managed-block delimiters of §FS-init.2.3, both regexes over text that `Grammar::build` never reads. Missing boundary: each of those as its own file. Not taken with the module move, because a component's first commit moves files rather than inventing them. The ceiling moved 387 -> 388 when the scanner became a module (§AR-system.2.5) and two of this component's own items came down out of scanner files — `LegacyGrammar` to grammar/near_miss.rs and the `{kind}` literal reader of the `[id] format` template to grammar/id_format.rs: one more import line, no more logic. It moved 388 -> 382 when `Grammar::build` stopped taking `[[kinds]]` rows and started taking the citable names and formats as plain values (§AR-system.2.1): the `citable` filter this file repeated at five places is config's now, applied once where the list is built.
 """
 [[exceptions]]
 path = "crates/grund-core/src/tests_citation_directions.rs"
