@@ -9,9 +9,11 @@ use std::path::PathBuf;
 
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
-use crate::model::{Citation, sort_path_key};
+use crate::model::{Citation, Finding, sort_path_key};
 use crate::resolver::{WorkspaceContext, load_narrowable_workspace_context};
 use crate::scanner::{ApiScanError, api_scan_error};
+
+use super::report::context_run_warnings;
 
 #[derive(Clone)]
 pub struct CoverOpts {
@@ -59,6 +61,12 @@ pub struct CoverOutput {
     pub output_format: String,
     pub entries: Vec<CoverEntry>,
     pub scan_errors: Vec<ApiScanError>,
+    /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
+    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
+    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// names. A frontend renders each as one CLI-level `warning:` on stderr
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    pub warnings: Vec<Finding>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -79,6 +87,12 @@ pub struct CoverTextOutput {
     pub output_format: String,
     pub entries: Vec<CoverTextEntry>,
     pub scan_errors: Vec<ApiScanError>,
+    /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
+    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
+    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// names. A frontend renders each as one CLI-level `warning:` on stderr
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    pub warnings: Vec<Finding>,
 }
 
 /// One scanned file's row in the cover index, with the project that owns it
@@ -244,6 +258,7 @@ pub fn cover(opts: CoverOpts) -> Result<CoverOutput> {
         output_format: context.render_config().output_format.clone(),
         entries,
         scan_errors: cover_scan_errors(&context),
+        warnings: context_run_warnings(&context),
     })
 }
 
@@ -273,5 +288,6 @@ pub fn cover_text(opts: CoverOpts) -> Result<CoverTextOutput> {
         output_format: context.render_config().output_format.clone(),
         entries,
         scan_errors: cover_scan_errors(&context),
+        warnings: context_run_warnings(&context),
     })
 }

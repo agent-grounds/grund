@@ -36,7 +36,9 @@
 //!   declaration's ID resolves to, which the checker's index-entry rule read the
 //!   same way (§FS-check.3.18).
 //! - `unread_block.rs` out of `workspace/members.rs`, the one half of
-//!   §FS-check.4.10 that has to run the walker to answer.
+//!   §FS-check.4.10 that has to run the walker to answer — and, with it, the
+//!   whole of the run's warning channel settled, since this is the lowest
+//!   component that can answer all four of its findings (§FS-distribution.3.1).
 //! - `shorthand.rs` out of `grammar/shorthand.rs`, the half of the number-only
 //!   shorthand that needs the whole run's catalog: whose grammar parses a
 //!   qualified token, whose format renders the canonical ID, whose policy lets a
@@ -86,7 +88,7 @@ pub(crate) use point_body::point_body_pair;
 pub(crate) use shorthand::{
     ShorthandTargets, expand_shorthand_citations_with_origins, shorthand_token_expansion,
 };
-pub(crate) use unread_block::unread_block_scope_root;
+pub(crate) use unread_block::settled_run_warnings;
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1).

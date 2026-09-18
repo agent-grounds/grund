@@ -4,10 +4,13 @@
 draws: model, grammar, config, then workspace and templates as siblings that may
 not read each other, scanner, resolver, checker, then queries and writers as
 siblings that may not read each other either, then api, then compat, which may
-read anything and which nothing may read. The reads that still run the
-other way are listed below, one entry per (file, item), and each one must still
-be in the tree and still carry its §AR-system.4 note — so the list can only
-shrink, and a new upward read fails.
+read anything and which nothing may read. The ledger of reads that still run the
+other way is **empty**, and must stay so: every entry it held was one of the four
+`[workspace]` findings that `workspace/` and `resolver/` printed through
+`compat/`, and each travels as a diagnostic in the run's warning channel now
+(§DA-engine-renders-nothing). The mechanism is kept rather than deleted — a
+future read against the direction is recorded here with its note, or it is not
+made at all — and the list can only shrink.
 
 A component's test modules — `tests_*.rs` beside the code they pin, and the
 shared fixtures in `testing.rs` — are skipped: a test module may read any
@@ -50,27 +53,19 @@ ORDER = {
 REFERENCE = re.compile(r"\bcrate::([a-z_][a-z0-9_]*)::(\{[^}]*\}|[A-Za-z0-9_]+)")
 NOTE = "§AR-system.4"
 
-# The debt this refactor recorded rather than resolved: turning each component
-# into a Rust module made every one of these visible, and resolving them is a
-# design move rather than a refactor (§AR-core-module-layout.2).
+# The ledger of reads against the direction of §AR-system.1, and it is empty.
+
+# It held six: `workspace/` and `resolver/` reached `compat/` to print four
+# `[workspace]` findings settled before a report exists.
+
+# Each is a `Diagnostic` in the run's warning channel now (§FS-check.4.7,
+# §FS-check.4.8, §FS-check.4.10, §FS-workspace.6.1), rendered by every frontend
+# for itself, so nothing below `compat/` reads it (§DA-engine-renders-nothing).
 
 # An entry is (file, `<component>::<item>`) and buys nothing else: the file must
 # still make the read, and the import must still carry its §AR-system.4 note.
-RECORDED_DEBT = {
-    # workspace and the resolver reach `compat/` for four stderr lines:
-    # §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and §FS-workspace.6.1 are
-    # settled before a report exists.
-
-    # The query surfaces have no report to carry them
-    # (§DF-unlisted-workspace-block.2.3): printing them lower would put a stream
-    # write in a component directory, and carrying them higher is a redesign.
-
-    # It is the first thing the retirement of `compat/` has to answer.
-    "resolver/context.rs": ("compat::print_unlisted_workspace_block_warnings",),
-    "workspace/expand.rs": ("compat::warn_if_members_absorb_scan", "compat::warn_unread_block"),
-    "workspace/members.rs": ("compat::warn_undecidable_ancestor_claim",),
-    "workspace/scope.rs": ("compat::warn_if_members_absorb_scan", "compat::warn_unread_block"),
-}
+# Empty is the state this dict is meant to stay in.
+RECORDED_DEBT = {}
 
 
 def _components():

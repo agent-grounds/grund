@@ -160,7 +160,10 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
         eprintln!("error: unsupported show format `{format}`");
         return ExitCode::from(2);
     };
-    match show_with_scope(
+    // §FS-check.4.7, §FS-check.4.8, §FS-check.4.10, §FS-workspace.6.1: the ID read
+    // walks like every other command, and a refused query still owes the reader
+    // the cautions the workspace pass settled before it (§FS-distribution.3.1).
+    let (run_warnings, result) = show_with_scope(
         &id_arg,
         ShowOpts {
             path: path.clone(),
@@ -169,7 +172,9 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             format: show_format,
         },
         path_provided,
-    ) {
+    );
+    render_run_warnings(&run_warnings);
+    match result {
         Ok(output) => {
             if format == "json" {
                 println!("{}", output.json.unwrap_or_default());

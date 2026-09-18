@@ -8,7 +8,7 @@ use crate::model::{
     Declaration, Id, format_path, is_stub_for_inline_decl, json_escape, sort_path_key,
 };
 use crate::queries::ListCitationCounts;
-use crate::resolver::{WorkspaceProject, load_workspace_context};
+use crate::resolver::WorkspaceProject;
 
 pub(super) fn command_list(args: &[String]) -> ExitCode {
     let mut path = PathBuf::from(".");
@@ -71,7 +71,7 @@ pub(super) fn command_list(args: &[String]) -> ExitCode {
         }
         idx += 1;
     }
-    let context = match load_workspace_context(&path, path_provided) {
+    let context = match super::output::workspace_context(&path, path_provided) {
         Ok(context) => context,
         Err(err) => {
             eprintln!("error: {err:#}");

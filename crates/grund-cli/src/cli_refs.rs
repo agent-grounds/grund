@@ -68,6 +68,7 @@ fn command_refs(args: &[String]) -> ExitCode {
         }
     };
     let output = &outcome.output;
+    render_run_warnings(&output.warnings);
     let format = match command_output_format("refs", &output.output_format, format_override) {
         Ok(format) => format,
         Err(code) => return code,

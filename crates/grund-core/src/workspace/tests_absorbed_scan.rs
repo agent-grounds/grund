@@ -93,7 +93,7 @@ fn the_release_constant_is_the_release_the_message_names() {
     };
     assert_eq!(
         named_release(&golden).as_deref(),
-        Some(super::members::ABSORBED_SCAN_ERROR_RELEASE),
+        Some(super::findings::ABSORBED_SCAN_ERROR_RELEASE),
         "{GOLDEN} names a different release from the constant the message is built from"
     );
 }
@@ -112,7 +112,7 @@ fn the_message_is_assembled_from_the_covered_pairs() {
         .strip_prefix("warning: grund.toml:16: ")
         .unwrap_or_else(|| panic!("{GOLDEN} is no longer a located warning:\n{shipped}"));
     assert_eq!(
-        super::absorbed_scan_warning(&["`docs` in `docs`".to_string()]),
+        super::findings::absorbed_scan_warning(&["`docs` in `docs`".to_string()]),
         sentence
     );
 }

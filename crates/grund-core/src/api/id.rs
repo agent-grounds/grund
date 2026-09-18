@@ -10,8 +10,9 @@
 use anyhow::Result;
 use std::path::PathBuf;
 
+use super::config::config_run_warnings;
 use crate::config::{display_path, kind_prefixes, non_citable_kind_error};
-use crate::model::Id;
+use crate::model::{Finding, Id};
 use crate::scanner::{e2e_case_dir_name, scan_tree_strict};
 use crate::workspace::resolve_workspace_config;
 use crate::writers::{format_id, slugify_title};
@@ -63,7 +64,32 @@ pub enum IdProposalOutcome {
 /// Programmatic `id`: compute the next conflict-free declaration ID without
 /// parsing CLI flags or printing the text/JSON report (§AR-bindings.2).
 pub fn propose_id(kind: &str, title: &str, opts: IdOpts) -> Result<IdProposalOutcome> {
+    propose_id_with_run_warnings(kind, title, opts).1
+}
+
+/// [`propose_id`] for a frontend that also renders the run's `[workspace]`
+/// warnings (§FS-check.4.7, §FS-check.4.10): `id` resolves a block's member
+/// boundary like every other walking command, and the outcome is an enum with
+/// nowhere to carry a caution.
+#[doc(hidden)]
+pub fn propose_id_with_run_warnings(
+    kind: &str,
+    title: &str,
+    opts: IdOpts,
+) -> (Vec<Finding>, Result<IdProposalOutcome>) {
+    let mut run_warnings = Vec::new();
+    let outcome = propose_id_run(kind, title, opts, &mut run_warnings);
+    (run_warnings, outcome)
+}
+
+fn propose_id_run(
+    kind: &str,
+    title: &str,
+    opts: IdOpts,
+    run_warnings: &mut Vec<Finding>,
+) -> Result<IdProposalOutcome> {
     let config = resolve_workspace_config(&opts.path)?;
+    *run_warnings = config_run_warnings(&config);
     let configured = config.kinds.iter().find(|candidate| candidate.kind == kind);
     let Some(kind_config) = configured.filter(|candidate| candidate.citable) else {
         // §FS-id.1: a non-citable kind is configured and still has nothing to

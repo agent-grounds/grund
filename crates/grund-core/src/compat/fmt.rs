@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+use super::output::print_published_run_warnings;
 use crate::api::FmtOpts;
 use crate::api::format_references;
 use crate::writers::FmtScanAbort;
@@ -52,6 +53,7 @@ pub(crate) fn command_fmt(args: &[String]) -> ExitCode {
             return ExitCode::from(2);
         }
     };
+    print_published_run_warnings(&output.warnings);
     for path in &output.refused_writes {
         eprintln!("warning: {path}: not rewritten: the symlink target is outside the config root");
     }

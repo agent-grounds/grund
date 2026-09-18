@@ -8,8 +8,11 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::config::display_path;
+use crate::model::Finding;
 use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::scanner::ApiScanError;
+
+use super::report::context_run_warnings;
 use crate::writers::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree, fmt_workspace_projects};
 
 #[derive(Clone)]
@@ -53,6 +56,12 @@ pub struct FmtOutput {
     /// the config root (§FS-fmt.2.3.2). The CLI names each one on stderr; the
     /// exit code is untouched, because the refusal is the intended behavior.
     pub refused_writes: Vec<String>,
+    /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
+    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
+    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// names. A frontend renders each as one CLI-level `warning:` on stderr
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    pub warnings: Vec<Finding>,
 }
 
 /// Programmatic `fmt`: run the normalizer and return the changed locations
@@ -129,5 +138,6 @@ pub fn format_references(opts: FmtOpts) -> Result<FmtOutput> {
             .collect(),
         scan_errors,
         refused_writes,
+        warnings: context_run_warnings(&context),
     })
 }

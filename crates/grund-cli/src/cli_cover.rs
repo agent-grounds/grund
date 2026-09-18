@@ -60,6 +60,7 @@ fn command_cover(args: &[String]) -> ExitCode {
             return ExitCode::from(2);
         }
     };
+    render_run_warnings(&output.warnings);
     let format = match command_output_format("cover", &output.output_format, format_override) {
         Ok(format) => format,
         Err(code) => return code,

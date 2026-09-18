@@ -976,10 +976,13 @@ impl Server {
         scanned.next().is_none().then_some(owner)
     }
 
-    /// Diagnostics normally follow the same exact owner as requests. A scan
-    /// error is the exception: an unreadable external file is necessarily not
-    /// in `scanned_files`, so choose one of the snapshots that reported that
-    /// path rather than dropping the error or publishing it from all of them.
+    /// Diagnostics normally follow the same exact owner as requests. Two shapes
+    /// are the exception, and both name a file no scan reads: an unreadable
+    /// external file is necessarily not in `scanned_files`, and a run-level
+    /// `[workspace]` warning anchors at a `grund.toml` that may lie above every
+    /// project root (§FS-lsp.1.1). For either, choose one of the snapshots that
+    /// reported that path rather than dropping it or publishing it from all of
+    /// them.
     fn project_for_diagnostic_path(&self, path: &Path) -> Option<&ProjectSnapshot> {
         self.project_for_path(path).or_else(|| {
             let path = canonical_snapshot_path(path);
@@ -1000,6 +1003,7 @@ impl Server {
                     .errors
                     .iter()
                     .chain(&project.snapshot.report.warnings)
+                    .chain(&project.snapshot.run_warnings)
                     .filter_map(|finding| absolute_finding_path(&project.snapshot, finding))
                     .any(|finding_path| canonical_snapshot_path(&finding_path) == path)
             });

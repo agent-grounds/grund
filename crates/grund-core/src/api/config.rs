@@ -8,8 +8,24 @@ use anyhow::Result;
 use std::path::Path;
 
 use super::config_findings::config_diagnostics;
+use super::report::public_run_warnings;
 use crate::config::{Config, load_config};
+use crate::model::Finding;
+use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config};
+
+/// The run's `[workspace]` warnings off a `Config` a caller already holds
+/// (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1): what the workspace pass
+/// settled on it, plus the walk §FS-check.4.10 needs, published as the
+/// `Finding`s a frontend renders (§FS-distribution.3.1).
+///
+/// The channel rides on the config every walking command resolves, so a command
+/// that hands one back — [`validate_config`], which loads every member's
+/// (§FS-config.4.1.1) — needs no channel of its own.
+#[doc(hidden)]
+pub fn config_run_warnings(config: &Config) -> Vec<Finding> {
+    public_run_warnings(config, settled_run_warnings(config))
+}
 
 pub fn effective_config(path: &Path) -> Result<Config> {
     load_config(path)

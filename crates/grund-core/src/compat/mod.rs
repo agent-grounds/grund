@@ -17,18 +17,15 @@
 //! `api/scope_cautions.rs`, the path and JSON spellings into `model/` and
 //! `config/`. What is left is argv, bytes and exit codes.
 //!
-//! Three things still cross the line the other way, and they are what the
-//! retirement of this directory has to answer first. `run_integrations` is `pub`
-//! and `grund-cli` imports it from the engine, so `lib.rs` re-exports it until
-//! the CLI carries its own copy. And four stderr printers here are called from
-//! `workspace/` on the **live** path, because §FS-check.4.7, §FS-check.4.8,
-//! §FS-check.4.10 and §FS-workspace.6.1 are settled before any report exists and
-//! the query surfaces have no report to carry them
-//! (§DF-unlisted-workspace-block.2.3): `warn_if_members_absorb_scan`,
-//! `warn_unread_block`, `warn_undecidable_ancestor_claim` and
-//! `print_unlisted_workspace_block_warnings`. Those four are the one direction
-//! §AR-system.4 forbids outright that this refactor could not remove without
-//! redesigning how those findings reach a reader.
+//! Nothing here is read from below any more. The four `[workspace]` findings of
+//! §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and §FS-workspace.6.1 were
+//! printed from this directory on the **live** path of every walking command,
+//! which was the one direction §AR-system.4 forbids outright; each is now a
+//! `Diagnostic` in the run's warning channel that every frontend — this one
+//! included — renders for itself (§DA-engine-renders-nothing,
+//! §FS-distribution.3.1). One read the other way is left: `run_integrations` is
+//! `pub` and `grund-cli` imports it from the engine, so `lib.rs` re-exports a
+//! renderer until the CLI carries its own copy.
 
 mod check;
 mod cli;
@@ -44,7 +41,6 @@ mod list;
 mod output;
 mod refs;
 mod show;
-mod workspace_members;
 
 // The deprecated process entry point (§REQ-backwards-compatibility.2) and the
 // one renderer the published CLI still imports from the engine.
@@ -52,13 +48,6 @@ mod workspace_members;
 pub use cli::main_entry;
 pub use integrations::run_integrations;
 pub use output::print_config_warnings;
-
-// The four stderr lines `workspace/` reaches on the live path — see the module
-// doc above (§AR-system.4).
-pub(crate) use output::print_unlisted_workspace_block_warnings;
-pub(crate) use workspace_members::{
-    warn_if_members_absorb_scan, warn_undecidable_ancestor_claim, warn_unread_block,
-};
 
 // What only the crate's own test modules read (§AR-core-module-layout.1): three
 // command adapters, the `cover` argv parse with its two JSON fragments, and the

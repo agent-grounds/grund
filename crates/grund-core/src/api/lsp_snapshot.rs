@@ -16,7 +16,7 @@ use super::lsp_ranges::{
     absolutize_path, declaration_range_parts, heading_span_parts, lsp_query_id,
     lsp_target_for_citation, lsp_target_for_stub, section_range_parts,
 };
-use super::report::public_lsp_report;
+use super::report::{public_lsp_report, public_lsp_run_warnings};
 use super::scope_cautions::scan_scope_caution;
 use crate::checker::{check_with_workspace_and_overlays, sort_diagnostics};
 use crate::config::display_path;
@@ -261,12 +261,17 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
         ))
     });
 
+    // §FS-lsp.1.1: the four run-level `[workspace]` warnings, published for the
+    // first time on the `grund.toml` each one anchors at — the same channel the
+    // CLI renders, from the same place (§FS-lsp.4).
+    let run_warnings = public_lsp_run_warnings(&render_config, context.run_warnings.clone());
     Ok(LspSnapshot {
         root: absolutize_path(&render_config.root),
         marker: render_config.marker,
         trigger: render_config.trigger,
         workspace: context.workspace_loaded,
         report,
+        run_warnings,
         declarations,
         sections,
         finding_ranges,

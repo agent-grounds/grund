@@ -93,7 +93,7 @@ mod integrations_detect;
 mod integrations_install;
 mod integrations_user_config;
 
-pub use fetch::{FetchFailure, FetchFailureKind, fetch_snapshot};
+pub use fetch::{FetchFailure, FetchFailureKind, fetch_snapshot, fetch_snapshot_with_run_warnings};
 pub use fmt_error::FmtScanAbort;
 pub use init::{InitError, InitEvent, InitFsHome, InitNext, InitOpts, InitOutput, init};
 pub use init_plan::InitAgentEntrypointSelection;

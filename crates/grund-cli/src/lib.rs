@@ -17,9 +17,10 @@ use grund_core::{
     IdProposalOutcome, InitAgentEntrypointSelection, InitNext, InitOpts, InitOutput, ListEntry,
     ListOpts, ListSizeEntry, ListSizeOpts, NamespaceMatch, PointSizeUnit,
     REFS_QUERY_FAILURE_WARNING, RefHit, RefsOpts, RefsQueryFailure, Report, ShowFormat, ShowMode,
-    ShowOpts, ShowQueryError, canonical_template_text, check_with_opts, complete_ids, cover,
-    effective_config, fetch_snapshot, format_references, init, list, list_sizes,
-    names_member_id_candidate, print_config_warnings, propose_id, refs_outcome,
+    ShowOpts, ShowQueryError, canonical_template_text, check_with_opts,
+    complete_ids_with_run_warnings, config_run_warnings, cover, effective_config,
+    fetch_snapshot_with_run_warnings, format_references, init, list_sizes, list_with_run_warnings,
+    names_member_id_candidate, print_config_warnings, propose_id_with_run_warnings, refs_outcome,
     refs_query_failure_is_exit_one, render_finding_sites_json, run_integrations,
     show_batch_with_scope, show_with_scope, validate_config,
 };

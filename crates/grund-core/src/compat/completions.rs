@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use crate::grammar::render_id;
-use crate::resolver::load_workspace_context;
 
 pub(super) fn command_complete(args: &[String]) -> ExitCode {
     match args.first().map(|arg| arg.as_str()) {
@@ -75,7 +74,7 @@ fn command_complete_ids(args: &[String]) -> ExitCode {
     // Completion is called on every tab press. Config or scan failures must not
     // smear diagnostics across the prompt; explicit flag misuse above is still a
     // normal CLI error because it is a bug in the installed completion script.
-    let context = match load_workspace_context(&path, path_provided) {
+    let context = match super::output::workspace_context(&path, path_provided) {
         Ok(context) => context,
         Err(_) => return ExitCode::SUCCESS,
     };

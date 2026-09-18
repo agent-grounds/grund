@@ -50,17 +50,20 @@ mod scope_cautions;
 mod show;
 
 pub use check::{CheckOpts, CheckOutput, check, check_with_opts, scan};
-pub use complete_ids::{CompleteIdsOpts, complete_ids};
+pub use complete_ids::{CompleteIdsOpts, complete_ids, complete_ids_with_run_warnings};
 pub use config::{
-    ReferenceStyle, config_warnings, effective_config, reference_style, validate_config,
+    ReferenceStyle, config_run_warnings, config_warnings, effective_config, reference_style,
+    validate_config,
 };
 pub use cover::{
     CoverCitation, CoverEntry, CoverOpts, CoverOutput, CoverTextCitation, CoverTextEntry,
     CoverTextOutput, cover, cover_text,
 };
 pub use fmt::{FmtChange, FmtOpts, FmtOutput, format_references};
-pub use id::{IdOpts, IdProposal, IdProposalOutcome, propose_id};
-pub use list::{ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot, list};
+pub use id::{IdOpts, IdProposal, IdProposalOutcome, propose_id, propose_id_with_run_warnings};
+pub use list::{
+    ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot, list, list_with_run_warnings,
+};
 pub use lsp_snapshot::lsp_snapshot;
 pub use refs::{
     REFS_QUERY_FAILURE_WARNING, RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure,

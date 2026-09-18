@@ -3,9 +3,9 @@ use std::collections::BTreeSet;
 
 use super::show::{render_show_output_json, show_declaration_with_overlays};
 use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
-use crate::config::display_path;
+use crate::config::{display_path, run_warning_findings};
 use crate::grammar::{flatten_cross_ref_links, render_id};
-use crate::model::{FindingSite, ShowOutput, TextOverlays};
+use crate::model::{Finding, FindingSite, ShowOutput, TextOverlays};
 use crate::resolver::{WorkspaceContext, load_workspace_context, with_member_id_candidates};
 use crate::scanner::resolve_id_arg;
 use crate::workspace::split_qualified_id_arg;
@@ -44,8 +44,19 @@ pub struct BatchShowRecord {
 #[doc(hidden)]
 pub fn show_batch_with_scope(
     queries: Option<Vec<BatchShowQuery>>,
+    opts: ShowOpts,
+    path_provided: bool,
+) -> (Vec<Finding>, Result<Vec<BatchShowRecord>>) {
+    let mut run_warnings = Vec::new();
+    let records = show_batch_run(queries, opts, path_provided, &mut run_warnings);
+    (run_warnings, records)
+}
+
+fn show_batch_run(
+    queries: Option<Vec<BatchShowQuery>>,
     mut opts: ShowOpts,
     path_provided: bool,
+    run_warnings: &mut Vec<Finding>,
 ) -> Result<Vec<BatchShowRecord>> {
     if queries.as_ref().is_some_and(Vec::is_empty) {
         return Ok(Vec::new());
@@ -54,6 +65,10 @@ pub fn show_batch_with_scope(
     // §AR-resolver.3: this is the batch's only loader entry. Exhaustive
     // discovery reads the returned catalog and never starts a preliminary scan.
     let context = load_workspace_context(&opts.path, path_provided)?;
+    // §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1: the run's `[workspace]`
+    // warnings come back beside the records, because the batch refuses after the
+    // workspace pass has already settled them.
+    *run_warnings = run_warning_findings(context.render_config(), context.run_warnings.clone());
     if let Some((file, message)) = context
         .projects
         .iter()

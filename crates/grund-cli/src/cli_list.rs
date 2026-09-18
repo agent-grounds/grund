@@ -162,6 +162,7 @@ fn command_list(args: &[String]) -> ExitCode {
                 return ExitCode::from(2);
             }
         };
+        render_run_warnings(&output.warnings);
         let format = match command_output_format("list", &output.output_format, format_override) {
             Ok(format) => format,
             Err(code) => return code,
@@ -176,13 +177,18 @@ fn command_list(args: &[String]) -> ExitCode {
         return exit_after_scan_errors(&output.scan_errors);
     }
 
-    let output = match list(ListOpts {
+    // §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1: the run's warnings come
+    // back beside the catalog, so a refused `--project` or `--kind` still prints
+    // the cautions the workspace pass settled before it (§FS-distribution.3.1).
+    let (run_warnings, listed) = list_with_run_warnings(ListOpts {
         path,
         path_provided,
         kind_filter,
         project_filter,
         unused_only,
-    }) {
+    });
+    render_run_warnings(&run_warnings);
+    let output = match listed {
         Ok(output) => output,
         Err(err) => {
             eprintln!("error: {err:#}");

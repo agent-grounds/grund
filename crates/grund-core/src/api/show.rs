@@ -17,11 +17,13 @@ use std::path::PathBuf;
 use super::lsp_snapshot::normalized_overlays;
 use crate::config::display_path;
 use crate::grammar::flatten_cross_ref_links;
-use crate::model::{ShowOutput, TextOverlays};
+use crate::model::{Finding, ShowOutput, TextOverlays};
 use crate::queries::{
     ShowFormat, ShowOpts, render_show_output_json, show_declaration_with_overlays,
 };
 use crate::resolver::{load_workspace_context_with_overlays, with_member_id_candidates};
+
+use super::report::context_run_warnings;
 use crate::scanner::resolve_id_arg;
 use crate::workspace::split_qualified_id_arg;
 
@@ -29,7 +31,7 @@ use crate::workspace::split_qualified_id_arg;
 /// returns the structured body instead of printing it.
 
 pub fn show(id_arg: &str, opts: ShowOpts) -> Result<ShowOutput> {
-    show_with_scope(id_arg, opts, true)
+    show_with_scope(id_arg, opts, true).1
 }
 
 pub fn show_with_overlays(
@@ -37,11 +39,21 @@ pub fn show_with_overlays(
     opts: ShowOpts,
     open_documents: BTreeMap<PathBuf, String>,
 ) -> Result<ShowOutput> {
-    show_with_scope_and_overlays(id_arg, opts, true, &normalized_overlays(open_documents))
+    show_with_scope_and_overlays(id_arg, opts, true, &normalized_overlays(open_documents)).1
 }
 
+/// The ID read behind `grund <ID>` (§FS-show).
+///
+/// The run's `[workspace]` warnings come back beside the answer rather than on it,
+/// because a refusal settled *after* the workspace pass — an unknown alias, an
+/// unresolvable ID — leaves an `Err` with nowhere to carry a caution the reader is
+/// already owed (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1).
 #[doc(hidden)]
-pub fn show_with_scope(id_arg: &str, opts: ShowOpts, path_provided: bool) -> Result<ShowOutput> {
+pub fn show_with_scope(
+    id_arg: &str,
+    opts: ShowOpts,
+    path_provided: bool,
+) -> (Vec<Finding>, Result<ShowOutput>) {
     show_with_scope_and_overlays(id_arg, opts, path_provided, &TextOverlays::new())
 }
 
@@ -50,8 +62,21 @@ fn show_with_scope_and_overlays(
     opts: ShowOpts,
     path_provided: bool,
     overlays: &TextOverlays,
+) -> (Vec<Finding>, Result<ShowOutput>) {
+    let mut run_warnings = Vec::new();
+    let output = show_run(id_arg, opts, path_provided, overlays, &mut run_warnings);
+    (run_warnings, output)
+}
+
+fn show_run(
+    id_arg: &str,
+    opts: ShowOpts,
+    path_provided: bool,
+    overlays: &TextOverlays,
+    run_warnings: &mut Vec<Finding>,
 ) -> Result<ShowOutput> {
     let context = load_workspace_context_with_overlays(&opts.path, path_provided, overlays, false)?;
+    *run_warnings = context_run_warnings(&context);
     let (alias, raw_id) = split_qualified_id_arg(id_arg)?;
     let project = match alias.as_deref() {
         Some(name) => context

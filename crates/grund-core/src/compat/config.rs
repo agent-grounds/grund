@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use super::output::print_config_warnings;
-use crate::api::validate_config;
+use super::output::{print_config_warnings, print_published_run_warnings};
+use crate::api::{config_run_warnings, validate_config};
 use crate::config::{
     CitationDisjunction, CitationLevel, CitationRules, KindResolution, escape_toml_basic,
     load_config, render_citation_target,
@@ -59,6 +59,7 @@ pub(super) fn command_config(args: &[String]) -> ExitCode {
     match action {
         "validate" => match validate_config(&path) {
             Ok(config) => {
+                print_published_run_warnings(&config_run_warnings(&config));
                 print_config_warnings(&config);
                 ExitCode::SUCCESS
             }

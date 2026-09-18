@@ -6,7 +6,10 @@
 use std::path::{Path, PathBuf};
 
 use super::fetch_write::{write_file_home, write_folder_home};
+use crate::config::run_warning_findings;
 use crate::grammar::parse_id_arg;
+use crate::model::Finding;
+use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config};
 
 /// Which public CLI exit class a fetch refusal belongs to (§FS-fetch.7).
@@ -47,6 +50,28 @@ pub(super) fn fetch_operational(message: impl Into<String>) -> FetchFailure {
 
 /// Materialize exactly one local or qualified external ID (§FS-fetch.1).
 pub fn fetch_snapshot(raw: &str, path: &Path) -> std::result::Result<(), FetchFailure> {
+    fetch_snapshot_with_run_warnings(raw, path).1
+}
+
+/// [`fetch_snapshot`] for a frontend that also renders the run's `[workspace]`
+/// warnings (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1): `fetch` resolves
+/// a block's member boundary like every other walking command, and its failure
+/// is a typed refusal with nowhere to carry a caution.
+#[doc(hidden)]
+pub fn fetch_snapshot_with_run_warnings(
+    raw: &str,
+    path: &Path,
+) -> (Vec<Finding>, std::result::Result<(), FetchFailure>) {
+    let mut run_warnings = Vec::new();
+    let result = fetch_run(raw, path, &mut run_warnings);
+    (run_warnings, result)
+}
+
+fn fetch_run(
+    raw: &str,
+    path: &Path,
+    run_warnings: &mut Vec<Finding>,
+) -> std::result::Result<(), FetchFailure> {
     let mut root_config =
         resolve_workspace_config(path).map_err(|err| fetch_operational(format!("{err:#}")))?;
     let (namespace, local) = raw
@@ -58,8 +83,10 @@ pub fn fetch_snapshot(raw: &str, path: &Path) -> std::result::Result<(), FetchFa
                 "unknown project alias `{namespace}` for fetch"
             )));
         }
-        expand_workspace_tree(&mut root_config)
-            .map_err(|err| fetch_operational(format!("{err:#}")))?
+        let projects = expand_workspace_tree(&mut root_config)
+            .map_err(|err| fetch_operational(format!("{err:#}")))?;
+        *run_warnings = run_warning_findings(&root_config, settled_run_warnings(&root_config));
+        projects
             .into_iter()
             .find(|project| project.alias == namespace)
             .map(|project| project.config)
@@ -67,6 +94,7 @@ pub fn fetch_snapshot(raw: &str, path: &Path) -> std::result::Result<(), FetchFa
                 fetch_operational(format!("unknown project alias `{namespace}` for fetch"))
             })?
     } else {
+        *run_warnings = run_warning_findings(&root_config, settled_run_warnings(&root_config));
         root_config
     };
 

@@ -10,6 +10,7 @@ use std::path::PathBuf;
 
 use super::refs_query::refs_impl;
 use crate::grammar::IdArgError;
+use crate::model::Finding;
 use crate::scanner::ApiScanError;
 
 #[derive(Clone)]
@@ -116,6 +117,12 @@ pub struct RefsOutput {
     pub hits: Vec<RefHit>,
     pub note: Option<String>,
     pub scan_errors: Vec<ApiScanError>,
+    /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
+    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
+    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// names. A frontend renders each as one CLI-level `warning:` on stderr
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    pub warnings: Vec<Finding>,
 }
 
 /// The additive classified `refs` result used by process frontends during the

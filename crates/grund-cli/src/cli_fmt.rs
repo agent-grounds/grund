@@ -56,6 +56,7 @@ fn command_fmt(args: &[String]) -> ExitCode {
             return ExitCode::from(2);
         }
     };
+    render_run_warnings(&output.warnings);
     // §FS-fmt.2.3.2: a file the walk read and the rewrite would not write through,
     // named once, exit code untouched — the refusal is the intended behavior and
     // not a failure of the run.

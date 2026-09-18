@@ -12,19 +12,14 @@ use anyhow::{Result, anyhow};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
-use super::members::{
-    WorkspaceMember, canonical_workspace_path, expand_workspace_member_list, unread_block_probe,
-};
+use super::findings::absorbed_scan_diagnostic;
+use super::members::{WorkspaceMember, canonical_workspace_path, expand_workspace_member_list};
 use crate::config::display_path;
 use crate::config::{
-    Config, ConfigLocation, invalid_project_alias_message, is_valid_project_alias, load_config,
-    load_config_at,
+    Config, ConfigLocation, RunWarning, invalid_project_alias_message, is_valid_project_alias,
+    load_config, load_config_at,
 };
 use crate::model::format_path;
-// §AR-system.4: two reads of `compat/`, which nothing may read — the printing of
-// the two `[workspace]` findings this file populates a boundary for, which reach
-// the reader as a stderr line (§FS-check.4.7, §FS-check.4.10).
-use crate::compat::{warn_if_members_absorb_scan, warn_unread_block};
 
 /// Whether the requested scope *is* the config root — the scope `[scan] include`
 /// governs, and therefore the only one `grund check --full` can widen
@@ -66,14 +61,15 @@ pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
 /// (`config_for_member_scope` rewrites first), so it stays silent about a block it
 /// is not reading through.
 ///
-/// §FS-check.4.10 is answered *here*, unlike the blocks below, which are held until
-/// the expansion knows where the run's projects are. It can be, and the reason is
-/// what makes this block different: it is the run's root and it is no project, so
-/// every project the run goes on to load lies inside one of the members expanded
-/// above — the probe's own member boundary is already the whole prune, and a list
-/// of project roots would add nothing to it (§FS-workspace.6). The count lands on
-/// the run's own config, which is the one `check` still holds when it decides
-/// whether to print `success` (§FS-check.2.1).
+/// §FS-check.4.10 is posed with no project roots *here*, unlike the blocks below,
+/// which are held until the expansion knows where the run's projects are. It can
+/// be, and the reason is what makes this block different: it is the run's root and
+/// it is no project, so every project the run goes on to load lies inside one of
+/// the members expanded above — the block's own member boundary is already the
+/// whole prune, and a list of project roots would add nothing to it
+/// (§FS-workspace.6). Both land on the run's own config, which is the one every
+/// walking command still holds when it decides what to render (§FS-check.2.1,
+/// §FS-distribution.3.1).
 pub(crate) fn apply_workspace_boundary(config: &mut Config) -> Result<()> {
     let Some(members) = populate_workspace_boundary(config)? else {
         return Ok(());
@@ -81,10 +77,10 @@ pub(crate) fn apply_workspace_boundary(config: &mut Config) -> Result<()> {
     // §FS-check.4.9: the absent optional entries are dropped here on purpose. This
     // is the boundary pass; the announcement needs the alias path each namespace is
     // spelled with, which only the expansion walk composes (`expand_workspace_tree`).
-    warn_if_members_absorb_scan(config, &members);
-    let unread =
-        unread_block_probe(config, &members).map_or(0, |probe| warn_unread_block(&probe, &[]));
-    config.unread_opted_out_blocks += unread;
+    let absorbed = absorbed_scan_diagnostic(config, &members).map(RunWarning::Settled);
+    let unread = RunWarning::unread_block(config, Vec::new());
+    config.run_warnings.extend(absorbed);
+    config.run_warnings.extend(unread);
     Ok(())
 }
 

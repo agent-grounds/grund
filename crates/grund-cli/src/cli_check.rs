@@ -120,10 +120,14 @@ fn command_check(args: &[String]) -> ExitCode {
         .report
         .suggestions
         .retain(|finding| selection.retains(finding.code));
+    // §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1: the run's warning channel
+    // first, in the position the engine used to write it from and in the same
+    // shape under either format.
+    render_run_warnings(&output.warnings);
     if format == "json" {
         render_check_json(&output.report);
     } else {
-        render_check_text(&output.report, output.unread_opted_out_blocks);
+        render_check_text(&output.report, output.warnings.len());
     }
     if output.had_scan_errors {
         ExitCode::from(2)
@@ -194,15 +198,16 @@ fn sorted_json_findings(report: &Report) -> Vec<(&'static str, &Finding)> {
     findings
 }
 
-/// `unread_opted_out_blocks` is the §FS-check.4.10 lines the run already printed on
-/// stderr, before this report existed. They are not findings, so nothing in
-/// `report` records them — and a run that says its citations are unchecked must not
-/// also say `success` (§FS-check.2.1).
-fn render_check_text(report: &Report, unread_opted_out_blocks: usize) {
+/// `run_warnings` is how many `[workspace]` cautions this run already printed on
+/// stderr, before this report existed (§FS-check.4.7, §FS-check.4.10,
+/// §FS-workspace.6.1). They are not report findings, so nothing in `report`
+/// records them — and a run that says part of its tree is unchecked must not also
+/// say `success` (§FS-check.2.1).
+fn render_check_text(report: &Report, run_warnings: usize) {
     // §FS-check.2.3: suggestions never suppress `success`, but when present
     // (caller passed --suggestions) they are printed, so the marker only stands
     // in for a run with nothing at all to show.
-    if unread_opted_out_blocks == 0
+    if run_warnings == 0
         && report.errors.is_empty()
         && report.warnings.is_empty()
         && report.suggestions.is_empty()

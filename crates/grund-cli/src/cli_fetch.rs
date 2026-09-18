@@ -5,7 +5,9 @@ fn command_fetch(args: &[String]) -> ExitCode {
         eprintln!("error: fetch requires exactly one <ID>");
         return ExitCode::from(2);
     }
-    match fetch_snapshot(&args[0], Path::new(".")) {
+    let (run_warnings, result) = fetch_snapshot_with_run_warnings(&args[0], Path::new("."));
+    render_run_warnings(&run_warnings);
+    match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => match err.kind {
             FetchFailureKind::Query => {

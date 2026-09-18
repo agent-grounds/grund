@@ -97,9 +97,9 @@ fn opted_out_block(name: &str) -> PathBuf {
 }
 
 /// How many blocks the run cautioned about, which is the finding itself
-/// (§FS-check.4.10) counted rather than read off stderr — the count is what
-/// decides the `success` marker, so it cannot be right while the lines are
-/// wrong.
+/// (§FS-check.4.10) counted off the run's warning channel rather than read off
+/// stderr — the channel is what decides the `success` marker, so it cannot be
+/// right while the lines are wrong (§FS-distribution.3.1).
 ///
 /// Unix only: every caller is a symlink case and so `#[cfg(unix)]` too.
 #[cfg(unix)]
@@ -110,7 +110,10 @@ fn cautioned_blocks(root: &Path) -> usize {
         ..crate::CheckOpts::default()
     })
     .expect("check the fixture")
-    .unread_opted_out_blocks
+    .warnings
+    .iter()
+    .filter(|warning| warning.message.starts_with("no project scans `"))
+    .count()
 }
 
 /// §FS-check.4.10, §FS-workspace.6: the block's only scope root **is** a

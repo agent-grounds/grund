@@ -117,7 +117,8 @@ pub use templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
 // §FS-fmt.3).
 pub use writers::{
     FetchFailure, FetchFailureKind, FmtScanAbort, InitAgentEntrypointSelection, InitError,
-    InitEvent, InitFsHome, InitNext, InitOpts, InitOutput, fetch_snapshot, init,
+    InitEvent, InitFsHome, InitNext, InitOpts, InitOutput, fetch_snapshot,
+    fetch_snapshot_with_run_warnings, init,
 };
 
 // §AR-system.2.9 api: the embedding surface itself — one data-returning
@@ -128,10 +129,12 @@ pub use api::{
     CoverTextCitation, CoverTextEntry, CoverTextOutput, FmtChange, FmtOpts, FmtOutput, IdOpts,
     IdProposal, IdProposalOutcome, ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot,
     REFS_QUERY_FAILURE_WARNING, RefHit, ReferenceStyle, RefsOpts, RefsOutcome, RefsOutput,
-    RefsQueryFailure, RefsQueryFailureKind, check, check_with_opts, complete_ids, config_warnings,
-    cover, cover_text, effective_config, format_references, list, lsp_snapshot, propose_id,
-    reference_style, refs, refs_outcome, refs_query_failure_is_exit_one, render_finding_sites_json,
-    scan, show, show_with_overlays, show_with_scope, validate_config,
+    RefsQueryFailure, RefsQueryFailureKind, check, check_with_opts, complete_ids,
+    complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover, cover_text,
+    effective_config, format_references, list, list_with_run_warnings, lsp_snapshot, propose_id,
+    propose_id_with_run_warnings, reference_style, refs, refs_outcome,
+    refs_query_failure_is_exit_one, render_finding_sites_json, scan, show, show_with_overlays,
+    show_with_scope, validate_config,
 };
 
 // §AR-system.2.9's one exception, the deprecated `main_entry()` path
