@@ -16,6 +16,7 @@ use std::path::PathBuf;
 
 use super::lsp_snapshot::normalized_overlays;
 use crate::config::display_path;
+use crate::grammar::flatten_cross_ref_links;
 use crate::model::{ShowOutput, TextOverlays};
 use crate::queries::{
     ShowFormat, ShowOpts, render_show_output_json, show_declaration_with_overlays,
@@ -23,7 +24,6 @@ use crate::queries::{
 use crate::resolver::{load_workspace_context_with_overlays, with_member_id_candidates};
 use crate::scanner::resolve_id_arg;
 use crate::workspace::split_qualified_id_arg;
-use crate::writers::flatten_cross_ref_links;
 
 /// Programmatic declaration read. This mirrors `grund show` resolution but
 /// returns the structured body instead of printing it.
@@ -111,7 +111,7 @@ fn show_with_scope_and_overlays(
     // read off the context this run already loaded.
     .map_err(|err| with_member_id_candidates(err, &context, alias.as_deref(), raw_id))?;
     if opts.format != ShowFormat::Markdown {
-        output.body = flatten_cross_ref_links(&output.body, config);
+        output.body = flatten_cross_ref_links(&output.body, config.lexical());
     }
     if opts.format == ShowFormat::Json {
         let json = render_show_output_json(

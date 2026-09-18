@@ -3,7 +3,7 @@ use std::process::ExitCode;
 
 use super::output::{print_bare_query_json, show_query_error_code};
 use crate::config::display_path;
-use crate::grammar::render_id;
+use crate::grammar::{flatten_cross_ref_links, render_id};
 use crate::model::ShowRenderMode;
 use crate::queries::{ShowQueryError, render_show_output_json, show_declaration};
 use crate::resolver::{
@@ -11,7 +11,6 @@ use crate::resolver::{
 };
 use crate::scanner::resolve_id_arg;
 use crate::workspace::split_qualified_id_arg;
-use crate::writers::flatten_cross_ref_links;
 
 pub(super) fn command_show(args: &[String]) -> ExitCode {
     command_show_impl(args, false)
@@ -271,7 +270,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             // §FS-show.3.2: `text` and `json` flatten `--cross-refs` link wrappers
             // back to bare `§…` citations; `md` keeps the renderable form verbatim.
             if format != "md" {
-                output.body = flatten_cross_ref_links(&output.body, config);
+                output.body = flatten_cross_ref_links(&output.body, config.lexical());
             }
             if format == "json" {
                 println!(

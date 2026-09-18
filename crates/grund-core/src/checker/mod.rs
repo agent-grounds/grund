@@ -26,10 +26,11 @@
 //! shorthand resolution had been reading upward out of this component
 //! (§AR-system.4).
 //!
-//! One more item came up when §AR-system.2.8 became a module: `plural`, the
-//! plural `s` a count earns, which `inline_style.rs` had been reading out of the
-//! writers' template renderer. This is the lowest component that reads it, so it
-//! lands here and the writers read it downward (§AR-system.4).
+//! `plural`, the plural `s` a count earns, came here from the writers' template
+//! renderer with §AR-system.2.8 and left again with §AR-system.2.11: the
+//! managed block's budget sentence is the templates' now, and neither reader
+//! sits below the other, so the spelling is `model/text.rs` and this component
+//! reads it downward (§AR-system.4).
 
 mod agents;
 mod citations;
@@ -56,7 +57,6 @@ pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
 pub(crate) use homes::file_declares_inline_home;
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
-pub(crate) use inline_style::plural;
 pub(crate) use references::{
     configured_scope, out_of_scope_references, retain_findings_in_scope,
     workspace_out_of_scope_references,

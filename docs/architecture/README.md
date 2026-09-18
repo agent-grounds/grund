@@ -1,10 +1,10 @@
-# AR-system: one engine, ten components, three frontends
+# AR-system: one engine, eleven components, three frontends
 
 `grund` is one pipeline. A single tree walk reads every file once and produces `Findings`; rules turn `Findings` into a `Report`; queries and writers answer from the same `Findings`; and thin frontends render or transport what the engine returns. Everything that decides lives in the engine crate `grund-core`, so the CLI, the LSP server and the planned bindings are the same verdicts behind different surfaces ([§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms), [§FS-distribution](../functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets)). Speed is set by the walk, which is why the walk happens once ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). This page is the whole system on one page: every architecture page in the index below carries a `placement` chapter that names its box here and reads no wider than it, so the system is described once and each page describes one part.
 
 ## 1. The system
 
-Ten components in one crate, stacked in the order they may read each other, and the frontends above them:
+Eleven components in one crate, stacked in the order they may read each other, and the frontends above them:
 
 ```text
              ┌───────────┐  ┌───────────┐  ┌──────────────────────┐
@@ -25,9 +25,9 @@ Ten components in one crate, stacked in the order they may read each other, and 
              │ 2.10 resolver                                      │
              ├────────────────────────────────────────────────────┤
              │ 2.5  scanner                                       │
-             ├────────────────────────────────────────────────────┤
-             │ 2.4  workspace                                     │
-             ├────────────────────────────────────────────────────┤
+             ├─────────────────────────┬──────────────────────────┤
+             │ 2.4  workspace          │ 2.11 templates           │
+             ├─────────────────────────┴──────────────────────────┤
              │ 2.3  config                                        │
              ├────────────────────────────────────────────────────┤
              │ 2.1  grammar                                       │
@@ -63,7 +63,7 @@ One subsection per box. Each says what the box consumes, what it produces, what 
 
 ### 2.1 grammar
 
-Consumes text. Produces the lexical facts every other component shares: the ID grammar and its near-miss detection, comment-line and comment-block recognition, fenced-block boundaries, the number-only shorthand, inline-note layout, and the never-rewrite predicates ([§FS-fmt.2.3](../functional-spec/FS-fmt.md#23-what-is-never-rewritten)). Knows no file and no rule, and takes no `Config`: what configuration decides reaches it as the compiled `Grammar` and the one settings record built beside it — the marker, `[reference] strict`, the comment prefixes, the inline-note keys — so every reader here reads a decision and makes none ([§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar), [§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)). Module: `crates/grund-core/src/grammar/`.
+Consumes text. Produces the lexical facts every other component shares: the ID grammar and its near-miss detection, comment-line and comment-block recognition, fenced-block boundaries, the number-only shorthand, inline-note layout, the never-rewrite predicates ([§FS-fmt.2.3](../functional-spec/FS-fmt.md#23-what-is-never-rewritten)), and the formatter's own syntax — the `--cross-refs` link wrapper a shown body is flattened back from ([§FS-fmt.6.2](../functional-spec/FS-fmt.md#62-form), [§DF-show-cross-ref-flattening](../decisions/functional/DF-show-cross-ref-flattening.md#df-show-cross-ref-flattening-grund-show-flattens-cross-reference-link-wrappers)) and the two scopes a repository takes out of a rewrite's reach ([§FS-fmt.2.5](../functional-spec/FS-fmt.md#25-suppressed-scopes), [§DF-fmt-suppression](../decisions/functional/DF-fmt-suppression.md#df-fmt-suppression-fmt-suppression-is-per-file-and-per-region-and-the-index-carve-out-outranks-both)). Knows no file and no rule, and takes no `Config`: what configuration decides reaches it as the compiled `Grammar` and the one settings record built beside it — the marker, `[reference] strict`, the comment prefixes, the inline-note keys — so every reader here reads a decision and makes none ([§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar), [§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)). Module: `crates/grund-core/src/grammar/`.
 
 ### 2.2 model
 
@@ -79,7 +79,7 @@ Consumes configs. Produces the multi-project scope — member expansion, claims,
 
 ### 2.5 scanner
 
-Consumes the scope and the grammar. Produces `Findings`: every declaration, section, citation, value binding and grounding unit in the tree, from one walk ([§FS-check.1](../functional-spec/FS-check.md#1-inputs)). Knows no rule and no frontend, and never asks whether it is in a workspace. Design: [§AR-scanner](AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations). Module: `crates/grund-core/src/scanner/`.
+Consumes the scope and the grammar. Produces `Findings`: every declaration, section, citation, value binding and grounding unit in the tree, from one walk ([§FS-check.1](../functional-spec/FS-check.md#1-inputs)) — and the one probe over the tree that is no part of that walk, which agent entrypoint files a repository has, because `init` and `check` both ask it and must not disagree ([§FS-init.2.1](../functional-spec/FS-init.md#21-files-written-updated-or-left-in-place), [§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)). Knows no rule and no frontend, and never asks whether it is in a workspace. Design: [§AR-scanner](AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations). Module: `crates/grund-core/src/scanner/`.
 
 ### 2.6 checker
 
@@ -91,7 +91,7 @@ Consume `Findings`. Produce data for one question each: a declaration body ([§F
 
 ### 2.8 writers
 
-Consume `Findings` and the tree. Produce edits: citation normalization and cross-reference links ([§FS-fmt](../functional-spec/FS-fmt.md#fs-fmt-grund-normalizes-references-in-bulk)), a proposed ID ([§FS-id](../functional-spec/FS-id.md#fs-id-grund-proposes-ids-for-new-declarations)), the init scaffold and the managed agent-entrypoint block ([§FS-init](../functional-spec/FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo)), an external fact snapshot ([§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)), and the clickable-citation client artifacts ([§FS-integrations](../functional-spec/FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations)). The only components that write to the tree, and each writes only what its spec names ([§REQ-no-data-loss](../requirements/REQ-no-data-loss.md#req-no-data-loss-grund-never-eats-user-content)). Module: `crates/grund-core/src/writers/`. The deprecated command adapters of the last two are `compat/init.rs` and `compat/integrations*.rs`, with the other renderers ([§AR-system.2.9](README.md#29-api)).
+Consume `Findings` and the tree. Produce edits: citation normalization and cross-reference links ([§FS-fmt](../functional-spec/FS-fmt.md#fs-fmt-grund-normalizes-references-in-bulk)), a proposed ID ([§FS-id](../functional-spec/FS-id.md#fs-id-grund-proposes-ids-for-new-declarations)), the init scaffold and the managed agent-entrypoint block — which files a run writes, the splice that puts the block in one, and the walk-up the block's workspace section needs, the block *text* being the templates' (section 2.11) ([§FS-init](../functional-spec/FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo)) — an external fact snapshot ([§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)), and the clickable-citation client artifacts ([§FS-integrations](../functional-spec/FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations)). The only components that write to the tree, and each writes only what its spec names ([§REQ-no-data-loss](../requirements/REQ-no-data-loss.md#req-no-data-loss-grund-never-eats-user-content)). Module: `crates/grund-core/src/writers/`. The deprecated command adapters of the last two are `compat/init.rs` and `compat/integrations*.rs`, with the other renderers ([§AR-system.2.9](README.md#29-api)).
 
 ### 2.9 api
 
@@ -101,13 +101,17 @@ Consumes everything above. Produces the embedding surface: data-returning functi
 
 Consumes the project map from workspace and every project's `Findings` from the scanner. Produces the loaded project set a run operates on — each project scanned, its off-grammar citations and its cross-namespace number-only shorthands reconciled across the whole set — and four answers that are functions of what a run loaded: which project a citation resolves against, a declaration's body sliced by the spans the scan recorded, the link target its ID resolves to, and which declaration a shorthand token names in whichever project's catalog answers for it ([§AR-resolver.4](AR-resolver.md#4-the-shorthand-a-whole-runs-catalog-resolves)) ([§FS-workspace.8](../functional-spec/FS-workspace.md#8-other-commands), [§FS-show.2](../functional-spec/FS-show.md#2-behavior), [§FS-fmt.6.2](../functional-spec/FS-fmt.md#62-form), [§FS-fmt.2.4](../functional-spec/FS-fmt.md#24-shorthand-to-canonical)). Knows no rule and no rendering; it runs scans, which is what puts it above the scanner while the config half of the workspace stays below it. Design: [§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them). Module: `crates/grund-core/src/resolver/`.
 
+### 2.11 templates
+
+Consumes config and the managed-block markers the grammar recognizes. Produces the text a managed block should say as a function of that config: the `AGENTS.md` block of [§FS-init.2.3](../functional-spec/FS-init.md#23-generated-agent-entrypoints) with its two config-derived sections, the generated `grund.toml`, and the embedded scaffold payload ([§FS-init.2.1](../functional-spec/FS-init.md#21-files-written-updated-or-left-in-place), [§FS-init.2.4](../functional-spec/FS-init.md#24-generated-grundtoml), [§FS-init.5](../functional-spec/FS-init.md#5-agent-setup-instructions)). Rendering is deterministic, so a fresh render is the hash: `init` writes it and `check` re-renders two sections and byte-compares them for drift ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block), [§AR-checker.2.7](../../crates/grund-core/src/checker/report.rs)) — two commands asking one component for the same answer from opposite directions, which is why it is a box rather than a corner of the writers. Knows no file, no rule and no rendering of a report: it writes nothing and reads no tree, and the one block section that needs a walk arrives already rendered from the run that walked for it ([§FS-init.2.3.4.15](../functional-spec/FS-init.md#23415-workspace-members)). Module: `crates/grund-core/src/templates/`.
+
 ## 3. Frontends
 
 Three today, two planned, and none has engine logic ([§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms)). `grund-cli` parses arguments, renders text and JSON, and maps exit codes ([§AR-bindings.3](AR-bindings.md#3-grund-cli-the-cli-binary), [§FS-cli](../functional-spec/FS-cli.md#fs-cli-grunds-command-line-surface-conventions)). `grund-lsp` speaks LSP over stdio and translates every request into an api call ([§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built)). `grund-node` and `grund-py` will marshal the same functions ([§AR-bindings.5](AR-bindings.md#5-grund-node-the-napi-rs-binding), [§AR-bindings.6](AR-bindings.md#6-grund-py-the-pyo3-binding)). Each depends on `grund-core` and on nothing of the others, so the CLI carries no JSON-RPC and the server no terminal renderer ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary)).
 
 ## 4. Dependency direction
 
-One rule: **no component reads one above it.** The stack in section 1 is the rule drawn: the frontends sit above api; api above the queries and the writers, which are siblings and read nothing of each other; those above the checker; the checker above the resolver; the resolver above the scanner; the scanner above workspace; workspace above config; config above grammar; and grammar above model, which reads nothing but std. Two things hold it. The compiler holds a component's privacy — nothing outside a module directory can name what its `mod.rs` does not re-export ([§AR-core-module-layout.1](AR-core-module-layout.md#1-module-categories)) — and `tests/integration/test_dependency_direction.py` holds the order across those directories, with every read that still runs the other way listed one by one and marked at its import, so the list can only shrink. Three consequences are held by tests of their own:
+One rule: **no component reads one above it.** The stack in section 1 is the rule drawn: the frontends sit above api; api above the queries and the writers, which are siblings and read nothing of each other; those above the checker; the checker above the resolver; the resolver above the scanner; the scanner above workspace and templates, which are siblings and read nothing of each other; both above config; config above grammar; and grammar above model, which reads nothing but std. Two things hold it. The compiler holds a component's privacy — nothing outside a module directory can name what its `mod.rs` does not re-export ([§AR-core-module-layout.1](AR-core-module-layout.md#1-module-categories)) — and `tests/integration/test_dependency_direction.py` holds the order across those directories, with every read that still runs the other way listed one by one and marked at its import, so the list can only shrink. Three consequences are held by tests of their own:
 
 - The engine writes no stream and exits no process; the frontends render (`tests/integration/test_engine_boundary.py`).
 - The engine names no frontend's protocol: no LSP types in `grund-core`, no CLI in `grund-lsp` (`tests/integration/test_frontend_isolation.py`).
@@ -127,7 +131,7 @@ The system:
 
 | ID | Subject |
 |---|---|
-| [§AR-system](README.md#ar-system-one-engine-ten-components-three-frontends) | one engine, ten components, three frontends — this page |
+| [§AR-system](README.md#ar-system-one-engine-eleven-components-three-frontends) | one engine, eleven components, three frontends — this page |
 
 The components and frontends:
 

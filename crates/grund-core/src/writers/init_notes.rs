@@ -1,12 +1,12 @@
 use std::path::{Path, PathBuf};
 
-use super::init_entrypoints::{
+use super::init_plan::SelectedInitAgentEntrypoints;
+use crate::model::format_list;
+use crate::scanner::{
     AgentEntrypoint, CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS,
     CanonicalSurfaceReach, CompanionAgentEntrypoint, is_file_or_symlink, is_symlink_to,
     path_missing_without_following_symlinks,
 };
-use super::init_plan::SelectedInitAgentEntrypoints;
-use crate::model::format_list;
 
 /// The `note:` for a repository whose committed `link` opinion cannot reach
 /// Claude, because a Claude entrypoint is a symlink to the canonical file

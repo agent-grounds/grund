@@ -13,7 +13,7 @@ mod tests_fmt_suppression {
     fn excluded(root: &Path, patterns: &[&str]) -> FmtExcluded {
         let mut config = legacy_fs_folder_config(root.to_path_buf());
         config.fmt_exclude = patterns.iter().map(|pattern| pattern.to_string()).collect();
-        FmtExcluded::new(&config).expect("validated patterns build")
+        fmt_excluded(&config).expect("validated patterns build")
     }
 
     /// §FS-fmt.2.5.1: the patterns are gitignore-style and config-root-relative.
@@ -99,7 +99,7 @@ mod tests_fmt_suppression {
     #[test]
     fn a_markdown_directive_is_an_html_comment_whose_content_is_exact() {
         let config = legacy_fs_folder_config(test_root("markdown_directive"));
-        let directives = FmtDirectives::new(&config, true);
+        let directives = FmtDirectives::new(config.lexical(), true);
         for (line, expected) in [
             ("<!-- grund:fmt off -->", Some(false)),
             ("<!-- grund:fmt on -->", Some(true)),
@@ -126,7 +126,7 @@ mod tests_fmt_suppression {
     #[test]
     fn a_source_directive_is_a_comment_line_and_never_a_string() {
         let config = legacy_fs_folder_config(test_root("source_directive"));
-        let directives = FmtDirectives::new(&config, false);
+        let directives = FmtDirectives::new(config.lexical(), false);
         for (line, expected) in [
             ("// grund:fmt off", Some(false)),
             ("    /// grund:fmt on", Some(true)),
@@ -150,7 +150,7 @@ mod tests_fmt_suppression {
     #[test]
     fn a_region_runs_from_off_until_on_and_redundant_directives_are_no_ops() {
         let config = legacy_fs_folder_config(test_root("region_state"));
-        let mut directives = FmtDirectives::new(&config, true);
+        let mut directives = FmtDirectives::new(config.lexical(), true);
         assert!(directives.rewriting(), "a file starts with the rewrite on");
         assert!(directives.consume("<!-- grund:fmt on -->", DocstringContent::default()));
         assert!(directives.rewriting(), "a stray `on` changes nothing");

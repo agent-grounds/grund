@@ -4,14 +4,11 @@ use std::collections::BTreeSet;
 use super::show::{render_show_output_json, show_declaration_with_overlays};
 use super::show_query::{ShowFormat, ShowOpts, ShowQueryError};
 use crate::config::display_path;
-use crate::grammar::render_id;
+use crate::grammar::{flatten_cross_ref_links, render_id};
 use crate::model::{FindingSite, ShowOutput, TextOverlays};
 use crate::resolver::{WorkspaceContext, load_workspace_context, with_member_id_candidates};
 use crate::scanner::resolve_id_arg;
 use crate::workspace::split_qualified_id_arg;
-// §AR-system.4: one sibling read — the link flattening from the writers, which
-// this query is the inverse of (§DF-show-cross-ref-flattening).
-use crate::writers::flatten_cross_ref_links;
 
 /// One input coordinate for the CLI-only batch-show adapter
 /// (§FS-show.1, §FS-show.2.6).
@@ -149,7 +146,7 @@ fn show_batch_query_in_context(
         overlays,
     )
     .map_err(|error| with_member_id_candidates(error, context, alias.as_deref(), raw_id))?;
-    output.body = flatten_cross_ref_links(&output.body, config);
+    output.body = flatten_cross_ref_links(&output.body, config.lexical());
     output.json = Some(render_show_output_json(
         config,
         context.render_config(),

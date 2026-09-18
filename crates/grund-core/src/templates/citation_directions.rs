@@ -1,12 +1,17 @@
-use super::init_templates::CITATION_DIRECTIONS_URL;
 use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, Config, KindCitationRules, KindConfig,
     NamespaceMatch,
 };
 
+/// The public citation-directions page the scaffold config and the no-`[citations]`
+/// fallback sentence hand a reader instead of an ID of this repository
+/// (§FS-config.3.9, §REQ-shipped-surfaces.1).
+const CITATION_DIRECTIONS_URL: &str =
+    "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md";
+
 /// The `### Citation directions` renderer of the managed block (§FS-init.2.3.5),
-/// split out of `init_templates.rs` so the payload constants and the renderer
-/// that composes them stop sharing a file (§AR-core-module-layout.1).
+/// in a file of its own so the payload constants and the renderer that composes
+/// them do not share one (§AR-core-module-layout.1).
 ///
 /// The section is what an agent reads *instead of* `grund.toml`, so every line
 /// here is held to the rule it states: a bullet names the unit the rule is

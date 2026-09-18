@@ -17,16 +17,7 @@ use std::path::Path;
 
 use crate::config::Config;
 use crate::grammar::{CITATION_RUN_SEPARATOR, LayoutChannel, layout_channel};
-use crate::model::{CheckReport, Citation, Diagnostic, Findings, InlineCitationSite};
-
-/// The plural `s` a count earns, or nothing at one — spelled once, because the
-/// size findings below (§FS-inline-citation-style.4) and the budget sentence the
-/// agent entrypoint teaches (§FS-init.2.3) have to read the same way. It came
-/// down out of the writers' template renderer with §AR-system.2.8, this being
-/// the lowest component that reads it (§AR-system.4).
-pub(crate) fn plural(value: usize) -> &'static str {
-    if value == 1 { "" } else { "s" }
-}
+use crate::model::{CheckReport, Citation, Diagnostic, Findings, InlineCitationSite, plural};
 
 /// The citation tokens of one inline citation site, for the message a budget
 /// finding names (§FS-inline-citation-style.4.1, §4.2): each citation's `text`

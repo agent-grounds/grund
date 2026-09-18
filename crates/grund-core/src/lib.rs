@@ -14,6 +14,10 @@ mod config;
 // claims and the scope they narrow to are declared in `workspace/` and what
 // crosses the boundary is what `workspace/mod.rs` re-exports.
 mod workspace;
+// §AR-system.2.11: templates is one Rust module too, so what a managed block
+// should say as a function of config — the payload, the substitutions and the
+// two generated sections — is declared in `templates/` (§FS-init.2.3).
+mod templates;
 // §AR-system.2.5: the scanner is one Rust module too, so the walk, the per-file
 // pass and everything they record are declared in `scanner/` and what crosses
 // the boundary is what `scanner/mod.rs` re-exports (§AR-scanner).
@@ -97,13 +101,17 @@ pub use queries::{
     lsp_title_hover_body, on_type_line_edits, show_batch_with_scope,
 };
 
+// §AR-system.2.11 templates: the setup skill a command prints byte-for-byte and
+// the newline canonicalization every template is read through (§FS-init.5,
+// §FS-init.2.1).
+pub use templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
+
 // §AR-system.2.8 writers: the init scaffold with its events and refusals, the
 // external fact snapshot, and the formatter's scan abort (§FS-init, §FS-fetch,
 // §FS-fmt.3).
 pub use writers::{
-    AGENT_SETUP_INSTRUCTIONS, FetchFailure, FetchFailureKind, FmtScanAbort,
-    InitAgentEntrypointSelection, InitError, InitEvent, InitFsHome, InitNext, InitOpts, InitOutput,
-    canonical_template_text, fetch_snapshot, init,
+    FetchFailure, FetchFailureKind, FmtScanAbort, InitAgentEntrypointSelection, InitError,
+    InitEvent, InitFsHome, InitNext, InitOpts, InitOutput, fetch_snapshot, init,
 };
 
 // §AR-system.2.9 api: the embedding surface itself — one data-returning
@@ -154,7 +162,7 @@ use std::process::ExitCode;
 #[cfg(test)]
 use {
     api::*, checker::*, compat::*, config::*, grammar::*, model::*, queries::*, resolver::*,
-    scanner::*, workspace::*, writers::*,
+    scanner::*, templates::*, workspace::*, writers::*,
 };
 
 // Tests, one module per category (§AR-core-module-layout.1). `tests_support`

@@ -33,6 +33,16 @@
 //! workspace was reading all three upward before any scan exists
 //! (§AR-resolver.placement).
 //!
+//! Two more crossings came with §AR-system.2.11. `formatter_wrapper_label_is_citation`
+//! went down into `grammar/fmt_cross_refs.rs`, beside the flattening that is its
+//! only other caller: whether a `[…](…)` label is a citation the formatter could
+//! have wrapped is a question about a token (§DF-show-cross-ref-flattening).
+//! And `agent_entrypoints.rs` came the other way, out of the writers: which
+//! entrypoint files a repository *has* is a probe over the tree — it resolves
+//! symlinks and reads a file for a managed block — and `grund check`'s companion
+//! scan was reading it upward out of a component above the checker
+//! (§FS-check.3.5, §AR-checker.2.7).
+//!
 //! What came the other way with that move is `scan_error.rs`: the published form
 //! of a scan failure (§FS-check.2), which sat in the api's contract while the
 //! size catalog and the formatter read it upward (§AR-system.4). It carries the
@@ -40,6 +50,7 @@
 //! §AR-core-module-layout.2, so `lib.rs` re-exports `ApiScanError` explicitly
 //! beside the component's otherwise `pub(crate)` glob.
 
+mod agent_entrypoints;
 mod citations;
 mod context;
 mod e2e;
@@ -67,13 +78,19 @@ pub use scan_error::ApiScanError;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
+pub(crate) use agent_entrypoints::{
+    AgentEntrypoint, CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS,
+    CanonicalSurfaceReach, CompanionAgentEntrypoint, InitCompanionAgentEntrypoint,
+    agents_with_own_entrypoint, companion_agent_entrypoints, companion_workspace_exists,
+    existing_init_companion_agent_entrypoints, is_file_or_symlink, is_symlink_to,
+    path_missing_without_following_symlinks,
+};
 pub(crate) use context::{file_home_kind, markdown_heading_level, section_path_is_numeric};
 pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;
 pub(crate) use legacy::{
-    collect_local_legacy_markdown_citations, configured_catalog_ids,
-    formatter_wrapper_label_is_citation, legacy_catalog_ids, match_legacy_tail,
-    promote_legacy_candidate, resolve_id_arg, sort_citations,
+    collect_local_legacy_markdown_citations, configured_catalog_ids, legacy_catalog_ids,
+    match_legacy_tail, promote_legacy_candidate, resolve_id_arg, sort_citations,
 };
 pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;

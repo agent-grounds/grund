@@ -10,18 +10,18 @@
 //!
 //! Both of its readers slice the lead through that one slicer, which is why
 //! neither can be a pure function in a lower component: the answer is a function
-//! of the findings a run loaded (§AR-system.4).
+//! of the findings a run loaded (§AR-system.4). The one thing it reads that is
+//! not — flattening the formatter's cross-reference wrappers, so a measured body
+//! is the body `show` prints (§FS-show.3.2) — is recognition, and lexical, so it
+//! is `grammar/fmt_cross_refs.rs` and reads downward.
 
 use anyhow::Result;
 
 use super::body::{PointBodyCache, PointBodySite, extract_declaration_body_cached};
 use super::e2e_body::show_e2e_case;
 use crate::config::Config;
+use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Declaration, DeclarationSource, Id, SectionInfo, ShowRenderMode};
-// §AR-system.4: one read above this component — the cross-reference flattening
-// of §DF-show-cross-ref-flattening from the writers' `fmt_links.rs`, the inverse
-// of the formatter's own wrapper, which a measured body has to agree with.
-use crate::writers::flatten_cross_ref_links;
 
 /// Return the lead/full text pair for one catalog site. JSON values and E2E
 /// cases already carry their canonical show bodies in scanner records; text
@@ -90,7 +90,7 @@ pub(crate) fn point_body_pair(
     // Text and JSON `show` flatten generated cross-reference wrappers before
     // exposing their bodies; point measurements promise those same bytes
     // (§FS-show.3.2, §FS-list.3.4).
-    lead = flatten_cross_ref_links(&lead, config);
-    full = flatten_cross_ref_links(&full, config);
+    lead = flatten_cross_ref_links(&lead, config.lexical());
+    full = flatten_cross_ref_links(&full, config.lexical());
     Ok(Some((lead, full)))
 }

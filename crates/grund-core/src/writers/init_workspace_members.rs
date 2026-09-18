@@ -2,9 +2,9 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::init_templates::markdown_link_destination;
 use crate::config::{Config, config_file_in, is_valid_project_alias, load_config_at};
 use crate::model::normalize_path_lexically;
+use crate::templates::markdown_link_destination;
 use crate::workspace::{
     AncestorWorkspaces, apply_workspace_boundary, enclosing_workspace_of,
     expand_workspace_tree_with_report_base,
@@ -16,7 +16,7 @@ use crate::workspace::{
 /// (§FS-init.2.3.4.15, §DF-workspace-member-descriptions).
 ///
 /// What this file holds: the workspace half of the `init` renderer
-/// (§FS-init.2.3.4.15), in a file of its own beside `init_entrypoints.rs`
+/// (§FS-init.2.3.4.15), in a file of its own beside `init_render.rs`
 /// (§AR-core-module-layout.1) — finding the workspace a target sits in, and
 /// rendering the member list the managed block carries. `init_templates.rs`
 /// keeps the block itself and the generated config.

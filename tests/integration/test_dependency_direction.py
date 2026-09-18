@@ -1,9 +1,10 @@
 """§AR-system.4 — no component of `grund-core` reads one above it. Every
 `crate::<other>` reference in every `.rs` file under
 `crates/grund-core/src/<component>/` is judged against the order §AR-system.1
-draws: model, grammar, config, workspace, scanner, resolver, checker, then
-queries and writers as siblings that may not read each other, then api, then
-compat, which may read anything and which nothing may read. The reads that still run the
+draws: model, grammar, config, then workspace and templates as siblings that may
+not read each other, scanner, resolver, checker, then queries and writers as
+siblings that may not read each other either, then api, then compat, which may
+read anything and which nothing may read. The reads that still run the
 other way are listed below, one entry per (file, item), and each one must still
 be in the tree and still carry its §AR-system.4 note — so the list can only
 shrink, and a new upward read fails."""
@@ -17,8 +18,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CORE = REPO_ROOT / "crates" / "grund-core" / "src"
 
 # §AR-system.1 as a rank: a component may read a lower rank and nothing else.
-# `queries` and `writers` share a rank because they are siblings that may not
-# read each other.
+
+# Two pairs share a rank because they are siblings that may not read each other:
+# `workspace` and `templates` — one answers about config text, the other renders
+# from config, and neither is about the other — and `queries` and `writers`.
 
 # `compat` is above everything, which is the same fact twice: the deprecated
 # frontend may read anything, and nothing may read it.
@@ -27,6 +30,7 @@ ORDER = {
     "grammar": 1,
     "config": 2,
     "workspace": 3,
+    "templates": 3,
     "scanner": 4,
     "resolver": 5,
     "checker": 6,
@@ -61,32 +65,6 @@ RECORDED_DEBT = {
     "workspace/expand.rs": ("compat::warn_if_members_absorb_scan", "compat::warn_unread_block"),
     "workspace/members.rs": ("compat::warn_undecidable_ancestor_claim",),
     "workspace/scope.rs": ("compat::warn_if_members_absorb_scan", "compat::warn_unread_block"),
-    # the checker reads the writers for what it must compare a verdict to: the
-    # entrypoint list and the three template renderers a managed block is
-    # byte-compared against (§FS-check.3.5).
-
-    # Each of those is the writer's plan rather than a function of text, so none
-    # of them moves down into grammar.
-    "checker/agents.rs": (
-        "writers::ConversationSurface",
-        "writers::citation_directions_section",
-        "writers::clickable_citations_section",
-        "writers::companion_agent_entrypoints",
-    ),
-    # the three sibling edges between the queries and the writers, all of them
-    # one fact: an answer that must agree with the formatter line for line
-    # (§DF-show-cross-ref-flattening, §FS-lsp.1.4).
-
-    # Either they move to a lower component together with the scanner state they
-    # are written in terms of, or one of the two siblings owns both halves.
-    "queries/batch.rs": ("writers::flatten_cross_ref_links",),
-    "queries/editor_on_type.rs": ("writers::FmtDirectives", "writers::FmtExcluded"),
-    # and the resolver reads the same flattening for the point body it measures,
-    # the one edge §AR-system.2.10 moved rather than resolved.
-
-    # A measured body has to agree with the formatter line for line
-    # (§FS-list.3.4).
-    "resolver/point_body.rs": ("writers::flatten_cross_ref_links",),
 }
 
 

@@ -6,12 +6,9 @@ use crate::grammar::{
     AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
 };
 use crate::model::{CheckReport, Diagnostic};
-// §AR-system.4: four upward reads — the companion
-// entrypoint list and the three template renderers this rule byte-compares a
-// fresh render of, all the writers' (§FS-init).
-use crate::writers::{
+use crate::scanner::companion_agent_entrypoints;
+use crate::templates::{
     ConversationSurface, citation_directions_section, clickable_citations_section,
-    companion_agent_entrypoints,
 };
 
 const AGENTS_INIT_COMPATIBILITY_TAIL: &str =
@@ -58,7 +55,10 @@ pub(super) fn check_agents_block_version(config: &Config, report: &mut CheckRepo
 /// required, version supported, and its generated sections still matching config.
 ///
 /// Why the generated sections are compared by re-rendering: rendering is
-/// deterministic, so a fresh render is the hash. `\r` is stripped from the block
+/// deterministic, so a fresh render is the hash — and what a managed block
+/// should say is a function of config alone, which is why `templates/` holds
+/// both renderers and `init` writes exactly what this compares against
+/// (§AR-system.2.11, §AR-checker.2.7). `\r` is stripped from the block
 /// first, because the managed `AGENTS.md` is not pinned to LF in `.gitattributes`,
 /// so a Windows checkout has CRLF and would read as drift against the LF render.
 ///
