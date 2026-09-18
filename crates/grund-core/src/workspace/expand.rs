@@ -24,10 +24,10 @@ use super::scope::{
 };
 use crate::config::display_path;
 use crate::config::{AbsentOptionalNamespace, Config, load_config_at_with_report_base};
-// §AR-system.4: two reads of `compat/`, through the crate root — the printing of
+// §AR-system.4: two reads of `compat/`, which nothing may read — the printing of
 // the two `[workspace]` findings this walk gathers, which reach the reader as a
 // stderr line rather than through a `Report` (§FS-check.4.7, §FS-check.4.10).
-use crate::{warn_if_members_absorb_scan, warn_unread_block};
+use crate::compat::{warn_if_members_absorb_scan, warn_unread_block};
 
 /// One project the workspace walk reached: the alias path qualified citations
 /// name it by — one segment per workspace level, so a nested project carries

@@ -2,10 +2,10 @@ use super::comment_line::{
     comment_content_range, comment_strip_prefixes, content_citation_tokens, line_citation_ranges,
     remove_inline_citation_tokens, strip_comment_tokens,
 };
-// §AR-system.4: `Config` is config's own record and `WorkspaceCitationTarget`
-// workspace's, both above this one and reachable through the crate root until
-// they move.
-use crate::{Config, WorkspaceCitationTarget};
+// §AR-system.4: two upward reads — `Config` is config's own record and
+// `WorkspaceCitationTarget` workspace's, both above this component.
+use crate::config::Config;
+use crate::workspace::WorkspaceCitationTarget;
 
 /// The layouts `[reference] inline_note_layout` selects, as the two dimensions a
 /// value picks: where the citation run sits on the line, and what separates it

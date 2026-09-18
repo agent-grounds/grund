@@ -4,9 +4,9 @@ use super::near_miss::declaration_id_on_line;
 use super::source_line::{
     PythonDocstringScanState, SourceScanLine, python_docstring_quote, source_scan_line,
 };
-// §AR-system.4: `Config` is config's own record, one component above this one,
-// and stays reachable through the crate root until the callers move.
-use crate::Config;
+// §AR-system.4: one upward read — `Config` is config's own record, one
+// component above this one.
+use crate::config::Config;
 
 /// One comment block, classified: what opens it, where a docstring closes it,
 /// whether it declares an ID, and whether the language it is written in calls it

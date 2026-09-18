@@ -2,10 +2,10 @@ use super::compiled::QUALIFIED_CITATION_PREFIX;
 use super::id_format::parse_longest_id_prefix;
 use super::ids::parse_loose_qualified_id_prefix;
 use super::never_rewrite::{is_inside_inline_code, is_inside_string_literal};
-// §AR-system.4: `Config` is config's own record and the citation target
-// workspace's, both above this one and reachable through the crate root until
-// they move.
-use crate::{Config, WorkspaceCitationTarget};
+// §AR-system.4: two upward reads — `Config` is config's own record and the
+// citation target workspace's, both above this component.
+use crate::config::Config;
+use crate::workspace::WorkspaceCitationTarget;
 
 /// Every recognized citation token on one line, as byte ranges into it
 /// (§FS-check.1.1): the configured marker, `[reference] strict`, the

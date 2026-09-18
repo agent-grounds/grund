@@ -14,9 +14,9 @@ use crate::model::{
     Citation, Declaration, Findings, Id, physical_path_key, scanned_decl_relative_path,
     scanned_path_key,
 };
-// §AR-system.4: one upward read through the crate root — the Markdown link
+// §AR-system.4: one upward read — the Markdown link
 // target reader, which is the formatter's (§FS-fmt.6).
-use crate::markdown_link_target;
+use crate::writers::markdown_link_target;
 
 /// The IDs each kind index owes an entry for, keyed by the index's
 /// config-root-relative path (§FS-check.3.18). `folder_owed` preserves the

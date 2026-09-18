@@ -49,9 +49,9 @@ pub use values::{
     ValueComponentKind,
 };
 
-// What the other components read, still through the crate root while they are
-// flat (§AR-system.4). The finalize task narrows this as each caller moves into
-// a module of its own.
+// What the other components read, each by this module's path (§AR-system.4):
+// the whole of what crosses this boundary, and the only thing outside the
+// directory that can name any of it.
 pub(crate) use headings::UnmarkedHeadingCandidate;
 pub(crate) use paths::{
     canonicalize_existing_prefix, configured_home_path_key, format_path, normalize_path_lexically,

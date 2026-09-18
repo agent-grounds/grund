@@ -17,12 +17,12 @@ use super::scope::{resolve_workspace_config, scope_is_config_root};
 use crate::config::{Config, INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
 use crate::grammar::resolve_qualified_shorthand_citations;
 use crate::model::{Findings, TextOverlays};
-// §AR-system.4: four reads through the crate root — three of the scanner's, and
+// §AR-system.4: four reads above this component — three of the scanner's, and
 // the §FS-check.4.8 stderr line, which is `compat/`'s because the query surfaces
 // have no report to carry it (§DF-unlisted-workspace-block.2.3).
-use crate::{
-    ScanError, print_unlisted_workspace_block_warnings, promote_qualified_legacy_citations,
-    scan_tree_with_workspace_overlays,
+use crate::compat::print_unlisted_workspace_block_warnings;
+use crate::scanner::{
+    ScanError, promote_qualified_legacy_citations, scan_tree_with_workspace_overlays,
 };
 
 /// One project of the run a qualified citation can name, as the scanner needs

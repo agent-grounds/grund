@@ -11,10 +11,10 @@ use std::collections::BTreeMap;
 use super::ids::parse_id_arg;
 use super::shorthand::{ParsedId, ShorthandIndex, parse_id_arg_with_shorthand, shorthand_names};
 use crate::model::{Findings, Id};
-// §AR-system.4: `Config` is config's own record and `WorkspaceContext` the
-// workspace component's, both above this one and reachable through the crate
-// root until they move.
-use crate::{Config, WorkspaceContext};
+// §AR-system.4: two upward reads — `Config` is config's own record and
+// `WorkspaceContext` the workspace component's, both above this one.
+use crate::config::Config;
+use crate::workspace::WorkspaceContext;
 
 /// Everything one `grund fmt` walk needs to expand a shorthand: this project's
 /// declaration index, plus one per workspace alias for the qualified form

@@ -12,30 +12,19 @@ Not a component: the rule for how the engine's files are named, owned and sized,
 
 ## 1. Module categories
 
-`crates/grund-core/src/lib.rs` stays the engine crate entrypoint and public Rust API surface (`check`, `show`, `scan`, and the shared data types), while implementation code lives in smaller category files under `crates/grund-core/src/`.
+`crates/grund-core/src/lib.rs` stays the engine crate entrypoint and public Rust API surface, and every implementation file under it belongs to one **component module**: one directory per component of [§AR-system.2](README.md#2-components), named after it — `model/`, `grammar/`, `config/`, `workspace/`, `scanner/`, `checker/`, `queries/`, `writers/`, `api/`, and `compat/` for the deprecated path beside the api ([§AR-system.2.9](README.md#29-api)). What each one implements, consumes and must not know is its component's subsection; this section says only how its files are arranged, and what a component may *read* is [§AR-system.4](README.md#4-dependency-direction).
 
-What each category implements, consumes and must not know is its component's subsection in [§AR-system.2](README.md#2-components), and the table's third column says which. A category is named by the module directory that holds it; every one has a directory now, so the compiler holds the boundary that a file-name prefix and a test used to.
+A file belongs to exactly one component — the directory it sits under, `model/records.rs` to **model** and `compat/list.rs` to **compat** — and it holds one thing, named for what that is: the invariant, rule or record a reader would look for under that name. That is what a citation of this section from a file's own doc comment means, and it is why a file grown past two subjects is a split rather than an exception (§3).
 
-A file belongs to the category it sits under: `model/records.rs` to **model**, `compat/list.rs` to **compat**. A row may still name a file-name prefix beside its directory, which is how a file a move deliberately left flat would be recorded; none does today, because the last two — the deprecated renderers of [§AR-system.2.9](README.md#29-api) and the embedding surface beside them — became `compat/` and `api/`. `lib.rs` is the one file outside every category, as the crate entrypoint: module declarations, the public re-exports, and the crate's own test modules. What each category owns:
+`mod.rs` is the component's whole boundary. It declares the component's files, carries the doc comment citing the component's subsection, and re-exports with `pub(crate)` exactly the items another component reads; everything else is `pub(super)` or private to its file. Nothing outside the directory can name what `mod.rs` does not list, so the compiler holds the ownership a file-name prefix and a test used to hold.
 
-| Category | Module directory, or file-name prefixes | Component |
-|---|---|---|
-| **model** | `model/` | [§AR-system.2.2](README.md#22-model) |
-| **config** | `config/` | [§AR-system.2.3](README.md#23-config) |
-| **scanner** | `scanner/` | [§AR-system.2.5](README.md#25-scanner) |
-| **checker** | `checker/` | [§AR-system.2.6](README.md#26-checker) |
-| **queries** | `queries/` | [§AR-system.2.7](README.md#27-queries) |
-| **writers** | `writers/` | [§AR-system.2.8](README.md#28-writers) |
-| **api** | `api/` | [§AR-system.2.9](README.md#29-api) |
-| **grammar** | `grammar/` | [§AR-system.2.1](README.md#21-grammar) |
-| **workspace** | `workspace/` | [§AR-system.2.4](README.md#24-workspace) |
-| **compat** | `compat/` | [§AR-system.2.9](README.md#29-api) |
+`lib.rs` is the one file outside every component, as the crate entrypoint: the ten `mod` lines, the explicit `pub use <component>::{…}` list that **is** the crate's public surface (§2), the `#[cfg(test)]` prelude through which the crate's own test modules still read it flat, and the `include!` lines that splice those test modules in. It holds no implementation and re-exports nothing by glob, so a name is public because this list says so rather than because a module happened to leave it `pub`.
 
-`tests/integration/test_module_categories.py` holds this table against the tree: every top-level implementation file owned by exactly one row, every prefix owning a file, and every named module directory present with none of its former prefixes left at the top level but the ones its row still lists.
+Two tests hold this against the tree. `tests/integration/test_module_layout.py` holds the layout: every `.rs` under `crates/grund-core/src/` is `lib.rs`, a `tests_*` module, or a file inside one of the ten directories, each of which exists and has a `mod.rs`, and `lib.rs` `include!`s nothing but its test modules. `tests/integration/test_dependency_direction.py` holds the order of [§AR-system.4](README.md#4-dependency-direction) across those directories: every `crate::<other>` reference runs downward, except the reads listed in it one by one, each of which must still exist and still carry its [§AR-system.4](README.md#4-dependency-direction) note at the import — so that list can only shrink and a new upward read fails.
 
 ## 2. Refactor boundary
 
-Splitting the core and CLI crates is an architectural refactor only: it must not change CLI output, diagnostics, scan behavior, template bytes, or public entrypoints. The CLI package may keep calling compatibility command adapters while narrower data-returning APIs are introduced, but embedders use the public API in `crates/grund-core/src/api/`, whose contract files carry the published signatures and whose adapter files carry the conversions behind them.
+Splitting the core and CLI crates is an architectural refactor only: it must not change CLI output, diagnostics, scan behavior, template bytes, or public entrypoints. The CLI package may keep calling compatibility command adapters while narrower data-returning APIs are introduced, but embedders use the public API in `crates/grund-core/src/api/`, whose contract files carry the published signatures and whose adapter files carry the conversions behind them, reaching it through the explicit `pub use` list in `lib.rs` (§1) — the one place a name becomes public.
 
 ## 3. File size
 

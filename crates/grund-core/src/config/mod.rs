@@ -49,9 +49,9 @@ pub use kind::{KindConfig, KindIndex, KindResolution};
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
 pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
 
-// What the other components read, still through the crate root while they are
-// flat (§AR-system.4). The finalize task narrows this as each caller moves into
-// a module of its own.
+// What the other components read, each by this module's path (§AR-system.4):
+// the whole of what crosses this boundary, and the only thing outside the
+// directory that can name any of it.
 pub(crate) use citations::render_citation_target;
 pub(crate) use discovery::{
     config_file_in, home_form_of, load_config, load_config_at, load_config_at_with_report_base,

@@ -15,16 +15,12 @@
 use std::path::Path;
 
 use super::context::{file_home_kind, markdown_heading_level};
-use crate::config::{Config, DEFAULT_GROUNDING_LEVEL};
+use crate::config::{Config, DEFAULT_GROUNDING_LEVEL, grounding_level_for_kind};
 use crate::grammar::{
     DocCommentRule, block_is_doc_comment, comment_blocks, doc_comment_rule, first_content_line,
     markdown_fence_delimiter,
 };
 use crate::model::{DocCommentBlock, FileHeading, FileStructure, Findings};
-// §AR-system.4: one upward read, through the crate root until its owner is a
-// module — the per-kind grounding level, which the checker cuts the units this
-// file describes out of (§FS-check.3.6).
-use crate::grounding_level_for_kind;
 
 /// Record `path`'s grounding structure into `findings`, or do nothing when the
 /// row this file belongs to asks for no unit finer than the file

@@ -28,10 +28,9 @@ use anyhow::{Result, anyhow};
 
 use super::compiled::Grammar;
 use crate::model::Id;
-// §AR-system.4: `Config` is config's record, above this component and reachable
-// through the crate root until the glob goes; the two renderers below read the
-// compiled grammar off it.
-use crate::Config;
+// §AR-system.4: one upward read — `Config` is config's record, above this
+// component, and the two renderers below read the compiled grammar off it.
+use crate::config::Config;
 
 /// Pull an `Id` out of a `Grammar` regex match — the `kind` / `num` / `slug`
 /// capture groups the `[id] format` defined (§FS-config.3.2, §AR-scanner.2.1).
