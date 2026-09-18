@@ -66,14 +66,41 @@ pub(crate) use sections::{out_of_scope_section_headings, workspace_out_of_scope_
 pub(crate) use support::{diagnostic_cmp, sort_diagnostics};
 pub(crate) use values::binding_target_has_any_value_authority;
 
-// What only the crate's own test modules read (§AR-core-module-layout.1): the
-// managed-block halves the drift cases drive, the dangling sentence, the release
-// ramp the index rule is on, and the three steps of the unknown-project hint.
+// What another component's tests read (§AR-core-module-layout.1): the managed
+// block path the compat selector cases drive, and the dangling sentence the
+// scanner's config cases compare against; the rest went beside their own cases.
 #[cfg(test)]
-pub(crate) use agents::{check_agent_block_path, section_in_block};
-#[cfg(test)]
-pub(crate) use index::{INDEX_RULE_PRIOR_RELEASE, INDEX_RULE_RELEASE};
-#[cfg(test)]
-pub(crate) use references::{nearest_project_aliases, tag_out_of_scope, unknown_project_message};
+pub(crate) use agents::check_agent_block_path;
 #[cfg(test)]
 pub(crate) use support::dangling_message;
+
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
+#[cfg(test)]
+mod tests_alias_hints;
+#[cfg(test)]
+mod tests_check_full;
+#[cfg(test)]
+mod tests_citation_directions;
+#[cfg(test)]
+mod tests_declaration_near_miss;
+#[cfg(test)]
+mod tests_duplicate_sections;
+#[cfg(test)]
+mod tests_grounding_per_place;
+#[cfg(test)]
+mod tests_grounding_style;
+#[cfg(test)]
+mod tests_inline_note_layout;
+#[cfg(test)]
+mod tests_kind_index;
+#[cfg(test)]
+mod tests_kind_index_enrollment;
+#[cfg(test)]
+mod tests_kind_index_entry_form;
+#[cfg(test)]
+mod tests_managed_block_drift;
+#[cfg(test)]
+mod tests_nothing_recognized;
+#[cfg(test)]
+mod tests_shorthand;

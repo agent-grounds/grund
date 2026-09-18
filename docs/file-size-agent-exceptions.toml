@@ -137,14 +137,16 @@ The ceiling is 415 where `crates/grund-core/src/list.rs` recorded 409 and had dr
 The +10 the old ceiling carried is `--summary` sorting its rows by alias and sizing the alias column to the widest one emitted, mirroring the same fix in `api.rs` so the deprecated path cannot re-diverge from the live one on the same bug (§FS-workspace.8.3, issue #68). The +2 before it is the `--kind` selector learning to tell a typo from a configured kind that declares no IDs (§FS-config.3.4.1) — one more arm on the check that was already there. Both are in what stayed.
 """
 [[exceptions]]
-path = "crates/grund-core/src/tests_shorthand.rs"
+path = "crates/grund-core/src/checker/tests_shorthand.rs"
 match = "exact"
 rules = ["tests"]
 kind = "deferred"
-max_accepted = { value = 475, unit = "lines" }
+max_accepted = { value = 477, unit = "lines" }
 until = "a third shorthand behaviour area earns its own module, the way the rewrite cases already did"
 reason = """
-The rewrite cases already left, to tests_shorthand_rewrite.rs — that was the seam, and it is spent. What remains is one area: what `check` reports about a shorthand, plus the two surfaces that must agree with it (the CLI argument resolver and the LSP snapshot). These fail together — a change to the recognition boundary or the candidate rule breaks the report, the query, and the editor in one move — so a reader chasing one is chasing all three. A second cut here would be by fixture shape rather than by behaviour, which is the split the tests rule exists to prevent.
+The rewrite cases already left, to what is now `resolver/tests_shorthand_rewrite.rs` — that was the seam, and it is spent. What remains is one area: what `check` reports about a shorthand, plus the two surfaces that must agree with it (the CLI argument resolver and the LSP snapshot). These fail together — a change to the recognition boundary or the candidate rule breaks the report, the query, and the editor in one move — so a reader chasing one is chasing all three. A second cut here would be by fixture shape rather than by behaviour, which is the split the tests rule exists to prevent.
+
+The ceiling moved 475 -> 477 when the file went beside the code it pins (§AR-core-module-layout.1): the seven-line import block a module charges, less the three `include!` wrapper lines it drops, and `cargo fmt --all` reaching the file for the first time now that it is a module rather than spliced in. No case changed.
 """
 
 [[exceptions]]
@@ -158,14 +160,16 @@ reason = """
 The compiled ID grammar: `Grammar::build` turning `[id] format`, the kinds and the comment prefixes into one set of regexes. It is the module's grammar file since `grammar` became a Rust module (§AR-system.2.1): the per-line readers — the comment-prefix alternation and the Python-docstring normalization of §AR-scanner.4 — left with the move, into `grammar/source_line.rs`, which was the boundary the previous entry named, and the three `[scan]` defaults left for config.rs because they are config defaults rather than grammar. That took the ceiling 411 -> 387 even after the explicit imports a module costs. What is left over the budget is two groups that are not the grammar either: the heading-text reduction a renderer's anchor is slugged from (§DF-github-anchor-fidelity) and the managed-block delimiters of §FS-init.2.3, both regexes over text that `Grammar::build` never reads. Missing boundary: each of those as its own file. Not taken with the module move, because a component's first commit moves files rather than inventing them. The ceiling moved 387 -> 388 when the scanner became a module (§AR-system.2.5) and two of this component's own items came down out of scanner files — `LegacyGrammar` to grammar/near_miss.rs and the `{kind}` literal reader of the `[id] format` template to grammar/id_format.rs: one more import line, no more logic. It moved 388 -> 382 when `Grammar::build` stopped taking `[[kinds]]` rows and started taking the citable names and formats as plain values (§AR-system.2.1): the `citable` filter this file repeated at five places is config's now, applied once where the list is built.
 """
 [[exceptions]]
-path = "crates/grund-core/src/tests_citation_directions.rs"
+path = "crates/grund-core/src/checker/tests_citation_directions.rs"
 match = "exact"
 rules = ["tests"]
 kind = "deferred"
-max_accepted = { value = 551, unit = "lines" }
+max_accepted = { value = 604, unit = "lines" }
 until = "the classification cases move to a scanner-side test file of their own"
 reason = """
-The render half of this file moved out to tests_citation_directions_render.rs, which took it from 659 lines to 551. What is left is the rule half: how the scanner classifies a citing site, the obligation and prohibition passes over those classes, the empty-obligation warning, and config validation. Missing boundary: classification and enforcement are two subjects — the first is scanner behaviour that citation directions happen to consume, the second is the checker's — and a scanner-side file would take the first with it.
+The render half of this file moved out to what is now `templates/tests_citation_directions.rs`, which took it from 659 lines to 551. What is left is the rule half: how the scanner classifies a citing site, the obligation and prohibition passes over those classes, the empty-obligation warning, and config validation. Missing boundary: classification and enforcement are two subjects — the first is scanner behaviour that citation directions happen to consume, the second is the checker's — and a scanner-side file would take the first with it.
+
+The ceiling moved 551 -> 604 when the file went beside the code it pins (§AR-core-module-layout.1), and none of it is a case: one net line for the import block a module charges over the `include!` wrapper it drops, and fifty-two for `cargo fmt --all` reaching the file for the first time now that it is a module rather than spliced in — this was the widest of the flat modules, so it carried the most over-long expressions the formatter had never seen.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-workspace.md"

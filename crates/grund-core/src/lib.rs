@@ -165,38 +165,24 @@ use std::process::ExitCode;
 // These globs are private and `#[cfg(test)]`, so they exist only in a test
 // build: production code reads every component by module path and sees only
 // what that component re-exports (§AR-system.4).
+
+// Each glob goes out with the last module that read it: `api`, `config` and
+// `workspace` left with the resolver's and the checker's, the only ones still
+// reaching them for a name the `pub use` list above does not already carry.
 #[cfg(test)]
 use {
-    api::*, checker::*, compat::*, config::*, grammar::*, model::*, queries::*, resolver::*,
-    scanner::*, templates::*, testing::*, workspace::*, writers::*,
+    checker::*, compat::*, grammar::*, model::*, queries::*, resolver::*, scanner::*, templates::*,
+    testing::*, writers::*,
 };
 
 // The test modules not yet beside the code they pin, one `include!` per module
 // (§AR-core-module-layout.1).
-include!("tests_check_full.rs");
-include!("tests_kind_index.rs");
-include!("tests_kind_index_entry_form.rs");
-include!("tests_kind_index_enrollment.rs");
 include!("tests_check_full_scope.rs");
-include!("tests_nothing_recognized.rs");
-include!("tests_declaration_near_miss.rs");
-include!("tests_duplicate_sections.rs");
-include!("tests_grounding_style.rs");
-include!("tests_grounding_per_place.rs");
-include!("tests_inline_note_layout_check.rs");
-include!("tests_shorthand.rs");
-include!("tests_shorthand_rewrite.rs");
 include!("tests_shorthand_docstring.rs");
 include!("tests_shorthand_surfaces.rs");
-include!("tests_shorthand_numeric_run.rs");
 include!("tests_fmt_workspace.rs");
-include!("tests_citation_directions.rs");
-include!("tests_managed_block_drift.rs");
 include!("tests_check_finding_selection.rs");
-include!("tests_workspace.rs");
 include!("tests_workspace_message_paths.rs");
-include!("tests_unread_opted_out_block.rs");
-include!("tests_alias_hints.rs");
 include!("tests_workspace_members.rs");
 include!("tests_cover_workspace.rs");
 include!("tests_init_agents.rs");
