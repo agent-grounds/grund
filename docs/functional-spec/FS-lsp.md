@@ -31,6 +31,18 @@ same message, code, severity, and range as the CLI
 ([§FS-check.4.12](FS-check.md#412-missing-snapshot)). It never executes the
 configured fetcher while publishing diagnostics.
 
+The run-level `[workspace]` warnings are published too. A block that swallows its own
+scan ([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)), one no enclosing workspace lists ([§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)), one whose
+opted-out tree nobody reads ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)), and an ancestor claim that cannot be
+answered ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)) reach the server in the same warning channel as every
+other finding, and each is published on the `grund.toml` it anchors at — at the
+anchored line, or at that file's first line for the undecidable claim, which names no
+line because the line is what it could not read. The message is the CLI's, byte for
+byte, and the server neither re-derives the location nor reads it back out of the
+message text. The editor is the surface that never saw these four: a configuration
+that leaves part of the tree unread, or spells its projects two ways, is exactly what
+a reader of that `grund.toml` needs told, and it was told only on a terminal.
+
 ### 1.2 Hover preview
 
 Hovering a Markdown, source-comment, or JSON value binding uses the same exact `show --toc` slice as the CLI; no rendered or interpolated value surface is invented. A declaration-side marked root retains the ordinary section-title hover and usage count: its semantic title and UTF-16 hover range exclude the separating space and marker, while a raw preview of that section includes the marker on its heading ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
@@ -179,7 +191,7 @@ Editor-side LSP configuration (server arguments, workspace folders) is the user'
 
 ## 4. Determinism and parity with the CLI
 
-Same input + same config → same diagnostics, same hover body, same definition target, byte-for-byte ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). The implementation enforces this by routing LSP state through `grund-core` snapshot, check, show, refs, and formatting APIs, plus focused LSP tests for linkification, configured trigger handling, workspace member marker resolution, UTF-16 ranges, and document-link targets. The full child-process sweep over `tests/e2e/cases/*` ships as `tests/integration/lsp_cli_parity.rs`: for every plain-`check` case, the diagnostics the server publishes are the located findings the CLI prints, or the build is red.
+Same input + same config → same diagnostics, same hover body, same definition target, byte-for-byte ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). The implementation enforces this by routing LSP state through `grund-core` snapshot, check, show, refs, and formatting APIs, plus focused LSP tests for linkification, configured trigger handling, workspace member marker resolution, UTF-16 ranges, and document-link targets. The full child-process sweep over `tests/e2e/cases/*` ships as `tests/integration/lsp_cli_parity.rs`: for every plain-`check` case, the diagnostics the server publishes are the located findings the CLI prints, or the build is red. The run-level warnings of §1.1 are held the same way against that case's stderr golden, so neither surface may carry one the other does not.
 
 For an embedded value, this parity covers the CLI's marked-root shape and comparison diagnostics, raw `show --toc` hover slice, marker-free semantic title range, component definition target, and existing dotted-token references, highlights, and document links. Shell completion remains the core catalog's ordinary section completion and LSP completion remains reserved; neither surface adds a value-specific candidate.
 
