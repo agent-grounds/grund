@@ -39,6 +39,7 @@ mod parse;
 mod point_sizes;
 mod record;
 mod report_paths;
+mod scope_roots;
 mod workspace_block;
 
 pub use citations::{
@@ -65,6 +66,9 @@ pub(crate) use record::{
     DEFAULT_GROUNDING_LEVEL, kind_prefixes, kind_uses_values, non_citable_kind_error,
 };
 pub(crate) use report_paths::display_path;
+pub(crate) use scope_roots::{
+    canonical_config_root, root_scope_roots, unwalked_home_roots, unwalked_homes,
+};
 pub(crate) use workspace_block::{
     INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, invalid_alias_path_segment,
     invalid_project_alias_message, is_valid_project_alias, optional_member_alias_segment,

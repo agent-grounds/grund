@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::checker::KindIndexEntries;
 use crate::model::Id;
-use crate::workspace::WorkspaceContext;
+use crate::resolver::WorkspaceContext;
 
 /// The two per-target-alias citation counts `grund list` needs, built in one
 /// pass (§FS-list.3.2, §DF-index-not-an-inbound-citation).

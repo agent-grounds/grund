@@ -588,7 +588,7 @@ workspace-local.
 ## 8. Other commands
 
 The workspace surface composes through the same resolver `grund check` uses
-([AR-workspace.4](../architecture/AR-workspace.md#4-the-resolver-one-function)), so qualified-ID behavior in query commands is a UX layer over
+([AR-resolver.1](../architecture/AR-resolver.md#1-the-resolver-one-function)), so qualified-ID behavior in query commands is a UX layer over
 an already-built engine — not new resolution logic. Four shared rules apply to
 every command in this section:
 
@@ -873,7 +873,7 @@ workspace root.
   the relative path crosses the workspace into the member's home, the anchor
   is computed from the *member's* declaration heading under the member's
   configured anchor profile ([§FS-fmt.6.7](FS-fmt.md#67-configurability)). The cross-project resolution goes
-  through `target_findings_for_citation` ([AR-workspace.4](../architecture/AR-workspace.md#4-the-resolver-one-function)) so the wrapped link
+  through `target_for_citation` ([AR-resolver.1](../architecture/AR-resolver.md#1-the-resolver-one-function)) so the wrapped link
   and `check`'s resolution can never disagree.
 - A member-local run (invoked inside `apps/api/`, or via a `<path>` that
   resolves member-local — see §8 intro) **leaves qualified citations

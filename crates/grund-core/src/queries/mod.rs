@@ -5,12 +5,21 @@
 //! on-type answers (§FS-lsp). A query is the data half: it knows no rendering,
 //! because the text and JSON shapes belong to the frontends.
 //!
+//! Three files left when §AR-system.2.10 became a component, all one fact: a
+//! declaration's body sliced by the spans a scan recorded is a function of the
+//! loaded findings rather than of one command's answer, and the checker's
+//! lead-budget rule was reading it upward out of this component
+//! (§FS-check.4.13, §AR-system.4). `body.rs` is `resolver/body.rs` now, the
+//! point-body pair `resolver/point_body.rs`, and the E2E case manifest that
+//! pair asks for `resolver/e2e_body.rs`, out of `show.rs` with the three text
+//! helpers only the slicer reads (§AR-resolver.placement).
+//!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
 //! (§AR-core-module-layout.1). The submodules are the former `show*`, `list*`
-//! and editor-answer category files, one per question — the body slicer and the
-//! show entry points, the batch adapter over one loaded context, the catalog's
-//! shared citation counts, the point-size catalog, and the two editor answers.
+//! and editor-answer category files, one per question — the show entry points,
+//! the batch adapter over one loaded context, the catalog's shared citation
+//! counts, the point-size catalog, and the two editor answers.
 //! The editor pair is `editor_hover` and `editor_on_type` rather than `lsp` and
 //! `on_type`: the engine names no frontend's protocol (§AR-system.4), and what
 //! these two hold is the hover body and the keystroke rule of §FS-lsp, which an
@@ -41,7 +50,6 @@
 //! meaning it is.
 
 mod batch;
-mod body;
 mod citation_counts;
 mod editor_hover;
 mod editor_on_type;
@@ -62,6 +70,5 @@ pub use sizes::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use body::{PointBodyCache, point_body_pair};
 pub(crate) use citation_counts::ListCitationCounts;
 pub(crate) use show::{render_show_output_json, show_declaration, show_declaration_with_overlays};

@@ -18,22 +18,20 @@ use super::lsp_ranges::{
 };
 use super::report::public_lsp_report;
 use super::scope_cautions::scan_scope_caution;
-use crate::checker::{
-    WorkspaceCheckTarget, check_with_workspace_and_overlays, is_stub_for_inline_decl,
-    sort_diagnostics,
-};
+use crate::checker::{check_with_workspace_and_overlays, sort_diagnostics};
 use crate::config::display_path;
 use crate::grammar::render_id;
 use crate::model::{
-    CheckReport, Declaration, Diagnostic, TextOverlays, canonical_snapshot_path, sort_path_key,
+    CheckReport, Declaration, Diagnostic, TextOverlays, canonical_snapshot_path,
+    is_stub_for_inline_decl, sort_path_key,
 };
 use crate::queries::{
     LspCitation, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts, LspStub,
 };
+use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext, load_resolved_workspace_context};
 use crate::scanner::api_scan_error;
 use crate::workspace::{
-    WorkspaceContext, absent_only_workspace_caution, absent_optional_member_warnings,
-    load_resolved_workspace_context, resolve_workspace_config,
+    absent_only_workspace_caution, absent_optional_member_warnings, resolve_workspace_config,
 };
 
 /// Programmatic snapshot for `grund-lsp`: all scanner-derived declaration and

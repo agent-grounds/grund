@@ -32,10 +32,10 @@ use crate::grammar::{
     is_inside_markdown_link_destination, markdown_fence_delimiter, string_literal_in,
 };
 use crate::model::{Findings, Id};
+use crate::resolver::WorkspaceContext;
 use crate::scanner::{
     ApiScanError, api_scan_error, walk_scannable_files, walk_scannable_files_reporting,
 };
-use crate::workspace::WorkspaceContext;
 
 /// §FS-fmt.6.6: whether this invocation turns the cross-reference pass on by
 /// itself — `[fmt.cross_refs] enabled` and at least one Markdown file in its

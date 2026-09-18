@@ -1,17 +1,16 @@
-use anyhow::{Context, Result, anyhow};
-use std::fs;
+use anyhow::{Result, anyhow};
 use std::path::Path;
 
-use super::body::extract_declaration_body;
 use super::show_query::ShowQueryError;
-use crate::checker::{file_declares_inline_home, is_stub_for_inline_decl};
+use crate::checker::file_declares_inline_home;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
-    Declaration, DeclarationSource, E2eCase, FindingSite, Findings, Id, ShowOutput, ShowRenderMode,
-    TextOverlays, format_path, json_escape, paths_same_location, resolve_stub_target,
+    Declaration, DeclarationSource, FindingSite, Findings, Id, ShowOutput, ShowRenderMode,
+    TextOverlays, format_path, is_stub_for_inline_decl, json_escape, paths_same_location,
+    resolve_stub_target,
 };
-use crate::scanner::overlay_text;
+use crate::resolver::{extract_declaration_body, show_e2e_case};
 
 pub(crate) fn show_declaration(
     config: &Config,
@@ -278,136 +277,6 @@ fn ambiguous_section_refusal(
         }
         .into(),
     )
-}
-
-/// Render an e2e case as an ID-query body: the invocation, expected exit, and
-/// fixture list (or just the invocation with `--brief`), plus the JSON shape — the
-/// case manifest of §FS-show.2.4. E2E declarations have no sections, so any
-/// `.<section>` is "section not found".
-pub(super) fn show_e2e_case(
-    config: &Config,
-    path_config: &Config,
-    id: &Id,
-    case: &E2eCase,
-    section: Option<&str>,
-    mode: ShowRenderMode,
-) -> Result<ShowOutput> {
-    if let Some(section) = section {
-        return Err(anyhow!(
-            "section not found: {}{}{}",
-            render_id(config, id),
-            config.section_separator,
-            section
-        ));
-    }
-    let invocation = format!("grund {}", case.args.join(" "));
-    let brief_body = format!("{invocation}\n");
-    let manifest = {
-        let mut lines = vec![
-            invocation.clone(),
-            format!("expected exit: {}", case.expected_exit),
-            "fixtures:".to_string(),
-        ];
-        lines.extend(
-            case.fixtures
-                .iter()
-                .map(|path| format!("- {}", format_path(path))),
-        );
-        format!("{}\n", lines.join("\n"))
-    };
-    let body = match mode {
-        ShowRenderMode::Brief => brief_body,
-        ShowRenderMode::Outline => String::new(),
-        ShowRenderMode::Default | ShowRenderMode::Toc | ShowRenderMode::Full => manifest,
-    };
-    let args_json = case
-        .args
-        .iter()
-        .map(|arg| format!("\"{}\"", json_escape(arg)))
-        .collect::<Vec<_>>()
-        .join(",");
-    let fixtures_json = case
-        .fixtures
-        .iter()
-        .map(|path| format!("\"{}\"", json_escape(&format_path(path))))
-        .collect::<Vec<_>>()
-        .join(",");
-    let json = format!(
-        "{{\"id\":\"{}\",\"kind\":\"E2E\",\"path\":\"{}\",\"args\":[{}],\"expected_exit\":{},\"fixtures\":[{}]}}",
-        json_escape(&render_id(config, id)),
-        // path_config, not config: an `<alias>/E2E-x` shown from a workspace
-        // root must report the same root-relative path as every other kind
-        // (§FS-workspace.8.1) — this baked JSON bypasses render_show_output_json.
-        json_escape(&display_path(path_config, &case.dir)),
-        args_json,
-        case.expected_exit,
-        fixtures_json
-    );
-    Ok(ShowOutput {
-        body,
-        path: case.dir.clone(),
-        line: 1,
-        json: Some(json),
-        sections: Vec::new(),
-    })
-}
-
-pub(super) fn read_text_with_overlays(path: &Path, overlays: &TextOverlays) -> Result<String> {
-    if let Some(text) = overlay_text(overlays, path) {
-        Ok(text.to_string())
-    } else {
-        fs::read_to_string(path).with_context(|| format!("read {}", path.display()))
-    }
-}
-
-/// `--toc` joins the default body with the section-map body, separated by one
-/// blank line. Empty halves are dropped; if both are empty the result is empty.
-/// Each body already ends with `\n`, so `{a}\n{b}` produces `<a>\n\n<b>\n`
-/// (§FS-show.2.1.2).
-pub(super) fn join_with_blank(default_body: &str, outline_body: &str) -> String {
-    match (default_body.is_empty(), outline_body.is_empty()) {
-        (true, true) => String::new(),
-        (true, false) => outline_body.to_string(),
-        (false, true) => default_body.to_string(),
-        (false, false) => format!("{default_body}\n{outline_body}"),
-    }
-}
-
-/// `--brief` truncates the (default-mode, heading-included) body to its first
-/// blank-line-separated paragraph (§FS-show.2.1.1). Keeps the heading line and
-/// at most one blank-line separator before the first paragraph; stops at the
-/// next blank line (or end of body).
-pub(super) fn truncate_to_first_paragraph(body: &str) -> String {
-    let mut lines: Vec<&str> = body.split('\n').collect();
-    // `body` ends with `\n`, so the split produces a trailing empty element.
-    if lines.last() == Some(&"") {
-        lines.pop();
-    }
-    if lines.is_empty() {
-        return String::new();
-    }
-    let mut out: Vec<&str> = vec![lines[0]];
-    let mut i = 1;
-    let mut kept_separator = false;
-    while i < lines.len() && lines[i].trim().is_empty() {
-        if !kept_separator {
-            out.push(lines[i]);
-            kept_separator = true;
-        }
-        i += 1;
-    }
-    while i < lines.len() && !lines[i].trim().is_empty() {
-        out.push(lines[i]);
-        i += 1;
-    }
-    while out.last().is_some_and(|line| line.trim().is_empty()) {
-        out.pop();
-    }
-    if out.is_empty() {
-        String::new()
-    } else {
-        format!("{}\n", out.join("\n"))
-    }
 }
 
 /// `config` is the *target project's* config — it owns the ID grammar and marker

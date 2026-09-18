@@ -6,11 +6,11 @@ use crate::config::display_path;
 use crate::grammar::render_id;
 use crate::model::ShowRenderMode;
 use crate::queries::{ShowQueryError, render_show_output_json, show_declaration};
-use crate::scanner::resolve_id_arg;
-use crate::workspace::{
-    load_workspace_context, names_member_id_candidate, split_qualified_id_arg,
-    with_member_id_candidates,
+use crate::resolver::{
+    load_workspace_context, names_member_id_candidate, with_member_id_candidates,
 };
+use crate::scanner::resolve_id_arg;
+use crate::workspace::split_qualified_id_arg;
 use crate::writers::flatten_cross_ref_links;
 
 pub(super) fn command_show(args: &[String]) -> ExitCode {

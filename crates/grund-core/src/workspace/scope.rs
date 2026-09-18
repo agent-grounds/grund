@@ -1,7 +1,7 @@
 //! Which project a path belongs to, and how that project is named in a message
 //! (§AR-system.2.4): upward discovery, the member-scope rewrite, the
 //! boundary-root population, and the alias every diagnostic spells the result
-//! with (§AR-workspace.5.1, §AR-workspace.6, §AR-workspace.8).
+//! with (§AR-workspace.5.1, §AR-workspace.6, §AR-resolver.3).
 //!
 //! Split out of the `check` adapter the way `members.rs` was: that file is the
 //! `check` command's argument adapter, and resolving a scope to a config is
@@ -38,7 +38,7 @@ pub(crate) fn scope_is_config_root(config: &Config, path: &Path, path_provided: 
             .unwrap_or(false)
 }
 
-/// §AR-workspace.5.1, §AR-workspace.6, §AR-workspace.8: every CLI entry point
+/// §AR-workspace.5.1, §AR-workspace.6, §AR-resolver.3: every CLI entry point
 /// that walks the tree funnels through this helper so workspace handling is
 /// identical across `check`, `fmt`, `refs`, `list`, `cover`, `show`, `id`, and
 /// completions. The three steps are upward discovery, the member-scope

@@ -1,10 +1,10 @@
-# AR-system: one engine, nine components, three frontends
+# AR-system: one engine, ten components, three frontends
 
 `grund` is one pipeline. A single tree walk reads every file once and produces `Findings`; rules turn `Findings` into a `Report`; queries and writers answer from the same `Findings`; and thin frontends render or transport what the engine returns. Everything that decides lives in the engine crate `grund-core`, so the CLI, the LSP server and the planned bindings are the same verdicts behind different surfaces ([§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms), [§FS-distribution](../functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets)). Speed is set by the walk, which is why the walk happens once ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). This page is the whole system on one page: every architecture page in the index below carries a `placement` chapter that names its box here and reads no wider than it, so the system is described once and each page describes one part.
 
 ## 1. The system
 
-Nine components in one crate, stacked in the order they may read each other, and the frontends above them:
+Ten components in one crate, stacked in the order they may read each other, and the frontends above them:
 
 ```text
              ┌───────────┐  ┌───────────┐  ┌──────────────────────┐
@@ -22,6 +22,8 @@ Nine components in one crate, stacked in the order they may read each other, and
              ├─────────────────────────┴──────────────────────────┤
              │ 2.6  checker                                       │
              ├────────────────────────────────────────────────────┤
+             │ 2.10 resolver                                      │
+             ├────────────────────────────────────────────────────┤
              │ 2.5  scanner                                       │
              ├────────────────────────────────────────────────────┤
              │ 2.4  workspace                                     │
@@ -38,17 +40,19 @@ Nine components in one crate, stacked in the order they may read each other, and
 The same components as the data moves through them:
 
 ```text
-                  grund.toml ──► config ──► workspace ──┐
-                                                        ▼
-  tree ──► scanner ──► Findings ──► checker ──► Report ─┐
-                          │                             │
-                          ├──► queries ──► data ────────┤
-                          └──► writers ──► edits ───────┤
-                                                        ▼
-                                                       api
-                                                        │
-                            ┌──────────────┬────────────┴───────────┐
-                           cli            lsp           node, py (planned)
+               grund.toml ──► config ──► workspace ──┐
+                                                     ▼
+  tree ──► scanner ──► Findings ─────────────────► resolver ──┐
+                                                              ▼
+                       loaded Findings ──► checker ──► Report ─┐
+                              │                                │
+                              ├──► queries ──► data ───────────┤
+                              └──► writers ──► edits ──────────┤
+                                                               ▼
+                                                              api
+                                                               │
+                                   ┌──────────────┬────────────┴───────────┐
+                                  cli            lsp           node, py (planned)
 ```
 
 Data flows along the arrows and so does knowledge: a component knows only what the arrows into it carry (section 4).
@@ -71,7 +75,7 @@ Consumes `grund.toml` and the defaults. Produces one validated `Config` per proj
 
 ### 2.4 workspace
 
-Consumes configs. Produces the multi-project scope — member expansion, claims, scope narrowing — and the one resolver that maps a citation to its target project ([§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)). Knows no rule and no rendering; its own invariants are [§AR-workspace](AR-workspace.md#ar-workspace-how-the-resolver-config-loader-and-scanner-compose-across-projects). Module: `crates/grund-core/src/workspace/`.
+Consumes configs. Produces the multi-project scope — member expansion, claims, scope narrowing, boundary roots ([§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)). Knows no rule, no rendering and no scan: loading the projects it names is the resolver's, one box up (section 2.10). Its own invariants are [§AR-workspace](AR-workspace.md#ar-workspace-how-the-config-time-workspace-layer-composes-with-the-config-loader-and-the-scanner). Module: `crates/grund-core/src/workspace/`.
 
 ### 2.5 scanner
 
@@ -93,13 +97,17 @@ Consume `Findings` and the tree. Produce edits: citation normalization and cross
 
 Consumes everything above. Produces the embedding surface: data-returning functions and the public types ([§AR-bindings.2](AR-bindings.md#2-grund-core-the-only-place-logic-lives), [§FS-distribution.3](../functional-spec/FS-distribution.md#3-api-surfaces)). Writes to no stream, exits no process and knows no frontend. Module: `crates/grund-core/src/api/`, one file per surface beside the private adapters that fill it. The deprecated `main_entry()` path is the one exception, kept for 0.4 consumers until the deprecation path of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) closes it; it renders inside the engine from `crates/grund-core/src/compat/`, the one directory that may write to a stream and a set that may shrink and never grow.
 
+### 2.10 resolver
+
+Consumes the project map from workspace and every project's `Findings` from the scanner. Produces the loaded project set a run operates on — each project scanned, its off-grammar citations reconciled across the whole set — and three answers that are functions of what a run loaded: which project a citation resolves against, a declaration's body sliced by the spans the scan recorded, and the link target its ID resolves to ([§FS-workspace.8](../functional-spec/FS-workspace.md#8-other-commands), [§FS-show.2](../functional-spec/FS-show.md#2-behavior), [§FS-fmt.6.2](../functional-spec/FS-fmt.md#62-form)). Knows no rule and no rendering; it runs scans, which is what puts it above the scanner while the config half of the workspace stays below it. Design: [§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them). Module: `crates/grund-core/src/resolver/`.
+
 ## 3. Frontends
 
 Three today, two planned, and none has engine logic ([§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms)). `grund-cli` parses arguments, renders text and JSON, and maps exit codes ([§AR-bindings.3](AR-bindings.md#3-grund-cli-the-cli-binary), [§FS-cli](../functional-spec/FS-cli.md#fs-cli-grunds-command-line-surface-conventions)). `grund-lsp` speaks LSP over stdio and translates every request into an api call ([§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built)). `grund-node` and `grund-py` will marshal the same functions ([§AR-bindings.5](AR-bindings.md#5-grund-node-the-napi-rs-binding), [§AR-bindings.6](AR-bindings.md#6-grund-py-the-pyo3-binding)). Each depends on `grund-core` and on nothing of the others, so the CLI carries no JSON-RPC and the server no terminal renderer ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary)).
 
 ## 4. Dependency direction
 
-One rule: **no component reads one above it.** The stack in section 1 is the rule drawn: the frontends sit above api; api above the queries and the writers, which are siblings and read nothing of each other; those above the checker; the checker above the scanner; the scanner above workspace; workspace above config; config above grammar; and grammar above model, which reads nothing but std. Two things hold it. The compiler holds a component's privacy — nothing outside a module directory can name what its `mod.rs` does not re-export ([§AR-core-module-layout.1](AR-core-module-layout.md#1-module-categories)) — and `tests/integration/test_dependency_direction.py` holds the order across those directories, with every read that still runs the other way listed one by one and marked at its import, so the list can only shrink. Three consequences are held by tests of their own:
+One rule: **no component reads one above it.** The stack in section 1 is the rule drawn: the frontends sit above api; api above the queries and the writers, which are siblings and read nothing of each other; those above the checker; the checker above the resolver; the resolver above the scanner; the scanner above workspace; workspace above config; config above grammar; and grammar above model, which reads nothing but std. Two things hold it. The compiler holds a component's privacy — nothing outside a module directory can name what its `mod.rs` does not re-export ([§AR-core-module-layout.1](AR-core-module-layout.md#1-module-categories)) — and `tests/integration/test_dependency_direction.py` holds the order across those directories, with every read that still runs the other way listed one by one and marked at its import, so the list can only shrink. Three consequences are held by tests of their own:
 
 - The engine writes no stream and exits no process; the frontends render (`tests/integration/test_engine_boundary.py`).
 - The engine names no frontend's protocol: no LSP types in `grund-core`, no CLI in `grund-lsp` (`tests/integration/test_frontend_isolation.py`).
@@ -119,7 +127,7 @@ The system:
 
 | ID | Subject |
 |---|---|
-| [§AR-system](README.md#ar-system-one-engine-nine-components-three-frontends) | one engine, nine components, three frontends — this page |
+| [§AR-system](README.md#ar-system-one-engine-ten-components-three-frontends) | one engine, ten components, three frontends — this page |
 
 The components and frontends:
 
@@ -127,7 +135,8 @@ The components and frontends:
 |---|---|
 | [§AR-scanner](AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations) | how grund discovers declarations and citations |
 | [§AR-checker](../../crates/grund-core/src/checker/report.rs) | how grund validates the scanner's findings — declared and enrolled directly from `crates/grund-core/src/checker/report.rs` |
-| [§AR-workspace](AR-workspace.md#ar-workspace-how-the-resolver-config-loader-and-scanner-compose-across-projects) | how the resolver, config loader, and scanner compose across projects |
+| [§AR-workspace](AR-workspace.md#ar-workspace-how-the-config-time-workspace-layer-composes-with-the-config-loader-and-the-scanner) | how the config-time workspace layer composes with the config loader and the scanner |
+| [§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them) | how a run loads every project and resolves a citation to one of them |
 | [§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms) | the engine's contract with its frontends, and the shape of the planned ones |
 | [§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built) | how the LSP server is built |
 | [§AR-core-module-layout](AR-core-module-layout.md#ar-core-module-layout-core-implementation-is-split-by-category) | how the engine's files are named, owned and sized |

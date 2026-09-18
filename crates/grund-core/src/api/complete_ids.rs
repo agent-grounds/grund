@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use crate::config::Config;
 use crate::grammar::render_id;
 use crate::model::Findings;
-use crate::workspace::load_workspace_context;
+use crate::resolver::load_workspace_context;
 
 #[derive(Clone)]
 pub struct CompleteIdsOpts {

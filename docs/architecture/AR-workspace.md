@@ -1,4 +1,4 @@
-# AR-workspace: how the resolver, config loader, and scanner compose across projects
+# AR-workspace: how the config-time workspace layer composes with the config loader and the scanner
 
 The workspace surface ([§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos), [§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)) adds **one
 extra dimension** to the existing single-project pipeline: a citation may now
@@ -7,6 +7,11 @@ the checker — must keep its single-project contract intact and let the new
 dimension flow through unchanged. This document fixes the layering so that the
 next command to gain qualified-ID behaviour (`show`, `refs`, `list`,
 completions) composes with it, instead of re-implementing it.
+
+What this page holds is the **config-time** half: what a `[workspace]` block
+expands to, what an alias is, and where a scan stops. Loading those projects —
+scanning each one and answering which of them a citation resolves against — runs
+scans and is one box up, [§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them).
 
 The bug cluster that motivated this doc was three slips of the same kind:
 two scanner modes that disagreed on what `path/ID` means; alias validation
@@ -20,14 +25,16 @@ invariants below.
 
 ```text
 config ─► Config ─► [ workspace ] ─┬─► scope, boundary roots ─► scanner
-                                   └─► resolver ─────────────► checker, queries
+                                   └─► project map, aliases ──► resolver
 ```
 
-The fourth box of the pipeline ([§AR-system.2.4](README.md#24-workspace)). It takes the configs that config produced ([§AR-system.2.3](README.md#23-config)) and gives the scanner its scope and boundary roots ([§AR-system.2.5](README.md#25-scanner)) and the checker and the queries one resolver (section 4). It knows no rule and no rendering: the namespace is one dimension that flows through the single-project pipeline unchanged, which is what the rest of this page holds ([§AR-system.4](README.md#4-dependency-direction)).
+The fourth box of the pipeline ([§AR-system.2.4](README.md#24-workspace)). It takes the configs that config produced ([§AR-system.2.3](README.md#23-config)) and gives the scanner its scope and boundary roots ([§AR-system.2.5](README.md#25-scanner)) and the resolver the project map and the alias each project answers to ([§AR-system.2.10](README.md#210-resolver)). It knows no rule, no rendering and no scan: the namespace is one dimension that flows through the single-project pipeline unchanged, which is what the rest of this page holds ([§AR-system.4](README.md#4-dependency-direction)).
+
+Everything here is answered from config text alone. Anything that needs a walk, or the `Findings` a walk produced, is the resolver's — which is why the walk-level facts this layer once reached up for are `config/scope_roots.rs` and `model/paths.rs` now, and why the [§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread) probe below is *posed* here and *answered* there ([§AR-resolver.placement](AR-resolver.md#placement-where-the-resolver-sits)).
 
 ## 1. Layering
 
-The single-project pipeline ([§AR-system.1](README.md#1-the-system)) gains one dimension and no new layer. Read top down: the CLI decides workspace versus single-project run and assembles the project map and current alias; the resolver (`target_findings_for_citation`, section 4) is the one function that knows what "qualified" means at runtime; the checker calls the resolver and does not branch on "is workspace?"; the scanner emits `Citation { namespace, … }` from one regex and obeys the workspace boundary roots in one walk. No layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)). The scanner never asks "am I in a workspace?"; the checker never asks "what alias am I?"; the CLI never reaches into a regex.
+The single-project pipeline ([§AR-system.1](README.md#1-the-system)) gains one dimension and no new layer. Read top down: the CLI decides workspace versus single-project run and assembles the project map and current alias; the resolver is the one function that knows what "qualified" means at runtime ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)); the checker calls the resolver and does not branch on "is workspace?"; the scanner emits `Citation { namespace, … }` from one regex and obeys the workspace boundary roots in one walk. No layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)). The scanner never asks "am I in a workspace?"; the checker never asks "what alias am I?"; the CLI never reaches into a regex.
 
 ## 2. Single citation grammar
 
@@ -83,7 +90,7 @@ configured, and a `<namespace>` is now a run of segments (§2). So a *marked* fi
 path whose last segment parses as an ID — `<§>docs/functional-spec/FS-login.md` —
 is a qualified citation with a two-segment alias path, in a single-project
 repository as much as in a workspace, and reports `unknown project alias` because
-the resolver never skips (§4). Widening one capture is what admits it; the
+the resolver never skips ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)). Widening one capture is what admits it; the
 alternative is a scanner that branches on whether a workspace exists, which §3.2
 rules out. Unmarking the path is the fix, and [§FS-workspace.1](../functional-spec/FS-workspace.md#1-citation-syntax) says so where an
 author writes one.
@@ -99,26 +106,6 @@ The only workspace-shaped knob the scanner reads is
 *not* descend into ([§AR-workspace.6](AR-workspace.md#6-the-workspace-boundary)). It exists because a root-project scan
 must not absorb member declarations; it is consulted as a directory filter
 during the walk, never as a per-citation rule.
-
-## 4. The resolver: one function
-
-`target_findings_for_citation(cite, local, workspace) -> Option<&Findings>` is
-the single function any command calls to map a citation to the project it
-resolves against:
-
-- `cite.namespace == None` → resolves against `local` (the current project).
-- `cite.namespace == Some(name)` → resolves against `workspace[name]`, or
-  `None` if the alias is unknown.
-
-Every consumer of citations — the checker (dangling, missing-section,
-ungrounded), and any future qualified `show` / `refs` / `list` — must go
-through this function. The bug shape it rules out is a command that learns
-qualified IDs but resolves them slightly differently from `check`, leaving the
-editor jump and the CI verdict out of sync.
-
-A `None` return value at the resolver is never a silent skip; the calling
-rule turns it into a located diagnostic (`unknown project alias <name>` at
-the citation site).
 
 ## 5. The config: one parse, one validation pass
 
@@ -245,7 +232,8 @@ the single-level case builds. The only difference is the key: a project's alias
 is its whole path, one segment per level ([§FS-workspace.6.1](../functional-spec/FS-workspace.md#61-nested-workspaces)).
 
 That key is what keeps nesting out of every layer below the expansion step. The
-namespace stays **one string**, so the resolver (§4) still does a map lookup,
+namespace stays **one string**, so the resolver still does a map lookup
+([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)),
 the grammar (§2) still has one optional capture, and alias derivation (§5.3)
 still yields one segment that the walk composes. Had it become a *list*, the
 resolver, the citation regex, the completion candidates, the `--project` filter,
@@ -294,75 +282,12 @@ scan stops at its own members; `include_root` decides that block's own project
 only; and alias uniqueness is checked within one sibling set, since paths under
 different parents cannot collide.
 
-## 7. Standalone members fail loud, not silent
-
-A `grund check` invoked at a member root cannot resolve qualified citations
-to the workspace or to siblings — there is no project map. Per
-[§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) §3.6 and [§FS-workspace.5](../functional-spec/FS-workspace.md#5-command-scope), every such unresolved
-qualified citation is an `unknown project alias <name>` error at the
-citation site.
-
-This is the architecturally honest default: the resolver returns `None` for
-the unknown alias, and the caller — a single rule, in one place — turns
-`None` into a diagnostic. The opt-in to downgrade these to warnings
-(`[reference] cross_project_when_standalone = "warn"`) is deferred follow-up
-([§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) §3.6); when it lands, it changes one branch in
-the checker, not the scanner, not the loader, not the resolver shape.
-
-## 8. Downstream commands compose, not duplicate
-
-Query commands (`show`, `refs`, `list`, `cover`, completions) and the formatter
-(`fmt --cross-refs`) consume the qualified-citation shape through a single
-shared loader, `load_workspace_context`
-([§FS-workspace.8](../functional-spec/FS-workspace.md#8-other-commands)).
-That loader funnels through `resolve_workspace_config` so workspace
-discovery and member-scope rewriting stay in one place (§5.1), and it
-exposes:
-
-1. The list of projects in scope (root + members in workspace mode; a
-   single project member-local or standalone).
-2. The "current" project for unqualified IDs (root at the workspace
-   root; `None` when `include_root = false`, so unqualified queries are
-   forced to qualify or fail loud).
-3. `project_by_alias` for routing a qualified `<§>alias/<ID>` to the
-   right config + findings; `aliases()` for completion candidates.
-
-Each command then applies its own filter — `grund refs FS-x` invoked at
-the workspace root scopes to the current (root) project; `grund list
---project api` narrows the catalog; `grund fmt --cross-refs` from a
-member tree preserves any pre-existing qualified wraps as-is and emits
-no new ones ([§FS-workspace.8.5](../functional-spec/FS-workspace.md#85-grund-fmt---cross-refs)). No command re-implements the resolver,
-the citation regex, or the alias derivation.
-
-`grund show --batch` is one consumer invocation, not a loop around the public
-single-query API. A non-empty explicit batch or `--all` calls the shared loader
-exactly once, then resolves, slices, and renders every coordinate against the
-returned context ([§FS-show.2.6](../functional-spec/FS-show.md#26-batch-resolution)).
-The exhaustive coordinate collector reads the declarations and recorded section
-maps already in that context; it performs no preliminary completion/list scan.
-The loader exposes an opt-in test-only counting observer so focused black-box
-tests count one load for many explicit queries and one for exhaustive discovery.
-
-`grund cover` applies **no** filter: it is keyed by file, so every project
-the loader returned contributes its scanned files and every citation in
-them, qualified or not ([§FS-workspace.8.6](../functional-spec/FS-workspace.md#86-grund-cover), [§DF-cover-workspace-scope](../decisions/functional/DF-cover-workspace-scope.md#df-cover-workspace-scope-cover-indexes-the-whole-run-and-counts-cross-project-citations)). That
-is the one command where dropping a row is indistinguishable from a file
-having nothing to say, so it is the one command whose consumer-end filter
-was a silent skip rather than a scope choice. A file belongs to exactly one
-project by the boundary rule (§6), so the per-file index needs no merge step
-and the alias attached to each entry is unambiguous.
-
-It reaches the loader through `load_narrowable_workspace_context`, which takes
-the workspace-aggregate arm only when `scope_is_config_root` — the same test
-`run_check` uses — and otherwise returns the one narrowed project
-([§FS-workspace.8.6](../functional-spec/FS-workspace.md#86-grund-cover)). Both
-arms build the single-project context from one helper, so "single project"
-cannot come to mean two things.
-
 ## 9. Test contracts
 
 The architecture is observable. Each invariant above has a fixture or unit
-test that fails if the invariant is broken — and
+test that fails if the invariant is broken — and so does each of the three the
+resolver took with it ([§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them)), which is why their rows are still in
+this one table: the cases are workspace cases whichever half they pin — and
 `tests/integration/test_architecture_coverage_table.py` fails when a row names a
 case directory or a test function that does not exist, so the table cannot
 outlive what it cites:

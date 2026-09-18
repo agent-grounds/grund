@@ -21,6 +21,18 @@
 //! §AR-lsp.5 followed them into `model/paths.rs` when §AR-system.2.9 became a
 //! module, the queries and the writers both rebasing a path against it.
 //!
+//! What the component does not hold any more either, since §AR-system.2.10
+//! became one: the qualified half of §FS-config.3.2's catalog reconciliation,
+//! which takes the whole loaded project set and is `resolver/legacy_promotion.rs`
+//! now — leaving it here would have had this component name the record of one
+//! above it (§AR-system.4). The per-candidate promotion it calls stays, and
+//! three of its steps are `pub(crate)` for that one reader. Three walk-level
+//! facts went down into `config/scope_roots.rs` and `model/paths.rs` with the
+//! same move — `root_scope_roots`, `canonical_config_root` and `is_hidden`, each
+//! a question about a configuration or a `Path` and not about a tree — because
+//! workspace was reading all three upward before any scan exists
+//! (§AR-resolver.placement).
+//!
 //! What came the other way with that move is `scan_error.rs`: the published form
 //! of a scan failure (§FS-check.2), which sat in the api's contract while the
 //! size catalog and the formatter read it upward (§AR-system.4). It carries the
@@ -60,8 +72,9 @@ pub(crate) use e2e::e2e_case_dir_name;
 pub(crate) use embedded_value_context::EMBEDDED_VALUE_MARKER;
 pub(crate) use file_pass::CitationLine;
 pub(crate) use legacy::{
-    collect_local_legacy_markdown_citations, formatter_wrapper_label_is_citation,
-    legacy_catalog_ids, match_legacy_tail, promote_qualified_legacy_citations, resolve_id_arg,
+    collect_local_legacy_markdown_citations, configured_catalog_ids,
+    formatter_wrapper_label_is_citation, legacy_catalog_ids, match_legacy_tail,
+    promote_legacy_candidate, resolve_id_arg, sort_citations,
 };
 pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;
@@ -69,10 +82,9 @@ pub(crate) use tree::{
     ScanError, overlay_text, scan_tree, scan_tree_strict, scan_tree_with_workspace_overlays,
 };
 pub(crate) use walk::{
-    canonical_config_root, root_scope_roots, scan_roots_for, unwalked_home_roots,
-    walk_reads_any_file, walk_scannable_files, walk_scannable_files_reporting,
+    scan_roots_for, walk_reads_any_file, walk_scannable_files, walk_scannable_files_reporting,
 };
-pub(crate) use walk_boundaries::{is_hidden, is_scannable};
+pub(crate) use walk_boundaries::is_scannable;
 
 // What only the crate's own test modules read (§AR-core-module-layout.1): the
 // exact embedded-value marker test, the scope probe's injectable half, the two

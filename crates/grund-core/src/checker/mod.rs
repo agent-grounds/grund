@@ -8,7 +8,7 @@
 //! reads is re-exported below, and everything else is the component's own
 //! (§AR-core-module-layout.1). The submodules are the former `checker*` category
 //! files, one per rule family §AR-checker.2 names, plus `support.rs` for what
-//! every rule shares — the resolver, the hint, and the report's order. The
+//! every rule shares — the hint and the report's order. The
 //! inline citation style rule came the other way, up out of
 //! `grammar/inline_note_layout.rs`, which is where a checker rule sat while both
 //! were file-name categories (§AR-system.2.1).
@@ -16,7 +16,15 @@
 //! What the component does **not** hold any more: five path keys and one
 //! `[[kinds]]` lookup that the flat layout parked in `homes.rs` and
 //! `grounding.rs`, which the scanner below read upward, went down into `model/`
-//! and `config/`, and the candidate joiner went down into `workspace/`.
+//! and `config/`, and the candidate joiner went down into `workspace/` and on
+//! into `resolver/` with the clause that reads it. Two more went down when
+//! §AR-system.2.10 became a component: `is_stub_for_inline_decl` into
+//! `model/records.rs`, a predicate over a `Declaration` beside the stub target
+//! it resolves, and the resolver of §AR-resolver.1 itself — the
+//! citation-to-target lookup with the `WorkspaceCheckTarget` pair it answers
+//! with, which every rule here now reads downward and which the grammar's
+//! shorthand resolution had been reading upward out of this component
+//! (§AR-system.4).
 //!
 //! One more item came up when §AR-system.2.8 became a module: `plural`, the
 //! plural `s` a count earns, which `inline_style.rs` had been reading out of the
@@ -44,13 +52,13 @@ pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use homes::{file_declares_inline_home, is_stub_for_inline_decl};
+pub(crate) use homes::file_declares_inline_home;
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
 pub(crate) use inline_style::plural;
 pub(crate) use references::{
-    ReferenceTier, WorkspaceCheckTarget, configured_scope, out_of_scope_references,
-    retain_findings_in_scope, workspace_out_of_scope_references,
+    ReferenceTier, configured_scope, out_of_scope_references, retain_findings_in_scope,
+    workspace_out_of_scope_references,
 };
 pub(crate) use report::{check_findings, check_with_workspace, check_with_workspace_and_overlays};
 pub(crate) use sections::{out_of_scope_section_headings, workspace_out_of_scope_section_headings};

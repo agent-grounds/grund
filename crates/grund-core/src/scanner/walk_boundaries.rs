@@ -11,6 +11,7 @@ use std::fs;
 use std::path::Path;
 
 use crate::config::Config;
+use crate::model::is_hidden;
 
 /// Whether a canonical path belongs to a project of this run that is **not** the
 /// one doing the walking (§FS-workspace.6, §AR-workspace.6). The owner is the
@@ -57,14 +58,6 @@ pub(super) fn outward_directory_link_root(
 pub(super) fn is_directory_symlink(path: &Path) -> bool {
     path.is_dir()
         && fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink())
-}
-
-/// A dotfile or dot-directory — same convention used by the scanner walker
-/// and by `expand_workspace_members` to skip `.git`, `.agents`, `.cache`, etc.
-pub(crate) fn is_hidden(path: &Path) -> bool {
-    path.file_name()
-        .and_then(|n| n.to_str())
-        .is_some_and(|n| n.starts_with('.'))
 }
 
 /// Whether a file is one the scanner reads: a non-hidden name with an extension in

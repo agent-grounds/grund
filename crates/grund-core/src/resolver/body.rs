@@ -1,38 +1,31 @@
-use anyhow::{Result, anyhow};
+//! Declaration-body extraction (§AR-system.2.10): where a declaration's body
+//! begins and ends in the file that holds it, across Markdown and every
+//! supported comment dialect (§FS-show.2.1, §FS-show.2.2, §FS-show.2.3).
+//!
+//! This is a question about *source structure* asked of the spans a scan already
+//! recorded — the same question §AR-scanner.2.4 answers for the citing side — so
+//! it is a function of the loaded findings rather than of any one command's
+//! rendering (§AR-resolver.placement). `queries/show.rs` keeps what is genuinely
+//! rendering: the entry points, the JSON shapes, and the refusals.
+//!
+//! It sat in `queries/body.rs` while the queries were the only component that
+//! asked, which had the checker's lead-budget rule reading the point-body pair
+//! upward out of a sibling's answer (§FS-check.4.13, §AR-system.4). The three
+//! text helpers below came with it out of `queries/show.rs`: this is now their
+//! only reader.
+
+use anyhow::{Context, Result, anyhow};
 use std::collections::BTreeMap;
+use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::show::{
-    join_with_blank, read_text_with_overlays, show_e2e_case, truncate_to_first_paragraph,
-};
 use crate::config::Config;
 use crate::grammar::{
     PythonDocstringScanState, declaration_id_on_line, markdown_fence_delimiter, render_id,
     section_path, source_scan_line,
 };
-use crate::model::{
-    Declaration, DeclarationSource, Id, SectionInfo, ShowOutput, ShowRenderMode, ShowSection,
-    TextOverlays,
-};
-// §AR-system.4: one sibling read — the cross-reference flattening of
-// §DF-show-cross-ref-flattening from the writers' `fmt_links.rs`, the inverse
-// of the formatter's own wrapper.
-use crate::writers::flatten_cross_ref_links;
-
-/// Declaration-body extraction: where a declaration's body begins and ends in
-/// the file that holds it, across Markdown and every supported comment dialect
-/// (§FS-show.2.1, §FS-show.2.2, §FS-show.2.3).
-///
-/// This is a question about *source structure*, not about rendering — the same
-/// question §AR-scanner.2.4 answers for the citing side — so it sits beside the
-/// renderer rather than inside it (§AR-core-module-layout.1). `queries/show.rs`
-/// keeps what is genuinely rendering: the entry points, the E2E case manifest,
-/// and the `--toc` / `--brief` shaping of what this file returns.
-///
-/// It also keeps the point-body pair and its per-file cache, which the size
-/// catalog (§FS-list.3.4) and the lead-budget rule (§FS-check.4.13) read: both
-/// slice a lead through the exact show slicer below, so neither can be a pure
-/// function that moves down to a lower component (§AR-system.4).
+use crate::model::{Declaration, Id, ShowOutput, ShowRenderMode, ShowSection, TextOverlays};
+use crate::scanner::overlay_text;
 
 /// Pull the body text of a declaration out of its file: the lines under the
 /// `# <ID>: …` heading down to the next same-or-shallower heading (§FS-show.2.1),
@@ -57,7 +50,7 @@ use crate::writers::flatten_cross_ref_links;
 /// a query does not reach here at all — it is refused from the scanner's record
 /// before the body is read (`ambiguous_section_refusal`). Before the target section
 /// is found, unrelated headings are scanned past rather than ending anything.
-pub(super) fn extract_declaration_body(
+pub(crate) fn extract_declaration_body(
     path: &Path,
     id: &Id,
     declaration: &Declaration,
@@ -91,13 +84,13 @@ pub(super) fn extract_declaration_body(
 /// source slice too; size rows additionally use it to keep duplicate homes and
 /// duplicate section coordinates site-local (§FS-show.2.1.2, §FS-list.3.4).
 #[derive(Clone, Copy)]
-struct PointBodySite {
-    declaration_line: usize,
+pub(super) struct PointBodySite {
+    pub(super) declaration_line: usize,
     /// Present when the scanner computed a meaningful body span. A read-only
     /// scan without sections retains its lazy single-line placeholder and lets
     /// the slicer derive that declaration's boundary itself (§AR-benchmarks).
-    declaration_body_end: Option<usize>,
-    section_line: Option<usize>,
+    pub(super) declaration_body_end: Option<usize>,
+    pub(super) section_line: Option<usize>,
 }
 
 /// Per-operation source cache shared by list and check point measurements. It
@@ -125,82 +118,10 @@ impl<'a> PointBodyCache<'a> {
     }
 }
 
-/// Return the lead/full text pair for one catalog site. JSON values and E2E
-/// cases already carry their canonical show bodies in scanner records; text
-/// declarations use the cached show slicer. A retained stub is broken (healthy
-/// stub rows collapse onto their inline home) and therefore unmeasurable
-/// (§FS-list.2, §FS-list.3.4).
-pub(crate) fn point_body_pair(
-    cache: &mut PointBodyCache<'_>,
-    config: &Config,
-    id: &Id,
-    declaration: &Declaration,
-    section: Option<(&str, &SectionInfo)>,
-) -> Result<Option<(String, String)>> {
-    if declaration.is_stub {
-        return Ok(None);
-    }
-    if matches!(declaration.source, DeclarationSource::Json { .. }) {
-        let body = match section {
-            Some((_, info)) => info
-                .value
-                .as_ref()
-                .map(|value| value.source_slice.clone())
-                .unwrap_or_default(),
-            None => match &declaration.source {
-                DeclarationSource::Json { member_slice, .. } => member_slice.clone(),
-                DeclarationSource::Text => unreachable!("guarded JSON source"),
-            },
-        };
-        return Ok(Some((body.clone(), body)));
-    }
-    if let Some(case) = &declaration.e2e_case {
-        let lead = show_e2e_case(config, config, id, case, None, ShowRenderMode::Default)?.body;
-        let full = show_e2e_case(config, config, id, case, None, ShowRenderMode::Full)?.body;
-        return Ok(Some((lead, full)));
-    }
-
-    let section_path = section.map(|(path, _)| path);
-    let site = PointBodySite {
-        declaration_line: declaration.line,
-        declaration_body_end: (section.is_some() || declaration.body_end > declaration.line)
-            .then_some(declaration.body_end),
-        section_line: section.map(|(_, info)| info.line),
-    };
-    let mut lead = extract_declaration_body_cached(
-        cache,
-        &declaration.file,
-        id,
-        section_path,
-        ShowRenderMode::Default,
-        false,
-        config,
-        Some(site),
-    )?
-    .body;
-    let mut full = extract_declaration_body_cached(
-        cache,
-        &declaration.file,
-        id,
-        section_path,
-        ShowRenderMode::Full,
-        false,
-        config,
-        Some(site),
-    )?
-    .body;
-    // Text and JSON `show` flatten generated cross-reference wrappers before
-    // exposing their bodies; point measurements promise those same bytes
-    // (§FS-show.3.2, §FS-list.3.4).
-    lead = flatten_cross_ref_links(&lead, config);
-    full = flatten_cross_ref_links(&full, config);
-    Ok(Some((lead, full)))
-}
-
 /// Shared show slicer, optionally pinned to one scanner-recorded site so the
 /// size catalog can expose duplicates without making them resolvable
 /// (§FS-show.2.1, §FS-list.3.4).
-fn extract_declaration_body_cached(
+pub(super) fn extract_declaration_body_cached(
     cache: &mut PointBodyCache<'_>,
     path: &Path,
     id: &Id,
@@ -508,4 +429,62 @@ fn is_line_style_comment_line(line: &str) -> bool {
         || trimmed.starts_with('#')
         || trimmed.starts_with(';')
         || trimmed.starts_with("--")
+}
+
+fn read_text_with_overlays(path: &Path, overlays: &TextOverlays) -> Result<String> {
+    if let Some(text) = overlay_text(overlays, path) {
+        Ok(text.to_string())
+    } else {
+        fs::read_to_string(path).with_context(|| format!("read {}", path.display()))
+    }
+}
+
+/// `--toc` joins the default body with the section-map body, separated by one
+/// blank line. Empty halves are dropped; if both are empty the result is empty.
+/// Each body already ends with `\n`, so `{a}\n{b}` produces `<a>\n\n<b>\n`
+/// (§FS-show.2.1.2).
+fn join_with_blank(default_body: &str, outline_body: &str) -> String {
+    match (default_body.is_empty(), outline_body.is_empty()) {
+        (true, true) => String::new(),
+        (true, false) => outline_body.to_string(),
+        (false, true) => default_body.to_string(),
+        (false, false) => format!("{default_body}\n{outline_body}"),
+    }
+}
+
+/// `--brief` truncates the (default-mode, heading-included) body to its first
+/// blank-line-separated paragraph (§FS-show.2.1.1). Keeps the heading line and
+/// at most one blank-line separator before the first paragraph; stops at the
+/// next blank line (or end of body).
+fn truncate_to_first_paragraph(body: &str) -> String {
+    let mut lines: Vec<&str> = body.split('\n').collect();
+    // `body` ends with `\n`, so the split produces a trailing empty element.
+    if lines.last() == Some(&"") {
+        lines.pop();
+    }
+    if lines.is_empty() {
+        return String::new();
+    }
+    let mut out: Vec<&str> = vec![lines[0]];
+    let mut i = 1;
+    let mut kept_separator = false;
+    while i < lines.len() && lines[i].trim().is_empty() {
+        if !kept_separator {
+            out.push(lines[i]);
+            kept_separator = true;
+        }
+        i += 1;
+    }
+    while i < lines.len() && !lines[i].trim().is_empty() {
+        out.push(lines[i]);
+        i += 1;
+    }
+    while out.last().is_some_and(|line| line.trim().is_empty()) {
+        out.pop();
+    }
+    if out.is_empty() {
+        String::new()
+    } else {
+        format!("{}\n", out.join("\n"))
+    }
 }

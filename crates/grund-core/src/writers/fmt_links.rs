@@ -1,6 +1,6 @@
 //! The cross-reference link pass (§FS-fmt.6): which citations on a Markdown
 //! line get a link, and the splice that writes one without disturbing the bytes
-//! around it. `fmt_link_targets.rs` computes the URL each one points at,
+//! around it. `resolver/link_targets.rs` computes the URL each one points at,
 //! `fmt_shorthand_links.rs` resolves an accepted shorthand into a linkable
 //! citation, and the record of one citation found on a line is
 //! `grammar/ids.rs`'s (§AR-system.2.1).
@@ -9,14 +9,13 @@
 //! (§DF-show-cross-ref-flattening): it undoes exactly the wrap
 //! `wrap_markdown_links` writes, recognizing a wrapper label by the scanner's
 //! `formatter_wrapper_label_is_citation`, so it is the formatter's plan read
-//! backwards rather than a lexical fact that could live lower. `queries/body.rs`
-//! and `queries/batch.rs` read it through the crate root, a sibling edge
-//! §AR-system.4 leaves for the finalize task.
+//! backwards rather than a lexical fact that could live lower.
+//! `resolver/point_body.rs` and `queries/batch.rs` read it through the crate
+//! root, an edge §AR-system.4 records rather than resolves.
 
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use super::fmt_link_targets::{markdown_link_target, markdown_link_target_with_root};
 use super::fmt_shorthand_links::{accepted_shorthand_link, collect_local_accepted_shorthand_links};
 use super::fmt_value_bindings::markdown_citation_is_value_binding;
 use crate::config::Config;
@@ -25,11 +24,11 @@ use crate::grammar::{
     parse_id, parse_longest_id_prefix,
 };
 use crate::model::{Findings, Id};
+use crate::resolver::{WorkspaceContext, markdown_link_target, markdown_link_target_with_root};
 use crate::scanner::{
     collect_local_legacy_markdown_citations, formatter_wrapper_label_is_citation,
     legacy_catalog_ids, match_legacy_tail,
 };
-use crate::workspace::WorkspaceContext;
 
 /// Wrap each `§<ID>[.<section>]` citation on this Markdown line as `[§<ID>…](url)`
 /// — the `--cross-refs` rewrite (§FS-fmt.6.2): re-derive an existing wrapper's URL,

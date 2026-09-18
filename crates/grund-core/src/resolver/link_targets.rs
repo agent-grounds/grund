@@ -1,26 +1,28 @@
-//! Where a cross-reference link points (§FS-fmt.6.2): the repo-relative path to
-//! the declaration's home file — following an inline-spec stub to its real
-//! source file — and the heading anchor a Markdown home takes.
+//! Where a cross-reference link points (§AR-system.2.10, §FS-fmt.6.2): the
+//! repo-relative path to the declaration's home file — following an inline-spec
+//! stub to its real source file — and the heading anchor a Markdown home takes.
 //!
-//! It is the formatter's plan rather than a lexical fact, which is why the
-//! checker's index-entry rule reads it upward through the crate root
-//! (§FS-check.3.18, §AR-system.4): it resolves the ID against the whole
-//! project's declarations, asks the checker which declaration is a stub for an
-//! inline home, and re-reads a home file when the cited section is not already
-//! in the section map. The derivation of an anchor *from* heading text is the
-//! lexical half and went down into `grammar/anchors.rs`.
+//! A function of the loaded findings rather than of a rule or a write: it
+//! resolves the ID against the whole project's declarations, follows a stub to
+//! the file that really declares it, and re-reads a home file when the cited
+//! section is not already in the section map (§AR-resolver.placement). Two components
+//! ask it for the same answer — `grund fmt --cross-refs` for the link it writes
+//! (§FS-fmt.6) and the checker's index-entry rule for the link it compares
+//! against (§FS-check.3.18) — so it sat in `writers/fmt_link_targets.rs` while
+//! the checker read it upward out of a component above it (§AR-system.4). The
+//! derivation of an anchor *from* heading text is the lexical half and is
+//! `grammar/anchors.rs`.
 
 use anyhow::{Context, Result};
 use std::fs;
 use std::path::Path;
 
-use crate::checker::is_stub_for_inline_decl;
 use crate::config::Config;
 use crate::grammar::{
     PythonDocstringScanState, anchor_slug, declaration_id_on_line, reduce_heading_text, render_id,
     section_anchor_text, section_path, source_scan_line,
 };
-use crate::model::{Declaration, Findings, Id, resolve_stub_target};
+use crate::model::{Declaration, Findings, Id, is_stub_for_inline_decl, resolve_stub_target};
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
 /// home file — following an inline-spec stub to its real source file — plus a
@@ -44,7 +46,7 @@ pub(crate) fn markdown_link_target(
 /// still drives anchor profile (§FS-fmt.6.7) and stub resolution, but the
 /// link path is anchored at `path_root` (the workspace root) when the
 /// citing file and the target's home live in different projects.
-pub(super) fn markdown_link_target_with_root(
+pub(crate) fn markdown_link_target_with_root(
     from_file: &Path,
     id: &Id,
     section: Option<&str>,

@@ -17,18 +17,16 @@ use std::path::{Path, PathBuf};
 use super::sections::retain_heading_findings_in_scope;
 use super::support::{
     citation_in_markdown_inline_code, close_enough_for_hint, dangling_message, edit_distance,
-    missing_snapshot_message, target_for_citation,
+    missing_snapshot_message,
 };
-use crate::config::{Config, KindResolution, display_path};
+use crate::config::{Config, KindResolution, display_path, unwalked_home_roots};
 use crate::grammar::{ShorthandIndexes, render_qualified_id, report_shorthand_citation};
 use crate::model::{CheckReport, DeclarationSource, Diagnostic, Findings, sort_path_key};
-use crate::scanner::{scan_roots_for, unwalked_home_roots};
-use crate::workspace::{WorkspaceProject, join_alternatives, namespace_is_unverified};
-
-pub(crate) struct WorkspaceCheckTarget<'a> {
-    pub(crate) findings: &'a Findings,
-    pub(crate) config: &'a Config,
-}
+use crate::resolver::{
+    WorkspaceCheckTarget, WorkspaceProject, join_alternatives, target_for_citation,
+};
+use crate::scanner::scan_roots_for;
+use crate::workspace::namespace_is_unverified;
 
 /// Which of a `--full` run's two scopes a citation site is being judged on
 /// (§FS-check.1.3). It changes exactly one thing: outside the configured scope,
@@ -266,7 +264,7 @@ pub(super) fn check_citation_resolution(
         let Some(target) = target_for_citation(cite, findings, config, workspace) else {
             // `target_for_citation` only returns `None` when the
             // namespace is present and unknown — so the namespace is always
-            // Some here (§AR-workspace.4).
+            // Some here (§AR-resolver.1).
             let namespace = cite
                 .namespace
                 .as_deref()

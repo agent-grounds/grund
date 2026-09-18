@@ -3,8 +3,8 @@ use anyhow::Result;
 use super::fmt_error::FmtScanAbort;
 use crate::config::Config;
 use crate::model::Findings;
+use crate::resolver::WorkspaceProject;
 use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
-use crate::workspace::WorkspaceProject;
 
 /// The one place a declaration set is proven complete (§FS-fmt.7.4).
 ///
