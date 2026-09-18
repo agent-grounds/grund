@@ -131,7 +131,7 @@ pub(crate) use init_entrypoints::{
     AgentEntrypoint, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
     agents_with_own_entrypoint,
 };
-#[cfg(test)]
+#[cfg(all(test, unix))]
 pub(crate) use init_notes::shadowed_claude_entrypoint_note;
 #[cfg(test)]
 pub(crate) use init_plan::{
@@ -152,7 +152,7 @@ pub(crate) use integrations_agents::LinkSupport;
 pub(crate) use integrations_clients::{ITERM2_SNIPPET, KITTY_SNIPPET, WEZTERM_SNIPPET};
 #[cfg(test)]
 pub(crate) use integrations_detect::value_names_codium;
-#[cfg(test)]
+#[cfg(all(test, unix))]
 pub(crate) use integrations_install::set_executable;
 #[cfg(test)]
 pub(crate) use integrations_user_config::{

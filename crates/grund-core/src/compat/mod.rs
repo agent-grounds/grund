@@ -69,7 +69,7 @@ pub(crate) use check::command_check;
 pub(crate) use cover::{
     compat_cover_citation_json, compat_cover_project_field, parse_compat_cover_args,
 };
-#[cfg(test)]
+#[cfg(all(test, unix))]
 pub(crate) use fmt::command_fmt;
 #[cfg(test)]
 pub(crate) use integrations::{
