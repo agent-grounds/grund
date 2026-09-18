@@ -75,7 +75,9 @@ let report = grund_core::check(&path)?;
 let body = grund_core::show("FS-check", ShowOpts::default())?;
 ```
 
-`Report` and the underlying `Findings` are exposed as plain data structures so callers can iterate, filter, or render their own output.
+`Report` and the underlying `Findings` are exposed as plain data structures so callers can iterate, filter, or render their own output. Every function on this surface returns data and writes to no stream, which is what lets one answer be rendered by a terminal, an editor and an embedder alike — the report's warning channel included, so a caution settled before any report exists still reaches a caller as a warning rather than as a line on its stderr ([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan), [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)).
+
+`grund_core::main_entry()` is the one exception and it is leaving. It is a process entry point — it parses argv, prints, and returns an exit code — kept since 0.4.1 for `grund-core = "0.4"` consumers that built a thin binary around the old core symbol, and deprecated since that release without ever naming the release it stops working in. [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) is the path it now takes, and the new form has shipped beside it since 0.4.1: the three calls above for an embedder, and the `grund` CLI package for a process entry point. **0.14.0** is the release whose deprecation note and changelog entry name the removal, in the `is removed in <release>` clause of §4.2, and **0.15.0** is the release that removes the symbol together with the rest of the engine's renderer. A tree still carrying the note therefore cannot be cut as 0.15.0 or above, which is the guard reading the promise rather than a person remembering it. An embedder migrates by replacing one call: with the CLI package, or with `check`, `show` and `scan`.
 
 ### 3.2 Node (`grund-cli` npm package)
 
@@ -137,6 +139,7 @@ So the release path asks it directly. `scripts/check_release_ramps.py <version>`
 | `becomes an error in <release>` | the change has not been made yet | must be **below** that release |
 | `became an error in <release>` | the change has been made | must be **at or above** it |
 | `was removed in <release>` | the change has been made | must be **at or above** it |
+| `is removed in <release>` | a named removal has not been made yet | must be **below** that release |
 | `stopped loading in <release>` | the change has been made | must be **at or above** it |
 | `unchecked in <release>` | the change has been made | must be **at or above** it |
 | `will exit <status> ... in <release>` | a scalar exit-status change has not been made yet | must be **below** that release |
@@ -144,7 +147,7 @@ So the release path asks it directly. `scripts/check_release_ramps.py <version>`
 
 The vocabulary is closed on purpose: it is the wording the warnings and errors already use, so a ramp written in it is seen and a ramp written outside it names no release this gate can read. The scalar clause matches the exact `refs` warning in [§FS-refs.4](FS-refs.md#4-exit-codes): its replacement diagnostics must remain the ordinary failed-query bytes, so they do not gain a historical release suffix. A version-gated contract test then owns the landed phase; at 0.15.0 it expects exit `1` and the warning's absence. The check asks the general question rather than naming any one ramp, so a ramp that lands later is covered the day its message is written. The refusal names every line that disagrees and the window of releases the tree may still be cut as — which can be empty, when a tree has landed one ramp and still promises another at the same release, and an empty window is itself the answer: nothing may be published until the rest of that release's ramps land.
 
-The release guard does not yet read `wording changes in <release>`; this clause is specified but not implemented today. The follow-up must add it to `scripts/check_release_ramps.py`'s `CLAUSES` tuple and add a deadline test for each wording constant, the narrowed-alias scope suffix and the `agents-init` compatibility tail.
+The release guard does not yet read `wording changes in <release>` or `is removed in <release>`; both clauses are specified but not implemented today. The follow-up must add them to `scripts/check_release_ramps.py`'s `CLAUSES` tuple and add a deadline test for each wording constant, the narrowed-alias scope suffix, the `agents-init` compatibility tail, and the deprecation note of §3.1. `is removed in <release>` is the pending half of `was removed in <release>` — the clause a deprecation names its removal release with, where the two named-error clauses name a verdict's — and it is written in that spelling rather than "will be removed in" so the pending and landed halves of one removal read as the same claim in two tenses.
 
 `release.yml`'s verify job runs the check on the version it is about to publish, which is every publication path — a `vX.Y.Z` tag push, a manual dispatch, and the non-publishing dry run both bump helpers wait on before they touch `main`. `auto-bump.yml` and `release-minor.yml` run it again on the version they compute, beside their existing gates, so a bump that could not be published fails before it pushes a candidate branch rather than after.
 
