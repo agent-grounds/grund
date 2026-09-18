@@ -8,7 +8,6 @@ use super::cover::command_cover;
 use super::fmt::command_fmt;
 use super::id::command_id;
 use super::init::command_init;
-use super::integrations::run_integrations;
 use super::list::command_list;
 use super::refs::command_refs;
 use super::show::{command_show, command_show_default};
@@ -87,9 +86,15 @@ fn compat_print_subcommand_help(cmd: &str) {
 /// New code should depend on the `grund` CLI package for process entry points,
 /// or call the structured `grund-core` APIs (`check`, `show`, `scan`) when
 /// embedding the engine (§AR-bindings.2, §FS-distribution.3.1).
+///
+/// The note names the release the symbol stops working in, in the clause
+/// §FS-distribution.4.2 closes for a pending removal, so a tree still carrying it
+/// cannot be cut at that release or above — nine releases shipped this warning
+/// without a name, which is a deprecation that never ends
+/// (§REQ-backwards-compatibility.2, §DA-engine-renders-nothing).
 #[deprecated(
     since = "0.4.1",
-    note = "use the `grund` CLI package for process entry points, or `grund_core::{check, show, scan}` for embedding"
+    note = "is removed in 0.15.0; use the `grund` CLI package for process entry points, or `grund_core::{check, show, scan}` for embedding"
 )]
 pub fn main_entry() -> ExitCode {
     compat_restore_default_sigpipe();
@@ -169,7 +174,15 @@ pub fn main_entry() -> ExitCode {
         Some("config") => command_config(&args[1..]),
         Some("agent-setup-instructions") => compat_agent_setup_instructions(&args[1..]),
         Some("completions") => command_completions(&args[1..]),
-        Some("integrations") => run_integrations(&args[1..]),
+        // §FS-integrations.1: the command's argv and its every byte are the
+        // CLI's, so this dispatcher names the migration §FS-distribution.3.1
+        // documents rather than carrying a second copy of a retiring renderer.
+        Some("integrations") => {
+            eprintln!(
+                "error: integrations is not available from deprecated grund_core::main_entry(); install and run the `grund` CLI package for this command."
+            );
+            ExitCode::from(2)
+        }
         Some("complete") => command_complete(&args[1..]),
         Some(_) => command_show_default(&args),
     }

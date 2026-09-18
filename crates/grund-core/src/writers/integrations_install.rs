@@ -24,13 +24,13 @@ use crate::grammar::{
 
 /// Result of splicing a managed block into a dotfile.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum BlockOutcome {
+pub enum BlockOutcome {
     Appended,
     Updated,
     Unchanged,
 }
 
-pub(crate) fn block_outcome_verb(outcome: BlockOutcome) -> &'static str {
+pub fn block_outcome_verb(outcome: BlockOutcome) -> &'static str {
     match outcome {
         BlockOutcome::Appended => "appended",
         BlockOutcome::Updated => "updated",
@@ -40,7 +40,7 @@ pub(crate) fn block_outcome_verb(outcome: BlockOutcome) -> &'static str {
 
 /// One file, two managed keys: `exists` only when neither line moved, and an
 /// append anywhere makes the whole write an append (§FS-integrations.6).
-pub(crate) fn merge_outcomes(first: BlockOutcome, second: BlockOutcome) -> BlockOutcome {
+pub fn merge_outcomes(first: BlockOutcome, second: BlockOutcome) -> BlockOutcome {
     match (first, second) {
         (BlockOutcome::Unchanged, other) | (other, BlockOutcome::Unchanged) => other,
         (BlockOutcome::Appended, _) | (_, BlockOutcome::Appended) => BlockOutcome::Appended,
@@ -53,7 +53,7 @@ pub(crate) fn merge_outcomes(first: BlockOutcome, second: BlockOutcome) -> Block
 /// when a block is present, else append after a blank-line separator. Everything
 /// outside the block is preserved. Returns the new text and what changed. A block
 /// whose version is newer than this binary understands is an error.
-pub(crate) fn install_managed_block(
+pub fn install_managed_block(
     comment: &str,
     prepend: bool,
     existing: &str,
@@ -94,7 +94,7 @@ pub(crate) fn install_managed_block(
     }
 }
 
-pub(crate) fn install_agent_guidance_block(
+pub fn install_agent_guidance_block(
     existing: &str,
     preference: ConversationRendering,
     target: ConversationTarget,
@@ -131,7 +131,7 @@ pub(crate) fn install_agent_guidance_block(
 
 /// The call a WezTerm config must make on the object it returns for the managed
 /// block to do anything (§FS-integrations.4.1).
-pub(crate) const WEZTERM_APPLY_CALL: &str = "grund_apply_hyperlink_rule(";
+pub const WEZTERM_APPLY_CALL: &str = "grund_apply_hyperlink_rule(";
 
 /// Whether this write leaves the user one manual step short of a working
 /// integration (§FS-integrations.4.1). WezTerm applies hyperlink rules only from
@@ -143,7 +143,7 @@ pub(crate) const WEZTERM_APPLY_CALL: &str = "grund_apply_hyperlink_rule(";
 /// defines the helper and names it in its own comments, so a whole-file test
 /// would match on every config and report nothing. A file grund scaffolded from
 /// scratch calls the helper below the block and is therefore already wired.
-pub(crate) fn needs_wezterm_wiring(client: IntegrationClient, text: &str) -> bool {
+pub fn needs_wezterm_wiring(client: IntegrationClient, text: &str) -> bool {
     if client != IntegrationClient::Wezterm {
         return false;
     }
@@ -158,7 +158,7 @@ pub(crate) fn needs_wezterm_wiring(client: IntegrationClient, text: &str) -> boo
 
 /// Install `grund-open` to `~/.local/bin` when absent or out of date. Returns the
 /// path when written, `None` when already current.
-pub(crate) fn write_resolver_script() -> Result<Option<PathBuf>, (PathBuf, String)> {
+pub fn write_resolver_script() -> Result<Option<PathBuf>, (PathBuf, String)> {
     let Some(path) = expand_target(RESOLVER_TARGET) else {
         return Err((
             PathBuf::from(RESOLVER_TARGET),
@@ -213,7 +213,7 @@ fn is_executable(path: &Path) -> bool {
 
 /// Whether every grund-owned artifact for a client is present and byte-current
 /// (§FS-integrations.5). Only the client's fixed target paths are read.
-pub(crate) fn integration_is_current(client: IntegrationClient) -> bool {
+pub fn integration_is_current(client: IntegrationClient) -> bool {
     match client.install_kind() {
         InstallKind::Block => {
             terminal_integration_is_current(client, client.snippet().unwrap_or(""))
@@ -249,7 +249,7 @@ fn terminal_integration_is_current(client: IntegrationClient, snippet: &str) -> 
         && is_executable(&resolver_path)
 }
 
-pub(crate) fn vscode_integration_is_current(dir: &Path) -> bool {
+pub fn vscode_integration_is_current(dir: &Path) -> bool {
     fs::read_to_string(dir.join(".grund-version"))
         .is_ok_and(|text| text == INTEGRATIONS_BLOCK_VERSION.to_string())
         && fs::read_to_string(dir.join("package.json"))

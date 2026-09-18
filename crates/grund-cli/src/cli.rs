@@ -158,7 +158,7 @@ pub fn main_entry() -> ExitCode {
         Some("config") => command_config(&args[1..]),
         Some("agent-setup-instructions") => command_agent_setup_instructions(&args[1..]),
         Some("completions") => command_completions(&args[1..]),
-        Some("integrations") => run_integrations(&args[1..]),
+        Some("integrations") => command_integrations(&args[1..]),
         Some("complete") => command_complete(&args[1..]),
         // Any first argument that is not a known subcommand is an ID query
         // (§FS-cli.1). Check is explicit as `grund check [path]`.

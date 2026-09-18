@@ -16,7 +16,7 @@ use super::integrations_clients::IntegrationClient;
 /// live under its own application directory. When that shows, VSCodium is marked
 /// *as well*: the extensions roots differ, and installing into the wrong one is
 /// silent.
-pub(crate) fn detect_clients() -> Vec<IntegrationClient> {
+pub fn detect_clients() -> Vec<IntegrationClient> {
     let has = |name: &str| std::env::var_os(name).is_some_and(|value| !value.is_empty());
     // `IntegrationClient` variants are declared in the same order as `ALL`, so the
     // discriminant is the index into this presence table.

@@ -22,7 +22,7 @@ use crate::config::strip_comment;
 
 /// The user-level Grund configuration `--write` records the preference in
 /// (§FS-integrations.4.3). `~/.config` resolves through `XDG_CONFIG_HOME`.
-pub(crate) const USER_CONFIG_TARGET: &str = "~/.config/grund/config.toml";
+pub const USER_CONFIG_TARGET: &str = "~/.config/grund/config.toml";
 
 /// The user-level setting spelled exactly as the repository key for the same
 /// concept (§FS-config.3.1): one name, two scopes.
@@ -37,7 +37,7 @@ const CONVERSATION_TARGET_KEY_PATH: &str = "reference.conversation_target";
 /// warning that names them.
 const USER_CONFIG_KEY_PATHS: &str = "`reference.conversation`, `reference.conversation_target`, and `reference.agents.<agent>.conversation_target`";
 
-pub(crate) fn read_optional_text(path: &Path) -> Result<String, (PathBuf, String)> {
+pub fn read_optional_text(path: &Path) -> Result<String, (PathBuf, String)> {
     match fs::read_to_string(path) {
         Ok(text) => Ok(text),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
@@ -45,7 +45,7 @@ pub(crate) fn read_optional_text(path: &Path) -> Result<String, (PathBuf, String
     }
 }
 
-pub(crate) fn user_grund_config_path() -> Option<PathBuf> {
+pub fn user_grund_config_path() -> Option<PathBuf> {
     expand_target(USER_CONFIG_TARGET)
 }
 
@@ -90,20 +90,20 @@ fn qualified_key(section: &str, key: &str) -> String {
 }
 
 /// What one scan of the user configuration found (§FS-integrations.4.3).
-pub(crate) struct UserConfigScan {
-    pub(crate) preference: Option<ConversationRendering>,
+pub struct UserConfigScan {
+    pub preference: Option<ConversationRendering>,
     /// The recorded addressing target, independent of `preference`: an
     /// unreadable target never costs the `plain`/`link` value recorded beside
     /// it (§FS-integrations.4.3).
-    pub(crate) target: Option<ConversationTarget>,
+    pub target: Option<ConversationTarget>,
     /// `[reference.agents.<agent>]` partials, in file order — the override
     /// layer merged over `target` per agent (§FS-integrations.4.4). Only known
     /// agents land here; an unknown one is a warning naming the closed set.
-    pub(crate) agent_targets: Vec<(String, ConversationTarget)>,
+    pub agent_targets: Vec<(String, ConversationTarget)>,
     /// `(line, message)` for everything in the file grund did not act on, in
     /// file order. Every message names what is being ignored, so the report says
     /// what the run will do rather than only what is wrong.
-    pub(crate) problems: Vec<(usize, String)>,
+    pub problems: Vec<(usize, String)>,
 }
 
 /// Scan the user configuration for the single preference grund reads there, and
@@ -129,7 +129,7 @@ pub(crate) struct UserConfigScan {
 /// terminal integration, and an unparseable value is not more of a reason than
 /// an unread key: both mean grund has no preference from this file, which is
 /// exactly the state of a machine that never wrote one.
-pub(crate) fn scan_user_config(text: &str) -> UserConfigScan {
+pub fn scan_user_config(text: &str) -> UserConfigScan {
     let mut section = String::new();
     let mut preference = None;
     let mut target = None;
@@ -304,7 +304,7 @@ pub(crate) fn install_conversation_preference(
 /// Why an already-recorded value is left alone: rewriting an identical value
 /// would report `updated` for a no-op and drop whatever comment the user wrote
 /// beside it.
-pub(crate) fn install_reference_key(
+pub fn install_reference_key(
     existing: &str,
     table: &str,
     bare_key: &str,

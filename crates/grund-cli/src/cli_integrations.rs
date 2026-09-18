@@ -1,45 +1,31 @@
-/// The deprecated `main_entry()` adapter for `grund integrations`
-/// (§AR-bindings.2): the argument parsing, the entry point both CLI frontends
-/// call, and the printing forms — detection, the machine-shaped plans, and a
-/// client's artifact read before installing (§FS-integrations). The engine
-/// renders here only because the published CLI still imports this one function
-/// (§AR-system.2.9); everything it decides over lives in `writers/` — the
-/// client set it prints, the detection it reports, and the installs the
-/// `--write` half beside this file carries out.
+/// `grund integrations` (§FS-integrations.1): the argument parsing, the command
+/// the dispatcher calls, and the printing forms — detection, the machine-shaped
+/// plans, and a client's artifact read before installing (§FS-integrations).
+/// Rendering is the frontend's, like every other subcommand's (§AR-bindings.3);
+/// everything it decides over is the engine's and returns data — the client set
+/// it prints, the detection it reports, and the installs the `--write` half
+/// beside this file carries out (§FS-distribution.3.1).
 ///
 /// The user-facing setup guide, named by detection (§FS-integrations.2). It
 /// carries what `--write` cannot do for the caller: the prerequisites that fail
 /// silently, and the per-client manual step.
-use anyhow::Result;
-use std::process::ExitCode;
-
-use super::integrations_write::{
-    load_user_config, write_integration, write_user_citation_guidance_command,
-};
-use crate::model::json_escape;
-use crate::writers::{
-    ConversationRendering, ConversationTarget, GRUND_OPEN_RESOLVER, IntegrationClient,
-    RESOLVER_TARGET, VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON, detect_clients,
-    integration_is_current, known_agent, known_agents_list, known_clients_line,
-};
-
-pub(crate) const SETUP_GUIDE_URL: &str =
+const SETUP_GUIDE_URL: &str =
     "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/clickable-citations.md";
 
 /// Parsed `grund integrations` invocation.
-pub(crate) struct IntegrationsInvocation {
-    pub(crate) client: Option<IntegrationClient>,
-    pub(crate) write: bool,
+struct IntegrationsInvocation {
+    client: Option<IntegrationClient>,
+    write: bool,
     json: bool,
-    pub(crate) conversation: Option<ConversationRendering>,
-    pub(crate) conversation_target: Option<ConversationTarget>,
+    conversation: Option<ConversationRendering>,
+    conversation_target: Option<ConversationTarget>,
     /// `--agent <name>`: scope `conversation_target` to one agent instead of
     /// the machine (§FS-integrations.4.4).
-    pub(crate) agent: Option<&'static str>,
+    agent: Option<&'static str>,
 }
 
 /// Parse args, or return an error `ExitCode` after printing a CLI-level message.
-pub(crate) fn parse_integrations_args(args: &[String]) -> Result<IntegrationsInvocation, ExitCode> {
+fn parse_integrations_args(args: &[String]) -> Result<IntegrationsInvocation, ExitCode> {
     let mut client = None;
     let mut write = false;
     let mut format: Option<String> = None;
@@ -207,14 +193,14 @@ pub(crate) fn parse_integrations_args(args: &[String]) -> Result<IntegrationsInv
     })
 }
 
-/// The `grund integrations` entry point, called from both CLI frontends
-/// (§FS-integrations). Prints by default; writes only under `--write`.
+/// The `grund integrations` command (§FS-integrations). Prints by default;
+/// writes only under `--write`.
 ///
 /// Why the user configuration is read before the first artifact is installed:
 /// its warnings are then reported once, and a file grund cannot parse fails the
 /// command outright rather than after a client's config and the resolver are
 /// already on disk.
-pub fn run_integrations(args: &[String]) -> ExitCode {
+fn command_integrations(args: &[String]) -> ExitCode {
     let invocation = match parse_integrations_args(args) {
         Ok(invocation) => invocation,
         Err(code) => return code,
@@ -287,7 +273,7 @@ fn print_detection(json: bool) -> ExitCode {
 
 /// The machine-shaped detection plan (§FS-integrations.5): detected clients in
 /// frozen order, then every client with whether it was detected and its install.
-pub(crate) fn detection_plan_json(detected: &[IntegrationClient]) -> String {
+fn detection_plan_json(detected: &[IntegrationClient]) -> String {
     let detected_names = detected
         .iter()
         .map(|client| format!("\"{}\"", client.name()))
@@ -314,7 +300,7 @@ pub(crate) fn detection_plan_json(detected: &[IntegrationClient]) -> String {
 
 /// One JSON object describing a client's artifact and its `--write` targets,
 /// without printing the artifact bytes (§FS-integrations.5).
-pub(crate) fn client_descriptor_json(client: IntegrationClient) -> String {
+fn client_descriptor_json(client: IntegrationClient) -> String {
     let kind = if client.is_terminal() {
         "terminal"
     } else {

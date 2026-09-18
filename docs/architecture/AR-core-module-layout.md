@@ -26,7 +26,7 @@ Two tests hold this against the tree. `tests/integration/test_module_layout.py` 
 
 ## 2. Refactor boundary
 
-Splitting the core and CLI crates is an architectural refactor only: it must not change CLI output, diagnostics, scan behavior, template bytes, or public entrypoints. The CLI package may keep calling compatibility command adapters while narrower data-returning APIs are introduced, but embedders use the public API in `crates/grund-core/src/api/`, whose contract files carry the published signatures and whose adapter files carry the conversions behind them, reaching it through the explicit `pub use` list in `lib.rs` (§1) — the one place a name becomes public.
+Splitting the core and CLI crates is an architectural refactor only: it must not change CLI output, diagnostics, scan behavior, template bytes, or public entrypoints. The CLI package calls no compatibility command adapter any more — `integrations` was the last and it renders here ([§AR-bindings.3](AR-bindings.md#3-grund-cli-the-cli-binary)) — and embedders use the public API in `crates/grund-core/src/api/`, whose contract files carry the published signatures and whose adapter files carry the conversions behind them, reaching it through the explicit `pub use` list in `lib.rs` (§1) — the one place a name becomes public.
 
 ## 3. File size
 

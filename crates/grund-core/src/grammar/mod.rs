@@ -105,10 +105,13 @@ pub(crate) use inline_note_layout::{
     layout_pass_enabled, line_says_something,
 };
 pub(crate) use managed_block::{
-    AGENT_GUIDANCE_BLOCK_VERSION, AGENTS_BLOCK_VERSION, AgentsBlockLookup,
-    INTEGRATIONS_BLOCK_VERSION, agent_guidance_markers, find_agent_guidance_block,
-    find_agents_block, find_managed_block, integrations_block_markers,
+    AGENT_GUIDANCE_BLOCK_VERSION, AGENTS_BLOCK_VERSION, AgentsBlockLookup, agent_guidance_markers,
+    find_agent_guidance_block, find_agents_block, find_managed_block, integrations_block_markers,
 };
+// The version a managed integrations block is written and read at: the command
+// that installs one stamps it, and that command is the CLI's
+// (§FS-integrations.4.2, §AR-bindings.3).
+pub use managed_block::INTEGRATIONS_BLOCK_VERSION;
 pub(crate) use near_miss::{declaration_captures, declaration_id_on_line, near_miss_heading};
 pub(crate) use never_rewrite::{
     DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, is_escaped,

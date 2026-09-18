@@ -1,29 +1,17 @@
-/// The `--write` half of the deprecated `grund integrations` adapter
-/// (§AR-bindings.2, §FS-integrations.4): what one install reports, and how the
-/// user-level citation guidance is synchronized across every agent whose
-/// instruction file this machine has (§FS-integrations.4.3). Splitting the
-/// reporting from the splices and probes it reports on is what let the whole
-/// command leave `integrations.rs` without a size exception
-/// (§AR-core-module-layout.3); the splices are `writers/integrations_install.rs`.
+/// The `--write` half of `grund integrations` (§FS-integrations.4): what one
+/// install reports, and how the user-level citation guidance is synchronized
+/// across every agent whose instruction file this machine has
+/// (§FS-integrations.4.3). Splitting the reporting from the splices and probes
+/// it reports on is what lets the whole command sit in the frontend without a
+/// size exception (§AR-core-module-layout.3); the splices are the engine's, in
+/// `writers/integrations_install.rs`, and return data rather than printing
+/// (§AR-bindings.3, §FS-distribution.3.1).
 ///
 /// Apply an integration to disk under `--write` (§FS-integrations.4). Reports on
 /// stderr; exit `0` on success, `2` on a newer-block or IO error.
-use anyhow::Result;
 use std::fs;
-use std::path::PathBuf;
-use std::process::ExitCode;
 
-use crate::grammar::INTEGRATIONS_BLOCK_VERSION;
-use crate::writers::{
-    BlockOutcome, ConversationRendering, ConversationTarget, GLOBAL_AGENT_INSTRUCTION_TARGETS,
-    InstallKind, IntegrationClient, USER_CONFIG_TARGET, VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON,
-    WEZTERM_APPLY_CALL, agent_override_table, block_outcome_verb, expand_target,
-    install_agent_guidance_block, install_managed_block, install_reference_key, merge_outcomes,
-    needs_wezterm_wiring, read_optional_text, scan_user_config, user_grund_config_path,
-    vscode_integration_is_current, write_resolver_script,
-};
-
-pub(super) fn write_integration(
+fn write_integration(
     client: IntegrationClient,
     conversation: Option<ConversationRendering>,
     conversation_target: Option<ConversationTarget>,
@@ -41,7 +29,7 @@ pub(super) fn write_integration(
     write_user_citation_guidance_command(conversation, conversation_target, agent, user_config)
 }
 
-pub(super) fn write_user_citation_guidance_command(
+fn write_user_citation_guidance_command(
     conversation: Option<ConversationRendering>,
     conversation_target: Option<ConversationTarget>,
     agent: Option<&'static str>,
@@ -194,15 +182,15 @@ enum GuidancePlan {
 /// for when it is not (§FS-integrations.4.4). Reported per target, because
 /// unreported an override, a gate downgrade, and an unread key are
 /// indistinguishable from the outside.
-pub(crate) struct EffectiveForm {
-    pub(crate) rendering: ConversationRendering,
-    pub(crate) target: ConversationTarget,
-    pub(crate) requested: ConversationTarget,
-    pub(crate) overridden: bool,
+struct EffectiveForm {
+    rendering: ConversationRendering,
+    target: ConversationTarget,
+    requested: ConversationTarget,
+    overridden: bool,
 }
 
 impl EffectiveForm {
-    pub(crate) fn describe(&self) -> String {
+    fn describe(&self) -> String {
         if self.rendering == ConversationRendering::Plain {
             return ConversationRendering::Plain.name().to_string();
         }
@@ -218,12 +206,12 @@ impl EffectiveForm {
 
 /// The user configuration `--write` reads, loaded once per invocation so its
 /// warnings are reported exactly once (§FS-integrations.4.3).
-pub(super) struct UserConfig {
-    pub(super) path: PathBuf,
-    pub(super) text: String,
-    pub(super) preference: Option<ConversationRendering>,
-    pub(super) target: Option<ConversationTarget>,
-    pub(super) agent_targets: Vec<(String, ConversationTarget)>,
+struct UserConfig {
+    path: PathBuf,
+    text: String,
+    preference: Option<ConversationRendering>,
+    target: Option<ConversationTarget>,
+    agent_targets: Vec<(String, ConversationTarget)>,
 }
 
 /// Read and report on the user configuration without writing anything. Every
@@ -231,7 +219,7 @@ pub(super) struct UserConfig {
 /// read: nothing else in this file has any effect, and a setting that silently
 /// does nothing is indistinguishable from one that works. Only failing to reach
 /// the file is an error; its contents never are (§FS-integrations.4.3).
-pub(super) fn load_user_config() -> Result<UserConfig, (PathBuf, String)> {
+fn load_user_config() -> Result<UserConfig, (PathBuf, String)> {
     let path = user_grund_config_path().ok_or_else(|| {
         (
             PathBuf::from(USER_CONFIG_TARGET),

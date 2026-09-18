@@ -1,3 +1,13 @@
+/// The `warning: ` line each key grund did not act on earns (§FS-config.4.2).
+/// The engine answers which keys those are and prints none of them
+/// (§FS-distribution.3.1); this is the terminal's rendering of that answer, the
+/// frontend's like every other byte (§AR-bindings.3).
+fn print_config_warnings(config: &Config) {
+    for warning in config_warnings(config) {
+        eprintln!("warning: {warning}");
+    }
+}
+
 fn command_config(args: &[String]) -> ExitCode {
     let Some(action) = args.first().map(|arg| arg.as_str()) else {
         eprintln!("error: expected `config validate` or `config show`");
