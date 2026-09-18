@@ -9,7 +9,6 @@
 mod tests_shorthand_surfaces {
     use regex::Regex;
 
-    use super::tests_support::*;
     use super::*;
 
     // §AR-scanner.2.6: `render_id` reduces a partial `Id` by the same rule the

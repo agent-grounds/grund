@@ -2,7 +2,6 @@
 #[cfg(test)]
 mod tests_workspace {
     use super::*;
-    use super::tests_support::*;
 
     #[test]
     fn workspace_boundary_root_is_not_scanned_as_parent_content() {

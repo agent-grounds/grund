@@ -1,0 +1,524 @@
+//! Test module: kinds that declare no IDs (§FS-config.3.4.1) — the `citable`
+//! key, the rules a non-citable home is subject to instead of the declaration
+//! rules, and the two selectors that refuse one. The removal of `prefix`, the
+//! name this key carried before that rename (§FS-config.3.4.6), lives here too:
+//! it is the same change seen from the config file, and a reader chasing either
+//! one wants both.
+
+use std::path::{Path, PathBuf};
+
+use super::*;
+use crate::api::{IdOpts, IdProposalOutcome, propose_id};
+use crate::templates::{ConversationSurface, citation_directions_section};
+use crate::testing::{check_run, codes, only, test_root, write};
+use crate::writers::render_agents_append_block_at;
+
+/// A repo whose `skills/` is a non-citable home, plus the `FS` its rules
+/// point at. `[scan] include` deliberately does **not** name `skills` — the
+/// home is what puts it in scope (§FS-config.3.5).
+fn skills_repo(name: &str, citations: &str, skill_body: &str) -> PathBuf {
+    let root = test_root(name);
+    write(
+        &root.join("grund.toml"),
+        &format!(
+            "grund_config_version = 1\n\n\
+                 [[kinds]]\nkind = \"FS\"\nfolder = \"docs/specs\"\nindex = false\n\n\
+                 [[kinds]]\nkind = \"AR\"\nfolder = \"docs/architecture\"\nindex = false\n\n\
+                 [[kinds]]\nkind = \"skill\"\nfolder = \"skills\"\ncitable = false\n\
+                 title = \"Agent skills\"\n\n\
+                 [scan]\ninclude = [\"docs\"]\n\n{citations}"
+        ),
+    );
+    write(
+        &root.join("docs/specs/FS-001-login.md"),
+        "# FS-001-login: A user logs in\n\nBody.\n",
+    );
+    write(
+        &root.join("docs/architecture/AR-001-bus.md"),
+        "# AR-001-bus: The bus\n\nBody.\n",
+    );
+    write(&root.join("skills/review/SKILL.md"), skill_body);
+    root
+}
+
+/// §FS-config.3.5: a configured home is walked whether or not `include`
+/// names it — otherwise the citations in it would be *invisible* rather than
+/// dangling, which is silence where a finding belongs.
+#[test]
+fn a_kind_home_outside_include_is_still_walked() {
+    let run = check_run(
+        &skills_repo(
+            "a_kind_home_outside_include_is_still_walked",
+            "",
+            "# Review skill\n\nSee §FS-999-ghost.\n",
+        ),
+        false,
+    );
+    assert!(
+        codes(&run).contains(&"dangling".to_string()),
+        "the home's own citations are checked: {:?}",
+        codes(&run)
+    );
+}
+
+/// §FS-check.3.7: the home admits no declaration, and the finding names the
+/// place rather than a kind the author could have written instead.
+#[test]
+fn a_declaration_in_a_non_citable_home_is_misplaced() {
+    let run = check_run(
+        &skills_repo(
+            "a_declaration_in_a_non_citable_home_is_misplaced",
+            "",
+            "# FS-002-review: Review\n\nSee §FS-001-login.\n",
+        ),
+        false,
+    );
+    assert_eq!(
+        only(&run, "misplaced-declaration").message,
+        "FS-002-review must not be declared in skills/ (not a citable home)",
+    );
+}
+
+/// §FS-check.3.11: the obligation unit is a *file* in the home — Markdown
+/// included, which is where `code`'s per-file rule stops — and the finding
+/// names the home, because the unit has no ID to print.
+#[test]
+fn an_obligation_fires_per_file_on_markdown_in_the_home() {
+    let run = check_run(
+        &skills_repo(
+            "an_obligation_fires_per_file_on_markdown_in_the_home",
+            "[citations]\n[citations.skill]\nmust = [\"FS\"]\n",
+            "# Review skill\n\nSee §AR-001-bus.\n",
+        ),
+        false,
+    );
+    let finding = only(&run, "missing-citation");
+    assert_eq!(finding.message, "skills/ must cite FS (citation direction)");
+    assert!(
+        finding
+            .path
+            .as_ref()
+            .is_some_and(|path| path.ends_with("skills/review/SKILL.md")),
+        "anchored at the file that is the unit: {:?}",
+        finding.path
+    );
+}
+
+/// §FS-check.3.11: the same rule is satisfied by one citation in the file —
+/// there is no declaration to put it in.
+#[test]
+fn an_obligation_is_satisfied_by_a_citation_anywhere_in_the_file() {
+    let run = check_run(
+        &skills_repo(
+            "an_obligation_is_satisfied_by_a_citation_anywhere_in_the_file",
+            "[citations]\n[citations.skill]\nmust = [\"FS\"]\n",
+            "# Review skill\n\nSee §FS-001-login.\n",
+        ),
+        false,
+    );
+    assert!(
+        !codes(&run).contains(&"missing-citation".to_string()),
+        "a cited FS satisfies it: {:?}",
+        codes(&run)
+    );
+}
+
+/// §FS-check.3.12: a prohibition names the place too.
+#[test]
+fn a_prohibition_names_the_home() {
+    let root = skills_repo(
+        "a_prohibition_names_the_home",
+        "[citations]\n[citations.skill]\nmust-not = [\"FS\"]\n",
+        "# Review skill\n\nSee §FS-001-login.\n",
+    );
+    let run = check_run(&root, false);
+    assert_eq!(
+        only(&run, "forbidden-citation").message,
+        "skills/ must not cite FS (citation direction)",
+    );
+}
+
+/// §FS-check.3.6: `require_grounding` reaches Markdown inside a non-citable
+/// home, and only there — the exemption is about documents, and this home is
+/// one the maintainer declared matters.
+#[test]
+fn require_grounding_reaches_markdown_in_a_non_citable_home() {
+    let root = skills_repo(
+        "require_grounding_reaches_markdown_in_a_non_citable_home",
+        "",
+        "# Review skill\n\nNo citation at all.\n",
+    );
+    let config_path = root.join("grund.toml");
+    let config = std::fs::read_to_string(&config_path).expect("read config");
+    write(
+        &config_path,
+        &config.replace(
+            "grund_config_version = 1\n",
+            "grund_config_version = 1\n\n[reference]\nrequire_grounding = true\n",
+        ),
+    );
+    let run = check_run(&root, false);
+    let finding = only(&run, "ungrounded");
+    assert_eq!(
+        finding.message,
+        "ungrounded file in kind home skills/: no § citation to a declared ID",
+    );
+    assert!(
+        !run.report.errors.iter().any(|diagnostic| {
+            diagnostic.code == "ungrounded"
+                && diagnostic
+                    .path
+                    .as_ref()
+                    .is_some_and(|path| path.ends_with("docs/specs/FS-001-login.md"))
+        }),
+        "Markdown outside such a home keeps its exemption: {:?}",
+        codes(&run)
+    );
+}
+
+/// §FS-config.3.4.1 / §FS-init.2.3.4.4: the generated block names the kind by
+/// its place, and leaves it out of the ID vocabulary.
+#[test]
+fn the_generated_block_names_a_non_citable_kind_by_place() {
+    let root = skills_repo(
+        "the_generated_block_names_a_non_citable_kind_by_place",
+        "[citations]\n[citations.skill]\nmust = [\"FS\"]\n",
+        "# Review skill\n\nSee §FS-001-login.\n",
+    );
+    let config = load_config(&root).expect("load config");
+    let block =
+        render_agents_append_block_at("demo", &config, &root, true, ConversationSurface::Plain);
+    assert!(
+        block.contains("- [skills/](skills): Agent skills"),
+        "map row by place: {block}"
+    );
+    assert!(
+        block.contains("- Each file in **skills/** must cite FS."),
+        "directions row by place, with the unit it is checked per: {block}"
+    );
+    assert!(
+        block.contains("KIND ∈ {FS, AR}"),
+        "the vocabulary line lists citable kinds only: {block}"
+    );
+}
+
+/// §FS-config.3.4.5: prefix-freedom is about tokenization, so it stops where
+/// tokenization does. A name that never appears in an ID has no prefix.
+#[test]
+fn a_non_citable_name_may_prefix_a_citable_one() {
+    let root = test_root("a_non_citable_name_may_prefix_a_citable_one");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n\
+             [[kinds]]\nkind = \"SKI\"\nfolder = \"docs/ski\"\nindex = false\n\n\
+             [[kinds]]\nkind = \"SKILL\"\nfolder = \"skills\"\ncitable = false\n",
+    );
+    assert!(
+        load_config(&root).is_ok(),
+        "a non-citable name never tokenizes, so it collides with nothing"
+    );
+}
+
+/// §FS-config.3.4.5: two citable names still collide, and every name is still
+/// unique.
+#[test]
+fn citable_names_still_collide_and_names_are_unique() {
+    let root = test_root("citable_names_still_collide_and_names_are_unique");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n\
+             [[kinds]]\nkind = \"DA\"\nfolder = \"docs/da\"\n\n\
+             [[kinds]]\nkind = \"DAT\"\nfolder = \"docs/dat\"\n",
+    );
+    assert!(
+        config_error(&root).contains("collide"),
+        "two citable prefixes are still ambiguous"
+    );
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n\
+             [[kinds]]\nkind = \"FS\"\nfolder = \"docs/a\"\n\n\
+             [[kinds]]\nkind = \"FS\"\nfolder = \"docs/b\"\n",
+    );
+    assert!(
+        config_error(&root).contains("kind `FS` is declared twice"),
+        "a name is the handle [citations.*] keys on, so it answers for one row"
+    );
+}
+
+/// §FS-config.3.4.1: the keys a non-citable kind may not combine — an index
+/// lists declarations it will never have, and a place with no home is `code`.
+#[test]
+fn a_non_citable_kind_needs_a_home_and_takes_no_index() {
+    let root = test_root("a_non_citable_kind_needs_a_home_and_takes_no_index");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n\
+             [[kinds]]\nkind = \"skill\"\nfolder = \"skills\"\ncitable = false\nindex = \"README.md\"\n",
+    );
+    assert!(
+        config_error(&root).contains("a non-citable kind declares nothing to index"),
+        "the key is a statement about a set that can never be non-empty"
+    );
+}
+
+/// §FS-config.3.9.5: a non-citable kind cites and is never cited, and the
+/// message says which of the two mistakes it is.
+#[test]
+fn a_non_citable_kind_is_not_a_citation_target() {
+    let root = test_root("a_non_citable_kind_is_not_a_citation_target");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n\
+             [[kinds]]\nkind = \"FS\"\nfolder = \"docs/specs\"\nindex = false\n\n\
+             [[kinds]]\nkind = \"skill\"\nfolder = \"skills\"\ncitable = false\n\n\
+             [citations]\n[citations.FS]\nmust = [\"skill\"]\n",
+    );
+    assert!(
+        config_error(&root).contains("names a non-citable target kind `skill`"),
+        "a configured kind with no IDs is not an unknown kind"
+    );
+}
+
+/// The one line §FS-config.3.4.6 fences. Byte-stable under §FS-errors.3, so
+/// the goldens and these assertions copy it rather than build it.
+const PREFIX_REMOVED: &str = "[[kinds]] `prefix` was removed in grund 0.13.0 — rename it to `kind`";
+
+/// §FS-config.3.4.6: the key stopped loading, and the refusal names `kind`
+/// at the line `prefix` is written on rather than dropping the row's name.
+#[test]
+fn the_removed_prefix_key_is_refused_at_its_own_line() {
+    let root = test_root("the_removed_prefix_key_is_refused_at_its_own_line");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n\
+             [[kinds]]\nprefix = \"FS\"\nfolder = \"docs/specs\"\nindex = false\n",
+    );
+    assert_eq!(
+        config_error(&root),
+        format!("grund.toml:4: {PREFIX_REMOVED}"),
+        "the `prefix` line, not the [[kinds]] header above it"
+    );
+}
+
+/// §FS-config.3.4.6: a row that sets both earns the same error at the same
+/// line, whichever order it spells them in — the anchor follows `prefix`,
+/// not whichever key the parser reached second.
+#[test]
+fn the_removed_prefix_key_is_refused_beside_kind_in_either_order() {
+    for (name, body, line) in [
+        (
+            "the_removed_prefix_key_after_kind",
+            "grund_config_version = 1\n\n[[kinds]]\nkind = \"FS\"\nprefix = \"FS\"\nfolder = \"docs\"\n",
+            5,
+        ),
+        (
+            "the_removed_prefix_key_before_kind",
+            "grund_config_version = 1\n\n[[kinds]]\nprefix = \"FS\"\nkind = \"FS\"\nfolder = \"docs\"\n",
+            4,
+        ),
+    ] {
+        let root = test_root(name);
+        write(&root.join("grund.toml"), body);
+        assert_eq!(
+            config_error(&root),
+            format!("grund.toml:{line}: {PREFIX_REMOVED}"),
+            "{name}: anchored at the `prefix` line"
+        );
+    }
+}
+
+/// §FS-config.3.4: with one of the two spellings gone, the only name a row
+/// can repeat is `kind`, and repeating it is still refused at the second
+/// line — the branch the removal rewrote, and the last thing left in it.
+#[test]
+fn a_kinds_entry_that_sets_kind_twice_is_refused_at_the_second_line() {
+    let root = test_root("a_kinds_entry_that_sets_kind_twice_is_refused_at_the_second_line");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n\
+             [[kinds]]\nkind = \"FS\"\nkind = \"AR\"\nfolder = \"docs\"\n",
+    );
+    assert_eq!(
+        config_error(&root),
+        "grund.toml:5: [[kinds]] sets `kind` twice",
+        "the repeat, not the first spelling above it"
+    );
+}
+
+/// A repo whose complement kind is named, rather than left as `code`.
+fn named_homeless_repo(name: &str, citations: &str) -> PathBuf {
+    let root = test_root(name);
+    write(
+        &root.join("grund.toml"),
+        &format!(
+            "grund_config_version = 1\n\n\
+                 [[kinds]]\nkind = \"FS\"\nfolder = \"docs/specs\"\nindex = false\n\n\
+                 [[kinds]]\nkind = \"src\"\ncitable = false\n\
+                 title = \"Deployment modules and scripts\"\n\n\
+                 [scan]\ninclude = [\"docs\", \"modules\"]\n\n{citations}"
+        ),
+    );
+    write(
+        &root.join("docs/specs/FS-001-login.md"),
+        "# FS-001-login: A user logs in\n\nBody.\n",
+    );
+    write(
+        &root.join("modules/login.py"),
+        "# Realizes §FS-001-login.\n",
+    );
+    root
+}
+
+/// §FS-config.3.9.2: `code` is the *default* name of the homeless kind, not a
+/// fixed one — the complement of every home is a category, and which word
+/// fits it is the project's to decide.
+#[test]
+fn a_project_may_name_the_homeless_kind() {
+    let root = named_homeless_repo(
+        "a_project_may_name_the_homeless_kind",
+        "[citations]\n[citations.src]\nmust-not = [\"FS\"]\n",
+    );
+    assert_eq!(
+        load_config(&root).expect("load config").homeless_kind(),
+        "src"
+    );
+    // The rule reaches the module, which is the whole claim: a site outside
+    // every home resolved to the name the project chose, and the finding
+    // says it back.
+    assert_eq!(
+        only(&check_run(&root, false), "forbidden-citation").message,
+        "src must not cite FS (citation direction)",
+    );
+}
+
+/// §FS-config.3.9.2: the named kind takes the rules, and `code` is then a
+/// rule about nothing — so it is refused rather than silently inert.
+#[test]
+fn the_named_homeless_kind_takes_the_rules_and_code_becomes_unknown() {
+    let root = named_homeless_repo(
+        "the_named_homeless_kind_takes_the_rules_and_code_becomes_unknown",
+        "[citations]\n[citations.src]\nmust = [\"FS\"]\n",
+    );
+    let run = check_run(&root, false);
+    assert!(
+        !codes(&run).contains(&"missing-citation".to_string()),
+        "the module cites its FS, so the obligation is met under the new name: {:?}",
+        codes(&run)
+    );
+
+    let config_path = root.join("grund.toml");
+    let text = std::fs::read_to_string(&config_path).expect("read config");
+    write(
+        &config_path,
+        &text.replace("[citations.src]", "[citations.code]"),
+    );
+    assert!(
+        config_error(&root).contains("names an unknown kind `code`"),
+        "a config whose complement is `src` has no `code`"
+    );
+}
+
+/// §FS-init.2.3.4.4 / §FS-init.2.3.5: no map row — it is the one kind that is
+/// not a place — and a directions row last, carrying its `title` as the scope
+/// where the project wrote one.
+#[test]
+fn the_homeless_kind_renders_as_directions_only() {
+    let root = named_homeless_repo(
+        "the_homeless_kind_renders_as_directions_only",
+        "[citations]\n[citations.FS]\nshould = [\"FS\"]\n\n[citations.src]\nmust = [\"FS\"]\n",
+    );
+    let config = load_config(&root).expect("load config");
+    let block =
+        render_agents_append_block_at("demo", &config, &root, true, ConversationSurface::Plain);
+    assert!(
+        !block.contains("- [src]") && !block.contains("- `src`"),
+        "the complement of every home is not a place to link: {block}"
+    );
+    assert!(
+        block.contains(
+            "- Each source file outside the Project map (**src**: Deployment modules and scripts) that cites anything must cite FS."
+        ),
+        "its title says what it covers: {block}"
+    );
+    let directions = citation_directions_section(&config);
+    let src = directions.find("(**src**").expect("the src row");
+    let fs = directions
+        .find("Each **FS** declaration")
+        .expect("the FS row");
+    assert!(fs < src, "the homeless kind closes the list: {directions}");
+}
+
+/// §FS-config.3.9.2: a complement is one place, and `code` is a name a row
+/// may take only by *being* that complement.
+#[test]
+fn the_homeless_kind_is_one_row_and_code_is_reserved_to_it() {
+    let root = test_root("the_homeless_kind_is_one_row_and_code_is_reserved_to_it");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n\
+             [[kinds]]\nkind = \"src\"\ncitable = false\n\n\
+             [[kinds]]\nkind = \"other\"\ncitable = false\n",
+    );
+    assert!(
+        config_error(&root).contains("both declare the homeless kind"),
+        "two complements leave the fallback with no single answer"
+    );
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n\
+             [[kinds]]\nkind = \"code\"\nfolder = \"src\"\ncitable = false\n",
+    );
+    assert!(
+        config_error(&root).contains("names the homeless kind"),
+        "a homed row wearing `code` would collide with the fallback"
+    );
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n\
+             [[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n\n\
+             [[kinds]]\nkind = \"code\"\ncitable = false\ntitle = \"Implementation\"\n",
+    );
+    let config = load_config(&root).expect("declaring `code` itself is how it is retitled");
+    assert_eq!(config.homeless_kind(), "code");
+}
+
+/// The message a config this repo cannot load fails with. `Config` carries no
+/// `Debug`, so the error is unwrapped by matching rather than by `expect_err`.
+fn config_error(root: &Path) -> String {
+    match load_config(root) {
+        Ok(_) => panic!("expected the config to be rejected"),
+        Err(error) => format!("{error:#}"),
+    }
+}
+
+/// §FS-list.1 / §FS-id.1: both selectors take a citable kind, and a
+/// configured non-citable one is refused with the reason rather than as a
+/// typo — it would select nothing, every time.
+#[test]
+fn the_kind_selectors_refuse_a_non_citable_kind() {
+    let root = skills_repo(
+        "the_kind_selectors_refuse_a_non_citable_kind",
+        "",
+        "# Review skill\n\nSee §FS-001-login.\n",
+    );
+    let outcome = propose_id(
+        "skill",
+        "Review",
+        IdOpts {
+            path: root.clone(),
+            ..IdOpts::default()
+        },
+    )
+    .expect("propose");
+    match outcome {
+        IdProposalOutcome::UnknownKind { headline, known } => {
+            assert_eq!(
+                headline,
+                "kind `skill` declares no IDs — skills/ is not a citable home"
+            );
+            assert_eq!(known, vec!["FS", "AR"], "the citable kinds, and only those");
+        }
+        other => panic!("expected a refusal, got {other:?}"),
+    }
+}

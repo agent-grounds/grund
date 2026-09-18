@@ -3,7 +3,6 @@
 /// block teaches (§FS-inline-citation-style.4.4, §FS-inline-citation-style.5)
 #[cfg(test)]
 mod tests_inline_note_layout_check {
-    use super::tests_support::*;
     use super::*;
 
     fn layout_fixture(name: &str) -> PathBuf {

@@ -81,3 +81,16 @@ pub(crate) use workspace_block::{
 // `[fmt] exclude` validator, which the suppression cases drive directly.
 #[cfg(test)]
 pub(crate) use fmt_block::validate_fmt_exclude;
+
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
+#[cfg(test)]
+mod tests_discovery;
+#[cfg(test)]
+mod tests_grounding;
+#[cfg(test)]
+mod tests_id_grammar;
+#[cfg(test)]
+mod tests_kind_index;
+#[cfg(test)]
+mod tests_non_citable_kinds;

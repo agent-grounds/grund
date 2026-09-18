@@ -3,7 +3,6 @@
 #[cfg(test)]
 mod tests_lsp_hover {
     use super::*;
-    use super::tests_support::*;
 
     /// A snapshot of `root`, with nothing open in the editor.
     fn snapshot_of(root: &Path) -> LspSnapshot {

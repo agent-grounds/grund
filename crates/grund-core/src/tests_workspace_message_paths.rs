@@ -7,7 +7,6 @@
 #[cfg(test)]
 mod tests_workspace_message_paths {
     use super::*;
-    use super::tests_support::*;
 
     fn alpha() -> Id {
         Id {

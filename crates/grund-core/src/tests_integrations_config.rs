@@ -2,7 +2,6 @@
 #[cfg(test)]
 mod tests_integrations_config {
     use super::*;
-    use super::tests_support::*;
 
     // §FS-integrations.4.4: `[reference.agents.<agent>]` is a partial of the
     // machine-wide keys — a key present under an agent replaces the base for

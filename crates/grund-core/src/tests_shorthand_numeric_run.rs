@@ -10,7 +10,6 @@
 /// have to fail together and be read together.
 #[cfg(test)]
 mod tests_shorthand_numeric_run {
-    use super::tests_support::*;
     use super::*;
 
     fn check_tree(config: &Config, root: &Path) -> (Findings, CheckReport) {

@@ -2,7 +2,6 @@
 /// deprecated compatibility adapter (§FS-fmt.3).
 #[cfg(all(test, unix))]
 mod tests_fmt_workspace {
-    use super::tests_support::*;
     use super::*;
 
     const ROOT_DOCUMENT: &str =

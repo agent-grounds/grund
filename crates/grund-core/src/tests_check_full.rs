@@ -6,8 +6,8 @@
 #[cfg(test)]
 mod tests_check_full {
     // Every fixture and shape helper these cases need is shared with
-    // `tests_check_full_scope.rs` and lives in `tests_support`.
-    use super::tests_support::*;
+    // `tests_check_full_scope.rs` and lives in `crate::testing`.
+    use super::*;
 
     #[test]
     fn full_scope_reports_a_dangling_citation_outside_include() {

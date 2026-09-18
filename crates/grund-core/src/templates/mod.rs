@@ -50,10 +50,15 @@ pub(crate) use assets::{
 pub(crate) use citation_directions::citation_directions_section;
 pub(crate) use clickable_citations::{ConversationSurface, clickable_citations_section};
 
-// What only the crate's own test modules read (§AR-core-module-layout.1): the
-// citation-level legend, which the directions-render cases assert stands alone,
-// and the inline-citation-style sentence the layout cases read per key.
+// What another component's tests read (§AR-core-module-layout.1): the
+// inline-citation-style sentence the checker's layout cases read per key. The
+// citation-level legend went beside the cases that assert it stands alone.
 #[cfg(test)]
 pub(crate) use agents_block::inline_citation_style_sentence;
+
+// The cases that pin this component, one module per behaviour area
+// (§AR-core-module-layout.1).
 #[cfg(test)]
-pub(crate) use citation_directions::CITATION_LEVEL_LEGEND;
+mod tests_citation_directions;
+#[cfg(test)]
+mod tests_clickable_citations;

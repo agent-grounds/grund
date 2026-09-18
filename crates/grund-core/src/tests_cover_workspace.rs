@@ -7,7 +7,6 @@
 #[cfg(test)]
 mod tests_cover_workspace {
     use super::*;
-    use super::tests_support::*;
 
     const ROOT_CONFIG: &str = "grund_config_version = 1\n\
         project_name = \"root\"\n\n\

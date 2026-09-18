@@ -6,7 +6,6 @@
 #[cfg(test)]
 mod tests_kind_index {
     use super::*;
-    use super::tests_support::*;
 
     /// §FS-check.3.18: the folder has an index and the index does not name the
     /// declaration. The finding is an **error**, anchored at the declaration's own

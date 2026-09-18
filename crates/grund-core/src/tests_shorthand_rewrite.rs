@@ -8,7 +8,6 @@
 /// that damages a repository.
 #[cfg(test)]
 mod tests_shorthand_rewrite {
-    use super::tests_support::*;
     use super::*;
 
     // §FS-fmt.2.4: `fmt` expands what resolves and leaves what does not, and the

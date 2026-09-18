@@ -4,7 +4,6 @@
 /// cuts, and the obligations that follow the same unit (§FS-check.3.11).
 #[cfg(test)]
 mod tests_grounding_per_place {
-    use super::tests_support::*;
     use super::*;
 
     /// A repo with three places: an `FS` home, a non-citable `skills/` home, and

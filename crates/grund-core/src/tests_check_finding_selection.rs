@@ -3,7 +3,6 @@
 #[cfg(test)]
 mod tests_check_finding_selection {
     use super::*;
-    use super::tests_support::*;
 
     /// `main_entry()` dispatches `check` through this compatibility parser, so
     /// both selector syntaxes must match the dedicated frontend (§FS-cli.3).

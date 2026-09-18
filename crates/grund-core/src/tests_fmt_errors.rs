@@ -1,7 +1,6 @@
 /// Test module: strict formatter scan errors across the public API (§FS-fmt.3).
 #[cfg(all(test, unix))]
 mod tests_fmt_errors {
-    use super::tests_support::*;
     use super::*;
 
     /// A whole-declaration-set rewrite keeps its fatal scan result structured
