@@ -3,9 +3,9 @@
 //! exactly as a run without the flag (§FS-check.1.3, §DF-check-full-scope).
 //! What the wider walk then *reports* out there is in `tests_check_full.rs`.
 
-use crate::testing::{
-    check_run, drifted_include_repo, located_diagnostics, symlink, test_root, write,
-};
+#[cfg(unix)]
+use crate::testing::symlink;
+use crate::testing::{check_run, drifted_include_repo, located_diagnostics, test_root, write};
 
 // Only the shared fixtures are read here: every case drives `check` through
 // `crate::testing::check_run`, so this module names none of the api's own items.

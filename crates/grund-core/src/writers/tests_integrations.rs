@@ -7,6 +7,7 @@ use super::integrations_user_config::{conversation_preference, conversation_targ
 use super::*;
 use crate::compat::{SETUP_GUIDE_URL, client_descriptor_json, parse_integrations_args};
 use crate::grammar::find_managed_block;
+#[cfg(unix)]
 use crate::testing::{OutputRetryingBusy, test_root, write};
 
 // §FS-integrations.4.1: managed dotfile block splice is idempotent.

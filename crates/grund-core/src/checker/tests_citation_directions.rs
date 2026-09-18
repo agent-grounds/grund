@@ -3,8 +3,12 @@
 use super::*;
 use crate::config::{Config, NamespaceMatch, load_config};
 use crate::model::Id;
-use crate::scanner::{companion_agent_entrypoints, scan_tree};
-use crate::testing::{check_run, current_block, test_root, write};
+#[cfg(unix)]
+use crate::scanner::companion_agent_entrypoints;
+use crate::scanner::scan_tree;
+#[cfg(unix)]
+use crate::testing::current_block;
+use crate::testing::{check_run, test_root, write};
 
 // §AR-scanner.2.4: a Markdown declaration's body runs until the next
 // same-or-higher heading; an enclosed citation is classified by the

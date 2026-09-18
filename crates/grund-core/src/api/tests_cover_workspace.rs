@@ -12,7 +12,9 @@ use crate::compat::{
     compat_cover_citation_json, compat_cover_project_field, parse_compat_cover_args,
 };
 use crate::model::json_escape;
-use crate::testing::{symlink, test_root, write};
+#[cfg(unix)]
+use crate::testing::symlink;
+use crate::testing::{test_root, write};
 
 const ROOT_CONFIG: &str = "grund_config_version = 1\n\
     project_name = \"root\"\n\n\

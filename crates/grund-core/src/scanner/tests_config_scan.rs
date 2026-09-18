@@ -1,5 +1,6 @@
 //! Test module: config parsing, kind homes, and the parallel scan path (§FS-config, §FS-check)
 
+#[cfg(unix)]
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -9,7 +10,9 @@ use super::tree::scan_tree_with_workspace_threshold;
 use super::*;
 use crate::checker::{check_findings, dangling_message};
 use crate::config::{Config, load_config_at_with_report_base};
-use crate::model::{Declaration, DeclarationSource, Findings, Id, TextOverlays, format_path};
+#[cfg(unix)]
+use crate::model::{Declaration, DeclarationSource, Findings};
+use crate::model::{Id, TextOverlays, format_path};
 use crate::testing::{
     findings_signature, legacy_fs_folder_config, scan_errors_signature, test_root, write,
 };
