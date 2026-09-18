@@ -1,7 +1,7 @@
 """§FS-distribution.4.2 — the release gate reads the release each message names
 out of the tree's own message text and refuses a version that contradicts one.
 The synthetic trees below pin the two directions and the closed clause
-vocabulary; the last two run the gate against this repository, because a gate
+vocabulary; the last three run the gate against this repository, because a gate
 wired to text nobody writes any more would pass everything in silence."""
 
 import importlib.util
@@ -42,6 +42,20 @@ class ClauseReadingTests(unittest.TestCase):
         self.assertEqual((claim.release, claim.direction), ("0.15.0", ramps.PENDING))
         self.assertTrue(ramps.report([claim], "0.15.0"))
 
+    def test_a_pending_removal_names_its_release(self):
+        (claim,) = claims('note = "is removed in 0.15.0; use the `grund` CLI package"')
+        self.assertEqual((claim.release, claim.direction), ("0.15.0", ramps.PENDING))
+
+    def test_a_removals_two_tenses_read_as_opposite_directions(self):
+        """The same removal, promised and made: one clause each, so a deprecation
+        that names its release is refused above it and the message that replaces
+        it is refused below it."""
+        found = claims("is removed in 0.15.0\nwas removed in 0.13.0")
+        self.assertEqual(
+            [(c.direction, c.release) for c in found],
+            [(ramps.PENDING, "0.15.0"), (ramps.LANDED, "0.13.0")],
+        )
+
     def test_grund_is_optional_and_bold_is_tolerated(self):
         for text in ("stopped loading in 0.13.0", "stopped loading in grund **0.13.0**"):
             (claim,) = claims(text)
@@ -61,6 +75,7 @@ class ClauseReadingTests(unittest.TestCase):
 class VerdictTests(unittest.TestCase):
     LANDED = '"`prefix` was removed in grund 0.13.0"'
     PENDING = '"an index entry becomes an error in grund 0.13.0"'
+    REMOVAL = '"is removed in 0.13.0; use the `grund` CLI package"'
 
     def test_a_landed_change_may_not_ship_below_the_release_it_names(self):
         report = refused(self.LANDED, "0.12.4")
@@ -80,6 +95,13 @@ class VerdictTests(unittest.TestCase):
 
     def test_a_pending_promise_ships_below_the_release_it_names(self):
         self.assertEqual(refused(self.PENDING, "0.12.4"), [])
+
+    def test_a_named_removal_may_not_ship_at_the_release_it_names(self):
+        report = refused(self.REMOVAL, "0.13.0")
+        self.assertTrue(any("is removed in 0.13.0" in line for line in report))
+
+    def test_a_named_removal_ships_below_the_release_it_names(self):
+        self.assertEqual(refused(self.REMOVAL, "0.12.4"), [])
 
     def test_a_tree_that_landed_and_still_promises_one_release_can_cut_nothing(self):
         report = refused(f"{self.LANDED}\n{self.PENDING}", "0.12.4")
@@ -107,6 +129,15 @@ class ThisRepositoryTests(unittest.TestCase):
         homes = {claim.path.split("/")[0] for claim in self.claims}
         self.assertIn("crates", homes)
         self.assertIn("tests", homes)
+
+    def test_the_deprecation_this_tree_promises_refuses_a_0_15_0_release(self):
+        """§FS-distribution.3.1: `main_entry()`'s note names 0.15.0, so the guard
+        reads the promise rather than a person remembering it."""
+        report = ramps.report(self.claims, "0.15.0")
+        self.assertTrue(
+            any("compat/cli.rs" in line and "is removed in 0.15.0" in line for line in report),
+            "the deprecation note must be what refuses a 0.15.0 release of this tree",
+        )
 
     def test_the_removal_this_tree_landed_holds_the_floor_at_0_13_0(self):
         floor, _ = ramps.release_window(self.claims)

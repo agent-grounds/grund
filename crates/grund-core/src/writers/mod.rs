@@ -20,14 +20,17 @@
 //! artifacts (the closed client set, detection, the agent instruction surfaces,
 //! the installs and their byte-current probes, and the user configuration).
 //!
-//! Two halves of this component are `compat/init.rs` and
-//! `compat/integrations*.rs`: the deprecated `main_entry()` adapters, which
-//! render inside the engine (§AR-system.2.9) and nothing here may import. The
-//! line is the one `tests/integration/test_engine_boundary.py` measures — a
-//! function that writes to a stream or returns an `ExitCode` is a renderer and
-//! went there, so no file under this directory prints. `run_integrations` is the
-//! one exception the published CLI still forces: it is `pub` and imported by
-//! `grund-cli`, so `lib.rs` re-exports it until the CLI carries its own copy.
+//! One half of this component is `compat/init.rs`: the deprecated `main_entry()`
+//! adapter for the scaffold, which renders inside the engine (§AR-system.2.9)
+//! and nothing here may import. The line is the one
+//! `tests/integration/test_engine_boundary.py` measures — a function that writes
+//! to a stream or returns an `ExitCode` is a renderer and went there, so no file
+//! under this directory prints. The `integrations` command was the second half
+//! and is not here any more: its argv, its bytes and its exit codes are
+//! `crates/grund-cli/src/cli_integrations*.rs`, the frontend that owns rendering
+//! (§FS-integrations.1, §AR-bindings.3), and what it reads of this component is
+//! the `pub` block below rather than a renderer `lib.rs` re-exports
+//! (§DA-engine-renders-nothing).
 //!
 //! What the component does **not** hold any more. Four lexical items went down
 //! into `grammar/` (§AR-system.2.1), because a component below was reading each
@@ -105,26 +108,30 @@ pub(crate) use fmt_rewrite::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};
 pub(crate) use fmt_workspace::fmt_workspace_projects;
 pub(crate) use id::{format_id, slugify_title};
 
-// What the deprecated `compat/init.rs` and `compat/integrations*.rs` renderers read,
-// through the crate root because nothing here may import them
-// (§AR-system.2.9). This block is what the compat task retires.
-pub(crate) use integrations_agents::{
-    ConversationRendering, ConversationTarget, GLOBAL_AGENT_INSTRUCTION_TARGETS,
-    agent_override_table, known_agent, known_agents_list,
+// What `grund integrations` is assembled from: the closed client set with each
+// client's artifact, what the environment detects, the agent instruction
+// surfaces, the splices a `--write` carries out, and the user configuration.
+
+// The command's argv, its bytes and its exit codes are the CLI's
+// (§FS-integrations.1, §AR-bindings.3), so what it reads here crosses a crate
+// boundary and is public; each name returns data (§FS-distribution.3.1).
+pub use integrations_agents::{
+    ConversationRendering, ConversationTarget, GLOBAL_AGENT_INSTRUCTION_TARGETS, GlobalAgentTarget,
+    LinkSupport, agent_override_table, known_agent, known_agents_list,
 };
-pub(crate) use integrations_clients::{
+pub use integrations_clients::{
     GRUND_OPEN_RESOLVER, InstallKind, IntegrationClient, RESOLVER_TARGET, VSCODE_EXTENSION_JS,
     VSCODE_PACKAGE_JSON, expand_target, known_clients_line,
 };
-pub(crate) use integrations_detect::detect_clients;
-pub(crate) use integrations_install::{
+pub use integrations_detect::detect_clients;
+pub use integrations_install::{
     BlockOutcome, WEZTERM_APPLY_CALL, block_outcome_verb, install_agent_guidance_block,
     install_managed_block, integration_is_current, merge_outcomes, needs_wezterm_wiring,
     vscode_integration_is_current, write_resolver_script,
 };
-pub(crate) use integrations_user_config::{
-    USER_CONFIG_TARGET, install_reference_key, read_optional_text, scan_user_config,
-    user_grund_config_path,
+pub use integrations_user_config::{
+    USER_CONFIG_TARGET, UserConfigScan, install_reference_key, read_optional_text,
+    scan_user_config, user_grund_config_path,
 };
 
 // What another component's tests read (§AR-core-module-layout.1): the rewrite

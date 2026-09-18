@@ -5,7 +5,6 @@ use super::init_notes::shadowed_claude_entrypoint_note;
 use super::integrations_agents::LinkSupport;
 use super::integrations_user_config::{conversation_preference, conversation_target_preference};
 use super::*;
-use crate::compat::{SETUP_GUIDE_URL, client_descriptor_json, parse_integrations_args};
 use crate::grammar::find_managed_block;
 #[cfg(unix)]
 use crate::testing::{OutputRetryingBusy, test_root, write};
@@ -192,31 +191,6 @@ fn codium_installs_into_its_own_extensions_root() {
     assert!(IntegrationClient::Codium.snippet().is_none());
 }
 
-/// §FS-integrations.3.4: iTerm2 keeps its rules in a binary plist, so there is
-/// nothing to splice and nothing to read back. It must never claim installed —
-/// a guess there is worse than reporting nothing — and the detection plan has
-/// to say *why*, so a caller can tell "not installed" from "not knowable".
-#[test]
-fn iterm2_is_a_manual_client_that_never_claims_installed() {
-    assert!(matches!(
-        IntegrationClient::Iterm2.install_kind(),
-        InstallKind::Manual
-    ));
-    assert!(!integration_is_current(IntegrationClient::Iterm2));
-    let descriptor = client_descriptor_json(IntegrationClient::Iterm2);
-    assert!(descriptor.contains("\"install_kind\":\"manual\""));
-    // It still uses the shared resolver, so it counts as a terminal client
-    // and its printed artifact carries grund-open.
-    assert!(IntegrationClient::Iterm2.is_terminal());
-    // The rule it prints must carry the same matcher the other clients use,
-    // or a citation clickable in kitty would be inert in iTerm2.
-    let snippet = IntegrationClient::Iterm2
-        .snippet()
-        .expect("iterm2 artifact");
-    assert!(snippet.contains("[A-Z][A-Z0-9]*-[a-z0-9][a-z0-9-]*"));
-    assert!(snippet.contains("grund-open \\0"));
-}
-
 /// §FS-integrations.4.1: the markers are comments *in the host file's
 /// language*. `#` is a comment in kitty.conf and .tmux.conf but the length
 /// operator in Lua, so a `#` marker in wezterm.lua is a syntax error that
@@ -320,70 +294,6 @@ fn wezterm_wiring_note_reads_only_outside_the_block() {
         IntegrationClient::Iterm2,
     ] {
         assert!(!needs_wezterm_wiring(client, ""));
-    }
-}
-
-// §FS-integrations.2: detection closes on the preview line and the setup
-// guide, in both the detected and the nothing-detected form — the guide
-// carries the prerequisites and manual steps `--write` cannot perform.
-#[test]
-fn detection_names_the_setup_guide() {
-    assert!(SETUP_GUIDE_URL.starts_with("https://"));
-    assert!(SETUP_GUIDE_URL.ends_with("docs/user-facing/clickable-citations.md"));
-}
-
-// §FS-integrations.1 / §FS-integrations.4.3: an explicit conversation
-// preference is a complete clientless write target.
-#[test]
-fn integrations_accepts_preference_only_write() {
-    let args = ["--write", "--conversation", "link"]
-        .into_iter()
-        .map(str::to_string)
-        .collect::<Vec<_>>();
-    let invocation = parse_integrations_args(&args).expect("parse preference-only write");
-    assert!(invocation.client.is_none());
-    assert!(invocation.write);
-    assert_eq!(invocation.conversation, Some(ConversationRendering::Link));
-}
-
-// §FS-integrations.1: `--conversation-target` alone is also a complete
-// clientless write target, and an unknown value is a CLI error listing the
-// accepted set — a value the caller typed, not a stale line in a file.
-#[test]
-fn integrations_accepts_target_only_write() {
-    let args = ["--write", "--conversation-target", "vscodium"]
-        .into_iter()
-        .map(str::to_string)
-        .collect::<Vec<_>>();
-    let invocation = parse_integrations_args(&args).expect("parse target-only write");
-    assert!(invocation.client.is_none());
-    assert!(invocation.write);
-    assert_eq!(invocation.conversation, None);
-    assert_eq!(
-        invocation.conversation_target,
-        Some(ConversationTarget::Vscodium)
-    );
-
-    let joined = ["--write", "--conversation-target=web"]
-        .into_iter()
-        .map(str::to_string)
-        .collect::<Vec<_>>();
-    assert_eq!(
-        parse_integrations_args(&joined)
-            .expect("parse joined form")
-            .conversation_target,
-        Some(ConversationTarget::Web)
-    );
-
-    for rejected in [
-        vec!["--write", "--conversation-target", "emacs"],
-        vec!["--conversation-target", "file"],
-    ] {
-        let args = rejected.into_iter().map(str::to_string).collect::<Vec<_>>();
-        assert!(
-            parse_integrations_args(&args).is_err(),
-            "must be rejected: {args:?}"
-        );
     }
 }
 

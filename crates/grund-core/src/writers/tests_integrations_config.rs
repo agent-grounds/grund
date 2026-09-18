@@ -4,7 +4,6 @@ use super::integrations_agents::LinkSupport;
 use super::integrations_detect::value_names_codium;
 use super::integrations_user_config::{conversation_preference, install_conversation_preference};
 use super::*;
-use crate::compat::{EffectiveForm, detection_plan_json, parse_integrations_args};
 use crate::grammar::INTEGRATIONS_BLOCK_VERSION;
 use crate::testing::{test_root, write};
 
@@ -136,84 +135,6 @@ fn agent_override_cannot_outrank_the_gate() {
         LinkSupport::WebOnly.resolve(ConversationTarget::Web),
         ConversationTarget::Web
     );
-}
-
-// §FS-integrations.4.4: the report names the form each agent received, and
-// why when it is not the one asked for — unreported, an override, a gate
-// downgrade, and an unread key look identical from the outside.
-#[test]
-fn effective_form_describes_override_and_gate() {
-    let plain = EffectiveForm {
-        rendering: ConversationRendering::Plain,
-        target: ConversationTarget::Path,
-        requested: ConversationTarget::Vscodium,
-        overridden: false,
-    };
-    assert_eq!(plain.describe(), "plain");
-
-    let taken = EffectiveForm {
-        rendering: ConversationRendering::Link,
-        target: ConversationTarget::Vscodium,
-        requested: ConversationTarget::Vscodium,
-        overridden: false,
-    };
-    assert_eq!(taken.describe(), "link \u{2192} vscodium");
-
-    let overridden = EffectiveForm {
-        rendering: ConversationRendering::Link,
-        target: ConversationTarget::Web,
-        requested: ConversationTarget::Web,
-        overridden: true,
-    };
-    assert_eq!(overridden.describe(), "link \u{2192} web; agent override");
-
-    let gated = EffectiveForm {
-        rendering: ConversationRendering::Link,
-        target: ConversationTarget::Path,
-        requested: ConversationTarget::Vscodium,
-        overridden: false,
-    };
-    assert_eq!(
-        gated.describe(),
-        "link \u{2192} path; vscodium unverified here"
-    );
-}
-
-// §FS-integrations.1 / §FS-integrations.6: `--agent` scopes
-// `--conversation-target` and nothing else.
-#[test]
-fn agent_flag_requires_write_and_a_target() {
-    let ok = [
-        "--write",
-        "--agent",
-        "codex",
-        "--conversation-target",
-        "web",
-    ]
-    .into_iter()
-    .map(str::to_string)
-    .collect::<Vec<_>>();
-    let invocation = parse_integrations_args(&ok).expect("parse scoped write");
-    assert_eq!(invocation.agent, Some("codex"));
-    assert_eq!(
-        invocation.conversation_target,
-        Some(ConversationTarget::Web)
-    );
-
-    for rejected in [
-        // no --write
-        vec!["--agent", "codex", "--conversation-target", "web"],
-        // nothing to scope
-        vec!["--write", "--agent", "codex"],
-        // unknown agent
-        vec!["--write", "--agent", "codx", "--conversation-target", "web"],
-    ] {
-        let args = rejected.into_iter().map(str::to_string).collect::<Vec<_>>();
-        assert!(
-            parse_integrations_args(&args).is_err(),
-            "must be rejected: {args:?}"
-        );
-    }
 }
 
 // §FS-integrations.4.3: the user preference is installed without rewriting
@@ -445,22 +366,6 @@ fn vscode_installation_state_checks_owned_files() {
 
     std::fs::remove_file(root.join("extension.js")).expect("remove provider");
     assert!(!vscode_integration_is_current(&root));
-}
-
-/// §FS-integrations.5: the machine detection plan distinguishes ambient
-/// detection from actual installation state, and carries each client's
-/// `install_kind` so a manual client's permanent `installed: false` reads as
-/// "not knowable" rather than "not installed" (§FS-integrations.3.4).
-#[test]
-fn integrations_detection_json_reports_installed_state() {
-    let json = detection_plan_json(&[IntegrationClient::Wezterm]);
-    assert!(json.contains("\"client\":\"wezterm\",\"detected\":true,\"installed\":"));
-    assert!(json.contains("\"client\":\"kitty\",\"detected\":false,\"installed\":"));
-    assert!(json.contains("\"install_kind\":\"block\""));
-    assert!(json.contains("\"install_kind\":\"extension\""));
-    assert!(json.contains(
-        "\"client\":\"iterm2\",\"detected\":false,\"installed\":false,\"install_kind\":\"manual\""
-    ));
 }
 
 // §FS-integrations.2: `codium` is marked when a VSCODE_* value *names*

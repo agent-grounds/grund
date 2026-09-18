@@ -72,8 +72,9 @@ pub use model::{
 };
 
 // §AR-system.2.1 grammar: the compiled ID grammar, the one lexical fact an
-// embedder names (§FS-config.3.2).
-pub use grammar::Grammar;
+// embedder names (§FS-config.3.2), and the version a managed integrations block
+// is written and read at (§FS-integrations.4.2).
+pub use grammar::{Grammar, INTEGRATIONS_BLOCK_VERSION};
 
 // §AR-system.2.3 config: the validated `Config` and the `grund.toml` records it
 // is read from (§FS-config).
@@ -121,6 +122,20 @@ pub use writers::{
     fetch_snapshot_with_run_warnings, init,
 };
 
+// §AR-system.2.8 writers, the clickable-citation artifacts of §FS-integrations:
+// the client set, the detection, the agent surfaces and the managed writes. The
+// command that renders them is the CLI's (§FS-integrations.1, §AR-bindings.3).
+pub use writers::{
+    BlockOutcome, ConversationRendering, ConversationTarget, GLOBAL_AGENT_INSTRUCTION_TARGETS,
+    GRUND_OPEN_RESOLVER, GlobalAgentTarget, InstallKind, IntegrationClient, LinkSupport,
+    RESOLVER_TARGET, USER_CONFIG_TARGET, UserConfigScan, VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON,
+    WEZTERM_APPLY_CALL, agent_override_table, block_outcome_verb, detect_clients, expand_target,
+    install_agent_guidance_block, install_managed_block, install_reference_key,
+    integration_is_current, known_agent, known_agents_list, known_clients_line, merge_outcomes,
+    needs_wezterm_wiring, read_optional_text, scan_user_config, user_grund_config_path,
+    vscode_integration_is_current, write_resolver_script,
+};
+
 // §AR-system.2.9 api: the embedding surface itself — one data-returning
 // function per question, with the option and output records around it
 // (§AR-bindings.2, §FS-distribution.3).
@@ -141,8 +156,3 @@ pub use api::{
 // §REQ-backwards-compatibility.2 keeps for 0.4 consumers.
 #[allow(deprecated)]
 pub use compat::main_entry;
-
-// The `warning:` shape both `config` frontends share (§FS-config.4.2), and the
-// one renderer `grund-cli` still imports from the engine, which the
-// compat-retirement step replaces with a copy of its own (§AR-system.2.9).
-pub use compat::{print_config_warnings, run_integrations};

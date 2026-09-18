@@ -18,13 +18,27 @@ use grund_core::{
     ListOpts, ListSizeEntry, ListSizeOpts, NamespaceMatch, PointSizeUnit,
     REFS_QUERY_FAILURE_WARNING, RefHit, RefsOpts, RefsQueryFailure, Report, ShowFormat, ShowMode,
     ShowOpts, ShowQueryError, canonical_template_text, check_with_opts,
-    complete_ids_with_run_warnings, config_run_warnings, cover, effective_config,
+    complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover, effective_config,
     fetch_snapshot_with_run_warnings, format_references, init, list_sizes, list_with_run_warnings,
-    names_member_id_candidate, print_config_warnings, propose_id_with_run_warnings, refs_outcome,
-    refs_query_failure_is_exit_one, render_finding_sites_json, run_integrations,
-    show_batch_with_scope, show_with_scope, validate_config,
+    names_member_id_candidate, propose_id_with_run_warnings, refs_outcome,
+    refs_query_failure_is_exit_one, render_finding_sites_json, show_batch_with_scope,
+    show_with_scope, validate_config,
 };
 use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
+
+// §FS-integrations.1: what `grund integrations` is assembled from. The engine
+// answers with data — the client set, the detection, the agent surfaces and the
+// managed writes — and this crate prints every byte of it (§AR-bindings.3).
+use grund_core::{
+    BlockOutcome, ConversationRendering, ConversationTarget, GLOBAL_AGENT_INSTRUCTION_TARGETS,
+    GRUND_OPEN_RESOLVER, INTEGRATIONS_BLOCK_VERSION, InstallKind, IntegrationClient,
+    RESOLVER_TARGET, USER_CONFIG_TARGET, VSCODE_EXTENSION_JS, VSCODE_PACKAGE_JSON,
+    WEZTERM_APPLY_CALL, agent_override_table, block_outcome_verb, detect_clients, expand_target,
+    install_agent_guidance_block, install_managed_block, install_reference_key,
+    integration_is_current, known_agent, known_agents_list, known_clients_line, merge_outcomes,
+    needs_wezterm_wiring, read_optional_text, scan_user_config, user_grund_config_path,
+    vscode_integration_is_current, write_resolver_script,
+};
 
 const SUBCOMMANDS: &[&str] = &[
     "check",
@@ -58,3 +72,6 @@ include!("cli_id.rs");
 include!("cli_init.rs");
 include!("cli_config.rs");
 include!("cli_complete.rs");
+include!("cli_integrations.rs");
+include!("cli_integrations_write.rs");
+include!("tests_integrations.rs");

@@ -190,7 +190,7 @@ fn find_legacy_agents_block(text: &str) -> AgentsBlockLookup {
 
 /// The version stamped into the managed dotfile block markers (§FS-integrations.4.1).
 /// Bumped when an embedded snippet changes in a way a re-run should propagate.
-pub(crate) const INTEGRATIONS_BLOCK_VERSION: u32 = 1;
+pub const INTEGRATIONS_BLOCK_VERSION: u32 = 1;
 
 /// Version for the user-level agent-instruction block (§FS-integrations.4.3).
 /// v2 (§DF-repo-conversation-opinion): self-scoping texts — gated on the presence

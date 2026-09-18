@@ -23,9 +23,18 @@
 //! which was the one direction §AR-system.4 forbids outright; each is now a
 //! `Diagnostic` in the run's warning channel that every frontend — this one
 //! included — renders for itself (§DA-engine-renders-nothing,
-//! §FS-distribution.3.1). One read the other way is left: `run_integrations` is
-//! `pub` and `grund-cli` imports it from the engine, so `lib.rs` re-exports a
-//! renderer until the CLI carries its own copy.
+//! §FS-distribution.3.1).
+//!
+//! Nothing here is read from outside the crate either: `main_entry` is the whole
+//! of what `lib.rs` re-exports, so the engine's public surface carries no
+//! renderer but the deprecated entry point itself (§FS-distribution.3.1). That
+//! is what `integrations` left for — its argv and its bytes are
+//! `crates/grund-cli/src/cli_integrations*.rs` now (§FS-integrations.1,
+//! §AR-bindings.3) — and it is why this dispatcher answers that one command with
+//! the migration §FS-distribution.3.1 names rather than a second copy of it. The
+//! whole directory goes with `main_entry` in the release its deprecation note
+//! names, which is the one claim about a version this component makes and it is
+//! made there rather than here (§FS-distribution.4.2).
 
 mod check;
 mod cli;
@@ -35,23 +44,19 @@ mod cover;
 mod fmt;
 mod id;
 mod init;
-mod integrations;
-mod integrations_write;
 mod list;
 mod output;
 mod refs;
 mod show;
 
-// The deprecated process entry point (§REQ-backwards-compatibility.2) and the
-// one renderer the published CLI still imports from the engine.
+// The deprecated process entry point (§REQ-backwards-compatibility.2), and the
+// whole of what this directory publishes: nothing here renders for another
+// crate any more (§FS-distribution.3.1).
 #[allow(deprecated)]
 pub use cli::main_entry;
-pub use integrations::run_integrations;
-pub use output::print_config_warnings;
 
 // What only the crate's own test modules read (§AR-core-module-layout.1): three
-// command adapters, the `cover` argv parse with its two JSON fragments, and the
-// `integrations` argv parse with its descriptors, form and guide URL.
+// command adapters and the `cover` argv parse with its two JSON fragments.
 #[cfg(test)]
 pub(crate) use check::command_check;
 #[cfg(test)]
@@ -60,12 +65,6 @@ pub(crate) use cover::{
 };
 #[cfg(all(test, unix))]
 pub(crate) use fmt::command_fmt;
-#[cfg(test)]
-pub(crate) use integrations::{
-    SETUP_GUIDE_URL, client_descriptor_json, detection_plan_json, parse_integrations_args,
-};
-#[cfg(test)]
-pub(crate) use integrations_write::EffectiveForm;
 #[cfg(test)]
 pub(crate) use refs::command_refs;
 

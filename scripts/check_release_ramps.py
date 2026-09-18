@@ -33,6 +33,10 @@ LANDED = "landed"
 CLAUSES = (
     ("becomes an error in", PENDING),
     ("became an error in", LANDED),
+    # The two tenses of one removal (§FS-distribution.4.2): a deprecation names
+    # the release its symbol stops working in, and the message that replaces it
+    # names the release the removal was made in.
+    ("is removed in", PENDING),
     ("was removed in", LANDED),
     ("stopped loading in", LANDED),
     ("unchecked in", LANDED),

@@ -15,7 +15,7 @@
 /// `ConversationTarget::Path`, the form that surface already had — the gate can
 /// hold a target where it is, never make one worse.
 #[derive(Clone, Copy, Eq, PartialEq)]
-pub(crate) enum LinkSupport {
+pub enum LinkSupport {
     /// Every target, local schemes included (matrix rows 12–14).
     Every,
     /// `file:` and web URLs dispatch, editor schemes do not; labels survive
@@ -29,7 +29,7 @@ pub(crate) enum LinkSupport {
 }
 
 impl LinkSupport {
-    pub(crate) fn resolve(self, target: ConversationTarget) -> ConversationTarget {
+    pub fn resolve(self, target: ConversationTarget) -> ConversationTarget {
         match (self, target) {
             (Self::Every, _) => target,
             (Self::FileAndWeb, ConversationTarget::File | ConversationTarget::Web) => target,
@@ -43,22 +43,22 @@ impl LinkSupport {
 /// `home` is the directory whose presence says the user actually runs that
 /// agent: `--write` installs a *rendering layer*, and provisioning the config
 /// tree of five agents the machine does not have is not part of that.
-pub(crate) struct GlobalAgentTarget {
+pub struct GlobalAgentTarget {
     /// The agent's name — the key `[reference.agents.<agent>]` is written under
     /// and the value `--agent` accepts (§FS-integrations.4.4).
-    pub(crate) agent: &'static str,
+    pub agent: &'static str,
     /// `~`-rooted instruction file, printed verbatim so reports stay stable.
-    pub(crate) file: &'static str,
+    pub file: &'static str,
     /// `~`-rooted directory that shows the agent is in use.
-    pub(crate) home: &'static str,
+    pub home: &'static str,
     /// What this agent's renderer is verified to do with a linked citation.
-    pub(crate) link_support: LinkSupport,
+    pub link_support: LinkSupport,
 }
 
 /// The file-backed global instruction surfaces for every agent grund supports
 /// end-to-end (§FS-integrations.4.3). Keep this superset aligned with the
 /// repository entrypoints in §FS-init.2.1.
-pub(crate) const GLOBAL_AGENT_INSTRUCTION_TARGETS: [GlobalAgentTarget; 6] = [
+pub const GLOBAL_AGENT_INSTRUCTION_TARGETS: [GlobalAgentTarget; 6] = [
     GlobalAgentTarget {
         agent: "codex",
         file: "~/.codex/AGENTS.md",
@@ -100,12 +100,12 @@ pub(crate) const GLOBAL_AGENT_INSTRUCTION_TARGETS: [GlobalAgentTarget; 6] = [
 /// The table one agent's overrides live under (§FS-integrations.4.4). The
 /// partial is merged over the machine-wide keys, so only the names above are
 /// accepted inside it.
-pub(crate) fn agent_override_table(agent: &str) -> String {
+pub fn agent_override_table(agent: &str) -> String {
     format!("reference.agents.{agent}")
 }
 
 /// `codex | claude | …` for the errors that list the accepted set.
-pub(crate) fn known_agents_list() -> String {
+pub fn known_agents_list() -> String {
     GLOBAL_AGENT_INSTRUCTION_TARGETS
         .iter()
         .map(|target| target.agent)
@@ -114,7 +114,7 @@ pub(crate) fn known_agents_list() -> String {
 }
 
 /// The canonical spelling of a known agent name, or `None` (§FS-integrations.4.4).
-pub(crate) fn known_agent(name: &str) -> Option<&'static str> {
+pub fn known_agent(name: &str) -> Option<&'static str> {
     GLOBAL_AGENT_INSTRUCTION_TARGETS
         .iter()
         .map(|target| target.agent)
@@ -122,13 +122,13 @@ pub(crate) fn known_agent(name: &str) -> Option<&'static str> {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum ConversationRendering {
+pub enum ConversationRendering {
     Plain,
     Link,
 }
 
 impl ConversationRendering {
-    pub(crate) fn from_name(name: &str) -> Option<Self> {
+    pub fn from_name(name: &str) -> Option<Self> {
         match name {
             "plain" => Some(Self::Plain),
             "link" => Some(Self::Link),
@@ -136,7 +136,7 @@ impl ConversationRendering {
         }
     }
 
-    pub(crate) fn name(self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             Self::Plain => "plain",
             Self::Link => "link",
@@ -176,7 +176,7 @@ impl ConversationRendering {
 /// §DF-conversation-link-target.2.2). A closed enum: each value names one fixed
 /// template an agent fills from the declaration's absolute path and line.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub(crate) enum ConversationTarget {
+pub enum ConversationTarget {
     /// `file://<abs>#L<line>` — the default, and the only local form that
     /// presumes nothing about the machine beyond a handler for `file:`.
     #[default]
@@ -202,11 +202,11 @@ impl ConversationTarget {
         ConversationTarget::Cursor,
     ];
 
-    pub(crate) fn from_name(name: &str) -> Option<Self> {
+    pub fn from_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|target| target.name() == name)
     }
 
-    pub(crate) fn name(self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             Self::File => "file",
             Self::Path => "path",
@@ -218,7 +218,7 @@ impl ConversationTarget {
     }
 
     /// `file | path | web | …` for the error that lists the accepted set.
-    pub(crate) fn accepted_list() -> String {
+    pub fn accepted_list() -> String {
         Self::ALL
             .iter()
             .map(|target| target.name())

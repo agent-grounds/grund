@@ -267,7 +267,7 @@ pub(super) fn show_query_error_code(message: &str) -> &'static str {
 /// (§AR-core-module-layout.1) — and in one place rather than in each `config`
 /// frontend, so the published CLI and the deprecated `grund_core` adapter
 /// cannot drift on the prefix or the stream (§FS-config.4.1, §FS-config.4.2).
-pub fn print_config_warnings(config: &Config) {
+pub(super) fn print_config_warnings(config: &Config) {
     for warning in config_warnings(config) {
         eprintln!("warning: {warning}");
     }
