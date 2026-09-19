@@ -36,15 +36,15 @@ Every binding returns the same data, only spelled idiomatically. The conceptual 
 
 ```
 Report {
-  errors:   [Finding]
-  warnings: [Finding]
+  errors:      [Finding]
+  warnings:    [Finding]
+  suggestions: [Finding]  // filled only under `check --suggestions` (FS-check.2.3)
 }
 
 Finding {
-  severity: "error" | "warning"
-  code:     // a `check` finding — "dangling" | "missing-section" | "duplicate" | "duplicate-section"
-            //                   | "broken-stub" | "unused" | "ungrounded" | "agents-init"
-            //                   | "empty-scan" | "nothing-recognized" | "empty-citation-obligation" | "io"
+  severity: "error" | "warning"  // absent on a suggestion, whose JSON carries "channel": "suggestion"
+                                 // in its place (FS-errors.5)
+  code:     // a `check` finding — one code of the sorted supported catalog in FS-errors.5
             // — or, on a failed ID query (FS-show.3, rendered with this same shape on stderr,
             //   path/line null) — "not-found" | "missing-section" | "broken-stub" | "ambiguous"
             //                   | "ambiguous-section" | "invalid-id" | "query-failed"
@@ -130,7 +130,7 @@ A release leaves `main` holding the version it just published, so every build fr
 
 ### 4.2 A release may not contradict the releases the tree's own messages name
 
-A ramp is a promise written into a message: a warning names the release it becomes an error in, or names the release in which a scalar status will move, and once an error ramp lands the error that replaced it names the release the change was made in ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). Both halves are claims about a version, and each is false at the wrong one. A pending warning shipped *at* its deadline breaks the promise it makes; a landed change shipped *below* the release its own message names is worse, because it puts a breaking change in a release whose version says there is none. A unit test can hold the pending half — the bump that reaches a deadline bumps the running version, and a test can read it — but nothing could hold an ordinary landed-message half, because the helpers bump the version on a candidate branch that is neither `main` nor a pull request and no test suite runs between that bump and the publish.
+A ramp is a promise written into a message: a warning names the release it becomes an error in, or names the release in which a scalar status will move ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)), and once an error ramp lands the error that replaced it names the release the change was made in. Both halves are claims about a version, and each is false at the wrong one. A pending warning shipped *at* its deadline breaks the promise it makes; a landed change shipped *below* the release its own message names is worse, because it puts a breaking change in a release whose version says there is none. A unit test can hold the pending half — the bump that reaches a deadline bumps the running version, and a test can read it — but nothing could hold an ordinary landed-message half, because the helpers bump the version on a candidate branch that is neither `main` nor a pull request and no test suite runs between that bump and the publish.
 
 So the release path asks it directly. `scripts/check_release_ramps.py <version>` reads the release each message names out of the tree's own message text — the Rust sources under `crates/`, and the checked `expected.stdout` and `expected.stderr` goldens under `tests/e2e/cases/` that pin the bytes a user sees — and refuses a version that contradicts one:
 

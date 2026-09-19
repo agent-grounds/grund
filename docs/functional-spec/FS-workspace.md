@@ -47,8 +47,9 @@ the citing/root project uses a different ID format.
 
 The shape is read the same way in **every** repository, including one with no
 `[workspace]` at all: what makes a token a citation is the marker
-([§FS-check.1.1](FS-check.md#11-recognized-citations)), and a marked token of this shape is a citation whose alias
-path resolves against nothing, so it is reported as an unknown project alias at
+([§FS-check.1.1](FS-check.md#11-recognized-citations), which skips this form only inside a source
+file's string literal or inline-code span), and a marked token of this shape is
+a citation whose alias path resolves against nothing, so it is reported as an unknown project alias at
 its site rather than skipped (§5, [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)) — the same rule that
 stops a member-local run from shipping a cross-project citation the workspace
 root would reject. The multi-segment path therefore makes one *file path*
@@ -100,7 +101,7 @@ A member root may sit anywhere strictly inside the block that lists it, and that
 includes on top of the paths the block itself scans. When it covers **all** of
 them the block's own project reads nothing: every one of its walk roots lies
 under a member boundary (§6), so its declarations reach no catalog and its
-dangling citations pass [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration). That is the same consequence
+dangling citations pass the check, which is [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) failing. That is the same consequence
 §6.1 gives as the reason a member root may not be an *ancestor* of its own
 block, one step weaker — here the root is strictly inside the block and still
 covers everything the block had to read.
@@ -233,7 +234,7 @@ verdict this section exists to remove.
 validated by the rules here exactly as its `members` are (§6.1), and its absent
 entries are announced at its own `optional_members` line, rendered against the
 root this run was launched at like every other diagnostic from a block the run
-did not start in ([§FS-errors.4](FS-errors.md#4-determinism)). There is no outermost-block privilege in either
+did not start in ([§FS-errors.3](FS-errors.md#3-message-text)). There is no outermost-block privilege in either
 direction: a nested block may declare an optional member whose parent block knows
 nothing about it, and an absent one below the run's root costs the same one line
 as an absent one at the top. §6.1's ancestor climb reads `optional_members` beside
@@ -268,8 +269,8 @@ The temptation is to widen it, and the case that tempts is the motivating one.
 Git materializes an uninitialized submodule as an **empty directory**, so a
 repository whose member *is* the submodule (`members = ["hardware"]`, `hardware`
 the gitlink) has a member that exists: it loads under the canonical defaults
-(§2), contributes zero declarations, and turns citations into it into "declaration
-not found" errors ([§FS-check.3.1](FS-check.md#31-dangling-citation)) rather than unknown aliases. That is a
+(§2), contributes zero declarations, and turns citations into it into
+`unknown reference` errors ([§FS-check.3.1](FS-check.md#31-dangling-citation)) rather than `unknown project alias` ones. That is a
 different symptom from the one this section fixes, and the repository meeting it
 has the ordinary repair — name the namespaces under the submodule rather than the
 submodule directory, `optional_members = ["hardware/sprayer"]`, which *is* absent
@@ -406,36 +407,40 @@ Cross-project references are deliberately never resolved by path syntax such as
 
 ## 5. Command scope
 
-`grund check` run at a workspace root checks the root project and all configured
-members, aggregates diagnostics, and prints the same explicit-channel
+`grund check` run at a workspace root checks the root project (unless
+`include_root = false`, §2) and all configured members, aggregates diagnostics, and prints the same explicit-channel
 `<path>:<line>: <channel>: <message>` shape as a normal check
 ([§FS-check.2.1](FS-check.md#21-report-format)). Paths are rendered relative
-to the workspace root when `[output] relative_paths = true`.
+to the workspace root when `[output] relative_paths = true`. `grund check <dir>`
+with a `<dir>` narrower than the config root is one narrowed scan of the
+enclosing project — no workspace loaded, no `project` field.
 
 `grund check <member>` (or `grund check` invoked from inside a member tree)
-discovers the member's own config first and validates it as an independent
-project. Qualified citations such as `§root/<ID>` or `§sibling/<ID>` cannot be
+discovers the member's own config first and, for a member that declares no
+`[workspace]` block of its own, validates it as an independent project; one that
+does runs its own subtree (§6.1). Qualified citations such as `§root/<ID>` or `§sibling/<ID>` cannot be
 resolved without the workspace context; each such citation produces an
-`unknown project alias <name>` error at the citation site
+`unknown project alias <path>` error at the citation site
 ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)). This matches [§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) §3.6 — silent skipping
 would let a passing member check ship a cross-project reference that no longer
 resolves at the workspace root, which violates [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration). Run
 `grund check` at the workspace root to validate cross-project citations.
 
-The member-local scanner recognizes the `<§>alias/` prefix before applying the
-member's local ID grammar. That way `<§>root/FS-root` is still an unknown-alias
+The scanner of any run that loads no workspace recognizes the `<§>alias/` prefix
+before applying the local ID grammar. That way `<§>root/FS-root` is still an unknown-alias
 citation inside a default `{kind}-{number}-{slug}` member, rather than plain
 text that disappears from `check`.
 
-Member-local recognition uses a fixed fallback ID shape — `KIND[-NUM]-SLUG`
-with an uppercase-or-digit kind and a non-empty slug — because the workspace
-catalogue (and therefore each target's `[id] format`) is unreachable at member
-scope. A qualified citation whose tail does not match that shape (lowercase
-kinds, slug-only ID grammars that don't split on `-`/`_`, kinds with
-non-`[A-Z0-9]` characters) is not flagged at member scope; the workspace-root
-run, which parses each qualified tail with the target project's grammar, is
-the one place that catches every shape. Run `grund check` at the workspace
-root for full coverage.
+Recognition in any run that loads no workspace uses a fixed fallback ID shape —
+`KIND[-NUM]-SLUG` with an uppercase-or-digit kind and a non-empty slug — because
+the workspace catalogue (and therefore each target's `[id] format`) is
+not loaded there. That shape does not decide whether a qualified citation is reported: the
+unknown thing is the alias, which needs no tail grammar, so a tail that does not
+match it (lowercase kinds, slug-only ID grammars that don't split on `-`/`_`,
+kinds with non-`[A-Z0-9]` characters) is an `unknown project alias` error all the
+same. The workspace-root run, which parses each qualified tail with the target
+project's grammar, is the one place that checks the tail itself. Run
+`grund check` at the workspace root for full coverage.
 
 A relaxed standalone mode (downgrade `unknown project alias` from error to
 warning on a member-only run) is deferred follow-up; see
@@ -500,8 +505,8 @@ a workspace with no nesting is spelled exactly as it is today. Given a root with
 Paths, not globally unique names, are what let two `pod` projects under
 different parents coexist ([§DF-nested-workspaces](../decisions/functional/DF-nested-workspaces.md#df-nested-workspaces-a-nested-project-is-named-by-its-whole-alias-path)) — hence the per-level
 uniqueness rule in §3. The cost is that a short leaf name no longer resolves on
-its own, and `grund check` answers that mistake by naming the projects the
-written path could have meant ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)).
+its own, and `grund check` at the outermost workspace root answers that mistake
+by naming the projects the written path could have meant ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)).
 
 `include_root` is read per `[workspace]` block and governs that block's own
 project. Under the default an intermediate node is a project like any other: it
@@ -524,8 +529,9 @@ run stays silent, and `grund check` stays
 green over content nothing reads, which is precisely why the default is a project
 ([§DF-nested-workspaces.3.5](../decisions/functional/DF-nested-workspaces.md#35-the-intermediate-node-reuses-include_root-and-defaults-to-a-project)).
 Every block must put at
-least one project in scope, so `include_root = false` with no members is a
-config error at that block's `members` line — or at its `[workspace]` line when
+least one project in scope, so `include_root = false` with no members (read from
+the config text, `optional_members` included, §2.2) is a config error at that
+block's `members` line — or at its `[workspace]` line when
 there is no `members` key to point at, since a tree may hold many blocks and the
 error has to say which one is empty. An explicitly empty `members = []` is the
 same no-members case. A non-empty list whose glob entries all match no
@@ -573,7 +579,7 @@ subtree check and failing the run CI does, which is
 [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) failing in the one place it has to hold.
 
 Three rules keep one chain readable from every scope. **A path is read from the outermost block that claims a directory:** a multi-segment `members` entry (`grp/inner`) hops a directory that may itself declare `[workspace]` and list the same child, and the outer claim is the one the walk down from the outermost root follows — ordinary nesting has one claim per directory, where the two agree.
-**A block that claims a directory and cannot answer** — a missing member, overlapping roots, an invalid alias for the project below it, or a config that does not load at all — fails the run with *its own error*, from its own `members` or `project_name` line — rendered against the root **this run** was launched at, so a block above that root renders with `..` (`../grund.toml:16`) and the reader lands on the file that holds the line rather than on a same-named one inside the subtree ([§FS-errors.4](FS-errors.md#4-determinism)); dropping its segment would let the subtree invent a namespace, and [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) would then hint the one spelling that fails at the root. The obligation is a *claim's* and a **workspace run's**, and only theirs — a claim the climb that spells *this run's own* alias path had to ask: that climb happens because a run has a path to read, so a run at a project that declares no `[workspace]` block of its own — a leaf member, or any single-project repository — reads no path out of the chain. Such a run resolves one project (§5): it has no alias path to get wrong, every qualified citation is an unknown alias whatever an ancestor lists, and no claim above it, answered or not, can fail it. The claim rule is about the scopes that *do* read a path, which are the blocks. The chain is still *asked* about such a run, by a second climb that reads no path out of it: [§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)'s rule walks these same ancestors, with this same `members`-only read, about a `[workspace]` block the run's own walk met rather than about the run's own name — so what an ancestor lists decides whether that block is reported. That question carries none of the obligations here, because it spells nothing: it fails no run, and an ancestor it cannot read leaves the claim unanswered and the block unreported rather than costing the reader a line. A block that does not name this directory is not asked, so neither a `members` list it could not expand nor a config that would not load at all is an error in a run below it. Otherwise one broken config anywhere above a repository — at any depth up to `/`, in a workspace that never mentions it — would answer every command inside it. The claim is therefore read from the **`members` entries alone**, never from a loaded config: the `members` value is parsed on its own — no other key read, no shape rule applied — so a config that fails to load is still asked whether it claims this directory. Deciding it from a loaded config instead made *every* load failure above a repository silently equal to "claims nothing", which is the collapsed prefix this rule exists to prevent, and two mistakes on one `members` line then behaved oppositely: a member that does not exist failed the subtree run, while an entry the shape rule rejects ([§2](#2-workspace-configuration)) let it re-spell itself. A config whose `members` text cannot be obtained at all — the file cannot be read, or its `members` value is not a list — leaves the claim undecidable in both directions. The run continues, because a stray unreadable `grund.toml` above a repository is not that repository's problem, and whether it says so is the asking climb's: the one spelling an alias path never continues silently — it prints a run-level `warning:` naming that config and saying alias paths below it may be missing a segment ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) — while the quiet climb has no path below it to warn about, so it says nothing and leaves the block it was asking about unreported. That warning travels the way its three `[workspace]` siblings do ([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)): one of the run's warnings, carried on whatever the walking command returns and rendered by each frontend rather than written to a stream from inside the engine, so an editor publishes it too ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). It anchors at the config it could not read — that file and no line, because the `members` value whose line would be the anchor is exactly what could not be obtained — and the bytes the CLI prints are unchanged.
+**A block that claims a directory and cannot answer** — a missing member, overlapping roots, an invalid alias for the project below it, or a config that does not load at all — fails the run with *its own error*, from its own `members` or `project_name` line — rendered against the root **this run** was launched at, so a block above that root renders with `..` (`../grund.toml:16`) and the reader lands on the file that holds the line rather than on a same-named one inside the subtree ([§FS-errors.3](FS-errors.md#3-message-text)); dropping its segment would let the subtree invent a namespace, and [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) would then hint the one spelling that fails at the root. The obligation is a *claim's* and a **workspace run's**, and only theirs — a claim the climb that spells *this run's own* alias path had to ask: that climb happens because a run has a path to read, so a run at a project that declares no `[workspace]` block of its own — a leaf member, or any single-project repository — reads no path out of the chain. Such a run resolves one project (§5): it has no alias path to get wrong, every qualified citation is an unknown alias whatever an ancestor lists, and no claim above it, answered or not, can fail it. The claim rule is about the scopes that *do* read a path, which are the blocks. The chain is still *asked* about such a run, by a second climb that reads no path out of it: [§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)'s rule walks these same ancestors, with this same `members`-only read, about a `[workspace]` block the run's own walk met rather than about the run's own name — so what an ancestor lists decides whether that block is reported. That question carries none of the obligations here, because it spells nothing: it fails no run, and an ancestor it cannot read leaves the claim unanswered and the block unreported rather than costing the reader a line. A block that does not name this directory is not asked, so neither a `members` list it could not expand nor a config that would not load at all is an error in a run below it. Otherwise one broken config anywhere above a repository — at any depth up to `/`, in a workspace that never mentions it — would answer every command inside it. The claim is therefore read from the **`members` entries alone**, never from a loaded config: the `members` value is parsed on its own — no other key read, no shape rule applied — so a config that fails to load is still asked whether it claims this directory. Deciding it from a loaded config instead made *every* load failure above a repository silently equal to "claims nothing", which is the collapsed prefix this rule exists to prevent, and two mistakes on one `members` line then behaved oppositely: a member that does not exist failed the subtree run, while an entry the shape rule rejects ([§2](#2-workspace-configuration)) let it re-spell itself. A config whose `members` text cannot be obtained at all — the file cannot be read, or its `members` value is not a list — leaves the claim undecidable in both directions. The run continues, because a stray unreadable `grund.toml` above a repository is not that repository's problem, and whether it says so is the asking climb's: the one spelling an alias path never continues silently — it prints a run-level `warning:` naming that config and saying alias paths below it may be missing a segment ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) — while the quiet climb has no path below it to warn about, so it says nothing and leaves the block it was asking about unreported. That warning travels the way its three `[workspace]` siblings do ([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)): one of the run's warnings, carried on whatever the walking command returns and rendered by each frontend rather than written to a stream from inside the engine, so an editor publishes it too ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). It anchors at the config it could not read — that file and no line, because the `members` value whose line would be the anchor is exactly what could not be obtained — and the bytes the CLI prints are unchanged.
 **A `[workspace]` block that no enclosing block lists is outside the chain:** at the outer scope it is ignored, so its tree belongs to the enclosing project's namespace when that project's scan reaches it and to nobody when it does not, while a run started **at** it names every path from itself — a run started at a block *below* it that the chain does list is back inside the guarantee. A run whose own tree walk meets such a block reports it, naming the block's `[workspace]` line and saying that the projects under it are absorbed into the enclosing namespace instead of named under their own alias path ([§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)). Two shapes stay unreported, for different reasons. A block the walk never reaches — behind `[scan] exclude`, an ignore file, a member boundary, or a narrowed scope — is the known limitation, because a run that cannot see something does not judge it. A block an enclosing config *names* and then cannot answer for is the undecidable claim of the rule above, left alone because no answer is not the answer that nothing claims it.
 
 ## 7. Neighboring repos
@@ -648,8 +654,8 @@ changes which tree is scanned, not what is printed.
   local `FS-login`. Unchanged from today; no workspace context is needed
   because the citation is local.
 
-Under `--format json` the reported `path` is relative to the config root the
-command resolved against, matching `grund list` ([§FS-config.3.6](FS-config.md#36-output--report-format)) — so
+Under `--format json` the reported `path` is, under the default
+`relative_paths = true`, relative to the config root the command resolved against, matching `grund list` ([§FS-config.3.6](FS-config.md#36-output--report-format)) — so
 `grund api/FS-login --format json` from the workspace root reports
 `apps/api/…`, not the member-relative `…`. Consumers that join this path
 against the directory they invoked `grund` in, such as the `grund-open`
@@ -700,20 +706,19 @@ questions one level up, for alias paths rather than for IDs:
 
 - **The candidate is appended**, after the ID, so the line still opens
   `ID not found: <ID>`. That prefix is the diagnostic's identity — it is what
-  selects the `not-found` code (§8.7, [§FS-errors.5](FS-errors.md#5-json-format)) — so a candidate written
+  selects the `not-found` code ([§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)) — so a candidate written
   ahead of it would trade that class away for a few characters of prominence.
 - **Several candidates are listed, never chosen.** Two projects declaring one ID
   is not an `ambiguous ID` error — §8.1: they are two declarations in two
   namespaces — and picking one would be a guess
-  ([§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). They are joined as [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) joins
-  its own — `did you mean left/FS-shipping or right/FS-shipping?` — sorted, and
-  cut at three: `grund list` is the catalogue, a diagnostic is not.
+  ([§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). They are deduplicated, sorted, limited and joined as
+  [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) treats its own — `did you mean left/FS-shipping or right/FS-shipping?`.
 - **Each project is asked in its own grammar.** The written ID text is re-parsed
   with the candidate project's `[id]` config and rendered back with it, the way
   a qualified citation already is (§1, §4). In a mixed-format workspace one text
   is a different ID in each project, so carrying the current project's parse
   across the boundary would find nothing and report no candidate at all.
-- **A narrowed run offers none.** A member-local run, a standalone repo, or a
+- **A one-project run offers none.** A member-local run, a standalone repo, or a
   `<path>` that resolves inside a member holds one project (§5, §8): there is no
   second project to name, and the bare line is printed unchanged.
 - **The section is not carried.** `grund SPEC-007-shipping.2` could not find the
@@ -726,7 +731,7 @@ questions one level up, for alias paths rather than for IDs:
   new ID — is advice for an ID that does not exist. Where there is no candidate
   the hint prints exactly as before.
 - **`--format json` keeps its shape.** The diagnostic still carries
-  `"code":"not-found"`, with the candidate inside `message` ([§FS-errors.5](FS-errors.md#5-json-format)). The
+  `"code":"not-found"`, with the candidate inside `message` ([§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)). The
   hint line has no JSON form under either branch.
 
 ### 8.2 `grund refs`
@@ -911,7 +916,7 @@ rather than choosing which config answers ([§FS-cover.1](FS-cover.md#1-inputs))
 aggregate/narrow line where `grund check` draws it and not where `list` does: a
 scope narrower than the config root is one narrowed scan of the enclosing
 project, no workspace loaded and no `project` field, the way `grund check <dir>`
-already behaves ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)). Widening `grund cover src/` back to every
+already behaves (§5). Widening `grund cover src/` back to every
 project would answer a question the caller did not ask, and an explicit path
 deliberately bypasses `[scan] include`, so the narrowing is the only thing that
 put those files in scope at all.
@@ -942,10 +947,8 @@ Rationale and the discarded project-local alternative: [§DF-cover-workspace-sco
   `[output] relative_paths` is left at its default, so a member's file is
   spelled the way `[workspace] members` spells it and the recipe can join it
   against the same base `git diff` reports. Under `relative_paths = false` the
-  base is the command's path argument, as it is for every other command
-  ([§FS-config.3.6](FS-config.md#36-output--report-format)); a member outside
-  that base is reached with the minimum `..` components while remaining inside
-  the loaded workspace, never by falling back to its absolute path. Scan errors
+  base is the path argument/cwd, with in-workspace parent components, as for
+  every other command ([§FS-config.3.6](FS-config.md#36-output--report-format)). Scan errors
   from any project render against whichever base the rows did.
 - **`--format json` adds `"project": "<alias>"`** to the per-file object and to
   each nested citation object whenever workspace mode is loaded — the alias of

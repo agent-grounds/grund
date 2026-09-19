@@ -19,8 +19,9 @@ The whole report keeps the CLI base. A target that remains inside the loaded
 project or workspace may use the minimum `..` components needed to reach it
 from that base ([§FS-config.3.6](../../functional-spec/FS-config.md#36-output--report-format)).
 The permission is bounded by the loaded root: it does not make paths outside
-that root reportable and never licenses an absolute fallback for an in-root
-target.
+that root reportable, save the `..` path of a config above the run's root that
+the run had to read ([§FS-workspace.6.1](../../functional-spec/FS-workspace.md#61-nested-workspaces)), and never licenses an absolute
+fallback for an in-root target.
 
 Thus a workspace containing root `docs/FS-root.md` and member
 `hw/docs/FS-nozzle.md`, invoked from root `docs/`, reports `FS-root.md` and

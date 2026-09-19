@@ -36,11 +36,11 @@ Which snapshot that is comes from one resolution used by every surface, requests
 
 ### 3.1 Full re-scan on every change (v1)
 
-Initial implementation: every `didChange` triggers `grund-core::scan(workspace_root)` and a fresh `grund-core::check`. This is simple and correct. Per [§GOAL-fast-feedback.1](../goals.md#1-performance-targets), a scan completes in under 100 ms on the grund repo and under 1 s on a 10k-file repo — fast enough that a full re-scan per keystroke is invisible on small and medium projects, and acceptable per-save on large ones.
+Initial implementation: every `didChange` triggers `grund-core::scan(workspace_root)` and a fresh `grund-core::check`. This is simple and correct. The [§GOAL-fast-feedback.1](../goals.md#1-performance-targets) targets are the budget this rests on: a scan within them is fast enough that a full re-scan per keystroke is invisible on small and medium projects, and acceptable per-save on large ones.
 
 ### 3.2 Incremental scan (v2, when budget breaks)
 
-When the full-scan budget breaks (typically: large monorepos, slow disks, or per-keystroke debounce too tight), switch to incremental: rescan only the changed file and re-validate citations whose targets touch the changed file's declarations. This is the same gradient [§GOAL-fast-feedback.2](../goals.md#2-how-we-get-there) endorses for the CLI's parallel walk — incremental is added when the simple version stops winning, not before.
+When the full-scan budget breaks (typically: large monorepos, slow disks, or per-keystroke debounce too tight), switch to incremental: rescan only the changed file and re-validate citations whose targets touch the changed file's declarations. This is the same gradient [§GOAL-fast-feedback.2](../goals.md#2-how-we-get-there) endorses for the CLI's parallel scan — incremental is added when the simple version stops winning, not before.
 
 The incremental path keeps the single source of truth in `grund-core::scan`; `grund-lsp` adds a thin "what changed" diff over scan inputs and reuses the rest.
 
@@ -64,7 +64,7 @@ those records only; CLI/core/LSP parity therefore includes embedded mismatch and
 title-range fixtures alongside missing, duplicate, orphan, depth, and resolving
 named-section fixtures rather than parallel behavior in the transport.
 
-The LSP must produce the same diagnostics for the same workspace state as `grund check` does — byte-for-byte on the message text, position-for-position on the line numbers ([§FS-non-goals.13](../functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). Current parity is enforced by keeping all engine work in `grund-core` and limiting `grund-lsp` to transport/range translation:
+The LSP must produce the same diagnostics for the same workspace state as `grund check` does — byte-for-byte on the message text, position-for-position on the line numbers ([§FS-lsp.4](../functional-spec/FS-lsp.md#4-determinism-and-parity-with-the-cli)). Current parity is enforced by keeping all engine work in `grund-core` and limiting `grund-lsp` to transport/range translation:
 
 - `grund-core::lsp_snapshot` returns the report, declaration ranges, section-heading ranges, stub ranges, citation ranges, and resolved targets from one scan/check pass.
 - `textDocument/hover` previews citation bodies by calling the same `show` engine used by `grund <ID> --toc` with open-document overlays applied. Declaration-side title spans (Markdown declaration headings, numbered section headings, and inline-spec stub titles) return the whole-title range plus the title's usage counts ([§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview)), so editors can underline the complete title while the sites themselves stay behind go-to-definition and references.

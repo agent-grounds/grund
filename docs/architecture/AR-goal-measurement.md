@@ -1,6 +1,6 @@
 # AR-goal-measurement: goal and requirement meters live outside goals
 
-Goals say what matters and requirements say what must never break; this page names where each is measured. An unmeasured requirement is a wish, so every entry below points at the behavior spec, fixture, or gate that would catch the violation. Keep measurement details here, in functional specs, e2e cases, CI specs, and benchmark reports so [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file) stays true for the always-read goal page.
+Goals say what matters and requirements say what must never break; this page names where each is measured. An unmeasured requirement is a wish, so every entry below points at the behavior spec, fixture, or gate that would catch the violation. Keep measurement details here, in functional specs, e2e cases, CI specs, and benchmark reports so [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file) stays true for each goal's lead, the slice a citation of it reads.
 
 ## placement: What the meters measure
 

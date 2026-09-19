@@ -7,7 +7,7 @@ This file is the verbose output-shape companion to [§FS-errors](FS-errors.md#fs
 Diagnostics use this shape:
 
 ```json
-{"severity":"error","path":"docs/functional-spec/FS-001-alpha.md","line":3,"code":"unknown-reference","message":"unknown reference FS-999-missing","sites":null}
+{"severity":"error","path":"docs/functional-spec/FS-001-alpha.md","line":3,"code":"dangling","message":"unknown reference FS-999-missing","sites":null}
 ```
 
 Fields:
@@ -62,7 +62,7 @@ bytes and shape:
 
 ```json
 {"severity":"warning","path":"docs/functional-spec/FS-001-alpha.md","line":3,"code":"unused-declaration","message":"declared but never cited: FS-001-alpha","sites":null}
-{"severity":"error","path":"src/z-last.rs","line":1,"code":"unknown-reference","message":"unknown reference FS-999-missing","sites":null}
+{"severity":"error","path":"src/z-last.rs","line":1,"code":"dangling","message":"unknown reference FS-999-missing","sites":null}
 ```
 
 ## 4. `show --format=json`

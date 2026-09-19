@@ -8,8 +8,9 @@ declaration under [§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-r
 ## 1. Input and project selection
 
 The command accepts exactly one local or workspace-qualified ID and no section. It uses
-the same per-kind grammar and target-project selection as the ID query
-([§FS-config.3.2](FS-config.md#32-id--id-grammar), [§FS-workspace.5](FS-workspace.md#5-command-scope)). `grund fetch alias/TICKET-1234` loads that member's config and home, renders the qualified form in user messages, and passes only `TICKET-1234` to the integration.
+the same target-project selection as the ID query ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)) but parses
+by the kind's effective grammar only, without the catalog-backed off-grammar spellings
+the query also reads ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). `grund fetch alias/TICKET-1234` loads that member's config and home, renders the qualified form in user messages, and passes only `TICKET-1234` to the integration.
 
 An ID that cannot be parsed follows the existing bare query-failure shape and exits 1.
 A parsed ID whose kind has no `fetch`, or whose selected project cannot supply exactly

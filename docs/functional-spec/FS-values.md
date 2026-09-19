@@ -26,7 +26,7 @@ Home JSON is project catalog input, not general scan input. It is read once rega
 
 A source is one top-level object. Every ordered member key is a full, unaliased local ID of the owning kind and every member value is a nonempty array. Array element `i` declares component `i + 1`; only JSON numbers and strings are valid elements. A decoded string component must be nonempty and contain no edge whitespace, backtick, or control character, matching the Markdown component boundary. Empty or non-object roots; wrong-kind, invalid, or qualified keys; empty arrays; and null, boolean, object, nested-array, or non-finite/malformed number components are invalid declarations.
 
-The reader preserves member order, duplicate keys, raw number and string spellings, decoded strings, and exact key/member/element spans before building lookup maps. It never applies a JSON library's “last key wins” behavior. A missing, unreadable, malformed-UTF-8, or syntactically incomplete source is a scan-incomplete failure ([§FS-errors.5](FS-errors.md#5-json-format)); readable semantic violations are ordinary value errors.
+The reader preserves member order, duplicate keys, raw number and string spellings, decoded strings, and exact key/member/element spans before building lookup maps. It never applies a JSON library's “last key wins” behavior. A missing, unreadable, malformed-UTF-8, or syntactically incomplete source is a scan-incomplete failure (§5.3); readable semantic violations are ordinary value errors.
 
 ### 2.3 Duplicates and ownership
 
