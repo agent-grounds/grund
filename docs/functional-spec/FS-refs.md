@@ -46,7 +46,7 @@ crates/grund-core/src/scanner/file_pass.rs:142: FS-check.1
 docs/functional-spec/FS-show.md:11: §FS-check.1
 ```
 
-`<message>` is the citation token exactly as it appears in the source — marker-prefixed or bare, with its section suffix — so the reader sees the form on disk. Exit `0` always when the scan succeeds, regardless of how many citations were found.
+`<message>` is the citation token exactly as it appears in the source — marker-prefixed or bare, with its section suffix — so the reader sees the form on disk. Exit `0` whenever the scan succeeds and the operand is not refused, regardless of how many citations were found; a refused operand exits `1` (§4).
 
 ### 3.2 `--format json`
 
@@ -83,6 +83,11 @@ The shape is `<path>: <count> (lines <l1>, <l2>, …)`. The count is the number 
   keeps the configured-format `hint:`. JSON emits exactly one failed-query
   diagnostic object on stderr, with `code` `invalid-id` or `ambiguous` and
   `sites:null`, and emits no hint ([§FS-errors.5](FS-errors.md#5-json-format)).
+  It is also exit `1` when the ID has more than one home or its section path
+  is claimed by more than one heading: `refs` refuses both as `show` does
+  ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id),
+  [§FS-show.2.2.2](FS-show.md#222-ambiguous-section)), and under JSON that
+  object names its `sites` ([§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal)).
 - `2` — scan / I/O error ([§FS-check.2](FS-check.md#2-outputs) partial-scan
   semantics apply: an incomplete scan exits `2` and the lookup is not
   trustworthy as complete), an unsupported `--format`, an unknown alias, or

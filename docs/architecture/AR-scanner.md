@@ -1,6 +1,6 @@
 # AR-scanner: how grund discovers declarations and citations
 
-The scanner is the single tree-walk that produces all of grund's input data. Every check in [§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-reference-in-a-repo) and every retrieval in [§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id) derives from what the scanner finds. Speed ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)) is set here.
+The scanner is the single tree-walk that produces grund's input data, the `Findings` of section 3, and it holds the one probe over the tree that is no part of that walk: which agent entrypoint files a repository has ([§AR-system.2.5](README.md#25-scanner)). Every check in [§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-reference-in-a-repo) and every retrieval in [§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id) derives from what the scanner finds. Speed ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)) is set here.
 
 ## placement: Where the scanner sits
 
@@ -60,13 +60,13 @@ The `--full` root list keeps the configured roots rather than starting at the co
 
 ### 1.8 One physical file is read once
 
-The roots can overlap, so the one sorted file list is deduplicated by path before scanning: a file reached from two roots is read once ([§FS-config.3.5.4](../functional-spec/FS-config.md#354-one-physical-file-is-read-once)), and an overlapping `include` pair produces no duplicate-declaration report. Path is enough while every root spells its descendants the same way. It is not enough for an **alias**, which reaches one file under two names: a root that is a symlink to a directory inside the config root or a case alias of one, a file that is itself a link, or anything below a directory link. So the roots are canonicalized once before the walk, and while it walks the scanner records the files that can wear a second name (every file of an aliased root, a file that is itself a link, anything below a directory link) and resolves only those with `canonicalize`. Their resolved targets are the only paths another file can collide with, so the first-seen-wins pass keyed on file identity tests every other file against that small target set by path and never resolves it. `include` roots come first so that first-seen is the spelling the plain run reports, which keeps `--full` purely additive ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)); each root's own file list is sorted before it joins the accumulated one, so "first seen" is deterministic within a root as well as across them ([§FS-errors.4](../functional-spec/FS-errors.md#4-determinism)).
+The roots can overlap, so the one sorted file list is deduplicated by path before scanning: a file reached from two roots is read once ([§FS-config.3.5.4](../functional-spec/FS-config.md#354-one-physical-file-is-read-once)), and an overlapping `include` pair produces no duplicate-declaration report. Path is enough while every root spells its descendants the same way. It is not enough for a second **spelling**, which reaches one file under two names: a root that is a symlink to a directory inside the config root or a case variant of one, a file that is itself a link, or anything below a directory link. So the roots are canonicalized once before the walk, and while it walks the scanner records the files that can wear a second name (every file of such a root, a file that is itself a link, anything below a directory link) and resolves only those with `canonicalize`. Their resolved targets are the only paths another file can collide with, so the first-seen-wins pass keyed on file identity tests every other file against that small target set by path and never resolves it. `include` roots come first so that first-seen is the spelling the plain run reports, which keeps `--full` purely additive ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)); each root's own file list is sorted before it joins the accumulated one, so "first seen" is deterministic within a root as well as across them ([§FS-errors.4](../functional-spec/FS-errors.md#4-determinism)).
 
-What turns the pass on is that **list**, not a flag. A tree with no symlink and no aliased root does not run it; a tree with one symlink pays one `realpath` rather than one per file. A flag would make a single link anywhere charge the entire repository, and real repositories have a link; the list is what keeps the ordinary walk at the cost [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) sets.
+What turns the pass on is that **list**, not a flag. A tree with no symlink and no root spelled other than its canonical path does not run it; a tree with one symlink pays one `realpath` rather than one per file. A flag would make a single link anywhere charge the entire repository, and real repositories have a link; the list is what keeps the ordinary walk at the cost [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) sets.
 
 ### 1.9 A link the walker cannot resolve is a scan failure
 
-`follow_links` also turns a link the walker cannot resolve into an *error* entry in place of the file: a broken target, or a loop, which the `ignore` crate detects and reports rather than recursing into. Those are collected as the per-file scan failures of [§FS-check.2](../functional-spec/FS-check.md#2-outputs) instead of aborting the walk. The walker applies neither its directory filter nor its ignore files to an error entry, so both are re-applied by hand: the hidden-name and `[scan] exclude` tests before a loop is reported, and, for a broken link, the extension filter (§1.12) plus a one-level re-walk of the link's own directory, where the link is an ordinary entry and the ignore rules do reach it. Only a positive "the walker filtered this out" suppresses the report; an unreadable parent reports, because the wrong way to be wrong here is silently.
+`follow_links` also turns a link the walker cannot resolve into an *error* entry in place of the file: a broken target, or a loop, which the `ignore` crate detects and reports rather than recursing into. A directory link whose target is at or above the walk root itself (`docs/up -> ..`) is the one loop the walker cannot see, so the directory filter prunes it where it is met and it is reported after the walk ([§FS-config.3.5.5](../functional-spec/FS-config.md#355-a-link-the-walk-cannot-resolve-is-reported-and-not-walked-into)). Those are collected as the per-file scan failures of [§FS-check.2](../functional-spec/FS-check.md#2-outputs) instead of aborting the walk. The walker applies neither its directory filter nor its ignore files to an error entry, so both are re-applied by hand: the hidden-name and `[scan] exclude` tests before a loop is reported, and, for a broken link, the extension filter (§1.12) plus a one-level re-walk of the link's own directory, where the link is an ordinary entry and the ignore rules do reach it. Only a positive "the walker filtered this out" suppresses the report; an unreadable parent reports, because the wrong way to be wrong here is silently.
 
 ### 1.10 The walk carries out the directories it descended into
 
@@ -99,7 +99,7 @@ Both forms record the same `Declaration` struct downstream; consumers (`grund <I
 
 `<ID>` is the kind's effective grammar — the configured `[id]` grammar, or a citable `[[kinds]]` row's own `format` where it sets one ([§FS-config.3.2](../functional-spec/FS-config.md#32-id--id-grammar), [§FS-config.3.4.10](../functional-spec/FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)) — with `{kind}` drawn from a configured `[[kinds]]` prefix. A token in either shape that begins with a configured citable kind and ends at the declaration colon but misses that format still opens a declaration: it is retained in the catalog under its exact spelling and reported as a near miss ([§FS-check.4.6](../functional-spec/FS-check.md#46-declaration-near-miss)).
 
-A markdown-form heading may sit at any level: file-form `GRUND`/`FS`/`AR`/`DF`/`DA` declarations are H1 (`# FS-… :`), and `GOAL` and `RM` declarations are H2 inside `docs/goals.md` and `docs/roadmap.md` respectively.
+A markdown-form heading may sit at any level; where each default kind declares, and at which level, is [§FS-config.3.4.4.1](../functional-spec/FS-config.md#3441-where-each-citable-default-declares).
 
 #### 2.1.2 The declaration heading level
 
@@ -202,7 +202,7 @@ The pass is cheap — a line that lacks the literal `<§>` needle short-circuits
 
 ### 2.6 Number-only shorthand citations
 
-Where the configured `[id] format` carries both `{number}` and `{slug}`, a second citation pattern is compiled beside the full one: the format with the `{slug}` placeholder and one adjacent literal separator removed, so `{kind}-{number}-{slug}` yields `{kind}-{number}` and `§FS-042` is recognized ([§FS-check.1.2](../functional-spec/FS-check.md#12-the-number-only-shorthand)). A format missing either placeholder compiles no such pattern and pays nothing anywhere below.
+Where a kind's effective format (§2.1.1) carries both `{number}` and `{slug}`, a second citation pattern is compiled beside the full one, one for the kinds that use `[id] format` and one for each `[[kinds]]` row whose own `format` qualifies: the format with the `{slug}` placeholder and one adjacent literal separator removed, so `{kind}-{number}-{slug}` yields `{kind}-{number}` and `§FS-042` is recognized ([§FS-check.1.2](../functional-spec/FS-check.md#12-the-number-only-shorthand)). A kind whose effective format misses either placeholder compiles no such pattern, and a project where no kind has one pays nothing anywhere below.
 
 Five properties, §2.6.1 to §2.6.5, make the pass safe to add to a grammar that already matches; a whole-file post-pass then resolves what it flagged (§2.6.6).
 
@@ -270,7 +270,7 @@ The record is **structure, not units**: the level that turns it into units belon
 
 ## 3. Output
 
-The scanner's only structured output is a `Findings` struct, and everything downstream (checking, showing, IDE diagnostics) operates on it. It contains:
+The walk's only structured output is a `Findings` struct, and everything downstream (checking, showing, IDE diagnostics) operates on it; which agent entrypoint files a repository has is the scanner's one answer outside it, from a probe that is no part of the walk ([§AR-system.2.5](README.md#25-scanner)). `Findings` contains:
 
 - `declarations: BTreeMap<Id, Vec<Declaration>>` — keyed by ID, with file/line, stub-info, the recorded sections (each section path paired with its heading text — §2.2) per declaration, and the body line range (§2.4.1). An `E2E` declaration (§6) carries its case-directory path, fixture list, invocation, and expected exit code instead.
 - `citations: Vec<Citation>` — each with the referenced ID, optional section, file, line, and start column, whether it was written marker-prefixed or bare, whether it was written in the number-only shorthand (§2.6), the resolved source kind plus enclosing declaration (§2.4.2, §2.4.3), and, in a source inline comment, its inline citation site (§3.1).
@@ -292,7 +292,7 @@ When file scanning runs in parallel, each per-file result is merged as though th
 
 ## 4. Inline declarations in language doc-comments
 
-The scanner is designed so that an inline declaration — most commonly an `AR-NNN-<slug>` for an architectural spec — can live inside the **class, method, module, or package doc-comment** of any major language. This makes class-level documentation a first-class place to put architecture specs: the spec body sits with the code it describes, and a stub under `docs/architecture/` points at it through a single-line H1 of the form `# <ID>: [<path>](<path>)`. The scanner recognizes the doc-comment forms of §4.3, strips each comment line to the content the author meant (§4.4), and then runs its ordinary detection on that content.
+The scanner is designed so that an inline declaration — most commonly an `AR-NNN-<slug>` for an architectural spec — can live inside the **class, method, module, or package doc-comment** of any major language — *inline* meaning in source, in a doc-comment, which is never an *inline comment* in [§FS-inline-citation-style.1.1](../functional-spec/FS-inline-citation-style.md#11-doc-comments-are-not-sites)'s sense. This makes class-level documentation a first-class place to put architecture specs: the spec body sits with the code it describes, and a stub under `docs/architecture/` points at it through a single-line H1 of the form `# <ID>: [<path>](<path>)`. The scanner recognizes the doc-comment forms of §4.3, strips each comment line to the content the author meant (§4.4), and then runs its ordinary detection on that content.
 
 ### 4.1 Ruby and Python edge cases
 
@@ -321,9 +321,9 @@ The contract also names the corners the recognizer accepts rather than repairs. 
 
 ### 4.3 The recognized doc-comment forms
 
-The recognized doc-comment forms (matched as comment prefixes preceding the heading line):
+The comment forms a declaration is recognized in (matched as comment prefixes preceding the heading line); which blocks of them are doc comments is [§FS-inline-citation-style.1.1.2](../functional-spec/FS-inline-citation-style.md#112-languages)'s question, not this table's:
 
-| Language(s)              | Doc-comment form                                  | How the regex sees it                |
+| Language(s)              | Declaration-hosting comment form                  | How the regex sees it                |
 |--------------------------|---------------------------------------------------|--------------------------------------|
 | Java, Kotlin, Scala      | `/** … */` (Javadoc / KDoc / Scaladoc)            | `/*` opens; ` * ` on continuation    |
 | C, C++                   | `/** … */` (Doxygen) or `/// …`                   | `/*` or `//` (covers `///`)          |
@@ -338,7 +338,7 @@ The recognized doc-comment forms (matched as comment prefixes preceding the head
 | Lisp, Scheme, Clojure    | `; …` line comments                               | `;`                                  |
 | SQL, Haskell, Lua, Ada   | `-- …` line comments                              | `--`                                 |
 
-This table documents the doc-comment *conventions* for the languages `grund` is built to serve. It is not the only gate: the file extension must be in `[scan] extensions` and the marker must be in `[scan] comment_prefixes` ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-walked)). The defaults contain both halves for every row above and also recognize bare `*` / `/*` block-comment lines. A language not in the table still works when the repository configures both its extension and its comment marker.
+This table documents the comment *conventions* for the languages `grund` is built to serve. It is not the only gate: the file extension must be in `[scan] extensions` and the marker must be in `[scan] comment_prefixes` ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-walked)). The defaults contain both halves for every row above and also recognize bare `*` / `/*` block-comment lines. A language not in the table still works when the repository configures both its extension and its comment marker.
 
 ### 4.4 Comment lines are normalized before detection
 

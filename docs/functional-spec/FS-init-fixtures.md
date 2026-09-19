@@ -137,7 +137,7 @@ When `AGENTS.md` exists and `--force` is passed, `init` rewrites the canonical f
 
 ## 4. Target and flag failures
 
-A missing target directory is a CLI-level failure: exit `2`, stdout empty, stderr:
+A missing target directory is an I/O failure ([§FS-init.4](FS-init.md#4-exit-codes)): exit `2`, stdout empty, stderr:
 
 ```text
 error: target directory does not exist: <path>
@@ -153,7 +153,7 @@ These failures leave the target tree unchanged.
 
 ## 5. Dry-run preview
 
-`grund init --dry-run` reports exactly what a real run would do, without writing anything: `wrote `, `appended `, and `updated ` become `would-write `, `would-append `, and `would-update `, `exists ` lines are unchanged, and the `next:` block follows a real run's rule ([§FS-init.2.2](FS-init.md#22-stdout--stderr)). Exit code is `0` for a clean preview, `2` for a CLI-level error (e.g. missing target), the same as a real run.
+`grund init --dry-run` reports exactly what a real run would do, without writing anything: `wrote `, `appended `, and `updated ` become `would-write `, `would-append `, and `would-update `, `exists ` lines are unchanged, and the `next:` block follows a real run's rule ([§FS-init.2.2](FS-init.md#22-stdout--stderr)). Exit code is `0` for a clean preview, `2` for an I/O error (e.g. missing target) or a CLI-level error, the same as a real run.
 
 ## 6. Workspace members
 
@@ -188,7 +188,7 @@ The generated `{repo_copy}/AGENTS.md` contains, between `### Project map` and `#
 ```markdown
 ### Workspace members
 
-Cross-project citations use §alias/<ID>.
+Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
 - [`api`](apps/api/AGENTS.md)
 - [`core`](packages/core/) *(not yet initialized)*
@@ -208,7 +208,7 @@ The generated `{repo_copy}/apps/api/AGENTS.md` contains a `### Workspace members
 ```markdown
 ### Workspace members
 
-Cross-project citations use §alias/<ID>.
+Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
 - [`core`](../../packages/core/) *(not yet initialized)*
 - [`root`](../../) *(not yet initialized)*
@@ -219,11 +219,11 @@ Cross-project citations use §alias/<ID>.
 
 ### 6.3 Non-workspace repo
 
-Precondition: `{repo_copy}` exists and contains no `[workspace]` block in its config (or no config at all, in which case the defaults apply per [§FS-init.2.4](FS-init.md#24-generated-grundtoml)).
+Precondition: `{repo_copy}` exists and contains no `[workspace]` block in its config (or no config at all, in which case the defaults apply per [§FS-init.2.4](FS-init.md#24-generated-grundtoml)), and no ancestor workspace claims it ([§FS-init.2.3.4.15.1](FS-init.md#234151-which-workspace)).
 
 Command: `grund init {repo_copy}`.
 
-The generated `AGENTS.md` contains no `### Workspace members` section anywhere. The `### Project map` block is byte-identical to the default-form fixture (§1) — surfacing workspace mode is gated on `[workspace]` being declared, so a single-project repo's block is unchanged from before [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) landed.
+The generated `AGENTS.md` contains no `### Workspace members` section anywhere. The `### Project map` block is byte-identical to the default-form fixture (§1) — surfacing workspace mode is gated on a `[workspace]` block, the target's own or a claiming ancestor's, so a single-project repo's block is unchanged from before [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) landed.
 
 ### 6.4 Workspace member descriptions
 
@@ -246,7 +246,7 @@ The generated `{repo_copy}/AGENTS.md` contains exactly this block:
 ```markdown
 ### Workspace members
 
-Cross-project citations use §alias/<ID>.
+Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 
 - [`api`](apps/api/AGENTS.md): Payment API service
 - [`core`](packages/core/): Core domain library *(not yet initialized)*

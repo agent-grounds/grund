@@ -5,12 +5,12 @@ How `grund` turns the [§GOAL-fast-feedback.1](../goals.md#1-performance-targets
 ## placement: What the benchmarks measure
 
 ```text
-generated fixture, committed baseline ─► [ benchmarks ] ─► instruction count per hot command ─► CI job (AR-ci.5)
-                                            │
-                                            └─ runs the built grund binary as a subprocess: the CLI, end to end
+generated fixture, base-branch baseline ─► [ benchmarks ] ─► instruction count per hot command ─► CI job (AR-ci.5)
+                                              │
+                                              └─ runs the built grund binary as a subprocess: the CLI, end to end
 ```
 
-Not a component: a meter on the pipeline ([§AR-system.1](README.md#1-the-system)), taken through the CLI frontend so that it counts what a user's invocation counts ([§AR-system.3](README.md#3-frontends), [§AR-system.5](README.md#5-what-holds-the-shape)). It takes a generated fixture and the committed baseline and gives one instruction count per hot command, recorded by the CI job of [§AR-ci.5](AR-ci.md#5-benchmark-job). It knows nothing of the engine's internals: each benchmark runs the built `grund` binary as a subprocess (section 1).
+Not a component: a meter on the pipeline ([§AR-system.1](README.md#1-the-system)), taken through the CLI frontend so that it counts what a user's invocation counts ([§AR-system.3](README.md#3-frontends), [§AR-system.5](README.md#5-what-holds-the-shape)). It takes a generated fixture and a baseline saved from the base branch ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)) and gives one instruction count per hot command, recorded by the CI job of [§AR-ci.5](AR-ci.md#5-benchmark-job). It knows nothing of the engine's internals: each benchmark runs the built `grund` binary as a subprocess (section 1).
 
 ## 1. What is benched
 
@@ -77,10 +77,10 @@ The millisecond budget itself is still backstopped by the cheap wall-clock guard
 
 ## 4. Relationship to the rest of the tree
 
-- [§AR-goal-measurement.2](AR-goal-measurement.md#2-goal-meters) — this harness is the fast-feedback meter; [§GOAL-fast-feedback.1](../goals.md#1-performance-targets)'s targets are recorded per commit against the committed baseline; the limits are not wired up ([§AR-ci.5.2](AR-ci.md#52-regression-limits)).
+- [§AR-goal-measurement.2](AR-goal-measurement.md#2-goal-meters) — this harness is the fast-feedback meter; [§GOAL-fast-feedback.1](../goals.md#1-performance-targets)'s targets are recorded per commit and, on a pull request, compared against a baseline saved from the base branch ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)); the limits are not wired up ([§AR-ci.5.2](AR-ci.md#52-regression-limits)).
 - [§DA-benchmark-instruction-counting](../decisions/architectural/DA-benchmark-instruction-counting.md#da-benchmark-instruction-counting-the-performance-harness-counts-instructions-not-wall-clock-seconds) — the decision record for choosing Callgrind/iai-callgrind over a wall-clock criterion harness (§2), and for benchmarking the binary rather than the library (§1).
 - [§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms) / [§RM-distribution](../roadmap.md#rm-distribution-cargo--npm--pypi-from-one-engine) — the harness is deliberately established before the workspace split and bindings work move the engine around, so any slowdown shows up as a diff against a known-good instruction count rather than going unnoticed.
-- [§DA-pgo-release](../decisions/architectural/DA-pgo-release.md#da-pgo-release-distributed-binaries-are-pgo-built-trained-on-the-benchmark-workload) — the PGO training corpus of §1.5; the release pipeline that runs `scripts/pgo-build.sh` is owned by [§RM-distribution](../roadmap.md#rm-distribution-cargo--npm--pypi-from-one-engine), the release contract is [§FS-distribution.4](../functional-spec/FS-distribution.md#4-release-process).
+- [§DA-pgo-release](../decisions/architectural/DA-pgo-release.md#da-pgo-release-distributed-binaries-are-pgo-built-trained-on-the-benchmark-workload) — the PGO training corpus of §1.5; the release pipeline that runs `scripts/pgo-build.sh` is release packaging ([§AR-ci.6](AR-ci.md#6-pgo-stays-out-of-development-ci)), whose contract is [§FS-distribution.4](../functional-spec/FS-distribution.md#4-release-process).
 
 ## 5. Comparing two revisions
 

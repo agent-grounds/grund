@@ -23,7 +23,7 @@ hint: run `grund check bogus` to validate a path
 hint: run `grund --help` for the list of subcommands
 ```
 
-The final `grund --help` hint is emitted only when the first word contains none of `-` / `/` / `.` — the three separators an ID, a workspace-qualified ID, or a section reference would carry — because a token without any of them cannot match the default `{kind}-{slug}` shape and is overwhelmingly a botched subcommand. The full known-command list stays in `grund --help` rather than being repeated on every query failure.
+The final `grund --help` hint is emitted only when the first word contains none of `-` / `/` / `.` — the three separators an ID, a workspace-qualified ID, or a section reference would carry — because a token without any of them cannot match the default `{kind}-{number}-{slug}` shape and is overwhelmingly a botched subcommand. The full known-command list stays in `grund --help` rather than being repeated on every query failure.
 
 Stdout is empty and the exit is `1`: the default ID lookup is a failed query, not a CLI launch failure.
 
@@ -96,4 +96,4 @@ prevents the batch from running ([§FS-show.2.6](FS-show.md#26-batch-resolution)
 - No generic `--quiet` / `--verbose` knobs — severity is fixed ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)), and a clean text `grund check` already has a single fixed `success` line ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)). The explicit `check --only <code>` / `--ignore <code>` surface is a scoped query over stable diagnostic identities, not a presentation mode or a project policy knob ([§FS-check.1](FS-check.md#1-inputs)).
 - No `--config <file>` override — config is discovered by walking up from the command path ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), not pointed at directly, to keep two installs on the same tree in agreement ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). `grund config show [path]` reports what was discovered from that starting path.
 - No interactive flags, no TUI, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
-- No `grund graph`, no `grund new` — graph visualisation is not a committed feature ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)), and file creation for a new declaration is the caller's job after `grund id` ([§FS-id.7](FS-id.md#7-what-id-does-not-do)).
+- No `grund graph`, no `grund new` — graph visualisation is a non-goal ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)), and file creation for a new declaration is the caller's job after `grund id` ([§FS-id.7](FS-id.md#7-what-id-does-not-do)).

@@ -1,6 +1,6 @@
 # AR-core-module-layout: core implementation is split by category
 
-The core implementation lives in `crates/grund-core/src/`, while `crates/grund-cli/src/main.rs` is the published `grund` CLI entrypoint described by [§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms). Inside `grund-core`, the source layout should match the same category boundaries the later LSP and binding frontends need. A single large crate root hides ownership and makes spec-to-code citations harder to place.
+The core implementation lives in `crates/grund-core/src/`, while `crates/grund-cli/src/main.rs` is the published `grund` CLI entrypoint described by [§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms). Inside `grund-core`, the source layout should match the same category boundaries the shipped LSP frontend and the later binding frontends need. A single large crate root hides ownership and makes spec-to-code citations harder to place.
 
 ## placement: Where the file layout sits
 
@@ -12,9 +12,9 @@ Not a component: the rule for how the engine's files are named, owned and sized,
 
 ## 1. Module categories
 
-`crates/grund-core/src/lib.rs` stays the engine crate entrypoint and public Rust API surface, and every implementation file under it belongs to one **component module**: one directory per component of [§AR-system.2](README.md#2-components), named after it — `model/`, `grammar/`, `config/`, `workspace/`, `templates/`, `scanner/`, `resolver/`, `checker/`, `queries/`, `writers/`, `api/`, and `compat/` for the deprecated path beside the api ([§AR-system.2.9](README.md#29-api)). What each one implements, consumes and must not know is its component's subsection, and what it may *read* is [§AR-system.4](README.md#4-dependency-direction); this section says only how its files are arranged.
+`crates/grund-core/src/lib.rs` stays the engine crate entrypoint and public Rust API surface, and every implementation file under it belongs to one **module directory**: one per component of [§AR-system.2](README.md#2-components), named after it — `model/`, `grammar/`, `config/`, `workspace/`, `templates/`, `scanner/`, `resolver/`, `checker/`, `queries/`, `writers/`, `api/` — and `compat/`, a module directory but no component, for the deprecated path beside the api ([§AR-system.2.9](README.md#29-api)). What each one implements, consumes and must not know is its component's subsection, and what it may *read* is [§AR-system.4](README.md#4-dependency-direction); this section says only how its files are arranged.
 
-A file belongs to exactly one component — the directory it sits under, `model/records.rs` to **model** and `compat/list.rs` to **compat** — and it holds one thing, named for what that is: the invariant, rule or record a reader would look for under that name. That is what a citation of this section from a file's own doc comment means, and it is why a file grown past two subjects is a split rather than an exception (§3).
+A file belongs to exactly one of those twelve module directories — the one it sits under, `model/records.rs` to **model** and `compat/list.rs` to **compat** — and it holds one thing, named for what that is: the invariant, rule or record a reader would look for under that name. That is what a citation of this section from a file's own doc comment means, and it is why a file grown past two subjects is a split rather than an exception (§3).
 The boundary, the one file outside it, where a test module sits, and the two tests that hold this against the tree are §1.1 to §1.4.
 
 ### 1.1 `mod.rs` is the component's whole boundary

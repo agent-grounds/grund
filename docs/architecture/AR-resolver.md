@@ -32,7 +32,7 @@ scanner ─► Findings ─► [ resolver ] ─┬─► loaded project set ─�
 The tenth box of the pipeline ([§AR-system.2.10](README.md#210-resolver)). It takes the
 project map workspace expanded out of configs ([§AR-system.2.4](README.md#24-workspace)) and each
 project's `Findings` from the scanner ([§AR-system.2.5](README.md#25-scanner)), and gives the
-checker, the queries and the writers the loaded project set with the five
+checker, the queries and the writers the loaded project set with the four
 answers above ([§AR-system.2.6](README.md#26-checker), [§AR-system.2.7](README.md#27-queries), [§AR-system.2.8](README.md#28-writers)). It
 knows no rule and no rendering: it settles which project a coordinate lands in
 and what text is there, never whether that is an error or how to print it
@@ -67,7 +67,7 @@ slightly differently from `check`, leaving the editor jump and the CI verdict
 out of sync.
 
 A `None` return value at the resolver is never a silent skip; the calling
-rule turns it into a located diagnostic (`unknown project alias <name>` at
+rule turns it into a located diagnostic (`unknown project alias <path>` at
 the citation site). Section 2 is that consequence in full.
 
 ## 2. Standalone members fail loud, not silent
@@ -75,7 +75,7 @@ the citation site). Section 2 is that consequence in full.
 A `grund check` invoked at a member root cannot resolve qualified citations
 to the workspace or to siblings — there is no project map. Per
 [§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) §3.6 and [§FS-workspace.5](../functional-spec/FS-workspace.md#5-command-scope), every such unresolved
-qualified citation is an `unknown project alias <name>` error at the
+qualified citation is an `unknown project alias <path>` error at the
 citation site.
 
 This is the `None` of section 1, turned into a diagnostic by a single rule in

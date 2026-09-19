@@ -58,7 +58,7 @@ project_name = "Example" # optional metadata written by `grund init`
 project_description = "One line describing what this project is for" # optional
 ```
 
-`project_name` is free-form metadata. When the project participates in a workspace (its own config sets `[workspace]`, or its directory is listed as a member by a parent), `project_name` is also the project's workspace alias — but only when it matches the alias grammar in [§FS-workspace.1](FS-workspace.md#1-citation-syntax). A `project_name` that is not a valid alias is not a load-time error; it errors loudly at workspace expansion with `invalid workspace project alias <name>`. Outside any workspace context `project_name` is purely metadata: no checker, scanner, formatter, or query behavior depends on it.
+`project_name` is free-form metadata. When the project participates in a workspace (its own config sets `[workspace]`, or its directory is listed as a member by a parent), `project_name` is also the project's workspace alias — but only when it matches the alias grammar in [§FS-workspace.1](FS-workspace.md#1-citation-syntax), and never for a member listed in `optional_members`, whose alias is the entry's last path segment and whose disagreeing `project_name` is a config error ([§FS-workspace.3](FS-workspace.md#3-aliases)). A `project_name` that is not a valid alias is not a load-time error; it errors loudly at workspace expansion with `invalid workspace project alias <name>`. Outside any workspace context `project_name` is purely metadata: no checker, scanner, formatter, or query behavior depends on it.
 
 `project_description` is a free-form one-line description of the project, chosen in [§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists). It is presentation metadata only: generated workspace member lists render it next to the project's alias ([§FS-init.2.3.4.15](FS-init.md#23415-workspace-members), [§FS-workspace.3](FS-workspace.md#3-aliases)), and no checker, scanner, formatter, or query behavior depends on it. A value containing a line break (a `\n` or `\r` escape in the TOML string) is a config error at the `project_description` line, reported per §4.3 — the key exists to feed single-line list bullets, so a multi-line value is a bug surfaced loudly.
 
@@ -124,7 +124,7 @@ The key has **one name and two scopes**, and the scope decides both who is instr
 | Where | File | Accepted | Instructs |
 | --- | --- | --- | --- |
 | Repository *opinion* | the project's `grund.toml` (§1) | `link` only | every agent that clones the repo, through the generated entrypoint ([§FS-init.2.3.6](FS-init.md#236-clickable-citations)) |
-| User *preference* | `$XDG_CONFIG_HOME/grund/config.toml` | `plain` \| `link` | every agent on this machine, through its global instruction file ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)) |
+| User *preference* | `~/.config/grund/config.toml`, resolved like every `~/.config` target ([§FS-integrations.4.1.7](FS-integrations.md#417-where-a--target-resolves)) | `plain` \| `link` | every agent on this machine, through its global instruction file ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)) |
 
 The same spelling in both files is deliberate: one setting the user already knows by name, read at two scopes, rather than a second vocabulary for the same idea. Only the *values* narrow, and only in the direction a repository can actually justify.
 
@@ -142,7 +142,7 @@ may read several agents that do not render alike, so the same key is also accept
 
 #### 3.1.5 What `link` commits, and when to set it
 
-`link` makes the declaration's location travel with the citation; the committed form depends on the entrypoint's agent — a Markdown link over the machine-independent `file` target in the Claude entrypoints, plain `path:line` text in every other ([§DF-conversation-link-target.2.4](../decisions/functional/DF-conversation-link-target.md#24-the-form-is-gated-per-agent-and-the-fallback-is-path)) — and the reader's own `conversation_target` may override it ([§FS-init.2.3.4.17](FS-init.md#23417-clickable-citations), [§DF-conversation-link-target.2.3](../decisions/functional/DF-conversation-link-target.md#23-the-target-is-user-scoped-but-the-default-is-committable)).
+`link` makes the declaration's location travel with the citation; the committed form depends on the entrypoint's agent — a Markdown link over the machine-independent `file` target in the entrypoints of the agents the gate clears for it (Claude's and Pi's), plain `path:line` text in every other ([§DF-conversation-link-target.2.4](../decisions/functional/DF-conversation-link-target.md#24-the-form-is-gated-per-agent-and-the-fallback-is-path)) — and the reader's own `conversation_target` may override it ([§FS-init.2.3.4.17](FS-init.md#23417-clickable-citations), [§DF-conversation-link-target.2.3](../decisions/functional/DF-conversation-link-target.md#23-the-target-is-user-scoped-but-the-default-is-committable)).
 
 **Set the repository key to `link`** when the citations your agents write should carry their declaration location for readers whose machines grund never touched — teammates on a fresh clone, cloud agent sessions, CI reviewers, and Cursor or Windsurf users, who have no user-level file grund can write. It costs installed users nothing: their recorded `plain` still wins ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions), [§DF-repo-conversation-opinion.2.3](../decisions/functional/DF-repo-conversation-opinion.md#23-precedence)). **Leave it absent** when local-conversation rendering is each contributor's own business — then the user preference governs alone, and a machine that never stated one gets today's bare citations.
 
@@ -284,7 +284,7 @@ One `[[kinds]]` table per kind. `kind` is its name — mandatory, and the handle
 
 A kind is either *multi-file* (`folder = "<dir>"`) — each declaration is the H1 of its own file under `<dir>` — or *single-file* (`file = "<path>"`) — every declaration of the kind is a heading inside that one document — an H2 by convention, and the H1 where the file holds the kind's single declaration (§3.4.4). Setting both `folder` and `file` on the same kind is invalid; setting neither leaves the kind with no configured home. What a home means to `grund id` and to the checker is §3.4.11.
 
-Every configured home is also **in the scan scope by construction**, whether or not `[scan] include` names it (§3.5).
+Every configured home is also **in the scan scope by construction**, whether or not `[scan] include` names it (§3.5.8), except one marked `scan = false`, which is listed and not walked (§3.4.7).
 
 #### 3.4.1 `citable` — kinds that declare no IDs
 
@@ -359,7 +359,7 @@ The name-keyed default is additive like the key (§3.4.2) — it can only *remov
 
 #### 3.4.4 The default kinds
 
-The defaults declare these nine, in this order:
+The defaults declare these nine, in this order (an existing `grund.toml` that omits `[[kinds]]` gets them with the older `FS` home of §2):
 
 ```toml
 [[kinds]]
@@ -497,7 +497,7 @@ Three combinations are config errors, reported per §4.3, each closing a state t
 
 #### 3.4.8 `require_grounding` and `grounding_level` — grounding per place and per level
 
-Two keys say, per kind, **whether** the files of a place must cite a declared ID and **how finely** that is asked. Each has a `[reference]` twin (§3.1.7) that is the default for every row not setting it — the shape `index` already has (§3.4.2): a global default, the row wins.
+Two keys say, per kind, **whether** the files of a place must cite a declared ID and **how finely** that is asked. Each has a `[reference]` twin (§3.1.7) that is the default for every row not setting it — the shape `index` already has, though its default is built in per kind name rather than configured (§3.4.2.4): a default, the row wins.
 
 ```toml
 [reference]
@@ -664,7 +664,7 @@ The same rule reaches the **walk root itself**: a repository whose own path is r
 
 #### 3.5.3 The directory rules apply under the link name
 
-The directory rules above still apply to a followed directory under its **link** name, so `docs/node_modules -> ../../node_modules` is excluded exactly as a real directory of that name would be. The one boundary that is *not* a name rule is another project's root, which a link may not carry a walk across in any direction ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)).
+The directory rules above still apply to a followed directory under its **link** name, so `docs/node_modules -> ../../node_modules` is excluded exactly as a real directory of that name would be. The two boundaries that are *not* name rules are another project's root, which a link may not carry a walk across in any direction ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)), and an E2E case directory, whose fixture tree stays out of the host scan however a link reaches it (§3.4.4.3).
 
 #### 3.5.4 One physical file is read once
 

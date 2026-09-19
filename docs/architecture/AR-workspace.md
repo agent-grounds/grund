@@ -4,9 +4,9 @@ The workspace surface ([§DF-subproject-namespaces](../decisions/functional/DF-s
 extra dimension** to the single-project pipeline: a citation may carry a
 namespace. Every other moving part — the scanner, the config loader, the
 checker — must keep its single-project contract intact and let the dimension
-flow through unchanged, so that the next command to gain qualified-ID behaviour
-(`show`, `refs`, `list`, completions) composes with this layering instead of
-re-implementing it.
+flow through unchanged, so that every command with qualified-ID behaviour
+composes with this layering instead of re-implementing it, as the query
+commands and the formatter already do ([§AR-resolver.3](AR-resolver.md#3-downstream-commands-compose-not-duplicate)).
 
 This page holds the **config-time** half: what a `[workspace]` block expands
 to, what an alias is, and where a scan stops. Loading those projects — scanning
@@ -33,7 +33,7 @@ Everything here is answered from config text alone. Anything that needs a walk, 
 
 ## 1. Layering
 
-The single-project pipeline ([§AR-system.1](README.md#1-the-system)) gains one dimension and no new layer. Read top down: the CLI decides workspace versus single-project run and assembles the project map and current alias; the resolver is the one function that knows what "qualified" means at runtime ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)); the checker calls the resolver and asks neither "is this a workspace?" nor "what alias am I?"; the scanner emits `Citation { namespace, … }` from one regex (§2) and obeys the workspace boundary roots in one walk, never asking "am I in a workspace?" (§3.2). The CLI never reaches into a regex, and no layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)).
+The single-project pipeline ([§AR-system.1](README.md#1-the-system)) gains one dimension and no new layer. Read top down: the core's shared loader, `load_workspace_context` / `run_check` ([§AR-resolver.3](AR-resolver.md#3-downstream-commands-compose-not-duplicate)), decides workspace versus single-project run and assembles the project map and current alias; the checker calls the resolver and asks neither "is this a workspace?" nor "what alias am I?"; the resolver is the one function that knows what "qualified" means at runtime ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)); the scanner emits `Citation { namespace, … }` from one regex (§2) and obeys the workspace boundary roots in one walk, never asking "am I in a workspace?" (§3.2). The CLI never reaches into a regex, and no layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)).
 
 ## 2. Single citation grammar
 
@@ -98,12 +98,14 @@ author writes one.
 
 The scanner does not know whether it is running for a single-project repo or
 a workspace member. It produces a uniform stream of `Citation` records, and
-the workspace machinery lives one layer up.
+the resolver lives one layer up ([§AR-system.4](README.md#4-dependency-direction)).
 
-The only workspace-shaped knob the scanner reads is `workspace_boundary_roots`
-— the canonical paths the tree walk must *not* descend into, because a
-root-project scan must not absorb member declarations (§6). It is consulted as
-a directory filter during the walk, never as a per-citation rule.
+The scanner reads two workspace-shaped knobs. `workspace_boundary_roots` holds
+the canonical paths the tree walk must *not* descend into, because a
+root-project scan must not absorb member declarations (§6), and is consulted as
+a directory filter during the walk. `workspace_project_roots` holds the
+canonical root of every project the run loaded, and is the ownership test asked
+of a link-reached directory (§6.2). Neither is ever a per-citation rule.
 
 ## 5. The config: one parse, one validation pass
 
@@ -149,7 +151,7 @@ must hold for *every* shape of config the loader can return:
 
 The workspace alias for a project is, in order:
 
-1. The project's own `project_name` (validated as a slug at config load).
+1. The project's own `project_name` (validated as a slug at use, in `derive_alias`).
 2. For a member, the basename of the member directory (also validated as a slug
    before use).
 3. For the workspace root with no `project_name`, the literal `root`

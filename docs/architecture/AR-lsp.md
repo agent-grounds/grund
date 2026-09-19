@@ -38,7 +38,7 @@ Requests and diagnostics alike take their snapshot from one resolution of the do
 
 ### 3.1 Full re-scan on every change (v1)
 
-Initial implementation: every `didChange` triggers `grund_core::scan(workspace_root)` and a fresh `grund_core::check`. This is simple and correct. The [§GOAL-fast-feedback.1](../goals.md#1-performance-targets) targets are the budget it rests on: a scan within them makes a full re-scan per keystroke invisible on small and medium projects, and acceptable per-save on large ones.
+Initial implementation: every `didChange` triggers `grund_core::scan(project_root)` and a fresh `grund_core::check` for each project that can see the edited file (§2.1). This is simple and correct. The [§GOAL-fast-feedback.1](../goals.md#1-performance-targets) targets are the budget it rests on: a scan within them makes a full re-scan per keystroke invisible on small and medium projects, and acceptable per-save on large ones.
 
 ### 3.2 Incremental scan (v2, when budget breaks)
 

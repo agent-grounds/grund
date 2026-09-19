@@ -289,9 +289,10 @@ is not.
 
 Recognizing such a citation uses the fixed `KIND[-NUM]-SLUG` fallback shape of
 §5, not the target's `[id] format`, for exactly the reason §5 gives: the target's
-grammar is unreachable. A qualified tail that does not match the fallback is no
-more a citation here than at member scope, and the run over a checkout that
-*has* the member stays the place every shape is caught.
+grammar is unreachable. As at member scope (§5.2), that shape does not decide
+whether the citation is reported: a qualified tail that does not match it is
+unverified all the same, and the run over a checkout that *has* the member stays
+the place every tail is checked.
 
 #### 2.2.3 Why `members` alone leaves no run
 
@@ -731,9 +732,9 @@ the one spelling that fails at the root.
 
 Only a run that reads a path carries this obligation (§6.1.7.1); a quiet climb
 asks the same ancestors (§6.1.7.2). A block that does not name the directory is
-not asked (§6.1.7.3), the claim is read from `members` alone (§6.1.7.4), and an
-unobtainable `members` value leaves it undecidable (§6.1.7.5) and earns one
-warning (§6.1.7.6).
+not asked (§6.1.7.3), the claim is read from `members` and `optional_members`
+alone (§6.1.7.4), and an unobtainable value of either leaves it undecidable
+(§6.1.7.5) and earns one warning (§6.1.7.6).
 
 ##### 6.1.7.1 Only a run that reads a path carries the obligation
 
@@ -750,7 +751,7 @@ The claim rule is about the scopes that *do* read a path, which are the blocks.
 
 The chain is still *asked* about such a run, by a second, **quiet** climb that
 reads no path out of it: [§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)'s
-rule walks these same ancestors, with this same `members`-only read (§6.1.7.4),
+rule walks these same ancestors, with this same entry-text read (§6.1.7.4),
 about a `[workspace]` block the run's own walk met rather than about the run's
 own name — so what an ancestor lists decides whether that block is reported.
 That question carries none of the obligations of §6.1.7, because it spells
@@ -767,10 +768,10 @@ command inside it.
 
 ##### 6.1.7.4 The claim is read from `members` entries alone
 
-The claim is read from the **`members` entries alone**, never from a loaded
-config: the `members` value is parsed on its own — no other key read, no shape
-rule applied — so a config that fails to load is still asked whether it claims
-this directory. Deciding it from a loaded config instead made *every* load
+The claim is read from the **`members` and `optional_members` entries alone**
+(§2.2.9.1), never from a loaded config: those two values are parsed on their own
+— no other key read, no shape rule applied — so a config that fails to load is
+still asked whether it claims this directory. Deciding it from a loaded config instead made *every* load
 failure above a repository silently equal to "claims nothing", which is the
 collapsed prefix this rule exists to prevent, and two mistakes on one `members`
 line then behaved oppositely: a member that does not exist failed the subtree
@@ -778,9 +779,9 @@ run, while an entry the shape rule rejects (§2.3) let it re-spell itself.
 
 ##### 6.1.7.5 An unobtainable `members` value leaves the claim undecidable
 
-A config whose `members` text cannot be obtained at all — the file cannot be
-read, or its `members` value is not a list — leaves the claim undecidable in both
-directions. The run continues, because a stray unreadable `grund.toml` above a
+A config whose `members` or `optional_members` text cannot be obtained at all —
+the file cannot be read, or either value is not a list — leaves the claim
+undecidable in both directions. The run continues, because a stray unreadable `grund.toml` above a
 repository is not that repository's problem, and whether it says so depends on
 which climb asked: the one spelling an alias path never continues silently — it
 prints a run-level `warning:` naming that config and saying alias paths below it
@@ -817,7 +818,7 @@ Two shapes stay unreported, for different reasons. A block the walk never
 reaches — behind `[scan] exclude`, an ignore file, a member boundary, or a
 narrowed scope — is the known limitation, because a run that cannot see
 something does not judge it. A block an enclosing config *names* and then cannot
-answer for is the undecidable claim of §6.1.7, left alone because no answer is
+answer for is the unanswered claim of §6.1.7.2, left alone because no answer is
 not the answer that nothing claims it.
 
 ### 6.2 The boundary is mutual
@@ -1041,9 +1042,9 @@ projects, `<§>FS-login` from inside `api`.
 #### 8.2.2 An unqualified query at the workspace root
 
 `grund refs FS-login` invoked at the workspace root lists citations of the
-*root's* `FS-login` only (root is the current project). To get cross-project
-occurrences, qualify: `grund refs root/FS-login` is the same query in this
-context and is the canonical form for scripts.
+*root's* `FS-login` only (root is the current project), and those already
+include the `<§>root/FS-login` sites in members. `grund refs root/FS-login` is
+the same query in this context and is the canonical form for scripts.
 
 #### 8.2.3 `--summary`
 
@@ -1361,11 +1362,13 @@ Discovery follows the same walk-up rule as `grund check` ([§FS-config.1](FS-con
 §5): from the CWD (or from an explicit `<path>` argument), walk up to the
 nearest `grund.toml` in either discovery form. If the nearest config is a member's own config,
 the command runs member-local — qualified `<alias>/<ID>` cannot resolve, the
-same way `check` errors at the member scope (§5.1). If the nearest config is
-the workspace root, the command runs workspace-wide. An explicit `<path>`
-argument (e.g. `grund list apps/api`, `grund refs FS-x apps/api`,
-`grund complete ids --path apps/api`) behaves as if the command were invoked
-from that path: a `<path>` inside a member is member-scoped, not
+same way `check` errors at the member scope (§5.1). A scope inside a member
+with no config of its own is member-local all the same, on §2's canonical
+defaults with the member directory as the config root; only outside every member
+does a nearest config at the workspace root run the command workspace-wide. An
+explicit `<path>` argument (e.g. `grund list apps/api`,
+`grund refs FS-x apps/api`, `grund complete ids --path apps/api`) behaves as if
+the command were invoked from that path: a `<path>` inside a member is member-scoped, not
 workspace-aggregate, even when a workspace exists above it. `cover`, whose
 `<path>` bounds a walk, runs one narrowed scan below the config root instead
 (§8.6.1).

@@ -28,7 +28,7 @@ The two are never mixed: `grund check 2>/dev/null` shows you the findings and on
 - `warning:` lines about the run itself, not its content — e.g. an empty scan ([§FS-check.2.2](FS-check.md#22-empty-scan)) — exit unchanged;
 - `note:` / `hint:` recovery breadcrumbs ([§FS-refs.2](FS-refs.md#2-behaviour), [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints));
 - the bare message a *failed query* prints when it has no result to put on stdout (§2.3 — an ID query on a missing ID);
-- `grund init`'s file-by-file transcript (§6 — `init`'s real output is the scaffold on disk; the transcript is progress).
+- `grund init`'s file-by-file transcript (§6 — `init`'s real output is the scaffold on disk; the transcript is progress), and `grund integrations --write`'s transcript in the same shape (§6).
 
 ## 2. The Fixed Shapes
 
@@ -113,10 +113,10 @@ A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed 
 
 When a subcommand established its query context but has no result to put on
 stdout — an ID query on a missing ID, a missing section, an invalid ID under the
-selected grammar, or an ambiguous ID; `grund refs` from 0.15.0 when the selected
-resolver rejects an invalid ID or ambiguous number-only shorthand; `grund id`
-when the title slugifies to nothing or the proposed ID collides with an existing
-declaration:
+selected grammar, an ambiguous ID or section, or a broken stub; `grund refs` from
+0.15.0 when the selected resolver rejects an invalid ID or ambiguous number-only
+shorthand; `grund id` when the title slugifies to nothing or the proposed ID
+collides with an existing declaration:
 
 ```
 <message>
@@ -129,28 +129,28 @@ How ambiguity and hint lines read is §2.3.1; who uses the shape is §2.3.2.
 
 #### 2.3.1 Ambiguity and hint lines
 
-Ambiguity messages list every site in lexicographic `path:line` order ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)). A `hint:` line may follow on stderr where the next step is obvious (§1.2).
+Ambiguity messages list every site in lexicographic `path:line` order ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), except an ambiguous number-only shorthand's, which lists its candidate IDs in ID order ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)). A `hint:` line may follow on stderr where the next step is obvious (§1.2).
 
 #### 2.3.2 Who uses it
 
-Used by ID queries (missing or invalid ID and missing section — [§FS-show.3](FS-show.md#3-outputs); ambiguous ID — [§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), by `refs` resolver rejections after its compatibility window ([§FS-refs.4](FS-refs.md#4-exit-codes)), and by `grund id` for a satisfiable query context whose requested allocation has no result (empty slug — [§FS-id.3](FS-id.md#3-slug-derivation); proposed-ID collision — [§FS-id.5](FS-id.md#5-collision-check)). `check` does not use this shape — every line it prints is a located finding (stdout) or a CLI-level message (stderr).
+Used by ID queries (missing or invalid ID and missing section — [§FS-show.3](FS-show.md#3-outputs); ambiguous ID — [§FS-show.2.2.1](FS-show.md#221-ambiguous-id); ambiguous section — [§FS-show.2.2.2](FS-show.md#222-ambiguous-section); broken stub — [§FS-show.2.3.4](FS-show.md#234-broken-stub)), by `refs` resolver rejections after its compatibility window ([§FS-refs.4](FS-refs.md#4-exit-codes)), and by `grund id` for a satisfiable query context whose requested allocation has no result (empty slug — [§FS-id.3](FS-id.md#3-slug-derivation); proposed-ID collision — [§FS-id.5](FS-id.md#5-collision-check)). `check` does not use this shape — every line it prints is a located finding (stdout) or a CLI-level message (stderr).
 
 ### 2.4 Text success marker
 
-A text-mode `grund check` run with zero errors and zero warnings prints exactly:
+A text-mode `grund check` run with zero retained errors and zero retained warnings, and no retained suggestion or unselectable run-level line ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)), prints exactly:
 
 ```
 success
 ```
 
-One trailing newline follows the line. The marker is on **stdout** because it is the command's output (§1.1), exits `0`, and appears only when the report has no diagnostics ([§FS-check.2.1](FS-check.md#21-report-format)). It is not emitted in `--format=json`, where stdout remains diagnostics-only.
+One trailing newline follows the line. The marker is on **stdout** because it is the command's output (§1.1), exits `0`, and appears only when the selected report is otherwise empty: it says that report is empty, not that the repository has no findings ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)). It is not emitted in `--format=json`, where stdout remains diagnostics-only.
 
 ## 3. Message text
 
 The shape is structural; the text is human-readable. Style rules apply to every shape:
 
 - **Lowercase first letter.** `unknown reference <ID>` — not `Unknown reference <ID>`.
-- **No terminal period.** Messages do not end in `.` or `!`.
+- **No terminal period.** A single-clause message does not end in `.` or `!`. A run-level caution that runs to more than one clause, such as the empty-scan warning ([§FS-check.2.2.2](FS-check.md#222-the-message-names-the-likely-cause)), is written in sentences and punctuates each, its last included.
 - **No ANSI colors yet.** Once colored output lands, the `[output] color` key, whose default is `auto` ([§FS-config.3.6](FS-config.md#36-output--report-format)), may add them ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) applies); until then plain bytes are the contract.
 - **Stable phrasing.** The exact text of each message is part of the user-visible output covered by [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible): changing it goes through a deprecation path. Tools grep on it.
 - **Quoted user input** appears in double quotes when the input could be confused with surrounding prose: `"<original title>"`, not `<original title>`.
@@ -277,7 +277,7 @@ Which ambiguity refusals carry `sites` is §5.2.1; the messages that stay raw te
 
 #### 5.2.2 Launch-time messages stay text
 
-A *launch-time* CLI-level message (§2.2) — an error such as a bad flag, unknown kind, unknown project alias, or unreadable config or path (exit `2`), or a warning settled before a report exists, such as [§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)'s and [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)'s — stays as its `error:` / `warning:` text line on stderr regardless of `--format`: what decides is when the fact exists, and one settled before a report exists is not data. During 0.14.0 only, the two `refs` resolver rejections of §5.2 retain that raw error and hint policy under JSON and append the raw warning fixed by [§FS-refs.4](FS-refs.md#4-exit-codes).
+A *launch-time* CLI-level message (§2.2) — an error such as a bad flag, unknown kind, unknown project alias, or unreadable config or path (exit `2`), or a warning carried in the run's warning channel, such as [§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)'s, [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)'s and [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)'s — stays as its `error:` / `warning:` text line on stderr regardless of `--format`. What decides is which channel carries the fact: a warning settled from the loaded config but carried as one of `check`'s report warnings, such as [§FS-check.4.3](FS-check.md#43-redundant-config-pair)'s and [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)'s, is data, and renders as a JSON diagnostic (§5.2.3). During 0.14.0 only, the two `refs` resolver rejections of §5.2 retain that raw error and hint policy under JSON and append the raw warning fixed by [§FS-refs.4](FS-refs.md#4-exit-codes).
 
 #### 5.2.3 Run-level diagnostics in `check`'s report
 
@@ -296,7 +296,7 @@ stdout empty and produces no partial records.
 
 ### 5.4 Value diagnostics
 
-Value diagnostics use the same object and streams. `invalid-value-declaration`, `invalid-value-binding`, and `value-mismatch` are fixed error codes; a mismatch's `sites` is the sorted declaration-site array, and its `message` is byte-identical to the text message after the primary `path:line:` prefix ([§FS-values.5](FS-values.md#5-resolution-diagnostics-and-exit-status)). Home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete remains a run-level incomplete-scan failure at exit `2` rather than a semantic value diagnostic.
+Value diagnostics use the same object and streams. `invalid-value-declaration`, `invalid-value-binding`, and `value-mismatch` are fixed error codes; a mismatch's `sites` is the sorted declaration-site array, and its `message` is byte-identical to the text message after the primary `path:line:` prefix and its channel marker (§2.1, [§FS-values.5](FS-values.md#5-resolution-diagnostics-and-exit-status)). Home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete remains a run-level incomplete-scan failure at exit `2` rather than a semantic value diagnostic.
 
 ### 5.5 The `check` code catalog
 
@@ -358,11 +358,11 @@ exit `2` even when `--ignore io` or an excluding `--only` set is present
 
 ## 6. The `grund init` transcript
 
-`grund init` ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) writes status lines to **stderr** — `wrote AGENTS.md`, `appended CLAUDE.md`, `exists grund.toml`, etc. — followed by the `next:` block. These are **not** the command's output: `init`'s output is the scaffold it wrote to disk; the transcript is progress, and nobody pipes `grund init`. They use an init-specific shape (`<verb> <path>`) and are scoped to that command. This is the one carve-out from §1 — every other subcommand puts its output on stdout. In particular `grund fmt --write` ([§FS-fmt.3](FS-fmt.md#3-outputs)) does **not** use this shape: its `rewrote N line(s):` report is `fmt`'s output and goes to stdout, the same stream as its `--check` dry-run report. A subcommand with no output and no transcript stays silent and lets the exit code carry the verdict.
+`grund init` ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) writes status lines to **stderr** — `wrote AGENTS.md`, `appended CLAUDE.md`, `exists grund.toml`, etc. — followed by the `next:` block. These are **not** the command's output: `init`'s output is the scaffold it wrote to disk; the transcript is progress, and nobody pipes `grund init`. They use a `<verb> <path>` shape. This is one of two carve-outs from §1; the other is `grund integrations --write`, which reports what it wrote on stderr in the same `<verb> <path>` shape ([§FS-integrations.4.1.6](FS-integrations.md#416-outcome-verbs)). Every other subcommand puts its output on stdout. In particular `grund fmt --write` ([§FS-fmt.3](FS-fmt.md#3-outputs)) does **not** use this shape: its `rewrote N line(s):` report is `fmt`'s output and goes to stdout, the same stream as its `--check` dry-run report. A subcommand with no output and no transcript stays silent and lets the exit code carry the verdict.
 
 ## 7. What this rules out
 
-- Severity prefixes (`error:`, `warning:`) on located findings — see §3.
-- Multi-line messages. A finding that wants to elaborate uses `--format=json` and a `code` plus a documentation link, not a wrapped paragraph.
+- A severity prefix (`error:`, `warning:`) ahead of a located finding's `<path>:<line>:` prefix — that leading position marks a CLI-level message (§2.2); the channel marker `check` places goes after the location (§3.4).
+- Multi-line messages. A finding that wants to elaborate uses `--format=json` and its `code` (§5.1), not a wrapped paragraph.
 - Interactive prompts, progress bars, or spinners. Per [§FS-non-goals.10](FS-non-goals.md#10-interactive-mode), every subcommand is non-interactive.
 - Localization. Messages are English; translation is downstream's problem.
