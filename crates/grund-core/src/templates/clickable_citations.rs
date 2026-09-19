@@ -15,7 +15,7 @@ use crate::config::Config;
 /// sentence when the repo commits the `link` opinion (§FS-init.2.3.4.17,
 /// §DF-repo-conversation-opinion). Without the opinion, local conversation
 /// rendering belongs to user-level instructions installed by
-/// `grund integrations --write` (§FS-integrations.4.3).
+/// `grund integrations --write` (§FS-integrations.4.3.8).
 ///
 /// Why the marker is interpolated rather than left as a `{MARKER}` placeholder:
 /// this section is spliced into the template *after* that placeholder is
@@ -62,7 +62,7 @@ pub(crate) fn clickable_citations_section(config: &Config, surface: Conversation
 }
 
 /// Which local-conversation form one entrypoint file teaches
-/// (§FS-init.2.3.4.17). A pure function of the target path, so the generated
+/// (§FS-init.2.3.4.17.2). A pure function of the target path, so the generated
 /// block stays reproducible (§FS-non-goals.13).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum ConversationSurface {
@@ -76,7 +76,7 @@ pub(crate) enum ConversationSurface {
 
 impl ConversationSurface {
     /// `CLAUDE.md` at the repository root or under `.claude/` — the two paths
-    /// the Claude entrypoint family occupies (§FS-init.2.3).
+    /// the Claude entrypoint family occupies (§FS-init.2.3.12).
     pub(crate) fn for_entrypoint(path: &Path) -> Self {
         match path.file_name().and_then(|name| name.to_str()) {
             Some("CLAUDE.md") => Self::Linked,

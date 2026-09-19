@@ -36,8 +36,8 @@ pub(crate) fn join_alternatives(items: &[String]) -> String {
 const MEMBER_CANDIDATE_CLAUSE: &str = "; did you mean ";
 
 /// Whether an `ID not found:` refusal already names a project that declares the
-/// ID (§FS-workspace.8.1.1). That is the one case where the `grund list` hint of
-/// §FS-show.3 is withheld: the catalogue it points at is what this line has
+/// ID (§FS-workspace.8.1.1.7). That is the one case where the `grund list` hint of
+/// §FS-show.3.5 is withheld: the catalogue it points at is what this line has
 /// already searched, and its other half proposes minting an ID that exists.
 pub fn names_member_id_candidate(message: &str) -> bool {
     message.contains(MEMBER_CANDIDATE_CLAUSE)
@@ -56,7 +56,7 @@ pub fn names_member_id_candidate(message: &str) -> bool {
 /// Everything else is left exactly as raised: a qualified lookup already named
 /// its project, an ID the current grammar rejects fails earlier as `invalid ID`,
 /// and the `ID not found:` prefix stays the first token because it is what
-/// selects the `not-found` code (§FS-errors.5).
+/// selects the `not-found` code (§FS-errors.5.2).
 pub(crate) fn with_member_id_candidates(
     err: anyhow::Error,
     context: &WorkspaceContext,
@@ -90,12 +90,12 @@ fn member_id_candidate_clause(context: &WorkspaceContext, raw_id: &str) -> Optio
 
 /// Every project other than the one the lookup ran against that declares the ID
 /// as written, qualified with its alias — sorted and cut at three, joined the
-/// way §FS-check.3.8 joins its own candidates. Several are listed and none is
+/// way §FS-check.3.8.2 joins its own candidates. Several are listed and none is
 /// chosen: two projects declaring one ID are two declarations in two namespaces
-/// (§FS-workspace.8.1), and picking one would be a guess
+/// (§FS-workspace.8.1.4), and picking one would be a guess
 /// (§REQ-no-wrong-citation.1).
 ///
-/// A narrowed run offers nothing (§FS-workspace.8.1.1). Member-local runs,
+/// A narrowed run offers nothing (§FS-workspace.8.1.1.5). Member-local runs,
 /// standalone repositories, and a `<path>` pinned inside a member all load with
 /// `workspace_loaded == false`; a run that cannot see the whole tree must not
 /// guess at what the rest of it declares.
@@ -111,7 +111,7 @@ fn member_id_candidates(context: &WorkspaceContext, raw_id: &str) -> Vec<String>
         .filter_map(|(_, project)| qualified_declared_id(project, raw_id))
         .collect();
     candidates.sort();
-    // Three is the §FS-check.3.8 cut: `grund list` is the catalogue, a
+    // Three is the §FS-check.3.8.2 cut: `grund list` is the catalogue, a
     // diagnostic is not.
     candidates.truncate(3);
     candidates
@@ -120,7 +120,7 @@ fn member_id_candidates(context: &WorkspaceContext, raw_id: &str) -> Vec<String>
 /// The `<alias>/<ID>` spelling of the written text in one project, when that
 /// project declares it.
 ///
-/// §FS-workspace.1: the text is re-parsed with *this* project's `[id]` grammar
+/// §FS-workspace.1.2: the text is re-parsed with *this* project's `[id]` grammar
 /// and rendered back with it, exactly as a qualified citation is. In a
 /// mixed-format workspace one text is a different `Id` in each project —
 /// `SPEC-007-shipping` is slug `007-shipping` under `{kind}-{slug}` and number
@@ -129,7 +129,7 @@ fn member_id_candidates(context: &WorkspaceContext, raw_id: &str) -> Vec<String>
 ///
 /// A section written after the ID is dropped: this run never looked for that
 /// coordinate here, so suggesting it would be the one guessed part of the line
-/// (§FS-workspace.8.1.1). A text this project's own grammar rejects, or a
+/// (§FS-workspace.8.1.1.6). A text this project's own grammar rejects, or a
 /// shorthand several of its declarations answer to, names no candidate here —
 /// the clause offers a spelling that resolves, or it offers nothing.
 fn qualified_declared_id(project: &WorkspaceProject, raw_id: &str) -> Option<String> {

@@ -1,6 +1,6 @@
 //! Shared fixtures for the crate's test modules: temp-repo setup, config
 //! builders, finding signatures, and the resolver harness. Not a component's
-//! (§AR-core-module-layout.1) — every component's tests read it, so it sits
+//! (§AR-core-module-layout.1.2) — every component's tests read it, so it sits
 //! beside `lib.rs` and is imported as `use crate::testing::{…}`.
 
 use std::path::{Path, PathBuf};
@@ -94,7 +94,7 @@ pub(crate) fn legacy_fs_folder_config(root: PathBuf) -> Config {
 }
 
 /// The default `grund init` config: `{kind}-{number}-{slug}`, the only shape
-/// that has a shorthand at all (§FS-check.1.2). Shared by the four shorthand
+/// that has a shorthand at all (§FS-check.1.2.1). Shared by the four shorthand
 /// suites, which each had a byte-identical copy — including the assertion,
 /// which is the point of the helper: a change to the default format must
 /// fail here rather than quietly leave those suites testing no shorthand.
@@ -154,7 +154,7 @@ pub(crate) fn findings_signature(config: &Config, findings: &Findings) -> Vec<St
                     info.heading_level
                 ));
             }
-            // §AR-scanner.2.2: a later heading claiming a recorded path is
+            // §AR-scanner.2.2.3: a later heading claiming a recorded path is
             // kept beside the map, so the signature has to carry it too — a
             // signature blind to a recorded field cannot see it change.
             for (section, info) in &declaration.duplicate_sections {
@@ -489,7 +489,7 @@ pub(crate) fn findings(run: &CheckRun) -> Vec<String> {
         .chain(run.report.warnings.iter())
         .filter(|diagnostic| diagnostic.code != "io")
         .collect::<Vec<_>>();
-    // The order the report prints in (§FS-errors.4), so a case can read as
+    // The order the report prints in (§FS-errors.4.1), so a case can read as
     // the lines a user would see.
     diagnostics.sort_by(|a, b| diagnostic_cmp(a, b));
     located_diagnostics(&run.config, diagnostics)
@@ -511,7 +511,7 @@ pub(crate) fn scanned(config: &Config, findings: &Findings) -> Vec<String> {
 }
 
 /// The `error: <path>: <reason>` lines a file the scan could not read earns
-/// (§FS-check.2, §FS-errors.2.2).
+/// (§FS-check.2.4, §FS-errors.2.2.1).
 /// Unix only: every caller is a symlink case and so `#[cfg(unix)]` too.
 #[cfg(unix)]
 pub(crate) fn scan_errors(run: &CheckRun) -> Vec<String> {

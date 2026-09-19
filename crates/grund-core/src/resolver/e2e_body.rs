@@ -7,7 +7,7 @@
 //! answer for a different source: `point_body.rs` asks it for a case's lead and
 //! full body exactly as it asks the slicer for a text declaration's, and a
 //! measurement that could not reach it would measure nothing for every E2E row
-//! (§FS-list.3.4). The bytes it renders are the query's, which is why every
+//! (§FS-list.3.4.1). The bytes it renders are the query's, which is why every
 //! sentence of it is unchanged from `queries/show.rs`, where it sat while the
 //! queries were its only reader.
 
@@ -74,7 +74,7 @@ pub(crate) fn show_e2e_case(
         json_escape(&render_id(&config.grammar, id)),
         // path_config, not config: an `<alias>/E2E-x` shown from a workspace
         // root must report the same root-relative path as every other kind
-        // (§FS-workspace.8.1) — this baked JSON bypasses render_show_output_json.
+        // (§FS-workspace.8.1.2) — this baked JSON bypasses render_show_output_json.
         json_escape(&display_path(path_config, &case.dir)),
         args_json,
         case.expected_exit,

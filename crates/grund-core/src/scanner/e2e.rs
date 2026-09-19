@@ -96,7 +96,7 @@ pub(super) fn scan_e2e_cases(
                 defined_in: None,
                 e2e_case: Some(case),
                 title: Some(format!("e2e case `{name}`")),
-                // §AR-scanner.2.4: an E2E case spans its manifest line only; its
+                // §AR-scanner.2.4.1: an E2E case spans its manifest line only; its
                 // obligations evaluate over the case's scanned files, not a body.
                 body_start: 1,
                 body_end: 1,
@@ -108,7 +108,7 @@ pub(super) fn scan_e2e_cases(
 }
 
 /// Map an `e2e/cases/<name>/` directory name to its `E2E-<name>` `Id` under the
-/// repo's `[id] format` (§AR-scanner.6, §FS-config.3.4).
+/// repo's `[id] format` (§AR-scanner.6.1, §FS-config.3.4).
 pub(super) fn e2e_id_from_case_dir_name(config: &Config, name: &str) -> Option<Id> {
     let after_kind_literal = literal_after_kind_placeholder(&config.id_format)?;
     let raw = format!("E2E{after_kind_literal}{name}");
@@ -122,7 +122,7 @@ pub(super) fn e2e_id_from_case_dir_name(config: &Config, name: &str) -> Option<I
 
 /// Inverse of `e2e_id_from_case_dir_name`: strip the `E2E` prefix off a rendered ID
 /// to get the `e2e/cases/<name>/` directory `grund id` tells the author to create
-/// (§FS-id.2, §AR-scanner.6).
+/// (§FS-id.2, §AR-scanner.6.1).
 pub(crate) fn e2e_case_dir_name(config: &Config, rendered: &str) -> String {
     let prefix = format!(
         "E2E{}",

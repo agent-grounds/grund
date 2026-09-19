@@ -1,7 +1,7 @@
 //! The one function that maps a citation to the project it resolves against
 //! (§AR-system.2.10, §AR-resolver.1): the target's `Findings` and the `Config`
 //! its ID is parsed and rendered with, or `None` when the alias is unknown
-//! (§FS-workspace.1, §FS-workspace.8).
+//! (§FS-workspace.1.2, §FS-workspace.8).
 //!
 //! Every consumer of citations goes through here rather than matching on
 //! `citation.namespace` itself, which is what keeps `check`, the editor jump and
@@ -22,7 +22,7 @@ use crate::model::{Citation, Findings};
 
 /// One project a citation can resolve against, as a rule needs it: the findings
 /// the ID is looked up in and the config that spells it, because a workspace may
-/// mix `[id] format`s (§FS-workspace.1, §AR-workspace.2).
+/// mix `[id] format`s (§FS-workspace.1.2, §AR-workspace.2).
 pub(crate) struct WorkspaceCheckTarget<'a> {
     pub(crate) findings: &'a Findings,
     pub(crate) config: &'a Config,

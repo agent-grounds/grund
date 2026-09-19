@@ -12,7 +12,7 @@
 //!
 //! It is here rather than up there because both `grund init` and `grund check`
 //! ask it, and the checker sits below the writers: while this file was the
-//! writers', the companion scan of §FS-check.3.5 read it upward through the
+//! writers', the companion scan of §FS-check.3.5.1 read it upward through the
 //! crate root (§AR-system.4). Down here both read it downward, and there is
 //! still only one walk — `companion_agent_entrypoints` is *derived from*
 //! `existing_init_companion_agent_entrypoints` rather than restating it, so
@@ -80,7 +80,7 @@ pub(crate) const COMPANION_AGENT_ENTRYPOINTS: &[CompanionAgentEntrypoint] = &[
         discovery: true,
         create_on_request: true,
     },
-    // §FS-init.2.1 / §FS-init.2.3: the modern `.cursor/rules/*.mdc` form is
+    // §FS-init.2.1.2 / §FS-init.2.3.12.1: the modern `.cursor/rules/*.mdc` form is
     // created for new adopters; the legacy `.cursorrules` row below is only
     // updated when it already exists.
     CompanionAgentEntrypoint {
@@ -104,7 +104,7 @@ pub(crate) const COMPANION_AGENT_ENTRYPOINTS: &[CompanionAgentEntrypoint] = &[
         discovery: true,
         create_on_request: true,
     },
-    // §FS-init.2.3: `.rules` is too generic to attribute to Zed by filename
+    // §FS-init.2.3.12.1: `.rules` is too generic to attribute to Zed by filename
     // alone, so we only touch it when the `.zed/` workspace already exists or
     // `--zed` is explicit — discovery-by-file-existence is disabled.
     CompanionAgentEntrypoint {
@@ -142,7 +142,7 @@ impl AgentEntrypoint {
     }
 }
 
-/// How far the canonical entrypoint's own render reaches (§FS-init.2.1.1) — the
+/// How far the canonical entrypoint's own render reaches (§FS-init.2.1.1.1) — the
 /// one question a companion *symlinked* to `AGENTS.md` turns on: does the agent
 /// reading through that link get the block it should, or a form it is not meant
 /// to read? The answer is a property of the effective config, not of any one
@@ -155,7 +155,7 @@ pub(crate) enum CanonicalSurfaceReach {
     /// to it is simply its agent's copy of the block.
     EveryEntrypoint,
     /// `[reference] conversation = "link"` gates the Claude form away from the
-    /// canonical file, which every other agent reads too (§FS-init.2.3.4.17), so
+    /// canonical file, which every other agent reads too (§FS-init.2.3.4.17.2), so
     /// the canonical render can only speak for entrypoints on the plain surface.
     PlainEntrypointsOnly,
 }
@@ -170,9 +170,9 @@ impl CanonicalSurfaceReach {
     }
 
     /// Whether a companion symlinked to the canonical entrypoint leaves its
-    /// agent without the block it should read (§FS-init.2.1.1). Only when the
+    /// agent without the block it should read (§FS-init.2.1.1.1). Only when the
     /// canonical render is gated *and* this path's surface is one it cannot
-    /// carry: the surfaces are what differ (§FS-init.2.3.4.17), so a symlink
+    /// carry: the surfaces are what differ (§FS-init.2.3.4.17.3), so a symlink
     /// whose surface is the canonical file's own carries exactly the bytes that
     /// file carries.
     pub(crate) fn leaves_uncovered(self, path: &Path) -> bool {
@@ -192,7 +192,7 @@ pub(crate) struct CompanionAgentEntrypoint {
     pub(crate) discovery: bool,
     /// Whether an explicit agent flag creates this entrypoint when it is absent.
     /// Legacy Cursor `.cursorrules` is updated when present but never created;
-    /// new Cursor installs use `.cursor/rules/grund.mdc` instead (§FS-init.2.1).
+    /// new Cursor installs use `.cursor/rules/grund.mdc` instead (§FS-init.2.1.2).
     pub(crate) create_on_request: bool,
 }
 
@@ -220,7 +220,7 @@ impl InitCompanionAgentEntrypoint {
 /// is derived from it rather than restated: the two answer the same question —
 /// which companion files does this repository have — and a second copy of that
 /// walk is a place for `check` and `init` to disagree about what an entrypoint
-/// is (§FS-check.3.5, §AR-checker.2.7).
+/// is (§FS-check.3.5.1, §AR-checker.2.7).
 pub(crate) fn companion_agent_entrypoints(root: &Path) -> Result<Vec<PathBuf>, (PathBuf, String)> {
     let (_, companions) = existing_init_companion_agent_entrypoints(root)?;
     Ok(companions
@@ -276,7 +276,7 @@ pub(crate) fn existing_init_companion_agent_entrypoints(
 /// beside it would hand the agent the same bytes twice, which is the thing this
 /// rule exists to stop. The one exception is the one that makes the two files
 /// differ — a repository committing `[reference] conversation = "link"`, whose
-/// canonical file cannot carry the Claude form (§FS-init.2.3.4.17). There the
+/// canonical file cannot carry the Claude form (§FS-init.2.3.4.17.2). There the
 /// symlink resolves to the plain form, the agent has no file carrying its own,
 /// and an explicit request writes it the first path the symlink has not taken.
 ///
@@ -285,7 +285,7 @@ pub(crate) fn existing_init_companion_agent_entrypoints(
 /// that no `.zed/` and no managed block claims for Zed is somebody else's file,
 /// and answering *does this agent have an entrypoint* with a looser definition
 /// than `check` and the update set use is how the two come to disagree about
-/// what an entrypoint is (§FS-check.3.5).
+/// what an entrypoint is (§FS-check.3.5.1).
 pub(crate) fn agents_with_own_entrypoint(
     root: &Path,
     reach: CanonicalSurfaceReach,
@@ -326,7 +326,7 @@ pub(crate) fn companion_workspace_exists(
 
 /// Whether the on-disk `path` is grund-owned despite belonging to an entrypoint
 /// whose filename is too generic to attribute by existence alone (currently
-/// `.rules`, §FS-init.2.1). True when the entry is discovery-safe by filename,
+/// `.rules`, §FS-init.2.1.2). True when the entry is discovery-safe by filename,
 /// when its owning workspace directory proves ownership, or when the file
 /// already carries a managed block from a prior `grund init` — same evidence
 /// for both `grund check`'s companion scan and `grund init`'s update set, so

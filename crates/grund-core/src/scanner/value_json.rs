@@ -1,5 +1,5 @@
 //! Discovery and one-read enrollment of home-derived JSON value sources
-//! (§FS-values.2.2, §AR-scanner.2.1, §AR-scanner.3).
+//! (§FS-values.2.2, §AR-scanner.2.1.3, §AR-scanner.3).
 
 use std::collections::BTreeMap;
 use std::fs;

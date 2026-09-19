@@ -18,7 +18,7 @@ use crate::model::{
 use crate::workspace::WorkspaceCitationTarget;
 
 /// The file count above which one tree scan is worth splitting across threads
-/// (§AR-scanner.1, §GOAL-fast-feedback): below it the rayon fan-out costs more
+/// (§AR-scanner.1.12, §GOAL-fast-feedback): below it the rayon fan-out costs more
 /// than the pass it parallelizes.
 const PARALLEL_SCAN_MIN_FILES: usize = 256;
 
@@ -46,7 +46,7 @@ pub(super) fn heading_level_for_line(
 }
 
 /// A file that could not be read or decoded during the walk. The walk continues
-/// past it (§FS-check.2); callers that are point queries treat any entry here as
+/// past it (§FS-check.2.4); callers that are point queries treat any entry here as
 /// fatal, `check` and `refs` report it and exit 2 with a still-printed report.
 pub(crate) type ScanError = (PathBuf, String);
 
@@ -122,7 +122,7 @@ fn scan_file_results(
 
 /// One full tree walk: scan every file (§AR-scanner.2) plus the e2e case
 /// directories (§AR-scanner.6), collecting unreadable files rather than aborting
-/// so `check` can report them and keep going (§FS-check.2). The wrapper around
+/// so `check` can report them and keep going (§FS-check.2.4). The wrapper around
 /// the workspace-aware variant with no targets — single-project scans and
 /// member-local scans share this path.
 pub(crate) fn scan_tree(
@@ -134,7 +134,7 @@ pub(crate) fn scan_tree(
 }
 
 /// Workspace-aware tree walk: `§<alias>/<ID>` citations parse with each
-/// target's grammar inline, so the workspace layer (§FS-workspace.1,
+/// target's grammar inline, so the workspace layer (§FS-workspace.1.2,
 /// §AR-workspace.2) never needs to re-read the files the initial scan
 /// already read.
 pub(crate) fn scan_tree_with_workspace(
@@ -162,9 +162,9 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     overlays: &TextOverlays,
 ) -> Result<(Findings, Vec<ScanError>)> {
     // §FS-config.3.5: a link the walk could not resolve is already a scan failure
-    // before a single file is opened — it joins the per-file ones (§FS-check.2).
+    // before a single file is opened — it joins the per-file ones (§FS-check.2.4).
     let walked = walk_scannable_files_reporting(config, scope, explicit_scope)?;
-    // §FS-check.4.8: the walk's directories travel with its files, for the rule that
+    // §FS-check.4.8.11: the walk's directories travel with its files, for the rule that
     // asks which of them holds a `[workspace]` block nothing claims. Carried, not
     // judged: the scanner never asks that question itself (§AR-workspace.1).
     let mut findings = Findings {
@@ -209,7 +209,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         errors.push((config.root.join("e2e/cases"), format!("{err:#}")));
     }
     scan_value_json_sources(config, overlays, &mut findings, &mut errors);
-    // §FS-workspace.1: when the citing-grammar pass and the target-grammar pass both
+    // §FS-workspace.1.2: when the citing-grammar pass and the target-grammar pass both
     // fire on the same line they emit in source order *per pass*; one sort at the end
     // keeps a workspace scan's per-line order the single-project scan's left-to-right one.
     if !workspace_targets.is_empty() {
@@ -228,7 +228,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
             ))
         });
     }
-    // §AR-scanner.2.6: shorthand citations name a declaration that may live in
+    // §AR-scanner.2.6.6: shorthand citations name a declaration that may live in
     // any file, so they can only be resolved once the whole walk (including the
     // E2E cases above) has produced the declaration set.
     promote_local_legacy_citations(config, &mut findings);

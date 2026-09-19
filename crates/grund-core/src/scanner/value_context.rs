@@ -1,5 +1,5 @@
 //! Source comment-span classification for explicit value bindings
-//! (§FS-values.3.2, §AR-scanner.2.3).
+//! (§FS-values.3.2, §AR-scanner.2.3.5).
 
 use super::file_pass::CitationLine;
 use crate::config::Config;
@@ -32,7 +32,7 @@ pub(super) fn binding_span_is_inside(context: (usize, usize), start: usize, end:
 /// block walk used for declaration bodies and doc-comment structure. A block
 /// interior remains recognized without a decorative `*`; the first `*/` ends
 /// the range so host expressions or strings after it can neither bind nor
-/// declare embedded values (§FS-values.2.4, §FS-values.3.2).
+/// declare embedded values (§FS-values.2.4.1, §FS-values.3.2).
 pub(super) fn recognized_source_value_contexts(
     text: &str,
     is_py: bool,

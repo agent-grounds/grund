@@ -300,7 +300,7 @@ fn section_anchor_keeps_angle_brackets_inside_code_spans() {
     assert_eq!(anchor_slug_github(&literal_link), "42-ab");
 }
 
-/// §FS-check.1.1 / grund#131: a bare ID-shaped token inside a Markdown link
+/// §FS-check.1.1.4 / grund#131: a bare ID-shaped token inside a Markdown link
 /// destination is not a citation off strict mode — not the extended one a
 /// declaration's own home file name introduces (`FS-001-login-a.md` for
 /// `FS-001-login`), and not one that merely repeats a real ID

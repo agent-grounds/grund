@@ -18,7 +18,7 @@ fn snapshot_of(root: &Path) -> LspSnapshot {
     .expect("lsp snapshot")
 }
 
-/// The hover body §FS-lsp.1.2 specifies for the declaration heading or
+/// The hover body §FS-lsp.1.2.4 specifies for the declaration heading or
 /// numbered section heading whose query ID is `query_id`.
 fn title_hover_body(snapshot: &LspSnapshot, query_id: &str) -> String {
     let decl = snapshot
@@ -45,7 +45,7 @@ fn stub_hover_body(snapshot: &LspSnapshot, query_id: &str) -> String {
 }
 
 /// The `grund refs <ID>` answer for the same tree, as (sites, files) — the
-/// CLI side of the parity §FS-lsp.1.2 claims for a whole-ID title.
+/// CLI side of the parity §FS-lsp.1.2.5 claims for a whole-ID title.
 fn refs_counts(root: &Path, id: &str, section: Option<&str>) -> (usize, usize) {
     let output = refs(RefsOpts {
         path: root.to_path_buf(),
@@ -77,7 +77,7 @@ fn plural_fixture(root: &Path) {
         "# FS-003-gamma: Gamma\n\nLead.\n",
     );
     // Three sites across two files for alpha, one site for beta, none for
-    // gamma — the three count shapes §FS-lsp.1.2 words differently.
+    // gamma — the three count shapes §FS-lsp.1.2.4 words differently.
     write(
         &root.join("src/first.rs"),
         "//! §FS-001-alpha\n/// §FS-001-alpha.1\npub fn first() {}\n",
@@ -107,7 +107,7 @@ fn a_title_claims_its_sections_and_no_longer_id() {
     assert!(!citation_under_title("FS-lsp#goals", "FS-lsp#other", "#"));
 }
 
-/// §FS-lsp.1.2: the body is the title as inline code, an em dash, and the
+/// §FS-lsp.1.2.4: the body is the title as inline code, an em dash, and the
 /// usage clause — plural nouns above one, `across` at every count.
 #[test]
 fn declaration_title_hover_counts_sites_and_files() {
@@ -121,7 +121,7 @@ fn declaration_title_hover_counts_sites_and_files() {
     );
 }
 
-/// §FS-lsp.1.2: at one, both nouns lose the `s` and the preposition does
+/// §FS-lsp.1.2.4: at one, both nouns lose the `s` and the preposition does
 /// not change — `cited at 1 site across 1 file`.
 #[test]
 fn declaration_title_hover_uses_singular_nouns_at_one() {
@@ -162,7 +162,7 @@ fn uncited_declaration_title_hover_reads_not_cited() {
     );
 }
 
-/// §FS-lsp.1.2: the title goes into the code span verbatim, so a title
+/// §FS-lsp.1.2.4: the title goes into the code span verbatim, so a title
 /// carrying backticks is fenced with a run one longer than the longest run
 /// inside it — a backslash does not escape a backtick inside a code span,
 /// and the raw one would close the span early — and padded with one space
@@ -195,7 +195,7 @@ fn title_hover_body_fences_a_title_that_carries_backticks() {
     );
 }
 
-/// §FS-lsp.1.2: the same rule end to end — a declaration heading and a
+/// §FS-lsp.1.2.4: the same rule end to end — a declaration heading and a
 /// section heading whose titles carry backticks hover with the title intact.
 #[test]
 fn title_hover_fences_backticks_read_off_a_real_tree() {
@@ -218,7 +218,7 @@ fn title_hover_fences_backticks_read_off_a_real_tree() {
     );
 }
 
-/// §FS-lsp.1.2: a numbered section heading counts the section-scoped set
+/// §FS-lsp.1.2.6: a numbered section heading counts the section-scoped set
 /// §FS-lsp.1.3.1 defines — `§<ID>.<section>` and deeper — which is wider
 /// than the exact-coordinate filter `grund refs <ID> --section <s>` applies.
 #[test]
@@ -240,7 +240,7 @@ fn section_title_hover_counts_the_section_subtree() {
     assert_eq!(refs_counts(&root, "FS-001-alpha", Some("1")), (1, 1));
 }
 
-/// §FS-lsp.1.2: an inline-spec stub title is a whole-ID title, so it counts
+/// §FS-lsp.1.2.5: an inline-spec stub title is a whole-ID title, so it counts
 /// what the declaration it points at is cited by, not what the stub file is.
 #[test]
 fn stub_title_hover_counts_the_inline_declarations_citations() {
@@ -269,7 +269,7 @@ fn stub_title_hover_counts_the_inline_declarations_citations() {
     );
 }
 
-/// §FS-lsp.1.2 / §FS-lsp.4: on a whole-ID title the two numbers *are* the
+/// §FS-lsp.1.2.5 / §FS-lsp.4.1: on a whole-ID title the two numbers *are* the
 /// `grund refs <ID>` answer. Held by comparison rather than by claim, since
 /// the LSP counts from the session snapshot and never re-runs the query.
 #[test]
@@ -293,7 +293,7 @@ fn whole_id_title_hover_counts_match_the_refs_query() {
     }
 }
 
-/// §FS-lsp.1.2: in a workspace the count follows `refs` across namespaces —
+/// §FS-lsp.1.2.5: in a workspace the count follows `refs` across namespaces —
 /// a member's own `§<ID>` and a sibling's `§<alias>/<ID>` both count for the
 /// member's declaration title.
 #[test]

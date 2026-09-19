@@ -20,7 +20,7 @@ use crate::model::{
 /// nothing else — today the `--cross-refs` auto-enable probe, which wants to know
 /// whether the scope holds any Markdown (§FS-fmt.6.6). Every caller that *reports*
 /// takes `walk_scannable_files_reporting`, so an unresolvable link reaches the
-/// report rather than being dropped here (§FS-config.3.5.5, §FS-check.2): this one
+/// report rather than being dropped here (§FS-config.3.5.5, §FS-check.2.4): this one
 /// is walking a tree that the reporting walk is about to walk again and account
 /// for, so repeating its errors would print each of them twice.
 ///
@@ -39,9 +39,9 @@ pub(crate) fn walk_scannable_files(
 
 /// What one walk of the tree produced (§AR-scanner.1).
 pub(crate) struct WalkedTree {
-    /// The scannable files, sorted, one entry per physical file (§FS-errors.4).
+    /// The scannable files, sorted, one entry per physical file (§FS-errors.4.1).
     pub(crate) files: Vec<PathBuf>,
-    /// The paths the walk could not read, for the caller to report (§FS-check.2).
+    /// The paths the walk could not read, for the caller to report (§FS-check.2.4).
     pub(crate) errors: Vec<ScanError>,
     /// The files that are in this tree only by a link: their physical path is
     /// outside the config root. Read like any other file (§FS-config.3.5.1) —
@@ -49,7 +49,7 @@ pub(crate) struct WalkedTree {
     /// rewriting one edits a file the project does not own (§FS-fmt.2.3.2).
     pub(crate) outside_root: BTreeSet<PathBuf>,
     /// Every directory the walk descended into, scan roots included, sorted and
-    /// deduplicated (§FS-errors.4). Carried out rather than asked about here: the
+    /// deduplicated (§FS-errors.4.1). Carried out rather than asked about here: the
     /// scanner never asks "am I in a workspace?" (§AR-workspace.1), and the one
     /// caller of this list — the unlisted-`[workspace]` rule of §FS-check.4.8 —
     /// probes each directory for a config and answers the claim above the walk.
@@ -58,10 +58,10 @@ pub(crate) struct WalkedTree {
 
 /// The tree walk (§AR-scanner.1): from each scan root, descend skipping hidden and
 /// `[scan] exclude` directories, honouring `.gitignore` and friends unless
-/// `respect_gitignore = false` (§AR-scanner.1.1, §FS-config.3.5), following
+/// `respect_gitignore = false` (§AR-scanner.1.1, §FS-config.3.5.15), following
 /// symlinks, keeping only scannable files, in a sorted order so findings are
-/// deterministic (§FS-errors.4). Returns the paths it could not read beside the
-/// files, for the caller to report (§FS-check.2).
+/// deterministic (§FS-errors.4.1). Returns the paths it could not read beside the
+/// files, for the caller to report (§FS-check.2.4).
 ///
 /// Why `aliasable` is a list and not a flag: the identity pass resolves what is in
 /// it and compares everything else by path, so one link in a repository costs one
@@ -98,7 +98,7 @@ pub(crate) fn walk_scannable_files_reporting(
     let mut aliasable = BTreeSet::new();
     let mut files = Vec::new();
     let mut errors = Vec::new();
-    // §FS-check.4.8: the directories the walk met, for the rule that asks which of
+    // §FS-check.4.8.11: the directories the walk met, for the rule that asks which of
     // them carries a `[workspace]` block nothing claims. Collected here because the
     // entries are already being enumerated — no second traversal (§GOAL-fast-feedback).
     let mut dirs = Vec::new();
@@ -117,7 +117,7 @@ pub(crate) fn walk_scannable_files_reporting(
 
         // §AR-workspace.6: a root scan starts outside member namespaces; an
         // included path at or below a member boundary belongs to the member scan,
-        // and one in another project belongs there (§FS-workspace.6).
+        // and one in another project belongs there (§FS-workspace.6.2).
         if outward_directory_link_root(
             &scan_root,
             &canonical_scan_root,
@@ -139,11 +139,11 @@ pub(crate) fn walk_scannable_files_reporting(
         }
         // The directory links the filter met, shared with the loop below: a file
         // under one of them is reached under a spelling that is not its own, the
-        // same as a file that is a link itself (§AR-scanner.1).
+        // same as a file that is a link itself (§AR-scanner.1.8).
         let link_roots = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
         // §FS-config.3.5.5: the directory links the filter pruned as loops, for the
         // report to be raised from without the descent the walker would need to
-        // notice them (§AR-scanner.1).
+        // notice them (§AR-scanner.1.9).
         let looping_links = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
         let walker = scannable_walker(
             config,
@@ -154,7 +154,7 @@ pub(crate) fn walk_scannable_files_reporting(
             &looping_links,
         );
         // A root that resolves elsewhere reaches every one of its files under a
-        // spelling that is not the file's own, so all of them can alias (§FS-check.1.3).
+        // spelling that is not the file's own, so all of them can alias (§FS-check.1.3.2).
         let root_is_aliased = canonical_scan_root != scan_root;
         let mut root_files = Vec::new();
         for entry in walker {
@@ -162,13 +162,13 @@ pub(crate) fn walk_scannable_files_reporting(
                 Ok(entry) => entry,
                 // §FS-config.3.5.5: a link the walk cannot resolve is a file the scan
                 // cannot read — reported at its own path, the walk continuing past it
-                // (§FS-check.2). Failing the scan would let it take the whole report.
+                // (§FS-check.2.4). Failing the scan would let it take the whole report.
                 Err(err) => {
                     errors.extend(walk_error_report(&err, config, &scan_root));
                     continue;
                 }
             };
-            // §FS-check.4.8: a directory is not a scannable file, so it falls out
+            // §FS-check.4.8.11: a directory is not a scannable file, so it falls out
             // one line below. Its path is what the unlisted-`[workspace]` rule needs,
             // and the scan root itself — the entry at depth 0 — is one of them.
             if entry
@@ -205,17 +205,17 @@ pub(crate) fn walk_scannable_files_reporting(
                 .map(|rest| scan_root.join(rest));
             errors.extend(symlink_loop_report(&link, ancestor.as_deref(), config));
         }
-        // §FS-errors.4: within one root the order is the filesystem's, and the
+        // §FS-errors.4.1: within one root the order is the filesystem's, and the
         // first-seen rule below turns that into a choice of *spelling*. Sorting each
         // root's list first makes the choice ours: earlier root wins, then lexicographic.
         root_files.sort_by_key(|path| sort_path_key(path));
         files.append(&mut root_files);
     }
-    // One file, one read (§FS-check.1.3, §FS-config.3.5.4). Two spellings first,
+    // One file, one read (§FS-check.1.3.2, §FS-config.3.5.4). Two spellings first,
     // while the list is still in walk order and first-seen wins; then the
     // byte-identical ones, which the sort has just brought together.
     let resolved = resolve_aliasable(&aliasable);
-    // §FS-workspace.6: the directory filter stops a *directory* link at another
+    // §FS-workspace.6.2: the directory filter stops a *directory* link at another
     // project's root, and a link straight onto one of its files is the same
     // crossing one entry lower down.
     if !config.workspace_project_roots.is_empty() {
@@ -231,11 +231,11 @@ pub(crate) fn walk_scannable_files_reporting(
     files.sort_by_key(|path| sort_path_key(path));
     // The roots may overlap — `include = ["docs", "docs/api"]` names one subtree
     // twice, and under `--full` every `include` root is walked beside the config root
-    // containing it (§FS-check.1.3). A file read twice duplicates its own declaration.
+    // containing it (§FS-check.1.3.2). A file read twice duplicates its own declaration.
     files.dedup();
-    // §FS-errors.4: the walk meets its unreadable paths in readdir order, so they
+    // §FS-errors.4.1: the walk meets its unreadable paths in readdir order, so they
     // are sorted once here for both surfaces, then deduplicated — printing a scan
-    // error twice is what the additivity rule of §FS-check.1.3 forbids.
+    // error twice is what the additivity rule of §FS-check.1.3.4 forbids.
     errors.sort_by_key(|(path, message)| (sort_path_key(path), message.clone()));
     errors.dedup();
     // §FS-fmt.2.3.2: a file whose physical path is not under the config root is in
@@ -250,7 +250,7 @@ pub(crate) fn walk_scannable_files_reporting(
         })
         .cloned()
         .collect();
-    // §FS-errors.4: overlapping roots — and `--full`, which walks every `include`
+    // §FS-errors.4.1: overlapping roots — and `--full`, which walks every `include`
     // root beside the config root containing it — meet the same directory once per
     // root, so one sort and one dedup make the candidate list a set.
     dirs.sort_by_key(|path| sort_path_key(path));
@@ -329,7 +329,7 @@ fn scannable_walker(
     builder.build()
 }
 
-/// §FS-check.4.10: whether a walk of `scan_root` under this config would read a
+/// §FS-check.4.10.2: whether a walk of `scan_root` under this config would read a
 /// file — the same builder, the same filter and the same `is_scannable` test the
 /// reporting walk applies, stopped at the first hit.
 ///
@@ -345,13 +345,13 @@ fn scannable_walker(
 /// boundary roots, or one another project of the run owns, is that project's
 /// tree rather than this block's (§FS-workspace.6). The gate has to be applied
 /// to the root by hand, because the filter below is never asked about it — a walk
-/// root is never pruned at depth zero (§FS-config.3.5), and a file root reaches
+/// root is never pruned at depth zero (§FS-config.3.5.9), and a file root reaches
 /// no filter at all.
 ///
 /// A root that is not a directory takes `is_scannable` directly, which is the same
 /// answer the walk above gives a file root — including that a hidden *file* is
 /// skipped even as a root, while a walk root is never pruned by `exclude`, an
-/// ignore file, or the hidden-directory rule (§FS-config.3.5).
+/// ignore file, or the hidden-directory rule (§FS-config.3.5.12).
 ///
 /// A path the walk cannot read is not an error here the way it is in
 /// [`walk_scannable_files_reporting`]: no run is scanning this tree, so there is no
@@ -405,7 +405,7 @@ pub(crate) fn walk_reads_any_file(config: &Config, scan_root: &Path) -> bool {
 /// The directory filter the walk runs on every entry it meets: the workspace
 /// boundary (§AR-workspace.6), hidden names and `[scan] exclude`
 /// (§FS-config.3.5.3), and the E2E case directories the manifest pass owns
-/// (§AR-scanner.6).
+/// (§AR-scanner.6.4).
 ///
 /// The **name** tests read the in-tree path, so a followed link is pruned under
 /// the name it wears in the tree — `docs/node_modules -> ../../node_modules` is
@@ -413,7 +413,7 @@ pub(crate) fn walk_reads_any_file(config: &Config, scan_root: &Path) -> bool {
 /// project-root fence and the two **ownership** tests read the canonical path as
 /// well, because the physical root, a member root, and a case directory are
 /// properties of the directory rather than of the name it is reached under
-/// (§AR-scanner.1): reached through a link they match neither the in-tree
+/// (§AR-scanner.1.3): reached through a link they match neither the in-tree
 /// prefix, the precomputed suffix, nor the parent compare, and the walk would
 /// descend into a namespace that is not its to read.
 ///
@@ -431,7 +431,7 @@ struct WalkDirFilter {
     boundary_roots: Vec<PathBuf>,
     excluded: Vec<String>,
     /// The `scan = false` homes this walk prunes, as home path keys
-    /// (§FS-config.3.4.7). Empty under `--full`, and empty in the tree that
+    /// (§FS-config.3.4.7.2). Empty under `--full`, and empty in the tree that
     /// configures no such kind — which is every tree that never pays for the
     /// test below (§GOAL-fast-feedback).
     unwalked_homes: Vec<PathBuf>,
@@ -468,9 +468,9 @@ impl WalkDirFilter {
         if entry.depth() == 0 {
             return true;
         }
-        // §FS-config.3.4.7: a home the config lists without walking is pruned here as
+        // §FS-config.3.4.7.2: a home the config lists without walking is pruned here as
         // well as left out of `kind_home_roots`, on the in-tree path the way
-        // §AR-scanner.2.4 decides which home a file is in (§GOAL-fast-feedback).
+        // §AR-scanner.2.4.2 decides which home a file is in (§GOAL-fast-feedback).
         if !self.unwalked_homes.is_empty()
             && let Some(relative) =
                 scanned_decl_relative_path(entry.path(), &self.config.root, &self.physical_root)
@@ -504,7 +504,7 @@ impl WalkDirFilter {
         }
         // §FS-config.3.5.5: a directory link whose target is at or above the walk root
         // is a loop, and the one kind the walker cannot see, so it is pruned here and
-        // the report raised afterwards from `looping_links` (§AR-scanner.1).
+        // the report raised afterwards from `looping_links` (§AR-scanner.1.9).
         if entry.path_is_symlink()
             && let Some(resolved) = resolved
             && self.canonical_scan_root.starts_with(resolved)
@@ -521,7 +521,7 @@ impl WalkDirFilter {
     /// The canonical path of a directory the walk reached **through** a symlink
     /// — the link itself, or anything below one — and `None` for a directory
     /// reached under its own name, which is the ordinary case and pays no
-    /// syscall (§AR-scanner.1, §GOAL-fast-feedback).
+    /// syscall (§AR-scanner.1.3, §GOAL-fast-feedback).
     fn resolved_link_dir(&self, entry: &ignore::DirEntry) -> Option<PathBuf> {
         let path = entry.path();
         let mut link_roots = self
@@ -540,9 +540,9 @@ impl WalkDirFilter {
     }
 
     /// A link-reached directory outside the canonical project root is out of
-    /// bounds (§FS-config.3.5.1, §AR-scanner.1). Loaded-workspace ownership is
+    /// bounds (§FS-config.3.5.1, §AR-scanner.1.2). Loaded-workspace ownership is
     /// stronger: another project remains out of bounds even when it lies inside
-    /// this project's physical root (§FS-workspace.6, §AR-workspace.6).
+    /// this project's physical root (§FS-workspace.6.2, §AR-workspace.6.2).
     fn crosses_a_scan_boundary(&self, path: &Path, resolved: Option<&Path>) -> bool {
         if let Ok(relative) = path.strip_prefix(&self.scan_root)
             && self
@@ -569,7 +569,7 @@ impl WalkDirFilter {
 
 /// Whether the walk reached this path *through* one of the directory links it
 /// recorded — which makes the file's spelling not its own, exactly as being a
-/// link itself would (§AR-scanner.1).
+/// link itself would (§AR-scanner.1.8).
 fn under_link(link_roots: &std::sync::Mutex<Vec<PathBuf>>, path: &Path) -> bool {
     link_roots
         .lock()
@@ -585,7 +585,7 @@ type AliasTargets = std::collections::HashMap<PathBuf, PathBuf>;
 /// Resolve the files the walk saw arrive under a spelling that is not their own —
 /// a link, a file below a directory link, or any file of an aliased root. This is
 /// the only `canonicalize` the walk spends: everything else is answered by
-/// comparing a path against what these resolved to (§AR-scanner.1,
+/// comparing a path against what these resolved to (§AR-scanner.1.8,
 /// §GOAL-fast-feedback).
 fn resolve_aliasable(aliasable: &BTreeSet<PathBuf>) -> AliasTargets {
     aliasable
@@ -595,19 +595,19 @@ fn resolve_aliasable(aliasable: &BTreeSet<PathBuf>) -> AliasTargets {
 }
 
 /// Collapse the files reached under two spellings, keeping the **first**
-/// (§FS-check.1.3, §FS-config.3.5.4). `root_scope_roots` walks the `include` roots
+/// (§FS-check.1.3.2, §FS-config.3.5.4). `root_scope_roots` walks the `include` roots
 /// before the config root `--full` adds, so the surviving spelling is the one the
 /// plain run reports, and `--full` stays purely additive: it appends out-of-scope
 /// lines and never restates an in-scope one under a second name. Within a single
 /// root the caller has already sorted, so "first" there is the lexicographically
-/// first path rather than whatever readdir happened to say (§FS-errors.4).
+/// first path rather than whatever readdir happened to say (§FS-errors.4.1).
 ///
 /// `resolved` covers the files that can wear a second name, and the paths they
 /// resolve to are the only ones another file can turn out to be — so every other
 /// file is answered by a lookup in that small target set and is never resolved at
 /// all. A repository with one symlink pays one `realpath` and not one per file,
 /// which is what a flag saying "this tree has a link in it" could not do
-/// (§GOAL-fast-feedback, §AR-scanner.1).
+/// (§GOAL-fast-feedback, §AR-scanner.1.8).
 fn dedup_by_file_identity(files: &mut Vec<PathBuf>, resolved: &AliasTargets) {
     let targets: std::collections::HashSet<&Path> =
         resolved.values().map(PathBuf::as_path).collect();
@@ -621,7 +621,7 @@ fn dedup_by_file_identity(files: &mut Vec<PathBuf>, resolved: &AliasTargets) {
 }
 
 /// Direct `e2e/cases/<name>/` directories are E2E manifest declarations
-/// (§AR-scanner.6), so the ordinary file walk must not scan their fixture repos.
+/// (§AR-scanner.6.1), so the ordinary file walk must not scan their fixture repos.
 pub(super) fn is_direct_e2e_case_dir(
     path: &Path,
     cases_root: Option<&Path>,
@@ -641,7 +641,7 @@ pub(super) fn is_direct_e2e_case_dir(
 
 /// The directories (or single file) the walk starts from: a `[path]` argument when
 /// given (narrowing the default scope), otherwise `[scan] include` resolved against
-/// the repo root, otherwise the whole root (§FS-config.3.5, §AR-scanner.1).
+/// the repo root, otherwise the whole root (§FS-config.3.5.7, §AR-scanner.1.6).
 pub(super) fn scan_roots(
     config: &Config,
     scope: Option<&Path>,
@@ -650,7 +650,7 @@ pub(super) fn scan_roots(
     scan_roots_for(config, scope, explicit_scope, config.scan_full)
 }
 
-/// §FS-check.1.3: `full` cancels `[scan] include` for this walk and nothing else
+/// §FS-check.1.3.1: `full` cancels `[scan] include` for this walk and nothing else
 /// — an explicit path argument still narrows, and `exclude`, the ignore files,
 /// and `extensions` are untouched. `check --full` asks both ways: once with
 /// `true` to walk the whole root, and once with `false` to learn which of what it
@@ -674,7 +674,7 @@ pub(crate) fn scan_roots_for(
                 .unwrap_or_else(|_| normalize_path_lexically(scope))
         };
         let resolved = fs::canonicalize(scope).unwrap_or_else(|_| lexical_scope.clone());
-        // §FS-config.3.5.1, §FS-config.3.5.2: keep the lexical spelling for an
+        // §FS-config.3.5.1, §FS-config.3.5.2.1: keep the lexical spelling for an
         // in-tree link and an external directory-link root; resolve other roots.
         let scope =
             if lexical_scope.starts_with(&config.root) || is_directory_symlink(&lexical_scope) {
@@ -694,7 +694,7 @@ pub(crate) fn scan_roots_for(
 }
 
 /// A resolved scope re-expressed under the spelling `config.root` wears
-/// (§FS-config.3.5.2). Resolving the scope above answers "which directory is
+/// (§FS-config.3.5.2.1). Resolving the scope above answers "which directory is
 /// this", and on a root that is itself reached through a link — a symlinked
 /// `~/work`, macOS resolving `/var` to `/private/var` — it throws away the
 /// answer to "what is it called here": the walk would start at the physical
@@ -715,14 +715,14 @@ fn walk_root_under_config_root(config: &Config, resolved: &Path) -> PathBuf {
 
 /// The same homes as home *path keys*, for the walk's per-entry test: it
 /// compares an in-tree path stripped to the config root, the way the scanner
-/// decides which home a file is in (§AR-scanner.2.4), so a root reached through
+/// decides which home a file is in (§AR-scanner.2.4.2), so a root reached through
 /// a symlink still recognizes them.
 ///
 /// Empty for the two walks that are meant to read such a home. `--full` reaches
 /// it like any directory nobody configured (§FS-check.1.3). And a walk whose own
 /// root is at or inside one is a path a user typed — `grund check docs/templates`
 /// — which reads the directory it names the way an explicit argument already
-/// reads past `[scan] include` (§FS-config.3.4.7); the key describes the default
+/// reads past `[scan] include` (§FS-config.3.4.7.3); the key describes the default
 /// scope, and `grund check .` resolves to that scope rather than to this branch.
 fn walk_pruned_home_keys(config: &Config, scan_root: &Path, physical_root: &Path) -> Vec<PathBuf> {
     if config.scan_full {

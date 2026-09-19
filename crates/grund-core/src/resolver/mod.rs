@@ -14,7 +14,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). Seven groups came from five components, each
+//! (§AR-core-module-layout.1.1). Seven groups came from five components, each
 //! because a component below was reading it upward or a sibling was answering
 //! for it:
 //!
@@ -22,7 +22,7 @@
 //!   set and the §FS-workspace.8.1.1 candidate clause that reads it. They are
 //!   what had workspace reading the scanner for `ScanError`, the tree scan and
 //!   the ID-argument resolver (§AR-system.4).
-//! - `legacy_promotion.rs`, the qualified half of §FS-config.3.2's catalog
+//! - `legacy_promotion.rs`, the qualified half of §FS-config.3.2.6's catalog
 //!   reconciliation, out of `scanner/legacy.rs`: it takes the whole loaded set,
 //!   so leaving it there would have had the scanner name this component's
 //!   record. The per-candidate promotion it calls stays the scanner's.
@@ -34,9 +34,9 @@
 //!   lead-budget rule read upward out of a sibling's answer (§FS-check.4.13).
 //! - `link_targets.rs` out of `writers/fmt_link_targets.rs`, the link a
 //!   declaration's ID resolves to, which the checker's index-entry rule read the
-//!   same way (§FS-check.3.18).
+//!   same way (§FS-check.3.18.5).
 //! - `unread_block.rs` out of `workspace/members.rs`, the one half of
-//!   §FS-check.4.10 that has to run the walker to answer — and, with it, the
+//!   §FS-check.4.10.2 that has to run the walker to answer — and, with it, the
 //!   whole of the run's warning channel settled, since this is the lowest
 //!   component that can answer all four of its findings (§FS-distribution.3.1).
 //! - `shorthand.rs` out of `grammar/shorthand.rs`, the half of the number-only
@@ -91,7 +91,7 @@ pub(crate) use shorthand::{
 pub(crate) use unread_block::settled_run_warnings;
 
 // The cases that pin this component, one module per behaviour area
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_shorthand_numeric_run;
 #[cfg(test)]

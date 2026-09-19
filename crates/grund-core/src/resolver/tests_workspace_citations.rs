@@ -98,7 +98,7 @@ fn dangling_reference_suggests_nearest_declared_id() {
     );
 }
 
-/// §FS-workspace.1: a qualified citation's ID tail is parsed with the
+/// §FS-workspace.1.2: a qualified citation's ID tail is parsed with the
 /// target project's grammar, not the citing project's grammar.
 #[test]
 fn workspace_qualified_citation_uses_target_id_grammar() {
@@ -194,7 +194,7 @@ fn workspace_qualified_citation_uses_target_id_grammar() {
     );
 }
 
-/// §FS-workspace.5: member-local checks must report qualified citations even
+/// §FS-workspace.5.2: member-local checks must report qualified citations even
 /// when the cited token only matches another project's ID grammar.
 #[test]
 fn member_local_qualified_citation_with_foreign_grammar_reports_unknown_alias() {
@@ -230,7 +230,7 @@ fn member_local_qualified_citation_with_foreign_grammar_reports_unknown_alias() 
     );
 }
 
-/// §FS-workspace.4: a qualified dangling diagnostic names the target ID
+/// §FS-workspace.4.1: a qualified dangling diagnostic names the target ID
 /// using the target project's grammar, not the citing project's grammar.
 #[test]
 fn workspace_qualified_dangling_diagnostic_uses_target_id_grammar() {
@@ -362,7 +362,7 @@ members = ["apps/api"]
     );
 }
 
-/// §FS-workspace.2 / §FS-check.2.1: an explicitly empty workspace is a
+/// §FS-workspace.2 / §FS-check.2.1.3: an explicitly empty workspace is a
 /// configuration error for `check`, not a successful scan of nothing.
 #[test]
 fn check_rejects_workspace_with_no_projects_in_scope() {

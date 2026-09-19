@@ -12,7 +12,7 @@ use crate::resolver::shorthand_token_expansion;
 use crate::workspace::resolve_workspace_config;
 
 /// Check the same context exclusions as `grund fmt` before an LSP on-type
-/// `$$` rewrite (§FS-fmt.2.3, §FS-lsp.1.4).
+/// `$$` rewrite (§FS-fmt.2.3, §FS-lsp.1.4.4).
 ///
 /// The LSP live on-type transform (§FS-lsp.1.4) — the keystroke-time counterpart
 /// to `grund fmt`'s bulk passes (§FS-fmt.2.1, §FS-fmt.2.4).
@@ -41,7 +41,7 @@ pub fn can_replace_trigger_at(
 }
 
 /// `docstring` is where this line's Python docstring content sits
-/// (§FS-fmt.2.3.1). One line cannot say — only a walk from the top of the document
+/// (§FS-fmt.2.3.1.1). One line cannot say — only a walk from the top of the document
 /// can — so the single-line `can_replace_trigger_at` above passes the empty view
 /// and reads a `"""` as the quote it looks like; `on_type_line_edits`, which is
 /// handed the document, passes the real one and agrees with `grund fmt`.
@@ -133,7 +133,7 @@ pub fn on_type_line_edits(
     .collect())
 }
 
-/// Where the edited line's Python docstring content sits (§FS-fmt.2.3.1). Only a
+/// Where the edited line's Python docstring content sits (§FS-fmt.2.3.1.1). Only a
 /// walk from the top of the document can say whether a line is inside a docstring,
 /// so this is the same shape as `line_is_rewritable`'s walk and is called for the
 /// same reason — and it is called only once a rewrite is already in prospect, so an
@@ -166,7 +166,7 @@ fn docstring_content_at<'a>(
 /// consults this: it is the one that edits text the author did not just type, so
 /// a live transform that ignored these would silently rewrite an illustration
 /// inside a fence, a citation in the title of a declaration, or the diagram a
-/// region was written to protect (§FS-lsp.1.4).
+/// region was written to protect (§FS-lsp.1.4.3).
 ///
 /// The region state is `rewrite_file`'s own `FmtDirectives` — one record in
 /// `grammar/fmt_suppress.rs` that both read, rather than a second spelling of
@@ -182,10 +182,10 @@ fn line_is_rewritable(
     is_py: bool,
 ) -> bool {
     let mut markdown_fence = None;
-    // §FS-fmt.2.3.1: `rewrite_file` reads a docstring line's content when it asks
+    // §FS-fmt.2.3.1.1: `rewrite_file` reads a docstring line's content when it asks
     // whether the line is a declaration heading, so this walk does too.
     let mut docstrings = DocstringCursor::new(is_py, config.docstring_python);
-    // §FS-fmt.2.5.2: every file starts with the rewrite on — a region never
+    // §FS-fmt.2.5.2.1: every file starts with the rewrite on — a region never
     // carries across files, so the walk starts at the top of this one.
     let mut directives = FmtDirectives::new(config.lexical(), is_md);
     for (index, line) in text.lines().enumerate() {
@@ -196,7 +196,7 @@ fn line_is_rewritable(
             continue;
         }
         let docstring = docstrings.advance(line);
-        // §FS-fmt.2.5.2: inside a fence nothing is rewritten and a directive is an
+        // §FS-fmt.2.5.2.2: inside a fence nothing is rewritten and a directive is an
         // illustration, so the fence is asked first here exactly as it is there.
         if markdown_fence.is_some() {
             if index == line_index {
@@ -204,7 +204,7 @@ fn line_is_rewritable(
             }
             continue;
         }
-        // §FS-fmt.2.5.2: the directive line itself is never rewritten, whichever
+        // §FS-fmt.2.5.2.1: the directive line itself is never rewritten, whichever
         // state it leaves behind.
         if directives.consume(line, docstring) {
             if index == line_index {
@@ -232,7 +232,7 @@ fn line_is_rewritable(
 ///
 /// Consulted only once an expansion is already in prospect, and free for a
 /// repository that set no key (§GOAL-fast-feedback). A pattern set that will not
-/// compile was refused at config load (§FS-config.3.10), so reaching the error
+/// compile was refused at config load (§FS-config.3.10.1), so reaching the error
 /// here is a grund bug — and of the two ways to be wrong about it, refusing the
 /// edit is the one that cannot damage a protected file.
 fn file_is_fmt_excluded(config: &Config, path: &Path) -> bool {
@@ -243,7 +243,7 @@ fn file_is_fmt_excluded(config: &Config, path: &Path) -> bool {
 }
 
 /// One declaration the caller already knows about: the file it lives in, and its
-/// **unqualified** rendered ID (§FS-lsp.1.4).
+/// **unqualified** rendered ID (§FS-lsp.1.4.2).
 ///
 /// The path is what scopes a shorthand to the right namespace. In a workspace the
 /// snapshot holds every member's declarations, and `§FS-042` typed in `web` means
@@ -255,7 +255,7 @@ pub struct DeclaredId<'a> {
     pub id: &'a str,
 }
 
-/// The IDs of the declarations that live under `root` (§FS-lsp.1.4).
+/// The IDs of the declarations that live under `root` (§FS-lsp.1.4.2).
 ///
 /// A plain prefix test is not enough, because the two sides can reach the same
 /// directory by different spellings: the editor's URI and the discovered config
@@ -265,7 +265,7 @@ pub struct DeclaredId<'a> {
 ///
 /// So the raw comparison runs first, and only if it finds nothing does the
 /// normalized one run, through the same `canonical_snapshot_path` the LSP snapshot
-/// itself is built with (§AR-lsp.5) rather than a second, drift-prone rule about
+/// itself is built with (§AR-lsp.5.1) rather than a second, drift-prone rule about
 /// path shapes. On a tree whose paths already agree that costs no I/O at all.
 fn declarations_under_root<'a>(declarations: &[DeclaredId<'a>], root: &Path) -> Vec<&'a str> {
     let direct: Vec<&str> = declarations
@@ -302,7 +302,7 @@ fn trigger_marker_edit(
     if token.is_empty() {
         return None;
     }
-    // §FS-fmt.2.3.1: the docstring walk runs only here, past the two tests that
+    // §FS-fmt.2.3.1.1: the docstring walk runs only here, past the two tests that
     // reject every ordinary keystroke (§GOAL-fast-feedback).
     let docstring = docstring_content_at(config, text, line_index, is_py);
     if !can_replace_trigger_with_config(config, docstring, path, line, trigger_start, token) {

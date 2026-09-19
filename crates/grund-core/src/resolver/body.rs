@@ -3,7 +3,7 @@
 //! supported comment dialect (§FS-show.2.1, §FS-show.2.2, §FS-show.2.3).
 //!
 //! This is a question about *source structure* asked of the spans a scan already
-//! recorded — the same question §AR-scanner.2.4 answers for the citing side — so
+//! recorded — the same question §AR-scanner.2.4.1 answers for the citing side — so
 //! it is a function of the loaded findings rather than of any one command's
 //! rendering (§AR-resolver.placement). `queries/show.rs` keeps what is genuinely
 //! rendering: the entry points, the JSON shapes, and the refusals.
@@ -82,7 +82,7 @@ pub(crate) fn extract_declaration_body(
 /// The exact scanner-recorded site whose body is being sliced. `show` supplies
 /// it after establishing uniqueness so an assigned scanner body span bounds the
 /// source slice too; size rows additionally use it to keep duplicate homes and
-/// duplicate section coordinates site-local (§FS-show.2.1.2, §FS-list.3.4).
+/// duplicate section coordinates site-local (§FS-show.2.1.2.1, §FS-list.3.4).
 #[derive(Clone, Copy)]
 pub(super) struct PointBodySite {
     pub(super) declaration_line: usize,
@@ -95,7 +95,7 @@ pub(super) struct PointBodySite {
 
 /// Per-operation source cache shared by list and check point measurements. It
 /// owns no parsing rules: the cached bytes still flow through the exact show
-/// slicer below (§FS-list.3.4, §FS-check.4.13).
+/// slicer below (§FS-list.3.4.1, §FS-check.4.13).
 pub(crate) struct PointBodyCache<'a> {
     overlays: &'a TextOverlays,
     text: BTreeMap<PathBuf, String>,
@@ -230,7 +230,7 @@ pub(super) fn extract_declaration_body_cached(
                 line_style_comment = is_line_style_comment_line(scan_line);
                 output_line = lineno;
                 // `md` format keeps the heading verbatim — including for `--brief`,
-                // which then prints heading + first paragraph (§FS-show.3.1).
+                // which then prints heading + first paragraph (§FS-show.3.1.2).
                 if include_heading {
                     lines.push(clean_body_line(scan_line, is_md || scan.in_py_docstring));
                 }
@@ -248,11 +248,11 @@ pub(super) fn extract_declaration_body_cached(
             if scan.in_py_docstring {
                 // Python docstring content is plain Markdown; delimiter-only
                 // triple-quote lines are skipped by `source_scan_line`
-                // (§AR-scanner.4, §FS-show.2.3.2).
+                // (§AR-scanner.4.4, §FS-show.2.3.2).
             } else if blank {
                 // A blank line ends a line-style comment block (`//`, `#`, …);
                 // inside a `/* … */` block or a docstring it is part of the body
-                // (§FS-show.2.3.1).
+                // (§FS-show.2.3.1.2).
                 if line_style_comment {
                     break;
                 }
@@ -411,7 +411,7 @@ fn clean_body_line(line: &str, is_md: bool) -> String {
 }
 
 /// Whether a line still looks like part of the comment block — used to decide
-/// where an inline declaration's body ends (§FS-show.2.3.1).
+/// where an inline declaration's body ends (§FS-show.2.3.1.2).
 fn is_comment_body_line(line: &str) -> bool {
     let trimmed = line.trim_start();
     ["///", "//!", "//", "#", "*", "/*", "*/"]
@@ -422,7 +422,7 @@ fn is_comment_body_line(line: &str) -> bool {
 /// Whether a declaration heading line sits inside a *line-style* comment
 /// (`//`-family, `#`, `;`, `--`) as opposed to a `/* … */` block (which opens
 /// `*` continuation lines). Line-style blocks end at a blank line; block-style
-/// ones end at `*/` (§FS-show.2.3.1).
+/// ones end at `*/` (§FS-show.2.3.1.2).
 fn is_line_style_comment_line(line: &str) -> bool {
     let trimmed = line.trim_start();
     trimmed.starts_with("//")
@@ -442,7 +442,7 @@ fn read_text_with_overlays(path: &Path, overlays: &TextOverlays) -> Result<Strin
 /// `--toc` joins the default body with the section-map body, separated by one
 /// blank line. Empty halves are dropped; if both are empty the result is empty.
 /// Each body already ends with `\n`, so `{a}\n{b}` produces `<a>\n\n<b>\n`
-/// (§FS-show.2.1.2).
+/// (§FS-show.2.1.2.2).
 fn join_with_blank(default_body: &str, outline_body: &str) -> String {
     match (default_body.is_empty(), outline_body.is_empty()) {
         (true, true) => String::new(),

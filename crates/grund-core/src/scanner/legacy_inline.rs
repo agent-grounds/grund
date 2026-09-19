@@ -1,5 +1,5 @@
 //! Reconcile promoted persisted citations with inline-note classification
-//! (§FS-inline-citation-style.3.1, §FS-config.3.2). Kept beside `legacy.rs`
+//! (§FS-inline-citation-style.3.1, §FS-config.3.2.6). Kept beside `legacy.rs`
 //! because this is the post-catalog half of that pass, not a new inline-style
 //! rule.
 

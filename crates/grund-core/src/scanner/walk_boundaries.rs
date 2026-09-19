@@ -1,7 +1,7 @@
 //! The §AR-scanner.1 predicates that are not the traversal itself: which files
 //! the walk reads at all, and the ownership and canonical-root boundaries it may
 //! not carry a scan root across, shared by the reporting walk and the
-//! read-any-file probe (§FS-workspace.6).
+//! read-any-file probe (§FS-workspace.6.2).
 //!
 //! The two file tests sat in the per-file pass while the scanner was a file-name
 //! category, which is what made a §AR-scanner.2 file answer a §AR-scanner.1
@@ -14,7 +14,7 @@ use crate::config::Config;
 use crate::model::is_hidden;
 
 /// Whether a canonical path belongs to a project of this run that is **not** the
-/// one doing the walking (§FS-workspace.6, §AR-workspace.6). The owner is the
+/// one doing the walking (§FS-workspace.6.2, §AR-workspace.6.2). The owner is the
 /// innermost project root containing it, since a nested member's root sits inside
 /// the block that listed it. A path no loaded project owns does not cross this
 /// ownership boundary; the canonical project-root fence is answered separately
@@ -30,7 +30,7 @@ pub(super) fn owned_by_another_project(config: &Config, own_root: &Path, canonic
 }
 
 /// Whether directory-link traversal carried a scan root outside the canonical
-/// project root (§FS-config.3.5.1, §AR-scanner.1). For an in-project spelling,
+/// project root (§FS-config.3.5.1, §AR-scanner.1.6). For an in-project spelling,
 /// every component below the project root is checked: the named root may be a
 /// descendant of the link rather than the link itself. An external spelling is
 /// rejected only when the named root itself is a link, so a plain parent-relative

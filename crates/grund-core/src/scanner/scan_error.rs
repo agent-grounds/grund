@@ -1,5 +1,5 @@
 //! The published form of a scan failure (§AR-system.2.5): the `(path, message)`
-//! pair the walk collects (§FS-check.2), with its path already spelled the way
+//! pair the walk collects (§FS-check.2.4), with its path already spelled the way
 //! the report spells it.
 //!
 //! It sat in the api's contract file while the queries and the writers read it
@@ -15,7 +15,7 @@ use crate::config::{Config, display_path};
 
 /// One file the walk could not read, as a caller of the embedding API sees it:
 /// the path rendered against the run's report base (§FS-config.3.6) and the
-/// reason verbatim (§FS-check.2, §AR-bindings.2).
+/// reason verbatim (§FS-check.2.4, §AR-bindings.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ApiScanError {
     pub path: String,

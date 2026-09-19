@@ -88,7 +88,7 @@ fn an_alias_that_sorts_last_leaves_the_real_name_reported() {
             "docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha",
             "docs/functional-spec/FS-001-alpha.md:3: unknown reference FS-999-ghost",
         ],
-        "§FS-errors.4: the surviving spelling is the lexicographically first path, not whichever one readdir happened to yield first"
+        "§FS-errors.4.1: the surviving spelling is the lexicographically first path, not whichever one readdir happened to yield first"
     );
 }
 
@@ -118,7 +118,7 @@ fn full_scope_keeps_the_plain_runs_spelling_of_a_linked_file() {
                 .filter(|diagnostic| !diagnostic.code.starts_with("out-of-scope-")),
         ),
         located_diagnostics(&scoped.config, scoped.report.errors.iter()),
-        "§FS-check.1.3: --full stays purely additive — same in-scope lines, same spelling of the file two roots reach"
+        "§FS-check.1.3.2: --full stays purely additive — same in-scope lines, same spelling of the file two roots reach"
     );
     assert_eq!(
         located_diagnostics(&scoped.config, scoped.report.errors.iter()),
@@ -126,7 +126,7 @@ fn full_scope_keeps_the_plain_runs_spelling_of_a_linked_file() {
     );
 }
 
-/// §AR-workspace.6: the boundary compare is a path suffix, which a member
+/// §AR-workspace.6.2: the boundary compare is a path suffix, which a member
 /// reached under a *link* name never matches — so the root scan walked into
 /// the member namespace and reported its declarations as duplicates.
 #[test]
@@ -150,7 +150,7 @@ fn a_member_reached_through_a_link_stays_out_of_the_root_scan() {
     assert_eq!(
         scanned(&config, &findings),
         vec!["docs/functional-spec/FS-001-alpha.md"],
-        "§AR-workspace.6: a member is out of bounds under every name it wears, the link's included"
+        "§AR-workspace.6.2: a member is out of bounds under every name it wears, the link's included"
     );
 }
 
@@ -177,11 +177,11 @@ fn a_link_above_a_member_does_not_carry_the_root_scan_into_it() {
     assert_eq!(
         scanned(&config, &findings),
         vec!["docs/functional-spec/FS-001-alpha.md"],
-        "§AR-workspace.6: the boundary is the directory, so it holds however many links are above it"
+        "§AR-workspace.6.2: the boundary is the directory, so it holds however many links are above it"
     );
 }
 
-/// §AR-scanner.6: the case-directory test compares an entry's parent with the
+/// §AR-scanner.6.4: the case-directory test compares an entry's parent with the
 /// cases root exactly, which a link onto that root does not match — and the
 /// fixture repos the manifest pass owns were scanned as repo content.
 #[test]
@@ -200,7 +200,7 @@ fn an_e2e_case_directory_reached_through_a_link_is_not_scanned() {
         !findings(&run)
             .iter()
             .any(|line| line.contains("duplicate declaration")),
-        "§AR-scanner.6: a case directory is a manifest boundary under every name it is reached by"
+        "§AR-scanner.6.4: a case directory is a manifest boundary under every name it is reached by"
     );
 }
 
@@ -229,7 +229,7 @@ fn a_plain_run_collapses_an_aliased_root() {
     assert_eq!(
         findings(&run),
         vec!["docs/functional-spec/FS-001-alpha.md:1: declared but never cited: FS-001-alpha"],
-        "§FS-check.1.3: one physical file read once, under the earlier root's spelling — no duplicate of itself"
+        "§FS-check.1.3.2: one physical file read once, under the earlier root's spelling — no duplicate of itself"
     );
 }
 
@@ -260,7 +260,7 @@ fn an_excluded_directory_reached_through_a_link_is_still_excluded() {
     );
 }
 
-/// §FS-config.3.5: a repository whose own path is reached through a link is
+/// §FS-config.3.5.2.1: a repository whose own path is reached through a link is
 /// walked and reported under the path the run was handed. Resolving the scope
 /// is how the walk recognizes that it *is* the config root; it is not a
 /// decision about what the report calls it. macOS is where CI meets this —
@@ -281,11 +281,11 @@ fn a_config_root_reached_through_a_link_is_reported_under_that_name() {
     assert_eq!(
         scanned(&config, &findings),
         vec!["docs/functional-spec/FS-001-alpha.md"],
-        "§FS-config.3.5: the walked spelling is what the report names, not the physical one"
+        "§FS-config.3.5.2.1: the walked spelling is what the report names, not the physical one"
     );
 }
 
-/// §FS-workspace.6: a leaf member has no members of its own, so the downward
+/// §FS-workspace.6.2: a leaf member has no members of its own, so the downward
 /// boundary list is empty and a link inside it walked straight into a
 /// sibling's tree — re-declaring that project's IDs in this one's namespace.
 #[test]
@@ -306,7 +306,7 @@ fn a_link_into_a_sibling_project_stays_out_of_this_scan() {
     assert_eq!(
         scanned(&config, &findings),
         vec!["docs/functional-spec/FS-001-alpha.md"],
-        "§FS-workspace.6: the sibling owns its files, so this walk stops at its root"
+        "§FS-workspace.6.2: the sibling owns its files, so this walk stops at its root"
     );
 }
 
@@ -333,7 +333,7 @@ fn a_link_onto_another_projects_file_is_not_read() {
     assert_eq!(
         scanned(&config, &findings),
         vec!["docs/functional-spec/FS-001-alpha.md"],
-        "§FS-workspace.6: a file another project owns is not this project's to declare"
+        "§FS-workspace.6.2: a file another project owns is not this project's to declare"
     );
 }
 
@@ -404,7 +404,7 @@ fn a_parent_relative_scan_root_outside_the_project_is_still_followed() {
 }
 
 /// A member's scan, with the run's other project roots on the config — what
-/// workspace expansion stamps onto every project it loaded (§AR-workspace.6).
+/// workspace expansion stamps onto every project it loaded (§AR-workspace.6.2).
 fn member_scan(root: &Path, member: &str) -> (Config, Findings) {
     let mut config = Config::default_for(root.join(member));
     config.include = Some(vec!["docs".into()]);

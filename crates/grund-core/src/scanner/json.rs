@@ -1,4 +1,4 @@
-//! A small span-preserving JSON reader for value homes (§FS-values.2.2,
+//! A small span-preserving JSON reader for value homes (§FS-values.2.2.2,
 //! §REQ-never-crashes.1). It preserves ordered and duplicate object members,
 //! raw scalar spellings, decoded strings, and byte spans before catalog maps
 //! are built; syntax failures remain scan-incomplete rather than semantic value

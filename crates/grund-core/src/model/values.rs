@@ -70,7 +70,7 @@ pub struct InvalidValueSite {
     /// Binding-only target metadata. Declaration-shape errors leave these
     /// fields empty; the checker uses them to keep malformed delimited prose
     /// inert unless it actually aims at configured or marked value authority
-    /// (§FS-values.3.1, §FS-values.5.1).
+    /// (§FS-values.3.1.1, §FS-values.5.1).
     pub binding_namespace: Option<String>,
     pub binding_section: Option<String>,
 }

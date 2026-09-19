@@ -10,10 +10,10 @@ use crate::workspace::WorkspaceCitationTarget;
 
 /// Whether `fmt` may rewrite the citation whose marker starts at `marker_start` —
 /// a **`scan_line`** offset, which is what every pass below holds — on the line
-/// they are scanning (§FS-fmt.2.3, §FS-check.3.13). One place asks it, so the
+/// they are scanning (§FS-fmt.2.3, §FS-check.3.13.1). One place asks it, so the
 /// qualified pass, the unqualified one and the shorthand pass can never reach
 /// different verdicts about one site; the recorded column stays a raw-file column
-/// either way (§AR-scanner.2.6).
+/// either way (§AR-scanner.2.6.10).
 fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> bool {
     !never_rewrite_context_in(
         line.docstring,
@@ -23,7 +23,7 @@ fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> 
     )
 }
 
-/// §FS-workspace.5: a member-local scan must still recognize marker-qualified
+/// §FS-workspace.5.2: a member-local scan must still recognize marker-qualified
 /// citations before the member's own ID grammar is applied. Without this
 /// fallback, `§root/FS-root` in a default member can disappear just because the
 /// root uses `{kind}-{slug}`.
@@ -42,7 +42,7 @@ fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> 
 /// `qualified_claimed` carries the marker offsets a qualified citation already
 /// exists at — the full-ID pass's on entry, this pass's own on return. The
 /// shorthand pass reads the union to decide whether a qualified marker is
-/// already spoken for (§AR-scanner.2.6).
+/// already spoken for (§AR-scanner.2.6.1.1).
 pub(super) fn scan_fallback_qualified_citations(
     line: &CitationLine<'_>,
     qualified_claimed: &mut BTreeSet<usize>,
@@ -101,7 +101,7 @@ pub(super) fn scan_fallback_qualified_citations(
 
 /// One line's worth of marker-qualified workspace citations: a `§<alias>/<ID>`
 /// token whose ID tail parses with the target project's grammar
-/// (§FS-workspace.1, §AR-workspace.2). Runs inline during `scan_file` in
+/// (§FS-workspace.1.2, §AR-workspace.2). Runs inline during `scan_file` in
 /// workspace mode so the file is read once, not twice.
 pub(super) fn scan_workspace_qualified_pass(
     line: &CitationLine<'_>,
@@ -158,7 +158,7 @@ pub(super) fn scan_workspace_qualified_pass(
             line: line.lineno,
             column: line.column_offset + marker_start + 1,
             has_marker: true,
-            // §FS-fmt.2.3 / §FS-check.3.13: a qualified shorthand is rewritable
+            // §FS-fmt.2.3 / §FS-check.3.13.1: a qualified shorthand is rewritable
             // wherever an unqualified one is — the workspace pass reaches the aliased
             // project's declarations, so `fmt` can name the canonical form here too.
             shorthand_rewritable: scanned_citation_rewritable(line, marker_start),
@@ -182,7 +182,7 @@ pub(super) fn scan_workspace_qualified_pass(
 
 /// Retain marker-prefixed tokens that the configured grammar may have rejected;
 /// catalog reconciliation promotes only exact declaration-backed spellings
-/// (§FS-check.1.1, §FS-config.3.2). The remainder of the already-read line is
+/// (§FS-check.1.1.1, §FS-config.3.2.6). The remainder of the already-read line is
 /// enough to defer token/section precedence without a second file read.
 pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings: &mut Findings) {
     if line.config.marker.is_empty() || !line.scan_line.contains(&line.config.marker) {
@@ -351,14 +351,14 @@ pub(super) fn scan_shorthand_citations(
         if !line.config.grammar.id_token_ends_cleanly(rest, match_end) {
             continue;
         }
-        // §FS-fmt.2.4.1: the token ended, which does not make it a citation.
+        // §FS-fmt.2.4.1.1: the token ended, which does not make it a citation.
         let numeric_run =
             line.config
                 .grammar
                 .shorthand_sits_in_numeric_run(&line.config.marker, rest, match_end);
-        // §AR-scanner.2.6: a qualified marker a qualified pass already claimed —
-        // the workspace one, or the loose fallback (§FS-workspace.5) — belongs to
-        // that pass alone (§REQ-no-missed-citation.1, §AR-scanner.2.3).
+        // §AR-scanner.2.6.1.1: a qualified marker a qualified pass already claimed —
+        // the workspace one, or the loose fallback (§FS-workspace.5.2) — belongs to
+        // that pass alone (§REQ-no-missed-citation.1, §AR-scanner.2.3.2).
         let namespace = caps.name("namespace").map(|m| m.as_str().to_string());
         if namespace.is_some()
             && (workspace_mode
@@ -380,7 +380,7 @@ pub(super) fn scan_shorthand_citations(
             column: line.column_offset + marker_start + 1,
             has_marker: true,
             shorthand: true,
-            // §FS-check.3.13: still a citation here — it resolves, it counts, it
+            // §FS-check.3.13.1: still a citation here — it resolves, it counts, it
             // grounds its file — but `fmt` may not rewrite it (§FS-fmt.2.3), so the
             // checker withholds the "write the canonical form" error.
             shorthand_rewritable: scanned_citation_rewritable(line, marker_start),

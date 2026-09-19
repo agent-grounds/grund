@@ -1,7 +1,7 @@
 //! Off-grammar promotion across the **loaded set** (§AR-system.2.10): a
 //! qualified candidate the scanner deferred, reconciled against the catalog of
-//! the project its alias names (§FS-workspace.4, §FS-workspace.8,
-//! §FS-config.3.2).
+//! the project its alias names (§FS-workspace.4.1, §FS-workspace.8,
+//! §FS-config.3.2.6).
 //!
 //! The single-project half of the same reconciliation is the scanner's own, in
 //! `scanner/legacy.rs`, and stays there: it runs on one `Findings` inside the
@@ -16,7 +16,7 @@ use crate::scanner::{
     configured_catalog_ids, legacy_catalog_ids, promote_legacy_candidate, sort_citations,
 };
 
-/// The workspace half of the same reconciliation (§FS-workspace.4,
+/// The workspace half of the same reconciliation (§FS-workspace.4.1,
 /// §FS-workspace.8): a qualified candidate consults only the alias-selected
 /// project's catalog and effective section grammar.
 pub(crate) fn promote_qualified_legacy_citations(projects: &mut [WorkspaceProject]) {

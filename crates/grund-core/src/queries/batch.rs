@@ -11,7 +11,7 @@ use crate::scanner::resolve_id_arg;
 use crate::workspace::split_qualified_id_arg;
 
 /// One input coordinate for the CLI-only batch-show adapter
-/// (§FS-show.1, §FS-show.2.6).
+/// (§FS-show.1.8, §FS-show.2.6).
 #[doc(hidden)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct BatchShowQuery {
@@ -62,10 +62,10 @@ fn show_batch_run(
         return Ok(Vec::new());
     }
 
-    // §AR-resolver.3: this is the batch's only loader entry. Exhaustive
+    // §AR-resolver.3.1: this is the batch's only loader entry. Exhaustive
     // discovery reads the returned catalog and never starts a preliminary scan.
     let context = load_workspace_context(&opts.path, path_provided)?;
-    // §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1: the run's `[workspace]`
+    // §FS-check.4.7.7, §FS-check.4.10.11, §FS-workspace.6.1.7: the run's `[workspace]`
     // warnings come back beside the records, because the batch refuses after the
     // workspace pass has already settled them.
     *run_warnings = run_warning_findings(context.render_config(), context.run_warnings.clone());
@@ -109,7 +109,7 @@ fn show_batch_run(
 
 /// Resolve one batch coordinate through the shared context and the same lower
 /// level resolver, body extractor, flattening, and JSON renderer as single show
-/// (§FS-show.2.6, §AR-resolver.3).
+/// (§FS-show.2.6.1, §AR-resolver.3.1).
 fn show_batch_query_in_context(
     context: &WorkspaceContext,
     id_arg: &str,
@@ -174,7 +174,7 @@ fn show_batch_query_in_context(
 }
 
 /// Generate stable coordinates from the declarations and sections already in
-/// the loaded context (§FS-show.2.6). BTree sets collapse duplicate claimants;
+/// the loaded context (§FS-show.2.6.2). BTree sets collapse duplicate claimants;
 /// the final bytewise sort is over the public qualified spelling.
 fn exhaustive_batch_queries(context: &WorkspaceContext) -> Vec<BatchShowQuery> {
     let mut queries = Vec::new();
@@ -217,7 +217,7 @@ fn exhaustive_batch_queries(context: &WorkspaceContext) -> Vec<BatchShowQuery> {
 }
 
 /// Convert only coordinate-level refusals into envelopes. An unexpected body
-/// read or other operational error remains a run-level abort (§FS-show.2.6).
+/// read or other operational error remains a run-level abort (§FS-show.2.6.3).
 fn batch_query_failure(error: &anyhow::Error) -> Option<BatchShowFailure> {
     if let Some(carrier) = error.downcast_ref::<ShowQueryError>() {
         return Some(BatchShowFailure {

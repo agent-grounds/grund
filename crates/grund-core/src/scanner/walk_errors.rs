@@ -7,10 +7,10 @@ use super::walk_boundaries::is_scannable;
 use crate::config::{Config, display_path};
 use crate::model::is_hidden;
 
-/// The per-file scan failure a walker error becomes (§FS-check.2), or `None` when
+/// The per-file scan failure a walker error becomes (§FS-check.2.4), or `None` when
 /// the walk was never going to read through the path it names (§FS-config.3.5.6).
 ///
-/// What the walk does with a path it cannot read (§AR-scanner.1, §FS-check.2):
+/// What the walk does with a path it cannot read (§AR-scanner.1.9, §FS-check.2.4):
 /// which walker errors become per-file scan failures, which stay silent because
 /// the ordinary walk was never going to read the path anyway, and which link a
 /// loop is reported at. It sits beside `walk.rs` because it is the other half of
@@ -72,7 +72,7 @@ pub(super) fn walk_error_report(
 /// target reaches over the walk root, which no in-tree name below it describes. Shared by the two ways a loop is found: the walker's
 /// own detection, and the filter pruning a link whose target is at or above the
 /// walk root — which the walker cannot see without descending a second copy of
-/// the tree first (§AR-scanner.1).
+/// the tree first (§AR-scanner.1.9).
 ///
 /// Why the ancestor name can be missing: the config root renders as nothing at
 /// all, and a target at or above the walk root has no in-tree name below it
@@ -186,7 +186,7 @@ fn walk_error_path(err: &ignore::Error) -> Option<&Path> {
 }
 
 /// A walker error's reason, without the path `ignore` writes into its own text:
-/// the diagnostic already carries the path (§FS-errors.2.2), and the one `ignore`
+/// the diagnostic already carries the path (§FS-errors.2.2.1), and the one `ignore`
 /// writes is absolute, which a report may not contain (§FS-errors.4).
 fn walk_error_reason(err: &ignore::Error) -> String {
     match err.io_error() {

@@ -8,7 +8,7 @@
 //! section is not already in the section map (§AR-resolver.placement). Two components
 //! ask it for the same answer — `grund fmt --cross-refs` for the link it writes
 //! (§FS-fmt.6) and the checker's index-entry rule for the link it compares
-//! against (§FS-check.3.18) — so it sat in `writers/fmt_link_targets.rs` while
+//! against (§FS-check.3.18.5) — so it sat in `writers/fmt_link_targets.rs` while
 //! the checker read it upward out of a component above it (§AR-system.4). The
 //! derivation of an anchor *from* heading text is the lexical half and is
 //! `grammar/anchors.rs`.
@@ -43,7 +43,7 @@ pub(crate) fn markdown_link_target(
 
 /// §FS-workspace.8.5: same as `markdown_link_target`, but with an explicit
 /// `path_root` override for relative-path computation. The target's `config`
-/// still drives anchor profile (§FS-fmt.6.7) and stub resolution, but the
+/// still drives anchor profile (§FS-fmt.6.7.1) and stub resolution, but the
 /// link path is anchored at `path_root` (the workspace root) when the
 /// citing file and the target's home live in different projects.
 pub(crate) fn markdown_link_target_with_root(

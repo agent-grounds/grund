@@ -16,7 +16,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). The submodules are the former `show*`, `list*`
+//! (§AR-core-module-layout.1.1). The submodules are the former `show*`, `list*`
 //! and editor-answer category files, one per question — the show entry points,
 //! the batch adapter over one loaded context, the catalog's shared citation
 //! counts, the point-size catalog, and the two editor answers.
@@ -28,17 +28,17 @@
 //! Two files came in when §AR-system.2.9 became a module, both because a record
 //! the api's contract declared was produced or read here (§AR-system.4).
 //! `show_query.rs` is what a show query is asked and what it refuses with — the
-//! options of §FS-distribution.3.1 and the typed refusal of §FS-errors.5, which
+//! options of §FS-distribution.3.1 and the typed refusal of §FS-errors.5.2, which
 //! `show.rs` raises and the batch read upward. `editor_snapshot.rs` is the
 //! editor's snapshot vocabulary of §FS-lsp.1, which the title hover read upward;
 //! the walk that *fills* a snapshot stays in `api/lsp_snapshot.rs`, needing the
 //! whole pipeline beneath it. What went the other way is the snapshot path
 //! canonicalization, down into `model/paths.rs` where the on-type rule and the
-//! formatter's suppression both read it (§AR-lsp.5).
+//! formatter's suppression both read it (§AR-lsp.5.1).
 //!
 //! This is the first component whose files were **split** rather than moved.
 //! Five of them wrote to a stream, because the deprecated `main_entry()` path
-//! renders inside the engine (§AR-system.2.9): the `command_*` adapters that
+//! renders inside the engine (§AR-system.2.9.1): the `command_*` adapters that
 //! parse argv, print text or JSON and return an `ExitCode` are the deprecated
 //! path's, not a query's, so they are `compat/show.rs`, `compat/refs.rs`,
 //! `compat/cover.rs`, `compat/list.rs` and `compat/completions.rs`. `refs`,
@@ -74,7 +74,7 @@ pub(crate) use citation_counts::ListCitationCounts;
 pub(crate) use show::{render_show_output_json, show_declaration, show_declaration_with_overlays};
 
 // The cases that pin this component, one module per behaviour area
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_lsp_hover;
 #[cfg(test)]

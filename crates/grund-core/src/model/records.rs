@@ -26,7 +26,7 @@ const LEGACY_ID_SENTINEL: char = '\0';
 
 impl Id {
     /// Preserve an off-grammar declaration's exact spelling without widening
-    /// the configured authoring grammar (§FS-config.3.2). The spelling lives in
+    /// the configured authoring grammar (§FS-config.3.2.5). The spelling lives in
     /// the otherwise grammar-owned slug slot behind an impossible sentinel, so
     /// existing `Id` construction and kind-based graph rules stay unchanged.
     pub(crate) fn legacy(kind: String, spelling: &str) -> Self {
@@ -58,14 +58,14 @@ pub struct Declaration {
     pub sections: BTreeMap<String, SectionInfo>,
     /// Every later heading that claimed a section path `sections` already holds,
     /// in file order, narrowed to the ones inside this declaration's own body
-    /// span (§AR-scanner.2.2).
+    /// span (§AR-scanner.2.2.3).
     ///
     /// Nothing *resolves* through it: a `§<ID>.<path>` citation, the completion
     /// candidates, and §FS-check.3.9 all read the map. It exists for the two
     /// commands that have to say the coordinate is ambiguous — §FS-check.3.16
     /// names each colliding line, and §FS-show.2.2.2 refuses a query for a path
     /// it holds. `--toc` reads neither: it re-scans the source, which is what
-    /// §FS-show.2.2.2 exempts it for.
+    /// §FS-show.2.2.2.3 exempts it for.
     pub duplicate_sections: Vec<(String, SectionInfo)>,
     pub is_stub: bool,
     pub defined_in: Option<PathBuf>,
@@ -75,7 +75,7 @@ pub struct Declaration {
     /// when the heading is a stub link (`# <ID>: [<text>](<path>)`), whose tail
     /// is a path, not a title.
     pub title: Option<String>,
-    /// The declaration's body line span (1-indexed, inclusive), §AR-scanner.2.4:
+    /// The declaration's body line span (1-indexed, inclusive), §AR-scanner.2.4.1:
     /// in Markdown it runs from the declaration heading to the line before the
     /// next same-or-higher heading (or end of file); in a source file it is
     /// bounded by the comment/docstring block, capped before the next
@@ -87,7 +87,7 @@ pub struct Declaration {
     pub body_end: usize,
     /// Exact source metadata for catalog consumers. Ordinary Markdown and
     /// source declarations carry `Text`; home JSON members retain both their
-    /// member slice and key span (§FS-values.2.2, §FS-values.6).
+    /// member slice and key span (§FS-values.2.2.2, §FS-values.6.2).
     pub source: DeclarationSource,
     /// `Some(true)` for a valid opted-in value declaration, `Some(false)` for
     /// a readable declaration with invalid value grammar, and `None` for an
@@ -108,7 +108,7 @@ pub struct SectionInfo {
     /// Present only when this existing numeric section carries the exact
     /// embedded-value suffix. The section remains the catalog identity; this
     /// metadata records authority without synthesizing a declaration
-    /// (§FS-values.2.4, §FS-values.6).
+    /// (§FS-values.2.4, §FS-values.6.1).
     pub value_root: Option<EmbeddedValueRoot>,
 }
 
@@ -126,7 +126,7 @@ pub struct Citation {
     pub has_marker: bool,
     /// Written in the number-only shorthand (§FS-check.1.2). The scanner's
     /// resolution pass has already rewritten `id` to the canonical declaration
-    /// when exactly one matched (§AR-scanner.2.6), so this flag is what
+    /// when exactly one matched (§AR-scanner.2.6.6), so this flag is what
     /// distinguishes a resolved shorthand from a full citation — and the only
     /// thing that has to: every graph consumer deliberately ignores it and reads
     /// `id`. When `id.slug` is still `None` the shorthand resolved to zero or
@@ -136,7 +136,7 @@ pub struct Citation {
     /// `false` inside inline code, a Markdown link destination, or a runtime
     /// string literal, the contexts §FS-fmt.2.3 forbids every rewrite from
     /// touching. The site is still a citation in every other sense; the flag only
-    /// withholds the §FS-check.3.13 error that names `grund fmt --write` as its
+    /// withholds the §FS-check.3.13.1 error that names `grund fmt --write` as its
     /// fix, so `check` never demands an edit the formatter refuses to make.
     /// Always `true` when `shorthand` is `false`.
     pub shorthand_rewritable: bool,
@@ -157,13 +157,13 @@ pub struct Citation {
     /// it is no site and carries no budget, style, or layout
     /// (§FS-inline-citation-style.1.1).
     pub inline_site: Option<InlineCitationSite>,
-    /// The resolved *citing* kind for this site (§AR-scanner.2.4): the kind of
+    /// The resolved *citing* kind for this site (§AR-scanner.2.4.2): the kind of
     /// the enclosing declaration, else the file's unique kind home, else the
-    /// homeless kind (`code` by default, §FS-config.3.9.2). Drives the citation-direction
+    /// homeless kind (`code` by default, §FS-config.3.9.2.2). Drives the citation-direction
     /// checks (§FS-config.3.9, §AR-checker.2.9, §AR-checker.2.10).
     pub source_kind: String,
     /// The nearest preceding declaration whose body range contains this site
-    /// (§AR-scanner.2.4), or `None` when the site sits in no declaration body.
+    /// (§AR-scanner.2.4.3), or `None` when the site sits in no declaration body.
     /// Lets the obligation pass ask "does this declaration cite the target?" as
     /// a lookup rather than a re-scan.
     pub enclosing_declaration: Option<Id>,
@@ -171,7 +171,7 @@ pub struct Citation {
 
 /// A marker-prefixed token the configured grammar rejected, retained during
 /// the same file scan until the project catalog can prove it names an exact
-/// persisted declaration (§FS-check.1.1, §FS-config.3.2).
+/// persisted declaration (§FS-check.1.1.1, §FS-config.3.2.6).
 #[derive(Debug)]
 pub(crate) struct LegacyCitationCandidate {
     pub(crate) namespace: Option<String>,
@@ -197,7 +197,7 @@ pub struct InlineCitationSite {
     pub first_line: usize,
     pub last_line: usize,
     /// Width of the site's longest line in **characters** — Unicode scalar
-    /// values, one column each (§FS-inline-citation-style.2.3). Not the byte
+    /// values, one column each (§FS-inline-citation-style.2.3.2). Not the byte
     /// length, and not the display width: `é`, `—`, and the `§` marker itself
     /// cost one column apiece, and so does a tab
     /// (§DF-note-columns-are-characters). This is a different measure from the
@@ -206,7 +206,7 @@ pub struct InlineCitationSite {
     pub max_columns: usize,
     pub has_note: bool,
     /// The site's judged lines that deviate from
-    /// `[reference] inline_note_layout` (§FS-inline-citation-style.3.3), 1-based
+    /// `[reference] inline_note_layout` (§FS-inline-citation-style.3.3.1), 1-based
     /// and ascending. Judged is rule 1's set, not every line carrying a citation:
     /// the line that opens the note, and any later line that opens with a
     /// citation of its own.
@@ -218,7 +218,7 @@ pub struct InlineCitationSite {
     /// `inline_note_layout_check = "off"`, where the verdicts would reach no
     /// channel (§FS-inline-citation-style.4.4). So the field costs a project only
     /// what it asked for: until it configures a layout and gates it, no line is
-    /// tokenized or classified on its account (§AR-scanner.3). A consumer that
+    /// tokenized or classified on its account (§AR-scanner.3.2). A consumer that
     /// wants the deviations of a tree whose gate is `off` is asking a different
     /// question and has to gate it, or classify the lines itself — reading an
     /// empty list here is not evidence that the tree conforms.
@@ -241,7 +241,7 @@ pub struct Findings {
     pub section_headings_outside_declarations: Vec<SectionHeadingOutsideDeclaration>,
     /// Markdown ATX headings owned by declaration bodies but carrying neither a
     /// declaration ID nor a section coordinate (§FS-check.4.14,
-    /// §AR-scanner.2.2). The scanner assigns the owner and a collision-free
+    /// §AR-scanner.2.2.7). The scanner assigns the owner and a collision-free
     /// suggested coordinate before any checker consumes this list.
     pub unmarked_headings: Vec<UnmarkedHeading>,
     pub(crate) legacy_citation_candidates: Vec<LegacyCitationCandidate>,
@@ -253,7 +253,7 @@ pub struct Findings {
     /// §DF-require-grounding). Files that failed to read are not here; they are in
     /// the walk's `ScanError` list instead.
     pub scanned_files: Vec<PathBuf>,
-    /// Every directory the walk descended into (§AR-scanner.1), scan roots
+    /// Every directory the walk descended into (§AR-scanner.1.10), scan roots
     /// included — the candidate set the unlisted-`[workspace]` rule of
     /// §FS-check.4.8 probes. Carried rather than judged here: the walk knows what
     /// it reached, and nothing about workspaces (§AR-workspace.1).
@@ -276,7 +276,7 @@ pub struct Findings {
     pub near_miss_headings: Vec<NearMissHeading>,
 }
 
-/// ID-query slice mode (§FS-show.1): each rung adds to the previous one —
+/// ID-query slice mode (§FS-show.1.6): each rung adds to the previous one —
 /// `--brief` is heading + first paragraph; `Default` adds the rest of the lead
 /// (cut at the first child section); `Toc` adds the nested section map; `Full`
 /// adds every subsection body. `Outline` is an internal-only mode used by `Toc`
@@ -358,7 +358,7 @@ pub struct FileHeading {
 /// One doc-comment block in a source file (§AR-scanner.2.7): its 1-indexed
 /// inclusive line span, and whether its first line starts at column 0.
 /// Indentation is the parse-free stand-in for "top-level item" that
-/// §FS-check.3.6.2 reads at level 2 — it holds across Rust, Python, Java, Go, and
+/// §FS-check.3.6.2.2 reads at level 2 — it holds across Rust, Python, Java, Go, and
 /// Kotlin without knowing any of them (§FS-non-goals.3).
 pub struct DocCommentBlock {
     pub start: usize,

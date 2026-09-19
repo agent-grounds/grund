@@ -27,7 +27,7 @@ use crate::model::{Declaration, DeclarationSource, Id, SectionInfo, ShowRenderMo
 /// cases already carry their canonical show bodies in scanner records; text
 /// declarations use the cached show slicer. A retained stub is broken (healthy
 /// stub rows collapse onto their inline home) and therefore unmeasurable
-/// (§FS-list.2, §FS-list.3.4).
+/// (§FS-list.2.5, §FS-list.3.4).
 pub(crate) fn point_body_pair(
     cache: &mut PointBodyCache<'_>,
     config: &Config,
@@ -89,7 +89,7 @@ pub(crate) fn point_body_pair(
     .body;
     // Text and JSON `show` flatten generated cross-reference wrappers before
     // exposing their bodies; point measurements promise those same bytes
-    // (§FS-show.3.2, §FS-list.3.4).
+    // (§FS-show.3.2, §FS-list.3.4.1).
     lead = flatten_cross_ref_links(&lead, config.lexical());
     full = flatten_cross_ref_links(&full, config.lexical());
     Ok(Some((lead, full)))
