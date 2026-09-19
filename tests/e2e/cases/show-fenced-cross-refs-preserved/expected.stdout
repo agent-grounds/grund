@@ -1,0 +1,17 @@
+## 1. Both fence characters
+
+Before the fences, §FS-002-target.1 is ordinary prose.
+
+```markdown
+[§FS-002-target.1](FS-002-target.md#1-detail)
+[§FS-<foo>.3.1](<relative-path>#<anchor>)
+```
+
+Between the fences, §FS-002-target.1 is ordinary prose.
+
+~~~markdown
+[§FS-002-target.1](FS-002-target.md#1-detail)
+[§FS-<foo>.3.1](<relative-path>#<anchor>)
+~~~
+
+After the fences, §FS-002-target.1 is ordinary prose.
