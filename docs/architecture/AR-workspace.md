@@ -85,7 +85,7 @@ error. The marker is the only signal the scanner uses for "the writer meant
 this as a citation."
 
 It is also the whole of the rule, in every repository: a `<namespace>` capture is
-matched wherever the marker precedes it, not only where a workspace is
+matched wherever the marker precedes it outside the source-file string literals and inline-code spans [§AR-scanner.2.3](AR-scanner.md#23-citation-detection) skips, not only where a workspace is
 configured, and a `<namespace>` is now a run of segments (§2). So a *marked* file
 path whose last segment parses as an ID — `<§>docs/functional-spec/FS-login.md` —
 is a qualified citation with a two-segment alias path, in a single-project
@@ -164,6 +164,9 @@ this `ProjectScan`" rather than re-deriving it from a config + path pair on
 their own. Alias errors still obey [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements): a bad explicit
 `project_name` points at that key, while a bad basename fallback or duplicate
 member alias points at the workspace `members` line that introduced the member.
+An optional member takes its alias from its entry's last segment, so a segment
+that is not a valid alias, or a `project_name` that disagrees with it, points at
+the `optional_members` line instead ([§FS-workspace.2.2.2](../functional-spec/FS-workspace.md#222-the-alias-of-an-optional-member)).
 
 ## 6. The workspace boundary
 
@@ -255,7 +258,7 @@ loaded config made every load failure above a repository equal to "claims nothin
 The residue is a config whose `members` text cannot be obtained — an unreadable file, or a `members` value that is not a list — where the claim is undecidable in both
 directions: the alias-path climb returns one run-level `warning:` naming that config — a `Diagnostic` on the run's warning channel that each frontend renders, never a line the climb writes to a stream ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)) — then treats it as no claim, because failing would let a stray `grund.toml` above a repository break every
 run inside it and silence is what this rule was corrected for.
-An ancestor's config is loaded with the run's own root as its report base (`load_config_at_with_report_base`), the same way a nested member's is, so its `members` line renders as `../grund.toml:16` rather than as a path relative to that ancestor: the second form is a valid line in the wrong file once the reader resolves it from the subtree they are standing in ([§FS-errors.4](../functional-spec/FS-errors.md#4-determinism)).
+An ancestor's config is loaded with the run's own root as its report base (`load_config_at_with_report_base`), the same way a nested member's is, so its `members` line renders as `../grund.toml:16` rather than as a path relative to that ancestor: the second form is a valid line in the wrong file once the reader resolves it from the subtree they are standing in ([§FS-errors.3](../functional-spec/FS-errors.md#3-message-text)).
 Which blocks that reaches is decided **before** any member list is expanded, from the entry text alone (`MemberClaim`: `config.root.join(entry)`, and the visible
 directories under a `<parent>/*` entry, compared both as written and canonically, since an entry may reach the directory through a symlink). Only a block whose
 entries name the child is expanded, and only then is its error propagated; the expanded roots then confirm the claim, because where a glob or a symlinked entry

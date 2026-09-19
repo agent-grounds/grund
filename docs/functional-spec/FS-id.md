@@ -47,7 +47,7 @@ Stderr is empty on success unless `--explain` was passed (§2.3). The `path:line
 
 ### 2.3 `--explain` (text only)
 
-With `--explain`, stdout is unchanged — still the bare ID — and stderr carries one extra line: where to put the declaration and how to start it. For a kind with a configured `file`:
+With `--explain`, stdout is unchanged — still the bare ID — and stderr carries one extra line: where to put the declaration and how to start it. For a kind with a configured `file`, the hint names an H2 by convention, and the H1 where the file holds the kind's single declaration ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)), as `GRUND`'s does:
 
 ```
 $ grund id FS "User can log in with email" --explain
@@ -71,7 +71,7 @@ The title is converted to a slug deterministically. Two `grund id` calls with th
 
 1. Unicode-normalize the title to NFKD, strip combining marks. (`Café log-in` → `Cafe log-in`.)
 2. Lower-case. ASCII-only; non-ASCII letters that survive step 1 are passed through to step 3 unchanged and will be filtered there.
-3. Replace every run of characters that does **not** match the configured `slug_pattern` character class ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) with a single `-`. The default pattern is `[a-z0-9][a-z0-9-]*`, so spaces, punctuation, and quotes all collapse to `-`.
+3. Replace every run of characters that does **not** match the repeating character class of the configured `slug_pattern` regex ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — its last `[...]` bracket expression, or `[a-z0-9-]` when it has none — with a single `-`. Under the default pattern, spaces, punctuation, and quotes all collapse to `-`.
 4. Trim leading and trailing `-`.
 5. Collapse runs of two or more `-` into a single `-`.
 6. Truncate to 60 characters at the nearest preceding `-` boundary (so a slug never ends mid-word).
@@ -86,7 +86,7 @@ The author is expected to provide a title that contains at least one slug-charac
 
 ## 4. Next-number derivation
 
-The scan from [§FS-check](FS-check.md#fs-check-grund-validates-every-reference-in-a-repo) runs across the tree (or the configured `[scan] include` paths from [§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)) and collects every declaration of the requested `<KIND>`. The proposed number is `max(existing numbers) + 1`, or `1` if the kind has no existing declarations.
+The scan from [§FS-check](FS-check.md#fs-check-grund-validates-every-reference-in-a-repo) walks exactly what `check` walks ([§FS-check.1](FS-check.md#1-inputs), [§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)) and collects every declaration of the requested `<KIND>`. The proposed number is `max(existing numbers) + 1`, or `1` if the kind has no existing declarations.
 
 Holes in the numbering (e.g., `FS-001`, `FS-002`, `FS-004` exists but `FS-003` does not) are **not** filled. Numbers are issued strictly above the maximum, never reused, never recycled. Reasoning: an ID that once existed and was removed may still be cited from external systems (PRs, chat, mirrored repos); reusing the number would silently change what those references point at. This is the same principle as [§FS-non-goals.4](FS-non-goals.md#4-cross-workspace-id-renaming) (no rename) applied to allocation.
 
@@ -96,7 +96,7 @@ If the scan fails (I/O, malformed file), `id` exits 2 with the underlying error 
 
 When the repo's `[id] format` has no `{number}` placeholder — `{kind}-{slug}` (the form `grund` itself uses) — there is nothing to derive: the proposed ID is `format` with `{kind}` and `{slug}` substituted, e.g. `FS-<user-can-log-in-with-email>`. The `--width` flag is accepted but has no effect (it pads a number that does not exist), and the `--format json` `number` field is `null`. The collision check (§5) still runs, and it carries more weight here: with no number to disambiguate, two declarations sharing a kind and slug collide on the same ID, so a clash is far more likely than under a numbered format. Conversely, when `format` has no `{slug}` placeholder (`{kind}-{number}`), the title is still required — it is used only to render a helpful collision message and is otherwise discarded; the proposed ID is `{kind}-{number}` with the next number, and the `slug` field in JSON output is the derived slug even though it does not appear in the ID.
 
-Either of these one-component formats also puts the repo outside the number-only citation shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)): that shape is the format with `{slug}` dropped, so it exists only where the format carries both `{number}` and `{slug}`. A `{kind}-{slug}` repo has no number standing in for the ID and a `{kind}-{number}` repo has no slug to omit, so neither can produce a [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) finding.
+Either of these one-component formats also puts the repo outside the number-only citation shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)), so neither can produce a [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) finding.
 
 ## 5. Collision check
 

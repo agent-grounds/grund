@@ -1,6 +1,6 @@
 # FS-errors: grund emits messages in fixed shapes
 
-This spec defines the style every `grund` subcommand uses when it speaks to a user or to a downstream tool. It is cross-cutting: [§FS-check](FS-check.md#fs-check-grund-validates-every-reference-in-a-repo), [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id), [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-references-in-bulk), [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot), [§FS-init](FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo), [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations), [§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up), and [§FS-completions](FS-completions.md#fs-completions-grund-completes-declared-ids-in-shells) all conform to it, and the global-flag behaviour in [§FS-cli](FS-cli.md#fs-cli-grunds-command-line-surface-conventions) routes its errors through §2.2 here. Serves [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements) ("errors point at the line", "no surprises") and [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible) (the message shapes are user-visible output).
+This spec defines the style every `grund` subcommand uses when it speaks to a user or to a downstream tool. It is cross-cutting: [§FS-check](FS-check.md#fs-check-grund-validates-every-reference-in-a-repo), [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id), [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-references-in-bulk), [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot), [§FS-init](FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo), [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations), [§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up), and [§FS-completions](FS-completions.md#fs-completions-grund-completes-declared-ids-in-shells) all conform to it, and the global-flag behaviour in [§FS-cli](FS-cli.md#fs-cli-grunds-command-line-surface-conventions) routes its errors through §2.2 here. Serves [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements) (errors point at the line, no surprises) and [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible) (the message shapes are user-visible output).
 
 The shapes are **frozen** by the same logic as [§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization): two correctly-configured installs must agree on what they print. A subcommand that needs to say something new picks one of the shapes below; it does not invent an ad hoc one.
 
@@ -33,7 +33,7 @@ A diagnostic that points at a specific source site:
 <path>:<line>: <channel>: <message>
 ```
 
-- `<path>` is relative to the config root when a `grund.toml` was discovered ([§FS-config.3.6](FS-config.md#36-output--report-format)), otherwise to the path passed on the command line.
+- `<path>` is rendered against the report base that `relative_paths` selects ([§FS-config.3.6](FS-config.md#36-output--report-format)).
 - `<line>` is 1-indexed.
 - `<channel>` is the lowercase `error`, `warning`, or `suggestion` marker used
   by `grund check`; other commands omit it.
@@ -62,10 +62,17 @@ warning: <message>
   here — a line beginning with that prefix is the signal of a per-site finding
   on stdout, whether a `check` channel marker or the message follows it. The
   message *text* may still carry a location: a `grund.toml` schema error is
-  reported `error: <path>:<line>: <message>` ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)) — the leading `error:` marks it CLI-level (stderr, exit `2`), and the `<path>:<line>:` inside the text is the breadcrumb to the bad line, since a config file has one where a bad flag does not. Other CLI-level messages just name the file in prose when relevant (e.g. `error: invalid grund.toml: ...`) or carry no path at all.
-- `error:` always accompanies exit `2` — a launch-time, setup, or I/O failure:
-  the run could not establish or complete the query context or a trustworthy
-  scan. `warning:` leaves the exit code alone — it is a caution, not a failure.
+  reported `error: <path>:<line>: <message>` ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)) — the leading `error:` marks it CLI-level (stderr, non-zero exit), and the `<path>:<line>:` inside the text is the breadcrumb to the bad line, since a config file has one where a bad flag does not. Other CLI-level messages carry a location in the text the same way when they have one — a config line (`warning: b/grund.toml:3: …`, [§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)) or a whole file (`error: <path>: <reason>`, [§FS-check.2](FS-check.md#2-outputs)) — or name the file in prose (e.g. `error: read grund.toml: Permission denied (os error 13)`).
+- `error:` always accompanies a non-zero exit — exit `2` unless a point names
+  otherwise — for a failure that means the run could not do its job: a
+  launch-time, setup, or I/O failure that leaves no query context or
+  trustworthy scan, or an operational command's own failure, such as `fetch`'s
+  rejected integration output or ambiguous existing content
+  ([§FS-fetch.7](FS-fetch.md#7-output-and-exits)). The named
+  exception is `grund config validate`, which prints the same located
+  `error: <path>:<line>: <message>` for an invalid config and exits `1`
+  ([§FS-config.4.1](FS-config.md#41-grund-config-validate-path)). `warning:` leaves the exit code alone — it is a
+  caution, not a failure.
   Once context has selected a project's ID grammar, a resolver-rejected operand
   is instead an exit-`1` query failure, alongside `grund id`'s empty-slug /
   collision and the other failed ID queries, so it takes the bare shape of
@@ -73,7 +80,7 @@ warning: <message>
   `error:` / exit-`2` shape and appends the migration warning in
   [§FS-refs.4](FS-refs.md#4-exit-codes).
 
-Used by [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location) (unknown subcommand / bad flag), [§FS-id.6](FS-id.md#6-exit-codes) (unknown kind, unknown `--format`, scan / I/O error), [§FS-config.6](FS-config.md#6-what-is-not-configured-here) (config validation), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages) (a malformed config or a per-file read failure mid-walk), [§FS-check.2.2](FS-check.md#22-empty-scan) (the empty-scan `warning:`), [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) (the empty citation-obligation `warning:`), and any subcommand reporting a launch-time failure. A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed as raw text and is never JSON-ified; a *mid-walk* per-file failure collected by `grund check` is one of the report's diagnostics and is rendered in `--format=json` like the others (§5), still on stderr because it is not a finding about the spec graph.
+Used by [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location) (unknown subcommand / bad flag), [§FS-id.6](FS-id.md#6-exit-codes) (unknown kind, unknown `--format`, scan / I/O error), [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) (config validation), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages) (a malformed config or a per-file read failure mid-walk), [§FS-check.2.2](FS-check.md#22-empty-scan) (the empty-scan `warning:`), [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) (the empty citation-obligation `warning:`), and any subcommand reporting a launch-time failure. A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed as raw text and is never JSON-ified; a *mid-walk* per-file failure collected by `grund check` is one of the report's diagnostics and is rendered in `--format=json` like the others (§5), still on stderr because it is not a finding about the spec graph.
 
 ### 2.3 Bare query failure
 
@@ -110,7 +117,7 @@ The shape is structural; the text is human-readable. Style rules apply to every 
 
 - **Lowercase first letter.** `unknown reference <ID>` — not `Unknown reference <ID>`.
 - **No terminal period.** Messages do not end in `.` or `!`.
-- **No ANSI colors by default.** A future `--color=auto` may add them ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) applies); plain bytes are the contract.
+- **No ANSI colors yet.** Once colored output lands, the `[output] color` key, whose default is `auto` ([§FS-config.3.6](FS-config.md#36-output--report-format)), may add them ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) applies); until then plain bytes are the contract.
 - **Stable phrasing.** The exact text of each message is part of the user-visible output covered by [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible): changing it goes through a deprecation path. Tools grep on it.
 - **Quoted user input** appears in double quotes when the input could be confused with surrounding prose: `"<original title>"`, not `<original title>`.
 - **One base for every path in the line.** A path written *inside* the message text — a duplicate declaration's other homes, an ambiguous ID's competing sites, the stub a broken-stub refusal names — is a report path like the `<path>` the shape anchors at, and is rendered against the same base ([§FS-config.3.6](FS-config.md#36-output--report-format)). In a workspace that base is the root the run reports from, never the member the finding came out of ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)): a line whose two halves are relative to two different roots sends the reader — and an editor following it — to a file that is not there. The path the message quotes back from the user's own text, such as a stub's link target, is not a resolved path and stays verbatim.
@@ -118,36 +125,22 @@ The shape is structural; the text is human-readable. Style rules apply to every 
 The unknown-project recovery shape in [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) freezes the base `unknown project alias <written>` and, when its first non-empty candidate tier supplies alternatives, appends `; did you mean <a>?`, `; did you mean <a> or <b>?`, or `; did you mean <a>, <b> or <c>?`. The base begins lowercase and has no period; the recovery clause has one terminal question mark. Text output carries the whole message, and JSON retains `code: "unknown-project"` while carrying the same bytes in `message` (§5).
 
 The narrowed-run scope-only unknown-project message has a two-release wording
-migration. In `0.13.2`, its complete legacy message remains a verbatim
-contiguous prefix and gains exactly ` — here, the <scope> subtree means the
-<scope> project and its descendants; this wording changes in grund 0.14.0`.
-This is part of the existing error message, not a second warning diagnostic.
-Exact-line consumers must migrate during this window to the stable
-`code == "unknown-project"`; the code, error severity, sites, selectors, and
-exit verdict do not change.
-
-In `0.14.0`, the compatibility suffix and legacy scope clause must be removed,
-and the complete message becomes exactly:
-
-```text
-unknown project alias <path>; the <scope> project and its descendants are in scope here — check from the workspace root for a path outside that subtree
-```
-
-Workspace-root candidate messages and bare unknown-project messages remain
-unchanged throughout this migration.
+migration, whose `0.13.2` compatibility form and `0.14.0` final template are
+fixed in [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure). The `0.13.2` suffix is part of the existing error
+message, not a second warning diagnostic. Exact-line consumers must migrate
+during this window to the stable `code == "unknown-project"`; the code, error
+severity, sites, selectors, and exit verdict do not change. Workspace-root
+candidate messages and bare unknown-project messages remain unchanged
+throughout this migration.
 
 For `grund check`, the fixed rule supplies the channel and every located text
 line makes it explicit after the location prefix: [§FS-check.3](FS-check.md#3-errors-detected) is `error:`, [§FS-check.4](FS-check.md#4-warnings) is `warning:`, and enabled [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) advisories are `suggestion:`. That structural marker does not change the diagnostic's message bytes. JSON continues to carry the same distinction in its existing `severity` or `channel` field (§5); `fmt`, `refs`, run-level messages, and LSP retain their existing shapes.
 
-For a missing fetch-backed declaration, the two frozen identities are
-`dangling` / `error` with `unknown reference <qualified-ID>; no snapshot in
-<home> — run grund fetch <qualified-ID>` and `missing-snapshot` / `warning`
-with `no snapshot for <qualified-ID> in <home> — run grund fetch
-<qualified-ID>` ([§FS-check.3.1](FS-check.md#31-dangling-citation),
-[§FS-check.4.12](FS-check.md#412-missing-snapshot)). The remedy is bare text,
-not inline code. An existing near-ID or illustration hint wins: the
-snapshot-and-home base remains, while the existing semicolon-prefixed hint
-replaces the em-dash fetch-action tail.
+A missing fetch-backed declaration has two frozen identities, `dangling` /
+`error` ([§FS-check.3.1](FS-check.md#31-dangling-citation)) and
+`missing-snapshot` / `warning` ([§FS-check.4.12](FS-check.md#412-missing-snapshot)); those points own the exact
+message bytes, the bare-text fetch remedy, and the precedence of an existing
+near-ID or illustration hint over the fetch-action tail.
 
 The five `agents-init` messages migrate over two releases. In the first release,
 each existing message stays as a verbatim contiguous prefix and gains exactly
@@ -175,7 +168,10 @@ category or selector value ([§FS-check.1](FS-check.md#1-inputs)).
 Two runs of the same subcommand on the same input must produce byte-identical stdout *and* stderr ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)). This rules out:
 
 - Wall-clock timestamps in messages.
-- Process IDs, hostnames, or absolute paths outside the configured root.
+- Process IDs, hostnames, or — in the reports of the tree-reading commands
+  [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes) names — an absolute path or one that escapes the loaded
+  root, with no absolute fallback for an in-root target ([§FS-config.3.6](FS-config.md#36-output--report-format),
+  [§DF-cli-base-parent-paths.2](../decisions/functional/DF-cli-base-parent-paths.md#2-decision)).
 - Non-deterministic ordering. Text `check` findings are grouped as errors,
   warnings, then enabled suggestions and sort bytewise by `(path, line,
   message)` within each group. JSON `check` findings retain their global
@@ -193,12 +189,12 @@ selector flags cannot alter the result ([§FS-check.2.1](FS-check.md#21-report-f
 
 ## 5. JSON format
 
-Value diagnostics use the same object and streams. `invalid-value-declaration`, `invalid-value-binding`, and `value-mismatch` are fixed error codes; a mismatch's `sites` is the sorted declaration-site array, and its `message` is byte-identical to the text message after the primary `path:line:` prefix ([§FS-values.5](FS-values.md#5-resolution-diagnostics-and-exit-status)). Unreadable or syntactically incomplete home JSON remains a run-level incomplete-scan failure at exit `2` rather than a semantic value diagnostic.
+Value diagnostics use the same object and streams. `invalid-value-declaration`, `invalid-value-binding`, and `value-mismatch` are fixed error codes; a mismatch's `sites` is the sorted declaration-site array, and its `message` is byte-identical to the text message after the primary `path:line:` prefix ([§FS-values.5](FS-values.md#5-resolution-diagnostics-and-exit-status)). Home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete remains a run-level incomplete-scan failure at exit `2` rather than a semantic value diagnostic.
 
 The subcommands with a machine-readable result or finding surface accept `--format=json`: `check`, `show`, `list`, `refs`, `cover`, `id`, and `integrations` ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements), [§FS-cli.3](FS-cli.md#3-cross-subcommand-flags), [§FS-integrations.5](FS-integrations.md#5-json-format)). Operational commands whose output is human text or generated files (`fmt`, `fetch`, `init`, `config`, `agent-setup-instructions`, `completions`) do not accept `--format` unless their own spec adds a JSON surface later. JSON follows the same stream split as the text form (§1):
 
-- **On stdout — the command's output.** `grund check --format=json` emits its findings as NDJSON, one object per line, in the binding-level shape from [§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes) (`{ severity, path, line, code, message, sites }`); `severity` carries the `error`/`warning` distinction as a structured field, while text carries the explicit channel marker after its location prefix (§3), and `sites` is `null` for an ordinary single-site finding, a `[{ path, line }]` list naming every site for a multi-site finding (a duplicate declaration, [§FS-check.3.3](FS-check.md#33-duplicate-declaration)). A clean JSON check emits no `success` object. A citation-direction **suggestion** ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)), emitted only under `grund check --suggestions`, carries `"channel": "suggestion"` in place of a `severity` — keeping the frozen `{error, warning}` severity set ([§FS-config.6](FS-config.md#6-what-is-not-configured-here)) intact, so a consumer filtering on `severity` never sees one. Query subcommands emit their result on stdout too: one JSON object for a single-result command (`grund <ID> --format=json` — [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id); `grund id --format=json` — [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations)), NDJSON — one object per row — for a list command (`grund list` per declaration, `grund refs` per citation, `grund cover` per scanned file).
-- **On stderr — what is not output.** A *failed ID query* (`ID not found` / `ambiguous` / `broken stub` / `section not found` / `invalid ID`, exit `1`) emits its one diagnostic object on stderr in the same `{ severity, path, line, code, message, sites }` shape, with `path` and `line` `null` — there is no single site, and there is no result, so nothing goes to stdout. This includes `refs`' invalid-ID and ambiguous-number-only rejections from 0.15.0; their codes are respectively `invalid-id` and `ambiguous`, both carry `sites:null`, and neither carries the text-mode hint. `sites` carries the `[{ path, line }]` list the message names, the same pairs in the same order, for an `ambiguous` refusal naming an ID with two homes ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)) and for an `ambiguous-section` refusal ([§FS-show.2.2.2](FS-show.md#222-ambiguous-section)). The number-only shorthand's `ambiguous` refusal names candidate IDs rather than sites ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), so — like every other query failure — it carries `sites: null`; a consumer tells the two `ambiguous` shapes apart by whether `sites` is `null`, not by `code`. A *launch-time* CLI-level error (§2.2 — bad flag, unknown kind, unknown project alias, unreadable config or path; exit `2`) stays as the `error: <message>` text line on stderr regardless of `--format` — it is a launch failure, not data. During 0.14.0 only, the two `refs` resolver rejections retain that raw error and hint policy under JSON and append the raw warning fixed by [§FS-refs.4](FS-refs.md#4-exit-codes). The empty-scan `warning:` ([§FS-check.2.2](FS-check.md#22-empty-scan)), the nothing-recognized `warning:` ([§FS-check.4.5](FS-check.md#45-nothing-recognized)), and a per-file read failure collected mid-walk (a `line`-less diagnostic in `grund check`'s report) are likewise on stderr in both forms — about the run, not findings about the graph.
+- **On stdout — the command's output.** `grund check --format=json` emits its findings as NDJSON, one object per line, in the binding-level shape from [§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes) (`{ severity, path, line, code, message, sites }`); `severity` carries the `error`/`warning` distinction as a structured field, while text carries the explicit channel marker after its location prefix (§3), and `sites` is `null` for an ordinary single-site finding, a `[{ path, line }]` list naming every site for a multi-site finding (a duplicate declaration, [§FS-check.3.3](FS-check.md#33-duplicate-declaration)). A clean JSON check emits no `success` object. A **suggestion** ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)), emitted only under `grund check --suggestions`, carries `"channel": "suggestion"` in place of a `severity` — keeping the frozen `{error, warning}` severity set ([§FS-config.6](FS-config.md#6-what-is-not-configured-here)) intact, so a consumer filtering on `severity` never sees one. Query subcommands emit their result on stdout too: one JSON object for a single-result command (`grund <ID> --format=json` — [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id); `grund id --format=json` — [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations)), NDJSON — one object per row — for a list command (`grund list` per declaration, `grund refs` per citation, `grund cover` per scanned file).
+- **On stderr — what is not output.** A *failed ID query* (`ID not found` / `ambiguous` / `broken stub` / `section not found` / `invalid ID`, exit `1`) emits its one diagnostic object on stderr in the same `{ severity, path, line, code, message, sites }` shape, with `path` and `line` `null` — there is no single site, and there is no result, so nothing goes to stdout. This includes `refs`' invalid-ID and ambiguous-number-only rejections from 0.15.0; their codes are respectively `invalid-id` and `ambiguous`, both carry `sites:null`, and neither carries the text-mode hint. `sites` carries the `[{ path, line }]` list the message names, the same pairs in the same order, for an `ambiguous` refusal naming an ID with two homes ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)) and for an `ambiguous-section` refusal ([§FS-show.2.2.2](FS-show.md#222-ambiguous-section)). The number-only shorthand's `ambiguous` refusal names candidate IDs rather than sites ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), so — like every other query failure — it carries `sites: null`; a consumer tells the two `ambiguous` shapes apart by whether `sites` is `null`, not by `code`. A *launch-time* CLI-level message (§2.2) — an error such as a bad flag, unknown kind, unknown project alias, or unreadable config or path (exit `2`), or a warning settled before a report exists, such as [§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)'s and [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)'s — stays as its `error:` / `warning:` text line on stderr regardless of `--format`: what decides is when the fact exists, and one settled before a report exists is not data. During 0.14.0 only, the two `refs` resolver rejections retain that raw error and hint policy under JSON and append the raw warning fixed by [§FS-refs.4](FS-refs.md#4-exit-codes). A run-level diagnostic in `grund check`'s report — about the run, not a finding about the graph, such as the empty-scan `warning:` ([§FS-check.2.2](FS-check.md#22-empty-scan)), the nothing-recognized `warning:` ([§FS-check.4.5](FS-check.md#45-nothing-recognized)), or a per-file read failure collected mid-walk (a `line`-less diagnostic) — is likewise on stderr in both forms; under JSON a run-level warning carries `path`, `line`, and `sites` all `null`, any location being in its message text ([§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)).
 
 `show --batch --format=json` is the explicit query-stream exception. Every
 well-formed query, including a failed one, produces one ordered stdout envelope
@@ -257,6 +253,7 @@ ungrounded
 unknown-project
 unlinked-index-entry
 unlisted-workspace-block
+unmarked-heading
 unused
 value-mismatch
 ```
@@ -276,5 +273,5 @@ exit `2` even when `--ignore io` or an excluding `--only` set is present
 
 - Severity prefixes (`error:`, `warning:`) on located findings — see §3.
 - Multi-line messages. A finding that wants to elaborate uses `--format=json` and a `code` plus a documentation link, not a wrapped paragraph.
-- Interactive prompts, progress bars, spinners, or any byte that depends on terminal capabilities. Per [§FS-non-goals.10](FS-non-goals.md#10-interactive-mode), every subcommand is non-interactive.
+- Interactive prompts, progress bars, or spinners. Per [§FS-non-goals.10](FS-non-goals.md#10-interactive-mode), every subcommand is non-interactive.
 - Localization. Messages are English; translation is downstream's problem.
