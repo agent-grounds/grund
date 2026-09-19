@@ -59,6 +59,7 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ### Fixed
 
+- [§FS-check.3.17](functional-spec/FS-check.md#317-index-entry-is-not-a-link): `grund check` now treats a bare citation in an external file-symlink index as a missing entry instead of recommending `grund fmt --write`, which refuses to rewrite that target. Existing links in the readable external index still satisfy the entry obligation, while bare citations in ordinary indexes and in-root file symlinks remain mechanically repairable. (PR #257)
 - `Auto bump`'s closing step printed `$next`, the same variable `Release minor`
   got wrong: the step reads the released version into `released` and derives
   `dev` from it, so `set -u` aborted the run after the patch release had already
