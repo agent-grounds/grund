@@ -1,25 +1,24 @@
 # AR-workspace: how the config-time workspace layer composes with the config loader and the scanner
 
 The workspace surface ([§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos), [§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace)) adds **one
-extra dimension** to the existing single-project pipeline: a citation may now
-carry a namespace. Every other moving part — the scanner, the config loader,
-the checker — must keep its single-project contract intact and let the new
-dimension flow through unchanged. This document fixes the layering so that the
-next command to gain qualified-ID behaviour (`show`, `refs`, `list`,
-completions) composes with it, instead of re-implementing it.
+extra dimension** to the single-project pipeline: a citation may carry a
+namespace. Every other moving part — the scanner, the config loader, the
+checker — must keep its single-project contract intact and let the dimension
+flow through unchanged, so that the next command to gain qualified-ID behaviour
+(`show`, `refs`, `list`, completions) composes with this layering instead of
+re-implementing it.
 
-What this page holds is the **config-time** half: what a `[workspace]` block
-expands to, what an alias is, and where a scan stops. Loading those projects —
-scanning each one and answering which of them a citation resolves against — runs
-scans and is one box up, [§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them).
+This page holds the **config-time** half: what a `[workspace]` block expands
+to, what an alias is, and where a scan stops. Loading those projects — scanning
+each one and answering which of them a citation resolves against — runs scans
+and is one box up, [§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them).
 
-The bug cluster that motivated this doc was three slips of the same kind:
-two scanner modes that disagreed on what `path/ID` means; alias validation
-gated on which section happened to be present in a config file; a
-silent-skip behaviour at member scope that contradicted [§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) §3.6.
-All three came from the same shape — *workspace-only branches sitting
-alongside the single-project path* — and all three are ruled out by the
-invariants below.
+Three slips of one shape motivated this page, each a *workspace-only branch
+beside the single-project path*: two scanner modes that disagreed on what
+`path/ID` means (§2), alias validation gated on which section a config file
+happened to hold (§5.2), and a silent skip at member scope that contradicted
+[§DF-subproject-namespaces.3.6](../decisions/functional/DF-subproject-namespaces.md#36-standalone-members-fail-loud-not-silent).
+The invariants below rule out all three.
 
 ## placement: Where the workspace layer sits
 
@@ -30,15 +29,15 @@ config ─► Config ─► [ workspace ] ─┬─► scope, boundary roots ─
 
 The fourth box of the pipeline ([§AR-system.2.4](README.md#24-workspace)). It takes the configs that config produced ([§AR-system.2.3](README.md#23-config)) and gives the scanner its scope and boundary roots ([§AR-system.2.5](README.md#25-scanner)) and the resolver the project map and the alias each project answers to ([§AR-system.2.10](README.md#210-resolver)). It knows no rule, no rendering and no scan: the namespace is one dimension that flows through the single-project pipeline unchanged, which is what the rest of this page holds ([§AR-system.4](README.md#4-dependency-direction)).
 
-Everything here is answered from config text alone. Anything that needs a walk, or the `Findings` a walk produced, is the resolver's — which is why the walk-level facts this layer once reached up for are `config/scope_roots.rs` and `model/paths.rs` now, and why the [§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread) probe below is *posed* here and *answered* there ([§AR-resolver.placement](AR-resolver.md#placement-where-the-resolver-sits)).
+Everything here is answered from config text alone. Anything that needs a walk, or the `Findings` a walk produced, is the resolver's — which is why the walk-level facts this layer once reached up for are `config/scope_roots.rs` and `model/paths.rs` now, and why the [§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread) probe is *posed* here and *answered* there ([§AR-resolver.placement](AR-resolver.md#placement-where-the-resolver-sits)).
 
 ## 1. Layering
 
-The single-project pipeline ([§AR-system.1](README.md#1-the-system)) gains one dimension and no new layer. Read top down: the CLI decides workspace versus single-project run and assembles the project map and current alias; the resolver is the one function that knows what "qualified" means at runtime ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)); the checker calls the resolver and does not branch on "is workspace?"; the scanner emits `Citation { namespace, … }` from one regex and obeys the workspace boundary roots in one walk. No layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)). The scanner never asks "am I in a workspace?"; the checker never asks "what alias am I?"; the CLI never reaches into a regex.
+The single-project pipeline ([§AR-system.1](README.md#1-the-system)) gains one dimension and no new layer. Read top down: the CLI decides workspace versus single-project run and assembles the project map and current alias; the resolver is the one function that knows what "qualified" means at runtime ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)); the checker calls the resolver and asks neither "is this a workspace?" nor "what alias am I?"; the scanner emits `Citation { namespace, … }` from one regex (§2) and obeys the workspace boundary roots in one walk, never asking "am I in a workspace?" (§3.2). The CLI never reaches into a regex, and no layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)).
 
 ## 2. Single citation grammar
 
-There is exactly one citation regex in the engine, defined in `grammar.rs`:
+There is exactly one citation regex in the engine, defined in `grammar/compiled.rs`:
 
 ```text
 \b(?:(?P<namespace>[a-z][a-z0-9-]*(?:/[a-z][a-z0-9-]*)*)/)?<ID>(?:<sep><section>)?
@@ -51,14 +50,14 @@ look equivalent on the happy path, but disagree on the edges (a bare
 `path/<ID>` token; a literal slash inside a string; a markdown link
 destination). One regex, one capture group, one decision rule downstream.
 
-Nesting widened the capture to a `/`-joined run of alias segments (§6.1) and
-changed nothing else: still one capture holding one string, so no consumer
-learned a second shape. It stays unambiguous because an ID never contains `/`.
+Nesting widened the capture to a `/`-joined run of alias segments and changed
+nothing else: one capture still holds one string, which the token's last `/`
+separates from the ID (§6.1).
 
 In a workspace run, the alias still controls the ID grammar: a qualified
 citation's `ID[.section]` tail is parsed with the target project's config, not
-the citing project's config. The scanner may first recognize the marker and
-alias with the citing project's config, but once all member configs are loaded,
+the citing project's. The scanner may first recognize the marker and alias with
+the citing project's config; once all member configs are loaded,
 workspace-aware paths normalize known qualified citations against the target
 grammar so `check`, `refs`, `list`, and `fmt --cross-refs` see the
 target-shaped `Id`.
@@ -86,7 +85,7 @@ this as a citation."
 
 It is also the whole of the rule, in every repository: a `<namespace>` capture is
 matched wherever the marker precedes it outside the source-file string literals and inline-code spans [§AR-scanner.2.3](AR-scanner.md#23-citation-detection) skips, not only where a workspace is
-configured, and a `<namespace>` is now a run of segments (§2). So a *marked* file
+configured, and a `<namespace>` is a run of segments (§2). So a *marked* file
 path whose last segment parses as an ID — `<§>docs/functional-spec/FS-login.md` —
 is a qualified citation with a two-segment alias path, in a single-project
 repository as much as in a workspace, and reports `unknown project alias` because
@@ -101,11 +100,10 @@ The scanner does not know whether it is running for a single-project repo or
 a workspace member. It produces a uniform stream of `Citation` records, and
 the workspace machinery lives one layer up.
 
-The only workspace-shaped knob the scanner reads is
-`workspace_boundary_roots` — a list of canonical paths the tree walk must
-*not* descend into ([§AR-workspace.6](AR-workspace.md#6-the-workspace-boundary)). It exists because a root-project scan
-must not absorb member declarations; it is consulted as a directory filter
-during the walk, never as a per-citation rule.
+The only workspace-shaped knob the scanner reads is `workspace_boundary_roots`
+— the canonical paths the tree walk must *not* descend into, because a
+root-project scan must not absorb member declarations (§6). It is consulted as
+a directory filter during the walk, never as a per-citation rule.
 
 ## 5. The config: one parse, one validation pass
 
@@ -120,11 +118,13 @@ between the two entry points is whether they walk upward first.
 
 ### 5.2 Validation runs once, at the right layer
 
-Every post-parse invariant runs on every config load, never gated on
-"did this section appear in the same file." The bug this rules out is the v1
-slip where the `project_name` slug check fired only when `[workspace]` was
-also present in the same file, so a member's `project_name` slipped through
-load and only blew up in a different command.
+An invariant runs *once*, at the layer where its precondition is universally
+true — never duplicated across layers, never gated on "did this section appear
+in the same file." At the loader, every post-parse invariant runs on every
+config load. The bug this rules out is the v1 slip where the `project_name`
+slug check fired only when `[workspace]` was also present in the same file, so
+a member's `project_name` slipped through load and only blew up in a different
+command.
 
 For an invariant to live at the loader, the constraint must be universal — it
 must hold for *every* shape of config the loader can return:
@@ -145,10 +145,6 @@ must hold for *every* shape of config the loader can return:
   an alias." Putting it earlier would force `grund init`'s `--name`, which
   predates workspaces, to write only sluggable names.
 
-The principle: an invariant runs *once*, at the layer where its precondition
-is universally true — never duplicated across layers, never gated on a sibling
-section's presence.
-
 ### 5.3 Alias derivation has one canonical source
 
 The workspace alias for a project is, in order:
@@ -157,7 +153,7 @@ The workspace alias for a project is, in order:
 2. For a member, the basename of the member directory (also validated as a slug
    before use).
 3. For the workspace root with no `project_name`, the literal `root`
-   ([§FS-workspace.3](../functional-spec/FS-workspace.md#3-aliases), [§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) §3.3).
+   ([§FS-workspace.3](../functional-spec/FS-workspace.md#3-aliases), [§DF-subproject-namespaces.3.3](../decisions/functional/DF-subproject-namespaces.md#33-no-reserved-alias-for-the-workspace-project)).
 
 This ordering is implemented in *one* place. Commands ask for "the alias of
 this `ProjectScan`" rather than re-deriving it from a config + path pair on
@@ -171,56 +167,20 @@ the `optional_members` line instead ([§FS-workspace.2.2.2](../functional-spec/F
 ## 6. The workspace boundary
 
 When `grund check` runs at a workspace root, the **root scan must not enter
-member namespaces**. That means both ordinary descent into a member directory
-and a root `[scan] include` that names a path inside a member are skipped.
+member namespaces**: neither ordinary descent into a member directory nor a
+root `[scan] include` that names a path inside a member
+([§FS-workspace.6](../functional-spec/FS-workspace.md#6-nested-project-boundary)).
 Otherwise the root absorbs the member's declarations into its own namespace,
 breaks alias uniqueness, and silently re-creates the cross-project dependency
-model that [§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) rejected (§3.2).
+model that [§DF-subproject-namespaces.3.2](../decisions/functional/DF-subproject-namespaces.md#32-cross-project-references-are-always-explicit) rejected.
 
 The mechanism is a list of canonical member roots set on the root `Config`
 before the walk; the scanner skips any scan root at or below one of those
 boundaries, and its `WalkBuilder` filter prunes entries whose relative path
 matches a boundary. Boundary roots are computed once per workspace run, not per
 directory entry, so the per-entry cost is one path comparison and no
-`canonicalize` syscall.
-
-The relative-path compare answers the question only while the tree spells a
-member one way. A **symlink** gives it a second spelling — `docs/link -> ../sub`,
-or `docs/link -> ../packages` with the member one level below it — and a member
-reached under a link name matches no precomputed suffix, so the root scan
-descends into the member namespace this section forbids and reports the member's
-own declarations as duplicates of themselves. The boundary is a property of the
-directory, not of the name it is reached under, so a directory the walk reached
-**through a link** is resolved with `canonicalize` and compared against the
-member roots directly ([§AR-scanner.1](AR-scanner.md#1-tree-walk)). That is the
-one case that pays a syscall, it is paid per link-reached directory rather than
-per entry, and a tree with no directory symlink in it pays nothing.
-
-Expansion also stamps every project's config with the **canonical root of every
-project the run loaded**, and a link-reached directory is asked which of them
-owns it — the innermost project root that contains it, since a nested member's
-root sits inside the block that listed it. Out of bounds is "owned by a project
-that is not this one". This ownership test is stronger than the scanner's
-canonical project-root fence
-([§AR-scanner.1](AR-scanner.md#1-tree-walk)): it separates another loaded
-project even when that project is physically inside the current root.
-
-The physical-root fence supplies the direction the workspace map cannot when a
-member is checked independently. Such a run still does not load its ancestor
-workspace, but a directory link into a sibling or the root project necessarily
-resolves outside the member's canonical root and is pruned there
-([§FS-workspace.6](../functional-spec/FS-workspace.md#6-nested-project-boundary)).
-No ancestor climb or workspace expansion is added to a single-project run.
-The innermost-owner rule is what keeps a member's own subtree readable while its
-parent project's is not, and it subsumes the member-root list for the root scan
-rather than replacing it: the list still prunes a member of a *nested* workspace
-whose grouping directory is not itself a project.
-
-The list is empty for a run that never loaded a workspace, which is a member
-checked on its own — an independent project by
-[§FS-workspace.5](../functional-spec/FS-workspace.md#5-command-scope), and one
-that cannot be told where the other projects are without loading the workspace
-it deliberately does not load.
+`canonicalize` syscall. A directory reached through a symlink is the one
+exception (§6.2).
 
 Members are scanned recursively as independent projects. A member that declares
 its own `[workspace]` block contributes its whole subtree instead of one
@@ -245,45 +205,118 @@ and the `refs`/`list` JSON keys would each have grown a second shape
 last separator — one rule, applied identically by the scanner, the CLI argument
 parser, and the `[citations]` rule parser.
 
+#### 6.1.1 An alias path is read from the outermost claiming block
+
 The path is absolute with respect to the **outermost** workspace, not the one the command started in, so a run started at any scope the claimed chain lists resolves a
 subset of the same names instead of a re-spelled set of its own. `enclosing_alias_prefix` recovers it by climbing the ancestors that both declare `[workspace]` and list the directory below them, and
 takes the **outermost** claim: a multi-segment `members` entry may hop a block that lists the same child, and the top-down walk composes the path through the outer one.
+
+#### 6.1.2 A claiming block that cannot answer fails the run
+
 The climb is fallible — a claiming block that cannot expand its members, name the project below it, or *load at all* raises that block's own error, since dropping it
 would silently re-spell the subtree.
+
 That last case is why the claim is decided by a **tolerant, members-only read** of the ancestor config (`ancestor_member_entries`) rather than by a loaded `Config`: the file
 is scanned for its `[workspace] members` value with the parser's own line and section rules and nothing else — no other key, no shape validation, no grammar rebuild — so a
 config that fails to load is still asked the one question the climb has for it, and only a block whose entries name the child is loaded at all. Reading the claim off a
 loaded config made every load failure above a repository equal to "claims nothing", which collapsed the very prefix the rule protects
 ([§FS-workspace.6.1](../functional-spec/FS-workspace.md#61-nested-workspaces)).
+
 The residue is a config whose `members` text cannot be obtained — an unreadable file, or a `members` value that is not a list — where the claim is undecidable in both
 directions: the alias-path climb returns one run-level `warning:` naming that config — a `Diagnostic` on the run's warning channel that each frontend renders, never a line the climb writes to a stream ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)) — then treats it as no claim, because failing would let a stray `grund.toml` above a repository break every
 run inside it and silence is what this rule was corrected for.
+
 An ancestor's config is loaded with the run's own root as its report base (`load_config_at_with_report_base`), the same way a nested member's is, so its `members` line renders as `../grund.toml:16` rather than as a path relative to that ancestor: the second form is a valid line in the wrong file once the reader resolves it from the subtree they are standing in ([§FS-errors.3](../functional-spec/FS-errors.md#3-message-text)).
-Which blocks that reaches is decided **before** any member list is expanded, from the entry text alone (`MemberClaim`: `config.root.join(entry)`, and the visible
+
+#### 6.1.3 A block that claims nothing here is never expanded
+
+Which ancestor blocks the climb loads is decided **before** any member list is expanded, from the entry text alone (`MemberClaim`: `config.root.join(entry)`, and the visible
 directories under a `<parent>/*` entry, compared both as written and canonically, since an entry may reach the directory through a symlink). Only a block whose
 entries name the child is expanded, and only then is its error propagated; the expanded roots then confirm the claim, because where a glob or a symlinked entry
 lands is an answer only expansion has. Expanding every *declaring* ancestor instead made one broken `members` list above a repository the answer to every command
 inside it, at any depth up to `/`, for a block that claimed nothing there ([§FS-workspace.6.1](../functional-spec/FS-workspace.md#61-nested-workspaces)).
+
+#### 6.1.4 Only a run that reads an alias path climbs
+
 `enclosing_alias_prefix` is called from `expand_workspace_tree` and nowhere else, so the alias-path climb happens only for a config that carries a `[workspace]` block: a run at a project with no block of
 its own takes the single-project path in `load_workspace_context` / `run_check` and reads no alias path, which is why an enclosing claim it cannot answer never reaches such a run and a test that
 wants that consequence has to point at a run root that declares a block ([§FS-workspace.5](../functional-spec/FS-workspace.md#5-command-scope), §9).
-The blocks it reads are cached per directory for the length of one climb (`AncestorWorkspaces`), because every level re-walks the ancestors of the level below it: without
+
+#### 6.1.5 The climb caches the blocks it reads
+
+The blocks the climb reads are cached per directory for the length of one climb (`AncestorWorkspaces`), because every level re-walks the ancestors of the level below it: without
 the cache each ancestor's config is re-read and its grammar regex set rebuilt once per level, which is quadratic in depth and inverts the cost of narrowing — a `list`
 narrowed to two projects deep inside a 40-level chain measured 7.1 s against 0.4 s for the whole chain from its root, and 0.4 s against 0.4 s with it. One cache per climb
 is also why it needs no invalidation: nothing outlives the walk that built it.
 
-That chain of mutual claims is also the boundary of the guarantee, and what it bounds is the **scope** a command starts at, not the project that scope names: a `[workspace]` block no enclosing block lists is outside it — absorbed into the enclosing namespace at the outer scope, a root of its own from the inside. The projects *below* such a block can still be reached by the chain, since a multi-segment entry hops the block, and a run started at the block re-spells them anyway ([§FS-workspace.6.1](../functional-spec/FS-workspace.md#61-nested-workspaces)).
+#### 6.1.6 A block the claimed chain never lists
 
-What a run now *says* about such a block is one pass of its own, `workspace/unlisted.rs`, and it sits **above** the walk rather than inside it (§1, [§FS-check.4.8](../functional-spec/FS-check.md#48-unlisted-workspace-block)). `walk_scannable_files_reporting` carries out the directories it descended into, scan roots included, and asks nothing of them; the rule then probes each one for a config (`config_file_in`, which is what finds the `.agents/` form in a directory the walk never descends into), reads the `[workspace]` header line out of that file's text without loading it, and asks the same `enclosing_workspace_of` climb the alias prefix asks — one `AncestorWorkspaces` cache for the whole pass, for the same reason one climb shares one, built by `quiet_for_run_at` so the undecidable-claim warning stays with the climb that spells an alias path out of the answer. This rule spells none: it treats a claim it cannot decide as no finding, and printing that warning from here put the sentence into single-project runs that had never asked the chain anything, and a second, wrongly based copy of it into workspace runs that had ([§FS-check.4.8](../functional-spec/FS-check.md#48-unlisted-workspace-block)). Candidates are deduplicated by canonical root *after* the header read and beside the project-root exemption, which already canonicalizes: a block the walk reached through a directory symlink as well as under its own path is one edit, so it is one finding, and the cheap path still pays no canonicalize. Three filters in cost order is what makes the scope affordable: a tree with no nested config pays two `is_file` calls per walked directory and nothing else, no candidate is ever loaded as a `Config` — a config that will not parse must not fail the run, and a full load rebuilds the grammar regex set per candidate — and no ancestor is climbed where nothing declares a block ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). Outermost-only needs no pass of its own, because a block below an unlisted one *is* claimed by it and the climb answers that; the run's own project roots are exempt, or `--full` — which makes the config root a walk root — would report every workspace repository against itself. `check` folds the finding into `report.warnings`, which is what stands it in place of the `success` marker; the query commands carry the identical text on the run's warning channel, filled in `load_resolved_workspace_context` and `single_project_context` — the one place every walking command that is not `check` passes through — and rendered by whichever frontend asked rather than written to a stream from in here ([§DF-unlisted-workspace-block.2.4](../decisions/functional/DF-unlisted-workspace-block.md#24-one-shape-on-every-surface), [§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). Only the channel's copy carries the block's `[workspace]` line as the finding's own location: `check`'s report keeps `path` and `line` null, because a change about which side renders must not move what a JSON consumer filters on ([§FS-errors.5](../functional-spec/FS-errors.md#5-json-format), [§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)).
+The chain of mutual claims (§6.1.1) is also the boundary of the guarantee, and what it bounds is the **scope** a command starts at, not the project that scope names: a `[workspace]` block no enclosing block lists is outside it — absorbed into the enclosing namespace at the outer scope, a root of its own from the inside. The projects *below* such a block can still be reached by the chain, since a multi-segment entry hops the block, and a run started at the block re-spells them anyway ([§FS-workspace.6.1](../functional-spec/FS-workspace.md#61-nested-workspaces)).
+
+What a run now *says* about such a block is one pass of its own, `workspace/unlisted.rs`, and it sits **above** the walk rather than inside it (§1, [§FS-check.4.8](../functional-spec/FS-check.md#48-unlisted-workspace-block)). `walk_scannable_files_reporting` carries out the directories it descended into, scan roots included, and asks nothing of them; the rule then probes each one for a config (`config_file_in`, which is what finds the `.agents/` form in a directory the walk never descends into), reads the `[workspace]` header line out of that file's text without loading it, and asks the same `enclosing_workspace_of` climb the alias prefix asks — one `AncestorWorkspaces` cache for the whole pass, for the same reason one climb shares one (§6.1.5), built by `quiet_for_run_at` so the undecidable-claim warning stays with the climb that spells an alias path out of the answer.
+
+This rule spells none: it treats a claim it cannot decide as no finding, and printing that warning from here put the sentence into single-project runs that had never asked the chain anything, and a second, wrongly based copy of it into workspace runs that had ([§FS-check.4.8](../functional-spec/FS-check.md#48-unlisted-workspace-block)).
+
+Candidates are deduplicated by canonical root *after* the header read and beside the project-root exemption, which already canonicalizes: a block the walk reached through a directory symlink as well as under its own path is one edit, so it is one finding, and the cheap path still pays no canonicalize.
+
+Three filters in cost order is what makes the scope affordable: a tree with no nested config pays two `is_file` calls per walked directory and nothing else, no candidate is ever loaded as a `Config` — a config that will not parse must not fail the run, and a full load rebuilds the grammar regex set per candidate — and no ancestor is climbed where nothing declares a block ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)).
+
+Outermost-only needs no pass of its own, because a block below an unlisted one *is* claimed by it and the climb answers that; the run's own project roots are exempt, or `--full` — which makes the config root a walk root — would report every workspace repository against itself.
+
+`check` folds the finding into `report.warnings`, which is what stands it in place of the `success` marker; the query commands carry the identical text on the run's warning channel, filled in `load_resolved_workspace_context` and `single_project_context` — the one place every walking command that is not `check` passes through — and rendered by whichever frontend asked rather than written to a stream from in here ([§DF-unlisted-workspace-block.2.4](../decisions/functional/DF-unlisted-workspace-block.md#24-one-shape-on-every-surface), [§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). Only the channel's copy carries the block's `[workspace]` line as the finding's own location: `check`'s report keeps `path` and `line` null, because a change about which side renders must not move what a JSON consumer filters on ([§FS-errors.5](../functional-spec/FS-errors.md#5-json-format), [§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)).
+
+#### 6.1.7 Containment bounds expansion
 
 Expansion is bounded by **containment**. Every member root has to land strictly inside the block that listed it, and no member of one block may contain another, so the blocks form a strict containment tree: each recursion step consumes a canonical root strictly deeper than the block that named it, the tree is finite, and no two roots in it can be equal. Depth therefore needs no separate limit. The duplicate check beside it — a member resolving to a canonical root already collected is a config error at the `members` line that introduced it — is what that argument makes **unreachable**, and it is kept as the backstop that would name the offending line if the containment rule ever stopped holding: never a silent skip, never an unbounded walk. Both errors name the entry **as the config wrote it**, since a canonical root renders as the empty string when it equals the render base and as an absolute path once it leaves the tree, and a diagnostic may do neither ([§FS-errors.4](../functional-spec/FS-errors.md#4-determinism)). `workspace/members.rs` holds that rule set, one file for every block's expansion at any depth.
 
-Three invariants are per-block, because every `[workspace]` block is a workspace
-root in its own right (§5.1 — one loader, whatever the depth):
+#### 6.1.8 Three invariants are per-block
+
+Every `[workspace]` block is a workspace root in its own right (§5.1 — one
+loader, whatever the depth), so three invariants are per-block:
 `workspace_boundary_roots` (§6) comes from that block's own member list, so each
 scan stops at its own members; `include_root` decides that block's own project
 only; and alias uniqueness is checked within one sibling set, since paths under
 different parents cannot collide.
+
+### 6.2 A directory reached through a symlink is compared canonically
+
+The relative-path compare of §6 answers the question only while the tree spells a
+member one way. A **symlink** gives it a second spelling — `docs/link -> ../sub`,
+or `docs/link -> ../packages` with the member one level below it — and a member
+reached under a link name matches no precomputed suffix, so the root scan
+descends into the member namespace §6 forbids and reports the member's
+own declarations as duplicates of themselves. The boundary is a property of the
+directory, not of the name it is reached under, so a directory the walk reached
+**through a link** is resolved with `canonicalize` and compared against the
+member roots directly ([§AR-scanner.1](AR-scanner.md#1-tree-walk)). That is the
+one case that pays a syscall, it is paid per link-reached directory rather than
+per entry, and a tree with no directory symlink in it pays nothing.
+
+Expansion also stamps every project's config with the **canonical root of every
+project the run loaded** (`workspace_project_roots`), and a link-reached
+directory is asked which of them owns it — the innermost project root that
+contains it, since a nested member's root sits inside the block that listed it.
+Out of bounds is "owned by a project that is not this one". This ownership test
+is stronger than the scanner's canonical project-root fence
+([§AR-scanner.1](AR-scanner.md#1-tree-walk)): it separates another loaded
+project even when that project is physically inside the current root. The
+innermost-owner rule is what keeps a member's own subtree readable while its
+parent project's is not, and it subsumes the member-root list for the root scan
+rather than replacing it: the list still prunes a member of a *nested* workspace
+whose grouping directory is not itself a project.
+
+`workspace_project_roots` is empty for a run that never loaded a workspace,
+which is a member checked on its own — an independent project by
+[§FS-workspace.5](../functional-spec/FS-workspace.md#5-command-scope), and one
+that cannot be told where the other projects are without loading the workspace
+it deliberately does not load.
+
+The physical-root fence supplies the direction the workspace map cannot when a
+member is checked independently. Such a run still does not load its ancestor workspace, but a directory link into
+a sibling or the root project necessarily resolves outside the member's
+canonical root and is pruned there
+([§FS-workspace.6](../functional-spec/FS-workspace.md#6-nested-project-boundary)).
+No ancestor climb or workspace expansion is added to a single-project run.
 
 ## 9. Test contracts
 
