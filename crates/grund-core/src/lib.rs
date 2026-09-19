@@ -103,9 +103,10 @@ pub use checker::{CHECK_FINDING_CODES, CheckFindingSelection};
 pub use queries::{
     BatchShowFailure, BatchShowQuery, BatchShowRecord, DeclaredId, LineEdit, ListSizeEntry,
     ListSizeMeasurement, ListSizeOpts, ListSizeOutput, LspCitation, LspDeclaration,
-    LspFindingRange, LspSnapshot, LspSnapshotOpts, LspStub, LspUsage, ShowFormat, ShowMode,
-    ShowOpts, ShowQueryError, can_replace_trigger_at, citation_under_title, list_sizes,
-    lsp_title_hover_body, on_type_line_edits, show_batch_with_scope,
+    LspFindingRange, LspSnapshot, LspSnapshotOpts, LspSnapshotWithMetadata, LspStub, LspUsage,
+    ShowFormat, ShowMode, ShowOpts, ShowQueryError, can_replace_trigger_at, citation_under_title,
+    list_sizes, lsp_hover_with_kind_title, lsp_title_hover_body, on_type_line_edits,
+    show_batch_with_scope,
 };
 
 // §AR-system.2.11 templates: the setup skill a command prints byte-for-byte and
@@ -144,10 +145,10 @@ pub use api::{
     CoverTextCitation, CoverTextEntry, CoverTextOutput, FmtChange, FmtOpts, FmtOutput, IdOpts,
     IdProposal, IdProposalOutcome, ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot,
     REFS_QUERY_FAILURE_WARNING, RefHit, ReferenceStyle, RefsOpts, RefsOutcome, RefsOutput,
-    RefsQueryFailure, RefsQueryFailureKind, check, check_with_opts, complete_ids,
+    RefsQueryFailure, RefsQueryFailureKind, RefsWithMetadata, check, check_with_opts, complete_ids,
     complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover, cover_text,
-    effective_config, format_references, list, list_with_run_warnings, lsp_snapshot, propose_id,
-    propose_id_with_run_warnings, reference_style, refs, refs_outcome,
+    effective_config, format_references, list, list_with_run_warnings, lsp_snapshot, lsp_snapshot_with_metadata, propose_id,
+    propose_id_with_run_warnings, reference_style, refs, refs_outcome, refs_with_metadata,
     refs_query_failure_is_exit_one, render_finding_sites_json, scan, show, show_with_overlays,
     show_with_scope, validate_config,
 };

@@ -89,6 +89,16 @@ pub fn lsp_title_hover_body(title: &str, usage: LspUsage) -> String {
     format!("{} — {}", markdown_code_span(title), usage_clause(usage))
 }
 
+/// Append literal target-kind metadata after the existing successful hover,
+/// preserving all preview bytes and the original title helper (§FS-lsp.1.2.8).
+/// Call after preview linkification so title text is never interpreted as a citation.
+pub fn lsp_hover_with_kind_title(body: &str, kind_title: Option<&str>) -> String {
+    match kind_title {
+        Some(title) => format!("{body}\n\nKind: {}", markdown_code_span(title)),
+        None => body.to_string(),
+    }
+}
+
 /// `text` as a CommonMark code span, verbatim (§FS-lsp.1.2.4). A backslash does
 /// not escape a backtick inside a code span, so a title carrying one — plenty
 /// of section headings do, `2.1.2 Section map (--toc)` among them — is fenced

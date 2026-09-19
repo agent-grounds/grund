@@ -55,7 +55,7 @@ fn command_refs(args: &[String]) -> ExitCode {
         eprintln!("error: refs requires an ID");
         return ExitCode::from(2);
     };
-    let outcome = match refs_outcome(RefsOpts {
+    let metadata = match refs_with_metadata(RefsOpts {
         path,
         path_provided,
         id: id_arg,
@@ -67,6 +67,7 @@ fn command_refs(args: &[String]) -> ExitCode {
             return ExitCode::from(2);
         }
     };
+    let outcome = &metadata.outcome;
     let output = &outcome.output;
     render_run_warnings(&output.warnings);
     let format = match command_output_format("refs", &output.output_format, format_override) {
@@ -86,7 +87,7 @@ fn command_refs(args: &[String]) -> ExitCode {
         render_refs_summary(&output.hits, output.workspace, &format);
     } else if format == "json" {
         for hit in &output.hits {
-            println!("{}", render_ref_hit_json(hit, output.workspace));
+            println!("{}", render_ref_hit_json(hit, output.workspace, metadata.kind_title.as_deref()));
         }
     } else {
         for hit in &output.hits {
@@ -169,7 +170,7 @@ fn render_refs_summary(hits: &[RefHit], workspace: bool, format: &str) {
     }
 }
 
-fn render_ref_hit_json(hit: &RefHit, workspace: bool) -> String {
+fn render_ref_hit_json(hit: &RefHit, workspace: bool, kind_title: Option<&str>) -> String {
     let project_field = if workspace {
         format!(
             "\"project\":\"{}\",",
@@ -178,8 +179,12 @@ fn render_ref_hit_json(hit: &RefHit, workspace: bool) -> String {
     } else {
         String::new()
     };
+    // §FS-refs.3.2: append target metadata only to detailed records.
+    let metadata = kind_title
+        .map(|title| format!(",\"kind_title\":\"{}\"", json_escape(title)))
+        .unwrap_or_default();
     format!(
-        "{{{}\"path\":\"{}\",\"line\":{},\"column\":{},\"id\":\"{}\",\"section\":{},\"marker\":{},\"text\":\"{}\"}}",
+        "{{{}\"path\":\"{}\",\"line\":{},\"column\":{},\"id\":\"{}\",\"section\":{},\"marker\":{},\"text\":\"{}\"{}}}",
         project_field,
         json_escape(&hit.path),
         hit.line,
@@ -190,7 +195,8 @@ fn render_ref_hit_json(hit: &RefHit, workspace: bool) -> String {
             .map(|section| format!("\"{}\"", json_escape(section)))
             .unwrap_or_else(|| "null".to_string()),
         hit.marker,
-        json_escape(&hit.text)
+        json_escape(&hit.text),
+        metadata
     )
 }
 

@@ -1,0 +1,10 @@
+grund_config_version = 1
+project_name = "untitled"
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+index = false

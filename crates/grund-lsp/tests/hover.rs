@@ -75,7 +75,7 @@ fn title_hover_reports_usage_counts_for_every_title_kind() {
     let declaration = hover_result(&mut stdin, &receiver, &mut child, 2, &file_uri(&spec), 0, 5);
     assert_eq!(
         hover_body(&declaration),
-        "`FS-001-alpha: Alpha` — cited at 2 sites across 2 files"
+        "`FS-001-alpha: Alpha` — cited at 2 sites across 2 files\n\nKind: `What: behavior, requirements, and constraints`"
     );
     assert!(
         declaration["range"]["start"]["character"].as_i64() == Some(2)
@@ -88,7 +88,7 @@ fn title_hover_reports_usage_counts_for_every_title_kind() {
     let section = hover_result(&mut stdin, &receiver, &mut child, 3, &file_uri(&spec), 4, 4);
     assert_eq!(
         hover_body(&section),
-        "`1. Detail` — cited at 1 site across 1 file"
+        "`1. Detail` — cited at 1 site across 1 file\n\nKind: `What: behavior, requirements, and constraints`"
     );
     assert!(
         section["range"]["start"]["line"].as_i64() == Some(4)
@@ -103,7 +103,7 @@ fn title_hover_reports_usage_counts_for_every_title_kind() {
     let stub_heading = "# AR-001-router: [src/router.rs](../../src/router.rs)";
     assert_eq!(
         hover_body(&stub_hover),
-        "`AR-001-router: [src/router.rs](../../src/router.rs)` — cited at 1 site across 1 file"
+        "`AR-001-router: [src/router.rs](../../src/router.rs)` — cited at 1 site across 1 file\n\nKind: `How: high-level implementation, structure, and design`"
     );
     assert!(
         stub_hover["range"]["start"]["character"].as_i64() == Some(2)
@@ -123,12 +123,15 @@ fn title_hover_reports_usage_counts_for_every_title_kind() {
     );
     assert_eq!(
         hover_body(&inline),
-        "`AR-001-router: Router` — cited at 1 site across 1 file"
+        "`AR-001-router: Router` — cited at 1 site across 1 file\n\nKind: `How: high-level implementation, structure, and design`"
     );
 
     // Zero replaces the whole clause rather than suppressing the hover.
     let uncited = hover_result(&mut stdin, &receiver, &mut child, 6, &file_uri(&beta), 0, 5);
-    assert_eq!(hover_body(&uncited), "`FS-002-beta: Beta` — not cited");
+    assert_eq!(
+        hover_body(&uncited),
+        "`FS-002-beta: Beta` — not cited\n\nKind: `What: behavior, requirements, and constraints`"
+    );
 
     // §FS-lsp.4: the same request against an unchanged tree answers with the
     // same bytes.

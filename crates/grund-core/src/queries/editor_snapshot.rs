@@ -129,3 +129,12 @@ pub struct LspCitation {
     pub target_path: Option<PathBuf>,
     pub target_line: Option<usize>,
 }
+
+/// Additive snapshot metadata for §FS-config.3.4.3 and §FS-lsp.1.2, keyed by
+/// the snapshot's resolved query IDs (including section IDs). Keeping this
+/// outside `LspSnapshot` preserves existing public struct construction.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LspSnapshotWithMetadata {
+    pub snapshot: LspSnapshot,
+    pub kind_titles: BTreeMap<String, String>,
+}

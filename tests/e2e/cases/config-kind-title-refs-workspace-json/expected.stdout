@@ -1,0 +1,3 @@
+{"project":"citer","path":"citer/src/user.rs","line":1,"column":5,"id":"FS-authored","section":null,"marker":true,"text":"§target/FS-authored","kind_title":"Target title"}
+{"project":"root","path":"src/user.rs","line":1,"column":5,"id":"FS-authored","section":null,"marker":true,"text":"§target/FS-authored","kind_title":"Target title"}
+{"project":"target","path":"target/src/user.rs","line":1,"column":5,"id":"FS-authored","section":null,"marker":true,"text":"§FS-authored","kind_title":"Target title"}
