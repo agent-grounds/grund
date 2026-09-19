@@ -35,7 +35,7 @@ fn redundant_config_warning(config: &Config) -> Option<Diagnostic> {
 
 /// §FS-check.4.11: the warning for a config the run read from the deprecated
 /// `.agents/` location — the file still governs the project, so the message
-/// names the move a reader can type rather than a fault (§FS-config.1.2).
+/// names the move a reader can type rather than a fault (§FS-config.1.2.1).
 /// `line`-less for §4.3's reason, which this finding shares whole: the subject
 /// is which file the run read, not a site inside it.
 ///

@@ -23,7 +23,7 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     );
     // The default config indexes `FS`, so the fixture owes the entry
     // (§FS-check.3.18) — and the entry is a citation to `list` and `refs`
-    // alike, which is why the counts below are two (§FS-check.4.1).
+    // alike, which is why the counts below are two (§FS-check.4.1.2).
     write(
         &root.join("docs/functional-spec/README.md"),
         "# Functional spec\n\n- [§FS-001-alpha](FS-001-alpha.md#fs-001-alpha-alpha)\n",
@@ -309,7 +309,7 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     let init_output = init(InitOpts {
         target: init_root,
         dry_run: true,
-        // §FS-init.1.2: a bare temp root no VCS marker covers.
+        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })
@@ -356,7 +356,7 @@ fn init_next_guidance_uses_effective_legacy_fs_home() {
         target: root,
         docs: true,
         dry_run: true,
-        // §FS-init.1.2: a bare temp root no VCS marker covers.
+        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })
@@ -398,7 +398,7 @@ file = "specs/requirements.md"
         target: root,
         docs: true,
         dry_run: true,
-        // §FS-init.1.2: a bare temp root no VCS marker covers.
+        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })

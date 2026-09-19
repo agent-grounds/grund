@@ -149,7 +149,7 @@ fn cover_counts_a_qualified_citation_toward_the_citing_file() {
     );
 }
 
-/// §FS-workspace.8.6: the ID renders under the **target** project's `[id]`
+/// §FS-workspace.8.6.4: the ID renders under the **target** project's `[id]`
 /// config, matching `refs` (§FS-workspace.8.2). The member numbers its IDs
 /// and the root does not, so rendering under the citing project's config
 /// would spell the same citation `sub/FS-sub-thing`.
@@ -191,10 +191,10 @@ fn cover_under_a_member_path_stays_member_local() {
     );
 }
 
-/// §FS-workspace.8.6: a scope narrower than the config root is one narrowed
+/// §FS-workspace.8.6.1: a scope narrower than the config root is one narrowed
 /// scan, not the aggregate — the line `grund check <dir>` already draws
-/// (§FS-check.1.3). Widening it would discard the narrowing an explicit path
-/// exists for, since such a path bypasses `[scan] include` (§AR-scanner.1).
+/// (§FS-check.1.3.6). Widening it would discard the narrowing an explicit path
+/// exists for, since such a path bypasses `[scan] include` (§AR-scanner.1.6).
 #[test]
 fn cover_under_a_narrowed_path_loads_no_workspace() {
     let root = workspace(
@@ -210,7 +210,7 @@ fn cover_under_a_narrowed_path_loads_no_workspace() {
     );
 }
 
-/// §FS-workspace.8.7: a member's unreadable file fails the run launched at
+/// §FS-workspace.8.7.3: a member's unreadable file fails the run launched at
 /// the workspace root, named from that root. Rendered against the member it
 /// would name a file that does not exist from where the run started
 /// (§FS-errors.4).
@@ -239,7 +239,7 @@ fn a_members_scan_error_is_reported_from_the_workspace_root() {
     );
 }
 
-/// §FS-errors.4: two projects, two unreadable files, one list in path order
+/// §FS-errors.4.1: two projects, two unreadable files, one list in path order
 /// — not in the order the projects were loaded. The member sits under
 /// `alpha/` so the two orders disagree: the root is loaded first and its
 /// `docs/` path sorts second. With one scan error in the tree, reversing the
@@ -388,7 +388,7 @@ fn the_compat_renderer_emits_the_same_json_the_cli_does() {
     );
 }
 
-/// §FS-cover.1: the compat surface answers a bad `--format` from the argv,
+/// §FS-cover.1.1: the compat surface answers a bad `--format` from the argv,
 /// before anything is loaded — the CLI already did, and the two disagreed:
 /// `cover --format=bogus /nope` reported the missing path on one and the
 /// bad format on the other. Both answers exit 2, so only the message

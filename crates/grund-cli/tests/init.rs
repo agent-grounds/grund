@@ -68,7 +68,7 @@ fn init_default_writes_canonical_pair_and_passes_check() {
 
 #[test]
 fn init_docs_form_emits_full_scaffold_and_check_is_clean() {
-    // §FS-init.2.1 (--docs form) + §FS-init.2.3.4.10 (reachable static
+    // §FS-init.2.1.3 (--docs form) + §FS-init.2.3.4.10 (reachable static
     // citation-direction guidance). The scaffolded tree must satisfy `grund check` —
     // i.e. the canonical AGENTS.md + grund.toml + docs skeleton is internally consistent.
     let target = workdir("init_docs_form_emits_full_scaffold_and_check_is_clean");
@@ -142,7 +142,7 @@ fn init_docs_form_emits_full_scaffold_and_check_is_clean() {
 
 #[test]
 fn init_docs_default_requirements_file_is_scanned() {
-    // §FS-init.2.1 / §FS-config.3.5: the generated FS home is in the generated
+    // §FS-init.2.1 / §FS-config.3.5.8: the generated FS home is in the generated
     // scan roots, so declarations added where `init` points users are resolvable.
     let target = workdir("init_docs_default_requirements_file_is_scanned");
     let output = run_grund(
@@ -178,7 +178,7 @@ fn init_docs_default_requirements_file_is_scanned() {
 
 #[test]
 fn init_description_flag_writes_config_key() {
-    // §FS-init.1 + §FS-init.2.4: `--description` replaces the commented
+    // §FS-init.1 + §FS-init.2.4.7: `--description` replaces the commented
     // teaching line in the generated config with the real key.
     let target = workdir("init_description_flag_writes_config_key");
     let output = run_grund(
@@ -283,7 +283,7 @@ fn init_failed_docs_write_reports_prior_progress() {
 
 #[test]
 fn init_generated_config_comments_list_constrained_values() {
-    // §FS-init.2.4: the generated config is a teaching surface, so non-boolean
+    // §FS-init.2.4.5: the generated config is a teaching surface, so non-boolean
     // constrained keys carry inline comments listing their accepted values.
     let target = workdir("init_generated_config_comments_list_constrained_values");
     let output = run_grund(&["init", target.to_str().unwrap()], manifest_dir());
@@ -323,7 +323,7 @@ fn init_generated_config_comments_list_constrained_values() {
     );
 }
 
-/// §FS-inline-citation-style.5: the rendered house style closes with the
+/// §FS-inline-citation-style.5.4: the rendered house style closes with the
 /// doc-comment sentence at every `inline_style`, so the agent reading the
 /// block knows the budgets stop where documentation starts
 /// (§FS-inline-citation-style.1.1).
@@ -520,7 +520,7 @@ fn init_rerun_on_current_repo_writes_nothing_and_reports_exists() {
     );
 }
 
-/// §FS-init.2.4 / §FS-init.3: `.agents/grund.toml` is the repo's config, not a
+/// §FS-init.2.4.2 / §FS-init.3.5: `.agents/grund.toml` is the repo's config, not a
 /// scaffold artifact — `grund init --force` regenerates AGENTS.md but leaves an
 /// existing config byte-for-byte intact and reports it with `exists `, never
 /// `wrote `. (Overwriting it with the canonical template was a footgun.)
@@ -616,7 +616,7 @@ fn init_dry_run_writes_no_files_and_reports_would_prefixes() {
     assert!(target.join("grund.toml").is_file());
 }
 
-/// §FS-init.2.2: when every reported path is `exists ` (and no would-… lines
+/// §FS-init.2.2.2: when every reported path is `exists ` (and no would-… lines
 /// were emitted), the `next:` guidance block is suppressed — the user has
 /// a complete setup, so there is nothing to teach. This holds for both
 /// real runs and dry-runs.
@@ -741,7 +741,7 @@ fn init_force_dry_run_previews_canonical_rewrite() {
     );
 }
 
-/// §FS-init.2.3: generated output must pass `grund check` unmodified, even
+/// §FS-init.2.3.8: generated output must pass `grund check` unmodified, even
 /// when the entrypoint itself is inside the scan scope of a strict repo —
 /// the worked citation example is `<§>`-escaped, not a live dangling
 /// reference (the grund init → grund check → grund init wedge of the

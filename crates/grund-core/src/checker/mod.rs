@@ -6,7 +6,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). The submodules are the former `checker*` category
+//! (§AR-core-module-layout.1.1). The submodules are the former `checker*` category
 //! files, one per rule family §AR-checker.2 names, plus `support.rs` for what
 //! every rule shares — the hint and the report's order. The
 //! inline citation style rule came the other way, up out of
@@ -66,7 +66,7 @@ pub(crate) use sections::{out_of_scope_section_headings, workspace_out_of_scope_
 pub(crate) use support::{diagnostic_cmp, sort_diagnostics};
 pub(crate) use values::binding_target_has_any_value_authority;
 
-// What another component's tests read (§AR-core-module-layout.1): the managed
+// What another component's tests read (§AR-core-module-layout.1.3): the managed
 // block path the compat selector cases drive, and the dangling sentence the
 // scanner's config cases compare against; the rest went beside their own cases.
 #[cfg(test)]
@@ -75,7 +75,7 @@ pub(crate) use agents::check_agent_block_path;
 pub(crate) use support::dangling_message;
 
 // The cases that pin this component, one module per behaviour area
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_alias_hints;
 #[cfg(test)]

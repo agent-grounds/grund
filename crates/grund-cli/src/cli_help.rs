@@ -1,5 +1,5 @@
 /// `grund --help` / `grund help` — the top-level usage text: the subcommand list and
-/// global flags (§FS-cli.2). `grund help <cmd>` defers to `print_subcommand_help`.
+/// global flags (§FS-cli.2.2). `grund help <cmd>` defers to `print_subcommand_help`.
 fn print_help() {
     println!("grund — ground your agents in the spec.");
     println!("Checks ID-based citations (§<ID>.<section>) across Markdown docs and source-code doc-comments, so every reader — human or AI — points at the same facts.");
@@ -58,7 +58,7 @@ fn print_help() {
     );
 }
 
-/// Per-subcommand `--help` / `help <subcommand>` page (§FS-cli.2, §FS-cli.3): what
+/// Per-subcommand `--help` / `help <subcommand>` page (§FS-cli.2.3, §FS-cli.3): what
 /// it takes, every flag with a one-line example, the exit codes, and the common
 /// recovery path. Goes to stdout, exit 0 — help is never an error.
 fn print_subcommand_help(cmd: &str) {

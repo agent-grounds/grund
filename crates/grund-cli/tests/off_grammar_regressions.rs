@@ -1,5 +1,5 @@
 //! Regression coverage for exact persisted spellings, promoted inline citation
-//! sites, and formatter-wrapper reads (§FS-config.3.2, §FS-show.3.2,
+//! sites, and formatter-wrapper reads (§FS-config.3.2.5, §FS-show.3.2.1,
 //! §FS-inline-citation-style.3.1, §FS-workspace.8).
 
 use std::fs;
@@ -51,8 +51,8 @@ fn assert_code(output: &Output, expected: i32, label: &str) {
 }
 
 /// A narrowed component regex cannot claim a shorter configured prefix before
-/// the complete colon-delimited spelling reaches the catalog (§FS-config.3.2,
-/// §FS-show.1, §FS-list.2, §FS-refs.1, §FS-check.4.6).
+/// the complete colon-delimited spelling reaches the catalog (§FS-config.3.2.5,
+/// §FS-show.1.1, §FS-list.2.3, §FS-refs.1, §FS-check.4.6.4).
 #[test]
 fn off_grammar_narrowed_slug_pattern_retains_the_exact_written_token() {
     let root = test_root("narrowed-pattern");
@@ -122,7 +122,7 @@ fn local_inline_config(style: &str, layout: bool) -> String {
 }
 
 /// Local promotion supplies the final token range to both citation-only and
-/// layout classification (§FS-inline-citation-style.3.1, §FS-config.3.2).
+/// layout classification (§FS-inline-citation-style.3.1, §FS-config.3.2.5).
 #[test]
 fn off_grammar_local_promotion_drives_inline_style_and_layout() {
     let root = test_root("local-inline");

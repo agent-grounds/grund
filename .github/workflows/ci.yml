@@ -127,7 +127,7 @@ jobs:
 
   # `pre-commit run --all-files` cannot reproduce the `commit-msg` stage — it takes a
   # message file, not a file list — so a trailer that lives only in a commit message
-  # rides in unchecked. This job scans what the push or pull request adds (§AR-ci.8).
+  # rides in unchecked. This job scans what the push or pull request adds (§AR-ci.8.2).
   commit-messages:
     name: commit message attribution gate
     runs-on: ubuntu-latest

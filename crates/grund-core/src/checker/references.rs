@@ -30,9 +30,9 @@ use crate::scanner::scan_roots_for;
 use crate::workspace::namespace_is_unverified;
 
 /// Which of a `--full` run's two scopes a citation site is being judged on
-/// (§FS-check.1.3). It changes exactly one thing: outside the configured scope,
+/// (§FS-check.1.3.3). It changes exactly one thing: outside the configured scope,
 /// `grund fmt --write` will not rewrite the site either, so the mechanical
-/// shorthand form is withheld there (§FS-check.3.14).
+/// shorthand form is withheld there (§FS-check.3.14.4).
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum ReferenceTier {
     Configured,
@@ -40,24 +40,24 @@ pub(crate) enum ReferenceTier {
 }
 
 /// The roots a run *without* `--full` walks: the explicit path argument, or
-/// `[scan] include` resolved against the config root (§FS-config.3.5). Under
+/// `[scan] include` resolved against the config root (§FS-config.3.5.7). Under
 /// `--full` the walk is wider than this, and the difference is what separates
 /// the ordinary report from the out-of-scope tier (§FS-check.1.3).
 ///
 /// Each root is held in both its written and its canonical form: the walk yields
 /// paths built from `config.root`, while `E2E` case declarations carry
-/// canonicalized directories (§AR-scanner.6), and a scope test has to answer the
+/// canonicalized directories (§AR-scanner.6.2), and a scope test has to answer the
 /// same for both.
 pub(crate) struct ScanScope {
     roots: Vec<PathBuf>,
-    /// The `scan = false` homes under those roots (§FS-config.3.4.7): listed by
+    /// The `scan = false` homes under those roots (§FS-config.3.4.7.5): listed by
     /// the config, and read by this run only because `--full` widened the walk.
     unwalked: Vec<PathBuf>,
 }
 
 impl ScanScope {
     pub(super) fn contains(&self, path: &Path) -> bool {
-        // §FS-config.3.4.7: a file in a home the config lists without walking is
+        // §FS-config.3.4.7.5: a file in a home the config lists without walking is
         // outside the configured scope even when a root above it is inside — the
         // scope is a set of roots, less the homes a run without `--full` never reads.
         if self.unwalked.iter().any(|home| path.starts_with(home)) {
@@ -90,7 +90,7 @@ pub(crate) fn configured_scope(
     roots.sort_by_key(|root| sort_path_key(root));
     roots.dedup();
     // Both spellings again, for the same reason the roots carry both: a finding
-    // is recorded under the path the walk reached it by (§FS-config.3.5.2).
+    // is recorded under the path the walk reached it by (§FS-config.3.5.2.1).
     let mut unwalked = unwalked_home_roots(config);
     let canonical = unwalked
         .iter()
@@ -102,13 +102,13 @@ pub(crate) fn configured_scope(
     Ok(Some(ScanScope { roots, unwalked }))
 }
 
-/// §FS-check.1.3: drop everything the wider `--full` walk read from outside the
+/// §FS-check.1.3.4: drop everything the wider `--full` walk read from outside the
 /// configured scope, so every rule but the out-of-scope tier sees exactly the
 /// tree a run without the flag sees and reports exactly what it reports. A no-op
 /// without `--full`. Nothing is cloned — the walk's findings are narrowed in
 /// place, after the tier has been read off the whole of them.
 ///
-/// Why there is no undo pass for the shorthand resolutions §AR-scanner.2.6 made
+/// Why there is no undo pass for the shorthand resolutions §AR-scanner.2.6.6 made
 /// against the whole walk: the narrowed declarations yield the candidate set
 /// `report_shorthand_citation` judges a site against — one predicate covering the
 /// unqualified and the cross-member qualified form alike, where an undo pass here
@@ -130,7 +130,7 @@ pub(crate) fn retain_findings_in_scope(findings: &mut Findings, scope: Option<&S
         .invalid_value_bindings
         .retain(|site| scope.contains(&site.file));
     // Home JSON is catalog input under every scope; Markdown value errors obey
-    // the ordinary configured scope (§FS-values.2.2, §FS-check.1.3).
+    // the ordinary configured scope (§FS-values.2.2, §FS-check.1.3.3).
     findings.invalid_value_declarations.retain(|site| {
         matches!(site.source, DeclarationSource::Json { .. }) || scope.contains(&site.file)
     });
@@ -139,17 +139,17 @@ pub(crate) fn retain_findings_in_scope(findings: &mut Findings, scope: Option<&S
         .retain(|cite| scope.contains(&cite.file));
     // §FS-check.4.6 asks a question about the configured scope, so a `--full`
     // walk's extra files are dropped with the rest: `--full` widens the
-    // *reference* tier (§FS-check.3.14) and nothing else.
+    // *reference* tier (§FS-check.3.14.2) and nothing else.
     findings
         .near_miss_headings
         .retain(|heading| scope.contains(&heading.file));
     findings.scanned_files.retain(|file| scope.contains(file));
-    // The shorthand resolutions §AR-scanner.2.6 performed against the whole walk
+    // The shorthand resolutions §AR-scanner.2.6.6 performed against the whole walk
     // are deliberately left standing: a site whose declaration the retains above
     // just dropped is re-judged in `report_shorthand_citation` (§FS-check.3.13).
 }
 
-/// §FS-check.3.14: the out-of-scope tier — the reference-resolution family run
+/// §FS-check.3.14.3: the out-of-scope tier — the reference-resolution family run
 /// over the citation sites the wider `--full` walk found outside the configured
 /// scope, resolved against the *whole* walk so a citation whose declaration is
 /// also out there still resolves. Empty without `--full`.
@@ -175,7 +175,7 @@ pub(crate) fn out_of_scope_references(
     tier.errors.into_iter().map(tag_out_of_scope).collect()
 }
 
-/// §FS-check.1.3: the out-of-scope tier for a workspace run — one pass per
+/// §FS-check.1.3.8: the out-of-scope tier for a workspace run — one pass per
 /// project, tiered against that project's own `[scan] include`, and resolved
 /// against every project's *whole* walk, which is why it runs before the
 /// findings are narrowed. `include` is a per-project statement, so a member
@@ -215,7 +215,7 @@ pub(crate) fn workspace_out_of_scope_references(
 ///
 /// The code is the in-scope one under an `out-of-scope-` prefix, so a
 /// `--format=json` consumer filters the tier by prefix and the rule by exact
-/// match on the `code` field the report shape already carries (§FS-errors.5) —
+/// match on the `code` field the report shape already carries (§FS-errors.5.1) —
 /// one code for all four would leave the rule readable only in the prose.
 ///
 /// The tier leads the message rather than trailing it: out here the fix is
@@ -242,9 +242,9 @@ pub(crate) fn tag_out_of_scope(mut diagnostic: Diagnostic) -> Diagnostic {
 /// what it looks at (§FS-check.3.14); the ordinary run passes `None` and judges
 /// every site the walk found.
 ///
-/// §FS-workspace.4: an alias path into an absent optional member is neither
+/// §FS-workspace.4.3: an alias path into an absent optional member is neither
 /// resolved nor unknown — it is *unverified*, and the run says so once at the entry
-/// that made the skip legal rather than at every site (§FS-check.4.9). Every other
+/// that made the skip legal rather than at every site (§FS-check.4.9.1). Every other
 /// unknown alias still errors here.
 pub(super) fn check_citation_resolution(
     findings: &Findings,
@@ -270,7 +270,7 @@ pub(super) fn check_citation_resolution(
                 .namespace
                 .as_deref()
                 .expect("resolver only returns None for qualified citations");
-            // §FS-workspace.4: unverified, not unknown — see this function's docs.
+            // §FS-workspace.4.3: unverified, not unknown — see this function's docs.
             if namespace_is_unverified(config, namespace) {
                 continue;
             }
@@ -288,7 +288,7 @@ pub(super) fn check_citation_resolution(
             });
             continue;
         };
-        // §FS-check.3.13 / §AR-checker.2.12: the shorthand pass, and the one rule that
+        // §FS-check.3.13.3 / §AR-checker.2.12: the shorthand pass, and the one rule that
         // can end this citation early — an unresolved shorthand skips the dangling check
         // below rather than adding `unknown reference FS-042` for a token that is not an ID.
         if cite.shorthand
@@ -303,7 +303,7 @@ pub(super) fn check_citation_resolution(
         {
             continue;
         }
-        // §FS-check.3.1 / §FS-workspace.4: a citation whose ID is declared
+        // §FS-check.3.1 / §FS-workspace.4.1: a citation whose ID is declared
         // nowhere in its target namespace is dangling.
         let Some(decls) = target.findings.declarations.get(&cite.id) else {
             let snapshot_kind = target
@@ -313,7 +313,7 @@ pub(super) fn check_citation_resolution(
                 .find(|kind| kind.kind == cite.id.kind && kind.fetch.is_some());
             let in_inline_code = citation_in_markdown_inline_code(cite);
             let (code, message, warning) = if let Some(kind) = snapshot_kind {
-                // §FS-check.3.14: out-of-scope citations stay fixed dangling errors;
+                // §FS-check.3.14.1: out-of-scope citations stay fixed dangling errors;
                 // a target kind's in-scope `should` must not demote this opt-in tier.
                 let should_warn = tier == ReferenceTier::Configured
                     && kind.resolve == Some(KindResolution::Should);
@@ -426,7 +426,7 @@ pub(super) fn check_citation_resolution(
 /// the scope segment by segment is the exception, because every candidate the
 /// run loaded for that path is inside the subtree it can judge
 /// (§FS-check.3.8.1). Ineligible paths keep the scope-only message
-/// (§FS-check.3.8, §FS-workspace.6.1).
+/// (§FS-check.3.8.3, §FS-workspace.6.1.5).
 pub(crate) fn unknown_project_message<'a>(
     namespace: &str,
     known: impl Iterator<Item = &'a str>,
@@ -434,7 +434,7 @@ pub(crate) fn unknown_project_message<'a>(
 ) -> String {
     if !scope_path.is_empty() && !alias_strictly_extends_scope(namespace, scope_path) {
         // §FS-check.3.8.1: 0.13.2 keeps the legacy diagnostic as a prefix while
-        // appending §FS-errors.3's fixed compatibility explanation and horizon.
+        // appending §FS-errors.3.3's fixed compatibility explanation and horizon.
         return format!(
             "unknown project alias {namespace}; only the {scope_path} subtree is in scope here — check from the workspace root for a path outside it — here, the {scope_path} subtree means the {scope_path} project and its descendants; this wording changes in grund 0.14.0"
         );

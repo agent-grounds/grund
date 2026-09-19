@@ -33,7 +33,7 @@ mod tests_integrations {
         assert!(snippet.contains("grund-open \\0"));
     }
 
-    // §FS-integrations.2: detection closes on the preview line and the setup
+    // §FS-integrations.2.1: detection closes on the preview line and the setup
     // guide, in both the detected and the nothing-detected form — the guide
     // carries the prerequisites and manual steps `--write` cannot perform.
     #[test]
@@ -42,7 +42,7 @@ mod tests_integrations {
         assert!(SETUP_GUIDE_URL.ends_with("docs/user-facing/clickable-citations.md"));
     }
 
-    // §FS-integrations.1 / §FS-integrations.4.3: an explicit conversation
+    // §FS-integrations.1.1 / §FS-integrations.4.3: an explicit conversation
     // preference is a complete clientless write target.
     #[test]
     fn integrations_accepts_preference_only_write() {
@@ -56,7 +56,7 @@ mod tests_integrations {
         assert_eq!(invocation.conversation, Some(ConversationRendering::Link));
     }
 
-    // §FS-integrations.1: `--conversation-target` alone is also a complete
+    // §FS-integrations.1.2: `--conversation-target` alone is also a complete
     // clientless write target, and an unknown value is a CLI error listing the
     // accepted set — a value the caller typed, not a stale line in a file.
     #[test]
@@ -97,7 +97,7 @@ mod tests_integrations {
         }
     }
 
-    // §FS-integrations.4.4: the report names the form each agent received, and
+    // §FS-integrations.4.4.4: the report names the form each agent received, and
     // why when it is not the one asked for — unreported, an override, a gate
     // downgrade, and an unread key look identical from the outside.
     #[test]
@@ -138,7 +138,7 @@ mod tests_integrations {
         );
     }
 
-    // §FS-integrations.1 / §FS-integrations.6: `--agent` scopes
+    // §FS-integrations.1.2 / §FS-integrations.6.2: `--agent` scopes
     // `--conversation-target` and nothing else.
     #[test]
     fn agent_flag_requires_write_and_a_target() {
@@ -178,7 +178,7 @@ mod tests_integrations {
     /// §FS-integrations.5: the machine detection plan distinguishes ambient
     /// detection from actual installation state, and carries each client's
     /// `install_kind` so a manual client's permanent `installed: false` reads as
-    /// "not knowable" rather than "not installed" (§FS-integrations.3.4).
+    /// "not knowable" rather than "not installed" (§FS-integrations.3.4.2).
     #[test]
     fn integrations_detection_json_reports_installed_state() {
         let json = detection_plan_json(&[IntegrationClient::Wezterm]);

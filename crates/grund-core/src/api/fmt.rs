@@ -49,7 +49,7 @@ pub struct FmtChange {
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FmtOutput {
     pub changes: Vec<FmtChange>,
-    /// The paths the walk could not read (§FS-fmt.3) — the CLI prints these and
+    /// The paths the walk could not read (§FS-fmt.3.1) — the CLI prints these and
     /// exits `2`. Non-empty means the rewrite ran over less than the whole tree.
     pub scan_errors: Vec<ApiScanError>,
     /// The files read but not rewritten, because a link reaches them from outside
@@ -57,10 +57,10 @@ pub struct FmtOutput {
     /// exit code is untouched, because the refusal is the intended behavior.
     pub refused_writes: Vec<String>,
     /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
-    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// cautions of §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11 and
+    /// §FS-workspace.6.1.7, each anchored at the `grund.toml` line its own message
     /// names. A frontend renders each as one CLI-level `warning:` on stderr
-    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1.3).
     pub warnings: Vec<Finding>,
 }
 
@@ -81,7 +81,7 @@ pub fn format_references(opts: FmtOpts) -> Result<FmtOutput> {
                 .map(|canonical| canonical == config.root)
                 .unwrap_or(false));
     let (changes, scan_errors, refused_writes) = if walk_all_projects {
-        // §FS-fmt.3: complete every project's strict readiness pass before a
+        // §FS-fmt.3.2: complete every project's strict readiness pass before a
         // workspace write can touch the first one. The dry pass also discovers
         // shorthand-triggered strictness and aggregates root/member failures.
         let preflight = fmt_workspace_projects(
@@ -104,7 +104,7 @@ pub fn format_references(opts: FmtOpts) -> Result<FmtOutput> {
         };
         (walked.changes, walked.scan_errors, walked.refused_writes)
     } else {
-        // §FS-fmt.3: same guard as above — a bare `--write` and `--write .` name
+        // §FS-fmt.3.2: same guard as above — a bare `--write` and `--write .` name
         // the same scope and must refuse alike, not one quietly resolving
         // cross-refs/shorthands against a set the other just reported incomplete.
         let reusable_findings = (!opts.path_provided)
@@ -120,7 +120,7 @@ pub fn format_references(opts: FmtOpts) -> Result<FmtOutput> {
             render: &config,
             workspace: workspace_for_wrap,
             precomputed_findings: reusable_findings,
-            // §FS-fmt.6.1: check previews the same index carve-out write applies.
+            // §FS-fmt.6.1.3: check previews the same index carve-out write applies.
             index_cross_refs: true,
         };
         let walked = fmt_tree(&config, Some(&opts.path), opts.path_provided, &run_opts)?;

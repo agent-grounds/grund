@@ -1,7 +1,7 @@
 /// The `--write` half of `grund integrations` (§FS-integrations.4): what one
 /// install reports, and how the user-level citation guidance is synchronized
 /// across every agent whose instruction file this machine has
-/// (§FS-integrations.4.3). Splitting the reporting from the splices and probes
+/// (§FS-integrations.4.3.8). Splitting the reporting from the splices and probes
 /// it reports on is what lets the whole command sit in the frontend without a
 /// size exception (§AR-core-module-layout.3); the splices are the engine's, in
 /// `writers/integrations_install.rs`, and return data rather than printing
@@ -45,7 +45,7 @@ fn write_user_citation_guidance_command(
 }
 
 /// `--write` for a client with no writable configuration: install the resolver
-/// the manual steps depend on, then print those steps (§FS-integrations.3.4).
+/// the manual steps depend on, then print those steps (§FS-integrations.3.4.2).
 /// Reported as `manual` rather than a block verb, so a script can tell that a
 /// human still has to act.
 fn write_manual_integration(client: IntegrationClient) -> ExitCode {
@@ -108,7 +108,7 @@ fn write_terminal_integration(client: IntegrationClient, snippet: &str) -> ExitC
         }
     }
     eprintln!("{} {}", block_outcome_verb(outcome), config_path.display());
-    // Reported rather than silent (§FS-integrations.4.1): the install is
+    // Reported rather than silent (§FS-integrations.4.1.3): the install is
     // otherwise indistinguishable from one that works.
     if needs_wezterm_wiring(client, &updated) {
         eprintln!(
@@ -174,12 +174,12 @@ enum GuidancePlan {
     /// Named so the report says which directory would make it apply.
     Skip(&'static str),
     /// An instruction file, reported with the form it received
-    /// (§FS-integrations.4.4).
+    /// (§FS-integrations.4.4.4).
     WriteAgent(String, BlockOutcome, EffectiveForm),
 }
 
 /// What one agent's block ended up teaching, and why it is not what was asked
-/// for when it is not (§FS-integrations.4.4). Reported per target, because
+/// for when it is not (§FS-integrations.4.4.4). Reported per target, because
 /// unreported an override, a gate downgrade, and an unread key are
 /// indistinguishable from the outside.
 struct EffectiveForm {
@@ -205,7 +205,7 @@ impl EffectiveForm {
 }
 
 /// The user configuration `--write` reads, loaded once per invocation so its
-/// warnings are reported exactly once (§FS-integrations.4.3).
+/// warnings are reported exactly once (§FS-integrations.4.3.7).
 struct UserConfig {
     path: PathBuf,
     text: String,
@@ -218,7 +218,7 @@ struct UserConfig {
 /// line grund did not act on is warned about here, at the one point the file is
 /// read: nothing else in this file has any effect, and a setting that silently
 /// does nothing is indistinguishable from one that works. Only failing to reach
-/// the file is an error; its contents never are (§FS-integrations.4.3).
+/// the file is an error; its contents never are (§FS-integrations.4.3.5).
 fn load_user_config() -> Result<UserConfig, (PathBuf, String)> {
     let path = user_grund_config_path().ok_or_else(|| {
         (
@@ -241,7 +241,7 @@ fn load_user_config() -> Result<UserConfig, (PathBuf, String)> {
 }
 
 /// Persist the machine-local conversation preference and synchronize it into
-/// global agent instructions (§FS-integrations.4.3). All files are planned
+/// global agent instructions (§FS-integrations.4.3.8). All files are planned
 /// before the first write so malformed managed blocks fail without touching any
 /// of these user-guidance targets.
 ///
@@ -263,7 +263,7 @@ fn write_user_citation_guidance(
     } = user_config;
     let effective = requested.or(stored).unwrap_or(ConversationRendering::Plain);
     // A scoped write changes one agent's partial and leaves the base exactly as
-    // it was — that is the whole point of the flag (§FS-integrations.4.4).
+    // it was — that is the whole point of the flag (§FS-integrations.4.4.2).
     let machine_target = if scoped_agent.is_some() {
         stored_target.unwrap_or_default()
     } else {
@@ -271,7 +271,7 @@ fn write_user_citation_guidance(
     };
     // Both keys are recorded, and both are recorded even when inert: a machine
     // that set a target under `plain` keeps it when it later switches to `link`
-    // (§FS-integrations.1).
+    // (§FS-integrations.1.2).
     let (config_updated, conversation_outcome) = install_reference_key(
         &config_existing,
         "reference",
@@ -328,7 +328,7 @@ fn write_user_citation_guidance(
             plans.push((path, GuidancePlan::Skip(target.home)));
             continue;
         }
-        // §FS-integrations.4.4: the agent's own partial replaces the base, then
+        // §FS-integrations.4.4.1: the agent's own partial replaces the base, then
         // §DF-conversation-link-target.2.4 gates the result.
         let overridden = agent_targets
             .iter()

@@ -20,7 +20,7 @@ use crate::model::{
 };
 use crate::scanner::file_home_kind;
 
-/// How a citing kind is named in a finding (§FS-check.3.11, §FS-check.3.12): a
+/// How a citing kind is named in a finding (§FS-check.3.11, §FS-check.3.12.1): a
 /// citable kind by its name, which is the prefix of every ID in it; a
 /// non-citable one by its home, which is all a reader of the message could go
 /// and look at. `code` keeps its own name — it is the one non-citable kind with
@@ -102,7 +102,7 @@ pub(super) fn check_citation_obligations(
             &by_file,
             &e2e_by_case,
         );
-        // §FS-check.2.2.1: a walked folder with real non-entry content must not
+        // §FS-check.2.2.1.1: a walked folder with real non-entry content must not
         // silently pass when this obligation has no unit to evaluate.
         if units.is_empty()
             && let Some(warning) =
@@ -137,7 +137,7 @@ pub(super) fn check_citation_obligations(
     }
 }
 
-/// §FS-check.2.2.1: identify the one run-level warning for a walked folder whose
+/// §FS-check.2.2.1.1: identify the one run-level warning for a walked folder whose
 /// explicit obligation has real scanned content but no ordinary obligation unit.
 /// The warning is derived from the same normalized home classifier the scanner
 /// uses for citation-source attribution, so explicit paths and symlink spellings
@@ -170,7 +170,7 @@ fn empty_citation_obligation_warning(
             "[citations.{citing_kind}] {level} applies to nothing — {place} declares no {citing_kind} ID; did you mean `citable = false`?"
         )
     } else {
-        // §FS-check.2.2.1: the row-key half is advice, so it is given only where it is
+        // §FS-check.2.2.1.2: the row-key half is advice, so it is given only where it is
         // still advice — a row already grounding (§FS-config.3.4.8) has made that
         // setting, and this run is already reporting what it caught (§FS-check.3.6).
         let tail = if config.kind_grounding(kind).0 {
@@ -194,7 +194,7 @@ fn empty_citation_obligation_warning(
 
 /// Whether `file` is the entry file excluded from a folder's content count:
 /// the effective citable index, or literal `README.md` for a non-citable home
-/// (§FS-check.2.2.1). `index = false` naturally has no entry path.
+/// (§FS-check.2.2.1.1). `index = false` naturally has no entry path.
 fn kind_entry_file(file: &Path, config: &Config, kind: &KindConfig) -> bool {
     let entry = if kind.citable {
         kind.index_path()
@@ -212,7 +212,7 @@ fn kind_entry_file(file: &Path, config: &Config, kind: &KindConfig) -> bool {
 /// `id` (a declaration) or `None` (a `code` source file).
 pub(super) struct ObligationUnit<'a> {
     pub(super) id: Option<&'a Id>,
-    /// The place a non-citable kind's unit is named by (§FS-check.3.11) — its
+    /// The place a non-citable kind's unit is named by (§FS-check.3.11.2) — its
     /// home, since the unit is a file in it and the kind has no ID to print.
     pub(super) place: Option<String>,
     pub(super) path: PathBuf,
@@ -246,7 +246,7 @@ impl ObligationUnit<'_> {
 /// obligation to, and both answer with the file:
 ///
 /// * the **homeless kind** (`code`, or whatever the project named it,
-///   §FS-config.3.9.2) — every citation outside a configured home, source files
+///   §FS-config.3.9.2.4) — every citation outside a configured home, source files
 ///   only. A README or a changelog is a document, and §FS-check.3.6 exempts it
 ///   for the same reason.
 /// * a **homed non-citable kind** — every scanned file in its home, `.md`
@@ -290,7 +290,7 @@ fn obligation_units<'a>(
 ) -> Vec<ObligationUnit<'a>> {
     if citing_kind == config.homeless_kind() || non_citable_kind_names(config).contains(citing_kind)
     {
-        // §FS-check.3.11: a kind with no declarations answers with its files,
+        // §FS-check.3.11.3: a kind with no declarations answers with its files,
         // cut by the row's `grounding_level` — the same unit §FS-check.3.6 asks
         // for grounding, in `grounding.rs`.
         return file_obligation_units(citing_kind, config, findings, by_file);
@@ -406,8 +406,8 @@ fn prohibition_diagnostic(
         column: Some(cite.column),
         message: format!(
             "{} {verb} cite {} (citation direction)",
-            // §FS-check.3.12: a non-citable citing kind is named by its place —
-            // the same label §FS-check.3.11 and the generated directions use,
+            // §FS-check.3.12.1: a non-citable citing kind is named by its place —
+            // the same label §FS-check.3.11.2 and the generated directions use,
             // because its name is a config handle and not a thing to read.
             citing_side_label(config, &cite.source_kind),
             render_citation_target(&target)
@@ -472,7 +472,7 @@ fn e2e_spec_ref_matches_target(spec_ref: &E2eSpecRef, target: &CitationTarget) -
 }
 
 /// Render a disjunction as a human phrase for a finding message: kinds joined by
-/// " or " (§FS-init.2.3.5 uses the same phrasing in the agent entrypoint).
+/// " or " (§FS-init.2.3.5.4 uses the same phrasing in the agent entrypoint).
 fn render_target_phrase(entry: &CitationDisjunction) -> String {
     entry
         .targets

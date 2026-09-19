@@ -5,7 +5,7 @@
 //! Its own file since before the component was a module, so the list contract
 //! could grow without the contract file growing with it
 //! (§AR-core-module-layout.3). The citation counts each row's `refs` is read off
-//! are the catalog query's, read downward (§FS-list.3.2).
+//! are the catalog query's, read downward (§FS-list.3.2.1).
 
 use anyhow::{Result, anyhow};
 use std::collections::{BTreeMap, BTreeSet};
@@ -54,8 +54,8 @@ pub struct ListEntry {
     pub refs: usize,
     pub duplicate: bool,
     /// Embedded value authorities owned by this declaration's existing
-    /// sections, omitted by serializers when empty (§FS-values.6,
-    /// §FS-list.3.1).
+    /// sections, omitted by serializers when empty (§FS-values.6.1,
+    /// §FS-list.3.1.1).
     pub value_roots: Vec<ListValueRoot>,
 }
 
@@ -82,10 +82,10 @@ pub struct ListOutput {
     pub summaries: Vec<ListSummary>,
     pub scan_errors: Vec<ApiScanError>,
     /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
-    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// cautions of §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11 and
+    /// §FS-workspace.6.1.7, each anchored at the `grund.toml` line its own message
     /// names. A frontend renders each as one CLI-level `warning:` on stderr
-    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1.3).
     pub warnings: Vec<Finding>,
 }
 
@@ -104,7 +104,7 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
 }
 
 /// [`list`] for a frontend that renders the run's `[workspace]` warnings even
-/// when the query is refused (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1).
+/// when the query is refused (§FS-check.4.7.2, §FS-check.4.10.7, §FS-workspace.6.1.7).
 ///
 /// A refusal `list` settles *after* the workspace pass — an unknown project alias,
 /// an unknown kind — leaves an `Err` with nowhere to carry a caution the reader is
@@ -138,7 +138,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         }
     }
     for kind in &opts.kind_filter {
-        // §FS-list.1, as in the CLI frontend: a configured but non-citable kind
+        // §FS-list.1.1, as in the CLI frontend: a configured but non-citable kind
         // is refused with its reason rather than selected into an empty list.
         let matched = context
             .projects
@@ -187,7 +187,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         if !opts.project_filter.is_empty() && !opts.project_filter.contains(&project.alias) {
             continue;
         }
-        // §FS-workspace.8.7: rendered against the run's config, like the entries
+        // §FS-workspace.8.7.3: rendered against the run's config, like the entries
         // below, not the scanning project's — the same spelling `check` uses.
         scan_errors.extend(
             project
@@ -303,7 +303,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 .entry((entry.project_alias.to_string(), entry.id.kind.clone()))
                 .or_insert(0) += 1;
         }
-        // §FS-workspace.8.3: rows sorted by alias — the same byte-wise `str`
+        // §FS-workspace.8.3.4: rows sorted by alias — the same byte-wise `str`
         // order the catalog above sorts `entries` by — then by that
         // project's configured kind order.
         let mut projects: Vec<&WorkspaceProject> = context.projects.iter().collect();

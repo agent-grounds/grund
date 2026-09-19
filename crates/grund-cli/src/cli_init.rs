@@ -14,7 +14,7 @@ fn command_init(args: &[String]) -> ExitCode {
             "--docs" => docs = true,
             "--force" => force = true,
             "--dry-run" => dry_run = true,
-            // §FS-init.1: the same preview, taken as a verdict.
+            // §FS-init.1.4: the same preview, taken as a verdict.
             "--check" => check = true,
             "--no-vcs" => no_vcs = true,
             "--agents-md" => agent_selection.canonical = true,
@@ -73,7 +73,7 @@ fn command_init(args: &[String]) -> ExitCode {
         agent_selection,
     }) {
         Ok(output) => output,
-        // §FS-init.4: `2` wins over `1` — a run that could not be performed
+        // §FS-init.4.2: `2` wins over `1` — a run that could not be performed
         // produced no report to gate on.
         Err(err) => {
             render_init_output(&err.output);
@@ -82,7 +82,7 @@ fn command_init(args: &[String]) -> ExitCode {
         }
     };
     render_init_output(&output);
-    // §FS-init.4: `--check` draws its verdict from the report it just printed —
+    // §FS-init.4.1: `--check` draws its verdict from the report it just printed —
     // `1` when any reported path was a `would-…`, nothing else. `--dry-run`
     // alone keeps `0` (§REQ-backwards-compatibility.1).
     if check && output.has_pending_changes() {
@@ -92,14 +92,14 @@ fn command_init(args: &[String]) -> ExitCode {
 }
 
 fn render_init_output(output: &InitOutput) {
-    // §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1: `init` expands the
+    // §FS-check.4.7.4, §FS-check.4.10.7, §FS-workspace.6.1.7: `init` expands the
     // outermost workspace above its target, so it carries the run's warnings
     // ahead of its own report (§FS-distribution.3.1).
     render_run_warnings(&output.warnings);
     for event in &output.events {
         eprintln!("{} {}", event.verb, event.path);
     }
-    // §FS-init.2.3.4.17: reported, never fatal — a note names something the run
+    // §FS-init.2.3.4.17.4: reported, never fatal — a note names something the run
     // could not do that the caller would otherwise have to notice for itself.
     for note in &output.notes {
         eprintln!("note: {note}");
@@ -110,7 +110,7 @@ fn render_init_output(output: &InitOutput) {
 }
 
 fn render_init_next(next: &InitNext) {
-    // §FS-init.2.2: both command adapters print the core-rendered decision, so
+    // §FS-init.2.2.2: both command adapters print the core-rendered decision, so
     // the shipped CLI cannot drift from the deprecated compatibility path.
     eprint!("{}", next.render());
 }

@@ -71,7 +71,7 @@ impl KindIndexEntries {
     }
 
     /// The IDs this index owes an entry for, or `None` when `path` is not a
-    /// configured index (§FS-fmt.6.1). What the always-linkify carve-out wraps:
+    /// configured index (§FS-fmt.6.1.2). What the always-linkify carve-out wraps:
     /// declarations under the folder plus an external inline ID only after its
     /// canonical enrollment link exists (§FS-check.3.18).
     pub(crate) fn entries_in(&self, path: &Path) -> Option<&BTreeSet<Id>> {
@@ -83,7 +83,7 @@ impl KindIndexEntries {
         self.owed.get(relative.as_ref())
     }
 
-    /// §FS-check.4.1 / §DF-index-not-an-inbound-citation.2.2: folder-owned IDs
+    /// §FS-check.4.1.2 / §DF-index-not-an-inbound-citation.2.2: folder-owned IDs
     /// keep PR #134's accounting. For an external ID only the canonical link site
     /// is navigation; a second same-ID citation in the index is ordinary use.
     pub(crate) fn is_index_entry(&self, citation: &Citation) -> bool {
@@ -106,7 +106,7 @@ impl KindIndexEntries {
 }
 
 /// Add every canonical external-inline enrollment to `owed`, returning the
-/// exact citation sites that are navigation rather than use (§FS-check.3.18).
+/// exact citation sites that are navigation rather than use (§FS-check.3.18.3).
 /// Citations are already scanner records; index text is read once per target
 /// solely to inspect the persisted Markdown wrapper and destination.
 fn enroll_external_inline_declarations(

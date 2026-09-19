@@ -1,5 +1,5 @@
-//! CLI grammar and launch-failure contract for point sizes (§FS-list.1,
-//! §FS-list.3.4, §FS-list.4).
+//! CLI grammar and launch-failure contract for point sizes (§FS-list.1.7,
+//! §FS-list.3.4.2, §FS-list.4).
 
 use serde_json::Value;
 use std::fs;

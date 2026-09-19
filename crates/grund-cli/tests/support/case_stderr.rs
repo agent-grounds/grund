@@ -28,11 +28,11 @@ fn assert_expected_errors_are_concise(case: &Path, name: &str, args: &[String], 
 }
 
 /// The judgement, isolated from the filesystem. A `--format json` case's
-/// stderr is not uniformly JSON (§FS-errors.5): a launch-time `error: …` line
+/// stderr is not uniformly JSON (§FS-errors.5.2): a launch-time `error: …` line
 /// and a run-level `warning:` / `hint:` stay text and keep the plain 180-byte
 /// cap. Only a line that opens a JSON object is parsed and judged by its
 /// `message` field instead of its serialized length — the scaffolding around
-/// it (§FS-distribution.3.0's `severity`, `path`, `line`, `code`, `sites`) is
+/// it (§FS-distribution.3.0.1's `severity`, `path`, `line`, `code`, `sites`) is
 /// fixed cost the conciseness policy was never about.
 fn assert_stderr_is_concise(name: &str, json_case: bool, stderr: &str) {
     assert!(
@@ -51,7 +51,7 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, stderr: &str) {
     }
 }
 
-/// Parse one `{`-line as the diagnostic object §FS-errors.5 / §FS-distribution.3.0
+/// Parse one `{`-line as the diagnostic object §FS-errors.5.2 / §FS-distribution.3.0.1
 /// promise, assert its shape, and cap its `message`. Every rejection names the
 /// case and the whole line, exactly as the plain-text cap does.
 fn assert_json_diagnostic_is_concise(name: &str, line: &str) {
@@ -109,7 +109,7 @@ fn assert_json_diagnostic_is_concise(name: &str, line: &str) {
 }
 
 /// `sites` is `null`, or a list of `{ path, line }` locating every site of a
-/// multi-site finding (§FS-distribution.3.0) — unlike the diagnostic's own
+/// multi-site finding (§FS-distribution.3.0.1) — unlike the diagnostic's own
 /// `path` / `line`, a site always has both: it exists to say where.
 fn assert_json_sites_are_well_formed(name: &str, line: &str, sites: Option<&serde_json::Value>) {
     match sites {

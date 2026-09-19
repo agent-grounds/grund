@@ -185,7 +185,7 @@ jobs:
       - name: Check registry names
         run: bash scripts/check-registry-names.sh
 
-      # §FS-distribution.4.2: the only gate on this path that sees the bumped
+      # §FS-distribution.4.2.1: the only gate on this path that sees the bumped
       # tree — the helpers bump on a candidate branch CI does not run on, and
       # no step here runs the test suite.
       - name: Check release ramps
@@ -276,7 +276,7 @@ jobs:
             echo "release source: $ref ($sha)"
           }
 
-          # Manual releases create the tag from the selected commit (§FS-distribution.4).
+          # Manual releases create the tag from the selected commit (§FS-distribution.4.3).
           # Tag-triggered releases already have the ref; dry runs with publishing disabled
           # do not need a tag.
           if [ "${{ needs.verify.outputs.create_tag }}" != "true" ]; then
@@ -437,7 +437,7 @@ jobs:
 
       # Windows ARM hosted runners can fail during LLVM PGO training even though
       # the ordinary release binary is sound; keep the platform artifact
-      # self-checked without blocking registry publication (§FS-distribution.4).
+      # self-checked without blocking registry publication (§FS-distribution.4.9).
       - name: Build LTO release binary fallback
         if: ${{ ! matrix.pgo_required && steps.pgo.outcome == 'failure' }}
         shell: bash

@@ -1,14 +1,14 @@
 //! The cautions a run earns for what it did *not* find (§AR-system.2.9): a walk
 //! that read no files, one that read files and recognized nothing in them, and a
 //! `--full` that had nothing left to cancel (§FS-check.2.2, §FS-check.4.5,
-//! §FS-check.1.3).
+//! §FS-check.1.3.7).
 //!
 //! Every one is a `Diagnostic` and none of them prints, which is why they left
 //! the deprecated path's `output` category with the run that folds them in: the
 //! LSP snapshot builds the same two from the same function, so an editor and a
-//! terminal over one tree say the same thing (§FS-lsp.4, §AR-system.4).
+//! terminal over one tree say the same thing (§FS-lsp.4.1, §AR-system.4).
 
-/// §FS-check.4.5: whether a walk that read files matched nothing in them. It asks
+/// §FS-check.4.5.3: whether a walk that read files matched nothing in them. It asks
 /// *recognized*, not *declared* — a project that only cites another project's
 /// specs (§FS-workspace.1) declares nothing and is working as intended, so one
 /// citation anywhere answers the question and the caution stays quiet.
@@ -32,7 +32,7 @@ fn nothing_recognized(findings: &Findings) -> bool {
 /// had nothing to recognize.
 ///
 /// One decision for every surface that runs the engine: `grund check`, the
-/// workspace loop beside it, and the LSP snapshot (§FS-lsp.4, `check_workspace_context`).
+/// workspace loop beside it, and the LSP snapshot (§FS-lsp.4.1, `check_workspace_context`).
 /// Spelled once per surface it was already wrong once — the LSP kept the empty
 /// scan and never grew the second caution, so an editor and a terminal disagreed
 /// about one tree.
@@ -56,7 +56,7 @@ pub(super) fn scan_scope_caution(
     if findings.scanned_files.is_empty() {
         return Some(empty_scan_warning(config, path, path_provided));
     }
-    // §FS-check.4.5: only a run over the whole project makes the claim. A narrowed
+    // §FS-check.4.5.4: only a run over the whole project makes the claim. A narrowed
     // `grund check <dir>` is a slice the caller chose, and a slice with no
     // declarations and no citations is an answer, not a misconfiguration.
     (nothing_recognized(findings) && scope_is_config_root(config, path, path_provided))
@@ -64,7 +64,7 @@ pub(super) fn scan_scope_caution(
 }
 
 /// Whether the path `check` was handed is a **file** that the hidden-name rule
-/// alone kept out of the walk (§FS-check.2.2): the caller really handed a path,
+/// alone kept out of the walk (§FS-check.2.2.2): the caller really handed a path,
 /// its own name begins with `.`, and its extension is one `[scan] extensions`
 /// lists — so the extension list is the one rule that did *not* decide, and the
 /// message must not send the reader there.
@@ -75,9 +75,9 @@ pub(super) fn scan_scope_caution(
 /// entirely. A hidden file whose extension is *also* unlisted has two reasons and
 /// keeps the extension message, because naming one of two causes is its own
 /// misdirection. And the `is_file` test keeps this to files: a hidden **directory**
-/// handed explicitly is walked (§FS-config.3.5), so an empty one really did match
+/// handed explicitly is walked (§FS-config.3.5.12), so an empty one really did match
 /// no extensions — and a directory whose only content is hidden keeps the extension
-/// message too, a boundary §FS-check.2.2 states rather than leaves to be found.
+/// message too, a boundary §FS-check.2.2.2 states rather than leaves to be found.
 fn handed_a_hidden_file(config: &Config, path: &Path, path_provided: bool) -> bool {
     path_provided
         && path.is_file()
@@ -108,7 +108,7 @@ fn empty_scan_warning(config: &Config, path: &Path, path_provided: bool) -> Diag
             .map(|p| p == config.root)
             .unwrap_or(false);
     let message = match (&config.include, scoped_to_root) {
-        // §FS-check.2.2: name the hidden-name rule that actually skipped the file,
+        // §FS-check.2.2.2: name the hidden-name rule that actually skipped the file,
         // rather than the `include` list or the extensions that never got to answer.
         _ if handed_a_hidden_file(config, path, path_provided) => format!(
             "nothing to scan — `{}` is a hidden file. grund reads no file whose own name \
@@ -181,13 +181,13 @@ fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnost
     }
 }
 
-/// §FS-check.1.3: the caution a `--full` run earns when the caller also typed a
+/// §FS-check.1.3.7: the caution a `--full` run earns when the caller also typed a
 /// path that is not the config root. `--full` cancels `[scan] include`, and an
 /// explicit path already bypasses that key, so the flag has nothing left to
 /// cancel and the run is the ordinary one. A warning rather than a rejection:
 /// the invocation is valid, and a script that passes `--full` uniformly must not
 /// fail on the one call where it is redundant. Like every warning it leaves the
-/// exit code alone and, per §FS-check.2.1, stands in place of the `success`
+/// exit code alone and, per §FS-check.2.1.3, stands in place of the `success`
 /// marker on an otherwise clean run.
 pub(super) fn full_scope_ignored_warning(
     config: &Config,

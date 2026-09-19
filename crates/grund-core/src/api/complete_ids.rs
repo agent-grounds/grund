@@ -46,7 +46,7 @@ pub fn complete_ids(opts: CompleteIdsOpts) -> Result<Vec<String>> {
 }
 
 /// [`complete_ids`] for a frontend that also renders the run's `[workspace]`
-/// warnings (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1). The candidate
+/// warnings (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1.7.6). The candidate
 /// list is a bare `Vec<String>`, so this is the only channel they have.
 #[doc(hidden)]
 pub fn complete_ids_with_run_warnings(
@@ -65,7 +65,7 @@ fn complete_ids_run(opts: CompleteIdsOpts, run_warnings: &mut Vec<Finding>) -> R
         .map(|project| &project.config)
         .unwrap_or_else(|| context.render_config());
     let mut candidates = BTreeSet::new();
-    // §FS-workspace.8.4: an alias path may itself carry slashes
+    // §FS-workspace.8.4.1: an alias path may itself carry slashes
     // (§FS-workspace.6.1), so the split is at the *last* `/` — the left names a
     // project, the right is its ID-prefix.
     if let Some((alias_prefix, id_prefix)) = opts.prefix.rsplit_once('/') {

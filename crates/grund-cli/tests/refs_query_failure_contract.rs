@@ -1,4 +1,4 @@
-// §FS-refs.4 / §FS-errors.5: the two resolver rejections share one staged
+// §FS-refs.4 / §FS-errors.5.2: the two resolver rejections share one staged
 // exit and wire contract across refs, show, text, JSON, and rendering flags.
 use std::fs;
 use std::path::{Path, PathBuf};

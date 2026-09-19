@@ -131,7 +131,7 @@ fn command_list(args: &[String]) -> ExitCode {
         }
         idx += 1;
     }
-    // §FS-list.1: size-selector combinations are launch errors decided before
+    // §FS-list.1.7: size-selector combinations are launch errors decided before
     // config discovery or scanning.
     if size_units.is_some() && summary {
         eprintln!("error: --size cannot be combined with --summary");
@@ -177,7 +177,7 @@ fn command_list(args: &[String]) -> ExitCode {
         return exit_after_scan_errors(&output.scan_errors);
     }
 
-    // §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1: the run's warnings come
+    // §FS-check.4.7.2, §FS-check.4.10.7, §FS-workspace.6.1.7: the run's warnings come
     // back beside the catalog, so a refused `--project` or `--kind` still prints
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
     let (run_warnings, listed) = list_with_run_warnings(ListOpts {
@@ -214,7 +214,7 @@ fn command_list(args: &[String]) -> ExitCode {
 }
 
 fn render_list_summary(summaries: &[grund_core::ListSummary], workspace: bool, format: &str) {
-    // §FS-workspace.8.3: the alias column is sized to the widest alias among
+    // §FS-workspace.8.3.4: the alias column is sized to the widest alias among
     // the rows being rendered, capped like `render_list_text`'s `id_width`.
     let alias_width = summaries
         .iter()
@@ -358,7 +358,7 @@ fn render_list_text(entries: &[ListEntry]) {
 }
 
 /// Render the owning project's exact declaration/section coordinate
-/// (§FS-list.3.4, §FS-workspace.8.3).
+/// (§FS-list.3.4.3, §FS-workspace.8.3.3).
 fn list_size_coordinate(entry: &ListSizeEntry) -> String {
     match &entry.section {
         Some(section) => format!("{}{}{}", entry.id, entry.section_separator, section),
@@ -366,7 +366,7 @@ fn list_size_coordinate(entry: &ListSizeEntry) -> String {
     }
 }
 
-/// §FS-list.3.4 / §FS-output-shapes.5: size-mode NDJSON has its own fixed
+/// §FS-list.3.4.4 / §FS-output-shapes.5.2: size-mode NDJSON has its own fixed
 /// metadata prefix and appends only selected lead/full pairs in caller order.
 fn render_list_size_entry_json(entry: &ListSizeEntry) -> String {
     let project_field = entry
@@ -415,7 +415,7 @@ fn render_list_size_entry_json(entry: &ListSizeEntry) -> String {
 }
 
 /// Headerless size rows with ordinary list alignment and site-local suffixes
-/// (§FS-list.3.4).
+/// (§FS-list.3.4.3).
 fn render_list_size_text(entries: &[ListSizeEntry]) {
     let coordinates = entries.iter().map(list_size_coordinate).collect::<Vec<_>>();
     let width = coordinates

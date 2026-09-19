@@ -11,7 +11,7 @@
 //!
 //! The six shapes are the forms §FS-fmt.7.2 names. `clean-markdown` rewrites and
 //! meets no error. `strict-abort` is the whole-declaration-set path refusing up
-//! front (§FS-fmt.3). `partial-source` is a source-only scope, where no rewrite
+//! front (§FS-fmt.3.2). `partial-source` is a source-only scope, where no rewrite
 //! needs the whole set, so the run reports its rewrites *and* names the path it
 //! could not read. `two-scopes` narrows the rewrite to one directory while the
 //! unreadable path sits in the other, which is the shape where `fmt` and `check`
@@ -225,7 +225,7 @@ pub fn stderr(output: &Output) -> String {
 
 /// The `<path>: <reason>` pairs a run reported, in the order it printed them,
 /// with §FS-fmt.7.2's one licensed difference removed: a strict abort spells its
-/// lines `error: nothing was rewritten: …` on purpose (§FS-fmt.3), because the
+/// lines `error: nothing was rewritten: …` on purpose (§FS-fmt.3.4), because the
 /// two exit `2`s mean opposite things. Everything after that prefix is the part
 /// two readers of one tree must agree on.
 pub fn scan_error_pairs(output: &Output) -> Vec<String> {
@@ -242,7 +242,7 @@ pub fn scan_error_pairs(output: &Output) -> Vec<String> {
 
 /// Whether a run took the strict whole-declaration-set path, read off the one
 /// thing that says so. A strict `fmt` scans the project rather than the scope
-/// (§FS-fmt.3, §FS-fmt.2.4), so the run it is comparable to is `check` over the
+/// (§FS-fmt.3.2, §FS-fmt.2.4.5), so the run it is comparable to is `check` over the
 /// project — the distinction §FS-fmt.7.2 draws per walk rather than per argv.
 pub fn aborted_strictly(output: &Output) -> bool {
     stderr(output).contains("error: nothing was rewritten: ")

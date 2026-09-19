@@ -1,5 +1,5 @@
 //! Black-box contract for one-context batch declaration reads
-//! (§FS-show.1, §FS-show.2.6, §FS-output-shapes.4.1, §AR-resolver.3).
+//! (§FS-show.1, §FS-show.2.6, §FS-output-shapes.4.1, §AR-resolver.3.1).
 
 use serde_json::Value;
 use std::fs;
@@ -121,7 +121,7 @@ fn loads(path: &Path) -> usize {
 
 #[test]
 fn show_batch_ambiguous_shorthand_is_a_query_failure_and_continues() {
-    // §FS-show.2.6: an ambiguous shorthand is one failed coordinate, not a
+    // §FS-show.2.6.3: an ambiguous shorthand is one failed coordinate, not a
     // run-level error that suppresses the records after it.
     let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../tests/e2e/cases/check-shorthand-citation-ambiguous-and-unknown/repo");

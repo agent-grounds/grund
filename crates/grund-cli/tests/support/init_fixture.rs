@@ -21,7 +21,7 @@ pub fn manifest_dir() -> PathBuf {
 
 /// A fresh, empty target directory named after the case, inside this
 /// repository's own tree — which satisfies the version-control rule
-/// (§FS-init.1.2) without any fixture having to fake a marker.
+/// (§FS-init.1.2.3) without any fixture having to fake a marker.
 pub fn workdir(suffix: &str) -> PathBuf {
     let dir = manifest_dir().join("target/init-tests").join(suffix);
     let _ = fs::remove_dir_all(&dir);

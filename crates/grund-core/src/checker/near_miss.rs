@@ -12,7 +12,7 @@ use crate::model::{CheckReport, Diagnostic, Findings};
 
 /// §FS-check.4.6: one warning per heading that came close. Sorted with the rest
 /// of the report by the shared comparator, so a run over one tree prints them in
-/// the same order every time (§FS-errors.4).
+/// the same order every time (§FS-errors.4.1).
 pub(super) fn check_declaration_near_misses(findings: &Findings, report: &mut CheckReport) {
     for heading in &findings.near_miss_headings {
         let diagnostic = Diagnostic {
@@ -23,7 +23,7 @@ pub(super) fn check_declaration_near_misses(findings: &Findings, report: &mut Ch
             message: near_miss_message(&heading.format, &heading.text),
             sites: Vec::new(),
         };
-        // §FS-check.4.6 / §RM-off-grammar-declaration-error: the scheduled
+        // §FS-check.4.6.5 / §RM-off-grammar-declaration-error: the scheduled
         // severity transition is release-derived and never changes catalog
         // recognition or citation promotion.
         if declaration_near_miss_is_error() {

@@ -1,6 +1,6 @@
-//! Binary-level contract for exact-code `check` selection (§FS-check.1), its
-//! selected output and exit decision (§FS-check.2.1), and unhideable incomplete
-//! scans (§FS-check.2). Each assertion invokes the shipped `grund` frontend.
+//! Binary-level contract for exact-code `check` selection (§FS-check.1.4), its
+//! selected output and exit decision (§FS-check.2.1.2), and unhideable incomplete
+//! scans (§FS-check.2.4). Each assertion invokes the shipped `grund` frontend.
 
 use std::fs;
 use std::path::{Path, PathBuf};

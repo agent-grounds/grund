@@ -47,7 +47,7 @@ pub fn show_with_overlays(
 /// The run's `[workspace]` warnings come back beside the answer rather than on it,
 /// because a refusal settled *after* the workspace pass — an unknown alias, an
 /// unresolvable ID — leaves an `Err` with nowhere to carry a caution the reader is
-/// already owed (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1).
+/// already owed (§FS-check.4.7.2, §FS-check.4.10.7, §FS-workspace.6.1.7).
 #[doc(hidden)]
 pub fn show_with_scope(
     id_arg: &str,
@@ -104,7 +104,7 @@ fn show_run(
             }
         })?,
     };
-    // §FS-workspace.8.7: rendered against the run's config, not the target
+    // §FS-workspace.8.7.3: rendered against the run's config, not the target
     // project's — the same spelling `check` uses for the same tree.
     if let Some((file, message)) = project.scan_errors.first() {
         return Err(anyhow!(

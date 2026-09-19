@@ -1,6 +1,6 @@
 //! Black-box contract for opt-in oversized-lead warnings and v10 guidance
-//! (§FS-config.3.1, §FS-check.1, §FS-check.4.13, §FS-errors.5,
-//! §FS-init.2.3, §FS-init.2.3.4.3).
+//! (§FS-config.3.1.2, §FS-check.1, §FS-check.4.13, §FS-errors.5.1,
+//! §FS-init.2.3.7, §FS-init.2.3.4.3).
 
 use serde_json::Value;
 use std::fs;

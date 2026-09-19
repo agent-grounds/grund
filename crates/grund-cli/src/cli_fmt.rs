@@ -42,7 +42,7 @@ fn command_fmt(args: &[String]) -> ExitCode {
         Ok(output) => output,
         Err(err) => {
             if let Some(abort) = err.downcast_ref::<FmtScanAbort>() {
-                // §FS-fmt.3: the engine keeps strict scan failures structured;
+                // §FS-fmt.3.4: the engine keeps strict scan failures structured;
                 // this frontend owns the prefix on every complete refusal line.
                 for error in &abort.scan_errors {
                     eprintln!(
@@ -91,8 +91,8 @@ fn command_fmt(args: &[String]) -> ExitCode {
         }
     }
     if !output.scan_errors.is_empty() {
-        // §FS-fmt.3: `fmt` walks the tree `check` walks and owes the same account of the paths in
-        // it that could not be read (§FS-check.2). What it did rewrite is real and, under
+        // §FS-fmt.3.1: `fmt` walks the tree `check` walks and owes the same account of the paths in
+        // it that could not be read (§FS-check.2.4). What it did rewrite is real and, under
         // `--write`, already on disk — the `2` says the tree it ran over was not the whole tree.
         for error in &output.scan_errors {
             eprintln!("error: {}: {}", error.path, error.message);

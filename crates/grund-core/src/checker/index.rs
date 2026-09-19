@@ -5,7 +5,7 @@
 //! canonical source link, as full Markdown links. §FS-check.3.18 is the coverage
 //! half and §FS-check.3.17 the link half; this module owns both, plus
 //! the set of citations they make navigational rather than referential
-//! (§FS-check.4.1, §DF-index-not-an-inbound-citation).
+//! (§FS-check.4.1.2, §DF-index-not-an-inbound-citation).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -65,18 +65,18 @@ pub(super) fn kind_index_targets(config: &Config) -> Vec<KindIndexTarget<'_>> {
 }
 
 /// How one citation of an indexed ID sits in the index file — the entry's form
-/// (§FS-check.3.18, §FS-check.3.17, §DF-index-entry-form.2.1).
+/// (§FS-check.3.18.5, §FS-check.3.17.1, §DF-index-entry-form.2.1).
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum IndexCitationForm {
     /// Wrapped as `[§<ID>…](<target>)` — the form `grund fmt --cross-refs`
     /// writes (§FS-fmt.6.2), which is what the entry has to be.
     Link,
     /// A recognized citation of the ID, unwrapped, **and one the
-    /// cross-reference pass would wrap on its next `--write`**. §FS-check.3.17's
+    /// cross-reference pass would wrap on its next `--write`**. §FS-check.3.17.4's
     /// finding, and the only form that earns it.
     Bare,
     /// Everything else: a citation `fmt` declines to wrap, so it is neither an
-    /// entry nor a §FS-check.3.17 finding, and the ID falls to §FS-check.3.18's
+    /// entry nor a §FS-check.3.17.5 finding, and the ID falls to §FS-check.3.18's
     /// error (§DF-index-entry-form.2.3).
     Ignored,
 }
@@ -92,11 +92,11 @@ enum IndexCitationForm {
 /// as it stands. `Bare` asks whether `grund fmt --write` would turn this
 /// occurrence into that link, and only an occurrence the cross-reference pass
 /// actually reaches may answer yes: marker-prefixed (§FS-fmt.6.5) and outside
-/// §FS-fmt.2.3's never-rewrite zones. Anything else is `Ignored` — §FS-check.3.17
+/// §FS-fmt.2.3's never-rewrite zones. Anything else is `Ignored` — §FS-check.3.17.4
 /// names `grund fmt --write` as its fix, and an error whose named fix the tool
 /// declines to perform is an error a repository can never clear
 /// (§DF-index-entry-form.2.3), the same trap `shorthand_rewritable` keeps
-/// §FS-check.3.13 out of.
+/// §FS-check.3.13.1 out of.
 ///
 /// `line` is Markdown: §FS-config.3.4 requires `index` to name a `.md` file and
 /// `kind_index_targets` drops anything else, which is what lets the never-rewrite
@@ -116,7 +116,7 @@ fn index_citation_form(line: &str, text: &str, marker: &str) -> IndexCitationFor
         // marker, which is multi-byte under the default `§`, and slicing one byte
         // into it would panic (§REQ-never-crashes).
         cursor = end;
-        // §FS-fmt.6.3's wrap detection, from the other side: a `[` immediately
+        // §FS-fmt.6.3.1's wrap detection, from the other side: a `[` immediately
         // before the citation and `](…)` immediately after it is the shape the
         // formatter writes and re-derives, and the only shape it recognizes.
         let wrapped = start > 0
@@ -161,7 +161,7 @@ fn index_section_resolves(findings: &Findings, citation: &Citation) -> bool {
 }
 
 /// What an index says about one ID: whether any citation of it is a full link,
-/// and where the first bare one sits (§FS-check.3.17 anchors there).
+/// and where the first bare one sits (§FS-check.3.17.6 anchors there).
 #[derive(Default)]
 struct IndexEntryState {
     linked: bool,
@@ -185,7 +185,7 @@ impl IndexEntryState {
 
 /// The declaration a finding about `id` points at — the same home `grund list`
 /// and the unused warning pick, so a collapsed stub-and-inline pair is named at
-/// the body rather than twice (§FS-list.2, §DF-index-entry-form.2.5).
+/// the body rather than twice (§FS-list.2.5, §DF-index-entry-form.2.5).
 fn index_home_declaration<'a>(
     config: &Config,
     decls: &'a [Declaration],
@@ -197,7 +197,7 @@ fn index_home_declaration<'a>(
 }
 
 /// Whether any of `decls` sits under `folder_key` — the recursive membership
-/// test of §FS-check.3.18: a stub in the folder is what puts an inline-homed ID
+/// test of §FS-check.3.18.2: a stub in the folder is what puts an inline-homed ID
 /// in it, and a folder's whole subtree counts, not its top level.
 pub(super) fn declarations_under_folder(
     decls: &[Declaration],
@@ -211,26 +211,26 @@ pub(super) fn declarations_under_folder(
     })
 }
 
-/// The two releases §FS-check.3.17's message names
+/// The two releases §FS-check.3.17.3's message names
 /// (§DF-index-compatibility-ramp.2.3) — the pair
 /// §REQ-backwards-compatibility.3 asks of a verdict that flipped in one
 /// release. Both are literals in message text, so both are part of the release
 /// process: bumping the workspace version is also the moment to ask whether
-/// they still say what they mean (§FS-distribution.4), and
+/// they still say what they mean (§FS-distribution.4.5), and
 /// `index_rule_releases_are_ordered_and_behind_us` below holds them to it.
 ///
-/// §FS-check.3.18's message names a third, the release its own ramp ended in.
+/// §FS-check.3.18.9's message names a third, the release its own ramp ended in.
 /// That one is written into the message text rather than kept here, the way the
 /// `[[kinds]] prefix` removal writes its own (§FS-config.3.4.6): a landed
 /// release is read back out of the line a user sees, by the release gate that
-/// refuses a version contradicting it (§FS-distribution.4.2).
+/// refuses a version contradicting it (§FS-distribution.4.2.2).
 
 /// The last release before `check` knew anything about a kind's index — the
 /// "from" half of the pair §REQ-backwards-compatibility.3 requires a
 /// verdict-flipping finding to name.
 pub(crate) const INDEX_RULE_PRIOR_RELEASE: &str = "0.11.0";
 
-/// The release the kind-index rules arrive in, and in which §FS-check.3.17 is an
+/// The release the kind-index rules arrive in, and in which §FS-check.3.17.3 is an
 /// error on arrival — the "to" half of that pair.
 pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 
@@ -249,7 +249,7 @@ pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 /// said about a directory that plainly does, is a diagnosis a reader has to argue
 /// with.
 ///
-/// Why only the bare form is gated on the cited section resolving: §FS-check.3.17
+/// Why only the bare form is gated on the cited section resolving: §FS-check.3.17.4
 /// is the finding that names `grund fmt --write`, so it may only reach an
 /// occurrence the pass would in fact rewrite, while a link already written stands
 /// whatever `fmt` would do with it (§DF-index-entry-form.2.4). The tree is already
@@ -297,7 +297,7 @@ pub(super) fn check_kind_indexes(
             cited_in_index.entry(key).or_default().push(citation);
         }
     }
-    // §FS-check.3.18: which index files *this run* read. The entries come from the
+    // §FS-check.3.18.8: which index files *this run* read. The entries come from the
     // scan and the form from disk, so an index the run never scanned would
     // otherwise look empty and report every declaration in the folder as unlisted.
     let index_scanned: BTreeSet<&Path> = findings
@@ -310,7 +310,7 @@ pub(super) fn check_kind_indexes(
     for target in &targets {
         // `is_file`, not `exists`: a path that is not a readable file is not an index
         // this run failed to read, it is an index that is not there — a missing one or
-        // a directory wearing the name — which is §FS-check.3.18's finding, not silence.
+        // a directory wearing the name — which is §FS-check.3.18.7's finding, not silence.
         if !index_scanned.contains(target.index_key.as_path()) && target.index_file.is_file() {
             continue;
         }
@@ -328,7 +328,7 @@ pub(super) fn check_kind_indexes(
             continue;
         }
         let index_display = display_path(path_config, &target.index_file);
-        // §FS-check.3.18: a folder whose index file does not exist is the same
+        // §FS-check.3.18.7: a folder whose index file does not exist is the same
         // finding, once per declaration — the strongest form of the same fact, not
         // a different one. The three ways it can fail to read are named apart.
         let text = fs::read_to_string(&target.index_file).ok();
@@ -358,10 +358,10 @@ pub(super) fn check_kind_indexes(
                 continue;
             }
             // An `Ignored` form creates no entry: a citation `fmt` will not wrap
-            // neither satisfies the rule nor triggers §FS-check.3.17
+            // neither satisfies the rule nor triggers §FS-check.3.17.5
             // (§DF-index-entry-form.2.3), so the ID is reported as unlisted.
             let form = index_citation_form(line, &citation.text, &config.marker);
-            // §FS-fmt.6.2: the pass has to compute a link target, and a citation
+            // §FS-fmt.6.2.1: the pass has to compute a link target, and a citation
             // naming a section no declaration declares has none — `fmt` skips the
             // line and answers `rewrote 0 lines`. Only the bare form is gated.
             let form =
@@ -402,7 +402,7 @@ pub(super) fn check_kind_indexes(
                     });
                 }
                 Some(_) => {}
-                // §FS-check.3.18: no entry at all, anchored at the declaration's
+                // §FS-check.3.18.7: no entry at all, anchored at the declaration's
                 // own heading — the one line that exists whether or not the
                 // index file does (§DF-index-entry-form.2.6).
                 None => {
@@ -411,7 +411,7 @@ pub(super) fn check_kind_indexes(
                         path: Some(decl.file.clone()),
                         line: Some(decl.line),
                         column: None,
-                        // §FS-distribution.4.2: the deadline clause is spent, and
+                        // §FS-distribution.4.2.3: the deadline clause is spent, and
                         // what replaces it reports the release the flip landed in
                         // — the past-tense form the gate reads.
                         message: format!(
@@ -428,7 +428,7 @@ pub(super) fn check_kind_indexes(
 
 /// The configured index files, as a path-membership test (§FS-config.3.4).
 /// `grund fmt` reads it to keep the cross-reference pass running over an index
-/// whatever `[fmt.cross_refs] enabled` says (§FS-fmt.6.1,
+/// whatever `[fmt.cross_refs] enabled` says (§FS-fmt.6.1.1,
 /// §DF-index-always-linkified) — the one region the formatter always writes,
 /// mirroring §FS-fmt.2.3's regions it never writes.
 pub(crate) struct KindIndexFiles {

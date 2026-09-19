@@ -10,7 +10,7 @@
 /// that is the order a pass built the vector in) as one summary naming each
 /// mismatched case and, under it, each surface that differed — a case's own
 /// `mismatches` are already in the fixed exit/stdout/stderr/repo order, so this
-/// only orders the cases (§AR-workspace.9).
+/// only orders the cases (§AR-workspace.9.3).
 fn mismatch_summary(label: &str, outcomes: &[CaseOutcome]) -> Option<String> {
     let failed = outcomes
         .iter()
@@ -199,7 +199,7 @@ fn collect_relative_files(root: &Path, dir: &Path, files: &mut BTreeSet<PathBuf>
 }
 
 
-/// Pins the collect-then-decide verdict (§AR-workspace.9): a reporter test over
+/// Pins the collect-then-decide verdict (§AR-workspace.9.3): a reporter test over
 /// synthetic outcomes, and an end-to-end one that drives [`run_case`] itself
 /// over a scratch corpus with two corrupted cases.
 #[cfg(test)]

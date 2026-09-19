@@ -67,7 +67,7 @@ pub(super) fn check_oversized_leads(
 }
 
 /// Judge and, when needed, report one declaration or section site using the
-/// exact fixed warning contract (§FS-check.4.13).
+/// exact fixed warning contract (§FS-check.4.13.1).
 #[allow(clippy::too_many_arguments)]
 fn check_oversized_lead_site(
     cache: &mut PointBodyCache<'_>,

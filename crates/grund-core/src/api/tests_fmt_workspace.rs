@@ -1,5 +1,5 @@
 //! Workspace-wide strict formatter preflight through the public API and the
-//! deprecated compatibility adapter (§FS-fmt.3).
+//! deprecated compatibility adapter (§FS-fmt.3.3).
 
 use std::fs;
 use std::path::PathBuf;

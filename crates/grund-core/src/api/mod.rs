@@ -5,7 +5,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). The submodules are one per surface — `check`,
+//! (§AR-core-module-layout.1.1). The submodules are one per surface — `check`,
 //! `show`, `complete_ids`, `id`, `config`, `cover`, `fmt`, `refs`, `list` and the
 //! editor snapshot — beside the private adapters that fill them: the report
 //! conversion in `report.rs`, the `refs` walk in `refs_query.rs`, the run in
@@ -73,17 +73,17 @@ pub use report::render_finding_sites_json;
 pub use show::{show, show_with_overlays, show_with_scope};
 
 // What the deprecated `compat/check.rs` renderer reads, by module path because
-// nothing here may import it (§AR-system.2.9): the run the published `check` and
+// nothing here may import it (§AR-system.2.9.1): the run the published `check` and
 // the deprecated one share, so neither can report what the other does not.
 pub(crate) use run::run_check;
 
-// What only the crate's own test modules read (§AR-core-module-layout.1): the
+// What only the crate's own test modules read (§AR-core-module-layout.1.3): the
 // run record, which the fixtures drive directly.
 #[cfg(test)]
 pub(crate) use run::CheckRun;
 
 // The cases that pin this component, one module per behaviour area
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_check_full_scope;
 #[cfg(test)]

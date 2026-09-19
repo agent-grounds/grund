@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 
 /// The exact public code vocabulary accepted by `grund check --only` and
-/// `--ignore`, kept sorted for deterministic help output (§FS-errors.5).
+/// `--ignore`, kept sorted for deterministic help output (§FS-errors.5.5).
 #[doc(hidden)]
 pub const CHECK_FINDING_CODES: &[&str] = &[
     "agents-init",
@@ -52,7 +52,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
 
 /// Repeatable exact-code selection for the two CLI check adapters. The
 /// structured Rust API deliberately does not carry this presentation query, so
-/// API and LSP callers continue to receive the complete report (§FS-check.1).
+/// API and LSP callers continue to receive the complete report (§FS-check.1.4).
 #[doc(hidden)]
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct CheckFindingSelection {
@@ -70,7 +70,7 @@ impl CheckFindingSelection {
     }
 
     /// Add one ignored code; repetitions collapse into the specified set
-    /// semantics (§FS-check.1).
+    /// semantics (§FS-check.1.4).
     pub fn add_ignore(&mut self, value: &str) -> Result<()> {
         validate_check_finding_code("--ignore", value)?;
         self.ignore.insert(value.to_string());
@@ -79,7 +79,7 @@ impl CheckFindingSelection {
 
     /// Decide whether a completed check's diagnostic enters the selected
     /// report. Ignore wins over only, while `io` cannot be hidden because it
-    /// marks an incomplete scan (§FS-check.2).
+    /// marks an incomplete scan (§FS-check.2.4).
     pub fn retains(&self, code: &str) -> bool {
         code == "io"
             || (self.only.is_empty() || self.only.contains(code)) && !self.ignore.contains(code)

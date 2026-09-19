@@ -23,14 +23,14 @@ fn command_output_format(
 
 /// The run's `[workspace]` warnings, in §FS-check.2.1.1's CLI-level shape: one
 /// `warning: ` line each on **stderr**, ahead of whatever the command itself
-/// prints, exit code untouched (§FS-check.4.7, §FS-check.4.8, §FS-check.4.10,
-/// §FS-workspace.6.1).
+/// prints, exit code untouched (§FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11,
+/// §FS-workspace.6.1.7).
 ///
 /// The engine settles these before any report exists and hands them back as
 /// diagnostics; this is the terminal's rendering of them, and it is the same text
 /// under `--format json`, because the shape is fixed by each finding's own spec
-/// section rather than read off the channel it travels in (§FS-errors.5). The
-/// anchor each one carries is for an editor (§FS-lsp.1.1) — here the message
+/// section rather than read off the channel it travels in (§FS-errors.5.2). The
+/// anchor each one carries is for an editor (§FS-lsp.1.1.3) — here the message
 /// already names the line, so a `<path>:<line>:` prefix would say it twice and
 /// put a fact about the run's configuration in the stream reserved for findings
 /// about the citation graph.
@@ -104,7 +104,7 @@ pub fn main_entry() -> ExitCode {
     }
     let first = args.first().map(|arg| arg.as_str());
     // `grund help [<subcommand>]` — the top-level page with no argument, that
-    // subcommand's page with one, an error for an unknown name (§FS-cli.2).
+    // subcommand's page with one, an error for an unknown name (§FS-cli.2.3).
     if first == Some("help") {
         return match args.get(1).map(String::as_str) {
             None => {

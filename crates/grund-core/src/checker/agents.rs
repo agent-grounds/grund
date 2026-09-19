@@ -15,14 +15,14 @@ const AGENTS_INIT_COMPATIBILITY_TAIL: &str =
     " — repo maintenance; citation checks still ran; wording changes in grund 0.14.0";
 
 /// Preserve the legacy diagnostic as a contiguous prefix while giving readers
-/// the maintenance classification during the two-release migration (§FS-errors.3).
+/// the maintenance classification during the two-release migration (§FS-errors.3.6).
 fn agents_init_compatibility_message(legacy: String) -> String {
     format!("{legacy}{AGENTS_INIT_COMPATIBILITY_TAIL}")
 }
 
 /// Validate the managed agent-entrypoint blocks (§FS-check.3.5): the begin/end
 /// marker pair must be present and intact, and the `vN` version must match this
-/// binary — an older `vN` is "run `grund init`" (§FS-init.2.3), a newer one is
+/// binary — an older `vN` is "run `grund init`" (§FS-init.2.3.7), a newer one is
 /// fatal. `AGENTS.md` is canonical; known companion entrypoints are checked when
 /// present and not symlinked to `AGENTS.md`.
 pub(super) fn check_agents_block_version(config: &Config, report: &mut CheckReport) {
@@ -92,7 +92,7 @@ pub(crate) fn check_agent_block_path(
     };
     let block = match find_agents_block(&text) {
         AgentsBlockLookup::Malformed { message, at } => {
-            // §FS-check.3.5 / §FS-init.2.3: broken delimiters are diagnosed at
+            // §FS-check.3.5.2 / §FS-init.2.3.11: broken delimiters are diagnosed at
             // the offending line and never rewritten — `grund init` refuses
             // them too.
             report.errors.push(Diagnostic {
@@ -137,7 +137,7 @@ pub(crate) fn check_agent_block_path(
                 sites: Vec::new(),
             });
         } else {
-            // §FS-check.3.5 / §FS-init.2.3.5: citation directions are generated
+            // §FS-check.3.5 / §FS-init.2.3.5.8: citation directions are generated
             // from `[citations]`, so the version marker alone cannot catch a
             // config edit that left the block stale. Re-render and byte-compare.
             let block_text = text[block.start..block.end].replace('\r', "");
@@ -147,9 +147,9 @@ pub(crate) fn check_agent_block_path(
                     citation_directions_section(config),
                     "citation directions",
                 ),
-                // §FS-init.2.3.6: the local-conversation sentence derives from
+                // §FS-init.2.3.6.1: the local-conversation sentence derives from
                 // `[reference] conversation` and varies by entrypoint
-                // (§FS-init.2.3.4.17), so drift re-renders for *this* file's surface.
+                // (§FS-init.2.3.4.17.2), so drift re-renders for *this* file's surface.
                 (
                     "### Clickable citations",
                     clickable_citations_section(config, ConversationSurface::for_entrypoint(path)),

@@ -57,7 +57,7 @@ fn full_scope_keeps_the_empty_scan_caution() {
             .warnings
             .iter()
             .any(|diagnostic| diagnostic.code == "empty-scan"),
-        "§FS-check.1.3: the tier says where the citations are, the caution says the config has not been told"
+        "§FS-check.1.3.9: the tier says where the citations are, the caution says the config has not been told"
     );
     assert_eq!(full.report.errors.len(), 1);
 }
@@ -73,7 +73,7 @@ fn an_explicit_path_argument_is_not_widened_by_full() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         located_diagnostics(&scoped.config, &scoped.report.errors),
-        "§FS-check.1.3: --full cancels `include`, never a path the caller typed"
+        "§FS-check.1.3.6: --full cancels `include`, never a path the caller typed"
     );
     assert!(
         full.report
@@ -84,7 +84,7 @@ fn an_explicit_path_argument_is_not_widened_by_full() {
     );
 }
 
-/// §FS-check.1.3: `--full` with an explicit path that is not the config root
+/// §FS-check.1.3.7: `--full` with an explicit path that is not the config root
 /// has nothing left to cancel. The run is the ordinary one and says so.
 #[test]
 fn full_scope_warns_when_an_explicit_path_leaves_it_nothing_to_cancel() {
@@ -98,7 +98,7 @@ fn full_scope_warns_when_an_explicit_path_leaves_it_nothing_to_cancel() {
         .warnings
         .iter()
         .find(|diagnostic| diagnostic.code == "full-scope-ignored")
-        .expect("§FS-check.1.3: the redundant flag earns a caution");
+        .expect("§FS-check.1.3.7: the redundant flag earns a caution");
     assert_eq!(
         caution.message,
         "--full has no effect with an explicit PATH — it cancels [scan] include, and sim already bypasses it"
@@ -181,11 +181,11 @@ fn full_scope_widens_every_workspace_member() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         vec!["api/sim/model.py:1: outside [scan] include: unknown reference FS-404-nope"],
-        "§FS-check.1.3: `include` is a per-project statement, so every member widens past its own"
+        "§FS-check.1.3.8: `include` is a per-project statement, so every member widens past its own"
     );
 }
 
-/// §FS-check.1.3: `.gitignore` prunes descendants, never the directory a
+/// §FS-check.1.3.2: `.gitignore` prunes descendants, never the directory a
 /// walk starts at — so an `[scan] include` root the ignore files hide is read
 /// by the ordinary run and must be read by the wider one too. Without the
 /// exemption `--full` reads *fewer* files than `grund check` and the finding
@@ -225,7 +225,7 @@ fn full_scope_still_reads_a_gitignored_include_root() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         located_diagnostics(&scoped.config, &scoped.report.errors),
-        "§FS-check.1.3: the wider walk reads a superset — a gitignored `include` root is still an `include` root"
+        "§FS-check.1.3.2: the wider walk reads a superset — a gitignored `include` root is still an `include` root"
     );
     assert_eq!(
         located_diagnostics(&scoped.config, &scoped.report.errors),
@@ -234,7 +234,7 @@ fn full_scope_still_reads_a_gitignored_include_root() {
 }
 
 /// The same shape for the other two prune rules: a `[scan] include` root that
-/// `[scan] exclude` names, and one whose name makes it hidden (§FS-check.1.3).
+/// `[scan] exclude` names, and one whose name makes it hidden (§FS-check.1.3.2).
 #[test]
 fn full_scope_still_reads_an_excluded_or_hidden_include_root() {
     for (name, include, exclude, dir) in [
@@ -273,7 +273,7 @@ fn full_scope_still_reads_an_excluded_or_hidden_include_root() {
         assert_eq!(
             located_diagnostics(&full.config, &full.report.errors),
             located_diagnostics(&scoped.config, &scoped.report.errors),
-            "§FS-check.1.3: `--full` must not lose the {name} `include` root"
+            "§FS-check.1.3.2: `--full` must not lose the {name} `include` root"
         );
         assert!(
             located_diagnostics(&scoped.config, &scoped.report.errors)
@@ -286,7 +286,7 @@ fn full_scope_still_reads_an_excluded_or_hidden_include_root() {
 
 /// The exemption is for the roots `[scan] include` names, not for the rules:
 /// a directory those same three rules prune *below* a scanned root stays
-/// unread under `--full` (§FS-check.1.3).
+/// unread under `--full` (§FS-check.1.3.1).
 #[test]
 fn full_scope_still_prunes_excluded_hidden_and_ignored_descendants() {
     let root = test_root("full_scope_still_prunes_excluded_hidden_and_ignored_descendants");
@@ -315,11 +315,11 @@ fn full_scope_still_prunes_excluded_hidden_and_ignored_descendants() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         vec!["sim/world.py:1: outside [scan] include: unknown reference FS-904-nope"],
-        "§FS-check.1.3: `--full` cancels `include` and nothing else — exclude, hidden dirs, and the ignore files still prune"
+        "§FS-check.1.3.1: `--full` cancels `include` and nothing else — exclude, hidden dirs, and the ignore files still prune"
     );
 }
 
-/// §FS-check.1.3: overlapping roots name one file once. `include` may already
+/// §FS-check.1.3.2: overlapping roots name one file once. `include` may already
 /// nest one root inside another, and under `--full` every root is walked
 /// beside the config root that contains them all — a second read would report
 /// each declaration as a duplicate of itself (§FS-check.3.3).
@@ -359,7 +359,7 @@ fn full_scope_reads_each_file_once_across_overlapping_roots() {
 /// under that spelling, while the config root `--full` adds reaches the same
 /// files under the real one. Unix only — a fixture cannot carry a symlink to
 /// a Windows runner that checks the repository out without them, so this
-/// case stays here rather than in `e2e/cases/` (§FS-check.1.3).
+/// case stays here rather than in `e2e/cases/` (§FS-check.1.3.2).
 #[cfg(unix)]
 fn aliased_include_root_repo(name: &str, real: &str, link: &str) -> std::path::PathBuf {
     let root = test_root(name);
@@ -372,7 +372,7 @@ fn aliased_include_root_repo(name: &str, real: &str, link: &str) -> std::path::P
     root
 }
 
-/// §FS-check.1.3: the wider walk reads each *file* once, not each path once.
+/// §FS-check.1.3.2: the wider walk reads each *file* once, not each path once.
 /// An aliased root hands the same file to two walks under two spellings, so
 /// the byte-identical dedup cannot see the reread — and the declaration the
 /// plain run reads once would be reported as a duplicate of itself (§3.3),
@@ -399,11 +399,11 @@ fn full_scope_reads_an_aliased_include_root_once() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         located_diagnostics(&scoped.config, &scoped.report.errors),
-        "§FS-check.1.3: --full is purely additive — no duplicate declaration of itself"
+        "§FS-check.1.3.2: --full is purely additive — no duplicate declaration of itself"
     );
 }
 
-/// §FS-check.1.3: and the spelling it keeps is the `include` one. Reporting
+/// §FS-check.1.3.2: and the spelling it keeps is the `include` one. Reporting
 /// the same site a second time under the real path would be an in-scope line
 /// the plain run does not print — and an untagged one, since the configured
 /// scope covers both names — so the two reports must be identical text.
@@ -430,12 +430,12 @@ fn full_scope_keeps_the_include_spelling_of_an_aliased_root() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         located_diagnostics(&scoped.config, &scoped.report.errors),
-        "§FS-check.1.3: --full only appends `outside [scan] include:` lines"
+        "§FS-check.1.3.2: --full only appends `outside [scan] include:` lines"
     );
 }
 
-/// §FS-check.3.14: the wider walk reaches files the configured scope never
-/// touched, so one it cannot read is the §FS-check.2 scan failure and exit 2 —
+/// §FS-check.3.14.7: the wider walk reaches files the configured scope never
+/// touched, so one it cannot read is the §FS-check.2.4 scan failure and exit 2 —
 /// on a tree whose plain `check` exits 0.
 #[cfg(unix)]
 #[test]
@@ -456,7 +456,7 @@ fn full_scope_exits_two_on_an_unreadable_file_outside_include() {
     let full = check_run(&root, true);
     assert!(
         full.had_scan_errors,
-        "§FS-check.3.14: a file the wider walk cannot read is a scan failure, and the run exits 2"
+        "§FS-check.3.14.7: a file the wider walk cannot read is a scan failure, and the run exits 2"
     );
     assert!(
         full.report

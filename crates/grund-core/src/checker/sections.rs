@@ -3,7 +3,7 @@
 //!
 //! - **Heading level** (§FS-check.3.9) — the Markdown depth a heading writes must
 //!   mirror the dotted path it claims, as strictly as `[id] section_heading_levels`
-//!   asks (§FS-config.3.3).
+//!   asks (§FS-config.3.3.2).
 //! - **Duplicate path** (§FS-check.3.16) — two headings claiming one path give a
 //!   section citation two destinations, which is §FS-check.3.3's ambiguity one
 //!   level down, and is reported rather than ranked (§DF-duplicate-section-path).
@@ -27,7 +27,7 @@ use crate::scanner::section_path_is_numeric;
 
 /// The section-shape rules, as independent passes over the declarations
 /// (§AR-checker.2.15). Order does not matter — the report is sorted before it is
-/// printed (§FS-errors.4).
+/// printed (§FS-errors.4.1).
 ///
 /// `config` is the project being checked (it owns the ID grammar and the
 /// separator); `path_config` is the one the printed report renders paths
@@ -36,7 +36,7 @@ use crate::scanner::section_path_is_numeric;
 ///
 /// Why a later item's doc comment and a stub's prose stay out of the duplicate-path
 /// rule: `duplicate_sections` is already scoped to the declaration's own body
-/// (§AR-scanner.2.2).
+/// (§AR-scanner.2.2.5).
 ///
 /// Why the anchor does not hang on the section map: the same insert that starts a
 /// collision list fills that map, so the lookup always hits — but the finding is
@@ -95,7 +95,7 @@ pub(super) fn check_section_headings(
         }
     }));
 
-    // §FS-check.3.9 / §FS-config.3.3: in strict mode, the Markdown heading level
+    // §FS-check.3.9 / §FS-config.3.3.2: in strict mode, the Markdown heading level
     // must mirror the dotted section depth so `## 1`, `### 1.1`, ...
     // communicate the same tree that `§ID.1.1` addresses.
     if matches!(config.section_heading_levels.as_str(), "strict" | "warn") {
@@ -179,7 +179,7 @@ pub(super) fn check_section_headings(
                 colliding.entry(path.as_str()).or_default().push(info.line);
             }
             for (path, mut lines) in colliding {
-                // The map holds the first heading (§AR-scanner.2.2), which is where
+                // The map holds the first heading (§AR-scanner.2.2.3), which is where
                 // the finding anchors; the rest are named in the message. With no map
                 // entry the earliest recorded claimant anchors it instead.
                 lines.extend(decl.sections.get(path).map(|first| first.line));
@@ -243,7 +243,7 @@ pub(super) fn retain_heading_findings_in_scope(findings: &mut Findings, scope: &
         .retain(|heading| scope.contains(&heading.file));
 }
 
-/// §FS-check.3.23: unlike the reference tier, an outside-declaration heading
+/// §FS-check.3.23.3: unlike the reference tier, an outside-declaration heading
 /// keeps the same public code and message when `--full` discovers it beyond
 /// `[scan] include`.
 pub(crate) fn out_of_scope_section_headings(

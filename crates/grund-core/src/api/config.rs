@@ -15,8 +15,8 @@ use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config};
 
 /// The run's `[workspace]` warnings off a `Config` a caller already holds
-/// (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1): what the workspace pass
-/// settled on it, plus the walk §FS-check.4.10 needs, published as the
+/// (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1.7.6): what the workspace pass
+/// settled on it, plus the walk §FS-check.4.10.2 needs, published as the
 /// `Finding`s a frontend renders (§FS-distribution.3.1).
 ///
 /// The channel rides on the config every walking command resolves, so a command
@@ -49,8 +49,8 @@ pub fn validate_config(path: &Path) -> Result<Config> {
 }
 
 /// The CLI-level `warning:` texts a loaded config carries: the redundant
-/// discovery pair (§FS-config.1.1, §FS-check.4.3) and the deprecated `.agents/`
-/// location (§FS-config.1.2, §FS-check.4.11). Message text only, so
+/// discovery pair (§FS-config.1.1.1, §FS-check.4.3.2) and the deprecated `.agents/`
+/// location (§FS-config.1.2, §FS-check.4.11.2). Message text only, so
 /// `grund config validate` and `grund config show` print the same sentences
 /// `grund check` does without depending on the checker's report type.
 pub fn config_warnings(config: &Config) -> Vec<String> {
@@ -59,7 +59,7 @@ pub fn config_warnings(config: &Config) -> Vec<String> {
         .collect()
 }
 
-/// Reference marker and typing trigger resolved for one path. §FS-lsp.1.4
+/// Reference marker and typing trigger resolved for one path. §FS-lsp.1.4.6
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ReferenceStyle {
     pub marker: String,
@@ -68,7 +68,7 @@ pub struct ReferenceStyle {
 
 /// Resolve the marker/trigger pair for a specific document. Workspace member
 /// files use the member config, matching `grund fmt` and `grund check`
-/// (§FS-lsp.1.4, §FS-workspace.5).
+/// (§FS-lsp.1.4.6, §FS-workspace.5.1).
 pub fn reference_style(path: &Path) -> Result<ReferenceStyle> {
     let config = resolve_workspace_config(path)?;
     Ok(ReferenceStyle {

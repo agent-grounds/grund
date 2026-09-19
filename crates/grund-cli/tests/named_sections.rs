@@ -1,6 +1,6 @@
 //! Black-box contract for opt-in named section coordinates. The fixture is the
 //! validated issue-178 reproducer expanded across every CLI consumer
-//! (§FS-config.3.2, §FS-config.3.3).
+//! (§FS-config.3.2.7, §FS-config.3.3).
 
 use serde_json::Value;
 use std::fs;
