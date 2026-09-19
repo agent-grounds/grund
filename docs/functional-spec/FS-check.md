@@ -1085,33 +1085,63 @@ Under `--format=json` it is one warning diagnostic on **stdout** with `path` and
 
 ### 4.10 `include_root = false` leaves the block's own files unread
 
-A `[workspace]` block that sets `include_root = false` is not a project; an intermediate one is still a segment in every alias path below it ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)). Its own files are then read by nobody — it has no scan of its own, an enclosing scan, where there is one, stops at the member boundary ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)), and `--full` (§1.3) widens a project's scope and has no project to widen here — so a declaration there reaches no catalog and a citation there is never checked, which is [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) failing through one config key. No run said so: over a grouping directory holding two dangling citations, `check`, `check --full` and `list` were all silent and exited `0` ([grund#71](https://github.com/agent-grounds/grund/issues/71)). `grund` emits one CLI-level `warning:` (§2.1.1) on **stderr** for such a block **whose own tree actually holds a file a scan would have read**. Decided in [§DF-unread-opted-out-block](../decisions/functional/DF-unread-opted-out-block.md#df-unread-opted-out-block-the-unread-files-of-an-opted-out-block-are-a-conditional-warning-that-never-ramps).
+A `[workspace]` block that sets `include_root = false` is not a project, and its own files are read by nobody (§4.10.1): a declaration there reaches no catalog and a citation there is never checked, which is [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) failing through one config key. `grund` emits one CLI-level `warning:` (§2.1.1) on **stderr** for such a block **whose own tree actually holds a file a scan would have read**. Decided in [§DF-unread-opted-out-block](../decisions/functional/DF-unread-opted-out-block.md#df-unread-opted-out-block-the-unread-files-of-an-opted-out-block-are-a-conditional-warning-that-never-ramps).
+
+What counts is §4.10.2, and §4.10.3 and §4.10.4 are what does not. The message is §4.10.5, and it names one root (§4.10.6). Every command that walks says it, once per block (§4.10.7), except over a failed workspace expansion (§4.10.8). It keeps its text under `--format json` (§4.10.9), stands in place of `success` without moving the exit code (§4.10.10), reaches every frontend (§4.10.11), and never becomes an error (§4.10.12).
+
+#### 4.10.1 Nobody reads the block's own files
+
+An intermediate opted-out block is still a segment in every alias path below it ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)), yet its own files are read by nobody: it has no scan of its own, an enclosing scan, where there is one, stops at the member boundary ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)), and `--full` (§1.3) widens a project's scope and has no project to widen here. No run said so: over a grouping directory holding two dangling citations, `check`, `check --full` and `list` were all silent and exited `0` ([grund#71](https://github.com/agent-grounds/grund/issues/71)).
+
+#### 4.10.2 What counts
 
 **What counts is one question: would this block have read something, had it been a project?** That is the mirror of [§FS-workspace.2.1](FS-workspace.md#21-a-member-that-swallows-the-blocks-own-scan), which asks whether a block that *is* a project reads nothing — so one notion of "this block's own scope" answers both, and a `[[kinds]]` home or an unwalked home moves the two rules together. Take the block's **default scope** — the roots `[scan] include` and the walked `[[kinds]]` homes give it ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)), the set [§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)'s boundary prunes, asked of the default scope whatever `--full` says, because this is a property of the configuration and not of one walk. Drop a root that is not on disk: the walk skips it before it prunes, so it is read by nobody and costs nobody anything. Drop a root at or inside one of the block's own expanded member roots: those files *are* read, by the member — compared as canonical paths, the way the walk's own prune compares them. On what is left, probe for one file the scan would have read, under the block's own `[scan] extensions`, `exclude`, ignore files and hidden-name rules applied exactly as the scanner applies them ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)). The probe **stops at the first hit**: the cost is "is there one file here", not the size of the tree, and only a block that opted out ever pays it ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)).
 
-**A block with no member in scope is not this finding.** `include_root = false` with no members — an absent `members` key, an empty list, or a non-empty list of globs that match no directories, beside no `optional_members` entry ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)) — is already a config error at that block's own line ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)). A configuration the run refuses is not one it also cautions about, and the caution's two remedies are not the repair that block needs.
+#### 4.10.3 A block with no member in scope is not this finding
 
-**What stays silent, and why the silence is the point.** Four shapes are deliberately not this finding, and each is a correct configuration. A grouping directory that only groups — `grund.toml` and its members and nothing else — has no root on disk to read. A block whose own roots are all inside its members is [§FS-workspace.2.1](FS-workspace.md#21-a-member-that-swallows-the-blocks-own-scan)'s shape read from the other side, and those files are read, by the member. A tree whose only files are of unscanned types, or excluded, gitignored, or hidden, is a tree the block would not have read as a project either. And a root the config names that is not on disk rescues nothing. Firing on any of them would be a warning with no edit that clears it, which is permanent output tools learn to filter — the outcome [§DF-absorbed-scan-warning](../decisions/functional/DF-absorbed-scan-warning.md#df-absorbed-scan-warning-a-scan-its-own-members-swallowed-is-a-warning-with-a-named-release-not-an-error) already rejected once for a neighbouring finding.
+`include_root = false` with no members — an absent `members` key, an empty list, or a non-empty list of globs that match no directories, beside no `optional_members` entry ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)) — is already a config error at that block's own line ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)). A configuration the run refuses is not one it also cautions about, and the caution's two remedies are not the repair that block needs.
 
-**The message** carries the config line the reader should open, the tree that is unread, what that costs, and the two remedies:
+#### 4.10.4 What stays silent, and why the silence is the point
+
+Four shapes are deliberately not this finding, and each is a correct configuration that §4.10.2 answers "no" for. A grouping directory that only groups — `grund.toml` and its members and nothing else — has no root on disk to read. A block whose own roots are all inside its members is [§FS-workspace.2.1](FS-workspace.md#21-a-member-that-swallows-the-blocks-own-scan)'s shape read from the other side. A tree whose only files are of unscanned types, or excluded, gitignored, or hidden, is a tree the block would not have read as a project either. And a root the config names that is not on disk rescues nothing. Firing on any of them would be a warning with no edit that clears it, which is permanent output tools learn to filter — the outcome [§DF-absorbed-scan-warning](../decisions/functional/DF-absorbed-scan-warning.md#df-absorbed-scan-warning-a-scan-its-own-members-swallowed-is-a-warning-with-a-named-release-not-an-error) already rejected once for a neighbouring finding.
+
+#### 4.10.5 The message
+
+The message carries the config line the reader should open, the tree that is unread, what that costs, and the two remedies:
 
 ```
 warning: group/grund.toml:17: no project scans `docs`, so its citations are never checked. Set include_root = true, or point another project's [scan] include at it.
 ```
 
-The breadcrumb is the block's own `include_root` line — the key that decided is the line to open — falling back to its `[workspace]` line if the key is absent, which the default `true` makes unreachable. It renders against the root this run was launched at, like every diagnostic about a block above or below it ([§FS-errors.3](FS-errors.md#3-message-text)). The unread tree is named by its path **under the block root**, that spelling normalized rather than the spelling itself, exactly as §4.7 names a covered root and never the resolved path, which renders as nothing when it equals the render base and as an absolute path when it does not.
+The breadcrumb is the block's own `include_root` line — the key that decided is the line to open — falling back to its `[workspace]` line if the key is absent, which the default `true` makes unreachable. It renders against the root this run was launched at, like every diagnostic about a block above or below it ([§FS-errors.3](FS-errors.md#3-message-text)). The unread tree is named by its path **under the block root**, that spelling normalized rather than the spelling itself, exactly as §4.7.1 names a covered root, and never by the resolved path, for §4.7.1's reason.
 
-**One root, not every root.** §4.7 lists every covered root because its claim is universal — *every* one is inside a member — and the list is the evidence for it. This claim is existential: one unread root is the whole finding, one edit clears all of them, and probing the rest would buy nothing the answer depends on. The one named is the first in scope order, `[scan] include` in config order and then the `[[kinds]]` homes, which is fixed; the first *file* under it is whatever the filesystem handed back, which is not, and is therefore never named ([§FS-errors.4](FS-errors.md#4-determinism)).
+#### 4.10.6 One root, not every root
 
-**Every command that walks says it, and each block says it once.** The question is asked where a run populates a block's member boundary — the block the run is rooted at, and each block below it — so `check`, [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-references-in-bulk) and every other command that resolves that boundary carry it, on exactly the surfaces §4.7 is carried on. The reproduction in the ticket used `check` and `list`, which is the whole argument: a silent-scope defect only `check` reports is half-reported. It is **once per block per run** — a workspace-wide run that expands the same block a second time still says it once — and a tree with two opted-out blocks earns one line each, the block the run is rooted at first and the blocks below it after, in the order the run reaches them. A run narrowed inside a member never populates the enclosing block's boundary, so it stays silent about a block it is not reading through. One further silence is declared and bounded ([§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded)) rather than a gap: a run whose **workspace expansion fails** does not carry this finding for the blocks below its root — the answer depends on where the run's other projects are, and a failed expansion is exactly the case where that list was never produced, so the alternative is not an earlier warning but a wrong one. The run is exiting `2` on a config error the reader has to repair before anything else it says is worth reading, and the finding returns on the next run. §4.7 survives such a run, because what it asks is answered by the block's own members alone.
+§4.7.1 lists every covered root because its claim is universal — *every* one is inside a member — and the list is the evidence for it. This claim is existential: one unread root is the whole finding, one edit clears all of them, and probing the rest would buy nothing the answer depends on. The one named is the first in scope order, `[scan] include` in config order and then the `[[kinds]]` homes, which is fixed; the first *file* under it is whatever the filesystem handed back, which is not, and is therefore never named ([§FS-errors.4](FS-errors.md#4-determinism)).
 
-**It is a launch-time diagnostic, so it keeps its text under `--format json`** ([§FS-errors.5](FS-errors.md#5-json-format)) and carries no JSON `code` and no selector of its own (§1). That is §4.7's rendered shape rather than §4.8's, and the difference between them is *when the fact exists*. §4.8's is knowable only from the walk that meets a nested config, so it is one of `check`'s report warnings and renders as a JSON diagnostic with `path`, `line` and `sites` null. This one is settled at boundary population, before a walk and before a report exists, and is carried by five commands that render no report at all — so the shape it renders in is fixed here rather than borrowed from `check`'s, and giving `check` a different one would make the text a consumer greps for depend on which command produced it.
+#### 4.10.7 Every command that walks says it, and each block says it once
 
-**It stands in place of the `success` marker, and never moves the exit code.** §2.1 is unchanged: a run with a warning prints the warning rather than `success`. This is the first `[workspace]` caution that has to say so out loud, because it is the first that can fire on an otherwise clean run — §4.7's block always earns the empty-scan caution beside it (§2.2), and §4.8's is a report warning already. The exit code stays where it was (§2): opting out is a legitimate choice, and [§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization) fixes what a warning means.
+The question is asked where a run populates a block's member boundary — the block the run is rooted at, and each block below it — so `check`, [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-references-in-bulk) and every other command that resolves that boundary carry it, on exactly the surfaces §4.7 is carried on (§4.7.2). The reproduction in the ticket used `check` and `list`, which is the whole argument: a silent-scope defect only `check` reports is half-reported. It is **once per block per run** — a workspace-wide run that expands the same block a second time still says it once — and a tree with two opted-out blocks earns one line each, the block the run is rooted at first and the blocks below it after, in the order the run reaches them. A run narrowed inside a member never populates the enclosing block's boundary, so it stays silent about a block it is not reading through.
 
-**It travels as one of the run's warnings, and every frontend renders it.** Like §4.7, and for the same reason: the fact is settled before any report exists, but what the engine hands back is a diagnostic in the run's warning channel — carried on whatever the walking command returns and rendered by whichever frontend asked ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)) — rather than a line the engine wrote to a stream. It **anchors at the block's `include_root` line**, falling back to its `[workspace]` line exactly as the breadcrumb above does, and carries that anchor as the finding's own location so a frontend never parses the message for one. Every byte is the byte it is today, on stderr and under `--format json` alike, and the `success` marker it stands in place of is unaffected. The editor is the surface that gains a reader: it publishes the warning on that `include_root` line ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)), which is where the one edit that clears it is written.
+#### 4.10.8 A failed workspace expansion withholds it
 
-**A warning permanently, with no release it becomes an error in.** This is the one of the three `[workspace]` findings that does not ramp, and the difference is not how wrong the repository is. A finding is eligible to become an error only when **every repository in that state is wrong** *and* **the configuration has a way to say "I meant it"** — the rule for all three, argued in [§DF-unread-opted-out-block.2.3](../decisions/functional/DF-unread-opted-out-block.md#23-what-makes-a-workspace-finding-ramp-and-what-makes-one-permanent). §4.7 and §4.8 pass both: a block that claims to be a project and reads nothing, and a block whose projects are spelled two ways, are wrong on every reading of them, and each has an edit that records the intent instead — `include_root = false` for one, listing the block for the other — so an error is a verdict their author can act on before it lands, and [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s deprecation path gets them there. This finding passes neither. A grouping directory holding a README nobody needs checked is doing exactly what its author meant, and neither remedy records that: making the block a project and pointing another project's `[scan] include` at it both change what the repository *is*. That the finding is a property of the configuration **and** the tree — the same `grund.toml` silent on Monday and reportable on Tuesday because somebody added `group/docs/notes.md` — is the symptom that makes it recognizable, not the reason: §3.18 depends on the tree in the same way and ramped anyway. There is therefore no version constant, no roadmap milestone, and no clause in the message naming a release.
+A run whose **workspace expansion fails** does not carry this finding for the blocks below its root, a silence declared and bounded ([§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded)) rather than a gap: the answer depends on where the run's other projects are, and a failed expansion is exactly the case where that list was never produced, so the alternative is not an earlier warning but a wrong one. The run is exiting `2` on a config error the reader has to repair before anything else it says is worth reading, and the finding returns on the next run. §4.7 survives such a run, because what it asks is answered by the block's own members alone.
+
+#### 4.10.9 A launch-time diagnostic keeps its text under `--format json`
+
+It is a launch-time diagnostic, so it keeps its text under `--format json` ([§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text)) and carries no JSON `code` and no selector of its own (§1.4). That is §4.7's rendered shape (§4.7.6) rather than §4.8's, and the difference between them is *when the fact exists*. §4.8's is knowable only from the walk that meets a nested config (§4.8.10), so it is one of `check`'s report warnings and renders as a JSON diagnostic with `path`, `line` and `sites` null (§4.8.13). This one is settled at boundary population, before a walk and before a report exists, and is carried by five commands that render no report at all — so the shape it renders in is fixed here rather than borrowed from `check`'s, and giving `check` a different one would make the text a consumer greps for depend on which command produced it.
+
+#### 4.10.10 It stands in place of the `success` marker, and never moves the exit code
+
+§2.1.3 is unchanged: a run with a warning prints the warning rather than `success`. This is the first `[workspace]` caution that has to say so out loud, because it is the first that can fire on an otherwise clean run — §4.7's block always earns the empty-scan caution beside it (§2.2, §4.7.5), and §4.8's is a report warning already. The exit code stays where it was (§2): opting out is a legitimate choice, and [§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization) fixes what a warning means.
+
+#### 4.10.11 One of the run's warnings, rendered by every frontend
+
+Like §4.7, and for the same reason (§4.7.7): the fact is settled before any report exists, but what the engine hands back is a diagnostic in the run's warning channel — carried on whatever the walking command returns and rendered by whichever frontend asked ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)) — rather than a line the engine wrote to a stream. It **anchors at the block's `include_root` line**, falling back to its `[workspace]` line exactly as the breadcrumb of §4.10.5 does, and carries that anchor as the finding's own location so a frontend never parses the message for one. Every byte is the byte it is today, on stderr and under `--format json` alike, and the `success` marker it stands in place of is unaffected. The editor is the surface that gains a reader: it publishes the warning on that `include_root` line ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)), which is where the one edit that clears it is written.
+
+#### 4.10.12 A warning permanently, with no release it becomes an error in
+
+This is the one of the three `[workspace]` findings that does not ramp, and the difference is not how wrong the repository is. A finding is eligible to become an error only when **every repository in that state is wrong** *and* **the configuration has a way to say "I meant it"** — the rule for all three, argued in [§DF-unread-opted-out-block.2.3](../decisions/functional/DF-unread-opted-out-block.md#23-what-makes-a-workspace-finding-ramp-and-what-makes-one-permanent). §4.7 and §4.8 pass both: a block that claims to be a project and reads nothing, and a block whose projects are spelled two ways, are wrong on every reading of them, and each has an edit that records the intent instead — `include_root = false` for one, listing the block for the other — so an error is a verdict their author can act on before it lands, and [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s deprecation path gets them there. This finding passes neither. A grouping directory holding a README nobody needs checked is doing exactly what its author meant, and neither remedy records that: making the block a project and pointing another project's `[scan] include` at it both change what the repository *is*. That the finding is a property of the configuration **and** the tree — the same `grund.toml` silent on Monday and reportable on Tuesday because somebody added `group/docs/notes.md` — is the symptom that makes it recognizable, not the reason: §3.18 depends on the tree in the same way and ramped anyway. There is therefore no version constant, no roadmap milestone, and no clause in the message naming a release.
 
 ### 4.11 Config read from the deprecated `.agents/` location
 
@@ -1121,43 +1151,53 @@ The config this run read is an `.agents/grund.toml` ([§FS-config.1.2](FS-config
 warning: .agents/grund.toml is a deprecated config location — move it to grund.toml
 ```
 
-This is §4.3's finding in everything but its trigger, and for §4.3's own reason: it is a fact about *which file the run read*, not about that file's content and not about a site in the citation graph. So it is a CLI-level `warning:` on **stderr** (§2.1.1) and never a per-finding line — there is no offending line to point at, the whole file is the subject. Both paths are report paths and follow `[output] relative_paths` as §4.3's do ([§FS-config.3.6](FS-config.md#36-output--report-format)), so the message names the move as the `git mv` a reader can type from the report's base. Like every warning it leaves the exit code alone (§2), because the location it names is a supported one and [§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization) fixes what a warning means.
+It is §4.3's finding in everything but its trigger (§4.11.1), on the same three surfaces and no more (§4.11.2), once per config (§4.11.3), and never beside §4.3 about one directory (§4.11.4). Its JSON form is §4.11.5. It stands in place of the `success` marker (§4.11.6) and never becomes an error (§4.11.7).
 
-**The same three surfaces as §4.3, and no more.** `grund check`, `grund config validate` and `grund config show` ([§FS-config.4.1](FS-config.md#41-grund-config-validate-path), [§FS-config.4.2](FS-config.md#42-grund-config-show-path)) carry it, byte-identically. `list`, `refs`, `cover`, `fmt` and a bare ID read stay silent, on §4.3's argument unchanged: where the config came from is a question about the repository's configuration, and those commands answer questions about its content. The silence is not an oversight to be widened later — a fact that never changes between runs, printed by every command, is permanent output tools learn to filter, and the surface a user reaches for to ask *where is my config* is `config show`.
+#### 4.11.1 §4.3's finding in everything but its trigger
 
-**Once per config, not once per scope.** A workspace names the root's config and every member's, each at the path that project's config was loaded under ([§FS-errors.4](FS-errors.md#4-determinism)) — `packages/beta/.agents/grund.toml`, moving to `packages/beta/grund.toml`. Root and member are separate configs and a workspace may mix the two forms ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)), so a member on the old path earns its own line while a member on the bare form earns none, and a root and a member both on the old path earn one line each.
+This is §4.3's finding in everything but its trigger, and for §4.3.1's reason: it is a fact about *which file the run read*, not about that file's content and not about a site in the citation graph. So it is a CLI-level `warning:` on **stderr** (§2.1.1) and never a per-finding line — there is no offending line to point at, the whole file is the subject. Both paths are report paths and follow `[output] relative_paths` as §4.3.1's do ([§FS-config.3.6](FS-config.md#36-output--report-format)), so the message names the move as the `git mv` a reader can type from the report's base. Like every warning it leaves the exit code alone (§2), because the location it names is a supported one and [§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization) fixes what a warning means.
 
-**A directory carrying both names earns §4.3 and not this.** The bare `grund.toml` won the tie ([§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both)), so the config in force is on the home path already and nothing about it is deprecated; the `.agents/` file beside it is the one read by nothing, which is exactly what §4.3 reports. Emitting both would name one move twice and disagree about which of the two files is the problem.
+#### 4.11.2 The same three surfaces as §4.3, and no more
 
-**Under `--format=json` it is one warning diagnostic on stderr**, carrying the `code` `deprecated-config-location`, with `path`, `line` and `sites` null ([§FS-errors.5](FS-errors.md#5-json-format)) — §4.3's shape, because it arrives the same way: one of the report's warnings, knowable from the config the run loaded rather than from the walk.
+`grund check`, `grund config validate` and `grund config show` ([§FS-config.4.1](FS-config.md#41-grund-config-validate-path), [§FS-config.4.2](FS-config.md#42-grund-config-show-path)) carry it, byte-identically. `list`, `refs`, `cover`, `fmt` and a bare ID read stay silent, on §4.3.2's argument unchanged. The silence is not an oversight to be widened later — a fact that never changes between runs, printed by every command, is permanent output tools learn to filter, and the surface a user reaches for to ask *where is my config* is `config show`.
 
-**It stands in place of the `success` marker** (§2.1), as every warning does, and that is the whole cost of the finding rather than a detail of it: a clean repository on the old path now prints this line where it printed `success`. [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) governs that as a verdict change and permits it, since the exit code does not move. This repository pays it in its own e2e corpus, which is why the fixtures that had no reason to be on `.agents/` are on the bare form and the ones that remain are the ones whose subject is discovery itself.
+#### 4.11.3 Once per config, not once per scope
 
-**A warning permanently, with no release it becomes an error in.** The promise lives in [§FS-config.1.2](FS-config.md#12-the-agents-location-is-deprecated), because it is a fact about the location rather than about this message: the fallback is never removed, so there is no version constant, no roadmap milestone, and no clause in the text naming a release.
+A workspace names the root's config and every member's, each at the path that project's config was loaded under ([§FS-errors.4](FS-errors.md#4-determinism)) — `packages/beta/.agents/grund.toml`, moving to `packages/beta/grund.toml`. Root and member are separate configs and a workspace may mix the two forms ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)), so a member on the old path earns its own line while a member on the bare form earns none, and a root and a member both on the old path earn one line each.
+
+#### 4.11.4 A directory carrying both names earns §4.3 and not this
+
+The bare `grund.toml` won the tie ([§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both)), so the config in force is on the home path already and nothing about it is deprecated; the `.agents/` file beside it is the one read by nothing, which is exactly what §4.3 reports. Emitting both would name one move twice and disagree about which of the two files is the problem.
+
+#### 4.11.5 Under `--format=json`, one warning diagnostic on stderr
+
+Under `--format=json` it is one warning diagnostic on stderr, carrying the `code` `deprecated-config-location`, with `path`, `line` and `sites` null ([§FS-errors.5](FS-errors.md#5-json-format)) — §4.3's shape, because it arrives the same way: one of the report's warnings, knowable from the config the run loaded rather than from the walk.
+
+#### 4.11.6 It stands in place of the `success` marker
+
+It stands in place of the `success` marker (§2.1.3), as every warning does, and that is the whole cost of the finding rather than a detail of it: a clean repository on the old path now prints this line where it printed `success`. [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) governs that as a verdict change and permits it, since the exit code does not move. This repository pays it in its own e2e corpus, which is why the fixtures that had no reason to be on `.agents/` are on the bare form and the ones that remain are the ones whose subject is discovery itself.
+
+#### 4.11.7 A warning permanently, with no release it becomes an error in
+
+The promise lives in [§FS-config.1.2](FS-config.md#12-the-agents-location-is-deprecated), because it is a fact about the location rather than about this message: the fallback is never removed, so there is no version constant, no roadmap milestone, and no clause in the text naming a release.
 
 ### 4.12 Missing snapshot
 
-A recognized citation has no declaration and targets a fetch-enabled kind
-whose effective `resolve` is `should` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)). It is a distinct fixed warning, not a softened dangling error:
+A recognized citation has no declaration and targets a fetch-enabled kind whose effective `resolve` is `should` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)). It is a distinct fixed warning, not a softened dangling error:
 
 ```text
 <path>:<line>: no snapshot for <qualified-ID> in <home> — run grund fetch <qualified-ID>
 ```
 
-The em-dash remedy tail is exactly `— run grund fetch <qualified-ID>`, with no
-inner backticks. The JSON code is `missing-snapshot`, severity is `warning`,
-and the message field is the text after `<path>:<line>: `. A warning-only run
-exits 0 and prints no `success` marker. Every site gets one finding, remains in
-the reference and coverage indexes, and may resolve after an explicit
-[§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot).
+The em-dash remedy tail is exactly `— run grund fetch <qualified-ID>`, with no inner backticks. The JSON code is `missing-snapshot`, severity is `warning`, and the message field is the text after `<path>:<line>: `. A warning-only run exits 0 and prints no `success` marker. Every site gets one finding, remains in the reference and coverage indexes, and may resolve after an explicit [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot). The hints that take the fetch tail's place are §4.12.1, and its workspace spelling is §4.12.2.
 
-The near-ID and escaped-inline-code hints of §3.1 take precedence over the
-fetch action. The message retains `no snapshot for <qualified-ID> in <home>`
-and substitutes the existing conditional `; did you mean …`, `; write <§>…`,
-or combined tail for the em-dash fetch tail. That precedence never produces
-both a dangling and a missing-snapshot finding for one site. In a workspace,
-the ID and remedy use the complete alias-qualified spelling while `<home>` is
-rendered from the run's report base ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)).
+#### 4.12.1 A hint takes the fetch tail's place
+
+The near-ID and escaped-inline-code hints of §3.1.1 and §3.1.2 take precedence over the fetch action. The message retains `no snapshot for <qualified-ID> in <home>` and substitutes the existing conditional `; did you mean …`, `; write <§>…`, or combined tail for the em-dash fetch tail. That precedence never produces both a dangling and a missing-snapshot finding for one site.
+
+#### 4.12.2 In a workspace
+
+In a workspace, the ID and remedy use the complete alias-qualified spelling while `<home>` is rendered from the run's report base ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)).
 
 ### 4.13 Oversized lead *(opt-in)*
 
@@ -1170,80 +1210,69 @@ lead_size_warning = { max = <N>, unit = "<unit>" }
 
 `check` measures each declaration and citable section lead in that project by [§FS-list.3.4](FS-list.md#34---size--per-point-lead-and-full-body-measurements). A lead whose selected measurement is strictly greater than `max` produces one warning at that site's heading line. Equality passes. A broken stub has no measurable lead and produces no size warning; duplicate declaration homes and duplicate section claimants are judged separately from their own site-local slices.
 
+The message is §4.13.1 and its exit and rendering §4.13.2. Only the key activates it (§4.13.3), and which sites it judges is §4.13.4.
+
+#### 4.13.1 The message
+
 The fixed code is `oversized-lead`, severity is `warning`, and the exact text after `<path>:<line>: ` is:
 
 ```text
 <coordinate> lead is <actual> <unit>, over the configured maximum of <max>; move detail into citable child sections, or promote a child section to its own ID after running grund refs <coordinate> --summary
 ```
 
-The coordinate is local for a member-local check and workspace-qualified for a workspace-root check. The two remedies preserve grounding and citation stability; the message never suggests shortening or deleting it. A warning-only run exits `0` and replaces the text `success` marker; JSON uses the ordinary located diagnostic object ([§FS-errors.5](FS-errors.md#5-json-format)). The LSP publishes the same message, line, code, and warning severity as the CLI ([§FS-lsp.1.2](FS-lsp.md#12-hover-preview)).
+The coordinate is local for a member-local check and workspace-qualified for a workspace-root check. The two remedies preserve grounding and citation stability; the message never suggests shortening or deleting it.
 
-The absent key activates no measurement or finding and leaves the existing text and JSON check output byte-identical. `--only oversized-lead` and `--ignore oversized-lead` select the finding after the complete check and never activate it. An explicit-path check judges only declaration and section sites scanned at that path. `--full` adds its existing out-of-scope reference findings but does not extend this repository policy beyond declarations in the configured scan scope. In a workspace, each member's effective key governs only that member's sites; a member without the key remains silent even when another member opts in. Any simultaneous error, including `duplicate` or `duplicate-section`, still decides exit `1`; the warning neither suppresses it nor changes its priority.
+#### 4.13.2 Exit code and rendering
+
+A warning-only run exits `0` and replaces the text `success` marker; JSON uses the ordinary located diagnostic object ([§FS-errors.5](FS-errors.md#5-json-format)). The LSP publishes the same message, line, code, and warning severity as the CLI ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). Any simultaneous error, including `duplicate` or `duplicate-section`, still decides exit `1`; the warning neither suppresses it nor changes its priority.
+
+#### 4.13.3 Only the key activates it
+
+The absent key activates no measurement or finding and leaves the existing text and JSON check output byte-identical. `--only oversized-lead` and `--ignore oversized-lead` select the finding after the complete check and never activate it.
+
+#### 4.13.4 Which sites it judges
+
+An explicit-path check judges only declaration and section sites scanned at that path. `--full` adds its existing out-of-scope reference findings but does not extend this repository policy beyond declarations in the configured scan scope. In a workspace, each member's effective key governs only that member's sites; a member without the key remains silent even when another member opts in.
 
 ### 4.14 Unmarked Markdown heading
 
-Before grund 0.15.0, a Markdown ATX heading that is deeper than a declaration
-heading and whose line is still inside that declaration's body is a fixed
-warning when it is neither another declaration nor a recognized numeric or
-enabled named section. The containing declaration is the nearest enclosing
-body, so a plain heading beneath a deeper child declaration names that child,
-not an overlapping ancestor. This is a project-wide rule with no configuration,
-severity selector, or permanent opt-out ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
+Before grund 0.15.0, a Markdown ATX heading that is deeper than a declaration heading and whose line is still inside that declaration's body is a fixed warning when it is neither another declaration nor a recognized numeric or enabled named section. The containing declaration is the nearest enclosing body, so a plain heading beneath a deeper child declaration names that child, not an overlapping ancestor. This is a project-wide rule with no configuration, severity selector, or permanent opt-out ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
 
-Only ATX headings in scanned Markdown files participate. A heading inside a
-backtick or tilde fence is content. A file title before the first declaration,
-a same-or-shallower heading that closes a declaration body, source doc-comment
-text, setext text, and a bold label are outside the rule. A deeper declaration
-and a valid numeric or enabled named section already participate in the graph
-and are not unmarked. `--full` keeps this convention-scoped warning narrowed to
-the configured scan scope, as it does other convention findings (§1.3).
+Which headings participate is §4.14.1. The message is §4.14.2 and its suggested coordinate §4.14.3; its rendering is §4.14.4, its flip to an error §4.14.5, and what it leaves unchanged §4.14.6.
 
-The warning is anchored at the heading line, uses code `unmarked-heading`, and
-has this text:
+#### 4.14.1 Which headings participate
+
+Only ATX headings in scanned Markdown files participate. A heading inside a backtick or tilde fence is content. A file title before the first declaration, a same-or-shallower heading that closes a declaration body, source doc-comment text, setext text, and a bold label are outside the rule. A deeper declaration and a valid numeric or enabled named section already participate in the graph and are not unmarked. `--full` keeps this convention-scoped warning narrowed to the configured scan scope, as it does other convention findings (§1.3).
+
+#### 4.14.2 The message
+
+The warning is anchored at the heading line, uses code `unmarked-heading`, and has this text:
 
 ```text
 unmarked heading inside <ID>; number it (<suggested heading>) as <ID>.<path>, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0
 ```
 
-The suggested coordinate is guidance, not a rewrite. Its path depth follows the
-written ATX depth relative to the containing declaration. At each depth, grund
-uses the nearest preceding citable or already-suggested parent and appends one
-above the largest existing or earlier-suggested numeric sibling; it never fills
-a hole or reuses a coordinate. With no parent it starts one above the largest
-root numeric coordinate, or at `1` when none exists. If the authored heading
-skips a depth, missing parents are filled with `.1`. A named parent may therefore
-receive a numeric child such as `goals.1`. The suggested heading preserves the
-authored `#` depth and title and inserts the complete coordinate in that valid
-numeric or mixed form. A titleless ATX heading has no authored title to
-preserve, so its otherwise-identical suggestion uses the literal title
-`Untitled`; applying that complete suggested heading produces a recognized
-section and clears the warning.
+#### 4.14.3 The suggested coordinate
 
-Text output uses the `<path>:<line>: warning: <message>` form. A warning leaves
-the exit at `0` but stands in place of the bare `success` line (§2.1). JSON emits
-the same path, line, code, and message with `"severity":"warning"` and
-`"sites":null`. `--only unmarked-heading` retains it and `--ignore
-unmarked-heading` removes it through the ordinary exact-code selection rules.
-The LSP carries the same core finding with warning severity and the complete ATX
-heading as its range ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+The suggested coordinate is guidance, not a rewrite. Its path depth follows the written ATX depth relative to the containing declaration. At each depth, grund uses the nearest preceding citable or already-suggested parent and appends one above the largest existing or earlier-suggested numeric sibling; it never fills a hole or reuses a coordinate. With no parent it starts one above the largest root numeric coordinate, or at `1` when none exists. If the authored heading skips a depth, missing parents are filled with `.1`. A named parent may therefore receive a numeric child such as `goals.1`. The suggested heading preserves the authored `#` depth and title and inserts the complete coordinate in that valid numeric or mixed form. A titleless ATX heading has no authored title to preserve, so its otherwise-identical suggestion uses the literal title `Untitled`; applying that complete suggested heading produces a recognized section and clears the warning.
 
-In grund 0.15.0 the same site, code, suggestion, and all non-severity bytes stay
-stable except that the deadline clause becomes `this became an error in grund
-0.15.0`; severity becomes error and a retained finding contributes exit `1`.
-[§RM-unmarked-heading-error](../roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0150)
-owns that scheduled flip. Until then the warning window serves
-[§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
+#### 4.14.4 Rendering, exit, and selection
 
-No command numbers the heading: `grund fmt` remains unchanged. `show`, `list`,
-`refs`, `cover`, formatting, section resolution, and source scanning otherwise
-keep their current behavior, including the body boundary and rejected section
-behavior of §3.23. `grund_config_version` stays `1`; the managed agent block is
-the existing mechanical repair surface and moves to v10 under `grund init`
-([§FS-init.2.3.4.5](FS-init.md#2345-declaration-forms)).
+Text output uses the `<path>:<line>: warning: <message>` form. A warning leaves the exit at `0` but stands in place of the `success` marker (§2.1.3). JSON emits the same path, line, code, and message with `"severity":"warning"` and `"sites":null`. `--only unmarked-heading` retains it and `--ignore unmarked-heading` removes it through the ordinary exact-code selection rules. The LSP carries the same core finding with warning severity and the complete ATX heading as its range ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+
+#### 4.14.5 An error in grund 0.15.0
+
+In grund 0.15.0 the same site, code, suggestion, and all non-severity bytes stay stable except that the deadline clause becomes `this became an error in grund 0.15.0`; severity becomes error and a retained finding contributes exit `1`. [§RM-unmarked-heading-error](../roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0150) owns that scheduled flip. Until then the warning window serves [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
+
+#### 4.14.6 No command numbers the heading
+
+No command numbers the heading: `grund fmt` remains unchanged. `show`, `list`, `refs`, `cover`, formatting, section resolution, and source scanning otherwise keep their current behavior, including the body boundary and rejected section behavior of §3.23. `grund_config_version` stays `1`; the managed agent block is the existing mechanical repair surface and moves to v10 under `grund init` ([§FS-init.2.3.4.5](FS-init.md#2345-declaration-forms)).
 
 ## 5. What grund does not check
 
-See [§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do) — in particular [§FS-non-goals.1](FS-non-goals.md#1-markdown-link-validation) (markdown links / URLs), [§FS-non-goals.2](FS-non-goals.md#2-spelling-grammar-prose-quality) (spelling/grammar outside the explicit value form), and the convention that ID numbers are stable handles, not ordinal positions. Value checking adds only the exact binding in [§FS-values.3.1](FS-values.md#31-the-only-binding-grammar): no surrounding-number inference, bare-literal lint, range/unit semantics, rendering, fingerprint/history check, or new reconciliation verb is performed ([§FS-values.9](FS-values.md#9-compatibility-and-explicit-exclusions)).
+See [§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do) — in particular [§FS-non-goals.1](FS-non-goals.md#1-markdown-link-validation) (markdown links / URLs), [§FS-non-goals.2](FS-non-goals.md#2-spelling-grammar-prose-quality) (spelling/grammar outside the explicit value form), and the convention that ID numbers are stable handles, not ordinal positions. Value checking adds only the exact binding in [§FS-values.3.1](FS-values.md#31-the-only-binding-grammar): no surrounding-number inference, bare-literal lint, range/unit semantics, rendering, fingerprint/history check, or new reconciliation verb is performed ([§FS-values.9](FS-values.md#9-compatibility-and-explicit-exclusions)). The near misses that used to be listed here are §5.1.
+
+### 5.1 The near misses are no longer here
 
 The declaration-side near miss is **no longer** in this section: a heading shaped like `# <KIND>-…: <title>` whose ID does not match the configured `[id] format` is reported per heading by §4.6, and a tree in which every heading misses that way says so twice over — once per line, and once as the run that recognized nothing (§4.5). Neither guesses the corrected ID. The citation-side near miss — a `§`-marked token in the shorthand shape — left this section earlier, when §1.2 and §3.13 began recognizing and reporting it.
 
@@ -1253,7 +1282,20 @@ Status: planned — implementation tracked under [§RM-watch](../roadmap.md#rm-w
 
 When implemented, `grund check --watch [<path>]` will run the check once, then stay resident and re-run it whenever a file under the scanned tree (or the discovered `grund.toml`) changes. It is the editor-less counterpart to the optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)): the LSP integrates `grund` into an editor's diagnostics; `--watch` is the plain-terminal "every save" loop that [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) exists for. Until [§RM-watch](../roadmap.md#rm-watch-implement-grund-check---watch) lands, `grund check --watch` is a CLI error (`error: unknown flag \`--watch\``, exit 2).
 
-- **Change detection.** Filesystem notifications where the OS provides them; a debounce window coalesces a burst of writes into one re-check. No polling loop is required, and there is no configurable interval — the watcher reacts, it does not sample.
-- **Each run is a plain `grund check`.** Output and exit-status semantics of an individual run are exactly §2/§2.1 on the tree's state at that moment — byte-identical to what a non-`--watch` invocation would print ([§FS-errors.4](FS-errors.md#4-determinism)). Before each run, and only when stdout is a terminal, the previous run's output is cleared so the terminal always shows the current report; piped output and `--format=json` carry no clearing bytes and stay byte-identical to a plain run, and with `--format=json` each run emits the same diagnostic NDJSON as non-watch mode, scoped to that run.
-- **Lifecycle.** The process runs until interrupted (Ctrl-C / SIGINT). On interrupt it exits with the exit code of the most recently completed run (`0`/`1`/`2`), so `grund check --watch &` followed by a later signal is still a meaningful CI-ish probe. There is no TUI, no key bindings, no prompt — it is non-interactive per [§FS-non-goals.10](FS-non-goals.md#10-interactive-mode), just a re-printing checker. No network I/O ([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)); the only files touched are the ones the walk already reads.
-- **Scope.** `--watch` will be a `check` flag spelled as `grund check --watch [<path>]` ([§FS-cli](FS-cli.md#fs-cli-grunds-command-line-surface-conventions)). Other subcommands will not take it; a one-shot `grund fmt` or ID query has nothing to keep watching.
+How it notices a change is §6.1, what each run prints is §6.2, how it ends is §6.3, and which command takes the flag is §6.4.
+
+### 6.1 Change detection
+
+Filesystem notifications where the OS provides them; a debounce window coalesces a burst of writes into one re-check. No polling loop is required, and there is no configurable interval — the watcher reacts, it does not sample.
+
+### 6.2 Each run is a plain `grund check`
+
+Output and exit-status semantics of an individual run are exactly §2/§2.1 on the tree's state at that moment — byte-identical to what a non-`--watch` invocation would print ([§FS-errors.4](FS-errors.md#4-determinism)). Before each run, and only when stdout is a terminal, the previous run's output is cleared so the terminal always shows the current report; piped output and `--format=json` carry no clearing bytes and stay byte-identical to a plain run, and with `--format=json` each run emits the same diagnostic NDJSON as non-watch mode, scoped to that run.
+
+### 6.3 Lifecycle
+
+The process runs until interrupted (Ctrl-C / SIGINT). On interrupt it exits with the exit code of the most recently completed run (`0`/`1`/`2`), so `grund check --watch &` followed by a later signal is still a meaningful CI-ish probe. There is no TUI, no key bindings, no prompt — it is non-interactive per [§FS-non-goals.10](FS-non-goals.md#10-interactive-mode), just a re-printing checker. No network I/O ([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)); the only files touched are the ones the walk already reads.
+
+### 6.4 Scope
+
+`--watch` will be a `check` flag spelled as `grund check --watch [<path>]` ([§FS-cli](FS-cli.md#fs-cli-grunds-command-line-surface-conventions)). Other subcommands will not take it; a one-shot `grund fmt` or ID query has nothing to keep watching.
