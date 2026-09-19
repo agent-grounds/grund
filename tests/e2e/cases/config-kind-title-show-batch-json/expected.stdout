@@ -1,4 +1,4 @@
-{"query":{"id":"FS-authored","section":null},"ok":true,"result":{"id":"FS-authored","section":null,"body":"Body stays authored.\n","path":"docs/FS-authored.md","line":1,"kind_title":"Caller title"},"error":null}
-{"query":{"id":"target/FS-authored","section":null},"ok":true,"result":{"id":"FS-authored","section":null,"body":"Body stays authored.\n","path":"target/docs/FS-authored.md","line":1,"kind_title":"Target title"},"error":null}
+{"query":{"id":"FS-authored","section":null},"ok":true,"result":{"id":"FS-authored","section":null,"body":"Body stays authored.\n","kind_title":"Caller title","path":"docs/FS-authored.md","line":1},"error":null}
+{"query":{"id":"target/FS-authored","section":null},"ok":true,"result":{"id":"FS-authored","section":null,"body":"Body stays authored.\n","kind_title":"Target title","path":"target/docs/FS-authored.md","line":1},"error":null}
 {"query":{"id":"untitled/FS-authored","section":null},"ok":true,"result":{"id":"FS-authored","section":null,"body":"Body stays authored.\n","path":"untitled/docs/FS-authored.md","line":1},"error":null}
 {"query":{"id":"target/FS-missing","section":null},"ok":false,"result":null,"error":{"severity":"error","path":null,"line":null,"code":"not-found","message":"ID not found: FS-missing","sites":null}}

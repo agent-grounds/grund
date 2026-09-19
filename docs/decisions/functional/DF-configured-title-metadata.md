@@ -1,6 +1,6 @@
 # DF-configured-title-metadata: kind titles are separate target metadata
 
-**Status:** Accepted by issue 243's checkpoint-10 supervisory ruling
+**Status:** Accepted by issue 243's checkpoint-10 supervisory ruling; show ordering corrected by the checkpoint-18 operator ruling
 **Date:** 2026-09-19
 
 ## 1. Context
@@ -16,13 +16,17 @@ author response or a claim that the original unchanged-output prediction held.
 
 ## 2. Decision
 
-Append an optional `kind_title` string after the existing fields of each
-successful show JSON object, including E2E manifests, JSON values, sections,
-all read modes and batch results. Append it to each detailed refs record, but
-not file summaries. Use the resolved target kind's effective configuration,
-including defaults; omit it for `None` and preserve a present empty string.
-Caller and citer configuration cannot supply the title of a workspace target.
-Refs still accepts a grammatically valid undeclared ID.
+Add an optional `kind_title` string to each successful show JSON object,
+including E2E manifests, JSON values, sections, all read modes and batch
+results. The checkpoint-18 operator compatibility correction places it before
+the terminal `path`, `line` pair in declaration and section objects because
+installed resolver copies anchor on that trusted tail; section maps precede it.
+The distinct E2E manifest retains its `id`, `kind`, `path` prefix and appends
+the metadata last. Append it to each detailed refs record, but not file summaries.
+Use the resolved target kind's effective configuration, including defaults;
+omit it for `None` and preserve a present empty string. Caller and citer
+configuration cannot supply the title of a workspace target. Refs still accepts
+a grammatically valid undeclared ID.
 
 Successful hover appends two newlines, `Kind: ` and a CommonMark code span of
 the title. Preserve the existing preview or title-and-usage content, including
@@ -55,7 +59,8 @@ exception to the coverage gate.
 
 ## 4. Consequences
 
-JSON consumers may read the final field or continue reading existing fields.
+JSON consumers may read the optional field while declaration and section
+consumers can continue trusting the terminal location pair.
 Full hover gains separate metadata while its preview remains CLI-parallel.
 Target selection is shared with the query or snapshot, with no fetch, network
 execution or extra per-hover filesystem scan. Exact JSON/API and editor-handler

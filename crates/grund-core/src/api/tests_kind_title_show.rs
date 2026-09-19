@@ -31,7 +31,7 @@ fn read(root: &Path, id: &str, mode: ShowMode, format: ShowFormat) -> crate::mod
 }
 
 #[test]
-fn kind_title_show_modes_preserve_bodies_and_append_metadata_last() {
+fn kind_title_show_modes_preserve_bodies_and_terminal_location_pair() {
     let root = test_root("kind_title_show_modes");
     let source = "# FS-authored: Authored title\n\nLead.\n\n## 1. Detail\n\nDetail body.\n";
     write(&root.join("docs/FS-authored.md"), source);
@@ -63,7 +63,7 @@ fn kind_title_show_modes_preserve_bodies_and_append_metadata_last() {
             assert_eq!(
                 shown.json.unwrap(),
                 format!(
-                    "{{\"id\":\"FS-authored\",\"section\":null,\"body\":\"{}\",\"path\":\"docs/FS-authored.md\",\"line\":1{sections}{metadata}}}",
+                    "{{\"id\":\"FS-authored\",\"section\":null,\"body\":\"{}\"{sections}{metadata},\"path\":\"docs/FS-authored.md\",\"line\":1}}",
                     json_escape(body)
                 )
             );
@@ -77,7 +77,7 @@ fn kind_title_show_modes_preserve_bodies_and_append_metadata_last() {
             assert_eq!(
                 section.json.unwrap(),
                 format!(
-                    "{{\"id\":\"FS-authored\",\"section\":\"1\",\"body\":\"{}\",\"path\":\"docs/FS-authored.md\",\"line\":5{section_map}{metadata}}}",
+                    "{{\"id\":\"FS-authored\",\"section\":\"1\",\"body\":\"{}\"{section_map}{metadata},\"path\":\"docs/FS-authored.md\",\"line\":5}}",
                     json_escape(section_body)
                 )
             );
@@ -104,7 +104,7 @@ fn kind_title_show_uses_effective_defaults() {
         read(&root, "FS-authored", ShowMode::Lead, ShowFormat::Json)
             .json
             .unwrap(),
-        "{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\",\"path\":\"requirements.md\",\"line\":1,\"kind_title\":\"What: behavior, requirements, and constraints\"}"
+        "{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\",\"kind_title\":\"What: behavior, requirements, and constraints\",\"path\":\"requirements.md\",\"line\":1}"
     );
 }
 
@@ -190,7 +190,7 @@ fn kind_title_show_e2e_and_json_values_keep_their_alternate_shapes() {
                 assert_eq!(
                     shown.json.unwrap(),
                     format!(
-                        "{{\"id\":\"CONST-price\",\"section\":{section},\"body\":\"{}\",\"path\":\"values/data.json\",\"line\":2{map}{metadata}}}",
+                        "{{\"id\":\"CONST-price\",\"section\":{section},\"body\":\"{}\"{map}{metadata},\"path\":\"values/data.json\",\"line\":2}}",
                         json_escape(body)
                     )
                 );
@@ -255,7 +255,7 @@ fn kind_title_show_workspace_and_batch_select_each_targets_title() {
             .map(|title| format!(",\"kind_title\":\"{title}\""))
             .unwrap_or_default();
         let expected = format!(
-            "{{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\",\"path\":\"{prefix}docs/FS-authored.md\",\"line\":1{metadata}}}"
+            "{{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\"{metadata},\"path\":\"{prefix}docs/FS-authored.md\",\"line\":1}}"
         );
         assert_eq!(records[index].result.as_ref().unwrap(), &expected);
         assert_eq!(

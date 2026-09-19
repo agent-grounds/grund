@@ -14,6 +14,57 @@ mod binaries;
 use std::fs;
 use std::process::Command;
 
+/// §FS-show.3.1: installed resolvers trust this terminal pair for declarations
+/// and sections because authored body prose may contain location-shaped JSON.
+#[test]
+fn titled_show_json_keeps_path_and_line_as_the_terminal_pair() {
+    let repo = binaries::repo_root();
+    let sandbox = repo.join("target/integration-work/show-json-location-tail");
+    let _ = fs::remove_dir_all(&sandbox);
+    fs::create_dir_all(sandbox.join("docs")).expect("create show JSON fixture");
+    fs::write(
+        sandbox.join("grund.toml"),
+        concat!(
+            "grund_config_version = 1\n",
+            "[id]\nformat = \"{kind}-{slug}\"\n",
+            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n",
+            "index = false\ntitle = \"Product contracts\"\n",
+        ),
+    )
+    .expect("write show JSON config");
+    fs::write(
+        sandbox.join("docs/FS-authored.md"),
+        "# FS-authored: Authored\n\nLead.\n\n## 1. Detail\n\nDetail body.\n",
+    )
+    .expect("write show JSON declaration");
+
+    for (query, expected) in [
+        (
+            "FS-authored",
+            "{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\",\"kind_title\":\"Product contracts\",\"path\":\"docs/FS-authored.md\",\"line\":1}\n",
+        ),
+        (
+            "FS-authored.1",
+            "{\"id\":\"FS-authored\",\"section\":\"1\",\"body\":\"## 1. Detail\\n\\nDetail body.\\n\",\"kind_title\":\"Product contracts\",\"path\":\"docs/FS-authored.md\",\"line\":5}\n",
+        ),
+    ] {
+        let output = Command::new(binaries::grund())
+            .args([query, "--format=json"])
+            .current_dir(&sandbox)
+            .output()
+            .expect("run titled show JSON query");
+        assert!(
+            output.status.success(),
+            "{query} failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(String::from_utf8_lossy(&output.stdout), expected);
+        assert!(output.stderr.is_empty());
+    }
+
+    fs::remove_dir_all(&sandbox).expect("remove show JSON fixture");
+}
+
 #[cfg(unix)]
 #[test]
 fn the_resolver_resolves_every_citation_form_headlessly() {
