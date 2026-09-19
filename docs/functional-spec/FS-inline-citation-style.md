@@ -197,7 +197,7 @@ The default is `any` because a layout is a house style, not a correctness proper
 
 ## 4. Enforcement (`grund check`)
 
-Findings are reported using the located-finding shape of [§FS-errors.2.1](FS-errors.md#21-located-finding), anchored at the **first line** of the offending citation site (so a multi-line block with a budget violation lands one diagnostic at its opener, not at every constituent line). The one exception is the layout rule of §4.4, which judges a single line and therefore anchors at it. The rule is a pure transformation of `Findings` ([AR-checker.4](../../crates/grund-core/src/checker/report.rs)) — the checker does **not** re-read files; the scanner annotates each recorded citation with its enclosing site's span, max-column width, note presence, and — when a layout and a check level ask for them (§4.4) — the lines of that site that fail the configured layout (§3.3), so the rule operates from `Findings` alone. That last annotation is what lets §4.4 anchor at a single line without the checker ever re-reading it.
+Findings are reported using the located-finding shape of [§FS-errors.2.1](FS-errors.md#21-located-finding), anchored at the **first line** of the offending citation site (so a multi-line block with a budget violation lands one diagnostic at its opener, not at every constituent line). The one exception is the layout rule of §4.4, which judges a single line and therefore anchors at it (§4.4.1). The rule is a pure transformation of `Findings` ([AR-checker.4](../../crates/grund-core/src/checker/report.rs)) — the checker does **not** re-read files. The scanner annotates each recorded citation with its enclosing site's span, max-column width, note presence, and — when a layout and a check level ask for them (§4.4) — the site's lines that fail the configured layout (§3.3; §7.1), so the rule, the per-line anchor of §4.4 included, operates from `Findings` alone.
 
 ### 4.1 Errors — hard caps
 
@@ -209,21 +209,31 @@ Each of the following is an error and contributes to a non-zero exit code, per [
 | `lines > inline_note_max_lines`                         | error: `inline note is M lines, over the N-line maximum: lines A-B cite <citations>; a blank line splits a note, an empty comment line does not` |
 | `max(columns) > inline_note_max_columns`                | error: `inline note is M columns, over the N-column maximum: line(s) A[-B] cite(s) <citations>`                     |
 
-A single site that violates more than one cap produces one finding per violated cap (so the author sees every reason in a single pass). `M` is the measured size — physical lines, or characters (§2.3) of the site's longest line — placed next to the cap `N` so the finding is actionable without re-measuring, in keeping with [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible). `M` pluralises by its own value (`1 line`, `2 lines`, `1 column`, `2 columns`); `N-line` and `N-column` are adjectival and never pluralise.
+A single site that violates more than one cap produces one finding per violated cap (so the author sees every reason in a single pass). §4.1.1–§4.1.3 define `M` and `N`, the site clause, and the splitting clause.
 
-Both findings also name the site: `A-B` is the block's `first_line`–`last_line`, or `line A` alone when the two coincide (only possible for the column cap); `<citations>` is every citation token of the site as written — marker, qualifier, section — in source order, deduplicated after the first occurrence, chain-spelled with `, ` the way §3.3 already joins a citation run. The line-count finding carries a further clause, `a blank line splits a note, an empty comment line does not`, restating §1's block rule at the point it fixes the finding: the citations name what has to move, and the clause names the boundary that moving them has to cross. The column cap carries no such clause — a wide line is fixed by wrapping, not by splitting.
+#### 4.1.1 The measured size
+
+`M` is the measured size — physical lines (§2.3.1), or characters (§2.3.2) of the site's longest line — placed next to the cap `N` so the finding is actionable without re-measuring, in keeping with [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible). `M` pluralises by its own value (`1 line`, `2 lines`, `1 column`, `2 columns`); `N-line` and `N-column` are adjectival and never pluralise.
+
+#### 4.1.2 The site clause
+
+Both cap findings name the site: `A-B` is the block's `first_line`–`last_line`, or `line A` alone when the two coincide (only possible for the column cap); `<citations>` is every citation token of the site as written — marker, qualifier, section — in source order, deduplicated after the first occurrence, chain-spelled with `, ` the way §3.3 already joins a citation run.
+
+#### 4.1.3 The splitting clause
+
+The line-count finding carries a further clause, `a blank line splits a note, an empty comment line does not`, restating §1.2's block rule at the point it fixes the finding: the citations name what has to move, and the clause names the boundary that moving them has to cross. The column cap carries no such clause — a wide line is fixed by wrapping, not by splitting.
 
 ### 4.2 Warnings — opt-in soft cap
 
 `warn_on_suggested = false` (default): soft-cap overruns are **silent** at `check` time. The soft cap is purely guidance for the agent-facing surface (§5); humans get the same guidance through the same rendered copy.
 
-`warn_on_suggested = true`: a site whose line count exceeds `inline_note_suggested_lines` but stays within `inline_note_max_lines` is reported as a **warning**: `inline note is M lines, over the N-line preferred limit: lines A-B cite <citations>; a blank line splits a note, an empty comment line does not`, with `M`, `N`, the site clause, and the splitting clause following the same rules as §4.1's line-count finding. Warnings never affect the exit code, per [§FS-check.4](FS-check.md#4-warnings).
+`warn_on_suggested = true`: a site whose line count exceeds `inline_note_suggested_lines` but stays within `inline_note_max_lines` is reported as a **warning**: `inline note is M lines, over the N-line preferred limit: lines A-B cite <citations>; a blank line splits a note, an empty comment line does not`, with `M`, `N`, the site clause, and the splitting clause following the same rules as §4.1's line-count finding (§4.1.1–§4.1.3). Warnings never affect the exit code, per [§FS-check.4](FS-check.md#4-warnings).
 
-There is no `suggested_columns` knob; column width is a single hard cap. The motivation is symmetry with how editors and formatters already treat line length — a binary "too long" rather than a layered preference.
+The soft cap counts lines only: there is no `suggested_columns` knob, and column width is a single hard cap (§6.3).
 
 ### 4.3 `grund fmt`
 
-`grund fmt` does **not** auto-fix style violations under this spec — budgets and layout alike. Prose cannot be safely rewritten or truncated, and moving a citation across the prose that surrounds it is a prose edit, not a token rewrite: the formatter would have to decide where a sentence ends, whether a trailing `(§<ID>)` was parenthetical, and what punctuation the remainder now needs. The fix for a layout deviation is one token in the author's own editing loop, and migrating a tree is served by `inline_note_layout_check = "warn"` (§4.4), which produces the worklist without touching a byte. The formatter continues to handle trigger-to-marker and bare-to-marker rewrites ([§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker), [§FS-fmt.2.2](FS-fmt.md#22-bare-to-marker-with---marker)) and cross-reference emission ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)) unchanged; an inline citation that violates `inline_style` rules is `check`'s problem, not `fmt`'s.
+`grund fmt` does **not** auto-fix style violations under this spec — budgets and layout alike; an inline citation that violates `inline_style` rules is `check`'s problem, not `fmt`'s. Prose cannot be safely rewritten or truncated, and moving a citation across the prose that surrounds it is a prose edit, not a token rewrite: the formatter would have to decide where a sentence ends, whether a trailing `(§<ID>)` was parenthetical, and what punctuation the remainder now needs. The fix for a layout deviation is one token in the author's own editing loop, and migrating a tree is served by `inline_note_layout_check = "warn"` (§4.4), which produces the worklist without touching a byte. The formatter's trigger-to-marker and bare-to-marker rewrites ([§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker), [§FS-fmt.2.2](FS-fmt.md#22-bare-to-marker-with---marker)) and its cross-reference emission ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)) continue unchanged.
 
 ### 4.4 Warnings and errors — opt-in layout deviations
 
@@ -237,62 +247,115 @@ With `inline_note_layout = "citation-first-colon"`:
 | `warn`                     | one **warning** per nonconforming line; the exit code is untouched (§4.2)   |
 | `error`                    | one **error** per nonconforming line; the exit code becomes 1               |
 
-Three properties are fixed at both levels:
+Three properties are fixed at both levels (§4.4.1–§4.4.3); §4.4.4 says why there are two.
 
-- **One finding per nonconforming line, anchored at that line** — not at the site's opener. A layout deviation is a property of the line the author has to edit, and a five-line doc-comment with two bad lines is two edits. This is the one rule in this spec that does not anchor at `first_line`; the budgets measure the site as a whole and keep their opener anchor.
-- **The message is the same at both levels**, so moving a project from `warn` to `error` changes the exit code and nothing a reader has to re-learn. It names the canonical shape with the configured marker, e.g. ``inline note must open with its citations and a colon (§<ID>: note)``.
-- **Report order is the existing deterministic order** ([§FS-errors.4](FS-errors.md#4-determinism)) — the level chooses the channel, and in a text report the channel chooses the group, errors ahead of warnings; the JSON order ignores the channel.
+#### 4.4.1 One finding per nonconforming line
 
-The two levels exist so a repository can adopt the style in the order adoption actually happens: turn on `warn`, migrate the tree with the report as the worklist, then turn on `error` to keep it migrated. That is the same ladder [§DF-require-grounding.2.4](../decisions/functional/DF-require-grounding.md#24-off-by-default) describes for the grounding floor, and choosing which channel a rule speaks through is a per-project configuration choice, not a redefinition of what a warning or an error *means* — those stay fixed by [§FS-check.2](FS-check.md#2-outputs).
+Each finding is anchored at its nonconforming line, not at the site's opener. A layout deviation is a property of the line the author has to edit, and a five-line comment with two bad lines is two edits. This is the exception §4 names: the budgets measure the site as a whole and keep their opener anchor.
+
+#### 4.4.2 One message at both levels
+
+The message is the same at `warn` and at `error`, so moving a project from `warn` to `error` changes the exit code and nothing a reader has to re-learn. It names the canonical shape with the configured marker, e.g. ``inline note must open with its citations and a colon (§<ID>: note)``.
+
+#### 4.4.3 Report order
+
+Report order is the existing deterministic order ([§FS-errors.4](FS-errors.md#4-determinism)) — the level chooses the channel, and in a text report the channel chooses the group, errors ahead of warnings; the JSON order ignores the channel.
+
+#### 4.4.4 Why two levels
+
+The two levels exist so a repository can adopt the style in the order adoption actually happens: turn on `warn`, migrate the tree with the report as the worklist, then turn on `error` to keep it migrated. That is the same ladder [§DF-require-grounding.2.4](../decisions/functional/DF-require-grounding.md#24-off-by-default) describes for the grounding floor. Choosing which channel a rule speaks through is a per-project configuration choice, not a redefinition of what a warning or an error *means* — those stay fixed by [§FS-check.2](FS-check.md#2-outputs).
 
 ## 5. Agent-facing rendering
 
-The `init` machinery that writes versioned managed blocks into `AGENTS.md` / `CLAUDE.md` / sibling agent entrypoints ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) reads the active values and emits the sentences describing the project's house style, opening with one budgets line:
+The `init` machinery that writes versioned managed blocks into `AGENTS.md` / `CLAUDE.md` / sibling agent entrypoints ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) reads the active values and emits the sentences describing the project's house style: the budgets line (§5.1), the block sentence (§5.2), the layout sentence (§5.3) and the doc-comment sentence (§5.4), each under the conditions its section states. They are rendered, not live (§5.5); the last three move no managed-block version (§5.6); and `grund config show` is the machine-readable form of the same keys (§5.7).
+
+### 5.1 The budgets line
+
+The copy opens with one budgets line:
 
 - `inline_style = "citation-only"` → `Inline citations carry no prose — put rationale in the spec.`
 - `inline_style = "citation-with-note"`, `suggested_lines == max_lines` → e.g. `Inline notes: ≤ 1 line, ≤ 100 columns.`
 - `inline_style = "citation-with-note"`, `suggested_lines < max_lines` → e.g. `Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns.`
 
-Under `citation-with-note` only, one further sentence follows the budgets line and precedes everything below: `A note is one comment block: a blank line splits it, an empty comment line does not.` — restating §1's block rule where the agent will need it to act on a cap finding. No sentence is added under `citation-only`: a citation site with no note has no block to split. Like the layout and doc-comment sentences, this moves **no** managed-block version (§2.2): a block that predates it teaches the same rule less precisely, an over-careful comment, never a finding.
+The collapse rule is "if soft and hard are the same number, only mention the number" — the soft/hard distinction is a property of the *config*, not always a useful distinction in the agent prose.
 
-When `inline_note_layout = "citation-first-colon"` is set, one further sentence is appended to whichever line above applies, naming the canonical form with the configured marker and placeholder IDs — e.g. ``Lay each note out citation-first: `// §<ID>: <note>` (several citations: `// §<ID>, §<ID>: <note>`).`` Under `inline_note_layout = "any"` nothing is appended and the rendered text is byte-identical to what a `grund` without this key produced, so no repository's managed block drifts on upgrade: its re-render ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) is unchanged, and `grund init --check` reports no `would-update` for it ([§FS-init.1](FS-init.md#1-inputs)).
+### 5.2 The block sentence
+
+Under `citation-with-note` only, one further sentence follows the budgets line and precedes the layout and doc-comment sentences (§5.3, §5.4): `A note is one comment block: a blank line splits it, an empty comment line does not.` — restating §1.2's block rule where the agent will need it to act on a cap finding. No sentence is added under `citation-only`: a citation site with no note has no block to split.
+
+### 5.3 The layout sentence
+
+When `inline_note_layout = "citation-first-colon"` is set, one further sentence is appended to whichever line above applies (§5.1, §5.2), naming the canonical form with the configured marker and placeholder IDs — e.g. ``Lay each note out citation-first: `// §<ID>: <note>` (several citations: `// §<ID>, §<ID>: <note>`).`` Under `inline_note_layout = "any"` nothing is appended and the rendered text is byte-identical to what a `grund` without this key produced, so no repository's managed block drifts on upgrade: its re-render ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) is unchanged, and `grund init --check` reports no `would-update` for it ([§FS-init.1](FS-init.md#1-inputs)).
+
+#### 5.3.1 Wider than the gate
+
+The sentence names a house style for the comments an agent writes, and it is deliberately wider than the gate: `check` judges inline citation *sites*, so neither a doc comment (§1.1) nor a doc-comment that declares an ID (§3.3.6) is measured against the form at all. Both readings are the intended ones — an agent should lay out every note it writes the same way, and documentation, whether it is a declaration body or the Javadoc next to it, is text whose shape this spec does not govern. The practical consequence belongs to whoever migrates a tree: under `warn`, the worklist covers the citing inline comments and never the doc comments, so "the report is empty" means the sites are clean, not that every `§<ID>` line in the repository is citation-first.
+
+#### 5.3.2 The same at every check level
+
+`inline_note_layout_check` does **not** change the sentence. The house style is what the agent is asked to write; whether `check` reports a deviation as a warning, as an error, or not at all is a fact about the project's gate, not about the form. An agent told the form and then told it is only advisory would have been given a reason to ignore it.
+
+### 5.4 The doc-comment sentence
 
 One last sentence closes the rendered copy at **every** `inline_style`, after whatever the keys above produced, because where the gate stops is part of the house style an agent needs:
 
 ``Doc-comments (`///`, `//!`, `/** */`, a docstring, a comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.``
 
-Without it the author and the linter disagree in the expensive direction: the agent reads a budget, sees a Javadoc that cites, and moves the citation to a detached `//` line above the block — out of the generated documentation and away from the sentence it supported — to satisfy a rule that never applied (§1.1). Like the layout keys (§2.2), this moves **no** managed-block version. A bump would turn a silent staleness into an error for every repository, and the sentence only ever widens what an author may write: a block that predates it teaches a narrower rule than the gate enforces, which costs an over-careful comment and never a finding. The block gains the sentence on the repository's next `grund init`.
+Without it the author and the linter disagree in the expensive direction: the agent reads a budget, sees a Javadoc that cites, and moves the citation to a detached `//` line above the block — out of the generated documentation and away from the sentence it supported — to satisfy a rule that never applied (§1.1).
 
-The sentence is *rendered*, not live: it is written into the managed block when `grund init` runs, and `check` version-checks that block ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) without comparing this bullet against the active config. A project that adopts `inline_note_layout`, changes its value, or drops back to `any` therefore re-runs `grund init` to refresh the block; until it does, the entrypoint keeps teaching the previous style and `check` says nothing about the mismatch. That is the same standing every other line [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) substitutes into the block has, and it is why the layout keys move no block version (§2.2) — a version bump would turn a silent staleness into an error for every repository, including the ones that never set the key. The citation-directions and clickable-citations sections do not share that standing: `check` re-renders them and byte-compares ([§FS-init.2.3.5](FS-init.md#235-citation-directions), [§FS-init.2.3.6](FS-init.md#236-clickable-citations)).
+### 5.5 Rendered, not live
 
-The sentence names a house style for the comments an agent writes, and it is deliberately wider than the gate: `check` judges inline citation *sites*, so neither a doc comment (§1.1) nor a doc-comment that declares an ID (§3.3, rule 6) is measured against the form at all. Both readings are the intended ones — an agent should lay out every note it writes the same way, and documentation, whether it is a declaration body or the Javadoc next to it, is text whose shape this spec does not govern. The practical consequence belongs to whoever migrates a tree: under `warn`, the worklist covers the citing inline comments and never the doc comments, so "the report is empty" means the sites are clean, not that every `§<ID>` line in the repository is citation-first.
+Like every other line [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) substitutes into the block, the sentences of §5.1–§5.4 are *rendered*, not live: they are written into the managed block when `grund init` runs, and `check` version-checks that block ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) without comparing them against the active config. A project that adopts `inline_note_layout`, changes its value, or drops back to `any` therefore re-runs `grund init` to refresh the block; until it does, the entrypoint keeps teaching the previous style and `check` says nothing about the mismatch. The citation-directions and clickable-citations sections do not share that standing: `check` re-renders them and byte-compares ([§FS-init.2.3.5](FS-init.md#235-citation-directions), [§FS-init.2.3.6](FS-init.md#236-clickable-citations)).
 
-`inline_note_layout_check` does **not** change the sentence. The house style is what the agent is asked to write; whether `check` reports a deviation as a warning, as an error, or not at all is a fact about the project's gate, not about the form. An agent told the form and then told it is only advisory would have been given a reason to ignore it.
+### 5.6 No managed-block version
 
-The collapse rule is "if soft and hard are the same number, only mention the number" — the soft/hard distinction is a property of the *config*, not always a useful distinction in the agent prose.
+Because they are rendered, not live (§5.5), the block, layout and doc-comment sentences move **no** managed-block version: a version bump would turn a silent staleness into an error for every repository, including the ones that never set the layout key. For the block and doc-comment sentences staleness is also cheap: a block that predates the block sentence teaches the same rule less precisely, and one that predates the doc-comment sentence teaches a narrower rule than the gate enforces, since that sentence only ever widens what an author may write. Either costs an over-careful comment, never a finding, and the block gains the sentence on the repository's next `grund init`.
 
-`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) is the canonical machine-readable form: every key is printed at every value, no collapse, so a human or downstream tool diffing config sees the raw shape.
+### 5.7 `grund config show` is the machine-readable form
+
+`grund config show` ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)) is the canonical machine-readable form: every key is printed at every value, no collapse (§5.1), so a human or downstream tool diffing config sees the raw shape.
 
 ## 6. Non-goals
 
-- No `suggested_columns` knob. Column width is governed by editor/formatter rules in most repos; one hard cap is enough.
-- No auto-rewrite in `grund fmt`. Prose changes need human judgment.
-- No scope expansion to Markdown bodies. Spec text is not capped.
+Deliberately out of scope, in four groups (§6.1–§6.4).
+
+### 6.1 No rewrite in `grund fmt`
+
+No auto-rewrite of a note and no normalization of layout, in `--check` or in `--write` (§4.3): prose changes need human judgment, and layout is check-only.
+
+### 6.2 No scope beyond inline citation sites
+
+- No scope growth. Spec text in Markdown bodies is not capped, and layout is judged on inline citation sites only — never in Markdown bodies, never on a comment trailing code, never on the code line below the comment (§3.3.6).
+- No host-language parsing to find definitions. Whether a block is a doc comment is one marker test or one next-line test (§1.1.1). A false negative in a position language — a Go `var` in a function body, a Ruby `private def` — is fixed by widening a starter set, never by acquiring a parser ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).
+
+### 6.3 No second column measure
+
+- No `suggested_columns` knob. Column width is a single hard cap, a binary "too long" in symmetry with how editors and formatters already treat line length rather than a layered preference; in most repositories editor or formatter rules already govern it.
+- No display-width awareness. Tabs count as one column; widening tabstops in an editor does not change whether a comment passes the cap.
+
+### 6.4 No per-project reshaping of the rule
+
 - No per-kind or per-file overrides. The style is repo-wide, matching [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree) — two correctly-configured `grund` installs must agree on whether a tree is well-formed.
 - No "warning for hard-cap miss." A hard-cap miss is always an error; if a project wants the soft tier to nag, it sets `warn_on_suggested = true`.
-- No display-width awareness. Tabs count as one column; widening tabstops in an editor does not change whether a comment passes the cap.
-- No `grund fmt` normalization of layout, in `--check` or in `--write` (§4.3). Layout is check-only.
 - No per-rule severity remap. `inline_note_layout_check` selects which channel *this* rule speaks through, from a fixed set; it does not let a project re-level any other rule, and it does not change what an error or a warning means ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization), [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
-- No scope growth. Layout is judged on inline citation sites only — never in Markdown bodies, never on a comment trailing code, never on the code line below the comment (§3.3, rule 6).
-- No host-language parsing to find definitions. Whether a block is a doc comment is one marker test or one next-line test (§1.1). A false negative in a position language — a Go `var` in a function body, a Ruby `private def` — is fixed by widening a starter set, never by acquiring a parser ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).
-- No configuration of the language table. The recognizers and the extensions they claim are built in (§1.1): what a site *is* must not differ between two installs ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). The table is widenable later without a `grund_config_version` bump ([§FS-config.5](FS-config.md#5-schema-versioning)).
+- No configuration of the language table. The recognizers and the extensions they claim are built in (§1.1.1, §1.1.2): what a site *is* must not differ between two installs ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). The table is widenable later without a `grund_config_version` bump ([§FS-config.5](FS-config.md#5-schema-versioning)).
 
 ## 7. Architecture impact
 
-This rule is additive on top of the existing scanner + checker pipeline:
+This rule is additive on top of the existing scanner + checker pipeline (§7.1–§7.4), and it never grows past the comment block: a site shape that lies outside what the scanner already records — e.g. "the next code line after the comment" — is **not** part of the site.
 
-- **Scanner** ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)). Each recorded `Citation` gains its enclosing site's information: `(first_line, last_line, max_columns, has_note)`, plus the ascending list of the site's lines that fail the configured layout (§3.3) — computed only when a layout is configured *and* `inline_note_layout_check` is not `off`, so both the default and a documented-only layout cost one comparison per site, allocate no per-block memo, and tokenize no line and classify no line on the field's account ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). The scanner already knows the comment-block extent on every line (it normalizes `/// …`, ` * …`, docstring interiors for declaration detection in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)) — the addition is recording that extent on the citations the block contains, not new line-classification logic. Multiple citations in the same block carry the same span. The doc-or-inline classification of §1.1 sits in the same place, in `comment_block.rs` alongside the block classifiers declaration detection already shares: the rule is chosen once per file from its extension, and the block is tested once — one comparison, made only for a block that carries a citation, which is where the scanner already has the block in hand. A doc-comment block records no site at all, exactly as a declaring block records none.
-- **Checker** ([AR-checker](../../crates/grund-core/src/checker/report.rs)). One new rule under [AR-checker.2](../../crates/grund-core/src/checker/report.rs) — a pure pass over `findings.citations`, grouping by site, comparing line/column counts and note-presence against the `[reference] inline_*` settings, emitting located findings per §4.1 (and §4.2 when `warn_on_suggested = true`, §4.4 when `inline_note_layout_check` is not `off`). No file I/O: the per-line layout verdicts arrive on the site the scanner recorded, so the checker never re-reads a line to decide its shape.
-- **`grund fmt`**, **`grund refs`**, **`grund cover`**, **`grund show`**: unaffected. The added fields are inert for every command except `check`.
+### 7.1 Scanner
 
-A site shape that lies outside what the scanner already records — e.g. "the next code line after the comment" — is **not** part of the site. The rule never grows past the comment block.
+In the scanner ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)), each recorded `Citation` gains its enclosing site's information: `(first_line, last_line, max_columns, has_note)`, plus the ascending list of the site's lines that fail the configured layout (§3.3). The scanner already knows the comment-block extent on every line (it normalizes `/// …`, ` * …`, docstring interiors for declaration detection in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)) — the addition is recording that extent on the citations the block contains, not new line-classification logic. Multiple citations in the same block carry the same span. A doc-comment block records no site at all, exactly as a declaring block records none.
+
+### 7.2 What the scanner pays
+
+The layout list is computed only when a layout is configured *and* `inline_note_layout_check` is not `off`, so both the default and a documented-only layout cost one comparison per site, allocate no per-block memo, and tokenize no line and classify no line on the field's account ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). The doc-or-inline classification of §1.1 sits in `comment_block.rs` alongside the block classifiers declaration detection already shares: the rule is chosen once per file from its extension, and the block is tested once — one comparison, made only for a block that carries a citation, which is where the scanner already has the block in hand.
+
+### 7.3 Checker
+
+The checker ([AR-checker](../../crates/grund-core/src/checker/report.rs)) gains one new rule under [AR-checker.2](../../crates/grund-core/src/checker/report.rs) — a pure pass over `findings.citations`, grouping by site, comparing line/column counts and note-presence against the `[reference] inline_*` settings, emitting located findings per §4.1 (and §4.2 when `warn_on_suggested = true`, §4.4 when `inline_note_layout_check` is not `off`). No file I/O: the per-line layout verdicts arrive on the site the scanner recorded, so the checker never re-reads a line to decide its shape.
+
+### 7.4 Other commands
+
+**`grund fmt`**, **`grund refs`**, **`grund cover`**, **`grund show`**: unaffected. The added fields are inert for every command except `check`.
