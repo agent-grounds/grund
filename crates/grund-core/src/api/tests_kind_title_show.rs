@@ -127,6 +127,10 @@ fn kind_title_show_e2e_and_json_values_keep_their_alternate_shapes() {
             &root.join("values/data.json"),
             "{\n  \"CONST-price\": [12, \"USD\"]\n}\n",
         );
+        write(
+            &root.join("cases/login/command.args"),
+            "check --format json repo\n",
+        );
         write(&root.join("cases/login/expected.exit"), "0\n");
         let metadata = title
             .map(|title| format!(",\"kind_title\":\"{title}\""))
@@ -169,7 +173,7 @@ fn kind_title_show_e2e_and_json_values_keep_their_alternate_shapes() {
             assert_eq!(
                 e2e.json.unwrap(),
                 format!(
-                    "{{\"id\":\"E2E-login\",\"kind\":\"E2E\",\"path\":\"cases/login\",\"args\":[],\"expected_exit\":0,\"fixtures\":[\"expected.exit\"]{metadata}}}"
+                    "{{\"id\":\"E2E-login\",\"kind\":\"E2E\",\"path\":\"cases/login\",\"args\":[\"check\",\"--format\",\"json\",\"repo\"],\"expected_exit\":0,\"fixtures\":[\"command.args\",\"expected.exit\"]{metadata}}}"
                 )
             );
             for (id, section, body) in [
