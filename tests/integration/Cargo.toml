@@ -48,6 +48,10 @@ path = "refs_frontend_parity.rs"
 name = "check_frontend_parity"
 path = "check_frontend_parity.rs"
 
+[[test]]
+name = "functional_spec_coverage"
+path = "functional_spec_coverage.rs"
+
 [[bin]]
 name = "grund-core-compat-test"
 path = "compat_frontend.rs"
