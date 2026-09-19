@@ -249,17 +249,29 @@ Which *files* the command may rewrite is configurable too: `[fmt] exclude` takes
 
 A free convenience layer on top of the ID system: render each citation as a clickable cross-reference to the declaration body — without giving up any of the polyglot, refactor-safe properties IDs already provide. Decided in [§DF-md-link-emission](../decisions/functional/DF-md-link-emission.md#df-md-link-emission-grund-fmt-may-emit-clickable-markdown-links-alongside--prefixed-citations).
 
-A "cross-reference" is whatever construct the surrounding markup uses to point at another location — a Markdown inline link `[text](url#anchor)`, an AsciiDoc `xref:`, a reStructuredText `:ref:`. **Today, `--cross-refs` emits exactly one form: the Markdown inline link, and only in `.md` files (§6.1).** The flag, and the `[fmt.cross_refs]` config block (§6.7), are named for the general concept on purpose: a later `grund` that learns a second markup family emits that family's cross-reference syntax in those files under the *same* flag, with its settings under the *same* config block — an additive change, no new flag and no `grund_config_version` bump. Language-specific cross-references are deliberately not in scope yet (getting each renderer's anchor algorithm exactly right is the same kind of fidelity work the Markdown profiles already needed — [§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)); the name just leaves the door open.
+A "cross-reference" is whatever construct the surrounding markup uses to point at another location — a Markdown inline link `[text](url#anchor)`, an AsciiDoc `xref:`, a reStructuredText `:ref:`. **Today, `--cross-refs` emits exactly one form: the Markdown inline link, and only in `.md` files (§6.1).** The flag and the `[fmt.cross_refs]` config block (§6.7) are named for the general concept on purpose: a later `grund` that learns a second markup family emits that family's cross-reference syntax in those files under the *same* flag, with its settings under the *same* block (§6.7.4). Other markup families are deliberately not in scope yet: getting each renderer's anchor algorithm exactly right is the same kind of fidelity work the Markdown profiles already needed ([§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)).
 
 ### 6.1 Scope
 
-`--cross-refs` runs **only on files with the `.md` extension** in the configured scan set. Source files are never touched: their host languages do not render Markdown, and rewriting a comment in `src/bus.rs` to inject `[…](…)` syntax is at best noise and at worst a parse error. The polyglot citation grammar (`§GOAL-polyglot-citation`) is the universal form; cross-reference emission is the rendered view of it — Markdown today, with room for other markup families later (the introduction above).
+`--cross-refs` runs **only on files with the `.md` extension** in the configured scan set. Source files are never touched: their host languages do not render Markdown, and rewriting a comment in `src/bus.rs` to inject `[…](…)` syntax is at best noise and at worst a parse error. The polyglot citation grammar (`§GOAL-polyglot-citation`) is the universal form; cross-reference emission is the rendered view of it — Markdown today, with room for other markup families later (§6).
 
-**A kind's index entries are always linkified.** The index file a `[[kinds]]` entry names, or the `README.md` it defaults to ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)), is a region the cross-reference pass runs on regardless of `[fmt.cross_refs] enabled` (§6.7) — the mirror image of §2.3's never-rewrite zones, one region `fmt` always writes rather than one it never does. `grund check` requires an index entry to be a full link ([§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link)) and takes the [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) licence to do so in the release it arrives, on the grounds that `grund fmt --write` is the fix; under `enabled = false` that would otherwise be false, and the fix would become `grund fmt --cross-refs --write`, which linkifies the whole tree to repair one file. The carve-out is what makes the requirement cost nothing in every configuration.
+A kind's index entries are linkified even under `[fmt.cross_refs] enabled = false` (§6.1.1) — only the entries (§6.1.2), and in both modes (§6.1.3). Decided in [§DF-index-always-linkified](../decisions/functional/DF-index-always-linkified.md#df-index-always-linkified-the-cross-reference-pass-always-runs-on-a-kinds-index-file).
 
-The carve-out is scoped to the **entries**, not to the page. Reached this way — that is, only where `enabled = false` would otherwise have skipped the file — the pass wraps the citations the index owes an entry for ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) and leaves every other citation in the file alone: a mention of a foreign ID in the prose around the list is an ordinary citation in an ordinary file, and a repository that turned generated links off asked for it to stay bare. An external inline declaration enters this owed set only while its canonical enrollment link already exists; the carve-out therefore preserves that form but does not infer membership from an ordinary external citation or repair a link whose noncanonical destination makes it ordinary. Under the default `enabled = true` nothing is scoped, because the pass was already running on that file for its own reasons; a marker-prefixed bare-ID citation that the ordinary pass wraps canonically acquires the enrollment meaning of its stored form.
+#### 6.1.1 A kind's index entries are always linkified
 
-It follows the pass's own gate, in both modes: the dry run previews the index-entry wraps that `--write` applies even when `[fmt.cross_refs] enabled = false`. It needs no `.md` test of its own: `index` must name a Markdown file ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)), which is a rule this scope clause is the reason for. Decided in [§DF-index-always-linkified](../decisions/functional/DF-index-always-linkified.md#df-index-always-linkified-the-cross-reference-pass-always-runs-on-a-kinds-index-file).
+The index file a `[[kinds]]` entry names, or the `README.md` it defaults to ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)), is a region the cross-reference pass runs on regardless of `[fmt.cross_refs] enabled` (§6.7.2) — the mirror image of §2.3's never-rewrite zones, one region `fmt` always writes rather than one it never does. `grund check` requires an index entry to be a full link ([§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link)) and takes the [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) licence to do so in the release it arrives, on the grounds that `grund fmt --write` is the fix; under `enabled = false` that would otherwise be false, and the fix would become `grund fmt --cross-refs --write`, which linkifies the whole tree to repair one file. The carve-out is what makes the requirement cost nothing in every configuration.
+
+#### 6.1.2 The carve-out is scoped to the entries, not the page
+
+Reached this way — that is, only where `enabled = false` would otherwise have skipped the file — the pass wraps the citations the index owes an entry for ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) and leaves every other citation in the file alone: a mention of a foreign ID in the prose around the list is an ordinary citation in an ordinary file, and a repository that turned generated links off asked for it to stay bare.
+
+An external inline declaration enters this owed set only while its canonical enrollment link already exists; the carve-out therefore preserves that form but does not infer membership from an ordinary external citation or repair a link whose noncanonical destination makes it ordinary.
+
+Under the default `enabled = true` nothing is scoped, because the pass was already running on that file for its own reasons; a marker-prefixed bare-ID citation that the ordinary pass wraps canonically acquires the enrollment meaning of its stored form.
+
+#### 6.1.3 The carve-out follows the pass's own gate
+
+The dry run previews the index-entry wraps that `--write` applies, even when `[fmt.cross_refs] enabled = false`. The carve-out needs no `.md` test of its own: `index` must name a Markdown file ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)), which is a rule this scope clause is the reason for.
 
 ### 6.2 Form
 
@@ -270,11 +282,25 @@ Wrap the citation. A bare or marker-prefixed citation (illustrated as `§FS-<foo
 ```
 
 - `<relative-path>` — path from the file containing the citation to the file containing the declaration, in POSIX form (`../functional-spec/FS-<foo>.md`). When the declaration's home is in source code (a stub points at `src/foo.rs`), the link targets the source file directly with no anchor — the host renderer will not jump inside a doc-comment, but the link still leads to the right file.
-- `#<anchor>` — a heading anchor, present whenever the declaration's home is a Markdown file (and the active profile is not `none`). For a `.<section>` citation it is the cited section's heading; for a bare-ID citation it is the declaration's own heading — `§GOAL-<x>` → `[§GOAL-<x>](goals.md#goal-x-the-title)` rather than a bare link to `goals.md` ([§DF-declaration-anchor](../decisions/functional/DF-declaration-anchor.md#df-declaration-anchor-a-bare-id-markdown-link-points-at-the-declarations-heading-anchor)). The anchor is the heading's **rendered text** slugified per the configured renderer profile (§6.7) — for the default `github` profile, `### 6.2 Form` produces `#62-form`. "Rendered text" matters when the heading itself contains an inline link (including a citation that `--cross-refs` has already wrapped, §6.4) or an HTML-tag-shaped span: `## 4. Refining [§FS-<x>.1](FS-x.md#1-y)` slugifies as if it read `## 4. Refining §FS-<x>.1` (the destination URL is not part of the text), and `## RM-read: grund <ID>` slugifies as `## RM-read: grund ` (the `<ID>` is dropped) — exactly as a Markdown renderer treats them. The `github` (and `gitlab`) profile then reproduces `github-slugger` byte-for-byte: disallowed characters are deleted in place and each remaining space becomes one `-`, with no run-collapsing and no trailing-`-` trim — `## A — B` → `#a--b`, `` ## 6. Watch mode (`--watch`) `` → `#6-watch-mode---watch` ([§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)). The full strategy and profile list is decided in [§DF-md-link-anchor-strategy](../decisions/functional/DF-md-link-anchor-strategy.md#df-md-link-anchor-strategy-heading-text-slugs-re-derived-on-every-fmt-pass). When the home is a source file (a stub points at `src/x.rs`) the link is the bare file path with no anchor — a renderer will not jump inside a doc-comment; when the active profile is `none`, the anchor is omitted regardless.
-
-For an explicit named heading, the rendered text includes the handle and colon. Thus `## goals: Scope` produces `#goals-scope` under the GitHub profile. Retitling it to `## goals: Intent` refreshes an existing wrapper to `#goals-intent` on the next pass while the stored handle and citation text remain `goals`.
+- `#<anchor>` — a heading anchor, present whenever the declaration's home is a Markdown file and the active profile is not `none`: the cited heading (§6.2.1), slugified from its rendered text (§6.2.2).
 
 The citation text inside the brackets is preserved verbatim, including the marker. A reader scanning the rendered Markdown sees the citation exactly as before; only now it is clickable.
+
+#### 6.2.1 The anchor names the cited heading
+
+For a `.<section>` citation the anchor is the cited section's heading; for a bare-ID citation it is the declaration's own heading — `§GOAL-<x>` → `[§GOAL-<x>](goals.md#goal-x-the-title)` rather than a bare link to `goals.md` ([§DF-declaration-anchor](../decisions/functional/DF-declaration-anchor.md#df-declaration-anchor-a-bare-id-markdown-link-points-at-the-declarations-heading-anchor)).
+
+#### 6.2.2 The anchor slugifies the heading's rendered text
+
+The anchor is the heading's **rendered text** slugified per the configured renderer profile (§6.7.1) — for the default `github` profile, `### 6.2 Form` produces `#62-form`. "Rendered text" matters when the heading itself contains an inline link (including a citation that `--cross-refs` has already wrapped, §6.4) or an HTML-tag-shaped span: `## 4. Refining [§FS-<x>.1](FS-x.md#1-y)` slugifies as if it read `## 4. Refining §FS-<x>.1` (the destination URL is not part of the text), and `## RM-read: grund <ID>` slugifies as `## RM-read: grund ` (the `<ID>` is dropped) — exactly as a Markdown renderer treats them. The full strategy and profile list is decided in [§DF-md-link-anchor-strategy](../decisions/functional/DF-md-link-anchor-strategy.md#df-md-link-anchor-strategy-heading-text-slugs-re-derived-on-every-fmt-pass).
+
+#### 6.2.3 The `github` profile reproduces `github-slugger`
+
+The `github` (and `gitlab`) profile reproduces `github-slugger` byte-for-byte: disallowed characters are deleted in place and each remaining space becomes one `-`, with no run-collapsing and no trailing-`-` trim — `## A — B` → `#a--b`, `` ## 6. Watch mode (`--watch`) `` → `#6-watch-mode---watch` ([§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)).
+
+#### 6.2.4 A named heading's anchor carries its handle
+
+For an explicit named heading, the rendered text includes the handle and colon. Thus `## goals: Scope` produces `#goals-scope` under the GitHub profile. Retitling it to `## goals: Intent` refreshes an existing wrapper to `#goals-intent` on the next pass while the stored handle and citation text remain `goals`.
 
 ### 6.3 Idempotency and re-derive
 
@@ -282,21 +308,21 @@ Per [§DF-md-link-anchor-strategy.2.2](../decisions/functional/DF-md-link-anchor
 
 Idempotency holds: a second run with no intervening edits is a no-op, because the URL on disk is now equal to the canonical URL.
 
-An exact marked off-grammar citation backed by a catalog declaration
-([§FS-config.3.2](FS-config.md#32-id--id-grammar)) is the same durable source and may be wrapped or re-derived
-like any conforming citation. Unmarked and declaration-less off-grammar
-candidates stay untouched. The formatter consumes the shared scanner result
-and does not relax its marker, shorthand, or authoring grammar independently.
+#### 6.3.1 An existing wrap is recognized by its brackets
 
-Detection of an existing wrap, for both the rewrite and the no-double-wrap rules: the citation's immediately-preceding character is `[` and its immediately-following text begins `](`. When this matches, the wrapper computes the canonical URL and replaces the existing one if different. When it does not match, the citation is wrapped fresh.
+A citation is already wrapped when its immediately-preceding character is `[` and its immediately-following text begins `](`. The one test decides both the re-derive of §6.3 and the no-double-wrap rule; a citation that fails it is wrapped fresh.
+
+#### 6.3.2 A marked off-grammar citation is wrapped like any other
+
+An exact marked off-grammar citation backed by a catalog declaration ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) is the same durable source and may be wrapped or re-derived like any conforming citation. Unmarked and declaration-less off-grammar candidates stay untouched. The formatter consumes the shared scanner result and does not relax its marker, shorthand, or authoring grammar independently.
 
 ### 6.4 What is never wrapped
 
-The citation bytes inside a recognized value binding are never wrapped or otherwise rewritten, because the explicit form is the only compared grammar. Existing trigger and safe shorthand behavior may still apply where it preserves that form ([§FS-values.8](FS-values.md#8-formatting-stability)).
+The citation bytes inside a recognized value binding are never wrapped or otherwise rewritten, because the explicit form is the only compared grammar; existing trigger and safe shorthand behavior may still apply where it preserves that form ([§FS-values.8](FS-values.md#8-formatting-stability)).
 
-The never-rewrite rules of §2.3 are the authority here as for every pass: a citation in a fenced code block, in an inline code span, on a declaration heading line, or in a suppressed scope is not wrapped, except a kind's index entry in a suppressed scope (§2.5.3). Beyond them, this pass also skips:
+The never-rewrite zones of §2.3 are the authority here as for every pass: a citation in a fenced code block, in an inline code span, on a declaration heading line, or in a suppressed scope is not wrapped, except a kind's index entry in a suppressed scope (§2.5.3).
 
-- Citations whose declaration cannot be located by the scanner. A dangling citation is a `grund check` error; `fmt` does not paper over it by emitting a link to a nonexistent file. Report the unwrapped citation; let `check` flag the underlying problem.
+Beyond them, this pass also skips a citation whose declaration the scanner cannot locate. A dangling citation is a `grund check` error; `fmt` does not paper over it by emitting a link to a nonexistent file. Report the unwrapped citation; let `check` flag the underlying problem.
 
 ### 6.5 Interaction with `--marker`
 
@@ -307,19 +333,17 @@ The never-rewrite rules of §2.3 are the authority here as for every pass: a cit
 Generated `grund.toml` files set `[fmt.cross_refs] enabled = true`, and the built-in default is the same. This makes rendered Markdown useful by default while keeping the ID citation as the source of truth. The default favors GitHub code review and external discovery over the cleaner editor-only source view, per [§DF-md-link-default-on](../decisions/functional/DF-md-link-default-on.md#df-md-link-default-on-markdown-cross-reference-links-default-on-for-github-review-and-discovery):
 
 1. The source text still contains the exact citation, only wrapped as `[§ID](target)`; `grund check`, `grund show`, and `grund refs` continue to resolve the citation, not the Markdown URL.
-2. The pass runs automatically for every `grund fmt` scope that contains Markdown files, in both dry-run and write mode. The dry run reports exactly the set of changes `--write` applies. Source-only scopes such as `grund fmt src/app.rs --write` stay on the lightweight marker/trigger path unless `--cross-refs` is passed.
+2. The pass runs by itself in every `grund fmt` scope that contains Markdown files, dry run and `--write` alike (§6.7.2, §7.3).
 3. Repos that do not want generated Markdown links can set `enabled = false`; the generated config writes the key explicitly so the opt-out is visible.
-4. Projects with non-GitHub renderers keep the default link behavior but choose a matching `anchor_format` (§6.7), instead of disabling links entirely.
+4. Projects with non-GitHub renderers keep the default link behavior but choose a matching `anchor_format` (§6.7.1), instead of disabling links entirely.
 
 ### 6.7 Configurability
 
-```toml
-[fmt.cross_refs]
-enabled       = true       # default; false opts out of generated Markdown links
-anchor_format = "github"   # default; named renderer profile per §DF-md-link-anchor-strategy.2.3
-```
+`[fmt.cross_refs]` is the home for cross-reference settings; its keys and defaults are those of [§FS-config.3.7](FS-config.md#37-fmtcross_refs--cross-reference-emission). Today it carries two: `enabled`, the default-on toggle for `fmt` (§6.7.2), and `anchor_format`, which renderer's anchor-slug algorithm the Markdown link form uses (§6.7.1). The per-file opt-out is not among them (§6.7.3), and a later markup family's settings join the block additively (§6.7.4).
 
-`[fmt.cross_refs]` is the home for cross-reference settings. Today it carries two keys — `enabled` (the default-on toggle for `fmt`) and `anchor_format` (which renderer's anchor-slug algorithm the Markdown link form uses). `anchor_format` accepts one of the named profiles defined in [§DF-md-link-anchor-strategy.2.3](../decisions/functional/DF-md-link-anchor-strategy.md#23-renderer-profiles):
+#### 6.7.1 `anchor_format` names a renderer profile
+
+`anchor_format` accepts one of the named profiles defined in [§DF-md-link-anchor-strategy.2.3](../decisions/functional/DF-md-link-anchor-strategy.md#23-renderer-profiles):
 
 - `github` (default) — GitHub's slugger; covers the most common host.
 - `gitlab` — GitLab's slugger.
@@ -327,54 +351,109 @@ anchor_format = "github"   # default; named renderer profile per §DF-md-link-an
 - `pandoc` — Pandoc's `auto_identifiers` algorithm.
 - `none` — emit no anchor; produce a file-level link with no fragment.
 
-When `enabled = true`, the cross-reference pass runs on every `grund fmt` invocation whose rewrite scope contains at least one Markdown file, without requiring `--cross-refs`; dry-run and write mode make the same decision. Source-only scopes do not pay the full-project link-target scan because no file in that scope can be wrapped. When `enabled = false`, both modes skip link emission unless `--cross-refs` is passed for that invocation, apart from the index carve-out in §6.1. When a future `grund` adds a second markup family (the introduction to §6), that family's settings live under this same `[fmt.cross_refs]` block (a new key, or a sub-table such as `[fmt.cross_refs.asciidoc]`) — additive, so a v1 config that only set `anchor_format` keeps working and `grund_config_version` is unchanged ([§FS-config.5](FS-config.md#5-schema-versioning) bump rules).
+#### 6.7.2 What `enabled` decides
 
-What is **not** here is the per-file opt-out: `[fmt] exclude` (§2.5.1) sits in the sibling `[fmt]` table because it governs every rewrite the command performs, not just this pass ([§DF-fmt-suppression.2.1](../decisions/functional/DF-fmt-suppression.md#21-one-general-fmt-exclude-not-one-exclude-per-pass)). Its files, and any `grund:fmt off` region (§2.5.2), are skipped by this pass with them — apart from a kind's index entries, which the §6.1 carve-out wraps regardless (§2.5.3).
+When `enabled = true`, the cross-reference pass runs on every `grund fmt` invocation whose rewrite scope contains at least one Markdown file, without requiring `--cross-refs`; dry-run and write mode make the same decision. A source-only scope, such as `grund fmt src/app.rs --write`, stays on the lightweight marker/trigger path unless `--cross-refs` is passed: it does not pay the full-project link-target scan, because no file in it can be wrapped.
+
+When `enabled = false`, both modes skip link emission unless `--cross-refs` is passed for that invocation, apart from the index carve-out (§6.1.1).
+
+#### 6.7.3 The per-file opt-out lives in `[fmt]`
+
+`[fmt] exclude` (§2.5.1) sits in the sibling `[fmt]` table because it governs every rewrite the command performs, not just this pass ([§DF-fmt-suppression.2.1](../decisions/functional/DF-fmt-suppression.md#21-one-general-fmt-exclude-not-one-exclude-per-pass)); what it and a `grund:fmt off` region (§2.5.2) do to this pass is §6.4's.
+
+#### 6.7.4 A later markup family's settings join this block
+
+A second markup family's settings (§6) take a new key in this block, or a sub-table such as `[fmt.cross_refs.asciidoc]`. The change is additive: a v1 config that only set `anchor_format` keeps working and `grund_config_version` is unchanged ([§FS-config.5](FS-config.md#5-schema-versioning) bump rules).
 
 ### 6.8 Measurable
 
-E2E fixtures cover: wrap-on-first-run; dry-run/write parity when the default `enabled = true` causes both modes to run the cross-reference pass without the flag; source-only scopes skipping the default link-target scan in both modes; `enabled = false` preserving trigger-only behavior in both modes unless `--cross-refs` is passed, while the §6.1 index carve-out is still previewed and written; changed-line summary counts; no-op on second-run (idempotency); re-derive on heading rename (a wrap pointing at the old slug is rewritten to the new one in a single `fmt` pass); named-heading anchor derivation (`## goals: Scope` → `#goals-scope`), retitle refresh, and byte-identical handle preservation; re-derive on file move; correct relative path across `docs/` subdirectories; a bare-ID citation linking to the declaration's own heading anchor ([§DF-declaration-anchor](../decisions/functional/DF-declaration-anchor.md#df-declaration-anchor-a-bare-id-markdown-link-points-at-the-declarations-heading-anchor)); source-file declaration link with no anchor; `anchor_format = "none"` produces file-only links; each named renderer profile (`github`, `gitlab`, `mkdocs`, `pandoc`) produces its expected slug for a curated heading set — for `github`, that set includes headings whose punctuation closes up into runs of `-` that GitHub keeps and a naive collapser would not (`## A — B` → `#a--b`; [§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)) and a section heading that itself carries a citation, with another citation pointing at that section (the anchor derives from the heading's rendered text, so it is identical before and after `--cross-refs` wraps the heading's own citation — i.e. the wrap is idempotent over a citation that lives in a section heading); fenced-block exemption; dangling-citation skipped; declaration-line skipped; and `--cross-refs` without `--marker` on a tree containing both forms.
+E2E fixtures pin the pass (§6.8.1), its anchors (§6.8.2), and the suppressed scopes of §2.5 (§6.8.3).
 
-The suppressed scopes of §2.5 carry their own fixtures: an excluded file silent in dry run and byte-identical under `--write` while its `check` and `refs` output is unchanged; a region protecting an HTML `<pre>` diagram while ordinary prose in the same file is still wrapped; all four rewrites suppressed in each scope, a typed `$$` trigger included; a directive inside a fenced block toggling nothing in Markdown; an `off` with no `on` running to the end of the file; a stray `on` changing nothing; the source-file comment form (`fmt-directive-in-source-comment`), where the same directive illustrated inside a doc comment's own fence does open a region (§2.5.2); idempotency on a second pass; and a kind's index entries still wrapped under both scopes (§2.5.3).
+#### 6.8.1 Wrapping, parity, and skips
+
+- wrap-on-first-run
+- dry-run/write parity when the default `enabled = true` causes both modes to run the cross-reference pass without the flag
+- source-only scopes skipping the default link-target scan in both modes
+- `enabled = false` preserving trigger-only behavior in both modes unless `--cross-refs` is passed, while the index carve-out (§6.1.3) is still previewed and written
+- changed-line summary counts
+- no-op on second-run (idempotency)
+- re-derive on heading rename (a wrap pointing at the old slug is rewritten to the new one in a single `fmt` pass), and re-derive on file move
+- correct relative path across `docs/` subdirectories
+- fenced-block exemption; dangling-citation skipped; declaration-line skipped
+- `--cross-refs` without `--marker` on a tree containing both forms
+
+#### 6.8.2 Anchors
+
+- named-heading anchor derivation (`## goals: Scope` → `#goals-scope`), retitle refresh, and byte-identical handle preservation
+- a bare-ID citation linking to the declaration's own heading anchor ([§DF-declaration-anchor](../decisions/functional/DF-declaration-anchor.md#df-declaration-anchor-a-bare-id-markdown-link-points-at-the-declarations-heading-anchor))
+- source-file declaration link with no anchor
+- `anchor_format = "none"` produces file-only links
+- each named renderer profile (`github`, `gitlab`, `mkdocs`, `pandoc`) produces its expected slug for a curated heading set. For `github`, that set includes headings whose punctuation closes up into runs of `-` that GitHub keeps and a naive collapser would not (§6.2.3), and a section heading that itself carries a citation, with another citation pointing at that section: the anchor derives from the heading's rendered text (§6.2.2), so it is identical before and after `--cross-refs` wraps the heading's own citation.
+
+#### 6.8.3 Suppressed scopes
+
+- an excluded file silent in dry run and byte-identical under `--write` while its `check` and `refs` output is unchanged
+- a region protecting an HTML `<pre>` diagram while ordinary prose in the same file is still wrapped
+- all four rewrites suppressed in each scope, a typed `$$` trigger included
+- a directive inside a fenced block toggling nothing in Markdown
+- an `off` with no `on` running to the end of the file
+- a stray `on` changing nothing
+- the source-file comment form (`fmt-directive-in-source-comment`), where the same directive illustrated inside a doc comment's own fence does open a region (§2.5.2.2)
+- idempotency on a second pass
+- a kind's index entries still wrapped under both scopes (§2.5.3)
 
 ## 7. One model, and a write step
 
-`fmt` is the model `grund check` verifies plus a write step, never a second implementation of it. Every claim this command makes — what a token is, which lines will change, which paths could not be read, which files it may edit — is read from that model; and where the model is incomplete, or the proof that it is complete is missing, `fmt` refuses loudly rather than proceeding (§3).
+`fmt` is the model `grund check` verifies plus a write step, never a second implementation of it. Every claim this command makes — what a token is, which lines will change, which paths could not be read, which files it may edit — is read from that model; and where the model is incomplete, or the proof that it is complete is missing, `fmt` refuses loudly rather than proceeding (§3.2). Decided in [§DF-fmt-one-model](../decisions/functional/DF-fmt-one-model.md#df-fmt-one-model-fmt-is-the-shared-verified-model-plus-a-write-step-and-completeness-is-a-precondition-rather-than-a-convention).
 
-Decided in [§DF-fmt-one-model](../decisions/functional/DF-fmt-one-model.md#df-fmt-one-model-fmt-is-the-shared-verified-model-plus-a-write-step-and-completeness-is-a-precondition-rather-than-a-convention).
-
-This is not new behavior. Each rule below states, as a general property of the command, something §1–§6 already require of one code path at a time — and each was first written down only after a code path had already broken it. That is the reason the property is stated here rather than left implied: a principle enforced per code path is re-decided by the next code path, and this one has twice been re-decided against a sentence already in this document.
-
-**The rule has a direction, and the direction is the whole of it.** Equivalence binds `fmt` to `check`'s **model** — the same walk, the same token grammar, the same account of what could not be read. It does not bind `check`'s **findings** to what `fmt` is able to rewrite. The second coupling is a different rule wearing the same words, and this specification carries one instance of it already: [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) withholds its error in inline code, a Markdown link destination, and a source string literal, where §2.3 forbids the rewrite, so that the checker never reports there what the formatter cannot fix. The price is that the shorthand form of a citation inside a string literal, where it resolves to exactly one declaration, is unflaggable by any command — a true fact about the tree that no report may state, because one consumer of the model cannot act on it. A reader is owed every true finding about the tree; a writer is owed only the findings it can safely act on. §7 establishes the first direction, and licenses no more of the second.
+The binding has a direction: `fmt` to `check`'s model, never `check`'s findings to what `fmt` can rewrite (§7.7).
 
 ### 7.1 Scope-equivalence
 
 `grund fmt` with no `<path>` and `grund fmt <path>` where `<path>` names the default scope (§1) are one run written two ways: identical stdout, identical stderr, identical exit code, and identical effects on disk, in every mode — dry run, `--check`, `--write`, `--marker`, `--cross-refs`, and any combination of them.
 
-How a caller reached a scope is not part of the scope. In particular, a run that already holds a scan of that scope — a workspace-root run holding each member's, or the CLI reusing the scan it made resolving the current directory — may reuse it as an optimization and never as a different computation: reuse is permitted only after the same completeness check a fresh scan would have made (§3, §7.4). A form that skips the check because it happens to have a declaration set at hand is not a faster path to the same answer; it is the other answer.
+How a caller reached a scope is not part of the scope. In particular, a run that already holds a scan of that scope — a workspace-root run holding each member's, or the CLI reusing the scan it made resolving the current directory — may reuse it as an optimization and never as a different computation: reuse is permitted only after the same completeness check a fresh scan would have made (§3.2, §7.4).
 
 ### 7.2 Reader-equivalence
 
 On any tree, the unreadable paths `fmt` reports are the ones `check` reports on the same scope: the same paths, spelled against the same config, with the same reasons, in the same deterministic order. This holds in every form the command has — plain, strict, scoped, and workspace — because they are all the same walk.
 
-Equality is of the **(path, reason)** pairs, not of the bytes of the line. §3 requires a strict abort to spell its lines `error: nothing was rewritten: <path>: <reason>` against a partial run's bare `error: <path>: <reason>`, deliberately, because the two exit `2`s mean opposite things — one says the tree was edited and the view of it was short, the other that the tree was not touched. That prefix is the one licensed difference. Everything else a line can differ by is a disagreement between two readers of one tree: a member's path spelled from the member root rather than from where the run was launched, a reason one command invented for itself, a path named by one command and not the other, or a set one command truncates at the first entry while the other lists them all.
+Equality is of the **(path, reason)** pairs, not of the bytes of the line. The one licensed difference is the `nothing was rewritten:` prefix §3.4 requires on a strict abort's lines, because the two exit `2`s mean opposite things. Everything else a line can differ by is a disagreement between two readers of one tree: a member's path spelled from the member root rather than from where the run was launched, a reason one command invented for itself, a path named by one command and not the other, or a set one command truncates at the first entry while the other lists them all.
 
 ### 7.3 Preview-equivalence
 
 The line set `fmt --check` prints is the change set `fmt --write` applies to the same tree: the same files, the same line numbers, and on each line the rewrite its label named. The dry run is the write run with the write withheld, not a second computation of the same question.
 
-So neither mode may hold a refusal, a carve-out, or a scope rule the other does not. The out-of-root write refusal is named by both and listed as a rewrite by neither (§2.3.2); the index carve-out is previewed exactly where it is applied (§6.1, §2.5.3); the cross-reference pass turns itself on for both alike (§6.6); a suppressed scope is silent in both (§2.5). A rewrite the dry run lists and `--write` will never perform is a finding no edit can clear, so `fmt --check` on that tree could never go green, and every gate built on it is permanently red for a reason no contributor can act on.
+So neither mode may hold a refusal, a carve-out, or a scope rule the other does not. The out-of-root write refusal is named by both and listed as a rewrite by neither (§2.3.2.1); the index carve-out is previewed exactly where it is applied (§6.1.3, §2.5.3); the cross-reference pass turns itself on for both alike (§6.6); a suppressed scope is silent in both (§2.5). A rewrite the dry run lists and `--write` will never perform is a finding no edit can clear, so `fmt --check` on that tree could never go green, and every gate built on it is permanently red for a reason no contributor can act on.
 
 ### 7.4 No write without a complete model
 
 Where a rewrite needs the whole declaration set — a shorthand to expand (§2.4), or a cross-reference to wrap or re-derive (§6) — the completeness of that set is a **precondition of the consumer**, not a habit of each producer. The consumer accepts only a declaration set carrying the proof that the scan which produced it met no error, obtainable one way: a construction that checks. Handing it a set that carries no such proof is not a run that behaves differently; it is a program that does not build.
 
-The reason this rule is structural where the other three are behavioral is that its prose form has already failed twice. §3 said "an unreadable path is fatal up front" before the code path that ignored it was written, and said it again in the same change as the code that violated it. A guard written beside each call site is re-decided by every new call site, by whoever writes it, in the one moment least able to judge it. A precondition on the consumer is re-decided by nobody: the next caller either supplies the proof or does not compile.
+#### 7.4.1 Why this rule is structural
 
-The observable half of the rule is §3's refusal, and it is one no later pass can supply for us. `fmt` is the only command whose mistakes are invisible after the fact: a shorthand expanded against a partial set becomes a well-formed citation of a real declaration, indistinguishable from one the author wrote, so `check` passes over it and the review that could have caught it already happened ([§DF-shorthand-numeric-run.2.7](../decisions/functional/DF-shorthand-numeric-run.md#27-invention-is-reported-in-full-whatever-the-rule-decides), [§REQ-no-wrong-citation.3](../requirements/REQ-no-wrong-citation.md#3-no-wrong-write)).
+The reason this rule is structural where the other three are behavioral is that its prose form has already failed twice. §3.2 said "an unreadable path is fatal up front" before the code path that ignored it was written, and said it again in the same change as the code that violated it. A guard written beside each call site is re-decided by every new call site, by whoever writes it, in the one moment least able to judge it. A precondition on the consumer is re-decided by nobody: the next caller either supplies the proof or does not compile.
+
+#### 7.4.2 The refusal is the observable half
+
+The observable half of the rule is §3.2's refusal, and it is one no later pass can supply for us. `fmt` is the only command whose mistakes are invisible after the fact: a shorthand expanded against a partial set is indistinguishable from one the author wrote ([§REQ-no-wrong-citation.3](../requirements/REQ-no-wrong-citation.md#3-no-wrong-write)), so `check` passes over it and the review that could have caught it already happened ([§DF-shorthand-numeric-run.2.7](../decisions/functional/DF-shorthand-numeric-run.md#27-invention-is-reported-in-full-whatever-the-rule-decides)).
 
 ### 7.5 Measurable
 
 Rules 7.1 to 7.3 are cross-run properties: each compares two invocations, so no single golden can state one. They are pinned as integration tests over a corpus of tree shapes — a clean rewritable tree, a strict tree that aborts, a partial source-only scope that reports and rewrites anyway, a two-directory tree for the scoped form, a clean workspace whose citations cross the member boundary both ways, and a workspace whose member holds the unreadable path — asserting the property over every shape rather than over the one shape whose defect prompted it. The e2e corpus pins the individual outputs those properties are equalities between: `symlink-fmt-scan-error` beside `symlink-broken` for §7.2's licensed prefix, `fmt-partial-scan-error-still-reports` for the partial form of the same rule, and the `fmt-check-previews-default-cross-refs` / `fmt-write-applies-default-cross-refs-preview` pair for §7.3.
 
+§7.1 and §7.4 have no e2e case, each for its own reason (§7.5.1).
+
+#### 7.5.1 What no e2e case can pin
+
 §7.1 has no e2e case by construction: the harness runs every case from this repository's own root and names the fixture as an argument, so the no-path form it compares against cannot be expressed there. §7.4 has no runtime case at all — a rule whose whole content is that the wrong program does not build is checked by building the wrong program. `scripts/check_fmt_complete_findings.sh` is that check: it makes the one substitution that was issue #105, compiles, restores the tree, and fails when the compile succeeded.
+
+### 7.6 Why the property is written down
+
+This is not new behavior. Each rule of §7.1 to §7.4 states, as a general property of the command, something §1–§6 already require of one code path at a time — and each was first written down only after a code path had already broken it. That is the reason the property is stated here rather than left implied: a principle enforced per code path is re-decided by the next code path, and this one has twice been re-decided against a sentence already in this document.
+
+### 7.7 The rule has a direction
+
+Equivalence binds `fmt` to `check`'s **model** — the same walk, the same token grammar, the same account of what could not be read. It does not bind `check`'s **findings** to what `fmt` is able to rewrite. The second coupling is a different rule wearing the same words, and this specification carries one instance of it already: [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) withholds its error in the never-rewrite zones §2.4 names, so that the checker never reports there what the formatter cannot fix. The price is that the shorthand form of a citation inside a string literal, where it resolves to exactly one declaration, is unflaggable by any command — a true fact about the tree that no report may state, because one consumer of the model cannot act on it.
+
+A reader is owed every true finding about the tree; a writer is owed only the findings it can safely act on. §7 establishes the first direction, and licenses no more of the second.
