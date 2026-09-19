@@ -13,6 +13,7 @@ The directory is also the workspace member `grund-integration-tests` (never publ
 - `integrations_resolve.rs` — `scripts/try-integrations.sh resolve` run headlessly: the resolver installed into a sandbox HOME from the binary under test resolves every citation form the clickable clients hand it ([§FS-integrations.4](../../docs/functional-spec/FS-integrations.md#4-managed-writes---write)).
 - `check_frontend_parity.rs` — the published CLI and deprecated core process adapter render mixed-severity text findings byte-identically ([§AR-bindings.2](../../docs/architecture/AR-bindings.md#2-grund-core-the-only-place-logic-lives)).
 - `refs_frontend_parity.rs` — the published CLI and deprecated core process adapter give an unsupported refs format identical precedence over a resolver-rejected operand ([§AR-bindings.2](../../docs/architecture/AR-bindings.md#2-grund-core-the-only-place-logic-lives)).
+- `functional_spec_coverage.rs` — every functional-spec leaf is named by exact e2e or test-source evidence, or by one reviewed permanent/temporary exception; adding proof retires its exception automatically ([§AR-goal-measurement.1](../../docs/architecture/AR-goal-measurement.md#1-rule)). Fix a failure by citing the exact proved leaf in `spec.refs` or the approved test roots, or by reviewing and documenting a genuine non-behavioral exception.
 
 ## Python
 
