@@ -458,24 +458,27 @@ fn repository_evidence_counts_sources_and_excludes_its_own_synthetic_proofs() {
     for (path, contents) in [
         (
             "crates/sample/src/nested/tests_behavior.rs",
-            "// §FS-proof.unit\n",
+            "// \u{a7}FS-proof.unit\n",
         ),
-        ("crates/sample/tests/behavior.rs", "// §FS-proof.crate\n"),
+        (
+            "crates/sample/tests/behavior.rs",
+            "// \u{a7}FS-proof.crate\n",
+        ),
         (
             "tests/integration/behavior.rs",
-            "// §FS-proof.integration\n",
+            "// \u{a7}FS-proof.integration\n",
         ),
         (
             "tests/integration/functional_spec_coverage.rs",
-            "// §FS-proof.gate\nconst INVENTORY: &str = \"FS-proof.inventory\";\n",
+            "// \u{a7}FS-proof.gate\nconst INVENTORY: &str = \"FS-proof.inventory\";\n",
         ),
         (
             "crates/sample/src/implementation.rs",
-            "// §FS-proof.production\n",
+            "// \u{a7}FS-proof.production\n",
         ),
         (
             "tests/e2e/cases/synthetic/repo/proof.rs",
-            "// §FS-proof.synthetic\n",
+            "// \u{a7}FS-proof.synthetic\n",
         ),
         (
             "tests/e2e/cases/synthetic/spec.refs",
@@ -483,7 +486,7 @@ fn repository_evidence_counts_sources_and_excludes_its_own_synthetic_proofs() {
         ),
         (
             "tests/integration/inventory.md",
-            "FS-proof.inventory\n<§>FS-proof.escaped\n",
+            "FS-proof.inventory\n<\u{a7}>FS-proof.escaped\n",
         ),
     ] {
         let file = fixture.root.join(path);
