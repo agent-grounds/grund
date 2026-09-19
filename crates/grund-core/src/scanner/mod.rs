@@ -129,6 +129,8 @@ mod tests_unmarked_headings;
 #[cfg(test)]
 mod tests_unwalked_kinds;
 #[cfg(test)]
+mod tests_value_json;
+#[cfg(test)]
 mod tests_values;
 #[cfg(all(test, unix))]
 mod tests_walk;

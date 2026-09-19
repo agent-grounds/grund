@@ -1,0 +1,1 @@
+show --full --format md FS-001-authored {repo}

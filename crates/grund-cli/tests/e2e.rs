@@ -29,6 +29,8 @@ fn e2e_cases_match_expected_reports() {
     assert_every_case_passed("e2e cases", &outcomes);
 }
 
+/// Completion scripts participate in the same two independent runs as every
+/// immutable case, so their bytes are stable across invocations (§FS-completions.3).
 #[test]
 fn e2e_output_is_deterministic() {
     let manifest_dir = repo_root();
