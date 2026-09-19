@@ -57,7 +57,7 @@ pub(super) fn agents_workspace_members_section(
 /// `target` when one is absent.
 ///
 /// A config that fails to load is an error, not a fallback to defaults
-/// (§FS-init.2.3.8): the block is rendered *from* this config, so silently
+/// (§FS-init.2.3.8.3): the block is rendered *from* this config, so silently
 /// substituting defaults writes agent instructions that describe a repository
 /// the user does not have — an invalid `[reference] conversation`, marker, or
 /// kind set would drop the guidance it selects while `init` still reported

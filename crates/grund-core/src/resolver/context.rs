@@ -50,9 +50,9 @@ pub(crate) struct WorkspaceProject {
 pub(crate) struct WorkspaceContext {
     pub(crate) projects: Vec<WorkspaceProject>,
     /// Index into `projects` for the "current project" — what `<ID>` (no
-    /// alias) resolves against (§FS-workspace.8.9 intro). `None` only for a
+    /// alias) resolves against (§FS-workspace.8.9). `None` only for a
     /// workspace-root run with `include_root = false`, where there is no root
-    /// project for unqualified lookups (§FS-workspace.8.9 intro).
+    /// project for unqualified lookups (§FS-workspace.8.9).
     pub(crate) current: Option<usize>,
     /// `true` only when a `[workspace]` block was discovered AND the
     /// invocation actually loads the workspace (i.e. not pinned member-local
@@ -206,7 +206,7 @@ pub(crate) fn load_resolved_workspace_context(
 
     let mut root_config = config;
     let render_root = root_config.root.clone();
-    // §FS-workspace.8.9 intro: the current project is the root iff
+    // §FS-workspace.8.9: the current project is the root iff
     // `include_root = true` (the helper always emits the root first).
     let current = root_config.workspace_include_root.then_some(0);
     let projects = load_workspace_projects_with_overlays(&mut root_config, overlays)?;
