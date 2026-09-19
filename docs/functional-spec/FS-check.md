@@ -895,177 +895,193 @@ The per-heading half — naming each heading that looks like a declaration and d
 
 ### 4.6 Declaration near miss
 
-A heading that opens the way a declaration does and does not match its
-effective ID format remains a declaration for read compatibility
-([§FS-config.3.2](FS-config.md#32-id--id-grammar)). The classic stumble is `# FS-login: …` under the default
-`{kind}-{number}-{slug}` — the `-NNN-` left out. Before grund 0.15.0, `check`
-emits one **warning** per such declaration, at the line a contributor has to
-edit:
+A heading that opens the way a declaration does and does not match its effective ID format remains a declaration for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). The classic stumble is `# FS-login: …` under the default `{kind}-{number}-{slug}` — the `-NNN-` left out. Before grund 0.15.0, `check` emits one **warning** per such declaration, at the line a contributor has to edit:
 
 ```
 docs/spec.md:1: `FS-login` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this warning becomes an error in grund 0.15.0
 ```
 
-**What counts.** A line in declaration position — a Markdown heading, or a
-comment-prefixed line in a source file under the rules of
-[AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)
-— whose first token unambiguously begins with a configured citable kind
-([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), which the effective
-ID grammar rejects, and which is **followed by the declaration colon**. This
-also covers a per-kind format whose first literal after `{kind}` differs from
-the persisted token.
-
-That colon is the discriminator, and it earns its place: a line opening with an ID-shaped token and no colon is prose far more often than it is a declaration attempt — a comment wrapped across lines whose continuation begins with one is the case that proved it, in this repository's own source. So the rule reads exactly the shape a declaration attempt has, `<KIND>-…: <title>`, and says nothing about the rest. A near miss written without a title is not reported; that is the cost, and it buys a rule that stays quiet on prose. The token also stops at a backtick, so an inline-code mention is not one either. The position rules are the declaration rules exactly, so a near miss is only ever read where a declaration would have been: a bare `FS-login: …` in Markdown prose is not one ([§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix)), and neither is anything inside a fenced block.
-
-**Facts, not a guessed rename.** The message names the token as written and the
-effective template, states that lookup remains compatible, and offers the two
-real migration choices: rename the declaration and its citations, or change
-the effective format. It does **not** propose a corrected ID; assembling one
-from component patterns would guess what the author meant.
-
-**Before 0.15.0 it is a warning, so the exit code is unchanged** (§4). A run
-with no errors exits successfully but prints the located warning and no
-`success` marker. The declaration still appears in `list` and resolves through
-every reader; severity never changes recognition. In grund 0.15.0 the same
-code and location become an error, the deadline clause becomes the past-tense
-release report required by
-[§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name),
-and `check` exits `1`. The release guard and
-[§RM-off-grammar-declaration-error](../roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0150)
-prevent shipping the warning at or beyond that version.
-
-There is no line-oriented opt-out or automatic rewrite: the position and colon
-rules bound recognition, and migration remains the repository author's choice.
+What counts is §4.6.1: the declaration colon is its discriminator (§4.6.2), and inline code, prose and fenced blocks never count (§4.6.3). The message states facts rather than a guessed rename (§4.6.4), the warning becomes an error in 0.15.0 (§4.6.5), and there is no opt-out (§4.6.6).
 
 - **Code:** `declaration-near-miss` ([§FS-errors.5](FS-errors.md#5-json-format)).
+
+#### 4.6.1 What counts
+
+A line in declaration position — a Markdown heading, or a comment-prefixed line in a source file under the rules of [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — whose first token unambiguously begins with a configured citable kind ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), which the effective ID grammar rejects, and which is **followed by the declaration colon**. This also covers a per-kind format whose first literal after `{kind}` differs from the persisted token.
+
+#### 4.6.2 The declaration colon is the discriminator
+
+A line opening with an ID-shaped token and no colon is prose far more often than it is a declaration attempt — a comment wrapped across lines whose continuation begins with one is the case that proved it, in this repository's own source. So the rule reads exactly the shape a declaration attempt has, `<KIND>-…: <title>`, and says nothing about the rest. A near miss written without a title is not reported; that is the cost, and it buys a rule that stays quiet on prose.
+
+#### 4.6.3 Never in inline code, prose, or a fenced block
+
+The token stops at a backtick, so an inline-code mention is not a near miss. The position rules are the declaration rules exactly, so a near miss is only ever read where a declaration would have been: a bare `FS-login: …` in Markdown prose is not one ([§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix)), and neither is anything inside a fenced block.
+
+#### 4.6.4 Facts, not a guessed rename
+
+The message names the token as written and the effective template, states that lookup remains compatible, and offers the two real migration choices: rename the declaration and its citations, or change the effective format. It does **not** propose a corrected ID; assembling one from component patterns would guess what the author meant.
+
+#### 4.6.5 A warning before 0.15.0, an error in it
+
+Before 0.15.0 it is a warning, so like every warning it leaves the exit code alone (§2): a run with no errors exits successfully but prints the located warning and no `success` marker (§2.1.3). The declaration still appears in `list` and resolves through every reader; severity never changes recognition. In grund 0.15.0 the same code and location become an error, the deadline clause becomes the past-tense release report required by [§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name), and `check` exits `1`. The release guard and [§RM-off-grammar-declaration-error](../roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0150) prevent shipping the warning at or beyond that version.
+
+#### 4.6.6 No opt-out, no rewrite
+
+There is no line-oriented opt-out or automatic rewrite: the position and colon rules bound recognition, and migration remains the repository author's choice.
 
 ### 4.7 A workspace member swallows the block's own scan
 
 A `[workspace]` block every one of whose walk roots lies inside one of its own members ([§FS-workspace.2.1](FS-workspace.md#21-a-member-that-swallows-the-blocks-own-scan)) reads nothing at all, and said nothing about it: `grund list` completed silently and exited `0`, and `check` offered only the empty-scan caution of §2.2 — which names `[scan] include`, the key that is usually already correct, so the one message the run did produce pointed away from the entry that caused it.
 
-`grund` emits one CLI-level `warning:` line (§2.1.1) on **stderr**, carrying the block's `members` line as its breadcrumb the way a config error does ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)), then each covered root and the member entry it is inside, in config order. The member entry is named **as the config wrote it**; the covered root is named by its path **under the block root**, which is that spelling normalized rather than the spelling itself — an `include = ["./docs/"]` entry is named `docs`. Neither is the resolved path: that renders as nothing when it equals the render base and as an absolute path when it does not, and an author can edit neither ([§FS-errors.4](FS-errors.md#4-determinism)):
+`grund` emits one CLI-level `warning:` line (§2.1.1) on **stderr**, whose content is §4.7.1, from every command that walks (§4.7.2), with every block spelled from the run's own root (§4.7.3), `grund init` included (§4.7.4). It stands beside the empty-scan caution (§4.7.5), keeps its text under `--format json` (§4.7.6), travels as one of the run's warnings to every frontend (§4.7.7), and becomes an error in the next release (§4.7.8).
+
+#### 4.7.1 The message
+
+The line carries the block's `members` line as its breadcrumb the way a config error does ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)), then each covered root and the member entry it is inside, in config order. The member entry is named **as the config wrote it**; the covered root is named by its path **under the block root**, which is that spelling normalized rather than the spelling itself — an `include = ["./docs/"]` entry is named `docs`. Neither is the resolved path: that renders as nothing when it equals the render base and as an absolute path when it does not, and an author can edit neither ([§FS-errors.4](FS-errors.md#4-determinism)):
 
 ```
 warning: grund.toml:16: [workspace] members swallows this project's whole scan — every scan root is inside a member: `docs` in `docs` — so its declarations are unreachable and its citations are never checked. Point [scan] include at a directory that is not a member, or set include_root = false. This becomes an error in grund 0.14.0.
 ```
 
-**Every command that walks says it, not just `check`.** The question is asked where a run populates a block's member boundary, so `grund check`, `list`, `refs`, `cover`, `fmt`, and every other command that resolves that boundary carry it. A silent-scan defect only `check` reports is half-reported: the other surfaces are exactly where the repository looks fine. It is emitted **once per block per run**, ahead of any finding, and asked of every block in a nested tree against that block's own `members` line — rendered, like every diagnostic from a block above the run's root, against the root this run was launched at ([§FS-errors.3](FS-errors.md#3-message-text)).
+#### 4.7.2 Every command that walks says it, not just `check`
 
-**One run spells the whole tree from one place.** That base is the run's own root, for every block the run reaches — the ones above it, the one it is rooted at, and the ones below it alike. Most commands never have to think about it: a run narrowed into a member is re-rooted onto that member before it walks, so the top of the tree it expands *is* where it was launched. `grund init` is the exception, because it expands the outermost workspace above its target in order to teach the alias set. Its blocks below the target are still named from the target: run inside a member of a three-deep absorbed tree, the lines read `../grund.toml`, `grund.toml`, `sub/grund.toml`, and a reader resolves every one of them against the directory they are standing in. Re-basing them onto the workspace root instead would print a path that exists from there and is the wrong file, which is the defect [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces) already forbids for an ancestor's `members` line.
+The question is asked where a run populates a block's member boundary, so `grund check`, `list`, `refs`, `cover`, `fmt`, and every other command that resolves that boundary carry it. A silent-scan defect only `check` reports is half-reported: the other surfaces are exactly where the repository looks fine. It is emitted **once per block per run**, ahead of any finding, and asked of every block in a nested tree against that block's own `members` line, rendered from the run's own root (§4.7.3).
 
-**It stands beside the empty-scan caution rather than in place of it.** §2.2 is about a walk that read nothing; this is about a configuration that can read nothing. A `check` over an absorbed block prints both, this one first, and §2.2's text is unchanged — it is stable phrasing ([§FS-errors.3](FS-errors.md#3-message-text)) and a repository grepping for it keeps what it had.
+#### 4.7.3 One run spells the whole tree from one place
 
-**It is a launch-time diagnostic, so it keeps its text under `--format json`** ([§FS-errors.5](FS-errors.md#5-json-format)), like the undecidable-ancestor warning of [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces) and every other message emitted before a report exists. It therefore carries no JSON `code` and no selector of its own (§1): the shape it renders in is fixed here, rather than read off the channel it travels in. Like every warning it leaves the exit code alone (§2), and like every warning it stands in place of the `success` marker (§2.1).
+Every line is rendered against the root this run was launched at, like every diagnostic from a block above the run's root ([§FS-errors.3](FS-errors.md#3-message-text)), and that base is the same for every block the run reaches — the ones above it, the one it is rooted at, and the ones below it alike. Most commands never have to think about it: a run narrowed into a member is re-rooted onto that member before it walks, so the top of the tree it expands *is* where it was launched.
 
-**It travels as one of the run's warnings, and every frontend renders it.** The fact is settled during workspace expansion, before any report exists, but what the engine hands back is still a diagnostic in the run's warning channel — carried on whatever the walking command returns, and rendered by whichever frontend asked for it, exactly as §2.2's empty-scan caution already is ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)). It **anchors at the block's `members` line**: the `grund.toml:<line>` breadcrumb the text above already carries is the finding's own location too, so a frontend places it without parsing the message, while §2.1's `<path>:<line>:` prefix stays off it for the reason this section already gives — a fact about the run's configuration is not a finding at a site in the citation graph. No byte a reader has today moves: the CLI prints the line above on stderr in §2.1.1's shape, `--format json` keeps that same text, and a run that earns it still prints no `success`. What changes is who else hears it — an editor publishes it on that `grund.toml` line, where before it published nothing at all ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+#### 4.7.4 `grund init` names the blocks below its target from the target
 
-**A warning in this release, an error in the next.** No `grund` command repairs it — the fix is a choice between repointing `[scan] include` and declaring the block no project — so [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)'s single-release licence does not apply and [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s deprecation path does: the message names the release the finding becomes an error in. That release is [§RM-workspace-absorbed-scan-error](../roadmap.md#rm-workspace-absorbed-scan-error-flip-the-absorbed-scan-warning-to-an-error), and a test holds it ahead of the running version so the deadline cannot pass unnoticed — the same guard §3.18 carried until its own release arrived, for the same reason. Decided in [§DF-absorbed-scan-warning](../decisions/functional/DF-absorbed-scan-warning.md#df-absorbed-scan-warning-a-scan-its-own-members-swallowed-is-a-warning-with-a-named-release-not-an-error).
+`grund init` is the exception to §4.7.3's rooting, because it expands the outermost workspace above its target in order to teach the alias set. Its blocks below the target are still named from the target: run inside a member of a three-deep absorbed tree, the lines read `../grund.toml`, `grund.toml`, `sub/grund.toml`, and a reader resolves every one of them against the directory they are standing in. Re-basing them onto the workspace root instead would print a path that exists from there and is the wrong file, which is the defect [§FS-workspace.6.1.7](FS-workspace.md#617-a-claiming-block-that-cannot-answer-fails-the-run) already forbids for an ancestor's `members` line.
+
+#### 4.7.5 Beside the empty-scan caution, not in place of it
+
+§2.2 is about a walk that read nothing; this is about a configuration that can read nothing. A `check` over an absorbed block prints both, this one first, and §2.2's text is unchanged — it is stable phrasing ([§FS-errors.3](FS-errors.md#3-message-text)) and a repository grepping for it keeps what it had.
+
+#### 4.7.6 A launch-time diagnostic keeps its text under `--format json`
+
+It is a launch-time diagnostic, so it keeps its text under `--format json` ([§FS-errors.5](FS-errors.md#5-json-format)), like the undecidable-claim warning of [§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable) and every other message emitted before a report exists. It therefore carries no JSON `code` and no selector of its own (§1.4): the shape it renders in is fixed here, rather than read off the channel it travels in. Like every warning it leaves the exit code alone (§2), and like every warning it stands in place of the `success` marker (§2.1.3).
+
+#### 4.7.7 One of the run's warnings, rendered by every frontend
+
+The fact is settled during workspace expansion, before any report exists, but what the engine hands back is still a diagnostic in the run's warning channel — carried on whatever the walking command returns, and rendered by whichever frontend asked for it, exactly as §2.2's empty-scan caution already is ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)). It **anchors at the block's `members` line**: the `grund.toml:<line>` breadcrumb of §4.7.1 is the finding's own location too, so a frontend places it without parsing the message, while §2.1's `<path>:<line>:` prefix stays off it, because a fact about the run's configuration is not a finding at a site in the citation graph. No byte a reader has today moves: the CLI prints the line of §4.7.1 on stderr in §2.1.1's shape, `--format json` keeps that same text (§4.7.6), and a run that earns it still prints no `success`. What changes is who else hears it — an editor publishes it on that `grund.toml` line, where before it published nothing at all ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+
+#### 4.7.8 A warning in this release, an error in the next
+
+No `grund` command repairs it — the fix is a choice between repointing `[scan] include` and declaring the block no project — so [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)'s single-release licence does not apply and [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s deprecation path does: the message names the release the finding becomes an error in. That release is [§RM-workspace-absorbed-scan-error](../roadmap.md#rm-workspace-absorbed-scan-error-flip-the-absorbed-scan-warning-to-an-error), and a test holds it ahead of the running version so the deadline cannot pass unnoticed — the same guard §3.18.9 carried until its own release arrived, for the same reason. Decided in [§DF-absorbed-scan-warning](../decisions/functional/DF-absorbed-scan-warning.md#df-absorbed-scan-warning-a-scan-its-own-members-swallowed-is-a-warning-with-a-named-release-not-an-error).
+
 ### 4.8 Unlisted `[workspace]` block
 
-A directory that declares `[workspace]` and that **no enclosing `[workspace]` block lists among its `members`** is claimed by nobody ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)). At the outer scope the block is ignored, so its subtree is read into the enclosing project's namespace when that project's scan reaches it and by nobody when it does not; a run started *at* it names every project from itself. The two scopes then spell the same projects differently — `c/FS-c` inside the block, `root/FS-c` at the repository root — so a citation passes the inner check and fails the run CI does, which is [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) failing in the one place the alias-path model exists to hold it. Every run whose tree walk meets such a block says so, in one CLI-level `warning:` on **stderr** (§2.1.1, [§FS-errors.2.2](FS-errors.md#22-cli-level-message)). Decided in [§DF-unlisted-workspace-block](../decisions/functional/DF-unlisted-workspace-block.md#df-unlisted-workspace-block-an-unlisted-workspace-block-is-reported-by-the-walk-that-meets-it).
+A directory that declares `[workspace]` and that **no enclosing `[workspace]` block lists among its `members`** is claimed by nobody: the enclosing project's scan absorbs its subtree when it reaches it, while a run started *at* it names every project from itself ([§FS-workspace.6.1.8](FS-workspace.md#618-a-block-no-enclosing-block-lists-is-outside-the-chain)). The two scopes then spell the same projects differently — `c/FS-c` inside the block, `root/FS-c` at the repository root — so a citation passes the inner check and fails the run CI does, which is [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) failing in the one place the alias-path model exists to hold it. Every run whose tree walk meets such a block says so, in one CLI-level `warning:` on **stderr** (§2.1.1, [§FS-errors.2.2](FS-errors.md#22-cli-level-message)). Decided in [§DF-unlisted-workspace-block](../decisions/functional/DF-unlisted-workspace-block.md#df-unlisted-workspace-block-an-unlisted-workspace-block-is-reported-by-the-walk-that-meets-it).
 
-**What counts.** A directory the run's own walk reached, carrying a config under either discovery name ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), whose config declares a `[workspace]` table, and whose canonical root no `[workspace]` block above it names among its **expanded** members. The claim question is the ancestor climb the claimed chain already runs ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)) — asked of a directory the walk found rather than of the run's own root — so it is read from `members` entries alone and it climbs past the run's root exactly as that climb does. Both discovery names are probed at each walked *directory*, which is what finds the `.agents/grund.toml` form: the walk never descends into a hidden directory ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)), so watching instead for walked *files* named `grund.toml` would find half the blocks and call the other half claimed. A tree with no enclosing `[workspace]` block anywhere above it is the same case rather than a milder one — nothing claims the block, so nothing gives the projects under it a stable alias path, and the enclosing scan absorbs them just the same. An ancestor that *names* the candidate among its `members` and then cannot answer it — a member list that will not expand, a config that will not parse — leaves the claim unanswered ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)) and the block unreported, because no answer is not the answer that nothing claims it. That silence has a floor: the claim is read off the entry text before anything is expanded, so a block no ancestor *names* is never silenced by an ancestor's breakage, however broken that ancestor is. And the question is asked **quietly** — [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)'s undecidable-claim warning belongs to the climb that spells an alias path out of the chain, which this rule does not do, so a run that would otherwise never ask the chain anything gains no line from having asked.
+What counts is §4.8.1, and its edges are §4.8.2 to §4.8.5. The message is §4.8.6 to §4.8.8; which commands report it, over what walk, is §4.8.9 to §4.8.12; its severity and rendering are §4.8.13 to §4.8.15.
 
-Three neighbouring shapes are deliberately **not** this finding. A nested directory carrying a plain `grund.toml` with no `[workspace]` table declares no projects to absorb: it is ordinary tree to the enclosing walk (§1.3) and nothing reports it. A block that *is* listed is inside the claimed chain at every depth, whatever the nesting. And **a project root of this run is never a candidate** — the run's own root, and each member root the walk stops at ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)) — because those are the scopes the run names everything else from, and a block absorbs nothing into a namespace it is the namespace of. Without that exemption the rule would fire on the run's own root the moment `--full` made it a walk root (§1.3), which is every workspace repository that sits under no enclosing one — that is to say, almost all of them.
+- **Code:** `unlisted-workspace-block` ([§FS-errors.5](FS-errors.md#5-json-format)).
 
-**Only the outermost block of a chain.** A `[workspace]` block below an unlisted one *is* claimed — by the unlisted block — so the claim test answers it on its own, and listing the outer block puts the whole chain back in the claimed chain. One finding for one edit. One block the walk reached twice — under its own path and under a directory symlink to it — is one finding for the same reason: the claim test resolves both spellings to one root, one edit clears both, and the spelling reported is the first the walk met. Two unlisted blocks neither of which lists the other are two findings, because they are two edits.
+#### 4.8.1 What counts
 
-**`include_root = false` changes nothing.** The key answers "is this block's root a project?"; the finding asks "does anything claim this block?". Same finding, same message. What that key costs the block's *own* files is §4.10, a separate finding on a separate condition: the two can fire on one block, because being claimed by nobody and being read by nobody are different holes with different repairs.
+A directory the run's own walk reached, carrying a config under either discovery name ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), whose config declares a `[workspace]` table, and whose canonical root no `[workspace]` block above it names among its **expanded** members. The claim question is the ancestor climb the claimed chain already runs ([§FS-workspace.6.1.7.2](FS-workspace.md#6172-the-quiet-climb-asks-the-same-ancestors)) — asked of a directory the walk found rather than of the run's own root — so it is read from `members` entries alone and it climbs past the run's root exactly as that climb does. Both discovery names are probed at each walked *directory*, which is what finds the `.agents/grund.toml` form: the walk never descends into a hidden directory ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)), so watching instead for walked *files* named `grund.toml` would find half the blocks and call the other half claimed. A tree with no enclosing `[workspace]` block anywhere above it is the same case rather than a milder one — nothing claims the block, so nothing gives the projects under it a stable alias path, and the enclosing scan absorbs them just the same.
 
-**The message** carries the block, what the absorption costs, the two config edits that clear it, and the release it becomes an error in:
+#### 4.8.2 An unanswered claim is not reported, and is asked quietly
+
+An ancestor that *names* the candidate among its `members` and then cannot answer it — a member list that will not expand, a config that will not parse — leaves the claim unanswered ([§FS-workspace.6.1.8.1](FS-workspace.md#6181-two-shapes-stay-unreported)) and the block unreported, because no answer is not the answer that nothing claims it. That silence has a floor: the claim is read off the entry text before anything is expanded, so a block no ancestor *names* is never silenced by an ancestor's breakage, however broken that ancestor is. And the question is asked **quietly** — [§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable)'s undecidable-claim warning belongs to the climb that spells an alias path out of the chain, which this rule does not do, so a run that would otherwise never ask the chain anything gains no line from having asked.
+
+#### 4.8.3 Three neighbouring shapes are not this finding
+
+A nested directory carrying a plain `grund.toml` with no `[workspace]` table declares no projects to absorb: it is ordinary tree to the enclosing walk (§1.3.1) and nothing reports it. A block that *is* listed is inside the claimed chain at every depth, whatever the nesting. And **a project root of this run is never a candidate** — the run's own root, and each member root the walk stops at ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)) — because those are the scopes the run names everything else from, and a block absorbs nothing into a namespace it is the namespace of. Without that exemption the rule would fire on the run's own root the moment `--full` made it a walk root (§1.3), which is every workspace repository that sits under no enclosing one — that is to say, almost all of them.
+
+#### 4.8.4 Only the outermost block of a chain
+
+A `[workspace]` block below an unlisted one *is* claimed — by the unlisted block — so the claim test answers it on its own, and listing the outer block puts the whole chain back in the claimed chain. One finding for one edit. One block the walk reached twice — under its own path and under a directory symlink to it — is one finding for the same reason: the claim test resolves both spellings to one root, one edit clears both, and the spelling reported is the first the walk met. Two unlisted blocks neither of which lists the other are two findings, because they are two edits.
+
+#### 4.8.5 `include_root = false` changes nothing
+
+The key answers "is this block's root a project?"; the finding asks "does anything claim this block?". Same finding, same message. What that key costs the block's *own* files is §4.10, a separate finding on a separate condition: the two can fire on one block, because being claimed by nobody and being read by nobody are different holes with different repairs.
+
+#### 4.8.6 The message
+
+The message carries the block, what the absorption costs, the two config edits that clear it, and the release it becomes an error in:
 
 ```
 warning: b/grund.toml:3: this [workspace] is listed by no enclosing workspace — the projects under it are absorbed into `root` instead of named under their own alias path; add "b" to [workspace] members in grund.toml, or keep it out of that project's [scan] — an unlisted [workspace] becomes an error in grund 0.14.0
 ```
 
-The location sits *inside* the message text rather than in a bare `<path>:<line>:` prefix, because this is a fact about the run's configuration and not a finding at a site in the citation graph — the shape §4.3 and [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) already use, and the shape the undecidable-claim warning of [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces) already prints for a neighbouring fact about a `[workspace]` block. `<line>` is the block's `[workspace]` line: the reader has two files to open and this is the one that is wrong. Every path in the line is rendered against the run's report base ([§FS-errors.3](FS-errors.md#3-message-text)), and `"b"` is the block's directory relative to the enclosing project's root, which is where both remedies are written. The second remedy is stated as an outcome rather than as a key because which key carries it depends on the tree: `[scan] exclude` prunes descendants and never the directory a walk starts at (§1.3), so a block that is itself an `include` root leaves `include` as the edit, and a block below one takes `exclude`. Naming a key that clears the finding in one shape and not the other would be a remedy the reader has to argue with. The absorbing project is named by the alias path this run spells it with, so the message can be matched against what [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id) printed.
+#### 4.8.7 The location sits inside the text
 
-**Which commands report it, and why not `check` alone.** Every command whose run walks a project tree: `check`, [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-references-in-bulk), and the ID read of [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id). That is a choice, and the reader is owed it in writing rather than left to infer it, because §4.3 draws the opposite line one page up for the redundant config pair. Three reasons it falls this way. The absorbed spelling is what `list` prints, so a `list` that shows `root/FS-c` where the block shows `c/FS-c` and says nothing is the same silence the finding exists to break. `refs` and `fmt --cross-refs` resolve qualified citations against the same project map, so they are equally wrong under an absorbed block. And §4.3's line does not reach this fact: a redundant config pair is about *which file the run read*, while this is about *how every command in the tree spells its projects*, which is not a question only `check` asks.
+The location sits *inside* the message text rather than in a bare `<path>:<line>:` prefix, because this is a fact about the run's configuration and not a finding at a site in the citation graph — the shape §4.3.1 and [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) already use, and the shape the undecidable-claim warning of [§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable) already prints for a neighbouring fact about a `[workspace]` block. `<line>` is the block's `[workspace]` line: the reader has two files to open and this is the one that is wrong. Every path in the line is rendered against the run's report base ([§FS-errors.3](FS-errors.md#3-message-text)), and `"b"` is the block's directory relative to the enclosing project's root, which is where both remedies are written. The absorbing project is named by the alias path this run spells it with, so the message can be matched against what [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id) printed.
 
-The honest difference from the neighbouring `[workspace]` cautions, and the reason it is stated rather than left implicit: a fact knowable at workspace-boundary population is knowable before any walk, so every command that merely *loads* the workspace can carry it. This one is knowable only from the walk that meets the nested config, so it is a property of **what the run walked** — carried by every command that walks, and silent wherever the walk does not reach the block. That is the earliest point at which the fact exists, not a second rule picked for convenience.
+#### 4.8.8 The second remedy is an outcome, not a key
 
-**The scope is the walk the run already makes.** The roots `[scan] include` and the walked `[[kinds]]` homes give it, and their subtrees, minus member boundaries and what `[scan] exclude`, the ignore files, and hidden directories prune below a root — never a root itself ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked), [§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)). No second walk is made for config files: the entries are already being enumerated, and the added work is one config probe per walked directory, which is what keeps [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) affordable here. It is also exactly the tree that gets absorbed — a block the scan never reaches absorbs nothing into the enclosing namespace.
+The second remedy is stated as an outcome rather than as a key because which key carries it depends on the tree: `[scan] exclude` prunes descendants and never the directory a walk starts at (§1.3.2), so a block that is itself an `include` root leaves `include` as the edit, and a block below one takes `exclude`. Naming a key that clears the finding in one shape and not the other would be a remedy the reader has to argue with.
 
-What survives is a real limitation and is recorded rather than papered over: **an unlisted block outside the run's walk is still unreported.** A narrowed `grund check <path>` (§1.3), a directory `[scan] exclude` prunes, a gitignored one, and a subtree behind a member boundary all leave a block unmet, and a run that cannot see something does not judge it — the same stance §3.18 takes for an index the run did not scan. `grund check --full` widens the walk, so it reaches blocks the plain run does not and may report one more; that is the flag being additive (§1.3) about a caution rather than about a located finding, and it is the same edit §1.3 already recommends for a vendored or example project sitting inside the config root.
+#### 4.8.9 Every command that walks reports it, not `check` alone
 
-**In `check` it is one of the report's warnings.** Like every warning it leaves the exit code alone (§2), and like every warning it stands in place of the `success` marker (§2.1) — which is what keeps it a verdict a repository can catch, and what makes the deprecation path below the right one. Under `--format=json` it is one warning diagnostic on stderr with `path`, `line`, and `sites` all `null` ([§FS-errors.5](FS-errors.md#5-json-format)), the location being in the message text; that is the cost of the CLI-level shape and it is paid once, on every surface, rather than by giving `check` a located finding and the other commands a different line for the same fact.
+Every command whose run walks a project tree reports it: `check`, [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-references-in-bulk), and the ID read of [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id). That is a deliberate choice, because §4.3.2 draws the opposite line for the redundant config pair, and three reasons make it. The absorbed spelling is what `list` prints, so a `list` that shows `root/FS-c` where the block shows `c/FS-c` and says nothing is the same silence the finding exists to break. `refs` and `fmt --cross-refs` resolve qualified citations against the same project map, so they are equally wrong under an absorbed block. And §4.3.2's line does not reach this fact: a redundant config pair is about *which file the run read*, while this is about *how every command in the tree spells its projects*, which is not a question only `check` asks.
 
-**A warning in this release, an error in [§RM-unlisted-workspace-error](../roadmap.md#rm-unlisted-workspace-error-flip-the-unlisted-workspace-warning-to-an-error).** No `grund` command writes either remedy — both are config edits and a judgement about which one the repository wants — so [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)'s licence for a same-release verdict flip does not apply and [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s deprecation path does: the message names the release the finding becomes an error in, and a unit test holds that release ahead of the running version so the deadline cannot pass unnoticed. The same ramp, for the same reason, as [§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index) — argued in [§DF-index-compatibility-ramp](../decisions/functional/DF-index-compatibility-ramp.md#df-index-compatibility-ramp-a-findings-ramp-follows-its-fix-command-not-the-size-of-the-offence).
+#### 4.8.10 Knowable only from the walk
 
-**Every frontend renders it, and it anchors at the block's `[workspace]` line.** In `check` it is one of the report's warnings already; on the five other surfaces it is that same warning-channel diagnostic rather than a line the engine printed, so one text reaches every frontend from one place ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)) instead of one place per surface. Its anchor is the `<path>:<line>` its message names — the block's `[workspace]` line — carried as the finding's own location, so no frontend reads a location back out of message text. The bytes and the machine shape are unchanged: the CLI-level line on stderr, and under `--format json` one warning diagnostic whose `path`, `line` and `sites` are still `null` with the location still in the text, because a change about which side renders must not move a consumer's filter. The editor gains what it never had, publishing the warning on that `[workspace]` line ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+This finding differs from the neighbouring `[workspace]` cautions in one respect: a fact knowable at workspace-boundary population is knowable before any walk, so every command that merely *loads* the workspace can carry it. This one is knowable only from the walk that meets the nested config, so it is a property of **what the run walked** — carried by every command that walks, and silent wherever the walk does not reach the block. That is the earliest point at which the fact exists, not a second rule picked for convenience.
 
-- **Code:** `unlisted-workspace-block` ([§FS-errors.5](FS-errors.md#5-json-format)).
+#### 4.8.11 The scope is the walk the run already makes
+
+The roots `[scan] include` and the walked `[[kinds]]` homes give it, and their subtrees, minus member boundaries and what `[scan] exclude`, the ignore files, and hidden directories prune below a root — never a root itself ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked), [§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)). No second walk is made for config files: the entries are already being enumerated, and the added work is one config probe per walked directory, which is what keeps [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) affordable here. It is also exactly the tree that gets absorbed — a block the scan never reaches absorbs nothing into the enclosing namespace.
+
+#### 4.8.12 An unlisted block outside the walk is unreported
+
+An unlisted block outside the run's walk is still unreported, a real limitation recorded rather than papered over. A narrowed `grund check <path>` (§1.3), a directory `[scan] exclude` prunes, a gitignored one, and a subtree behind a member boundary all leave a block unmet, and a run that cannot see something does not judge it — the same stance §3.18.8 takes for an index the run did not scan. `grund check --full` widens the walk, so it reaches blocks the plain run does not and may report one more; that is the flag being additive (§1.3.4) about a caution rather than about a located finding, and it is the same edit §1.3.1 already recommends for a vendored or example project sitting inside the config root.
+
+#### 4.8.13 In `check`, one of the report's warnings
+
+In `check` it is one of the report's warnings. Like every warning it leaves the exit code alone (§2), and like every warning it stands in place of the `success` marker (§2.1.3) — which is what keeps it a verdict a repository can catch, and what makes the deprecation path of §4.8.14 the right one. Under `--format=json` it is one warning diagnostic on stderr with `path`, `line`, and `sites` all `null` ([§FS-errors.5](FS-errors.md#5-json-format)), the location being in the message text; that is the cost of the CLI-level shape and it is paid once, on every surface, rather than by giving `check` a located finding and the other commands a different line for the same fact.
+
+#### 4.8.14 A warning in this release, an error in its named release
+
+No `grund` command writes either remedy — both are config edits and a judgement about which one the repository wants — so [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)'s licence for a same-release verdict flip does not apply and [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s deprecation path does: the message names the release the finding becomes an error in, [§RM-unlisted-workspace-error](../roadmap.md#rm-unlisted-workspace-error-flip-the-unlisted-workspace-warning-to-an-error), and a unit test holds that release ahead of the running version so the deadline cannot pass unnoticed. The same ramp, for the same reason, as §3.18.9 — argued in [§DF-index-compatibility-ramp](../decisions/functional/DF-index-compatibility-ramp.md#df-index-compatibility-ramp-a-findings-ramp-follows-its-fix-command-not-the-size-of-the-offence).
+
+#### 4.8.15 Every frontend renders it, anchored at the block's `[workspace]` line
+
+In `check` it is a report warning (§4.8.13); on the five other surfaces of §4.8.9 it is that same warning-channel diagnostic rather than a line the engine printed, so one text reaches every frontend from one place ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)) instead of one place per surface. Its anchor is the `<path>:<line>` its message names — the block's `[workspace]` line — carried as the finding's own location, so no frontend reads a location back out of message text. The bytes and the machine shape are unchanged — the CLI-level line on stderr, and under `--format json` the diagnostic of §4.8.13 with the location still in its text — because a change about which side renders must not move a consumer's filter. The editor gains what it never had, publishing the warning on that `[workspace]` line ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
 
 ### 4.9 A workspace member declared optional is absent
 
-A member listed in `[workspace] optional_members` whose path is not a directory
-in this checkout ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)). The namespace it would have contributed
-was not read: no declaration in it reached a catalog, and no citation into it was
-resolved or reported ([§FS-workspace.4](FS-workspace.md#4-resolution)). The run is a report about less of the
-repository than it looks like, and saying so is this finding's whole job.
+A member listed in `[workspace] optional_members` whose path is not a directory in this checkout ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)). The namespace it would have contributed was not read: no declaration in it reached a catalog, and no citation into it was resolved or reported ([§FS-workspace.4](FS-workspace.md#4-resolution)). The run is a report about less of the repository than it looks like, and saying so is this finding's whole job.
 
-One warning per absent entry, in the report's ordinary sort ([§FS-errors.4](FS-errors.md#4-determinism)) — by entry name, since all of them share one path and line — anchored at the
-`optional_members` line of the block that holds it:
+It is one located warning per absent entry (§4.9.1), naming the entry and its namespace (§4.9.2) and no remedy (§4.9.3). Unlike §4.7 and §4.8 it is printed on stdout (§4.9.4), because the exit code cannot carry it (§4.9.5); it names no release (§4.9.6), and its JSON form is §4.9.7.
+
+- **Code:** `optional-member-absent` ([§FS-errors.5](FS-errors.md#5-json-format)).
+
+#### 4.9.1 One warning per absent entry
+
+One warning per absent entry, in the report's ordinary sort ([§FS-errors.4](FS-errors.md#4-determinism)) — by entry name, since all of them share one path and line — anchored at the `optional_members` line of the block that holds it:
 
 ```
 grund.toml:5: optional workspace member `vendored` is absent — citations into namespace `vendored` were not checked, so this run does not cover it
 ```
 
-The entry is named **as the config wrote it** and the namespace by the **whole
-alias path this run spells it with** — `vendored` and `sub/vendored` for one
-entry inside a nested block — which is the pair §4.7 and §4.8 already use, for
-the same two reasons: the entry is what an author can edit ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)), and the alias path is
-what a citation has to write ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)).
+#### 4.9.2 The entry as written, the namespace by its alias path
 
-**It names no remedy, because nothing here is broken.** Most warnings in §4 end
-in an edit, because they report a configuration that says something its author
-did not mean. This one reports a state the author declared in advance and
-a checkout that happens to be partial; the only thing that would "fix" it is a
-checkout with the member in it, which is not grund's to ask for and is often not
-available where the run happens. So the message stops at the fact, the way
-[§FS-check.4.6](FS-check.md#46-declaration-near-miss) stops at the mismatch.
+The entry is named **as the config wrote it** and the namespace by the **whole alias path this run spells it with** — `vendored` and `sub/vendored` for one entry inside a nested block — which is the pair §4.7.1 and §4.8.7 already use, for the same two reasons: the entry is what an author can edit ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)), and the alias path is what a citation has to write ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)).
 
-**It is a located finding on stdout, not a CLI-level caution.** That departs from
-its two nearest neighbours — §4.7 and §4.8 both point at a `[workspace]` line and
-both print as a CLI-level `warning:` on stderr (§2.1.1) — and the departure is
-deliberate.
+#### 4.9.3 It names no remedy, because nothing here is broken
 
-Those two report a **misconfiguration**, and the reason they are CLI-level is
-that every command in the tree is wrong under them: a block that reads nothing
-makes `grund list` silent, an unlisted block makes every command spell the same
-project two ways. So they are emitted where the workspace loads, and carried by
-every command that walks. This finding is not that. Nothing is misconfigured —
-the repository said this may happen, and it happened — and no other command's
-output is wrong, because a namespace that is not there has nothing to list and
-nothing to point at. What is at stake is only the verdict `check` renders, and a
-statement about the coverage of a report belongs in the report.
+Most warnings in §4 end in an edit, because they report a configuration that says something its author did not mean. This one reports a state the author declared in advance and a checkout that happens to be partial; the only thing that would "fix" it is a checkout with the member in it, which is not grund's to ask for and is often not available where the run happens. So the message stops at the fact, the way [§FS-check.4.6](FS-check.md#46-declaration-near-miss) stops at the mismatch.
 
-The exit code is what forces the shape. §2 gives grund one way to say "do not
-trust this report as complete", and it is exit `2`. This is the one case where a
-run is deliberately incomplete and still exits `0` ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)), so the
-exit code carries nothing here and stdout has to. A CLI-level line would leave
-stdout saying only that the `success` marker was withheld — a signal made of an
-absence, which under `2>/dev/null` or a folded CI log is indistinguishable from
-silence, and which is exactly the warning that scrolls past. The
-`<path>:<line>:` prefix is also honest here in a way it is not for §4.3: there is
-one line, in a file the repository wrote, and it is the line a reader has to open
-to understand the run. `success` is withheld all the same, because it is withheld
-for every warning (§2.1) — but that is now a consequence of the finding rather
-than the whole of it.
+#### 4.9.4 A located finding on stdout, not a CLI-level caution
 
-**It names no release.** §4.7 and §4.8 are warnings on the way to being errors
-([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). This one is permanent. An unverified namespace
-is not a state to be migrated off; it is the standing price of the opt-out, paid
-on every run of every checkout that takes it, and a repository that stops wanting
-to pay it deletes the entry.
+It is a located finding on stdout, which departs deliberately from its two nearest neighbours — §4.7 and §4.8 both point at a line of their block's config and both print as a CLI-level `warning:` on stderr (§2.1.1). Those two report a **misconfiguration**, and the reason they are CLI-level is that every command in the tree is wrong under them: a block that reads nothing makes `grund list` silent, an unlisted block makes every command spell the same project two ways. So they are emitted where the workspace loads, and carried by every command that walks. This finding is not that. Nothing is misconfigured — the repository said this may happen, and it happened — and no other command's output is wrong, because a namespace that is not there has nothing to list and nothing to point at. What is at stake is only the verdict `check` renders, and a statement about the coverage of a report belongs in the report.
 
-Under `--format=json` it is one warning diagnostic on **stdout** with `path` and
-`line` set and `sites` null, like every other located finding ([§FS-errors.5](FS-errors.md#5-json-format)) —
-which is the other half of what the CLI-level shape would have cost, since a
-consumer filtering the report for coverage facts would have had to parse text on
-a second stream to find this one.
+#### 4.9.5 The exit code forces the shape
 
-- **Code:** `optional-member-absent` ([§FS-errors.5](FS-errors.md#5-json-format)).
+§2 gives grund one way to say "do not trust this report as complete", and it is exit `2`. This is the one case where a run is deliberately incomplete and still exits `0` ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)), so the exit code carries nothing here and stdout has to. A CLI-level line would leave stdout saying only that the `success` marker was withheld — a signal made of an absence, which under `2>/dev/null` or a folded CI log is indistinguishable from silence, and which is exactly the warning that scrolls past. The `<path>:<line>:` prefix is also honest here in a way it is not for §4.3.1: there is one line, in a file the repository wrote, and it is the line a reader has to open to understand the run. `success` is withheld all the same, because it is withheld for every warning (§2.1.3) — but that is now a consequence of the finding rather than the whole of it.
+
+#### 4.9.6 It names no release
+
+§4.7 and §4.8 are warnings on the way to being errors ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). This one is permanent. An unverified namespace is not a state to be migrated off; it is the standing price of the opt-out, paid on every run of every checkout that takes it, and a repository that stops wanting to pay it deletes the entry.
+
+#### 4.9.7 Its JSON form is on stdout
+
+Under `--format=json` it is one warning diagnostic on **stdout** with `path` and `line` set and `sites` null, like every other located finding ([§FS-errors.5](FS-errors.md#5-json-format)) — which is the other half of what the CLI-level shape would have cost, since a consumer filtering the report for coverage facts would have had to parse text on a second stream to find this one.
 
 ### 4.10 `include_root = false` leaves the block's own files unread
 
