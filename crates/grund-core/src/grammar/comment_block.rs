@@ -8,7 +8,7 @@ use super::source_line::{
 
 /// One comment block, classified: what opens it, where a docstring closes it,
 /// whether it declares an ID, and whether the language it is written in calls it
-/// documentation (§AR-scanner.4, §FS-inline-citation-style.1.1).
+/// documentation (§AR-scanner.4.3, §FS-inline-citation-style.1.1.1).
 ///
 /// These are the block-level classifiers the scanner's single pass used to carry
 /// (§AR-scanner.2): pure functions over a line or over one block's lines, holding
@@ -60,7 +60,7 @@ fn line_comment_marker(trimmed: &str, comment_prefixes: &[String]) -> Option<Str
 }
 
 /// Every comment / docstring block in a source file, as 0-indexed inclusive line
-/// spans with the kind that opened each one (§AR-scanner.2.4). One walk, three
+/// spans with the kind that opened each one (§AR-scanner.2.4.1). One walk, three
 /// readers: the block that bounds a declaration body, the block that may host an
 /// inline citation site, and the block that is a grounding unit
 /// (§AR-scanner.2.7). They asked the same question three times, and a block
@@ -182,7 +182,7 @@ pub(crate) enum DocCommentRule {
 }
 
 /// What the line under a position language's doc comment begins with
-/// (§FS-inline-citation-style.1.1). Recognition, not parsing: the test reads one
+/// (§FS-inline-citation-style.1.1.3). Recognition, not parsing: the test reads one
 /// line, so a Go `var` inside a function body classifies as a definition and a
 /// Ruby `private def` does not. A miss only means a block is measured that need
 /// not be; it never changes what a citation resolves to.
@@ -208,7 +208,7 @@ const GO_DEFINITION_STARTERS: &[&str] = &["func", "type", "var", "const", "packa
 const RUBY_DEFINITION_STARTERS: &[&str] = &["class", "module", "def"];
 
 /// The doc-comment recognizer for one file, keyed on its extension
-/// (§FS-inline-citation-style.1.1, §AR-scanner.4). Built in and not
+/// (§FS-inline-citation-style.1.1.2, §AR-scanner.4). Built in and not
 /// configurable: what a note *is* must not differ between two installs
 /// (§FS-non-goals.13). An extension this table does not name has no doc notion,
 /// so every one of its comment blocks stays an inline site and nothing a tree
@@ -299,7 +299,7 @@ fn haddock_block_opens(first: &str) -> bool {
 }
 
 /// Whether the line under a position language's comment block opens a definition
-/// (§FS-inline-citation-style.1.1). The line arrives with its leading whitespace
+/// (§FS-inline-citation-style.1.1.2). The line arrives with its leading whitespace
 /// already stripped.
 fn definition_opens(start: DefinitionStart, next: &str) -> bool {
     match start {
@@ -313,7 +313,7 @@ fn definition_opens(start: DefinitionStart, next: &str) -> bool {
 
 /// Whether `line` begins with `keyword` followed by a non-identifier character
 /// or by nothing at all — the boundary that separates `func main` and `func(`
-/// from `functional` (§FS-inline-citation-style.1.1).
+/// from `functional` (§FS-inline-citation-style.1.1.2).
 fn opens_with_keyword(line: &str, keyword: &str, ignore_case: bool) -> bool {
     let Some(head) = line.get(..keyword.len()) else {
         return false;
@@ -334,7 +334,7 @@ fn is_identifier_char(ch: char) -> bool {
 
 /// Shell's two spellings of a function definition: `function <name>`, and
 /// `<name>()` / `<name> ()` with `<name>` an `[A-Za-z_][A-Za-z0-9_]*`
-/// (§FS-inline-citation-style.1.1). A scan rather than a regex — it reads at
+/// (§FS-inline-citation-style.1.1.2). A scan rather than a regex — it reads at
 /// most a name's worth of bytes and stops.
 fn shell_function_opens(line: &str) -> bool {
     if opens_with_keyword(line, "function", false) {
@@ -362,7 +362,7 @@ fn shell_identifier_len(line: &str) -> usize {
 /// the file's very first line). A comment block opening at or before it is the
 /// file's *leading comment* — a position language's spelling of a module doc,
 /// the thing `//!` and a module docstring are in the marker languages
-/// (§FS-inline-citation-style.1.1).
+/// (§FS-inline-citation-style.1.1.1).
 ///
 /// One scan of the file, taken only where a position language will ask
 /// (§GOAL-fast-feedback), rather than a walk back over every earlier line once

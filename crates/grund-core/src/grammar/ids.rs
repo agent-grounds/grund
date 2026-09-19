@@ -8,7 +8,7 @@
 //! §AR-system.4 allows, so they live here rather than on the record. The
 //! compiled `Grammar` they read is the one config built (§AR-system.2.3).
 //!
-//! The member-local fallback of §FS-workspace.5 was parked in the scanner's
+//! The member-local fallback of §FS-workspace.5.2 was parked in the scanner's
 //! citation pass while §AR-system.2.5 was a file-name category; it is a lexical
 //! reading of the conventional ID shape over plain text, with neither scan state
 //! nor a compiled grammar, so it came down here with the move.
@@ -47,7 +47,7 @@ pub(crate) fn parse_id(caps: &regex::Captures, grammar: &Grammar) -> Option<Id> 
 }
 
 /// Parse a CLI `<ID>[.<section>]` argument (the form ID queries and `grund refs` take,
-/// §FS-show.1, §FS-refs.1) into an `Id` and an optional section path (§FS-config.3.3).
+/// §FS-show.1.1, §FS-refs.1) into an `Id` and an optional section path (§FS-config.3.3).
 pub(crate) fn parse_id_arg(raw: &str, grammar: &Grammar) -> Result<(Id, Option<String>)> {
     let caps = grammar
         .id_input_re
@@ -57,7 +57,7 @@ pub(crate) fn parse_id_arg(raw: &str, grammar: &Grammar) -> Result<(Id, Option<S
     Ok((id, caps.name("sec").map(|m| m.as_str().to_string())))
 }
 
-/// The member-local fallback ID parser (§FS-workspace.5). Recognises the
+/// The member-local fallback ID parser (§FS-workspace.5.2). Recognises the
 /// conventional `KIND[-NUM]-SLUG` shape — uppercase-or-digit kind, optional
 /// numeric middle component, non-empty slug — because the member has no
 /// access to the citing or target project's `[id] format` at this point.

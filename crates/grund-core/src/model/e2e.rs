@@ -4,7 +4,7 @@ use std::path::PathBuf;
 /// (§AR-scanner.6, §AR-core-module-layout.1).
 
 /// An `e2e/cases/<name>/` directory treated as an `E2E-<name>` declaration
-/// (§AR-scanner.6) — its `command.args`, `expected.exit`, and fixture file list
+/// (§AR-scanner.6.1) — its `command.args`, `expected.exit`, and fixture file list
 /// are what `grund E2E-<name>` renders (§FS-show.2.4).
 #[derive(Debug, Clone)]
 pub struct E2eCase {
@@ -15,7 +15,7 @@ pub struct E2eCase {
     pub spec_refs: Vec<E2eSpecRef>,
 }
 
-/// A non-empty `spec.refs` manifest line from an E2E case (§AR-scanner.6).
+/// A non-empty `spec.refs` manifest line from an E2E case (§AR-scanner.6.3).
 /// It is evidence for E2E citation-direction obligations (§FS-config.3.9), not a
 /// normal citation site, so it does not produce dangling-ref findings: an E2E
 /// case grounds in the *layer* a `spec.refs` entry names, and entries are

@@ -9,7 +9,7 @@ use crate::model::Id;
 /// template into elements once gives the regexes and `render_id` a single shared
 /// reading of it, which is what lets the shorthand pattern and the shorthand
 /// *rendering* be derived by the same reduction instead of two rules that could
-/// disagree (§AR-scanner.2.6).
+/// disagree (§AR-scanner.2.6.11).
 ///
 /// The `[id] format` template, parsed once into elements (§FS-config.3.2).
 ///
@@ -18,7 +18,7 @@ use crate::model::Id;
 /// shorthand. `Grammar::build` compiles every pattern from these elements and
 /// `render_id` prints every ID back through them, so the parsed form is what
 /// keeps the pattern and the rendering two readings of one template rather than
-/// two rules that can disagree (§AR-scanner.2.6).
+/// two rules that can disagree (§AR-scanner.2.6.11).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum IdElement {
     Literal(String),
@@ -121,19 +121,19 @@ impl Grammar {
     /// placeholder is in the format — the shorthand `Id` a shorthand citation
     /// carries before it resolves — is dropped with its separator by
     /// `elements_without`, so a partial ID prints as `FS-042` rather than
-    /// leaking the raw `{slug}` placeholder into a report (§AR-scanner.2.6).
+    /// leaking the raw `{slug}` placeholder into a report (§AR-scanner.2.6.11).
     ///
     /// Why the reduction is conditional: a `{kind}-{slug}` repo's `num: None` is
     /// not a missing component, it is a component the format never had. And
     /// `render_id` is on the report and `list` paths, so the common case has to
     /// borrow the parsed element list rather than clone it.
     pub(crate) fn render(&self, id: &Id, width: usize) -> String {
-        // §FS-config.3.2: catalog reads preserve a persisted off-grammar ID's
+        // §FS-config.3.2.5: catalog reads preserve a persisted off-grammar ID's
         // raw spelling; the effective format remains only its conformance rule.
         if let Some(spelling) = id.legacy_spelling() {
             return spelling.to_string();
         }
-        // §FS-config.3.4.10: numeric external handles are preserved as ordinary
+        // §FS-config.3.4.10.1: numeric external handles are preserved as ordinary
         // numbers on read/report paths rather than being rewritten to the
         // allocator's minimum width.
         let width = if self.overridden_kinds.contains(&id.kind) {
@@ -145,7 +145,7 @@ impl Grammar {
     }
 
     /// Render a newly allocated ID with the caller's explicit minimum width
-    /// even when its kind overrides the repository format (§FS-id.1,
+    /// even when its kind overrides the repository format (§FS-id.1.2,
     /// §FS-id.2.1).
     pub(crate) fn render_allocation(&self, id: &Id, width: usize) -> String {
         self.render_with_width(id, width)
@@ -220,7 +220,7 @@ pub(crate) fn parse_longest_id_prefix(raw: &str, grammar: &Grammar) -> Option<Pa
         .collect::<Vec<_>>();
     for end in ends.into_iter().rev() {
         if let Ok(parsed) = parse_id_arg_with_shorthand(&raw[..end], grammar) {
-            // §FS-config.3.3 / §AR-scanner.2.3: do not return the numeric prefix
+            // §FS-config.3.3.1 / §AR-scanner.2.3.4: do not return the numeric prefix
             // of a reserved name-bearing candidate.
             if grammar.has_reserved_named_tail(raw, end) {
                 return None;
@@ -263,7 +263,7 @@ pub(crate) struct ParsedIdPrefix {
 /// has to be rejected by a second full-ID search. On a 10k-file tree that
 /// measured as a 46% instruction-count regression — a direct hit on
 /// §GOAL-fast-feedback, which is why the pass is driven from marker positions
-/// (§AR-scanner.2.6) rather than from its own scan of the line.
+/// (§AR-scanner.2.6.1) rather than from its own scan of the line.
 #[derive(Clone)]
 pub(crate) struct ShorthandGrammar {
     /// The *full* ID as a prefix of the same slice. Tried first, so a canonical
@@ -331,7 +331,7 @@ impl ShorthandGrammar {
 
 /// The number-only shorthand's element list, or `None` when the format has no
 /// shorthand: without `{number}` nothing is left to name the declaration, and
-/// without `{slug}` there is nothing to omit (§FS-check.1.2, §FS-id.4.1).
+/// without `{slug}` there is nothing to omit (§FS-check.1.2.1, §FS-id.4.1).
 pub(super) fn shorthand_elements(elements: &[IdElement]) -> Option<Vec<IdElement>> {
     let has_both = elements.contains(&IdElement::Number) && elements.contains(&IdElement::Slug);
     has_both.then(|| elements_without(elements, &IdElement::Slug))
@@ -375,7 +375,7 @@ impl Grammar {
     /// makes `FS-042` a prefix of `FS-042-user-login`.
     ///
     /// `/` is deliberately **not** one of them. It is the namespace separator of
-    /// §FS-workspace.1, which can only *precede* a kind, never follow a number, and
+    /// §FS-workspace.1.1, which can only *precede* a kind, never follow a number, and
     /// the full-ID pass already reads `§FS-042-user-login/x` as a citation of
     /// `FS-042-user-login`. Treating it as a continuation here would make the
     /// shorthand and the canonical form disagree about the same boundary — and the
@@ -515,7 +515,7 @@ fn bounds_a_construct(ch: char) -> bool {
 /// The end offset of the ID-shaped token starting at exactly `at`, or `None` when
 /// none does — a full ID, or the number-only shorthand where the repo has one
 /// (§FS-check.1.2). One definition of "a real ID follows here", shared by `fmt`'s
-/// trigger pass (§FS-fmt.2.1) and the LSP's live transform (§FS-lsp.1.4), so the
+/// trigger pass (§FS-fmt.2.1) and the LSP's live transform (§FS-lsp.1.4.1), so the
 /// two cannot disagree about which `$$` to consume.
 pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Option<usize> {
     if let Some(found) = grammar
@@ -540,7 +540,7 @@ pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Optio
 
 /// The `[id] format` template with each placeholder replaced by the schematic
 /// name of what it accepts — `{kind}-{number}-{slug}` reads `<KIND>-<NNN>-<slug>`
-/// (§FS-init.2.3, §FS-check.4.5). A substitution over the template's literal
+/// (§FS-init.2.3.8, §FS-check.4.5.2). A substitution over the template's literal
 /// text, so it is a fact about the config rather than a guess at what
 /// `[id] number_pattern` and `[id] slug_pattern` accept: an ID assembled from
 /// those patterns would be wrong for every project that narrows them, printed by
@@ -557,7 +557,7 @@ pub(crate) fn id_shape(id_format: &str) -> String {
 
 /// The literal text between `{kind}` and the next placeholder in `[id] format`
 /// (e.g. `-` in `{kind}-{slug}`) — the glue an `E2E-<dirname>` ID is reassembled
-/// with (§AR-scanner.6).
+/// with (§AR-scanner.6.1).
 pub(crate) fn literal_after_kind_placeholder(format: &str) -> Option<&str> {
     let marker = "{kind}";
     let start = format.find(marker)? + marker.len();

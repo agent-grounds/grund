@@ -1,4 +1,4 @@
-//! The deprecated `grund check` adapter (§AR-system.2.9): argv, the exact-code
+//! The deprecated `grund check` adapter (§AR-system.2.9.1): argv, the exact-code
 //! selectors, the report format, the printing and the exit code (§FS-check.1,
 //! §FS-check.2.1, §FS-cli.5).
 //!
@@ -8,7 +8,7 @@
 //! something the embedding API does not (§FS-lsp.4, §AR-system.4).
 
 /// `grund check [path]`: validate repeatable exact-code selectors before config
-/// discovery (§FS-check.1), scan the whole tree, select the completed report,
+/// discovery (§FS-check.1.4), scan the whole tree, select the completed report,
 /// and exit `0` clean / `1` on a retained error / `2` on a CLI or I/O failure
 /// (§FS-check.2.1, §FS-cli.5).
 use std::path::PathBuf;
@@ -89,7 +89,7 @@ pub(crate) fn command_check(args: &[String]) -> ExitCode {
                 return ExitCode::from(2);
             }
             other => {
-                // §FS-cli.3: a path-taking subcommand accepts at most one path;
+                // §FS-cli.3.2: a path-taking subcommand accepts at most one path;
                 // a second positional is a CLI error, never a silent drop.
                 if path_provided {
                     eprintln!("error: check takes at most one path argument");
@@ -119,7 +119,7 @@ pub(crate) fn command_check(args: &[String]) -> ExitCode {
         eprintln!("error: unsupported check format `{format}`");
         return ExitCode::from(2);
     }
-    // §FS-check.2.1: filter only after the ordinary checker completed, before
+    // §FS-check.2.1.2: filter only after the ordinary checker completed, before
     // the existing sort, rendering, and selected-report exit decision.
     run.report
         .errors
@@ -130,9 +130,9 @@ pub(crate) fn command_check(args: &[String]) -> ExitCode {
     run.report
         .suggestions
         .retain(|diagnostic| selection.retains(diagnostic.code));
-    // §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1: the run's warning channel,
+    // §FS-check.4.7.7, §FS-check.4.10.11, §FS-workspace.6.1: the run's warning channel,
     // rendered ahead of the report exactly where the engine used to print it, in
-    // §FS-check.2.1.1's shape on both formats (§FS-errors.5).
+    // §FS-check.2.1.1's shape on both formats (§FS-errors.5.2).
     let run_warnings = settled_run_warnings(&run.config);
     print_run_warnings(&run_warnings);
     if format == "json" {

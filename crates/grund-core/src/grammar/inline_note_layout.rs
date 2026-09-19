@@ -12,11 +12,11 @@ use super::settings::{AliasGrammar, LexicalSettings};
 /// (§DF-inline-note-layout.2.4).
 ///
 /// Inline note shape: what one comment line says, and whether it says it in the
-/// project's configured layout (§FS-inline-citation-style.2.3,
+/// project's configured layout (§FS-inline-citation-style.2.3.3,
 /// §FS-inline-citation-style.3.3).
 ///
 /// What is here is the classifier alone: the scanner annotates each inline
-/// citation site with the lines that deviate (§AR-scanner.3), and the checker
+/// citation site with the lines that deviate (§AR-scanner.3.2), and the checker
 /// turns that list into findings at the configured level (§AR-checker.2.14).
 /// The rule that does so is `checker/inline_style.rs` — a checker rule sat in
 /// grammar while both were file-name categories, and §AR-system.2.1 says this
@@ -81,16 +81,16 @@ pub(crate) fn layout_pass_enabled(lexical: LexicalSettings<'_>) -> bool {
 }
 
 /// The separator between two citations of one run: comma, exactly one space
-/// (§FS-inline-citation-style.3.3, rule 4).
+/// (§FS-inline-citation-style.3.3.4, rule 4).
 pub(crate) const CITATION_RUN_SEPARATOR: &str = ", ";
 
 /// The 1-based lines of one comment block that are judged by the configured
-/// layout and deviate from it, ascending (§FS-inline-citation-style.3.3).
+/// layout and deviate from it, ascending (§FS-inline-citation-style.3.3.1).
 ///
 /// Called only where `layout_pass_enabled` already said a verdict has somewhere
 /// to go, so the remaining exemption is the block's own: a site with no note is
 /// a pure pointer, and a layout is a relation between a citation and a note
-/// (§FS-inline-citation-style.3.3, rule 2).
+/// (§FS-inline-citation-style.3.3.2, rule 2).
 ///
 /// Which lines are judged is rule 1: the first line whose content carries a
 /// citation opens the note and is always judged; a later one is judged only when
@@ -127,7 +127,7 @@ pub(crate) fn inline_layout_violations(
 /// list marker skipped, and the citation tokens inside that window rebased onto
 /// it. The window is the one §2.3 uses — comment prefix and block closer stripped
 /// — and the tokens are the ones the scanner itself recognizes on the line
-/// (§FS-inline-citation-style.3.3, rule 5), translated rather than re-tokenized
+/// (§FS-inline-citation-style.3.3.5, rule 5), translated rather than re-tokenized
 /// in the stripped copy. `None` when no citation falls inside the window, which
 /// is rule 1's unconstrained line.
 pub(crate) fn line_layout_view<'a>(
@@ -158,13 +158,13 @@ pub(crate) fn content_conforms(
         return false;
     };
     // The delimiter may end the line, and anything that follows it must be
-    // separated by a space (§FS-inline-citation-style.3.3, rule 4).
+    // separated by a space (§FS-inline-citation-style.3.3.4, rule 4).
     rest.is_empty() || rest.starts_with(' ')
 }
 
 /// The byte length of a leading Markdown list marker and the spaces behind it,
 /// or `0` when the content does not open with one
-/// (§FS-inline-citation-style.3.3). A bullet is item structure rather than note
+/// (§FS-inline-citation-style.3.3.8). A bullet is item structure rather than note
 /// text, so an enumerated block of grounded points can open each item with its
 /// citation run. One marker is skipped, never a chain, and only where a space
 /// follows — `-§<ID>` opens with a `-`.
@@ -192,7 +192,7 @@ fn list_marker_len(content: &str) -> usize {
 /// joined by exactly `, `. `None` when there is no such run — either the content
 /// does not open with a citation token (the run has to sit on the line's first
 /// content byte) or a `, ` inside it is followed by something that is not one
-/// (§FS-inline-citation-style.3.3, rule 4). Both are deviations, so neither needs
+/// (§FS-inline-citation-style.3.3.4, rule 4). Both are deviations, so neither needs
 /// an offset to report.
 fn citation_run_end(content: &str, tokens: &[(usize, usize)]) -> Option<usize> {
     let mut cursor = 0;
@@ -219,8 +219,8 @@ fn citation_run_end(content: &str, tokens: &[(usize, usize)]) -> Option<usize> {
 }
 
 /// The two verdicts one comment block carries about its note: whether it says
-/// anything at all (§FS-inline-citation-style.2.3) and which of its citation
-/// lines say it in the wrong shape (§FS-inline-citation-style.3.3).
+/// anything at all (§FS-inline-citation-style.2.3.3) and which of its citation
+/// lines say it in the wrong shape (§FS-inline-citation-style.3.3.1).
 ///
 /// Whether a second reader exists is a config fact, so it is settled here, once
 /// per block, before a line is touched. Where one does, both passes read one
@@ -295,7 +295,7 @@ impl<'a> BlockCitations<'a> {
 }
 
 /// Whether any line of a comment block carries note text — non-whitespace that is
-/// neither a comment token nor part of a citation (§FS-inline-citation-style.2.3).
+/// neither a comment token nor part of a citation (§FS-inline-citation-style.2.3.3).
 /// The walk stops at the first line that says something, so the block is read only
 /// as far as the answer needs it.
 pub(crate) fn block_has_inline_note(
@@ -323,7 +323,7 @@ pub(crate) fn block_has_inline_note_memoized(
 }
 
 /// Whether one line says anything once its comment tokens and its citations are
-/// taken out of it (§FS-inline-citation-style.2.3).
+/// taken out of it (§FS-inline-citation-style.2.3.3).
 pub(crate) fn line_says_something(
     line: &str,
     ranges: &[(usize, usize)],
@@ -333,7 +333,7 @@ pub(crate) fn line_says_something(
     !strip_comment_tokens(&tokenless, prefixes).trim().is_empty()
 }
 
-/// §FS-inline-citation-style.5: the sentence the managed agent-entrypoint block
+/// §FS-inline-citation-style.5.3: the sentence the managed agent-entrypoint block
 /// appends when a layout is configured, written with the project's own marker and
 /// `<ID>` placeholders so the example is a shape rather than a live citation.
 /// Empty under `any`, and the same at every `inline_note_layout_check` — the

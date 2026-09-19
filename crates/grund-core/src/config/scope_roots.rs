@@ -31,7 +31,7 @@ pub(crate) fn canonical_config_root(config: &Config) -> PathBuf {
 /// the config root is. Starting only at the root would therefore read *fewer*
 /// files than the plain walk whenever an `include` entry is gitignored, excluded,
 /// or hidden — and `--full` would turn a red run green, which is exactly what
-/// §FS-check.1.3 promises it can never do. `walk_scannable_files` deduplicates
+/// §FS-check.1.3.4 promises it can never do. `walk_scannable_files` deduplicates
 /// the file list, so an `include` root the root walk already covers is read once.
 /// Collecting each root through `components()` folds away the `./` and trailing
 /// separator an entry may be written with, so two roots naming one directory
@@ -56,7 +56,7 @@ pub(crate) fn canonical_config_root(config: &Config) -> PathBuf {
 /// ways is still `include`'s, which keeps the dedup and `--full`'s additivity
 /// unchanged.
 pub(crate) fn root_scope_roots(config: &Config, full: bool) -> Vec<PathBuf> {
-    // §FS-config.3.4.7: an `include` entry at or inside an unwalked home is the one
+    // §FS-config.3.4.7.2: an `include` entry at or inside an unwalked home is the one
     // way such a home is still a *root*, where the walk's own prune cannot reach it.
     // The narrower key, the one written on the kind itself, wins.
     let unwalked = if full {
@@ -72,7 +72,7 @@ pub(crate) fn root_scope_roots(config: &Config, full: bool) -> Vec<PathBuf> {
         .filter(move |root| !unwalked.iter().any(|home| root.starts_with(home)))
         .collect::<Vec<_>>()
         .into_iter();
-    // §FS-config.3.5: every configured kind home is walked whether or not `include`
+    // §FS-config.3.5.8: every configured kind home is walked whether or not `include`
     // names it; `include` keeps its job, the extra roots. Ordered after `include` so
     // the first-seen spelling of a file reached two ways is still the one it gives.
     let homes = kind_home_roots(config);
@@ -97,7 +97,7 @@ pub(crate) fn unwalked_home_roots(config: &Config) -> Vec<PathBuf> {
         .collect()
 }
 
-/// Every configured `[[kinds]]` home as a walk root (§FS-config.3.5) — `file`
+/// Every configured `[[kinds]]` home as a walk root (§FS-config.3.5.8) — `file`
 /// homes included, since a single-file kind's document is as much a home as a
 /// folder is. A home that does not exist walks as nothing, so a fresh repository
 /// whose default homes are not scaffolded yet stays silent. An unwalked home

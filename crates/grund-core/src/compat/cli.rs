@@ -85,10 +85,10 @@ fn compat_print_subcommand_help(cmd: &str) {
 ///
 /// New code should depend on the `grund` CLI package for process entry points,
 /// or call the structured `grund-core` APIs (`check`, `show`, `scan`) when
-/// embedding the engine (§AR-bindings.2, §FS-distribution.3.1).
+/// embedding the engine (§AR-bindings.2, §FS-distribution.3.1.1).
 ///
 /// The note names the release the symbol stops working in, in the clause
-/// §FS-distribution.4.2 closes for a pending removal, so a tree still carrying it
+/// §FS-distribution.4.2.2 closes for a pending removal, so a tree still carrying it
 /// cannot be cut at that release or above — nine releases shipped this warning
 /// without a name, which is a deprecation that never ends
 /// (§REQ-backwards-compatibility.2, §DA-engine-renders-nothing).
@@ -174,8 +174,8 @@ pub fn main_entry() -> ExitCode {
         Some("config") => command_config(&args[1..]),
         Some("agent-setup-instructions") => compat_agent_setup_instructions(&args[1..]),
         Some("completions") => command_completions(&args[1..]),
-        // §FS-integrations.1: the command's argv and its every byte are the
-        // CLI's, so this dispatcher names the migration §FS-distribution.3.1
+        // §FS-integrations.1.3: the command's argv and its every byte are the
+        // CLI's, so this dispatcher names the migration §FS-distribution.3.1.1
         // documents rather than carrying a second copy of a retiring renderer.
         Some("integrations") => {
             eprintln!(

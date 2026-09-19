@@ -13,7 +13,7 @@ use crate::writers::{
     render_agents_append_block_at,
 };
 
-// §FS-check.3.5 / §FS-init.2.3.5: a v-current managed block whose generated
+// §FS-check.3.5 / §FS-init.2.3.5.8: a v-current managed block whose generated
 // citation directions no longer match `[citations]` is an agents-init finding.
 #[test]
 fn citation_directions_drift_is_reported() {
@@ -53,7 +53,7 @@ fn citation_directions_drift_is_reported() {
     );
 }
 
-// §FS-check.3.5 / §FS-init.2.3.6: flipping `[reference] conversation` without
+// §FS-check.3.5 / §FS-init.2.3.6.1: flipping `[reference] conversation` without
 // re-running `grund init` leaves a v-current block whose clickable-citations
 // section disagrees with the live config — an agents-init drift finding.
 #[test]
@@ -104,7 +104,7 @@ fn clickable_citations_drift_is_reported() {
     );
 }
 
-// §FS-integrations.4.3: an older guidance block upgrades in place to the
+// §FS-integrations.4.3.14: an older guidance block upgrades in place to the
 // current text, preserving everything around it.
 #[test]
 fn agent_guidance_block_upgrades_older_version_in_place() {
@@ -132,7 +132,7 @@ fn agent_guidance_block_upgrades_older_version_in_place() {
     assert!(updated.ends_with("keep-after\n"));
 }
 
-// §FS-check.3.5 / §FS-init.2.3.5: only the managed block content can satisfy
+// §FS-check.3.5 / §FS-init.2.3.5.8: only the managed block content can satisfy
 // citation-direction drift validation; matching prose elsewhere is ignored.
 #[test]
 fn citation_directions_drift_compares_managed_block_only() {
@@ -167,7 +167,7 @@ fn citation_directions_drift_compares_managed_block_only() {
     );
 }
 
-// §FS-check.3.5 / §FS-init.2.3.5: byte comparison is against the rendered
+// §FS-check.3.5 / §FS-init.2.3.5.8: byte comparison is against the rendered
 // Citation directions section, not a substring search for the current text.
 #[test]
 fn citation_directions_drift_rejects_extra_managed_section_bytes() {

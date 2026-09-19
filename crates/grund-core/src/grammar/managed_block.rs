@@ -34,37 +34,37 @@ use super::compiled::{
     AGENTS_BLOCK_BEGIN, AGENTS_BLOCK_END, AGENTS_BLOCK_H2, AGENTS_SECTION_BOUNDARY,
 };
 
-/// v5 (§FS-init.2.3.6, §DF-integrations-command, §DF-repo-conversation-opinion):
+/// v5 (§FS-init.2.3.6.2, §DF-integrations-command, §DF-repo-conversation-opinion):
 /// the block gains the `### Clickable citations` section — the fixed
 /// repository-web convention, plus a config-derived local-conversation sentence
-/// when `[reference] conversation = "link"` is set. v4 (§FS-init.2.3,
+/// when `[reference] conversation = "link"` is set. v4 (§FS-init.2.3.9,
 /// §DF-managed-block-delimiters): explicit `<!-- BEGIN/END GRUND MANAGED BLOCK -->`
 /// delimiters replace the implicit H2-to-next-heading region, and the worked
 /// citation example is `<§>`-escaped so generated output passes `grund check`
-/// unmodified. v3 (§FS-init.2.3.5, §DF-citation-directions) replaced the
+/// unmodified. v3 (§FS-init.2.3.5.9, §DF-citation-directions) replaced the
 /// hand-written climbing-rule bullet with a generated `### Citation directions`
 /// section derived from `[citations]`.
-/// v6 (§FS-init.2.3.6, §DF-conversation-link-target): the local-conversation
+/// v6 (§FS-init.2.3.6.2, §DF-conversation-link-target): the local-conversation
 /// sentence became the gated link form — a Markdown link over the `file` target
 /// on the Claude entrypoints, the plain location everywhere else.
-/// v7 (§FS-config.1, §DF-config-file-location.2.3): the namespace rule tells an
+/// v7 (§FS-config.1.3, §DF-config-file-location.2.3): the namespace rule tells an
 /// agent to give a new subproject a bare `grund.toml` rather than
 /// `.agents/grund.toml`. That is the taught workflow changing — an agent
 /// following a v6 block creates a config in the form `init` no longer
 /// generates — so it carries a version bump rather than a silent rewrite
-/// (§FS-init.2.3).
-/// v8 (§FS-init.2.3.5, §DF-directions-render): the generated
+/// (§FS-init.2.3.7).
+/// v8 (§FS-init.2.3.5.9, §DF-directions-render): the generated
 /// `### Citation directions` section is re-rendered exactly — a unit per bullet,
 /// a grouped conjunction of alternatives, `*/K` said in words, a closed per-kind
 /// default folded into its permission, a legend for what gates, and the
 /// grounding sentence `[reference] require_grounding` was never rendering. The
 /// rules an agent reads changed, so it carries a bump rather than a silent
-/// rewrite (§FS-init.2.3).
+/// rewrite (§FS-init.2.3.7).
 /// v9 (§FS-init.2.3.4.3): the cheap-read ladder gains the point-size sweep so
 /// oversized leads are discoverable before an agent pays to read them.
-/// v10 (§FS-init.2.3.4.5): Markdown declaration bodies teach that ATX headings
+/// v10 (§FS-init.2.3.4.5.1): Markdown declaration bodies teach that ATX headings
 /// need section coordinates, with the body/fence/source exemptions and bold
-/// label alternative of §FS-check.4.14.
+/// label alternative of §FS-check.4.14.1.
 pub(crate) const AGENTS_BLOCK_VERSION: u32 = 10;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
@@ -95,7 +95,7 @@ pub(crate) enum AgentsBlockLookup {
 /// delimiter lines; a legacy v3-and-earlier block has no delimiters — its H2
 /// marker line (`## Grounding with grund (vN)`) opens it and it runs until the
 /// next H1 or H2 (or EOF). Broken delimiters are reported as `Malformed`
-/// rather than guessed around (§FS-check.3.5).
+/// rather than guessed around (§FS-check.3.5.2).
 pub(crate) fn find_agents_block(text: &str) -> AgentsBlockLookup {
     let begins: Vec<Match<'_>> = AGENTS_BLOCK_BEGIN.find_iter(text).collect();
     let ends: Vec<Match<'_>> = AGENTS_BLOCK_END.find_iter(text).collect();
@@ -157,7 +157,7 @@ pub(crate) fn find_agents_block(text: &str) -> AgentsBlockLookup {
 }
 
 /// The pre-v4 lookup: the H2 marker line opens the block and the next H1/H2 (or
-/// EOF) closes it (§FS-init.2.3).
+/// EOF) closes it (§FS-init.2.3.9.2).
 fn find_legacy_agents_block(text: &str) -> AgentsBlockLookup {
     let Some(caps) = AGENTS_BLOCK_H2.captures(text) else {
         return AgentsBlockLookup::Absent;
@@ -188,18 +188,18 @@ fn find_legacy_agents_block(text: &str) -> AgentsBlockLookup {
     })
 }
 
-/// The version stamped into the managed dotfile block markers (§FS-integrations.4.1).
+/// The version stamped into the managed dotfile block markers (§FS-integrations.4.1.4).
 /// Bumped when an embedded snippet changes in a way a re-run should propagate.
 pub const INTEGRATIONS_BLOCK_VERSION: u32 = 1;
 
-/// Version for the user-level agent-instruction block (§FS-integrations.4.3).
+/// Version for the user-level agent-instruction block (§FS-integrations.4.3.13).
 /// v2 (§DF-repo-conversation-opinion): self-scoping texts — gated on the presence
 /// of a `grund.toml`, with the repo-opinion precedence sentence in `plain`.
 /// v3 (§DF-conversation-link-target): the `link` text addresses the declaration
 /// through `conversation_target`, gated per agent.
 /// v4 (§DF-config-file-location): the self-scoping gate names both discovery
 /// locations — a repository configured by a bare root `grund.toml` is a grund
-/// repository the v3 gate did not describe (§FS-config.1).
+/// repository the v3 gate did not describe (§FS-config.1.3).
 pub(crate) const AGENT_GUIDANCE_BLOCK_VERSION: u32 = 4;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -218,7 +218,7 @@ pub(crate) fn integrations_block_markers(comment: &str, version: u32) -> (String
 
 /// Find exactly one complete managed block at any supported version. Marker
 /// spans are whole physical lines, so accepted indentation cannot leak suffix
-/// bytes into the rewritten config (§FS-integrations.4.1).
+/// bytes into the rewritten config (§FS-integrations.4.1.4).
 pub(crate) fn find_managed_block(
     comment: &str,
     text: &str,

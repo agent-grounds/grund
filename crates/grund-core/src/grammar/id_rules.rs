@@ -1,5 +1,5 @@
-/// §FS-config.3.2: no ID the grammar can build may contain a `/`. The character
-/// belongs to the citation namespace (§FS-workspace.1) — a qualified citation and
+/// §FS-config.3.2.3: no ID the grammar can build may contain a `/`. The character
+/// belongs to the citation namespace (§FS-workspace.1.1) — a qualified citation and
 /// every `<alias>/<ID>` CLI argument split on the **last** one — so an ID that
 /// contained a `/` would declare and resolve and then be unqueryable, the alias
 /// boundary landing inside it. Both functions return the message body for a
@@ -11,9 +11,9 @@
 /// and a substring test is exact.
 ///
 /// The rules an `[id]` table must satisfy before a grammar is built from it
-/// (§FS-config.3.2). Today that is one rule — no ID the grammar can build may
+/// (§FS-config.3.2.3). Today that is one rule — no ID the grammar can build may
 /// contain a `/`, the character the citation namespace has already spent
-/// (§FS-workspace.1) — asked once per key, because a `/` reaches an ID
+/// (§FS-workspace.1.1) — asked once per key, because a `/` reaches an ID
 /// differently through each: `format` and a `[[kinds]]` prefix contribute literal
 /// text, `number_pattern` and `slug_pattern` contribute whatever they match.
 ///
@@ -37,13 +37,13 @@ pub(super) fn id_grammar_pattern_slash_error(label: &str, pattern: &str) -> Opti
     pattern_admits_slash(pattern).then(|| id_grammar_slash_message(label, "match"))
 }
 
-/// §FS-config.3.2: and `section_separator` may not carry a `/` either — the same
+/// §FS-config.3.2.2: and `section_separator` may not carry a `/` either — the same
 /// invariant from the other side. A citation is `[<alias path>/]<ID>[<sep><section>]`
 /// and its alias-path boundary is the **last** `/`, so a `/` separator makes the two
 /// boundaries the same character: `<§>root/fs-x/1` — section 1 of `fs-x` in project
 /// `root` — reads as alias path `root/fs-x` and ID `1`. That citation resolved before
 /// alias *paths* existed, so a `[citations]` obligation resting on it turns red with
-/// no config change (§FS-workspace.1).
+/// no config change (§FS-workspace.1.1).
 pub(super) fn section_separator_slash_error(separator: &str) -> Option<String> {
     separator.contains('/').then(|| {
         "[id].section_separator must not contain `/` (a citation's alias path ends at the last `/`, so a `/` here would put the ID/section boundary inside it)".to_string()
@@ -72,7 +72,7 @@ fn id_grammar_slash_message(label: &str, verb: &str) -> String {
 /// pattern like `[a-z]{3}/[a-z]{3}` either.
 ///
 /// A pattern that does not parse admits nothing here: the regex error is reported
-/// by the "valid regex on its own" validator (§FS-config.3.2), and naming it a `/`
+/// by the "valid regex on its own" validator (§FS-config.3.2.4), and naming it a `/`
 /// rejection would name the wrong defect.
 fn pattern_admits_slash(pattern: &str) -> bool {
     regex_syntax::parse(pattern).is_ok_and(|hir| hir_admits_slash(&hir))
@@ -100,7 +100,7 @@ fn hir_admits_slash(hir: &regex_syntax::hir::Hir) -> bool {
     }
 }
 
-/// §FS-config.3.2: the `/` rule for one `[id]` key, by key name — the one entry
+/// §FS-config.3.2.3: the `/` rule for one `[id]` key, by key name — the one entry
 /// point `config/parse.rs` needs, so the caller that reads a TOML line does not also
 /// have to know which shape of rule that line's key takes. An unknown key has no
 /// rule.

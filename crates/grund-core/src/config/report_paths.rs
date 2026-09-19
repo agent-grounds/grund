@@ -4,7 +4,7 @@
 //!
 //! It sat in the deprecated path's `output` category while workspace, the
 //! scanner, the checker, the queries, the writers and the api all read it upward
-//! (§AR-system.4, §AR-system.2.9). The spelling itself — forward slashes, the
+//! (§AR-system.4, §AR-system.2.9.1). The spelling itself — forward slashes, the
 //! sort key, the `..` walk out of a base — is a function of a `Path` alone and
 //! went one level further down, into `model/paths.rs`; what is left here is the
 //! part that needs a `Config` to answer, so it belongs to the component that
@@ -45,7 +45,7 @@ pub(crate) fn display_path(config: &Config, path: &Path) -> String {
 /// `sites` is nothing but a message and a `<config>:<line>` anchor, and every
 /// component that settles one — the walking commands' api, the `init` and `fetch`
 /// writers — needs one spelling of it (§FS-check.4.7, §FS-check.4.10,
-/// §FS-workspace.6.1).
+/// §FS-workspace.6.1.7).
 pub(crate) fn run_warning_findings(config: &Config, warnings: Vec<Diagnostic>) -> Vec<Finding> {
     warnings
         .into_iter()

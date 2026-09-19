@@ -12,7 +12,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). The submodules are the former `grammar*`,
+//! (§AR-core-module-layout.1.1). The submodules are the former `grammar*`,
 //! `markdown_fence`, `comment_line`, `comment_block`, `shorthand`,
 //! `inline_note_layout`, `never_rewrite` and ID-grammar category files, one per
 //! lexical fact §AR-system.2.1 names. Four items the flat layout parked in
@@ -125,14 +125,14 @@ pub(crate) use shorthand::{
 };
 pub(crate) use source_line::{PythonDocstringScanState, source_scan_line};
 
-// What another component's tests read (§AR-core-module-layout.1): the GitHub
+// What another component's tests read (§AR-core-module-layout.1.1): the GitHub
 // slugger, which the scanner's file-pass cases assert their anchors against.
 // The layout classifier's steps went beside their own cases, below.
 #[cfg(test)]
 pub(crate) use anchors::anchor_slug_github;
 
 // The cases that pin this component, one module per behaviour area
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_comment_block;
 #[cfg(test)]

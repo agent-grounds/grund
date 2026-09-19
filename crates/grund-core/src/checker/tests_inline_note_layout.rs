@@ -51,7 +51,7 @@ fn style_findings(config: &Config, root: &Path) -> (Vec<usize>, Vec<usize>) {
     (lines(&report.errors), lines(&report.warnings))
 }
 
-// §FS-inline-citation-style.4.4: one error per nonconforming line, anchored at
+// §FS-inline-citation-style.4.4.1: one error per nonconforming line, anchored at
 // the line — never at the site's opener, and never on a conforming sibling.
 #[test]
 fn layout_error_reports_one_finding_per_offending_line() {
@@ -80,7 +80,7 @@ fn layout_warn_reports_the_same_lines_as_warnings() {
     assert_eq!(warnings, vec![4, 9]);
 }
 
-// §FS-inline-citation-style.4.4: the message is identical at both levels, so a
+// §FS-inline-citation-style.4.4.2: the message is identical at both levels, so a
 // project moving from `warn` to `error` changes the exit code and nothing else.
 #[test]
 fn layout_message_names_the_form_with_the_configured_marker() {
@@ -189,7 +189,7 @@ fn agents_sentence_teaches_the_configured_layout() {
     assert!(inline_citation_style_sentence(&off).contains("`// @<ID>: <note>`"));
 
     // A style that permits no note at all has no layout to teach — but the
-    // doc-comment sentence closes this style too (§FS-inline-citation-style.5).
+    // doc-comment sentence closes this style too (§FS-inline-citation-style.5.4).
     let mut citation_only = layout_config(root, "citation-first-colon");
     citation_only.inline_style = "citation-only".into();
     assert_eq!(

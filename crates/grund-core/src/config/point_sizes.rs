@@ -5,7 +5,7 @@ use super::parse::{bail_config, parse_string, parse_usize};
 use crate::model::format_path;
 
 /// The closed built-in point-size vocabulary, its opt-in warning policy and
-/// what counting in one of its units means (§FS-list.3.4, §FS-config.3.1).
+/// what counting in one of its units means (§FS-list.3.4.2, §FS-config.3.1.2).
 /// These config-facing types stay in this component so the general model remains
 /// reserved for scan and declaration data (§AR-system.2.2, §AR-system.2.3).
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -35,7 +35,7 @@ impl PointSizeUnit {
 }
 
 /// Byte-defined size counting with no locale or Unicode-table input
-/// (§FS-list.3.4). It sits beside the unit rather than beside either caller: it
+/// (§FS-list.3.4.2). It sits beside the unit rather than beside either caller: it
 /// is what `PointSizeUnit` *means*, and the query that slices a lead
 /// (§AR-system.2.7) and the budget rule that judges one (§FS-check.4.13) must
 /// count the same bytes.
@@ -63,7 +63,7 @@ pub struct LeadSizeWarning {
 }
 
 /// Parse the one inline table in grund's line-oriented config surface
-/// (§FS-config.3.1). Keeping this parser specific makes duplicate, missing, and
+/// (§FS-config.3.1.2). Keeping this parser specific makes duplicate, missing, and
 /// extra fields loud without silently widening the rest of the TOML subset.
 pub(super) fn parse_lead_size_warning(
     path: &Path,

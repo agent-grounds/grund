@@ -66,7 +66,7 @@ fn a_tree_written_for_another_id_format_stops_reporting_success() {
     );
 }
 
-/// §FS-check.4.5: the caution's own remaining ground — a tree whose headings
+/// §FS-check.4.5.6: the caution's own remaining ground — a tree whose headings
 /// are not kind-shaped at all, where §FS-check.4.6 has nothing to say and the
 /// run still has to stop printing `success`.
 #[test]
@@ -103,7 +103,7 @@ fn a_tree_with_no_near_miss_still_earns_the_caution() {
     );
 }
 
-/// §FS-check.4.5: the two trees that produce this report — one written to
+/// §FS-check.4.5.2: the two trees that produce this report — one written to
 /// another format, one nobody has declared in yet — are indistinguishable
 /// without judging a line, so the caution names both rather than sending a
 /// fresh adopter to look for a bug in a config that is fine.
@@ -133,7 +133,7 @@ fn the_caution_offers_both_readings_of_the_fact() {
 fn the_caution_proposes_no_id() {
     let root = test_root("the_caution_proposes_no_id");
     write(&root.join("grund.toml"), DEFAULT_CONFIG);
-    // Not kind-shaped, so §FS-check.4.6 stays silent and the caution speaks.
+    // Not kind-shaped, so §FS-check.4.6.1 stays silent and the caution speaks.
     write(&root.join("docs/alpha.md"), "# The alpha spec\n");
 
     let message = caution(&check_run(&root, false))
@@ -150,7 +150,7 @@ fn the_caution_proposes_no_id() {
     );
 }
 
-/// §FS-check.4.5: the shapes and the marker are the project's own, not the
+/// §FS-check.4.5.2: the shapes and the marker are the project's own, not the
 /// defaults — a repository that configures neither still gets a message it
 /// can act on.
 #[test]
@@ -222,7 +222,7 @@ fn a_walk_that_read_no_files_keeps_the_empty_scan_caution() {
     );
 }
 
-/// §FS-check.4.5: the claim is about a whole project, so a run that read part
+/// §FS-check.4.5.4: the claim is about a whole project, so a run that read part
 /// of one does not make it.
 #[test]
 fn a_narrowed_run_makes_no_claim_about_the_project() {
@@ -244,7 +244,7 @@ fn a_narrowed_run_makes_no_claim_about_the_project() {
     );
 }
 
-/// §FS-check.4.5 / §FS-check.3.14: the out-of-scope tier is a finding about
+/// §FS-check.4.5.5 / §FS-check.3.14: the out-of-scope tier is a finding about
 /// the tree *beyond* the configured scope, so it does not stand in for a
 /// verdict about the scope itself. This is the run the caution is worth most:
 /// the tier says where the citations really are, the caution says the config
@@ -271,7 +271,7 @@ fn the_out_of_scope_tier_does_not_withhold_the_caution() {
     );
     assert!(
         caution(&full).is_some(),
-        "§FS-check.4.5: a finding about the tree outside the scope is not a finding about the scope"
+        "§FS-check.4.5.5: a finding about the tree outside the scope is not a finding about the scope"
     );
 }
 
@@ -337,7 +337,7 @@ fn citing_member_workspace(name: &str) -> PathBuf {
     root
 }
 
-/// §FS-check.4.5 asks *recognized*, not *declared*: a member whose whole job
+/// §FS-check.4.5.3 asks *recognized*, not *declared*: a member whose whole job
 /// is to point at another project's specs declares nothing and is working
 /// exactly as intended.
 #[test]
@@ -360,7 +360,7 @@ fn a_member_that_only_cites_another_project_earns_no_caution() {
     );
 }
 
-/// §FS-check.4.5: per project, like §FS-check.2.2 — the member that
+/// §FS-check.4.5.3: per project, like §FS-check.2.2 — the member that
 /// recognized nothing earns the caution, and the member beside it that did
 /// does not.
 #[test]

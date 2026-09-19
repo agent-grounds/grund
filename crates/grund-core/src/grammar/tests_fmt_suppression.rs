@@ -3,7 +3,7 @@
 //! which paths `[fmt] exclude` claims (§FS-fmt.2.5.1) and which lines are
 //! directives (§FS-fmt.2.5.2) — where a case per spelling would be a fixture
 //! tree per spelling. The on-type cases at the end are here for the same reason:
-//! the LSP live transform honours both scopes (§FS-lsp.1.4), and what it takes to
+//! the LSP live transform honours both scopes (§FS-lsp.1.4.3), and what it takes to
 //! see one is the document above the cursor, not a tree on disk.
 
 use std::path::{Path, PathBuf};
@@ -68,7 +68,7 @@ fn exclude_reads_a_path_a_glob_and_a_directory() {
 /// canonicalized when the config loaded, so the two differ wherever a symlink
 /// stands between them — which is every macOS `$TMPDIR` and any repository
 /// reached through a link — and the rewrite would be let through in the one
-/// file the config named (§FS-lsp.1.4).
+/// file the config named (§FS-lsp.1.4.3).
 #[cfg(unix)]
 #[test]
 fn exclude_claims_a_file_reached_through_a_symlinked_root() {
@@ -90,14 +90,14 @@ fn exclude_claims_a_file_reached_through_a_symlinked_root() {
 }
 
 /// A config that set no key pays for nothing and claims nothing — the state
-/// every repository written before §FS-config.3.10 existed is in.
+/// every repository written before §FS-config.3.10.2 existed is in.
 #[test]
 fn an_empty_exclude_claims_no_file() {
     let root = test_root("an_empty_exclude_claims_no_file");
     assert!(!excluded(&root, &[]).contains(&root.join("docs/functional-spec/FS-001-login.md")));
 }
 
-/// §FS-config.3.10: a malformed glob is rejected where it was written, so
+/// §FS-config.3.10.1: a malformed glob is rejected where it was written, so
 /// the config load fails rather than the first `grund fmt`.
 #[test]
 fn a_malformed_glob_is_refused_at_config_load() {
@@ -110,7 +110,7 @@ fn a_malformed_glob_is_refused_at_config_load() {
     assert!(validate_fmt_exclude(&["docs/**/*.md".to_string()]).is_ok());
 }
 
-/// §FS-fmt.2.5.2: in Markdown the directive is an HTML comment and nothing
+/// §FS-fmt.2.5.2.2: in Markdown the directive is an HTML comment and nothing
 /// else. The near-misses matter more than the hits — an inline code span is
 /// how this repository's own spec names the directive without writing one.
 #[test]
@@ -162,7 +162,7 @@ fn a_source_directive_is_a_comment_line_and_never_a_string() {
     }
 }
 
-/// §FS-fmt.2.5.2: the state machine itself — `off` runs until `on`, a
+/// §FS-fmt.2.5.2.1: the state machine itself — `off` runs until `on`, a
 /// redundant directive is a no-op, and every file starts with the rewrite on.
 #[test]
 fn a_region_runs_from_off_until_on_and_redundant_directives_are_no_ops() {
@@ -224,7 +224,7 @@ fn type_line_in(root: &Path, file: &str, before: &str, prefix: &str, typed: &str
     line
 }
 
-/// §FS-lsp.1.4, §FS-fmt.2.5.2: the live transform refuses a suppressed region
+/// §FS-lsp.1.4.3, §FS-fmt.2.5.2: the live transform refuses a suppressed region
 /// exactly as `grund fmt` does. The case is the one the scopes exist for — a
 /// diagram whose alignment is the document — and the editor is where that
 /// diagram is actually edited, so an on-type expansion here would splice a
@@ -240,7 +240,7 @@ fn on_type_refuses_a_shorthand_inside_a_suppressed_region() {
         format!("{diagram}\u{a7}FS-042-user-login .")
     );
     // Inside the region it does not. The trigger still converts the two
-    // characters just typed; only the expansion is withheld (§FS-lsp.1.4).
+    // characters just typed; only the expansion is withheld (§FS-lsp.1.4.4).
     assert_eq!(
         type_line_in(
             &root,
@@ -264,7 +264,7 @@ fn on_type_refuses_a_shorthand_inside_a_suppressed_region() {
     );
 }
 
-/// §FS-lsp.1.4, §FS-fmt.2.5.1: and the live transform refuses every line of a
+/// §FS-lsp.1.4.3, §FS-fmt.2.5.1: and the live transform refuses every line of a
 /// file the `[fmt] exclude` list names, which no line of that file can reveal
 /// on its own — the verdict is the config's, so the transform reads it there.
 #[test]

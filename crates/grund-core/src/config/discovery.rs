@@ -101,7 +101,7 @@ pub(crate) fn load_config(start: &Path) -> Result<Config> {
     }
     // Zero-config (§GOAL-zero-config): the "project root" is the current working
     // directory, never the path passed on the command line. Reports stay relative to
-    // `cli_base` (the resolved path arg) when `relative_paths` is off (§FS-config.3.6).
+    // `cli_base` (the resolved path arg) when `relative_paths` is off (§FS-config.3.6.1).
     let root = std::env::current_dir()
         .ok()
         .and_then(|cwd| fs::canonicalize(&cwd).ok())
@@ -125,7 +125,7 @@ pub(crate) fn load_config_at(root: &Path, cli_base: &Path) -> Result<Config> {
 /// workspace member; one *below* it is the enclosing workspace read by an ancestor
 /// climb, and that renders with `..` so the reader lands on the file that holds the
 /// offending line rather than on a same-named one in their own directory
-/// (§FS-workspace.6.1).
+/// (§FS-workspace.6.1.7).
 pub(crate) fn load_config_at_with_report_base(
     root: &Path,
     cli_base: &Path,
@@ -149,7 +149,7 @@ pub(crate) fn load_config_at_with_report_base(
             .map(Path::to_path_buf)
             .unwrap_or_else(|_| path.to_path_buf()),
     };
-    // §FS-check.4.3: the loser of a two-name tie is recorded, not read, so every
+    // §FS-check.4.3.2: the loser of a two-name tie is recorded, not read, so every
     // surface that reports on the config can name the file grund ignored.
     config.redundant_config_file =
         redundant_config_file_in(&root).map(|path| report_relative(&path));

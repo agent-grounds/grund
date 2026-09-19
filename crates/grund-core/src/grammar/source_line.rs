@@ -10,7 +10,7 @@
 /// Build the alternation a declaration/section heading may be prefixed by — one
 /// entry per `[scan] comment_prefixes` value (§FS-config.3.5), with `//` widened to
 /// also catch Rust/JS doc-comment forms `///` and `//!` so inline declarations in
-/// code are seen (§AR-scanner.4). Longest-first so `//` does not shadow `///`.
+/// code are seen (§AR-scanner.4.3). Longest-first so `//` does not shadow `///`.
 pub(super) fn comment_prefix_regex(comment_prefixes: &[String]) -> String {
     let mut prefixes = comment_prefixes
         .iter()
@@ -45,7 +45,7 @@ pub(crate) struct SourceScanLine<'a> {
 
 /// Normalize one source line for scanner-style declaration/section/citation
 /// detection while preserving the original-file column offset for emitted
-/// ranges (§AR-scanner.4).
+/// ranges (§AR-scanner.4.4).
 pub(crate) fn source_scan_line<'a>(
     line: &'a str,
     is_py: bool,

@@ -27,8 +27,8 @@ fn check_tree(config: &Config, root: &Path) -> (Findings, CheckReport) {
     (findings, report)
 }
 
-/// §FS-check.3.13: a shorthand that names exactly one declaration is reported
-/// once, with the canonical form to write — and, per §FS-check.1.2, it still
+/// §FS-check.3.13.3: a shorthand that names exactly one declaration is reported
+/// once, with the canonical form to write — and, per §FS-check.1.2.4, it still
 /// counts as a citation everywhere else. The uncited warning firing here was
 /// the original defect: `check` said "declared but never cited" about a
 /// declaration this file cites twice.
@@ -76,7 +76,7 @@ fn resolvable_shorthand_reports_once_and_counts_as_a_citation() {
     assert_eq!(findings.citations[1].section.as_deref(), Some("1"));
 }
 
-// §FS-check.3.13: the unknown and ambiguous outcomes. Neither resolves, and
+// §FS-check.3.13.3: the unknown and ambiguous outcomes. Neither resolves, and
 // neither is guessed at (§DF-number-only-citation-shorthand.2.7).
 #[test]
 fn unknown_and_ambiguous_shorthands_are_named_not_guessed() {
@@ -215,7 +215,7 @@ fn number_less_and_slug_less_formats_have_no_shorthand() {
     assert!(!slug_less.grammar.has_shorthand());
 }
 
-/// §FS-config.3.2: the shorthand pattern is the ID pattern with one capture
+/// §FS-config.3.2.4: the shorthand pattern is the ID pattern with one capture
 /// group cut out, which is only sound when each component pattern is a valid
 /// regex on its own. Two that balance only against each other compile as one ID
 /// pattern and then fail the moment a group is removed — a config `grund` had
@@ -233,7 +233,7 @@ fn component_patterns_must_be_valid_regexes_on_their_own() {
     );
 }
 
-/// §FS-check.3.13 / §FS-fmt.2.3: a shorthand `fmt` is forbidden to rewrite —
+/// §FS-check.3.13.1 / §FS-fmt.2.3: a shorthand `fmt` is forbidden to rewrite —
 /// inline code, a link destination, a runtime string — is still a citation that
 /// resolves and counts, but earns no "write the canonical form" error. An error
 /// whose only named fix is one the formatter refuses to apply is an error the
@@ -280,7 +280,7 @@ fn a_shorthand_fmt_cannot_rewrite_is_counted_but_not_reported() {
     );
 }
 
-/// §FS-check.3.13 / §FS-fmt.2.3.1: the "may `fmt` rewrite this?" question has
+/// §FS-check.3.13.2 / §FS-fmt.2.3.1.1: the "may `fmt` rewrite this?" question has
 /// to be asked of the text `fmt` will see, and inside a Python docstring that
 /// text is the interior with the delimiters stripped — on both sides. The
 /// opening line is where the raw line and the scanned line differ, so it is
@@ -368,7 +368,7 @@ fn an_escaped_shorthand_that_resolves_is_suggested() {
     );
 }
 
-// §AR-scanner.2.6: the reduction drops the placeholder together with one
+// §AR-scanner.2.6.11: the reduction drops the placeholder together with one
 // adjacent separator, whichever side carries it — so a format that puts the
 // slug in the middle still yields `{kind}-{number}`.
 #[test]
@@ -433,7 +433,7 @@ fn a_shorthand_prefix_of_a_longer_token_is_never_reported() {
     assert_eq!(shorthands, vec!["§FS-042"]);
 }
 
-// §FS-check.1.2: a resolved shorthand grounds its file under
+// §FS-check.1.2.4: a resolved shorthand grounds its file under
 // `require_grounding`, exactly as the full citation it stands for would.
 #[test]
 fn a_resolved_shorthand_grounds_its_source_file() {
@@ -459,9 +459,9 @@ fn a_resolved_shorthand_grounds_its_source_file() {
     );
 }
 
-/// §AR-scanner.2.6: one marker is one citation. A qualified marker belongs
+/// §AR-scanner.2.6.1: one marker is one citation. A qualified marker belongs
 /// to the qualified pass, and outside workspace mode that pass is the loose
-/// fallback (§FS-workspace.5) — which records nothing into
+/// fallback (§FS-workspace.5.2) — which records nothing into
 /// `claimed_markers`, so the shorthand pattern used to match the same
 /// `\u{a7}<alias>/<ID>` a second time. The token then became two identical
 /// citations: a row `grund cover` printed twice (§FS-cover.2) and a
@@ -510,7 +510,7 @@ fn a_qualified_shorthand_is_one_citation_not_two() {
 
 /// §REQ-no-missed-citation.1: the shorthand pass defers a qualified marker to
 /// the qualified pass only where that pass actually claimed it. Outside
-/// workspace mode the claimant is the loose fallback (§FS-workspace.5), which
+/// workspace mode the claimant is the loose fallback (§FS-workspace.5.2), which
 /// parses the tail as `KIND[-NUM]-SLUG` with an uppercase kind — so under an
 /// `[id] format` it cannot read, the shorthand pass is the only producer and
 /// a blanket skip would delete the citation and turn a red tree green.
@@ -569,7 +569,7 @@ fn a_qualified_shorthand_the_loose_parser_cannot_read_is_still_a_citation() {
     }
 }
 
-/// §AR-scanner.2.6: the claim record is scoped to **one line**. A marker
+/// §AR-scanner.2.6.1: the claim record is scoped to **one line**. A marker
 /// offset means nothing across lines, so a record that outlived its line
 /// would let a qualified citation on line 1 suppress the shorthand pass at
 /// the same byte offset on every line below it — deleting citations exactly

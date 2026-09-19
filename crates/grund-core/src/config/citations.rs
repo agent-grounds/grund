@@ -47,7 +47,7 @@ pub struct CitationTarget {
 }
 
 /// One `[citations]` array entry — a disjunction of targets joined by `|`
-/// (§FS-config.3.9.1). Satisfied by a citation matching any one target.
+/// (§FS-config.3.9.1.1). Satisfied by a citation matching any one target.
 #[derive(Clone, Debug)]
 pub struct CitationDisjunction {
     pub targets: Vec<CitationTarget>,
@@ -178,7 +178,7 @@ fn parse_citation_target(path: &Path, line_no: usize, token: &str) -> Result<Cit
             let namespace = if qualifier == "*" {
                 NamespaceMatch::Any
             } else {
-                // §FS-config.3.9.3: config diagnostics name the citation target's
+                // §FS-config.3.9.3.1: config diagnostics name the citation target's
                 // qualifier and kind, while the CLI keeps its own `<alias>/<ID>`
                 // vocabulary. Both surfaces use the same segment validation.
                 if let Some(message) = invalid_citation_target_message(token, qualifier, kind) {
@@ -204,7 +204,7 @@ fn parse_citation_target(path: &Path, line_no: usize, token: &str) -> Result<Cit
 }
 
 /// Render the `[citations]` form of an invalid namespace qualifier
-/// (§FS-config.3.9.3). This is intentionally separate from the CLI alias-path
+/// (§FS-config.3.9.3.1). This is intentionally separate from the CLI alias-path
 /// message: the final segment here is a citation kind, not an ID.
 fn invalid_citation_target_message(token: &str, qualifier: &str, kind: &str) -> Option<String> {
     let bad = invalid_alias_path_segment(qualifier)?;
@@ -247,7 +247,7 @@ pub(super) fn validate_citation_rules(path: &Path, config: &Config) -> Result<()
                 format_path(path)
             ));
         }
-        // §FS-config.3.4.7: a rule on a kind whose home is not walked could
+        // §FS-config.3.4.7.6: a rule on a kind whose home is not walked could
         // never fire — the vacuous pass §DF-non-citable-kinds.2.5 refused, one
         // level up — so the config is refused where it makes the promise.
         if config.kinds.iter().any(|k| k.kind == *citing && !k.scan) {
@@ -290,7 +290,7 @@ pub(super) fn validate_citation_rules(path: &Path, config: &Config) -> Result<()
         }
         // Two targets of one kind whose matchers can match the same citation (e.g.
         // bare `AR` and `*/AR`) must not sit at different levels — such a citation
-        // would have no single level (§FS-config.3.9.5). Identical entries are fine.
+        // would have no single level (§FS-config.3.9.5.1). Identical entries are fine.
         for (index, (level_a, a)) in targets.iter().enumerate() {
             for (level_b, b) in targets.iter().skip(index + 1) {
                 if level_a != level_b

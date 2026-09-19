@@ -1,7 +1,7 @@
 //! Test module: the **marker** languages of the doc-comment recognizer — the
 //! ones that spell documentation with a marker of their own — their corners, and
 //! the two style surfaces the exemption keeps off a doc comment
-//! (§FS-inline-citation-style.1.1, §AR-scanner.4). The position languages, whose
+//! (§FS-inline-citation-style.1.1, §AR-scanner.4.3). The position languages, whose
 //! doc comment is spelled like any other comment, are in
 //! `tests_comment_block_position.rs`.
 
@@ -60,7 +60,7 @@ fn java_measures_a_plain_block_comment_but_not_a_javadoc() {
     assert_eq!(findings, over_the_line_cap(8, 5, "§FS-001-login"));
 }
 
-/// §FS-inline-citation-style.1.1: exactly three slashes. A `////` run is a
+/// §FS-inline-citation-style.1.1.2: exactly three slashes. A `////` run is a
 /// rule drawn across the file, and Rust does not treat it as documentation
 /// either.
 #[test]
@@ -79,7 +79,7 @@ fn a_four_slash_run_is_a_rule_line_not_a_doc_comment() {
     assert_eq!(findings, over_the_line_cap(1, 4, "§FS-001-login"));
 }
 
-/// §FS-inline-citation-style.1.1: `/**/` is the empty block comment, not a
+/// §FS-inline-citation-style.1.1.2: `/**/` is the empty block comment, not a
 /// Javadoc opener. Measured on the column cap, because a one-line block can
 /// never be over the line cap.
 #[test]
@@ -93,7 +93,7 @@ fn an_empty_block_comment_is_not_a_javadoc_opener() {
     assert_eq!(findings, over_the_column_cap(1, 122, "§FS-001-login"));
 }
 
-/// §FS-inline-citation-style.1.1: `/**` and `/*!` both open documentation,
+/// §FS-inline-citation-style.1.1.2: `/**` and `/*!` both open documentation,
 /// and neither is measured however wide it runs.
 #[test]
 fn a_javadoc_or_bang_block_opener_is_a_doc_comment() {
@@ -131,7 +131,7 @@ fn python_measures_a_hash_block_but_not_a_docstring() {
     assert_eq!(findings, over_the_line_cap(8, 4, "§FS-001-login"));
 }
 
-/// §FS-inline-citation-style.1.1: PEP 257 says only a docstring is
+/// §FS-inline-citation-style.1.1.2: PEP 257 says only a docstring is
 /// documentation, so a `#` block keeps its budget even directly above the
 /// `def` it describes — position decides nothing in a marker language.
 #[test]
@@ -195,7 +195,7 @@ fn haskell_measures_a_plain_dash_run_but_not_a_haddock_bar() {
     assert_eq!(findings, over_the_line_cap(7, 4, "§FS-001-login"));
 }
 
-/// §FS-inline-citation-style.1.1: Haddock's other marker documents what
+/// §FS-inline-citation-style.1.1.2: Haddock's other marker documents what
 /// *precedes* the comment, and is a doc comment for the same reason.
 #[test]
 fn haskell_reads_a_haddock_caret_as_a_doc_comment_too() {
@@ -237,7 +237,7 @@ fn r_measures_a_hash_block_but_not_a_roxygen_run() {
     assert_eq!(findings, over_the_line_cap(7, 4, "§FS-001-login"));
 }
 
-/// §FS-inline-citation-style.1.1: an extension neither table names has no
+/// §FS-inline-citation-style.1.1.1: an extension neither table names has no
 /// doc-comment notion, so every one of its blocks is measured — which is
 /// what every extension did before this rule existed.
 #[test]

@@ -108,7 +108,7 @@ fn print_init_output(output: &InitOutput) {
 }
 
 /// Compatibility output consumes the same structured guidance as the shipped
-/// CLI (§FS-init.2.2).
+/// CLI (§FS-init.2.2.2).
 fn print_next_block(next: &InitNext) {
     eprint!("{}", next.render());
 }

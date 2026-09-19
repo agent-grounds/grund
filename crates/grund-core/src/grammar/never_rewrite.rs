@@ -11,7 +11,7 @@ use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_l
 ///
 /// One predicate, read by both the rewrite and the scanner, because the two have
 /// to agree: `fmt` is forbidden to canonicalize a shorthand here, so
-/// §FS-check.3.13 must not demand it here either — an error whose named fix the
+/// §FS-check.3.13.1 must not demand it here either — an error whose named fix the
 /// tool refuses to perform is an error a repository can never clear.
 pub(crate) fn never_rewrite_context(line: &str, is_md: bool, marker_start: usize) -> bool {
     if is_md {
@@ -24,15 +24,15 @@ pub(crate) fn never_rewrite_context(line: &str, is_md: bool, marker_start: usize
 
 /// Where a Python docstring's **content** sits on one raw source line: the text
 /// between the `"""` / `'''` delimiters, and the byte offset it starts at
-/// (§AR-scanner.4). Empty on every other line — a code line, any line of a file
+/// (§AR-scanner.4.4). Empty on every other line — a code line, any line of a file
 /// that is not `.py`, any line under `docstring_python = false` — where the raw
 /// line is its own content and nothing below changes.
 ///
-/// §FS-fmt.2.3.1: a docstring's delimiters are doc-comment syntax, not quotes, so
+/// §FS-fmt.2.3.1.1: a docstring's delimiters are doc-comment syntax, not quotes, so
 /// the never-rewrite walk runs over this slice rather than the raw line and a
 /// docstring line is judged exactly like a `#` comment line. This is the one view
 /// the scanner, `fmt`, and the LSP on-type path all hold, which is what keeps
-/// §AR-scanner.2.6's "one predicate serving both" true now that the predicate has
+/// §AR-scanner.2.6.10's "one predicate serving both" true now that the predicate has
 /// two texts to choose between.
 #[derive(Clone, Copy, Default)]
 pub(crate) struct DocstringContent<'a> {
@@ -41,7 +41,7 @@ pub(crate) struct DocstringContent<'a> {
 
 impl<'a> DocstringContent<'a> {
     /// The content span of a line the scanner has already normalized
-    /// (§AR-scanner.4). `SourceScanLine::text` is a slice of the raw line starting
+    /// (§AR-scanner.4.4). `SourceScanLine::text` is a slice of the raw line starting
     /// at `column_offset`, which is exactly the pair this view is.
     pub(crate) fn of(scan: &SourceScanLine<'a>) -> Self {
         Self {
@@ -52,7 +52,7 @@ impl<'a> DocstringContent<'a> {
     }
 
     /// The text a whole-line reader sees here: the docstring's content on a
-    /// docstring line, the raw line everywhere else (§AR-scanner.4).
+    /// docstring line, the raw line everywhere else (§AR-scanner.4.4).
     pub(crate) fn text_of(self, raw_line: &'a str) -> &'a str {
         self.span.map_or(raw_line, |(_, text)| text)
     }
@@ -77,7 +77,7 @@ impl<'a> DocstringContent<'a> {
 }
 
 /// `never_rewrite_context` for a source line whose docstring content `docstring`
-/// describes, at the raw-line offset `marker_start` (§FS-fmt.2.3.1). Every surface
+/// describes, at the raw-line offset `marker_start` (§FS-fmt.2.3.1.1). Every surface
 /// that asks "may `fmt` rewrite here?" goes through this, so all three reach one
 /// verdict per site.
 pub(crate) fn never_rewrite_context_in(
@@ -90,7 +90,7 @@ pub(crate) fn never_rewrite_context_in(
     never_rewrite_context(text, is_md, pos)
 }
 
-/// `is_inside_string_literal` asked of the same view (§FS-fmt.2.3.1) — what the
+/// `is_inside_string_literal` asked of the same view (§FS-fmt.2.3.1.1) — what the
 /// two `fmt` passes with no Markdown branch of their own, `replace_trigger` and
 /// `add_markers`, use.
 pub(crate) fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos: usize) -> bool {
@@ -100,7 +100,7 @@ pub(crate) fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos
 
 /// The Python-docstring state a line **begins** in, so a caller that rewrites the
 /// line can ask where its docstring content sits *in the line it is about to
-/// change* (§FS-fmt.2.3.1).
+/// change* (§FS-fmt.2.3.1.1).
 ///
 /// `fmt` re-derives the span per rewrite stage instead of carrying it, because a
 /// stage before it may have changed the line's length: `--marker` splices a `§`
@@ -200,7 +200,7 @@ pub(crate) fn is_inside_inline_code(line: &str, pos: usize) -> bool {
 /// Whether byte offset `pos` falls inside the destination part of an inline
 /// Markdown link (`[text](destination)`). URLs are presentation syntax, not
 /// citations, so `fmt --marker` must not rewrite ID-shaped file names there
-/// (§FS-fmt.2.3).
+/// (§FS-fmt.2.3.4).
 pub(crate) fn is_inside_markdown_link_destination(line: &str, pos: usize) -> bool {
     let bytes = line.as_bytes();
     let mut i = 0;
@@ -252,7 +252,7 @@ pub(crate) fn is_escaped(bytes: &[u8], pos: usize) -> bool {
     count % 2 == 1
 }
 
-/// §AR-scanner.2.3: the qualified `alias/ID` form collides with a path, module
+/// §AR-scanner.2.3.2: the qualified `alias/ID` form collides with a path, module
 /// reference, or URL, so in a **source** file a marked qualified citation whose
 /// start column falls inside an inline-code span or a string literal is not a
 /// citation (the same path-collision caution as §AR-workspace.3.1). Markdown has

@@ -1,4 +1,4 @@
-//! What the deprecated `main_entry()` path prints (§AR-system.2.9): the text and
+//! What the deprecated `main_entry()` path prints (§AR-system.2.9.1): the text and
 //! JSON report shapes of §FS-errors.1 and §FS-errors.5, the bare query refusal,
 //! and the CLI-level `warning:` lines that have no report to ride on — the
 //! config warnings of §FS-config.4.2 and the run's `[workspace]` channel, which
@@ -16,10 +16,10 @@
 //! renders them like any other (§FS-distribution.3.1, §DA-engine-renders-nothing).
 
 /// Print the compatibility CLI's text report in the fixed output shapes
-/// (§FS-errors.1, §FS-errors.2.1, §FS-errors.2.4): channel-bearing located
+/// (§FS-errors.1, §FS-errors.2.1.1, §FS-errors.2.4): channel-bearing located
 /// findings, run-level diagnostics on stderr, and `success` for a clean text
-/// check (§FS-check.2.1). Diagnostic lines stay in the fixed order
-/// (§FS-errors.4).
+/// check (§FS-check.2.1.3). Diagnostic lines stay in the fixed order
+/// (§FS-errors.4.1).
 use anyhow::Result;
 use std::path::Path;
 
@@ -31,11 +31,11 @@ use crate::resolver::{WorkspaceContext, load_workspace_context};
 
 /// The run's `[workspace]` warnings in §FS-errors.2.2's CLI-level shape — one
 /// `warning: ` line each on stderr, ahead of anything the command itself prints
-/// and with the exit code untouched (§FS-check.4.7, §FS-check.4.8,
-/// §FS-check.4.10, §FS-workspace.6.1).
+/// and with the exit code untouched (§FS-check.4.7.7, §FS-check.4.8.15,
+/// §FS-check.4.10.11, §FS-workspace.6.1.7).
 ///
 /// The deprecated frontend renders the same channel the published one renders,
-/// from the same place, so the two cannot drift on a byte (§FS-lsp.4).
+/// from the same place, so the two cannot drift on a byte (§FS-lsp.4.1).
 pub(super) fn print_run_warnings(warnings: &[Diagnostic]) {
     for warning in warnings {
         eprintln!("warning: {}", warning.message);
@@ -70,11 +70,11 @@ pub(super) fn print_report(
     include_suggestions: bool,
     run_warnings: usize,
 ) {
-    // §FS-check.2.3: the `success` marker keys off errors and warnings only — a
+    // §FS-check.2.3.2: the `success` marker keys off errors and warnings only — a
     // suggestion is not a finding about well-formedness, so it never suppresses
     // `success`, and without `--suggestions` it is not printed at all.
 
-    // §FS-check.4.7 / §FS-check.4.10 / §FS-workspace.6.1: a warning this frontend
+    // §FS-check.4.7.7 / §FS-check.4.10.11 / §FS-workspace.6.1.7: a warning this frontend
     // printed before the report existed, so the marker asks the run's warning
     // channel too — else stderr says unchecked and stdout says `success`.
     if run_warnings == 0
@@ -85,7 +85,7 @@ pub(super) fn print_report(
         println!("success");
         return;
     }
-    // §FS-errors.4: each report partition is already bytewise sorted; joining
+    // §FS-errors.4.1: each report partition is already bytewise sorted; joining
     // errors, warnings, then suggestions realizes text's fixed channel groups.
     let mut diagnostics = report
         .errors
@@ -109,7 +109,7 @@ pub(super) fn print_report(
     for (severity, diagnostic) in diagnostics {
         let line = render_diagnostic_text(config, severity, diagnostic);
         // §FS-errors.1 / §FS-check.2.1: a located finding is `check`'s output →
-        // stdout. A `line`-less diagnostic — a mid-walk read failure (§FS-check.2)
+        // stdout. A `line`-less diagnostic — a mid-walk read failure (§FS-check.2.4)
         // or the empty-scan caution (§FS-check.2.2) — is about the run → stderr.
         if diagnostic.line.is_some() {
             println!("{line}");
@@ -130,7 +130,7 @@ fn render_diagnostic_text(config: &Config, severity: &str, diagnostic: &Diagnost
             )
         }
         // A file-level finding with no line to point at (e.g. an unreadable file
-        // discovered mid-walk) uses the CLI-level shape — §FS-check.2, §FS-errors.2.2.
+        // discovered mid-walk) uses the CLI-level shape — §FS-check.2.4, §FS-errors.2.2.1.
         (Some(path), None) => format!(
             "{severity}: {}: {}",
             display_path(config, path),
@@ -178,10 +178,10 @@ pub(super) fn print_json_report(config: &Config, report: &CheckReport, include_s
     }
 }
 
-/// Render one diagnostic as a JSON object (§FS-errors.5). An `error` / `warning`
+/// Render one diagnostic as a JSON object (§FS-errors.5.1). An `error` / `warning`
 /// carries a `"severity"`; a citation-direction `suggestion` carries
 /// `"channel":"suggestion"` instead, keeping the frozen `{error, warning}`
-/// severity set intact (§FS-config.6, §FS-check.2.3).
+/// severity set intact (§FS-config.6.1, §FS-check.2.3).
 fn render_diagnostic_json(config: &Config, channel: &str, diagnostic: &Diagnostic) -> String {
     let path = diagnostic
         .path
@@ -225,7 +225,7 @@ fn render_diagnostic_json(config: &Config, channel: &str, diagnostic: &Diagnosti
     )
 }
 
-/// §FS-errors.5: `sites` here are already display strings from the raise site
+/// §FS-errors.5.2: `sites` here are already display strings from the raise site
 /// in `queries/show.rs` (rendered against `path_config`, which may be a
 /// workspace root this printer's own `Config` is not), so they are rendered
 /// through the shared [`render_finding_sites_json`] rather than re-derived
@@ -248,7 +248,7 @@ pub(super) fn show_query_error_code(message: &str) -> &'static str {
         "invalid-id"
     } else if message.starts_with("ambiguous ID:") {
         "ambiguous"
-    // §FS-show.2.2.2: the section-level twin of the ambiguous-ID refusal, under
+    // §FS-show.2.2.2.1: the section-level twin of the ambiguous-ID refusal, under
     // its own code — the two need different edits, and a JSON consumer should not
     // have to read the prose to tell them apart (§DF-duplicate-section-path.2.5).
     } else if message.starts_with("ambiguous section:") {

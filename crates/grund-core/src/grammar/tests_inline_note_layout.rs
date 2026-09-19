@@ -17,7 +17,7 @@ fn conforms(config: &Config, line: &str) -> bool {
     let ranges = line_citation_ranges(line, config.lexical(), &[]);
     let prefixes = comment_strip_prefixes(config.lexical());
     match line_layout_view(line, &ranges, &prefixes) {
-        // §FS-inline-citation-style.3.3, rule 1: no citation in the content,
+        // §FS-inline-citation-style.3.3.1, rule 1: no citation in the content,
         // so nothing to lay out.
         None => true,
         Some((content, tokens)) => content_conforms(
@@ -89,7 +89,7 @@ fn citation_first_colon_accepts_the_canonical_forms() {
     }
 }
 
-// §FS-inline-citation-style.3.3, rule 4: the form is exact, so each near miss
+// §FS-inline-citation-style.3.3.4, rule 4: the form is exact, so each near miss
 // is a deviation rather than a tolerated spelling.
 #[test]
 fn citation_first_colon_rejects_near_misses() {
@@ -115,11 +115,11 @@ fn citation_first_colon_rejects_near_misses() {
     }
 }
 
-/// §FS-inline-citation-style.3.3: the line is read after the comment prefix and
+/// §FS-inline-citation-style.3.3.8: the line is read after the comment prefix and
 /// any block closer are stripped, so every recognized comment shape is judged on
 /// the same content the author sees. The prefix set is the project's, not one
 /// language's: `//!` and `/**` open a doc comment in the C family and so are
-/// never judged there (§FS-inline-citation-style.1.1), but `[scan]
+/// never judged there (§FS-inline-citation-style.1.1.2), but `[scan]
 /// comment_prefixes` applies to every extension, so the reader still has to
 /// strip them.
 #[test]
@@ -147,7 +147,7 @@ fn citation_first_colon_reads_every_comment_prefix() {
     }
 }
 
-// §FS-inline-citation-style.3.3: the block closer and the space in front of it
+// §FS-inline-citation-style.3.3.8: the block closer and the space in front of it
 // are stripped together, so a colon that ends a `/* … */` line closes the
 // grammar's empty tail rather than opening a note made of one space.
 #[test]
@@ -171,7 +171,7 @@ fn a_block_closer_leaves_no_trailing_space() {
     assert!(!has_note(&config, &block));
 }
 
-// §FS-inline-citation-style.3.3: a leading list marker is skipped with the
+// §FS-inline-citation-style.3.3.8: a leading list marker is skipped with the
 // indentation, so an enumerated block of grounded points can open each item
 // with its citation run. One marker, and only where a space follows it.
 #[test]
@@ -206,7 +206,7 @@ fn a_list_marker_is_skipped_like_indentation() {
     assert!(has_note(&config, &["// - §FS-001-login"]));
 }
 
-/// §FS-inline-citation-style.3.3, rule 1: the line that opens the note is
+/// §FS-inline-citation-style.3.3.1, rule 1: the line that opens the note is
 /// judged, and so is any later line that opens with a citation — but a
 /// continuation line that opens with prose is note text, so a note may wrap
 /// and still name a second point on the way (rule 3, and the line budget).
@@ -241,7 +241,7 @@ fn a_wrapped_note_may_name_a_point_on_its_continuation() {
     assert_eq!(violations(&config, &prose_first, true), vec![2]);
 }
 
-// §FS-inline-citation-style.3.3, rule 5: a workspace-qualified token is one
+// §FS-inline-citation-style.3.3.5, rule 5: a workspace-qualified token is one
 // citation token, so the run reads it as the line's opening citation.
 #[test]
 fn citation_first_colon_reads_a_qualified_token() {
@@ -253,7 +253,7 @@ fn citation_first_colon_reads_a_qualified_token() {
     assert!(!conforms(&config, "// §api/FS-001-login the member's rule"));
 }
 
-// §FS-inline-citation-style.3.3, rule 2: a site with no note has no layout, so
+// §FS-inline-citation-style.3.3.2, rule 2: a site with no note has no layout, so
 // nothing in it is classified — not even a line that would otherwise deviate.
 #[test]
 fn a_site_without_a_note_is_exempt() {
@@ -267,7 +267,7 @@ fn a_site_without_a_note_is_exempt() {
     assert_eq!(violations(&config, &block, true), vec![1]);
 }
 
-// §FS-inline-citation-style.1: what joins two citations of one run says
+// §FS-inline-citation-style.1.4: what joins two citations of one run says
 // nothing, so a chain stays a pure citation comment however it is spelled —
 // including with the `, ` the layout itself mandates in front of a colon.
 #[test]
@@ -387,7 +387,7 @@ fn an_unknown_check_level_classifies_nothing() {
 }
 
 /// How many of a site's lines have been tokenized so far: the memo slots the
-/// two passes have filled (§AR-scanner.3).
+/// two passes have filled (§AR-scanner.3.2).
 fn filled_slots(block: &BlockCitations<'_>) -> usize {
     block.ranges.iter().filter(|slot| slot.is_some()).count()
 }

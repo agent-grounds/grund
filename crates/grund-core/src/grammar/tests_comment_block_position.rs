@@ -1,7 +1,7 @@
 //! Test module: the **position** languages of the doc-comment recognizer — Go,
 //! Ruby, shell and SQL, which spell a doc comment like any other comment, so the
 //! line under it and the top of the file decide
-//! (§FS-inline-citation-style.1.1, §AR-scanner.4). The marker languages are in
+//! (§FS-inline-citation-style.1.1.1, §AR-scanner.4.3). The marker languages are in
 //! `tests_comment_block.rs`.
 
 use crate::testing::{inline_style_findings, inline_style_findings_with, over_the_line_cap};
@@ -32,7 +32,7 @@ fn go_measures_a_comment_that_is_not_above_a_definition() {
     assert_eq!(findings, over_the_line_cap(10, 4, "§FS-001-login"));
 }
 
-/// §FS-inline-citation-style.1.1: the definition has to be the *next* line.
+/// §FS-inline-citation-style.1.1.1: the definition has to be the *next* line.
 /// A blank line between makes the block a detached note, which is what a
 /// blank line means to a reader too.
 #[test]
@@ -75,7 +75,7 @@ fn a_blank_line_before_the_definition_makes_the_block_a_note() {
     );
 }
 
-/// §FS-inline-citation-style.1.1: leading whitespace is stripped before the
+/// §FS-inline-citation-style.1.1.2: leading whitespace is stripped before the
 /// starter test, so a `def` indented inside a `class` still documents.
 #[test]
 fn ruby_reads_an_indented_def_as_a_definition() {
@@ -129,7 +129,7 @@ fn shell_reads_a_name_paren_definition() {
     assert_eq!(findings, over_the_line_cap(11, 4, "§FS-001-login"));
 }
 
-/// §FS-inline-citation-style.1.1: shell's other spelling, and the identifier
+/// §FS-inline-citation-style.1.1.2: shell's other spelling, and the identifier
 /// boundary that keeps `functional_helper` from opening one.
 #[test]
 fn shell_reads_the_function_keyword_but_not_a_word_starting_with_it() {
@@ -188,7 +188,7 @@ fn sql_reads_create_in_either_case() {
     assert_eq!(findings, over_the_line_cap(15, 4, "§FS-001-login"));
 }
 
-/// §FS-inline-citation-style.1.1: a position language's file header is its
+/// §FS-inline-citation-style.1.1.1: a position language's file header is its
 /// module doc — with a `#!` shebang above it, or with nothing but blank
 /// lines.
 #[test]
@@ -231,7 +231,7 @@ fn the_leading_comment_of_a_position_language_documents_the_file() {
     );
 }
 
-/// §FS-inline-citation-style.1.1: once a line of code has gone by, a block
+/// §FS-inline-citation-style.1.1.1: once a line of code has gone by, a block
 /// is no longer the file's leading comment.
 #[test]
 fn a_block_below_the_first_line_of_code_is_not_the_leading_comment() {

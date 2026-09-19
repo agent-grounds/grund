@@ -30,12 +30,12 @@ pub struct KindConfig {
     /// root. `false` is a place that is listed — its Project map row — and not
     /// walked: content that ships verbatim, which nothing here may check.
     pub scan: bool,
-    /// The `require_grounding` key (§FS-config.3.4.8): whether the files this
+    /// The `require_grounding` key (§FS-config.3.4.8.3): whether the files this
     /// row governs must cite a declared ID. `None` inherits the `[reference]`
     /// default, which `grund check --require-grounding` also sets — the flag and
     /// the key are one knob, so an explicit `Some(false)` wins over both.
     pub require_grounding: Option<bool>,
-    /// The `grounding_level` key (§FS-config.3.4.8): the unit inside each
+    /// The `grounding_level` key (§FS-config.3.4.8.2): the unit inside each
     /// governed file, in Markdown heading levels. `None` inherits the
     /// `[reference]` default; `1` is the file, which is what every config had
     /// before the key existed.
@@ -44,10 +44,10 @@ pub struct KindConfig {
     /// §FS-values.1).
     pub values: bool,
     /// A grammar override for this kind; absent inherits `[id].format`
-    /// (§FS-config.3.4.10). Public because [`KindConfig`] is part of the
+    /// (§FS-config.3.4.10.1). Public because [`KindConfig`] is part of the
     /// embedding API, so consumers can inspect the effective snapshot shape.
     pub format: Option<String>,
-    /// The fixed target-side resolution obligation (§FS-config.3.4.10).
+    /// The fixed target-side resolution obligation (§FS-config.3.4.10.2).
     /// `None` means an ordinary kind; a fetch-enabled kind resolves it to
     /// [`KindResolution::Must`] while loading configuration.
     pub resolve: Option<KindResolution>,
@@ -57,7 +57,7 @@ pub struct KindConfig {
 }
 
 /// A fetch-enabled kind's target-side resolution obligation
-/// (§FS-config.3.4.10). This selects a finding class; it is not configurable
+/// (§FS-config.3.4.10.3). This selects a finding class; it is not configurable
 /// severity.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum KindResolution {
@@ -79,13 +79,13 @@ const DEFAULT_KIND_INDEX: &str = "README.md";
 
 impl KindConfig {
     /// This row's ID template, falling back to the repository default
-    /// (§FS-config.3.2, §FS-config.3.4.10).
+    /// (§FS-config.3.2, §FS-config.3.4.10.1).
     pub fn effective_format<'a>(&'a self, config: &'a Config) -> &'a str {
         self.format.as_deref().unwrap_or(&config.id_format)
     }
 
     /// The effective snapshot resolution obligation, if this is a
-    /// fetch-enabled kind (§FS-config.3.4.10).
+    /// fetch-enabled kind (§FS-config.3.4.10.2).
     pub fn resolution(&self) -> Option<KindResolution> {
         self.resolve
     }
@@ -106,8 +106,8 @@ impl KindConfig {
         })
     }
 
-    /// How this kind is named where a name would be useless (§FS-init.2.3.4.4,
-    /// §FS-check.3.11): by its place, with a trailing `/` on a folder so it
+    /// How this kind is named where a name would be useless (§FS-init.2.3.4.4.1,
+    /// §FS-check.3.11.2): by its place, with a trailing `/` on a folder so it
     /// reads as the directory it is. `None` for a kind with no home. Used for
     /// non-citable kinds, whose name exists only to key `[citations.*]` on and
     /// is nothing a reader can go and look at.
