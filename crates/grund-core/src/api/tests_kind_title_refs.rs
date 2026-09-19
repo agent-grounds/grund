@@ -8,7 +8,7 @@ use crate::testing::{test_root, write};
 #[test]
 fn kind_title_refs_preserve_existing_public_records_and_undeclared_queries() {
     let root = test_root("kind_title_refs_public_records");
-    write(&root.join("src/user.rs"), "//! §FS-authored\n");
+    write(&root.join("src/user.rs"), "//! \u{a7}FS-authored\n");
     // No declaration is needed to query a valid ID's citation sites.
     for title in [None, Some("Target title"), Some("")] {
         let metadata = title
@@ -39,7 +39,7 @@ fn kind_title_refs_preserve_existing_public_records_and_undeclared_queries() {
                     id: "FS-authored".into(),
                     section: None,
                     marker: true,
-                    text: "§FS-authored".into(),
+                    text: "\u{a7}FS-authored".into(),
                 }],
                 note: None,
                 scan_errors: vec![],
@@ -84,7 +84,10 @@ fn kind_title_refs_target_differs_from_caller_and_citers() {
     write(&root.join("target/grund.toml"), &config("Target title"));
     write(&root.join("citer/grund.toml"), &config("Citer title"));
     write(&root.join("citer/src/user.rs"), "//! §target/FS-authored\n");
-    write(&root.join("target/src/user.rs"), "//! §FS-authored\n");
+    write(
+        &root.join("target/src/user.rs"),
+        "//! \u{a7}FS-authored\n",
+    );
     write(&root.join("src/user.rs"), "//! §target/FS-authored\n");
     let result = refs_with_metadata(RefsOpts {
         path: root,
@@ -126,7 +129,7 @@ fn kind_title_refs_target_differs_from_caller_and_citers() {
                 id: "FS-authored".into(),
                 section: None,
                 marker: true,
-                text: "§FS-authored".into()
+                text: "\u{a7}FS-authored".into()
             },
         ]
     );
@@ -143,7 +146,7 @@ fn kind_title_snapshot_addition_preserves_existing_carrier_and_title_helper() {
         &root.join("docs/FS-authored.md"),
         "# FS-authored: Authored title\n\n## 1. Detail\nBody.\n",
     );
-    write(&root.join("src/user.rs"), "//! §FS-authored.1\n");
+    write(&root.join("src/user.rs"), "//! \u{a7}FS-authored.1\n");
     let opts = LspSnapshotOpts {
         path: root,
         path_provided: true,
