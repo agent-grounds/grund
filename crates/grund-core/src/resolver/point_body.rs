@@ -87,15 +87,10 @@ pub(crate) fn point_body_pair(
         Some(site),
     )?
     .body;
-    // Text and JSON `show` flatten generated cross-reference wrappers before
-    // exposing their bodies; point measurements promise those same bytes
-    // (§FS-show.3.2.2, §FS-list.3.4.1). Markdown measurements therefore retain
-    // the authored destination bytes inside fences.
-    let markdown_body = declaration
-        .file
-        .extension()
-        .and_then(|ext| ext.to_str())
-        == Some("md");
+    // Text and JSON `show` flatten generated wrappers; point measurements promise
+    // those same bytes (§FS-show.3.2.2, §FS-list.3.4.1). Markdown measurements retain
+    // authored destination bytes inside fences.
+    let markdown_body = declaration.file.extension().and_then(|ext| ext.to_str()) == Some("md");
     lead = flatten_cross_ref_links(&lead, config.lexical(), markdown_body);
     full = flatten_cross_ref_links(&full, config.lexical(), markdown_body);
     Ok(Some((lead, full)))
