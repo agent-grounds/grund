@@ -3,13 +3,16 @@
 
 use std::path::{Path, PathBuf};
 
+use super::json::{JsonNode, JsonReader};
 use super::scan_tree;
 use crate::config::load_config;
-use crate::model::Findings;
+use crate::model::{DeclarationSource, Findings, ValueComponentKind};
 use crate::testing::{test_root, write};
 
 fn value_root(name: &str, kinds: &str) -> PathBuf {
-    let root = test_root(name);
+    let root = test_root(name)
+        .canonicalize()
+        .expect("canonical value fixture");
     write(
         &root.join("grund.toml"),
         &format!(
@@ -32,9 +35,9 @@ fn one_kind(name: &str) -> PathBuf {
 
 fn scan(root: &Path) -> Findings {
     let config = load_config(root).expect("load value config");
-    scan_tree(&config, Some(root), true)
-        .expect("scan value fixture")
-        .0
+    let (findings, errors) = scan_tree(&config, Some(root), true).expect("scan value fixture");
+    assert!(errors.is_empty(), "readable value fixture: {errors:?}");
+    findings
 }
 
 fn declarations<'a>(findings: &'a Findings, kind: &str, slug: &str) -> &'a [crate::Declaration] {
@@ -49,54 +52,169 @@ fn declarations<'a>(findings: &'a Findings, kind: &str, slug: &str) -> &'a [crat
 #[test]
 fn json_values_preserve_scalar_kind_spelling_and_member_order() {
     let root = one_kind("json_values_preserve_scalar_kind_spelling_and_member_order");
-    write(
-        &root.join("values/catalog.json"),
-        "{\n  \"CONST-price\": [1.20e3, \"USD\"],\n  \"CONST-region\": [\"CH\"]\n}\n",
+    let text = concat!(
+        "{\n",
+        "  \"CONST-region\": [\"C\\u0048\"],\n",
+        "  \"CONST-price\": [\n",
+        "    1.20e3,\n",
+        "    \"\\u0055SD\"\n",
+        "  ]\n",
+        "}\n",
     );
+    let file = root.join("values/catalog.json");
+    write(&file, text);
+    // §FS-values.2.2: inspect physical order before the lookup map can sort the keys.
+    let JsonNode::Object(members, _) = JsonReader::parse(text).expect("read JSON") else {
+        panic!("expected object");
+    };
+    assert_eq!(
+        members
+            .iter()
+            .map(|member| member.key.decoded.as_str())
+            .collect::<Vec<_>>(),
+        ["CONST-region", "CONST-price"]
+    );
+    for (member, key, source) in [
+        (
+            &members[0],
+            "\"CONST-region\"",
+            "\"CONST-region\": [\"C\\u0048\"]",
+        ),
+        (
+            &members[1],
+            "\"CONST-price\"",
+            "\"CONST-price\": [\n    1.20e3,\n    \"\\u0055SD\"\n  ]",
+        ),
+    ] {
+        assert_eq!(&text[member.key.span.start..member.key.span.end], key);
+        assert_eq!(&text[member.span.start..member.span.end], source);
+    }
     let findings = scan(&root);
     let price = &declarations(&findings, "CONST", "price")[0];
-    assert_eq!(
-        price
-            .sections
-            .values()
-            .map(|section| section
-                .value
-                .as_ref()
-                .map(|value| value.source_slice.as_str()))
-            .collect::<Vec<_>>(),
-        [Some("1.20e3"), Some("\"USD\"")]
-    );
-    assert_eq!(
-        findings
-            .declarations
-            .keys()
-            .filter_map(|id| id.slug.as_deref())
-            .collect::<Vec<_>>(),
-        ["price", "region"]
-    );
+    let region = &declarations(&findings, "CONST", "region")[0];
+    for (declaration, member, line, end_line) in
+        [(region, &members[0], 2, 2), (price, &members[1], 3, 6)]
+    {
+        assert_eq!((&declaration.file, declaration.line), (&file, line));
+        assert_eq!(
+            (declaration.body_start, declaration.body_end),
+            (line, end_line)
+        );
+        assert_eq!(declaration.value_valid, Some(true));
+        let DeclarationSource::Json {
+            member_slice,
+            key_column,
+            key_text,
+        } = &declaration.source
+        else {
+            panic!("expected retained JSON member");
+        };
+        assert_eq!(*key_column, 3);
+        assert_eq!(key_text, &text[member.key.span.start..member.key.span.end]);
+        assert_eq!(member_slice, &text[member.span.start..member.span.end]);
+    }
+    for (declaration, section, kind, decoded, raw, line, column) in [
+        (
+            region,
+            "1",
+            ValueComponentKind::String,
+            "CH",
+            "\"C\\u0048\"",
+            2,
+            20,
+        ),
+        (
+            price,
+            "1",
+            ValueComponentKind::Number,
+            "1.20e3",
+            "1.20e3",
+            4,
+            5,
+        ),
+        (
+            price,
+            "2",
+            ValueComponentKind::String,
+            "USD",
+            "\"\\u0055SD\"",
+            5,
+            5,
+        ),
+    ] {
+        let component = &declaration.sections[section];
+        let value = component.value.as_ref().expect("valid scalar");
+        assert_eq!((component.line, value.column), (line, column));
+        assert_eq!(
+            (
+                value.kind,
+                value.decoded.as_str(),
+                value.source_slice.as_str()
+            ),
+            (kind, decoded, raw)
+        );
+    }
+    assert!(findings.invalid_value_declarations.is_empty());
 }
 
 #[test]
 fn json_values_reject_root_key_and_element_shape_independently() {
-    let root = one_kind("json_values_reject_root_key_and_element_shape_independently");
-    write(&root.join("values/a-root.json"), "[]\n");
-    write(&root.join("values/b-key.json"), "{\"FS-wrong\":[1]}\n");
-    write(
-        &root.join("values/c-element.json"),
-        "{\"CONST-bad\":[true]}\n",
+    let root = value_root(
+        "json_values_reject_root_key_and_element_shape_independently",
+        "[[kinds]]\nkind = \"CONST\"\nfolder = \"values\"\nindex = false\nvalues = true\n\n\
+         [[kinds]]\nkind = \"FS\"\nfolder = \"docs/specs\"\nindex = false\n\n",
     );
+    let cases = [
+        (
+            "a-root",
+            "\n []\n",
+            2,
+            2,
+            "value JSON root must be an object",
+        ),
+        (
+            "b-invalid-id",
+            "{\n  \"not-an-id\": [1]\n}\n",
+            2,
+            3,
+            "JSON value key must be a full unqualified local ID",
+        ),
+        (
+            "c-wrong-owner",
+            "{\n  \"FS-wrong\": [1]\n}\n",
+            2,
+            3,
+            "JSON value key must belong to owning kind `CONST`",
+        ),
+        (
+            "d-element",
+            "{\n  \"CONST-bad\": [\n    true\n  ]\n}\n",
+            4,
+            5,
+            "JSON value component must be a number or a nonempty edge-unspaced string without backticks or control characters",
+        ),
+    ];
+    for (name, contents, _, _, _) in cases {
+        write(&root.join(format!("values/{name}.json")), contents);
+    }
     let findings = scan(&root);
     assert_eq!(
         findings
             .invalid_value_declarations
             .iter()
-            .map(|site| site.message.as_str())
+            .map(|site| (
+                site.file.clone(),
+                site.line,
+                site.column,
+                site.message.as_str()
+            ))
             .collect::<Vec<_>>(),
-        [
-            "value JSON root must be an object",
-            "JSON value key must belong to owning kind `CONST`",
-            "JSON value component must be a number or a nonempty edge-unspaced string without backticks or control characters",
-        ]
+        cases.map(|(name, _, line, column, message)| (
+            root.join(format!("values/{name}.json")),
+            line,
+            Some(column),
+            message
+        ))
     );
 }
 
