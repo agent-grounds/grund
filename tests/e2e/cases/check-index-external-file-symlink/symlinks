@@ -1,0 +1,3 @@
+# The index remains readable, but its bytes live outside the config root and
+# `fmt --write` refuses to change them.
+project/docs/fs/README.md -> ../../../outside/index.md
