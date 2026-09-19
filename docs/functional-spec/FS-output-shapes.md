@@ -67,7 +67,7 @@ bytes and shape:
 
 ## 4. `show --format=json`
 
-A successful `show --format=json` emits exactly one JSON object on stdout and nothing on stderr:
+A successful `show --format=json` emits exactly one JSON object on stdout and nothing on stderr. The examples below select kinds without an effective title; a titled kind adds the final `kind_title` field:
 
 ```json
 {"id":"FS-001-alpha","section":"1","body":"## 1. First\n\nFirst body.\n","path":"docs/functional-spec/FS-001-alpha.md","line":5}
@@ -79,6 +79,7 @@ Fields:
 - `section` is the requested section path as a string, or `null` for a whole declaration.
 - `body` is exactly the text-mode body, including trailing newline when text mode would print one.
 - `path` and `line` point at the declaration or selected section start.
+- `kind_title`, when the resolved target kind has a title, is a string appended after all other fields, including `sections`. It is omitted when absent and remains `""` when configured empty ([§FS-config.3.4.3](FS-config.md#343-title)).
 - `sections`, present for `show --toc --format=json`, is the ordered section-map slice as objects with `path`, `title`, and `depth`.
 
 `show --toc --format=json` example:
@@ -99,6 +100,8 @@ For an E2E case, `show --format=json` uses the E2E manifest shape from [§FS-sho
 {"id":"E2E-login","kind":"E2E","path":"e2e/cases/login","args":[],"expected_exit":0,"fixtures":["expected.exit","expected.stdout","repo/docs/functional-spec/FS-001-login.md"]}
 ```
 
+Every successful form carries this optional final metadata field: declarations, sections, lead/full/brief/toc, JSON values, and E2E manifests. It never changes `body`, authored section `title`, locations or workspace provenance.
+
 Failed queries emit one diagnostic object on stderr and leave stdout empty; launch-time errors stay raw `error:` text.
 
 ### 4.1 `show --batch --format=json`
@@ -114,7 +117,8 @@ fixed order shown here:
 `query.id` preserves the caller's spelling for explicit input and carries the
 generated local-or-qualified spelling for `--all`; `query.section` is the
 explicit or generated section string, or `null`. A success places the unchanged
-current single-show JSON object in `result` and sets `error` to `null`. A failed
+current single-show JSON object in `result`, including the optional final
+`kind_title` selected separately for that query, and sets `error` to `null`. A failed
 query sets `result` to `null` and places the unchanged current diagnostic object
 in `error`. Every envelope is on stdout in explicit-input or exhaustive order;
 stderr is empty for per-query failures. Run-level failures emit no envelopes
@@ -161,7 +165,8 @@ The fixed prefix fields are `id`, `section`, `kind`, `path`, `line`, `stub`, `de
 
 ### 5.1 `refs --format=json`
 
-`refs --format=json` emits one citation object per line. With `--summary`, it emits one file summary object per line instead:
+`refs --format=json` emits one citation object per line, with the optional final
+`kind_title` from the queried target kind as specified by [§FS-refs.3.2](FS-refs.md#32---format-json). With `--summary`, it emits one file summary object per line instead, without `kind_title`:
 
 ```json
 {"path":"docs/functional-spec/FS-002-beta.md","count":3,"lines":[3,5]}

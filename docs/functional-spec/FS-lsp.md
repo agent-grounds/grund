@@ -49,7 +49,7 @@ Hovering a Markdown, source-comment, or JSON value binding uses the same exact `
 
 Named citations preview the exact named section slice that `grund <ID>.<path> --toc` returns. An explicit named heading is a declaration-side title just like a numbered heading: its hover range covers the complete rendered heading title, including the handle and colon, and its usage count covers citations of that path and its descendants.
 
-`textDocument/hover` on a citation returns the body `grund <ID> --toc` would print ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), or the `--toc` body of the requested section if the citation includes one ([§FS-show.2.2](FS-show.md#22-section)). When the declaration's home is in source code (a stub points at `src/bus.rs`), the hover body is the comment-stripped prose per [§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers) — the same content the CLI returns. There is no separate "IDE-only" rendering for resolving citations; citation hover and the `show --toc` query produce the same bytes. If that citation has a diagnostic instead (for example an unknown reference with a nearest-ID hint), hover returns nothing: the diagnostic already carries the actionable text — the nearest-ID hint — through `publishDiagnostics`, and an editor that renders diagnostics inside the hover popup (VSCode among them) would otherwise show that text twice. The diagnostic is the single source of the error message; hover stays reserved for previewing citations that resolve.
+`textDocument/hover` on a citation returns the body `grund <ID> --toc` would print ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), or the `--toc` body of the requested section if the citation includes one ([§FS-show.2.2](FS-show.md#22-section)). When the declaration's home is in source code (a stub points at `src/bus.rs`), the hover body is the comment-stripped prose per [§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers) — the same content the CLI returns. The unadorned preview and the `show --toc` query produce the same bytes before editor linkification; the full hover may also carry the separate kind-metadata paragraph below. If that citation has a diagnostic instead (for example an unknown reference with a nearest-ID hint), hover returns nothing: the diagnostic already carries the actionable text — the nearest-ID hint — through `publishDiagnostics`, and an editor that renders diagnostics inside the hover popup (VSCode among them) would otherwise show that text twice. The diagnostic is the single source of the error message; hover stays reserved for previewing citations that resolve.
 
 A committed fetched snapshot is an ordinary declaration on this path: hover,
 definition, references, document links, and highlights use its scanner spans
@@ -58,7 +58,7 @@ hover or navigation target.
 
 `textDocument/hover` on a declaration-side title — a Markdown declaration heading, the same declaration written inline in a doc-comment, a numbered section heading (`<ID>.<section>`, §1.3.1), or an inline-spec stub title — returns the title token and how much of the tree leans on it, with the hover range set to the whole title span. The cursor is already inside the declaration body, so a body preview would only repeat what is on screen; the *usage* is the one fact about a declaration that is visible nowhere on that screen, and reading it used to mean leaving the editor for `grund refs <ID>`. The title hover keeps its original job of giving editors such as Codium a whole-title range for the hover affordance, and the citation sites themselves are still reached on demand through go-to-definition (§1.3) and references (§1.3.1): the hover is the count, not the list.
 
-The body is one line of Markdown — the title token as inline code, then ` — `, then the usage clause:
+The original title-and-usage content is one line of Markdown — the title token as inline code, then ` — `, then the usage clause:
 
 ```
 `FS-user-login: Users sign in` — cited at 12 sites across 5 files
@@ -73,6 +73,19 @@ The clause is `cited at <n> site(s) across <m> file(s)`, where `site` and `file`
 On a numbered section heading the set is the section-scoped one §1.3.1 already defines: `§<ID>.<section>` and its deeper subsections. A section's blast radius includes its children — the same subtree `grund <ID>.<section> --full` prints ([§FS-show.2.2](FS-show.md#22-section)), and the same set that heading's own definition and references return — so the count is the total of what the reader can navigate to from the very token they are hovering. That is deliberately wider than `grund refs <ID> --section <s>`, which keeps only citations whose section coordinate is *exactly* `<s>` ([§FS-refs.1](FS-refs.md#1-inputs)): the flag answers "who cites this section itself", a declaration-side title answers "who leans on this", and only the whole-ID form is a `refs` invocation counted byte for byte. Where the two readings conflict, the one that keeps a title's hover and its reference list in agreement wins — those are one gesture apart in the same editor, while the terminal comparison is one the user has to go looking for.
 
 The clause is a count, never a finding. An uncited declaration already earns the unused-declaration warning through `publishDiagnostics` (§1.1, [§FS-check.4.1](FS-check.md#41-unused-declaration)), and hover does not restate it: `not cited` is the count at zero, worded as a count, so an editor that renders diagnostics inside the hover popup shows that warning once rather than twice. Where an editor draws both into one popup over an uncited title, that popup carries the warning naming the ID and the count answering the hover — one statement each, not the same sentence twice. Nor is the zero case suppressed in favour of the warning, because the warning does not cover every title that can reach zero — `E2E` declarations are exempt from it ([§FS-check.4.1](FS-check.md#41-unused-declaration)) and section headings never carry one — so a hover that fell silent at zero would go quiet exactly where nothing else speaks, and "no counts shown" is indistinguishable from "this server does not show counts". Determinism is the server's usual promise (§4): the counts are read from the session snapshot, one scan of the workspace shared with diagnostics and navigation, so the same tree and config produce the same bytes and no hover re-scans to answer.
+
+When the resolved target kind has an effective title, append `"\n\nKind: "`
+and that title as a CommonMark code span to the existing successful hover,
+without trimming or rewriting its content. Use the title-token backtick fencing
+and padding convention above. This applies to citation and value-binding
+previews, declarations, sections, inline-source titles and stubs. No title
+returns the existing hover unchanged; an empty configured title still adds
+the paragraph. Metadata is literal: do not interpret Markdown or linkify
+citations inside it. Only the existing preview is linkified. Resolve metadata
+from the same target context or snapshot, with no extra per-hover scan, fetch
+or network execution. Usage counts, ranges, navigation and missing-target or
+diagnostic suppression remain unchanged
+([§FS-config.3.4.3](FS-config.md#343-title)).
 
 The citation hover content is Markdown. Any resolving `§<ID>` citation inside that hover body is emitted as a normal link to its declaration target, so users can keep following the grounding graph without closing the hover.
 

@@ -26,6 +26,8 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ### Fixed
 
+- [§FS-config.3.4.3](functional-spec/FS-config.md#343-title): expose the resolved target kind title as optional final `kind_title` metadata on successful show JSON and detailed refs JSON, and as a separate literal Kind paragraph in hover. Preserve Markdown previews, refs summary shapes and existing callable APIs. (PR #254)
+
 - [§FS-id.3](functional-spec/FS-id.md#3-slug-derivation): trim leading as well as trailing literal hyphens when deriving an ID slug, including hyphens accepted by the configured character class. (PR #254)
 
 ### Added
