@@ -686,26 +686,42 @@ An index entry (§3.18) that is present as a bare citation rather than a full Ma
 docs/discussions/README.md:12: index entry §DISC-external-ticket-resolvers is not a link; unchecked in grund 0.11.0, an error in 0.12.0 — run `grund fmt --write`
 ```
 
-The index is a *file* index: its job is to get a reader from the folder to the declaration, and a bare `§<ID>` in it is a promise the reader cannot follow. The required form is exactly the link `grund fmt --cross-refs` writes ([§FS-fmt.6.2](FS-fmt.md#62-form)) — the relative path to the declaration's home, plus the heading anchor under the active `anchor_format`. That is the canonical target, not "has an anchor": a declaration whose home is a source file links to the bare file path with no anchor, and `anchor_format = "none"` drops anchors everywhere. `docs/architecture/README.md` already carries that case, and it is correct as written.
+The index is a *file* index: its job is to get a reader from the folder to the declaration, and a bare `§<ID>` in it is a promise the reader cannot follow. The entry owes the link `fmt` writes (§3.17.1) but is judged only by its shape (§3.17.2); the finding is an error on arrival (§3.17.3) that only a citation `fmt` would wrap can earn (§3.17.4, §3.17.5), once per ID (§3.17.6).
+
+- **Code:** `unlinked-index-entry` ([§FS-errors.5](FS-errors.md#5-json-format)).
+
+#### 3.17.1 The required form is the link `fmt` writes
+
+The required form is exactly the link `grund fmt --cross-refs` writes ([§FS-fmt.6.2](FS-fmt.md#62-form)) — the relative path to the declaration's home, plus the heading anchor under the active `anchor_format`. That is the canonical target, not "has an anchor": a declaration whose home is a source file links to the bare file path with no anchor, and `anchor_format = "none"` drops anchors everywhere. `docs/architecture/README.md` already carries that case, and it is correct as written.
+
+#### 3.17.2 The shape, never the target
 
 `check` requires the **shape** — the citation wrapped as `[§<ID>…](<target>)` — and never the target. A wrap's URL is re-derived on every `grund fmt --cross-refs` pass ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)), so a heading rename that rots an anchor is a one-line `fmt` diff rather than a second finding here, and re-deriving it in `check` would put the anchor algorithm in a second command for no new coverage.
 
-This half is an **error on arrival**, under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations): the message names the versions the verdict moved between, the fix is one documented command the tool ships, `grund fmt --write`, and the release notes it. That licence is only honest while the named command is one that would actually act here, which is what the next paragraph is for.
+#### 3.17.3 An error on arrival
 
-**Only a citation `fmt` would wrap reaches this rule.** The bare form this reports is, exactly, an occurrence the next `grund fmt --write` turns into the link above:
+This half is an **error on arrival**, under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations): the message names the versions the verdict moved between, the fix is one documented command the tool ships, `grund fmt --write`, and the release notes it. That licence is only honest while the named command is one that would actually act here, which is what §3.17.4 is for.
+
+For one release the two halves of the entry contract disagreed about severity — the greater offence warned while the lesser errored — and what decided that was having a fix command rather than the size of the offence ([§DF-index-compatibility-ramp](../decisions/functional/DF-index-compatibility-ramp.md#df-index-compatibility-ramp-a-findings-ramp-follows-its-fix-command-not-the-size-of-the-offence)). The inversion closed when §3.18's ramp did (§3.18.9), and one verdict now covers both halves.
+
+#### 3.17.4 Only a citation `fmt` would wrap reaches this rule
+
+The bare form this reports is, exactly, an occurrence the next `grund fmt --write` turns into the link of §3.17.1:
 
 - in the index file, which is a Markdown file by construction — `index` must name one ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)) because `--cross-refs` runs on `.md` files only ([§FS-fmt.6.1](FS-fmt.md#61-scope));
 - **marker-prefixed**, because without `--marker` the link pass leaves a bare token bare ([§FS-fmt.6.5](FS-fmt.md#65-interaction-with---marker)). `grund fmt --write --marker` *would* reach an unmarked token — but only by marking every bare citation in the tree, which is the repository-wide style choice a project on `[reference] strict = false` has already declined ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). A finding may name a command that repairs it, not one that changes something else on the way; the same objection [§DF-index-always-linkified](../decisions/functional/DF-index-always-linkified.md#df-index-always-linkified-the-cross-reference-pass-always-runs-on-a-kinds-index-file) raises against `--cross-refs --write` as a fix;
 - outside every zone `fmt` never writes in ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten), [§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)): an inline-code span, a Markdown link destination — a bare ID-shaped token inside `](…)` is a URL, not an entry — a fenced block, a declaration heading line, and an index file reached as an external file-symlink target, which `--write` reads and does not write through ([§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through));
-- and **naming a section that exists**, when it names one at all. The pass has to compute a link target ([§FS-fmt.6.2](FS-fmt.md#62-form)), and a citation whose section no declaration declares has none, so `fmt` passes over the line. Such a citation is already reported by §3.2, and adding a second finding whose named command answers `rewrote 0 lines` would be the trap this paragraph exists to avoid.
+- and **naming a section that exists**, when it names one at all. The pass has to compute a link target ([§FS-fmt.6.2](FS-fmt.md#62-form)), and a citation whose section no declaration declares has none, so `fmt` passes over the line. Such a citation is already reported by §3.2, and adding a second finding whose named command answers `rewrote 0 lines` would be the trap §3.17.5 exists to avoid.
 
-Anything else in the index is **not an entry**: it neither satisfies §3.18 nor is reported here, and the ID falls to §3.18, whose fix is a human edit rather than a command. The alternative is an error whose named fix the tool declines to perform, which is an error a repository can never clear — the same trap §3.13 stays out of, and by the same predicate ([§DF-index-entry-form.2.3](../decisions/functional/DF-index-entry-form.md#23-one-link-per-id-not-every-mention)). The condition runs one way only: an entry that already *is* a link satisfies §3.18 whatever `fmt` would do with it. Off strict mode, where an unmarked token is a citation ([§FS-config.3.1](FS-config.md#31-reference--citation-form)), that means a hand-written `[FS-x](…)` around one is a correct entry and is left alone; under `strict = true` the same line carries no citation at all, so the ID has no entry and is §3.18's.
+#### 3.17.5 Anything else is not an entry
 
-For one release the two halves of the entry contract disagreed about severity — the greater offence warned while the lesser errored — and what decided that was having a fix command rather than the size of the offence ([§DF-index-compatibility-ramp](../decisions/functional/DF-index-compatibility-ramp.md#df-index-compatibility-ramp-a-findings-ramp-follows-its-fix-command-not-the-size-of-the-offence)). The inversion closed when §3.18's ramp did, and one verdict now covers both halves.
+Anything else in the index is **not an entry**: it neither satisfies §3.18 nor is reported here, and the ID falls to §3.18, whose fix is a human edit rather than a command. The alternative is an error whose named fix the tool declines to perform, which is an error a repository can never clear — the same trap §3.13.1 stays out of, and by the same predicate ([§DF-index-entry-form.2.3](../decisions/functional/DF-index-entry-form.md#23-one-link-per-id-not-every-mention)).
+
+The condition runs one way only: an entry that already *is* a link satisfies §3.18 whatever `fmt` would do with it. Off strict mode, where an unmarked token is a citation ([§FS-config.3.1](FS-config.md#31-reference--citation-form)), that means a hand-written `[FS-x](…)` around one is a correct entry and is left alone; under `strict = true` the same line carries no citation at all, so the ID has no entry and is §3.18's.
+
+#### 3.17.6 One finding per ID
 
 Only an ID that already has an entry reaches this rule; an ID with none is §3.18's, and one cause never yields both findings. Where several citations of one ID sit in the index and none is a link, the finding anchors at the first of them in file order.
-
-- **Code:** `unlinked-index-entry` ([§FS-errors.5](FS-errors.md#5-json-format)).
 
 ### 3.18 Declaration missing from its kind's index
 
@@ -715,29 +731,49 @@ A kind configured with a `folder` and an index file — `README.md` unless `inde
 docs/decisions/functional/DF-md-link-emission.md:1: DF-md-link-emission is not listed in docs/decisions/functional/README.md — became an error in grund 0.13.0
 ```
 
-**Which kinds are covered.** Folder kinds that declare IDs. A `citable = false` kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) has no declarations, so it has no index and this rule never reaches it — which is why setting `index` on one is a config error rather than a silent no-op ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)).
+Its children say which kinds (§3.18.1) and declarations (§3.18.2) are covered, how an external inline declaration enrolls (§3.18.3, §3.18.4), what an entry is (§3.18.5, §3.18.6), how a missing or unscanned index is judged (§3.18.7, §3.18.8), and why this is an error (§3.18.9). Decided in [§DF-index-entry-form](../decisions/functional/DF-index-entry-form.md#df-index-entry-form-an-index-entry-is-one-full-link-per-id-and-nothing-else-about-the-page), [§DF-index-compatibility-ramp](../decisions/functional/DF-index-compatibility-ramp.md#df-index-compatibility-ramp-a-findings-ramp-follows-its-fix-command-not-the-size-of-the-offence), and [§DF-index-not-an-inbound-citation](../decisions/functional/DF-index-not-an-inbound-citation.md#df-index-not-an-inbound-citation-an-index-entry-is-navigation-not-use).
 
-**Which declarations are covered.** Every ID of that kind with at least one declaration site anywhere under `folder` — the whole subtree, not its top level, because a kind's folder routinely holds a directory per topic or per year (`DISC`'s proposals all live in `docs/discussions/proposals/`). A stub-and-inline pair collapses the way [§FS-list.2](FS-list.md#2-behaviour) collapses it: the stub under `folder` is what puts the ID in the folder, and **one** entry for the ID satisfies the rule — pointing at wherever the body lives, which for an inline home is the source file. A declaration of some *other* kind sitting inside the folder is a misplaced declaration (§3.7) and is not additionally demanded here.
+- **Code:** `missing-index-entry` ([§FS-errors.5](FS-errors.md#5-json-format)).
+
+#### 3.18.1 Which kinds are covered
+
+Folder kinds that declare IDs. A `citable = false` kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) has no declarations, so it has no index and this rule never reaches it — which is why setting `index` on one is a config error rather than a silent no-op ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)).
+
+#### 3.18.2 Which declarations are covered
+
+Every ID of that kind with at least one declaration site anywhere under `folder` — the whole subtree, not its top level, because a kind's folder routinely holds a directory per topic or per year (`DISC`'s proposals all live in `docs/discussions/proposals/`). A stub-and-inline pair collapses the way [§FS-list.2](FS-list.md#2-behaviour) collapses it: the stub under `folder` is what puts the ID in the folder, and **one** entry for the ID satisfies the rule — pointing at wherever the body lives, which for an inline home is the source file. A declaration of some *other* kind sitting inside the folder is a misplaced declaration (§3.7) and is not additionally demanded here.
+
+#### 3.18.3 An external inline declaration enrolls by its canonical link
 
 An index may also **enroll one external inline declaration directly**, with no stub under `folder`. The enrollment is deliberately a stricter form than an ordinary entry: an unqualified, marker-prefixed citation of the bare ID (no section) whose declaration is in a non-Markdown source file outside `folder`, wrapped as a Markdown link whose destination is exactly the one `grund fmt --cross-refs` derives from that index to the source home ([§FS-fmt.6.2](FS-fmt.md#62-form)). The same canonical link is both the act of membership and the satisfying entry, so `check` requires no third artifact. Where two kinds share one `folder` and one `index`, each enrolls its own: the link is matched to the kind its ID names, so configuration order never lets one kind hide another's external entry. `grund show` and `grund list` still see the source declaration as the only home; enrollment creates no declaration record and no synthetic stub ([§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments), [§FS-list.2](FS-list.md#2-behaviour)).
 
-Every condition distinguishes enrollment from surrounding prose. A foreign-kind or qualified citation, a citation of a section, a **number-only shorthand** (§1.2) — enrollment is the *persisted* whole ID, and a shorthand stays authoring sugar until `grund fmt --write` expands it ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)) — an unlinked mention, a link **nested inside another link's destination** or any other zone `fmt` never writes in (§3.17), a link with a different destination, and a link to a Markdown declaration outside `folder` are ordinary references. They neither enroll the ID nor become navigational for §4.1. A marker-prefixed bare-ID mention that `grund fmt --cross-refs` turns into the exact canonical link becomes an enrollment when that form is written — the stored link is the unambiguous signal. Removing it removes the external membership, so there is no missing-entry finding for an external declaration that the index no longer claims. Decided in [§DF-index-entry-form.2.7](../decisions/functional/DF-index-entry-form.md#27-a-canonical-bare-id-link-enrolls-an-external-inline-declaration).
+#### 3.18.4 What does not enroll
 
-**What an entry is.** For an ID covered by a declaration under `folder`, one recognized citation (§1.1) of the ID in the index file, written as a full Markdown link. The two conditions are the entry's contract and either one unmet is a finding: this rule is the first, and §3.17 is the second. For an external inline declaration, the canonical link above establishes coverage and satisfies the entry simultaneously.
+Every condition distinguishes enrollment from surrounding prose. A foreign-kind or qualified citation, a citation of a section, a **number-only shorthand** (§1.2) — enrollment is the *persisted* whole ID, and a shorthand stays authoring sugar until `grund fmt --write` expands it ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)) — an unlinked mention, a link **nested inside another link's destination** or any other zone `fmt` never writes in (§3.17.4), a link with a different destination, and a link to a Markdown declaration outside `folder` are ordinary references. They neither enroll the ID nor become navigational for §4.1.2. A marker-prefixed bare-ID mention that `grund fmt --cross-refs` turns into the exact canonical link becomes an enrollment when that form is written — the stored link is the unambiguous signal. Removing it removes the external membership, so there is no missing-entry finding for an external declaration that the index no longer claims. Decided in [§DF-index-entry-form.2.7](../decisions/functional/DF-index-entry-form.md#27-a-canonical-bare-id-link-enrolls-an-external-inline-declaration).
 
-Between them sits a third case, and it lands here. A citation `grund fmt --write` would not wrap (§3.17 lists the conditions in full) is not an entry at all. An index that mentions the ID only that way is reported *here*, where the fix is to write an entry, and never under §3.17, where the command the message names would decline to act.
+#### 3.18.5 What an entry is
 
-**And nothing more.** Layout is free: table or list, grouped or flat, in any order, with any prose around it. `docs/functional-spec/README.md` groups its entries under six curated headings, and a rule that dictated a table would break the best index in the tree. One link per ID is enough — every other occurrence of the ID in the index is untouched and is never a finding.
+For an ID covered by a declaration under `folder`, one recognized citation (§1.1) of the ID in the index file, written as a full Markdown link. The two conditions are the entry's contract and either one unmet is a finding: this rule is the first, and §3.17 is the second. For an external inline declaration, the canonical link of §3.18.3 establishes coverage and satisfies the entry simultaneously.
 
-**A missing index file** is this same finding class, once per declaration in the folder: a folder whose index nobody wrote is the strongest form of the same fact, not a different one. It is also why the finding is anchored at the declaration and not at the index — an index file that does not exist has no line to point at, and every declaration has one. The message says which way it failed, in a parenthesis after the file name: `(the index file does not exist)`, `(the index file is a directory)` for a path that is one, and `(the index file could not be read)` for a file that is there and would not open. Three phrasings rather than one because "does not exist", said about a directory that plainly does, is a diagnosis the reader has to argue with before they can act on it.
+Between them sits a third case, and it lands here: a citation `grund fmt --write` would not wrap (§3.17.4) is not an entry at all, so an index that mentions the ID only that way is reported *here*, where the fix is to write an entry, and never under §3.17, where the command the message names would decline to act (§3.17.5).
 
-**A run that cannot see the index does not judge it.** Which IDs the index names comes from the scan, while the form of each entry comes from re-reading the file, and the two can disagree about whether the index was read at all: a narrowed `grund check <one-file>` (§1.3), or an index the `[scan]` set excludes, leaves the index unscanned while the declarations under the folder are still in view. Reporting every one of them as unlisted would be a finding about the scope, not about the tree, so this rule is skipped for an index file the run did not scan. An index file that is *not there* — missing, or a directory wearing the name — is a fact about the tree and is still reported.
+#### 3.18.6 And nothing more
 
-**An error, because the deadline the warning named has arrived.** No `grund` command writes a missing entry — rendering the index is not a pass `fmt` has — so this rule never had [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)'s licence for a same-release verdict flip, and took [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s deprecation path instead. It arrived in `0.12.0` as a warning whose own text named the release it would become an error in, `0.13.0`; that release is this one, and the ramp ends here. So the finding is an error like every other in this section — it contributes to the exit code (§3) and it stands in place of the `success` marker (§2.1) — and the deadline clause is spent: a release still ahead is a date a reader can act on, and one that has arrived is not. What replaces it reports rather than promises, `— became an error in grund 0.13.0`, which is the past-tense half of the closed vocabulary [§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name) defines. A landed ramp names its release for the same reason a pending one names its deadline, and for one more: that clause is the only record of the flip a user reads without the changelog, and it is what makes the release path able to refuse a version this error would contradict. What the ramp bought is what it was for: a repository that never listed its declarations was told, by the tool, in the release before this one, exactly which run would start failing.
+Layout is free: table or list, grouped or flat, in any order, with any prose around it. `docs/functional-spec/README.md` groups its entries under six curated headings, and a rule that dictated a table would break the best index in the tree. One link per ID is enough — every other occurrence of the ID in the index is untouched and is never a finding ([§DF-index-entry-form.2.3](../decisions/functional/DF-index-entry-form.md#23-one-link-per-id-not-every-mention)).
 
-Decided in [§DF-index-entry-form](../decisions/functional/DF-index-entry-form.md#df-index-entry-form-an-index-entry-is-one-full-link-per-id-and-nothing-else-about-the-page), [§DF-index-compatibility-ramp](../decisions/functional/DF-index-compatibility-ramp.md#df-index-compatibility-ramp-a-findings-ramp-follows-its-fix-command-not-the-size-of-the-offence), and [§DF-index-not-an-inbound-citation](../decisions/functional/DF-index-not-an-inbound-citation.md#df-index-not-an-inbound-citation-an-index-entry-is-navigation-not-use).
+#### 3.18.7 A missing index file
 
-- **Code:** `missing-index-entry` ([§FS-errors.5](FS-errors.md#5-json-format)).
+A missing index file is this same finding class, once per declaration in the folder: a folder whose index nobody wrote is the strongest form of the same fact, not a different one. It is also why the finding is anchored at the declaration and not at the index — an index file that does not exist has no line to point at, and every declaration has one. The message says which way it failed, in a parenthesis after the file name: `(the index file does not exist)`, `(the index file is a directory)` for a path that is one, and `(the index file could not be read)` for a file that is there and would not open. Three phrasings rather than one because "does not exist", said about a directory that plainly does, is a diagnosis the reader has to argue with before they can act on it.
+
+#### 3.18.8 A run that cannot see the index does not judge it
+
+Which IDs the index names comes from the scan, while the form of each entry comes from re-reading the file, and the two can disagree about whether the index was read at all: a narrowed `grund check <one-file>` (§1.3), or an index the `[scan]` set excludes, leaves the index unscanned while the declarations under the folder are still in view. Reporting every one of them as unlisted would be a finding about the scope, not about the tree, so this rule is skipped for an index file the run did not scan. An index file that is *not there* — missing, or a directory wearing the name — is a fact about the tree and is still reported.
+
+#### 3.18.9 An error, because the deadline the warning named has arrived
+
+No `grund` command writes a missing entry — rendering the index is not a pass `fmt` has — so this rule never had [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)'s licence for a same-release verdict flip, and took [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s deprecation path instead. It arrived in `0.12.0` as a warning whose own text named the release it would become an error in, `0.13.0`, and that release ended the ramp. So the finding is an error like every other in this section — it contributes to the exit code (§3) and it stands in place of the `success` marker (§2.1). The ramp bought what it was for: a repository that never listed its declarations was told, by the tool, in `0.12.0`, exactly which run would start failing.
+
+The deadline clause is spent: a release still ahead is a date a reader can act on, and one that has arrived is not. What replaces it reports rather than promises, `— became an error in grund 0.13.0`, which is the past-tense half of the closed vocabulary [§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name) defines. A landed ramp names its release for the same reason a pending one names its deadline, and for one more: that clause is the only record of the flip a user reads without the changelog, and it is what makes the release path able to refuse a version this error would contradict.
 
 ### 3.19 Orphan name-bearing section path
 
@@ -759,55 +795,35 @@ After ordinary citation and section resolution succeeds uniquely, a binding whos
 
 ### 3.23 Section outside a declaration
 
-When the scanner encounters a numeric section heading, or an enabled named
-section heading, that is deeper than its stale declaration context but whose
-line lies inside no declaration body, `check` emits one located error at the
-heading. A numeric heading's exact message is `numbered section outside any
-declaration`; an enabled named heading's is `named section outside any
-declaration`. Both use the public code `section-outside-declaration`.
+When the scanner encounters a numeric section heading, or an enabled named section heading, that is deeper than its stale declaration context but whose line lies inside no declaration body, `check` emits one located error at the heading. A numeric heading's exact message is `numbered section outside any declaration`; an enabled named heading's is `named section outside any declaration`. Both use the public code `section-outside-declaration`. Ownership is the declaration's body span (§3.23.1), the rejected heading leaves the section map every consumer reads (§3.23.2), and the finding is reported like any other hard error (§3.23.3).
 
-Ownership is the body span already used for extraction and citing-side
-classification, not a second section-only approximation. In Markdown, a
-same-or-higher heading ends a declaration body even when that boundary heading
-is plain; a later deeper section-like heading is outside. In source, the end of
-a doc-comment or docstring ends ownership. A later declaration in the same
-comment block ends the earlier body and begins its own. An inline-spec stub owns
-only its single heading line, so numbered prose below the stub belongs to no
-stubbed declaration. A deeper section-like heading before any of those
-boundaries stays valid. A heading inside a Markdown fence is content and emits
-nothing ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)).
-Legal unmarked or plain headings are not errors under this point; adopting a
-general unmarked-heading policy is a separate change.
+#### 3.23.1 Ownership is the body span
 
-The rejected heading is excluded from the shared body-local section map before
-any consumer runs ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)). It cannot
-resolve a citation or query, enter completion or list/size output, become an
-embedded-value root, participate in duplicate-section detection, or acquire an
-LSP navigation target. `show` and other failed queries retain their ordinary
-missing-section semantics rather than printing this check-only message.
+Ownership is the body span already used for extraction and citing-side classification, not a second section-only approximation. In Markdown, a same-or-higher heading ends a declaration body even when that boundary heading is plain; a later deeper section-like heading is outside. In source, the end of a doc-comment or docstring ends ownership. A later declaration in the same comment block ends the earlier body and begins its own. An inline-spec stub owns only its single heading line, so numbered prose below the stub belongs to no stubbed declaration. A deeper section-like heading before any of those boundaries stays valid. A heading inside a Markdown fence is content and emits nothing ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)). Legal unmarked or plain headings are not errors under this point; adopting a general unmarked-heading policy is a separate change (§4.14).
 
-This is an ordinary hard finding under §§2–3. Text uses the located
-`<path>:<line>: error: <message>` form. JSON emits
-`{"severity":"error","path":<path>,"line":<line>,"code":"section-outside-declaration","message":<message>,"sites":null}`.
-`--only section-outside-declaration` retains it and `--ignore
-section-outside-declaration` removes it; a retained finding contributes exit
-`1`, while selecting it away restores the ordinary selected-report result.
-Parallel and workspace scans merge the record once under the workspace-relative
-path, never once per stale declaration. A narrowed scan judges the complete
-selected file, and `--full` applies the same code and message to otherwise
-out-of-scope files it adds. The LSP transports the same error severity, code,
-message, and heading range through its shared snapshot
-([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+#### 3.23.2 The rejected heading leaves the section map
+
+The rejected heading is excluded from the shared body-local section map before any consumer runs ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)). It cannot resolve a citation or query, enter completion or list/size output, become an embedded-value root, participate in duplicate-section detection, or acquire an LSP navigation target. `show` and other failed queries retain their ordinary missing-section semantics rather than printing this check-only message.
+
+#### 3.23.3 An ordinary hard finding
+
+This is an ordinary hard finding under §§2–3. Text uses the located `<path>:<line>: error: <message>` form. JSON emits `{"severity":"error","path":<path>,"line":<line>,"code":"section-outside-declaration","message":<message>,"sites":null}`. `--only section-outside-declaration` retains it and `--ignore section-outside-declaration` removes it; a retained finding contributes exit `1`, while selecting it away restores the ordinary selected-report result. Parallel and workspace scans merge the record once under the workspace-relative path, never once per stale declaration. A narrowed scan judges the complete selected file, and `--full` applies the same code and message to otherwise out-of-scope files it adds. The LSP transports the same error severity, code, message, and heading range through its shared snapshot ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
 
 ## 4. Warnings
 
 ### 4.1 Unused declaration
 
-An ID that is declared but never cited. Reported as a warning, not an error — newly declared IDs may not yet have citations. Warnings never affect the exit code (§2).
+An ID that is declared but never cited. Reported as a warning, not an error — newly declared IDs may not yet have citations. Warnings never affect the exit code (§2). A resolving shorthand counts as a citation (§4.1.1), a kind's own index entry does not (§4.1.2), and `E2E` declarations are exempt (§4.1.3).
 
-A number-only shorthand citation that resolves counts here like any other citation (§1.2): a declaration abbreviated as `§FS-042` everywhere is cited, and reporting it as unused would state the opposite of the truth.
+#### 4.1.1 A resolving shorthand counts
 
-A citation that is a kind's own **index entry** (§3.18) does not count here. An index names every declaration in its folder by construction, so counting its entries would leave every ID in an indexed folder permanently cited and delete the signal this warning exists to give ([§DF-index-not-an-inbound-citation](../decisions/functional/DF-index-not-an-inbound-citation.md#df-index-not-an-inbound-citation-an-index-entry-is-navigation-not-use)). The exclusion is exactly the entry: a citation in an index file of an ID whose home lies *outside* that folder is an ordinary citation and counts like any other **unless that exact site is the canonical link that enrolls an external inline declaration** (§3.18). Other citations of the enrolled ID on the same page still count. `grund refs` is unaffected and still lists every index entry — they are real citations, and a reader asking who points at an ID wants to be told that its index does.
+A number-only shorthand citation that resolves counts here like any other citation (§1.2.4): a declaration abbreviated as `§FS-042` everywhere is cited, and reporting it as unused would state the opposite of the truth.
+
+#### 4.1.2 An index entry does not count
+
+A citation that is a kind's own **index entry** (§3.18.5) does not count here. An index names every declaration in its folder by construction, so counting its entries would leave every ID in an indexed folder permanently cited and delete the signal this warning exists to give ([§DF-index-not-an-inbound-citation](../decisions/functional/DF-index-not-an-inbound-citation.md#df-index-not-an-inbound-citation-an-index-entry-is-navigation-not-use)). The exclusion is exactly the entry: a citation in an index file of an ID whose home lies *outside* that folder is an ordinary citation and counts like any other **unless that exact site is the canonical link that enrolls an external inline declaration** (§3.18.3). Other citations of the enrolled ID on the same page still count. `grund refs` is unaffected and still lists every index entry — they are real citations, and a reader asking who points at an ID wants to be told that its index does.
+
+#### 4.1.3 `E2E` declarations are exempt
 
 `E2E` declarations ([AR-scanner.6](../architecture/AR-scanner.md#6-e2e-case-declarations)) are exempt: an end-to-end case is exercised by being run, not by being cited, so a `§E2E-<name>` that nothing references is not a warning. Every other kind is subject to this rule, including Markdown and JSON value declarations; the citation inside a recognized value binding counts as a use ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)). `grund list --unused` ([§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id)) uses the same default signal and suppresses uncited `E2E` cases unless `E2E` is explicitly selected with `--kind` (including a multi-kind filter such as `--kind FS,E2E`).
 
@@ -817,15 +833,23 @@ Off by default. When `[reference] warn_on_suggested = true` is set in the projec
 
 ### 4.3 Redundant config pair
 
-A directory that carries both a bare `grund.toml` and `.agents/grund.toml` ([§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both)). The bare file is the config; the `.agents/` one is read by nothing, so a user who edits it changes nothing and is told so:
+A directory that carries both a bare `grund.toml` and `.agents/grund.toml` ([§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both)). The bare file is the config; the `.agents/` one is read by nothing, so a user who edits it changes nothing and is told so, in a CLI-level warning (§4.3.1) that `grund config validate` and `grund config show` also emit (§4.3.2):
 
 ```
 warning: .agents/grund.toml is ignored — grund.toml takes precedence; delete one
 ```
 
+#### 4.3.1 A CLI-level warning
+
 It is a CLI-level `warning:` on **stderr** (§2.1.1), not a per-finding line: it is about which file the run read, not a finding at a site in the citation graph, and there is no offending line to point at — the whole file is ignored. Both paths are report paths and follow `[output] relative_paths` ([§FS-config.3.6](FS-config.md#36-output--report-format)) — relative to the config root by default — so the message names the two files a user has to choose between. Like every warning it leaves the exit code alone (§2), because the pair is the ordinary transient state of a migration between the two forms ([§DF-config-file-location.2.2](../decisions/functional/DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair)).
 
-The same warning is emitted by `grund config validate` and `grund config show` ([§FS-config.4.1](FS-config.md#41-grund-config-validate-path), [§FS-config.4.2](FS-config.md#42-grund-config-show-path)) — those are the surfaces a user reaches for when the answer to "why is my config not taking effect" is that `grund` is reading the other file. No other command reports it: a redundant pair is a fact about the repository's configuration, and `show`, `list`, `refs`, `cover`, and `fmt` answer questions about its content. §4.11 is this finding's sibling and inherits every sentence of this section: it fires where the run *read* the `.agents/` file rather than ignored it, which is the case this one cannot be in.
+#### 4.3.2 Reported by `check`, `config validate` and `config show`
+
+The same warning is emitted by `grund config validate` and `grund config show` ([§FS-config.4.1](FS-config.md#41-grund-config-validate-path), [§FS-config.4.2](FS-config.md#42-grund-config-show-path)) — those are the surfaces a user reaches for when the answer to "why is my config not taking effect" is that `grund` is reading the other file. No other command reports it: a redundant pair is a fact about the repository's configuration, and `show`, `list`, `refs`, `cover`, and `fmt` answer questions about its content.
+
+#### 4.3.3 The deprecated-location sibling
+
+§4.11 is this finding's sibling and inherits every sentence of this section: it fires where the run *read* the `.agents/` file rather than ignored it, which is the case this one cannot be in.
 
 ### 4.4 Inline note layout deviation *(opt-in)*
 
@@ -835,9 +859,17 @@ Off by default because a layout is a house style rather than a correctness prope
 
 ### 4.5 Nothing recognized
 
-A walk that read at least one file and recognized **nothing in it** — no declaration and no citation — is §2.2's empty scan one step further in: the scope was right and the files were read, and the grammar matched none of their content. The usual causes are a tree nobody has declared in yet and a docs tree whose headings open with a prefix that is no configured kind ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), either of which leaves every heading in the tree a non-declaration and the run's verdict `success` over a repository where nothing is grounded. Decided in [§DF-nothing-recognized](../decisions/functional/DF-nothing-recognized.md#df-nothing-recognized-a-run-that-recognized-nothing-says-so-and-says-it-as-a-warning).
+A walk that read at least one file and recognized **nothing in it** — no declaration and no citation — is §2.2's empty scan one step further in: the scope was right and the files were read, and the grammar matched none of their content. `check` then emits one CLI-level `warning:` line (§2.1.1) on **stderr**, whose text is §4.5.2. It has two usual causes (§4.5.1), is asked per project (§4.5.3) and only of a run over that project's root (§4.5.4), and is withheld beside any other finding about the scope (§4.5.5); the per-heading half is §4.6's (§4.5.6). Decided in [§DF-nothing-recognized](../decisions/functional/DF-nothing-recognized.md#df-nothing-recognized-a-run-that-recognized-nothing-says-so-and-says-it-as-a-warning).
 
-`check` emits one CLI-level `warning:` line (§2.1.1) on **stderr**, naming how many files were read, the shape a declaration heading and a citation take under the configured format, and the configured `[[kinds]]` prefixes:
+- **Code:** `nothing-recognized` ([§FS-errors.5](FS-errors.md#5-json-format)), with `path` and `line` null like every CLI-level diagnostic.
+
+#### 4.5.1 The usual causes
+
+The usual causes are a tree nobody has declared in yet and a docs tree whose headings open with a prefix that is no configured kind ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), either of which leaves every heading in the tree a non-declaration and the run's verdict `success` over a repository where nothing is grounded.
+
+#### 4.5.2 The message
+
+The line names how many files were read, the shape a declaration heading and a citation take under the configured format, and the configured `[[kinds]]` prefixes:
 
 ```
 warning: nothing recognized — grund read 3 files and found no declaration and no citation in them. A declaration heading reads `# <KIND>-<NNN>-<slug>: <title>` and a citation `<marker><KIND>-<NNN>-<slug>`, under [id] format = "{kind}-{number}-{slug}" with <KIND> one of {AR, FS}. Either nothing is declared yet, or the headings are written to a different shape than that.
@@ -845,15 +877,21 @@ warning: nothing recognized — grund read 3 files and found no declaration and 
 
 The shapes are rendered from the `[id] format` template, the same substitution [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) makes for the managed entrypoint block, and the citation shape carries the configured marker ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). The closing sentence offers both readings of the fact, because the run cannot tell them apart without judging a line: a tree written to another format and a `grund init` scaffold nobody has declared in yet produce the identical report, and naming only the first would send a fresh adopter looking for a bug in a config that is fine. No example ID is built from `[id] number_pattern` and `[id] slug_pattern` and no corrected ID is proposed for any heading: `check` reports facts about the tree and the config (§3 vs §4), and an ID assembled from those patterns would be a guess at what they accept.
 
+#### 4.5.3 Asked per project
+
 The question is asked **per project**, like §2.2: in a workspace ([§FS-workspace.5](FS-workspace.md#5-command-scope)) each project is judged against its own config, since one project's grammar mismatch says nothing about another's. It asks *recognized*, not *declared* — a member that only cites another member's specs declares nothing and is working as intended, so a citation anywhere in the project answers the question.
+
+#### 4.5.4 Asked only of the whole project
 
 It is asked only of a run whose scope **is** that project's root (no path argument, or a path that resolves to it). A narrowed `grund check <dir>` is a slice the caller chose, and a slice holding no declaration and no citation is an answer rather than a misconfiguration — the claim this caution makes is about a whole project, and a run that read part of one cannot make it.
 
+#### 4.5.5 A warning, withheld beside any other finding about the scope
+
 Like §2.2 it is a warning, and like §2.2 it is withheld from a run that has any other finding about the configured scope: the exit code stays `0` (a tree with nothing in it yet is the ordinary first day of a repository), and a report that already says something about that scope is not the silent verdict this rule exists to break. It inherits §2.2's two exceptions unchanged, and for the same reasons. A redundant-config pair (§4.3) is a fact about which file was read — and a repository mid-migration between the two config names is exactly where a mismatched `[id] format` hides, in the file that is no longer read. The out-of-scope tier (§3.14) is a fact about the tree beyond the scope, and a `--full` run that reports every citation out there while the configured scope holds nothing is the strongest form of this diagnosis, not a reason to withhold half of it. What it buys is the `success` marker — a warning stands in its place (§2.1), so the run that recognized nothing stops printing the same word as the run that checked everything.
 
-The per-heading half — naming each heading that looks like a declaration and does not match — is §4.6, a different rule asking a different question: this one is arithmetic over what the scan recorded, that one is about what a single line came close to being. Where both could speak, §4.6 does and this one is withheld under the rule above, because "these two headings, at these lines" is the same fact said usefully.
+#### 4.5.6 The per-heading half
 
-- **Code:** `nothing-recognized` ([§FS-errors.5](FS-errors.md#5-json-format)), with `path` and `line` null like every CLI-level diagnostic.
+The per-heading half — naming each heading that looks like a declaration and does not match — is §4.6, a different rule asking a different question: this one is arithmetic over what the scan recorded, that one is about what a single line came close to being. Where both could speak, §4.6 does and this one is withheld under the rule above, because "these two headings, at these lines" is the same fact said usefully.
 
 ### 4.6 Declaration near miss
 
