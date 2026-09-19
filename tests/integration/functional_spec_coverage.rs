@@ -106,394 +106,108 @@ fn functional_spec_sections(catalog: &Findings) -> BTreeSet<String> {
     sections
 }
 
+#[rustfmt::skip]
 const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
-    Exception {
-        id: "FS-check.5",
-        reason: "finding selection reference, not a behavioral requirement",
-    },
-    Exception {
-        id: "FS-completions.4",
-        reason: "shell installation examples",
-    },
-    Exception {
-        id: "FS-config.6",
-        reason: "configuration rationale and limits",
-    },
-    Exception {
-        id: "FS-cover.5",
-        reason: "coverage interpretation guidance",
-    },
-    Exception {
-        id: "FS-errors.7",
-        reason: "error-design rationale",
-    },
-    Exception {
-        id: "FS-examples.1",
-        reason: "example-suite overview",
-    },
-    Exception {
-        id: "FS-fmt.4",
-        reason: "formatter non-goals",
-    },
-    Exception {
-        id: "FS-id.7",
-        reason: "ID proposal rationale",
-    },
-    Exception {
-        id: "FS-id.8",
-        reason: "ID proposal examples",
-    },
-    Exception {
-        id: "FS-init.1.1",
-        reason: "initialization rationale",
-    },
-    Exception {
-        id: "FS-init.6",
-        reason: "initialization non-goals",
-    },
-    Exception {
-        id: "FS-inline-citation-style.6",
-        reason: "inline-style rationale",
-    },
-    Exception {
-        id: "FS-inline-citation-style.7",
-        reason: "inline-style examples",
-    },
-    Exception {
-        id: "FS-integrations.3.5",
-        reason: "integration guidance",
-    },
-    Exception {
-        id: "FS-list.5",
-        reason: "catalog-query rationale",
-    },
-    Exception {
-        id: "FS-lsp.2.3",
-        reason: "reserved LSP capability",
-    },
-    Exception {
-        id: "FS-lsp.5",
-        reason: "LSP non-goals",
-    },
-    Exception {
-        id: "FS-refs.5",
-        reason: "reference-query rationale",
-    },
-    Exception {
-        id: "FS-show.4",
-        reason: "show-query rationale",
-    },
-    Exception {
-        id: "FS-distribution.1",
-        reason: "distribution target description",
-    },
-    Exception {
-        id: "FS-distribution.2",
-        reason: "distribution target description",
-    },
-    Exception {
-        id: "FS-distribution.3.1",
-        reason: "packaging target",
-    },
-    Exception {
-        id: "FS-distribution.3.2",
-        reason: "packaging target",
-    },
-    Exception {
-        id: "FS-distribution.3.3",
-        reason: "packaging target",
-    },
-    Exception {
-        id: "FS-distribution.4.1",
-        reason: "release-process target",
-    },
-    Exception {
-        id: "FS-distribution.5",
-        reason: "distribution target description",
-    },
-    Exception {
-        id: "FS-lsp.1.5",
-        reason: "planned LSP capability",
-    },
-    Exception {
-        id: "FS-non-goals.1",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.2",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.4",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.5",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.6",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.7",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.8",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.9",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.10",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.11",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.12.1",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.12.2",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-non-goals.14",
-        reason: "explicit non-goal",
-    },
-    Exception {
-        id: "FS-init.2.3.4.1",
-        reason: "covered by the byte-exact generated init block",
-    },
-    Exception {
-        id: "FS-init.2.3.4.2",
-        reason: "covered by the byte-exact generated init block",
-    },
-    Exception {
-        id: "FS-init.2.3.4.6",
-        reason: "covered by the byte-exact generated init block",
-    },
-    Exception {
-        id: "FS-init.2.3.4.7",
-        reason: "covered by the byte-exact generated init block",
-    },
-    Exception {
-        id: "FS-init.2.3.4.8",
-        reason: "covered by the byte-exact generated init block",
-    },
-    Exception {
-        id: "FS-init.2.3.4.9",
-        reason: "covered by the byte-exact generated init block",
-    },
-    Exception {
-        id: "FS-init.2.3.4.11",
-        reason: "covered by the byte-exact generated init block",
-    },
-    Exception {
-        id: "FS-init.2.3.4.12",
-        reason: "covered by the byte-exact generated init block",
-    },
-    Exception {
-        id: "FS-init.2.3.4.13",
-        reason: "covered by the byte-exact generated init block",
-    },
-    Exception {
-        id: "FS-init.2.3.4.14",
-        reason: "covered by the byte-exact generated init block",
-    },
-    Exception {
-        id: "FS-init.2.3.4.16",
-        reason: "covered by the byte-exact generated init block",
-    },
+    Exception { id: "FS-check.5", reason: "finding selection reference, not a behavioral requirement" },
+    Exception { id: "FS-completions.4", reason: "shell installation examples" },
+    Exception { id: "FS-config.6", reason: "configuration rationale and limits" },
+    Exception { id: "FS-cover.5", reason: "coverage interpretation guidance" },
+    Exception { id: "FS-errors.7", reason: "error-design rationale" },
+    Exception { id: "FS-examples.1", reason: "example-suite overview" },
+    Exception { id: "FS-fmt.4", reason: "formatter non-goals" },
+    Exception { id: "FS-id.7", reason: "ID proposal rationale" },
+    Exception { id: "FS-id.8", reason: "ID proposal examples" },
+    Exception { id: "FS-init.1.1", reason: "initialization rationale" },
+    Exception { id: "FS-init.6", reason: "initialization non-goals" },
+    Exception { id: "FS-inline-citation-style.6", reason: "inline-style rationale" },
+    Exception { id: "FS-inline-citation-style.7", reason: "inline-style examples" },
+    Exception { id: "FS-integrations.3.5", reason: "integration guidance" },
+    Exception { id: "FS-list.5", reason: "catalog-query rationale" },
+    Exception { id: "FS-lsp.2.3", reason: "reserved LSP capability" },
+    Exception { id: "FS-lsp.5", reason: "LSP non-goals" },
+    Exception { id: "FS-refs.5", reason: "reference-query rationale" },
+    Exception { id: "FS-show.4", reason: "show-query rationale" },
+    Exception { id: "FS-distribution.1", reason: "distribution target description" },
+    Exception { id: "FS-distribution.2", reason: "distribution target description" },
+    Exception { id: "FS-distribution.3.1", reason: "packaging target" },
+    Exception { id: "FS-distribution.3.2", reason: "packaging target" },
+    Exception { id: "FS-distribution.3.3", reason: "packaging target" },
+    Exception { id: "FS-distribution.4.1", reason: "release-process target" },
+    Exception { id: "FS-distribution.5", reason: "distribution target description" },
+    Exception { id: "FS-lsp.1.5", reason: "planned LSP capability" },
+    Exception { id: "FS-non-goals.1", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.2", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.4", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.5", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.6", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.7", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.8", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.9", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.10", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.11", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.12.1", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.12.2", reason: "explicit non-goal" },
+    Exception { id: "FS-non-goals.14", reason: "explicit non-goal" },
+    Exception { id: "FS-init.2.3.4.1", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-init.2.3.4.2", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-init.2.3.4.6", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-init.2.3.4.7", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-init.2.3.4.8", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-init.2.3.4.9", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-init.2.3.4.11", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-init.2.3.4.12", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-init.2.3.4.13", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-init.2.3.4.14", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-init.2.3.4.16", reason: "covered by the byte-exact generated init block" },
 ];
 
+#[rustfmt::skip]
 const TEMPORARY_EXCEPTIONS: &[Exception<'static>] = &[
-    Exception {
-        id: "FS-fetch.1",
-        reason: "issue 243 local selection proof pending",
-    },
-    Exception {
-        id: "FS-fetch.5",
-        reason: "issue 243 bounded folder write proof pending",
-    },
-    Exception {
-        id: "FS-id.2.2",
-        reason: "issue 243 JSON proposal proof pending",
-    },
-    Exception {
-        id: "FS-id.2.3",
-        reason: "issue 243 explanation proof pending",
-    },
-    Exception {
-        id: "FS-id.3",
-        reason: "issue 243 slug derivation proof pending",
-    },
-    Exception {
-        id: "FS-id.5",
-        reason: "issue 243 collision proof pending",
-    },
-    Exception {
-        id: "FS-id.6",
-        reason: "issue 243 exit-code proof pending",
-    },
-    Exception {
-        id: "FS-check.3.19",
-        reason: "issue 243 named orphan proof pending",
-    },
-    Exception {
-        id: "FS-check.3.20",
-        reason: "issue 243 invalid value declaration proof pending",
-    },
-    Exception {
-        id: "FS-check.3.21",
-        reason: "issue 243 invalid binding proof pending",
-    },
-    Exception {
-        id: "FS-check.3.22",
-        reason: "issue 243 value mismatch proof pending",
-    },
-    Exception {
-        id: "FS-check.6",
-        reason: "issue 243 current watch rejection proof pending",
-    },
-    Exception {
-        id: "FS-output-shapes.1",
-        reason: "issue 243 diagnostic JSON proof pending",
-    },
-    Exception {
-        id: "FS-output-shapes.2",
-        reason: "issue 243 empty JSON proof pending",
-    },
-    Exception {
-        id: "FS-output-shapes.5.1",
-        reason: "issue 243 refs JSON proof pending",
-    },
-    Exception {
-        id: "FS-output-shapes.6",
-        reason: "issue 243 CLI/config failure proof pending",
-    },
-    Exception {
-        id: "FS-errors.1",
-        reason: "issue 243 stream placement proof pending",
-    },
-    Exception {
-        id: "FS-errors.2.4",
-        reason: "issue 243 success marker proof pending",
-    },
-    Exception {
-        id: "FS-errors.6",
-        reason: "issue 243 init transcript proof pending",
-    },
-    Exception {
-        id: "FS-config.3.4.3",
-        reason: "issue 243 kind-title proof pending",
-    },
-    Exception {
-        id: "FS-config.3.5.3",
-        reason: "issue 243 linked-directory exclusion proof pending",
-    },
-    Exception {
-        id: "FS-config.3.5.4",
-        reason: "issue 243 physical-file deduplication proof pending",
-    },
-    Exception {
-        id: "FS-config.3.9.1",
-        reason: "issue 243 citation-level proof pending",
-    },
-    Exception {
-        id: "FS-show.2.3.3",
-        reason: "issue 243 inline section query proof pending",
-    },
-    Exception {
-        id: "FS-show.2.3.4",
-        reason: "issue 243 broken stub proof pending",
-    },
-    Exception {
-        id: "FS-refs.3.1",
-        reason: "issue 243 text refs proof pending",
-    },
-    Exception {
-        id: "FS-list.3.2",
-        reason: "issue 243 JSON list proof pending",
-    },
-    Exception {
-        id: "FS-completions.3",
-        reason: "issue 243 completion determinism proof pending",
-    },
-    Exception {
-        id: "FS-values.2.2",
-        reason: "issue 243 JSON value-shape proof pending",
-    },
-    Exception {
-        id: "FS-values.2.3",
-        reason: "issue 243 duplicate value proof pending",
-    },
-    Exception {
-        id: "FS-init-fixtures.2",
-        reason: "issue 243 docs-form final-tree proof pending",
-    },
-    Exception {
-        id: "FS-init-fixtures.3",
-        reason: "issue 243 idempotence and force proof pending",
-    },
-    Exception {
-        id: "FS-init-fixtures.4",
-        reason: "issue 243 usage no-write proof pending",
-    },
-    Exception {
-        id: "FS-init-fixtures.5",
-        reason: "issue 243 dry-run no-write proof pending",
-    },
-    Exception {
-        id: "FS-config.5",
-        reason: "version-gate proof needs a precise mapping audit",
-    },
-    Exception {
-        id: "FS-examples.2",
-        reason: "the example catalog is measured across the runner and docs",
-    },
-    Exception {
-        id: "FS-examples.3",
-        reason: "example explanation proof spans the runner and docs",
-    },
-    Exception {
-        id: "FS-examples.4",
-        reason: "example maintenance proof spans the runner and docs",
-    },
-    Exception {
-        id: "FS-fmt.2.1",
-        reason: "the broad formatter input matrix needs a proof audit",
-    },
-    Exception {
-        id: "FS-fmt.6.8",
-        reason: "the cross-reference fixture matrix needs a proof audit",
-    },
-    Exception {
-        id: "FS-fmt.7.5",
-        reason: "the formatter idempotence matrix needs a proof audit",
-    },
-    Exception {
-        id: "FS-init.2.3.3",
-        reason: "generated citation-form proof needs a precise mapping audit",
-    },
-    Exception {
-        id: "FS-inline-citation-style.3.2",
-        reason: "the multi-case note boundary needs a proof audit",
-    },
-    Exception {
-        id: "FS-inline-citation-style.4.3",
-        reason: "the formatter boundary needs a proof audit",
-    },
-    Exception {
-        id: "FS-lsp.3",
-        reason: "shared config parity across CLI and LSP needs a proof audit",
-    },
+    Exception { id: "FS-fetch.1", reason: "issue 243 local selection proof pending" },
+    Exception { id: "FS-fetch.5", reason: "issue 243 bounded folder write proof pending" },
+    Exception { id: "FS-id.2.2", reason: "issue 243 JSON proposal proof pending" },
+    Exception { id: "FS-id.2.3", reason: "issue 243 explanation proof pending" },
+    Exception { id: "FS-id.3", reason: "issue 243 slug derivation proof pending" },
+    Exception { id: "FS-id.5", reason: "issue 243 collision proof pending" },
+    Exception { id: "FS-id.6", reason: "issue 243 exit-code proof pending" },
+    Exception { id: "FS-check.3.19", reason: "issue 243 named orphan proof pending" },
+    Exception { id: "FS-check.3.20", reason: "issue 243 invalid value declaration proof pending" },
+    Exception { id: "FS-check.3.21", reason: "issue 243 invalid binding proof pending" },
+    Exception { id: "FS-check.3.22", reason: "issue 243 value mismatch proof pending" },
+    Exception { id: "FS-check.6", reason: "issue 243 current watch rejection proof pending" },
+    Exception { id: "FS-output-shapes.1", reason: "issue 243 diagnostic JSON proof pending" },
+    Exception { id: "FS-output-shapes.2", reason: "issue 243 empty JSON proof pending" },
+    Exception { id: "FS-output-shapes.5.1", reason: "issue 243 refs JSON proof pending" },
+    Exception { id: "FS-output-shapes.6", reason: "issue 243 CLI/config failure proof pending" },
+    Exception { id: "FS-errors.1", reason: "issue 243 stream placement proof pending" },
+    Exception { id: "FS-errors.2.4", reason: "issue 243 success marker proof pending" },
+    Exception { id: "FS-errors.6", reason: "issue 243 init transcript proof pending" },
+    Exception { id: "FS-config.3.4.3", reason: "issue 243 kind-title proof pending" },
+    Exception { id: "FS-config.3.5.3", reason: "issue 243 linked-directory exclusion proof pending" },
+    Exception { id: "FS-config.3.5.4", reason: "issue 243 physical-file deduplication proof pending" },
+    Exception { id: "FS-config.3.9.1", reason: "issue 243 citation-level proof pending" },
+    Exception { id: "FS-show.2.3.3", reason: "issue 243 inline section query proof pending" },
+    Exception { id: "FS-show.2.3.4", reason: "issue 243 broken stub proof pending" },
+    Exception { id: "FS-refs.3.1", reason: "issue 243 text refs proof pending" },
+    Exception { id: "FS-list.3.2", reason: "issue 243 JSON list proof pending" },
+    Exception { id: "FS-completions.3", reason: "issue 243 completion determinism proof pending" },
+    Exception { id: "FS-values.2.2", reason: "issue 243 JSON value-shape proof pending" },
+    Exception { id: "FS-values.2.3", reason: "issue 243 duplicate value proof pending" },
+    Exception { id: "FS-init-fixtures.2", reason: "issue 243 docs-form final-tree proof pending" },
+    Exception { id: "FS-init-fixtures.3", reason: "issue 243 idempotence and force proof pending" },
+    Exception { id: "FS-init-fixtures.4", reason: "issue 243 usage no-write proof pending" },
+    Exception { id: "FS-init-fixtures.5", reason: "issue 243 dry-run no-write proof pending" },
+    Exception { id: "FS-config.5", reason: "version-gate proof needs a precise mapping audit" },
+    Exception { id: "FS-examples.2", reason: "the example catalog is measured across the runner and docs" },
+    Exception { id: "FS-examples.3", reason: "example explanation proof spans the runner and docs" },
+    Exception { id: "FS-examples.4", reason: "example maintenance proof spans the runner and docs" },
+    Exception { id: "FS-fmt.2.1", reason: "the broad formatter input matrix needs a proof audit" },
+    Exception { id: "FS-fmt.6.8", reason: "the cross-reference fixture matrix needs a proof audit" },
+    Exception { id: "FS-fmt.7.5", reason: "the formatter idempotence matrix needs a proof audit" },
+    Exception { id: "FS-init.2.3.3", reason: "generated citation-form proof needs a precise mapping audit" },
+    Exception { id: "FS-inline-citation-style.3.2", reason: "the multi-case note boundary needs a proof audit" },
+    Exception { id: "FS-inline-citation-style.4.3", reason: "the formatter boundary needs a proof audit" },
+    Exception { id: "FS-lsp.3", reason: "shared config parity across CLI and LSP needs a proof audit" },
 ];
 
 fn repository_root() -> PathBuf {
