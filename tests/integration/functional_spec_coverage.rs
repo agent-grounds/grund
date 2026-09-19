@@ -177,7 +177,10 @@ const TEMPORARY_EXCEPTIONS: &[Exception<'static>] = &[
 ];
 
 fn repository_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .expect("canonical repository root")
 }
 
 fn is_live_test_source(root: &Path, file: &Path) -> bool {
@@ -205,6 +208,8 @@ fn is_live_test_source(root: &Path, file: &Path) -> bool {
 }
 
 fn repository_evidence(root: &Path, catalog: &Findings) -> BTreeSet<String> {
+    // §AR-goal-measurement.1: source paths and their filter share the scanner's canonical root.
+    let root = root.canonicalize().expect("canonical evidence root");
     let mut evidence = BTreeSet::new();
     let cases = fs::read_dir(root.join("tests/e2e/cases")).expect("read e2e cases");
     for case in cases {
@@ -228,7 +233,7 @@ fn repository_evidence(root: &Path, catalog: &Findings) -> BTreeSet<String> {
                 citation.namespace.is_none()
                     && citation.has_marker
                     && citation.id.kind == "FS"
-                    && is_live_test_source(root, &citation.file)
+                    && is_live_test_source(&root, &citation.file)
             })
             .filter_map(|citation| {
                 let slug = citation.id.slug.as_deref()?;
@@ -437,5 +442,70 @@ fn newly_covered_temporary_entry_must_be_retired() {
     assert_eq!(
         functional_spec_coverage_problems(&catalog, &evidence, no_exceptions(), &temporary),
         [CoverageProblem::CoveredException("FS-coverage.1.1".into())]
+    );
+}
+
+#[test]
+fn repository_evidence_counts_sources_and_excludes_its_own_synthetic_proofs() {
+    let fixture = Fixture::new();
+    for (path, contents) in [
+        (
+            "crates/sample/src/nested/tests_behavior.rs",
+            "// §FS-proof.unit\n",
+        ),
+        ("crates/sample/tests/behavior.rs", "// §FS-proof.crate\n"),
+        (
+            "tests/integration/behavior.rs",
+            "// §FS-proof.integration\n",
+        ),
+        (
+            "tests/integration/functional_spec_coverage.rs",
+            "// §FS-proof.gate\nconst INVENTORY: &str = \"FS-proof.inventory\";\n",
+        ),
+        (
+            "crates/sample/src/implementation.rs",
+            "// §FS-proof.production\n",
+        ),
+        (
+            "tests/e2e/cases/synthetic/repo/proof.rs",
+            "// §FS-proof.synthetic\n",
+        ),
+        (
+            "tests/e2e/cases/synthetic/spec.refs",
+            "FS-coverage.1\nFS-proof.manifest\n",
+        ),
+        (
+            "tests/integration/inventory.md",
+            "FS-proof.inventory\n<§>FS-proof.escaped\n",
+        ),
+    ] {
+        let file = fixture.root.join(path);
+        fs::create_dir_all(file.parent().unwrap()).expect("create evidence directory");
+        fs::write(file, contents).expect("write evidence fixture");
+    }
+    let root = fixture.root.join("tests/integration/../..");
+    let catalog = scan(&root).expect("scan evidence fixture through a lexical root");
+    assert!(
+        catalog.citations.iter().any(|citation| {
+            citation
+                .file
+                .ends_with("tests/integration/functional_spec_coverage.rs")
+                && citation.section.as_deref() == Some("gate")
+        }),
+        "self-exclusion must discard a citation actually returned by the scanner"
+    );
+    assert_eq!(
+        repository_evidence(&root, &catalog),
+        BTreeSet::from(
+            [
+                "FS-coverage.1",
+                "FS-proof.unit",
+                "FS-proof.crate",
+                "FS-proof.integration",
+                "FS-proof.manifest",
+            ]
+            .map(str::to_string)
+        ),
+        "only exact manifests and live citations in the approved sources count"
     );
 }
