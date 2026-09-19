@@ -19,7 +19,9 @@ Fields:
 - `message` is the same lowercase, no-terminal-period text used in text mode.
 - `sites` is `null` for single-site diagnostics, or a sorted array of `{ "path": <path>, "line": <line> }` for multi-site diagnostics.
 
-`check --format=json` emits diagnostic objects as NDJSON on stdout for graph findings. Run-level warnings such as empty scans, and line-less mid-walk read failures, emit the same diagnostic object shape on stderr. Launch-time CLI failures stay raw `error:` text on stderr even when `--format=json` was requested.
+`check --format=json` splits these objects across streams as [§FS-errors.5](FS-errors.md#5-json-format) specifies: graph findings as NDJSON on stdout, run-level warnings such as empty scans and line-less mid-walk read failures on stderr. Launch-time CLI failures stay raw `error:` text on stderr even when `--format=json` was requested.
+
+### 1.1 Value mismatch
 
 A value mismatch uses `code: "value-mismatch"`, the binding as its primary `path`/`line`, and the declaration as the one `sites` entry. The text embedded in `message` includes that declaration's `path:line`; the object and text line therefore carry the same actionable content ([§FS-values.5.2](FS-values.md#52-fixed-value-errors)).
 
@@ -41,8 +43,9 @@ A clean non-empty JSON check emits nothing on stdout and nothing on stderr. Ther
 
 ## 3. Text report ordering
 
-Text diagnostics are grouped by channel: every error first, then every warning,
-then opt-in suggestions. Inside each group they sort bytewise by `(path, line,
+Text diagnostics are grouped by channel as
+[§FS-errors.4](FS-errors.md#4-determinism) fixes: every error, then every
+warning, then opt-in suggestions, each group sorted bytewise by `(path, line,
 message)`. Each located line keeps its jump-friendly location prefix and places
 the channel immediately after it. Example stdout for a failing `check` whose
 warning sorts first by path:
@@ -93,12 +96,6 @@ Fields:
 {"id":"FS-001-alpha","section":null,"body":"# FS-001-alpha: Alpha\n\nAlpha overview.\n","path":"docs/functional-spec/FS-001-alpha.md","line":1}
 ```
 
-For an E2E case, `show --format=json` uses the E2E manifest shape from [§FS-show.2.4](FS-show.md#24-e2e-cases). `path` is the case directory under the configured `E2E` home; `e2e/cases/<name>` is the example produced by the conventional configuration that selects that folder.
-
-```json
-{"id":"E2E-login","kind":"E2E","path":"e2e/cases/login","args":[],"expected_exit":0,"fixtures":["expected.exit","expected.stdout","repo/docs/functional-spec/FS-001-login.md"]}
-```
-
 Failed queries emit one diagnostic object on stderr and leave stdout empty; launch-time errors stay raw `error:` text.
 
 ### 4.1 `show --batch --format=json`
@@ -124,7 +121,17 @@ The batch-only diagnostic for an unknown alias uses code `unknown-project`, the
 same stable code as citation resolution, and the single-show message without its
 CLI `error:` prefix (including the `known aliases:` or standalone `note:` line).
 
-For a JSON value declaration, every read mode's `body` is the exact available member or element source slice and `path`/`line` is that slice's exact span start; no Markdown heading or title is synthesized ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
+### 4.2 E2E cases
+
+For an E2E case, `show --format=json` uses the E2E manifest shape from [§FS-show.2.4](FS-show.md#24-e2e-cases). `path` is the case directory under the configured `E2E` home; `e2e/cases/<name>` is the example produced by the conventional configuration that selects that folder.
+
+```json
+{"id":"E2E-login","kind":"E2E","path":"e2e/cases/login","args":[],"expected_exit":0,"fixtures":["expected.exit","expected.stdout","repo/docs/functional-spec/FS-001-login.md"]}
+```
+
+### 4.3 JSON value declarations
+
+For a JSON value declaration, every read mode's `body` is the exact available member or element source slice and `path`/`line` is that slice's exact span start; no Markdown heading or title is synthesized ([§FS-values.6.2](FS-values.md#62-json-declarations-in-the-catalog)).
 
 ## 5. `list --format=json`
 
@@ -150,14 +157,7 @@ Fields:
 {"kind":"AR","title":"How: high-level implementation, structure, and design","home":"docs/architecture","count":1}
 ```
 
-`list --size --format=json` instead emits one object per declaration and citable section site, in the size-row order defined by [§FS-list.3.4](FS-list.md#34---size--per-point-lead-and-full-body-measurements):
-
-```json
-{"id":"FS-001-login","section":null,"kind":"FS","path":"docs/functional-spec/FS-001-login.md","line":1,"stub":false,"defines":null,"duplicate":false,"lead_lines":2,"full_lines":5,"lead_words":7,"full_words":18,"lead_bytes":41,"full_bytes":109}
-{"id":"FS-001-login","section":"1","kind":"FS","path":"docs/functional-spec/FS-001-login.md","line":6,"stub":false,"defines":null,"duplicate":false,"lead_lines":3,"full_lines":3,"lead_words":9,"full_words":9,"lead_bytes":57,"full_bytes":57}
-```
-
-The fixed prefix fields are `id`, `section`, `kind`, `path`, `line`, `stub`, `defines`, and `duplicate`. A workspace row begins with `project`; its `id` remains workspace-qualified ([§FS-workspace.8.3](FS-workspace.md#83-grund-list)). Selected unit pairs follow in caller order as `lead_<unit>`, `full_<unit>`; bare `--size` therefore emits `lines`, `words`, then `bytes`. Unselected pairs are absent. A broken stub uses `null` for each selected measurement. These are point-site records rather than declaration-summary records, so `title` and `refs` are absent.
+`list --size --format=json` emits point-site rows instead (§5.2).
 
 ### 5.1 `refs --format=json`
 
@@ -169,9 +169,35 @@ The fixed prefix fields are `id`, `section`, `kind`, `path`, `line`, `stub`, `de
 
 `count` is the number of citation sites in the file; `lines` is the sorted, de-duplicated set of 1-indexed source lines containing those sites.
 
+### 5.2 `list --size --format=json`
+
+`list --size --format=json` emits one object per declaration and citable section site, in the size-row order defined by [§FS-list.3.4](FS-list.md#34---size--per-point-lead-and-full-body-measurements):
+
+```json
+{"id":"FS-001-login","section":null,"kind":"FS","path":"docs/functional-spec/FS-001-login.md","line":1,"stub":false,"defines":null,"duplicate":false,"lead_lines":2,"full_lines":5,"lead_words":7,"full_words":18,"lead_bytes":41,"full_bytes":109}
+{"id":"FS-001-login","section":"1","kind":"FS","path":"docs/functional-spec/FS-001-login.md","line":6,"stub":false,"defines":null,"duplicate":false,"lead_lines":3,"full_lines":3,"lead_words":9,"full_words":9,"lead_bytes":57,"full_bytes":57}
+```
+
+The fixed prefix fields are `id`, `section`, `kind`, `path`, `line`, `stub`, `defines`, and `duplicate`. A workspace row begins with `project`; its `id` remains workspace-qualified ([§FS-workspace.8.3](FS-workspace.md#83-grund-list)). Selected unit pairs follow in caller order as `lead_<unit>`, `full_<unit>`; bare `--size` therefore emits `lines`, `words`, then `bytes`. Unselected pairs are absent. A broken stub uses `null` for each selected measurement. These are point-site records rather than declaration-summary records, so `title` and `refs` are absent.
+
 ## 6. CLI and config failures
 
-CLI-level failures use raw text on stderr, not JSON, because the command did not reach its data-producing phase. During grund 0.14.0, `refs` preserves that former classification for resolver-rejected operands and warns about the 0.15.0 change. The invalid-ID text and JSON invocations both write exactly:
+CLI-level failures use raw text on stderr, not JSON, because the command did not reach its data-producing phase:
+
+```text
+error: grund.toml:2: unknown config key `strcit`
+```
+
+This config validation example exits `1` for `grund config validate` and `2`
+when the same invalid config blocks another subcommand.
+
+### 6.1 `refs` resolver rejections across 0.14.0 and 0.15.0
+
+During grund 0.14.0, `refs` preserves the former CLI-level classification for resolver-rejected operands and warns about the 0.15.0 change ([§FS-refs.4](FS-refs.md#4-exit-codes)); at 0.15.0 the rejection becomes a failed query with exit `1`. §6.1.1 and §6.1.2 give an invalid ID's exact output at each stage; an ambiguous number-only shorthand follows the same stages, without a hint.
+
+#### 6.1.1 In 0.14.0
+
+The invalid-ID text and JSON invocations both write exactly:
 
 ```text
 error: invalid ID `FS-bar`
@@ -179,11 +205,11 @@ hint: this repo's [id] format is `{kind}-{number}-{slug}` (run `grund config sho
 warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.15.0
 ```
 
-```text
-error: grund.toml:2: unknown config key `strcit`
-```
+The `refs` example exits `2` and leaves stdout empty in 0.14.0.
 
-The `refs` example exits `2` and leaves stdout empty in 0.14.0. At 0.15.0 it becomes the failed-query text shape below, exit `1`; JSON emits the one object shown and no hint, warning, or stdout:
+#### 6.1.2 From 0.15.0
+
+The same example becomes the failed-query text shape below, exit `1`; JSON emits the one object shown and no hint, warning, or stdout:
 
 ```text
 invalid ID `FS-bar`
@@ -194,12 +220,13 @@ hint: this repo's [id] format is `{kind}-{number}-{slug}` (run `grund config sho
 {"severity":"error","path":null,"line":null,"code":"invalid-id","message":"invalid ID `FS-bar`","sites":null}
 ```
 
-An ambiguous number-only shorthand follows the same stages, without a hint. Its
-0.15.0 JSON code is `ambiguous` and `sites` is `null`. The config validation
-example exits `1` for `grund config validate` and `2` when the same invalid
-config blocks another subcommand.
+An ambiguous number-only shorthand's 0.15.0 JSON code is `ambiguous` and `sites` is `null`.
 
 ## 7. Stream matrix
+
+For each case above, §7.1 lists what reaches stdout and stderr and the exit code.
+
+### 7.1 The matrix
 
 | Case | stdout | stderr | Exit |
 |------|--------|--------|------|
@@ -218,4 +245,4 @@ config blocks another subcommand.
 | invalid config blocking another command | empty | raw `error: <path>:<line>:` text | `2` |
 | semantic value finding, text | located finding lines | empty | `1` |
 | semantic value finding, JSON | diagnostic NDJSON with declaration `sites` | empty | `1` |
-| unreadable or syntactically incomplete home JSON | partial findings if any | incomplete-scan diagnostic | `2` |
+| home JSON that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete | partial findings if any | incomplete-scan diagnostic | `2` |

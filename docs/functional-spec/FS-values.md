@@ -4,7 +4,7 @@
 
 ## 1. Per-kind opt-in and identity
 
-A `[[kinds]]` row opts whole declarations in only with `values = true` ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations)). The row must be citable, must declare exactly one existing `file` or `folder` home, and that normalized home must be inside the project root. `values` is absent and false by default. It does not create a kind, change the configured ID grammar, or make any whole declaration outside the row's existing home authoritative.
+A `[[kinds]]` row opts whole declarations in only with `values = true`, which is absent and false by default; [§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations) fixes which rows may carry it. It does not create a kind, change the configured ID grammar, or make any whole declaration outside the row's existing home authoritative.
 
 Independently, the exact section marker in §2.4 opts that one numbered section into value authority in any supported scanned Markdown declaration or source doc-comment. It needs no `values = true`, does not make its enclosing declaration or sibling sections authoritative, and adds no configuration key or identifier grammar.
 
@@ -14,7 +14,7 @@ The declaration ID is a normal full local ID of that kind. Its slug carries stab
 
 ### 2.1 Markdown declarations
 
-A whole-declaration Markdown value is an ordinary declaration in its opted-in kind home. Its value fields are the declaration's immediate citable child headings and must be one nonempty contiguous run `.1` through `.N`, where `N >= 1`. Each heading uses the configured strict depth for that coordinate; gaps, zero or leading-zero coordinates, nested or named citable sections, and duplicate fields make the declaration invalid. The separately marked section form is §2.4; its descendants do not weaken this declaration-rooted grammar.
+A whole-declaration Markdown value is an ordinary declaration in its opted-in kind home. Its value fields are the declaration's immediate citable child headings and must be one nonempty contiguous run `.1` through `.N`, where `N >= 1`. Each heading uses the configured strict depth for that coordinate; gaps, zero or leading-zero coordinates, nested or named citable sections, and duplicate fields make the declaration invalid. A marked root (§2.4) is a separate form; its descendants do not weaken this declaration-rooted grammar.
 
 The component is the entire heading title after the numeric coordinate. It must fit on that physical line, be nonempty, and have no leading or trailing whitespace, backtick, or control character. Lead prose, bodies below component headings, and plain non-citable headings carry no value. A component is numeric only when its complete text matches JSON number grammar; otherwise it is a string.
 
@@ -24,9 +24,13 @@ JSON is an equivalent declaration format at the existing kind home, never a sepa
 
 Home JSON is project catalog input, not general scan input. It is read once regardless of `[scan].extensions`, ignore/include/exclude, an explicit command path, or `--full`; those controls neither suppress home JSON nor discover another source. JSON sources never contribute citations.
 
+#### 2.2.1 Source shape
+
 A source is one top-level object. Every ordered member key is a full, unaliased local ID of the owning kind and every member value is a nonempty array. Array element `i` declares component `i + 1`; only JSON numbers and strings are valid elements. A decoded string component must be nonempty and contain no edge whitespace, backtick, or control character, matching the Markdown component boundary. Empty or non-object roots; wrong-kind, invalid, or qualified keys; empty arrays; and null, boolean, object, nested-array, or non-finite/malformed number components are invalid declarations.
 
-The reader preserves member order, duplicate keys, raw number and string spellings, decoded strings, and exact key/member/element spans before building lookup maps. It never applies a JSON library's “last key wins” behavior. A missing, unreadable, malformed-UTF-8, or syntactically incomplete source is a scan-incomplete failure (§5.3); readable semantic violations are ordinary value errors.
+#### 2.2.2 Reader fidelity
+
+The reader preserves member order, duplicate keys, raw number and string spellings, decoded strings, and exact key/member/element spans before building lookup maps. It never applies a JSON library's “last key wins” behavior. A source that §5.3 counts as incomplete is an incomplete-scan failure; readable semantic violations are ordinary value errors.
 
 ### 2.3 Duplicates and ownership
 
@@ -34,13 +38,21 @@ A JSON key repeated in one object, the same ID declared across JSON files, a Mar
 
 ### 2.4 Embedded section value roots
 
-An author marks one existing citable numeric section as a value root by ending its heading content with one ASCII space and the byte-exact lowercase suffix `<!-- grund:value -->`, followed only by optional trailing whitespace. The section may occur at any numeric depth inside any scanned Markdown declaration or supported source doc-comment, independently of the enclosing kind's `values` setting and configured home. Its canonical identity remains the declaration ID plus its existing dotted section path: a root at `FS-pricing.2.3` owns components `FS-pricing.2.3.1` through `.N`. No synthetic declaration, ID, section, or resolver is created.
+An author makes one existing citable numeric section a marked root by ending its heading content with one ASCII space and the byte-exact lowercase suffix `<!-- grund:value -->`, followed only by optional trailing whitespace. The section may occur at any numeric depth inside any scanned Markdown declaration or supported source doc-comment, independently of the enclosing kind's `values` setting and configured home. Its canonical identity remains the declaration ID plus its existing dotted section path: a marked root at `FS-pricing.2.3` owns components `FS-pricing.2.3.1` through `.N`. No synthetic declaration, ID, section, or resolver is created. A misspelling, different case, missing or extra space inside the suffix, incomplete suffix, or other lookalike is opaque prose and grants no value authority or value diagnostic.
 
-For source declarations the scanner recognizes the marker after removing the same configured comment wrapper used for headings: `//`, `///`, `//!`, `#`, `;`, and `--` line comments; `/* ... */` and `*` continuation lines used by Javadoc/JSDoc and other supported block doc-comments; and content inside enabled Python `"""` and `'''` docstrings. The language adds no alternate spelling. A misspelling, different case, missing or extra space inside the suffix, incomplete suffix, or other lookalike is opaque prose and grants no value authority or value diagnostic.
+#### 2.4.1 Recognition in source doc-comments
+
+For source declarations the scanner recognizes the marker after removing the same configured comment wrapper used for headings: `//`, `///`, `//!`, `#`, `;`, and `--` line comments; `/* ... */` and `*` continuation lines used by Javadoc/JSDoc and other supported block doc-comments; and content inside enabled Python `"""` and `'''` docstrings. The language adds no alternate spelling.
+
+#### 2.4.2 Semantic content and raw bytes
 
 The marker is removed only from semantic heading content. The section title, derived Markdown anchor, LSP title and hover token, and semantic title range exclude the separating space and marker. Raw source spans remain unchanged: `show` includes the authored marker on a verbatim root heading, formatter input and output retain it byte for byte, and diagnostics may select the marker or offending source line.
 
+#### 2.4.3 The component run
+
 A valid marked root owns exactly one nonempty, physical-order run of immediate numeric children, with relative coordinates `.1` through `.N` contiguous and in order. Each child is written exactly one heading level below the root and satisfies §2.1's one-line component-title grammar; its existing section record and exact value span are the component. Blank lines and the outer delimiters of a source block comment are harmless. Every other nonblank line within the root is invalid: root lead prose, a component body, a named or plain child heading, a grandchild, and a child with invalid component text are reported at that line. Zero components is reported at the root marker. A gap or out-of-order coordinate is reported at each heading that differs from the next expected index. A duplicate retains [§FS-check.3.3](FS-check.md#33-duplicate-declaration) or the ordinary duplicate-section finding and also receives `invalid-value-declaration` at its duplicate heading.
+
+#### 2.4.4 Misplaced and overlapping marks
 
 An exact marker on a plain or named heading, an empty or malformed numeric heading, or a heading outside a declaration grants no authority and is `invalid-value-declaration` at the marker; the same bytes in ordinary prose are inert. Ordinary section-depth findings own a malformed root heading and run before value comparison. Multiple marked roots in one declaration are valid only when neither root path is an ancestor of the other. Nested or overlapping marks invalidate both roots and report the inner marker. A marker inside a whole-declaration Markdown value likewise invalidates the marked root while the existing declaration-root authority wins.
 
@@ -54,7 +66,11 @@ The sole binding form is a nonempty single-backtick-delimited authored literal, 
 `1200` (§CONST-field-price.1)
 ```
 
-The marker is mandatory even when `[reference] strict = false`. The literal may not be empty or multiline and may not have edge whitespace, a backtick, or a control character. Tabs or extra/missing spaces, absent parentheses, a missing marker or field, and zero, leading-zero, named, or otherwise nonnumeric component coordinates are invalid attempted bindings. A delimited form aimed at a marked root itself or below one of its components is also `invalid-value-binding`. An unbackticked adjacent token, a bare value citation, or the same delimited shape aimed at an ordinary unmarked section or a whole declaration whose kind lacks `values = true` remains ordinary prose and one ordinary citation; it is not inferred as an attempted binding and is not compared.
+The marker is mandatory even when `[reference] strict = false`. The literal may not be empty or multiline and may not have edge whitespace, a backtick, or a control character.
+
+#### 3.1.1 Invalid attempts and non-attempts
+
+Tabs or extra/missing spaces, absent parentheses, a missing marker or field, and zero, leading-zero, named, or otherwise nonnumeric component coordinates are invalid attempted bindings. A delimited form aimed at a marked root itself or below one of its components is also `invalid-value-binding`. An unbackticked adjacent token, a bare value citation, or the same delimited shape aimed at an ordinary unmarked section or a whole declaration whose kind lacks `values = true` remains ordinary prose and one ordinary citation; it is not inferred as an attempted binding and is not compared.
 
 ### 3.2 Recognized text contexts
 
@@ -70,13 +86,13 @@ Otherwise both components must be strings and their decoded Unicode scalar seque
 
 ### 5.1 Resolve before comparison
 
-Every binding citation uses the existing local/workspace declaration and dotted-section resolver ([§FS-workspace.4](FS-workspace.md#4-resolution)). For an embedded binding, its final numeric segment selects the component and its parent path must resolve uniquely to one valid marked root that records that immediate child. Unknown alias, dangling or duplicate declaration, duplicate or missing section, invalid root, and noncanonical shorthand findings run first and suppress value comparison at that site. Invalid declaration or resolution also suppresses mismatch; malformed binding syntax remains independently reportable. A mismatch exists only after one unique valid authority and component resolve.
+Every binding citation uses the existing local/workspace declaration and dotted-section resolver ([§FS-workspace.4](FS-workspace.md#4-resolution)). For a binding to a marked root, its final numeric segment selects the component and its parent path must resolve uniquely to one valid marked root that records that immediate child. Unknown alias, dangling or duplicate declaration, duplicate or missing section, invalid root, and noncanonical shorthand findings run first and suppress value comparison at that site. Invalid declaration or resolution also suppresses mismatch; malformed binding syntax remains independently reportable. A mismatch exists only after one unique valid authority and component resolve.
 
 ### 5.2 Fixed value errors
 
 Three fixed-severity errors are reported and exit `1`:
 
-- `invalid-value-declaration` identifies a readable whole declaration or marked section root whose value grammar or marker location is invalid.
+- `invalid-value-declaration` identifies a readable whole declaration or marked root whose value grammar or marker location is invalid.
 - `invalid-value-binding` identifies an attempted delimited binding whose grammar or marked-root relationship is invalid.
 - `value-mismatch` identifies a valid binding whose authored and declared components are unequal under §4.
 
@@ -88,15 +104,21 @@ docs/offer.md:7: value mismatch for CONST-field-price.1: bound `1250`, declared 
 
 ### 5.3 Incomplete input and deterministic output
 
-Invalid config stops before scanning. A missing, unreadable, or syntactically incomplete home JSON file preserves the existing incomplete-tree exit `2`; readable semantic JSON errors use exit `1`. For readable input, declaration and citation-resolution findings precede comparison as §5.1 specifies.
+Invalid config stops before scanning. A missing, unreadable, malformed-UTF-8, or syntactically incomplete home JSON source preserves the existing incomplete-scan exit `2`; readable semantic JSON errors use exit `1`. For readable input, declaration and citation-resolution findings precede comparison as §5.1 specifies.
 
-Text and NDJSON use the existing streams, schema, and deterministic `(path, line, message)` ordering ([§FS-output-shapes.1](FS-output-shapes.md#1-diagnostic-object), [§FS-output-shapes.3](FS-output-shapes.md#3-text-report-ordering)). The NDJSON `code`, message, primary location, and declaration `sites` describe the same finding as text. A clean text check prints `success`; a clean JSON check remains empty.
+Text and NDJSON use the existing streams, schema, and deterministic ordering ([§FS-output-shapes.1](FS-output-shapes.md#1-diagnostic-object), [§FS-output-shapes.3](FS-output-shapes.md#3-text-report-ordering)). The NDJSON `code`, message, primary location, and declaration `sites` describe the same finding as text. A clean text check prints `success`; a clean JSON check remains empty.
 
 ## 6. Shared catalog consumers
 
-Markdown, JSON, and embedded roots enter one declaration/section catalog. An embedded root and its components keep their ordinary dotted section identities: `show` returns the queried verbatim section slice, `refs` and `cover` count the binding citation once, and shell completion continues to offer the recorded section paths without a value-specific candidate. `list` retains one row for the enclosing declaration and exposes root metadata on that row rather than inventing another row. Text appends ` [value roots: <ID.path>, <ID.path> (invalid)]` only when roots exist, ordered by canonical section path. NDJSON likewise adds an optional `"value_roots":[{"id":"<ID.path>","valid":true}]` member only on such rows; rows without roots omit it and `--summary` is unchanged ([§FS-list.2](FS-list.md#2-behaviour), [§FS-list.3](FS-list.md#3-outputs)).
+Markdown, JSON, and marked roots enter one declaration/section catalog. `refs` and `cover` count a binding's citation once, as the ordinary citation §3.2 makes it; completion offers whole-value IDs and numbered fields; and unused and duplicate checks apply normally.
 
-`list` reports JSON IDs and locations without inventing a title; `refs` and `cover` include binding citations as ordinary citations; completion offers whole-value IDs and numbered fields; and unused and duplicate checks apply normally. `id` includes JSON IDs in collision checks but remains a Markdown-oriented allocator and never writes JSON. `refs <ID.path>` and `--section <path>` retain their exact ordinary-section meanings; no root aggregate is added.
+### 6.1 Marked roots in the catalog
+
+A marked root and its components keep their ordinary dotted section identities: `show` returns the queried verbatim section slice, and shell completion continues to offer the recorded section paths without a value-specific candidate. `refs <ID.path>` and `--section <path>` retain their exact ordinary-section meanings; no root aggregate is added. `list` retains one row for the enclosing declaration and exposes root metadata on that row rather than inventing another row. Text appends ` [value roots: <ID.path>, <ID.path> (invalid)]` only when roots exist, ordered by canonical section path. NDJSON likewise adds an optional `"value_roots":[{"id":"<ID.path>","valid":true}]` member only on such rows; rows without roots omit it and `--summary` is unchanged ([§FS-list.2](FS-list.md#2-behaviour), [§FS-list.3](FS-list.md#3-outputs)).
+
+### 6.2 JSON declarations in the catalog
+
+`list` reports JSON IDs and locations without inventing a title. `id` includes JSON IDs in collision checks but remains a Markdown-oriented allocator and never writes JSON.
 
 For a JSON declaration, `show` returns the exact source member slice for an ID and exact element slice for a section. `--brief`, default, `--toc`, and `--full` collapse to that available slice, and no command synthesizes Markdown. A folder kind's generated index includes JSON IDs by linking to their JSON file without an invented Markdown anchor; a single-file JSON kind has no index, matching the existing single-file rule.
 
@@ -106,10 +128,10 @@ An unqualified binding resolves in its local project. The qualified form `<§>al
 
 ## 8. Formatting stability
 
-`fmt --cross-refs` may perform its existing trigger and safe shorthand rewrites, but it never wraps or otherwise rewrites the citation bytes inside a recognized binding: replacing `§ID` with a Markdown link would destroy the only accepted binding form. It never inserts, canonicalizes, moves, or removes an embedded value marker, and preserves its authored bytes and trailing whitespace on both `--check` and `--write` passes. Every other citation keeps the existing formatter behavior.
+`fmt --cross-refs` may perform its existing trigger and safe shorthand rewrites, but it never wraps or otherwise rewrites the citation bytes inside a recognized binding: replacing `§ID` with a Markdown link would destroy the only accepted binding form. It never inserts, canonicalizes, moves, or removes a §2.4 marker, and preserves its authored bytes and trailing whitespace on both `--check` and `--write` passes. Every other citation keeps the existing formatter behavior.
 
 ## 9. Compatibility and explicit exclusions
 
-Without `values = true`, whole-declaration and JSON discovery retain their prior absence. Without the exact §2.4 marker, no embedded root, binding record, value diagnostic, output field, or extra read occurs; unmarked sections, malformed lookalikes, citations, and prose retain byte-identical behavior and never gain authority by inference ([§FS-non-goals.2](FS-non-goals.md#2-spelling-grammar-prose-quality)). The exact previously inert marker now has the explicit meaning §2.4 assigns it. Applications may reuse opted-in JSON by reading that source directly. `grund` neither generates nor freshness-checks language modules.
+Without `values = true`, whole-declaration and JSON discovery retain their prior absence. Without the exact §2.4 marker, no marked root, binding record, value diagnostic, output field, or extra read occurs; unmarked sections, malformed lookalikes, citations, and prose retain byte-identical behavior and never gain authority by inference ([§FS-non-goals.2](FS-non-goals.md#2-spelling-grammar-prose-quality)). The exact previously inert marker now has the explicit meaning §2.4 assigns it. Applications may reuse opted-in JSON by reading that source directly. `grund` neither generates nor freshness-checks language modules.
 
-The feature adds no rendering or interpolation, inferred adjacent-value or bare-literal lint, range/unit semantics, derived arithmetic, generated artifact, target fingerprint, history, `reconcile` or `stale` command, excluded-path hint, value-aware search, generated-file policy, embedded JSON root, nested value root, or orphan relief. It does not change `[reference] strict`, scan scope or filters, custom citation markers or separators, named-section authority, whole-value Markdown/JSON behavior, or the history, AST, documentation-generation, offline, and deterministic-install non-goals ([§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do)).
+The feature adds no rendering or interpolation, inferred adjacent-value or bare-literal lint, range/unit semantics, derived arithmetic, generated artifact, target fingerprint, history, `reconcile` or `stale` command, excluded-path hint, value-aware search, generated-file policy, embedded JSON root, nested marked root, or orphan relief. It does not change `[reference] strict`, scan scope or filters, custom citation markers or separators, named-section authority, whole-value Markdown/JSON behavior, or the history, AST, documentation-generation, offline, and deterministic-install non-goals ([§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do)).
