@@ -172,15 +172,29 @@ never runs `grund fetch` from the server.
 
 Users do not run `grund-lsp` directly. The editor's LSP client spawns it as a child process when a relevant file (markdown or any extension in the configured `[scan] extensions`) is opened in a workspace containing a `grund.toml` (in either discovery location) or `AGENTS.md`, and kills it when the workspace closes. The server speaks LSP over stdio; there is no daemon, no socket, no background service. CI pipelines that happen to have `grund-lsp` installed never invoke it — the only entry point in batch contexts is the CLI.
 
-The folders in an LSP `initialize` request are config-discovery anchors, not scan boundaries. For every `workspaceFolders` entry, the server walks upward with the same discovery rules as the CLI (§3); when it finds a Grund config, it snapshots that config's project root so configured `[scan] include` paths and sibling source trees remain visible even when the editor opened only a nested directory. Entries that discover the same project root share one snapshot. Entries that discover different roots each get a snapshot. If `workspaceFolders` is absent or empty, the deprecated `rootUri` is the anchor, then the server process's current directory as the final fallback. With no discovered config, the anchor itself remains the zero-config scan root.
+#### 2.2.1 Workspace folders anchor discovery
 
-Each document is answered by at most one of those projects. A project whose root contains the document claims it — the deepest such root when project trees nest, so a member opened as its own folder answers for its own files. A project that merely *scans* the document claims it when no root contains it: `[scan] include` is a scan scope, not a fence ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)), so a parent-relative include root may reach outside the project directory, and a document there is checked by the CLI and must stay answerable in the editor. A document reachable only below a directory symlink whose canonical target is outside the project root is pruned by [§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed), so that project publishes no diagnostics for it and hover and navigation return no result. If multiple projects only reach the same external document through their scans, none owns it: choosing by folder order or root shape would guess between independent namespaces, so requests return no result and neither project's diagnostics are published for that file ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)). One owner per document is also what keeps diagnostics honest: where nested projects both read a file, the containing owner's verdict is published alone rather than merged with the other's, so a file cannot collect the same finding twice or two projects' disagreeing readings of one citation side by side.
+The folders in an LSP `initialize` request are config-discovery anchors, not scan boundaries. For every `workspaceFolders` entry, the server walks upward with the same discovery rules as the CLI (§3); when it finds a Grund config, it snapshots that config's project root so configured `[scan] include` paths and sibling source trees remain visible even when the editor opened only a nested directory. If `workspaceFolders` is absent or empty, the deprecated `rootUri` is the anchor, then the server process's current directory as the final fallback. With no discovered config under either name, the anchor itself remains the zero-config scan root, with the canonical defaults ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)).
 
-Independent projects are never merged. Identical local IDs in two editor folders are unrelated namespaces, and a reference answered from the wrong one would be a wrong citation ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
+Entries that discover the same project root share one snapshot. Entries that discover different roots each get a snapshot, and independent projects are never merged: identical local IDs in two editor folders are unrelated namespaces, and a reference answered from the wrong one would be a wrong citation ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
+
+#### 2.2.2 One project answers each document
+
+Each document is answered by at most one of those projects. A project whose root contains the document claims it — the deepest such root when project trees nest, so a member opened as its own folder answers for its own files. A project that merely *scans* the document claims it when no root contains it: `[scan] include` is a scan scope, not a fence ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)), so a parent-relative include root may reach outside the project directory, and a document there is checked by the CLI and must stay answerable in the editor.
+
+One owner per document is also what keeps diagnostics honest: where nested projects both read a file, the containing owner's verdict is published alone rather than merged with the other's, so a file cannot collect the same finding twice or two projects' disagreeing readings of one citation side by side.
+
+#### 2.2.3 A document no project answers
+
+A document reachable only below a directory symlink whose canonical target is outside the project root is pruned by [§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed), so that project publishes no diagnostics for it and hover and navigation return no result. If multiple projects only reach the same external document through their scans, none owns it: choosing by folder order or root shape would guess between independent namespaces, so requests return no result and neither project's diagnostics are published for that file ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
+
+#### 2.2.4 An unusable folder is skipped
 
 A folder the server cannot turn into a project is skipped, never fatal ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)). A folder URI with a non-`file:` scheme — editors mix virtual and remote folders into one window — is passed over with a note on stderr. So is a folder whose config will not load: a half-typed `grund.toml` in one folder reports itself and leaves that project on its last good snapshot, while every other folder in the session keeps its diagnostics current. A session with no usable folder left still starts and answers nothing, rather than exiting.
 
-The server advertises workspace-folder support with change notifications. On `workspace/didChangeWorkspaceFolders`, added folders are discovered and included by the same rules, removed folders stop contributing, and diagnostics are republished from the resulting snapshot set. Unusable entries are skipped as above, so the rest of a mixed event still applies. Keeping a nested folder that still resolves to a project keeps that project active even when another folder for the same project is removed. Thus the initial folder order and later add/remove order cannot silently narrow references or diagnostics.
+#### 2.2.5 Folder changes
+
+The server advertises workspace-folder support with change notifications. On `workspace/didChangeWorkspaceFolders`, added folders are discovered and included by the same rules, removed folders stop contributing, and diagnostics are republished from the resulting snapshot set. Unusable entries are skipped as §2.2.4 says, so the rest of a mixed event still applies. Keeping a nested folder that still resolves to a project keeps that project active even when another folder for the same project is removed. Thus the initial folder order and later add/remove order cannot silently narrow references or diagnostics.
 
 ### 2.3 Editor configuration (one-time, per editor)
 
@@ -190,9 +204,9 @@ The user-facing LSP setup guide ships example LSP-client snippets for the editor
 - **Neovim** — a built-in LSP snippet, compatible with `nvim-lspconfig`-based setups.
 - **Zed** — central LSP registry entry; one config block locally if not yet upstreamed.
 - **Emacs** — `eglot-server-programs` or `lsp-mode` registration (~5 lines).
-- **VSCode** — install a generic LSP client extension and point it at `grund-lsp`. A first-party VSCode extension is **not** shipped ([§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do)).
+- **VSCode** — install a generic LSP client extension and point it at `grund-lsp`. A first-party VSCode extension is **not** shipped ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)).
 - **Sublime Text** — LSP package client configuration for Markdown and scanned source syntaxes.
-- **IntelliJ family** — generate the import directory with §2.4, then explicitly import it through LSP4IJ's **Settings | Languages & Frameworks | Language Servers**, **+ | New Language Server**, **Import from custom template...** flow.
+- **IntelliJ family** — generate the import directory with §2.4.1, then explicitly import it through LSP4IJ's **Settings | Languages & Frameworks | Language Servers**, **+ | New Language Server**, **Import from custom template...** flow.
 
 Adding a new editor's snippet to the user-facing guide is a small contribution; it does not require a release.
 
@@ -200,37 +214,51 @@ Adding a new editor's snippet to the user-facing guide is a small contribution; 
 
 `grund-lsp integrations` is the batch surface for editor-client configuration carried by the installed `grund-lsp` version. It is distinct from `grund integrations`, which configures clickable-citation rendering clients ([§FS-integrations](FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations)). The initial catalog contains one entry, `lsp4ij`, with a one-line description. Listing prints the catalog on stdout, writes nothing, leaves stderr empty, and exits `0`.
 
-`grund-lsp integrations lsp4ij` is a read-only preview. It prints the complete generated `template.json` object followed by the exact explicit IntelliJ import steps from §2.3 on stdout, writes no file or directory, leaves stderr empty, and exits `0`. `grund-lsp integrations lsp4ij --write <directory>` treats `<directory>` as the LSP4IJ import root and creates exactly `template.json` and `README.md`; success prints `created <directory>` and the import steps on stdout and exits `0`. Repeating the write against those two byte-identical files is an idempotent success that prints `unchanged <directory>` and the same steps. A pre-existing root with a missing, extra, or byte-different entry is a conflict: every existing byte remains untouched, stdout is empty, and one `error:` diagnostic on stderr tells the user to move or remove the root before retrying ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)). There is no force option.
+#### 2.4.1 Preview and write
+
+`grund-lsp integrations lsp4ij` is a read-only preview. It prints the complete generated `template.json` object followed by the exact explicit IntelliJ import steps from §2.3 on stdout, writes no file or directory, leaves stderr empty, and exits `0`. `grund-lsp integrations lsp4ij --write <directory>` treats `<directory>` as the LSP4IJ import root and creates exactly `template.json` and `README.md`; success prints `created <directory>` and the import steps on stdout and exits `0`; the written README contains the same explicit import steps as preview. Repeating the write against those two byte-identical files is an idempotent success that prints `unchanged <directory>` and the same steps.
+
+A pre-existing root with a missing, extra, or byte-different entry is a conflict: every existing byte remains untouched, stdout is empty, and one `error:` diagnostic on stderr tells the user to move or remove the root before retrying ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)). There is no force option.
+
+#### 2.4.2 Language mappings
 
 Generation starts at the process current working directory, uses the same upward configuration discovery as §3, and reads the resulting effective `[scan].extensions` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)). With no config it therefore uses the canonical default extensions. Each extension becomes one `*.ext` file pattern. Conventional language IDs are used for known extensions — including `md` → `markdown`, `rs` → `rust`, `ts` → `typescript`, and every canonical default — while an unknown extension uses the extension itself as its non-empty language ID. Mappings are a deterministic snapshot of the effective config at generation time; a later config change requires regeneration.
 
-The embedded LSP4IJ template contains both `programArgs.default` and `programArgs.windows`. Both change to `$PROJECT_DIR$` before launch and quote the absolute path returned for the running `grund-lsp` executable, the former for a POSIX shell and the latter for Windows `cmd`; the command selected on the generating host must be executable there. Spaces, non-ASCII characters, and JSON or command metacharacters in paths cannot change the command or corrupt the JSON. Neither command invokes Cargo or relies on shell `PATH` lookup. The generated README contains the same explicit import steps as preview. The generator does not install LSP4IJ, edit JetBrains-owned files, or add editor-specific protocol behavior (§5).
+#### 2.4.3 The launch command
 
-Top-level help and `integrations` help explain this boundary, show list, preview, and write forms, and document exits `0` and `2`. `--version` retains its existing output. An unknown template, malformed arguments, invalid discovered config, render failure, path failure, or write conflict leaves stdout empty, prints one `error:` diagnostic on stderr, and exits `2`. Any argument is handled or rejected as batch input and never enters the protocol loop; exactly no arguments retains the stdio lifecycle of §2.2 with protocol stdout pristine.
+The embedded LSP4IJ template contains both `programArgs.default` and `programArgs.windows`. Both change to `$PROJECT_DIR$` before launch and quote the absolute path returned for the running `grund-lsp` executable, the former for a POSIX shell and the latter for Windows `cmd`; the command selected on the generating host must be executable there. Spaces, non-ASCII characters, and JSON or command metacharacters in paths cannot change the command or corrupt the JSON. Neither command invokes Cargo or relies on shell `PATH` lookup.
+
+#### 2.4.4 Help, failures, and the protocol boundary
+
+The generator does not install LSP4IJ, edit JetBrains-owned files, or add editor-specific protocol behavior (§5). Top-level help and `integrations` help explain this boundary, show list, preview, and write forms, and document exits `0` and `2`. `--version` retains its existing output. An unknown template, malformed arguments, invalid discovered config, render failure, path failure, or write conflict leaves stdout empty, prints one `error:` diagnostic on stderr, and exits `2`. Any argument is handled or rejected as batch input and never enters the protocol loop; exactly no arguments retains the stdio lifecycle of §2.2 with protocol stdout pristine.
 
 ## 3. Configuration
 
-The server reads the `grund.toml` via the same discovery logic as `grund check` ([§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)), walking up from every workspace-folder anchor supplied by the editor's LSP `initialize` request (§2.2). Batch integration generation instead walks upward from the process current working directory (§2.4). Both consume the same effective core configuration; there is no separate LSP config or second parser. A workspace folder with no config under either name falls back to the canonical defaults rooted at that folder ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)).
+The server reads the `grund.toml` via the same discovery logic as `grund check` ([§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)), walking up from every workspace-folder anchor supplied by the editor's LSP `initialize` request, with the fallbacks of §2.2.1. Batch integration generation instead walks upward from the process current working directory (§2.4.2). Both consume the same effective core configuration; there is no separate LSP config or second parser.
 
 Editor-side LSP configuration (server arguments, workspace folders) is the user's responsibility per §2.3 and is not part of `grund.toml`.
 
 ## 4. Determinism and parity with the CLI
 
-Same input + same config → same diagnostics, same hover body, same definition target, byte-for-byte ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). The implementation enforces this by routing LSP state through `grund-core` snapshot, check, show, refs, and formatting APIs, plus focused LSP tests for linkification, configured trigger handling, workspace member marker resolution, UTF-16 ranges, and document-link targets. The full child-process sweep over `tests/e2e/cases/*` ships as `tests/integration/lsp_cli_parity.rs`: for every plain-`check` case, the diagnostics the server publishes are the located findings the CLI prints, or the build is red. The run-level warnings of §1.1 are held the same way against that case's stderr golden, so neither surface may carry one the other does not.
-
-For an embedded value, this parity covers the CLI's marked-root shape and comparison diagnostics, raw `show --toc` hover slice, marker-free semantic title range, component definition target, and existing dotted-token references, highlights, and document links. Shell completion remains the core catalog's ordinary section completion and LSP completion remains reserved; neither surface adds a value-specific candidate.
-
-This parity includes exact off-grammar declarations and their declaration-backed
-marked citations ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): the LSP publishes the same located
-`declaration-near-miss` as `check`, while hover, definition, references,
-highlights, and document links navigate the declaration and its sections from
-the shared snapshot. No editor-only fallback recognition is permitted.
+Same input + same config → same diagnostics, same hover body, same definition target, byte-for-byte ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 
 The LSP server does not have an "interactive" mode or a confirmation prompt ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). It is the same engine with a different transport.
 
+### 4.1 How parity is held
+
+The implementation enforces this parity by routing LSP state through `grund-core` snapshot, check, show, refs, and formatting APIs, plus focused LSP tests for linkification, configured trigger handling, workspace member marker resolution, UTF-16 ranges, and document-link targets. The full child-process sweep over `tests/e2e/cases/*` ships as `tests/integration/lsp_cli_parity.rs`: for every plain-`check` case, the diagnostics the server publishes are the located findings the CLI prints, or the build is red. The run-level warnings of §1.1.3 are held the same way against that case's stderr golden, so neither surface may carry one the other does not.
+
+### 4.2 Embedded values
+
+For an embedded value, this parity covers the CLI's marked-root shape and comparison diagnostics, raw `show --toc` hover slice, marker-free semantic title range, component definition target, and existing dotted-token references, highlights, and document links. Shell completion remains the core catalog's ordinary section completion and LSP completion remains reserved; neither surface adds a value-specific candidate.
+
+### 4.3 Off-grammar declarations
+
+This parity includes exact off-grammar declarations and their declaration-backed marked citations ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): the LSP publishes the same located `declaration-near-miss` as `check`, while hover, definition, references, highlights, and document links navigate the declaration and its sections from the shared snapshot. No editor-only fallback recognition is permitted.
+
 ## 5. Out of scope
 
-- **Per-editor wrappers**: VSCode/IntelliJ/Vim/Emacs first-party plugins are not shipped ([§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do)). The LSP server is the executable surface; §2.4 ships importable configuration data but the user installs the generic client and performs the import.
+- **Per-editor wrappers**: VSCode/IntelliJ/Vim/Emacs first-party plugins are not shipped ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)). The LSP server is the executable surface; §2.4 ships importable configuration data but the user installs the generic client and performs the import.
 - **Refactoring (rename ID)**: `grund` does not rename IDs; the scheme says IDs are forever ([§FS-non-goals.4](FS-non-goals.md#4-cross-workspace-id-renaming)).
 - **Inline editing of declaration bodies from the hover popup**: editors already do this well; `grund-lsp` does not implement it.
 - **Network access**: the server performs no network I/O ([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)). All scanning is local.
