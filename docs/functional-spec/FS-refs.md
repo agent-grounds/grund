@@ -8,25 +8,31 @@ The `refs` subcommand answers the reverse of `grund <ID>`: not "what does this I
 grund refs <ID> [<path>] [--section <s>] [--summary] [--format text|json]
 ```
 
-- `<ID>` — the ID to look up, without the marker. May carry an inline section (`FS-check.3.1`, or `FS-plan.goals.performance` when named sections are enabled) using the configured `[id] section_separator`; equivalently pass `--section 3.1` or `--section goals.performance`. Parsing uses the named kind's effective format and the selected project's shared catalog ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): an exact off-grammar declaration is a valid read query and keeps its raw spelling, while an off-grammar argument with no exact declaration retains the ordinary invalid-ID hint. The number-only shorthand is accepted where the effective format has one — `grund refs FS-042` lists the citations of `FS-042-user-login`, including any written in the shorthand themselves ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) — and shorthand, duplicate, and section ambiguities are rejected with their candidates rather than resolved to a guess.
-- `<path>` — directory or file whose tree is scanned. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)).
-- `--section <s>` — restrict to citations that reference exactly that numeric or named section path. Without it, every citation of `<ID>` is listed regardless of section (including bare-ID citations with no section). Mutually exclusive with the dotted inline form. The result comes from the scanner's shared citation record, so a named filter cannot disagree with `check`, `show`, completion, or the LSP about the coordinate.
-- `--summary` — collapse the per-citation lines into one line per citing **file**: the file path, the count of citations in it, and their line numbers (§3.3). The compact form for a blast-radius scan — how many files lean on `<ID>`, and where — where the full per-citation list would repeat the same path many times.
+- `<ID>` — the ID to look up, without the marker. It may carry an inline section in the configured `[id] section_separator` (`FS-check.3.1`, or `FS-plan.goals.performance` when named sections are enabled), or pass it as `--section 3.1` / `--section goals.performance`. Parsing uses the named kind's effective format and the selected project's shared catalog ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): an exact off-grammar declaration is a valid read query and keeps its raw spelling, while an off-grammar argument with no exact declaration keeps the ordinary invalid-ID hint. The number-only shorthand is accepted where the effective format has one — `grund refs FS-042` lists the citations of `FS-042-user-login`, including those written in the shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) — and shorthand, duplicate, and section ambiguities are rejected with their candidates rather than resolved to a guess.
+- `<path>` — directory or file whose tree is scanned, default `.`, discovered as by every other subcommand ([§FS-config.1](FS-config.md#1-file-location-and-discovery)).
+- `--section <s>` — list only citations of exactly that numeric or named section path; without it, every citation of `<ID>` is listed, bare-ID ones included. Mutually exclusive with the dotted inline form. The filter reads the scanner's shared citation record, so it cannot disagree with `check`, `show`, completion, or the LSP about a named coordinate.
+- `--summary` — one line per citing **file** instead of one per site (§3.3).
 - `--format text|json` — output shape (§3). Default `text`.
 
 `refs` is a query, like `show` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
 
 ## 2. Behaviour
 
-The citation inside a recognized value binding is an ordinary citation in this index, including local and alias-qualified bindings; JSON declaration sources themselves never contribute citations ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)).
+`refs` runs the same scan as `check` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)) and lists, for the requested `<ID>`, every recognised citation site — the set `check` would validate, so it honours `[reference] strict` (bare tokens are listed only in non-strict mode), the string-literal carve-out in source files ([AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection)), and citations inside doc-comments. It does **not** list the *declaration* of `<ID>` — that is `grund <ID> --format=json` (the README documents that one-liner). An ID with no declaration still lists its citations, exactly the ones `check` flags as dangling, so `refs` is also the "what would break if I never create this ID" tool.
 
-`refs` runs the same scan as `check` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)) and emits, for the requested `<ID>`, every recognised citation site — the same set of citations `check` would validate, so it honours `[reference] strict` (bare tokens are listed only in non-strict mode), the string-literal carve-out in source files ([AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection)), and citations inside doc-comments. It does **not** list the *declaration* of `<ID>` — that is `grund <ID> --format=json` (the README documents that one-liner). A `refs` lookup of an ID that has no declaration still works: the citations are listed (they are exactly the ones `check` flags as dangling), so `refs` is also the "what would break if I never create this ID" tool.
+Output is sorted by `(path, line, column)` ([§FS-errors.4](FS-errors.md#4-determinism)). The list is the command's *result*, so it goes to **stdout** — text lines and `--format json` NDJSON alike, as for `grund list` and `grund cover` ([§FS-errors.1](FS-errors.md#1-streams)). A text line has the `<path>:<line>: <message>` located-finding shape ([§FS-errors.2.1](FS-errors.md#21-located-finding)) so an editor can jump to it, but it is an *answer*, not a diagnostic; stderr is left for errors and the typo note of §2.1.
 
-That includes a missing fetch-backed snapshot: `refs` reports its citation
-sites without executing the configured integration. Once fetched, the result
-set is unchanged; only the target now resolves.
+### 2.1 An ID with no citations
 
-Output is sorted by `(path, line, column)` — deterministic per [§FS-errors.4](FS-errors.md#4-determinism). The citation list is the command's *result*, so it goes to **stdout** — text lines and `--format json` NDJSON alike, the same stream `grund list` and `grund cover` use ([§FS-errors.1](FS-errors.md#1-streams)). A `refs` line shares the `path:line: <text>` located-finding shape ([§FS-errors.2.1](FS-errors.md#21-located-finding)) so an editor can jump to it, but it is an *answer*, not a diagnostic; stderr is left for errors and the typo hint below. An ID with zero citations produces empty output and exit `0` (not an error: an as-yet-uncited declaration is normal, and `check` already warns about it — [§FS-check.4.1](FS-check.md#41-unused-declaration)). If the requested ID is *also* not declared anywhere in the scanned tree, the likeliest cause is a typo, so `refs` prints one `note:` line to **stderr** — `note: <ID> is neither declared nor cited — run \`grund list\` to see every declared ID` — and still exits `0`. The note is a hint, not part of the result: the empty stdout (no text lines, no NDJSON) is unchanged, so machine consumers that only read stdout never see it. This mirrors the `ID not found` hint the ID query gives for the same mistake ([§FS-show.3](FS-show.md#3-outputs)) without that query's exit `1`. It is distinct from a resolver rejection: once the selected project's grammar rejects the operand, there is no citation-list result, and from 0.15.0 that failed query exits `1` (§4).
+An ID with zero citations produces empty output and exit `0`: an as-yet-uncited declaration is normal, and `check` already warns about it ([§FS-check.4.1](FS-check.md#41-unused-declaration)). If the ID is *also* declared nowhere in the scanned tree, the likeliest cause is a typo, so `refs` prints one `note:` line to **stderr** — `note: <ID> is neither declared nor cited — run \`grund list\` to see every declared ID` — and still exits `0`. The note is a hint, not part of the result: stdout stays empty, so machine consumers that read only stdout never see it. It mirrors the `ID not found` hint the ID query gives for the same mistake ([§FS-show.3](FS-show.md#3-outputs)) without that query's exit `1`. A resolver rejection is different: once the selected project's grammar rejects the operand there is no citation-list result, and from 0.15.0 that failed query exits `1` (§4).
+
+### 2.2 Value bindings
+
+A citation inside a recognized value binding, local or alias-qualified, is an ordinary citation in this index; JSON declaration sources themselves never contribute citations ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)).
+
+### 2.3 Fetch-backed snapshots
+
+The undeclared-ID rule of §2 includes a missing fetch-backed snapshot: `refs` reports its citation sites without executing the configured integration. Once fetched, the result set is unchanged; only the target now resolves.
 
 ## 3. Outputs
 
@@ -36,19 +42,19 @@ One line per citation site on **stdout**, in the located-finding shape ([§FS-er
 
 ```
 $ grund refs FS-check.1
-docs/functional-spec/FS-show.md:11: §FS-check.1
 crates/grund-core/src/scanner/file_pass.rs:142: FS-check.1
+docs/functional-spec/FS-show.md:11: §FS-check.1
 ```
 
-`<message>` is the citation token exactly as it appears in the source — marker-prefixed or bare, with its section suffix — so the reader sees the form on disk. The lines *are* the result, so `grund refs <ID> | …` and `grund refs <ID> > out.txt` work the way they do for `grund list` — no `2>&1` needed (§2). Exit `0` always when the scan succeeds, regardless of how many citations were found.
+`<message>` is the citation token exactly as it appears in the source — marker-prefixed or bare, with its section suffix — so the reader sees the form on disk. Exit `0` always when the scan succeeds, regardless of how many citations were found.
 
 ### 3.2 `--format json`
 
 NDJSON on stdout — one object per citation, matching the `Citation` shape ([AR-scanner.3](../architecture/AR-scanner.md#3-output)) plus the verbatim token:
 
 ```json
-{"path":"docs/functional-spec/FS-show.md","line":11,"column":42,"id":"FS-check","section":"1","marker":true,"text":"§FS-check.1"}
 {"path":"crates/grund-core/src/scanner/file_pass.rs","line":142,"column":12,"id":"FS-check","section":"1","marker":false,"text":"FS-check.1"}
+{"path":"docs/functional-spec/FS-show.md","line":11,"column":42,"id":"FS-check","section":"1","marker":true,"text":"§FS-check.1"}
 ```
 
 `section` is `null` for a bare-ID citation with no section coordinate.
@@ -59,11 +65,11 @@ NDJSON on stdout — one object per citation, matching the `Citation` shape ([AR
 
 ```
 $ grund refs FS-check --summary
-docs/functional-spec/FS-show.md: 3 (lines 11, 142, 200)
 crates/grund-core/src/scanner/file_pass.rs: 1 (line 142)
+docs/functional-spec/FS-show.md: 3 (lines 11, 142, 200)
 ```
 
-The shape is `<path>: <count> (lines <l1>, <l2>, …)` — the count is the number of citation sites from exactly the citation set §3.1 lists (so `--summary` honours `[reference] strict`, the string-literal carve-out, and doc-comment citations the same way), while the line list is the sorted, de-duplicated set of source lines that contain those citations. If two citations appear on line 10, the count includes both but the line list contains `10` once: `path: 2 (line 10)`. This makes `grund refs <ID> --summary | wc -l` the number of files that lean on `<ID>` while the line list still points an editor at every line that contains at least one site. With `--section`, the aggregate is over citations of that section only. An ID with no citations prints nothing and exits `0` — same as §3.1, and the "neither declared nor cited" `note:` on stderr (§2) is unaffected. `--format json` together with `--summary`: NDJSON, one object per file, `{"path":<path>,"count":<n>,"lines":[<unique l1>,<unique l2>,…]}`, same order; the per-citation object form (§3.2) is what you get *without* `--summary`. Exit codes (§4) are unchanged — `--summary` is a rendering of the same scan result, not a different query.
+The shape is `<path>: <count> (lines <l1>, <l2>, …)`. The count is the number of sites from exactly the citation set §3.1 lists, so `--summary` honours `[reference] strict`, the string-literal carve-out, and doc-comment citations the same way; the line list is the sorted, de-duplicated set of source lines holding them, so two citations on line 10 read `path: 2 (line 10)`. `grund refs <ID> --summary | wc -l` is then the number of files that lean on `<ID>`, while the line list still points an editor at every line with a site. With `--section`, the aggregate is over that section's citations only. No citations prints nothing, with exit `0` and the §2.1 `note:` unaffected. With `--format json`: NDJSON, one object per file, `{"path":<path>,"count":<n>,"lines":[<unique l1>,<unique l2>,…]}`, in the same order; without `--summary` it is the per-citation form of §3.2. Exit codes (§4) are unchanged — `--summary` renders the same scan result, not a different query.
 
 ## 4. Exit codes
 
@@ -98,4 +104,4 @@ decision in [§DF-refs-resolver-rejection](../decisions/functional/DF-refs-resol
 
 ## 5. Why this exists
 
-`grep -oE '§…'` gives a contributor a rough back-reference list but cannot: distinguish a real citation from an ID-shaped substring in a string literal; respect `strict` mode; reach citations inside block doc-comments without language-specific regex; or produce a stable, machine-shaped result for an agent to program against. `refs` is the scheme's own answer, sharing the scanner with `check` so the two never disagree on what counts as a citation. `--summary` folds a wide back-reference set to one line per file, so the blast radius before changing a declaration is legible at a glance — token-cheap for an agent that needs the count and the file list, not every column. Together with `grund <ID>` it closes the loop: the ID query reads the body an ID promises, `refs` enumerates the code and docs that took the promise.
+`grep -oE '§…'` gives a contributor a rough back-reference list but cannot tell a real citation from an ID-shaped substring in a string literal, respect `strict` mode, reach citations inside block doc-comments without language-specific regex, or produce a stable, machine-shaped result for an agent to program against. `refs` is the scheme's own answer, sharing the scanner with `check` so the two never disagree on what counts as a citation. `--summary` folds a wide back-reference set to one line per file, so the blast radius before changing a declaration is legible at a glance — token-cheap for an agent that needs the count and the file list, not every column. With `grund <ID>` it closes the loop: the ID query reads the body an ID promises, `refs` enumerates the code and docs that took the promise.
