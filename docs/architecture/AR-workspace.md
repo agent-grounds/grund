@@ -320,13 +320,113 @@ No ancestor climb or workspace expansion is added to a single-project run.
 
 ## 9. Test contracts
 
-The architecture is observable. Each invariant above has a fixture or unit
-test that fails if the invariant is broken — and so does each of the three the
-resolver took with it ([§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them)), which is why their rows are still in
-this one table: the cases are workspace cases whichever half they pin — and
+The architecture is observable. Each invariant above has a fixture or unit test
+that fails if the invariant is broken — and so does each of the three the
+resolver took with it
+([§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them)),
+which is why their rows are still in this one table, §9.4: the cases are
+workspace cases whichever half they pin.
 `tests/integration/test_architecture_coverage_table.py` fails when a row names a
 case directory or a test function that does not exist, so the table cannot
-outlive what it cites:
+outlive what it cites.
+
+These are the contracts a future change must keep green: a change that cannot
+keep one of them green is breaking the layering, not the test. How a golden is
+spelled on disk is §9.1, which platforms run the symlink cases §9.2, and how a
+pass decides §9.3.
+
+### 9.1 A golden has one on-disk spelling
+
+A golden is bytes, and the harness is both their writer (`UPDATE_EXPECTED=1`)
+and their reader. Two spellings of one expectation are one too many: the reader
+accepts both, the writer emits only one, and a refresh of any case rewrites
+every golden checked in in the other form — churn in cases the change never
+touched, to be reverted by hand or committed by accident. So each golden surface
+has exactly one canonical form:
+
+- an **output golden** (`expected.stdout`, `expected.stderr`) holds the run's
+  output with every `\r\n` folded to `\n`; empty output is a single `\n`, never
+  zero bytes;
+- an **exit golden** (`expected.exit`) holds the decimal exit code followed by
+  exactly one `\n`.
+
+The invariant the canonical form exists for is §9.1.4: a refresh over an
+unchanged tree writes the bytes that are already there. Why the newline and not
+zero bytes, what that costs, and how the form is checked are §9.1.1 to §9.1.3.
+
+#### 9.1.1 Why the newline and not zero bytes
+
+The canonical form is a fact about the tree rather than a preference. When this
+was settled, 469 of the 487 empty output goldens already carried a lone `\n` and
+488 of the 491 exit goldens already ended in one, so keeping that form
+normalized 21 files where writing empty output as zero bytes instead would have
+rewritten 469. It is also the form `text eol=lf` in `.gitattributes` and every
+end-with-a-newline convention expect, and it keeps `\ No newline at end of file`
+out of the diff of a file a reviewer has to read as bytes.
+
+#### 9.1.2 What it costs, knowingly
+
+A whole-file `\n` means "no output", so a case whose real output is *exactly*
+one newline cannot be pinned: its golden reads back as empty and the case could
+never pass. No case in the tree needs that, and the alternative spelling would
+trade this one limitation for a golden that patches, editors and shells
+routinely mangle.
+
+#### 9.1.3 Checked, not remembered
+
+`goldens_are_in_canonical_form` (`crates/grund-cli/tests/e2e.rs`) walks every
+case under both roots of §9.1.4 and reads the bytes, never the reader's
+normalized string — through the reader the very difference under test
+disappears. It names every offending file in one failure with what is wrong with
+each, the same "account for every case, then decide once" shape as the pass of
+§9.3, so the tree can be normalized from the message alone. The writer's half is
+a property rather than a corpus:
+`crates/grund-cli/tests/support/case_golden_form.rs` writes each representative
+output, reads it back through the reader, and writes it again — the second write
+must produce the same bytes as the first.
+
+#### 9.1.4 A refresh over an unchanged tree writes the bytes already there
+
+`cargo test --test e2e`, then `UPDATE_EXPECTED=1 cargo test --test e2e`, leaves
+`git status --porcelain` empty, and refreshing one case leaves every other
+case's goldens byte-identical, so the diff of a golden update is the change and
+nothing else. It holds for `examples/` exactly as for `tests/e2e/cases/` — one
+harness writes both.
+
+### 9.2 Which platforms actually run the symlink cases
+
+One row of §9.4, a member root escaping its own block, is not covered everywhere:
+a member root can only escape its own block through a symlink, so every unit
+test for that rule is `#[cfg(unix)]` and the two e2e cases build their links at
+run time into `target/e2e-work/`. Where a directory symlink cannot be created —
+Windows without developer mode or elevation — those cases do not run.
+
+The harness probes the directory it creates the links in, counts each case it
+could not run, names it with the reason, and fails outright on a platform that
+*can* create a directory symlink, so lost coverage cannot read as a pass. Even
+so, a green `windows-latest` job
+([§AR-ci](AR-ci.md#ar-ci-ci-mirrors-the-local-pre-commit-gate)) is not evidence
+for the member-containment rejection rule; reaching it there needs a Windows
+runner with symlink creation enabled.
+
+### 9.3 A mismatch is data, not a panic
+
+Every runnable case is compared on every surface — exit code, stdout, stderr,
+`expected.repo` — before a pass decides anything: a golden that does not match
+is collected rather than asserted, so a mismatch on the first case, or the first
+surface of a case, does not hide a second one. The pass fails once, after the
+last case, naming every mismatched case in discovery order with each surface
+that differed under it — the same "account for and name every case, then decide
+once" shape the skip accounting of §9.2 already uses.
+
+A fixture-validity error — a malformed manifest, an unreadable golden, a
+non-concise `expected.stderr` — still aborts at the case: the case itself cannot
+be judged, which is a harness error, not a verdict. The synthetic probe that
+pins this verdict is always a comparison run, independent of inherited refresh
+selection
+([§FS-examples.5.1](../functional-spec/FS-examples.md#51-synthetic-verdict-probes-always-compare)).
+
+### 9.4 Each invariant and the test that pins it
 
 | Invariant                                        | Test or fixture |
 |--------------------------------------------------|---|
@@ -377,74 +477,3 @@ outlive what it cites:
 | `[[workspace]]` array-table form rejected        | `tests/e2e/cases/workspace-section-as-array-table` |
 | Unknown key under `[workspace]` rejected         | `tests/e2e/cases/workspace-unknown-key` |
 | Member missing on disk fails workspace expansion | `tests/e2e/cases/workspace-member-missing-on-disk` |
-
-These are the contracts a future change must keep green; if a change cannot
-keep one of them green, the change is breaking the layering — not the test.
-
-**Which platforms actually run them.** One row above is not covered everywhere: a member root can only escape
-its own block through a symlink, so every unit test for that rule is `#[cfg(unix)]` and the two e2e cases build
-their links at run time into `target/e2e-work/`. Where a directory symlink cannot be created — Windows without
-developer mode or elevation — those cases do not run. The harness probes the directory it creates the links in,
-counts each case it could not run, names it with the reason, and fails outright on a platform that *can* create
-one, so lost coverage cannot read as a pass; but a green `windows-latest` job ([§AR-ci](AR-ci.md#ar-ci-ci-mirrors-the-local-pre-commit-gate)) is still not
-evidence for the member-containment rejection rule. Reaching it there needs a Windows runner with symlink
-creation enabled.
-
-**A mismatch is data, not a panic.** Every runnable case is compared on every surface — exit code, stdout,
-stderr, `expected.repo` — before a pass decides anything: a golden that does not match is collected rather than
-asserted, so a mismatch on the first case, or the first surface of a case, does not hide a second one. The pass
-fails once, after the last case, naming every mismatched case in discovery order with each surface that differed
-under it — the same "account for and name every case, then decide once" shape the skip accounting above already
-uses. A fixture-validity error — a malformed manifest, an unreadable golden, a non-concise `expected.stderr` —
-still aborts at the case: the case itself cannot be judged, which is a harness error, not a verdict. The synthetic
-probe that pins this verdict is always a comparison run, independent of inherited refresh selection
-([§FS-examples.5.1](../functional-spec/FS-examples.md#51-synthetic-verdict-probes-always-compare)).
-
-### 9.1 A golden has one on-disk spelling
-
-A golden is bytes, and the harness is both their writer (`UPDATE_EXPECTED=1`)
-and their reader. Two spellings of one expectation are therefore one too many:
-the reader accepts both, the writer emits only one, and a refresh of any case
-rewrites every golden checked in in the other form — churn in cases the change
-never touched, to be reverted by hand or committed by accident. So each golden
-surface has exactly one canonical form:
-
-- an **output golden** (`expected.stdout`, `expected.stderr`) holds the run's
-  output with every `\r\n` folded to `\n`; empty output is a single `\n`, never
-  zero bytes;
-- an **exit golden** (`expected.exit`) holds the decimal exit code followed by
-  exactly one `\n`.
-
-**A refresh over an unchanged tree writes the bytes that are already there.**
-That is the invariant the canonical form exists for, and it is the one a
-contributor feels: `cargo test --test e2e`, then `UPDATE_EXPECTED=1 cargo test
---test e2e`, leaves `git status --porcelain` empty. Refreshing one case leaves
-every other case's goldens byte-identical, so the diff of a golden update is the
-change and nothing else. It holds for `examples/` exactly as for
-`tests/e2e/cases/` — one harness writes both.
-
-**Why the newline and not zero bytes.** The canonical form is a fact about the
-tree rather than a preference. When this was settled, 469 of the 487 empty
-output goldens already carried a lone `\n` and 488 of the 491 exit goldens
-already ended in one, so keeping that form normalized 21 files where writing
-empty output as zero bytes instead would have rewritten 469. It is also the form
-`text eol=lf` in `.gitattributes` and every end-with-a-newline convention
-expect, and it keeps `\ No newline at end of file` out of the diff of a file a
-reviewer has to read as bytes.
-
-**What it costs, knowingly.** A whole-file `\n` means "no output", so a case
-whose real output is *exactly* one newline cannot be pinned: its golden reads
-back as empty and the case could never pass. No case in the tree needs that, and
-the alternative spelling would trade this one limitation for a golden that
-patches, editors and shells routinely mangle.
-
-**Checked, not remembered.** `goldens_are_in_canonical_form`
-(`crates/grund-cli/tests/e2e.rs`) walks every case under both roots and reads
-the bytes, never the reader's normalized string — through the reader the very
-difference under test disappears. It names every offending file in one failure
-with what is wrong with each, the same "account for every case, then decide
-once" shape as the pass above, so the tree can be normalized from the message
-alone. The writer's half is a property rather than a corpus:
-`crates/grund-cli/tests/support/case_golden_form.rs` writes each representative
-output, reads it back through the reader, and writes it again — the second write
-must produce the same bytes as the first.
