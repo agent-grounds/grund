@@ -8,8 +8,6 @@ An example is any maintained directory or document under `examples/` that is adv
 
 ## 2. Canonical use-cases
 
-The examples include an optional first-class-values repository showing `values = true`, Markdown and home JSON declarations, exact numeric equality, prose and scanned-comment bindings, direct runtime JSON use, and a caught mismatch. It demonstrates the deliberate unbackticked non-binding without implying interpolation or value inference ([§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)).
-
 Every maintained example must map to at least one canonical `grund` use-case. The use-case must be named in the example's README or manifest in user terms, such as:
 
 - choosing between supported ID schemes;
@@ -21,11 +19,17 @@ Every maintained example must map to at least one canonical `grund` use-case. Th
 - grouping citations by file with `grund cover`;
 - normalizing citations with `grund fmt`;
 - validating a clean or broken tree with `grund check`;
-- validating cross-project citations in a workspace.
+- validating cross-project citations in a workspace;
 - citing an external fact, materializing its committed snapshot explicitly,
   and resolving it offline afterward ([§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)).
 
 An example may cover multiple use-cases, but it must stay small enough that a new user can tell which workflow it is teaching without reading unrelated files.
+
+The examples also include an optional first-class-values repository, specified in [§2.1](#21-the-values-example).
+
+### 2.1 The values example
+
+The examples include an optional first-class-values repository showing `values = true`, Markdown and home JSON declarations, exact numeric equality, prose and scanned-comment bindings, direct runtime JSON use, and a caught mismatch. It demonstrates the deliberate unbackticked non-binding without implying interpolation or value inference ([§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)).
 
 ## 3. Required explanation
 
@@ -45,11 +49,9 @@ When a new canonical workflow becomes part of the README or functional spec, the
 
 Runnable examples must also be executable end-to-end tests. They may have a lighter manifest than `tests/e2e/cases/` when that keeps the user-facing directory readable, but their command invocation, expected exit code, stdout/stderr comparison, mutable-repo handling, and final-repo snapshot comparison must be run by the same test runner logic used for ordinary e2e cases.
 
-The external-ticket example uses a deterministic local stub integration. It
-must run without network access and its final-repository golden must contain
-the exact snapshot declaration the fetcher printed.
-
 The repo must not maintain a second, example-only implementation of the e2e contract. Adding a new e2e capability such as `command.args`, `{repo_copy}`, `expected.repo`, deterministic-output checks, or golden-output refresh must make that capability available to examples through shared code, not through a copied harness.
+
+The external-ticket example runs offline; its contract is [§5.2](#52-the-external-ticket-example-runs-offline).
 
 ### 5.1 Synthetic verdict probes always compare
 
@@ -60,3 +62,9 @@ refresh selection must not rewrite the scratch goldens or turn their mismatches
 into successful runs. The probe collects every case before deciding and names
 every mismatched case and surface, so a caller's refresh workflow cannot mask a
 regression in the verdict it relies on.
+
+### 5.2 The external-ticket example runs offline
+
+The external-ticket example uses a deterministic local stub integration. It
+must run without network access and its final-repository golden must contain
+the exact snapshot declaration the fetcher printed.
