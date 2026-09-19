@@ -64,10 +64,11 @@ pub use id::{IdOpts, IdProposal, IdProposalOutcome, propose_id, propose_id_with_
 pub use list::{
     ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot, list, list_with_run_warnings,
 };
-pub use lsp_snapshot::lsp_snapshot;
+pub use lsp_snapshot::{lsp_snapshot, lsp_snapshot_with_metadata};
 pub use refs::{
     REFS_QUERY_FAILURE_WARNING, RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure,
-    RefsQueryFailureKind, refs, refs_outcome, refs_query_failure_is_exit_one,
+    RefsQueryFailureKind, RefsWithMetadata, refs, refs_outcome, refs_query_failure_is_exit_one,
+    refs_with_metadata,
 };
 pub use report::render_finding_sites_json;
 pub use show::{show, show_with_overlays, show_with_scope};
@@ -102,3 +103,8 @@ mod tests_refs_query_failures;
 mod tests_shorthand_docstring;
 #[cfg(test)]
 mod tests_shorthand_surfaces;
+
+#[cfg(test)]
+mod tests_kind_title_refs;
+#[cfg(test)]
+mod tests_kind_title_show;

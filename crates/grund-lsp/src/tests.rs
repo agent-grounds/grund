@@ -240,3 +240,6 @@ fn document_link_targets_include_line_fragment() {
         Some("L7")
     );
 }
+
+#[path = "tests_kind_title.rs"]
+mod kind_title;

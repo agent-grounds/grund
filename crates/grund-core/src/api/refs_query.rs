@@ -12,7 +12,7 @@
 use anyhow::{Result, anyhow};
 use std::path::Path;
 
-use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure};
+use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsWithMetadata};
 use super::report::context_run_warnings;
 use crate::config::display_path;
 use crate::grammar::render_id;
@@ -21,7 +21,7 @@ use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::scanner::{api_scan_error, resolve_id_arg};
 use crate::workspace::split_qualified_id_arg;
 
-pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
+pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
     let current_config = context
         .current_project()
@@ -75,19 +75,22 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
     {
         Ok(resolved) => resolved,
         Err(error) => {
-            return Ok(RefsOutcome {
-                output: RefsOutput {
-                    output_format: render_config.output_format.clone(),
-                    workspace: context.workspace_loaded,
-                    hits: Vec::new(),
-                    note: None,
-                    scan_errors,
-                    warnings: context_run_warnings(&context),
+            return Ok(RefsWithMetadata {
+                kind_title: None,
+                outcome: RefsOutcome {
+                    output: RefsOutput {
+                        output_format: render_config.output_format.clone(),
+                        workspace: context.workspace_loaded,
+                        hits: Vec::new(),
+                        note: None,
+                        scan_errors,
+                        warnings: context_run_warnings(&context),
+                    },
+                    query_failure: Some(RefsQueryFailure::from_resolver_error(
+                        &error,
+                        &render_config.id_format,
+                    )),
                 },
-                query_failure: Some(RefsQueryFailure::from_resolver_error(
-                    &error,
-                    &render_config.id_format,
-                )),
             });
         }
     };
@@ -174,15 +177,24 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsOutcome> {
     } else {
         None
     };
-    Ok(RefsOutcome {
-        output: RefsOutput {
-            output_format: render_config.output_format.clone(),
-            workspace: context.workspace_loaded,
-            hits: public_hits,
-            note,
-            scan_errors,
-            warnings: context_run_warnings(&context),
+    // §FS-refs.3.2: kind metadata does not require an existing declaration.
+    let kind_title = render_config
+        .kinds
+        .iter()
+        .find(|kind| kind.kind == id.kind)
+        .and_then(|kind| kind.title.clone());
+    Ok(RefsWithMetadata {
+        kind_title,
+        outcome: RefsOutcome {
+            output: RefsOutput {
+                output_format: render_config.output_format.clone(),
+                workspace: context.workspace_loaded,
+                hits: public_hits,
+                note,
+                scan_errors,
+                warnings: context_run_warnings(&context),
+            },
+            query_failure: None,
         },
-        query_failure: None,
     })
 }

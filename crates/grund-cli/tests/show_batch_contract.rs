@@ -137,7 +137,7 @@ fn show_batch_ambiguous_shorthand_is_a_query_failure_and_continues() {
         stdout(&output),
         concat!(
             "{\"query\":{\"id\":\"FS-042\",\"section\":null},\"ok\":false,\"result\":null,\"error\":{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"ambiguous\",\"message\":\"ambiguous ID: FS-042 (matches FS-042-user-login, FS-042-user-logout)\",\"sites\":null}}\n",
-            "{\"query\":{\"id\":\"FS-042-user-login\",\"section\":null},\"ok\":true,\"result\":{\"id\":\"FS-042-user-login\",\"section\":null,\"body\":\"Cited as §FS-042-user-login.\\n\",\"path\":\"docs/functional-spec/FS-042-user-login.md\",\"line\":1},\"error\":null}\n",
+            "{\"query\":{\"id\":\"FS-042-user-login\",\"section\":null},\"ok\":true,\"result\":{\"id\":\"FS-042-user-login\",\"section\":null,\"body\":\"Cited as §FS-042-user-login.\\n\",\"path\":\"docs/functional-spec/FS-042-user-login.md\",\"line\":1,\"kind_title\":\"What: behavior, requirements, and constraints\"},\"error\":null}\n",
         )
     );
     assert_eq!(stderr(&output), "");

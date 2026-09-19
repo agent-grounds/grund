@@ -137,7 +137,7 @@ pub struct RefsOutcome {
 /// Programmatic `refs` with the typed resolver-rejection outcome process
 /// frontends need to apply §FS-refs.4 without parsing an error string.
 pub fn refs_outcome(opts: RefsOpts) -> Result<RefsOutcome> {
-    refs_impl(opts)
+    Ok(refs_with_metadata(opts)?.outcome)
 }
 
 /// Programmatic `refs`: resolve an ID query and return all citation sites
@@ -149,4 +149,19 @@ pub fn refs(opts: RefsOpts) -> Result<RefsOutput> {
         Some(failure) => Err(failure.into_refs_error()),
         None => Ok(outcome.output),
     }
+}
+
+/// Additive query context for §FS-config.3.4.3 and §FS-refs.3.2. The title
+/// belongs to the selected target kind, not to any hit's citing project.
+/// The existing exhaustively constructible refs records stay unchanged.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct RefsWithMetadata {
+    pub outcome: RefsOutcome,
+    pub kind_title: Option<String>,
+}
+
+/// Read refs and target metadata from one resolved context, including queries
+/// for valid undeclared IDs (§FS-refs.3.2). File summaries ignore this metadata.
+pub fn refs_with_metadata(opts: RefsOpts) -> Result<RefsWithMetadata> {
+    refs_impl(opts)
 }

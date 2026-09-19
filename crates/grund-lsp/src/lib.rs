@@ -2,9 +2,10 @@
 
 use anyhow::{Context, Result};
 use grund_core::{
-    DeclaredId, Finding, LspCitation, LspDeclaration, LspSnapshot, LspSnapshotOpts, LspStub,
-    LspUsage, ShowFormat, ShowMode, ShowOpts, canonical_snapshot_path, citation_under_title,
-    effective_config, lsp_snapshot, lsp_title_hover_body, on_type_line_edits, show_with_overlays,
+    DeclaredId, Finding, LspCitation, LspDeclaration, LspSnapshot, LspSnapshotOpts,
+    LspSnapshotWithMetadata, LspStub, LspUsage, ShowFormat, ShowMode, ShowOpts,
+    canonical_snapshot_path, citation_under_title, effective_config, lsp_hover_with_kind_title,
+    lsp_snapshot_with_metadata, lsp_title_hover_body, on_type_line_edits, show_with_overlays,
 };
 use lsp_server::{Connection, Message, Notification, Request, Response};
 use lsp_types::{
@@ -332,7 +333,7 @@ impl Server {
                 projects.extend(existing);
                 continue;
             }
-            match lsp_snapshot(LspSnapshotOpts {
+            match lsp_snapshot_with_metadata(LspSnapshotOpts {
                 path: root.clone(),
                 // A discovered project root is the whole project, so its
                 // configured include paths govern just as for a root CLI run.
@@ -476,6 +477,14 @@ impl Server {
         else {
             return Ok(None);
         };
+        // §FS-lsp.1.2: reuse the same snapshot's metadata; never scan for a title.
+        let kind_title = |query_id: &str| {
+            self.projects
+                .iter()
+                .find(|project| std::ptr::eq(&project.snapshot, snapshot))
+                .and_then(|project| project.kind_titles.get(query_id))
+                .map(String::as_str)
+        };
         let citation = match token {
             Token::Citation(citation) => citation,
             // A declaration-side title has no body to preview — the cursor is
@@ -487,11 +496,17 @@ impl Server {
                     declaration_range(decl, self),
                     &decl.text,
                     usage,
+                    kind_title(&decl.query_id),
                 )));
             }
             Token::Stub(stub) => {
                 let usage = snapshot.title_usage(&stub.query_id, &stub.section_separator);
-                return Ok(Some(title_hover(stub_range(stub, self), &stub.text, usage)));
+                return Ok(Some(title_hover(
+                    stub_range(stub, self),
+                    &stub.text,
+                    usage,
+                    kind_title(&stub.query_id),
+                )));
             }
         };
         // A citation that does not resolve has no preview body; its diagnostic
@@ -506,7 +521,10 @@ impl Server {
             },
             self.open_document_overlays(),
         ) {
-            Ok(output) => linkify_hover_body(&output.body, &snapshot.citations),
+            Ok(output) => lsp_hover_with_kind_title(
+                &linkify_hover_body(&output.body, &snapshot.citations),
+                kind_title(&citation.declaration_query_id),
+            ),
             Err(_) => return Ok(None),
         };
         Ok(Some(Hover {
@@ -1089,11 +1107,11 @@ fn location_link(origin: Range, location: Location) -> LocationLink {
     }
 }
 
-fn title_hover(range: Range, text: &str, usage: LspUsage) -> Hover {
+fn title_hover(range: Range, text: &str, usage: LspUsage, kind_title: Option<&str>) -> Hover {
     Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value: lsp_title_hover_body(text, usage),
+            value: lsp_hover_with_kind_title(&lsp_title_hover_body(text, usage), kind_title),
         }),
         range: Some(range),
     }
