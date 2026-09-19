@@ -7,11 +7,12 @@
 //! recognizing the shape is all either side does: the wrap is a `[` immediately
 //! before a marker-prefixed citation token and `](…)` immediately after it, and
 //! nothing about it is resolved — a dangling citation flattens the same as a
-//! live one, and `grund check` still reports it. Three components read the
+//! live one, and `grund check` still reports it. Four consumers read the
 //! flattening for an answer that must agree with the formatter line for line —
-//! the `show` query, the point body a size is measured on and the deprecated
-//! adapter (§FS-show.3.2, §FS-list.3.4.1) — and while it sat in the writers each
-//! of them read a sibling or a component above it (§AR-system.4).
+//! single and batch `show`, the point body a size is measured on and the
+//! deprecated adapter (§DF-show-cross-ref-flattening.2.1, §FS-list.3.4.1) — and
+//! while it sat in the writers each of them read a sibling or a component above
+//! it (§AR-system.4).
 //!
 //! The label predicate is private, which it could not be before. It sat in
 //! `scanner/legacy.rs`, with the off-grammar catalog steps whose spellings it
@@ -20,6 +21,7 @@
 //! file holds both and nothing outside names either.
 
 use super::compiled::{Grammar, QUALIFIED_CITATION_PREFIX};
+use super::fence::markdown_fence_delimiter;
 use super::never_rewrite::is_inside_inline_code;
 use super::settings::LexicalSettings;
 use super::shorthand::parse_id_arg_with_shorthand;
@@ -50,15 +52,34 @@ fn formatter_wrapper_label_is_citation(label: &str, grammar: &Grammar) -> bool {
 /// is the only thing flattened. Ordinary Markdown links, an unwrapped citation,
 /// a citation inside an inline-code span (illustrative, like `fmt` itself —
 /// §FS-fmt.6.4), and `--format md` output (kept verbatim by the caller) are all
-/// left untouched. Purely textual: the citation is never resolved, so a dangling
-/// one is flattened just the same and `grund check` still reports it.
-pub(crate) fn flatten_cross_ref_links(body: &str, settings: LexicalSettings<'_>) -> String {
+/// left untouched. In a Markdown body, fence delimiters and their contents also
+/// remain authored until the shared delimiter grammar closes the fence
+/// (§FS-show.2.5, §FS-show.3.2.1, §FS-show.3.2.2). Purely textual: the citation
+/// is never resolved, so a dangling one is flattened just the same and `grund
+/// check` still reports it.
+pub(crate) fn flatten_cross_ref_links(
+    body: &str,
+    settings: LexicalSettings<'_>,
+    markdown_body: bool,
+) -> String {
     if !body.contains("](") {
         return body.to_string();
     }
     let mut out = String::with_capacity(body.len());
+    let mut markdown_fence = None;
     for line in body.split_inclusive('\n') {
-        out.push_str(&flatten_cross_ref_links_line(line, settings));
+        // §FS-check.1.1.5: use the established opener/closer grammar; a
+        // delimiter or fenced content is verbatim, and ordinary prose resumes
+        // after the valid closer.
+        let fence_line = line.strip_suffix('\n').unwrap_or(line);
+        let fence_line = fence_line.strip_suffix('\r').unwrap_or(fence_line);
+        let fence_delimiter = markdown_body
+            && markdown_fence_delimiter(&mut markdown_fence, fence_line);
+        if fence_delimiter || markdown_fence.is_some() {
+            out.push_str(line);
+        } else {
+            out.push_str(&flatten_cross_ref_links_line(line, settings));
+        }
     }
     out
 }

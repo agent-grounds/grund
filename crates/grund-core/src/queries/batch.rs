@@ -161,7 +161,10 @@ fn show_batch_query_in_context(
         overlays,
     )
     .map_err(|error| with_member_id_candidates(error, context, alias.as_deref(), raw_id))?;
-    output.body = flatten_cross_ref_links(&output.body, config.lexical());
+    let markdown_body = output.path.extension().and_then(|ext| ext.to_str()) == Some("md");
+    // §FS-show.2.5, §FS-show.3.2.1: batch reads use the same Markdown fence
+    // precedence and ordinary-prose inverse as single reads.
+    output.body = flatten_cross_ref_links(&output.body, config.lexical(), markdown_body);
     output.json = Some(render_show_output_json(
         config,
         context.render_config(),
