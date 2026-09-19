@@ -50,9 +50,8 @@ pub(crate) fn slugify_title(title: &str, slug_pattern: &str) -> String {
             last_dash = true;
         }
     }
-    while out.ends_with('-') {
-        out.pop();
-    }
+    // §FS-id.3: literal hyphens admitted by the character class must be trimmed at both ends.
+    out = out.trim_matches('-').to_string();
     while out.contains("--") {
         out = out.replace("--", "-");
     }
