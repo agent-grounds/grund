@@ -30,6 +30,11 @@ declarations. Duplicate declarations and duplicate section claimants retain one
 site-local row each. A broken stub remains visible with `-/-` in text or `null`
 measurements in JSON rather than borrowing another site's body.
 
+Measurements include complete citation-wrapper bytes preserved inside Markdown
+fences, because those bytes are part of the exact text body `grund show`
+returns. They can raise byte and word counts (and an opted-in warning near its
+limit), but they do not add lines; wrappers in ordinary prose remain flattened.
+
 ## Opt into a warning
 
 Add one closed inline table to the project whose point leads you want checked
