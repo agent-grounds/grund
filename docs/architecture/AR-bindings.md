@@ -1,6 +1,6 @@
 # AR-bindings: target shape for exposing the Rust engine on three platforms
 
-Implements the planned distribution shape in [§FS-distribution](../functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets). Target state: the repo is a Cargo workspace with one core library and four frontends — three for batch use (CLI, Node, Python) and one for editor use (LSP). The release-blocking boundary is now in place for Cargo: `grund-core` is the shared engine crate, `crates/grund-cli` is the published Cargo package named `grund`, and `crates/grund-lsp` is the optional Cargo package named `grund-lsp`. The later frontend crates (`grund-node`, `grund-py`) build on that boundary.
+Implements the planned distribution shape in [§FS-distribution](../functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets). Target state: a Cargo workspace with one core library and four frontends — three for batch use (CLI, Node, Python) and one for editor use (LSP). The release-blocking boundary is in place for Cargo: `grund-core` is the shared engine crate, `crates/grund-cli` the published package `grund`, and `crates/grund-lsp` the optional package `grund-lsp`. The planned `grund-node` and `grund-py` build on that boundary.
 
 ## placement: Where the frontends sit
 
@@ -12,11 +12,11 @@ api ──┼─► [ grund-lsp ]  ─► LSP over stdio
       no frontend depends on another; every regex, walk and rule stays in the engine
 ```
 
-The frontends' side of [§AR-system.3](README.md#3-frontends) and the api's contract of [§AR-system.2.9](README.md#29-api). Every frontend takes the data the api returns and gives back a rendering or a transport of it; none holds a regex, a walk or a rule, and none depends on another. The engine's side of the contract is section 2, and each shipped or planned frontend has a section of its own below.
+The frontends' side of [§AR-system.3](README.md#3-frontends) and the api's contract of [§AR-system.2.9](README.md#29-api). Every frontend takes the data the api returns and gives back a rendering or a transport of it; none holds a regex, a walk or a rule, and none depends on another. The engine's side of the contract is section 2; each frontend has a section of its own below.
 
 ## 1. Target workspace layout
 
-The shipped split ([§AR-system.1](README.md#1-the-system)) keeps one checked report behind every frontend while giving `grund-lsp` and the language bindings a library package they can depend on. `grund-core` exposes data-returning APIs for the CLI and LSP surfaces (`check`, `show`, `refs`, `list`, `cover`, `fmt`, `id`, `init`, config inspection, and LSP snapshots); the user-facing binary, help text, version handling, SIGPIPE setup, top-level command dispatch, flag parsing, text/JSON rendering, and exit-code mapping live in `grund-cli`. The CLI renderer gives text and JSON their deliberately distinct deterministic orders—severity groups for text and global location order for compatible JSON—without changing the shared report or LSP messages ([§FS-errors.4](../functional-spec/FS-errors.md#4-determinism)).
+The shipped split ([§AR-system.1](README.md#1-the-system)) keeps one checked report behind every frontend and gives `grund-lsp` and the language bindings a library package to depend on. `grund-core` exposes the data-returning APIs of section 2 and the LSP snapshot; the binary, help, version, SIGPIPE setup, dispatch, flag parsing, text/JSON rendering and exit-code mapping live in `grund-cli` (section 3). Its renderer gives text and JSON deliberately distinct deterministic orders — severity groups for text, global location order for compatible JSON — without changing the shared report or LSP messages ([§FS-errors.4](../functional-spec/FS-errors.md#4-determinism)).
 
 Final frontend layout:
 
@@ -32,7 +32,7 @@ grund/
 └── tests/
 ```
 
-All four frontend crates depend on `grund-core` and only on `grund-core` for engine logic. None depend on each other. `tests/integration/test_frontend_isolation.py` holds this on the resolved dependency graph `cargo metadata` reports rather than on the manifests' intent: the CLI's tree carries no LSP transport, the server's carries no CLI, and the engine's carries no frontend. This is the property that lets [§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary) hold: `grund-cli`'s dependency tree contains no JSON-RPC machinery and no LSP types, because none of those reach `grund-core`.
+All four frontend crates take their engine logic from `grund-core` alone and depend on none of each other. `tests/integration/test_frontend_isolation.py` holds this on the resolved dependency graph `cargo metadata` reports rather than on the manifests' intent: the CLI's tree carries no LSP transport, the server's no CLI, and the engine's no frontend. That is what lets [§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary) hold: no JSON-RPC machinery or LSP type reaches `grund-core`, so none is in `grund-cli`'s tree.
 
 ## 2. grund-core: the only place logic lives
 
@@ -52,15 +52,15 @@ Every check, every show, every regex, every walker invocation lives in `grund-co
 - `grund_core::effective_config(path)` / `grund_core::validate_config(path)`
 - The `Findings`, `Declaration`, `Citation`, `Report` data types.
 
-The embedding API returns data; callers decide what to do with it, and every name on the crate's public surface is one that returns data and writes to no stream ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). The deprecated `grund_core::main_entry()` compatibility path is the one exception and it remains for existing 0.4 consumers; the published `grund` CLI owns command parsing, terminal rendering, and exit-code policy for every command, imports no `grund_core::command_*` symbol, and imports no renderer of the engine's under any other spelling either — the last two were `run_integrations` and `print_config_warnings`, and the CLI carries both ([§FS-integrations.1](../functional-spec/FS-integrations.md#1-user-facing-command), [§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path), [§DA-engine-renders-nothing](../decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires)). `tests/integration/test_engine_boundary.py` holds the boundary: the embedding API in `crates/grund-core/src/api/` writes to no stream, the only engine files that render are the ones under `crates/grund-core/src/compat/`, and neither frontend references `main_entry`, `compat_cli` or a `command_*` symbol of the engine.
+Every name on the crate's public surface returns data and writes to no stream; callers decide what to do with it ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). The deprecated `grund_core::main_entry()` is the one exception, kept for 0.4 consumers ([§AR-system.2.9](README.md#29-api)). The published `grund` CLI owns command parsing, terminal rendering and exit-code policy for every command, and imports no `grund_core::command_*` symbol and no engine renderer under any other spelling — the last two, `run_integrations` and `print_config_warnings`, are the CLI's own ([§FS-integrations.1](../functional-spec/FS-integrations.md#1-user-facing-command), [§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path), [§DA-engine-renders-nothing](../decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires)). `tests/integration/test_engine_boundary.py` holds the boundary: the embedding API in `crates/grund-core/src/api/` writes to no stream, the only engine files that render are under `crates/grund-core/src/compat/`, and neither frontend references `main_entry`, `compat_cli` or a `command_*` symbol of the engine.
 
 ## 3. grund-cli: the CLI binary
 
-The Cargo package named `grund`. It imports `grund-core`, owns the installed binary, prints help/version output, restores SIGPIPE, and routes top-level commands to CLI-local wrappers over the data APIs. Every command's rendering is one of those wrappers, `integrations` included: its argument parsing, its detection and artifact printing, and the reports its `--write` makes are `cli_integrations.rs` and `cli_integrations_write.rs`, over the client set, the detection, the agent surfaces and the managed writes the engine answers with as data ([§FS-integrations.1](../functional-spec/FS-integrations.md#1-user-facing-command)). This is what `cargo install grund` produces and what the npm/PyPI packages wrap. Synchronous; no async runtime, no LSP types, no JSON-RPC.
+The Cargo package named `grund`, what `cargo install grund` produces and what the npm/PyPI packages wrap. It owns the installed binary, prints help and version, restores SIGPIPE, and routes top-level commands to CLI-local wrappers over the data APIs. Every command renders through one of those wrappers, `integrations` included: its argument parsing, detection and artifact printing, and its `--write` reports are `cli_integrations.rs` and `cli_integrations_write.rs`, over the client set, detection, agent surfaces and managed writes the engine returns as data ([§FS-integrations.1](../functional-spec/FS-integrations.md#1-user-facing-command)). Synchronous; no async runtime, no LSP types, no JSON-RPC.
 
 ## 4. grund-lsp: the LSP server binary
 
-Speaks LSP over stdio (per [§AR-lsp.4](AR-lsp.md#4-transport)). Imports `grund-core` for scan/check/show/fmt-backed state; imports `lsp-server` for the stdio JSON-RPC loop and `lsp-types` for protocol data shapes. Publishes as `grund-lsp` on Cargo per [§FS-distribution.1](../functional-spec/FS-distribution.md#1-targets), with npm/PyPI packages kept as planned distribution targets. Independent of `grund-cli` — neither pulls the other in. The full architecture lives in [§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built).
+Speaks LSP over stdio ([§AR-lsp.4](AR-lsp.md#4-transport)). Imports `grund-core` for scan/check/show/fmt-backed state, `lsp-server` for the stdio JSON-RPC loop and `lsp-types` for protocol data shapes. Published on Cargo as `grund-lsp`, with npm and PyPI packages planned ([§FS-distribution.1](../functional-spec/FS-distribution.md#1-targets)). Neither it nor `grund-cli` pulls the other in. Its architecture is [§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built).
 
 ## 5. grund-node: the napi-rs binding
 
@@ -79,5 +79,5 @@ Same operations, exposed as Python functions. Built and packaged via `maturin`. 
 
 - **One source of truth for behavior.** Bug fixes and new rules land in `grund-core` and reach all three ecosystems on the next release.
 - **No re-implementation.** Neither Node nor Python developers need to maintain a parallel parser or a parallel rule set.
-- **Fast everywhere.** The compiled engine is the same in all three. The bindings add only a thin marshalling layer.
+- **Fast everywhere.** The compiled engine is the same in all three; the bindings add only a thin marshalling layer.
 - **Independent release cadence per crate when needed.** A Node-only fix in `grund-node` does not require a `grund-core` version bump.
