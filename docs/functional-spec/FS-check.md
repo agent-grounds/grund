@@ -150,13 +150,7 @@ A report on **stdout** — `check` is a linter and its findings are its output (
 - `1` — at least one retained error.
 - `2` — scan or CLI failure (I/O, malformed file, invalid `grund.toml`, or invalid invocation).
 
-`check` always completes the ordinary scan and every checker pass before applying `--only` and `--ignore`. Selection is a query over that complete report, not a way to skip declaration, citation, maintenance, warning, or suggestion work. Coded errors, warnings, and enabled suggestions are selected by the same rule, after `--suggestions`, `--full`, and `--require-grounding` have decided which diagnostics exist. CLI and config failures happen outside that selectable report, and a mid-scan failure's `io` diagnostic cannot be hidden: either kind of incomplete run remains visible and exits `2` regardless of selectors. The unselected default run is unchanged, and no third exit status exists.
-
-The three value findings are ordinary fixed-severity errors and exit `1`; an unreadable or syntactically incomplete required home JSON source leaves the scan incomplete and exits `2` ([§FS-values.5](FS-values.md#5-resolution-diagnostics-and-exit-status)).
-
-For verbose text and JSON report examples, including empty JSON scans and global diagnostic ordering, see [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes).
-
-An invalid `grund.toml` aborts before any file is read ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)): exit `2`, a single `error:` line on stderr, nothing on stdout. A per-file failure encountered *during* the walk (a file that cannot be read or decoded, an unreadable directory, or a link the walk cannot resolve — [§FS-config.3.5.5](FS-config.md#355-a-link-the-walk-cannot-resolve-is-reported-and-not-walked-into)) is different: the offending path is reported as `error: <path>: <reason>` on stderr (the CLI-level shape, [§FS-errors.2.2](FS-errors.md#22-cli-level-message) — the path has no line to point at, and "I could not read this" is about the run, not a finding about the graph), the walk continues over the remaining files, every finding collected from the readable files is still printed to stdout in the normal located `check` form, and the run exits `2` because the view of the tree was incomplete. A `2` therefore always means "do not trust this report as complete"; the printed findings are still real. Malformed input is answered with a diagnostic naming the path and a truthful code, never an abort ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)).
+The three value findings are ordinary fixed-severity errors and exit `1`; an unreadable or syntactically incomplete required home JSON source leaves the scan incomplete and exits `2` ([§FS-values.5](FS-values.md#5-resolution-diagnostics-and-exit-status)). What `--only` and `--ignore` may select is §2.1.2, and what an incomplete run prints is §2.4. For verbose text and JSON report examples, including empty JSON scans and global diagnostic ordering, see [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes).
 
 ### 2.1 Report format
 
@@ -170,54 +164,50 @@ Findings are written to **stdout**, one per line, in the form:
 
 `<path>` is relative to the base `[output] relative_paths` selects — the config root under the default ([§FS-config.3.6](FS-config.md#36-output--report-format)). `<line>` is 1-indexed. The `<path>:<line>:` prefix is mandatory on every finding so editors and agents can jump unmodified — this is the contract from [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements).
 
-Every retained located text diagnostic carries its lowercase channel after that
-jump-friendly prefix: `error:` for §3, `warning:` for §4, and `suggestion:` for
-an enabled §2.3 advisory. The marker is report structure rather than part of the
-diagnostic message; `<message>` retains its ordinary bytes. Text reports follow
-the grouped order [§FS-errors.4](FS-errors.md#4-determinism) fixes. Every
-retained diagnostic remains present and unabridged.
+Every retained located text diagnostic carries its lowercase channel after that jump-friendly prefix: `error:` for §3, `warning:` for §4, and `suggestion:` for an enabled §2.3 advisory. The marker is report structure rather than part of the diagnostic message; `<message>` retains its ordinary bytes. Text reports follow the grouped order [§FS-errors.4](FS-errors.md#4-determinism) fixes. Every retained diagnostic remains present and unabridged.
 
 When a finding inherently spans multiple sites (e.g., duplicate declarations, [§FS-check.3.3](FS-check.md#33-duplicate-declaration)), the message is anchored at the lexicographically-first site (sort by `path`, then `line`) and the other sites are listed parenthetically inside the message.
 
-Selection happens before the fixed per-format sort, render, and exit decision.
-Every retained diagnostic keeps its message, location, code, sites, and channel,
-and selectors cannot alter its relative order within its text severity group or
-the global JSON order. Flag order and duplication cannot affect output
-([§FS-errors.4](FS-errors.md#4-determinism)).
-
-When there are zero retained errors and zero retained warnings, and no retained suggestion or unselectable run-level line exists, the default text form writes exactly `success` plus a trailing newline to stdout. The explicit success marker is only emitted for an otherwise empty selected report; a run that has a retained warning or suggestion prints that line instead. This says that the selected report is empty, not that the repository has no findings. There is no summary footer — the exit code is still the machine-readable verdict, and the per-finding lines are the human-readable detail.
-
-With `--format=json`, the retained findings are emitted as NDJSON on stdout instead — same stream, machine shape per [§FS-errors.5](FS-errors.md#5-json-format). JSON remains byte-, shape-, and order-compatible: its objects keep the global order [§FS-errors.4](FS-errors.md#4-determinism) fixes rather than inheriting text's severity groups. JSON remains diagnostics-only: stdout is empty when the selected report has no retained diagnostics, so `grund check --format=json | jq …` sees only diagnostic objects. (CLI-level `error:` / `warning:` lines, when there are any, go to stderr — §2.1.1 — so a clean JSON run is empty on *both* streams and a `2` always means something on stderr.)
+Selection happens before the fixed per-format sort, render, and exit decision (§2.1.2). An otherwise empty selected report makes the default text form write exactly `success` plus a trailing newline (§2.1.3); with `--format=json`, the retained findings are emitted as NDJSON on stdout instead (§2.1.4).
 
 #### 2.1.1 CLI-level messages
 
-Lines that are about the run rather than a finding at a site in the repo — unknown subcommand, malformed flag, invalid `grund.toml` schema (when the config itself parses but a value is wrong), a per-file read failure mid-walk (§2), the empty-scan caution (§2.2), the citation-obligation caution (§2.2.1), the nothing-recognized caution (§4.5) — are CLI-level messages: on **stderr**, never on stdout, with the shape, prefix and exit rules, and JSON treatment of [§FS-errors.2.2](FS-errors.md#22-cli-level-message). A `grund.toml` schema error is one of the CLI-level messages that still point at a line, beside the workspace warnings of §4.7, §4.8, and §4.10, in the form and for the reason [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) gives.
+Lines that are about the run rather than a finding at a site in the repo — unknown subcommand, malformed flag, invalid `grund.toml` schema (when the config itself parses but a value is wrong), a per-file read failure mid-walk (§2.4), the empty-scan caution (§2.2), the citation-obligation caution (§2.2.1), the nothing-recognized caution (§4.5) — are CLI-level messages: on **stderr**, never on stdout, with the shape, prefix and exit rules, and JSON treatment of [§FS-errors.2.2](FS-errors.md#22-cli-level-message). A `grund.toml` schema error is one of the CLI-level messages that still point at a line, beside the workspace warnings of §4.7, §4.8, and §4.10, in the form and for the reason [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) gives.
+
+#### 2.1.2 Selection filters the complete report
+
+`check` always completes the ordinary scan and every checker pass before applying `--only` and `--ignore` (§1.4): selection is a query over that complete report, not a way to skip declaration, citation, maintenance, warning, or suggestion work. Coded errors, warnings, and enabled suggestions are selected by the same rule, after `--suggestions`, `--full`, and `--require-grounding` have decided which diagnostics exist, and before the fixed per-format sort, render, and exit decision. Every retained diagnostic keeps its message, location, code, sites, and channel, and selectors cannot alter its relative order within its text severity group or the global JSON order; flag order and duplication cannot affect output ([§FS-errors.4](FS-errors.md#4-determinism)). CLI and config failures happen outside that selectable report, and a mid-scan failure's `io` diagnostic cannot be hidden: either kind of incomplete run (§2.4) remains visible and exits `2` regardless of selectors. The unselected default run is unchanged, and no third exit status exists.
+
+#### 2.1.3 The `success` marker
+
+When there are zero retained errors and zero retained warnings, and no retained suggestion or unselectable run-level line exists, the default text form writes exactly `success` plus a trailing newline to stdout. The marker is only emitted for an otherwise empty selected report; a run that has a retained warning or suggestion prints that line instead. It says that the selected report is empty, not that the repository has no findings. There is no summary footer — the exit code is still the machine-readable verdict, and the per-finding lines are the human-readable detail.
+
+#### 2.1.4 JSON
+
+With `--format=json`, the retained findings are emitted as NDJSON on stdout instead — same stream, machine shape per [§FS-errors.5](FS-errors.md#5-json-format). JSON remains byte-, shape-, and order-compatible: its objects keep the global order [§FS-errors.4](FS-errors.md#4-determinism) fixes rather than inheriting text's severity groups. JSON remains diagnostics-only: stdout is empty when the selected report has no retained diagnostics, so `grund check --format=json | jq …` sees only diagnostic objects. CLI-level `error:` / `warning:` lines, when there are any, go to stderr (§2.1.1), so a clean JSON run is empty on *both* streams and a `2` always means something on stderr.
 
 ### 2.2 Empty scan
 
-A walk that read **no scannable files** at all, and turned up no findings (no errors, no warnings — including the agent-entrypoint check of §3.5, which still runs and still reports even when nothing is scanned), is almost always a misconfigured scope rather than a clean repo. Rather than print nothing and exit `0` — which reads as "all clear" — `check` emits one CLI-level `warning:` line ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) to **stderr** — it is a caution about the run, not a finding about the repo, so it does not belong on stdout with the findings:
-
-- when the scope is the repo root (no path argument, or `grund check .`) and `[scan] include` is set: the message names the `include` list and points at `grund.toml` / `grund init`, since the usual cause is a project whose sources live outside the default `docs/`, `e2e/`, `src/`;
-- when an explicit path was given: the message names that path and the recognized extensions, since the usual cause is pointing `grund` at a tree with no `.md`/source files;
-- when the explicit path is a **file whose own name begins with `.`** and whose extension is one `[scan] extensions` lists: the message names the hidden-name rule instead ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)). The extension list is the one rule that did *not* skip that file, so naming it sends the reader to edit config that was never the cause, and a blind spot a reader is pointed away from is one they cannot plan around. A hidden file whose extension is *also* unlisted keeps the message above: there the list is a true reason, and naming one of two causes would be its own misdirection. This arm answers for a handed **file** only — a handed *directory* whose only listed-extension content is hidden keeps the message above too, though the hidden-name rule is the sole reason it read nothing, because the walk does not record that it met candidates and rejected every one of them by name;
-
-  ```
-  warning: nothing to scan — `docs/.notes.md` is a hidden file. grund reads no file whose own name begins with `.`, whatever `[scan] extensions` says. Rename it, or move what needs checking into a file that is not hidden.
-  ```
-- when a `[workspace]` block put no project in scope at all — `include_root = false`, and every member it has is an optional one this checkout does not have ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)): the message says exactly that. Both of the messages above would be false here, because the walk never looked under `[scan] include` and the tree `grund init --docs` scaffolds is not what is missing. This one names no remedy either, for the reason §4.9's announcement names none: nothing is misconfigured, and the only thing that changes the answer is a fuller checkout.
-
-This is a warning, not an error: the exit code stays `0` (a genuinely empty tree is not a failure), `--format=json` emits the warning as one diagnostic JSON object on stderr (the same stream as the text `warning:` line — it is not part of the findings on stdout), and a repo that *does* have a stale `AGENTS.md` block or any other finding **about the configured scope** gets that finding (on stdout) and **no** empty-scan notice. Three findings are not about that scope and do not suppress it: the redundant-config pair (§4.3), which is about which file the run read rather than what it walked — a repository mid-migration must not lose the scope diagnostic because it also has a config pair — the out-of-scope tier (§3.14), which is about the tree *outside* the scope, and the absent-member announcement (§4.9), which is about the namespaces the run skipped rather than the scope it walked: the block whose last project went missing is exactly the run that has nothing to read, and it must not lose the line saying so to the line saying why. The tier is the case the caution is worth most: it says where the citations actually are, and the caution says the config has not been told. This is the friendliness-first counterpart to the explicit success marker ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)): the run that scanned nothing is one of the cases where `success` would be the wrong answer (§2.1).
+A walk that read **no scannable files** at all, and turned up no findings (no errors, no warnings — including the agent-entrypoint check of §3.5, which still runs and still reports even when nothing is scanned), is almost always a misconfigured scope rather than a clean repo. Rather than print nothing and exit `0` — which reads as "all clear" — `check` emits one CLI-level `warning:` line ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) to **stderr**: it is a caution about the run, not a finding about the repo, so it does not belong on stdout with the findings. Its message names the likely cause (§2.2.2); its exit code, JSON form, and what suppresses it are §2.2.3. This is the friendliness-first counterpart to the explicit success marker ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)): the run that scanned nothing is one of the cases where `success` would be the wrong answer (§2.1.3).
 
 #### 2.2.1 Citation-direction obligation applies to nothing
 
-When `[citations.<kind>]` contains at least one `must` or `should` obligation, but the citing kind has no unit for the obligation to evaluate, `check` emits one CLI-level `warning:` on **stderr**. This is a run-level fact, not a finding at a repository site: the warning has no path, line, or sites, and it does not change the exit code or emit `success` in text mode. In `--format=json`, it is one standard warning diagnostic on **stderr** with `path`, `line`, and `sites` all `null` ([§FS-errors.5](FS-errors.md#5-json-format)). Its stable diagnostic code is `empty-citation-obligation`.
+When `[citations.<kind>]` contains at least one `must` or `should` obligation, but the citing kind has no unit for the obligation to evaluate, `check` emits one CLI-level `warning:` on **stderr**. This is a run-level fact, not a finding at a repository site: the warning has no path, line, or sites, and it does not change the exit code or emit `success` in text mode. In `--format=json`, it is one standard warning diagnostic on **stderr** with `path`, `line`, and `sites` all `null` ([§FS-errors.5](FS-errors.md#5-json-format)). Its stable diagnostic code is `empty-citation-obligation`. The warning is independent of other findings: another warning or error does not suppress it.
 
-The warning is emitted once per configured kind when all of these conditions hold:
+The warning is emitted once per configured kind when all of the conditions §2.2.1.1 lists hold; a workspace asks it per project, and an explicit path of the files it scans (§2.2.1.3). Its messages distinguish the two kinds of missing unit (§2.2.1.2).
+
+##### 2.2.1.1 When it fires
+
+The warning fires for a kind when all of these conditions hold:
 
 1. The table has a non-empty `must` or `should` list. A table containing only `must-not` or `should-not` entries has no obligation unit and does not warn. A kind with both levels is named by `must`; a `should`-only table is named by `should`.
 2. The citing kind has a `folder` home, and that kind is walked. File homes, the homeless kind, and `scan = false` kinds do not warn.
 3. The run successfully scanned at least one file that belongs to that folder, excluding the folder's entry file. For a citable kind, the entry is its effective `index` (`README.md` when the key is omitted); for a non-citable kind, the entry is the literal `README.md`. `index = false` excludes no file. Files not successfully scanned, files outside the home, and files hidden or excluded by the walk do not count.
 4. The ordinary obligation-unit derivation produced zero units: no declaration unit for a citable kind, or no citation-carrying scanned-file unit for a non-citable kind.
+
+The folder membership and entry-file comparisons use the same normalized home matching as citation-source classification.
+
+##### 2.2.1.2 The messages
 
 The messages distinguish the two kinds of missing unit:
 
@@ -232,31 +222,81 @@ The non-citable message keeps its `require_grounding` half only where that row's
 warning: [citations.skill] must applies to nothing — no scanned file in skills/ carries a citation
 ```
 
-The folder membership and entry-file comparisons use the same normalized home matching as citation-source classification. The warning is independent of other findings: another warning or error does not suppress it. Workspace checking asks the question separately for each project, against that project's config and scanned files ([§FS-workspace.5](FS-workspace.md#5-command-scope)). An explicit path still evaluates the files it scans, so a path such as `grund check skills` can earn this warning; it does not broaden the path to unrelated homes.
+##### 2.2.1.3 Workspaces and explicit paths
+
+Workspace checking asks the question separately for each project, against that project's config and scanned files ([§FS-workspace.5](FS-workspace.md#5-command-scope)). An explicit path still evaluates the files it scans, so a path such as `grund check skills` can earn this warning; it does not broaden the path to unrelated homes.
+
+#### 2.2.2 The message names the likely cause
+
+The message follows what the run was given: the repo root with `[scan] include` set (§2.2.2.1), an explicit path (§2.2.2.2), a hidden file handed by name (§2.2.2.3), or a `[workspace]` block that put no project in scope (§2.2.2.4).
+
+##### 2.2.2.1 The repo root
+
+When the scope is the repo root (no path argument, or `grund check .`) and `[scan] include` is set, the message names the `include` list and points at `grund.toml` / `grund init`, since the usual cause is a project whose sources live outside the default `docs/`, `e2e/`, `src/`.
+
+##### 2.2.2.2 An explicit path
+
+When an explicit path was given, the message names that path and the recognized extensions, since the usual cause is pointing `grund` at a tree with no `.md`/source files.
+
+##### 2.2.2.3 A hidden file
+
+When the explicit path is a **file whose own name begins with `.`** and whose extension is one `[scan] extensions` lists, the message names the hidden-name rule instead of §2.2.2.2's ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)). The extension list is the one rule that did *not* skip that file, so naming it would send the reader to edit config that was never the cause:
+
+```
+warning: nothing to scan — `docs/.notes.md` is a hidden file. grund reads no file whose own name begins with `.`, whatever `[scan] extensions` says. Rename it, or move what needs checking into a file that is not hidden.
+```
+
+A hidden file whose extension is *also* unlisted keeps §2.2.2.2's message: there the list is a true reason, and naming one of two causes would be its own misdirection. This case answers for a handed **file** only — a handed *directory* whose only listed-extension content is hidden keeps §2.2.2.2's message too, though the hidden-name rule is the sole reason it read nothing, because the walk does not record that it met candidates and rejected every one of them by name.
+
+##### 2.2.2.4 No project in scope
+
+When a `[workspace]` block put no project in scope at all — `include_root = false`, and every member it has is an optional one this checkout does not have ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)) — the message says exactly that. The messages of §2.2.2.1 and §2.2.2.2 would both be false here, because the walk never looked under `[scan] include` and the tree `grund init --docs` scaffolds is not what is missing. This one names no remedy either, for the reason §4.9's announcement names none: nothing is misconfigured, and the only thing that changes the answer is a fuller checkout.
+
+#### 2.2.3 Exit code, JSON, and what suppresses it
+
+This is a warning, not an error: the exit code stays `0` (a genuinely empty tree is not a failure), and `--format=json` emits the warning as one diagnostic JSON object on stderr, the stream of the text `warning:` line rather than of the findings on stdout. A repo that *does* have a stale `AGENTS.md` block or any other finding **about the configured scope** gets that finding (on stdout) and **no** empty-scan notice. Three findings are not about that scope and do not suppress it (§2.2.3.1).
+
+##### 2.2.3.1 Findings that do not suppress it
+
+- The redundant-config pair (§4.3) is about which file the run read rather than what it walked, so a repository mid-migration keeps the scope diagnostic beside its config pair.
+- The out-of-scope tier (§3.14) is about the tree *outside* the scope, and is the case the caution is worth most (§1.3.9).
+- The absent-member announcement (§4.9) is about the namespaces the run skipped rather than the scope it walked: the block whose last project went missing is exactly the run that has nothing to read, and it must not lose the line saying so to the line saying why.
 
 ### 2.3 Suggestions channel *(opt-in)*
 
-The `should` / `should-not` levels of `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) produce **suggestions**, not findings: they are advisory by RFC-2119 definition and grund has no per-site suppression mechanism, so surfacing them in the default run would replace the `success` marker (§2.1) on a repo that has consciously accepted a deviation, and it would never recover. They are therefore withheld from the default run and live on a separate channel, decided in [§DF-citation-directions](../decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels).
+The `should` / `should-not` levels of `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) produce **suggestions**, not findings: they are advisory by RFC-2119 definition and grund has no per-site suppression mechanism, so surfacing them in the default run would replace the `success` marker (§2.1.3) on a repo that has consciously accepted a deviation, and it would never recover. They are therefore withheld from the default run and live on a separate channel, decided in [§DF-citation-directions](../decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels).
 
 `grund check --suggestions` (§1) emits them. A suggestion is a third report channel, **not** a third severity: [§FS-config.6](FS-config.md#6-what-is-not-configured-here) freezes the severity set at `{error, warning}`, so a suggestion carries `"channel": "suggestion"` rather than a `severity` ([§FS-errors.5](FS-errors.md#5-json-format)). The codes are `suggested-citation` (a `should` obligation a declaration does not meet), `discouraged-citation` (a `should-not` citation site), and `escaped-citation-resolves` (§2.3.1).
 
-`--only` and `--ignore` select suggestions only after `--suggestions` has enabled this channel. A selector cannot surface a suggestion the run did not request; a retained suggestion still never affects exit status. Selecting away every enabled suggestion restores the ordinary empty selected-report behavior from §2.1.
-
-- **Text** — `--suggestions` prints each suggestion in the located-finding
-  shape `<path>:<line>: suggestion: <message>` (§2.1), after the error and
-  warning groups in the same deterministic within-group order
-  ([§FS-errors.4](FS-errors.md#4-determinism)). Without the flag, suggestions
-  are not printed, and the `success` marker still appears for a run with zero
-  errors and zero warnings even if suggestions exist — a suggestion is not a
-  finding about well-formedness.
-- **Exit code** — suggestions never affect it (`0`/`1`/`2` unchanged), exactly like the empty-scan caution.
-- **JSON** — under `--suggestions`, suggestion objects are emitted on stdout alongside the findings with `"channel": "suggestion"`; a consumer filtering on `severity ∈ {error, warning}` is unaffected. Without the flag none are emitted.
-
-`grund gap` ([§RM-gap-report](../roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports)) is the standing home for these records once it ships — a should-level miss is precisely "the graph is thinner than recommended," and gap is exit-code-neutral by design.
+`--only` and `--ignore` select suggestions only after `--suggestions` has enabled this channel; that selection, the text and JSON rendering, and the exit code suggestions never affect are §2.3.2. `grund gap` is the standing home for these records once it ships (§2.3.3).
 
 #### 2.3.1 Escaped citation resolves
 
-A citation whose marker is bracketed — the schematic `<§>alias/ID` shape — is deliberately inert: the `§` is not immediately followed by the ID, so no pass treats it as a citation ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)). That is how a citation's *shape* is written in prose without `grund check` resolving it. It also makes an escape of an ID that *does* exist ambiguous: usually a deliberate illustration, but also exactly what a live citation looks like once the marker is bracketed by accident — and that slip is invisible, since the escaped form raises no dangling error (§3.1) and navigates nowhere. So when an escaped citation's ID resolves to a real declaration, grund emits an `escaped-citation-resolves` suggestion at the escape site, naming the live `§`-form to switch to. It is a suggestion, never a warning or error: illustrating a real ID is legitimate, so it must never replace `success` (§2.1) or change the exit code. It is the mirror of the §3.1 dangling check — that flags a live citation whose ID does not resolve; this flags an escaped one whose ID does. Unqualified `<§>ID` and qualified `<§>alias/ID` escapes are both covered; the ID is parsed with the citing project's grammar, so a cross-namespace target under an unusual grammar may be skipped, which only ever withholds a suggestion.
+A citation whose marker is bracketed — the schematic `<§>alias/ID` shape — is deliberately inert: the `§` is not immediately followed by the ID, so no pass treats it as a citation ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)). That is how a citation's *shape* is written in prose without `grund check` resolving it. It also makes an escape of an ID that *does* exist ambiguous: usually a deliberate illustration, but also exactly what a live citation looks like once the marker is bracketed by accident, a slip that raises no dangling error (§3.1) and navigates nowhere. So when an escaped citation's ID resolves to a real declaration, grund emits an `escaped-citation-resolves` suggestion at the escape site, naming the live `§`-form to switch to. It never replaces `success` or changes the exit code (§2.3.1.1), and it reads both escape forms (§2.3.1.2).
+
+##### 2.3.1.1 Never a warning or error
+
+It is a suggestion, never a warning or error: illustrating a real ID is legitimate, so it must never replace `success` (§2.1.3) or change the exit code. It is the mirror of the §3.1 dangling check — that flags a live citation whose ID does not resolve; this flags an escaped one whose ID does.
+
+##### 2.3.1.2 Both escape forms
+
+Unqualified `<§>ID` and qualified `<§>alias/ID` escapes are both covered. The ID is parsed with the citing project's grammar, so a cross-namespace target under an unusual grammar may be skipped, which only ever withholds a suggestion.
+
+#### 2.3.2 Selecting and printing suggestions
+
+`--only` and `--ignore` select suggestions only after `--suggestions` has enabled this channel: a selector cannot surface a suggestion the run did not request. Selecting away every enabled suggestion restores the ordinary empty selected-report behavior from §2.1.3.
+
+- **Text** — `--suggestions` prints each suggestion in the located-finding shape `<path>:<line>: suggestion: <message>` (§2.1), after the error and warning groups in the same deterministic within-group order ([§FS-errors.4](FS-errors.md#4-determinism)). Without the flag, suggestions are not printed, and the `success` marker still appears for a run with zero errors and zero warnings even if suggestions exist — a suggestion is not a finding about well-formedness.
+- **Exit code** — suggestions, retained or not, never affect it (`0`/`1`/`2` unchanged), exactly like the empty-scan caution.
+- **JSON** — under `--suggestions`, suggestion objects are emitted on stdout alongside the findings with `"channel": "suggestion"`; a consumer filtering on `severity ∈ {error, warning}` is unaffected. Without the flag none are emitted.
+
+#### 2.3.3 `grund gap` is their standing home
+
+`grund gap` ([§RM-gap-report](../roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports)) is the standing home for these records once it ships — a should-level miss is precisely "the graph is thinner than recommended," and gap is exit-code-neutral by design.
+
+### 2.4 An incomplete run
+
+An invalid `grund.toml` aborts before any file is read ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)): exit `2`, a single `error:` line on stderr, nothing on stdout. A per-file failure *during* the walk — a file that cannot be read or decoded, an unreadable directory, or a link the walk cannot resolve ([§FS-config.3.5.5](FS-config.md#355-a-link-the-walk-cannot-resolve-is-reported-and-not-walked-into)) — does not abort: the offending path is reported as `error: <path>: <reason>` on stderr, in the CLI-level shape of [§FS-errors.2.2](FS-errors.md#22-cli-level-message) because the path has no line to point at and "I could not read this" is about the run, not a finding about the graph; the walk continues over the remaining files; every finding collected from the readable files is still printed to stdout in the normal located `check` form; and the run exits `2` because the view of the tree was incomplete. A `2` therefore always means "do not trust this report as complete"; the printed findings are still real. Malformed input is answered with a diagnostic naming the path and a truthful code, never an abort ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)).
 
 ## 3. Errors detected
 
@@ -264,45 +304,23 @@ Each of the following is an error and contributes to a non-zero exit code.
 
 ### 3.1 Dangling citation
 
-A recognized citation (per §1.1) for which no declaration is found. This is
-also the fixed finding for a fetch-enabled kind whose effective target-side
-resolution is `must` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)). In that case the exact message is
-`unknown reference <qualified-ID>; no snapshot in <home> — run grund fetch
-<qualified-ID>`, its JSON code remains `dangling`, its severity is `error`, and
-it contributes exit 1. For a kind without `fetch`, the historical
-`unknown reference <qualified-ID>` bytes remain unchanged.
+A recognized citation (per §1.1) for which no declaration is found: `unknown reference <ID>`. A near ID (§3.1.1) or an inline-code context (§3.1.2) adds a hint, and a fetch-enabled kind adds the fetch action (§3.1.3).
 
-If the
-target namespace contains a declared ID of the same kind that is close by
-deterministic edit distance, the diagnostic appends one hint:
-`unknown reference FS-chek; did you mean FS-check?`. If no same-kind candidate
-is close enough, the message stays `unknown reference <ID>` so unrelated missing
-IDs do not produce noisy guesses.
+A number-only shorthand citation (§1.2) is exempt from this rule and reported by §3.13 instead — never both, because `unknown reference FS-042` would name a token that is not a full ID under the repo's own grammar. For a value binding, this ordinary resolution finding suppresses value comparison at the same site ([§FS-values.5.1](FS-values.md#51-resolve-before-comparison)).
 
-When the dangling citation sits inside a Markdown inline-code span — where a
-`§`-citation is as often an illustration as a live reference — the diagnostic
-also offers the `<§>` escape ([§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves)):
-`unknown reference api/FS-zzz; write <§>api/FS-zzz if this is an illustration`.
-The two hints combine when a near-ID match and an inline-code context apply at
-once: `unknown reference api/FS-login; did you mean api/FS-logout? (or write
-<§>api/FS-login if this is an illustration)`. Outside inline code the escape hint
-is withheld, so an ordinary prose typo is nudged toward the near ID, not toward
-escaping. This is the live-citation counterpart to §2.3.1's escaped-citation
-suggestion: there an escape resolves and might be live; here a live citation
-dangles and might be an escape.
+#### 3.1.1 A near ID
 
-A number-only shorthand citation (§1.2) is exempt from this rule and reported by
-§3.13 instead — never both, because `unknown reference FS-042` would name a token
-that is not a full ID under the repo's own grammar.
+If the target namespace contains a declared ID of the same kind that is close by deterministic edit distance, the diagnostic appends one hint: `unknown reference FS-chek; did you mean FS-check?`. If no same-kind candidate is close enough, the message stays `unknown reference <ID>` so unrelated missing IDs do not produce noisy guesses.
 
-For a value binding, this ordinary resolution finding suppresses value comparison at the same site ([§FS-values.5.1](FS-values.md#51-resolve-before-comparison)).
+#### 3.1.2 An illustration in inline code
 
-The near-ID and escaped-inline-code hints above take precedence over the fetch
-action. The message retains `unknown reference <qualified-ID>; no snapshot in
-<home>` and substitutes the existing conditional tail for the em-dash fetch
-tail: `; did you mean <candidate>?`, `; write <§><qualified-ID> if this is an
-illustration`, or their existing combined form. One citation site still
-produces one finding.
+When the dangling citation sits inside a Markdown inline-code span — where a `§`-citation is as often an illustration as a live reference — the diagnostic also offers the `<§>` escape ([§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves)): `unknown reference api/FS-zzz; write <§>api/FS-zzz if this is an illustration`. The two hints combine when a near-ID match and an inline-code context apply at once: `unknown reference api/FS-login; did you mean api/FS-logout? (or write <§>api/FS-login if this is an illustration)`. Outside inline code the escape hint is withheld, so an ordinary prose typo is nudged toward the near ID, not toward escaping.
+
+#### 3.1.3 A kind that fetches
+
+This is also the fixed finding for a fetch-enabled kind whose effective target-side resolution is `must` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)). In that case the exact message is `unknown reference <qualified-ID>; no snapshot in <home> — run grund fetch <qualified-ID>`, its JSON code remains `dangling`, its severity is `error`, and it contributes exit 1. For a kind without `fetch`, the historical `unknown reference <qualified-ID>` bytes remain unchanged.
+
+The near-ID and escaped-inline-code hints (§3.1.1, §3.1.2) take precedence over the fetch action. The message retains `unknown reference <qualified-ID>; no snapshot in <home>` and substitutes the existing conditional tail for the em-dash fetch tail: `; did you mean <candidate>?`, `; write <§><qualified-ID> if this is an illustration`, or their existing combined form. One citation site still produces one finding.
 
 ### 3.2 Missing section
 
@@ -322,23 +340,27 @@ A `docs/` file whose H1 has the stub shape `# <ID>: [<text>](<path>)` where eith
 
 ### 3.5 Invalid agent entrypoint init block
 
-If `<path>/AGENTS.md` exists, `check` verifies the versioned `grund init` block defined by [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints). It also verifies known companion agent entrypoints whenever they exist and are not symlinks to `AGENTS.md` — `.rules` only where the owning `.zed/` directory or a managed block already in it says so, the evidence [§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent) attributes that too-generic name by; for example, existing standalone `AGENTS.override.md`, `CLAUDE.md`, `.claude/CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` files must carry the managed block as rendered for that file's own agent ([§FS-init.2.3.6](FS-init.md#236-clickable-citations)), while `CLAUDE.md -> AGENTS.md` is already covered by the canonical file. `check` does not require absent workspace-triggered aliases from [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place); once `grund init` creates one, it is validated because it exists. If `AGENTS.md` does not exist, existing companion agent files without a managed block are treated as project-owned instructions and are not validated by `grund check`; this keeps config-only adoption from modifying or policing an existing agent setup. A companion that already contains a managed `grund init` block is still version-checked even without `AGENTS.md`, so repos initialized directly into `CLAUDE.md`, `GEMINI.md`, or another explicit entrypoint still get drift detection. A missing managed block when one is required, an older block version, a newer unsupported block version, or a config-derived section that no longer byte-matches its re-render from the live config ([§FS-init.2.3.5](FS-init.md#235-citation-directions), [§FS-init.2.3.6](FS-init.md#236-clickable-citations)) is an error in scaffolded-entrypoint mode. A legacy H2-bounded block from v3 or earlier ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) is still recognized and reported as an *older block version* — `run \`grund init\`` is its transition path to the delimited form, so existing repositories are told how to migrate rather than treated as malformed. Broken delimiters are a distinct error: a file whose delimiters [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) defines as **malformed** is reported as a malformed managed block, anchored at the offending delimiter line and naming the defect; `check` never rewrites the file, and `grund init` refuses to splice against broken delimiters for the same reason. This lets CI catch repos whose managed agent entry points were initialized and later drifted or need to be refreshed with `grund init`.
+If `<path>/AGENTS.md` exists, `check` verifies the versioned `grund init` block defined by [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints); it also verifies the companion agent entrypoints §3.5.1 names. A missing managed block when one is required, an older block version, a newer unsupported block version, or a config-derived section that no longer byte-matches its re-render from the live config ([§FS-init.2.3.5](FS-init.md#235-citation-directions), [§FS-init.2.3.6](FS-init.md#236-clickable-citations)) is an error in scaffolded-entrypoint mode; a legacy block is an older version and broken delimiters are a distinct error (§3.5.2). This lets CI catch repos whose managed agent entry points were initialized and later drifted or need to be refreshed with `grund init`. Every variant is an error with code `agents-init`, with the reporting order, message text, and selector behavior of §3.5.3.
+
+#### 3.5.1 Which entrypoints are verified
+
+`check` verifies known companion agent entrypoints whenever they exist and are not symlinks to `AGENTS.md` — `.rules` only where the owning `.zed/` directory or a managed block already in it says so, the evidence [§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent) attributes that too-generic name by; for example, existing standalone `AGENTS.override.md`, `CLAUDE.md`, `.claude/CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` files must carry the managed block as rendered for that file's own agent ([§FS-init.2.3.6](FS-init.md#236-clickable-citations)), while `CLAUDE.md -> AGENTS.md` is already covered by the canonical file. `check` does not require absent workspace-triggered aliases from [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place); once `grund init` creates one, it is validated because it exists.
+
+If `AGENTS.md` does not exist, existing companion agent files without a managed block are treated as project-owned instructions and are not validated by `grund check`; this keeps config-only adoption from modifying or policing an existing agent setup. A companion that already contains a managed `grund init` block is still version-checked even without `AGENTS.md`, so repos initialized directly into `CLAUDE.md`, `GEMINI.md`, or another explicit entrypoint still get drift detection.
+
+#### 3.5.2 Legacy and malformed blocks
+
+A legacy H2-bounded block from v3 or earlier ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) is still recognized and reported as an *older block version* — `` run `grund init` `` is its transition path to the delimited form, so existing repositories are told how to migrate rather than treated as malformed. Broken delimiters are a distinct error: a file whose delimiters [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) defines as **malformed** is reported as a malformed managed block, anchored at the offending delimiter line and naming the defect; `check` never rewrites the file, and `grund init` refuses to splice against broken delimiters for the same reason.
+
+#### 3.5.3 Code and message
 
 Every variant remains an error with code `agents-init`, and the default run still reports it after every content pass completes. Its text follows the two-release migration in [§FS-errors.3](FS-errors.md#3-message-text): during the compatibility release the legacy message is a verbatim contiguous prefix followed by the fixed maintenance tail; in `0.14.0` the final text explicitly classifies the work as repository maintenance and states that citation validity is unaffected. A selector may retain or remove this ordinary coded error, but never changes the checker pass that produced it.
 
 ### 3.6 Ungrounded source file *(opt-in)*
 
-Off by default. Two config keys decide it, each written in `[reference]` as the default for every `[[kinds]]` row and settable on the row itself ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)): `require_grounding` says **whether** a place's files must be grounded, and `grounding_level` says **what the unit is** inside each of them. `grund check --require-grounding` (§1) sets the same global default, and an explicit `require_grounding = false` on a row wins over it.
+Off by default. Two config keys decide it, each written in `[reference]` as the default for every `[[kinds]]` row and settable on the row itself ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)): `require_grounding` says **whether** a place's files must be grounded (§3.6.1), and `grounding_level` says **what the unit is** inside each of them (§3.6.2). `grund check --require-grounding` (§1) sets the same global default, and an explicit `require_grounding = false` on a row wins over it.
 
-A unit is **grounded** when it contains at least one recognized citation (§1.1) whose ID resolves to a declaration — **or**, in a source file outside every non-citable home, when it declares an ID inline (a spec home is grounded in the spec it *is*, [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)). A unit that is neither is an error:
-
-```
-src/foo.rs:1: ungrounded source file: no § citation to a declared ID
-```
-
-The marker in the message is the configured one ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). A unit whose only citation is dangling (§3.1) is *not* grounded — it gets both findings; fixing the citation clears both.
-
-This is a pure function of `(tree, config)` like every other `check` rule ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)): it reads no git history ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)) and parses no code ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)) — "source file" is decided by extension, a unit by heading level or comment indentation, and "grounded" by the citations the scanner already collected. It is the floor of the grounding discipline — the verification-at-rest layer of [§GOAL-agent-grounding.1](../goals.md#1-the-three-layers), on top of which `grund cover` exposes the citation graph ([§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file)) and [§RM-cochange-gate](../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test) tracks the diff-aware co-change gate. Decided in [§DF-require-grounding](../decisions/functional/DF-require-grounding.md#df-require-grounding-an-opt-in-check-that-every-source-file-cites-a-spec).
+A unit is **grounded** when it contains at least one recognized citation (§1.1) whose ID resolves to a declaration — **or**, in a source file outside every non-citable home, when it declares an ID inline (a spec home is grounded in the spec it *is*, [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)). A unit that is neither is an error (§3.6.3). A unit whose only citation is dangling (§3.1) is *not* grounded — it gets both findings; fixing the citation clears both. The rule is a pure function of `(tree, config)`: it reads no git history and parses no code (§3.6.4). Decided in [§DF-require-grounding](../decisions/functional/DF-require-grounding.md#df-require-grounding-an-opt-in-check-that-every-source-file-cites-a-spec).
 
 #### 3.6.1 Which files a row governs
 
@@ -348,19 +370,31 @@ Every scanned file resolves to exactly one `[[kinds]]` row, and that row's effec
 - **A citable kind's folder home** governs the **source files** in it — a file the walk reads whose extension is not `.md` ([AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)).
 - **The homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) governs the source files no home claims, and a file claimed by two overlapping homes falls to it as well, the way its citing side already does ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)).
 
-So Markdown is exempt except inside a non-citable home, and that exception is a home rather than an extension. The Markdown exemption reasons about implementation versus document; a non-citable home is neither guess — it is a directory the maintainer declared matters, and it is usually *all* Markdown, a skill, a runbook, a prompt library. Inheriting the exemption there would switch the rule off exactly where it was turned on. An unwalked home ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-walked)) has no scanned files, so the rule never reaches it — which is why `require_grounding = true` on such a row is a config error.
+So Markdown is exempt except inside a non-citable home, and `require_grounding = true` on an unwalked home's row is a config error (§3.6.1.1). A repository that sets only the global key keeps every level `1` and the file as the unit (§3.6.1.2).
+
+##### 3.6.1.1 Markdown is governed only in a non-citable home
+
+Markdown is therefore exempt except inside a non-citable home, and that exception is a home rather than an extension. The Markdown exemption reasons about implementation versus document; a non-citable home is neither guess — it is a directory the maintainer declared matters, and it is usually *all* Markdown, a skill, a runbook, a prompt library. Inheriting the exemption there would switch the rule off exactly where it was turned on. An unwalked home ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-walked)) has no scanned files, so the rule never reaches it — which is why `require_grounding = true` on such a row is a config error.
+
+##### 3.6.1.2 The global key alone is the rule it always was
 
 A repository that sets only `[reference] require_grounding = true` and configures no non-citable kind sees this rule exactly as it did before these keys existed: every row inherits the global `true`, every level is `1`, and the unit is the file.
 
 #### 3.6.2 The unit
 
-`grounding_level` is an integer in Markdown heading levels ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)). Each level **contains the one below it**, so the file itself is always a unit and nothing passes vacuously for lacking structure.
+`grounding_level` is an integer in Markdown heading levels ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)). Each level **contains the one below it**, so the file itself is always a unit and nothing passes vacuously for lacking structure. In a Markdown file, level `L` adds a unit for every heading subtree of level `2` to `L` (§3.6.2.1); in a source file, the units below the file are doc-comment blocks, ranked by indentation (§3.6.2.2); and an inline declaration grounds its doc-comment block and its file, except inside a non-citable home (§3.6.2.3).
 
-**In a Markdown file**, level `L` makes a unit of the whole file and of every heading subtree whose level is between `2` and `L`. A subtree runs from its heading to the line before the next heading at the same or a higher level, so a parent is satisfied by any descendant and a leaf must cite directly; text before the first heading belongs to the file rather than to a section. At level `1` there are no section units and the file is the only one, which is the unit every config had before the key existed. A file with no heading at the level is one unit — the file — for the same reason.
+##### 3.6.2.1 In a Markdown file
 
-**In a source file** there are two ranks, and they are read by indentation rather than by syntax ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): at level `2` every **unindented** doc-comment block is a unit — a parse-free stand-in for a top-level item, which holds across Rust, Python, Java, Go, and Kotlin — and at any higher level every doc-comment block is. What counts as a doc comment is the per-language rule of [§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites), already read once per file by the scanner. The file is a unit at every level, as in Markdown.
+Level `L` makes a unit of the whole file and of every heading subtree whose level is between `2` and `L`. A subtree runs from its heading to the line before the next heading at the same or a higher level, so a parent is satisfied by any descendant and a leaf must cite directly; text before the first heading belongs to the file rather than to a section. At level `1` there are no section units and the file is the only one, which is the unit every config had before the key existed. A file with no heading at the level is one unit — the file — for the same reason.
 
-The **inline-declaration escape** applies per unit: a doc-comment block that declares an ID is grounded by that declaration, and so is the file it sits in. It has no effect inside a non-citable home, where a declaration is a misplaced declaration to begin with (§3.7) — there the only way to ground a unit is to cite one.
+##### 3.6.2.2 In a source file
+
+There are two ranks, and they are read by indentation rather than by syntax ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): at level `2` every **unindented** doc-comment block is a unit — a parse-free stand-in for a top-level item, which holds across Rust, Python, Java, Go, and Kotlin — and at any higher level every doc-comment block is. What counts as a doc comment is the per-language rule of [§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites), already read once per file by the scanner. The file is a unit at every level, as in Markdown.
+
+##### 3.6.2.3 The inline-declaration escape
+
+The inline-declaration escape of §3.6 applies per unit: a doc-comment block that declares an ID is grounded by that declaration, and so is the file it sits in. It has no effect inside a non-citable home, where a declaration is a misplaced declaration to begin with (§3.7) — there the only way to ground a unit is to cite one.
 
 #### 3.6.3 Findings
 
@@ -373,7 +407,15 @@ skills/review/SKILL.md:14: ungrounded section `## Steps` in kind home skills/: n
 src/walk.rs:41: ungrounded doc-comment: no § citation to a declared ID
 ```
 
-Section units arise only inside a non-citable home, since that is the only place Markdown is governed, so a section finding always names one. Every failing unit is reported: a file that cites nothing at level `2` earns the file finding *and* one per section, which is what "each level contains the one below it" means on the reporting side — the file is genuinely ungrounded, and so is each of its sections.
+The marker in the message is the configured one ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). Section units arise only inside a non-citable home, since that is the only place Markdown is governed, so a section finding always names one. Every failing unit is reported (§3.6.3.1).
+
+##### 3.6.3.1 Every failing unit is reported
+
+A file that cites nothing at level `2` earns the file finding *and* one per section, which is what "each level contains the one below it" means on the reporting side — the file is genuinely ungrounded, and so is each of its sections.
+
+#### 3.6.4 A pure function of the tree
+
+The rule is a pure function of `(tree, config)` like every other `check` rule ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)): it reads no git history ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)) and parses no code ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)) — "source file" is decided by extension, a unit by heading level or comment indentation, and "grounded" by the citations the scanner already collected. It is the floor of the grounding discipline — the verification-at-rest layer of [§GOAL-agent-grounding.1](../goals.md#1-the-three-layers), on top of which `grund cover` exposes the citation graph ([§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file)) and [§RM-cochange-gate](../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test) tracks the diff-aware co-change gate.
 
 ### 3.7 Misplaced declaration (configured kind home)
 
