@@ -268,7 +268,12 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             // §FS-show.3.2: `text` and `json` flatten `--cross-refs` link wrappers
             // back to bare `§…` citations; `md` keeps the renderable form verbatim.
             if format != "md" {
-                output.body = flatten_cross_ref_links(&output.body, config.lexical());
+                let markdown_body =
+                    output.path.extension().and_then(|ext| ext.to_str()) == Some("md");
+                // §FS-show.2.5, §FS-show.3.2.2: the deprecated adapter shares
+                // fenced preservation without assigning it to source bodies.
+                output.body =
+                    flatten_cross_ref_links(&output.body, config.lexical(), markdown_body);
             }
             if format == "json" {
                 println!(

@@ -136,7 +136,10 @@ fn show_run(
     // read off the context this run already loaded.
     .map_err(|err| with_member_id_candidates(err, &context, alias.as_deref(), raw_id))?;
     if opts.format != ShowFormat::Markdown {
-        output.body = flatten_cross_ref_links(&output.body, config.lexical());
+        let markdown_body = output.path.extension().and_then(|ext| ext.to_str()) == Some("md");
+        // §FS-show.3.2.1, §FS-show.3.2.2: flatten ordinary prose while
+        // preserving authored wrappers in Markdown fences.
+        output.body = flatten_cross_ref_links(&output.body, config.lexical(), markdown_body);
     }
     if opts.format == ShowFormat::Json {
         let json = render_show_output_json(
