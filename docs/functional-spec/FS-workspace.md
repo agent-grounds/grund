@@ -579,31 +579,8 @@ prunes *every* one of the block's own walk roots leaves that block reading
 nothing at all, which is a misconfiguration rather than a boundary, and §2.1 is
 where the run says so.
 
-**The boundary is mutual, and it belongs to the directory rather than to the path
-that reaches it.** A member's own scan stops at every *other* project in the
-workspace exactly as the root scan stops at the members — at a sibling member's
-files, and at the root project's. Ordinary descent cannot cross the line, since
-no project root contains another except along the workspace tree itself, but a
-symlink can, and a symlink is followed ([§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed)).
-So the directory a link resolves to is asked which project owns it — the
-innermost project root that contains it — and a directory owned by another
-project is not descended into, whichever project's walk met it and under
-whatever name. This loaded-workspace ownership rule is stronger than the
-physical-root rule: it also separates another project whose root lies inside the
-current project's root. The harm is the same in every direction:
-`packages/a/docs/b -> ../../b` files `b`'s declarations under `a`'s namespace
-and reports them as duplicates of themselves, which is what this section
-forbids of the root scan.
-
-A member checked on its own remains an independent project (§5) and does not
-load the workspace map. It needs no map to bound this case: its canonical
-project root fences directory-link traversal
-([§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed)), so a
-link into a sibling or the workspace root is pruned as an outward directory
-link. The independently checked member therefore cannot absorb another
-project's declarations into its own namespace. An ordinary parent-relative
-scan include is not a link traversal and retains §3.5.1's intentional external
-scope.
+The boundary is mutual (§6.2) and holds for a member checked on its own
+(§6.3); a member that declares its own `[workspace]` is §6.1.
 
 ### 6.1 Nested workspaces
 
@@ -612,7 +589,7 @@ member's config root, resolved and validated by the rules in §2 exactly as the
 outermost root's are. The tree may nest to any depth.
 
 A project is named by its **whole alias path**: one segment per level, read from
-the outermost workspace down (§1). The outermost root contributes no segment, so
+the outermost workspace down (§1.1). The outermost root contributes no segment, so
 a workspace with no nesting is spelled exactly as it is today. Given a root with
 `members = ["hardware", "final"]` and `hardware` declaring
 `members = ["sprayer", "pod"]`:
@@ -622,60 +599,84 @@ a workspace with no nesting is spelled exactly as it is today. Given a root with
 §hardware/AR-bus        the node's own decl     §hardware/sprayer/FS-x   a leaf
 ```
 
+Why a path rather than a unique name is §6.1.1. An intermediate node is a
+project unless its block opts out (§6.1.2), every block must put a project in
+scope (§6.1.3), and members are compared as canonical paths (§6.1.4). Alias
+paths do not change with scope along the claimed chain (§6.1.5), and three rules
+keep one chain readable from every scope (§6.1.6, §6.1.7, §6.1.8).
+
+#### 6.1.1 Why a path rather than a unique name
+
 Paths, not globally unique names, are what let two `pod` projects under
 different parents coexist ([§DF-nested-workspaces](../decisions/functional/DF-nested-workspaces.md#df-nested-workspaces-a-nested-project-is-named-by-its-whole-alias-path)) — hence the per-level
 uniqueness rule in §3. The cost is that a short leaf name no longer resolves on
 its own, and `grund check` at the outermost workspace root answers that mistake
 by naming the projects the written path could have meant ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)).
 
+#### 6.1.2 `include_root` on an intermediate block
+
 `include_root` is read per `[workspace]` block and governs that block's own
 project. Under the default an intermediate node is a project like any other: it
 derives an alias (§3), is scanned under its own config minus its members'
 subtrees (§6), and is citable at its own path. Under `include_root = false` it
 is pure grouping — no project, but still a segment in every path below it, so
-`<§>hardware/sprayer/<ID>` is unaffected either way. What it costs is that the
-node's own files are then scanned by **nobody**: the enclosing scan stops at the
-member boundary (§6) and no other scan covers that directory, so a declaration
-there is in no catalog and a citation there is never checked — not even under
-`--full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)), which
-widens a project's scope and has no project to widen here. That cost is said out loud rather
-than only written down here: a block whose own tree holds a file a scan would
-have read earns one warning naming it
+`<§>hardware/sprayer/<ID>` is unaffected either way. What the opt-out costs is
+§6.1.2.1.
+
+##### 6.1.2.1 An opted-out node's own files are read by nobody
+
+Under `include_root = false` the node's own files are scanned by **nobody**: the
+enclosing scan stops at the member boundary (§6) and no other scan covers that
+directory, so a declaration there is in no catalog and a citation there is never
+checked — not even under `--full`
+([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)), which widens a
+project's scope and has no project to widen here. The run says so: a block
+whose own tree holds a file a scan would have read earns one warning naming it
 ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)),
 on every command that walks, permanently and without moving the exit code —
 opting out is a legitimate choice, and the finding turns on what is in the tree
 rather than on the key alone. Where the tree holds nothing a scan would read the
-run stays silent, and `grund check` stays
-green over content nothing reads, which is precisely why the default is a project
+run stays silent, and `grund check` stays green over content nothing reads,
+which is precisely why the default is a project
 ([§DF-nested-workspaces.3.5](../decisions/functional/DF-nested-workspaces.md#35-the-intermediate-node-reuses-include_root-and-defaults-to-a-project)).
-Every block must put at
-least one project in scope, so `include_root = false` with no members (read from
-the config text, `optional_members` included, §2.2) is a config error at that
-block's `members` line — or at its `[workspace]` line when
-there is no `members` key to point at, since a tree may hold many blocks and the
-error has to say which one is empty. An explicitly empty `members = []` is the
-same no-members case. A non-empty list whose glob entries all match no
-directories is different: at the `members` line it says “the glob
-`packages/*` matched no directories”, naming the first unmatched glob in list
-order when there is more than one. This diagnostic belongs to the empty block,
-not to each empty glob independently: an included root or another member that
-does put a project in scope keeps the block valid.
+
+#### 6.1.3 Every block puts a project in scope
+
+Every block must put at least one project in scope, so `include_root = false`
+with no members (read from the config text, `optional_members` included,
+§2.2.10) is a config error at that block's `members` line — or at its
+`[workspace]` line when there is no `members` key to point at, since a tree may
+hold many blocks and the error has to say which one is empty. An explicitly
+empty `members = []` is the same no-members case. A non-empty list whose glob
+entries all match no directories is different: at the `members` line it says
+“the glob `packages/*` matched no directories”, naming the first unmatched glob
+in list order when there is more than one. This diagnostic belongs to the empty
+block, not to each empty glob independently: an included root or another member
+that does put a project in scope keeps the block valid.
+
+#### 6.1.4 Members are compared as canonical paths
 
 Members are compared as canonical paths. Two entries in *one* `members` list that
 resolve to the same root are the same member — deduped, not rejected, so a glob
 may legitimately name a directory an explicit entry also names (`members =
-["packages/*", "packages/api"]`); what §2 rejects there is one expanded root
+["packages/*", "packages/api"]`); what §2.3 rejects there is one expanded root
 *containing* another. An entry that resolves to a project root **another** block
-already holds is a config error at the `members` line that introduced it. What
-makes expansion terminate is containment: a member root resolves strictly inside
-the block that lists it and no member of one block contains another, so every step
-goes strictly downward into a finite tree and no two roots in it can be equal —
-which is also what makes that duplicate error a backstop rather than a rule a
-config can trip ([AR-workspace.6.1](../architecture/AR-workspace.md#61-nested-workspaces-are-one-recursion-not-a-second-namespace-model)). So is one that escapes
-its own block (§2): no lexical ancestor lists such a root, so nothing gives it a
-stable alias path, and a root *above* its own block scans nothing at all — every
-scan root lies under its own member boundary, so the project's declarations
-vanish and its dangling citations pass.
+already holds is a config error at the `members` line that introduced it, and so
+is one that escapes its own block (§2.3): no lexical ancestor lists such a root,
+so nothing gives it a stable alias path, and a root *above* its own block scans
+nothing at all — every scan root lies under its own member boundary, so the
+project's declarations vanish and its dangling citations pass. Why that
+duplicate error is only a backstop is §6.1.4.1.
+
+##### 6.1.4.1 Containment makes expansion terminate
+
+What makes expansion terminate is containment: a member root resolves strictly
+inside the block that lists it and no member of one block contains another, so
+every step goes strictly downward into a finite tree and no two roots in it can
+be equal — which is also what makes the duplicate error of §6.1.4 a backstop rather than
+a rule a config can trip ([AR-workspace.6.1](../architecture/AR-workspace.md#61-nested-workspaces-are-one-recursion-not-a-second-namespace-model)).
+
+#### 6.1.5 Alias paths do not change with scope
 
 Scope follows §5 unchanged: discovery stops at the *nearest* config
 ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), so a command invoked at an intermediate node runs that
@@ -683,24 +684,172 @@ node's subtree. **Alias paths do not change with scope** for every scope *in* th
 **claimed chain** — the `[workspace]` blocks from the outermost root down, each
 listing the directory below it among its `members` — so a run started at any of
 those blocks resolves a *subset* of the same paths rather than a re-spelled set of
-its own. The guarantee is quantified over the **scope**, not over the project: a
-block the chain never lists is not one of those scopes even when the projects
-*under* it are reached by the chain, which a multi-segment entry (`grp/inner`)
-makes routine, and a run started at such a block names every path from itself. A
+its own. What the guarantee covers is §6.1.5.1; why a subtree does not name its
+projects from itself is §6.1.5.2.
+
+##### 6.1.5.1 The guarantee is quantified over the scope
+
+The guarantee is quantified over the **scope**, not over the project: a block
+the chain never lists is not one of those scopes even when the projects *under*
+it are reached by the chain, which a multi-segment entry (`grp/inner`) makes
+routine, and a run started at such a block names every path from itself. A
 citation can therefore pass that block's check and fail the run CI does — the
-disagreement the third rule below reports, not a property of a chained scope.
+disagreement §6.1.8 reports, not a property of a chained scope.
+
+##### 6.1.5.2 A subtree does not name its projects from itself
+
 Inside `hardware/`, `<§>hardware/sprayer/<ID>` still names what it names at the
 repository root and `<§>final/<ID>` is simply unknown — unknown *here*, which is
 what the narrowed run's diagnostic says instead of proposing a project it does
-hold ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)). The alternative — naming a
-subtree's projects from the subtree — would make that disagreement the rule at
-*every* scope rather than the recorded exception at one: a citation passing a
-subtree check and failing the run CI does, which is
+hold ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)). The
+alternative — naming a subtree's projects from the subtree — would make the
+disagreement of §6.1.5.1 the rule at *every* scope rather than the recorded
+exception at one: a citation passing a subtree check and failing the run CI
+does, which is
 [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) failing in the one place it has to hold.
 
-Three rules keep one chain readable from every scope. **A path is read from the outermost block that claims a directory:** a multi-segment `members` entry (`grp/inner`) hops a directory that may itself declare `[workspace]` and list the same child, and the outer claim is the one the walk down from the outermost root follows — ordinary nesting has one claim per directory, where the two agree.
-**A block that claims a directory and cannot answer** — a missing member, overlapping roots, an invalid alias for the project below it, or a config that does not load at all — fails the run with *its own error*, from its own `members` or `project_name` line — rendered against the root **this run** was launched at, so a block above that root renders with `..` (`../grund.toml:16`) and the reader lands on the file that holds the line rather than on a same-named one inside the subtree ([§FS-errors.3](FS-errors.md#3-message-text)); dropping its segment would let the subtree invent a namespace, and [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) would then hint the one spelling that fails at the root. The obligation is a *claim's* and a **workspace run's**, and only theirs — a claim the climb that spells *this run's own* alias path had to ask: that climb happens because a run has a path to read, so a run at a project that declares no `[workspace]` block of its own — a leaf member, or any single-project repository — reads no path out of the chain. Such a run resolves one project (§5): it has no alias path to get wrong, every qualified citation is an unknown alias whatever an ancestor lists, and no claim above it, answered or not, can fail it. The claim rule is about the scopes that *do* read a path, which are the blocks. The chain is still *asked* about such a run, by a second climb that reads no path out of it: [§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)'s rule walks these same ancestors, with this same `members`-only read, about a `[workspace]` block the run's own walk met rather than about the run's own name — so what an ancestor lists decides whether that block is reported. That question carries none of the obligations here, because it spells nothing: it fails no run, and an ancestor it cannot read leaves the claim unanswered and the block unreported rather than costing the reader a line. A block that does not name this directory is not asked, so neither a `members` list it could not expand nor a config that would not load at all is an error in a run below it. Otherwise one broken config anywhere above a repository — at any depth up to `/`, in a workspace that never mentions it — would answer every command inside it. The claim is therefore read from the **`members` entries alone**, never from a loaded config: the `members` value is parsed on its own — no other key read, no shape rule applied — so a config that fails to load is still asked whether it claims this directory. Deciding it from a loaded config instead made *every* load failure above a repository silently equal to "claims nothing", which is the collapsed prefix this rule exists to prevent, and two mistakes on one `members` line then behaved oppositely: a member that does not exist failed the subtree run, while an entry the shape rule rejects ([§2](#2-workspace-configuration)) let it re-spell itself. A config whose `members` text cannot be obtained at all — the file cannot be read, or its `members` value is not a list — leaves the claim undecidable in both directions. The run continues, because a stray unreadable `grund.toml` above a repository is not that repository's problem, and whether it says so is the asking climb's: the one spelling an alias path never continues silently — it prints a run-level `warning:` naming that config and saying alias paths below it may be missing a segment ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) — while the quiet climb has no path below it to warn about, so it says nothing and leaves the block it was asking about unreported. That warning travels the way its three `[workspace]` siblings do ([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)): one of the run's warnings, carried on whatever the walking command returns and rendered by each frontend rather than written to a stream from inside the engine, so an editor publishes it too ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). It anchors at the config it could not read — that file and no line, because the `members` value whose line would be the anchor is exactly what could not be obtained — and the bytes the CLI prints are unchanged.
-**A `[workspace]` block that no enclosing block lists is outside the chain:** at the outer scope it is ignored, so its tree belongs to the enclosing project's namespace when that project's scan reaches it and to nobody when it does not, while a run started **at** it names every path from itself — a run started at a block *below* it that the chain does list is back inside the guarantee. A run whose own tree walk meets such a block reports it, naming the block's `[workspace]` line and saying that the projects under it are absorbed into the enclosing namespace instead of named under their own alias path ([§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)). Two shapes stay unreported, for different reasons. A block the walk never reaches — behind `[scan] exclude`, an ignore file, a member boundary, or a narrowed scope — is the known limitation, because a run that cannot see something does not judge it. A block an enclosing config *names* and then cannot answer for is the undecidable claim of the rule above, left alone because no answer is not the answer that nothing claims it.
+#### 6.1.6 A path is read from the outermost claim
+
+**A path is read from the outermost block that claims a directory:** a
+multi-segment `members` entry (`grp/inner`) hops a directory that may itself
+declare `[workspace]` and list the same child, and the outer claim is the one the
+walk down from the outermost root follows — ordinary nesting has one claim per
+directory, where the two agree.
+
+#### 6.1.7 A claiming block that cannot answer fails the run
+
+**A block that claims a directory and cannot answer** — a missing member,
+overlapping roots, an invalid alias for the project below it, or a config that
+does not load at all — fails the run with *its own error*, from its own
+`members` or `project_name` line — rendered against the root **this run** was
+launched at, so a block above that root renders with `..` (`../grund.toml:16`)
+and the reader lands on the file that holds the line rather than on a same-named
+one inside the subtree ([§FS-errors.3](FS-errors.md#3-message-text)); dropping
+its segment would let the subtree invent a namespace, and
+[§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) would then hint
+the one spelling that fails at the root.
+
+Only a run that reads a path carries this obligation (§6.1.7.1); a quiet climb
+asks the same ancestors (§6.1.7.2). A block that does not name the directory is
+not asked (§6.1.7.3), the claim is read from `members` alone (§6.1.7.4), and an
+unobtainable `members` value leaves it undecidable (§6.1.7.5) and earns one
+warning (§6.1.7.6).
+
+##### 6.1.7.1 Only a run that reads a path carries the obligation
+
+The obligation is a *claim's* and a **workspace run's**, and only theirs — a
+claim the climb that spells *this run's own* alias path had to ask: that climb
+happens because a run has a path to read, so a run at a project that declares no
+`[workspace]` block of its own — a leaf member, or any single-project repository
+— reads no path out of the chain. Such a run resolves one project (§5): it has
+no alias path to get wrong, every qualified citation is an unknown alias
+whatever an ancestor lists, and no claim above it, answered or not, can fail it.
+The claim rule is about the scopes that *do* read a path, which are the blocks.
+
+##### 6.1.7.2 The quiet climb asks the same ancestors
+
+The chain is still *asked* about such a run, by a second, **quiet** climb that
+reads no path out of it: [§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)'s
+rule walks these same ancestors, with this same `members`-only read (§6.1.7.4),
+about a `[workspace]` block the run's own walk met rather than about the run's
+own name — so what an ancestor lists decides whether that block is reported.
+That question carries none of the obligations of §6.1.7, because it spells
+nothing: it fails no run, and an ancestor it cannot read leaves the claim
+unanswered and the block unreported rather than costing the reader a line.
+
+##### 6.1.7.3 A block that does not name this directory is not asked
+
+A block that does not name this directory is not asked, so neither a `members`
+list it could not expand nor a config that would not load at all is an error in
+a run below it. Otherwise one broken config anywhere above a repository — at any
+depth up to `/`, in a workspace that never mentions it — would answer every
+command inside it.
+
+##### 6.1.7.4 The claim is read from `members` entries alone
+
+The claim is read from the **`members` entries alone**, never from a loaded
+config: the `members` value is parsed on its own — no other key read, no shape
+rule applied — so a config that fails to load is still asked whether it claims
+this directory. Deciding it from a loaded config instead made *every* load
+failure above a repository silently equal to "claims nothing", which is the
+collapsed prefix this rule exists to prevent, and two mistakes on one `members`
+line then behaved oppositely: a member that does not exist failed the subtree
+run, while an entry the shape rule rejects (§2.3) let it re-spell itself.
+
+##### 6.1.7.5 An unobtainable `members` value leaves the claim undecidable
+
+A config whose `members` text cannot be obtained at all — the file cannot be
+read, or its `members` value is not a list — leaves the claim undecidable in both
+directions. The run continues, because a stray unreadable `grund.toml` above a
+repository is not that repository's problem, and whether it says so depends on
+which climb asked: the one spelling an alias path never continues silently — it
+prints a run-level `warning:` naming that config and saying alias paths below it
+may be missing a segment ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) —
+while the quiet climb has no path below it to warn about, so it says nothing and
+leaves the block it was asking about unreported.
+
+##### 6.1.7.6 How the undecidable-claim warning travels
+
+The warning of §6.1.7.5 travels the way its three `[workspace]` siblings do
+([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)):
+one of the run's warnings, carried on whatever the walking command returns and
+rendered by each frontend rather than written to a stream from inside the
+engine, so an editor publishes it too ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+It anchors at the config it could not read — that file and no line, because the
+`members` value whose line would be the anchor is exactly what could not be
+obtained — and the bytes the CLI prints are unchanged.
+
+#### 6.1.8 A block no enclosing block lists is outside the chain
+
+**A `[workspace]` block that no enclosing block lists is outside the chain:** at
+the outer scope it is ignored, so its tree belongs to the enclosing project's
+namespace when that project's scan reaches it and to nobody when it does not,
+while a run started **at** it names every path from itself — a run started at a
+block *below* it that the chain does list is back inside the guarantee. A run whose own tree walk meets such a block reports it, naming the
+block's `[workspace]` line and saying that the projects under it are absorbed
+into the enclosing namespace instead of named under their own alias path
+([§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)). Two shapes stay
+unreported (§6.1.8.1).
+
+##### 6.1.8.1 Two shapes stay unreported
+
+Two shapes stay unreported, for different reasons. A block the walk never
+reaches — behind `[scan] exclude`, an ignore file, a member boundary, or a
+narrowed scope — is the known limitation, because a run that cannot see
+something does not judge it. A block an enclosing config *names* and then cannot
+answer for is the undecidable claim of §6.1.7, left alone because no answer is
+not the answer that nothing claims it.
+
+### 6.2 The boundary is mutual
+
+**The boundary is mutual, and it belongs to the directory rather than to the path
+that reaches it.** A member's own scan stops at every *other* project in the
+workspace exactly as the root scan stops at the members — at a sibling member's
+files, and at the root project's. Ordinary descent cannot cross the line, since
+no project root contains another except along the workspace tree itself, but a
+symlink can, and a symlink is followed
+([§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed)).
+So the directory a link resolves to is asked which project owns it — the
+innermost project root that contains it — and a directory owned by another
+project is not descended into, whichever project's walk met it and under
+whatever name. This loaded-workspace ownership rule is stronger than the
+physical-root rule: it also separates another project whose root lies inside the
+current project's root. The harm is the same in every direction:
+`packages/a/docs/b -> ../../b` files `b`'s declarations under `a`'s namespace
+and reports them as duplicates of themselves, which is what §6 forbids of the
+root scan.
+
+### 6.3 A member checked on its own
+
+A member checked on its own remains an independent project (§5.1) and does not
+load the workspace map. It needs no map to bound the case of §6.2: its canonical
+project root fences directory-link traversal
+([§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed)), so a
+link into a sibling or the workspace root is pruned as an outward directory
+link. The independently checked member therefore cannot absorb another
+project's declarations into its own namespace. An ordinary parent-relative
+scan include is not a link traversal and retains the intentional external scope
+[§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed) gives it.
 
 ## 7. Neighboring repos
 
