@@ -391,9 +391,43 @@ query is attempted. In particular, malformed explicit input is diagnosed as
 
 - `0` — printed successfully.
 - `1` — ID not found, ambiguous ID (multiple homes — [§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), ambiguous section (two headings claiming the requested path — [§FS-show.2.2.2](FS-show.md#222-ambiguous-section)), broken stub ([§FS-show.2.3.4](FS-show.md#234-broken-stub)), or section not found in declaration.
-- `2` — I/O error, or a CLI-level failure that stops the query before it runs: the commonest is a qualified ID naming a project this run does not hold, which exits `2` with `error: unknown project alias` however many segments the path has ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)). An ID the grammar rejects is *not* one of these — `invalid ID` is a failed query, `1` (below).
+- `2` — I/O error, or a CLI-level failure that stops the query before it runs: the commonest is a qualified ID naming a project this run does not hold, which exits `2` with `error: unknown project alias` however many segments the path has ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)). An ID the grammar rejects is *not* one of these — `invalid ID` is a failed query, `1` (§3.5.1).
 
-Stdout carries the body (or, with `--format=json`, the result object — one JSON object, never NDJSON, per [§FS-errors.5](FS-errors.md#5-json-format)). Stderr carries errors. Stdout is empty on error.
+Stdout carries the body (or, with `--format=json`, the result object — one JSON object, never NDJSON, per [§FS-errors.5.1.1](FS-errors.md#511-query-results)). Stderr carries errors. Stdout is empty on error.
+
+Format variants are §3.1, link flattening §3.2, batch mode §3.3, what a failed query prints §3.4, and each failure's hint §3.5.
+
+### 3.1 Format variants
+
+`show` prints in one of three formats: `text`, the default (§3.1.1), `md` (§3.1.2), and `json` (§3.1.3). Verbose `show --format=json` examples, including failed-query stream behavior, live in [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes).
+
+#### 3.1.1 `text`
+
+The body only. The whole-declaration H1 (`# FS-<x>: …`) is omitted; section headings inside the slice are kept verbatim, including explicit named handles. Mode-by-mode: the default prints the lead prose (§2.1); `--brief` prints the heading line and the first paragraph (§2.1.1) — the one mode that includes the H1 in `text`, since the slice would otherwise be unlabeled; `--toc` prints the lead plus the citable heading lines (§2.1.2); `--full` prints the full body (§2.1.3); a selected section is printed with its own section heading in every mode (§2.2). For an inline-source declaration the body is the comment-stripped prose (§2.3.2); for an E2E case it is the manifest (§2.4). A `grund fmt --cross-refs` link wrapper around a citation (`[§FS-<x>.goals](FS-<x>.md#goals-scope)`) is flattened back to the bare citation — §3.2.
+
+#### 3.1.2 `md`
+
+Same as `text` but the opening declaration heading line is **included** verbatim, and `--cross-refs` link wrappers are kept as written — that is the renderable form (§3.2). For the default and `--toc`, the heading is prefixed; for `--brief` it is already included in `text` and stays as written in `md`; for `--full`, the heading is prefixed. The kind's `[[kinds]] title` ([§FS-config.3.4.3](FS-config.md#343-title)) is *not* injected — it is metadata that no `show` format carries, exposed in JSON only by `grund list --summary --format json` ([§FS-list.3.3](FS-list.md#33---summary)). For an inline-source declaration the included heading is the one written in the doc-comment (`AR-<event-bus>: In-process event broadcaster`), comment-markers stripped.
+
+#### 3.1.3 `json`
+
+A single object on stdout: `{"id":<ID>,"section":<section-path or null>,"body":<string>,"path":<declaring file or case dir>,"line":<1-indexed>}`. `body` is the same text `text` prints — `--cross-refs` wrappers flattened (§3.2). `section` is `null` when the whole declaration was requested and otherwise carries the exact numeric or named path string. With `--toc` the object additionally carries `sections` — one `{"path":<section path>,"title":<complete rendered heading text>,"depth":<integer>}` per citable heading in the selected outline slice, in document order. For E2E cases the object is the §2.4.2 shape instead. The wire form is stable per [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible).
+
+### 3.2 Cross-reference links are flattened in `text` and `json`
+
+A repo that has run `grund fmt --cross-refs` ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)) carries each citation in its `.md` files as a Markdown link *wrapping* the citation — `[§FS-check.1](FS-check.md#1-inputs)` instead of `§FS-check.1`. That wrapper is a rendered-view convenience ([§DF-md-link-emission](../decisions/functional/DF-md-link-emission.md#df-md-link-emission-grund-fmt-may-emit-clickable-markdown-links-alongside--prefixed-citations)), not the canonical form; for an agent pulling a fact into context it is noise, and the relative path inside it is the wrong pointer — the consumer should resolve the citation with `grund <ID>`, not open the file.
+
+So when `show` prints a body in `text` or in the `json` `body` field, it **flattens** every such wrapper back to the bare citation; the exact wrap shape it collapses is §3.2.1; what it leaves as written, and that it resolves nothing, is §3.2.2. Decided in [§DF-show-cross-ref-flattening](../decisions/functional/DF-show-cross-ref-flattening.md#df-show-cross-ref-flattening-grund-show-flattens-cross-reference-link-wrappers).
+
+#### 3.2.1 The wrap shape it collapses
+
+A `[` immediately before a marker-prefixed citation token and `](…)` immediately after it — exactly the wrap shape `grund fmt --cross-refs` emits and re-derives ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)) — collapses to just the `§[<alias>/]<ID>[.<section>]` text. This includes qualified workspace citations such as `[<§>api/FS-login](...)`, because they are the same presentation wrapper over the same canonical citation syntax ([§FS-workspace.8.5](FS-workspace.md#85-grund-fmt---cross-refs)).
+
+#### 3.2.2 What is left as written
+
+Nothing else changes: an ordinary Markdown link in the prose, a citation that is not wrapped, a body extracted from a source-code doc-comment (cross-references never run on source — [§FS-fmt.6.1](FS-fmt.md#61-scope)), and a `grund <ID> --format md` body (the self-contained markdown fragment, §3.1.2) are all left exactly as written. The flattening is purely textual — it does not resolve the citation, so a dangling one is flattened just the same and `grund check` still reports it.
+
+### 3.3 Batch mode
 
 Batch mode is the explicit exception to the single-coordinate stream shape. It
 emits one NDJSON envelope on stdout for every well-formed query, in query order;
@@ -404,28 +438,22 @@ catalog), `1` after emitting all records when any query fails, and `2` with empt
 stdout for a malformed invocation/input or configuration/scan failure. These
 batch rules do not change any single-coordinate byte, stream, or exit behavior.
 
-A failed query (`1`) prints the bare result line and, where the next step is obvious, one extra `hint:` line on stderr below it — never on stdout. With `--format=json`, stderr instead carries one diagnostic JSON object per [§FS-errors.5](FS-errors.md#5-json-format), with `path` and `line` set to `null` because the failure has no single source location:
+### 3.4 What a failed query prints
+
+A failed query (`1`) prints the bare result line and, where the next step is obvious, one extra `hint:` line on stderr below it — never on stdout. With `--format=json`, stderr instead carries one diagnostic JSON object per [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output), with `path` and `line` set to `null` because the failure has no single source location. The hint each failure gets is §3.5.
+
+`ambiguous ID`, `ambiguous section` and `broken stub` get no hint: the fix (run `grund check`, then edit the duplicate, renumber one of the two headings, or repair the stub) is already stated in §2.2.1 / §2.2.2 / §2.3.4 and the message names the sites.
+
+### 3.5 The hint for each failure
 
 - `ID not found: <ID>` → `hint: run \`grund list\` to see every declared ID, or \`grund id <KIND> "<title>"\` to propose a new one` — withheld in the one case where the result line already names the answer, a workspace run whose refusal carries a `did you mean <alias>/<ID>?` clause ([§FS-workspace.8.1.1](FS-workspace.md#811-an-unqualified-id-another-project-declares))
 - a missing snapshot for an ID whose parsed kind carries `fetch` in the loaded config → `hint: run grund fetch <qualified-ID>` — this remains offline and is the prescribed materialization hint ([§FS-check.4.12](FS-check.md#412-missing-snapshot), [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)). This branch is specified but not implemented today: `show` currently emits the generic `ID not found` hint.
 - `section not found: <ID>.<s>` → `hint: run \`grund <ID> --toc\` to print the lead with the section map`
-- a `<ID>` argument that does not match its kind's effective format ([§FS-config.3.2](FS-config.md#32-id--id-grammar)), once the scan has found no exact off-grammar declaration of that spelling, fails with `invalid ID \`<arg>\``, followed by `hint: this repo's [id] format is \`<format>\` (run \`grund config show\`); \`grund list\` shows the IDs that exist` — naming the kind's effective format instead where a `[[kinds]] format` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)) governs it; this is the common surprise in a repo whose format differs from the `{kind}-{slug}` `grund` itself uses.
+- a `<ID>` argument that does not match its kind's effective format → `invalid ID` and a format hint, §3.5.1
 
-`ambiguous ID`, `ambiguous section` and `broken stub` get no hint: the fix (run `grund check`, then edit the duplicate, renumber one of the two headings, or repair the stub) is already stated in §2.2.1 / §2.2.2 / §2.3.4 and the message names the sites.
+#### 3.5.1 An ID the grammar rejects
 
-### 3.1 Format variants
-
-- `text` (default) — the body only. The whole-declaration H1 (`# FS-<x>: …`) is omitted; section headings inside the slice are kept verbatim, including explicit named handles. Mode-by-mode: the default prints the lead prose (§2.1); `--brief` prints the heading line and the first paragraph (§2.1.1) — the one mode that includes the H1 in `text`, since the slice would otherwise be unlabeled; `--toc` prints the lead plus the citable heading lines (§2.1.2); `--full` prints the full body (§2.1.3); a selected section is printed with its own section heading in every mode (§2.2). For an inline-source declaration the body is the comment-stripped prose (§2.3.2); for an E2E case it is the manifest (§2.4). A `grund fmt --cross-refs` link wrapper around a citation (`[§FS-<x>.goals](FS-<x>.md#goals-scope)`) is flattened back to the bare citation — §3.2.
-- `md` — same as `text` but the opening declaration heading line is **included** verbatim, and `--cross-refs` link wrappers are kept as written — that is the renderable form (§3.2). For the default and `--toc`, the heading is prefixed; for `--brief` it is already included in `text` and stays as written in `md`; for `--full`, the heading is prefixed. The kind's `[[kinds]] title` ([§FS-config.3.4.3](FS-config.md#343-title)) is *not* injected — it is metadata that no `show` format carries, exposed in JSON only by `grund list --summary --format json` ([§FS-list.3.3](FS-list.md#33---summary)). For an inline-source declaration the included heading is the one written in the doc-comment (`AR-<event-bus>: In-process event broadcaster`), comment-markers stripped.
-- `json` — a single object on stdout: `{"id":<ID>,"section":<section-path or null>,"body":<string>,"path":<declaring file or case dir>,"line":<1-indexed>}`. `body` is the same text `text` prints — `--cross-refs` wrappers flattened (§3.2). `section` is `null` when the whole declaration was requested and otherwise carries the exact numeric or named path string. With `--toc` the object additionally carries `sections` — one `{"path":<section path>,"title":<complete rendered heading text>,"depth":<integer>}` per citable heading in the selected outline slice, in document order. For E2E cases the object is the §2.4 shape instead. The wire form is stable per [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible).
-
-Verbose `show --format=json` examples, including failed-query stream behavior, live in [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes).
-
-### 3.2 Cross-reference links are flattened in `text` and `json`
-
-A repo that has run `grund fmt --cross-refs` ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)) carries each citation in its `.md` files as a Markdown link *wrapping* the citation — `[§FS-check.1](FS-check.md#1-inputs)` instead of `§FS-check.1`. That wrapper is a rendered-view convenience ([§DF-md-link-emission](../decisions/functional/DF-md-link-emission.md#df-md-link-emission-grund-fmt-may-emit-clickable-markdown-links-alongside--prefixed-citations)), not the canonical form; for an agent pulling a fact into context it is noise, and the relative path inside it is the wrong pointer — the consumer should resolve the citation with `grund <ID>`, not open the file.
-
-So when `show` prints a body in `text` or in the `json` `body` field, it **flattens** every such wrapper back to the bare citation: a `[` immediately before a marker-prefixed citation token and `](…)` immediately after it — exactly the wrap shape `grund fmt --cross-refs` emits and re-derives ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)) — collapses to just the `§[<alias>/]<ID>[.<section>]` text. This includes qualified workspace citations such as `[<§>api/FS-login](...)`, because they are the same presentation wrapper over the same canonical citation syntax ([§FS-workspace.8.5](FS-workspace.md#85-grund-fmt---cross-refs)). Nothing else changes: an ordinary Markdown link in the prose, a citation that is not wrapped, a body extracted from a source-code doc-comment (cross-references never run on source — [§FS-fmt.6.1](FS-fmt.md#61-scope)), and a `grund <ID> --format md` body (the self-contained markdown fragment, §3.1) are all left exactly as written. The flattening is purely textual — it does not resolve the citation, so a dangling one is flattened just the same and `grund check` still reports it. Decided in [§DF-show-cross-ref-flattening](../decisions/functional/DF-show-cross-ref-flattening.md#df-show-cross-ref-flattening-grund-show-flattens-cross-reference-link-wrappers).
+A `<ID>` argument that does not match its kind's effective format ([§FS-config.3.2](FS-config.md#32-id--id-grammar)), once the scan has found no exact off-grammar declaration of that spelling, fails with `invalid ID \`<arg>\``, followed by `hint: this repo's [id] format is \`<format>\` (run \`grund config show\`); \`grund list\` shows the IDs that exist` — naming the kind's effective format instead where a `[[kinds]] format` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)) governs it; this is the common surprise in a repo whose format differs from the `{kind}-{slug}` `grund` itself uses.
 
 ## 4. Why this matters
 
@@ -435,6 +463,10 @@ Without `show`, an agent retrieving a spec section either loads the whole file (
 grund FS-check.3.1
 ```
 
-And when the citation is a bare `§FS-check` with no section, the cheap first move is just `grund FS-check` — the new default prints the lead paragraph, enough to know whether this is the right declaration. If the section needs to be chosen, `grund FS-check --toc` adds the section map; `grund FS-check --full` holds the full body in reserve for when even that is not enough. An agent that grounds itself this way pays for the fact it needs, not the file it lives in. `grund FS-check --brief` is the narrowest body slice of all — heading plus one paragraph — for hover previews and "is this the right ID?" checks before committing to a deeper read, though in `text` it alone keeps the H1, so on a one-paragraph lead like `FS-check`'s it prints more than the default (§3.1).
+When the citation names no section, which slice to start from and when to widen or narrow it is §4.1.
 
 This is the agent-grounding loop: declarations live in one place, and any agent — at any time — can fetch one, or just its lead, or just its map, with a single command.
+
+### 4.1 A citation with no section
+
+When the citation is a bare `§FS-check` with no section, the cheap first move is just `grund FS-check` — the new default prints the lead paragraph, enough to know whether this is the right declaration. If the section needs to be chosen, `grund FS-check --toc` adds the section map; `grund FS-check --full` holds the full body in reserve for when even that is not enough. An agent that grounds itself this way pays for the fact it needs, not the file it lives in. `grund FS-check --brief` is the narrowest body slice of all — heading plus one paragraph — for hover previews and "is this the right ID?" checks before committing to a deeper read, though in `text` it alone keeps the H1, so on a one-paragraph lead like `FS-check`'s it prints more than the default (§3.1.1).
