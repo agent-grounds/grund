@@ -50,7 +50,7 @@ docs/functional-spec/FS-show.md:11: §FS-check.1
 
 ### 3.2 `--format json`
 
-NDJSON on stdout — one object per citation, matching the `Citation` shape ([AR-scanner.3](../architecture/AR-scanner.md#3-output)) plus the verbatim token:
+NDJSON on stdout — one object per citation, matching the `Citation` shape ([AR-scanner.3](../architecture/AR-scanner.md#3-output)) plus the verbatim token and optional target-kind metadata. These examples select a kind without an effective title:
 
 ```json
 {"path":"crates/grund-core/src/scanner/file_pass.rs","line":142,"column":12,"id":"FS-check","section":"1","marker":false,"text":"FS-check.1"}
@@ -58,6 +58,12 @@ NDJSON on stdout — one object per citation, matching the `Citation` shape ([AR
 ```
 
 `section` is `null` for a bare-ID citation with no section coordinate.
+`kind_title` is appended after `text` when the resolved queried kind has an
+effective title ([§FS-config.3.4.3](FS-config.md#343-title)); absent titles omit
+it, while a configured empty string is retained. A workspace record's existing
+`project` still names the citing project, whereas `kind_title` belongs to the
+selected target project, even when the queried ID is undeclared but valid.
+All existing fields retain their values and relative order.
 
 ### 3.3 `--summary`
 
@@ -69,7 +75,7 @@ crates/grund-core/src/scanner/file_pass.rs: 1 (line 142)
 docs/functional-spec/FS-show.md: 3 (lines 11, 142, 200)
 ```
 
-The shape is `<path>: <count> (lines <l1>, <l2>, …)`. The count is the number of sites from exactly the citation set §3.1 lists, so `--summary` honours `[reference] strict`, the string-literal carve-out, and doc-comment citations the same way; the line list is the sorted, de-duplicated set of source lines holding them, so two citations on line 10 read `path: 2 (line 10)`. `grund refs <ID> --summary | wc -l` is then the number of files that lean on `<ID>`, while the line list still points an editor at every line with a site. With `--section`, the aggregate is over that section's citations only. No citations prints nothing, with exit `0` and the §2.1 `note:` unaffected. With `--format json`: NDJSON, one object per file, `{"path":<path>,"count":<n>,"lines":[<unique l1>,<unique l2>,…]}`, in the same order; without `--summary` it is the per-citation form of §3.2. Exit codes (§4) are unchanged — `--summary` renders the same scan result, not a different query.
+The shape is `<path>: <count> (lines <l1>, <l2>, …)`. The count is the number of sites from exactly the citation set §3.1 lists, so `--summary` honours `[reference] strict`, the string-literal carve-out, and doc-comment citations the same way; the line list is the sorted, de-duplicated set of source lines holding them, so two citations on line 10 read `path: 2 (line 10)`. `grund refs <ID> --summary | wc -l` is then the number of files that lean on `<ID>`, while the line list still points an editor at every line with a site. With `--section`, the aggregate is over that section's citations only. No citations prints nothing, with exit `0` and the §2.1 `note:` unaffected. With `--format json`: NDJSON, one object per file, `{"path":<path>,"count":<n>,"lines":[<unique l1>,<unique l2>,…]}`, in the same order; without `--summary` it is the per-citation form of §3.2. Summary objects omit `kind_title`, including for a titled target kind. Exit codes (§4) are unchanged — `--summary` renders the same scan result, not a different query.
 
 ## 4. Exit codes
 
