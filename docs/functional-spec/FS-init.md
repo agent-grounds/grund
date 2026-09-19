@@ -371,7 +371,13 @@ Because the local-conversation sentence now names its scope explicitly, it no lo
 
 When the effective `grund.toml` declares `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)), the managed block renders a `### Citation directions` section generated from those rules, replacing the static citation-direction sentence (§2.3.4.10). This is the strongest enforcement point for the `should` levels, which never appear in `grund check`'s standing output ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)): the agent reads the rule before writing the declaration, so most `should` obligations are met at write time. Decided in [§DF-citation-directions.2.7](../decisions/functional/DF-citation-directions.md#27-generated-agent-entrypoint-section-with-a-drift-check); the wording is [§DF-directions-render](../decisions/functional/DF-directions-render.md#df-directions-render-the-citation-directions-wording-is-chosen-once-against-a-canonical-config)'s, chosen once against a canonical config that exercises every branch.
 
-The section is what an agent reads *instead of* `grund.toml`, so it states rules and never config grammar. It opens with one paragraph — the fixed legend ``must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).``, followed by the grounding sentence below where any row's effective `require_grounding` is on — then one bullet per citing kind that has any rule, in `[[kinds]]` order with the homeless kind (§FS-config.3.9.2) last, then one closing line. An unwalked kind (§FS-config.3.4.7) has no bullet at all: it can carry no `[citations.<kind>]` rule.
+The section is what an agent reads *instead of* `grund.toml`, so it states rules and never config grammar (§2.3.5.1 to §2.3.5.7), and `grund check` holds it to the live config (§2.3.5.8).
+
+##### 2.3.5.1 Layout
+
+The section opens with one paragraph — the fixed legend ``must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).``, followed by the grounding sentence (§2.3.5.7) where any row's effective `require_grounding` is on — then one bullet per citing kind that has any rule, in `[[kinds]]` order with the homeless kind (§FS-config.3.9.2) last, then one closing line (§2.3.5.6). An unwalked kind (§FS-config.3.4.7) has no bullet at all: it can carry no `[citations.<kind>]` rule.
+
+##### 2.3.5.2 The subject names its unit
 
 **Every bullet names its unit**, because the units the levels are checked per are not interchangeable and one verb over three of them says nothing ([§FS-check.3.11](FS-check.md#311-missing-required-citation)):
 
@@ -383,35 +389,79 @@ The section is what an agent reads *instead of* `grund.toml`, so it states rules
 | homeless, with a `title` | `Each source file outside the Project map (**code**: Gradle build and workflows) that cites anything` |
 | homeless, without one | `Each source file outside the Project map (**code**) that cites anything` |
 
-A non-citable kind is named by its place, as in the Project map (§2.3.4.4), so the bullet reads as the instruction it is: files in this directory cite that. Naming the kind would name something an agent can never write. The homeless kind has no place, so it keeps its name and says what it covers. Its *that cites anything* is load-bearing: the obligation constrains what a source file cites and never whether it cites at all ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), so a util that cites nothing is not a unit. A non-citable home is the opposite case — a file there with no citation is the defect — so nothing narrows that subject, and `require_grounding` is what closes the hole ([§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in)).
+###### 2.3.5.2.1 Places, and what the homeless kind covers
 
-**The clauses** follow the subject, joined by `; ` in the order `must`, `should`, `may`, `must-not`, `should-not`, then the per-kind default. A prohibition leads its bullet with the modal — `must not cite`, `should not cite`, the wording [§FS-check.3.12](FS-check.md#312-forbidden-citation) uses in its findings — and follows a preceding clause with the short `never cite` / `avoid citing` the legend names, because the subject is a noun phrase and a bullet opening on a bare `never cite` is not a sentence.
+A non-citable kind is named by its place, as in the Project map (§2.3.4.4.1), so the bullet reads as the instruction it is: files in this directory cite that. The homeless kind has no place, so it keeps its name and says what it covers. Its *that cites anything* is load-bearing: the obligation constrains what a source file cites and never whether it cites at all ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), so a util that cites nothing is not a unit. A non-citable home is the opposite case — a file there with no citation is the defect — so nothing narrows that subject, and `require_grounding` is what closes the hole ([§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in)).
 
-**Targets** render as prose, never as rule grammar. Alternatives inside one entry join with "or", taking the Oxford comma from three on (`FS, AR, or RM`); conjunctive entries join with "and", and where there is more than one entry an entry that has alternatives of its own is parenthesised — `must = ["FS|GOAL", "AR"]` renders `(FS or GOAL) and AR`, which has one reading. A pinned alias renders exactly as spelled (`api/AR`), because that is how the citation is written; `*/AR`, which is rule grammar and never a citation ([§FS-config.3.9.3](FS-config.md#393-namespace-matching)), renders as `AR in any project`.
+##### 2.3.5.3 The clauses
 
-**Defaults.** Only `must-not` and `should-not` close anything: [§FS-config.3.9.4](FS-config.md#394-defaults-and-precedence) makes a default of `must`, `should`, or `may` invent no obligation and forbid nothing. A per-kind `must-not` default folds into the permission it qualifies — `may cite only FS or GOAL` — when the `may` list is the whole of what the kind permits; with a `must` or `should` beside it the permitted set is wider than that list, so the bullet ends with `never cite anything else` instead. A per-kind `should-not` default ends its bullet with `avoid citing anything else`. A per-kind default that leaves its kind open says so, `may cite anything else`, only where the global default is closed and the kind is therefore a hole in it. The closing line reports the global default alone, because a per-kind default is *listed above*: `Anything not listed above is allowed.` for an open one, including `must` and `should`; `Any citation not listed above is forbidden.` for `must-not`; `Any citation not listed above is discouraged.` for `should-not`. Either form is load-bearing — the first so an agent does not over-infer prohibitions from silence, the second so it does not miss a closed world.
+The clauses follow the subject, joined by `; ` in the order `must`, `should`, `may`, `must-not`, `should-not`, then the per-kind default. A prohibition leads its bullet with the modal — `must not cite`, `should not cite`, the wording [§FS-check.3.12](FS-check.md#312-forbidden-citation) uses in its findings — and follows a preceding clause with the short `never cite` / `avoid citing` the legend names, because the subject is a noun phrase and a bullet opening on a bare `never cite` is not a sentence.
 
-**The grounding sentence** is generated from each row's effective `require_grounding` — the row's own key, else `[reference] require_grounding`, because the row decides ([§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs), [§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) — and the configured non-citable homes, and it renders whether or not `[citations]` is declared, because grounding is not a direction rule (§2.3.4.10). It claims only what [§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in) enforces, so it names a place exactly when that place's row has grounding on, and it distinguishes citing from declaring: `Every source file must cite a declared ID or declare one inline`, extended with `; every file under skills/ and tests/e2e/ must cite one` for the walked non-citable homes whose rows have it on, because a declaration in such a home is misplaced ([§FS-check.3.7](FS-check.md#37-misplaced-declaration-configured-kind-home)) and those files can therefore only cite. An unwalked home ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-walked)) is left out: nothing in it is scanned, so the rule never reaches it. Naming the level per place ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) is not this sentence's work.
+##### 2.3.5.4 Targets
 
-Because this content derives from config rather than the template alone, the version marker (§2.3) is no longer sufficient to detect staleness: editing `[citations]` without re-running `grund init` would leave guidance that disagrees with the live rules under a current version number. `grund check` therefore re-renders this section from the live config and byte-compares it against the section in the block; a mismatch is an `agents-init` finding ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) telling the author to re-run `grund init`. Rendering determinism is what makes the comparison sound — the render *is* the hash. The managed-block version was bumped to carry this content change under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), and bumped again to **v8** when the rendering above replaced the flat one this section used to specify — which stated no unit, grouped no conjunction, rendered no grounding sentence, and leaked `*/AR` into prose ([§DF-directions-render](../decisions/functional/DF-directions-render.md#df-directions-render-the-citation-directions-wording-is-chosen-once-against-a-canonical-config)). The later v9 bump is solely the point-size sweep in §2.3.4.3; it changes no citation-direction rendering.
+Targets render as prose, never as rule grammar. Alternatives inside one entry join with "or", taking the Oxford comma from three on (`FS, AR, or RM`); conjunctive entries join with "and", and where there is more than one entry an entry that has alternatives of its own is parenthesised — `must = ["FS|GOAL", "AR"]` renders `(FS or GOAL) and AR`, which has one reading. A pinned alias renders exactly as spelled (`api/AR`), because that is how the citation is written; `*/AR`, which is rule grammar and never a citation ([§FS-config.3.9.3](FS-config.md#393-namespace-matching)), renders as `AR in any project`.
+
+##### 2.3.5.5 Defaults
+
+Only `must-not` and `should-not` close anything: [§FS-config.3.9.4](FS-config.md#394-defaults-and-precedence) makes a default of `must`, `should`, or `may` invent no obligation and forbid nothing. A per-kind `must-not` default folds into the permission it qualifies — `may cite only FS or GOAL` — when the `may` list is the whole of what the kind permits; with a `must` or `should` beside it the permitted set is wider than that list, so the bullet ends with `never cite anything else` instead. A per-kind `should-not` default ends its bullet with `avoid citing anything else`. A per-kind default that leaves its kind open says so, `may cite anything else`, only where the global default is closed and the kind is therefore a hole in it.
+
+##### 2.3.5.6 The closing line
+
+The closing line reports the global default alone, because a per-kind default is *listed above*: `Anything not listed above is allowed.` for an open one, including `must` and `should`; `Any citation not listed above is forbidden.` for `must-not`; `Any citation not listed above is discouraged.` for `should-not`. Either form is load-bearing — the first so an agent does not over-infer prohibitions from silence, the second so it does not miss a closed world.
+
+##### 2.3.5.7 The grounding sentence
+
+The grounding sentence is generated from each row's effective `require_grounding` — the row's own key, else `[reference] require_grounding`, because the row decides ([§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs), [§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) — and the configured non-citable homes, and it renders whether or not `[citations]` is declared, because grounding is not a direction rule (§2.3.4.10). It claims only what [§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in) enforces, so it names a place exactly when that place's row has grounding on; naming the level per place ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) is not its work.
+
+###### 2.3.5.7.1 Citing, not declaring
+
+The sentence distinguishes citing from declaring: `Every source file must cite a declared ID or declare one inline`, extended with `; every file under skills/ and tests/e2e/ must cite one` for the walked non-citable homes whose rows have it on, because a declaration in such a home is misplaced ([§FS-check.3.7](FS-check.md#37-misplaced-declaration-configured-kind-home)) and those files can therefore only cite. An unwalked home ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-walked)) is left out: nothing in it is scanned, so the rule never reaches it.
+
+##### 2.3.5.8 The drift check
+
+Because the section's content derives from config rather than the template alone, the version marker (§2.3.7) is no longer sufficient to detect staleness: editing `[citations]` without re-running `grund init` would leave guidance that disagrees with the live rules under a current version number. `grund check` therefore re-renders the section from the live config and byte-compares it against the section in the block; a mismatch is an `agents-init` finding ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) telling the author to re-run `grund init`. Rendering determinism is what makes the comparison sound — the render *is* the hash.
+
+##### 2.3.5.9 The block versions this section moved
+
+The managed-block version was bumped to carry this config-derived content under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), and bumped again to **v8** when the rendering of §2.3.5.1 to §2.3.5.7 replaced the flat one this section used to specify — which stated no unit, grouped no conjunction, rendered no grounding sentence, and leaked `*/AR` into prose ([§DF-directions-render](../decisions/functional/DF-directions-render.md#df-directions-render-the-citation-directions-wording-is-chosen-once-against-a-canonical-config)). The later v9 bump is solely the point-size sweep in §2.3.4.3; it changes no citation-direction rendering.
 
 #### 2.3.6 Clickable citations
 
-The managed block renders a `### Clickable citations` section carrying the content points in §2.3.4.17: the fixed repository-web sentence always, plus the local-conversation sentence when `[reference] conversation = "link"` is set. The section is deterministic from the effective config and the entrypoint's own agent ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)): byte-identical in every project with the same key state, for the same entrypoint file. The per-agent split of §2.3.4.17 is the one axis on which two entrypoints in the *same* repository differ, and it is a pure function of the target path, so it is as reproducible as the rest. Adding the fixed sentence bumped the managed-block version to **v4**; adding the config-derived local-conversation sentence bumped it to **v5**, replacing that sentence with the gated link form bumped it to **v6**, and naming the bare `grund.toml` in the namespace rule's "give that project its own config" instruction ([§FS-config.1](FS-config.md#1-file-location-and-discovery), [§DF-config-file-location.2.3](../decisions/functional/DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml)) bumps it to **v7**, all carried under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations); an older supported block is reported outdated by `grund check` until `grund init` re-renders it. Because the local-conversation sentence derives from config, the section joins the citation-directions drift check (§2.3.5): `grund check` re-renders it from the live config and byte-compares; a mismatch — including flipping the `conversation` key without re-running `grund init` — is an `agents-init` finding ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)).
+The managed block renders a `### Clickable citations` section carrying the content points in §2.3.4.17: the fixed repository-web sentence always, plus the local-conversation sentence when `[reference] conversation = "link"` is set. The section is deterministic from the effective config and the entrypoint's own agent ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)): byte-identical in every project with the same key state, for the same entrypoint file. The per-agent split of §2.3.4.17.2 is the one axis on which two entrypoints in the *same* repository differ, and it is a pure function of the target path, so it is as reproducible as the rest.
+
+##### 2.3.6.1 The drift check
+
+Because the local-conversation sentence derives from config, the section joins the citation-directions drift check (§2.3.5.8): `grund check` re-renders it from the live config and byte-compares; a mismatch — including flipping the `conversation` key without re-running `grund init` — is an `agents-init` finding ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)).
+
+##### 2.3.6.2 The block versions this section moved
+
+Adding the fixed sentence bumped the managed-block version to **v4**; adding the config-derived local-conversation sentence bumped it to **v5**, replacing that sentence with the gated link form bumped it to **v6**, and naming the bare `grund.toml` in the namespace rule's "give that project its own config" instruction ([§FS-config.1](FS-config.md#1-file-location-and-discovery), [§DF-config-file-location.2.3](../decisions/functional/DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml)) bumped it to **v7**, all carried under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations); an older supported block is reported outdated by `grund check` until `grund init` re-renders it.
 
 #### 2.3.7 The block version
 
 The canonical text for a given block version `vN` is embedded in the `grund` binary; the reference copy lives at `templates/AGENTS.md` in the `grund` source tree. The `vN` marker (§2.3.9) is what versions it under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), so changing the block's fixed canonical text is itself a block-version bump, carried by that mechanism, not a silent rewrite. What `vN` versions is that fixed text, not the lines substituted in (§2.3.8): the inline citation style sentences among them ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)) move no version while they only widen what an author may write.
 
-The current schema is **v10**; v10 adds the in-body Markdown heading policy in §2.3.4.5.1, and an existing v9 block is the supported predecessor, repaired by the same one-command `grund init` re-render (§2.3.10). The v9 history remains the point-size sweep added in §2.3.4.3, with v8 as its predecessor.
+##### 2.3.7.1 The current version
 
-`grund check`'s agent-entrypoint validation ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) checks the marker line and the version, not a byte-diff against the canonical text — save for the config-derived `### Citation directions` and `### Clickable citations` sections, which it re-renders from the live config and byte-compares (§2.3.5, §2.3.6).
+The current schema is **v10**; v10 adds the in-body Markdown heading policy in §2.3.4.5.1, and an existing v9 block is the supported predecessor, repaired by the same one-command `grund init` re-render (§2.3.10.1). The v9 history remains the point-size sweep added in §2.3.4.3, with v8 as its predecessor.
+
+##### 2.3.7.2 What `check` compares
+
+`grund check`'s agent-entrypoint validation ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) checks the marker line and the version, not a byte-diff against the canonical text — save for the config-derived `### Citation directions` and `### Clickable citations` sections, which it re-renders from the live config and byte-compares (§2.3.5.8, §2.3.6.1).
 
 #### 2.3.8 Substituted content
 
-Several things in the block are *substituted in* rather than fixed for its `vN`, so the file describes the repo it is in: the project name from `--name` (interpolated into the scaffolding H1 emitted above the block for a fresh `AGENTS.md`, §2.3.10), and the **effective ID grammar and artifact map** — taken from the `grund.toml` `init` leaves governing the target (an existing config in the target, or the defaults `init` is about to write, never an ancestor's). From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>-<slug>`, …, derived from `[id].format`), one worked example ID and citation, the `[id].section_separator`, the marker and `$$`-trigger from `[reference]`, the `KIND ∈ {…}` set from `[[kinds]]`, a raw-readable link list of each kind's configured declaration home and title (§2.3.4.4), a sentence on whether bare ID-shaped tokens count as citations (driven by `[reference].strict`), and the inline citation style sentences defined by [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering).
+Several things in the block are *substituted in* rather than fixed for its `vN`, so the file describes the repo it is in: the project name from `--name` (interpolated into the scaffolding H1 emitted above the block for a fresh `AGENTS.md`, §2.3.10), and the **effective ID grammar and artifact map** — taken from the `grund.toml` `init` leaves governing the target (an existing config in the target, or the defaults `init` is about to write, never an ancestor's).
+
+##### 2.3.8.1 What the config fills in
+
+From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>-<slug>`, …, derived from `[id].format`), one worked example ID and citation, the `[id].section_separator`, the marker and `$$`-trigger from `[reference]`, the `KIND ∈ {…}` set from `[[kinds]]`, a raw-readable link list of each kind's configured declaration home and title (§2.3.4.4), a sentence on whether bare ID-shaped tokens count as citations (driven by `[reference].strict`), and the inline citation style sentences defined by [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering).
+
+##### 2.3.8.2 The worked example is escaped
 
 The worked example citation is written in the escaped illustration form — `<§>` around the configured marker, per [§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves) — never as a live citation: the example ID is deliberately not a real declaration in the host repo, so a live marker would make the freshly generated block fail the host repo's own `grund check` (§2.3) as a dangling reference wherever the entrypoint falls inside the scan scope.
+
+##### 2.3.8.3 A config that fails to load
 
 The generator–checker symmetry of §2.3 extends to reading the config: an existing `grund.toml` that fails to load is an error (`exit 2`, the message and location `grund check` gives for the same file), never a silent fall back to defaults. The block is rendered *from* that config, so substituting defaults would write agent instructions describing a repository the user does not have — an unparseable `[reference] conversation`, `marker`, or kind set would drop exactly the guidance it selects while `init` reported success — and the two commands would disagree about a file both of them read.
 
@@ -426,7 +476,13 @@ The managed block is bounded by explicit standard `BEGIN` / `END` HTML-comment d
 <!-- END GRUND MANAGED BLOCK -->
 ```
 
-The integer after `v` is the managed-block version. The `<!-- BEGIN GRUND MANAGED BLOCK -->` line is the block's begin marker and `<!-- END GRUND MANAGED BLOCK -->` is its end marker; both delimiter lines belong to the managed region, so everything between them — delimiters included — is `init`'s to rewrite and nothing outside them is. The delimiters are deliberately the conventional managed-region shape rather than a grund-specific arrow syntax, so humans and agents skimming the file recognize the ownership boundary without knowing grund ([§DF-managed-block-delimiters](../decisions/functional/DF-managed-block-delimiters.md#df-managed-block-delimiters-standard-beginend-delimiters-for-the-managed-agent-instructions-block)).
+The integer after `v` is the managed-block version. The `<!-- BEGIN GRUND MANAGED BLOCK -->` line is the block's begin marker and `<!-- END GRUND MANAGED BLOCK -->` is its end marker; both delimiter lines belong to the managed region, so everything between them — delimiters included — is `init`'s to rewrite and nothing outside them is.
+
+##### 2.3.9.1 Why the conventional shape
+
+The delimiters are deliberately the conventional managed-region shape rather than a grund-specific arrow syntax, so humans and agents skimming the file recognize the ownership boundary without knowing grund ([§DF-managed-block-delimiters](../decisions/functional/DF-managed-block-delimiters.md#df-managed-block-delimiters-standard-beginend-delimiters-for-the-managed-agent-instructions-block)).
+
+##### 2.3.9.2 Legacy blocks
 
 Blocks at v3 and earlier predate the delimiters (**legacy blocks**): there the H2 heading itself is the begin marker and the block runs until the next H1 or H2 heading, or end of file. Both `init` and `check` continue to recognize the legacy form; on its next write `init` migrates a recognized legacy block to the delimited form in place (reported `updated `), preserving the block's position and every byte outside the block.
 
@@ -434,7 +490,13 @@ Blocks at v3 and earlier predate the delimiters (**legacy blocks**): there the H
 
 A fresh `AGENTS.md` consists of the block preceded by a one-line scaffolding H1 (`# {NAME} — agent instructions`); the H1 is *unmanaged*, so `init --force` rewrites the block but leaves the title alone. A freshly-created companion entrypoint consists of just the managed block, with no extra H1, so the agent-specific file remains a thin alias for the canonical workflow. If an agent entrypoint already exists and contains no managed block, `init` appends the current block after the existing content (no H1 is inserted — the host file owns its title).
 
-If the file already contains any supported block version, including the current one, `init` re-renders the block from the current effective `grund.toml`, compares it to the bytes of the managed region on disk (§2.3.9, delimited or legacy), and — when they differ — replaces only those bytes, leaving all content before and after the block untouched (reported `updated `, §2.3.1). Same-version template and config changes therefore propagate on the next `grund init` without requiring `--force`. When the re-render is byte-identical to what is on disk, `init` writes nothing and reports the file with `exists ` (§2.2) — re-running `grund init` on an already-current repo is a no-op on every file. If the file contains a newer block version than the running binary supports, `init` exits 2 and leaves the file unchanged.
+##### 2.3.10.1 Re-rendering an existing block
+
+If the file already contains any supported block version, including the current one, `init` re-renders the block from the current effective `grund.toml`, compares it to the bytes of the managed region on disk (§2.3.9, delimited or legacy), and — when they differ — replaces only those bytes, leaving all content before and after the block untouched (reported `updated `, §2.3.1). Same-version template and config changes therefore propagate on the next `grund init` without requiring `--force`. When the re-render is byte-identical to what is on disk, `init` writes nothing and reports the file with `exists ` (§2.2) — re-running `grund init` on an already-current repo is a no-op on every file.
+
+##### 2.3.10.2 A newer block version
+
+If an agent entrypoint contains a newer block version than the running binary supports, `init` exits 2 and leaves the file unchanged.
 
 #### 2.3.11 Malformed delimiters
 
@@ -444,19 +506,39 @@ A file whose delimiters are present but broken is **malformed**: a `BEGIN` delim
 
 `AGENTS.md` is the canonical fallback entrypoint. The supported-agent set is fixed and is the superset used by every agent-facing feature: AGENTS-compatible agents (including Codex), Claude Code, Gemini, Pi, GitHub Copilot, Cursor, Windsurf, and Zed. The built-in companion set covers their common root or repository instruction files: Codex override instructions (`AGENTS.override.md`), Claude Code (`CLAUDE.md`, `.claude/CLAUDE.md`), Gemini (`GEMINI.md`), Pi (`.pi/AGENTS.md`), GitHub Copilot (`.github/copilot-instructions.md`), Cursor (`.cursor/rules/grund.mdc`, plus the legacy `.cursorrules`), Windsurf (`.windsurfrules`), and Zed (`.rules`).
 
+##### 2.3.12.1 Which companions are created
+
 Companion entrypoints are mostly discovery-based: `init` updates them if the repo already has them, and creates the workspace-triggered aliases for Claude, Gemini, Pi, Cursor, or Zed — one per agent (§2.1.1) — only when the matching agent-specific workspace directory already shows that tool is in use. For the reasons §2.1.2 gives, `.github/copilot-instructions.md` is created only by `--copilot`, `.windsurfrules` only by `--windsurf`, and `.rules` only where `.zed/` exists or `--zed` is passed (§1.5).
+
+##### 2.3.12.2 A companion symlinked to `AGENTS.md`
 
 When a companion path is a symlink to `AGENTS.md`, `init` does not touch it separately. If that companion is explicitly requested, the request selects canonical `AGENTS.md` as the update target; `grund check` always treats the canonical `AGENTS.md` block as sufficient for that symlink ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)).
 
 ### 2.4 Generated `grund.toml`
 
-The shipped template illustrates values only as a commented `CONST` row with `values = true` and `file = "values.json"`. Fresh repositories remain unopted-in, and neither the template nor the effective schema contains a `value_sources` key ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations)).
+`init` writes `<path>/grund.toml` — the bare, root-visible form — and **only when the target has no config at all**, in either discovery location (§2.4.1). An existing config is never overwritten, not even with `--force` (§2.4.2). The file it does write is a teaching surface (§2.4.3); §2.4.4 to §2.4.8 say how particular keys are written.
 
-`init` writes `<path>/grund.toml` — the bare, root-visible form — and **only when the target has no config at all**: both discovery locations of [§FS-config.1](FS-config.md#1-file-location-and-discovery) are probed, so a repository already configured under `.agents/grund.toml` is reported `exists .agents/grund.toml` and never grows the redundant pair [§FS-check.4.3](FS-check.md#43-redundant-config-pair) warns about. That probe matters more under the [§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both) tie-break than a same-name check would: writing a bare `grund.toml` beside an existing `.agents/` config would *take over* the repository's grammar, which is exactly what `init` must never do to a config it did not write. Which form a project uses stays its own choice; the bare one is what `init` recommends, by generating it ([§DF-config-file-location.2.3](../decisions/functional/DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml)). An existing config is the repo's configuration — the one surface a project customizes ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable)) — and `init` never overwrites it, not even with `--force`: an existing config is reported as `exists` and left byte-for-byte unchanged (§3). `--force` resets the things `init` owns end to end — the managed `AGENTS.md` block and the `--docs` scaffold stubs — not the user's settings; a customized config that `init --force` clobbered would be a footgun. (When the file is absent and `init` does write it, every key written matches the built-in default for that key — including `FS` as `file = "requirements.md"` — so the file is a teaching surface, not an override surface, and a new user can see the schema they will be editing. Top of file is `grund_config_version = 1` per [§FS-config.5](FS-config.md#5-schema-versioning); the schema written is exactly the one in [§FS-config.3](FS-config.md#3-schema), no extra keys, no missing keys.)
+#### 2.4.1 Both discovery locations are probed
+
+Both discovery locations of [§FS-config.1](FS-config.md#1-file-location-and-discovery) are probed, so a repository already configured under `.agents/grund.toml` is reported `exists .agents/grund.toml` and never grows the redundant pair [§FS-check.4.3](FS-check.md#43-redundant-config-pair) warns about. That probe matters more under the [§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both) tie-break than a same-name check would: writing a bare `grund.toml` beside an existing `.agents/` config would *take over* the repository's grammar, which is exactly what `init` must never do to a config it did not write. Which form a project uses stays its own choice; the bare one is what `init` recommends, by generating it ([§DF-config-file-location.2.3](../decisions/functional/DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml)).
+
+#### 2.4.2 An existing config is never overwritten
+
+An existing config is the repo's configuration — the one surface a project customizes ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable)) — and `init` never overwrites it, not even with `--force`: an existing config is reported as `exists` and left byte-for-byte unchanged (§3). `--force` resets the things `init` owns end to end — the managed `AGENTS.md` block and the `--docs` scaffold stubs — not the user's settings; a customized config that `init --force` clobbered would be a footgun.
+
+#### 2.4.3 Every written key is the default
+
+When the file is absent and `init` does write it, every key written matches the built-in default for that key — including `FS` as `file = "requirements.md"` — so the file is a teaching surface, not an override surface, and a new user can see the schema they will be editing. Top of file is `grund_config_version = 1` per [§FS-config.5](FS-config.md#5-schema-versioning); the schema written is exactly the one in [§FS-config.3](FS-config.md#3-schema), no extra keys, no missing keys.
+
+#### 2.4.4 `named_sections` is written off
 
 The generated `[id]` table includes the uncommented Boolean `named_sections = false`. `init` never enables the feature on a repository's behalf; the author must opt in deliberately before named headings acquire citation meaning.
 
+#### 2.4.5 Finite value sets are named in comments
+
 Because the generated config is also a usability surface, non-boolean keys with a finite accepted value set carry inline comments listing that set. Boolean keys are left uncommented: spelling out `true | false` is not useful guidance and should not be emitted. Free-form keys instead describe their grammar or omit the comment when a finite list would be misleading. For example, `[reference].inline_style` names `citation-with-note | citation-only`, `[id].section_heading_levels` names `strict | warn | loose`, `[output].format` names `text | json`, and `[fmt.cross_refs].anchor_format` names `github | gitlab | mkdocs | pandoc | none`. These comments are explanatory only; they are not schema keys and do not change parsing under [§FS-config.3](FS-config.md#3-schema).
+
+#### 2.4.6 `shorthand` is written out
 
 The generated `[reference]` table writes
 `shorthand = "canonical" # canonical | accepted`. This makes the current
@@ -464,52 +546,90 @@ canonical behavior explicit while teaching the opt-in persistence policy; as
 with every generated key, the written value is the built-in default
 ([§FS-config.3.1](FS-config.md#31-reference--citation-form)).
 
-A single `project_name = "<name>"` key appears at the top above the section tables. This key is metadata only — it is not consumed by any other `grund` subcommand and exists so downstream tooling (IDE status bars, CI dashboards) can read it without re-deriving the name. Directly below it the file teaches the optional `project_description` key ([§FS-config.3](FS-config.md#3-schema)): a commented `# project_description = "<one line shown next to this project in workspace member lists>"` line by default, or the real `project_description = "<text>"` key when `--description` was given (§1). The commented form is a teaching comment like the finite-value-set comments below, not a schema key, so the "no extra keys, no missing keys" guarantee above is unchanged.
+#### 2.4.7 `project_name` and `project_description`
+
+A single `project_name = "<name>"` key appears at the top above the section tables. This key is metadata only — it is not consumed by any other `grund` subcommand and exists so downstream tooling (IDE status bars, CI dashboards) can read it without re-deriving the name. Directly below it the file teaches the optional `project_description` key ([§FS-config.3](FS-config.md#3-schema)): a commented `# project_description = "<one line shown next to this project in workspace member lists>"` line by default, or the real `project_description = "<text>"` key when `--description` was given (§1). The commented form is a teaching comment like the finite-value-set comments (§2.4.5), not a schema key, so the "no extra keys, no missing keys" guarantee (§2.4.3) is unchanged.
+
+#### 2.4.8 Values are illustrated, not enabled
+
+The shipped template illustrates values only as a commented `CONST` row with `values = true` and `file = "values.json"`. Fresh repositories remain unopted-in, and neither the template nor the effective schema contains a `value_sources` key ([§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations)).
 
 ## 3. Non-intrusive guarantees
 
-A reader skimming for "what won't `init` touch?" gets the consolidated answer here; the detail lives at the section cited beside each guarantee.
+What `init` won't touch, in one list; the detail lives at the section cited beside each guarantee.
 
-- **A target that is not a project is refused before anything is written.** The home directory and the user-global agent instruction files are declined unconditionally; a target no version-control marker covers is declined unless `--no-vcs` says otherwise (§1.2).
-- **Automatic mode never adds a competing entrypoint.** An existing `CLAUDE.md`, `GEMINI.md`, or other known entrypoint is updated in place; no canonical `AGENTS.md` is invented alongside it (§1, §2.1).
-- **`init` never creates a second file for an agent that already has one.** At most one entrypoint per agent is created, and only for an agent that has none — a companion symlinked to `AGENTS.md` counts as having one. Where a repository already carries two of one agent's files, both are maintained and the run says so in a `note:` rather than leaving the duplication invisible. The one file written beside an existing one is the Claude entrypoint a `conversation = "link"` repository asks for by committing that key, because there the two files do not carry the same block (§2.1.1, §2.3.4.17).
-- **Ambiguous companions need a workspace signal.** `.github/copilot-instructions.md` is never created from `.github/` alone (it is generic GitHub metadata); `.rules` is never created from file existence alone (its filename is too generic) — both require either an existing workspace directory or an explicit flag (§2.1, §2.3).
-- **User-authored content in agent entrypoints is preserved.** Only the delimiter-bounded managed `## Grounding with grund (vN)` block is touched. Everything before and after the block is byte-for-byte preserved, including the block's position within the file (§2.3, §2.3.1). The delimiter is the ownership boundary [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) is written around.
-- **Line endings outside the managed block are preserved.** CRLF, lone-CR, and mixed-encoding host files keep their endings; `init` never normalizes the surrounding bytes (§2.3.2).
-- **An existing `grund.toml` is never overwritten**, in either discovery location ([§FS-config.1](FS-config.md#1-file-location-and-discovery)). Once the config exists it is the project's, not `init`'s; `--force` does not touch it. The file is only ever written when it is absent (§2.4, below).
-- **No prompts, ever.** Every choice is a flag; there is no interactive mode that can surprise a human or break a script ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
-- **`--dry-run` previews any run.** The user can see exactly which lines `init` would emit — `would-write`, `would-append`, `would-update`, `exists` — before letting it touch a single file (§1, §2.2).
-- **Re-running is a true no-op when the repo is already current.** Every reported path is `exists `, no bytes change on disk, and the trailing `next:` guidance block is suppressed because there is nothing left to teach (§2.2, §2.3).
+- **A target that is not a project is refused before anything is written** (§1.2).
+- **Automatic mode never adds a competing entrypoint** (§1.5, §2.1).
+- **`init` never creates a second file for an agent that already has one** (§2.1.1), save the Claude entrypoint a `conversation = "link"` repository asks for by committing that key (§2.1.1.1).
+- **Ambiguous companions need a workspace signal** (§3.1).
+- **User-authored content in agent entrypoints is preserved** (§3.2).
+- **Line endings outside the managed block are preserved** (§2.3.2).
+- **An existing `grund.toml` is never overwritten**, in either discovery location, not even by `--force` (§2.4.1, §2.4.2).
+- **No prompts, ever.** Every choice is a flag ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
+- **`--dry-run` previews any run** (§1, §2.2).
+- **Re-running is a true no-op when the repo is already current** (§2.2, §2.2.2).
 
-The remainder of this section gives the detailed `--force` semantics that back the config and "refuse to clobber" guarantees.
+The `--force` semantics behind the config and "refuse to clobber" guarantees are §3.3 to §3.5.
 
-Without `--force`, `init` never overwrites an existing file. Existing agent entrypoints are handled by the append/update rules in §2.3. Every other existing target file is left unchanged and reported with `exists `:
+### 3.1 Ambiguous companions need a workspace signal
+
+`.github/copilot-instructions.md` is never created from `.github/` alone (it is generic GitHub metadata); `.rules` is never created from file existence alone (its filename is too generic) — both require either an existing workspace directory or an explicit flag (§2.1, §2.3).
+
+### 3.2 User-authored content in agent entrypoints is preserved
+
+Only the delimiter-bounded managed `## Grounding with grund (vN)` block is touched. Everything before and after the block is byte-for-byte preserved, including the block's position within the file (§2.3, §2.3.1). The delimiter is the ownership boundary [§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own) is written around.
+
+### 3.3 Without `--force`
+
+Without `--force`, `init` never overwrites an existing file. Existing agent entrypoints are handled by the append/update rules in §2.3.10. Every other existing target file is left unchanged and reported with `exists `:
 
 ```
 exists grund.toml
 ```
 
-This makes repeated `grund init` runs idempotent and safe for existing repos. With `--force`, a selected canonical `AGENTS.md` and the `--docs` scaffold files are overwritten in place; their previous contents are not preserved (the user has git for that, per [§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking) — `grund` does not maintain its own history). **The config is the exception: `--force` never overwrites it.** Once the config exists it is the project's, not `init`'s — `init --force` still reports it as `exists ` and leaves it untouched (§2.4); the file is only ever written when it is absent. Existing *companion* entrypoints are likewise not full-file overwritten by `--force` — the canonical `AGENTS.md` named above is the one entrypoint the flag replaces whole; if a companion is present and not symlinked to `AGENTS.md`, only its managed block is appended or updated so unrelated agent-specific instructions remain intact.
+This makes repeated `grund init` runs idempotent and safe for existing repos. The `--docs` mode applies the same rule across the docs tree: existing scaffold files are reported as `exists ` and left unchanged; missing scaffold files are written.
 
-Without `--force`, the `--docs` mode applies the same rule across the docs tree: existing scaffold files are reported as `exists ` and left unchanged; missing scaffold files are written. With `--force` they are overwritten like the canonical `AGENTS.md` above — these are stubs `init` owns, and a repository that has filled `docs/goals.md` or `docs/grund.md` with real content loses it, which is why the flag exists and why nothing else in `init` reaches these files ([§REQ-no-data-loss.3](../requirements/REQ-no-data-loss.md#3-destructive-is-opt-in-and-never-a-side-effect)).
+### 3.4 With `--force`
+
+With `--force`, a selected canonical `AGENTS.md` and the `--docs` scaffold files are overwritten in place; their previous contents are not preserved (the user has git for that, per [§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking) — `grund` does not maintain its own history). The `--docs` files are stubs `init` owns, and a repository that has filled `docs/goals.md` or `docs/grund.md` with real content loses it, which is why the flag exists and why nothing else in `init` reaches these files ([§REQ-no-data-loss.3](../requirements/REQ-no-data-loss.md#3-destructive-is-opt-in-and-never-a-side-effect)).
+
+### 3.5 What `--force` does not replace
+
+**`--force` never overwrites the config**: `init --force` still reports it as `exists ` and leaves it untouched (§2.4.2). Existing *companion* entrypoints are likewise not full-file overwritten by `--force` — the canonical `AGENTS.md` is the one entrypoint the flag replaces whole; if a companion is present and not symlinked to `AGENTS.md`, only its managed block is appended or updated so unrelated agent-specific instructions remain intact.
 
 ## 4. Exit codes
 
 - `0` — every requested file was written, appended, updated, or already current. Under `--check` (§1) this is the tree that is current: every reported path was `exists ` and there is nothing to write.
-- `1` — `--check` only: the report carried at least one `would-write `, `would-append `, or `would-update ` line, so the tree is not current. Nothing was written, and the run that fixes it is the same `init` without the flag. A `note:` never earns the `1` and neither does the `next:` block — a note is a report, not a finding (§2.2), and the exit code is decided by the reported paths alone.
-- `2` — I/O error (target path does not exist, permission denied, disk full, etc.); a CLI-level error such as an unknown flag; a refused target (§1.2), in which case nothing was written; or an existing `AGENTS.md` contains a managed block whose schema version is newer than the running binary supports (§2.3), in which case the file is left unchanged. `2` wins over `1`: a run that could not be performed produced no report to gate on, so `--check` over a refused target exits `2` the way any other form of the run does.
+- `1` — `--check` only: the report carried at least one `would-…` line, so the tree is not current (§4.1).
+- `2` — I/O error (target path does not exist, permission denied, disk full, etc.); a CLI-level error such as an unknown flag; a refused target (§1.2), in which case nothing was written; or an existing `AGENTS.md` contains a managed block whose schema version is newer than the running binary supports (§2.3), in which case the file is left unchanged. `2` wins over `1` (§4.2).
 
-`--dry-run` alone keeps `0` whatever it reports, and that asymmetry is deliberate. `1` is the *findings* slot of the mapping [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed) freezes, and `init` had never used it, so `--check` fills a hole in the mapping rather than moving it. Giving the `1` to `--dry-run` instead would change the verdict an existing green CI step gets on upgrade — quietly, with no finding naming the release and no one-command fix — which is the one thing [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) puts the exit-code mapping out of reach of. So there are two spellings because there are two questions: `--dry-run` asks *what would this run do*, `--check` asks *is there anything left to do*.
+`--dry-run` alone keeps `0` whatever it reports (§4.3). Exit-code mapping is fixed per [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out) and [§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization).
 
-Exit-code mapping is fixed per [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out) and [§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization).
+### 4.1 What earns the `1`
+
+The `would-…` lines that earn the `1` are `would-write `, `would-append `, and `would-update `. Nothing was written, and the run that fixes it is the same `init` without the flag. A `note:` never earns the `1` and neither does the `next:` block — a note is a report, not a finding (§2.2.1), and the exit code is decided by the reported paths alone.
+
+### 4.2 `2` wins over `1`
+
+A run that could not be performed produced no report to gate on, so `--check` over a refused target exits `2` the way any other form of the run does.
+
+### 4.3 Why `--dry-run` keeps `0`
+
+The asymmetry between `--dry-run`'s `0` and `--check`'s `1` is deliberate. `1` is the *findings* slot of the mapping [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed) freezes, and `init` had never used it, so `--check` fills a hole in the mapping rather than moving it. Giving the `1` to `--dry-run` instead would change the verdict an existing green CI step gets on upgrade — quietly, with no finding naming the release and no one-command fix — which is the one thing [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) puts the exit-code mapping out of reach of. So there are two spellings because there are two questions: `--dry-run` asks *what would this run do*, `--check` asks *is there anything left to do*.
 
 ## 5. Agent setup instructions
 
 `grund agent-setup-instructions` prints the AI-agent-facing guided setup instructions for adopting `grund` in an arbitrary repo. This is a read-only discovery command: stdout is Markdown, stderr is empty, exit `0`; passing any positional argument or flag is a CLI-level error (`error: agent-setup-instructions takes no arguments`, exit `2`). The command exists so a user can tell an agent only "set up grund" plus provide an installed `grund` binary, and the agent can still discover the recommended setup workflow without browsing the source repository.
 
+### 5.1 What the instructions tell the agent
+
 The output reads like an agent skill rather than a human tutorial. It instructs the agent to inspect the target repo first, identify the existing specs, artifact types, roadmaps, changelogs, decisions, plans, tests, and agent instruction files, recommend suitable `grund init` and `grund.toml` choices with evidence, show pros and cons for every config option, ask the user to confirm or override the recommendations, write `grund.toml`, run `grund init`, then validate with `grund config validate` and `grund check`. The config must be written before `grund init` so the generated managed block reflects the selected ID grammar, marker, strict mode, kinds, and existing artifact layout.
 
+### 5.2 Adopting an existing docs-heavy repo
+
 For an existing docs-heavy repo, the instructions make the adoption choice explicit before any write: show the canonical `grund` artifact types, including `GRUND` for the grounding doc, beside the detected project-specific sections, tags, or document classes, then ask whether to use canonical `grund`, canonical core plus project-specific extras, or the existing structure with `grund` citations. The recommended `grund init` form omits `--docs` unless the user selects a canonical-layout migration; existing specs are represented in `[[kinds]]` and `[scan]` settings rather than replaced by generic scaffold folders. This follows [§DF-skill-init-existing-specs](../decisions/functional/DF-skill-init-existing-specs.md#df-skill-init-existing-specs-grund-init-adopts-existing-specs-before-scaffolding).
+
+### 5.3 One body, two surfaces
 
 The core instructions must not fork from the distributable skill. The repository keeps the distributable skill at `skills/grund-init/SKILL.md` and the binary-embedded copy at `crates/grund-core/assets/skills/grund-init/SKILL.md`; they must be byte-identical, and `grund agent-setup-instructions` prints that Markdown source byte-for-byte. The source package therefore exposes the instructions in two ways with one body: agents that can read the repository may load `skills/grund-init/SKILL.md` as a skill; agents that only have the installed CLI may run `grund agent-setup-instructions`. A release that edits one surface without the other is invalid. The skill's `### [citations]` section contains a marked byte-identical copy of `docs/user-facing/citation-directions.md`; the asset-sync integration check prevents either copy from drifting.
 
@@ -517,6 +637,10 @@ The core instructions must not fork from the distributable skill. The repository
 
 `init` is the smallest on-ramp `grund` offers: one command, every default the most-common case, nothing the user already authored rewritten without `--force` (§3). The shape follows from three goals taken together — an agent that reads its entrypoint file at session start should arrive already taught ([§GOAL-agent-grounding.1](../goals.md#1-the-three-layers)); a conformant tree should work without configuration so the emitted defaults *are* the canonical grammar ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)); and the on-ramp should not surprise either humans or scripts, so there are no prompts and every choice is a flag ([§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible)).
 
-Without `init`, the on-ramp to `grund` would be a copy-paste of someone else's agent instructions, with the resulting drift between projects. `init` collapses that on-ramp to one command and freezes the selected agent entrypoint at the `grund` version that wrote it — when the canonical form evolves, `grund init` re-emits the managed block in place ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable) still applies through the project's `grund.toml`, which the re-emitted block is rendered from and `init` never overwrites, §2.4).
+### 6.1 One command instead of a copy-paste
+
+Without `init`, the on-ramp to `grund` would be a copy-paste of someone else's agent instructions, with the resulting drift between projects. `init` collapses that on-ramp to one command and freezes the selected agent entrypoint at the `grund` version that wrote it — when the canonical form evolves, `grund init` re-emits the managed block in place ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable) still applies through the project's `grund.toml`, which the re-emitted block is rendered from and `init` never overwrites, §2.4.2).
+
+### 6.2 The grammar before any IDs exist
 
 `init` is also the only safe place to demonstrate the ID grammar before any IDs exist: a repo that has not yet authored its first `FS-001-…` declaration still gets a literate agent entrypoint from `init` that teaches the grammar by example.
