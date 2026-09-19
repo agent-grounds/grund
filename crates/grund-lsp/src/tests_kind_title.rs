@@ -68,7 +68,7 @@ fn kind_title_handler_preserves_each_title_preview_and_navigation() {
     let stub_title = "FS-inline: [source](../src/inline.rs)";
     write(
         &spec,
-        "# FS-authored: Authored title\n\nLead §FS-other.\n\n## 1. Detail\n\nDetail body.\n",
+        "# FS-authored: Authored title\n\nLead \u{a7}FS-other.\n\n## 1. Detail\n\nDetail body.\n",
     );
     write(
         &root.join("docs/FS-other.md"),
@@ -81,14 +81,14 @@ fn kind_title_handler_preserves_each_title_preview_and_navigation() {
     );
     write(
         &user,
-        "//! §FS-authored\n//! §FS-authored.1\n//! §FS-inline\n//! §FS-missing\n",
+        "//! \u{a7}FS-authored\n//! \u{a7}FS-authored.1\n//! \u{a7}FS-inline\n//! \u{a7}FS-missing\n",
     );
     let mut baseline_navigation = None;
     for (title, suffix) in [
         (None, ""),
         (
-            Some("Product `contracts` §FS-other"),
-            "\n\nKind: ``Product `contracts` §FS-other``",
+            Some("Product `contracts` \u{a7}FS-other"),
+            "\n\nKind: ``Product `contracts` \u{a7}FS-other``",
         ),
         (Some("`edge``"), "\n\nKind: ``` `edge`` ```"),
         (Some(""), "\n\nKind: ``"),
@@ -127,7 +127,7 @@ fn kind_title_handler_preserves_each_title_preview_and_navigation() {
         // Linkification applies to the preview, while identical citation text in metadata stays literal.
         let other_uri = Url::from_file_path(root.join("docs/FS-other.md")).unwrap();
         let preview = format!(
-            "# FS-authored: Authored title\n\nLead [§FS-other]({other_uri}#L1).\n\n## 1. Detail\n"
+            "# FS-authored: Authored title\n\nLead [\u{a7}FS-other]({other_uri}#L1).\n\n## 1. Detail\n"
         );
         assert_eq!(
             request(&mut server, &client, "textDocument/hover", &user, 0, 6),
@@ -135,16 +135,18 @@ fn kind_title_handler_preserves_each_title_preview_and_navigation() {
                 &format!("{preview}{suffix}"),
                 0,
                 4,
-                4 + "§FS-authored".encode_utf16().count() as u32
+                4 + "\u{a7}FS-authored".encode_utf16().count() as u32
             )
         );
         assert_eq!(
             request(&mut server, &client, "textDocument/hover", &user, 1, 6),
             expected(
-                &format!("## 1. Detail\n\nDetail body.\n{suffix}"),
+                &format!(
+                    "# FS-authored: Authored title\n## 1. Detail\n\nDetail body.\n{suffix}"
+                ),
                 1,
                 4,
-                4 + "§FS-authored.1".encode_utf16().count() as u32
+                4 + "\u{a7}FS-authored.1".encode_utf16().count() as u32
             )
         );
         assert_eq!(
@@ -199,7 +201,7 @@ fn kind_title_handler_uses_target_snapshot_for_workspace_titles_and_bindings() {
     let hover = request(&mut server, &client, "textDocument/hover", &user, 0, 14);
     assert_eq!(
         hover["contents"]["value"],
-        "### 1.1. 12\n\n\nKind: `Target title`"
+        "# FS-price: Authored price\n### 1.1. 12\n\n\nKind: `Target title`"
     );
     assert_eq!(
         hover["range"],
