@@ -84,10 +84,7 @@ fn kind_title_refs_target_differs_from_caller_and_citers() {
     write(&root.join("target/grund.toml"), &config("Target title"));
     write(&root.join("citer/grund.toml"), &config("Citer title"));
     write(&root.join("citer/src/user.rs"), "//! §target/FS-authored\n");
-    write(
-        &root.join("target/src/user.rs"),
-        "//! \u{a7}FS-authored\n",
-    );
+    write(&root.join("target/src/user.rs"), "//! \u{a7}FS-authored\n");
     write(&root.join("src/user.rs"), "//! §target/FS-authored\n");
     let result = refs_with_metadata(RefsOpts {
         path: root,
