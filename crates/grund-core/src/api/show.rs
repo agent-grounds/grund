@@ -129,7 +129,7 @@ fn show_run(
         &id,
         section.as_deref(),
         opts.mode.render_mode(),
-        opts.format == ShowFormat::Markdown && section.is_none(),
+        opts.format == ShowFormat::Markdown,
         overlays,
     )
     // §FS-workspace.8.1.1: a miss names the projects that do declare the ID,

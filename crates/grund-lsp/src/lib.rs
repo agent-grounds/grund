@@ -517,7 +517,14 @@ impl Server {
                 path: snapshot.root.clone(),
                 section: None,
                 mode: ShowMode::Toc,
-                format: ShowFormat::Markdown,
+                // A section citation's exact preview starts at that section heading;
+                // text mode suppresses the declaration H1 while preserving the
+                // section body for the editor linkifier. §FS-lsp.1.2
+                format: if citation.query_id == citation.declaration_query_id {
+                    ShowFormat::Markdown
+                } else {
+                    ShowFormat::Text
+                },
             },
             self.open_document_overlays(),
         ) {
