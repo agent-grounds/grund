@@ -23,7 +23,7 @@ pub(super) struct DeclarationHome<'a> {
 }
 
 impl DeclarationHome<'_> {
-    /// How a non-citable home is named in a finding (§FS-check.3.7,
+    /// How a non-citable home is named in a finding (§FS-check.3.7.3,
     /// §FS-check.3.6) — the same `<folder>/` label the citation-direction
     /// findings and the generated block use, so one home reads one way
     /// everywhere.
@@ -121,7 +121,7 @@ impl<'a> KindHomeIndex<'a> {
     /// The configured kind home that contains `path`, when exactly one
     /// `[[kinds]]` home matches it. `file` homes are exact; `folder` homes are
     /// path-prefix matches against the scanner-recorded path, not the symlink
-    /// target (§FS-config.3.4, §FS-check.3.7).
+    /// target (§FS-config.3.4.11, §FS-check.3.7.2).
     pub(super) fn unique_decl_home_for_file(&self, path: &Path) -> Option<DeclarationHome<'a>> {
         let path = scanned_decl_relative_path(path, &self.configured_root, &self.physical_root)?;
         if !self.overlapping_homes {
@@ -181,7 +181,7 @@ fn homes_overlap(left: &ConfiguredHome<'_>, right: &ConfiguredHome<'_>) -> bool 
 }
 
 /// The one location test written against a key that has already been taken
-/// (§FS-check.3.7): the single-file rule holds one `physical_path` per kind home
+/// (§FS-check.3.7.1): the single-file rule holds one `physical_path` per kind home
 /// and compares every declaration's file to it, so re-deriving the right-hand
 /// side per declaration would canonicalize the same home once per ID.
 pub(super) fn paths_same_location_key(left: &Path, right: &Path) -> bool {

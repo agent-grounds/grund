@@ -7,7 +7,7 @@
 //! It is the sixth rule to leave `check_with_workspace` as a named function
 //! rather than an inline block, and it leaves because it stopped being one: the
 //! per-file test became a per-unit one over structure the scanner records
-//! (§AR-scanner.2.7), with a row lookup in front of it.
+//! (§AR-scanner.2.7.2), with a row lookup in front of it.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -42,7 +42,7 @@ enum GroundingSubject {
 /// non-citable home, declare one inline (a spec home is grounded in the spec it
 /// *is*).
 ///
-/// §FS-workspace.4: a citation into an absent optional namespace grounds its unit.
+/// §FS-workspace.4.3: a citation into an absent optional namespace grounds its unit.
 /// It cannot be resolved here, but it resolves in the checkout that has the member
 /// — and a unit that lost its grounding to a missing directory would be a finding
 /// at the site the run is required to say nothing about.
@@ -61,7 +61,7 @@ pub(super) fn check_grounding(
     // (§GOAL-fast-feedback).
     let mut cited: BTreeMap<&Path, Vec<usize>> = BTreeMap::new();
     for cite in &findings.citations {
-        // §FS-workspace.4: unverified grounds the unit — see this function's docs.
+        // §FS-workspace.4.3: unverified grounds the unit — see this function's docs.
         let unverified = cite
             .namespace
             .as_deref()
@@ -97,8 +97,8 @@ pub(super) fn check_grounding(
             .map(|home| home.place());
         let none: &[usize] = &[];
         let cited_lines = cited.get(file.as_path()).map_or(none, Vec::as_slice);
-        // §FS-check.3.6.2: no inline-declaration escape in a non-citable home —
-        // a declaration there is already misplaced (§FS-check.3.7), so the only
+        // §FS-check.3.6.2.3: no inline-declaration escape in a non-citable home —
+        // a declaration there is already misplaced (§FS-check.3.7.3), so the only
         // way to ground a unit is to cite one.
         let declared_lines = match place {
             Some(_) => none,
@@ -195,7 +195,7 @@ fn grounding_units(structure: Option<&FileStructure>, level: usize) -> Vec<Groun
         });
     }
     for block in &structure.doc_comments {
-        // §FS-check.3.6.2: level 2 reaches the unindented blocks — the parse-free
+        // §FS-check.3.6.2.2: level 2 reaches the unindented blocks — the parse-free
         // stand-in for a top-level item — and any higher level reaches them all.
         if block.indented && level == 2 {
             continue;
@@ -209,7 +209,7 @@ fn grounding_units(structure: Option<&FileStructure>, level: usize) -> Vec<Groun
     units
 }
 
-/// The line spans one file offers as units at `level` (§FS-check.3.11) — the
+/// The line spans one file offers as units at `level` (§FS-check.3.11.3) — the
 /// same cut §FS-check.3.6.2 makes for grounding, because *whether* a place's
 /// files must cite and *what* they must cite are asked of the same thing.
 fn grounding_unit_spans(structure: Option<&FileStructure>, level: usize) -> Vec<(usize, usize)> {

@@ -1,4 +1,4 @@
-//! §FS-config.3.6 / §FS-workspace.8.6: with `relative_paths = false`, one
+//! §FS-config.3.6.1 / §FS-workspace.8.6.5: with `relative_paths = false`, one
 //! workspace-wide report keeps the cwd-derived base. A sibling member uses the
 //! minimum bounded `..` spelling instead of leaking its canonical absolute path.
 

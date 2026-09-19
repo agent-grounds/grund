@@ -54,7 +54,7 @@ pub(crate) fn run_check(
     config.scan_full = full;
     // §FS-check.1: the flag and `[reference] require_grounding` are one knob, so
     // it sets the same global default — it never turns the key off, and a
-    // `[[kinds]]` row that says `false` stays exempt under it (§FS-config.3.4.8).
+    // `[[kinds]]` row that says `false` stays exempt under it (§FS-config.3.4.8.3).
     if force_require_grounding {
         config.require_grounding = true;
     }
@@ -88,7 +88,7 @@ pub(crate) fn run_check(
     // §FS-config.4.1), outside `report_is_silent`: a repository mid-migration
     // must not lose the scope caution just because it also has a config pair.
     report.warnings.extend(config_diagnostics(&config));
-    // §FS-check.1.3, also after the scope caution: `--full` cancels `[scan] include`,
+    // §FS-check.1.3.7, also after the scope caution: `--full` cancels `[scan] include`,
     // and an explicit path other than the config root already bypasses that key — so
     // the flag changed nothing, and the caller who typed it wanted a wider search.
     report.warnings.extend(full_scope_ignored_warning(
@@ -97,9 +97,9 @@ pub(crate) fn run_check(
         path_provided,
         full,
     ));
-    // §FS-check.4.8: the blocks this walk met that no enclosing one lists. A report
+    // §FS-check.4.8.13: the blocks this walk met that no enclosing one lists. A report
     // warning, not a line printed past it: that is what stands it in place of
-    // `success` (§FS-check.2.1) and makes §DF-unlisted-workspace-block.2.1's ramp work.
+    // `success` (§FS-check.2.1.3) and makes §DF-unlisted-workspace-block.2.1's ramp work.
     report.warnings.extend(unlisted_workspace_block_warnings(
         &config,
         &config,
@@ -131,11 +131,11 @@ pub(crate) fn run_check(
 /// located warning each, on stdout, at the `optional_members` entry that made the
 /// skip legal. It is what buys the green exit — the exit code says nothing about
 /// coverage here, so the report must — and it withholds `success` like any other
-/// warning (§FS-check.2.1). §FS-workspace.2.2: the block those entries left with no
+/// warning (§FS-check.2.1.3). §FS-workspace.2.2.10: the block those entries left with no
 /// project at all is not an error either, but a run with nothing to read still says
 /// so beside them (§FS-check.2.2). The LSP builds both from
 /// `check_workspace_context`, which is the same decision made from the same place
-/// (§FS-lsp.4).
+/// (§FS-lsp.4.1).
 fn run_workspace_check(
     mut root_config: Config,
     force_require_grounding: bool,
@@ -150,7 +150,7 @@ fn run_workspace_check(
             project.config.require_grounding = true;
         }
     }
-    // §FS-check.1.3: `include` is a per-project statement, so each project's
+    // §FS-check.1.3.8: `include` is a per-project statement, so each project's
     // walk is widened past its own and tiered against its own configured scope.
     let scopes = projects
         .iter()
@@ -192,7 +192,7 @@ fn run_workspace_check(
         report.warnings.append(&mut project_report.warnings);
         report.suggestions.append(&mut project_report.suggestions);
         had_scan_errors |= append_scan_errors(&mut report, project.scan_errors.iter().cloned());
-        // §FS-check.2.2 / §FS-check.4.5 / §FS-workspace.5: the same two cautions as
+        // §FS-check.2.2 / §FS-check.4.5.3 / §FS-workspace.5: the same two cautions as
         // the single-project path, asked per project — one member's empty scope or
         // grammar mismatch says nothing about another's, and each names its own.
         report.warnings.extend(scan_scope_caution(
@@ -212,7 +212,7 @@ fn run_workspace_check(
     report
         .warnings
         .extend(absent_optional_member_warnings(&root_config));
-    // §FS-check.4.3, §FS-check.4.11: the root's config and every member's, each
+    // §FS-check.4.3, §FS-check.4.11.3: the root's config and every member's, each
     // named where that project loaded it — one config, not one scope, and a
     // workspace may mix the two discovery forms (§FS-workspace.2).
     report.warnings.extend(config_diagnostics(&root_config));
@@ -221,7 +221,7 @@ fn run_workspace_check(
             report.warnings.extend(config_diagnostics(&project.config));
         }
     }
-    // §FS-check.4.8: per project — the candidates are what *that* walk reached, and
+    // §FS-check.4.8.11: per project — the candidates are what *that* walk reached, and
     // the absorbing namespace is its own. Rendered against the workspace root like
     // every other message here (§FS-workspace.8.1).
     for project in &projects {
@@ -252,7 +252,7 @@ fn append_scan_errors(
     for (file, message) in scan_errors {
         had_scan_errors = true;
         // A file that could not be read mid-walk is reported as a CLI-shaped
-        // `error: <path>: <reason>` finding (§FS-check.2): the walk continued,
+        // `error: <path>: <reason>` finding (§FS-check.2.4): the walk continued,
         // the findings below are real, but the view of the tree was incomplete.
         report.errors.push(Diagnostic {
             code: "io",

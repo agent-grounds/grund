@@ -6,7 +6,7 @@
 /// it prints, the detection it reports, and the installs the `--write` half
 /// beside this file carries out (§FS-distribution.3.1).
 ///
-/// The user-facing setup guide, named by detection (§FS-integrations.2). It
+/// The user-facing setup guide, named by detection (§FS-integrations.2.1). It
 /// carries what `--write` cannot do for the caller: the prerequisites that fail
 /// silently, and the per-client manual step.
 const SETUP_GUIDE_URL: &str =
@@ -20,7 +20,7 @@ struct IntegrationsInvocation {
     conversation: Option<ConversationRendering>,
     conversation_target: Option<ConversationTarget>,
     /// `--agent <name>`: scope `conversation_target` to one agent instead of
-    /// the machine (§FS-integrations.4.4).
+    /// the machine (§FS-integrations.4.4.2).
     agent: Option<&'static str>,
 }
 
@@ -136,7 +136,7 @@ fn parse_integrations_args(args: &[String]) -> Result<IntegrationsInvocation, Ex
             }
         },
     };
-    // §FS-integrations.4.4: `--agent` scopes `--conversation-target` and
+    // §FS-integrations.4.4.2: `--agent` scopes `--conversation-target` and
     // nothing else, so an agent with no target is an error rather than a
     // silent no-op.
     let agent = match agent.as_deref() {
@@ -170,7 +170,7 @@ fn parse_integrations_args(args: &[String]) -> Result<IntegrationsInvocation, Ex
     }
     // Either conversation flag is enough to make the clientless form
     // unambiguous: it updates the preference and the instruction blocks and
-    // installs no arbitrary client (§FS-integrations.1).
+    // installs no arbitrary client (§FS-integrations.1.2).
     if write && client.is_none() && conversation.is_none() && conversation_target.is_none() {
         eprintln!("error: integrations --write requires a client or --conversation");
         eprintln!("{}", known_clients_line());
@@ -205,7 +205,7 @@ fn command_integrations(args: &[String]) -> ExitCode {
         Ok(invocation) => invocation,
         Err(code) => return code,
     };
-    // §FS-integrations.4.3: `--write` reads the user configuration exactly once,
+    // §FS-integrations.4.3.7: `--write` reads the user configuration exactly once,
     // before any artifact is installed.
     if invocation.write {
         let user_config = match load_user_config() {
@@ -244,7 +244,7 @@ fn command_integrations(args: &[String]) -> ExitCode {
     }
 }
 
-/// No-client detection print (§FS-integrations.2). Environment-dependent, so it
+/// No-client detection print (§FS-integrations.2.2). Environment-dependent, so it
 /// is never goldened; exit is always `0`.
 fn print_detection(json: bool) -> ExitCode {
     let detected = detect_clients();
@@ -266,7 +266,7 @@ fn print_detection(json: bool) -> ExitCode {
     println!();
     println!("Run `grund integrations <client>` to preview one before installing.");
     // The prerequisites and the per-client manual step live in the guide, and
-    // this is the command a user reaches first (§FS-integrations.2).
+    // this is the command a user reaches first (§FS-integrations.2.1).
     println!("Setup guide: {SETUP_GUIDE_URL}");
     ExitCode::SUCCESS
 }
@@ -283,7 +283,7 @@ fn detection_plan_json(detected: &[IntegrationClient]) -> String {
         .iter()
         .map(|client| {
             // `install_kind` is what lets a caller tell a manual client's
-            // "not knowable" from a real "not installed" (§FS-integrations.3.4).
+            // "not knowable" from a real "not installed" (§FS-integrations.3.4.2).
             format!(
                 "{{\"client\":\"{}\",\"detected\":{},\"installed\":{},\"install_kind\":\"{}\",\"install\":\"{}\"}}",
                 client.name(),
@@ -299,7 +299,7 @@ fn detection_plan_json(detected: &[IntegrationClient]) -> String {
 }
 
 /// One JSON object describing a client's artifact and its `--write` targets,
-/// without printing the artifact bytes (§FS-integrations.5).
+/// without printing the artifact bytes (§FS-integrations.5.1).
 fn client_descriptor_json(client: IntegrationClient) -> String {
     let kind = if client.is_terminal() {
         "terminal"

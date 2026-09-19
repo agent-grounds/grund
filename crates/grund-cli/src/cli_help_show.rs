@@ -1,4 +1,4 @@
-/// The single and batch show usage page (§FS-cli.2, §FS-show.1).
+/// The single and batch show usage page (§FS-cli.2.3, §FS-show.1).
 fn print_show_help() {
     println!(
         "grund show — print one declaration's body by ID, so an agent pulls a single fact"

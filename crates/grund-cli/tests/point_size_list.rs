@@ -1,5 +1,5 @@
 //! Black-box contract for the point-size catalog (§FS-list.1, §FS-list.2,
-//! §FS-list.3.4, §FS-output-shapes.5, §FS-workspace.8.3).
+//! §FS-list.3.4, §FS-output-shapes.5.2, §FS-workspace.8.3.3).
 
 use serde_json::Value;
 use std::fs;

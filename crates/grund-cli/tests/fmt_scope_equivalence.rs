@@ -74,7 +74,7 @@ fn the_default_scope_and_its_explicit_path_are_one_run() {
 #[test]
 /// The equality above is satisfied by two runs that are wrong together, so the
 /// shape #105 had keeps its absolute claim: on a tree the completeness check
-/// refuses, *neither* form writes anything, and both say so (§FS-fmt.3).
+/// refuses, *neither* form writes anything, and both say so (§FS-fmt.3.2).
 fn neither_form_rewrites_a_tree_the_completeness_check_refuses() {
     let refusing = ["strict-abort", "two-scopes", "workspace-member-abort"];
     for shape in shapes().into_iter().filter(|s| refusing.contains(&s.name)) {

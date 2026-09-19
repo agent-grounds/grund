@@ -1,6 +1,6 @@
 /// Parse and validate the complete `grund check` input, including repeatable
-/// exact-code selectors (§FS-check.1), then select only after the full scan and
-/// before rendering and the exit decision (§FS-check.2.1).
+/// exact-code selectors (§FS-check.1.4), then select only after the full scan and
+/// before rendering and the exit decision (§FS-check.2.1.2).
 fn command_check(args: &[String]) -> ExitCode {
     let mut path = PathBuf::from(".");
     let mut path_provided = false;
@@ -106,7 +106,7 @@ fn command_check(args: &[String]) -> ExitCode {
         eprintln!("error: unsupported check format `{format}`");
         return ExitCode::from(2);
     }
-    // §FS-check.2.1: the complete API report exists before the CLI applies its
+    // §FS-check.2.1.2: the complete API report exists before the CLI applies its
     // presentation query; retained diagnostics then use ordinary rendering.
     output
         .report
@@ -120,7 +120,7 @@ fn command_check(args: &[String]) -> ExitCode {
         .report
         .suggestions
         .retain(|finding| selection.retains(finding.code));
-    // §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1: the run's warning channel
+    // §FS-check.4.7.7, §FS-check.4.10.11, §FS-workspace.6.1.7: the run's warning channel
     // first, in the position the engine used to write it from and in the same
     // shape under either format.
     render_run_warnings(&output.warnings);
@@ -139,7 +139,7 @@ fn command_check(args: &[String]) -> ExitCode {
 }
 
 /// Compare one format's retained findings by the fixed bytewise key
-/// (§FS-errors.4); text applies it per channel and JSON applies it globally.
+/// (§FS-errors.4.1); text applies it per channel and JSON applies it globally.
 fn finding_cmp(a: &Finding, b: &Finding) -> std::cmp::Ordering {
     (
         a.path.as_deref(),
@@ -154,8 +154,8 @@ fn finding_cmp(a: &Finding, b: &Finding) -> std::cmp::Ordering {
 }
 
 fn sorted_text_findings(report: &Report) -> Vec<(&'static str, &Finding)> {
-    // §FS-check.2.3: suggestions exist only when requested, so chaining is a no-op.
-    // §FS-errors.4: text has fixed channel groups, sorted within each group.
+    // §FS-check.2.3.2: suggestions exist only when requested, so chaining is a no-op.
+    // §FS-errors.4.1: text has fixed channel groups, sorted within each group.
     let mut errors = report
         .errors
         .iter()
@@ -180,7 +180,7 @@ fn sorted_text_findings(report: &Report) -> Vec<(&'static str, &Finding)> {
 }
 
 /// Keep JSON in its pre-existing global bytewise location/message order
-/// (§FS-check.2.1, §FS-errors.4), independent of text's severity groups.
+/// (§FS-check.2.1.4, §FS-errors.4.1), independent of text's severity groups.
 fn sorted_json_findings(report: &Report) -> Vec<(&'static str, &Finding)> {
     let mut findings = report
         .warnings
@@ -199,12 +199,12 @@ fn sorted_json_findings(report: &Report) -> Vec<(&'static str, &Finding)> {
 }
 
 /// `run_warnings` is how many `[workspace]` cautions this run already printed on
-/// stderr, before this report existed (§FS-check.4.7, §FS-check.4.10,
-/// §FS-workspace.6.1). They are not report findings, so nothing in `report`
+/// stderr, before this report existed (§FS-check.4.7.7, §FS-check.4.10.11,
+/// §FS-workspace.6.1.7). They are not report findings, so nothing in `report`
 /// records them — and a run that says part of its tree is unchecked must not also
-/// say `success` (§FS-check.2.1).
+/// say `success` (§FS-check.2.1.3).
 fn render_check_text(report: &Report, run_warnings: usize) {
-    // §FS-check.2.3: suggestions never suppress `success`, but when present
+    // §FS-check.2.3.2: suggestions never suppress `success`, but when present
     // (caller passed --suggestions) they are printed, so the marker only stands
     // in for a run with nothing at all to show.
     if run_warnings == 0
@@ -217,7 +217,7 @@ fn render_check_text(report: &Report, run_warnings: usize) {
     }
     for (severity, finding) in sorted_text_findings(report) {
         let line = match (finding.path.as_deref(), finding.line) {
-            // §FS-errors.2.1: retain the jump-friendly location prefix and
+            // §FS-errors.2.1.1: retain the jump-friendly location prefix and
             // place `check`'s structural channel before unchanged message bytes.
             (Some(path), Some(line)) => {
                 format!("{path}:{line}: {severity}: {}", finding.message)
@@ -271,7 +271,7 @@ fn render_finding_json(severity: &str, finding: &Finding) -> String {
             .join(",");
         format!("[{}]", values)
     };
-    // §FS-errors.5: a suggestion carries `"channel":"suggestion"` rather than a
+    // §FS-errors.5.1: a suggestion carries `"channel":"suggestion"` rather than a
     // `"severity"`, so the frozen `{error, warning}` set stays intact.
     let tag = if severity == "suggestion" {
         "\"channel\":\"suggestion\"".to_string()

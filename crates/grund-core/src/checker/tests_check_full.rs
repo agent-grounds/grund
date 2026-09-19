@@ -23,15 +23,15 @@ fn full_scope_reports_a_dangling_citation_outside_include() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         vec!["sim/world.py:1: outside [scan] include: unknown reference FS-999-missing"],
-        "§FS-check.3.14: --full reports it, naming the key that hid it"
+        "§FS-check.3.14.6: --full reports it, naming the key that hid it"
     );
     assert_eq!(
         full.report.errors[0].code, "out-of-scope-dangling",
-        "§FS-check.3.14: the tier code is the in-scope rule's code under an `out-of-scope-` prefix"
+        "§FS-check.3.14.5: the tier code is the in-scope rule's code under an `out-of-scope-` prefix"
     );
 }
 
-/// §FS-check.1.3 / §FS-check.3.14 / §REQ-no-missed-citation.1: the
+/// §FS-check.1.3 / §FS-check.3.14.1 / §REQ-no-missed-citation.1: the
 /// configured kind's soft in-scope obligation cannot soften the opt-in
 /// out-of-scope resolution tier.
 #[test]
@@ -82,7 +82,7 @@ fn full_scope_withholds_style_and_grounding_outside_include() {
     let full = check_run(&root, true);
     assert!(
         full.report.errors.is_empty(),
-        "§FS-check.3.14: only resolution is judged out of scope, not inline-note budgets — got {:?}",
+        "§FS-check.3.14.2: only resolution is judged out of scope, not inline-note budgets — got {:?}",
         located_diagnostics(&full.config, &full.report.errors)
     );
     let scoped_style = check_run(&root.join("sim"), false);
@@ -108,7 +108,7 @@ fn full_scope_resolves_against_the_whole_walk() {
     let full = check_run(&root, true);
     assert!(
         full.report.errors.is_empty(),
-        "§FS-check.3.14: the tier reports references that point at nothing, not references that point outside the scope — got {:?}",
+        "§FS-check.3.14.3: the tier reports references that point at nothing, not references that point outside the scope — got {:?}",
         located_diagnostics(&full.config, &full.report.errors)
     );
 }
@@ -141,7 +141,7 @@ fn full_scope_withholds_the_mechanical_shorthand_rewrite() {
         vec![
             "sim/world.py:2: outside [scan] include: shorthand citation §FS-777 matches no declaration"
         ],
-        "§FS-check.3.14: the mechanical rewrite is withheld because `fmt` scopes by `include` too; a shorthand matching nothing is still a resolution failure"
+        "§FS-check.3.14.4: the mechanical rewrite is withheld because `fmt` scopes by `include` too; a shorthand matching nothing is still a resolution failure"
     );
 }
 
@@ -174,7 +174,7 @@ fn full_scope_does_not_resolve_an_in_scope_shorthand_against_the_wider_walk() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         located_diagnostics(&scoped.config, &scoped.report.errors),
-        "§FS-check.3.13: the wider walk must not leave the site holding a canonical ID whose declaration was narrowed away — one cause, one finding"
+        "§FS-check.3.13.3: the wider walk must not leave the site holding a canonical ID whose declaration was narrowed away — one cause, one finding"
     );
     assert!(
         located_diagnostics(&scoped.config, &scoped.report.errors)
@@ -198,7 +198,7 @@ fn full_scope_reports_an_unknown_alias_outside_include() {
     assert_eq!(full.report.errors[0].code, "out-of-scope-unknown-project");
 }
 
-/// §FS-check.3.13: the qualified cross-member shorthand. The workspace pass
+/// §FS-check.3.13.3: the qualified cross-member shorthand. The workspace pass
 /// resolves `§api/AR-900` against `api`'s *whole* walk, which under `--full`
 /// includes a declaration `api`'s own `include` excludes; narrowing then drops
 /// it. One cause must still be one finding.
@@ -236,7 +236,7 @@ fn full_scope_reports_a_qualified_shorthand_once() {
     assert_eq!(
         located_diagnostics(&full.config, &full.report.errors),
         located_diagnostics(&scoped.config, &scoped.report.errors),
-        "§FS-check.3.13: at most one shorthand finding per site, and never a dangling one beside it"
+        "§FS-check.3.13.3: at most one shorthand finding per site, and never a dangling one beside it"
     );
     assert!(
         located_diagnostics(&scoped.config, &scoped.report.errors)

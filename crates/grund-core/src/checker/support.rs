@@ -31,7 +31,7 @@ pub(crate) fn dangling_message(
     }
 }
 
-/// §FS-check.3.1 / §FS-check.4.12: a missing declaration in a fetch-enabled
+/// §FS-check.3.1.3 / §FS-check.4.12.1: a missing declaration in a fetch-enabled
 /// home. Existing typo/illustration hints replace the fetch action while the
 /// snapshot-specific base and fixed finding class remain.
 pub(super) fn missing_snapshot_message(
@@ -61,7 +61,7 @@ pub(super) fn missing_snapshot_message(
     }
 }
 
-/// §FS-check.3.1: whether a citation site sits inside a Markdown inline-code
+/// §FS-check.3.1.2: whether a citation site sits inside a Markdown inline-code
 /// span, the signal that a dangling `§`-citation may be an illustration. Only
 /// the rare dangling path asks, so this re-reads the one line rather than
 /// widening every `Citation`; source files (columns shifted by stripped comment
@@ -145,7 +145,7 @@ pub(super) fn heading_marks(level: usize) -> String {
 
 /// Put diagnostics in the one fixed order `grund` ever prints them in — by path, then
 /// line, then message text — so two runs over the same tree agree byte-for-byte
-/// (§FS-errors.4) and ordering is not a knob (§FS-non-goals.9).
+/// (§FS-errors.4.1) and ordering is not a knob (§FS-non-goals.9).
 pub(crate) fn sort_diagnostics(diagnostics: &mut [Diagnostic]) {
     diagnostics.sort_by(diagnostic_cmp);
 }

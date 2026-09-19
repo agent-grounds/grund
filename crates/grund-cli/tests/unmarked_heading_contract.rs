@@ -1,6 +1,6 @@
 //! Binary-level compatibility contract for unmarked Markdown headings, their
 //! 0.15.0 deadline, and managed-block v10 repair (§FS-check.4.14,
-//! §FS-init.2.3.4.5, §RM-unmarked-heading-error).
+//! §FS-init.2.3.4.5.1, §RM-unmarked-heading-error).
 
 use std::fs;
 use std::path::{Path, PathBuf};

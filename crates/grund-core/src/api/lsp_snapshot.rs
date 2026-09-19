@@ -1,4 +1,4 @@
-//! The walk that fills one editor snapshot (§AR-system.2.9, §AR-lsp.5): every
+//! The walk that fills one editor snapshot (§AR-system.2.9, §AR-lsp.5.1): every
 //! declaration, section, stub, citation and finding range in the loaded
 //! workspace, with the navigation target each resolves to (§FS-lsp.1).
 //!
@@ -44,7 +44,7 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
     // (`missing-citation` / `forbidden-citation`) run and surface as editor
     // diagnostics, the same errors `grund check` reports.
     let mut config = resolve_workspace_config(&opts.path)?;
-    // §FS-lsp.2.2: an editor's explicit zero-config folder is the project anchor
+    // §FS-lsp.2.2.1: an editor's explicit zero-config folder is the project anchor
     // even when the server process started elsewhere; CLI discovery deliberately
     // roots defaults at cwd, so this API corrects that root before it builds.
     if opts.path_provided && opts.path.is_dir() && config.config_file.is_none() {
@@ -55,7 +55,7 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
     let render_config = context.render_config().clone();
     // LSP routes findings back to project snapshots by filesystem identity.
     // Preserve absolute paths here instead of reconstructing them from rendered
-    // `../` paths under Windows verbatim roots (§FS-lsp.1.1, §FS-lsp.2.2).
+    // `../` paths under Windows verbatim roots (§FS-lsp.1.1, §FS-lsp.2.2.2).
     let report = public_lsp_report(
         &render_config,
         check_workspace_context(&context, false, &overlays),
@@ -99,7 +99,7 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
                     }
                 }),
         );
-        // §FS-check.4.14 / §FS-lsp.1.1: warnings select the complete authored
+        // §FS-check.4.14.4 / §FS-lsp.1.1: warnings select the complete authored
         // ATX heading without promoting it into the navigation catalog.
         finding_ranges.extend(project.findings.unmarked_headings.iter().map(|heading| {
             LspFindingRange {
@@ -261,9 +261,9 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
         ))
     });
 
-    // §FS-lsp.1.1: the four run-level `[workspace]` warnings, published for the
+    // §FS-lsp.1.1.3: the four run-level `[workspace]` warnings, published for the
     // first time on the `grund.toml` each one anchors at — the same channel the
-    // CLI renders, from the same place (§FS-lsp.4).
+    // CLI renders, from the same place (§FS-lsp.4.1).
     let run_warnings = public_lsp_run_warnings(&render_config, context.run_warnings.clone());
     Ok(LspSnapshot {
         root: absolutize_path(&render_config.root),
@@ -289,11 +289,11 @@ pub(super) fn normalized_overlays(overlays: BTreeMap<PathBuf, String>) -> TextOv
         .collect()
 }
 
-/// §FS-lsp.4: the report the editor shows, decided here so that an editor and a
+/// §FS-lsp.4.1: the report the editor shows, decided here so that an editor and a
 /// terminal over one tree say the same thing — this is `grund check`'s workspace
 /// arm (`run_workspace_check`) for a surface that has no CLI.
 ///
-/// §FS-check.4.9: the announcement of every namespace the run did not read is a
+/// §FS-check.4.9.4: the announcement of every namespace the run did not read is a
 /// **located** report finding, so it is one of the diagnostics the editor must
 /// mirror. It belongs to the run rather than to a project, which is why it is read
 /// off the render config outside the loop below and survives a block whose every
@@ -322,7 +322,7 @@ fn check_workspace_context(
     for project in &context.projects {
         let mut config = project.config.clone();
         // §FS-check.1: the same global default the key sets, per member — an
-        // explicit `false` on a `[[kinds]]` row still wins (§FS-config.3.4.8).
+        // explicit `false` on a `[[kinds]]` row still wins (§FS-config.3.4.8.3).
         if force_require_grounding {
             config.require_grounding = true;
         }
@@ -352,7 +352,7 @@ fn check_workspace_context(
         report.errors.append(&mut project_report.errors);
         report.warnings.append(&mut project_report.warnings);
         append_lsp_scan_errors(&mut report, project.scan_errors.iter().cloned());
-        // §FS-lsp.4: the same decision `grund check` makes, from the same
+        // §FS-lsp.4.1: the same decision `grund check` makes, from the same
         // function — an editor and a terminal over one tree report one set of
         // diagnostics (§FS-check.2.2, §FS-check.4.5).
         report.warnings.extend(scan_scope_caution(

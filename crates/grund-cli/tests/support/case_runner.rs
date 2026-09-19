@@ -40,7 +40,7 @@ pub enum CaseOutcome {
     /// `mismatches` is one surface's report: a `<surface> mismatch` headline and,
     /// below it, the payload needed to update the golden by hand. A run compares
     /// every surface of every case before deciding, so a mismatch here never hid a
-    /// later case or a later surface of this one (§AR-workspace.9).
+    /// later case or a later surface of this one (§AR-workspace.9.3).
     Failed {
         case: String,
         mismatches: Vec<String>,
@@ -181,7 +181,7 @@ pub fn run_case(manifest_dir: &Path, case: &Path, kind: CaseKind) -> CaseOutcome
     }
     // A case whose fixture needs a symlink cannot run where the platform cannot
     // make one, so the case is skipped rather than compared against a different
-    // tree's output (§FS-workspace.6.1).
+    // tree's output (§FS-workspace.6.1.4).
     if !case_symlinks(case).is_empty() {
         // Links are created in the copy, and only the `{repo_copy}` branch of
         // `command_args` copies the fixture — so a manifest case written against
@@ -227,7 +227,7 @@ pub fn run_case(manifest_dir: &Path, case: &Path, kind: CaseKind) -> CaseOutcome
 
     // Every surface is compared, in this fixed order, before deciding: a
     // mismatch is pushed rather than panicked, so it cannot hide a later one
-    // (§AR-workspace.9).
+    // (§AR-workspace.9.3).
     let mut mismatches = Vec::new();
     if actual_exit != expected_exit {
         mismatches.push(exit_mismatch(expected_exit, actual_exit));
@@ -308,7 +308,7 @@ fn run_grund(case: &Path, cwd: &Path, args: &[String], name: &str) -> Output {
             .unwrap_or_else(|err| panic!("{name}: run grund: {err}"));
     }
 
-    // §FS-show.1: an e2e manifest can exercise an stdin query stream without
+    // §FS-show.1.8: an e2e manifest can exercise an stdin query stream without
     // wrapping the public command in a shell.
     let input = fs::read(&input_path)
         .unwrap_or_else(|err| panic!("{name}: read {}: {err}", input_path.display()));
@@ -436,7 +436,7 @@ fn assert_spec_refs(case: &Path, name: &str) {
     }
     // `[citations.e2e] must = ["FS"]` in grund.toml, held here because `spec.refs`
     // is a manifest the scanner never reads: a case that proves nothing in the
-    // spec is not an e2e case (§FS-config.3.4.4).
+    // spec is not an e2e case (§FS-config.3.4.4.2).
     assert!(
         refs.iter().any(|reference| reference.starts_with("FS-")),
         "{name}: spec.refs in {} names no FS point; an e2e case cites the spec it proves",

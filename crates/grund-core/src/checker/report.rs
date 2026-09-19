@@ -48,7 +48,7 @@ use crate::scanner::is_scannable;
 /// - Output: a `CheckReport` containing three channel partitions: `errors`,
 ///   `warnings`, and opt-in `suggestions`. Each partition is deterministic; the
 ///   CLI renderer groups text by channel while preserving JSON's global order
-///   (§FS-errors.4, §FS-non-goals.9) for §GOAL-friendliness-first.
+///   (§FS-errors.4.1, §FS-non-goals.9) for §GOAL-friendliness-first.
 ///
 /// ## 2. Rules
 ///
@@ -102,7 +102,7 @@ use crate::scanner::is_scannable;
 ///
 /// For each declared ID never cited, emit one warning. Warnings do not cause a
 /// non-zero exit. `E2E` declarations are exempt — a case is exercised by being
-/// run, not by being cited (§FS-check.4.1).
+/// run, not by being cited (§FS-check.4.1.3).
 ///
 /// ### 2.7 Invalid agent-entrypoint init block (§FS-check.3.5)
 ///
@@ -143,9 +143,9 @@ use crate::scanner::is_scannable;
 /// satisfying each obligation entry (entries are conjunctive, `|` inside an entry is
 /// a disjunction). The body extent and the per-citation `enclosing_declaration` come
 /// from the scanner (§AR-scanner.2.4), so this pass is a lookup, not a re-scan. The
-/// homeless-kind obligation is per source file (§FS-config.3.9.2) rather than
+/// homeless-kind obligation is per source file (§FS-config.3.9.2.4) rather than
 /// per declaration, and both per-file units are cut by the row's
-/// `grounding_level` like the grounding pass above (§FS-check.3.11). A `must` miss is a `missing-citation` error; a `should` miss is a
+/// `grounding_level` like the grounding pass above (§FS-check.3.11.3). A `must` miss is a `missing-citation` error; a `should` miss is a
 /// `suggested-citation` suggestion, emitted only under `--suggestions` (§FS-check.2.3).
 ///
 /// ### 2.10 Citation-direction prohibitions (§FS-check.3.12, §FS-config.3.9, §DF-citation-directions)
@@ -172,7 +172,7 @@ use crate::scanner::is_scannable;
 ///
 /// The scanner flags every citation written in the number-only shorthand and, in
 /// the same walk, rewrites the uniquely-resolving ones to their canonical `Id`
-/// (§AR-scanner.2.6). So by the time the checker runs, a resolved shorthand is
+/// (§AR-scanner.2.6.6). So by the time the checker runs, a resolved shorthand is
 /// indistinguishable from a full citation to every rule above — which is the
 /// point: `refs`, `cover`, the unused warning (§2.6), and the direction passes
 /// (§2.9, §2.10) all count it without knowing it exists.
@@ -180,7 +180,7 @@ use crate::scanner::is_scannable;
 /// This pass adds the one thing that does differ: under the target project's
 /// `canonical` policy, a finding naming the canonical form to write; under
 /// `accepted`, a unique marker-origin shorthand adds no form finding
-/// (§FS-config.3.1). Unknown and ambiguous candidates remain findings under both
+/// (§FS-config.3.1.1). Unknown and ambiguous candidates remain findings under both
 /// policies. It looks the candidate set up in a per-namespace `(kind,
 /// number)` index — built on first use, because deriving it per site is quadratic
 /// on the tree this rule asks people to migrate — so the three outcomes (unique,
@@ -207,9 +207,9 @@ use crate::scanner::is_scannable;
 /// above sees exactly the tree a run without the flag sees. That ordering is
 /// what makes `--full` purely additive: it can only add findings, never withdraw
 /// one the ordinary run would have made. The narrowing also undoes the shorthand
-/// resolution the wider walk enabled (§AR-scanner.2.6) where the declaration it
+/// resolution the wider walk enabled (§AR-scanner.2.6.6) where the declaration it
 /// resolved against has just been dropped, so such a site is the unresolved
-/// shorthand a plain run reports — one cause, one finding (§FS-check.3.13).
+/// shorthand a plain run reports — one cause, one finding (§FS-check.3.13.3).
 ///
 /// ### 2.14 Inline citation style (§FS-check.3.10, §FS-check.4.4, §FS-inline-citation-style.4)
 ///
@@ -221,7 +221,7 @@ use crate::scanner::is_scannable;
 /// like every rule above except §2.5 this one reads no file. A site that misses
 /// several caps yields one finding per cap; a block whose layout deviates yields
 /// one per offending *line*, anchored there rather than at the block's opener,
-/// because that is the line an author edits (§FS-inline-citation-style.4.4). Two
+/// because that is the line an author edits (§FS-inline-citation-style.4.4.1). Two
 /// of the three tiers are opt-in and silent by default: the soft cap under
 /// `warn_on_suggested`, the layout under `inline_note_layout_check`.
 ///
@@ -236,7 +236,7 @@ use crate::scanner::is_scannable;
 ///
 /// One pass over the declarations. The scanner records a section path once, by
 /// the first heading that claims it, and appends every later claimant *inside the
-/// declaration's own body* to `duplicate_sections` (§AR-scanner.2.2); this rule
+/// declaration's own body* to `duplicate_sections` (§AR-scanner.2.2.3); this rule
 /// groups that list by path and emits one error per collided path, anchored at
 /// the first heading with the rest named in the message — §2.1's shape for
 /// declarations, one level down. The heading-level rule above reads only the map,
@@ -245,10 +245,10 @@ use crate::scanner::is_scannable;
 /// (§DF-duplicate-section-path.2.4).
 ///
 /// Nothing here re-derives *which* headings a declaration owns — the scan
-/// answered that once, which is what makes `show`'s refusal (§FS-show.2.2.2) name
+/// answered that once, which is what makes `show`'s refusal (§FS-show.2.2.2.2) name
 /// exactly the coordinates this rule reports. A heading in the next item's
 /// doc-comment and a stub's prose are outside the body and never reach the list,
-/// so neither is filtered here (§FS-check.3.16).
+/// so neither is filtered here (§FS-check.3.16.2).
 ///
 /// ### 2.16 Kind indexes (§FS-check.3.18, §FS-check.3.17, §DF-index-entry-form)
 ///
@@ -256,7 +256,7 @@ use crate::scanner::is_scannable;
 /// (§FS-config.3.4). For each, membership is the declarations under that
 /// folder's whole subtree — a stub and the inline body it points at collapsing
 /// to one ID, as in §2.1 — plus an external inline declaration whose canonical
-/// bare-ID source link enrolls it directly (§FS-check.3.18). The citations already
+/// bare-ID source link enrolls it directly (§FS-check.3.18.3). The citations already
 /// recorded in the index file say which members it names. The index file itself
 /// is re-read, the second and last rule that touches disk after §2.5, because
 /// wrapper form and an external enrollment's exact destination are facts about
@@ -416,7 +416,7 @@ pub(crate) fn check_with_workspace_and_overlays(
             let primary = sites[0].clone();
             let others = sites[1..]
                 .iter()
-                // §FS-errors.3 / §FS-workspace.8.1: `path_config`, not `config`
+                // §FS-errors.3.1 / §FS-workspace.8.1: `path_config`, not `config`
                 // — the printer anchors this finding from the report root, so
                 // the sites named inside its message come from there too.
                 .map(|site| format!("{}:{}", display_path(path_config, &site.path), site.line))
@@ -468,7 +468,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                 continue;
             };
             if home.kind != id.kind {
-                // §FS-check.3.7: a non-citable home has no kind an author could
+                // §FS-check.3.7.3: a non-citable home has no kind an author could
                 // have declared instead, so the message names the place and says
                 // why, rather than pointing at a kind that does not exist.
                 let message = if home.citable {

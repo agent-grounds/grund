@@ -1,5 +1,5 @@
 /// The complete `grund check --help` discovery surface: all inputs, selected
-/// report semantics, the public code catalog, and recovery examples (§FS-cli.3).
+/// report semantics, the public code catalog, and recovery examples (§FS-cli.3.3).
 fn print_check_help() {
     println!("grund check — validate every ID citation across the repo.");
     println!();
@@ -24,7 +24,7 @@ fn print_check_help() {
     println!(
         "                       grouped errors, warnings, then enabled suggestions; json emits NDJSON."
     );
-    // §FS-check.3.23: this is the one non-reference hard finding the widened
+    // §FS-check.3.23.3: this is the one non-reference hard finding the widened
     // scan carries with its ordinary code and message.
     println!(
         "  --full               also walk past [scan] include and report unresolved references or section headings outside declaration bodies there."

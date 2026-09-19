@@ -96,11 +96,11 @@ fn public_finding(
 
 /// The run's warning channel, published (§FS-distribution.3.1): every
 /// `[workspace]` caution the run settled, as the `Finding`s a frontend renders
-/// (§FS-check.4.7, §FS-check.4.8, §FS-check.4.10, §FS-workspace.6.1).
+/// (§FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11, §FS-workspace.6.1.7).
 ///
 /// Each keeps the anchor the engine gave it — the `grund.toml` line its own
 /// message already names — so an editor publishes it without reading a location
-/// back out of the text (§FS-lsp.1.1, §AR-bindings.2). A terminal renders the
+/// back out of the text (§FS-lsp.1.1.3, §AR-bindings.2). A terminal renders the
 /// message alone, in §FS-check.2.1.1's CLI-level shape: the render shape is a
 /// property of the finding rather than a consequence of whether a location is
 /// known, which is why the anchor rides along unused there.
@@ -129,7 +129,7 @@ fn public_path(config: &Config, path: &Path) -> String {
     display_path(config, path)
 }
 
-/// The `sites` value of a query-refusal JSON diagnostic (§FS-errors.5): `null`
+/// The `sites` value of a query-refusal JSON diagnostic (§FS-errors.5.2): `null`
 /// when empty, else `[{ path, line }]` in the caller's order. Shared by the
 /// `grund` CLI and the deprecated `grund_core::main_entry()` mirror so the two
 /// printers cannot drift on the same bytes.

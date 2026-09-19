@@ -1,4 +1,4 @@
-//! §FS-check.3.17 — the one invariant the index-entry rule rests on: every
+//! §FS-check.3.17.3 — the one invariant the index-entry rule rests on: every
 //! `unlinked-index-entry` error is cleared by the command its own message
 //! names. `check` reports the finding only for an occurrence the next
 //! `grund fmt --write` turns into a link (§FS-fmt.6.2), so running that command
@@ -76,7 +76,7 @@ fn build_fixture_with_home(name: &str, strict: bool, index_body: &str, home: &st
     dir
 }
 
-/// §FS-check.3.18 / §FS-list.2 / §FS-show.2.3: the issue #133 shape. The index
+/// §FS-check.3.18.3 / §FS-list.2 / §FS-show.2.3: the issue #133 shape. The index
 /// directly enrolls the source declaration, with no Markdown stub to become a
 /// second scanner record or a query home.
 fn build_external_inline_fixture() -> PathBuf {
@@ -117,7 +117,7 @@ fn has_unlinked_entry(output: &Output) -> bool {
 /// error, the named command clears it, and the second `check` is silent about
 /// it. The `fmt` run must also report that it wrote something — a pass that
 /// answers `rewrote 0 lines` while `check` stays red is exactly the state
-/// §FS-check.3.17's licence under §REQ-backwards-compatibility.3 forbids.
+/// §FS-check.3.17.3's licence under §REQ-backwards-compatibility.3 forbids.
 fn assert_round_trip(dir: &Path, case: &str) {
     let before = run_grund(&["check", "."], dir);
     assert!(
@@ -170,7 +170,7 @@ fn fmt_write_clears_a_marked_bare_entry_off_strict_mode() {
 /// (`FS-001-login` homed in `FS-001-login-a.md`). Off strict mode, the token
 /// `fmt --cross-refs` writes into the link destination (`FS-001-login-a`) must
 /// not become a citation of its own — the round trip has to clear the unlinked
-/// entry without leaving behind a new `unknown reference` (§FS-check.1.1).
+/// entry without leaving behind a new `unknown reference` (§FS-check.1.1.4).
 #[test]
 fn fmt_write_clears_a_bare_entry_whose_home_extends_the_id() {
     let dir = build_fixture_with_home(
@@ -210,7 +210,7 @@ fn fmt_write_clears_a_bare_entry_whose_home_extends_the_id() {
 }
 
 /// A marked citation of a section that exists. `fmt` computes the section's
-/// anchor (§FS-fmt.6.2), so this is an entry and must round-trip — the
+/// anchor (§FS-fmt.6.2.1), so this is an entry and must round-trip — the
 /// counterpart to `a_dangling_section_is_not_an_entry` below, which is the same
 /// shape with a section that does not.
 #[test]
@@ -225,7 +225,7 @@ fn fmt_write_clears_a_bare_entry_naming_a_section() {
 
 /// The negative half, asserted through the same door: a citation naming a
 /// section no declaration declares has no link target, so `fmt` skips the line
-/// (§FS-fmt.6.2). `check` must not name it under §FS-check.3.17 — the tree is
+/// (§FS-fmt.6.2). `check` must not name it under §FS-check.3.17.4 — the tree is
 /// already red for the missing section itself (§FS-check.3.2), and a second
 /// finding here would name a command that answers `rewrote 0 lines`.
 #[test]
@@ -245,7 +245,7 @@ fn a_dangling_section_is_not_an_entry() {
     assert!(
         !has_unlinked_entry(&before),
         "`grund fmt --write` cannot wrap a citation with no link target, so \
-         §FS-check.3.17 must not name it: {}",
+         §FS-check.3.17.4 must not name it: {}",
         stdout(&before)
     );
 

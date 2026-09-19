@@ -37,7 +37,7 @@ fn command_cover(args: &[String]) -> ExitCode {
         }
         idx += 1;
     }
-    // §FS-cover.1: a bad `--format` value is a usage error, answered before the scan
+    // §FS-cover.1.1: a bad `--format` value is a usage error, answered before the scan
     // so that which of two errors a caller sees does not depend on the tree they
     // happened to point at — the scan can now fail first (§FS-cover.4).
     if let Some(format) = format_override.as_deref() {
@@ -51,7 +51,7 @@ fn command_cover(args: &[String]) -> ExitCode {
         path_provided,
     };
     // One load, whichever view is rendered: `cover` and `cover_text` build the
-    // same index (§FS-workspace.8.6), and calling both walked every project in
+    // same index (§FS-workspace.8.6.2), and calling both walked every project in
     // the workspace twice.
     let output = match cover(opts) {
         Ok(output) => output,

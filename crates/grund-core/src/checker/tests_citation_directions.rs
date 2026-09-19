@@ -47,7 +47,7 @@ fn scanner_markdown_body_and_source_kind() {
     assert_eq!(cite.enclosing_declaration.as_ref(), Some(&first));
 }
 
-// §AR-scanner.2.4: a citation in a source file outside any inline
+// §AR-scanner.2.4.2: a citation in a source file outside any inline
 // declaration falls through to the reserved `code` pseudo-kind; one inside
 // an inline declaration's comment block takes that declaration's kind.
 #[test]
@@ -84,7 +84,7 @@ fn scanner_code_source_kind_and_inline_block() {
     assert!(loose.enclosing_declaration.is_none());
 }
 
-// §AR-scanner.2.4 step 2: a citation in a Markdown file under a kind home
+// §AR-scanner.2.4.2 step 2: a citation in a Markdown file under a kind home
 // but outside any declaration body takes the file's home kind.
 #[test]
 fn scanner_file_home_source_kind() {
@@ -197,7 +197,7 @@ must = ["FS"]
     );
 }
 
-// §FS-config.3.9.2: Markdown files outside kind homes are still checked for
+// §FS-config.3.9.2.4: Markdown files outside kind homes are still checked for
 // prohibited citation directions, but they are not `code` obligation units.
 #[test]
 fn citation_directions_code_obligations_exempt_markdown() {
@@ -238,7 +238,7 @@ must = ["FS"]
     );
 }
 
-// §FS-config.3.9 / §FS-check.3.11: an E2E case with no scanned citations is
+// §FS-config.3.9 / §FS-check.3.11.6: an E2E case with no scanned citations is
 // still an obligation unit, so `[citations.E2E] must = ["FS"]` is a hard gate
 // in a normal root check that skips direct fixture trees.
 #[test]
@@ -423,7 +423,7 @@ must = ["FS"]
     );
 }
 
-/// §FS-check.2.2.1: entry-only folders, file homes, prohibition-only tables,
+/// §FS-check.2.2.1.1: entry-only folders, file homes, prohibition-only tables,
 /// the homeless kind, and unwalked kinds stay silent even when a full walk
 /// makes the unwalked home visible.
 #[test]
@@ -553,7 +553,7 @@ must = ["FS"]
     assert!(report.errors.iter().any(|error| error.code == "dangling"));
 }
 
-/// §FS-check.2.2.1 / §FS-workspace.5: empty-obligation warnings are evaluated
+/// §FS-check.2.2.1.3 / §FS-workspace.5: empty-obligation warnings are evaluated
 /// per workspace member, so an entry-only member does not inherit a sibling's
 /// warning.
 #[test]
@@ -618,7 +618,7 @@ must = ["FS"]
     assert!(warnings[0].message.contains("skills/"));
 }
 
-// §FS-config.3.9.5: a `should`/`must-not` pair whose namespaces overlap
+// §FS-config.3.9.5.1: a `should`/`must-not` pair whose namespaces overlap
 // (`*/AR` covers a bare local `AR`) is rejected; disjoint namespaces are not.
 #[test]
 fn citation_validation_rejects_overlapping_namespace_polarities() {
@@ -651,7 +651,7 @@ fn citation_validation_rejects_overlapping_namespace_polarities() {
     load_config(&root).expect("disjoint namespaces must load");
 }
 
-// §FS-config.3.9.3 / §FS-workspace.1: namespace-qualified citation targets
+// §FS-config.3.9.3 / §FS-workspace.1.1: namespace-qualified citation targets
 // must use the same alias grammar the scanner can actually produce.
 #[test]
 fn citation_validation_rejects_malformed_namespace_qualifiers() {
@@ -662,7 +662,7 @@ fn citation_validation_rejects_malformed_namespace_qualifiers() {
         )
     };
 
-    // §FS-config.3.9.3: config diagnostics use citation-target vocabulary,
+    // §FS-config.3.9.3.1: config diagnostics use citation-target vocabulary,
     // name the kind and identify the first invalid qualifier segment.
     let diagnostic = |target: &str| {
         write(&root.join("grund.toml"), &cfg(target));

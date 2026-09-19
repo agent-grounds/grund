@@ -17,7 +17,7 @@ use crate::testing::{canonical_test_path, numbered_config, test_root, write};
 use crate::writers::{ITERM2_SNIPPET, KITTY_SNIPPET, VSCODE_EXTENSION_JS, WEZTERM_SNIPPET};
 use regex::Regex;
 
-// §AR-scanner.2.6: `render_id` reduces a partial `Id` by the same rule the
+// §AR-scanner.2.6.11: `render_id` reduces a partial `Id` by the same rule the
 // shorthand pattern is derived from, so an unresolved shorthand prints as
 // `FS-042` rather than leaking the raw `{slug}` placeholder into a report.
 #[test]
@@ -42,9 +42,9 @@ fn render_id_prints_a_slugless_id_as_the_shorthand() {
     );
 }
 
-// §FS-check.1.2 / §FS-show.1: a query persists nothing, so the shorthand is
+// §FS-check.1.2.6 / §FS-show.1.2: a query persists nothing, so the shorthand is
 // simply expanded at the CLI boundary. This is also what makes a clicked
-// `§FS-042` open (§FS-integrations.3.1).
+// `§FS-042` open (§FS-integrations.3.1.7).
 #[test]
 fn shorthand_resolves_as_a_query_argument() {
     let root = test_root("shorthand_resolves_as_a_query_argument");
@@ -69,7 +69,7 @@ fn shorthand_resolves_as_a_query_argument() {
     assert_eq!(render_id(&config.grammar, &id), "FS-999");
 }
 
-// §FS-show.2.2.1: an ambiguous shorthand argument is a query failure that
+// §FS-show.2.2.1.1: an ambiguous shorthand argument is a query failure that
 // lists every candidate rather than picking one.
 #[test]
 fn ambiguous_shorthand_argument_lists_every_candidate() {
@@ -92,7 +92,7 @@ fn ambiguous_shorthand_argument_lists_every_candidate() {
     );
 }
 
-/// §FS-show.2.2.1 / §FS-errors.5: the shorthand's candidates are IDs, not
+/// §FS-show.2.2.1.1 / §FS-errors.5.2.1: the shorthand's candidates are IDs, not
 /// `{path, line}` sites — listing either home under `sites` would tell a
 /// JSON consumer to delete one of two *correct* declarations — so the
 /// public `show` query never carries the typed sites carrier for this
@@ -118,7 +118,7 @@ fn ambiguous_shorthand_query_carries_no_sites() {
             ..ShowOpts::default()
         },
     ) else {
-        panic!("§FS-show.2.2.1: an ambiguous shorthand argument must refuse");
+        panic!("§FS-show.2.2.1.1: an ambiguous shorthand argument must refuse");
     };
     assert!(
         err.downcast_ref::<ShowQueryError>().is_none(),
@@ -126,7 +126,7 @@ fn ambiguous_shorthand_query_carries_no_sites() {
     );
 }
 
-/// §FS-lsp.1.4: a shorthand already in the document navigates like any other
+/// §FS-lsp.1.4.5: a shorthand already in the document navigates like any other
 /// citation. The snapshot carries the canonical target while the range stays
 /// the written token, which is what makes hover, go-to-definition,
 /// references, document links, and highlight all work without any of them
@@ -181,7 +181,7 @@ fn lsp_snapshot_navigates_a_shorthand_citation() {
     );
 }
 
-/// §FS-integrations.3.1: the clients need no shorthand matcher of their own —
+/// §FS-integrations.3.1.7: the clients need no shorthand matcher of their own —
 /// the shared citation shape already accepts one, in every form. This pins
 /// that, because the spec claims it and six hand-written regexes would
 /// otherwise be free to drift from the engine.

@@ -1,4 +1,4 @@
-# Manual minor releases implement §FS-distribution.4.
+# Manual minor releases implement §FS-distribution.4.4.
 name: Release minor
 
 # Manual minor release helper: from the latest vX.Y.Z tag, bump to vX.(Y+1).0,
@@ -83,7 +83,7 @@ jobs:
           fi
           echo "CI on $sha is green."
 
-      # §FS-distribution.4.2: refuse a minor release the tree's own messages
+      # §FS-distribution.4.2.7: refuse a minor release the tree's own messages
       # contradict - a ramp still promising this release, or one already landed
       # for a later one. Fails before a candidate branch is pushed.
       - name: Gate - the tree can be released as this version

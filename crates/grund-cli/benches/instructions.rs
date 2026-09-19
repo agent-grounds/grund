@@ -77,7 +77,7 @@ fn canonical_repo() -> PathBuf {
 }
 
 /// Generate and normalize the formatter benchmark input outside Callgrind so
-/// the measured `--check` exits successfully on a canonical tree. §AR-benchmarks.1
+/// the measured `--check` exits successfully on a canonical tree. §AR-benchmarks.1.3
 #[cfg(feature = "bench")]
 fn canonical_fmt_repo() -> PathBuf {
     let root = canonical_repo();

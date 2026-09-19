@@ -8,7 +8,7 @@ struct BatchInputQuery {
 
 /// Validate the complete NDJSON stream before entering the workspace loader;
 /// empty lines are not records and physical line numbers stay reportable
-/// (§FS-show.1, §FS-show.2.6).
+/// (§FS-show.1.8, §FS-show.2.6.3).
 fn read_batch_queries() -> Result<Vec<BatchShowQuery>, String> {
     use std::io::Read;
 

@@ -15,7 +15,7 @@ const GOLDEN_SURFACES: [&str; 3] = ["expected.exit", "expected.stdout", "expecte
 /// [`read_expected_output`], because the reader normalizes away the very
 /// difference under test; and it judges every golden of every case before
 /// returning, so the caller names them all in one failure instead of aborting at
-/// the first (§AR-workspace.9).
+/// the first (§AR-workspace.9.3).
 pub fn golden_form_violations(manifest_dir: &Path, cases: &[PathBuf]) -> Vec<String> {
     let mut violations = Vec::new();
     for case in cases {
@@ -78,7 +78,7 @@ fn exit_golden_defect(bytes: &[u8]) -> Option<String> {
     }
 }
 
-/// The property the writer owes the reader (§AR-workspace.9.1): the bytes a
+/// The property the writer owes the reader (§AR-workspace.9.1.4): the bytes a
 /// golden is written with are the bytes a refresh writes again, so writing one
 /// twice — with the reader's own view of it in between — changes nothing. Driven
 /// over representative outputs rather than over the corpus, because the corpus
@@ -91,7 +91,7 @@ mod golden_form_tests {
 
     /// A run's output, the bytes its golden must hold, and the value the reader
     /// hands the comparison. The third row is the recorded limitation of
-    /// §AR-workspace.9.1 — a whole-file newline means "no output", so a case whose
+    /// §AR-workspace.9.1.2 — a whole-file newline means "no output", so a case whose
     /// real output is one newline reads back as empty and cannot be pinned. The
     /// fourth is the one the writer gets wrong today: it emits the run's line
     /// endings while the reader folds them.

@@ -33,7 +33,7 @@ impl Default for CoverOpts {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CoverCitation {
     /// The alias of the project whose tree contains this citation site — the
-    /// *citing* project, as in `refs` (§FS-workspace.8.2). `None` outside
+    /// *citing* project, as in `refs` (§FS-workspace.8.2.4). `None` outside
     /// workspace mode, where the JSON field is omitted entirely so a
     /// single-project repo's bytes are unchanged (§DF-cover-workspace-scope.2.3).
     pub project: Option<String>,
@@ -62,10 +62,10 @@ pub struct CoverOutput {
     pub entries: Vec<CoverEntry>,
     pub scan_errors: Vec<ApiScanError>,
     /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
-    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// cautions of §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11 and
+    /// §FS-workspace.6.1.7, each anchored at the `grund.toml` line its own message
     /// names. A frontend renders each as one CLI-level `warning:` on stderr
-    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1.3).
     pub warnings: Vec<Finding>,
 }
 
@@ -88,10 +88,10 @@ pub struct CoverTextOutput {
     pub entries: Vec<CoverTextEntry>,
     pub scan_errors: Vec<ApiScanError>,
     /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
-    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// cautions of §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11 and
+    /// §FS-workspace.6.1.7, each anchored at the `grund.toml` line its own message
     /// names. A frontend renders each as one CLI-level `warning:` on stderr
-    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1.3).
     pub warnings: Vec<Finding>,
 }
 
@@ -103,7 +103,7 @@ struct CoverRow<'a> {
     alias: Option<&'a str>,
     /// Rendered against the workspace root in workspace mode, so a member's
     /// file is spelled the way `[workspace] members` spells it
-    /// (§FS-workspace.8.6).
+    /// (§FS-workspace.8.6.5).
     path: String,
     citations: Vec<CoverCitationRow<'a>>,
 }
@@ -111,7 +111,7 @@ struct CoverRow<'a> {
 struct CoverCitationRow<'a> {
     citation: &'a Citation,
     /// The config the ID renders under: the **target** project's, matching
-    /// `refs` (§FS-workspace.8.2). Falls back to the citing project's config
+    /// `refs` (§FS-workspace.8.2.4). Falls back to the citing project's config
     /// when the alias names no loaded project — `cover` reports the graph and
     /// leaves the unknown-alias verdict to `check` (§FS-workspace.8.1).
     target_config: &'a Config,
@@ -120,7 +120,7 @@ struct CoverCitationRow<'a> {
 impl CoverCitationRow<'_> {
     /// The canonical spelling of the token the file wrote: alias-qualified only
     /// when the citation itself was, never qualified on the file's behalf
-    /// (§FS-workspace.8.6).
+    /// (§FS-workspace.8.6.4).
     fn rendered_id(&self) -> String {
         let id = render_id(&self.target_config.grammar, &self.citation.id);
         match &self.citation.namespace {
@@ -216,7 +216,7 @@ fn cover_scan_errors(context: &WorkspaceContext) -> Vec<ApiScanError> {
         .iter()
         .flat_map(|project| project.scan_errors.iter())
         .collect::<Vec<_>>();
-    // §FS-errors.4: by path, not by the order the projects were loaded — the
+    // §FS-errors.4.1: by path, not by the order the projects were loaded — the
     // same order `check` prints the same errors in, keyed with `sort_path_key`
     // on the path itself, before rendering.
     errors.sort_by_key(|(path, message)| (sort_path_key(path), message.clone()));

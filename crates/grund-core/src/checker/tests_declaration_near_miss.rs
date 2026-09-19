@@ -19,7 +19,7 @@ fn near_miss_repo(name: &str, heading: &str) -> PathBuf {
     root
 }
 
-/// §FS-check.4.6 / §RM-off-grammar-declaration-error: the classic stumble
+/// §FS-check.4.6.5 / §RM-off-grammar-declaration-error: the classic stumble
 /// stays a warning with a named deadline before 0.15.0.
 #[test]
 fn off_grammar_heading_missing_the_number_is_reported() {
@@ -50,7 +50,7 @@ fn off_grammar_heading_missing_the_number_is_reported() {
     );
 }
 
-/// §FS-config.3.2 / §FS-check.1.1 / §FS-show.1: a mismatch remains a
+/// §FS-config.3.2.5 / §FS-check.1.1.1 / §FS-show.1.1: a mismatch remains a
 /// readable declaration, and only an exact marked candidate backed by that
 /// catalog entry is promoted. Bare and unbacked malformed tokens stay text.
 #[test]
@@ -98,7 +98,7 @@ fn an_off_grammar_declaration_and_its_exact_marked_citation_remain_readable() {
     );
 }
 
-/// §FS-check.4.6 read from the other side: a heading that *does* match
+/// §FS-check.4.6.1 read from the other side: a heading that *does* match
 /// gets none.
 #[test]
 fn a_heading_that_matches_is_not_reported() {
@@ -114,7 +114,7 @@ fn a_heading_that_matches_is_not_reported() {
     );
 }
 
-/// §FS-config.3.2 / §FS-check.4.6: both recognition and the displayed
+/// §FS-config.3.2.5 / §FS-check.4.6: both recognition and the displayed
 /// template come from the candidate kind's effective grammar. A persisted
 /// spelling accepted only by the repository default remains readable when
 /// that kind's authoritative override rejects it.

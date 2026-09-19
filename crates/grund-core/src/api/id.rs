@@ -48,7 +48,7 @@ pub struct IdProposal {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum IdProposalOutcome {
     Proposed(IdProposal),
-    /// The kind is not one `id` can mint from (§FS-id.1): a name the config does
+    /// The kind is not one `id` can mint from (§FS-id.1.1): a name the config does
     /// not hold, or one it holds with `citable = false` (§FS-config.3.4.1).
     /// `headline` says which — the two are different mistakes, and the caller
     /// prints the same shape for both, with `known` listing the citable kinds.
@@ -68,7 +68,7 @@ pub fn propose_id(kind: &str, title: &str, opts: IdOpts) -> Result<IdProposalOut
 }
 
 /// [`propose_id`] for a frontend that also renders the run's `[workspace]`
-/// warnings (§FS-check.4.7, §FS-check.4.10): `id` resolves a block's member
+/// warnings (§FS-check.4.7.2, §FS-check.4.10.7): `id` resolves a block's member
 /// boundary like every other walking command, and the outcome is an enum with
 /// nowhere to carry a caution.
 #[doc(hidden)]
@@ -92,7 +92,7 @@ fn propose_id_run(
     *run_warnings = config_run_warnings(&config);
     let configured = config.kinds.iter().find(|candidate| candidate.kind == kind);
     let Some(kind_config) = configured.filter(|candidate| candidate.citable) else {
-        // §FS-id.1: a non-citable kind is configured and still has nothing to
+        // §FS-id.1.1: a non-citable kind is configured and still has nothing to
         // mint, so it is refused in the same shape with its reason in place of
         // "unknown" — a real row in the table is not a typo.
         return Ok(IdProposalOutcome::UnknownKind {

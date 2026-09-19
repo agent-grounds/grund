@@ -26,7 +26,7 @@ use grund_core::{
 };
 use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
 
-// §FS-integrations.1: what `grund integrations` is assembled from. The engine
+// §FS-integrations.1.3: what `grund integrations` is assembled from. The engine
 // answers with data — the client set, the detection, the agent surfaces and the
 // managed writes — and this crate prints every byte of it (§AR-bindings.3).
 use grund_core::{

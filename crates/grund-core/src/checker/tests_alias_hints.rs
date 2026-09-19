@@ -27,7 +27,7 @@ fn migrating_scope_only_message(namespace: &str, scope: &str) -> String {
     )
 }
 
-/// §FS-check.3.8: the first tier is a proper prefix of slash-separated
+/// §FS-check.3.8.2: the first tier is a proper prefix of slash-separated
 /// segments. Exact paths and byte prefixes without a segment boundary do
 /// not join it, nor does a path that merely ends with the written segments.
 #[test]
@@ -54,7 +54,7 @@ fn proper_prefix_tier_is_segment_aware() {
     );
 }
 
-/// §FS-check.3.8: a proper-prefix winner suppresses every lower tier.
+/// §FS-check.3.8.2: a proper-prefix winner suppresses every lower tier.
 #[test]
 fn proper_prefix_tier_outranks_suffix_leaf_and_typo_candidates() {
     let known = ["x/group", "wrong/group", "grouq", "group/alpha"];
@@ -64,7 +64,7 @@ fn proper_prefix_tier_outranks_suffix_leaf_and_typo_candidates() {
     );
 }
 
-/// §FS-check.3.8 / §REQ-deterministic-output: deeper aliases are byte-sorted
+/// §FS-check.3.8.2 / §REQ-deterministic-output: deeper aliases are byte-sorted
 /// before the same three-candidate cap as every other tier.
 #[test]
 fn proper_prefix_candidates_are_sorted_and_truncated_to_three() {
@@ -79,7 +79,7 @@ fn proper_prefix_candidates_are_sorted_and_truncated_to_three() {
     );
 }
 
-/// §FS-errors.3: the proper-prefix tier uses the frozen one-, two-, and
+/// §FS-errors.3.2: the proper-prefix tier uses the frozen one-, two-, and
 /// three-candidate message forms without changing the base error.
 #[test]
 fn proper_prefix_messages_use_the_exact_candidate_phrasing() {
@@ -101,7 +101,7 @@ fn proper_prefix_messages_use_the_exact_candidate_phrasing() {
     );
 }
 
-/// §FS-errors.3: 0.13.2 preserves the complete narrowed scope-only
+/// §FS-errors.3.3: 0.13.2 preserves the complete narrowed scope-only
 /// diagnostic as a contiguous prefix and appends the exact migration suffix.
 #[test]
 fn narrowed_scope_only_message_has_the_0132_compatibility_form() {
@@ -124,7 +124,7 @@ fn narrowed_scope_only_message_has_the_0132_compatibility_form() {
     assert_eq!(actual, migrating_scope_only_message("alpha", "group"));
 }
 
-/// §FS-check.3.8: narrowed runs still suppress the new tier. When `--full`
+/// §FS-check.3.8.3: narrowed runs still suppress the new tier. When `--full`
 /// finds the same error outside `include`, its scope clause remains first.
 #[test]
 fn proper_prefix_hint_preserves_scope_decorations() {
@@ -149,8 +149,8 @@ fn proper_prefix_hint_preserves_scope_decorations() {
     );
 }
 
-/// §FS-check.3.8: the dropped-prefix tier — a project whose path *ends with*
-/// what was written. The mistake whole alias paths invite (§FS-workspace.6.1).
+/// §FS-check.3.8.2: the dropped-prefix tier — a project whose path *ends with*
+/// what was written. The mistake whole alias paths invite (§FS-workspace.6.1.1).
 #[test]
 fn dropped_prefix_tier_offers_the_longer_path() {
     let known = ["root", "hardware", "hardware/sprayer"];
@@ -160,7 +160,7 @@ fn dropped_prefix_tier_offers_the_longer_path() {
     );
 }
 
-/// §FS-check.3.8: the dropped-prefix tier is a *tier*, not a filter that the
+/// §FS-check.3.8.2: the dropped-prefix tier is a *tier*, not a filter that the
 /// last-segment tier would have applied anyway. A written path that is a
 /// proper suffix of one project and shares a last segment with another offers
 /// the suffix match **alone** — deleting the tier hands the reader two
@@ -171,7 +171,7 @@ fn dropped_prefix_tier_outranks_a_same_leaf_candidate() {
     assert_eq!(
         nearest_project_aliases("inner/leaf", known.into_iter()),
         vec!["mid/inner/leaf".to_string()],
-        "§FS-check.3.8: `other/leaf` shares the leaf but is not what the author dropped a prefix from"
+        "§FS-check.3.8.2: `other/leaf` shares the leaf but is not what the author dropped a prefix from"
     );
 }
 
@@ -227,7 +227,7 @@ fn a_narrowed_alias_eligible_path_without_a_candidate_uses_the_bare_message() {
     );
 }
 
-/// §FS-check.3.8: the outermost root is where the tiers live, and the scope
+/// §FS-check.3.8.2: the outermost root is where the tiers live, and the scope
 /// sentence is not printed there — a path with no candidate reports bare.
 #[test]
 fn the_outermost_root_still_hints_and_never_names_a_scope() {
@@ -241,7 +241,7 @@ fn the_outermost_root_still_hints_and_never_names_a_scope() {
     );
 }
 
-/// §FS-check.3.8: the last-segment tier — the written path is the right
+/// §FS-check.3.8.2: the last-segment tier — the written path is the right
 /// length but names the wrong parent, so no suffix match exists and the
 /// project sharing the leaf is offered instead.
 #[test]
@@ -253,7 +253,7 @@ fn last_segment_tier_offers_the_same_leaf_under_another_parent() {
     );
 }
 
-/// §FS-check.3.8: the typo tier — no suffix and no shared leaf, so the
+/// §FS-check.3.8.2: the typo tier — no suffix and no shared leaf, so the
 /// near-match rule §3.1 uses decides.
 #[test]
 fn typo_tier_offers_a_project_one_edit_away() {
@@ -264,7 +264,7 @@ fn typo_tier_offers_a_project_one_edit_away() {
     );
 }
 
-/// §FS-check.3.8: "tiers do not mix". A dropped-prefix match is near-certain,
+/// §FS-check.3.8.2: "tiers do not mix". A dropped-prefix match is near-certain,
 /// so a typo-distance candidate present in the same tree is withheld rather
 /// than listed beside it — the good hint stays the whole hint.
 #[test]
@@ -273,11 +273,11 @@ fn a_suffix_match_suppresses_the_lower_tiers() {
     assert_eq!(
         nearest_project_aliases("api", known.into_iter()),
         vec!["left/api".to_string()],
-        "§FS-check.3.8: the suffix tier fires alone, `apj` is one edit away"
+        "§FS-check.3.8.2: the suffix tier fires alone, `apj` is one edit away"
     );
 }
 
-/// §FS-check.3.8: candidates are sorted and cut at three — `grund list` is
+/// §FS-check.3.8.2: candidates are sorted and cut at three — `grund list` is
 /// the catalogue, a finding is not. The fourth match is dropped by sort
 /// order, not by discovery order, so the diagnostic is deterministic.
 #[test]
@@ -306,7 +306,7 @@ fn alternatives_join_as_prose() {
     assert_eq!(of(&["a/api", "b/api", "c/api"]), "a/api, b/api or c/api");
 }
 
-/// §FS-check.3.8: a path with nothing to offer reports on its own — an empty
+/// §FS-check.3.8.2: a path with nothing to offer reports on its own — an empty
 /// candidate list, never a bare `did you mean ?`.
 #[test]
 fn an_unrelated_path_offers_nothing() {

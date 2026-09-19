@@ -98,7 +98,7 @@ fn command_refs(args: &[String]) -> ExitCode {
 }
 
 /// Render the release-selected wire form of a typed resolver rejection
-/// (§FS-refs.4, §FS-errors.5). The format and summary/section flags are already
+/// (§FS-refs.4, §FS-errors.5.2). The format and summary/section flags are already
 /// resolved, so no renderer can reclassify the operand.
 fn render_refs_query_failure(failure: &RefsQueryFailure, format: &str) -> ExitCode {
     if refs_query_failure_is_exit_one() {

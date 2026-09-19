@@ -97,7 +97,7 @@ fn outside_repo_dir(suffix: &str) -> PathBuf {
 
 /// Run `grund init`, with the child's home directory pointed at `home`. Both
 /// spellings are set because `init` resolves the home directory the way the
-/// platform reports it (§FS-init.1.2): Unix reads `$HOME`, Windows
+/// platform reports it (§FS-init.1.2.1): Unix reads `$HOME`, Windows
 /// `%USERPROFILE%`, and a case that set only one would pass on the platform it
 /// was written on and quietly test nothing on the other.
 fn run_init(args: &[&str], home: Option<&Path>) -> Output {
@@ -121,7 +121,7 @@ fn stderr(output: &Output) -> String {
 fn home_directory_target_is_refused_and_leaves_the_personal_file_alone() {
     // The reported accident: a shell slip leaves the user in `$HOME`, and
     // `--claude` appends the managed block to the machine-global instruction
-    // file every session in every project loads (§FS-init.1.2).
+    // file every session in every project loads (§FS-init.1.2.1).
     let home = outside_repo_dir("home_target");
     fs::create_dir_all(home.join(".claude")).expect("create .claude");
     fs::write(home.join(".claude/CLAUDE.md"), PERSONAL_INSTRUCTIONS).expect("write personal file");
@@ -224,7 +224,7 @@ fn dry_run_reports_the_refusal_rather_than_a_preview() {
 #[test]
 fn check_reports_the_refusal_and_keeps_its_exit_code() {
     // A refusal is not a finding: `2` still wins over the `1` `--check` earns
-    // for a pending change (§FS-init.4).
+    // for a pending change (§FS-init.4.2).
     let target = outside_repo_dir("check_refused");
     let home = outside_repo_dir("check_refused_home");
 
@@ -251,7 +251,7 @@ fn a_marker_anywhere_above_the_target_satisfies_the_rule() {
     let root = outside_repo_dir("marker_above");
     let home = outside_repo_dir("marker_above_home");
     // A linked worktree and a submodule both write `.git` as a *file*, so the
-    // rule tests presence rather than type (§FS-init.1.2).
+    // rule tests presence rather than type (§FS-init.1.2.3).
     fs::write(root.join(".git"), "gitdir: /elsewhere\n").expect("write .git file");
     let nested = root.join("packages/service");
     fs::create_dir_all(&nested).expect("create nested target");
@@ -278,7 +278,7 @@ fn each_supported_marker_satisfies_the_rule() {
     }
 }
 
-/// §FS-init.1.2 — the user-global instruction rule, reached the way a user
+/// §FS-init.1.2.2 — the user-global instruction rule, reached the way a user
 /// reaches it. The home rule cannot answer here: the target is a directory
 /// *inside* the home directory, not the home directory itself. Neither can the
 /// version-control rule, because dotfiles under `git` are the usual state of a
@@ -296,7 +296,7 @@ fn each_supported_marker_satisfies_the_rule() {
 fn a_user_global_instruction_file_is_refused_though_the_target_is_not_home() {
     let home = outside_repo_dir("global_files");
     fs::create_dir_all(home.join(".git")).expect("create the dotfiles marker");
-    // Every row of §FS-integrations.4.3 that an `init` target can produce. Four of
+    // Every row of §FS-integrations.4.3.8 that an `init` target can produce. Four of
     // the five are the canonical `AGENTS.md`, the entrypoint `init` reaches for by
     // default, which carries no agent's name to warn anyone off.
     for (dir, file) in [
@@ -348,7 +348,7 @@ fn no_flag_lifts_the_user_global_rule_and_none_rewrites_the_file() {
     fs::write(&global, PERSONAL_INSTRUCTIONS).expect("write personal file");
 
     // `--force` is the worst of these: canonical `AGENTS.md` is the one file
-    // `init` *overwrites* rather than appends to (§FS-init.3), so a run that got
+    // `init` *overwrites* rather than appends to (§FS-init.3.4), so a run that got
     // this far would leave nothing behind to hand-remove.
     for flags in [
         vec!["--agents-md"],
@@ -384,7 +384,7 @@ fn no_flag_lifts_the_user_global_rule_and_none_rewrites_the_file() {
 fn the_user_global_rule_refuses_to_create_the_file_too() {
     // The rule is about the path, not about what is at it: a machine that has
     // `~/.pi/agent/` but has never written the instruction file must not get one
-    // from `init` either (§FS-init.1.2).
+    // from `init` either (§FS-init.1.2.2).
     let home = outside_repo_dir("global_missing");
     fs::create_dir_all(home.join(".git")).expect("create the dotfiles marker");
     let target = home.join(".pi/agent");
@@ -404,7 +404,7 @@ fn the_user_global_rule_refuses_to_create_the_file_too() {
     );
 }
 
-/// §FS-init.1.2: the user-global rule checks the entrypoints the run *plans*,
+/// §FS-init.1.2.4: the user-global rule checks the entrypoints the run *plans*,
 /// and the plan depends on the effective configuration (§FS-init.2.1.1) — so a
 /// configuration `init` cannot parse is reported before it. Both refuse the run
 /// and write nothing; only which of the two problems the message names differs,

@@ -61,7 +61,7 @@ fn example_output_is_deterministic() {
 
 /// The goldens are themselves a contract, not just a comparison: every case's
 /// are in the one on-disk form the harness writes, so refreshing the case a
-/// change is about rewrites no other case's bytes (§AR-workspace.9.1). Judged as
+/// change is about rewrites no other case's bytes (§AR-workspace.9.1.3). Judged as
 /// bytes and reported all at once — the tree should be fixable from this failure
 /// alone.
 #[test]

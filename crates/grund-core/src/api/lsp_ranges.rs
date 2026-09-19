@@ -1,5 +1,5 @@
 //! The spans and targets one snapshot row carries (§AR-system.2.9,
-//! §AR-lsp.5): the query ID an editor navigates by, where a citation or a stub
+//! §AR-lsp.5.1): the query ID an editor navigates by, where a citation or a stub
 //! resolves to, and the exact column and text of a declaration, section or
 //! heading title (§FS-lsp.1.1, §FS-lsp.1.3).
 //!
@@ -102,7 +102,7 @@ pub(super) fn section_range_parts(
         && let Some(marker) = text.rfind(&format!(" {EMBEDDED_VALUE_MARKER}"))
     {
         // The marker is authored raw source but not part of the section's
-        // semantic title or editor selection (§FS-values.2.4, §FS-lsp.1.3).
+        // semantic title or editor selection (§FS-values.2.4.2, §FS-lsp.1.3).
         text.truncate(marker);
     }
     (column, text)

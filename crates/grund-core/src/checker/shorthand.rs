@@ -1,4 +1,4 @@
-//! The one finding a number-only shorthand site earns (§FS-check.3.13,
+//! The one finding a number-only shorthand site earns (§FS-check.3.13.3,
 //! §AR-checker.2.12), and the three shapes it wears: no declaration, several, or
 //! one whose canonical form the author should write instead.
 //!
@@ -18,7 +18,7 @@ use crate::grammar::{ShorthandIndex, render_id, render_qualified_id};
 use crate::model::{CheckReport, Citation, Diagnostic, Id};
 use crate::resolver::WorkspaceCheckTarget;
 
-/// §FS-check.3.13 / §AR-checker.2.12: the one finding a number-only shorthand
+/// §FS-check.3.13.3 / §AR-checker.2.12: the one finding a number-only shorthand
 /// site earns. The candidate set is re-derived here rather than read off the
 /// citation, so the message is right whether or not the scanner's resolution
 /// pass has run — a synthetic `Findings` fed straight to the checker gets the
@@ -35,7 +35,7 @@ use crate::resolver::WorkspaceCheckTarget;
 /// A shorthand that resolves to zero or several declarations is still reported
 /// there — that is a dangling reference, not a formatting nit. The out-of-scope
 /// tier of `check --full` withholds it for the same reason: `fmt` scopes by
-/// `[scan] include` too (§FS-check.3.14).
+/// `[scan] include` too (§FS-check.3.14.4).
 fn shorthand_diagnostic(
     config: &Config,
     cite: &Citation,
@@ -52,7 +52,7 @@ fn shorthand_diagnostic(
             if unique.legacy_spelling().is_some() {
                 return None;
             }
-            // §FS-check.3.14: outside the configured scope `fmt` will not rewrite
+            // §FS-check.3.14.4: outside the configured scope `fmt` will not rewrite
             // the site either, so the same withholding applies for the same reason.
             if !cite.shorthand_rewritable || tier == ReferenceTier::OutOfScope {
                 return None;
@@ -68,7 +68,7 @@ fn shorthand_diagnostic(
                 render_qualified_id(&target_config.grammar, cite.namespace.as_deref(), unique),
                 section
             );
-            // §FS-check.3.15: the same site, a different verdict — `fmt` will not
+            // §FS-check.3.15.1: the same site, a different verdict — `fmt` will not
             // rewrite a numeral in a run, so naming only the canonical form would
             // advise the edit that corrupts the line. Both exits; the author picks.
             if cite.numeric_run {
@@ -88,7 +88,7 @@ fn shorthand_diagnostic(
                     sites: Vec::new(),
                 });
             }
-            // §FS-check.3.13 / §FS-workspace.4: only the unique persisted-form
+            // §FS-check.3.13 / §FS-workspace.4.2: only the unique persisted-form
             // finding is policy-gated, and the policy belongs to the project
             // whose catalog resolved the shorthand.
             if target_config.shorthand == ShorthandPolicy::Accepted {
@@ -119,7 +119,7 @@ fn shorthand_diagnostic(
 /// builds none (§FS-check.3.13).
 pub(super) type ShorthandIndexes<'a> = BTreeMap<Option<String>, ShorthandIndex<'a>>;
 
-/// §FS-check.3.13 / §AR-checker.2.12: report one citation's shorthand finding, if
+/// §FS-check.3.13.3 / §AR-checker.2.12: report one citation's shorthand finding, if
 /// it earns one. Returns `true` when the citation resolved to nothing and the
 /// caller should skip its remaining rules — §3.1 in particular, which would
 /// otherwise name a token that is not a full ID.
@@ -130,7 +130,7 @@ pub(super) type ShorthandIndexes<'a> = BTreeMap<Option<String>, ShorthandIndex<'
 /// (§FS-check.1.3), so a site can arrive here holding a canonical ID whose
 /// declaration is no longer in the target's set. Judging it by the rewrite alone
 /// would earn that site a shorthand error *and* a dangling error for one cause,
-/// which §FS-check.3.13 says never happens. The qualified cross-member form is
+/// which §FS-check.3.13.3 says never happens. The qualified cross-member form is
 /// resolved in a pass of the resolver's own (§AR-resolver.4), so this is the only
 /// place both forms meet.
 ///

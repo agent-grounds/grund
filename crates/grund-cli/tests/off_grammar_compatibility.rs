@@ -1,6 +1,6 @@
 //! End-to-end contract for catalog-backed reads of persisted off-grammar
-//! declarations across CLI surfaces (§FS-config.3.2, §FS-check.1.1,
-//! §FS-show.1, §FS-refs.1, §FS-list.2, §FS-completions.2, §FS-cover.2,
+//! declarations across CLI surfaces (§FS-config.3.2.5, §FS-check.1.1.1,
+//! §FS-show.1.1, §FS-refs.1, §FS-list.2.3, §FS-completions.2.2, §FS-cover.2.4,
 //! §FS-fmt.6, and §FS-workspace.8).
 
 use std::fs;
@@ -94,7 +94,7 @@ fn numbered_fixture(root: &Path) {
 }
 
 /// The triage reproducer, expanded across every CLI consumer that reads the
-/// shared scanner/catalog (§FS-config.3.2). This test deliberately gathers all
+/// shared scanner/catalog (§FS-config.3.2.5). This test deliberately gathers all
 /// mismatches so a scanner regression cannot be hidden by `show` failing first.
 #[test]
 fn persisted_off_grammar_declaration_is_read_consistently_across_cli_surfaces() {
@@ -254,7 +254,7 @@ fn persisted_off_grammar_declaration_is_read_consistently_across_cli_surfaces() 
 }
 
 /// Qualified reads use the target member's catalog and per-kind grammar, while
-/// local and qualified citations resolve to one target (§FS-workspace.4,
+/// local and qualified citations resolve to one target (§FS-workspace.4.1,
 /// §FS-workspace.8).
 #[test]
 fn off_grammar_workspace_qualified_reads_use_the_target_per_kind_catalog() {
@@ -353,7 +353,7 @@ fn off_grammar_workspace_qualified_reads_use_the_target_per_kind_catalog() {
 
 /// Exact persisted IDs do not license guesses: shorthand collisions stay
 /// ambiguous, while a whole-token declaration wins before section splitting
-/// (§FS-config.3.2, §FS-show.1).
+/// (§FS-config.3.2.6, §FS-show.1).
 #[test]
 fn off_grammar_exact_id_section_and_shorthand_precedence_fail_rather_than_guess() {
     let root = test_root("ambiguity");
@@ -400,7 +400,7 @@ fn off_grammar_exact_id_section_and_shorthand_precedence_fail_rather_than_guess(
 }
 
 /// Duplicate persisted spellings retain the ordinary ambiguous-ID refusal and
-/// deterministic declaration sites (§FS-config.3.2, §FS-list.2).
+/// deterministic declaration sites (§FS-config.3.2.6, §FS-list.2.3).
 #[test]
 fn duplicate_off_grammar_declarations_are_ambiguous_with_sorted_sites() {
     let root = test_root("duplicate");

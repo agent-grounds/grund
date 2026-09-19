@@ -6,7 +6,7 @@
 //! and exits `0`, because a preview is a report and not a verdict. `--check`
 //! turns that same report into one ([grund#172](https://github.com/agent-grounds/grund/issues/172)).
 //! These cases pin the pair on one tree, because the whole change is the claim
-//! that only the exit code separates them (§FS-init.1, §FS-init.2.2).
+//! that only the exit code separates them (§FS-init.1.4, §FS-init.2.2).
 
 use std::fs;
 use std::path::Path;
@@ -174,7 +174,7 @@ fn check_exits_zero_when_every_reported_path_already_exists() {
 fn check_writes_nothing_even_with_force() {
     // §FS-init.1: `--check` composes with every other flag the way `--dry-run`
     // does, and `--force` is the one that would otherwise rewrite the canonical
-    // AGENTS.md whole (§FS-init.3).
+    // AGENTS.md whole (§FS-init.3.4).
     let target = drifted_target("check_never_writes");
     let path = target.to_str().unwrap();
     let before = snapshot(&target);

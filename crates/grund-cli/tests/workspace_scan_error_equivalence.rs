@@ -1,7 +1,7 @@
-//! §FS-workspace.8.7 / §FS-check.2 — a member's unreadable file earns the
+//! §FS-workspace.8.7.3 / §FS-check.2.4 — a member's unreadable file earns the
 //! same `<path>: <reason>` whichever query command meets it first, spelled
 //! from the workspace root like `check` spells it. `fmt` adds its
-//! §FS-fmt.3 strict-refusal prefix when automatic cross-references need the
+//! §FS-fmt.3.4 strict-refusal prefix when automatic cross-references need the
 //! complete tree. Issue
 //! #103: `list`, `refs`, and `show` used to render that line against the
 //! scanning member's own config instead, naming a path that does not exist
@@ -112,7 +112,7 @@ fn every_query_command_and_strict_fmt_name_a_member_scan_error_the_same_way() {
         );
     }
 
-    // §FS-fmt.3 / §FS-fmt.6.6: automatic cross-references make the complete
+    // §FS-fmt.3.4 / §FS-fmt.6.6: automatic cross-references make the complete
     // declaration scan ordinary in check mode too. The path stays identical;
     // the prefix says this formatter run aborted before reporting any rewrite.
     let fmt = run_grund(&["fmt", "--check", "."], &root);
@@ -125,7 +125,7 @@ fn every_query_command_and_strict_fmt_name_a_member_scan_error_the_same_way() {
 }
 
 #[test]
-/// §FS-fmt.3 / §FS-fmt.6.6: the automatically enabled pass and the explicit
+/// §FS-fmt.3.3 / §FS-fmt.6.6: the automatically enabled pass and the explicit
 /// flag take the same strict workspace path and preserve root-then-member order.
 fn automatic_and_explicit_cross_refs_report_workspace_errors_in_scan_order() {
     let root = build_fixture("strict_complete_abort");
@@ -150,7 +150,7 @@ fn automatic_and_explicit_cross_refs_report_workspace_errors_in_scan_order() {
 }
 
 #[test]
-/// §FS-fmt.3: a later member's strict refusal is discovered before a
+/// §FS-fmt.3.3: a later member's strict refusal is discovered before a
 /// write-capable pass can mutate a readable file in the root project.
 fn strict_workspace_write_does_not_mutate_root_before_member_abort() {
     let root = build_fixture("strict_write_abort");

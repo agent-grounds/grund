@@ -63,7 +63,7 @@ impl RefsQueryFailureKind {
 }
 
 /// A `refs` operand rejected after workspace context and the target grammar
-/// were selected (§FS-errors.2.3, §FS-workspace.8.7).
+/// were selected (§FS-errors.2.3, §FS-workspace.8.7.2).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RefsQueryFailure {
     pub kind: RefsQueryFailureKind,
@@ -118,10 +118,10 @@ pub struct RefsOutput {
     pub note: Option<String>,
     pub scan_errors: Vec<ApiScanError>,
     /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
-    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// cautions of §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11 and
+    /// §FS-workspace.6.1.7, each anchored at the `grund.toml` line its own message
     /// names. A frontend renders each as one CLI-level `warning:` on stderr
-    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1.3).
     pub warnings: Vec<Finding>,
 }
 

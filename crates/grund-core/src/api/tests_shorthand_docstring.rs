@@ -1,12 +1,12 @@
 //! Test module: a Python docstring's `"""` / `'''` is doc-comment syntax, not a
 //! quote, so every never-rewrite surface judges a docstring line on its content
-//! (§FS-fmt.2.3.1, §FS-check.3.13, §FS-fmt.2.4, §FS-lsp.1.4).
+//! (§FS-fmt.2.3.1.1, §FS-check.3.13.2, §FS-fmt.2.4, §FS-lsp.1.4.3).
 //!
 //! Its own module rather than more cases in `tests_shorthand.rs` or
 //! `tests_shorthand_rewrite.rs`, because the behaviour under test is not what the
 //! shorthand reports or what it rewrites but that the *three* surfaces agree:
 //! nearly every case here asserts `check`'s reported set against `fmt --check`'s
-//! rewrite set on one fixture, which is the shape §AR-scanner.2.6 calls "one
+//! rewrite set on one fixture, which is the shape §AR-scanner.2.6.8 calls "one
 //! predicate serving both" and the shape neither of those modules has.
 
 use std::fs;
@@ -75,7 +75,7 @@ fn rewrite_lines(root: &Path) -> (Vec<usize>, Vec<String>) {
 }
 
 /// One docstring, one verdict per line — and the same verdict from both
-/// surfaces (§FS-fmt.2.3.1, §FS-check.3.13). Every shape the rule has to reach
+/// surfaces (§FS-fmt.2.3.1.1, §FS-check.3.13.2). Every shape the rule has to reach
 /// the same answer on is in one file so the two sets can be compared directly:
 /// a multi-line docstring's opening, interior and closing lines; a one-line
 /// docstring; an indented method docstring; `'''`; a docstring whose content
@@ -87,7 +87,7 @@ fn rewrite_lines(root: &Path) -> (Vec<usize>, Vec<String>) {
 /// apostrophe before the citation, which is exactly as silent as the same
 /// apostrophe in a `#` comment — this fix makes a docstring line behave like a
 /// comment line, and does not change what a comment line does
-/// (§FS-fmt.2.3.1's walk still runs over the content). And a `"…"` literal on
+/// (§FS-fmt.2.3.1.1's walk still runs over the content). And a `"…"` literal on
 /// a code line, which is the runtime text the exclusion is about.
 const EVERY_SHAPE: &str = "\"\"\"Opening line cites §FS-042.\n\
                            \n\
@@ -126,7 +126,7 @@ const EVERY_SHAPE: &str = "\"\"\"Opening line cites §FS-042.\n\
 /// The lines of `EVERY_SHAPE` a shorthand finding and a rewrite both land on.
 const EVERY_SHAPE_SITES: [usize; 8] = [1, 3, 4, 8, 13, 15, 21, 30];
 
-/// §FS-check.3.13 / §FS-fmt.2.4: for every docstring shape, the set `check`
+/// §FS-check.3.13.2 / §FS-fmt.2.4: for every docstring shape, the set `check`
 /// reports equals the set `fmt --check` would rewrite. A site reported but not
 /// rewritten leaves a repository permanently red with nothing to run; a site
 /// rewritten but not reported edits a file `check` never complained about.
@@ -185,7 +185,7 @@ fn fmt_write_expands_docstrings_and_leaves_the_rest_byte_identical() {
     assert_eq!(rewrite_lines(&root).0, Vec::<usize>::new());
 }
 
-/// §FS-fmt.2.3 / §FS-check.3.13: the half of the ticket that is specified
+/// §FS-fmt.2.3 / §FS-check.3.13.1: the half of the ticket that is specified
 /// behaviour and stays. A shorthand inside a `"…"` literal on a **code** line
 /// is a citation — `refs` lists it, it grounds its file — and earns no finding
 /// and no rewrite, because rewriting it would change what the program prints.
@@ -212,7 +212,7 @@ fn a_string_literal_on_a_code_line_stays_silent_and_unrewritten() {
     );
 }
 
-/// §FS-fmt.2.3.1: `docstring_python = false` turns the docstring reading off
+/// §FS-fmt.2.3.1.1: `docstring_python = false` turns the docstring reading off
 /// entirely, and with it this rule — a `"""` is then just the quote it looks
 /// like, on both surfaces. The unchanged raw-line behaviour: the opening line
 /// and the one-line docstring sit inside a literal, the interior line does
@@ -236,7 +236,7 @@ fn docstring_python_false_keeps_the_raw_line_rule() {
     assert_eq!(rewrite_lines(&root).0, vec![2]);
 }
 
-/// §FS-fmt.2.2 / §FS-check.1.1: the bare-token half of the same split. Off
+/// §FS-fmt.2.2 / §FS-check.1.1.3: the bare-token half of the same split. Off
 /// strict mode the scanner already read a bare ID on a docstring's opening
 /// line against the content and counted it as a citation, while `--marker`
 /// asked the raw line and refused to mark it. Both now read the content, so
@@ -336,7 +336,7 @@ fn type_after(root: &Path, file: &str, before: &str, typed: &str) -> String {
     line
 }
 
-/// §FS-lsp.1.4: the live transform honours every context `grund fmt` refuses
+/// §FS-lsp.1.4.3: the live transform honours every context `grund fmt` refuses
 /// — in both directions. Typing `$$FS-042` and a terminator inside a docstring
 /// lands on the canonical ID, exactly as `fmt --write` would; typing the same
 /// inside a `"…"` literal on a code line converts nothing, exactly as `fmt`

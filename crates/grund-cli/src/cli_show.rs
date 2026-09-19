@@ -14,7 +14,7 @@ fn looks_like_subcommand_typo(arg: &str) -> bool {
 }
 
 /// Recognize the opt-in without treating another option's value as a flag
-/// (§FS-show.1).
+/// (§FS-show.1.8).
 fn show_batch_requested(args: &[String]) -> bool {
     let mut index = 0;
     while index < args.len() {
@@ -160,7 +160,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
         eprintln!("error: unsupported show format `{format}`");
         return ExitCode::from(2);
     };
-    // §FS-check.4.7, §FS-check.4.8, §FS-check.4.10, §FS-workspace.6.1: the ID read
+    // §FS-check.4.7.2, §FS-check.4.8.9, §FS-check.4.10.7, §FS-workspace.6.1.7: the ID read
     // walks like every other command, and a refused query still owes the reader
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
     let (run_warnings, result) = show_with_scope(
@@ -185,7 +185,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
         }
         Err(err) => {
             let message = format!("{err:#}");
-            // §FS-errors.5: the ambiguous refusals carry their sites in a typed
+            // §FS-errors.5.2: the ambiguous refusals carry their sites in a typed
             // carrier the query itself raised; every other query failure downcasts
             // to `None` and keeps `sites: null`.
             let sites = err
@@ -235,8 +235,8 @@ fn render_show_error(
             }
         }
     } else if message.starts_with("ID not found:") {
-        // §FS-show.3: the hint gives way where the line already names the
-        // project that declares the ID (§FS-workspace.8.1.1).
+        // §FS-show.3.5: the hint gives way where the line already names the
+        // project that declares the ID (§FS-workspace.8.1.1.7).
         if !names_member_id_candidate(message) {
             eprintln!(
                 "hint: run `grund list` to see every declared ID, or `grund id <KIND> \"<title>\"` to propose a new one"
@@ -283,7 +283,7 @@ fn show_query_error_code(message: &str) -> Option<&'static str> {
         Some("invalid-id")
     } else if message.starts_with("ambiguous ID:") {
         Some("ambiguous")
-    // §FS-show.2.2.2: the section-level twin of the ambiguous-ID refusal, under
+    // §FS-show.2.2.2.1: the section-level twin of the ambiguous-ID refusal, under
     // its own code — the two need different edits, and a JSON consumer should not
     // have to read the prose to tell them apart (§DF-duplicate-section-path.2.5).
     } else if message.starts_with("ambiguous section:") {

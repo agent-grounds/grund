@@ -1,5 +1,5 @@
 //! Same-marker precedence regressions for persisted off-grammar declarations
-//! (§FS-config.3.2, §FS-check.1.1, §FS-refs.1, §FS-fmt.6,
+//! (§FS-config.3.2.6, §FS-check.1.1.1, §FS-refs.1, §FS-fmt.6,
 //! §FS-workspace.8).
 
 use std::fs;
@@ -83,7 +83,7 @@ fn write_precedence_declarations(root: &Path) {
 }
 
 /// A configured full citation survives the shorter exact-legacy interpretation
-/// at the same local marker (§FS-config.3.2, §FS-refs.1).
+/// at the same local marker (§FS-config.3.2.6, §FS-refs.1).
 #[test]
 fn off_grammar_local_configured_full_citation_keeps_precedence_and_accounting() {
     let root = test_root("local-full");
@@ -121,7 +121,7 @@ fn workspace_root(root: &Path) {
 }
 
 /// Workspace-qualified configured IDs keep the same precedence and graph
-/// accounting as the local form (§FS-config.3.2, §FS-workspace.8).
+/// accounting as the local form (§FS-config.3.2.6, §FS-workspace.8).
 #[test]
 fn off_grammar_qualified_configured_full_citation_keeps_precedence_and_accounting() {
     let root = test_root("qualified-full");
@@ -183,8 +183,8 @@ fn assert_ambiguous_check(output: &Output, written: &str) {
 }
 
 /// A local exact-legacy/shorthand collision remains one unresolved citation
-/// site, so neither candidate acquires a guessed edge (§FS-config.3.2,
-/// §FS-check.1.1, §FS-fmt.6).
+/// site, so neither candidate acquires a guessed edge (§FS-config.3.2.6,
+/// §FS-check.1.1.1, §FS-fmt.6).
 #[test]
 fn off_grammar_local_exact_legacy_and_shorthand_are_ambiguous_without_graph_edge() {
     let root = test_root("local-ambiguity");
@@ -218,7 +218,7 @@ fn off_grammar_local_exact_legacy_and_shorthand_are_ambiguous_without_graph_edge
 }
 
 /// The qualified form reports the same sorted combined target set and remains
-/// absent from both candidates' graph counts (§FS-config.3.2,
+/// absent from both candidates' graph counts (§FS-config.3.2.6,
 /// §FS-workspace.8).
 #[test]
 fn off_grammar_qualified_exact_legacy_and_shorthand_are_ambiguous_without_graph_edge() {

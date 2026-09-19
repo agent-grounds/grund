@@ -14,7 +14,7 @@ const SYMLINK_SKIP: &str = "the platform cannot create a directory symlink under
 /// rather than committed, because git on Windows checks a committed symlink out as
 /// a text file holding its target unless developer mode is on — the fixture would
 /// then be a different tree, and the golden would fail for a reason the case is not
-/// about. §FS-workspace.6.1's containment rule can only be reached through one, so
+/// about. §FS-workspace.6.1.4's containment rule can only be reached through one, so
 /// the corpus needs the affordance.
 fn case_symlinks(case: &Path) -> Vec<(String, String)> {
     let manifest = case.join("symlinks");

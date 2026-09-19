@@ -18,7 +18,7 @@ use init_fixture::{manifest_dir, run_grund, workdir};
 
 #[test]
 fn init_updates_existing_agent_entrypoint_without_creating_agents_md() {
-    // §FS-init.2.1 / §FS-init.2.3: automatic mode preserves an existing repo's
+    // §FS-init.2.1 / §FS-init.2.3.10: automatic mode preserves an existing repo's
     // agent-entrypoint choice instead of adding canonical AGENTS.md.
     let target = workdir("init_updates_existing_agent_entrypoint_without_creating_agents_md");
     fs::write(target.join("CLAUDE.md"), "# Claude notes\n").expect("write CLAUDE.md");
@@ -52,7 +52,7 @@ fn init_updates_existing_agent_entrypoint_without_creating_agents_md() {
     );
 }
 
-/// §FS-init.2.1 / §FS-init.2.3: a workspace-selected companion symlink to
+/// §FS-init.2.1.2 / §FS-init.2.3.12.2: a workspace-selected companion symlink to
 /// AGENTS.md is covered by updating the canonical target, even before the
 /// target exists, rather than writing a companion-only block through it.
 /// §FS-init.2.1.1: the dangling symlink is still Claude's copy of that block,
@@ -101,9 +101,9 @@ fn init_workspace_symlinked_alias_writes_canonical_target() {
 
 #[test]
 fn init_creates_agent_aliases_when_agent_workspaces_exist() {
-    // §FS-init.2.1 / §FS-init.2.3: missing neutral companion aliases are created
+    // §FS-init.2.1.2 / §FS-init.2.3.12.1: missing neutral companion aliases are created
     // only when their owning agent-specific workspace already exists — one per
-    // agent (§FS-init.2.1.1), so `.claude/` yields `CLAUDE.md` alone.
+    // agent (§FS-init.2.1.1.2), so `.claude/` yields `CLAUDE.md` alone.
     let target = workdir("init_creates_agent_aliases_when_agent_workspaces_exist");
     fs::create_dir_all(target.join(".claude")).expect("create .claude");
     fs::create_dir_all(target.join(".gemini")).expect("create .gemini");
@@ -163,7 +163,7 @@ fn init_creates_agent_aliases_when_agent_workspaces_exist() {
     );
 }
 
-/// §FS-init.2.1 / §FS-init.2.3: a present `.cursor/` workspace triggers
+/// §FS-init.2.1.2 / §FS-init.2.3.12.1: a present `.cursor/` workspace triggers
 /// creation of `.cursor/rules/grund.mdc` in automatic mode — the same
 /// pattern that `.claude/` and `.gemini/` use. The legacy `.cursorrules`
 /// is never auto-created.
@@ -197,7 +197,7 @@ fn init_cursor_workspace_creates_cursor_rules_alias() {
     );
 }
 
-/// §FS-init.2.1 / §FS-init.2.3: `.rules` is too generic a filename to
+/// §FS-init.2.1.2 / §FS-init.2.3.12.1: `.rules` is too generic a filename to
 /// attribute to Zed by existence alone — automatic mode must NOT pick it
 /// up. Only an explicit `--zed` flag, or a `.zed/` workspace directory,
 /// creates or updates `.rules`.
@@ -276,7 +276,7 @@ fn init_zed_rules_is_only_workspace_or_flag_gated() {
     );
 }
 
-/// §FS-init.2.1 / §FS-init.2.3: AGENTS.override.md is the "automatic
+/// §FS-init.2.1.2 / §FS-init.2.3.10: AGENTS.override.md is the "automatic
 /// existing-file-only" override channel. When it is the only known agent
 /// entrypoint present, automatic mode treats it as the existing repo's
 /// choice — its managed block is appended/updated and no canonical

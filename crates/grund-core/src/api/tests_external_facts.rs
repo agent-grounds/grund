@@ -1,4 +1,4 @@
-//! Embedding contracts for external facts (§FS-id.1, §FS-id.2.1,
+//! Embedding contracts for external facts (§FS-id.1.2, §FS-id.2.1,
 //! §AR-bindings.2).
 
 use super::*;
