@@ -8,31 +8,42 @@ The `cover` subcommand exposes the citation graph as data: for each scanned file
 grund cover [<path>] [--format text|json]
 ```
 
-- `<path>` — directory or file whose tree is scanned. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). It bounds the **walk**, exactly as it does for `grund check`, and that is what decides the scope ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)):
-  - absent, or the config root, at a workspace root → every project the workspace covers;
-  - inside a member → that member alone;
-  - narrower than the config root → that subtree alone, one project, the way `grund check <dir>` narrows ([§FS-workspace.5](FS-workspace.md#5-command-scope)). An explicit path bypasses `[scan] include`, so it is the caller's scope and never widened back.
-- `--format text|json` — output shape (§3). Default `text`. A value outside that set is a usage error the caller can fix without touching the repository, so it is answered **before anything is loaded**: the scan can fail first (§4), and which of two errors a caller sees must not depend on the tree they happened to point at. A `[output] format` key carrying an unsupported value is a property of the tree, so it is reported after the load, like any other config fault.
+- `<path>` — directory or file whose tree is scanned. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). It bounds the **walk**, exactly as it does for `grund check`, and that is what decides the scope: every project at a workspace root, that member alone inside a member, that subtree alone below a config root ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
+- `--format text|json` — output shape (§3). Default `text`. An unsupported value is answered before anything is loaded (§1.1).
 
 `cover` is a query, like `list` and `refs` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). It reads no git history ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)) and parses no AST ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).
 
+### 1.1 An unsupported `--format` is answered before the load
+
+A `--format` value outside `text|json` is a usage error the caller can fix without touching the repository, so it is answered **before anything is loaded**: the scan can fail first (§4), and which of two errors a caller sees must not depend on the tree they happened to point at. A `[output] format` key carrying an unsupported value is a property of the tree, so it is reported after the load, like any other config fault.
+
 ## 2. Behaviour
+
+`cover` runs the same scan as `check`, `list`, and `refs` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)) and only renders the `Findings` the scanner already collected. It does not decide whether a file is sufficiently covered, whether a hunk is behavioral, or whether a spec/test co-change is required; those are recipe concerns ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)).
+
+Output is grouped by scanned file, sorted by path. Within a file, citations are sorted by `(line, column)`. Files with no recognised citations are still included, so a caller can distinguish "the file was scanned and cites nothing" from "the file was outside the scan scope." A citation object is the same shape `grund refs --format=json` emits (§3.2): path, line, column, rendered ID, optional section, marker boolean, and the verbatim token text.
+
+Which citations count is §2.1 for a cross-project one, §2.2 for a value binding's, §2.3 for one whose fetched snapshot is missing, and §2.4 for a declaration-backed exact one.
+
+### 2.1 A cross-project citation counts
+
+Every citation the scanner recognised in the file counts, **including a cross-project `<§><alias>/<ID>`**, and its rendered `id` keeps the alias it was written with and adds none of its own. `cover` does not judge whether the alias resolves; an unknown one is a `check` error, not a reason to drop the row. The rules and their reasons are [§FS-workspace.8.6.3](FS-workspace.md#863-qualified-citations-count-toward-the-citing-file) and [§FS-workspace.8.6.4](FS-workspace.md#864-the-rendered-id-says-what-the-token-says), decided in [§DF-cover-workspace-scope](../decisions/functional/DF-cover-workspace-scope.md#df-cover-workspace-scope-cover-indexes-the-whole-run-and-counts-cross-project-citations).
+
+### 2.2 A value binding's citation
 
 A recognized value binding contributes its ordinary citation to the citing scanned file. Home JSON is catalog input, not a scanned citing file, and therefore adds no file or citation row ([§FS-values.2.2](FS-values.md#22-json-declarations-from-the-kind-home), [§FS-values.3.2](FS-values.md#32-recognized-text-contexts)).
 
-`cover` runs the same scan as `check`, `list`, and `refs` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)). It does not decide whether a file is sufficiently covered, whether a hunk is behavioral, or whether a spec/test co-change is required; those are recipe concerns ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)). The command only renders the `Findings` the scanner already collected.
+### 2.3 A citation whose fetched snapshot is missing
 
 A citation parsed under a per-kind format is included even while its fetched
 snapshot is missing. Fetching changes resolution, not whether the citing file
 is covered. `cover` remains offline and never invokes the integration.
 
+### 2.4 A declaration-backed exact citation
+
 A declaration-backed exact marked citation retained through [§FS-config.3.2](FS-config.md#32-id--id-grammar) is
-likewise counted at its written site and rendered with its exact ID. `cover`
+counted at its written site and rendered with its exact ID. `cover`
 consumes the shared scanner result and adds no fallback grammar of its own.
-
-Output is grouped by scanned file, sorted by path. Within a file, citations are sorted by `(line, column)`. Files with no recognised citations are still included, so a caller can distinguish "the file was scanned and cites nothing" from "the file was outside the scan scope." A citation object is the same shape `grund refs --format=json` emits: path, line, column, rendered ID, optional section, marker boolean, and the verbatim token text.
-
-Every citation the scanner recognised in the file counts, **including a cross-project `<§><alias>/<ID>`** — that is a thing the file leans on, and omitting it reports a fully grounded file as citing nothing ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover), [§DF-cover-workspace-scope](../decisions/functional/DF-cover-workspace-scope.md#df-cover-workspace-scope-cover-indexes-the-whole-run-and-counts-cross-project-citations)). The rendered `id` keeps the alias the citation was written with and adds none of its own, so it is the canonical spelling of the token the file actually carries ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover) gives the rule for naming the target it points at). `cover` does not judge whether the alias resolves; an unknown one is a `check` error ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)), not a reason to drop the row.
 
 ## 3. Outputs
 
@@ -70,7 +81,7 @@ In workspace mode both the per-file object and each nested citation object gain 
 
 - `0` — scan succeeded; the emitted file records are the result.
 - `2` — the run could not read the tree it was asked about, in either of two ways:
-  - **A config the run needs does not load** — including a `[workspace]` block whose members cannot be expanded (a duplicate or invalid alias, a missing member, a block with nothing in scope). Before the index existed at workspace scope, `cover` never read those keys and answered `0` over the root project alone while `grund list` on the same tree failed; the two now agree ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
+  - **A config the run needs does not load** — including a `[workspace]` block whose members cannot be expanded (a duplicate or invalid alias, a missing member, a block with nothing in scope). `cover` indexes the whole workspace ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)), so it fails on such a tree exactly where `grund list` does.
   - **A scan / I/O error in any project the run loaded** ([§FS-check.2](FS-check.md#2-outputs) partial-scan semantics apply: records found before or after the unreadable file may print, but the result is not trustworthy as complete). A member's unreadable file fails the run at the workspace root, because the index the run just printed is incomplete for the tree it claimed ([§FS-workspace.8.7](FS-workspace.md#87-output-and-exit-codes)).
 
 There is no `1`: `cover` is a query over the current tree and has no finding class of its own.
