@@ -16,31 +16,78 @@ grund show --batch [<path>] --format=json [--brief | --toc | --full] [--path <pa
 grund show --batch --all [<path>] --format=json [--brief | --toc | --full] [--path <path>]
 ```
 
-- `<ID>` — the full ID without the marker (e.g. `FS-check`). May include an inline section (`FS-check.3.1`). Parsing first accepts the named kind's effective grammar, then exact written IDs retained in that project's shared catalog for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)); an off-grammar string with no exact declaration remains invalid. The dotted form uses the configured `[id] section_separator`. The one inline ambiguity a loaded config leaves is [§FS-config.3.2](FS-config.md#32-id--id-grammar)'s catalog-prefix case — competing valid readings of where the ID ends and the section begins — which fails rather than guesses. In a kind whose effective format carries both `{number}` and `{slug}`, the number-only shorthand is also accepted — `grund FS-042` and `grund FS-042.1` read `FS-042-user-login` ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)). Nothing is persisted by a query, so the shorthand is convenience here rather than the error it is in a file under the default `[reference] shorthand = "canonical"` ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)); shorthand, duplicate, exact-ID, and section interpretations obey [§FS-config.3.2](FS-config.md#32-id--id-grammar)'s fail-rather-than-guess precedence. All four whole-declaration slices and both section forms apply unchanged to an exact off-grammar declaration. A missing fetch-backed snapshot is still a failed offline query; `show` never invokes its fetcher ([§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)).
-- `show` is optional when the first non-flag word is the ID: `grund FS-check`, `grund FS-check --toc`, and `grund --toc FS-check` are byte-for-byte equivalent to their explicit `grund show …` forms ([§FS-cli.1](FS-cli.md#1-the-default-subcommand)).
-- `<path>` — directory or file whose tree is scanned to resolve the ID. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). `--path <path>` is an accepted alias for scripts that prefer to pass it as a flag; the two forms are equivalent.
-- `--section <s>` — alternative way to specify a section path (`3.1`). Mutually exclusive with the dotted form. Composes with each `--brief` / `--toc` / `--full` slice exactly as the dotted form does (§2.2).
-- `--brief` — print the title (declaration or selected-section heading) plus only the first blank-line-separated paragraph below it. The cheapest "what is this about" view — a hover-preview slice (§2.1.1).
-- (no flag, the default) — print the lead: the prose between the heading and the first child section heading. Cut at the first *citable* point (a numbered subsection), so an agent landing on a bare `§<ID>` reads enough to know whether to fetch a deeper section (§2.1).
-- `--toc` — print the default *plus* the headings of every nested subsection, in document order. The move when the next step is `grund <ID>.<sec>` and the section number needs to be chosen (§2.1.2).
+The first form reads one coordinate: `<ID>` names it (§1.1, §1.2), `show` itself
+may be omitted (§1.3), `<path>` picks the tree (§1.4), `--section` or the dotted
+form picks a section (§1.5), one slice flag picks how much (§1.6), and `--format`
+picks the shape (§1.7). The two `--batch` forms answer many coordinates from one
+load: an explicit query stream (§1.8) or every coordinate in scope (§1.9).
+
+### 1.1 `<ID>`
+
+`<ID>` is the full ID without the marker (e.g. `FS-check`). It may include an inline section (`FS-check.3.1`); the dotted form uses the configured `[id] section_separator`. Beyond the kind's grammar it accepts an exact off-grammar ID the catalog retains (§1.1.1); the catalog-prefix ambiguity fails rather than guesses (§1.1.2); and a missing fetch-backed snapshot is a failed offline query (§1.1.3).
+
+#### 1.1.1 Exact off-grammar IDs
+
+Parsing first accepts the named kind's effective grammar, then exact written IDs retained in that project's shared catalog for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)); an off-grammar string with no exact declaration remains invalid. All four whole-declaration slices and both section forms apply unchanged to an exact off-grammar declaration.
+
+#### 1.1.2 Where the ID ends and the section begins
+
+The one inline ambiguity a loaded config leaves is [§FS-config.3.2](FS-config.md#32-id--id-grammar)'s catalog-prefix case — competing valid readings of where the ID ends and the section begins — which fails rather than guesses.
+
+#### 1.1.3 A missing fetched snapshot
+
+A missing fetch-backed snapshot is still a failed offline query; `show` never invokes its fetcher ([§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)).
+
+### 1.2 The number-only shorthand
+
+In a kind whose effective format carries both `{number}` and `{slug}`, the number-only shorthand is also accepted — `grund FS-042` and `grund FS-042.1` read `FS-042-user-login` ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)). Nothing is persisted by a query, so the shorthand is convenience here rather than the error it is in a file under the default `[reference] shorthand = "canonical"` ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)); shorthand, duplicate, exact-ID, and section interpretations obey [§FS-config.3.2](FS-config.md#32-id--id-grammar)'s fail-rather-than-guess precedence.
+
+### 1.3 `show` is optional
+
+`show` is optional when the first non-flag word is the ID: `grund FS-check`, `grund FS-check --toc`, and `grund --toc FS-check` are byte-for-byte equivalent to their explicit `grund show …` forms ([§FS-cli.1](FS-cli.md#1-the-default-subcommand)).
+
+### 1.4 `<path>` and `--path`
+
+`<path>` is the directory or file whose tree is scanned to resolve the ID. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). `--path <path>` is an accepted alias for scripts that prefer to pass it as a flag; the two forms are equivalent.
+
+### 1.5 `--section <s>`
+
+`--section <s>` is an alternative way to specify a section path (`3.1`). Mutually exclusive with the dotted form. Composes with each `--brief` / `--toc` / `--full` slice exactly as the dotted form does (§2.2).
+
+### 1.6 How much: `--brief`, the default, `--toc`, `--full`
+
+`--brief`, `--toc`, and `--full` are mutually exclusive — each picks one rung on the "how much" ladder: title + 1 paragraph → lead prose → lead + section map → full body. The rungs' bodies are strictly nested (each contains the previous), so escalating is always one more flag; in `text` only `--brief` keeps the whole-declaration H1 (§2.1.1, §3.1), so for a one-paragraph lead it is longer than the default and not contained in it.
+
+- `--brief` — the cheapest "what is this about" view, a hover-preview slice (§2.1.1).
+- (no flag, the default) — the lead, cut at the first *citable* point, so an agent landing on a bare `§<ID>` reads enough to know whether to fetch a deeper section (§2.1).
+- `--toc` — the move when the next step is `grund <ID>.<sec>` and the section number needs to be chosen (§2.1.2).
 - `--full` — print the entire body: heading down to the next same-or-shallower ID heading, all subsections recursively included. The escalation when narrower slices are not enough (§2.1.3).
-- `--brief`, `--toc`, and `--full` are mutually exclusive — each picks one rung on the "how much" ladder: title + 1 paragraph → lead prose → lead + section map → full body. The rungs' bodies are strictly nested (each contains the previous), so escalating is always one more flag; in `text` only `--brief` keeps the whole-declaration H1 (§3.1), so for a one-paragraph lead it is longer than the default and not contained in it.
-- `--format` — output shape; defaults to `text` (just the body, no headers).
-- `--batch` is available only on the explicit `show` subcommand and requires
-  `--format=json`. Without `--all`, it reads one query object per non-empty stdin
-  line: `{"id":"api/FS-login","section":"3.1"}`. `id` is required and must be a
-  string; `section` is optional and must be a string or `null`; unknown fields,
-  malformed JSON, and any other shape are batch-input errors. The `id` field
-  accepts every local, qualified, shorthand, and inline-section spelling the
-  single-coordinate form accepts. An explicit non-null `section` and an inline
-  section in `id` form a valid record whose query fails rather than malformed
-  input. The whole input is validated before configuration discovery or scanning.
-- `--batch --all` reads no stdin and discovers its query set from the selected
-  scope (§2.6). `--all` requires `--batch`; stdin supplied with `--all` is not a
-  query source. Both batch forms use one invocation-level slice mode. `--section`
-  is rejected in batch mode because each explicit record owns its section and the
-  exhaustive form generates sections. `<path>` and `--path` retain their existing
-  equivalence and mutual exclusion.
+
+### 1.7 `--format`
+
+`--format` — output shape (§3.1); defaults to `text` (just the body, no headers).
+
+### 1.8 `--batch`: an explicit query stream
+
+`--batch` is available only on the explicit `show` subcommand and requires
+`--format=json`. Without `--all`, it reads one query object per non-empty stdin
+line: `{"id":"api/FS-login","section":"3.1"}`. `id` is required and must be a
+string; `section` is optional and must be a string or `null`; unknown fields,
+malformed JSON, and any other shape are batch-input errors. The `id` field
+accepts every local, qualified, shorthand, and inline-section spelling the
+single-coordinate form accepts. An explicit non-null `section` and an inline
+section in `id` form a valid record whose query fails rather than malformed
+input (§2.6.3). The whole input is validated before configuration discovery or
+scanning.
+
+### 1.9 `--batch --all`: every coordinate in scope
+
+`--batch --all` reads no stdin and discovers its query set from the selected
+scope (§2.6.2). `--all` requires `--batch`; stdin supplied with `--all` is not a
+query source. Both batch forms use one invocation-level slice mode. `--section`
+is rejected in batch mode because each explicit record owns its section and the
+exhaustive form generates sections. `<path>` and `--path` retain their existing
+equivalence and mutual exclusion.
 
 ## 2. Behavior
 
@@ -54,9 +101,7 @@ Opted-in JSON value declarations are members of the same catalog. For one, `show
 
 `grund FS-check` prints the *lead* — the prose between the declaration heading and the first child citable section heading (`## 1. ...`, or `## goals: ...` when named sections are enabled). The opening heading is omitted in `text` format and included in `md`. A named heading is a citable point and cuts its parent's lead exactly as a numbered heading does; a plain heading remains prose and does not cut it. This is the new default: a 1–2 paragraph slice that names what the declaration is about, without paying for the whole body. Decided in [§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in).
 
-If a declaration has no lead paragraph (its body opens directly with `## 1. ...`), the default prints **nothing** and exits `0`. This is not an error: the declaration simply has no lead. Callers (IDE hovers, agents) can detect this case by the empty output and escalate to `--toc` or `--full`. We do not auto-fall-back; the caller knows what it wants.
-
-`grund FS-check.3.1` applies the same cut one level down. It prints the selected section heading (`### 3.1 ...`) and the prose between that heading and the first *child* heading (`#### 3.1.1 ...`). The section heading is kept in both `text` and `md` — only the whole-declaration H1 is omitted by `text` (§3.1). If the section opens directly with a sub-subsection, the output is just the section heading line. A section that does not exist is still a `section not found` error.
+A declaration with no lead prints nothing (§2.1.4); a selected section gets the same cut one level down (§2.1.5).
 
 #### 2.1.1 Brief (`--brief`)
 
@@ -64,11 +109,19 @@ If a declaration has no lead paragraph (its body opens directly with `## 1. ...`
 
 `--brief` always includes the heading line so the slice is self-labeled, regardless of `text` vs `md`. This is the one mode where the `text` rule of "omit the H1" yields ([§FS-show.3.1](FS-show.md#31-format-variants)): a single paragraph with no title is unreadable for the hover-preview use case. In `text` the heading is rendered as written, with the leading `#` prefixes preserved.
 
+With no lead prose, `--brief` prints the heading line alone and exits `0`; with `--section` or the dotted form it prints the section heading and its first paragraph, or the heading alone when a sub-subsection opens the section (§2.1.1.1).
+
+##### 2.1.1.1 With no lead, the heading alone
+
 If the declaration has no lead prose (opens directly with `## 1. ...`), `--brief` prints just the heading line and exits `0`. With `--section` / the dotted form, `--brief` prints the section heading and the first paragraph under it; if the section opens directly with a sub-subsection, just the section heading is printed.
 
 #### 2.1.2 Section map (`--toc`)
 
-`grund --toc FS-check` prints the default lead (§2.1), then a blank line, then every citable section heading in the declaration body, one per line, in document order, each at the depth and in the complete form it was written (`## 1. Inputs`, `## goals: Goals`, `### goals.performance: Performance`, …). No section bodies. The heading lines are emitted verbatim — the same bytes `--full` would show for those lines — so the coordinate the reader needs is right there to feed back into `grund FS-check.<path>`. No generated summary, ever: `--toc` is a structural slice, as deterministic as the default ([§FS-errors.4](FS-errors.md#4-determinism)). A whole-declaration TOC still lists every claimant of a duplicate named coordinate; selecting that coordinate refuses as ambiguous.
+`grund --toc FS-check` prints the default lead (§2.1), then a blank line, then every citable section heading in the declaration body, one per line, in document order, each at the depth and in the complete form it was written (`## 1. Inputs`, `## goals: Goals`, `### goals.performance: Performance`, …). No section bodies. The heading lines are emitted verbatim — the same bytes `--full` would show for those lines — so the coordinate the reader needs is right there to feed back into `grund FS-check.<path>`. No generated summary, ever: `--toc` is a structural slice, as deterministic as the default ([§FS-errors.4](FS-errors.md#4-determinism)). A whole-declaration TOC still lists every claimant of a duplicate named coordinate; selecting that coordinate refuses as ambiguous (§2.2.2.3).
+
+Which headings the map holds is §2.1.2.1; what it prints when the lead or the map is empty is §2.1.2.2; a selected section's map is §2.1.2.3.
+
+##### 2.1.2.1 The map is the declaration's body span
 
 A coordinate enters the section map only when its heading lies inside that
 declaration's existing body span. The span, not the most recently scanned
@@ -82,7 +135,11 @@ pseudo-headings remain content under §2.5. This boundary does not make an
 otherwise legal plain heading inside a body an error; that separate policy is
 outside this contract.
 
+##### 2.1.2.2 An empty lead, an empty map
+
 If the lead is empty (`## 1.` or `## goals:` opens the body), the leading blank line is omitted — the output is the section map only. If the body has no citable headings (a short declaration that is all lead prose, an E2E manifest), `--toc` prints the default and nothing else. If both are empty, `--toc` prints **nothing** and exits `0`.
+
+##### 2.1.2.3 A selected section's map
 
 `grund --toc FS-check.3.1` restricts the map to headings **nested under** the selected section: it prints `### 3.1`'s lead, then a blank line, then `#### 3.1.1 …`, `#### 3.1.2 …`, and so on, stopping at the next sibling-or-shallower heading. A selected section with no nested headings is just its lead — i.e. behaves like the default. A section that does not exist is still a `section not found` error.
 
@@ -91,6 +148,14 @@ If the lead is empty (`## 1.` or `## goals:` opens the body), the leading blank 
 `grund --full FS-check` prints from the heading of `FS-check` to the start of the next ID heading (or end of file). Every subsection and sub-subsection body is included. With `--section` / the dotted form, `--full` prints the selected section's heading and full body — the same slice §2.2 defines. The opening heading is omitted in `text` and included in `md`, as in the default.
 
 `--full` is the escalation path when `--brief`, the default, and `--toc` are not enough. It is also the way to recover today's pre-[§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in) behavior: use `grund <ID> --full`.
+
+#### 2.1.4 A declaration with no lead prints nothing
+
+If a declaration has no lead paragraph (its body opens directly with `## 1. ...`), the default prints **nothing** and exits `0`. This is not an error: the declaration simply has no lead. Callers (IDE hovers, agents) can detect this case by the empty output and escalate to `--toc` or `--full`. We do not auto-fall-back; the caller knows what it wants.
+
+#### 2.1.5 A section's lead
+
+`grund FS-check.3.1` applies the same cut one level down. It prints the selected section heading (`### 3.1 ...`), kept in `text` as in `md` (§2.2), and the prose between that heading and the first *child* heading (`#### 3.1.1 ...`). If the section opens directly with a sub-subsection, the output is just the section heading line. A section that does not exist is still a `section not found` error.
 
 ### 2.2 Section
 
@@ -101,21 +166,11 @@ If the lead is empty (`## 1.` or `## goals:` opens the body), the leading blank 
 - `--toc`: section heading + lead + nested heading map.
 - `--full`: section heading + full body (everything down to the next sibling-or-shallower heading; nested deeper headings included).
 
-The selected section heading is printed verbatim in all four modes — `text` strips only the whole-declaration H1, not section headings (§3.1). For `--brief`, the section heading is the slice's self-label. Named paths, including `name.number`, compose with default, brief, TOC, full, and `--section` exactly as numeric paths do. Arbitrary nesting depth is supported per [§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth).
-
-Every coordinate-bearing surface reads this same body-local map: direct and
-batch `show`, exhaustive batch generation, citation and value resolution,
-`refs`, completion, list/size output, duplicate detection, and LSP navigation,
-references, highlights, and hover counts. A heading rejected by §2.1.2 can
-therefore neither resolve nor be suggested, listed, measured, navigated to,
-validated as an embedded-value root, or treated as a duplicate claimant. A
-query for its coordinate has the ordinary `section not found` result and hint
-from §3, emits none of the outside heading's body, and never substitutes the
-located `check` finding for query semantics.
+The selected section heading is printed verbatim in all four modes — `text` strips only the whole-declaration H1, not section headings (§3.1). For `--brief`, the section heading is the slice's self-label. Named paths, including `name.number`, compose with default, brief, TOC, full, and `--section` exactly as numeric paths do. Arbitrary nesting depth is supported per [§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth). Every surface that names a section reads the same map (§2.2.3).
 
 #### 2.2.1 Ambiguous ID
 
-If an ID has more than one home — the duplicate-declaration error from [§FS-check.3.3](FS-check.md#33-duplicate-declaration) — `show` does not pick one. A stub paired with the inline declaration it points at is *one* home, not two; ambiguity means two or more independent declarations remain after that pairing collapses. When ambiguous, `show` exits 1 with a single bare stderr line (no `<path>:<line>:` prefix, since there is no single site to point at):
+If an ID has more than one home — the duplicate-declaration error from [§FS-check.3.3](FS-check.md#33-duplicate-declaration) — `show` does not pick one. A stub paired with the inline declaration it points at is *one* home, not two; ambiguity means two or more independent declarations remain after that pairing collapses. When ambiguous, `show` exits 1 with a single bare stderr line — no `<path>:<line>:` prefix ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)):
 
 ```
 ambiguous ID: <ID> (declared at <path>:<line>, <path>:<line>[, ...])
@@ -123,13 +178,17 @@ ambiguous ID: <ID> (declared at <path>:<line>, <path>:<line>[, ...])
 
 Sites are listed in lexicographic `path:line` order so the message is stable across runs. The repo must be fixed (run `grund check` first) before `show` will return a body. With `--format=json`, those same sites travel in the diagnostic's `sites` field, `[{ path, line }]` in the same order ([§FS-errors.5](FS-errors.md#5-json-format)).
 
+This shape matches the bare-message form used for `ID not found` and `section not found` ([§FS-show.3](FS-show.md#3-outputs)): all three are queries that found something other than exactly one body. An ambiguous number-only shorthand fails the same way but names candidates rather than sites (§2.2.1.1).
+
+##### 2.2.1.1 An ambiguous shorthand names its candidates
+
 A number-only shorthand argument ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) fails the same way for a different reason — not one ID with two homes, but one abbreviation naming two IDs — so it names the **candidates** rather than the sites:
 
 ```
 ambiguous ID: FS-042 (matches FS-042-user-login, FS-042-user-logout)
 ```
 
-Candidates are listed in ID order, and the repo needs no fixing: the caller does, by passing one of the full IDs. Nothing is guessed at ([§DF-number-only-citation-shorthand.2.7](../decisions/functional/DF-number-only-citation-shorthand.md#27-ambiguity-is-reported-never-guessed), [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). This shape matches the bare-message form used for `ID not found` and `section not found` ([§FS-show.3](FS-show.md#3-outputs)): all three are queries that found something other than exactly one body.
+Candidates are listed in ID order, and the repo needs no fixing: the caller does, by passing one of the full IDs. Nothing is guessed at ([§DF-number-only-citation-shorthand.2.7](../decisions/functional/DF-number-only-citation-shorthand.md#27-ambiguity-is-reported-never-guessed), [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)).
 
 #### 2.2.2 Ambiguous section
 
@@ -141,56 +200,71 @@ ambiguous section: FS-001-login.1 (declared at docs/functional-spec/FS-001-login
 
 Sites are in `path:line` order, as in §2.2.1, and the exit is `1` with the bare stderr line of [§FS-errors.2.3](FS-errors.md#23-bare-query-failure). The repo must be fixed before `show` will return a body. With `--format=json`, the same sites travel in the diagnostic's `sites` field too ([§FS-errors.5](FS-errors.md#5-json-format)).
 
+What this replaces is worse than a pick: the reader used to get *both* headings and both bodies concatenated into one slice, a body no heading in the file spans ([§DF-duplicate-section-path.1](../decisions/functional/DF-duplicate-section-path.md#1-context)).
+
+The failure has its own code (§2.2.2.1) and refuses exactly what `check` reports (§2.2.2.2); the whole-declaration map still lists both headings (§2.2.2.3), and only the requested path can collide (§2.2.2.4).
+
+##### 2.2.2.1 Its own code, `ambiguous-section`
+
 The code is `ambiguous-section`, not §2.2.1's `ambiguous` ([§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)). The two failures need different edits — one ID with two homes is fixed in whichever file should not have declared it, one declaration with two `1.` headings is fixed by renumbering inside it — and the check side already spells that difference `duplicate` versus `duplicate-section` ([§FS-check.3.16](FS-check.md#316-duplicate-section-path)). Reusing one code would leave a JSON consumer parsing the message prose to tell them apart, the cost [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) refused to pay for its own four rules. Nothing regresses by adding it: before this rule the query returned a body and exit `0`, so no consumer ever saw `ambiguous` here to filter on.
+
+##### 2.2.2.2 The headings `check` counts
 
 Which headings count is [§FS-check.3.16](FS-check.md#316-duplicate-section-path)'s question, answered once: `show` refuses exactly the coordinates that rule reports, from the same recorded section set, so no coordinate is clean in `check` and unresolvable in `show`. For a stub (§2.3.4) that set is the **inline home's** — the file the query reads — never the stub's own prose.
 
-What this replaces is worse than a pick: the reader used to get *both* headings and both bodies concatenated into one slice, a body no heading in the file spans ([§DF-duplicate-section-path.1](../decisions/functional/DF-duplicate-section-path.md#1-context)).
+##### 2.2.2.3 The whole-declaration map still lists both
 
 `--toc` over the **whole declaration** (§2.1.2) is the exception and still lists both heading lines — it is a map of what is written, and seeing the collision is the point. `grund FS-001-login.1 --toc` is not that map: it selects the ambiguous coordinate, so it refuses like every other slice. The exemption is for the query that asks what the declaration contains, not for the one that asks which of two headings section `1` is.
 
+##### 2.2.2.4 Only the requested path can collide
+
 A duplicate elsewhere in the declaration is not this error: only a collision on the **requested** path can make the query ambiguous, so `grund FS-001-login.2` answers normally while `grund FS-001-login.1` refuses. `grund check` reports the file either way.
+
+#### 2.2.3 Every surface reads the same section map
+
+Every coordinate-bearing surface reads the same body-local map (§2.1.2.1):
+direct and batch `show`, exhaustive batch generation, citation and value
+resolution, `refs`, completion, list/size output, duplicate detection, and LSP
+navigation, references, highlights, and hover counts. A heading rejected by
+§2.1.2.1 can therefore neither resolve nor be suggested, listed, measured, navigated to,
+validated as an embedded-value root, or treated as a duplicate claimant. A
+query for its coordinate has the ordinary `section not found` result and hint
+from §3, emits none of the outside heading's body, and never substitutes the
+located `check` finding for query semantics.
 
 ### 2.3 Inline declarations in code and doc-comments
 
 When the ID's home is in code — whether discovered directly, enrolled by its kind's canonical index link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), or paired with a [§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub) stub — `show` extracts the comment block surrounding the inline declaration, strips comment markers, and prints the resulting prose. Index enrollment creates no declaration and therefore changes no query resolution. The same section logic applies — and so do the `--brief` / (default) / `--toc` / `--full` slices, computed over the stripped block exactly as over a `.md` body (the lead is what precedes the first citable heading inside the comment; the section map is the citable headings recorded within it, per §2.3.3).
 
-The scanner recognizes the same doc-comment forms enumerated in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architectural spec can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the rendered Javadoc lead — same content the optional LSP server shows on hover ([§FS-lsp.1.2](FS-lsp.md#12-hover-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
-
 A code-resident declaration is written as `<comment-marker> <ID>: <title>` (or bare `<ID>: <title>` inside a Python docstring), with no markdown `#` prefix. Decided in [§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix).
 
-A single doc-comment may declare **multiple** IDs — most usefully an `AR-` and an `FS-` co-located on the same class — and each gets its own body. The scanner ends each declaration's block at the next declaration line in either direction (§2.3.1.3 below):
-
-```rust
-/// AR-router: In-process event router
-///
-/// Implements the publish-subscribe contract from §FS-events.
-///
-/// FS-router-priority: Routes are matched in declared priority order
-///
-/// Ties broken by registration order; see §DF-router-tiebreak.
-pub struct Router { ... }
-```
-
-`grund AR-router` returns the first body; `grund FS-router-priority` returns the second. Multi-declaration comments compose with every slice flag (`--brief`, default, `--toc`, `--full`) because each is just a normal declaration the scanner happens to have found in the same doc-comment.
+The doc-comment forms are §2.3.5, and one doc-comment may hold several declarations (§2.3.6).
 
 #### 2.3.1 What counts as the "comment block"
 
 Extraction is precisely defined so that the implementation has no freedom and the same input produces the same output across editor, CLI, and binding callers.
 
-A declaration is found on a "declaration line" — a line that matches the declaration regex from [AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection) *and* sits inside a comment or docstring. The block surrounding it is computed as follows:
+A declaration is found on a "declaration line" — a line that matches the declaration regex from [AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection) *and* sits inside a comment or docstring. The block surrounding it runs from an open boundary (§2.3.1.1) to a close boundary (§2.3.1.2), and ends early at any other declaration line (§2.3.1.3).
 
-1. **Find the open boundary.** Walk **backwards** from the declaration line over consecutive lines that are part of the same comment construct:
-   - For line-style comments (`//`, `///`, `//!`, `#`, `;`, `--`): consecutive lines whose first non-whitespace character matches the same comment prefix family. A blank line ends the block. A line whose first non-whitespace character is not a comment marker ends the block.
-   - For block-style comments (`/* … */`, `/** … */`): walk backward until the opener is found (`/*` or `/**`). The opener line itself is part of the block.
-   - For Python triple-quoted docstrings: walk backward until the opening `"""` (or `'''`). The opener line is part of the block.
+##### 2.3.1.1 Find the open boundary
 
-2. **Find the close boundary.** Walk **forwards** from the declaration line by the symmetric rules:
-   - Line-style: until a blank line or a non-comment line.
-   - Block-style: until the closing `*/`. The closer line is part of the block.
-   - Python docstring: until the matching `"""` or `'''`. The closer line is part of the block.
+Walk **backwards** from the declaration line over consecutive lines that are part of the same comment construct:
 
-3. **Terminate early on another declaration.** Walking in **either direction**, if another declaration line of any ID is encountered, the block ends at the line before it. This is what allows two adjacent inline declarations to live in the same comment without bleeding into each other — backward termination keeps a later declaration's block from absorbing the previous declaration's tail; forward termination keeps the previous declaration's block from absorbing the next declaration's head.
+- For line-style comments (`//`, `///`, `//!`, `#`, `;`, `--`): consecutive lines whose first non-whitespace character matches the same comment prefix family. A blank line ends the block. A line whose first non-whitespace character is not a comment marker ends the block.
+- For block-style comments (`/* … */`, `/** … */`): walk backward until the opener is found (`/*` or `/**`). The opener line itself is part of the block.
+- For Python triple-quoted docstrings: walk backward until the opening `"""` (or `'''`). The opener line is part of the block.
+
+##### 2.3.1.2 Find the close boundary
+
+Walk **forwards** from the declaration line by the symmetric rules:
+
+- Line-style: until a blank line or a non-comment line.
+- Block-style: until the closing `*/`. The closer line is part of the block.
+- Python docstring: until the matching `"""` or `'''`. The closer line is part of the block.
+
+##### 2.3.1.3 Terminate early on another declaration
+
+Walking in **either direction**, if another declaration line of any ID is encountered, the block ends at the line before it. This is what allows two adjacent inline declarations to live in the same comment without bleeding into each other — backward termination keeps a later declaration's block from absorbing the previous declaration's tail; forward termination keeps the previous declaration's block from absorbing the next declaration's head.
 
 #### 2.3.2 Stripping comment markers
 
@@ -210,7 +284,7 @@ Section selection (`AR-<event-bus>.2`) works the same way inside a doc-comment a
 
 #### 2.3.4 Broken stub
 
-If the ID's only home is a stub (`# <ID>: [<text>](<path>)`) whose link is broken — the `<path>` does not exist, or the file at `<path>` contains no inline declaration of `<ID>` (the [§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub) error) — `show` has no body to extract. It exits `1` with a bare query-result line ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)), not a `path:line:` finding:
+If the ID's only home is a stub (`# <ID>: [<text>](<path>)`) whose link is broken — the `<path>` does not exist, or the file at `<path>` contains no inline declaration of `<ID>` (the [§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub) error) — `show` has no body to extract. It exits `1` with a bare query-failure line ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)), not a `path:line:` finding:
 
 ```
 broken stub: <ID> (stub at <path>:<line> points at <target>, which does not exist)
@@ -218,6 +292,27 @@ broken stub: <ID> (stub at <path>:<line> points at <target>, which contains no i
 ```
 
 This is the same "found something other than exactly one body" family as `ID not found` and `ambiguous ID` (§3). Run `grund check` to see the error in located form; fix the stub or the target before `show` will return a body.
+
+#### 2.3.5 The doc-comment forms
+
+The scanner recognizes the same doc-comment forms enumerated in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architectural spec can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the rendered Javadoc lead — same content the optional LSP server shows on hover ([§FS-lsp.1.2](FS-lsp.md#12-hover-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
+
+#### 2.3.6 Several declarations in one doc-comment
+
+A single doc-comment may declare **multiple** IDs — most usefully an `AR-` and an `FS-` co-located on the same class — and each gets its own body. The scanner ends each declaration's block at the next declaration line in either direction (§2.3.1.3):
+
+```rust
+/// AR-router: In-process event router
+///
+/// Implements the publish-subscribe contract from §FS-events.
+///
+/// FS-router-priority: Routes are matched in declared priority order
+///
+/// Ties broken by registration order; see §DF-router-tiebreak.
+pub struct Router { ... }
+```
+
+`grund AR-router` returns the first body; `grund FS-router-priority` returns the second. Multi-declaration comments compose with every slice flag (`--brief`, default, `--toc`, `--full`) because each is just a normal declaration the scanner happens to have found in the same doc-comment.
 
 ### 2.4 E2E cases
 
@@ -232,7 +327,15 @@ fixtures:
 …
 ```
 
-The first line is the invocation (`grund check` when the case has no `command.args`); then an `expected exit: <code>` line; then a `fixtures:` line followed by one `- <path>` line per file in the case directory, paths relative to that directory, sorted lexicographically — deterministic for a given tree. `--full` produces this output. The default and `--toc` produce the same output (an E2E manifest has no heading tree, so the default's "lead" *is* the manifest). `--brief` prints only the first line (the invocation). Section paths are not defined for E2E cases (the manifest is not a numbered-heading tree); `grund E2E-<name>.1` is a section-not-found error. `--format=json` emits a single object `{"id":"E2E-<name>","kind":"E2E","path":"e2e/cases/<name>","args":[…],"expected_exit":<code>,"fixtures":[…]}` — `path` is the case directory under the configured `E2E` home; `e2e/cases/<name>` is the example produced by the conventional configuration that selects that folder. `args` is the parsed `command.args` (empty when there is none), `fixtures` the same sorted relative-path list; `--brief` / `--toc` / default over a case do not change this object (the manifest has no headings or lead prose to slice further).
+The first line is the invocation (`grund check` when the case has no `command.args`); then an `expected exit: <code>` line; then a `fixtures:` line followed by one `- <path>` line per file in the case directory, paths relative to that directory, sorted lexicographically — deterministic for a given tree. How each slice prints it is §2.4.1; its JSON object is §2.4.2.
+
+#### 2.4.1 The slices over a manifest
+
+`--full` produces this output. The default and `--toc` produce the same output (an E2E manifest has no heading tree, so the default's "lead" *is* the manifest). `--brief` prints only the first line (the invocation). Section paths are not defined for E2E cases (the manifest is not a numbered-heading tree); `grund E2E-<name>.1` is a section-not-found error.
+
+#### 2.4.2 The manifest as JSON
+
+`--format=json` emits a single object `{"id":"E2E-<name>","kind":"E2E","path":"e2e/cases/<name>","args":[…],"expected_exit":<code>,"fixtures":[…]}` — `path` is the case directory under the configured `E2E` home; `e2e/cases/<name>` is the example produced by the conventional configuration that selects that folder. `args` is the parsed `command.args` (empty when there is none), `fixtures` the same sorted relative-path list; `--brief` / `--toc` / default over a case do not change this object (the manifest has no headings or lead prose to slice further).
 
 ### 2.5 A heading inside a fenced code block is an example
 
@@ -250,11 +353,20 @@ called once per coordinate. An empty explicit stream exits successfully without
 loading configuration or scanning. An exhaustive run always performs its one
 load; an empty catalog then succeeds with no records.
 
+The operation is additive: the existing one-query core API and every
+single-coordinate CLI spelling keep their signatures and behavior. How explicit
+queries are answered is §2.6.1, what the exhaustive form generates is §2.6.2,
+and which failures stay inside one query is §2.6.3.
+
+#### 2.6.1 Explicit queries
+
 Explicit queries retain input order and duplicates. Every well-formed query is
 attempted, even after an earlier query fails. It uses the same project selection,
 ID and section resolution, body extraction, cross-reference flattening, and
 default/`--brief`/`--toc`/`--full` renderer as single-coordinate `show`; the one
 invocation-level mode applies to every record.
+
+#### 2.6.2 Exhaustive generation
 
 The exhaustive form generates one query for every unique declaration and every
 recorded legal numeric or named section of that declaration. Generated queries
@@ -265,6 +377,8 @@ When a workspace excludes its root and therefore has no current project, every
 generated ID is qualified. Duplicate declarations or section claimants generate
 one coordinate and let normal resolution report its ambiguity.
 
+#### 2.6.3 Query failures and run-level failures
+
 A well-formed query that names an invalid, missing, or ambiguous ID; a missing or
 ambiguous section; a broken stub; an unknown project alias; or both an inline and
 explicit section produces that query's failed envelope (§3) and does not stop
@@ -272,8 +386,6 @@ later records. Malformed input or invocation, configuration failure, and any sca
 failure are run-level errors: stdout stays empty, stderr carries the error, and no
 query is attempted. In particular, malformed explicit input is diagnosed as
 `error: batch input line <N>: <reason>` before the workspace loader is called.
-The new operation is additive: the existing one-query core API and every
-single-coordinate CLI spelling keep their signatures and behavior.
 
 ## 3. Outputs
 
