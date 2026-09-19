@@ -67,7 +67,7 @@ bytes and shape:
 
 ## 4. `show --format=json`
 
-A successful `show --format=json` emits exactly one JSON object on stdout and nothing on stderr. The examples below select kinds without an effective title; a titled kind adds the final `kind_title` field:
+A successful `show --format=json` emits exactly one JSON object on stdout and nothing on stderr. The examples below select kinds without an effective title; in a declaration or section object, a titled kind adds `kind_title` immediately before the terminal `path`, `line` pair:
 
 ```json
 {"id":"FS-001-alpha","section":"1","body":"## 1. First\n\nFirst body.\n","path":"docs/functional-spec/FS-001-alpha.md","line":5}
@@ -78,14 +78,14 @@ Fields:
 - `id` is the resolved declaration ID.
 - `section` is the requested section path as a string, or `null` for a whole declaration.
 - `body` is exactly the text-mode body, including trailing newline when text mode would print one.
-- `path` and `line` point at the declaration or selected section start.
-- `kind_title`, when the resolved target kind has a title, is a string appended after all other fields, including `sections`. It is omitted when absent and remains `""` when configured empty ([§FS-config.3.4.3](FS-config.md#343-title)).
 - `sections`, present for `show --toc --format=json`, is the ordered section-map slice as objects with `path`, `title`, and `depth`.
+- `kind_title`, when the resolved target kind has a title, is a string after `sections` when present and before `path`. It is omitted when absent and remains `""` when configured empty ([§FS-config.3.4.3](FS-config.md#343-title)).
+- `path` and `line` point at the declaration or selected section start and are always the object's final pair, in that order.
 
 `show --toc --format=json` example:
 
 ```json
-{"id":"FS-001-alpha","section":null,"body":"Alpha overview.\n\n## 1. First\n### 1.1 Child\n","path":"docs/functional-spec/FS-001-alpha.md","line":1,"sections":[{"path":"1","title":"First","depth":1},{"path":"1.1","title":"Child","depth":2}]}
+{"id":"FS-001-alpha","section":null,"body":"Alpha overview.\n\n## 1. First\n### 1.1 Child\n","sections":[{"path":"1","title":"First","depth":1},{"path":"1.1","title":"Child","depth":2}],"path":"docs/functional-spec/FS-001-alpha.md","line":1}
 ```
 
 `show --brief --format=json` keeps the normal `show` object shape and narrows only `body`:
@@ -100,7 +100,10 @@ For an E2E case, `show --format=json` uses the E2E manifest shape from [§FS-sho
 {"id":"E2E-login","kind":"E2E","path":"e2e/cases/login","args":[],"expected_exit":0,"fixtures":["expected.exit","expected.stdout","repo/docs/functional-spec/FS-001-login.md"]}
 ```
 
-Every successful form carries this optional final metadata field: declarations, sections, lead/full/brief/toc, JSON values, and E2E manifests. It never changes `body`, authored section `title`, locations or workspace provenance.
+Every successful form carries the optional metadata field: declarations, sections,
+lead/full/brief/toc and JSON values place it before their terminal location pair;
+E2E manifests keep their distinct `id`, `kind`, `path` prefix and append it last. It
+never changes `body`, authored section `title`, locations or workspace provenance.
 
 Failed queries emit one diagnostic object on stderr and leave stdout empty; launch-time errors stay raw `error:` text.
 
@@ -117,8 +120,8 @@ fixed order shown here:
 `query.id` preserves the caller's spelling for explicit input and carries the
 generated local-or-qualified spelling for `--all`; `query.section` is the
 explicit or generated section string, or `null`. A success places the unchanged
-current single-show JSON object in `result`, including the optional final
-`kind_title` selected separately for that query, and sets `error` to `null`. A failed
+current single-show JSON object in `result`, including optional `kind_title` before
+the declaration/section object's terminal `path`, `line` pair, and sets `error` to `null`. A failed
 query sets `result` to `null` and places the unchanged current diagnostic object
 in `error`. Every envelope is on stdout in explicit-input or exhaustive order;
 stderr is empty for per-query failures. Run-level failures emit no envelopes

@@ -299,14 +299,17 @@ The key is purely additive and does not move `grund_config_version` (§5): a con
 `title` is human-readable metadata: it surfaces in `grund <ID> --format=json`, `grund refs --format=json`, and IDE hover previews, and is **not** injected into `grund <ID> --format=md` text (which is the declaration verbatim — [§FS-show.3](FS-show.md#3-outputs)). It is also the text of the kind's Project map row ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), which for a non-citable kind is the only thing that says what the place is for.
 
 The resolved target kind owns this metadata, including ordinary configuration defaults,
-qualified workspace queries and each batch query's selection. A present title,
-even an empty string, appends `kind_title` as the final field of every successful
-show JSON object and each non-summary refs citation object. An absent effective
-title omits the field; it is neither `null` nor a fallback kind name. Refs
-summaries keep their aggregate shape. Hover appends a separate literal Kind
-paragraph as specified by [§FS-lsp.1.2](FS-lsp.md#12-hover-preview); authored
-preview content and CLI Markdown remain unchanged. The bounded compatibility
-choice is recorded in [§DF-configured-title-metadata](../decisions/functional/DF-configured-title-metadata.md#df-configured-title-metadata-kind-titles-are-separate-target-metadata).
+qualified workspace queries and each batch query's selection. For declaration and
+section show objects, a present title, even an empty string, adds `kind_title`
+immediately before the terminal `path`, `line` pair. The distinct E2E manifest keeps
+its `id`, `kind`, `path` prefix and appends `kind_title` as its final field. Detailed
+refs citation objects also append it as their final field. An absent effective title
+omits the field; it is neither `null` nor a fallback kind name. Refs summaries keep
+their aggregate shape. Hover appends a separate literal Kind paragraph as specified
+by [§FS-lsp.1.2](FS-lsp.md#12-hover-preview); authored preview content and CLI Markdown
+remain unchanged. The bounded compatibility choice and its installed-resolver ordering
+correction are recorded in
+[§DF-configured-title-metadata](../decisions/functional/DF-configured-title-metadata.md#df-configured-title-metadata-kind-titles-are-separate-target-metadata).
 
 #### 3.4.4 The default kinds
 

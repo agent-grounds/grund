@@ -1,1 +1,1 @@
-{"id":"FS-api","section":"1","body":"## 1. Tokens\n\nTokens expire after an hour.\n","path":"apps/api/docs/FS-api.md","line":5,"kind_title":"What: behavior, requirements, and constraints"}
+{"id":"FS-api","section":"1","body":"## 1. Tokens\n\nTokens expire after an hour.\n","kind_title":"What: behavior, requirements, and constraints","path":"apps/api/docs/FS-api.md","line":5}

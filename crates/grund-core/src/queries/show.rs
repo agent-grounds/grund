@@ -319,7 +319,8 @@ pub(crate) fn render_show_output_json(
         );
         extra.push(']');
     }
-    // §FS-config.3.4.3: append metadata from the selected target, after the section map.
+    // §FS-config.3.4.3, §FS-show.3.1: selected-target metadata follows the
+    // section map but precedes the installed resolver's terminal location pair.
     if let Some(title) = config
         .kinds
         .iter()
@@ -329,15 +330,15 @@ pub(crate) fn render_show_output_json(
         extra.push_str(&format!(",\"kind_title\":\"{}\"", json_escape(title)));
     }
     format!(
-        "{{\"id\":\"{}\",\"section\":{},\"body\":\"{}\",\"path\":\"{}\",\"line\":{}{}}}",
+        "{{\"id\":\"{}\",\"section\":{},\"body\":\"{}\"{},\"path\":\"{}\",\"line\":{}}}",
         json_escape(&render_id(&config.grammar, id)),
         match section {
             Some(section) => format!("\"{}\"", json_escape(section)),
             None => "null".to_string(),
         },
         json_escape(&output.body),
+        extra,
         json_escape(&display_path(path_config, &output.path)),
         output.line,
-        extra
     )
 }
