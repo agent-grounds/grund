@@ -141,9 +141,7 @@ fn kind_title_handler_preserves_each_title_preview_and_navigation() {
         assert_eq!(
             request(&mut server, &client, "textDocument/hover", &user, 1, 6),
             expected(
-                &format!(
-                    "# FS-authored: Authored title\n## 1. Detail\n\nDetail body.\n{suffix}"
-                ),
+                &format!("# FS-authored: Authored title\n## 1. Detail\n\nDetail body.\n{suffix}"),
                 1,
                 4,
                 4 + "\u{a7}FS-authored.1".encode_utf16().count() as u32
