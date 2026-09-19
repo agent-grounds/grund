@@ -65,6 +65,8 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 
 ## The command surface
 
+- [§DF-configured-title-metadata](DF-configured-title-metadata.md#df-configured-title-metadata-kind-titles-are-separate-target-metadata) — kind titles are separate target metadata
+
 - [§DF-show-default-token-cheap](DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in) — grund show defaults to the cheap read; the full body is opt-in
 - [§DF-show-token-cheap-reads](DF-show-token-cheap-reads.md#df-show-token-cheap-reads-grund-show-keeps-the-full-body-default-token-cheap-slices-are-opt-in) — *(superseded)* grund show keeps the full-body default; token-cheap slices are opt-in
 - [§DF-show-keep-explicit-form](DF-show-keep-explicit-form.md#df-show-keep-explicit-form-grund-keeps-show-as-a-subcommand-alongside-the-bare-id-default) — grund keeps `show` as a subcommand alongside the bare-ID default

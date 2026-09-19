@@ -40,7 +40,7 @@ A committed fetched snapshot is an ordinary declaration on this path: hover, def
 
 #### 1.2.1 Citation preview
 
-`textDocument/hover` on a citation returns the body `grund <ID> --toc` would print ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), or the `--toc` body of the requested section if the citation includes one ([§FS-show.2.2](FS-show.md#22-section)); a named citation previews the exact named section slice that `grund <ID>.<path> --toc` returns. When the declaration's home is in source code (a stub points at `src/bus.rs`), the hover body is the comment-stripped prose per [§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers) — the same content the CLI returns. Hovering a Markdown, source-comment, or JSON value binding likewise uses the exact `show --toc` slice; no rendered or interpolated value surface is invented ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)). There is no separate "IDE-only" rendering for resolving citations: citation hover and the `show --toc` query produce the same bytes.
+`textDocument/hover` on a citation returns the body `grund <ID> --toc` would print ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), or the `--toc` body of the requested section if the citation includes one ([§FS-show.2.2](FS-show.md#22-section)); a named citation previews the exact named section slice that `grund <ID>.<path> --toc` returns. When the declaration's home is in source code (a stub points at `src/bus.rs`), the hover body is the comment-stripped prose per [§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers) — the same content the CLI returns. Hovering a Markdown, source-comment, or JSON value binding likewise uses the exact `show --toc` slice; no rendered or interpolated value surface is invented ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)). The unadorned preview and the `show --toc` query produce the same bytes before editor linkification; the full hover may also carry the separate kind-metadata paragraph (§1.2.8).
 
 The citation hover content is Markdown. Any resolving `§<ID>` citation inside it is emitted as a normal link to its declaration target, so users can keep following the grounding graph without closing the hover.
 
@@ -56,7 +56,7 @@ An explicit named heading is a declaration-side title just like a numbered headi
 
 #### 1.2.4 The title hover's text
 
-The body is one line of Markdown — the title token as inline code, then ` — `, then the usage clause:
+The original title-and-usage content is one line of Markdown — the title token as inline code, then ` — `, then the usage clause:
 
 ```
 `FS-user-login: Users sign in` — cited at 12 sites across 5 files
@@ -79,6 +79,21 @@ On a numbered section heading the set is the section-scoped one §1.3.1 defines:
 The clause is a count, never a finding. An uncited declaration already earns the unused-declaration warning through `publishDiagnostics` (§1.1, [§FS-check.4.1](FS-check.md#41-unused-declaration)), and hover does not restate it: `not cited` is the count at zero, worded as a count, so a popup that draws both over an uncited title carries the warning naming the ID and the count answering the hover — one statement each. Nor is the zero case suppressed in favour of the warning, because the warning does not cover every title that can reach zero — `E2E` declarations are exempt from it ([§FS-check.4.1](FS-check.md#41-unused-declaration)) and section headings never carry one — so a hover that fell silent at zero would go quiet exactly where nothing else speaks, indistinguishable from a server that shows no counts.
 
 The counts are read from the scan of the project that owns the document (§2.2.2), the one diagnostics and navigation answer from, so the same tree and config produce the same bytes (§4) and no hover re-scans to answer.
+
+#### 1.2.8 Target-kind metadata
+
+When the resolved target kind has an effective title, append `"\n\nKind: "`
+and that title as a CommonMark code span to the existing successful hover,
+without trimming or rewriting its content. Use the title-token backtick fencing
+and padding convention of §1.2.4. This applies to citation and value-binding
+previews, declarations, sections, inline-source titles and stubs. No title
+returns the existing hover unchanged; an empty configured title still adds
+the paragraph. Metadata is literal: do not interpret Markdown or linkify
+citations inside it. Only the existing preview is linkified. Resolve metadata
+from the same target context or snapshot, with no extra per-hover scan, fetch
+or network execution. Usage counts, ranges, navigation and missing-target or
+diagnostic suppression remain unchanged
+([§FS-config.3.4.3](FS-config.md#343-title)).
 
 ### 1.3 Go-to-definition
 

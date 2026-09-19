@@ -316,6 +316,11 @@ pub struct Router { ... }
 
 ### 2.4 E2E cases
 
+The JSON manifest appends the optional final `kind_title` field from the selected
+E2E kind, with the same absent/empty semantics as every successful show object
+([§FS-config.3.4.3](FS-config.md#343-title)). Its existing fields and Markdown
+rendering retain their meanings.
+
 `grund E2E-<name>` returns the case's manifest ([AR-scanner.6](../architecture/AR-scanner.md#6-e2e-case-declarations)) in three parts:
 
 ```

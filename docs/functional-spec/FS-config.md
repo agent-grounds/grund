@@ -357,6 +357,16 @@ The name-keyed default is additive like the key (§3.4.2) — it can only *remov
 
 `title` is human-readable metadata: it surfaces in `grund list --summary --format json` ([§FS-list.3.3](FS-list.md#33---summary)), the one JSON output that carries it, and in IDE hover previews, and is **not** injected into `grund <ID> --format=md` text (which is the declaration verbatim — [§FS-show.3.1](FS-show.md#31-format-variants)). It is also the text of the kind's Project map row ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), which for a non-citable kind is the only thing that says what the place is for.
 
+The resolved target kind owns this metadata, including ordinary configuration defaults,
+qualified workspace queries and each batch query's selection. A present title,
+even an empty string, appends `kind_title` as the final field of every successful
+show JSON object and each non-summary refs citation object. An absent effective
+title omits the field; it is neither `null` nor a fallback kind name. Refs
+summaries keep their aggregate shape. Hover appends a separate literal Kind
+paragraph as specified by [§FS-lsp.1.2](FS-lsp.md#12-hover-preview); authored
+preview content and CLI Markdown remain unchanged. The bounded compatibility
+choice is recorded in [§DF-configured-title-metadata](../decisions/functional/DF-configured-title-metadata.md#df-configured-title-metadata-kind-titles-are-separate-target-metadata).
+
 #### 3.4.4 The default kinds
 
 The defaults declare these nine, in this order (an existing `grund.toml` that omits `[[kinds]]` gets them with the older `FS` home of §2):
