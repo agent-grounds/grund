@@ -292,7 +292,34 @@ When file scanning runs in parallel, each per-file result is merged as though th
 
 ## 4. Inline declarations in language doc-comments
 
-The scanner is designed so that an inline declaration — most commonly an `AR-NNN-<slug>` for an architectural spec — can live inside the **class, method, module, or package doc-comment** of any major language. This makes class-level documentation a first-class place to put architecture specs: the spec body sits with the code it describes, and a stub under `docs/architecture/` points at it through a single-line H1 of the form `# <ID>: [<path>](<path>)`.
+The scanner is designed so that an inline declaration — most commonly an `AR-NNN-<slug>` for an architectural spec — can live inside the **class, method, module, or package doc-comment** of any major language. This makes class-level documentation a first-class place to put architecture specs: the spec body sits with the code it describes, and a stub under `docs/architecture/` points at it through a single-line H1 of the form `# <ID>: [<path>](<path>)`. The scanner recognizes the doc-comment forms of §4.3, strips each comment line to the content the author meant (§4.4), and then runs its ordinary detection on that content.
+
+### 4.1 Ruby and Python edge cases
+
+- **Ruby** uses `#` as the comment marker. The declaration itself starts after that marker (§4.4), so the canonical Ruby form is `# AR-<event-bus>`, not a markdown heading inside the comment.
+- **Python** docstrings are not comments but string literals (`""" … """`). The scanner has a small docstring mode for `.py` (§4.4 gives its delimiter rules): when a triple-quoted string opens, lines inside it are scanned the same way as comment continuation lines until the matching close. This lets a Python class or module docstring be a fully-featured spec home.
+
+### 4.2 Doc comment or inline comment
+
+The block classifiers of §4.3 and §4.4 answer a second question, for the inline citation sites of §3.1: is this block a **doc comment** — documentation of the definition below it, or of the file — or an **inline comment**? Only the second is a site ([§FS-inline-citation-style.1.1](../functional-spec/FS-inline-citation-style.md#11-doc-comments-are-not-sites)). The classifier lives in `crates/grund-core/src/grammar/comment_block.rs`, beside `CommentBlockKind` and the block-boundary helpers the declaration pass already shares, and it is asked once per block — and only for a block that carries a citation, which is where `inline_citation_sites` already has the block in hand.
+
+#### 4.2.1 One rule per extension
+
+Which rule applies is keyed on the **file extension** and resolved once per file. There are three, and [§FS-inline-citation-style.1.1](../functional-spec/FS-inline-citation-style.md#11-doc-comments-are-not-sites) is their contract: the table of which extension takes which rule and what its test looks for, and the definition-starter matching rule.
+
+- **Marker.** The language spells documentation with a marker of its own, so the marker is the answer. The test reads the run's marker for a line comment and the opening line for a block comment.
+- **Position.** The language spells documentation like any other comment, so position is the answer. The block is a doc comment when the line immediately below it — no blank line between — is a **definition-starter** for that language, or when it is the file's **leading block**, which is how a position language spells a module doc.
+- **None.** Every other extension has no doc-comment notion, so every block in it is inline. That is the behavior of every release before the rule, so no tree gains a finding from this classifier.
+
+#### 4.2.2 Recognition, not parsing
+
+The contract also names the corners the recognizer accepts rather than repairs. Nothing here parses the host language: the marker test is a prefix comparison and the position test is one look at one line ([§FS-non-goals.3](../functional-spec/FS-non-goals.md#3-code-ast-parsing)), the same discipline §5 states for the recognizer as a whole, and a starter set widens without a `grund_config_version` bump.
+
+#### 4.2.3 The planned declaration recognizer reuses it
+
+[§RM-doc-comment-declarations](../roadmap.md#rm-doc-comment-declarations-declarations-only-in-classmethod-doc-comments) plans the same marker/position split for the **declaration** recognizer — a code declaration only inside a doc comment that documents the following definition. It reuses this classifier rather than growing a second one, so the two gates cannot come to disagree about what documentation is.
+
+### 4.3 The recognized doc-comment forms
 
 The recognized doc-comment forms (matched as comment prefixes preceding the heading line):
 
@@ -313,13 +340,17 @@ The recognized doc-comment forms (matched as comment prefixes preceding the head
 
 This table documents the doc-comment *conventions* for the languages `grund` is built to serve. It is not the only gate: the file extension must be in `[scan] extensions` and the marker must be in `[scan] comment_prefixes` ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-walked)). The defaults contain both halves for every row above and also recognize bare `*` / `/*` block-comment lines. A language not in the table still works when the repository configures both its extension and its comment marker.
 
+### 4.4 Comment lines are normalized before detection
+
 Before declaration, section, or citation detection runs on a source file, the scanner normalizes each eligible comment/docstring line to the content the author meant:
 
 - `//`, `///`, and `//!` line comments strip the full leading comment marker and one following space when present. Therefore `/// AR-001-router: Router`, `//! AR-001-router: Router`, and `// AR-001-router: Router` all expose the same declaration content: `AR-001-router: Router`.
 - `#`, `;`, and `--` line comments strip that marker and one following space when present. Therefore Python/Ruby `# AR-001-router: Router` exposes `AR-001-router: Router`; a bare source line `AR-001-router: Router` is not a declaration outside a Python docstring, because it has no comment marker.
 - Block comments strip the opener (`/*` or `/**`) and closer (`*/`) when they appear on their own content lines. Continuation lines strip one optional leading `*` plus one following space when present. Therefore ` * AR-001-router: Router` exposes `AR-001-router: Router`.
-- Python triple-quoted docstrings in `.py` files enter docstring mode for both `"""` and `'''`. Delimiter-only opening and closing lines are not content; delimiter lines that also contain prose are scanned after stripping the delimiter on that side, so `"""Uses §FS-001-router."""` and an indented multi-line docstring body are both scanned as docstring content. Therefore a class or module docstring containing `AR-001-router: Router` declares `AR-001-router`, and a docstring containing `§FS-001-router` cites it.
+- Python triple-quoted docstrings in `.py` files enter docstring mode for both `"""` and `'''`. Delimiter-only opening and closing lines are not content; delimiter lines that also contain prose are scanned after stripping the delimiter on that side, so `"""Uses §FS-001-router."""` and an indented multi-line docstring body are both scanned as docstring content.
 - The normalization is line-local and deterministic. It does not parse the host language beyond recognizing the comment/docstring form above; after normalization, the same heading and citation regexes from §2.1 through §2.3 apply. Recorded source positions still point at the original file columns, not the stripped comment or docstring content columns, so LSP ranges and diagnostics cover the token the user sees in the editor.
+
+### 4.5 Forms the default settings must recognize
 
 The following inline declarations are all required to be recognized under the default scan settings:
 
@@ -354,62 +385,34 @@ class Service:
 # Runs background work.
 ```
 
-A canonical example — a Java class whose Javadoc *is* the architectural spec:
-
-```java
-/**
- * AR-event-bus: Asynchronous event distribution
- *
- * ## 1. Responsibilities
- * The event bus owns subscription state and …
- *
- * ## 2. Threading model
- * Single-writer, multi-reader …
- */
-public final class EventBus { … }
-```
-
-Matched by the matching stub `docs/architecture/AR-<event-bus>.md`:
-
-```
-# AR-event-bus: [src/main/java/com/example/EventBus.java](src/main/java/com/example/EventBus.java)
-```
-
-### 4.1 Ruby and Python edge cases
-
-- **Ruby** uses `#` as the comment marker. The declaration itself starts after that marker, so the canonical Ruby form is `# AR-<event-bus>`, not a markdown heading inside the comment.
-- **Python** docstrings are not comments but string literals (`""" … """`). The scanner has a small docstring mode for `.py`: when a triple-quoted string opens, lines inside it are scanned the same way as comment continuation lines until the matching close. This lets a Python class or module docstring be a fully-featured spec home.
-
-### 4.2 Doc comment or inline comment
-
-The block classifiers above answer a second question, for the inline citation sites of §3: is this block a **doc comment** — documentation of the definition below it, or of the file — or an **inline comment**? Only the second is a site ([§FS-inline-citation-style.1.1](../functional-spec/FS-inline-citation-style.md#11-doc-comments-are-not-sites)). The classifier lives in `crates/grund-core/src/grammar/comment_block.rs`, beside `CommentBlockKind` and the block-boundary helpers the declaration pass already shares, and it is asked once per block — and only for a block that carries a citation, which is where `inline_citation_sites` already has the block in hand.
-
-Which rule applies is keyed on the **file extension** and resolved once per file. There are three:
-
-- **Marker.** The language spells documentation with a marker of its own, so the marker is the answer. The test reads the run's marker for a line comment and the opening line for a block comment: `///` (exactly three slashes) or `//!` runs and `/**` (not `/**/`) or `/*!` openers for the C family — `rs`, `c`, `h`, `cpp`, `cc`, `cxx`, `hpp`, `hh`, `hxx`, `m`, `mm`, `java`, `cs`, `kt`, `kts`, `scala`, `swift`, `js`, `jsx`, `mjs`, `cjs`, `ts`, `tsx`, `php`, `dart`; a triple-quoted docstring for `py`; a leading `---` for `lua`; a first content character of `|` or `^` after the `--` for `hs` and `lhs`; a leading `#'` for `r` and `R`.
-- **Position.** The language spells documentation like any other comment, so position is the answer: `go`, `rb`, `sh`, `bash`, `zsh`, `sql`. The block is a doc comment when the line immediately below it — no blank line between — is a **definition-starter** for that language, matched with leading whitespace stripped and a non-identifier character or the end of the line required after the keyword: `func`, `type`, `var`, `const`, `package` for Go; `class`, `module`, `def` for Ruby; a shell `function <name>` or `<name>()`; a case-insensitive `create` for SQL. It is *also* a doc comment when it is the file's **leading block** — every line above it blank, or line 1 and a `#!` shebang — which is how a position language spells a module doc.
-- **None.** Every other extension has no doc-comment notion, so every block in it is inline. That is the behavior of every release before the rule, so no tree gains a finding from this classifier.
-
-[§FS-inline-citation-style.1.1](../functional-spec/FS-inline-citation-style.md#11-doc-comments-are-not-sites) is the contract: it holds the same table per extension, the definition-starter matching rule, and the corners the recognizer accepts rather than repairs — a dangling `///` inside a method body, a Go `var` in a function body, a `#` block separated from its `def` by a blank line. Nothing here parses the host language: the marker test is a prefix comparison and the position test is one look at one line ([§FS-non-goals.3](../functional-spec/FS-non-goals.md#3-code-ast-parsing)), the same discipline §5 states for the recognizer as a whole, and a starter set widens without a `grund_config_version` bump.
-
-[§RM-doc-comment-declarations](../roadmap.md#rm-doc-comment-declarations-declarations-only-in-classmethod-doc-comments) plans the same marker/position split for the **declaration** recognizer — a code declaration only inside a doc comment that documents the following definition. It reuses this classifier rather than growing a second one, so the two gates cannot come to disagree about what documentation is.
-
 ## 5. Why regex, not a parser
 
 Specs live in markdown *and* in source-file doc-comments across half a dozen languages. A real parser per language would be far more code and far slower than a single line-oriented regex pass. The scheme is deliberately designed to be regex-recognizable: the heading shape is unambiguous and the citation shape is anchored on word boundaries.
 
-The trade-off: we cannot reason about the surrounding code structure. We do not need to — IDs are syntactic, not semantic. The link in the stub heading is the only structural pointer between a stub and the code that hosts the inline spec, and it is verified by [§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs).
+The trade-off: we cannot reason about the surrounding code structure. We do not need to — IDs are syntactic, not semantic. The link in the stub heading is the only structural pointer between a stub and the code that hosts the inline spec, and it is verified by [§AR-checker.2.5](../../crates/grund-core/src/checker/report.rs).
 
 The marker character recognized in citations follows [§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger); the regex shape changes when the marker is reconfigured per [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable).
 
 ## 6. E2E case declarations
 
-`E2E` is a **configured** kind — it left the default `[[kinds]]` set in grund 0.12.0 ([§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds)) — and everything below follows the configured `E2E` home. A config with no citable `E2E` kind runs none of this pass: no case declarations, and no fixture-tree pruning, so a nested case repo under such a tree is ordinary content the walk reads.
+`E2E` is a **configured** kind — it left the default `[[kinds]]` set in grund 0.12.0 ([§FS-config.3.4.4](../functional-spec/FS-config.md#344-the-default-kinds)) — and everything below follows the configured `E2E` home. A config with no citable `E2E` kind runs none of this pass: no case declarations, and no fixture-tree pruning, so a nested case repo under such a tree is ordinary content the walk reads. The `E2E` kind is the one kind not declared by a heading line: a case directory declares it (§6.1).
 
-The `E2E` kind is the one kind not declared by a heading line. An `E2E` declaration is a **case directory** directly under the `E2E` kind's `[[kinds]] folder` (conventionally `e2e/cases`). The directory's name is the declared ID with the leading `{kind}` placeholder and its following literal stripped — under the default `[id] format = "{kind}-{number}-{slug}"`, a directory `007-login` declares `E2E-007-login`; under `{kind}-{slug}`, `login` declares `E2E-<login>`; under `{kind}-{number}`, `007` declares `E2E-007`. The directory name must match the format with the kind portion removed; directories that do not (e.g. `.gitkeep`, or a folder with no `expected.exit`) are skipped, so `e2e/cases/` itself never becomes a declaration. The case manifest also records non-empty `spec.refs` lines as cited-kind evidence for E2E citation-direction obligations ([§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels)); these manifest references do not enter the ordinary citation stream.
+### 6.1 A case directory declares the ID
 
-A case directory is recognized as a declaration only if it contains an `expected.exit` file (the minimal marker of a real case). The `Declaration` recorded for it carries the directory path with `line = 1`, an empty section set (the fixture file set is not a numbered-heading tree, so any section-bearing citation of an `E2E` ID — a `.2` suffix and so on — is a missing-section error per [§AR-checker.2.3](../../crates/grund-core/src/checker/report.rs)), and the deterministic, sorted list of the case's fixture files plus the invocation (`command.args` contents, or the implicit `grund check` when absent) and the expected exit code — this is the "body" [§FS-show.2.4](../functional-spec/FS-show.md#24-e2e-cases) prints. E2E declarations are never stubs, are never hosted in code, and are not reported as unused when no spec cites them.
+An `E2E` declaration is a **case directory** directly under the `E2E` kind's `[[kinds]] folder` (conventionally `e2e/cases`) that contains an `expected.exit` file, the minimal marker of a real case. The directory's name is the declared ID with the leading `{kind}` placeholder and its following literal stripped — under the default `[id] format = "{kind}-{number}-{slug}"`, a directory `007-login` declares `E2E-007-login`; under `{kind}-{slug}`, `login` declares `E2E-<login>`; under `{kind}-{number}`, `007` declares `E2E-007`. The directory name must match the format with the kind portion removed; directories that do not (e.g. `.gitkeep`, or a folder with no `expected.exit`) are skipped, so `e2e/cases/` itself never becomes a declaration.
+
+### 6.2 What a case declaration records
+
+The `Declaration` recorded for a case carries the directory path with `line = 1`, an empty section set (the fixture file set is not a numbered-heading tree, so any section-bearing citation of an `E2E` ID — a `.2` suffix and so on — is a missing-section error per [§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs)), and the deterministic, sorted list of the case's fixture files plus the invocation (`command.args` contents, or the implicit `grund check` when absent) and the expected exit code — this is the "body" [§FS-show.2.4](../functional-spec/FS-show.md#24-e2e-cases) prints. E2E declarations are never stubs, are never hosted in code, and are not reported as unused when no spec cites them.
+
+### 6.3 `spec.refs` is direction evidence, not citations
+
+The case manifest also records non-empty `spec.refs` lines as cited-kind evidence for E2E citation-direction obligations ([§FS-config.3.9.1](../functional-spec/FS-config.md#391-levels)); these manifest references do not enter the ordinary citation stream.
+
+### 6.4 The walk stops at a case directory
 
 The ordinary file walk treats each direct case directory as an E2E manifest boundary, not as repo content to scan. A root scan over `e2e/` or `e2e/cases/` still registers the case declaration through the E2E manifest pass, but it does not read the nested fixture repo under that case; an explicit path inside the fixture repo remains scannable.
 
-Citations of an `E2E` ID resolve like any other: an `E2E-<name>` cite from a spec ("proven by …") is a dangling-ref error ([§AR-checker.2.2](../../crates/grund-core/src/checker/report.rs)) when the case directory under the configured `E2E` home does not exist; `e2e/cases/<name>` is the example produced by the conventional configuration that selects that folder.
+### 6.5 Citations of a case resolve like any other
+
+Citations of an `E2E` ID resolve like any other: an `E2E-<name>` cite from a spec ("proven by …") is a dangling-ref error ([§AR-checker.2.3](../../crates/grund-core/src/checker/report.rs)) when the case directory under the configured `E2E` home does not exist; `e2e/cases/<name>` is the example produced by the conventional configuration that selects that folder.
