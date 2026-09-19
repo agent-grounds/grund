@@ -2,7 +2,7 @@
 
 This file is the verbose fixture companion to [§FS-init](FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo). It does not add a new command; it gives implementers concrete states and transcripts for the `init` behavior that [§FS-init](FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo) defines in prose.
 
-The fixtures use `{repo}` for an existing target directory and `{repo_copy}` for a mutable copy of that directory. Every success case has empty stdout. Every path printed by `init` is relative to the target directory. The stderr blocks below are exact apart from the placeholder path in the missing-target case.
+The fixtures use `{repo}` for an existing target directory and `{repo_copy}` for a mutable copy of that directory. Per [§FS-init.2.2](FS-init.md#22-stdout--stderr), every success case has empty stdout and every path `init` prints is relative to the target directory. The stderr blocks below are exact apart from the placeholder path in the missing-target case.
 
 ## 1. Default form
 
@@ -124,7 +124,7 @@ exists AGENTS.md
 exists grund.toml
 ```
 
-The `next:` block is suppressed in this case ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) — every reported path is `exists `, so the user already has a complete grund setup and there is no next step to teach.
+Every reported path is `exists `, so the `next:` block is suppressed ([§FS-init.2.2](FS-init.md#22-stdout--stderr)).
 
 When `AGENTS.md` exists without a managed block and `--force` is not passed, `init` appends the block and reports:
 
@@ -133,7 +133,7 @@ appended AGENTS.md
 wrote grund.toml
 ```
 
-When `AGENTS.md` exists and `--force` is passed, `init` rewrites the canonical file and reports `wrote AGENTS.md`. When a config already exists, `init --force` still preserves it and reports it with `exists ` under the name it was found at — `exists grund.toml` for the fixture below; config is never clobbered once present, in either discovery form ([§FS-config.1](FS-config.md#1-file-location-and-discovery)).
+When `AGENTS.md` exists and `--force` is passed, `init` rewrites the canonical file and reports `wrote AGENTS.md`. An existing config, in either discovery form ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), is never clobbered, not even by `--force`: it is reported `exists ` under the name it was found at, such as `exists grund.toml` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)).
 
 ## 4. Target and flag failures
 
@@ -153,11 +153,11 @@ These failures leave the target tree unchanged.
 
 ## 5. Dry-run preview
 
-`grund init --dry-run` reports exactly what a real run would do, without writing anything. Every line that a real run would prefix with `wrote `, `appended `, or `updated ` is reported with `would-write `, `would-append `, or `would-update ` instead; `exists ` lines are unchanged. The `next:` block prints under the same rule as a real run — suppressed when every reported path is `exists ` and no `would-…` lines were emitted ([§FS-init.2.2](FS-init.md#22-stdout--stderr)). Exit code is `0` for a clean preview, `2` for a CLI-level error (e.g. missing target), the same as a real run.
+`grund init --dry-run` reports exactly what a real run would do, without writing anything: `wrote `, `appended `, and `updated ` become `would-write `, `would-append `, and `would-update `, `exists ` lines are unchanged, and the `next:` block follows a real run's rule ([§FS-init.2.2](FS-init.md#22-stdout--stderr)). Exit code is `0` for a clean preview, `2` for a CLI-level error (e.g. missing target), the same as a real run.
 
 ## 6. Workspace members
 
-These fixtures together cover [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members): a workspace root with a mix of initialized and uninitialized members, a member-side run against the same workspace, a non-workspace repo whose generated block is unchanged, and a workspace whose projects carry `project_description` metadata.
+§6.1 to §6.4 together cover [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members): a root-side and a member-side run over one workspace, a non-workspace repo, and projects that carry `project_description`.
 
 ### 6.1 Workspace root init
 
@@ -195,7 +195,7 @@ Cross-project citations use §alias/<ID>.
 - [`ui`](packages/ui/) *(not yet initialized)*
 ```
 
-The list is sorted lexicographically by alias. `api` is initialized so its bullet links to the existing `AGENTS.md`. The root's own row is absent even though `include_root` defaults to `true`: [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) omits the project whose entrypoint is being rendered. `core` and `ui` are present in the workspace by glob expansion of `packages/*` but have no `AGENTS.md` yet, so they render with the trailing `*(not yet initialized)*` marker and link to the member root.
+The list is sorted lexicographically by alias. `api` is initialized, so its bullet links to its `AGENTS.md`; `core` and `ui`, expanded from the glob `packages/*`, have none yet, so they link to the member root and carry the trailing `*(not yet initialized)*` marker. The root's own row is absent even though `include_root` defaults to `true`: [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) omits the project whose entrypoint is being rendered.
 
 ### 6.2 Workspace member init
 
@@ -215,7 +215,7 @@ Cross-project citations use §alias/<ID>.
 - [`ui`](../../packages/ui/) *(not yet initialized)*
 ```
 
-`api` is absent because it is the project whose entrypoint is being rendered. `root` remains a foreign row because `include_root` is true, and is marked uninitialized because `{repo_copy}/AGENTS.md` does not exist; its link points at the workspace root directory rather than the file that would 404. The discoverability line and foreign-row grammar match §6.1 exactly; each perspective omits its own canonical project and sorts the remaining aliases.
+`root` remains a foreign row because `include_root` is true, and is marked uninitialized because `{repo_copy}/AGENTS.md` does not exist; its link points at the workspace root directory rather than the file that would 404. The discoverability line and foreign-row grammar match §6.1 exactly; each perspective omits its own canonical project and sorts the remaining aliases.
 
 ### 6.3 Non-workspace repo
 
