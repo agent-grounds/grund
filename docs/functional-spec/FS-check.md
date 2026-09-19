@@ -419,19 +419,27 @@ The rule is a pure function of `(tree, config)` like every other `check` rule ([
 
 ### 3.7 Misplaced declaration (configured kind home)
 
-A kind configured with `file = "<path>"` in [[kinds]] ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)) is a *single-file kind* — every declaration of that kind must live in that exact document. A declaration whose H1/H2 is found in any other scanned file is reported as a misplaced-declaration error, anchored at the declaration line:
+A declaration that sits where a configured kind home does not allow it is a misplaced-declaration error, anchored at the declaration line. Three placements are refused: a single-file kind's declaration outside its file (§3.7.1), a declaration inside another kind's home (§3.7.2), and any declaration in a non-citable home (§3.7.3). The home rules (§3.7.2, §3.7.3) apply to declaration lines and stub lines, not citations or prose mentions. A file that belongs to no configured home, or that matches several because configured homes overlap or nest, is not checked by them, because its expected kind is ambiguous.
+
+#### 3.7.1 A single-file kind
+
+A kind configured with `file = "<path>"` in [[kinds]] ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)) is a *single-file kind*: every declaration of that kind must live in that exact document, and one whose H1/H2 is found in any other scanned file is reported:
 
 ```
 docs/notes.md:42: GOAL-foo must be declared in docs/goals.md (single-file kind)
 ```
 
-Stubs (`# <ID>: [<text>](<path>)`) are exempt from this exact-file requirement — they are pointers from a kind's home folder to an inline declaration elsewhere, which is a multi-file-kind feature; a single-file kind has no stubs because there is no folder to redirect from. This is the canonical mechanism that keeps `GRUND`, `GOAL`, and `RM` declarations consolidated in their respective documents, and what makes "one file, all goals inline" a checked invariant rather than a convention.
+Stubs (`# <ID>: [<text>](<path>)`) are exempt from this exact-file requirement: a stub points from a kind's home folder to an inline declaration elsewhere, a multi-file-kind feature, and a single-file kind has no folder to redirect from. This rule is the canonical mechanism that keeps `GRUND`, `GOAL`, and `RM` declarations in their documents, and what makes "one file, all goals inline" a checked invariant rather than a convention.
 
-Every configured `file` and `folder` also acts as a declaration-home boundary. If a declaration line appears in a file that belongs to exactly one configured kind home, the declaration's kind must match that home kind. A `file` home matches only that exact path; a `folder` home matches files below that directory. A different-kind declaration is reported as a misplaced-declaration error, anchored at the declaration line and naming the declared kind, the expected home kind, and the configured home:
+#### 3.7.2 Another kind's home
+
+Every configured `file` and `folder` is also a declaration-home boundary: a declaration line in a file that belongs to exactly one configured kind home must declare that home's kind. A `file` home matches only that exact path; a `folder` home matches files below that directory. The error names the declared kind, the expected home kind, and the configured home:
 
 ```
 docs/functional-spec/FS-lsp.md:42: AR-router declares kind AR inside FS home docs/functional-spec
 ```
+
+#### 3.7.3 A non-citable home
 
 A **non-citable home** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) admits no declaration of any kind. It has no kind an author could have declared instead, so the message names the place and says why rather than pointing at a kind that does not exist:
 
@@ -439,15 +447,25 @@ A **non-citable home** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that
 skills/review/SKILL.md:1: FS-review must not be declared in skills/ (not a citable home)
 ```
 
-That is this rule working as designed, not a gap in it: `citable = false` says the directory is a place, and a place with a declaration in it is one of the two facts in conflict.
-
-The home-kind rule applies to declaration lines and stub lines, not citations or prose mentions. Files that belong to no configured home, or that match multiple homes because configured homes overlap or nest, are not checked by this rule because the expected kind is ambiguous.
+That is the rule working as designed, not a gap in it: `citable = false` says the directory is a place, and a place with a declaration in it is one of the two facts in conflict.
 
 ### 3.8 Cross-project citation failure
 
 An alias-qualified citation whose alias path is unknown is reported at the citation site in every run, with or without a `[workspace]` ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)); in a workspace run, so is one whose target declaration or target section is missing. The namespace and resolution rules live in [§FS-workspace.4](FS-workspace.md#4-resolution).
 
-An unknown alias path names the projects it could have meant, so the fix is in the diagnostic rather than in the config. At the outermost workspace root — the scope CI runs, and the only one that can see every project a path could name — candidates are taken from the projects in scope in one tier only, best first: a project whose slash-separated path has every written segment as a **proper prefix** and at least one further segment, else one whose path **ends with** what was written (a dropped prefix — the mistake full alias paths invite, [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)), else one whose **last segment** matches (a wrong prefix), else one a **typo** away under the same near-match rule §3.1 uses. Thus `group` matches `group/alpha`, and `group/alpha` matches `group/alpha/beta`; an exact `group`, `grouped/alpha`, and `other/group` do not match the proper-prefix tier. The first non-empty tier alone wins, without candidates from any lower tier. Its candidates are deduplicated, sorted by alias bytes, and then limited to three — `grund list` is the catalogue, a finding is not — and a path with no candidate reports on its own, unchanged. The citation remains unresolved and the run still fails.
+An unknown alias path names the projects it could have meant, so the fix is in the diagnostic rather than in the config: the outermost workspace root searches every project in scope (§3.8.2); a run narrowed to a subtree searches only for a strict extension of its scope (§3.8.1) and otherwise names the subtree it covers (§3.8.3), in the wording §3.8.4 stages. The citation remains unresolved and the run still fails.
+
+#### 3.8.1 A strict extension of the narrowed scope is safe to hint
+
+A narrowed run may search for a candidate only when its non-empty scope path is a strict, segment-wise prefix of the written alias path: the written path starts with every scope segment and has at least one segment after them. Thus `group/alph` is eligible in scope `group`, and `group/alpha/bet` in scope `group/alpha`. The search sees only the aliases the narrowed run loaded, so every candidate it can name is inside the subtree the run can judge.
+
+An eligible path gets the outermost root's ordered tiers, sorting, three-result limit, prose joining, and `; did you mean …?` rendering (§3.8.2); when the loaded aliases yield no candidate, the message is the bare `unknown project alias <path>` form. Outermost-root runs keep their unconditional candidate search.
+
+Shorter and equal paths, paths whose segments do not begin with the scope, and merely lexical prefixes remain ineligible: in scope `group`, that excludes `alpha`, `group`, `outside/alpha`, and `grouped/alpha` alike. Each gets the scope-only message of §3.8.4 with `<scope>` = `group` — in `0.13.2` the staged form with its exact compatibility suffix, from `0.14.0` the final template. Eligibility, candidate selection, resolution, and the failing verdict do not change in either release.
+
+#### 3.8.2 Candidates at the outermost root
+
+At the outermost workspace root — the scope CI runs, and the only one that can see every project a path could name — candidates are taken from the projects in scope in one tier only, best first: a project whose slash-separated path has every written segment as a **proper prefix** and at least one further segment, else one whose path **ends with** what was written (a dropped prefix — the mistake full alias paths invite, [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)), else one whose **last segment** matches (a wrong prefix), else one a **typo** away under the near-match rule of §3.1.1. Thus `group` matches `group/alpha`, and `group/alpha` matches `group/alpha/beta`; an exact `group`, `grouped/alpha`, and `other/group` do not match the proper-prefix tier. The first non-empty tier alone wins, without candidates from any lower tier. Its candidates are deduplicated, sorted by alias bytes, and then limited to three — `grund list` is the catalogue, a finding is not — and a path with no candidate reports on its own, unchanged.
 
 ```text
 docs/FS-root.md:3: unknown project alias sprayer; did you mean hardware/sprayer?
@@ -455,11 +473,15 @@ docs/FS-root.md:4: unknown project alias api; did you mean left/api or right/api
 docs/FS-root.md:5: unknown project alias group; did you mean group/alpha?
 ```
 
-A run narrowed to a subtree ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)) holds only part of the tree, so a path naming a project outside it is unknown *here* while being exactly right at the workspace root. Except for the visibly in-scope case in §3.8.1, such a run therefore offers **no candidate at all**. It cannot tell a dropped prefix from a path that correctly names a project outside its subtree, and every tier reads it as the first: the dropped-prefix tier included, because a *shorter* written path is itself a complete alias path whenever a top-level project carries that name, so re-pointing it at a deeper namesake rewrites a citation CI accepts into a different project's — green before and green after, so nothing catches it. In every ineligible case it names the subtree it covers — as a *subtree*, since that scope's own alias path is one project among the several it holds — rather than reporting the path bare, which is neither "delete this" nor "re-prefix this" but "check this from the root."
+#### 3.8.3 A narrowed run offers no candidate
 
-In `0.13.2`, the complete legacy diagnostic remains a contiguous prefix for
-consumers that match it, and the exact suffix clarifies that a subtree includes
-the named project and its descendants while warning when the wording changes:
+A run narrowed to a subtree ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)) holds only part of the tree, so a path naming a project outside it is unknown *here* while being exactly right at the workspace root. Except for the visibly in-scope case of §3.8.1, such a run therefore offers **no candidate at all**. It cannot tell a dropped prefix from a path that correctly names a project outside its subtree, and every tier reads it as the former: the dropped-prefix tier included, because a *shorter* written path is itself a complete alias path whenever a top-level project carries that name, so re-pointing it at a deeper namesake rewrites a citation CI accepts into a different project's — green before and green after, so nothing catches it.
+
+In every ineligible case it names the subtree it covers — as a *subtree*, since that scope's own alias path is one project among the several it holds — rather than reporting the path bare, which is neither "delete this" nor "re-prefix this" but "check this from the root."
+
+#### 3.8.4 The scope-only message across two releases
+
+In `0.13.2`, the complete legacy diagnostic remains a contiguous prefix for consumers that match it, and the exact suffix clarifies that a subtree includes the named project and its descendants while warning when the wording changes:
 
 ```text
 unknown project alias <path>; only the <scope> subtree is in scope here — check from the workspace root for a path outside it — here, the <scope> subtree means the <scope> project and its descendants; this wording changes in grund 0.14.0
@@ -471,44 +493,17 @@ In `0.14.0`, that compatibility form must be replaced with exactly:
 unknown project alias <path>; the <scope> project and its descendants are in scope here — check from the workspace root for a path outside that subtree
 ```
 
-#### 3.8.1 A strict extension of the narrowed scope is safe to hint
-
-A narrowed run may search for a candidate only when its non-empty scope path is
-a strict, segment-wise prefix of the written alias path: the written path starts
-with every scope segment and has at least one segment after them. Thus
-`group/alph` is eligible in scope `group`, and `group/alpha/bet` is eligible in
-scope `group/alpha`. The search sees only the aliases the narrowed run loaded,
-so every candidate it can name is inside the subtree the run can judge.
-
-An eligible path uses the same ordered candidate tiers, deterministic sorting,
-three-result limit, prose joining, and `; did you mean …?` rendering as an
-outermost-root run. When those loaded aliases yield no candidate, the message is
-the existing bare `unknown project alias <path>` form. Outermost-root runs keep
-their existing unconditional candidate search.
-
-Shorter and equal paths, paths whose segments do not begin with the scope, and
-merely lexical prefixes remain ineligible. In scope `group`, that excludes
-`alpha`, `group`, `outside/alpha`, and `grouped/alpha` alike. In `0.13.2`, each
-uses the staged scope-only form from §3.8, including its exact compatibility
-suffix:
-
-```text
-unknown project alias <path>; only the group subtree is in scope here — check from the workspace root for a path outside it — here, the group subtree means the group project and its descendants; this wording changes in grund 0.14.0
-```
-
-Starting in `0.14.0`, each uses the final template in §3.8 instead. Eligibility,
-candidate selection, resolution, and the failing verdict do not change in either
-release.
-
 ### 3.9 Section heading level mismatch
 
 When `[id] section_heading_levels = "strict"` (the default), every citable section heading must sit at the Markdown depth implied by its dotted path: expected level is the declaration heading level plus the number of path components ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth), [AR-scanner.2.2](../architecture/AR-scanner.md#22-section-detection)). A heading `## 1.1 Details` or `## goals.performance: Details` under an H1 declaration is therefore an error at the heading line: each must be H3. With `"warn"`, the same mismatch is reported as a warning; with `"loose"`, the checker does not report it and retains the historical rule that any deeper heading can declare any syntactically legal complete path. This point judges the depth of headings that already carry coordinates; the project-wide in-body Markdown ATX rule for a heading that carries none is [§FS-check.4.14](FS-check.md#414-unmarked-markdown-heading), independent of this mode. Bold labels are not headings and remain unchecked.
 
 ### 3.10 Inline citation style violation
 
-A citation site in a code comment that violates the configured inline citation style — `inline_style = "citation-only"` with prose present, an inline note that exceeds `inline_note_max_lines`, or one that exceeds `inline_note_max_columns`. A site is an *inline* comment block; a doc-comment block is never one, so nothing in this rule reaches a citation written inside a `///`, a `/** … */`, a docstring, or a comment documenting the definition below it ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)). The full mode and budget contract, and how multi-cap violations split into multiple findings, lives in [§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps). The schema for the controlling keys is in [§FS-config.3.1](FS-config.md#31-reference--citation-form).
+A citation site in a code comment that violates the configured inline citation style — `inline_style = "citation-only"` with prose present, an inline note that exceeds `inline_note_max_lines`, or one that exceeds `inline_note_max_columns`. A site is an *inline* comment block, never a doc-comment block, so nothing in this rule reaches a citation written inside a `///`, a `/** … */`, a docstring, or a comment documenting the definition below it ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)). The full mode and budget contract, and how multi-cap violations split into multiple findings, lives in [§FS-inline-citation-style.4.1](FS-inline-citation-style.md#41-errors--hard-caps); the schema for the controlling keys is in [§FS-config.3.1](FS-config.md#31-reference--citation-form). An opt-in layout check adds one further form (§3.10.1).
 
-One further form is opt-in: with `[reference] inline_note_layout` set to a layout and `inline_note_layout_check = "error"`, each line of a citation site that carries a citation and does not match the configured form is an error anchored at that line ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit), [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)). The same deviation is a warning under `inline_note_layout_check = "warn"` (§4.4) and silent at the default `off`. It is the one member of this rule that anchors per line rather than at the site's first line, because a layout deviation is a property of the line an author has to edit.
+#### 3.10.1 Layout deviation
+
+With `[reference] inline_note_layout` set to a layout and `inline_note_layout_check = "error"`, each line of a citation site that carries a citation and does not match the configured form is an error anchored at that line ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit), [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)). The same deviation is a warning under `inline_note_layout_check = "warn"` (§4.4) and silent at the default `off`. It is the one member of this rule that anchors per line rather than at the site's first line, because a layout deviation is a property of the line an author has to edit.
 
 ### 3.11 Missing required citation
 
@@ -518,7 +513,13 @@ When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direct
 docs/architecture/AR-router.md:1: AR-router must cite FS or GOAL (citation direction)
 ```
 
-The body extent and the citing-side classification come from the scanner ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)); the obligation pass is [AR-checker.2.9](../../crates/grund-core/src/checker/report.rs). A **homeless-kind** obligation ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — is per file rather than per declaration — a source file that contains at least one citation but none satisfying the obligation is the error, anchored at line 1.
+The body extent and the citing-side classification come from the scanner ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)); the obligation pass is [AR-checker.2.9](../../crates/grund-core/src/checker/report.rs). The homeless kind (§3.11.1) and a non-citable kind (§3.11.2) are asked per file instead, at the row's `grounding_level` (§3.11.3); every failing unit is reported (§3.11.4), a file with no citation is no unit (§3.11.5), and an `E2E` case has its own unit (§3.11.6). The parallel `should` obligation is not an error; it is a suggestion (§2.3).
+
+#### 3.11.1 The homeless kind
+
+A **homeless-kind** obligation ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — is per file rather than per declaration: a source file that contains at least one citation but none satisfying the obligation is the error, anchored at line 1.
+
+#### 3.11.2 A non-citable kind
 
 **A non-citable kind's obligation is per file too** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)), and its unit is every scanned file in the kind's home that carries at least one citation — **`.md` included**, unlike `code`. Obligations attach to declarations, and a kind that declares nothing would otherwise yield no units at all and let `must` pass vacuously; inheriting `code`'s Markdown exemption would do the same thing a second time, since such a home is usually all Markdown. The finding names the **home**, because the unit has no ID to print:
 
@@ -526,11 +527,21 @@ The body extent and the citing-side classification come from the scanner ([AR-sc
 skills/review/SKILL.md:1: skills/ must cite FS (citation direction)
 ```
 
-**Both per-file units follow the row's `grounding_level`** ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)): *whether* a place's files must cite and *what* they must cite are asked of the same thing (§3.6.2). At level `2` the unit of a non-citable Markdown home is every `##` subtree that carries a citation, and of a source file every unindented doc-comment block that does; the file stays a unit at every level, satisfied by any citation under it. A row at level `1` — which is every configuration written before the key existed — sees no change, and a citable kind's unit stays its declaration at every level, a declaration already being a unit inside a file.
+#### 3.11.3 The unit follows `grounding_level`
 
-**Every failing unit is reported**, as it is for grounding (§3.6.3): at level `2` or above a file whose citations satisfy no `must` entry earns the finding on the file unit *and* one on each section unit that satisfies none either. The reason is the same — the file genuinely cites no such target, and neither does the section — and the two lines differ only in the anchor, which is what tells the reader whether the miss is local to one section.
+Both per-file units follow the row's `grounding_level` ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)): *whether* a place's files must cite and *what* they must cite are asked of the same thing (§3.6.2). At level `2` the unit of a non-citable Markdown home is every `##` subtree that carries a citation, and of a source file every unindented doc-comment block that does; the file stays a unit at every level, satisfied by any citation under it. A row at level `1` — which is every configuration written before the key existed — sees no change, and a citable kind's unit stays its declaration at every level, a declaration already being a unit inside a file.
 
-Units are still built from citations, so a file carrying none produces no unit and `must` cannot fire on it — except that a walked folder with real non-entry content now earns the run-level warning of [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing). The same zero-unit boundary [§FS-config.3.9.2](FS-config.md#392-the-homeless-kind) states for the homeless kind remains intentionally unwarned. In a non-citable home `require_grounding` closes the per-file grounding hole (§3.6): there the grounding rule follows the home rather than the file extension, so "cite something" and "cite an `FS`" are two keys that compose, while the warning of §2.2.1 points at the row's key when grounding is off. An `E2E`-kind obligation ([§FS-config.3.9.1](FS-config.md#391-levels)) is per case declaration, can be satisfied by the case's `spec.refs` manifest entries, and remains an error when the case has no scanned citations or matching manifest reference. The parallel `should` obligation is not an error; it is a suggestion (§2.3).
+#### 3.11.4 Every failing unit is reported
+
+As for grounding (§3.6.3.1), at level `2` or above a file whose citations satisfy no `must` entry earns the finding on the file unit *and* one on each section unit that satisfies none either: the file genuinely cites no such target, and neither does the section. The two lines differ only in the anchor, which is what tells the reader whether the miss is local to one section.
+
+#### 3.11.5 A file with no citation is no unit
+
+Units are built from citations, so a file carrying none produces no unit and `must` cannot fire on it — except that a walked folder with real non-entry content earns the run-level warning of [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing). The same zero-unit boundary [§FS-config.3.9.2](FS-config.md#392-the-homeless-kind) states for the homeless kind remains intentionally unwarned. In a non-citable home `require_grounding` closes the per-file grounding hole (§3.6): there the grounding rule follows the home rather than the file extension, so "cite something" and "cite an `FS`" are two keys that compose, while the warning of §2.2.1 points at the row's key when grounding is off.
+
+#### 3.11.6 An `E2E` case
+
+An `E2E`-kind obligation ([§FS-config.3.9.1](FS-config.md#391-levels)) is per case declaration, can be satisfied by the case's `spec.refs` manifest entries, and remains an error when the case has no scanned citations or matching manifest reference.
 
 ### 3.12 Forbidden citation
 
@@ -540,27 +551,29 @@ When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direct
 docs/functional-spec/FS-login.md:42: FS must not cite AR (citation direction) — re-point the citation or downgrade it to a plain Markdown link
 ```
 
-This message is specified but not implemented today: the binary currently prints the bare fault; re-point the citation or downgrade it to a plain Markdown link.
+This message is specified but not implemented today: the binary currently prints the bare fault; the fix is still to re-point the citation or downgrade it to a plain Markdown link.
 
-The citing kind is the site's resolved `source_kind` ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)), named the way §3.11 names it — by kind for a citable kind, by **home** for a non-citable one (`skills/ must not cite AR`), and by name for the homeless kind, which has no home to name it by ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)). The cited kind and namespace come from the citation token, matched against the rule's namespace grammar ([§FS-config.3.9.3](FS-config.md#393-namespace-matching)). The prohibition pass is [AR-checker.2.10](../../crates/grund-core/src/checker/report.rs). The parallel `should-not` prohibition is not an error; it is a suggestion (§2.3). The sanctioned way to keep a discouraged downward pointer is a plain Markdown link, which is not a citation under `strict = true` and so is exempt from this rule.
+The prohibition pass is [AR-checker.2.10](../../crates/grund-core/src/checker/report.rs); how it reads the citing and the cited kind is §3.12.1. The parallel `should-not` prohibition is not an error; it is a suggestion (§2.3). The sanctioned way to keep a discouraged downward pointer is a plain Markdown link, which is not a citation under `strict = true` and so is exempt from this rule.
+
+#### 3.12.1 How the two kinds are read
+
+The citing kind is the site's resolved `source_kind` ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)), named the way §3.11 names it — by kind for a citable kind, by **home** for a non-citable one (`skills/ must not cite AR`), and by name for the homeless kind, which has no home to name it by ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)). The cited kind and namespace come from the citation token, matched against the rule's namespace grammar ([§FS-config.3.9.3](FS-config.md#393-namespace-matching)).
 
 ### 3.13 Number-only shorthand citation
 
-A recognized shorthand citation (§1.2) persisted in a scanned file is governed
-by the target project's `[reference] shorthand` policy
-([§FS-config.3.1](FS-config.md#31-reference--citation-form)). Under the default
-`canonical` policy, a uniquely resolving site is reported with its replacement
-text and `grund fmt --write` applies that mechanical fix in bulk
-([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)). Under `accepted`, the same
-marker-origin site is valid and produces no shorthand-form finding; its full
-canonical citation may coexist in the same file. This policy gate changes only
-the unique result. A shorthand matching no declaration or several declarations
-still earns the unknown or ambiguous form below, and no policy permits grund to
-guess.
+A recognized shorthand citation (§1.2) persisted in a scanned file is governed by the target project's `[reference] shorthand` policy ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). Under the default `canonical` policy, a uniquely resolving site is reported with its replacement text and `grund fmt --write` applies that mechanical fix in bulk ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)). Under `accepted`, the same marker-origin site is valid and produces no shorthand-form finding; its full canonical citation may coexist in the same file. The policy gate changes only the unique result: a shorthand matching no declaration or several still earns the unknown or ambiguous form of §3.13.3, and no policy permits grund to guess.
 
-**Where the text itself forbids the rewrite, this rule does not fire.** A shorthand inside inline code, a Markdown link destination, or a source string literal is exempt from the resolving form of this error, because [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) forbids the rewrite in those three contexts, where the text is legitimate as it stands, and an error whose only named fix the tool declines to perform there is one a repository can never clear. A suppressed scope and an external file-symlink target are not among them: `fmt` will not rewrite there either, but the error still fires and the author clears it by hand ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes), [§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)). The citation is untouched in every other respect — it resolves, `refs` lists it, and it keeps its declaration from being reported unused (§1.2). The exemption is for the *mechanical* form only: a shorthand matching zero or several declarations is still reported in those contexts, because that is a dangling reference rather than a formatting nit.
+Under `canonical`, an error rather than a warning or a suggestion: a warning leaves the exit code alone, so a repo could accumulate shorthand citations forever while CI stayed green ([§DF-number-only-citation-shorthand.2.3](../decisions/functional/DF-number-only-citation-shorthand.md#23-it-is-an-error-not-a-warning-or-a-suggestion)). Repos whose `[id] format` has no `{number}` or no `{slug}` never see this finding (§1.2). Where the text itself forbids the rewrite, the resolving form does not fire (§3.13.1, §3.13.2).
 
-**A Python docstring is not a string literal for this exemption.** Its delimiters are doc-comment syntax, so the question is asked of the docstring's content ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)) and a shorthand anywhere inside one — the opening line, a one-line docstring, an interior line, the closing line — is reported and rewritten exactly like one in a `#` comment. A shorthand inside a `"…"` or `'…'` literal on a **code** line is what stays exempt.
+#### 3.13.1 Where the text forbids the rewrite
+
+A shorthand inside inline code, a Markdown link destination, or a source string literal is exempt from the resolving form of this error, because [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) forbids the rewrite in those three contexts, where the text is legitimate as it stands, and an error whose only named fix the tool declines to perform there is one a repository can never clear. A suppressed scope and an external file-symlink target are not among them: `fmt` will not rewrite there either, but the error still fires and the author clears it by hand ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes), [§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)). The exempt citation is untouched in every other respect — it resolves, `refs` lists it, and it keeps its declaration from being reported unused (§1.2.4). The exemption is for the *mechanical* form only: a shorthand matching zero or several declarations is still reported in those contexts, because that is a dangling reference rather than a formatting nit.
+
+#### 3.13.2 A Python docstring is not a string literal
+
+A Python docstring is not a string literal for this exemption: its delimiters are doc-comment syntax, so the question is asked of its content ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)), and a shorthand anywhere inside one — the opening line, a one-line docstring, an interior line, the closing line — is reported and rewritten exactly like one in a `#` comment. A shorthand inside a `"…"` or `'…'` literal on a **code** line is what stays exempt.
+
+#### 3.13.3 One finding per site, in three forms
 
 At most one *shorthand* finding per site, in one of three forms. Other rules judge the site on their own terms — a bad section (§3.2) or a forbidden direction (§3.12) is a separate fact about the same citation and is reported separately:
 
@@ -572,24 +585,42 @@ docs/notes.md:7: shorthand citation §FS-042 is ambiguous: FS-042-user-login, FS
 
 The candidate list in the ambiguous form is sorted and complete — `grund` names every match and resolves none, because choosing one would be a guess and `check` reports facts about the tree (§5, [§GOAL-agent-grounding.3](../goals.md#3-what-this-rules-out), [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). Duplicate *numbers* are not otherwise an error: §3.3 catches duplicate full IDs, and a repo may legitimately hold `FS-042-user-login` alongside `FS-042-user-logout` as long as nothing abbreviates them. The marker rendered in the message is the configured one ([§FS-config.3.1](FS-config.md#31-reference--citation-form)), and the qualified form names its namespace (`<§>api/FS-042`, escaped here because this repo has no `api` member) so the replacement can be pasted as written.
 
-Under `canonical`, an error rather than a warning or a suggestion: a warning leaves the exit code alone, so a repo could accumulate shorthand citations forever while CI stayed green, which is the state this rule exists to end ([§DF-number-only-citation-shorthand.2.3](../decisions/functional/DF-number-only-citation-shorthand.md#23-it-is-an-error-not-a-warning-or-a-suggestion)). Repos whose `[id] format` has no `{number}` or no `{slug}` never see this finding (§1.2).
-
 ### 3.14 Out-of-scope unresolvable citation *(`--full` only)*
 
-Under `--full` (§1.3), a citation in a file outside the configured scope whose reference resolves to nothing: the ID is declared nowhere (§3.1), the declaration exists but the cited section does not (§3.2), the namespace alias is unknown (§3.8), or a number-only shorthand matches zero or several declarations (§3.13). The site is reported in the ordinary located-finding shape, with the tier named first and the rule's own message after it:
+Under `--full` (§1.3), a citation in a file outside the configured scope whose reference resolves to nothing — the ID is declared nowhere (§3.1), the declaration exists but the cited section does not (§3.2), the namespace alias is unknown (§3.8), or a number-only shorthand matches zero or several declarations (§3.13) — is an error (§3.14.1) judged on resolution alone (§3.14.2). The site is reported in the ordinary located-finding shape, with the tier named first and the rule's own message after it:
 
 ```
 sim/world.py:12: outside [scan] include: unknown reference RES-061-world-arable-basin-screen
 render/prompts.md:4: outside [scan] include: missing section DA-002-general-field-service-scope.1.4
 ```
 
-- **An error, not a warning.** It moves the exit code to `1` like every other reference failure. A warning would leave `--full` exit-code-neutral, and a finding no CI run can fail on is one a repository accumulates behind forever — the argument §3.13 already makes. Nothing turns red without being asked: the flag is opt-in.
-- **Only resolution, plus one scanner invariant, is judged.** The style, placement, grounding, direction, duplicate, and unused rules say how a project organizes the files it has chosen to govern, and `[scan] include` is exactly that choice; a directory nobody configured has agreed to none of them. The sole exception is §3.23: a numeric or enabled named heading outside every declaration body is invalid scanner structure before any project convention applies, so it retains the untiered `section-outside-declaration` code and its ordinary message outside scope too.
-- **Resolution sees the whole walk.** An out-of-scope citation whose declaration is also out of scope resolves normally. The tier reports references that point at *nothing*, not references that point outside the configured scope.
-- **The mechanical shorthand rewrite is withheld** (§3.13). Its named fix is `grund fmt --write`, and `fmt` scopes by `[scan] include`, so out there the error would name a fix the formatter declines to apply — the same reason §3.13 withholds it at an unrewritable site. A shorthand that matches zero or several declarations is a resolution failure, not a formatting nit, and is reported.
-- **A compound code per rule.** A finding here carries `out-of-scope-` followed by the code its in-scope equivalent carries: `out-of-scope-dangling`, `out-of-scope-missing-section`, `out-of-scope-unknown-project`, `out-of-scope-shorthand-citation`. A `--format=json` consumer ([§FS-errors.5](FS-errors.md#5-json-format)) then filters the tier by prefix and the rule by exact match, both on the `code` field the shape already carries; one code for all four would have left the rule readable only by parsing the message prose. The JSON shape gains no field.
-- **The tier leads the message.** `outside [scan] include: ` comes first, before the rule's own text, because it is the fact that changes what to do: out there the usual fix is to widen the key, not to edit the citation, and a rule's own fix-it hint — `did you mean …?`, `or write <§>… if this is an illustration` — is likelier to be the wrong advice and would otherwise be read first. Naming the key is the whole remedy the message carries; it does not also spell out "widen `[scan] include`", because every finding in the tier would repeat the same sentence and §1.3 states the remedy once.
-- **A wider walk can fail wider.** These findings are errors and move the exit code to `1`, but the flag also puts files the configured scope never touched into the walk, so one that cannot be read or decoded out there is reported as the §2 `error: <path>: <reason>` on stderr and the run exits `2` — "I could not read this" is a fact about the run, not about the tier, and it holds for a file in either scope. A tree whose plain `check` exits `0` can therefore exit `2` under `--full`; that is the wider walk reporting what it found, not a regression.
+#### 3.14.1 An error, not a warning
+
+It moves the exit code to `1` like every other reference failure. A warning would leave `--full` exit-code-neutral, and a finding no CI run can fail on is one a repository accumulates behind forever — the argument §3.13 already makes. Nothing turns red without being asked: the flag is opt-in.
+
+#### 3.14.2 Only resolution, plus one scanner invariant, is judged
+
+The style, placement, grounding, direction, duplicate, and unused rules say how a project organizes the files it has chosen to govern, and `[scan] include` is exactly that choice; a directory nobody configured has agreed to none of them (§1.3.3). The sole exception is §3.23: a numeric or enabled named heading outside every declaration body is invalid scanner structure before any project convention applies, so it retains the untiered `section-outside-declaration` code and its ordinary message outside scope too.
+
+#### 3.14.3 Resolution sees the whole walk
+
+An out-of-scope citation whose declaration is also out of scope resolves normally. The tier reports references that point at *nothing*, not references that point outside the configured scope.
+
+#### 3.14.4 The mechanical shorthand rewrite is withheld
+
+§3.13's resolving form names `grund fmt --write` as its fix, and `fmt` scopes by `[scan] include`, so out there the error would name a fix the formatter declines to apply — the same reason §3.13.1 withholds it at an unrewritable site. A shorthand that matches zero or several declarations is a resolution failure, not a formatting nit, and is reported.
+
+#### 3.14.5 A compound code per rule
+
+A finding here carries `out-of-scope-` followed by the code its in-scope equivalent carries: `out-of-scope-dangling`, `out-of-scope-missing-section`, `out-of-scope-unknown-project`, `out-of-scope-shorthand-citation`. A `--format=json` consumer ([§FS-errors.5](FS-errors.md#5-json-format)) then filters the tier by prefix and the rule by exact match, both on the `code` field the shape already carries; one code for all four would have left the rule readable only by parsing the message prose. The JSON shape gains no field.
+
+#### 3.14.6 The tier leads the message
+
+`outside [scan] include: ` comes first, before the rule's own text, because it is the fact that changes what to do: out there the usual fix is to widen the key, not to edit the citation, and a rule's own fix-it hint — `did you mean …?`, `or write <§>… if this is an illustration` — is likelier to be the wrong advice and would otherwise be read first. Naming the key is the whole remedy the message carries; it does not also spell out "widen `[scan] include`", because every finding in the tier would repeat the same sentence and §1.3 states the remedy once.
+
+#### 3.14.7 A wider walk can fail wider
+
+The flag also puts files the configured scope never touched into the walk, so one that cannot be read or decoded out there is reported as the `error: <path>: <reason>` of §2.4 on stderr and the run exits `2` — "I could not read this" is a fact about the run, not about the tier, and it holds for a file in either scope. A tree whose plain `check` exits `0` can therefore exit `2` under `--full`; that is the wider walk reporting what it found, not a regression.
 
 ### 3.15 Shorthand citation in a numeric run
 
@@ -599,30 +630,53 @@ A number-only shorthand (§1.2) that resolves to exactly one declaration but sit
 docs/changelog.md:3: shorthand §SPEC-001 sits in a numeric run and was not rewritten; write §SPEC-001-checkout, or <§>SPEC-001 if these are old numbers
 ```
 
-This is §3.13's site with a different verdict, so it takes §3.13's place there rather than adding a second finding — at most one *shorthand* finding per site still holds, and rules judging a different fact about the same citation still report alongside it.
+This is §3.13's site with a different verdict, so it takes §3.13's place there rather than adding a second finding — at most one *shorthand* finding per site still holds, and rules judging a different fact about the same citation still report alongside it. Its code is `shorthand-numeric-run` ([§FS-errors.5](FS-errors.md#5-json-format)). It names both fixes (§3.15.1), is an error (§3.15.2), is withheld in the three text contexts where §3.13's resolving form is (§3.15.3), covers only the resolving form (§3.15.4), and is withheld out of scope (§3.15.5).
 
-- **Both exits are named.** `grund` cannot know which was meant and the author knows at a glance. If it was a citation, the canonical text is there to paste; if the numbers were a mapping, `<§>` is the escape for writing an ID without citing it (§2.3.1), offered in the same shape §3.1 uses for a dangling citation that might be an illustration.
-- **An error, like §3.13.** A warning leaves the exit code alone, and a finding no CI run fails on is one a repository accumulates behind forever. No verdict moves on upgrade — these sites are already §3.13 errors — but their bytes do: the §3.13 message and its `shorthand-citation` code give way to this one, and an existing finding's text otherwise changes only through the deprecation path ([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered)). This change takes the pre-1.0 licence of [§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise) instead: carrying the old text beside the new for a release would cost more than the rename, because it would go on advising, at every such site, the edit that corrupts the line.
-- **The rule this one is an exception to.** §3.13 withholds itself where the text forbids the rewrite, because an error whose only named fix the tool declines to perform there can never be cleared. That reasoning covers §3.13's three [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) text contexts, where the text is legitimate as it stands and no edit is wanted at all — and this finding is withheld there too, for that reason, while in a suppressed scope or an external file-symlink target it fires as §3.13's does. It does not cover a run, where the line does need an edit and a person can make it in one keystroke. What has to hold is that every finding names a fix, not that every fix is `fmt`'s.
-- **Only the resolving form.** A shorthand in a run matching zero or several declarations keeps its §3.13 message. That is a resolution failure, reported on its own terms, and a run is no reason to say less about it.
-- **Withheld out of scope.** Under `--full` (§1.3) the site is outside `[scan] include`, where §3.14 withholds the mechanical shorthand rewrite for the same reason: `fmt` scopes by `include` too, so the finding would name an edit no run in that scope is asking for.
-- **Code:** `shorthand-numeric-run` ([§FS-errors.5](FS-errors.md#5-json-format)).
+#### 3.15.1 Both exits are named
+
+`grund` cannot know which was meant and the author knows at a glance. If it was a citation, the canonical text is there to paste; if the numbers were a mapping, `<§>` is the escape for writing an ID without citing it (§2.3.1), offered in the same shape §3.1.2 uses for a dangling citation that might be an illustration.
+
+#### 3.15.2 An error, with new bytes
+
+It is an error for the reason §3.13 gives. No verdict moves on upgrade — these sites are already §3.13 errors — but their bytes do: the §3.13 message and its `shorthand-citation` code give way to this one, and an existing finding's text otherwise changes only through the deprecation path ([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered)). This change takes the pre-1.0 licence of [§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise) instead: carrying the old text beside the new for a release would cost more than the rename, because it would go on advising, at every such site, the edit that corrupts the line.
+
+#### 3.15.3 The rule this one is an exception to
+
+§3.13.1 withholds the resolving form where the text forbids the rewrite, because an error whose only named fix the tool declines to perform there can never be cleared. That reasoning covers the three [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) text contexts, where the text is legitimate as it stands and no edit is wanted at all — and this finding is withheld there too, for that reason, while in a suppressed scope or an external file-symlink target it fires as §3.13's does. It does not cover a run, where the line does need an edit and a person can make it in one keystroke. What has to hold is that every finding names a fix, not that every fix is `fmt`'s.
+
+#### 3.15.4 Only the resolving form
+
+A shorthand in a run matching zero or several declarations keeps its §3.13 message. That is a resolution failure, reported on its own terms, and a run is no reason to say less about it.
+
+#### 3.15.5 Withheld out of scope
+
+Under `--full` (§1.3) the site is outside `[scan] include`, where §3.14.4 withholds the mechanical shorthand rewrite for the same reason: `fmt` scopes by `include` too, so the finding would name an edit no run in that scope is asking for.
 
 ### 3.16 Duplicate section path
 
-Two or more citable section headings inside one declaration claiming the same dotted path ([AR-scanner.2.2](../architecture/AR-scanner.md#22-section-detection)) — either two `## 1. …` headings or two `## goals: …` headings under one `# FS-001-login`. Reported per §2.1 in §3.3's shape: one error anchored at the first heading in file order, with every other heading line named in the message. Named and numeric coordinates use the same `duplicate-section` code, multi-site record, and no-ranking rule.
+Two or more citable section headings inside one declaration claiming the same dotted path ([AR-scanner.2.2](../architecture/AR-scanner.md#22-section-detection)) — either two `## 1. …` headings or two `## goals: …` headings under one `# FS-001-login`. Reported per §2.1 in §3.3's shape: one error anchored at the first heading in file order, with every other heading line named in the message. Named and numeric coordinates use the same `duplicate-section` code ([§FS-errors.5](FS-errors.md#5-json-format)), the same multi-site `sites` record §3.3 carries, and the same no-ranking rule.
 
 ```
 docs/functional-spec/FS-001-login.md:5: duplicate section FS-001-login.1 (also declared at docs/functional-spec/FS-001-login.md:9)
 ```
 
-This is §3.3 one level down. A section path is a citation target, so two headings claiming it give `§FS-001-login.1` two destinations, and picking one silently is the guess [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) forbids by name. Decided in [§DF-duplicate-section-path](../decisions/functional/DF-duplicate-section-path.md#df-duplicate-section-path-a-section-coordinate-names-one-heading-or-the-run-says-so).
+This is §3.3 one level down. A section path is a citation target, so two headings claiming it give `§FS-001-login.1` two destinations, and picking one silently is the guess [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) forbids by name. Decided in [§DF-duplicate-section-path](../decisions/functional/DF-duplicate-section-path.md#df-duplicate-section-path-a-section-coordinate-names-one-heading-or-the-run-says-so). The collision is scoped to one declaration (§3.16.1) and its body (§3.16.2), independent of the heading-level mode (§3.16.3), and read from the record `show` reads (§3.16.4).
 
-- **Scoped to one declaration.** Section paths are addressed as `<ID>.<path>`, so the same `1.` under two different declarations is two distinct coordinates and not a finding. Only headings sharing a declaration collide.
-- **Scoped to that declaration's body.** The headings judged are the ones inside the body [§FS-show.2.1](FS-show.md#21-whole-declaration-default) and [§FS-show.2.3.1](FS-show.md#231-what-counts-as-the-comment-block) delimit — in Markdown down to the next same-or-shallower heading, in a source file to the end of the comment block the declaration line opens. A `## 1.` further down the file — in the *next* item's doc-comment, or under a later unrelated heading — is not one of this declaration's sections: `grund <ID>.1` never reaches it, and reporting it would ask for a renumbering that changes what nothing points at. A stub ([§3.4](#34-broken-inline-spec-stub)) is one link line whose tail is a path rather than a body, so it declares no sections at all and is never reported here; the headings that count are the inline home's, which is also the file `grund <ID>.<path>` reads.
-- **Independent of `[id] section_heading_levels`.** The mode ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth)) governs how deep a heading must sit for the path it writes, which is a different fact; `## 1.` and `### 1.` under an H1 declaration both claim path `1` and are a duplicate in every mode, `"loose"` included. A heading that is both misplaced and duplicated yields §3.9's finding and this one — two facts, two findings.
-- **The same record `show` reads.** This rule and [§FS-show.2.2.2](FS-show.md#222-ambiguous-section) answer from one recorded section set, so `grund <ID>.<path>` refuses exactly when this rule reports `<ID>.<path>` and returns a body exactly when it does not. Two readers that each decided for themselves would disagree — a fenced example, a heading past the end of the body — and a coordinate `check` calls clean but `show` will not resolve is [§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess) failing quietly in the other direction.
-- **Code:** `duplicate-section` ([§FS-errors.5](FS-errors.md#5-json-format)), carrying the same multi-site `sites` list §3.3 carries.
+#### 3.16.1 Scoped to one declaration
+
+Section paths are addressed as `<ID>.<path>`, so the same `1.` under two different declarations is two distinct coordinates and not a finding. Only headings sharing a declaration collide.
+
+#### 3.16.2 Scoped to that declaration's body
+
+The headings judged are the ones inside the body [§FS-show.2.1](FS-show.md#21-whole-declaration-default) and [§FS-show.2.3.1](FS-show.md#231-what-counts-as-the-comment-block) delimit — in Markdown down to the next same-or-shallower heading, in a source file to the end of the comment block the declaration line opens. A `## 1.` further down the file — in the *next* item's doc-comment, or under a later unrelated heading — is not one of this declaration's sections: `grund <ID>.1` never reaches it, and reporting it would ask for a renumbering that changes what nothing points at. A stub ([§3.4](#34-broken-inline-spec-stub)) is one link line whose tail is a path rather than a body, so it declares no sections at all and is never reported here; the headings that count are the inline home's, which is also the file `grund <ID>.<path>` reads.
+
+#### 3.16.3 Independent of `[id] section_heading_levels`
+
+The mode ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth)) governs how deep a heading must sit for the path it writes, which is a different fact; `## 1.` and `### 1.` under an H1 declaration both claim path `1` and are a duplicate in every mode, `"loose"` included. A heading that is both misplaced and duplicated yields §3.9's finding and this one — two facts, two findings.
+
+#### 3.16.4 The same record `show` reads
+
+This rule and [§FS-show.2.2.2](FS-show.md#222-ambiguous-section) answer from one recorded section set, so `grund <ID>.<path>` refuses exactly when this rule reports `<ID>.<path>` and returns a body exactly when it does not. Two readers that each decided for themselves would disagree — a fenced example, a heading past the end of the body — and a coordinate `check` calls clean but `show` will not resolve is [§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess) failing quietly in the other direction.
 
 ### 3.17 Index entry is not a link
 
