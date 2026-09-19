@@ -630,23 +630,9 @@ docstring_python   = true
 respect_gitignore  = true
 ```
 
-`include` is the set of paths walked **from the config root** — the directory the discovered `grund.toml` was found at (§1), or, when no config was discovered, the current working directory (never a subdirectory that merely happened to be passed as `grund`'s path argument). So in a config-less repo `grund` (no path) and `grund check .` both walk `requirements.md`, `docs/`, `e2e/`, `src/` relative to the cwd, while `grund check src/foo` or `grund check lib/` scans exactly the file or directory it is handed — an explicit path argument overrides `include` rather than being filtered by it. A walk that ends up reading no files at all is reported, not silently passed ([§FS-check.2.2](FS-check.md#22-empty-scan)). `exclude` is the set of directory names skipped at any depth. `extensions` filters which files are read. `comment_prefixes` are the markers recognized when looking for inline declarations and citations in source files. The two lists compose: adding `sql` without `--`, or `--` without `sql` (or another extension using that marker), does not enable SQL doc-comments. `docstring_python` enables Python triple-quoted-string scanning in addition to `#` comments.
+`include` is the set of paths walked from the config root (§3.5.7), beside every configured kind home (§3.5.8). `exclude` is the set of directory names skipped at any depth, `extensions` filters which files are read (§3.5.13), and `respect_gitignore` has the walk honor the ignore files as well (§3.5.15). `comment_prefixes` are the markers recognized when looking for inline declarations and citations in source files, composed with `extensions` (§3.5.14); `docstring_python` enables Python triple-quoted-string scanning in addition to `#` comments. A hidden file is not read (§3.5.12), and `include` is a scope, not a fence (§3.5.11). A walk that ends up reading no files at all is reported, not silently passed ([§FS-check.2.2](FS-check.md#22-empty-scan)).
 
 An opted-in kind's home JSON is catalog input rather than part of this walk. The exact discovery and independence from every key in this table are fixed by [§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations) and [§FS-values.2.2](FS-values.md#22-json-declarations-from-the-kind-home).
-
-**A hidden *file* is not read either, and that rule is not about descent.** The walk skips a hidden directory by not descending into it; it skips a file whose own name begins with `.` by the name that file wears, before `extensions` is consulted at all ([AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)). So `docs/.notes.md` is not scanned though `md` is listed, and a citation inside it neither resolves nor dangles — it is invisible the way one outside `include` is, and `grund check --full` does not reach it either, because that flag cancels `include` and nothing else ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)). Being a rule about a name rather than about a descent, it also reaches a walk **root**, which is the one exception to the walk-root rule the kind-home paragraph below states. It is a blind spot the repository can see and plan around ([§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded)): what decides is the file's own name, so a document that must be checked is one not named as a dotfile, and a run handed such a file whose extension this list *does* allow says so rather than blaming the list ([§FS-check.2.2](FS-check.md#22-empty-scan)).
-
-Listing an extension makes a file *readable*, not declarable. A prose markup format other than Markdown — AsciiDoc, reStructuredText, LaTeX — has its citations checked as soon as its extension appears here, because the citation grammar is format-agnostic; its native heading syntax still declares nothing, since a declaration is a `#`-prefixed heading or a comment-prefixed line. Whether those formats should be declaration homes of their own is an open discussion ([§DISC-markup-format-declarations](../discussions/proposals/2026-05-25-markup-format-declarations.md#disc-markup-format-declarations-declarations-in-asciidoc-restructuredtext-latex-and-similar-markup-document-formats)), not a configured behavior.
-
-Every default comment prefix has a path through the default extension list: `;` pairs with Lisp, Scheme, and Clojure extensions; `--` pairs with SQL, Haskell, Lua, and Ada extensions; and `*` / `/*` are block-comment continuation and opener forms in the C-family extensions. Any line whose first non-whitespace run is a configured prefix is eligible to host a declaration heading or a citation. Each claimed form has a strict-mode executable case that plants a marked dangling citation in that form ([§REQ-no-missed-citation.3](../requirements/REQ-no-missed-citation.md#3-proven-per-host-language)).
-
-**Every configured kind home is walked, whether or not `include` names it** (§3.4). A home is the repository saying "declarations and citations live here", so `include` names the *extra* roots — `src`, `crates`, a `README.md` — rather than having to repeat the homes the `[[kinds]]` table already spelled. A home that does not exist walks as nothing and earns no finding, so a fresh repository whose default homes are not scaffolded yet stays silent. A home is a **walk root**, and no walk root is pruned by `exclude`, an ignore file, or the hidden-directory rule ([AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)) — so a home the repository also excludes is read, while everything *below* it is filtered as usual. That is the honest reading of a config that says both: the `[[kinds]]` entry names the directory, and `exclude` was written about descendants. All three are rules about a descent, which is why a root outruns them; the hidden-**file** rule above is not, so it is the one skip a root does not outrun — a `file` home whose name is hidden, like an `include` entry naming one, is not read as a root either. The one home that is not a walk root is the one the config says so about: `scan = false` (§3.4.7) lists a place without walking it.
-
-This closes a trap that had nothing to do with non-citable kinds and everything to do with why one would be configured: a `folder` or `file` outside `include` was never walked, so its declarations did not exist and its citations were **invisible rather than dangling** — no resolution, no finding, nothing to notice. A kind whose entire content is "this directory matters" would have fallen into it on its first line of config. **Upgrade note:** a repository that had a home outside `include` starts seeing that home's findings; they were always true of the tree, and the run was simply not reading it.
-
-`include` is a **scan scope, not a fence**. A citation in a file that neither it nor a kind home brings into the walk is invisible rather than merely unchecked — it does not resolve and it does not dangle — so `grund check --full` walks the whole config root past this key, and what it reports outside the configured scope is [§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)'s to say. The flag cancels `include` and, with it, the `scan = false` prune of §3.4.7, and nothing else: `exclude`, the ignore files, and `extensions` below apply to that walk unchanged. A plain parent-relative entry such as `../shared` intentionally names external content and is still walked; §3.5.1's project-root boundary applies only when a **directory symlink** carries traversal outside the project.
-
-`respect_gitignore` (default `true`) makes the scanner honor every form of ignore file the `ignore` crate recognizes — `.gitignore` at any depth, `.git/info/exclude`, the global `core.excludesFile`, and `.ignore` files. Set to `false` only when you genuinely need to scan ignored paths. The directory-level `exclude` list above is applied **in addition** to ignore-file rules, never instead of them. See [AR-scanner.1.1](../architecture/AR-scanner.md#11-respecting-gitignore-and-friends).
 
 **Symlinks (§3.5.1–§3.5.6).** Decided in [§DF-symlink-scan](../decisions/functional/DF-symlink-scan.md#df-symlink-scan-a-symlink-in-the-scanned-tree-is-followed-and-the-report-names-the-link).
 
@@ -672,6 +658,8 @@ current project's root.
 
 Every finding from a link met **inside a walked tree** is reported at the in-tree link path, never the target's: that is the path a reader can act on, and it is what keeps `relative_paths` output (§3.6) and the additivity rule of [§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full) meaningful. An explicit path argument follows the same reporting rule: resolving `grund check docs/beta.md` identifies and reads the target, but every text and JSON report names `docs/beta.md` as reached through the configured CLI base. This remains true when the target resolves outside the config root — the in-tree link is the bounded, actionable spelling and the external physical path never becomes report output.
 
+##### 3.5.2.1 The walk root keeps the path the run was handed
+
 The same rule reaches the **walk root itself**: a repository whose own path is reached through a link — a symlinked `~/work`, macOS resolving `/var` to `/private/var` — is walked and reported under the path the run was handed, never the physical one it resolves to. Resolving a root is how a run recognizes that a scope *is* the config root; it is not a decision about what the report calls it, and a finding spelled physically is one [`relative_paths`](#36-output--report-format) cannot render and no reader of that repository ever wrote.
 
 #### 3.5.3 The directory rules apply under the link name
@@ -690,7 +678,45 @@ A link the walk cannot resolve is not a silent skip: a broken target, or a loop 
 
 That report is owed only where the walk would otherwise have read through the link, judged by the same rules as any other entry: the ignore files for both kinds, and `extensions` as well for a broken link, which names a file where a loop names a directory. So a dangling `docs/logo.png -> nowhere`, and a link of either kind that `.gitignore` covers, stay silent — the walk was never going to read them.
 
+##### 3.5.6.1 A broken link with no extension is a declared blind spot
+
 A broken link with **no extension at all** is silent for the same reason and is worth naming, because it is the one case where that answer can be wrong: `docs/shared -> ../nonexistent-dir` would have been a directory to descend into had it resolved. Nothing on disk distinguishes it from `bin/tool -> nowhere`, since the target does not exist and only the target could have said which it was, and reporting every extensionless dangling link is the noise this gate exists to prevent. That is a declared, bounded blind spot ([§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded)) and not a silent one: a link you need scanned is one you need to resolve.
+
+#### 3.5.7 `include` is walked from the config root
+
+`include` is walked **from the config root** — the directory the discovered `grund.toml` was found at (§1), or, when no config was discovered, the current working directory (never a subdirectory that merely happened to be passed as `grund`'s path argument). So in a config-less repo `grund` (no path) and `grund check .` both walk `requirements.md`, `docs/`, `e2e/`, `src/` relative to the cwd, while `grund check src/foo` or `grund check lib/` scans exactly the file or directory it is handed — an explicit path argument overrides `include` rather than being filtered by it. A plain parent-relative entry such as `../shared` intentionally names external content and is still walked; §3.5.1's project-root boundary applies only when a **directory symlink** carries traversal outside the project.
+
+#### 3.5.8 Every configured kind home is walked
+
+**Every configured kind home is walked, whether or not `include` names it** (§3.4). A home is the repository saying "declarations and citations live here", so `include` names the *extra* roots — `src`, `crates`, a `README.md` — rather than having to repeat the homes the `[[kinds]]` table already spelled. A home that does not exist walks as nothing and earns no finding, so a fresh repository whose default homes are not scaffolded yet stays silent. The one home that is not a walk root is the one the config says so about: `scan = false` (§3.4.7) lists a place without walking it.
+
+#### 3.5.9 A walk root outruns every rule about descent
+
+A home is a **walk root**, and no walk root is pruned by `exclude`, an ignore file, or the hidden-directory rule ([AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)) — so a home the repository also excludes is read, while everything *below* it is filtered as usual. That is the honest reading of a config that says both: the `[[kinds]]` entry names the directory, and `exclude` was written about descendants. All three are rules about a descent, which is why a root outruns them; the hidden-file rule is about a name, so a root does not outrun it (§3.5.12).
+
+#### 3.5.10 Why every home is walked
+
+Walking every home closes a trap that had nothing to do with non-citable kinds and everything to do with why one would be configured: a `folder` or `file` outside `include` was never walked, so its declarations did not exist and its citations were **invisible rather than dangling** — no resolution, no finding, nothing to notice. A kind whose entire content is "this directory matters" would have fallen into it on its first line of config. **Upgrade note:** a repository that had a home outside `include` starts seeing that home's findings; they were always true of the tree, and the run was simply not reading it.
+
+#### 3.5.11 `include` is a scan scope, not a fence
+
+A citation in a file that neither `include` nor a kind home brings into the walk is invisible rather than merely unchecked ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)), so `grund check --full` walks the whole config root past this key. The flag cancels `include` and, with it, the `scan = false` prune of §3.4.7, and nothing else: every other rule of this table applies to that walk unchanged ([§FS-check.1.3.1](FS-check.md#131-the-walk-covers-the-whole-config-root)), and what it reports outside the configured scope is [§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)'s to say.
+
+#### 3.5.12 A hidden file is not read, and the rule is not about descent
+
+The walk skips a hidden directory by not descending into it; it skips a file whose own name begins with `.` by the name that file wears, before `extensions` is consulted at all ([AR-scanner.1](../architecture/AR-scanner.md#1-tree-walk)). So `docs/.notes.md` is not scanned though `md` is listed, and a citation inside it neither resolves nor dangles — it is invisible the way one outside `include` is, and `grund check --full` does not reach it either (§3.5.11). Being a rule about a name rather than about a descent, it also reaches a walk **root**, the one exception to §3.5.9: a `file` home whose name is hidden, like an `include` entry naming one, is not read as a root. It is a blind spot the repository can see and plan around ([§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded)): what decides is the file's own name, so a document that must be checked is one not named as a dotfile, and a run handed such a file whose extension `extensions` *does* allow says so rather than blaming the list ([§FS-check.2.2](FS-check.md#22-empty-scan)).
+
+#### 3.5.13 An extension makes a file readable, not declarable
+
+Listing an extension makes a file *readable*, not declarable. A prose markup format other than Markdown — AsciiDoc, reStructuredText, LaTeX — has its citations checked as soon as its extension appears in `extensions`, because the citation grammar is format-agnostic; its native heading syntax still declares nothing, since a declaration is a `#`-prefixed heading or a comment-prefixed line. Whether those formats should be declaration homes of their own is an open discussion ([§DISC-markup-format-declarations](../discussions/proposals/2026-05-25-markup-format-declarations.md#disc-markup-format-declarations-declarations-in-asciidoc-restructuredtext-latex-and-similar-markup-document-formats)), not a configured behavior.
+
+#### 3.5.14 `comment_prefixes` compose with `extensions`
+
+The two lists compose: adding `sql` without `--`, or `--` without `sql` (or another extension using that marker), does not enable SQL doc-comments. Every default comment prefix has a path through the default extension list: `;` pairs with Lisp, Scheme, and Clojure extensions; `--` pairs with SQL, Haskell, Lua, and Ada extensions; and `*` / `/*` are block-comment continuation and opener forms in the C-family extensions. Any line whose first non-whitespace run is a configured prefix is eligible to host a declaration heading or a citation. Each claimed form has a strict-mode executable case that plants a marked dangling citation in that form ([§REQ-no-missed-citation.3](../requirements/REQ-no-missed-citation.md#3-proven-per-host-language)).
+
+#### 3.5.15 `respect_gitignore` — the ignore files
+
+`respect_gitignore` (default `true`) makes the scanner honor every form of ignore file the `ignore` crate recognizes — `.gitignore` at any depth, `.git/info/exclude`, the global `core.excludesFile`, and `.ignore` files. Set to `false` only when you genuinely need to scan ignored paths. The directory-level `exclude` list is applied **in addition** to ignore-file rules, never instead of them. See [AR-scanner.1.1](../architecture/AR-scanner.md#11-respecting-gitignore-and-friends).
 
 ### 3.6 `[output]` — report format
 
@@ -701,7 +727,11 @@ color          = "auto"   # auto | always | never
 relative_paths = true     # show paths relative to config root in reports
 ```
 
-`relative_paths = true` (default) renders every `<path>` in a report relative to the config root (§1). `relative_paths = false` renders them relative to the path argument passed on the command line — or to the current working directory when no path is given. A target elsewhere inside the loaded project or workspace uses the minimum `..` components needed to reach it from that base; those parent components are allowed only while the resolved target remains inside the loaded root. Either way `grund` **never** emits an absolute path, nor a path that escapes the loaded root other than the `..` path of a config above the run's root that the run had to read (`../grund.toml:16`, [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)); this is what keeps the report deterministic per [§FS-errors.4](FS-errors.md#4-determinism). The CLI-base choice and the rejected workspace-root alternative are recorded in [§DF-cli-base-parent-paths](../decisions/functional/DF-cli-base-parent-paths.md#df-cli-base-parent-paths-relative_paths--false-keeps-one-cli-base-and-may-climb-within-the-loaded-root). `color` controls ANSI styling once the colored-output feature lands ([§FS-errors.3](FS-errors.md#3-message-text)); until then output is plain bytes regardless of this value, and a change to that default goes through the [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) path.
+`relative_paths = true` (default) renders every `<path>` in a report relative to the config root (§1); `relative_paths = false` renders it relative to the CLI base instead (§3.6.1). Either way `grund` **never** emits an absolute path, nor a path that escapes the loaded root other than the `..` path of a config above the run's root that the run had to read (`../grund.toml:16`, [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)); this is what keeps the report deterministic per [§FS-errors.4](FS-errors.md#4-determinism). `color` controls ANSI styling once the colored-output feature lands ([§FS-errors.3](FS-errors.md#3-message-text)); until then output is plain bytes regardless of this value, and a change to that default goes through the [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) path.
+
+#### 3.6.1 `relative_paths = false` — the CLI base
+
+`relative_paths = false` renders every `<path>` relative to the path argument passed on the command line — or to the current working directory when no path is given. A target elsewhere inside the loaded project or workspace uses the minimum `..` components needed to reach it from that base; those parent components are allowed only while the resolved target remains inside the loaded root. The CLI-base choice and the rejected workspace-root alternative are recorded in [§DF-cli-base-parent-paths](../decisions/functional/DF-cli-base-parent-paths.md#df-cli-base-parent-paths-relative_paths--false-keeps-one-cli-base-and-may-climb-within-the-loaded-root).
 
 ### 3.7 `[fmt.cross_refs]` — cross-reference emission
 
@@ -711,7 +741,11 @@ enabled       = true       # default; false opts out of generated Markdown links
 anchor_format = "github"   # default; one of github | gitlab | mkdocs | pandoc | none
 ```
 
-The full contract for this block — what `enabled` does, the named `anchor_format` profiles, and when the cross-reference pass runs — lives in [§FS-fmt.6.7](FS-fmt.md#67-configurability), [§DF-md-link-default-on](../decisions/functional/DF-md-link-default-on.md#df-md-link-default-on-markdown-cross-reference-links-default-on-for-github-review-and-discovery), and [§DF-md-link-anchor-strategy](../decisions/functional/DF-md-link-anchor-strategy.md#df-md-link-anchor-strategy-heading-text-slugs-re-derived-on-every-fmt-pass). It is part of the schema here because the generated `grund.toml` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)) writes every key in this section explicitly, including `enabled = true`, so the default generated file teaches that `grund fmt --write` emits Markdown inline links in `.md` files. `[fmt.cross_refs]` is the home for cross-reference settings; today `grund fmt --cross-refs` only emits the Markdown inline-link form ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)), so `anchor_format` is the only knob — a future markup family adds its settings under this same block ([§FS-fmt.6.7](FS-fmt.md#67-configurability)), additively, with no `grund_config_version` bump (§5). The sibling `[fmt]` table (§3.10) is a different thing and is documented apart from this one: it governs every rewrite `grund fmt` performs, not just this pass.
+The full contract for this block — what `enabled` does, the named `anchor_format` profiles, and when the cross-reference pass runs — lives in [§FS-fmt.6.7](FS-fmt.md#67-configurability), [§DF-md-link-default-on](../decisions/functional/DF-md-link-default-on.md#df-md-link-default-on-markdown-cross-reference-links-default-on-for-github-review-and-discovery), and [§DF-md-link-anchor-strategy](../decisions/functional/DF-md-link-anchor-strategy.md#df-md-link-anchor-strategy-heading-text-slugs-re-derived-on-every-fmt-pass). It is part of the schema here because the generated `grund.toml` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)) writes every key in this section explicitly, including `enabled = true`, so the default generated file teaches that `grund fmt --write` emits Markdown inline links in `.md` files.
+
+#### 3.7.1 One block for every cross-reference form
+
+`[fmt.cross_refs]` is the home for cross-reference settings; today `grund fmt --cross-refs` only emits the Markdown inline-link form ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)), so `anchor_format` is the only knob — a future markup family adds its settings under this same block ([§FS-fmt.6.7](FS-fmt.md#67-configurability)), additively, with no `grund_config_version` bump (§5). The sibling `[fmt]` table is a different thing (§3.10.3).
 
 ### 3.8 `[workspace]` — sub-project namespaces
 
@@ -757,7 +791,15 @@ Five keys form an RFC-2119 ladder, split into two rule classes and two enforceme
 | `should-not` | prohibition | citation site | suggestion — `discouraged-citation` ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)) |
 | `must-not` | prohibition | citation site | `grund check` error — `forbidden-citation` ([§FS-check.3.12](FS-check.md#312-forbidden-citation)) |
 
-An **obligation** asks: does each top-level declaration of the citing kind contain at least one citation to the target kind, anywhere in its body? Multiple array entries are **conjunctive** — `must = ["GOAL", "GRUND"]` requires a citation to each — while a `|` disjunction inside one entry is satisfied by any one alternative — `must = ["GOAL|GRUND"]` requires a citation to either. `E2E` obligations are per case declaration: they evaluate the case's scanned files plus the case manifest's `spec.refs` entries, but an otherwise empty evidence set still fails a `must` entry rather than satisfying it vacuously. A `spec.refs` entry is kind-shaped evidence — it may name an idealized ID that does not resolve locally, so it is not subject to the dangling check that governs ordinary citations. A **prohibition** fires once per offending citation site, anchored at its exact `file:line`.
+##### 3.9.1.1 Obligations and prohibitions
+
+An **obligation** asks: does each top-level declaration of the citing kind contain at least one citation to the target kind, anywhere in its body? Multiple array entries are **conjunctive** — `must = ["GOAL", "GRUND"]` requires a citation to each — while a `|` disjunction inside one entry is satisfied by any one alternative — `must = ["GOAL|GRUND"]` requires a citation to either. A **prohibition** fires once per offending citation site, anchored at its exact `file:line`.
+
+##### 3.9.1.2 `E2E` obligations are per case
+
+`E2E` obligations are per case declaration: they evaluate the case's scanned files plus the case manifest's `spec.refs` entries, but an otherwise empty evidence set still fails a `must` entry rather than satisfying it vacuously. A `spec.refs` entry is kind-shaped evidence — it may name an idealized ID that does not resolve locally, so it is not subject to the dangling check that governs ordinary citations.
+
+##### 3.9.1.3 The level→surface mapping is fixed
 
 `must` and `must-not` gate (`grund check` errors); `should` and `should-not` are machine-checked suggestions that never appear in `grund check`'s standing output and are surfaced only at write time (the generated entrypoint, [§FS-init.2.3.5](FS-init.md#235-citation-directions)) and on demand (`grund check --suggestions`, [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). The level→surface mapping is fixed, never a project knob, so two installs reading one config agree on what gates and what is suggested ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)).
 
@@ -765,7 +807,9 @@ An **obligation** asks: does each top-level declaration of the citing kind conta
 
 Every citation site that no single configured kind home claims — outside every home, or in a file two overlapping homes contain — resolves to one citing kind ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)). That kind is the **complement** of the whole `[[kinds]]` table: it is the one kind that is not a place, which is why it has no `folder` and no `file` and why there is exactly one of it.
 
-Its name is `code` by default, and a project may name it something truer by declaring it:
+Its name is `code` by default, and a project may name it something truer by declaring it (§3.9.2.1).
+
+##### 3.9.2.1 Declaring it
 
 ```toml
 [[kinds]]
@@ -779,19 +823,31 @@ should = ["FS|AR"]
 
 An entry is the homeless kind exactly when it sets `citable = false` and neither `folder` nor `file` — that shape is the declaration, not a separate key. Declaring two is a config error (§4.3): a complement is one place, and two rows claiming it leave the fallback with no single answer.
 
-The row takes `require_grounding` and `grounding_level` like any other (§3.4.8), and that is how a project asks for grounding of its source tree and of nothing else: `kind = "code"`, `citable = false`, `require_grounding = true`. Written on this row the keys govern the complement alone; written in `[reference]` they are the default this row inherits with every other.
-
-`code` is the default rather than a fixed name because it is the right word for most repositories and the wrong one for some — a Terraform tree, a SQL tree, a prose tree. It is still **reserved**: a `[[kinds]]` entry may take the name `code` only by *being* the homeless kind, because any other row wearing it would collide with the fallback every citation outside a home resolves to. Declaring `code` with a `title` is therefore how a project keeps the name and says what it covers.
-
 Naming the kind moves the rules with it: `[citations.src]` governs those sites, and `[citations.code]` in that config names an unknown kind (§3.9.5) rather than sitting inert.
+
+##### 3.9.2.2 `code` is the default name, and reserved
+
+`code` is the default rather than a fixed name because it is the right word for most repositories and the wrong one for some — a Terraform tree, a SQL tree, a prose tree. It is still **reserved** to this kind (§3.4.5.2), so declaring `code` with a `title` is how a project keeps the name and says what it covers.
+
+##### 3.9.2.3 Grounding the source tree and nothing else
+
+The row takes `require_grounding` and `grounding_level` like any other (§3.4.8.4), and that is how a project asks for grounding of its source tree and of nothing else: `kind = "code"`, `citable = false`, `require_grounding = true`. Written on this row the keys govern the complement alone; written in `[reference]` they are the default this row inherits with every other.
+
+##### 3.9.2.4 Obligations apply per source file
 
 **Obligations apply per file** — and per section unit as well where the row's `grounding_level` is above `1` ([§FS-check.3.11](FS-check.md#311-missing-required-citation)) — only to files that contain at least one citation, and only to **source files** under the exact predicate `require_grounding` uses — a scanned file whose extension is not `.md` ([§DF-require-grounding.2.2](../decisions/functional/DF-require-grounding.md#22-grounded-is-defined-syntactically)). Markdown outside a kind home (a README, the changelog) is therefore prohibition-checked but obligation-exempt. A configured non-citable kind *with* a home (§3.4.1) is the same species and differs on exactly that point: its unit is every scanned file in its home, `.md` included ([§FS-check.3.11](FS-check.md#311-missing-required-citation)).
 
-**It gets no Project map row** ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)) — every row there links a place, and this is the kind that has none. Its citation-directions row renders **last**, wherever in the table it was declared, under the subject [§FS-init.2.3.5](FS-init.md#235-citation-directions) gives the homeless kind.
+##### 3.9.2.5 No Project map row, and the last directions row
+
+The homeless kind **gets no Project map row** ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)) — every row there links a place, and this is the kind that has none. Its citation-directions row renders **last**, wherever in the table it was declared, under the subject [§FS-init.2.3.5](FS-init.md#235-citation-directions) gives the homeless kind.
 
 #### 3.9.3 Namespace matching
 
-Rule entries reuse the citation grammar of [§FS-workspace.1](FS-workspace.md#1-citation-syntax): a bare `AR` matches the **local** namespace only; `alias/AR` pins one workspace member, spelled with the same whole alias path a citation uses (`group/api/AR`, [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)); `*/AR` matches the kind in **any** namespace including the local one. `*/` is new syntax valid in rule entries only — it is never a citation. Each entry parses as `[alias-path-or-*/]KIND`, split at the last `/` exactly as a citation is. A malformed qualifier is rejected with a citation-target diagnostic that names the target's kind and the first invalid qualifier segment; an empty qualifier or segment is named explicitly. A `*` segment is invalid unless it is the whole qualifier, and the diagnostic says so. The match is textual on the qualifier and prefix; resolution failures are separate errors ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)), so the direction check never loads a foreign config. Each member's own `[citations]` governs the citation sites in that member's tree — like `strict`, `require_grounding`, and `[id]`, no section inherits from the workspace root.
+Rule entries reuse the citation grammar of [§FS-workspace.1](FS-workspace.md#1-citation-syntax): a bare `AR` matches the **local** namespace only; `alias/AR` pins one workspace member, spelled with the same whole alias path a citation uses (`group/api/AR`, [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)); `*/AR` matches the kind in **any** namespace including the local one. `*/` is new syntax valid in rule entries only — it is never a citation. Each entry parses as `[alias-path-or-*/]KIND`, split at the last `/` exactly as a citation is; a malformed qualifier is rejected (§3.9.3.1). The match is textual on the qualifier and prefix; resolution failures are separate errors ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)), so the direction check never loads a foreign config. Each member's own `[citations]` governs the citation sites in that member's tree — like `strict`, `require_grounding`, and `[id]`, no section inherits from the workspace root.
+
+##### 3.9.3.1 A malformed qualifier is rejected
+
+A malformed qualifier is rejected with a citation-target diagnostic that names the target's kind and the first invalid qualifier segment; an empty qualifier or segment is named explicitly. A `*` segment is invalid unless it is the whole qualifier, and the diagnostic says so.
 
 #### 3.9.4 Defaults and precedence
 
@@ -799,9 +855,13 @@ Rule entries reuse the citation grammar of [§FS-workspace.1](FS-workspace.md#1-
 
 #### 3.9.5 Validation
 
-Config validation rejects: a `[citations.<kind>]` table whose kind is neither a configured `[[kinds]]` name nor the homeless kind's name (§3.9.2) — so `[citations.code]` is rejected in a config that named its complement something else; one naming an unwalked kind (§3.4.7); a target naming a kind that is not a configured *citable* kind — reported as *an unknown target kind* for a name the table does not hold and *a non-citable target kind* for one it does, since those are different mistakes; `code` used as a `[[kinds]]` name by anything but the homeless kind (§3.4.5); two entries declaring the homeless kind (§3.9.2); an unknown level key; and two targets of the same cited kind at different levels whose namespace matchers can match the same citation. The last rule is on namespace **overlap**, not textual equality — `*/AR` (any namespace) overlaps a bare `AR` (local), so listing one at `should` and the other at `must-not` is rejected, while a local `AR` permitted alongside a pinned `alias/AR` forbidden is allowed because those matchers are disjoint (§3.9.3). The section composes unchanged with project-defined `[[kinds]]` — a new kind is one more `[citations.<KIND>]` table.
+Config validation rejects: a `[citations.<kind>]` table whose kind is neither a configured `[[kinds]]` name nor the homeless kind's name (§3.9.2) — so `[citations.code]` is rejected in a config that named its complement something else; one naming an unwalked kind (§3.4.7); a target naming a kind that is not a configured *citable* kind — reported as *an unknown target kind* for a name the table does not hold and *a non-citable target kind* for one it does, since those are different mistakes; `code` used as a `[[kinds]]` name by anything but the homeless kind (§3.4.5); two entries declaring the homeless kind (§3.9.2); an unknown level key; and two targets of the same cited kind at different levels whose namespace matchers can match the same citation (§3.9.5.1). The section composes unchanged with project-defined `[[kinds]]` — a new kind is one more `[citations.<KIND>]` table.
 
 Adding `[citations]` does **not** bump `grund_config_version` (§5): it is additive surface, like `[workspace]` and `require_grounding`. An older binary meeting it fails loudly with `unknown config section`.
+
+##### 3.9.5.1 Overlap, not textual equality
+
+The rule on two targets of one cited kind is on namespace **overlap**, not textual equality — `*/AR` (any namespace) overlaps a bare `AR` (local), so listing one at `should` and the other at `must-not` is rejected, while a local `AR` permitted alongside a pinned `alias/AR` forbidden is allowed because those matchers are disjoint (§3.9.3).
 
 ### 3.10 `[fmt]` — suppressing the rewrite
 
@@ -812,11 +872,17 @@ exclude = ["docs/architecture/AR-topology.md", "docs/diagrams"]
 
 `exclude` is the set of files `grund fmt` performs **no** rewrite in. The full contract — that it covers all four rewrite classes, that a suppressed file is still walked and still checked, and that a kind's index entries are wrapped there anyway — is [§FS-fmt.2.5.1](FS-fmt.md#251-fmt-exclude--a-file-at-a-time). Nothing else reads the key: no scanner, checker, or query behavior depends on it, and `grund check` says exactly the same thing about a tree with the key and without it.
 
-Each entry is a gitignore-style glob resolved against the config root (§1) — the same dialect `respect_gitignore` already brings to the walk (§3.5) — so `docs/diagrams` takes every file under that directory, `AR-*.md` matches at any depth, and `docs/architecture/AR-topology.md` names one file. A pattern the glob parser rejects is a config error at its own line, per §4.3.
+#### 3.10.1 Entries are gitignore-style globs
+
+Each entry is a gitignore-style glob resolved against the config root (§1) — the same dialect `respect_gitignore` already brings to the walk (§3.5.15) — so `docs/diagrams` takes every file under that directory, `AR-*.md` matches at any depth, and `docs/architecture/AR-topology.md` names one file. A pattern the glob parser rejects is a config error at its own line, per §4.3.
+
+#### 3.10.2 Optional, empty by default, and additive
 
 The table is optional and defaults to the empty list, which is what every config written before the key existed means. It is additive, so `grund_config_version` stays 1 (§5), and an older binary meeting it fails loudly through the unknown-section rejection (§4.3) rather than silently ignoring it. `grund config show` (§4.2) prints the table only where the list is non-empty, so a shown config still loads back as itself.
 
-`[fmt]` is the home for settings about the `fmt` command as a whole; `[fmt.cross_refs]` (§3.7) remains the home for cross-reference settings specifically. The per-region counterpart to this key is not configured here at all — it is written in the file it governs ([§FS-fmt.2.5.2](FS-fmt.md#252-grundfmt-off--grundfmt-on--a-region-at-a-time)), and the reasoning for both is in [§DF-fmt-suppression](../decisions/functional/DF-fmt-suppression.md#df-fmt-suppression-fmt-suppression-is-per-file-and-per-region-and-the-index-carve-out-outranks-both).
+#### 3.10.3 `[fmt]` is the command's home, `[fmt.cross_refs]` the pass's
+
+`[fmt]` is the home for settings about the `fmt` command as a whole — it governs every rewrite `grund fmt` performs, not just the cross-reference pass; `[fmt.cross_refs]` (§3.7) remains the home for cross-reference settings specifically. The per-region counterpart to this key is not configured here at all — it is written in the file it governs ([§FS-fmt.2.5.2](FS-fmt.md#252-grundfmt-off--grundfmt-on--a-region-at-a-time)), and the reasoning for both is in [§DF-fmt-suppression](../decisions/functional/DF-fmt-suppression.md#df-fmt-suppression-fmt-suppression-is-per-file-and-per-region-and-the-index-carve-out-outranks-both).
 
 ## 4. Validation and inspection
 
@@ -830,14 +896,22 @@ When the discovered config declares `[workspace]` ([§3.8](#38-workspace--sub-pr
 
 ### 4.2 `grund config show [path]`
 
-Prints the **effective** configuration — defaults merged with the config discovered by walking up from `path` (or `.` when omitted), plus CLI flags — as TOML. Every `[[kinds]]` entry is printed under the canonical `kind` key, and `citable` is printed **only where it is `false`**: absence *is* `citable = true`, and the printed config has to load back as itself. `require_grounding` and `grounding_level` follow the same rule for the same reason, one scope down: a row prints either key only where its effective value differs from the effective global, which is printed under `[reference]` (§3.4.8). A row that inherits both prints neither, and the config that comes out loads back to the same effective values it went in with. Useful for debugging "why did grund recognize this citation" or "what does my config actually evaluate to." A redundant config pair at the config root is reported as a `warning:` on stderr before the TOML (§1.1, [§FS-check.4.3](FS-check.md#43-redundant-config-pair)), so the answer to "why is this key not taking effect" is on screen next to the effective value.
+Prints the **effective** configuration — defaults merged with the config discovered by walking up from `path` (or `.` when omitted), plus CLI flags — as TOML, and the TOML that comes out loads back to the same effective values it went in with: every rule below about which keys are printed keeps that so. Useful for debugging "why did grund recognize this citation" or "what does my config actually evaluate to." A redundant config pair at the config root is reported as a `warning:` on stderr before the TOML (§1.1, [§FS-check.4.3](FS-check.md#43-redundant-config-pair)), so the answer to "why is this key not taking effect" is on screen next to the effective value.
+
+#### 4.2.1 `[[kinds]]` rows print what they do not inherit
+
+Every `[[kinds]]` entry is printed under the canonical `kind` key, and `citable` is printed **only where it is `false`**: absence *is* `citable = true`. `require_grounding` and `grounding_level` follow the same rule one scope down: a row prints either key only where its effective value differs from the effective global, which is printed under `[reference]` (§3.4.8). A row that inherits both prints neither.
+
+#### 4.2.2 `[reference]` always prints `shorthand`
 
 The `[reference]` table always prints the effective `shorthand` policy. An
 absent key therefore appears as `shorthand = "canonical"`, while an opted-in
 project appears as `shorthand = "accepted"`; either emitted form loads back to
 the same effective policy (§3.1).
 
-The `[id]` table prints `named_sections = true` only when enabled. Absent and explicit `false` configurations therefore retain the previous `config show` bytes; an enabled repository exposes the opt-in that explains its named heading and citation grammar. An enabled value kind likewise prints `values = true` on its row and a disabled one prints no value key (§3.4.9). The emitted TOML loads back to the same effective value.
+#### 4.2.3 `named_sections` and `values` print only when enabled
+
+The `[id]` table prints `named_sections = true` only when enabled. Absent and explicit `false` configurations therefore retain the previous `config show` bytes; an enabled repository exposes the opt-in that explains its named heading and citation grammar. An enabled value kind likewise prints `values = true` on its row and a disabled one prints no value key (§3.4.9).
 
 ### 4.3 Invalid config behavior
 
