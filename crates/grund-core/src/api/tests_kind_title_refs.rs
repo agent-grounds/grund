@@ -43,6 +43,7 @@ fn kind_title_refs_preserve_existing_public_records_and_undeclared_queries() {
                 }],
                 note: None,
                 scan_errors: vec![],
+                warnings: vec![],
             },
             query_failure: None,
         };
@@ -167,6 +168,7 @@ fn kind_title_snapshot_addition_preserves_existing_carrier_and_title_helper() {
         trigger: old.trigger.clone(),
         workspace: old.workspace,
         report: old.report.clone(),
+        run_warnings: old.run_warnings.clone(),
         declarations: old.declarations.clone(),
         sections: old.sections.clone(),
         finding_ranges: old.finding_ranges.clone(),

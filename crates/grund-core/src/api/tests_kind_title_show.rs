@@ -159,6 +159,7 @@ fn kind_title_show_e2e_and_json_values_keep_their_alternate_shapes() {
                 },
                 true,
             )
+            .1
             .unwrap();
             for (record, id) in records
                 .iter()
@@ -239,6 +240,7 @@ fn kind_title_show_workspace_and_batch_select_each_targets_title() {
         },
         true,
     )
+    .1
     .unwrap();
     assert_eq!(records.len(), 4);
     for (index, (prefix, title)) in [
