@@ -1,6 +1,6 @@
 //! Every source-comment form that can declare an embedded value must also carry
 //! that authority through the CLI checker. Missed recognition cannot pass: each
-//! form deliberately mismatches (§AR-scanner.2.2, §AR-checker.2.18).
+//! form deliberately mismatches (§AR-scanner.2.2.8, §AR-checker.2.18).
 
 #[path = "binaries.rs"]
 mod binaries;

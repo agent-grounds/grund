@@ -89,7 +89,7 @@ fn on_type_trigger_characters(trigger: &str) -> Vec<String> {
     for ch in '!'..='~' {
         chars.insert(ch.to_string());
     }
-    // §FS-lsp.1.4: the shorthand expands on the keystroke that *ends* the token,
+    // §FS-lsp.1.4.1: the shorthand expands on the keystroke that *ends* the token,
     // and a space is the commonest way to end one. The printable range above
     // starts at `!`, so without this the ordinary `see §FS-042 and …` never fires.
     chars.insert(" ".to_string());
@@ -104,7 +104,7 @@ fn on_type_trigger_characters(trigger: &str) -> Vec<String> {
 /// origin span, so editors fall back to underlining the word at the cursor;
 /// `LocationLink` lets us hand back the whole token span as one navigable unit.
 /// Some clients omit the flag even though they understand the union member, so
-/// only an explicit `false` opts out (§FS-lsp.1.3).
+/// only an explicit `false` opts out (§FS-lsp.1.3.4).
 fn client_supports_definition_links(params: &InitializeParams) -> bool {
     params
         .capabilities
@@ -126,7 +126,7 @@ fn initialize_folders(params: &InitializeParams) -> Result<BTreeMap<Url, PathBuf
         .as_ref()
         .filter(|folders| !folders.is_empty())
     {
-        // §FS-lsp.2.2: a present, non-empty workspace-folder list is
+        // §FS-lsp.2.2.1: a present, non-empty workspace-folder list is
         // authoritative even when every entry is virtual.
         return Ok(workspace_folder_paths(folders));
     }
@@ -154,7 +154,7 @@ fn initialize_folders(params: &InitializeParams) -> Result<BTreeMap<Url, PathBuf
 /// is not a `file:` one is skipped with a note on stderr, never fatal: an
 /// editor may legitimately mix local folders with virtual ones in a single
 /// window, and one of those must not take the whole session — including the
-/// local folders beside it — down with it (§FS-lsp.2.2, §REQ-never-crashes).
+/// local folders beside it — down with it (§FS-lsp.2.2.4, §REQ-never-crashes).
 fn workspace_folder_paths(folders: &[WorkspaceFolder]) -> BTreeMap<Url, PathBuf> {
     folders
         .iter()
@@ -177,7 +177,7 @@ struct Server {
     connection: Connection,
     /// Folder identity stays keyed by the URI the client supplied. Distinct
     /// symlink aliases may canonicalize to one path, but removing either URI
-    /// must leave the other anchor active (§FS-lsp.2.2).
+    /// must leave the other anchor active (§FS-lsp.2.2.5).
     workspace_folders: BTreeMap<Url, PathBuf>,
     /// Last successful project-root discovery for each folder anchor. This is
     /// what lets a temporarily invalid config keep serving its last snapshot.
@@ -261,7 +261,7 @@ impl Server {
     /// changed document is the natural optimization for large repos, left as
     /// future work. What multi-root discovery adds is *other* projects, and a
     /// keystroke in one editor folder cannot change the verdicts of a project
-    /// that never reads that file, so those are left standing (§AR-lsp.2).
+    /// that never reads that file, so those are left standing (§AR-lsp.2.1).
     ///
     /// A path *no* project claims falls back to rebuilding everything. It is
     /// the shape a newly created file takes under a symlinked or
@@ -287,7 +287,7 @@ impl Server {
     /// and keeps whatever snapshot it last had — so a half-typed `grund.toml`
     /// in one editor folder cannot silently freeze diagnostics across the whole
     /// session, which is what collecting the batch into one `Result` did
-    /// (§FS-lsp.2.2, §REQ-never-crashes).
+    /// (§FS-lsp.2.2.4, §REQ-never-crashes).
     fn rebuild(&mut self, changed: Option<PathBuf>) {
         let mut roots = BTreeSet::new();
         let mut discoverable_roots = BTreeSet::new();
@@ -319,7 +319,7 @@ impl Server {
             let existing = previous.remove(&root);
             // Discovery itself failed for every anchor that last named this
             // root. Calling `lsp_snapshot` would rediscover the same broken
-            // config, so retain the existing snapshot directly (§FS-lsp.2.2).
+            // config, so retain the existing snapshot directly (§FS-lsp.2.2.4).
             if !discoverable_roots.contains(&root) {
                 projects.extend(existing);
                 continue;
@@ -449,7 +449,7 @@ impl Server {
                 let params: lsp_types::DidChangeWorkspaceFoldersParams =
                     serde_json::from_value(notification.params)?;
                 // Unusable folder URIs are skipped, not fatal, so the rest of
-                // one mixed event still applies (§FS-lsp.2.2).
+                // one mixed event still applies (§FS-lsp.2.2.5).
                 for (folder_uri, _) in workspace_folder_paths(&params.event.removed) {
                     self.workspace_folders.remove(&folder_uri);
                     self.folder_roots.remove(&folder_uri);
@@ -480,7 +480,7 @@ impl Server {
             Token::Citation(citation) => citation,
             // A declaration-side title has no body to preview — the cursor is
             // already in it — so the hover carries what is not on screen: how
-            // many sites cite this title, across how many files (§FS-lsp.1.2).
+            // many sites cite this title, across how many files (§FS-lsp.1.2.3).
             Token::Declaration(decl) => {
                 let usage = snapshot.title_usage(&decl.query_id, &decl.section_separator);
                 return Ok(Some(title_hover(
@@ -495,7 +495,7 @@ impl Server {
             }
         };
         // A citation that does not resolve has no preview body; its diagnostic
-        // already carries the nearest-ID hint (§FS-lsp.1.2).
+        // already carries the nearest-ID hint (§FS-lsp.1.2.2).
         let body = match show_with_overlays(
             &citation.query_id,
             ShowOpts {
@@ -526,7 +526,7 @@ impl Server {
         };
         // The origin span is the whole token (citation, declaration title, or
         // stub title) under the cursor, so editors underline it as one unit
-        // rather than the bare word at the click position (§FS-lsp.1.3).
+        // rather than the bare word at the click position (§FS-lsp.1.3.4).
         let origin = token.range(self);
         match token {
             Token::Citation(citation) => Ok(self
@@ -797,7 +797,7 @@ impl Server {
         let position = params.text_document_position.position;
         // The whole document, not just the edited line: the shorthand rewrite has
         // to know whether the line sits inside a fenced block, exactly as
-        // `grund fmt` does (§FS-lsp.1.4).
+        // `grund fmt` does (§FS-lsp.1.4.3).
         let Some(text) = self.document_text(&uri) else {
             return Ok(Some(Vec::new()));
         };
@@ -821,7 +821,7 @@ impl Server {
     }
 
     /// The declarations in the session snapshot, for shorthand expansion in the
-    /// live transform (§FS-lsp.1.4). Section titles are excluded — only whole-ID
+    /// live transform (§FS-lsp.1.4.2). Section titles are excluded — only whole-ID
     /// declarations can be what a shorthand names.
     ///
     /// `query_id` carries an `<alias>/` prefix in workspace mode, which no `[id]
@@ -951,12 +951,12 @@ impl Server {
     /// The one project that answers for `path`. A containing root claims the
     /// document, the deepest one when project trees nest; a project that merely
     /// scans the path — through a symlinked or parent-relative `[scan] include`
-    /// — claims it only when no root contains it (§FS-lsp.2.2).
+    /// — claims it only when no root contains it (§FS-lsp.2.2.2).
     ///
     /// Multiple projects that only scan the same external path are ambiguous:
     /// neither folder order nor root depth establishes namespace ownership, so
     /// return no project rather than resolve a citation as a guess
-    /// (§FS-lsp.2.2, §REQ-no-wrong-citation.1).
+    /// (§FS-lsp.2.2.3, §REQ-no-wrong-citation.1).
     fn project_for_path(&self, path: &Path) -> Option<&ProjectSnapshot> {
         let path = canonical_snapshot_path(path);
         if let Some(project) = self
@@ -980,7 +980,7 @@ impl Server {
     /// are the exception, and both name a file no scan reads: an unreadable
     /// external file is necessarily not in `scanned_files`, and a run-level
     /// `[workspace]` warning anchors at a `grund.toml` that may lie above every
-    /// project root (§FS-lsp.1.1). For either, choose one of the snapshots that
+    /// project root (§FS-lsp.1.1.3). For either, choose one of the snapshots that
     /// reported that path rather than dropping it or publishing it from all of
     /// them.
     fn project_for_diagnostic_path(&self, path: &Path) -> Option<&ProjectSnapshot> {
@@ -1293,7 +1293,7 @@ fn on_type_replacement_for_line(
     let cursor = utf16_to_byte(line, position.character);
     // One config resolution per keystroke: the core helper resolves the edited
     // file's marker/trigger and the fmt-context exclusions together
-    // (§FS-lsp.1.4).
+    // (§FS-lsp.1.4.6).
     let at = |offset| Position {
         line: position.line,
         character: byte_to_utf16(line, offset),

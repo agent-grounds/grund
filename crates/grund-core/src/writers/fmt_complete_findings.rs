@@ -52,17 +52,17 @@ mod complete_findings {
         /// Scan the whole project for the rewrites that need every declaration —
         /// a cross-reference wrap (§FS-fmt.6.3) or a shorthand expansion
         /// (§FS-fmt.2.4) — and refuse the whole run when any path could not be
-        /// read, rather than resolving against what was legible (§FS-fmt.3).
+        /// read, rather than resolving against what was legible (§FS-fmt.3.2).
         ///
         /// The scan is unscoped and non-strict about the scope on purpose: the
         /// declaration a shorthand names routinely lives outside the files being
         /// rewritten, so a scope-narrow set is not the set this question is
-        /// asked of (§FS-fmt.2.4).
+        /// asked of (§FS-fmt.2.4.5).
         ///
         /// Why a refusal and not a partial result: this is the one command that
         /// edits files, and the errors it aborts on are the same ones every
         /// other command reports, made fatal up front and preserved for
-        /// reporting (§FS-fmt.3).
+        /// reporting (§FS-fmt.3.2).
         ///
         /// Every refusal line names itself. Both `fmt` failures exit `2`, but the
         /// partial-scan one means every readable file was rewritten and this one
@@ -110,7 +110,7 @@ mod complete_findings {
     impl WorkspaceProject {
         /// This project's already-computed findings from `load_workspace_context`,
         /// reusable by `fmt_tree` only when the scan that produced them met no
-        /// error (§FS-fmt.3, §FS-fmt.7.1). A caller that reuses a scan instead of
+        /// error (§FS-fmt.3.2, §FS-fmt.7.1). A caller that reuses a scan instead of
         /// running one has to answer the question a fresh scan would have failed
         /// on, not just borrow the `Findings` beside it — reuse is an
         /// optimization of one computation and never a second one.

@@ -1,4 +1,4 @@
-"""§FS-init.5 — what the binary embeds is what the tree shows: the `grund-init`
+"""§FS-init.5.3 — what the binary embeds is what the tree shows: the `grund-init`
 skill under `skills/` and every scaffold template under `templates/`
 (§FS-init.2.1) are byte-identical to their copies under
 `crates/grund-core/assets/`, in both directions, so neither can drift from the

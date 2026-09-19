@@ -7,7 +7,7 @@ use super::*;
 use crate::grammar::INTEGRATIONS_BLOCK_VERSION;
 use crate::testing::{test_root, write};
 
-// §FS-integrations.4.4: `[reference.agents.<agent>]` is a partial of the
+// §FS-integrations.4.4.1: `[reference.agents.<agent>]` is a partial of the
 // machine-wide keys — a key present under an agent replaces the base for
 // that agent, an absent key inherits it.
 #[test]
@@ -80,7 +80,7 @@ fn agent_partial_reports_unknown_agents_and_keys() {
     assert_eq!(scan.problems.len(), 1);
 }
 
-// §FS-integrations.4.4: a scoped write lands in the agent's own table and
+// §FS-integrations.4.4.2: a scoped write lands in the agent's own table and
 // leaves the machine-wide base byte-for-byte alone.
 #[test]
 fn agent_override_installs_into_its_own_table() {
@@ -118,7 +118,7 @@ fn agent_override_installs_into_its_own_table() {
     assert_eq!(again, written);
 }
 
-// §FS-integrations.4.4 / §DF-conversation-link-target.2.5: the override sets
+// §FS-integrations.4.4.3 / §DF-conversation-link-target.2.5: the override sets
 // the request, the gate sets the verdict. Asking for a local scheme under an
 // agent that erases citations still resolves to `path`.
 #[test]
@@ -162,7 +162,7 @@ fn conversation_preference_appends_and_updates() {
     assert_eq!(again, linked);
 }
 
-// §FS-integrations.4.3: every TOML spelling of the key is the same setting.
+// §FS-integrations.4.3.4: every TOML spelling of the key is the same setting.
 // A spelling grund failed to *see* would be silently reversed to the default
 // and written back beside the original, so these are read, not ignored.
 #[test]
@@ -204,7 +204,7 @@ fn conversation_preference_rewrite_preserves_key_spelling() {
     );
 }
 
-/// §FS-integrations.4.3: nothing in this file fails. A value grund cannot
+/// §FS-integrations.4.3.5: nothing in this file fails. A value grund cannot
 /// interpret leaves it with no preference — the state of a machine that never
 /// wrote one — and a duplicate resolves to the first, which is the occurrence
 /// a write rewrites, so a read and a write cannot disagree.
@@ -241,7 +241,7 @@ fn user_config_reports_bad_values_and_duplicates_without_failing() {
     );
 }
 
-// §FS-integrations.4.3: nothing else in this file has any effect, so every
+// §FS-integrations.4.3.5: nothing else in this file has any effect, so every
 // unconsumed key is reported with its line — a typo, a retired spelling, and
 // a repository-only key set here all read as "configured" otherwise.
 #[test]
@@ -285,7 +285,7 @@ fn user_config_reports_nothing_when_every_key_is_read() {
     }
 }
 
-// §FS-integrations.4.3: global agent guidance is versioned, idempotent, and
+// §FS-integrations.4.3.14: global agent guidance is versioned, idempotent, and
 // preserves user-authored text around its managed block.
 #[test]
 fn agent_guidance_block_tracks_user_preference() {
@@ -315,7 +315,7 @@ fn agent_guidance_block_tracks_user_preference() {
         )
     );
     assert!(!linked.contains("write citations bare in local conversations"));
-    // §FS-integrations.4.3: user-global and written once, so neither text may
+    // §FS-integrations.4.3.10: user-global and written once, so neither text may
     // hardcode a marker — `[reference] marker` is per-repo, and a `§` here
     // would be wrong in every repository configured with another one.
     for text in [

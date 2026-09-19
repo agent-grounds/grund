@@ -30,7 +30,7 @@ fn named_sections_have_cli_parity_across_editor_surfaces() {
 
     let (mut child, mut stdin, receiver) = start_server(&root);
 
-    // §FS-lsp.1.1: the core's named missing-section finding is transported at
+    // §FS-lsp.1.1.2: the core's named missing-section finding is transported at
     // the citation line with the same message and whole-token range.
     let diagnostics = recv_diagnostics(&receiver, &mut child, "FS-doc.md");
     let missing = diagnostics
@@ -44,7 +44,7 @@ fn named_sections_have_cli_parity_across_editor_surfaces() {
     assert!(missing["message"].as_str().unwrap().contains("<§>"));
     assert_eq!(missing["range"]["start"]["line"].as_i64(), Some(13));
 
-    // §FS-lsp.1.2: citation hover is the named section's `show --toc` body.
+    // §FS-lsp.1.2.1: citation hover is the named section's `show --toc` body.
     let hover = hover_result(
         &mut stdin,
         &receiver,

@@ -25,10 +25,10 @@ use crate::config::strip_comment;
 pub const USER_CONFIG_TARGET: &str = "~/.config/grund/config.toml";
 
 /// The user-level setting spelled exactly as the repository key for the same
-/// concept (§FS-config.3.1): one name, two scopes.
+/// concept (§FS-config.3.1.3): one name, two scopes.
 const CONVERSATION_KEY_PATH: &str = "reference.conversation";
 
-/// How a linked citation addresses its declaration (§FS-integrations.4.3). No
+/// How a linked citation addresses its declaration (§FS-integrations.4.3.2). No
 /// repository spelling — the scheme is machine state
 /// (§DF-conversation-link-target.2.3).
 const CONVERSATION_TARGET_KEY_PATH: &str = "reference.conversation_target";
@@ -94,7 +94,7 @@ pub struct UserConfigScan {
     pub preference: Option<ConversationRendering>,
     /// The recorded addressing target, independent of `preference`: an
     /// unreadable target never costs the `plain`/`link` value recorded beside
-    /// it (§FS-integrations.4.3).
+    /// it (§FS-integrations.4.3.5).
     pub target: Option<ConversationTarget>,
     /// `[reference.agents.<agent>]` partials, in file order — the override
     /// layer merged over `target` per agent (§FS-integrations.4.4). Only known
@@ -293,7 +293,7 @@ pub(crate) fn install_conversation_preference(
 
 /// Install or replace one `[reference]` line while preserving unrelated bytes.
 /// Infallible: every defect in this file is a warning reported at load
-/// (§FS-integrations.4.3), so there is nothing left here to refuse.
+/// (§FS-integrations.4.3.5), so there is nothing left here to refuse.
 ///
 /// `table` is the table the key belongs to — `reference`, or one agent's
 /// `reference.agents.<agent>` partial (§FS-integrations.4.4) — and `bare_key`
@@ -313,7 +313,7 @@ pub fn install_reference_key(
 ) -> (String, BlockOutcome) {
     let key_path = format!("{table}.{bare_key}");
     // Already recorded: leave the bytes alone — a second `--write` is a no-op
-    // reporting `exists` (§FS-integrations.6).
+    // reporting `exists` (§FS-integrations.6.1).
     if already_recorded {
         return (existing.to_string(), BlockOutcome::Unchanged);
     }

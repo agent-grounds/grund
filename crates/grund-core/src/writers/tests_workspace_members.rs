@@ -73,7 +73,7 @@ fn workspace_members_member_init_omits_self_and_preserves_foreign_rows() {
     );
 }
 
-/// §FS-init.2.3.4.15: companion-only init omits self by the same canonical
+/// §FS-init.2.3.4.15.4: companion-only init omits self by the same canonical
 /// identity rule as canonical-AGENTS.md init.
 #[test]
 fn workspace_members_companion_only_init_omits_self() {
@@ -94,7 +94,7 @@ fn workspace_members_companion_only_init_omits_self() {
     assert!(section.contains("- [`root`](../../) *(not yet initialized)*"));
 }
 
-/// §FS-init.2.3.4.15: the discoverability line uses the target project's
+/// §FS-init.2.3.4.15.2: the discoverability line uses the target project's
 /// configured marker, not a hard-coded `§`.
 #[test]
 fn workspace_members_discoverability_line_uses_configured_marker() {
@@ -111,7 +111,7 @@ fn workspace_members_discoverability_line_uses_configured_marker() {
     assert!(!section.contains("Cross-project citations use §alias/<ID>."));
 }
 
-/// §FS-init.2.3.4.15: self is selected by canonical project identity, not
+/// §FS-init.2.3.4.15.4: self is selected by canonical project identity, not
 /// by either the member directory basename or the pending `project_name`.
 #[test]
 fn workspace_members_self_identity_is_canonical_not_pending_alias_text() {
@@ -136,7 +136,7 @@ fn workspace_members_self_identity_is_canonical_not_pending_alias_text() {
     assert!(section.contains("- [`root`](../../) *(not yet initialized)*"));
 }
 
-/// §FS-init.2.3.4.15: a target reached through a symlink still omits the
+/// §FS-init.2.3.4.15.4: a target reached through a symlink still omits the
 /// resolved project whose canonical root it names.
 #[cfg(unix)]
 #[test]
@@ -158,7 +158,7 @@ fn workspace_members_self_identity_follows_target_symlink() {
     assert!(section.contains("- [`root`](../../) *(not yet initialized)*"));
 }
 
-/// §FS-init.2.3.4.15: `include_root = false` still drops the root from a
+/// §FS-init.2.3.4.15.4: `include_root = false` still drops the root from a
 /// member entrypoint; self is also omitted, while another foreign member
 /// keeps the section present.
 #[test]
@@ -224,7 +224,7 @@ fn workspace_members_suppresses_duplicate_aliases() {
     );
 }
 
-/// §FS-init.2.3.4.15 + §DF-workspace-member-descriptions: a project's
+/// §FS-init.2.3.4.15.5 + §DF-workspace-member-descriptions: a project's
 /// `project_description` renders after its link (before any trailing
 /// marker), and a project without one keeps the link-only bullet. Mirrors
 /// §FS-init-fixtures.6.4.
@@ -265,7 +265,7 @@ fn workspace_members_renders_configured_descriptions() {
     assert!(section.contains("- [`ui`](packages/ui/) *(not yet initialized)*"));
 }
 
-/// §FS-init.2.3.4.15: pending self metadata never creates a local row.
+/// §FS-init.2.3.4.15.4: pending self metadata never creates a local row.
 #[test]
 fn workspace_members_member_init_omits_pending_self_description() {
     let root = test_root("workspace_members_member_init_omits_pending_self_description");
@@ -295,7 +295,7 @@ fn workspace_members_member_init_omits_pending_self_description() {
     assert!(section.contains("- [`root`](../../) *(not yet initialized)*"));
 }
 
-/// §FS-init.2.3.4.15 + §FS-workspace.6.1: in a nested workspace the search
+/// §FS-init.2.3.4.15.1 + §FS-workspace.6.1.5: in a nested workspace the search
 /// climbs to the *outermost* root, so a member three levels down is taught
 /// every foreign alias CI can resolve — not just its enclosing group's.
 /// Rows carry whole alias paths and links stay relative to the entrypoint.
@@ -337,7 +337,7 @@ fn workspace_members_nested_workspace_lists_the_whole_tree() {
     );
 }
 
-/// §FS-init.2.3.4.15 + §FS-workspace.6.1: `include_root` is read per
+/// §FS-init.2.3.4.15.4 + §FS-workspace.6.1.2: `include_root` is read per
 /// `[workspace]` block, so a grouping node that opted out contributes no
 /// alias and therefore no row.
 #[test]
@@ -372,7 +372,7 @@ fn workspace_members_nested_grouping_node_without_include_root_has_no_row() {
     );
 }
 
-/// §FS-init.2.3.4.15 + §FS-workspace.6.1: an ancestor `[workspace]` that does
+/// §FS-init.2.3.4.15.1 + §FS-workspace.6.1.8: an ancestor `[workspace]` that does
 /// not list the directory below it describes a different workspace, so the
 /// section names the tree the target's own outermost *claiming* block
 /// resolves. Reading the outermost *declarer* instead replaced both real
@@ -409,7 +409,7 @@ fn workspace_members_ignores_an_ancestor_workspace_that_does_not_claim_the_targe
     );
 }
 
-/// §FS-init.2.3.4.15 + §FS-workspace.6.1: the same rule one level in — a
+/// §FS-init.2.3.4.15.1 + §FS-workspace.6.1.8: the same rule one level in — a
 /// nested `[workspace]` its parent does not list is a workspace root in its
 /// own right, so `init` inside it teaches its own aliases rather than the
 /// enclosing tree's, which is what a command run there resolves.
@@ -444,7 +444,7 @@ fn workspace_members_at_a_group_its_parent_does_not_list_names_its_own_tree() {
     );
 }
 
-/// §FS-init.2.4 + §DF-workspace-member-descriptions: the generated config
+/// §FS-init.2.4.7 + §DF-workspace-member-descriptions: the generated config
 /// teaches `project_description` with a commented line by default, and
 /// `--description` turns it into the real key.
 #[test]

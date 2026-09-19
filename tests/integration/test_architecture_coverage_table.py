@@ -1,4 +1,4 @@
-"""§AR-workspace.9 — the test-contracts table names things that exist: every
+"""§AR-workspace.9.4 — the test-contracts table names things that exist: every
 `tests/e2e/cases/<case>` cell is a case directory and every backticked test name
 is a `fn` in the file the cell names; and every e2e case any architecture page
 mentions is on disk. A contract that names a test nobody can run is a wish, and a
@@ -31,7 +31,7 @@ def _table_cells(text):
 
 def _test_files():
     # A unit-test module sits beside the code it pins, in its component
-    # directory (§AR-core-module-layout.1), so the search runs at any depth.
+    # directory (§AR-core-module-layout.1.3), so the search runs at any depth.
     files = list((REPO_ROOT / "crates").glob("*/src/tests*.rs"))
     files += list((REPO_ROOT / "crates").glob("*/src/**/tests_*.rs"))
     files += list((REPO_ROOT / "crates").glob("*/tests/**/*.rs"))

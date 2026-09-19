@@ -35,7 +35,7 @@ pub fn detect_clients() -> Vec<IntegrationClient> {
         Some("vscode") => mark(IntegrationClient::Vscode),
         _ => {}
     }
-    // §FS-integrations.3.2: presence alone cannot tell VS Code from VSCodium, so
+    // §FS-integrations.3.2.4: presence alone cannot tell VS Code from VSCodium, so
     // a value naming VSCodium's own application directory marks VSCodium as well.
     let vscode_vars: Vec<String> = std::env::vars_os()
         .filter(|(key, _)| {

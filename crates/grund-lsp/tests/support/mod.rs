@@ -250,7 +250,7 @@ pub fn start_server_with_capabilities(
 
 /// Start a server whose client supplies the given LSP workspace folders. The
 /// process cwd is independent so cases can prove the initialize payload, not
-/// an ambient directory, determines project discovery (§FS-lsp.2.2).
+/// an ambient directory, determines project discovery (§FS-lsp.2.2.1).
 pub fn start_server_with_workspace_folders(
     current_dir: &Path,
     folders: &[&Path],
@@ -276,7 +276,7 @@ pub fn start_server_with_workspace_folders(
 
 /// The handshake with the `initialize` params written out in full, for a case
 /// whose subject is the payload itself — a folder list mixing local and virtual
-/// URIs, say (§FS-lsp.2.2).
+/// URIs, say (§FS-lsp.2.2.4).
 pub fn start_server_with_initialize(
     current_dir: &Path,
     initialize_params: Value,

@@ -77,7 +77,7 @@ fn a_present_optional_member_is_an_ordinary_member() {
     assert_eq!(aliases, vec!["acme".to_string(), "vendored".to_string()]);
 }
 
-/// §FS-workspace.2.2, §FS-check.4.9: the default does not move. A member
+/// §FS-workspace.2.2.4, §FS-check.4.9: the default does not move. A member
 /// listed in `members` and missing is the same fatal config error it has
 /// always been, at the same line — and the message now names the key that
 /// would have made the absence legal, so a CI author is not left guessing
@@ -115,7 +115,7 @@ fn a_multi_segment_optional_entry_takes_its_last_segment_as_the_alias() {
     assert_eq!(aliases, vec!["acme".to_string(), "sprayer".to_string()]);
 }
 
-/// §FS-workspace.2.2.2: the half the author called the important one. A
+/// §FS-workspace.2.2.2.1: the half the author called the important one. A
 /// *present* optional member whose `project_name` disagrees with the entry's
 /// last segment is refused, naming both names — otherwise citation text that
 /// resolves in a full checkout would quietly name nothing in a partial one,
@@ -138,7 +138,7 @@ fn a_present_optional_member_must_agree_with_its_entry_segment() {
     );
 }
 
-/// §FS-workspace.2.2: a trailing glob may not be optional. An absent parent
+/// §FS-workspace.2.2.6: a trailing glob may not be optional. An absent parent
 /// directory names no namespaces, so the key would appear to work and do
 /// nothing — and the refusal has to say what to write instead, because a user
 /// meeting it needs the form that works.
@@ -159,7 +159,7 @@ fn an_optional_member_glob_is_refused_and_names_the_shape_to_write() {
     );
 }
 
-/// §FS-workspace.2.2: one entry belongs to one list. The two lists state
+/// §FS-workspace.2.2.7: one entry belongs to one list. The two lists state
 /// opposite intents about one directory, and resolving that in either
 /// direction would silently discard half of what the author wrote.
 #[test]
@@ -181,7 +181,7 @@ fn an_entry_may_not_be_in_both_member_lists() {
     );
 }
 
-/// §FS-workspace.2.2: the same refusal in the checkout that does *not* have the
+/// §FS-workspace.2.2.7: the same refusal in the checkout that does *not* have the
 /// directory. Behind the `is_dir` test it could only fire where the member was
 /// present, and the other checkout was told to list the entry in
 /// `optional_members` — where the author had already put it. What is wrong is
@@ -269,7 +269,7 @@ fn two_absent_entries_may_not_share_an_alias() {
     );
 }
 
-/// §FS-workspace.2.2, §FS-workspace.6.1: one entry written twice is one member
+/// §FS-workspace.2.2.8, §FS-workspace.6.1.4: one entry written twice is one member
 /// in *either* checkout. Folding it only where the directory is present would
 /// have made the same config a launch-time error for CI and a green run for the
 /// developer holding the member — the checkout-dependent verdict this key
@@ -340,7 +340,7 @@ fn a_present_optional_claimant_reports_at_the_optional_members_line() {
     );
 }
 
-/// §FS-workspace.2.2.2: the segment has to be a valid alias in its own right.
+/// §FS-workspace.2.2.2.2: the segment has to be a valid alias in its own right.
 /// An entry whose last segment is not a lowercase slug can name a namespace in
 /// neither checkout, so it is refused before any directory is looked for —
 /// here with no `Vendored` on disk at all.
@@ -360,7 +360,7 @@ fn an_optional_entry_whose_segment_is_not_a_slug_is_refused() {
     );
 }
 
-/// §FS-workspace.2.2, §FS-workspace.6.1: every `[workspace]` block reads the
+/// §FS-workspace.2.2.9, §FS-workspace.6.1: every `[workspace]` block reads the
 /// key. A nested block's absent optional member is skipped exactly as the
 /// outermost root's is — expansion re-enters the same rules at every depth, so
 /// a fix that held only at the top would be a hole one directory down.
@@ -379,8 +379,8 @@ fn a_nested_block_may_declare_an_optional_member() {
     assert_eq!(aliases, vec!["acme".to_string(), "sub".to_string()]);
 }
 
-/// §FS-workspace.2.2: a block whose last project goes missing is not the
-/// empty block §FS-workspace.6.1 refuses. That test is read from the config
+/// §FS-workspace.2.2.10: a block whose last project goes missing is not the
+/// empty block §FS-workspace.6.1.3 refuses. That test is read from the config
 /// text — a non-empty `optional_members` list names members — so whether they
 /// are present is a fact about the checkout, and failing on it would be the
 /// verdict the key exists to remove.

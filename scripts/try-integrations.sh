@@ -85,7 +85,7 @@ done
     die "no grund.toml in $FIXTURE (root or .agents/) — pass --repo <dir> pointing at a grund repository"
 
 # The resolver climbs from the *clicked pane's* directory to the config root
-# (§FS-integrations.3.1). Starting a subdirectory down is the honest test: a
+# (§FS-integrations.3.1.3). Starting a subdirectory down is the honest test: a
 # click from the repository root would pass even if the climb were broken.
 if [ -z "$SUBDIR" ]; then
     for candidate in docs/functional-spec docs .; do
@@ -139,7 +139,7 @@ prepare_sandbox() {
     : >>"$SANDBOX/opens.log"
 
     # `grund-open` and the WezTerm spawn both look for `grund` on PATH, and the spawn
-    # rebuilds PATH from $HOME/.local/bin and $HOME/.cargo/bin (§FS-integrations.3.1) —
+    # rebuilds PATH from $HOME/.local/bin and $HOME/.cargo/bin (§FS-integrations.3.1.10) —
     # the sandbox HOME here, so the binary under test has to be reachable through both.
     ln -sf "$GRUND_BIN" "$SANDBOX/.local/bin/grund"
     ln -sf "$GRUND_BIN" "$SANDBOX/.cargo/bin/grund"
@@ -181,7 +181,7 @@ printf '%s\n' "$1"
 EOF
 
     # A program that has captured the mouse. WezTerm drops user mouse bindings while one
-    # is in the foreground, so the gestures are registered twice (§FS-integrations.3.1) —
+    # is in the foreground, so the gestures are registered twice (§FS-integrations.3.1.12) —
     # and every program printing citations in anger (agent TUIs, full-screen editors) is one.
     cat >"$SANDBOX/bin/tui" <<'EOF'
 #!/bin/sh
@@ -318,7 +318,7 @@ write_rcfile() {
     cat >"$RCFILE" <<EOF
 export PS1='grund-testbed:\W\$ '
 # Report the directory with OSC 7. WezTerm cannot find the clicked pane's
-# directory without it (§FS-integrations.3.1) and no shell emits it by default —
+# directory without it (§FS-integrations.3.1.15) and no shell emits it by default —
 # vte.sh, the usual emitter, skips every terminal that is not VTE. A testbed
 # whose shell stayed silent would only ever test the failure path.
 __grund_osc7() { printf '\033]7;file://%s%s\033\\\\' "\${HOSTNAME:-localhost}" "\$PWD"; }
@@ -358,7 +358,7 @@ launch_wezterm() {
         # Measured, not assumed: the portal starts the host command from the
         # session environment, not the sandbox's, so nothing set here reaches it.
         say "note: the resolver is re-spawned on the host through flatpak-spawn"
-        say "      (§FS-integrations.3.1), which does NOT carry this sandbox's"
+        say "      (§FS-integrations.3.1.13), which does NOT carry this sandbox's"
         say "      environment across. The host runs your real ~/.local/bin/grund-open"
         say "      with your session's editor, and the open log below stays empty."
         say "      Watch for the editor window instead."
@@ -418,7 +418,7 @@ launch_editor() {
     step "launching $bin"
     say "open the integrated terminal, cd into $SUBDIR, and print a citation:"
     say "  printf '%s\\n' '$MARKER$ID_PLAIN'"
-    say "hover it for the declaration lead, click it to open (§FS-integrations.3.3)."
+    say "hover it for the declaration lead, click it to open (§FS-integrations.3.3.1)."
     exec env "${SANDBOX_ENV[@]}" "$bin" \
         --extensions-dir "$extensions_dir" \
         --user-data-dir "$SANDBOX/$client-user-data" \
@@ -519,7 +519,7 @@ resolve_checks() {
     check "unknown id" "$WORKDIR" "$MARKER$ID_UNKNOWN" fails
     check "outside any repo" "/" "$MARKER$ID_PLAIN" fails
 
-    # The location beside a citation (§FS-integrations.3.1): `path:line` tokens
+    # The location beside a citation (§FS-integrations.3.1.9): `path:line` tokens
     # open without consulting grund, climbing to the nearest ancestor that
     # holds the file; a column suffix is dropped.
     step "location tokens"

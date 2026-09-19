@@ -67,7 +67,7 @@ pub(super) struct SelectedInitAgentEntrypoints {
 
 impl SelectedInitAgentEntrypoints {
     /// The `<path>`-relative entrypoints in this plan that Claude reads
-    /// (§FS-init.2.3.4.17) — what tells the shadowed-entrypoint note which file
+    /// (§FS-init.2.3.4.17.5) — what tells the shadowed-entrypoint note which file
     /// this run makes current for Claude, when it makes one current.
     pub(super) fn companions_of_claude(&self, target: &Path) -> Vec<String> {
         self.companions
@@ -79,7 +79,7 @@ impl SelectedInitAgentEntrypoints {
     }
 
     /// Every entrypoint path this plan would write, append to, or update — what
-    /// §FS-init.1.2's user-global rule has to be asked about. The canonical
+    /// §FS-init.1.2.2's user-global rule has to be asked about. The canonical
     /// entrypoint is as `<path>`-relative as any companion, but it is carried
     /// here as a flag rather than a path, so a caller that reasons about paths
     /// cannot see it at all unless it is rebuilt: `<path>/AGENTS.md` with

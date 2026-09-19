@@ -56,7 +56,7 @@ fn hover_linkifier_uses_displayed_citation_text_for_workspace_links() {
 
     assert!(
         linked.contains("[§FS-002-b]("),
-        "hover linkification must use the displayed citation text, not the workspace-qualified query ID (§FS-lsp.1.2): {linked}"
+        "hover linkification must use the displayed citation text, not the workspace-qualified query ID (§FS-lsp.1.2.1): {linked}"
     );
     assert!(
         !linked.contains("§root/FS-002-b"),

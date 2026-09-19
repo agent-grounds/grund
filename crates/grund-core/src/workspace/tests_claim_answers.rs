@@ -1,5 +1,5 @@
 //! Test module: what answering a claim obliges an enclosing `[workspace]` block
-//! to, and which runs it can reach (§FS-workspace.6.1, §AR-workspace.6.1).
+//! to, and which runs it can reach (§FS-workspace.6.1.7, §AR-workspace.6.1.2).
 //!
 //! Split from `tests_claims.rs`, which keeps the naming half — which block
 //! claims a directory and what the projects below it are therefore called.
@@ -16,7 +16,7 @@ use crate::config::{load_config, load_config_at};
 use crate::resolver::load_workspace_context;
 use crate::testing::{test_root, write};
 
-/// §FS-workspace.6.1: a block that claims this directory and cannot expand
+/// §FS-workspace.6.1.7: a block that claims this directory and cannot expand
 /// its own member list fails the narrowed run with that block's error. The
 /// alternative shipped: the failure read as "does not claim this tree", the
 /// climb walked past, and the subtree named itself — `alpha` where the root
@@ -54,7 +54,7 @@ fn enclosing_workspace_that_cannot_expand_fails_the_narrowed_run() {
     );
 }
 
-/// §FS-workspace.6.1: the truncation half of the same rule — an ancestor in
+/// §FS-workspace.6.1.7: the truncation half of the same rule — an ancestor in
 /// the chain whose alias is invalid is an error, not a dropped segment. It
 /// used to `break` the climb, so the root run exited 2 while the subtree run
 /// exited 0 with every project renamed one level short.
@@ -91,7 +91,7 @@ fn enclosing_workspace_with_an_invalid_alias_fails_the_narrowed_run() {
     );
 }
 
-/// §FS-workspace.6.1: every obligation of the ancestor climb is scoped to a
+/// §FS-workspace.6.1.7: every obligation of the ancestor climb is scoped to a
 /// **claim**. A block four levels up that declares `[workspace]`, lists one
 /// directory that does not exist, and never lists this repository says nothing
 /// about this tree — so its error is not this run's error. Expanding every
@@ -129,14 +129,14 @@ fn an_ancestor_that_claims_nothing_here_cannot_break_the_run() {
     );
 }
 
-/// §FS-workspace.6.1, the same rule against a different expansion failure:
+/// §FS-workspace.6.1.7, the same rule against a different expansion failure:
 /// overlapping members. The class is what matters — a non-claiming ancestor is
 /// never expanded, so *no* error its member list could earn reaches a run
 /// below it.
 ///
 /// The run root declares `[workspace]` because that is the only run that climbs
 /// at all: a project with no block of its own is one project with no alias path
-/// to read, so nothing above it is consulted (§FS-workspace.5). A fixture
+/// to read, so nothing above it is consulted (§FS-workspace.5.1). A fixture
 /// without it made the *second* half below assert an outcome no command could
 /// produce.
 #[test]
@@ -186,14 +186,14 @@ fn an_ancestor_with_overlapping_members_that_claims_nothing_is_climbed_past() {
     );
 }
 
-/// §FS-workspace.6.1 / §AR-workspace.5.3: a glob claims the directories under
+/// §FS-workspace.6.1.7 / §AR-workspace.5.3: a glob claims the directories under
 /// its parent, so a block whose only mention of this repository is
 /// `deep/*` still owes it an answer — and a `members` list it cannot expand
 /// still fails the run. The claim is read from the entry text, and the entry
 /// text here names a set.
 ///
 /// The claimed directory declares `[workspace]` for the same reason as the case
-/// above: only a run that reads an alias path climbs for one (§FS-workspace.5).
+/// above: only a run that reads an alias path climbs for one (§FS-workspace.5.1).
 #[test]
 fn an_ancestor_glob_claims_the_child_and_still_owes_it_an_answer() {
     let root = test_root("an_ancestor_glob_claims_the_child_and_still_owes_it_an_answer");
@@ -221,7 +221,7 @@ fn an_ancestor_glob_claims_the_child_and_still_owes_it_an_answer() {
     );
 }
 
-/// §FS-workspace.6.1: a claiming ancestor whose config does not **load** owes
+/// §FS-workspace.6.1.7: a claiming ancestor whose config does not **load** owes
 /// this run the same answer as one that cannot expand its members — its own
 /// error, from its own `members` line. The claim is read from the `members`
 /// entries on their own for exactly this reason, so it survives a file the
@@ -271,7 +271,7 @@ fn an_enclosing_workspace_whose_config_does_not_load_fails_the_narrowed_run() {
     );
 }
 
-/// §FS-workspace.6.1, the half above must not cost: a config that does not load
+/// §FS-workspace.6.1.7, the half above must not cost: a config that does not load
 /// and claims **nothing** here is still climbed past, whatever is wrong with it.
 /// A stray `grund.toml` above a repository — in a workspace that never mentions
 /// it — is not that repository's problem, at any depth up to `/`.
@@ -312,7 +312,7 @@ fn an_ancestor_that_does_not_load_and_claims_nothing_here_is_climbed_past() {
     );
 }
 
-/// §FS-workspace.6.1: the residue of the members-only read — a config whose
+/// §FS-workspace.6.1.7: the residue of the members-only read — a config whose
 /// `members` text cannot be obtained at all, so the claim is undecidable in
 /// *both* directions. Failing would let one unreadable `grund.toml` above a
 /// repository break every run inside it, so the run continues; staying silent
@@ -357,7 +357,7 @@ fn an_ancestor_whose_members_text_cannot_be_read_warns_and_lets_the_run_through(
     assert_eq!(aliases, vec!["repo", "api"]);
 }
 
-/// §FS-workspace.6.1: the other way the residue is reached — a config file that
+/// §FS-workspace.6.1.7: the other way the residue is reached — a config file that
 /// cannot be read as text at all. Bytes that are not UTF-8 are the portable
 /// case (a permission bit is not one: `root` can read anything), and they reach
 /// the same warning, because the reason is whatever the read failure said.
@@ -389,7 +389,7 @@ fn an_ancestor_config_that_is_not_text_is_reported_and_climbed_past() {
     assert_eq!(aliases, vec!["repo", "api"]);
 }
 
-/// §FS-workspace.5 / §FS-workspace.6.1: the asymmetry every claim case above
+/// §FS-workspace.5.1 / §FS-workspace.6.1.7: the asymmetry every claim case above
 /// rests on — a run climbs only when it has an alias path to read. A project
 /// that declares no `[workspace]` of its own is a single project, resolving its
 /// own IDs and nothing else, so no enclosing claim is consulted and none can

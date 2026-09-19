@@ -8,12 +8,12 @@
 //! root are skipped and counted, never silently, and a floor on the number of
 //! compared cases keeps the sweep from shrinking unnoticed.
 //!
-//! The run-level `[workspace]` warnings of §FS-lsp.1.1 are held the same way,
-//! against the same case's stderr: §FS-check.4.7, §FS-check.4.8, §FS-check.4.10
-//! and §FS-workspace.6.1 travel in the run's warning channel and are rendered by
+//! The run-level `[workspace]` warnings of §FS-lsp.1.1.3 are held the same way,
+//! against the same case's stderr: §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11
+//! and §FS-workspace.6.1.7 travel in the run's warning channel and are rendered by
 //! each frontend, so neither surface may carry one the other does not. They are
 //! compared as their own set because the two shapes differ by design — the CLI
-//! prints three of them as §FS-check.2.1.1 lines on stderr and §FS-check.4.8's
+//! prints three of them as §FS-check.2.1.1 lines on stderr and §FS-check.4.8.13's
 //! as one of `check`'s report objects with a null location, while the editor
 //! publishes each on the `grund.toml` it anchors at. Every other
 //! CLI-level `warning:` or `error:` line (§FS-errors.2.2) is stepped over: it is
@@ -41,23 +41,23 @@ use support::{send_message, start_server, wait_for_exit};
 const MIN_COMPARED_CASES: usize = 80;
 
 /// Fewer cases carrying one of the four run-level `[workspace]` warnings than
-/// this is a sweep that has stopped holding §FS-lsp.1.1: the corpus has several,
+/// this is a sweep that has stopped holding §FS-lsp.1.1.3: the corpus has several,
 /// and a comparison that met none of them would pass on an LSP that publishes
 /// nothing.
 const MIN_RUN_WARNING_CASES: usize = 4;
 
 /// The two CLI-level message prefixes of §FS-errors.2.2. A launch-time
 /// diagnostic keeps its raw text on stderr under `--format json` as well
-/// (§FS-errors.5), so the reduction below has to step over one — and over
+/// (§FS-errors.5.2), so the reduction below has to step over one — and over
 /// nothing else: any other line on either stream is output this sweep does not
 /// understand, and a harness that swallowed it would stop being the guard it is
 /// here to be.
 const CLI_LEVEL_PREFIXES: [&str; 2] = ["error: ", "warning: "];
 
-/// The four run-level `[workspace]` warnings §FS-lsp.1.1 names, each by a phrase
+/// The four run-level `[workspace]` warnings §FS-lsp.1.1.3 names, each by a phrase
 /// of its own fixed text (§FS-errors.3): §FS-check.4.7's absorbed scan,
 /// §FS-check.4.8's unlisted block, §FS-check.4.10's unread opted-out block and
-/// §FS-workspace.6.1's undecidable ancestor claim.
+/// §FS-workspace.6.1.7's undecidable ancestor claim.
 ///
 /// Matched on the message rather than on a code, because that is the one thing
 /// both surfaces carry: the CLI prints these as text and never as a JSON object,
@@ -87,7 +87,7 @@ struct Finding {
 }
 
 /// `grund check . --format json` from the fixture root: every located finding
-/// on either stream (§FS-output-shapes.7), or `None` when the run is refused.
+/// on either stream (§FS-output-shapes.7.1), or `None` when the run is refused.
 fn cli_findings(grund: &Path, root: &Path) -> Option<(BTreeSet<Finding>, BTreeSet<String>)> {
     let output = Command::new(grund)
         .args(["check", ".", "--format", "json"])
@@ -104,7 +104,7 @@ fn cli_findings(grund: &Path, root: &Path) -> Option<(BTreeSet<Finding>, BTreeSe
             let Ok(value) = serde_json::from_str::<Value>(line) else {
                 // §FS-errors.2.2: a CLI-level message is settled before a report
                 // exists, so neither surface carries it as a *located* finding.
-                // §FS-lsp.1.1's four arrive here too and are held on their own.
+                // §FS-lsp.1.1.3's four arrive here too and are held on their own.
                 if let Some(message) = line.strip_prefix("warning: ")
                     && is_run_level_warning(message)
                 {
@@ -122,7 +122,7 @@ fn cli_findings(grund: &Path, root: &Path) -> Option<(BTreeSet<Finding>, BTreeSe
                     root.display()
                 );
             };
-            // §FS-check.4.8 is one of `check`'s report warnings, so under `--format
+            // §FS-check.4.8.13 is one of `check`'s report warnings, so under `--format
             // json` it arrives as an object with `path` and `line` `null` — the same
             // warning in that command's shape, held with its three siblings.
             if let Some(message) = value["message"].as_str()
@@ -208,7 +208,7 @@ fn lsp_findings(root: &Path) -> (BTreeSet<Finding>, BTreeSet<String>) {
                 .as_str()
                 .unwrap_or_default()
                 .to_string();
-            // §FS-lsp.1.1: a run-level `[workspace]` warning is not a located
+            // §FS-lsp.1.1.3: a run-level `[workspace]` warning is not a located
             // finding on either surface — it is held against the CLI's stderr.
             if is_run_level_warning(&message) {
                 run_warnings.insert(message);
@@ -263,7 +263,7 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
                 case.name
             ));
         }
-        // §FS-lsp.1.1, §FS-lsp.4: the four run-level `[workspace]` warnings, held
+        // §FS-lsp.1.1.3, §FS-lsp.4: the four run-level `[workspace]` warnings, held
         // against the same case's stderr — neither surface may carry one the other
         // does not, and the message is the CLI's byte for byte.
         if !cli_run_warnings.is_empty() {
@@ -296,7 +296,7 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
         mismatches.join("\n")
     );
     // §FS-lsp.4: a sweep that compared no run-level warning at all would hold
-    // §FS-lsp.1.1's promise vacuously, which is the way this guard fails quietly.
+    // §FS-lsp.1.1.3's promise vacuously, which is the way this guard fails quietly.
     assert!(
         run_warning_cases >= MIN_RUN_WARNING_CASES,
         "only {run_warning_cases} case(s) carried a run-level [workspace] warning; \

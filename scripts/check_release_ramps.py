@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Refuse a release the tree's own messages contradict. §FS-distribution.4.2
+"""Refuse a release the tree's own messages contradict. §FS-distribution.4.2.2
 
 A ramp is a promise written into a message. A warning names the release it
 becomes an error in, and once the ramp lands the error names the release the
@@ -27,13 +27,13 @@ SOURCES = (("crates", "*.rs"), ("tests/e2e/cases", "expected.stdout"), ("tests/e
 PENDING = "pending"
 LANDED = "landed"
 
-# The clause vocabulary is closed (§FS-distribution.4.2): a ramp is written in
+# The clause vocabulary is closed (§FS-distribution.4.2.3): a ramp is written in
 # it or this gate does not see it. Each entry is the wording the messages
 # already use, and the direction the release named in it constrains.
 CLAUSES = (
     ("becomes an error in", PENDING),
     ("became an error in", LANDED),
-    # The two tenses of one removal (§FS-distribution.4.2): a deprecation names
+    # The two tenses of one removal (§FS-distribution.4.2.3): a deprecation names
     # the release its symbol stops working in, and the message that replaces it
     # names the release the removal was made in.
     ("is removed in", PENDING),
@@ -46,7 +46,7 @@ PATTERNS = tuple(
     (re.compile(re.escape(clause) + r"\s+(?:grund\s+)?\*{0,2}(\d+\.\d+\.\d+)"), clause, direction)
     for clause, direction in CLAUSES
 ) + (
-    # §FS-distribution.4.2: scalar migrations say what a command "will exit"
+    # §FS-distribution.4.2.4: scalar migrations say what a command "will exit"
     # before the final `in grund <release>` deadline rather than putting the
     # release directly after the verb phrase.
     (

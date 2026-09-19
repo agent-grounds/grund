@@ -73,7 +73,7 @@ fn stop_server(
 fn nested_editor_folder_scans_the_discovered_project_root() {
     // IntelliJ commonly supplies a module/project base below the checkout root.
     // That folder discovers the enclosing config; it must not hide sibling code
-    // included by that config (§FS-lsp.2.2).
+    // included by that config (§FS-lsp.2.2.1).
     let root = test_root("nested-workspace-folder");
     let (spec, source) = write_project(&root, "NestedUse");
     let nested = root.join("ee/vm-enterprise");

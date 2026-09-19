@@ -10,7 +10,7 @@ use crate::model::format_path;
 /// block before), `updated ` (a supported block whose bytes changed: an older
 /// block upgraded, or a same-version block re-rendered against a changed
 /// template or config), or `unchanged` (a supported block already byte-identical
-/// to the current render — `init` rewrites nothing, §FS-init.2.2/§FS-init.2.3,
+/// to the current render — `init` rewrites nothing, §FS-init.2.2/§FS-init.2.3.10,
 /// and reports it with the `exists ` prefix like any other untouched file).
 ///
 /// What this file holds: rewriting the managed agent-instructions block inside a
@@ -76,7 +76,7 @@ pub(super) fn write_or_update_canonical_agent_entrypoint(
 }
 
 /// Append or update the managed block in an existing agent entrypoint on disk
-/// (§FS-init.2.3). A supported block is re-rendered from the current
+/// (§FS-init.2.3.10). A supported block is re-rendered from the current
 /// template/config even when the schema version already matches — but when that
 /// re-render is byte-identical to what is on disk the file is left untouched
 /// (`Unchanged`, reported as `exists `), so re-running `grund init` on an
@@ -107,7 +107,7 @@ pub(crate) fn update_agents_text(
     label: &str,
 ) -> Result<(String, AgentsUpdateResult)> {
     match find_agents_block(existing) {
-        // §FS-init.2.3: splicing against broken delimiters risks eating user
+        // §FS-init.2.3.11: splicing against broken delimiters risks eating user
         // content, so a malformed block is a hard error and the file is left
         // untouched.
         AgentsBlockLookup::Malformed { message, .. } => {
@@ -122,7 +122,7 @@ pub(crate) fn update_agents_text(
                 ));
             }
             // A legacy H2-bounded block is migrated to the delimited form by
-            // this same splice (§FS-init.2.3): the replacement `block` carries
+            // this same splice (§FS-init.2.3.10): the replacement `block` carries
             // the delimiters, and the legacy span is what gets replaced.
             let mut updated = String::with_capacity(existing.len() + block.len());
             updated.push_str(&existing[..existing_block.start]);

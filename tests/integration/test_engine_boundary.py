@@ -16,7 +16,7 @@ FRONTENDS = (REPO_ROOT / "crates" / "grund-cli" / "src", REPO_ROOT / "crates" / 
 STREAM_OR_EXIT = re.compile(r"\b(e?println!|e?print!\(|io::stdout|io::stderr|process::exit)")
 # The one directory the deprecated `main_entry()` path renders through, and a
 # boundary a file printing elsewhere widens by decision rather than by slip
-# (§AR-system.2.9).
+# (§AR-system.2.9.1).
 COMPAT = "compat"
 ENGINE_ONLY_SYMBOLS = ("grund_core::main_entry", "compat_cli", "grund_core::command_")
 
@@ -63,7 +63,7 @@ class EngineBoundaryTests(unittest.TestCase):
         """The set may shrink, and the directory is the set: a file under
         `compat/` that no longer prints belongs with the component it serves. The
         directory's own test module is not one of those files — it pins what the
-        renderers do rather than rendering (§AR-core-module-layout.1)."""
+        renderers do rather than rendering (§AR-core-module-layout.1.3)."""
         idle = {
             _relative(path)
             for path in _implementation_files()

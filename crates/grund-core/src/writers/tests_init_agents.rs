@@ -19,7 +19,7 @@ use crate::scanner::{
 use crate::templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text, render_grund_toml};
 use crate::testing::{current_block, current_marker, test_root, write};
 
-/// §FS-init.5: the distributable skill and the binary-embedded copy the CLI
+/// §FS-init.5.3: the distributable skill and the binary-embedded copy the CLI
 /// prints must be byte-identical, and a release that edits one surface
 /// without the other is invalid. Nothing enforced that, so an edit to the
 /// repository copy alone shipped stale setup instructions to every agent
@@ -36,7 +36,7 @@ fn agent_setup_instructions_match_the_distributable_skill() {
     };
     assert_eq!(
         text, AGENT_SETUP_INSTRUCTIONS,
-        "skills/grund-init/SKILL.md and crates/grund-core/assets/skills/grund-init/SKILL.md must be byte-identical (§FS-init.5)"
+        "skills/grund-init/SKILL.md and crates/grund-core/assets/skills/grund-init/SKILL.md must be byte-identical (§FS-init.5.3)"
     );
 }
 
@@ -164,7 +164,7 @@ fn agents_update_handles_crlf_line_endings() {
 
 #[test]
 fn agents_update_migrates_legacy_block_to_delimited_form() {
-    // §FS-init.2.3 / §DF-managed-block-delimiters: a legacy H2-bounded block
+    // §FS-init.2.3.9 / §DF-managed-block-delimiters: a legacy H2-bounded block
     // sandwiched between user sections is replaced in place by the delimited
     // render, with both neighbors byte-identical.
     let existing =
@@ -181,7 +181,7 @@ fn agents_update_migrates_legacy_block_to_delimited_form() {
 
 #[test]
 fn agents_update_preserves_non_heading_content_after_delimited_block() {
-    // §FS-init.2.3 / §DF-managed-block-delimiters: the managed region ends at
+    // §FS-init.2.3.9 / §DF-managed-block-delimiters: the managed region ends at
     // the END delimiter, so a third-party managed marker right after the
     // block — not an H1/H2, invisible to the legacy boundary — survives.
     let existing = format!(
@@ -197,7 +197,7 @@ fn agents_update_preserves_non_heading_content_after_delimited_block() {
 
 #[test]
 fn agents_update_refuses_malformed_delimiters() {
-    // §FS-init.2.3: splicing against broken delimiters risks eating user
+    // §FS-init.2.3.11: splicing against broken delimiters risks eating user
     // content, so init errors out and leaves the text alone.
     for (existing, defect) in [
         (
@@ -229,7 +229,7 @@ fn agents_update_refuses_malformed_delimiters() {
 
 #[test]
 fn check_reports_malformed_agents_block() {
-    // §FS-check.3.5: broken delimiters are an agents-init error anchored at
+    // §FS-check.3.5.2: broken delimiters are an agents-init error anchored at
     // the offending delimiter line, and the file is never rewritten.
     let root = test_root("check_reports_malformed_agents_block");
     write(
@@ -262,7 +262,7 @@ fn check_reports_malformed_agents_block() {
 
 #[test]
 fn rendered_block_citation_example_is_escaped() {
-    // §FS-init.2.3: the worked example must be the `<§>`-escaped illustration
+    // §FS-init.2.3.8: the worked example must be the `<§>`-escaped illustration
     // form — a live `§` would make freshly generated output fail the host
     // repo's own `grund check` as a dangling reference.
     let block = current_block();
@@ -315,7 +315,7 @@ fn discovers_known_companion_agent_entrypoints() {
 
 #[test]
 fn init_discovers_missing_aliases_for_existing_agent_workspaces() {
-    // §FS-init.2.1.1: `.claude/` proves Claude is in use, which is one fact
+    // §FS-init.2.1.1.2: `.claude/` proves Claude is in use, which is one fact
     // and so one alias — the root-visible `CLAUDE.md`, not both of Claude's
     // entrypoints.
     let root = test_root("init_discovers_missing_aliases_for_existing_agent_workspaces");
@@ -347,9 +347,9 @@ fn init_discovers_missing_aliases_for_existing_agent_workspaces() {
 /// about what an entrypoint is.
 #[test]
 fn an_unclaimed_generic_file_is_not_its_agent_s_entrypoint() {
-    // §FS-init.2.1.1 / §FS-init.2.1: `.rules` is too generic to attribute to
+    // §FS-init.2.1.1 / §FS-init.2.1.2: `.rules` is too generic to attribute to
     // Zed by filename alone, so a build-rules file that no `.zed/` and no
-    // managed block claims is somebody else's (§FS-check.3.5).
+    // managed block claims is somebody else's (§FS-check.3.5.1).
     let root = test_root("an_unclaimed_generic_file_is_not_its_agent_s_entrypoint");
     write(&root.join(".rules"), "# somebody else's build rules\n");
 
@@ -468,7 +468,7 @@ fn check_validates_managed_companion_without_canonical_agents_md() {
 
 #[test]
 fn check_validates_managed_zed_rules_without_canonical_agents_md() {
-    // §FS-check.3.5 / §FS-init.2.1: `.rules` is not discovered by filename
+    // §FS-check.3.5.1 / §FS-init.2.1.2: `.rules` is not discovered by filename
     // alone, but a managed block proves it is a grund-owned Zed companion
     // and must still get init-block drift detection.
     let root = test_root("check_validates_managed_zed_rules_without_canonical_agents_md");
@@ -501,7 +501,7 @@ fn check_validates_managed_zed_rules_without_canonical_agents_md() {
 
 #[test]
 fn check_validates_zed_workspace_rules_when_canonical_exists() {
-    // §FS-check.3.5 / §FS-init.2.1: in a Zed workspace, `.rules` is owned
+    // §FS-check.3.5.1 / §FS-init.2.1.2: in a Zed workspace, `.rules` is owned
     // by the Zed companion path and must be validated when AGENTS.md exists.
     let root = test_root("check_validates_zed_workspace_rules_when_canonical_exists");
     write(&root.join("AGENTS.md"), &current_block());
@@ -535,7 +535,7 @@ fn check_validates_zed_workspace_rules_when_canonical_exists() {
 
 #[test]
 fn check_ignores_unmanaged_generic_rules_without_zed_workspace() {
-    // §FS-init.2.1: `.rules` is too generic to attribute to Zed by file
+    // §FS-init.2.1.2: `.rules` is too generic to attribute to Zed by file
     // existence alone, so a generic unmanaged file outside a `.zed/`
     // workspace must not become a companion check target.
     let root = test_root("check_ignores_unmanaged_generic_rules_without_zed_workspace");

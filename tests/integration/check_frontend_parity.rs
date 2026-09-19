@@ -1,5 +1,5 @@
 //! §AR-bindings.2: the published CLI and deprecated core process adapter keep
-//! §FS-errors.4 all-channel text ordering byte-identical.
+//! §FS-errors.4.1 all-channel text ordering byte-identical.
 
 mod binaries;
 

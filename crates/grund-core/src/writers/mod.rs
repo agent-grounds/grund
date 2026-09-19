@@ -8,7 +8,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). Each file keeps the name of the writer it belongs
+//! (§AR-core-module-layout.1.1). Each file keeps the name of the writer it belongs
 //! to rather than dropping a prefix, because this component holds five: the
 //! `fmt_*` files are the formatter — the rewrite walk, the link pass, the
 //! value-binding protection, the workspace pass, the completeness proof and the
@@ -21,14 +21,14 @@
 //! the installs and their byte-current probes, and the user configuration).
 //!
 //! One half of this component is `compat/init.rs`: the deprecated `main_entry()`
-//! adapter for the scaffold, which renders inside the engine (§AR-system.2.9)
+//! adapter for the scaffold, which renders inside the engine (§AR-system.2.9.1)
 //! and nothing here may import. The line is the one
 //! `tests/integration/test_engine_boundary.py` measures — a function that writes
 //! to a stream or returns an `ExitCode` is a renderer and went there, so no file
 //! under this directory prints. The `integrations` command was the second half
 //! and is not here any more: its argv, its bytes and its exit codes are
 //! `crates/grund-cli/src/cli_integrations*.rs`, the frontend that owns rendering
-//! (§FS-integrations.1, §AR-bindings.3), and what it reads of this component is
+//! (§FS-integrations.1.3, §AR-bindings.3), and what it reads of this component is
 //! the `pub` block below rather than a renderer `lib.rs` re-exports
 //! (§DA-engine-renders-nothing).
 //!
@@ -41,12 +41,12 @@
 //! its version — as `grammar/managed_block.rs`, which the checker's
 //! agent-entrypoint rule (§FS-check.3.5) now reads downward and which this
 //! component had implemented twice, once for §FS-init.2.3 and once for
-//! §FS-integrations.4.1. The `[fmt] exclude` glob grammar of §FS-config.3.10 and
+//! §FS-integrations.4.1. The `[fmt] exclude` glob grammar of §FS-config.3.10.1 and
 //! the TOML basic-string escaper went down into `config/`, and `plural` — by way
 //! of `checker/` — into `model/text.rs`, each to the lowest component that reads
 //! it. What came the other way is the §FS-fmt.6.6 auto-enable pair, out of the
 //! deprecated `fmt` adapter: neither of its two callers is the command
-//! (§AR-system.2.9).
+//! (§AR-system.2.9.1).
 //!
 //! `fmt_link_targets.rs` left the same way when §AR-system.2.10 became a
 //! component: where a citation's link points is a function of the loaded
@@ -113,7 +113,7 @@ pub(crate) use id::{format_id, slugify_title};
 // surfaces, the splices a `--write` carries out, and the user configuration.
 
 // The command's argv, its bytes and its exit codes are the CLI's
-// (§FS-integrations.1, §AR-bindings.3), so what it reads here crosses a crate
+// (§FS-integrations.1.3, §AR-bindings.3), so what it reads here crosses a crate
 // boundary and is public; each name returns data (§FS-distribution.3.1).
 pub use integrations_agents::{
     ConversationRendering, ConversationTarget, GLOBAL_AGENT_INSTRUCTION_TARGETS, GlobalAgentTarget,
@@ -134,7 +134,7 @@ pub use integrations_user_config::{
     scan_user_config, user_grund_config_path,
 };
 
-// What another component's tests read (§AR-core-module-layout.1): the rewrite
+// What another component's tests read (§AR-core-module-layout.1.3): the rewrite
 // pair, the scaffold, the block render and the terminal snippets. The rest went
 // beside their own cases.
 #[cfg(test)]
@@ -149,7 +149,7 @@ pub(crate) use init_render::render_agents_append_block_at;
 pub(crate) use integrations_clients::{ITERM2_SNIPPET, KITTY_SNIPPET, WEZTERM_SNIPPET};
 
 // The cases that pin this component, one module per behaviour area
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_init_agents;
 #[cfg(test)]

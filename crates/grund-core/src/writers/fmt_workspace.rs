@@ -12,7 +12,7 @@ use crate::resolver::WorkspaceContext;
 /// before any earlier project can be changed. If any project refuses, scan
 /// errors from both strict and ordinary project walks become one strict abort
 /// in the root-then-members order established by `WorkspaceContext`
-/// (§FS-fmt.3).
+/// (§FS-fmt.3.3).
 pub(crate) fn fmt_workspace_projects(
     context: &WorkspaceContext,
     render: &Config,
@@ -38,7 +38,7 @@ pub(crate) fn fmt_workspace_projects(
             render,
             workspace: Some(context),
             precomputed_findings: project.complete_findings(),
-            // §FS-fmt.6.1: check previews the same index carve-out write applies.
+            // §FS-fmt.6.1.3: check previews the same index carve-out write applies.
             index_cross_refs: true,
         };
         match fmt_tree(&project.config, Some(&project.config.root), true, &run_opts) {

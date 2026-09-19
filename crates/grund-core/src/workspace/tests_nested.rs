@@ -16,7 +16,7 @@ use crate::config::load_config;
 use crate::testing::physical_test_root;
 use crate::testing::{test_root, write};
 
-/// §FS-workspace.6.1: a member that resolves to an ancestor of the block that
+/// §FS-workspace.6.1.4: a member that resolves to an ancestor of the block that
 /// lists it is a located config error naming the entry as written. It has no
 /// e2e fixture because reaching it needs a symlink, and it is also what bounds
 /// the recursive walk — without it this test would not fail, it would hang.
@@ -52,7 +52,7 @@ fn nested_workspace_member_pointing_at_an_ancestor_is_rejected() {
     );
 }
 
-/// §FS-workspace.6.1: the same rule outward. A member whose canonical root
+/// §FS-workspace.6.1.4: the same rule outward. A member whose canonical root
 /// leaves the tree has no lexical ancestor listing it, so the two scopes that
 /// can see it demand opposite spellings — `grund check` at the root wanted
 /// `real/leaf`, a run at the member wanted `leaf`, and no citation text passed
@@ -86,7 +86,7 @@ fn workspace_member_resolving_out_of_the_tree_is_rejected() {
     );
 }
 
-/// §FS-workspace.6.1: the containment rule is about where an entry *resolves*,
+/// §FS-workspace.6.1.4: the containment rule is about where an entry *resolves*,
 /// not which of its segments carries the symlink — a symlinked **parent**
 /// (`members = ["pkgs/api"]` with `pkgs -> ../store/pkgs`) leaves the tree just
 /// as surely as a symlinked member does, and the migration note says both.
@@ -117,7 +117,7 @@ fn a_member_reached_through_a_symlinked_parent_is_rejected() {
     );
 }
 
-/// §FS-workspace.6.1: a member that resolves *to* the block listing it — the
+/// §FS-workspace.6.1.4: a member that resolves *to* the block listing it — the
 /// `self` symlink — is the boundary case of the same rule, and stays rejected.
 #[test]
 #[cfg(unix)]
@@ -141,7 +141,7 @@ fn workspace_member_resolving_to_its_own_block_is_rejected() {
     );
 }
 
-/// §FS-workspace.2 / §FS-errors.4: a nested block's overlap error names both
+/// §FS-workspace.2.3 / §FS-errors.4: a nested block's overlap error names both
 /// entries as the config wrote them, at that block's own `members` line. It
 /// used to print `display_path` of the canonical roots instead, which is a
 /// different string from the one the author wrote. This fixture cannot see the
@@ -214,7 +214,7 @@ fn member_overlap_names_the_entry_not_the_canonical_root() {
     );
 }
 
-/// §FS-workspace.2 / §FS-errors.4: a glob whose parent directory is missing
+/// §FS-workspace.2.3 / §FS-errors.4: a glob whose parent directory is missing
 /// names the entry **as written**, like every other member error. It used to
 /// render the joined path against the block's own root — a base no report uses
 /// — which under `[output] relative_paths = false` could not be made relative
@@ -239,7 +239,7 @@ fn a_missing_glob_parent_names_the_entry_as_written() {
     );
 }
 
-/// §FS-workspace.2: an existing glob parent that cannot be read is a
+/// §FS-workspace.2.4: an existing glob parent that cannot be read is a
 /// located config error at the `members` line, naming the glob as written
 /// and retaining the operating-system reason.
 #[test]
@@ -294,7 +294,7 @@ fn an_unreadable_glob_parent_is_a_located_members_error() {
     );
 }
 
-/// §FS-workspace.6.1: an unmatched glob is diagnosed only when the
+/// §FS-workspace.6.1.3: an unmatched glob is diagnosed only when the
 /// whole block is empty, and multiple unmatched globs name the first entry
 /// in config order so the output is deterministic.
 #[test]
@@ -334,7 +334,7 @@ fn unmatched_globs_only_error_when_the_workspace_is_empty() {
     );
 }
 
-/// §FS-workspace.6.1: the rule above bites only on an escape — a member that
+/// §FS-workspace.6.1.4: the rule above bites only on an escape — a member that
 /// really is nested inside the block that lists it still loads, including the
 /// multi-segment form (`grp/alpha`) whose canonical root is two levels down.
 #[test]
@@ -365,10 +365,10 @@ fn nested_member_inside_the_block_that_lists_it_loads() {
     assert_eq!(aliases, vec!["root", "group", "group/alpha", "group/beta"]);
 }
 
-/// §FS-workspace.8: an alias path that is not one slug per level names the
+/// §FS-workspace.8.11: an alias path that is not one slug per level names the
 /// **segment** that failed. Before this the message quoted the whole path
 /// against a pattern forbidding `/`, which reads as "a namespace may not
-/// contain `/`" — the opposite of §FS-workspace.1, and in a nested tree the
+/// contain `/`" — the opposite of §FS-workspace.1.1, and in a nested tree the
 /// path is usually mostly right.
 #[test]
 fn an_invalid_alias_path_names_the_offending_segment() {

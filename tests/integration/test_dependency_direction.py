@@ -15,7 +15,7 @@ made at all — and the list can only shrink.
 A component's test modules — `tests_*.rs` beside the code they pin, and the
 shared fixtures in `testing.rs` — are skipped: a test module may read any
 component, because what it exercises is reached from wherever the run that
-produced it starts (§AR-core-module-layout.1)."""
+produced it starts (§AR-core-module-layout.1.3)."""
 
 import re
 import unittest
@@ -58,8 +58,8 @@ NOTE = "§AR-system.4"
 # It held six: `workspace/` and `resolver/` reached `compat/` to print four
 # `[workspace]` findings settled before a report exists.
 
-# Each is a `Diagnostic` in the run's warning channel now (§FS-check.4.7,
-# §FS-check.4.8, §FS-check.4.10, §FS-workspace.6.1), rendered by every frontend
+# Each is a `Diagnostic` in the run's warning channel now (§FS-check.4.7.7,
+# §FS-check.4.8.15, §FS-check.4.10.11, §FS-workspace.6.1.7), rendered by every frontend
 # for itself, so nothing below `compat/` reads it (§DA-engine-renders-nothing).
 
 # An entry is (file, `<component>::<item>`) and buys nothing else: the file must
