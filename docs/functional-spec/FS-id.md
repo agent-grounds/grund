@@ -67,7 +67,7 @@ The title becomes a slug deterministically: the same title and the same configur
 1. Unicode-normalize the title to NFKD and strip combining marks (`Café log-in` → `Cafe log-in`).
 2. Lower-case, ASCII only; a non-ASCII letter that survives step 1 passes to step 3 unchanged and is filtered there.
 3. Replace every run of characters outside the repeating character class of the configured `slug_pattern` ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — its last `[...]` bracket expression, or `[a-z0-9-]` when it has none — with a single `-`. Under the default pattern, spaces, punctuation and quotes all become `-`.
-4. Trim leading and trailing `-`.
+4. Trim leading and trailing `-`. For example, `---login---` becomes `login`, including when the configured character class accepts hyphens.
 5. Collapse runs of two or more `-` into one.
 6. Truncate to 60 characters at the nearest preceding `-`, so a slug never ends mid-word.
 

@@ -24,6 +24,10 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ## Unreleased
 
+### Fixed
+
+- [§FS-id.3](functional-spec/FS-id.md#3-slug-derivation): trim leading as well as trailing literal hyphens when deriving an ID slug, including hyphens accepted by the configured character class. (PR #254)
+
 ### Added
 
 - [§AR-goal-measurement.1](architecture/AR-goal-measurement.md#1-rule): gate every functional-spec leaf on exact test evidence or a reviewed, self-retiring exception, and add the missing fetch, ID, check, output, error, config, query, value, completion, and init proofs. (PR #254)
