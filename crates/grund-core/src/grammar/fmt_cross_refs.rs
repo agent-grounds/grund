@@ -73,8 +73,8 @@ pub(crate) fn flatten_cross_ref_links(
         // after the valid closer.
         let fence_line = line.strip_suffix('\n').unwrap_or(line);
         let fence_line = fence_line.strip_suffix('\r').unwrap_or(fence_line);
-        let fence_delimiter = markdown_body
-            && markdown_fence_delimiter(&mut markdown_fence, fence_line);
+        let fence_delimiter =
+            markdown_body && markdown_fence_delimiter(&mut markdown_fence, fence_line);
         if fence_delimiter || markdown_fence.is_some() {
             out.push_str(line);
         } else {
