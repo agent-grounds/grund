@@ -161,7 +161,7 @@ fn find_init_workspace_root(
             Err(_) => break false,
         }
     };
-    // §FS-workspace.6.1.7: the climb that spells this run's alias path owes the
+    // §FS-workspace.6.1.7.5: the climb that spells this run's alias path owes the
     // reader an ancestor it could not read, whether or not the climb then
     // succeeded — the warning is about the chain, not about the section.
     run_warnings.extend(run_warning_findings(&config, ancestors.take_warnings()));
@@ -202,7 +202,7 @@ pub(crate) fn render_workspace_members_section(
 }
 
 /// [`render_workspace_members_section`] with the run's `[workspace]` warnings the
-/// walk-up settled (§FS-check.4.7.2, §FS-check.4.10.7, §FS-workspace.6.1.7). `init`
+/// walk-up settled (§FS-check.4.7.2, §FS-check.4.10.7, §FS-workspace.6.1.7.6). `init`
 /// resolves a block's member boundary like every other walking command, and the
 /// section it renders is not where a caution belongs — it is one of the run's,
 /// carried out to `InitOutput` (§FS-distribution.3.1).

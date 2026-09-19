@@ -1,4 +1,4 @@
-//! [§FS-lsp.1.1](../../../docs/functional-spec/FS-lsp.md#11-diagnostics) / [§REQ-runs-offline](../../../docs/requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service): missing-snapshot diagnostics cross the existing LSP transport without executing the fetcher.
+//! [§FS-lsp.1.1.2](../../../docs/functional-spec/FS-lsp.md#112-findings-the-core-report-shapes) / [§REQ-runs-offline](../../../docs/requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service): missing-snapshot diagnostics cross the existing LSP transport without executing the fetcher.
 #![cfg(unix)]
 
 mod support;
