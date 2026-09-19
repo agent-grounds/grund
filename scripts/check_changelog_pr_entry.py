@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Require pull requests to be represented in the Unreleased changelog. §FS-distribution.4"""
+"""Require pull requests to be represented in the Unreleased changelog. §FS-distribution.4.6"""
 
 from __future__ import annotations
 

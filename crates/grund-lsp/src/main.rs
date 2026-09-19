@@ -1,4 +1,4 @@
-//! LSP binary entry point and pre-transport batch dispatch. §AR-lsp.4 §FS-lsp.2.4
+//! LSP binary entry point and pre-transport batch dispatch. §AR-lsp.4 §FS-lsp.2.4.4
 
 mod integrations;
 

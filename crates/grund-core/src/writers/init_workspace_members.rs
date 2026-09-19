@@ -56,14 +56,14 @@ fn find_init_workspace_context(
 ) -> Option<Vec<InitWorkspaceProject>> {
     let (mut root_config, run_root) = find_init_workspace_root(target, run_warnings)?;
     // `expand_workspace_tree` returns canonical project roots, so canonicalize
-    // `target` before §FS-init.2.3.4.15's identity-based self omission.
+    // `target` before §FS-init.2.3.4.15.4's identity-based self omission.
     let target_canonical = fs::canonicalize(target).ok()?;
     let mut projects = Vec::new();
-    // §FS-check.4.8: the expansion below is the only route that walks *down* from
+    // §FS-check.4.8.7: the expansion below is the only route that walks *down* from
     // a root above the run, so it is the only one that has to be told where the
     // run is — every other command re-roots onto it first (§AR-workspace.5.1).
     let expanded = expand_workspace_tree_with_report_base(&mut root_config, &run_root);
-    // §FS-check.4.7, §FS-check.4.10: `init` is a walking command like any other, so
+    // §FS-check.4.7.2, §FS-check.4.10.7: `init` is a walking command like any other, so
     // the cautions the expansion settled reach the reader whether or not the
     // members section itself can be rendered (§FS-distribution.3.1).
     run_warnings.extend(run_warning_findings(
@@ -76,7 +76,7 @@ fn find_init_workspace_context(
         if entry.config.root == target_canonical && config_file_in(&entry.config.root).is_none() {
             // Apply pending config before validating the tree. The renderer
             // omits this project; its pending name matters only if it makes
-            // the foreign aliases ambiguous (§FS-init.2.3.4.15).
+            // the foreign aliases ambiguous (§FS-init.2.3.4.15.4).
             if let Some(name) = pending_project_name {
                 if !is_valid_project_alias(name) {
                     return None;
@@ -121,7 +121,7 @@ fn find_init_workspace_context(
 /// The outermost workspace whose tree actually contains `target`: start at the
 /// config that governs it (§FS-config.1) and climb the *claimed chain* — the
 /// same walk `enclosing_alias_prefix` uses, so `init` teaches exactly the alias
-/// set a command run here resolves (§FS-init.2.3.4.15, §FS-workspace.6.1).
+/// set a command run here resolves (§FS-init.2.3.4.15.1, §FS-workspace.6.1).
 ///
 /// Unlike [`load_config`] the walk does not stop at the first config it finds — a
 /// member with its own config must still see the workspace root above it. It does
@@ -133,7 +133,7 @@ fn find_init_workspace_context(
 /// block governing `target`, before the climb moved off it. That is the base every
 /// diagnostic of this run is rendered against (§FS-errors.4), and the climb has
 /// already used it for the blocks above; the expansion downward needs the same one
-/// (§FS-check.4.8).
+/// (§FS-check.4.8.7).
 fn find_init_workspace_root(
     target: &Path,
     run_warnings: &mut Vec<Finding>,
@@ -161,7 +161,7 @@ fn find_init_workspace_root(
             Err(_) => break false,
         }
     };
-    // §FS-workspace.6.1: the climb that spells this run's alias path owes the
+    // §FS-workspace.6.1.7: the climb that spells this run's alias path owes the
     // reader an ancestor it could not read, whether or not the climb then
     // succeeded — the warning is about the chain, not about the section.
     run_warnings.extend(run_warning_findings(&config, ancestors.take_warnings()));
@@ -202,7 +202,7 @@ pub(crate) fn render_workspace_members_section(
 }
 
 /// [`render_workspace_members_section`] with the run's `[workspace]` warnings the
-/// walk-up settled (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1). `init`
+/// walk-up settled (§FS-check.4.7.2, §FS-check.4.10.7, §FS-workspace.6.1.7). `init`
 /// resolves a block's member boundary like every other walking command, and the
 /// section it renders is not where a caution belongs — it is one of the run's,
 /// carried out to `InitOutput` (§FS-distribution.3.1).
@@ -231,7 +231,7 @@ pub(crate) fn render_workspace_members_section_with_run_warnings(
     };
     let mut bullets = Vec::with_capacity(projects.len());
     for project in &projects {
-        // §FS-init.2.3.4.15: the canonical init target is the local namespace,
+        // §FS-init.2.3.4.15.4: the canonical init target is the local namespace,
         // so this cross-project list contains only foreign projects.
         if project.project_root == target_canonical {
             continue;
@@ -253,7 +253,7 @@ pub(crate) fn render_workspace_members_section_with_run_warnings(
         } else {
             " *(not yet initialized)*"
         };
-        // §FS-init.2.3.4.15: the alias is the link label so the path appears
+        // §FS-init.2.3.4.15.5: the alias is the link label so the path appears
         // once, mirroring the Project Map's `- [x](y): …` shape; the one-line
         // description follows `: `, before the trailing marker.
         let description = project
@@ -276,7 +276,7 @@ pub(crate) fn render_workspace_members_section_with_run_warnings(
 
 /// Compute a relative POSIX-style path from `from_dir` to `to`. Both inputs
 /// must be absolute (canonicalized) paths. Used to render workspace member
-/// links from inside the AGENTS.md being written (§FS-init.2.3.4.15); Markdown
+/// links from inside the AGENTS.md being written (§FS-init.2.3.4.15.6); Markdown
 /// links are always forward-slash regardless of platform.
 fn relative_link_path(from_dir: &Path, to: &Path) -> String {
     let from = normalize_path_lexically(from_dir);

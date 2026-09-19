@@ -54,7 +54,7 @@ pub fn fetch_snapshot(raw: &str, path: &Path) -> std::result::Result<(), FetchFa
 }
 
 /// [`fetch_snapshot`] for a frontend that also renders the run's `[workspace]`
-/// warnings (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1): `fetch` resolves
+/// warnings (§FS-check.4.7.7, §FS-check.4.10.11, §FS-workspace.6.1.7): `fetch` resolves
 /// a block's member boundary like every other walking command, and its failure
 /// is a typed refusal with nowhere to carry a caution.
 #[doc(hidden)]

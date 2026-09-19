@@ -39,7 +39,7 @@ pub fn block_outcome_verb(outcome: BlockOutcome) -> &'static str {
 }
 
 /// One file, two managed keys: `exists` only when neither line moved, and an
-/// append anywhere makes the whole write an append (§FS-integrations.6).
+/// append anywhere makes the whole write an append (§FS-integrations.6.1).
 pub fn merge_outcomes(first: BlockOutcome, second: BlockOutcome) -> BlockOutcome {
     match (first, second) {
         (BlockOutcome::Unchanged, other) | (other, BlockOutcome::Unchanged) => other,
@@ -49,7 +49,7 @@ pub fn merge_outcomes(first: BlockOutcome, second: BlockOutcome) -> BlockOutcome
 }
 
 /// Splice the managed integrations block carrying `snippet` into `existing`
-/// (§FS-integrations.4.1): replace the bytes between the current-version markers
+/// (§FS-integrations.4.1.4): replace the bytes between the current-version markers
 /// when a block is present, else append after a blank-line separator. Everything
 /// outside the block is preserved. Returns the new text and what changed. A block
 /// whose version is newer than this binary understands is an error.
@@ -130,11 +130,11 @@ pub fn install_agent_guidance_block(
 }
 
 /// The call a WezTerm config must make on the object it returns for the managed
-/// block to do anything (§FS-integrations.4.1).
+/// block to do anything (§FS-integrations.4.1.2).
 pub const WEZTERM_APPLY_CALL: &str = "grund_apply_hyperlink_rule(";
 
 /// Whether this write leaves the user one manual step short of a working
-/// integration (§FS-integrations.4.1). WezTerm applies hyperlink rules only from
+/// integration (§FS-integrations.4.1.3). WezTerm applies hyperlink rules only from
 /// the config object the user's own Lua returns, and no installer can safely
 /// rewrite the function that builds it — so the block can be perfectly installed
 /// and every click still inert, which reports exactly like a broken install.

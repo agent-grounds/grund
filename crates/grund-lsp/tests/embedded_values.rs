@@ -1,6 +1,6 @@
 //! Embedded value roots keep ordinary section identity in editor ranges,
-//! navigation, raw previews, and CLI-equal diagnostics (§FS-lsp.1.2,
-//! §FS-lsp.1.3, §FS-lsp.4, §FS-values.7).
+//! navigation, raw previews, and CLI-equal diagnostics (§FS-lsp.1.2.1,
+//! §FS-lsp.1.3.5, §FS-lsp.4.2, §FS-values.7).
 
 mod support;
 

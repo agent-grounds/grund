@@ -1,6 +1,6 @@
 """§AR-ci.7 — the pull-request changelog gate, exercised the way CI runs it: a
 pull request must be named in the `## Unreleased` section of `docs/changelog.md`
-(§FS-distribution.4), and the script reads the PR number the way the event
+(§FS-distribution.4.6), and the script reads the PR number the way the event
 supplies it."""
 
 import importlib.util
@@ -33,7 +33,7 @@ class CheckChangelogPrEntryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             changelog = self.write_changelog(
                 Path(tmp),
-                "### Changed\n\n- §FS-distribution.4: add the changelog PR gate. PR #15",
+                "### Changed\n\n- §FS-distribution.4.6: add the changelog PR gate. PR #15",
             )
             check_changelog_pr_entry.check_changelog_pr_entry(changelog, 15)
 
@@ -41,7 +41,7 @@ class CheckChangelogPrEntryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             changelog = self.write_changelog(
                 Path(tmp),
-                "### Fixed\n\n- §FS-distribution.4: fix release notes (https://github.com/agent-grounds/grund/pull/15).",
+                "### Fixed\n\n- §FS-distribution.4.6: fix release notes (https://github.com/agent-grounds/grund/pull/15).",
             )
             check_changelog_pr_entry.check_changelog_pr_entry(changelog, 15)
 
@@ -49,7 +49,7 @@ class CheckChangelogPrEntryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             changelog = self.write_changelog(
                 Path(tmp),
-                "### Changed\n\n- §FS-distribution.4: add the changelog PR gate.",
+                "### Changed\n\n- §FS-distribution.4.6: add the changelog PR gate.",
             )
             with self.assertRaisesRegex(check_changelog_pr_entry.ChangelogPrError, "PR #15"):
                 check_changelog_pr_entry.check_changelog_pr_entry(changelog, 15)

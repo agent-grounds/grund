@@ -1,6 +1,6 @@
 //! Test module: a `[workspace]` block whose members cover every one of its own
 //! walk roots (§FS-workspace.2.1), and the deprecation ramp the finding rides
-//! (§FS-check.4.7).
+//! (§FS-check.4.7.8).
 //!
 //! The behaviour itself is pinned end to end, in `tests/e2e/cases/`, because the
 //! warning is a property of a whole run rather than of one function: it is
@@ -53,7 +53,7 @@ fn version(text: &str) -> Vec<u32> {
         .collect()
 }
 
-/// §FS-check.4.7, §REQ-backwards-compatibility.2: the warning names the
+/// §FS-check.4.7.8, §REQ-backwards-compatibility.2: the warning names the
 /// release it becomes an error in, and a named release that has already
 /// passed is a promise grund broke. Held ahead of the running version so the
 /// bump that reaches the deadline fails the build rather than shipping a
@@ -62,7 +62,7 @@ fn version(text: &str) -> Vec<u32> {
 /// `the_named_error_release_is_0_14_0_and_still_ahead` keeps for the
 /// unlisted-block ramp. These two are what is left of the pending half
 /// `scripts/check_release_ramps.py` now asks of every message
-/// (§FS-distribution.4.2).
+/// (§FS-distribution.4.2.1).
 #[test]
 fn the_absorbed_scan_error_release_is_still_ahead() {
     let Some(golden) = repo_text(GOLDEN) else {
@@ -73,14 +73,14 @@ fn the_absorbed_scan_error_release_is_still_ahead() {
     });
     assert!(
         version(env!("CARGO_PKG_VERSION")) < version(&release),
-        "this tree is {}, which has reached the release §FS-check.4.7 promised the \
+        "this tree is {}, which has reached the release §FS-check.4.7.8 promised the \
              absorbed-scan warning would become an error in ({release}). Land \
              §RM-workspace-absorbed-scan-error rather than moving the date.",
         env!("CARGO_PKG_VERSION")
     );
 }
 
-/// §FS-check.4.7, §RM-workspace-absorbed-scan-error: the one place the
+/// §FS-check.4.7.8, §RM-workspace-absorbed-scan-error: the one place the
 /// release is written in the source is the release the shipped message names.
 /// The guard above reads the bytes a user sees and holds them ahead of the
 /// running version; this ties those bytes to the constant, so a ramp moved in
@@ -98,7 +98,7 @@ fn the_release_constant_is_the_release_the_message_names() {
     );
 }
 
-/// §FS-check.4.7: the whole sentence, assembled from the covered pairs the
+/// §FS-check.4.7.1: the whole sentence, assembled from the covered pairs the
 /// rule found — the golden with its `members`-line breadcrumb taken off the
 /// front. Held here as well as end to end because this is where a failure
 /// names the sentence rather than a whole run's stderr.
@@ -117,7 +117,7 @@ fn the_message_is_assembled_from_the_covered_pairs() {
     );
 }
 
-/// §FS-check.4.7: the message the spec shows and the message the binary
+/// §FS-check.4.7.1: the message the spec shows and the message the binary
 /// prints are one string. Without this the deadline could be kept in the
 /// golden and stale in the document a reader reaches by citation — and the
 /// guard above would still pass, because it only ever reads the golden.

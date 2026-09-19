@@ -15,54 +15,54 @@
 use std::path::PathBuf;
 
 /// The resolver every client shells out to, and the one artifact `--write`
-/// installs for all of them (§FS-integrations.3.4). It takes the clicked token,
+/// installs for all of them (§FS-integrations.3.4.2). It takes the clicked token,
 /// tells a citation from the `§<ID> path:line` location an agent prints beside
-/// one (§FS-integrations.3.1), finds the config root by climbing under either
+/// one (§FS-integrations.3.1.8), finds the config root by climbing under either
 /// discovery name (§FS-config.1), reads `path` and `line` out of `--format
 /// json` — including the manifest shape a directory-backed case answers with
-/// (§FS-show.2.4) — and makes the path absolute, which grund's own reports
+/// (§FS-show.2.4.2) — and makes the path absolute, which grund's own reports
 /// never do (§FS-errors.4).
 pub const GRUND_OPEN_RESOLVER: &str = include_str!("../../assets/integrations/grund-open");
 
 /// iTerm2 keeps its settings in a binary plist, so this one is printed for the
 /// user to apply by hand rather than spliced; `--write` still installs the
-/// resolver it depends on (§FS-integrations.3.4). Its Smart Selection rule
+/// resolver it depends on (§FS-integrations.3.4.2). Its Smart Selection rule
 /// stays citation-only because Semantic History already opens a bare
 /// `path:line`, which is what the `link` preference makes agents print
-/// (§FS-integrations.4.3) — the location matcher the other terminals need
-/// (§FS-integrations.3.1) would only compete with it.
+/// (§FS-integrations.4.3.2) — the location matcher the other terminals need
+/// (§FS-integrations.3.1.8) would only compete with it.
 pub(crate) const ITERM2_SNIPPET: &str = include_str!("../../assets/integrations/iterm2.txt");
 
 /// WezTerm: one hyperlink rule for the citation and one for the location beside
 /// it, registered location-first so the whole `path:line` wins over an
-/// ID-shaped fragment inside it (§FS-integrations.3.1). WezTerm has no hover
-/// event, so peek opens a split pane (§FS-integrations.3.3).
+/// ID-shaped fragment inside it (§FS-integrations.3.1.9). WezTerm has no hover
+/// event, so peek opens a split pane (§FS-integrations.3.3.2).
 pub(crate) const WEZTERM_SNIPPET: &str = include_str!("../../assets/integrations/wezterm.lua");
 
 /// kitty: the `hints` kitten over the visible screen, matching the location
 /// ahead of the citation for the same reason WezTerm registers it first
-/// (§FS-integrations.3.1), with an overlay window as the read-without-leaving
-/// path kitty's missing hover leaves it (§FS-integrations.3.3).
+/// (§FS-integrations.3.1.9), with an overlay window as the read-without-leaving
+/// path kitty's missing hover leaves it (§FS-integrations.3.3.2).
 pub(crate) const KITTY_SNIPPET: &str = include_str!("../../assets/integrations/kitty.conf");
 
 /// tmux cannot make text clickable at all, so a prefix key hands the copy
 /// buffer — citation or location alike, the resolver tells them apart
-/// (§FS-integrations.3.1) — to `grund-open`, and a second key reads the
-/// declaration in a popup over the session (§FS-integrations.3.3).
+/// (§FS-integrations.3.1.8) — to `grund-open`, and a second key reads the
+/// declaration in a popup over the session (§FS-integrations.3.3.2).
 const TMUX_SNIPPET: &str = include_str!("../../assets/integrations/tmux.conf");
 
 pub const VSCODE_PACKAGE_JSON: &str = include_str!("../../assets/integrations/vscode/package.json");
 
 /// VS Code is the one client that can show a declaration on *hover* rather than
-/// on click (§FS-integrations.3.3), and one `--brief` resolution serves both
-/// (§FS-integrations.3.2). The provider mirrors grund's own config-root climb
+/// on click (§FS-integrations.3.3.1), and one `--brief` resolution serves both
+/// (§FS-integrations.3.2.1). The provider mirrors grund's own config-root climb
 /// (§FS-config.3.6) under both discovery names (§FS-config.1), so a reported
 /// path is joined against the root that produced it, and reveals a
 /// directory-backed case in the Explorer, having no line to open
-/// (§FS-show.2.4). Its document and terminal matchers, and the strip before a
+/// (§FS-show.2.4.2). Its document and terminal matchers, and the strip before a
 /// resolution, follow the citation-token rules every client shares: no hardcoded
 /// marker, and the `.<section>` suffix preserved so a subsection click lands on
-/// that section rather than the declaration heading (§FS-integrations.3.1).
+/// that section rather than the declaration heading (§FS-integrations.3.1.4).
 pub const VSCODE_EXTENSION_JS: &str = include_str!("../../assets/integrations/vscode/extension.js");
 
 /// Where `--write` installs the `grund-open` resolver for terminal clients; a
@@ -70,7 +70,7 @@ pub const VSCODE_EXTENSION_JS: &str = include_str!("../../assets/integrations/vs
 pub const RESOLVER_TARGET: &str = "~/.local/bin/grund-open";
 
 /// The rendering-layer clients grund ships an integration for. The set is closed
-/// and frozen (§FS-integrations.1); the ordering here is the frozen output order
+/// and frozen (§FS-integrations.1.4); the ordering here is the frozen output order
 /// used by detection and every listing.
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum IntegrationClient {
@@ -174,7 +174,7 @@ impl IntegrationClient {
             IntegrationClient::Vscode => "~/.vscode/extensions/grund.grund-terminal-citations",
             // VSCodium is a separate application with its own extensions root;
             // installing the same extension into ~/.vscode would land where it
-            // is never loaded (§FS-integrations.3.2).
+            // is never loaded (§FS-integrations.3.2.4).
             IntegrationClient::Codium => "~/.vscode-oss/extensions/grund.grund-terminal-citations",
         }
     }
@@ -188,7 +188,7 @@ impl IntegrationClient {
     /// be one fixed string: `kitty.conf` and `.tmux.conf` comment with `#`,
     /// while `wezterm.lua` is Lua, where `#` is the length operator and a `#`
     /// marker is a syntax error that costs the user their whole config
-    /// (§FS-integrations.4.1).
+    /// (§FS-integrations.4.1.1).
     pub fn comment_prefix(self) -> &'static str {
         match self {
             IntegrationClient::Iterm2 | IntegrationClient::Kitty | IntegrationClient::Tmux => "#",
@@ -212,7 +212,7 @@ impl IntegrationClient {
     /// Emitted below the managed block when `--write` creates the config file
     /// from scratch, so a fresh install is a *working* config rather than one
     /// the user must finish by hand. Unmanaged: later writes rewrite only the
-    /// block and leave this alone (§FS-integrations.4.1).
+    /// block and leave this alone (§FS-integrations.4.1.2).
     pub fn fresh_config_scaffold(self) -> Option<&'static str> {
         match self {
             // WezTerm applies hyperlink rules only from the config object the
@@ -253,7 +253,7 @@ pub fn known_clients_line() -> String {
 /// `~/.config` — kitty, WezTerm, Zed, and grund's own user config — reads it
 /// from `$XDG_CONFIG_HOME` when set, so writing to a hardcoded `~/.config`
 /// there lands where the tool never looks, and the failure is silent in exactly
-/// the way §FS-integrations.3.2 refuses to accept for VSCodium.
+/// the way §FS-integrations.3.2.4 refuses to accept for VSCodium.
 pub fn expand_target(target: &str) -> Option<PathBuf> {
     if let Some(rest) = target.strip_prefix("~/.config/") {
         return Some(user_config_base()?.join(rest));

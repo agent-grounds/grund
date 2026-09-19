@@ -36,7 +36,7 @@ use crate::scanner::{
 /// does not resolve (§FS-fmt.6.3).
 ///
 /// `workspace` is `None` for single-project runs (and for member-local
-/// runs in a workspace — §FS-workspace.8.5). When `Some`, a qualified
+/// runs in a workspace — §FS-workspace.8.5.1). When `Some`, a qualified
 /// `§<alias>/<ID>` resolves against the named project's findings, with
 /// the relative path crossing the workspace and the anchor computed
 /// against the target project's config (§FS-workspace.8.5).
@@ -53,7 +53,7 @@ pub(crate) fn wrap_markdown_links(
     wrap_markdown_links_with_targets(line, path, config, findings, workspace, only_ids, &targets)
 }
 
-/// The production §FS-fmt.6 wrapper pass, sharing §FS-fmt.2.4's already-built
+/// The production §FS-fmt.6 wrapper pass, sharing §FS-fmt.2.4.5's already-built
 /// target indexes so accepted shorthand adds no per-citation catalog scan.
 pub(super) fn wrap_markdown_links_with_targets(
     line: &str,
@@ -70,7 +70,7 @@ pub(super) fn wrap_markdown_links_with_targets(
         if citation.marker_start < cursor {
             continue;
         }
-        // §FS-fmt.6.1: the always-linkify carve-out reaches this file for its
+        // §FS-fmt.6.1.2: the always-linkify carve-out reaches this file for its
         // index entries (§FS-check.3.18) and writes nothing else — a qualified
         // citation is never an entry, and an ID the index does not owe is prose.
         if let Some(only_ids) = only_ids

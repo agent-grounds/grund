@@ -1,4 +1,4 @@
-"""Consistency rules for the two fissile file-size exception registries (§AR-ci.9).
+"""Consistency rules for the two fissile file-size exception registries (§AR-ci.9.9).
 
 `fissile check` validates that each registry parses and that the sizes it
 records are still accurate. It cannot see the rules this repository puts on
@@ -47,7 +47,7 @@ def where(registry: Path, entry: dict) -> str:
 
     Version 2 dropped the `id` field, because the registry an entry lives in
     and what it accepts already identify it, and a second name is the one that
-    can be wrong (§AR-ci.9). Diagnostics here name the same pair, which is also
+    can be wrong (§AR-ci.9.8). Diagnostics here name the same pair, which is also
     the line a reader has to edit.
     """
     return f"{registry.name}: {entry['path']}"
@@ -129,7 +129,7 @@ class FileSizeExceptionTests(unittest.TestCase):
         """A file past the hard budget is past the soft one too, and a `deferred`
         hard entry deliberately leaves the soft finding standing, so the hard
         entry alone prints a warning nobody can act on today on every unrelated
-        commit (§AR-ci.9). A `structural` hard entry silences both tiers itself,
+        commit (§AR-ci.9.8). A `structural` hard entry silences both tiers itself,
         so it wants no twin."""
         soft_paths = {entry["path"] for entry in self.soft}
         for entry in self.hard:

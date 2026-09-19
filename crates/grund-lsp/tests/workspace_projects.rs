@@ -141,7 +141,7 @@ fn folder_list(folders: &[(&Path, &str)]) -> Value {
 #[test]
 #[cfg(unix)]
 fn an_external_directory_link_has_no_diagnostics_or_hover() {
-    // §FS-lsp.2.2: the LSP consumes the shared scan. A document reachable only
+    // §FS-lsp.2.2.3: the LSP consumes the shared scan. A document reachable only
     // below an outward directory link is therefore neither diagnosed nor
     // answerable by this project.
     let base = std::env::temp_dir().join(format!("grund-lsp-symlink-{}", std::process::id()));
@@ -166,7 +166,7 @@ fn an_external_directory_link_has_no_diagnostics_or_hover() {
     let pushes = diagnostic_pushes(&receiver, "FS-002-user");
     assert!(
         pushes.is_empty(),
-        "§FS-lsp.2.2: content below an external directory link has no diagnostics: {pushes:?}"
+        "§FS-lsp.2.2.3: content below an external directory link has no diagnostics: {pushes:?}"
     );
     let hover = hover_citation(
         &mut child,
@@ -177,7 +177,7 @@ fn an_external_directory_link_has_no_diagnostics_or_hover() {
     );
     assert!(
         hover.is_null(),
-        "§FS-lsp.2.2: content below an external directory link has no hover: {hover}"
+        "§FS-lsp.2.2.3: content below an external directory link has no hover: {hover}"
     );
 
     stop_server(&mut child, &mut stdin, &receiver, 3);
@@ -235,7 +235,7 @@ fn a_parent_relative_include_root_still_answers() {
 fn a_file_two_projects_scan_collects_one_verdict() {
     // A workspace root and one of its members, both opened as editor folders,
     // scan the member's files. The member owns them, so its verdict is the one
-    // published — never both snapshots' findings merged (§FS-lsp.2.2).
+    // published — never both snapshots' findings merged (§FS-lsp.2.2.2).
     let root = std::env::temp_dir().join(format!("grund-lsp-overlap-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
     write(
@@ -277,7 +277,7 @@ fn a_file_two_projects_scan_collects_one_verdict() {
 fn a_virtual_workspace_folder_is_skipped_not_fatal() {
     // VS Code multi-root windows mix local folders with virtual ones. A folder
     // grund cannot read must not take the local folders beside it down
-    // (§FS-lsp.2.2, §REQ-never-crashes).
+    // (§FS-lsp.2.2.4, §REQ-never-crashes).
     let root = std::env::temp_dir().join(format!("grund-lsp-virtual-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
     write(
@@ -328,7 +328,7 @@ fn a_virtual_workspace_folder_is_skipped_not_fatal() {
 fn a_folder_whose_config_will_not_load_leaves_the_others_serving() {
     // One half-typed `grund.toml` used to abort the whole batch, so the folder
     // beside it lost every feature and the failure only reached stderr
-    // (§FS-lsp.2.2, §REQ-never-crashes).
+    // (§FS-lsp.2.2.4, §REQ-never-crashes).
     let root = std::env::temp_dir().join(format!("grund-lsp-broken-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
     let good = root.join("good");
@@ -387,7 +387,7 @@ fn a_folder_whose_config_will_not_load_leaves_the_others_serving() {
 fn an_edit_in_one_project_leaves_the_others_answering() {
     // Only the projects that can see the edited document are rebuilt, so this
     // pins that the edited one *does* update and the untouched one does not go
-    // stale or vanish (§AR-lsp.2).
+    // stale or vanish (§AR-lsp.2.1).
     let root = std::env::temp_dir().join(format!("grund-lsp-scoped-{}", std::process::id()));
     let _ = fs::remove_dir_all(&root);
     let first_root = root.join("first");

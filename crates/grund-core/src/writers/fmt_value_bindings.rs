@@ -1,6 +1,6 @@
 //! Formatter protection for exact value bindings. Authority comes from the
 //! scanner's local/workspace records so formatting cannot turn a binding into a
-//! link and silently disable comparison (§FS-values.8, §AR-scanner.2.3).
+//! link and silently disable comparison (§FS-values.8, §AR-scanner.2.3.5).
 
 use crate::checker::binding_target_has_any_value_authority;
 use crate::config::Config;

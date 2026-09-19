@@ -18,7 +18,7 @@ impl Server {
                     by_uri.entry(uri).or_default().push(diagnostic);
                 }
             }
-            // §FS-lsp.1.1: the four run-level `[workspace]` warnings, each on the
+            // §FS-lsp.1.1.3: the four run-level `[workspace]` warnings, each on the
             // `grund.toml` it anchors at — the engine's own anchor, never a
             // location read back out of the message text (§AR-bindings.2).
             for finding in project.snapshot.run_warnings.clone() {
@@ -76,7 +76,7 @@ impl Server {
         let path = absolute_finding_path(snapshot, &finding)?;
         // Overlapping editor folders mean two projects can scan one file; only
         // the project that answers requests for it states its verdict
-        // (§FS-lsp.2.2).
+        // (§FS-lsp.2.2.2).
         let owner = self.project_for_diagnostic_path(&path)?;
         if owner.root != project.root {
             return None;
@@ -118,7 +118,7 @@ impl Server {
         let line = finding.line?;
         // When the finding carries the offending citation's column, anchor on
         // that exact token rather than the first citation on the line — a single
-        // comment can carry several citations (§FS-lsp.1.1).
+        // comment can carry several citations (§FS-lsp.1.1.1).
         if let Some(column) = finding.column
             && let Some(citation) = snapshot.citations.iter().find(|citation| {
                 same_path(&citation.path, path)
@@ -130,7 +130,7 @@ impl Server {
         }
         // Rejected section headings retain their exact title range solely for
         // diagnostics; they remain absent from every navigation collection
-        // (§FS-check.3.23, §FS-lsp.1.1).
+        // (§FS-check.3.23.2, §FS-lsp.1.1.1).
         if let Some(range) = snapshot.finding_ranges.iter().find(|range| {
             range.code == finding.code && same_path(&range.path, path) && range.line == line
         }) {
@@ -143,7 +143,7 @@ impl Server {
             ));
         }
         // Line-anchored diagnostics must not borrow the first citation on their
-        // line (§FS-lsp.1.1).
+        // line (§FS-lsp.1.1.1).
         snapshot
             .declarations
             .iter()

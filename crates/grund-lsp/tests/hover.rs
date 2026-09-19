@@ -58,7 +58,7 @@ fn hover_body(result: &Value) -> String {
         .to_string()
 }
 
-/// §FS-lsp.1.2: every declaration-side title — Markdown heading, numbered
+/// §FS-lsp.1.2.3: every declaration-side title — Markdown heading, numbered
 /// section heading, and inline-spec stub title — hovers with the sites and
 /// files that cite it, and keeps the whole-title hover range.
 #[test]
@@ -81,7 +81,7 @@ fn title_hover_reports_usage_counts_for_every_title_kind() {
         declaration["range"]["start"]["character"].as_i64() == Some(2)
             && declaration["range"]["end"]["character"].as_i64()
                 == Some("# FS-001-alpha: Alpha".len() as i64),
-        "the whole-title hover range survives the usage counts (§FS-lsp.1.2): {declaration:?}"
+        "the whole-title hover range survives the usage counts (§FS-lsp.1.2.3): {declaration:?}"
     );
 
     // The section-scoped set (§FS-lsp.1.3.1), and the singular wording.
@@ -94,7 +94,7 @@ fn title_hover_reports_usage_counts_for_every_title_kind() {
         section["range"]["start"]["line"].as_i64() == Some(4)
             && section["range"]["start"]["character"].as_i64() == Some(3)
             && section["range"]["end"]["character"].as_i64() == Some("## 1. Detail".len() as i64),
-        "a section heading hovers with its whole title range (§FS-lsp.1.2): {section:?}"
+        "a section heading hovers with its whole title range (§FS-lsp.1.2.3): {section:?}"
     );
 
     // A stub title is a whole-ID title: it counts the citations of the
@@ -108,7 +108,7 @@ fn title_hover_reports_usage_counts_for_every_title_kind() {
     assert!(
         stub_hover["range"]["start"]["character"].as_i64() == Some(2)
             && stub_hover["range"]["end"]["character"].as_i64() == Some(stub_heading.len() as i64),
-        "a stub title hovers with its whole title range (§FS-lsp.1.2): {stub_hover:?}"
+        "a stub title hovers with its whole title range (§FS-lsp.1.2.3): {stub_hover:?}"
     );
 
     // And the inline source declaration the stub points at answers the same.
@@ -150,7 +150,7 @@ fn title_hover_reports_usage_counts_for_every_title_kind() {
     let _ = fs::remove_dir_all(root);
 }
 
-/// §FS-lsp.1.2: hovering a *citation* is unchanged — it still previews the
+/// §FS-lsp.1.2.1: hovering a *citation* is unchanged — it still previews the
 /// declaration body `grund <ID> --toc` prints, with no usage clause. The counts
 /// belong to the declaration side, where there is no body to show.
 #[test]
@@ -175,7 +175,7 @@ fn citation_hover_still_previews_the_declaration_body() {
     );
     assert!(
         !body.contains("cited at") && !body.contains("not cited"),
-        "usage counts belong to declaration-side titles only (§FS-lsp.1.2): {body:?}"
+        "usage counts belong to declaration-side titles only (§FS-lsp.1.2.3): {body:?}"
     );
 
     send_message(
@@ -196,7 +196,7 @@ fn citation_hover_still_previews_the_declaration_body() {
 /// A citation that cannot resolve has no hover body. Its diagnostic already
 /// carries the nearest-ID hint, so returning it from hover too would double
 /// the text in editors that render diagnostics in the hover popup; hover
-/// returns nothing and the diagnostic stands alone (§FS-lsp.1.2).
+/// returns nothing and the diagnostic stands alone (§FS-lsp.1.2.2).
 #[test]
 fn hover_on_dangling_citation_defers_to_diagnostic() {
     let root = test_root("hover-dangling-defers");
@@ -235,7 +235,7 @@ fn hover_on_dangling_citation_defers_to_diagnostic() {
     assert!(
         hover["result"].is_null(),
         "hover on a dangling citation returns nothing so the diagnostic is not \
-         echoed a second time in the hover popup (§FS-lsp.1.2): {hover:?}"
+         echoed a second time in the hover popup (§FS-lsp.1.2.2): {hover:?}"
     );
 
     send_message(

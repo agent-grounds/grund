@@ -1,4 +1,4 @@
-//! What one `grund init` run feeds the templates (§FS-init.2.3): the effective
+//! What one `grund init` run feeds the templates (§FS-init.2.3.8): the effective
 //! config it will leave governing the target, and the one managed-block section
 //! that reads the tree rather than the config.
 //!
@@ -39,7 +39,7 @@ pub(super) fn agents_workspace_members_section(
         Some(name),
         // Collect effective pending metadata. The renderer omits self (and its
         // description); the pending name still participates in alias validation
-        // (§FS-init.2.3.4.15).
+        // (§FS-init.2.3.4.15.4).
         config.project_description.as_deref(),
         config.marker.as_str(),
         canonical_agent_entrypoint_selected,
@@ -47,17 +47,17 @@ pub(super) fn agents_workspace_members_section(
 }
 
 /// The config that `grund init` will leave governing `target`, which the generated
-/// `AGENTS.md` must describe (§FS-init.2.3): `target`'s existing config in either
+/// `AGENTS.md` must describe (§FS-init.2.3.8): `target`'s existing config in either
 /// discovery form if there is one (§FS-config.1), otherwise the defaults plus the
 /// *pending* `project_name` and `project_description` that `init` is about to
-/// write into `target/grund.toml` (§FS-init.2.4). The `pending` in the name flags
+/// write into `target/grund.toml` (§FS-init.2.4.7). The `pending` in the name flags
 /// that the returned `Config` may carry values that are not yet on disk —
 /// callers must not treat it as reflecting persisted state. We do **not** walk
 /// up to an ancestor's config here — `init` always writes a config *in*
 /// `target` when one is absent.
 ///
 /// A config that fails to load is an error, not a fallback to defaults
-/// (§FS-init.2.3): the block is rendered *from* this config, so silently
+/// (§FS-init.2.3.8): the block is rendered *from* this config, so silently
 /// substituting defaults writes agent instructions that describe a repository
 /// the user does not have — an invalid `[reference] conversation`, marker, or
 /// kind set would drop the guidance it selects while `init` still reported
@@ -95,7 +95,7 @@ pub(crate) fn render_agents_append_block_at(
 }
 
 /// The full generated `AGENTS.md` for a fresh repo — the H1 scaffolding line
-/// followed by the managed block (§FS-init.2.3). The H1 is *unmanaged* — `init`
+/// followed by the managed block (§FS-init.2.3.10). The H1 is *unmanaged* — `init`
 /// owns the block, not the title. Deterministic: same `grund` version, same
 /// `--name`, same effective config, same workspace state ⇒ byte-identical
 /// output (§FS-non-goals.13).

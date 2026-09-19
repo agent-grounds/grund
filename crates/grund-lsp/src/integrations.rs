@@ -97,7 +97,7 @@ struct RenderedIntegration {
 }
 
 /// Render the effective extension snapshot without editor or transport state.
-/// Configuration discovery remains in `grund-core`. §AR-lsp.placement §FS-lsp.2.4
+/// Configuration discovery remains in `grund-core`. §AR-lsp.placement §FS-lsp.2.4.2
 fn render_lsp4ij() -> Result<RenderedIntegration> {
     let cwd = std::env::current_dir().context("read the current working directory")?;
     let config = grund_core::effective_config(&cwd)?;
@@ -144,7 +144,7 @@ fn render_lsp4ij() -> Result<RenderedIntegration> {
 }
 
 /// Keep both paths in fields LSP4IJ passes without command-line parsing.
-/// The shell expands only the executable environment value. §FS-lsp.2.4
+/// The shell expands only the executable environment value. §FS-lsp.2.4.3
 fn program_args() -> Value {
     let mut args = Map::new();
     args.insert(
@@ -194,7 +194,7 @@ impl WriteOutcome {
 }
 
 /// Write only a new root, or accept the exact two-file output already present.
-/// Every other pre-existing tree is preserved as a conflict. §FS-lsp.2.4
+/// Every other pre-existing tree is preserved as a conflict. §FS-lsp.2.4.1
 fn materialize(root: &Path, rendered: &RenderedIntegration) -> Result<WriteOutcome> {
     match fs::symlink_metadata(root) {
         Ok(metadata) => {

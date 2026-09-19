@@ -6,7 +6,7 @@ use super::integrations_agents::GLOBAL_AGENT_INSTRUCTION_TARGETS;
 use super::integrations_clients::expand_target;
 use crate::model::format_list;
 
-/// §FS-init.1.2: the version-control markers whose presence in the target or
+/// §FS-init.1.2.3: the version-control markers whose presence in the target or
 /// any ancestor says it is inside a working tree. Presence is what is tested,
 /// not type — a linked worktree and a submodule both write `.git` as a file.
 /// Nothing here reads any of them, so §FS-non-goals.6 is untouched: the
@@ -50,7 +50,7 @@ pub(crate) fn refuse_init_target(target: &Path, no_vcs: bool) -> Option<String> 
     let resolved = resolve_for_target_compare(target);
     // The home directory, unconditionally: `<path>/.claude/CLAUDE.md` with
     // `<path>` at `$HOME` *is* `~/.claude/CLAUDE.md`, the machine-global file
-    // (§FS-integrations.4.3, §FS-init.2.1). No flag lifts this.
+    // (§FS-integrations.4.3.8, §FS-init.2.1). No flag lifts this.
     if let Some(home) = std::env::home_dir()
         && resolve_for_target_compare(&home) == resolved
     {
@@ -75,8 +75,8 @@ pub(crate) fn refuse_init_target(target: &Path, no_vcs: bool) -> Option<String> 
     ))
 }
 
-/// §FS-init.1.2 — decline when a planned entrypoint is one of the file-backed
-/// user-global agent instruction targets of §FS-integrations.4.3. This is not
+/// §FS-init.1.2.2 — decline when a planned entrypoint is one of the file-backed
+/// user-global agent instruction targets of §FS-integrations.4.3.8. This is not
 /// the home-directory rule restated: that one fires when `<path>` *is* `$HOME`,
 /// and `<path>` is arbitrary. `<path>/AGENTS.md` with `<path>` at `~/.codex`,
 /// `~/.config/zed`, or `~/.pi/agent`, and `<path>/GEMINI.md` with `<path>` at
@@ -84,7 +84,7 @@ pub(crate) fn refuse_init_target(target: &Path, no_vcs: bool) -> Option<String> 
 /// home rule has nothing to say about — and one whose dotfiles are a repository,
 /// which is the usual case, satisfies the version-control rule too. So this rule
 /// is load-bearing on its own, and it takes every planned path rather than a
-/// target. The division is the one §FS-integrations.4.3 already states: the
+/// target. The division is the one §FS-integrations.4.3.10 already states: the
 /// user-global files carry machine-wide policy and are `grund integrations
 /// --write`'s to manage, the repository entrypoint carries this project's syntax
 /// and is `init`'s.

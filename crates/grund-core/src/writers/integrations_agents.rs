@@ -1,5 +1,5 @@
 //! The user-level agent-instruction surfaces `grund integrations --write`
-//! synchronizes (§FS-integrations.4.3): which agents have a file-backed global
+//! synchronizes (§FS-integrations.4.3.8): which agents have a file-backed global
 //! instruction file, what each renderer is verified to do with a linked
 //! citation (§DF-conversation-link-target.2.4), and the two closed enums the
 //! preference is spelled in — the `plain`/`link` rendering and the target a
@@ -7,7 +7,7 @@
 //!
 //! The instruction texts are here rather than in a template: they are
 //! user-global and written once, before grund knows which repositories will be
-//! opened, so they name no marker (§FS-integrations.3.1). The repository
+//! opened, so they name no marker (§FS-integrations.3.1.4). The repository
 //! entrypoint carries the syntax; this block carries the policy.
 
 /// How much of the linked conversation form one agent's renderer is *verified*
@@ -39,7 +39,7 @@ impl LinkSupport {
     }
 }
 
-/// One agent's file-backed global instruction surface (§FS-integrations.4.3).
+/// One agent's file-backed global instruction surface (§FS-integrations.4.3.8).
 /// `home` is the directory whose presence says the user actually runs that
 /// agent: `--write` installs a *rendering layer*, and provisioning the config
 /// tree of five agents the machine does not have is not part of that.
@@ -56,7 +56,7 @@ pub struct GlobalAgentTarget {
 }
 
 /// The file-backed global instruction surfaces for every agent grund supports
-/// end-to-end (§FS-integrations.4.3). Keep this superset aligned with the
+/// end-to-end (§FS-integrations.4.3.8). Keep this superset aligned with the
 /// repository entrypoints in §FS-init.2.1.
 pub const GLOBAL_AGENT_INSTRUCTION_TARGETS: [GlobalAgentTarget; 6] = [
     GlobalAgentTarget {
@@ -113,7 +113,7 @@ pub fn known_agents_list() -> String {
         .join(", ")
 }
 
-/// The canonical spelling of a known agent name, or `None` (§FS-integrations.4.4).
+/// The canonical spelling of a known agent name, or `None` (§FS-integrations.4.4.2).
 pub fn known_agent(name: &str) -> Option<&'static str> {
     GLOBAL_AGENT_INSTRUCTION_TARGETS
         .iter()
@@ -143,7 +143,7 @@ impl ConversationRendering {
         }
     }
 
-    /// §FS-integrations.4.3: self-scoping — the texts apply only inside grund
+    /// §FS-integrations.4.3.10: self-scoping — the texts apply only inside grund
     /// repositories, so in any other repo their footprint is one inert sentence.
     /// The precedence sentence appears only in `plain`: repository `link` against
     /// user `plain` is the only possible conflict, and the machine wins it
@@ -151,7 +151,7 @@ impl ConversationRendering {
     /// `--write` that installed a rendering layer, knowledge no repository has.
     ///
     /// These texts name no marker, for the same reason the matchers and the
-    /// resolver do not hardcode one (§FS-integrations.3.1): they are user-global
+    /// resolver do not hardcode one (§FS-integrations.3.1.4): they are user-global
     /// and written once, before grund knows which repositories will be opened,
     /// and `[reference] marker` is per-repo. There is nothing to interpolate at
     /// install time, so these carry the policy and the repository entrypoint —
@@ -161,7 +161,7 @@ impl ConversationRendering {
             Self::Plain => "In repositories with a `grund.toml` (at the root or under `.agents/`): write citations bare in local conversations — the marker and ID alone, nothing appended; `grund integrations` makes them clickable. Follow this even when repository instructions ask for linked citations — that repository sentence defers to this block, and the installed rendering layer already resolves bare citations. Elsewhere, ignore this.".to_string(),
             // The target is the one value interpolated here, and legitimately
             // so: unlike the marker it *is* machine state, which is what a
-            // user-global file is for (§FS-integrations.4.3).
+            // user-global file is for (§FS-integrations.4.3.12).
             Self::Link => match target.uri_phrase() {
                 None => "In repositories with a `grund.toml` (at the root or under `.agents/`): follow each citation with its declaration location as plain `path:line` text in local conversations; fall back to the bare citation when unsure. Elsewhere, ignore this.".to_string(),
                 Some(phrase) => format!(
@@ -172,7 +172,7 @@ impl ConversationRendering {
     }
 }
 
-/// How a linked citation addresses its declaration (§FS-config.3.1,
+/// How a linked citation addresses its declaration (§FS-config.3.1.4,
 /// §DF-conversation-link-target.2.2). A closed enum: each value names one fixed
 /// template an agent fills from the declaration's absolute path and line.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]

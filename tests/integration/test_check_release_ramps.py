@@ -1,4 +1,4 @@
-"""§FS-distribution.4.2 — the release gate reads the release each message names
+"""§FS-distribution.4.2.2 — the release gate reads the release each message names
 out of the tree's own message text and refuses a version that contradicts one.
 The synthetic trees below pin the two directions and the closed clause
 vocabulary; the last three run the gate against this repository, because a gate
@@ -131,7 +131,7 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertIn("tests", homes)
 
     def test_the_deprecation_this_tree_promises_refuses_a_0_15_0_release(self):
-        """§FS-distribution.3.1: `main_entry()`'s note names 0.15.0, so the guard
+        """§FS-distribution.3.1.1: `main_entry()`'s note names 0.15.0, so the guard
         reads the promise rather than a person remembering it."""
         report = ramps.report(self.claims, "0.15.0")
         self.assertTrue(

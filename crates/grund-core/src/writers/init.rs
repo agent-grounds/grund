@@ -36,11 +36,11 @@ pub struct InitOpts {
     pub dry_run: bool,
     /// `--check` — the `--dry-run` preview taken as a verdict (§FS-init.1):
     /// writes nothing, reports what `--dry-run` reports, and leaves the caller
-    /// to exit `1` when any reported event is a change (§FS-init.4). It implies
+    /// to exit `1` when any reported event is a change (§FS-init.4.1). It implies
     /// `dry_run` inside `init` rather than opening a second path through it.
     pub check: bool,
     /// `--no-vcs` — scaffold into a target no version-control marker covers
-    /// (§FS-init.1.2). Lifts that rule and only that one; it is not `--force`,
+    /// (§FS-init.1.2.3). Lifts that rule and only that one; it is not `--force`,
     /// which decides whether files `init` owns get overwritten (§FS-init.3).
     pub no_vcs: bool,
     pub agent_selection: InitAgentEntrypointSelection,
@@ -72,8 +72,8 @@ impl InitEvent {
     /// Whether this event reports work rather than a path that was already
     /// current. Every verb but `exists` is a change — `wrote`/`appended`/
     /// `updated` and their `would-` forms alike. The one definition of the
-    /// predicate: it suppresses the `next:` block (§FS-init.2.2) and it decides
-    /// the `--check` exit code (§FS-init.4), which is why those two agree.
+    /// predicate: it suppresses the `next:` block (§FS-init.2.2.2) and it decides
+    /// the `--check` exit code (§FS-init.4.1), which is why those two agree.
     pub fn is_change(&self) -> bool {
         self.verb != "exists"
     }
@@ -85,14 +85,14 @@ pub struct InitNext {
     pub entrypoint: String,
     pub fs_home: InitFsHome,
     /// Whether the effective scanner found a readable file before this guidance
-    /// was rendered (§FS-init.2.2). Both command adapters consume this decision;
+    /// was rendered (§FS-init.2.2.2). Both command adapters consume this decision;
     /// neither reconstructs scanner policy from paths.
     pub scan_reads_file: bool,
 }
 
 impl InitNext {
     /// Render the shared trailing guidance for the shipped CLI and the deprecated
-    /// core command adapter (§FS-init.2.2).
+    /// core command adapter (§FS-init.2.2.2).
     pub fn render(&self) -> String {
         render_next_block_for_home(
             self.docs,
@@ -119,12 +119,12 @@ pub enum InitFsHome {
 pub struct InitOutput {
     pub events: Vec<InitEvent>,
     /// Things the run could not do that the caller would otherwise have to
-    /// notice for itself (§FS-init.2.3.4.17). Reported, never fatal.
+    /// notice for itself (§FS-init.2.3.4.17.4). Reported, never fatal.
     pub notes: Vec<String>,
     pub next: Option<InitNext>,
     /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
     /// cautions the walk-up settled — §FS-check.4.7's absorbed scan,
-    /// §FS-check.4.10's unread opted-out block and §FS-workspace.6.1's
+    /// §FS-check.4.10's unread opted-out block and §FS-workspace.6.1.7's
     /// undecidable ancestor claim. `init` expands the outermost workspace above
     /// its target to teach the alias set, so it resolves a block's member
     /// boundary like every other walking command and owes the reader the same
@@ -134,7 +134,7 @@ pub struct InitOutput {
 
 impl InitOutput {
     /// Whether the run reported anything left to do — the verdict `--check`
-    /// draws from the report it just printed (§FS-init.4). Notes and the
+    /// draws from the report it just printed (§FS-init.4.1). Notes and the
     /// `next:` block are deliberately not consulted: a note is a report, not a
     /// finding.
     pub fn has_pending_changes(&self) -> bool {
@@ -249,13 +249,13 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         None => derive_default_name(&target).map_err(|err| InitError::new(err.to_string()))?,
     };
 
-    // §FS-init.2.3: render agent instructions against the config `init` leaves
+    // §FS-init.2.3.8: render agent instructions against the config `init` leaves
     // in place, so the ID-shape / kind / marker prose matches `grund.toml`; read
-    // before the entrypoint plan (§FS-init.2.1.1, §FS-init.2.3.4.17).
+    // before the entrypoint plan (§FS-init.2.1.1.1, §FS-init.2.3.4.17).
     let mut init_config =
         init_pending_effective_config(&target, &resolved_name, description.as_deref())
             .map_err(|err| InitError::new(err.to_string()))?;
-    // §FS-init.2.2: the guidance probe consumes the exact §AR-workspace.6
+    // §FS-init.2.2.2: the guidance probe consumes the exact §AR-workspace.6
     // boundary used by scanner commands. Keep this best-effort: the existing
     // workspace renderer owns init's diagnostics and error-tolerant behavior.
     let _ = populate_workspace_boundary(&mut init_config);
@@ -272,9 +272,9 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         }
     };
 
-    // §FS-init.1.2: the planned entrypoint paths are known now, so check them
+    // §FS-init.1.2.2: the planned entrypoint paths are known now, so check them
     // against the user-global instruction files `grund integrations --write`
-    // owns (§FS-integrations.4.3) before any of them is written.
+    // owns (§FS-integrations.4.3.8) before any of them is written.
     if let Some(message) =
         refuse_init_global_instruction_paths(&agent_entrypoints.planned_paths(&target))
     {
@@ -291,7 +291,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         agent_entrypoints.canonical,
     );
     // Render the managed block once and reuse it for both surfaces: the two
-    // surfaces differ in one sentence only (§FS-init.2.3.4.17).
+    // surfaces differ in one sentence only (§FS-init.2.3.4.17.2).
     let render_block = |surface| {
         render_agents_append_block(&resolved_name, &init_config, &workspace_members, surface)
     };
@@ -304,14 +304,14 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         })
         .then(|| render_block(ConversationSurface::Linked));
     let agents_contents = render_agents_md_from_block(&resolved_name, &agents_block);
-    // §FS-init.2.1.1, §FS-init.2.3.4.17: both computed before the companion loop
+    // §FS-init.2.1.1, §FS-init.2.3.4.17.4: both computed before the companion loop
     // consumes the plan.
     let claude_companions = agent_entrypoints.companions_of_claude(&target);
     let mut notes = duplicate_agent_entrypoint_notes(&target, &agent_entrypoints, reach, dry_run);
     let mut workflow_entrypoint = None;
     // Track whether any path changed (or, under --dry-run, *would* change).
     // The `next:` block is suppressed when every reported path is `exists `,
-    // since the user already has a complete grund setup (§FS-init.2.2).
+    // since the user already has a complete grund setup (§FS-init.2.2.2).
     let mut any_change = false;
     let mut events = Vec::new();
     if agent_entrypoints.canonical {
@@ -335,7 +335,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     for entrypoint in agent_entrypoints.companions {
         let path_ref = entrypoint.path();
         // The Claude entrypoints teach the linked form; every other companion
-        // gets the plain-location block (§FS-init.2.3.4.17).
+        // gets the plain-location block (§FS-init.2.3.4.17.2).
         let entrypoint_block = match ConversationSurface::for_entrypoint(path_ref) {
             ConversationSurface::Linked => claude_block.as_deref().unwrap_or(&agents_block),
             ConversationSurface::Plain => &agents_block,
@@ -407,7 +407,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
 
     // `grund.toml` is the project's configuration (§GOAL-configurable): written
     // only when the target has none (§FS-config.1), never overwritten, reported
-    // under the name found (§FS-init.2.4, §FS-check.4.3, §FS-init.3).
+    // under the name found (§FS-init.2.4.1, §FS-check.4.3, §FS-init.3).
     if let Some(existing) = config_file_in(&target) {
         let rel = existing
             .strip_prefix(&target)
@@ -481,7 +481,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     }
 
     let next = any_change.then(|| {
-        // §FS-init.2.2: only no-`--docs` guidance asks this question. The probe
+        // §FS-init.2.2.2: only no-`--docs` guidance asks this question. The probe
         // uses the effective config selected above and exits on its first file.
         let scan_reads_file = !docs && effective_scope_reads_any_file(&init_config);
         InitNext {
@@ -492,7 +492,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
             scan_reads_file,
         }
     });
-    // §FS-init.2.3.4.17: silence here would read as the committed `link` opinion
+    // §FS-init.2.3.4.17.4: silence here would read as the committed `link` opinion
     // simply not working.
     if reach == CanonicalSurfaceReach::PlainEntrypointsOnly {
         match shadowed_claude_entrypoint_note(&target, &claude_companions, dry_run) {
@@ -517,7 +517,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     })
 }
 
-/// The trailing `next:` guidance block (§FS-init.2.2). Suppressed by the caller
+/// The trailing `next:` guidance block (§FS-init.2.2.2). Suppressed by the caller
 /// when every reported path was `exists ` — when the repo is already current
 /// there is no next step to teach. `entrypoint` is the first agent entrypoint
 /// `init` touched, used in the final `see <entrypoint> …` pointer; `None`
@@ -668,7 +668,7 @@ pub(crate) fn docs_scaffold(fs_home: &InitFsHome) -> Vec<(String, String)> {
                 "docs/architecture/README.md",
                 canonical_template_text(AS_README_TEMPLATE),
             ),
-            // §FS-init.2.1 / §FS-check.3.18: every folder kind the generated config
+            // §FS-init.2.1.3 / §FS-check.3.18.1: every folder kind the generated config
             // leaves at the default `index` gets its index README scaffolded, not a
             // bare `.gitkeep` (§FS-config.3.4).
             (
@@ -679,7 +679,7 @@ pub(crate) fn docs_scaffold(fs_home: &InitFsHome) -> Vec<(String, String)> {
                 "docs/decisions/functional/README.md",
                 canonical_template_text(DF_README_TEMPLATE),
             ),
-            // §FS-init.2.1: the two test homes the generated config names
+            // §FS-init.2.1.3: the two test homes the generated config names
             // (§FS-config.3.4). Both are non-citable kinds, so neither gets an index
             // README.
             ("tests/e2e/README.md", render_e2e_readme(fs_home)),

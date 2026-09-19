@@ -1,16 +1,16 @@
 //! Test module: where each of the four run-level `[workspace]` warnings anchors
-//! (§FS-check.4.7, §FS-check.4.8, §FS-check.4.10, §FS-workspace.6.1).
+//! (§FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11, §FS-workspace.6.1.7).
 //!
 //! The *text* of each is pinned end to end, in `tests/e2e/cases/`, because a byte
 //! on stderr is what a repository greps. The anchor is not on stderr at all: it
 //! is the location the engine hands back so an editor places the warning without
-//! reading one back out of the message (§FS-lsp.1.1, §AR-bindings.2). No golden
+//! reading one back out of the message (§FS-lsp.1.1.3, §AR-bindings.2). No golden
 //! can see it, and the CLI renders the same bytes whether it is right or wrong —
 //! so it is held here, one case per section that names one.
 //!
 //! Each case reads the anchor off the surface that carries that warning: three
-//! travel on `check`'s own output, and §FS-check.4.8 is one of `check`'s report
-//! warnings with a deliberately null location (§FS-errors.5), so its anchor is
+//! travel on `check`'s own output, and §FS-check.4.8.13 is one of `check`'s report
+//! warnings with a deliberately null location (§FS-errors.5.2), so its anchor is
 //! read where it exists — the editor snapshot the server publishes from.
 
 use std::path::{Path, PathBuf};
@@ -38,7 +38,7 @@ fn check_anchors(root: &Path) -> Vec<(Option<String>, Option<usize>)> {
     .collect()
 }
 
-/// §FS-check.4.7: "It **anchors at the block's `members` line**." The fixture is
+/// §FS-check.4.7.7: "It **anchors at the block's `members` line**." The fixture is
 /// the shape of the `workspace-member-absorbs-scan-check` case — a block whose
 /// one scan root is also its one member — with the `members` key put on a line
 /// no other key could be mistaken for.
@@ -63,7 +63,7 @@ fn an_absorbed_scan_anchors_at_the_blocks_members_line() {
     );
 }
 
-/// §FS-check.4.10: "It **anchors at the block's `include_root` line**" — the key
+/// §FS-check.4.10.11: "It **anchors at the block's `include_root` line**" — the key
 /// that took the block's files out of every scan is the line to open, which
 /// neither the `members` line above it nor the `[workspace]` header is.
 #[test]
@@ -110,7 +110,7 @@ fn an_unread_opted_out_block_anchors_at_its_include_root_line() {
     );
 }
 
-/// §FS-check.4.10: the breadcrumb falls back to the block's `[workspace]` line
+/// §FS-check.4.10.11: the breadcrumb falls back to the block's `[workspace]` line
 /// when there is no `include_root` key to point at — a shape the default `true`
 /// makes unreachable through a config file, so it is held against the builder
 /// rather than against a fixture no `grund.toml` can produce.
@@ -137,9 +137,9 @@ fn an_unread_block_with_no_include_root_key_falls_back_to_the_workspace_line() {
     );
 }
 
-/// §FS-check.4.8, §FS-lsp.1.1: the unlisted block anchors at its `[workspace]`
+/// §FS-check.4.8.15, §FS-lsp.1.1.3: the unlisted block anchors at its `[workspace]`
 /// line — "the reader has two files to open and this is the one that is wrong".
-/// `check`'s own report keeps the location null on purpose (§FS-errors.5), so
+/// `check`'s own report keeps the location null on purpose (§FS-errors.5.2), so
 /// the anchor is read off the snapshot the editor publishes from.
 #[test]
 fn an_unlisted_block_anchors_at_its_workspace_line() {
@@ -190,7 +190,7 @@ fn an_unlisted_block_anchors_at_its_workspace_line() {
     );
 }
 
-/// §FS-workspace.6.1: the undecidable ancestor claim "anchors at the config it
+/// §FS-workspace.6.1.7: the undecidable ancestor claim "anchors at the config it
 /// could not read — that file and no line, because the `members` value whose
 /// line would be the anchor is exactly what could not be obtained".
 #[test]

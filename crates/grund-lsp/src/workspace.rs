@@ -1,6 +1,6 @@
 /// Resolve an editor folder to the scan root it names. A discovered config owns
 /// the scan, including sibling `[scan] include` roots; only a zero-config folder
-/// remains its own boundary (§FS-lsp.2.2).
+/// remains its own boundary (§FS-lsp.2.2.1).
 fn project_root(folder: &Path) -> Result<PathBuf> {
     let config = effective_config(folder)?;
     if config.config_file.is_some() {
@@ -37,7 +37,7 @@ impl ProjectSnapshot {
     /// Whether this project's scan may need rebuilding for `path` (already
     /// canonicalized). The directory fallback deliberately over-approximates
     /// newly created files; ownership below never uses that approximation
-    /// (§FS-lsp.2.2).
+    /// (§FS-lsp.2.2.2).
     fn might_cover(&self, path: &Path) -> bool {
         path.starts_with(&self.root)
             || self.snapshot.scanned_files.contains(path)

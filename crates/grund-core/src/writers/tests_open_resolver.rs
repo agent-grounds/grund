@@ -15,7 +15,7 @@ fn resolver_does_not_evaluate_repository_paths_as_shell_source() {
     let bin = root.join("bin");
     std::fs::create_dir_all(&bin).expect("create mock bin");
     // The resolver walks up for the config root before doing anything else
-    // (§FS-integrations.3.1), so the fixture has to look like a grund repo.
+    // (§FS-integrations.3.1.3), so the fixture has to look like a grund repo.
     write(&root.join("grund.toml"), "[project]\n");
     let pwned = root.join("pwned");
     let capture = root.join("opened-argument");
@@ -76,7 +76,7 @@ fn resolver_does_not_evaluate_repository_paths_as_shell_source() {
     assert!(String::from_utf8_lossy(&empty_command.stderr).contains("contains no command"));
 }
 
-/// §FS-integrations.3.1: a clicked `§<ID>.<section>` must open the *section's*
+/// §FS-integrations.3.1.5: a clicked `§<ID>.<section>` must open the *section's*
 /// line, not the declaration heading. The resolver therefore forwards the whole
 /// citation to `grund` instead of truncating at the first `.`; truncating would
 /// send every click on a subsection to line 1.
@@ -93,7 +93,7 @@ fn resolver_opens_the_cited_section_line() {
     assert_eq!(opened, "docs/target.md:12");
 }
 
-/// §FS-integrations.3.1: the click may arrive with the shell in a subdirectory.
+/// §FS-integrations.3.1.5: the click may arrive with the shell in a subdirectory.
 /// `grund` reports paths relative to the config root (§FS-config.3.6), so the
 /// resolver joins against the root it discovered — handing the editor a
 /// repo-relative path would open nothing from anywhere but the root.
@@ -112,7 +112,7 @@ fn resolver_opens_absolute_path_from_a_subdirectory() {
     );
 }
 
-/// §FS-integrations.3.1: `[reference] marker` is per-repo while the resolver is
+/// §FS-integrations.3.1.4: `[reference] marker` is per-repo while the resolver is
 /// user-global, so it strips any leading punctuation rather than a literal `§`.
 /// A workspace-qualified `<alias>/<ID>` survives that strip and is forwarded
 /// whole, because the alias begins with an alphanumeric.
@@ -132,7 +132,7 @@ fn resolver_strips_any_marker_and_keeps_the_workspace_alias() {
     assert_eq!(opened, "apps/app/docs/target.md:12");
 }
 
-/// §FS-integrations.3.1: the *location* an agent prints beside a citation —
+/// §FS-integrations.3.1.9: the *location* an agent prints beside a citation —
 /// `path:line[:col]` — opens too. The shapes are mechanically distinct (an
 /// ID's section suffix is dotted, never coloned); the printed path is
 /// config-root-relative while the click may land in a subdirectory, so the
@@ -194,7 +194,7 @@ fn resolver_opens_a_location_token_without_consulting_grund() {
     assert!(String::from_utf8_lossy(&missing.stderr).contains("no file 'no/such/file.md'"));
 }
 
-/// §FS-integrations.3.1: the location rule must be registered before the
+/// §FS-integrations.3.1.9: the location rule must be registered before the
 /// citation rule — ordered the other way, the citation matcher's recorded
 /// false positive claims an ID-shaped fragment *inside* a `:line`-suffixed
 /// path, and the location can never become one link. kitty encodes the same
@@ -228,7 +228,7 @@ fn location_matcher_precedes_citation_matcher() {
 
 // The `body` field carries arbitrary declaration prose. Field extraction is
 // anchored to the end of the object so prose containing `"path":` or `"line":`
-// cannot be read as the real field (§FS-integrations.3.1).
+// cannot be read as the real field (§FS-integrations.3.1.5).
 #[cfg(unix)]
 #[test]
 fn resolver_ignores_field_shapes_inside_the_body() {

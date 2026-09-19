@@ -1,6 +1,6 @@
 //! Real-server parity for catalog-backed off-grammar declarations: the LSP
 //! transports the same warning as `check` and navigates the same declaration
-//! and citations as CLI readers (§FS-lsp.4, §FS-config.3.2).
+//! and citations as CLI readers (§FS-lsp.4.3, §FS-config.3.2).
 
 mod support;
 
