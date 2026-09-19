@@ -10,13 +10,13 @@ grund completions <bash|zsh|fish>
 
 Prints a completion script for the requested shell on stdout, empty stderr, exit `0`. Unsupported shells are CLI-level errors: `error: unsupported shell \`<shell>\`` plus `known shells: bash, zsh, fish` on stderr, empty stdout, exit `2`.
 
-The generated scripts complete top-level subcommands (`check`, `show`, `list`, `refs`, `cover`, `fmt`, `id`, `init`, `config`, `agent-setup-instructions`, `completions`, `integrations`) and complete declared IDs in the first ID position of `grund <ID>` ([§FS-cli.1](FS-cli.md#1-the-default-subcommand)), the explicit `show` form, and `grund refs <ID>`. Which typed prefixes ask for IDs is §1.1.
+The generated scripts complete every top-level subcommand [§FS-cli.1](FS-cli.md#1-the-default-subcommand) dispatches and complete declared IDs in the first ID position of `grund <ID>`, the explicit `show` form, `grund refs <ID>`, and `grund fetch <ID>`. Which typed prefixes ask for IDs is §1.1.
 
 The scripts do not complete IDs for arbitrary shell words, citations inside files, or editor buffers, nor declaration bodies or Markdown links. A committed external snapshot is an ordinary declared ID and is completed under its kind's effective format; a missing snapshot has no catalog candidate.
 
 ### 1.1 The first argument and the ID slots
 
-For the first argument, the scripts offer subcommands and, once the typed prefix is non-empty and not a flag, also ask the dynamic helper (§2) for IDs. This completes both uppercase bare IDs (`FS-login`) and lowercase workspace aliases (`api/`) in the bare-ID default while keeping an empty prompt cheap. For explicit `show` and `refs`, the first positional argument is always an ID slot, so the helper runs for any prefix.
+For the first argument, the scripts offer subcommands and, once the typed prefix is non-empty and not a flag, also ask the dynamic helper (§2) for IDs. This completes both uppercase bare IDs (`FS-login`) and lowercase workspace aliases (`api/`) in the bare-ID default while keeping an empty prompt cheap. For explicit `show`, `refs`, and `fetch`, the first positional argument is always an ID slot, so the helper runs for any prefix.
 
 ## 2. Internal dynamic helper
 

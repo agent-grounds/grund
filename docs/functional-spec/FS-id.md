@@ -58,7 +58,7 @@ FS-008-user-can-log-in-with-email
 next: add the declaration to requirements.md  (H2: `## FS-008-user-can-log-in-with-email: <one-line statement>`), then cite it as §FS-008-user-can-log-in-with-email
 ```
 
-For a kind with a configured `folder`, the hint names the new declaration file under that folder and uses an H1; for a kind with neither, it names the H1 and the citation but no path. The bare ID still composes in `$(…)`, while a person who ran `grund id` by hand gets the next step without recalling the layout. It creates no file (§7).
+For a kind with a configured `folder`, the hint names the new declaration file under that folder and uses an H1; for a kind with neither, it names the H1 and the citation but no path. `E2E` is the exception to the folder form: its declaration is a case directory, not a Markdown file ([§FS-config.3.4.4.3](FS-config.md#3443-e2e-is-configured-not-a-default)), so its hint names the case directory to create under that folder, with `expected.exit` and fixtures. The bare ID still composes in `$(…)`, while a person who ran `grund id` by hand gets the next step without recalling the layout. It creates no file (§7).
 
 ## 3. Slug derivation
 
@@ -87,7 +87,7 @@ title produces empty slug after normalization: "<original title>"
 
 `id` scans exactly what `check` walks ([§FS-check.1](FS-check.md#1-inputs), [§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)) and collects every declaration of the requested `<KIND>`. The proposed number is `max(existing numbers) + 1`, or `1` if the kind has none.
 
-Holes are **not** filled: with `FS-001`, `FS-002` and `FS-004` declared, `FS-003` is never issued. Numbers are issued strictly above the maximum, never reused, never recycled, because an ID once removed may still be cited from outside the tree — PRs, chat, mirrored repos — and reusing its number would silently change what those citations point at. This is [§FS-non-goals.4](FS-non-goals.md#4-cross-workspace-id-renaming) (no rename) applied to allocation.
+Holes below the maximum are **not** filled: with `FS-001`, `FS-002` and `FS-004` declared, `FS-003` is never issued. Numbers are issued strictly above the maximum, because an ID once removed may still be cited from outside the tree — PRs, chat, mirrored repos — and filling its hole would silently change what those citations point at. This is [§FS-non-goals.4](FS-non-goals.md#4-cross-workspace-id-renaming) (no rename) applied to allocation.
 
 A failed scan (I/O, a malformed file) exits `2` with the underlying error and never falls back to a guess: a number allocated against an incomplete view of the tree could collide.
 
@@ -95,7 +95,7 @@ A failed scan (I/O, a malformed file) exits `2` with the underlying error and ne
 
 When the kind's effective format (§2.1) has no `{number}` — `{kind}-{slug}`, the form `grund` itself uses — there is nothing to derive: the proposed ID is the format with `{kind}` and `{slug}` substituted. `--width` is accepted and has no effect, and the JSON `number` is `null`. The collision check (§5) still runs and carries more weight: with no number to tell them apart, two declarations sharing a kind and a slug are the same ID.
 
-When the format has no `{slug}` — `{kind}-{number}` — the title is still required; it is used only to render a helpful collision message and is otherwise discarded. The proposed ID is the kind and the next number, and the JSON `slug` is the derived slug even though it is not in the ID.
+When the format has no `{slug}` — `{kind}-{number}` — the title is still required: it still produces the slug, which is refused when empty (§3.1) and reported as the JSON `slug`, and has no part in the ID. The proposed ID is the kind and the next number.
 
 Neither one-component format has the number-only citation shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)), so neither can produce a [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) finding.
 

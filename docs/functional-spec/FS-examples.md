@@ -39,7 +39,7 @@ The explanation must be self-contained: a user should not need to inspect `tests
 
 ## 4. Maintenance contract
 
-The root `README.md` is the concise public guide to shipped behavior. Any functional change that affects users must update `README.md` alongside the most-specific functional spec point, so the advertised workflow and the grounded contract do not drift.
+The root `README.md` is the concise public guide to shipped behavior. A functional change that alters the workflow the README advertises ([§REQ-readme.1](../requirements/REQ-readme.md#1-what-it-must-say)) must update `README.md` alongside the most-specific functional spec point, so the advertised workflow and the grounded contract do not drift. Any change that invalidates a README code excerpt or captured command output, functional or not, updates the README in the same change ([§REQ-readme.2](../requirements/REQ-readme.md#2-every-example-is-real)).
 
 Runnable examples must stay executable and regression-tested. If an example has `expected.exit`, `expected.stdout`, and `expected.stderr`, those files are the golden contract for the documented command. A behavior change that affects a canonical workflow must update the corresponding example explanation and golden output in the same change.
 

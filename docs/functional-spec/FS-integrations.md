@@ -14,7 +14,7 @@ grund integrations [<client>] [--write] [--conversation plain|link] [--conversat
 
 ### 1.1 `--conversation`
 
-`--conversation plain|link` overrides the user preference while writing, and is accepted only with `--write`. When present without a client, the command updates only the user preference and global agent instructions; this preference-only form is unambiguous and does not install an arbitrary client. With no override, a client installation records `plain` on first use and preserves the stored preference thereafter. `plain` tells agents to write bare citations for the installed rendering layer, while `link` tells them to carry the declaration's location with the citation, as a Markdown link over an absolute URI ([§DF-conversation-link-target](../decisions/functional/DF-conversation-link-target.md#df-conversation-link-target-the-conversation-link-form-is-a-markdown-link-over-an-absolute-uri-addressed-per-machine)), and fall back to the bare citation when uncertain.
+`--conversation plain|link` overrides the user preference while writing, and is accepted only with `--write`. When present without a client, the command updates only the user preference and global agent instructions; this preference-only form is unambiguous and does not install an arbitrary client. With no override, a client installation records `plain` on first use and preserves the stored preference thereafter. `plain` tells agents to write bare citations for the installed rendering layer, while `link` tells them to carry the declaration's location with the citation, addressed by the target of §4.3.2 — a Markdown link over an absolute URI ([§DF-conversation-link-target](../decisions/functional/DF-conversation-link-target.md#df-conversation-link-target-the-conversation-link-form-is-a-markdown-link-over-an-absolute-uri-addressed-per-machine)), or plain `path:line` text under the `path` target — and fall back to the bare citation when uncertain.
 
 ### 1.2 `--conversation-target` and `--agent`
 
@@ -56,7 +56,7 @@ Every artifact is embedded in the binary, like the `init` templates and `complet
 
 Each prints two things on stdout, exit `0`:
 
-1. A config snippet for that terminal that registers a click/hover handler for `§<ID>` citations, wired to run the resolver.
+1. A config snippet for that terminal that registers its own handler or binding for `§<ID>` citations, wired to run the resolver — a click or hints handler, or in tmux, which cannot make text clickable, a prefix key over the copy buffer (§3.3.2).
 2. The embedded `grund-open` resolver script — a POSIX shell script that takes a citation or bare `<ID>`, resolves it with `grund` to a `path:line` site, and opens it. The command it opens with is `GRUND_OPEN_CMD` when set, else `EDITOR`, else a platform default; the user's editor choice lives in that environment variable, never in shared repository text ([§DF-neural-link-generation](../decisions/functional/DF-neural-link-generation.md#df-neural-link-generation-agents-compose-clickable-citation-links-themselves-grund-does-not-grow-a-link-command)).
 
 The snippet and the resolver are printed together so a human can read both before installing; the one-line install shown by detection (§2) is the `--write` form (§4). Resolution proceeds in three steps — find the root (§3.1.2, §3.1.3), strip the marker (§3.1.4), resolve and join (§3.1.5) — and each exists because the click carries less context than a command line does.
@@ -83,7 +83,7 @@ From the pane's directory the resolver climbs: it tries every ancestor holding a
 
 #### 3.1.6 The path false positive
 
-The marker tolerance of §3.1.4 has one recorded false positive: a printed spec *path* contains ID-shaped segments the matcher cannot tell from a citation — `docs/functional-spec/FS-integrations.md` also matches at `/functional-spec/FS-integrations`, punctuation-marked and alias-shaped — and clicking that fragment reports the id unknown. It is accepted rather than excluded because no portable matcher can require a word boundary before the marker (the terminal engines disagree on lookbehind), and excluding `/` from the marker class merely moves the match to the preceding `-`. The real citation on the same line still matches and resolves; the false link costs one explanatory error, never a wrong file — and a `:line`-suffixed path is claimed whole by the location matcher (§3.1.8) before this fragment can form.
+The marker tolerance of §3.1.4 has one recorded false positive: a printed spec *path* contains ID-shaped segments the matcher cannot tell from a citation — `docs/functional-spec/FS-integrations.md` also matches at `/functional-spec/FS-integrations`, punctuation-marked and alias-shaped — and clicking that fragment reports the id unknown. It is accepted rather than excluded because no portable matcher can require a word boundary before the marker (the terminal engines disagree on lookbehind), and excluding `/` from the marker class merely moves the match to the preceding `-`. The real citation on the same line still matches and resolves; the false link costs one explanatory error, never a wrong file — and in WezTerm a `:line`-suffixed path is claimed whole by the location matcher (§3.1.8) before this fragment can form (§3.1.9).
 
 #### 3.1.7 Qualified and shorthand citations
 
@@ -93,7 +93,7 @@ The number-only shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-short
 
 #### 3.1.8 Location tokens
 
-The `link` conversation form (§4.3, [§DF-repo-conversation-opinion.2.1](../decisions/functional/DF-repo-conversation-opinion.md#21-the-link-form-is-a-markdown-link-over-an-absolute-uri)) has agents follow a citation with its declaration location — `<§>AR-scanner docs/architecture/AR-scanner.md:1`, escaped here because an FS example must not *cite* an AR — and some surfaces open that `path:line` natively (iTerm2's Semantic History, the VS Code terminal's own link detection) while the terminals grund configures match URLs only. Each terminal matcher therefore also matches a **location** token — a final path segment carrying a dot-extension and a `:<line>` suffix, optionally `:<col>` — and hands it to the same `grund-open`. The resolver tells the shapes apart mechanically: an ID's section suffix is dotted, never coloned, so a token ending in colon-digits is a location.
+The `link` conversation form (§4.3, [§DF-repo-conversation-opinion.2.1](../decisions/functional/DF-repo-conversation-opinion.md#21-the-link-form-is-a-markdown-link-over-an-absolute-uri)) is a Markdown link over a URI, but under its `path` target (§4.3.2), the fallback every gated agent receives (§4.3.3), it has agents follow a citation with its plain declaration location — `<§>AR-scanner docs/architecture/AR-scanner.md:1`, escaped here because an FS example must not *cite* an AR — and some surfaces open that `path:line` natively (iTerm2's Semantic History, the VS Code terminal's own link detection) while the terminals grund configures match URLs only. Each terminal matcher therefore also matches a **location** token — a final path segment carrying a dot-extension and a `:<line>` suffix, optionally `:<col>` — and hands it to the same `grund-open`. The resolver tells the shapes apart mechanically: an ID's section suffix is dotted, never coloned, so a token ending in colon-digits is a location.
 
 #### 3.1.9 Opening a location
 
@@ -133,7 +133,7 @@ It matches and strips the marker exactly as the terminal clients do (§3.1.4) an
 
 #### 3.2.2 The config root
 
-It walks up from the workspace folder to the nearest ancestor holding a config under either discovery name ([§FS-config.1](FS-config.md#1-file-location-and-discovery)) — the same walk `grund` itself performs from its cwd — and uses that root both as the directory it runs `grund` in and as the base it joins the reported path against, so the two can never disagree when the opened folder is a subdirectory of the repository.
+It finds the root by the resolver's climb (§3.1.3): from the workspace folder it tries every ancestor holding a config under either discovery name ([§FS-config.1](FS-config.md#1-file-location-and-discovery)), nearest first, and keeps the first where `grund` resolves the citation, since a folder opened on a workspace member resolves a qualified `<alias>/<ID>` only from the workspace root above it. It uses that root both as the directory it runs `grund` in and as the base it joins the reported path against, so the two can never disagree when the opened folder is a subdirectory of the repository.
 
 #### 3.2.3 E2E directories
 
@@ -187,7 +187,7 @@ iTerm2 stores its configuration in a binary property list, not a text file. Ther
 
 #### 3.4.3 Without the rule
 
-A Mac user may not need the rule at all. iTerm2's Semantic History already makes a plain `path:line` cmd-clickable, so `--conversation link` (§4.3) — which has agents write the declaration location beside each citation — produces clickable citations there with no integration installed. That is the same reason `link` exists for TUIs: it degrades to something the host already understands.
+A Mac user may not need the rule at all. iTerm2's Semantic History already makes a plain `path:line` cmd-clickable, so `--conversation link` with the `path` target (§4.3.2) — which has agents write the declaration location as plain `path:line` beside each citation — produces clickable citations there with no integration installed. That is the same reason `link` exists for TUIs: it degrades to something the host already understands.
 
 ### 3.5 Clients grund cannot support, and why
 
@@ -239,7 +239,7 @@ Outcomes map to stderr verbs `appended` / `updated` / `exists`, plus `skipped` f
 
 #### 4.1.7 Where a `~` target resolves
 
-The install-target hints (§1, §5) are printed verbatim and stay `~`-rooted so the artifact and the JSON descriptor are byte-stable across machines (§6); only resolution consults the environment. A `~/.config/…` target resolves against `$XDG_CONFIG_HOME` when that variable is set and non-empty, and against `~/.config` otherwise, because kitty, WezTerm, Zed, and grund's own user configuration each read their directory from it: a hardcoded `~/.config` on a machine that sets it writes where the tool never looks — the same silent, install-reports-success failure the separate `codium` client exists to prevent (§3.2.4). Targets outside `~/.config` — `~/.local/bin/grund-open`, `~/.vscode/extensions`, `~/.tmux.conf`, the agent instruction files of §4.3.8 — are the paths those tools define and resolve against `$HOME` alone.
+The install-target hints (§1, §5) are printed verbatim and stay `~`-rooted so the artifact and the JSON descriptor are byte-stable across machines (§6); only resolution consults the environment. A `~/.config/…` target resolves against `$XDG_CONFIG_HOME` when that variable is set and non-empty, and against `~/.config` otherwise, because kitty, WezTerm, Zed, and grund's own user configuration each read their directory from it: a hardcoded `~/.config` on a machine that sets it writes where the tool never looks — the same silent, install-reports-success failure the separate `codium` client exists to prevent (§3.2.4). Targets outside `~/.config` — `~/.local/bin/grund-open`, `~/.vscode/extensions`, `~/.tmux.conf`, the agent instruction files of §4.3.8 other than Zed's — are the paths those tools define and resolve against `$HOME` alone.
 
 ### 4.2 The VS Code extension
 
@@ -320,7 +320,7 @@ The block texts are self-scoping: they apply only inside grund repositories, so 
 
 The `plain` block says `In repositories with a grund.toml (at the root or under .agents/): write citations bare in local conversations — the marker and ID alone, nothing appended; grund integrations makes them clickable. Follow this even when repository instructions ask for linked citations — that repository sentence defers to this block, and the installed rendering layer already resolves bare citations. Elsewhere, ignore this.`
 
-The precedence sentence appears only in the `plain` block because repository `link` against user `plain` is the only possible conflict, and the machine wins it ([§DF-repo-conversation-opinion.2.3](../decisions/functional/DF-repo-conversation-opinion.md#23-precedence)): `plain` is only ever recorded by a `--write` that installed a rendering layer, so it carries machine knowledge the repository cannot have.
+The precedence sentence appears only in the `plain` block because repository `link` against user `plain` is the only possible conflict, and the machine wins it ([§DF-repo-conversation-opinion.2.3](../decisions/functional/DF-repo-conversation-opinion.md#23-precedence)): a recorded `plain` is the user's own statement about their surface, whether a `--write` or a hand edit recorded it (§4.3.1), so it carries machine knowledge the repository cannot have.
 
 #### 4.3.12 The `link` block texts
 
@@ -334,7 +334,7 @@ Adopting these self-scoping texts was an agent-guidance block version bump (v1 �
 
 The global instruction block uses versioned HTML-comment begin/end markers. The replacement, append, newer-version refusal, malformed/multiple-block rejection, preservation, idempotence, and stderr outcome rules are the same as the dotfile block's (§4.1). For a selected target (§4.3.9), missing parent directories and the file itself are created because `--write` is the explicit installation action.
 
-A failure to update the preference or any instruction file is an error. The preference file is validated first, before any client artifact is written, so the common failure — a hand-edited value grund cannot parse — costs nothing and changes nothing; a block failure discovered later may leave an integration artifact already written, and re-running after correction safely completes the installation.
+A failure to update the preference or any instruction file is an error. The preference file is validated first, before any client artifact is written, so the one failure §4.3.5 leaves — a preference file grund cannot reach (§4.3.7) — costs nothing and changes nothing; a block failure discovered later may leave an integration artifact already written, and re-running after correction safely completes the installation.
 
 ### 4.4 Per-agent overrides
 
@@ -397,4 +397,4 @@ With an explicit `<client>`, output is a pure function of the binary version and
 
 ### 6.2 Exit codes
 
-Exit codes follow the frozen mapping ([§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)): `0` printed, written, or already current; `2` an unknown client, bare `--write` with neither a client nor a conversation flag, `--conversation` or `--conversation-target` without `--write`, `--agent` without `--write` or without `--conversation-target`, an unknown agent name, an unknown flag, or a configuration file whose managed block is newer than this binary understands. There is no `1` outcome — `integrations` has no findings surface. Nothing in the user preference file is an exit code: its unused keys, uninterpretable values, and duplicates are warnings (§4.3.5), as are `skipped` targets (§4.3.9). An invalid `--conversation` or `--conversation-target` *argument* remains an error, because that is a value the caller typed on this command line rather than a stale line in a file.
+Exit codes follow the frozen mapping ([§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)): `0` printed, written, or already current; `2` an unknown client, bare `--write` with neither a client nor a conversation flag, `--conversation` or `--conversation-target` without `--write`, `--agent` without `--write` or without `--conversation-target`, an unknown agent name, an unknown flag, a managed block §4.1.4 refuses (a missing matching marker, multiple blocks, or a version newer than this binary understands), or an I/O failure (§4.1.5, §4.3.7, §4.3.14). There is no `1` outcome — `integrations` has no findings surface. Nothing in the user preference file is an exit code: its unused keys, uninterpretable values, and duplicates are warnings (§4.3.5), as are `skipped` targets (§4.3.9). An invalid `--conversation` or `--conversation-target` *argument* remains an error, because that is a value the caller typed on this command line rather than a stale line in a file.

@@ -32,7 +32,7 @@ The CLI install on each registry does **not** transitively pull in `grund-lsp` �
 
 The `grund` binary behaves identically regardless of how it was installed: the same flags, the same exit codes, the same byte-for-byte report format ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)). Users on Linux, macOS, and Windows who run `grund check .` against the same repo get the same answer.
 
-CLI reports use repo-relative logical paths with `/` as the separator, even on Windows. This applies to text reports, JSON fields, `sites`, ID-query e2e fixture lists, stub-link targets, and generated cross-reference URLs; native platform paths may appear only in launch-time errors about paths outside the scanned repo, where there is no repo-relative path to print. The CI build/test matrix is the proof for this contract: every normal e2e case must pass on Linux, macOS, and Windows.
+CLI reports use logical paths, relative to the base `relative_paths` selects ([§FS-config.3.6](FS-config.md#36-output--report-format)), with `/` as the separator, even on Windows. This applies to text reports, JSON fields, `sites`, ID-query e2e fixture lists, stub-link targets, and generated cross-reference URLs; native platform paths may appear only in launch-time errors about paths outside the scanned repo, where there is no repo-relative path to print. The CI build/test matrix is the proof for this contract: every normal e2e case must pass on Linux, macOS, and Windows.
 
 ## 3. API surfaces
 
@@ -58,12 +58,14 @@ Finding {
             // — or, on a failed ID query (FS-show.3, rendered with this same shape on stderr,
             //   path/line null) — "not-found" | "missing-section" | "broken-stub" | "ambiguous"
             //                   | "ambiguous-section" | "invalid-id" | "query-failed"
-  path:     string?        // relative to config root (FS-config.3.6); null for a CLI-level error
+  path:     string?        // relative to config root (FS-config.3.6); null for a run-level warning in the
+                           // report or a failed ID query (FS-errors.5.2, FS-errors.5.2.3)
   line:     u32?           // 1-indexed; null for a file-level finding with no line (e.g. an unreadable file, FS-check.2)
   message:  string         // the human-readable text
   sites:    [{ path, line }]?  // null for a single-site diagnostic; a list naming every site for a multi-site
                                // finding (a duplicate declaration) or an ambiguous-ID / ambiguous-section
-                               // query failure
+                               // query failure that names sites; null for the number-only shorthand's
+                               // `ambiguous` refusal, which names candidates instead (FS-errors.5.2.1)
 }
 ```
 
@@ -170,7 +172,7 @@ The release guard does not yet read `wording changes in <release>`; that clause 
 
 ### 4.3 `release.yml` publishes a commit that already carries its version
 
-A `vX.Y.Z` tag triggers `.github/workflows/release.yml` directly. The same workflow can also be run manually from the release commit: the operator enters the version, crate publishing is enabled by default, and the workflow creates `vX.Y.Z` if that tag does not already exist. If the requested tag already exists, that tag becomes the release source ref after the workflow verifies the tagged Cargo package versions match the requested version; this lets a failed release be recovered from a newer workflow commit without moving the release tag. In either entry path, the workflow verifies the tag/version matches both Cargo package versions, runs a fail-fast preflight on the crates.io token when crate publishing is enabled, re-runs `scripts/check-registry-names.sh` so claimed package names must still be available or owned by this project (§1.1), then builds and self-checks profile-guided-optimized binaries (§4.9) on six targets — `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, `x86_64-apple-darwin`, `aarch64-apple-darwin`, `x86_64-pc-windows-msvc`, and `aarch64-pc-windows-msvc`. `release.yml` does not bump versions: the selected commit already carries the version being released.
+A `vX.Y.Z` tag triggers `.github/workflows/release.yml` directly. The same workflow can also be run manually from the release commit: the operator enters the version, crate publishing is enabled by default, and the workflow creates `vX.Y.Z` if that tag does not already exist. If the requested tag already exists, that tag becomes the release source ref after the workflow verifies the tagged Cargo package versions match the requested version; this lets a failed release be recovered from a newer workflow commit without moving the release tag. In either entry path, the workflow verifies the tag/version matches the versions of all three Cargo packages it publishes (§4.10), runs a fail-fast preflight on the crates.io token when crate publishing is enabled, re-runs `scripts/check-registry-names.sh` so claimed package names must still be available or owned by this project (§1.1), then builds and self-checks profile-guided-optimized binaries (§4.9) on six targets — `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, `x86_64-apple-darwin`, `aarch64-apple-darwin`, `x86_64-pc-windows-msvc`, and `aarch64-pc-windows-msvc`. `release.yml` does not bump versions: the selected commit already carries the version being released.
 
 ### 4.4 Two helper workflows bump the version on a validated candidate
 

@@ -78,7 +78,7 @@ Declarations come out sorted by ID — kind, then number, then slug. The result 
 
 ### 2.5 Inline homes stay canonical
 
-When an ID's home is an inline declaration in source code with a one-line stub under `docs/architecture/` pointing at it (the [§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub) / [§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments) arrangement), `list` shows **one** line for that ID, naming the source file where the body lives. An external inline declaration enrolled directly by its kind's index ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) likewise appears once at the source home: the index link creates no declaration to collapse. A *broken* stub (its target missing, or the target has no matching inline declaration) is not paired with anything, so it does appear, listed at the stub's own location with a `→ <target>` note; `check` reports the breakage in located form.
+When an ID's home is an inline declaration in source code with a one-line stub in a `docs/` file pointing at it (the [§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub) / [§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments) arrangement), `list` shows **one** line for that ID, naming the source file where the body lives. An external inline declaration enrolled directly by its kind's index ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) likewise appears once at the source home: the index link creates no declaration to collapse. A *broken* stub (its target missing, or the target has no matching inline declaration) is not paired with anything, so it does appear, listed at the stub's own location with a `→ <target>` note; `check` reports the breakage in located form.
 
 ### 2.6 Duplicate declarations
 
@@ -106,13 +106,13 @@ FS-login        docs/functional-spec/FS-login.md:1    A player can log in with e
 G-no-dangling-refs  docs/goals.md:7     every cited ID resolves to a declaration
 ```
 
-The columns are: the ID (rendered in the repo's `[id] format`, left-padded so the column aligns — capped so one very long ID does not blow out the table), then `<path>:<line>` of the home declaration (for a collapsed stub-and-inline pair, the source file the body is in), then the title — the heading text the author wrote after `<ID>:`. A heading with no `: <text>` tail leaves the title column empty, a broken stub shows `→ <target>` in its place, a duplicated ID's lines carry a duplicate note, and a row with embedded value roots appends a suffix naming them in canonical order (§3.1.1). `--kind` and `--unused` select the lines as §1.1 and §1.3 say. An empty catalog (or an empty filter result) prints nothing — that is not an error.
+The columns are: the ID (rendered in the repo's `[id] format`, or in its kind's own `format` where the kind sets one ([§FS-config.3.4.10.1](FS-config.md#34101-format)); left-padded so the column aligns — capped so one very long ID does not blow out the table), then `<path>:<line>` of the home declaration (for a collapsed stub-and-inline pair, the source file the body is in), then the title — the heading text the author wrote after `<ID>:`. A heading with no `: <text>` tail leaves the title column empty, a broken stub shows `→ <target>` in its place, a duplicated ID's lines carry a duplicate note, and a row with marked roots appends a suffix naming them in canonical order (§3.1.1). `--kind` and `--unused` select the lines as §1.1 and §1.3 say. An empty catalog (or an empty filter result) prints nothing — that is not an error.
 
 Stderr is empty on success.
 
 #### 3.1.1 Row notes
 
-A declaration whose heading carries no `: <text>` tail has an empty title column. A broken stub shows `→ <target>` in place of a title. A duplicated ID's lines carry a `(duplicate declaration — grund check)` note. A row with embedded value roots appends ` [value roots: <ID.path>, <ID.path> (invalid)]`, ordered by canonical section path; a row without them is byte-identical to its prior form.
+A declaration whose heading carries no `: <text>` tail has an empty title column. A broken stub shows `→ <target>` in place of a title. A duplicated ID's lines carry a `(duplicate declaration — grund check)` note. A row with marked roots ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) appends ` [value roots: <ID.path>, <ID.path> (invalid)]`, ordered by canonical section path; a row without them is byte-identical to its prior form.
 
 ### 3.2 `--format json`
 
@@ -123,7 +123,7 @@ NDJSON on stdout — one object per catalog entry, same order as the text form:
 {"id":"FS-login","kind":"FS","path":"docs/functional-spec/FS-login.md","line":1,"title":"A player can log in with email","stub":false,"defines":null,"refs":7,"duplicate":false}
 ```
 
-Fields: `id` (rendered ID), `kind`, `path` and `line` of the home declaration, `title` (`null` when the heading has no title tail or the home is a broken stub), `stub` (true when this entry's home is a stub heading — only ever true for a *broken* stub, since a healthy one collapses into its inline declaration), `defines` (the `<target>` of a stub heading, else `null`), `refs` (the count of recognised citations of this ID — exactly the number `grund refs` would list, and not the `--unused` predicate; §3.2.1), and `duplicate` (true when the ID has more than one home). A row with embedded value roots adds a `value_roots` member in canonical section-path order, omitted when there are none (§3.2.2).
+Fields: `id` (rendered ID), `kind`, `path` and `line` of the home declaration, `title` (`null` when the heading has no title tail or the home is a broken stub), `stub` (true when this entry's home is a stub heading — only ever true for a *broken* stub, since a healthy one collapses into its inline declaration), `defines` (the `<target>` of a stub heading, else `null`), `refs` (the count of recognised citations of this ID — exactly the number `grund refs` would list, and not the `--unused` predicate; §3.2.1), and `duplicate` (true when the ID has more than one home). A row with marked roots adds a `value_roots` member in canonical section-path order, omitted when there are none (§3.2.2).
 
 #### 3.2.1 `refs` counts citations
 
@@ -131,7 +131,7 @@ Fields: `id` (rendered ID), `kind`, `path` and `line` of the home declaration, `
 
 #### 3.2.2 `value_roots`
 
-A row with embedded roots adds `"value_roots":[{"id":"FS-pricing.2","valid":true},{"id":"FS-pricing.4","valid":false}]` in canonical section-path order. This member is omitted, rather than emitted as an empty array, when the declaration has no embedded roots. No root changes `refs`, creates a row, or changes `--summary`. The additive conditional member and all existing wire fields are stable per [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
+A row with marked roots adds `"value_roots":[{"id":"FS-pricing.2","valid":true},{"id":"FS-pricing.4","valid":false}]` in canonical section-path order. This member is omitted, rather than emitted as an empty array, when the declaration has no marked roots. No root changes `refs`, creates a row, or changes `--summary`. The additive conditional member and all existing wire fields are stable per [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
 
 ### 3.3 `--summary`
 

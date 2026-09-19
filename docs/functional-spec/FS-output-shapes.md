@@ -12,11 +12,11 @@ Diagnostics use this shape:
 
 Fields:
 
-- `severity` is `error` or `warning`.
+- `severity` is `error` or `warning`. A suggestion, emitted only under `check --suggestions`, carries `"channel": "suggestion"` in place of a `severity` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)).
 - `path` is a relative path string, or `null` when there is no single source location.
 - `line` is 1-indexed, or `null` when `path` is `null`.
 - `code` is a stable kebab-case diagnostic code.
-- `message` is the same lowercase, no-terminal-period text used in text mode.
+- `message` is the same lowercase text used in text mode: no terminal period on a single-clause message, while a run-level caution of more than one clause keeps its sentences' periods ([§FS-errors.3](FS-errors.md#3-message-text)).
 - `sites` is `null` for single-site diagnostics, or a sorted array of `{ "path": <path>, "line": <line> }` for multi-site diagnostics.
 
 `check --format=json` splits these objects across streams as [§FS-errors.5](FS-errors.md#5-json-format) specifies: graph findings as NDJSON on stdout, run-level warnings such as empty scans and line-less mid-walk read failures on stderr. Launch-time CLI failures stay raw `error:` text on stderr even when `--format=json` was requested.
@@ -123,7 +123,7 @@ CLI `error:` prefix (including the `known aliases:` or standalone `note:` line).
 
 ### 4.2 E2E cases
 
-For an E2E case, `show --format=json` uses the E2E manifest shape from [§FS-show.2.4](FS-show.md#24-e2e-cases). `path` is the case directory under the configured `E2E` home; `e2e/cases/<name>` is the example produced by the conventional configuration that selects that folder.
+For an E2E case, `show --format=json` uses the E2E manifest shape from [§FS-show.2.4](FS-show.md#24-e2e-cases), whose fields, `path` among them, [§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json) defines.
 
 ```json
 {"id":"E2E-login","kind":"E2E","path":"e2e/cases/login","args":[],"expected_exit":0,"fixtures":["expected.exit","expected.stdout","repo/docs/functional-spec/FS-001-login.md"]}
@@ -145,7 +145,7 @@ For a JSON value declaration, every read mode's `body` is the exact available me
 Fields:
 
 - `id`, `kind`, `path`, `line`, and `title` identify the declaration.
-- `stub` is true when the declaration is a docs stub pointing at an inline declaration.
+- `stub` is true only for a broken stub: a healthy docs stub collapses into its inline declaration and gets no row of its own ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)).
 - `defines` is the target path for a stub, otherwise `null`.
 - `refs` is the number of citations that resolve to this ID.
 - `duplicate` is true when this ID has more than one independent declaration home.

@@ -16,7 +16,7 @@ The declaration ID is a normal full local ID of that kind. Its slug carries stab
 
 A whole-declaration Markdown value is an ordinary declaration in its opted-in kind home. Its value fields are the declaration's immediate citable child headings and must be one nonempty contiguous run `.1` through `.N`, where `N >= 1`. Each heading uses the configured strict depth for that coordinate; gaps, zero or leading-zero coordinates, nested or named citable sections, and duplicate fields make the declaration invalid. A marked root (§2.4) is a separate form; its descendants do not weaken this declaration-rooted grammar.
 
-The component is the entire heading title after the numeric coordinate. It must fit on that physical line, be nonempty, and have no leading or trailing whitespace, backtick, or control character. Lead prose, bodies below component headings, and plain non-citable headings carry no value. A component is numeric only when its complete text matches JSON number grammar; otherwise it is a string.
+A value field's text is the entire heading title after the numeric coordinate. It must fit on that physical line, be nonempty, and have no leading or trailing whitespace, backtick, or control character. Lead prose, bodies below value-field headings, and plain non-citable headings carry no value. A value field is numeric only when its complete text matches JSON number grammar; otherwise it is a string.
 
 ### 2.2 JSON declarations from the kind home
 
@@ -99,7 +99,7 @@ Three fixed-severity errors are reported and exit `1`:
 They are errors regardless of `strict` or `--suggestions` and are never suggestions. A mismatch uses this canonical lowercase, no-period text, with the declaration site in both text and structured forms:
 
 ```text
-docs/offer.md:7: value mismatch for CONST-field-price.1: bound `1250`, declared `1200` at values/field-price.md:2
+docs/offer.md:7: error: value mismatch for CONST-field-price.1: bound `1250`, declared `1200` at values/field-price.md:2
 ```
 
 ### 5.3 Incomplete input and deterministic output
@@ -114,7 +114,7 @@ Markdown, JSON, and marked roots enter one declaration/section catalog. `refs` a
 
 ### 6.1 Marked roots in the catalog
 
-A marked root and its components keep their ordinary dotted section identities: `show` returns the queried verbatim section slice, and shell completion continues to offer the recorded section paths without a value-specific candidate. `refs <ID.path>` and `--section <path>` retain their exact ordinary-section meanings; no root aggregate is added. `list` retains one row for the enclosing declaration and exposes root metadata on that row rather than inventing another row. Text appends ` [value roots: <ID.path>, <ID.path> (invalid)]` only when roots exist, ordered by canonical section path. NDJSON likewise adds an optional `"value_roots":[{"id":"<ID.path>","valid":true}]` member only on such rows; rows without roots omit it and `--summary` is unchanged ([§FS-list.2](FS-list.md#2-behaviour), [§FS-list.3](FS-list.md#3-outputs)).
+A marked root and its components keep their ordinary dotted section identities: `show` returns the queried verbatim section slice, and shell completion continues to offer the recorded section paths without a value-specific candidate. `refs <ID.path>` and `--section <path>` retain their exact ordinary-section meanings; no root aggregate is added. `list` retains one row for the enclosing declaration and exposes root metadata on that row rather than inventing another row ([§FS-list.2](FS-list.md#2-behaviour)): the text suffix of [§FS-list.3.1.1](FS-list.md#311-row-notes) and the NDJSON `value_roots` member of [§FS-list.3.2.2](FS-list.md#322-value_roots), both only on a row with roots, and `--summary` unchanged.
 
 ### 6.2 JSON declarations in the catalog
 

@@ -56,7 +56,7 @@ Every name on the crate's public surface returns data and writes to no stream; c
 
 ## 3. grund-cli: the CLI binary
 
-The Cargo package named `grund`, what `cargo install grund` produces and what the npm/PyPI packages wrap. It owns the installed binary, prints help and version, restores SIGPIPE, and routes top-level commands to CLI-local wrappers over the data APIs. Every command renders through one of those wrappers, `integrations` included: its argument parsing, detection and artifact printing, and its `--write` reports are `cli_integrations.rs` and `cli_integrations_write.rs`, over the client set, detection, agent surfaces and managed writes the engine returns as data ([§FS-integrations.1](../functional-spec/FS-integrations.md#1-user-facing-command)). Synchronous; no async runtime, no LSP types, no JSON-RPC.
+`crates/grund-cli`, the Cargo package published as `grund`: what `cargo install grund` produces and what the npm/PyPI packages wrap. It owns the installed binary, prints help and version, restores SIGPIPE, and routes top-level commands to CLI-local wrappers over the data APIs. Every command renders through one of those wrappers, `integrations` included: its argument parsing, detection and artifact printing, and its `--write` reports are `cli_integrations.rs` and `cli_integrations_write.rs`, over the client set, detection, agent surfaces and managed writes the engine returns as data ([§FS-integrations.1](../functional-spec/FS-integrations.md#1-user-facing-command)). Synchronous; no async runtime, no LSP types, no JSON-RPC.
 
 ## 4. grund-lsp: the LSP server binary
 

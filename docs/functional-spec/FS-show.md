@@ -61,11 +61,11 @@ In a kind whose effective format carries both `{number}` and `{slug}`, the numbe
 - `--brief` — the cheapest "what is this about" view, a hover-preview slice (§2.1.1).
 - (no flag, the default) — the lead, cut at the first *citable* point, so an agent landing on a bare `§<ID>` reads enough to know whether to fetch a deeper section (§2.1).
 - `--toc` — the move when the next step is `grund <ID>.<sec>` and the section number needs to be chosen (§2.1.2).
-- `--full` — print the entire body: heading down to the next same-or-shallower ID heading, all subsections recursively included. The escalation when narrower slices are not enough (§2.1.3).
+- `--full` — print the entire body: heading down to the end of its body span (§2.1.2.1), all subsections recursively included. The escalation when narrower slices are not enough (§2.1.3).
 
 ### 1.7 `--format`
 
-`--format` — output shape (§3.1); defaults to `text` (just the body, no headers).
+`--format` — output shape (§3.1); defaults to `text`.
 
 ### 1.8 `--batch`: an explicit query stream
 
@@ -145,7 +145,7 @@ If the lead is empty (`## 1.` or `## goals:` opens the body), the leading blank 
 
 #### 2.1.3 Full body (`--full`)
 
-`grund --full FS-check` prints from the heading of `FS-check` to the start of the next ID heading (or end of file). Every subsection and sub-subsection body is included. With `--section` / the dotted form, `--full` prints the selected section's heading and full body — the same slice §2.2 defines. The opening heading is omitted in `text` and included in `md`, as in the default.
+`grund --full FS-check` prints from the heading of `FS-check` to the end of its body span (§2.1.2.1): in Markdown, the start of the next same-or-higher heading, whether or not it declares an ID (or end of file). Every subsection and sub-subsection body is included. With `--section` / the dotted form, `--full` prints the selected section's heading and full body — the same slice §2.2 defines. The opening heading is omitted in `text` and included in `md`, as in the default.
 
 `--full` is the escalation path when `--brief`, the default, and `--toc` are not enough. It is also the way to recover today's pre-[§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in) behavior: use `grund <ID> --full`.
 
@@ -295,7 +295,7 @@ This is the same "found something other than exactly one body" family as `ID not
 
 #### 2.3.5 The doc-comment forms
 
-The scanner recognizes the same doc-comment forms enumerated in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architectural spec can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the rendered Javadoc lead — same content the optional LSP server shows on hover ([§FS-lsp.1.2](FS-lsp.md#12-hover-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
+The scanner recognizes the same doc-comment forms enumerated in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architectural spec can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the comment-stripped Javadoc lead (§2.3.2); the optional LSP server's hover shows the `--toc` slice of the same prose, the lead plus its section map ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
 
 #### 2.3.6 Several declarations in one doc-comment
 
@@ -411,7 +411,7 @@ Same as `text` but the opening declaration heading line is **included** verbatim
 
 #### 3.1.3 `json`
 
-A single object on stdout: `{"id":<ID>,"section":<section-path or null>,"body":<string>,"path":<declaring file or case dir>,"line":<1-indexed>}`. `body` is the same text `text` prints — `--cross-refs` wrappers flattened (§3.2). `section` is `null` when the whole declaration was requested and otherwise carries the exact numeric or named path string. With `--toc` the object additionally carries `sections` — one `{"path":<section path>,"title":<complete rendered heading text>,"depth":<integer>}` per citable heading in the selected outline slice, in document order. For E2E cases the object is the §2.4.2 shape instead. The wire form is stable per [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible).
+A single object on stdout: `{"id":<ID>,"section":<section-path or null>,"body":<string>,"path":<declaring file or case dir>,"line":<1-indexed>}`. `body` is the same text `text` prints — `--cross-refs` wrappers flattened (§3.2). `section` is `null` when the whole declaration was requested and otherwise carries the exact numeric or named path string. With `--toc` the object additionally carries `sections` — one `{"path":<section path>,"title":<heading title after its coordinate>,"depth":<integer>}` per citable heading in the selected outline slice, in document order. For E2E cases the object is the §2.4.2 shape instead. The wire form is stable per [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible).
 
 ### 3.2 Cross-reference links are flattened in `text` and `json`
 

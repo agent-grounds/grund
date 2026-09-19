@@ -1,6 +1,6 @@
 # FS-fmt: grund normalizes references in bulk
 
-The `fmt` subcommand rewrites a tree to canonical form: trigger sequences become markers, and (optionally) bare citations become marker-prefixed. It is the batch counterpart to the optional LSP server's live trigger transform ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)) and the always-available path: every install of `grund` ships `fmt`, while the LSP server is opt-in. Implements [§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger).
+The `fmt` subcommand rewrites the citations in a tree in four passes: trigger sequences become markers, (optionally) bare citations become marker-prefixed, a number-only shorthand is expanded to its full ID where its `shorthand` policy asks (§2.4), and citations in Markdown are wrapped as links (§6). It is the batch counterpart to the optional LSP server's live trigger transform ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)) and the always-available path: every install of `grund` ships `fmt`, while the LSP server is opt-in. Implements [§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger).
 
 ## 1. Inputs
 
@@ -156,9 +156,9 @@ A dry run reports nothing for a suppressed scope and `--write` leaves its bytes 
 exclude = ["docs/architecture/AR-topology.md", "docs/diagrams"]
 ```
 
-Each entry is a gitignore-style glob resolved against the config root ([§FS-config.3.10](FS-config.md#310-fmt--suppressing-the-rewrite)) — the same dialect the scanner already reads for `[scan] respect_gitignore` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)), so an entry naming a directory takes every file under it and an entry with no `/` matches at any depth. A file the list matches is walked, read, and checked exactly as before, and no rewrite is performed in it. A malformed pattern is a config error at its own line, like any other bad value ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)).
+Which files an entry names, and what a malformed one does, is [§FS-config.3.10.1](FS-config.md#3101-entries-are-gitignore-style-globs). A file the list matches is walked, read, and checked exactly as before, and no rewrite is performed in it.
 
-The key is additive and the default is the empty list, so `grund_config_version` is unchanged ([§FS-config.5](FS-config.md#5-schema-versioning)). In a workspace every project is rewritten under its own config, so the list is read from the project that owns the file and a member's entries never reach its siblings ([§FS-workspace.8.5](FS-workspace.md#85-grund-fmt---cross-refs)).
+The key is optional and additive ([§FS-config.3.10.2](FS-config.md#3102-optional-empty-by-default-and-additive)). In a workspace every project is rewritten under its own config, so the list is read from the project that owns the file and a member's entries never reach its siblings ([§FS-workspace.8.5](FS-workspace.md#85-grund-fmt---cross-refs)).
 
 #### 2.5.2 `grund:fmt off` / `grund:fmt on` — a region at a time
 
@@ -212,11 +212,11 @@ This fatal-up-front check binds to the **scope**, not to how a caller reached it
 
 ### 3.3 A refused run still names every unreadable path
 
-The completed strict scan still reports every unreadable path it found, once and in the normal deterministic order, even though the first one was already enough to refuse the rewrite; its stdout report stays empty because it rewrote nothing. For a workspace-root run, that completed preflight covers every in-scope project before any project is rewritten: failures are one root-then-members list in ordinary workspace scan order, and a failure in a later member leaves earlier projects byte-for-byte unchanged.
+The refused run's completed scan still reports every unreadable path it found, once and in the normal deterministic order, even though the first one was already enough to refuse the rewrite; its stdout report stays empty because it rewrote nothing. For a workspace-root run, that completed preflight covers every in-scope project before any project is rewritten: failures are one root-then-members list in ordinary workspace scan order, and a failure in a later member leaves earlier projects byte-for-byte unchanged.
 
 ### 3.4 A refusal says that nothing was rewritten
 
-Two exit `2`s that mean opposite things must not be spelled the same, so every strict-abort line says so: `error: nothing was rewritten: <path>: <reason>`, against the partial run's bare `error: <path>: <reason>`. One says the tree was edited and the view of it was short; the other says the tree was not touched. A reader deciding whether to re-run, revert, or fix the link needs to know which.
+Two exit `2`s that mean opposite things must not be spelled the same, so every line of a refused run says so: `error: nothing was rewritten: <path>: <reason>`, against the partial run's bare `error: <path>: <reason>`. One says the tree was edited and the view of it was short; the other says the tree was not touched. A reader deciding whether to re-run, revert, or fix the link needs to know which.
 
 ### 3.5 The dry-run report
 
@@ -275,7 +275,7 @@ The dry run previews the index-entry wraps that `--write` applies, even when `[f
 
 ### 6.2 Form
 
-Wrap the citation. A bare or marker-prefixed citation (illustrated as `§FS-<foo>.3.1`) becomes:
+Wrap the citation. A marker-prefixed citation (illustrated as `§FS-<foo>.3.1`) — a bare one only once `--marker` has marked it (§6.5) — becomes:
 
 ```
 [§FS-<foo>.3.1](<relative-path>#<anchor>)
@@ -406,7 +406,7 @@ E2E fixtures pin the pass (§6.8.1), its anchors (§6.8.2), and the suppressed s
 
 `fmt` is the model `grund check` verifies plus a write step, never a second implementation of it. Every claim this command makes — what a token is, which lines will change, which paths could not be read, which files it may edit — is read from that model; and where the model is incomplete, or the proof that it is complete is missing, `fmt` refuses loudly rather than proceeding (§3.2). Decided in [§DF-fmt-one-model](../decisions/functional/DF-fmt-one-model.md#df-fmt-one-model-fmt-is-the-shared-verified-model-plus-a-write-step-and-completeness-is-a-precondition-rather-than-a-convention).
 
-The binding has a direction: `fmt` to `check`'s model, never `check`'s findings to what `fmt` can rewrite (§7.7).
+The binding has a direction: `fmt` to `check`'s model, never `check`'s findings to what `fmt` can rewrite, save the one ruled exception of [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite) (§7.7).
 
 ### 7.1 Scope-equivalence
 
@@ -416,9 +416,9 @@ How a caller reached a scope is not part of the scope. In particular, a run that
 
 ### 7.2 Reader-equivalence
 
-On any tree, the unreadable paths `fmt` reports are the ones `check` reports on the same scope: the same paths, spelled against the same config, with the same reasons, in the same deterministic order. This holds in every form the command has — plain, strict, scoped, and workspace — because they are all the same walk.
+On any tree, the unreadable paths `fmt` reports are the ones `check` reports on the same scope: the same paths, spelled against the same config, with the same reasons, in the same deterministic order. This holds in every form the command has — plain, refused (§3.2), scoped, and workspace — because they are all the same walk.
 
-Equality is of the **(path, reason)** pairs, not of the bytes of the line. The one licensed difference is the `nothing was rewritten:` prefix §3.4 requires on a strict abort's lines, because the two exit `2`s mean opposite things. Everything else a line can differ by is a disagreement between two readers of one tree: a member's path spelled from the member root rather than from where the run was launched, a reason one command invented for itself, a path named by one command and not the other, or a set one command truncates at the first entry while the other lists them all.
+Equality is of the **(path, reason)** pairs, not of the bytes of the line. The one licensed difference is the `nothing was rewritten:` prefix §3.4 requires on a refused run's lines, because the two exit `2`s mean opposite things. Everything else a line can differ by is a disagreement between two readers of one tree: a member's path spelled from the member root rather than from where the run was launched, a reason one command invented for itself, a path named by one command and not the other, or a set one command truncates at the first entry while the other lists them all.
 
 ### 7.3 Preview-equivalence
 
@@ -440,7 +440,7 @@ The observable half of the rule is §3.2's refusal, and it is one no later pass 
 
 ### 7.5 Measurable
 
-Rules 7.1 to 7.3 are cross-run properties: each compares two invocations, so no single golden can state one. They are pinned as integration tests over a corpus of tree shapes — a clean rewritable tree, a strict tree that aborts, a partial source-only scope that reports and rewrites anyway, a two-directory tree for the scoped form, a clean workspace whose citations cross the member boundary both ways, and a workspace whose member holds the unreadable path — asserting the property over every shape rather than over the one shape whose defect prompted it. The e2e corpus pins the individual outputs those properties are equalities between: `symlink-fmt-scan-error` beside `symlink-broken` for §7.2's licensed prefix, `fmt-partial-scan-error-still-reports` for the partial form of the same rule, and the `fmt-check-previews-default-cross-refs` / `fmt-write-applies-default-cross-refs-preview` pair for §7.3.
+Rules 7.1 to 7.3 are cross-run properties: each compares two invocations, so no single golden can state one. They are pinned as integration tests over a corpus of tree shapes — a clean rewritable tree, a tree whose run is refused up front (§3.2), a partial source-only scope that reports and rewrites anyway, a two-directory tree for the scoped form, a clean workspace whose citations cross the member boundary both ways, and a workspace whose member holds the unreadable path — asserting the property over every shape rather than over the one shape whose defect prompted it. The e2e corpus pins the individual outputs those properties are equalities between: `symlink-fmt-scan-error` beside `symlink-broken` for §7.2's licensed prefix, `fmt-partial-scan-error-still-reports` for the partial form of the same rule, and the `fmt-check-previews-default-cross-refs` / `fmt-write-applies-default-cross-refs-preview` pair for §7.3.
 
 §7.1 and §7.4 have no e2e case, each for its own reason (§7.5.1).
 
@@ -454,6 +454,6 @@ This is not new behavior. Each rule of §7.1 to §7.4 states, as a general prope
 
 ### 7.7 The rule has a direction
 
-Equivalence binds `fmt` to `check`'s **model** — the same walk, the same token grammar, the same account of what could not be read. It does not bind `check`'s **findings** to what `fmt` is able to rewrite. The second coupling is a different rule wearing the same words, and this specification carries one instance of it already: [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) withholds its error in the never-rewrite zones §2.4 names, so that the checker never reports there what the formatter cannot fix. The price is that the shorthand form of a citation inside a string literal, where it resolves to exactly one declaration, is unflaggable by any command — a true fact about the tree that no report may state, because one consumer of the model cannot act on it.
+Equivalence binds `fmt` to `check`'s **model** — the same walk, the same token grammar, the same account of what could not be read. It does not bind `check`'s **findings** to what `fmt` is able to rewrite. The second coupling is a different rule wearing the same words, and this specification admits exactly one instance of it, as a ruled exception: [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite) withholds [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)'s error in the never-rewrite zones §2.4 names, so that the checker never reports there what the formatter cannot fix. Its price is accepted: the shorthand form of a citation inside a string literal, where it resolves to exactly one declaration, is unflaggable by any command — a true fact about the tree that no report may state, because one consumer of the model cannot act on it.
 
-A reader is owed every true finding about the tree; a writer is owed only the findings it can safely act on. §7 establishes the first direction, and licenses no more of the second.
+A reader is owed every true finding about the tree; a writer is owed only the findings it can safely act on. §7 establishes the first direction; the exception above is closed, and §7 licenses no second one.

@@ -14,7 +14,7 @@ A single malformed or failing message is not fatal to the session: a request tha
 
 `textDocument/publishDiagnostics` pushes `grund check` results as the user edits. Each unknown reference, missing section, duplicate declaration, broken stub, and citation-direction violation — a required citation absent ([§FS-check.3.11](FS-check.md#311-missing-required-citation)) or a forbidden one present ([§FS-check.3.12](FS-check.md#312-forbidden-citation)) — becomes a diagnostic with the same `path:line: <message>` content the CLI prints to stdout ([§FS-errors.2.1](FS-errors.md#21-located-finding)). The advisory `should` / `should-not` suggestions channel ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)) is opt-in on the CLI and is not pushed as diagnostics. Severity follows the engine's severity model ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization) — not configurable).
 
-Where each diagnostic anchors is §1.1.1. Value, named-section, and missing-snapshot findings are transported from the core report rather than derived by the server (§1.1.2), and the run-level `[workspace]` warnings are published too (§1.1.3).
+Where each diagnostic anchors is §1.1.1. Value, named-section, and missing-snapshot findings are transported from the core report rather than derived by the server (§1.1.2), and the `[workspace]` warnings on the run's warning channel are published too (§1.1.3).
 
 #### 1.1.1 Where a diagnostic anchors
 
@@ -22,13 +22,13 @@ The diagnostic position is the start column of the citation the finding concerns
 
 #### 1.1.2 Findings the core report shapes
 
-The shared core report includes all three value errors for whole declarations and marked section roots with the same primary and declaration/component spans as CLI text/NDJSON, so editor diagnostics neither rescan nor reinterpret bindings ([§FS-values.5](FS-values.md#5-resolution-diagnostics-and-exit-status)).
+The shared core report includes all three value errors for whole declarations and marked roots with the same primary and declaration/component spans as CLI text/NDJSON, so editor diagnostics neither rescan nor reinterpret bindings ([§FS-values.5](FS-values.md#5-resolution-diagnostics-and-exit-status)).
 
 Named-section diagnostics are not a parallel editor rule. In an opted-in repository, missing named coordinates, duplicate named coordinates, orphan name-bearing paths, and named heading-depth mismatches are transported from the core report with the same message, severity, line, and range as the CLI. A citation-side finding selects the complete written citation token; an orphan or depth finding selects the complete named heading title. Independent core findings remain independent diagnostics.
 
 A missing fetch-backed snapshot is not a separate editor rule either. The LSP transports the engine's `dangling` error or `missing-snapshot` warning with the same message, code, severity, and range as the CLI ([§FS-check.4.12](FS-check.md#412-missing-snapshot)), and never executes the configured fetcher while publishing diagnostics.
 
-#### 1.1.3 Run-level workspace warnings
+#### 1.1.3 Workspace warnings on the run's warning channel
 
 A block that swallows its own scan ([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)), one no enclosing workspace lists ([§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)), one whose opted-out tree nobody reads ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)), and an ancestor claim left undecidable ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)) reach the server in the same warning channel as every other finding. Each is published on the `grund.toml` it anchors at — at the anchored line, or at that file's first line for the undecidable claim, which names no line because the line is what it could not read. The message is the CLI's, byte for byte, and the server neither re-derives the location nor reads it back out of the message text. Only a terminal used to say these, though a configuration that leaves part of the tree unread, or spells its projects two ways, is what a reader of that `grund.toml` needs told ([§DA-engine-renders-nothing.2](../decisions/architectural/DA-engine-renders-nothing.md#2-decision)).
 
@@ -52,7 +52,7 @@ If a citation has a diagnostic instead (for example an unknown reference with a 
 
 On a declaration-side title, hover returns the title token and its usage count, with the hover range set to the whole title span. The cursor is already inside the declaration body, so a body preview would only repeat what is on screen; the *usage* is the one fact about a declaration that is visible nowhere on that screen. The whole-title range also gives editors such as Codium the hover affordance. The citation sites themselves are reached on demand through go-to-definition (§1.3) and references (§1.3.1): the hover is the count, not the list.
 
-An explicit named heading is a declaration-side title just like a numbered heading: its hover range covers the complete rendered heading title, including the handle and colon, and its usage count covers citations of that path and its descendants. A declaration-side marked value root retains the ordinary section-title hover and usage count: its semantic title and UTF-16 hover range exclude the separating space and marker, while a raw preview of that section includes the marker on its heading ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
+An explicit named heading is a declaration-side title just like a numbered heading: its hover range covers the complete rendered heading title, including the handle and colon, and its usage count covers citations of that path and its descendants. A declaration-side marked root retains the ordinary section-title hover and usage count: its semantic title and UTF-16 hover range exclude the separating space and marker, while a raw preview of that section includes the marker on its heading ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
 
 #### 1.2.4 The title hover's text
 
@@ -78,7 +78,7 @@ On a numbered section heading the set is the section-scoped one §1.3.1 defines:
 
 The clause is a count, never a finding. An uncited declaration already earns the unused-declaration warning through `publishDiagnostics` (§1.1, [§FS-check.4.1](FS-check.md#41-unused-declaration)), and hover does not restate it: `not cited` is the count at zero, worded as a count, so a popup that draws both over an uncited title carries the warning naming the ID and the count answering the hover — one statement each. Nor is the zero case suppressed in favour of the warning, because the warning does not cover every title that can reach zero — `E2E` declarations are exempt from it ([§FS-check.4.1](FS-check.md#41-unused-declaration)) and section headings never carry one — so a hover that fell silent at zero would go quiet exactly where nothing else speaks, indistinguishable from a server that shows no counts.
 
-The counts are read from the session snapshot, one scan of the workspace shared with diagnostics and navigation, so the same tree and config produce the same bytes (§4) and no hover re-scans to answer.
+The counts are read from the scan of the project that owns the document (§2.2.2), the one diagnostics and navigation answer from, so the same tree and config produce the same bytes (§4) and no hover re-scans to answer.
 
 ### 1.3 Go-to-definition
 
@@ -114,7 +114,7 @@ Definition results report the whole originating token as their origin span — t
 
 A value binding navigates through the shared resolver to its existing Markdown/source component heading or exact JSON key/element span. A marked root and component keep their ordinary dotted identities; no synthetic definition or value badge is exposed ([§FS-values.7](FS-values.md#7-workspaces-and-editor-consumers)).
 
-For a named coordinate, definition navigates from the whole citation token to the exact named heading, and declaration-side definition on that heading returns its section-scoped usages. Named and numeric headings use the same snapshot ranges and result shapes.
+For a named coordinate, definition navigates from the whole citation token to the exact named heading, and declaration-side definition on that heading returns its section-scoped usages. Named and numeric headings use the same scanned ranges and result shapes.
 
 ### 1.4 Live trigger transform
 
@@ -128,7 +128,7 @@ The two rewrites fire on **different keystrokes**, and that separation is what m
 
 #### 1.4.2 What the expansion resolves against
 
-The expansion reads the declaration set from the session snapshot the server already maintains, never a fresh scan, so the per-keystroke path stays within [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible). In a workspace the snapshot holds every member's declarations, and only the edited file's own project is consulted: `§FS-042` typed in one member means that member's `FS-042-…` and never a sibling's ([§FS-workspace.4](FS-workspace.md#4-resolution)). A shorthand that matches no declaration, or more than one, converts the trigger and nothing more: typing never stalls, and the resulting `§FS-042` earns the [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) diagnostic that names the problem. The same is true of a token the author never terminates — `grund check` and `grund fmt` are the backstop, and they agree with the editor about what resolves — except under `[reference] shorthand = "accepted"`, where one that resolves to exactly one declaration is a valid persisted shorthand that neither reports nor rewrites ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation), [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)).
+The expansion reads the declaration set from the scan the server already holds for the document's owner (§2.2.2), never a fresh scan, so the per-keystroke path stays within [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible). In a workspace that scan holds every member's declarations, and only the edited file's own project is consulted: `§FS-042` typed in one member means that member's `FS-042-…` and never a sibling's ([§FS-workspace.4](FS-workspace.md#4-resolution)). A shorthand that matches no declaration, or more than one, converts the trigger and nothing more: typing never stalls, and the resulting `§FS-042` earns the [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) diagnostic that names the problem. The same is true of a token the author never terminates — `grund check` and `grund fmt` are the backstop, and they agree with the editor about what resolves — except under `[reference] shorthand = "accepted"`, where one that resolves to exactly one declaration is a valid persisted shorthand that neither reports nor rewrites ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation), [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)).
 
 #### 1.4.3 Where the expansion refuses
 
@@ -174,9 +174,9 @@ Users do not run `grund-lsp` directly. The editor's LSP client spawns it as a ch
 
 #### 2.2.1 Workspace folders anchor discovery
 
-The folders in an LSP `initialize` request are config-discovery anchors, not scan boundaries. For every `workspaceFolders` entry, the server walks upward with the same discovery rules as the CLI (§3); when it finds a Grund config, it snapshots that config's project root so configured `[scan] include` paths and sibling source trees remain visible even when the editor opened only a nested directory. If `workspaceFolders` is absent or empty, the deprecated `rootUri` is the anchor, then the server process's current directory as the final fallback. With no discovered config under either name, the anchor itself remains the zero-config scan root, with the canonical defaults ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)).
+The folders in an LSP `initialize` request are config-discovery starts, not scan boundaries. For every `workspaceFolders` entry, the server walks upward with the same discovery rules as the CLI (§3); when it finds a Grund config, it scans that config's project root so configured `[scan] include` paths and sibling source trees remain visible even when the editor opened only a nested directory. If `workspaceFolders` is absent or empty, the deprecated `rootUri` is the discovery start, then the server process's current directory as the final fallback. With no discovered config under either name, the discovery start itself remains the zero-config scan root, with the canonical defaults ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)).
 
-Entries that discover the same project root share one snapshot. Entries that discover different roots each get a snapshot, and independent projects are never merged: identical local IDs in two editor folders are unrelated namespaces, and a reference answered from the wrong one would be a wrong citation ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
+Entries that discover the same project root share one scan. Entries that discover different roots each get their own scan, and independent projects are never merged: identical local IDs in two editor folders are unrelated namespaces, and a reference answered from the wrong one would be a wrong citation ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
 
 #### 2.2.2 One project answers each document
 
@@ -190,11 +190,11 @@ A document reachable only below a directory symlink whose canonical target is ou
 
 #### 2.2.4 An unusable folder is skipped
 
-A folder the server cannot turn into a project is skipped, never fatal ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)). A folder URI with a non-`file:` scheme — editors mix virtual and remote folders into one window — is passed over with a note on stderr. So is a folder whose config will not load: a half-typed `grund.toml` in one folder reports itself and leaves that project on its last good snapshot, while every other folder in the session keeps its diagnostics current. A session with no usable folder left still starts and answers nothing, rather than exiting.
+A folder the server cannot turn into a project is skipped, never fatal ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)). A folder URI with a non-`file:` scheme — editors mix virtual and remote folders into one window — is passed over with a note on stderr. So is a folder whose config will not load: a half-typed `grund.toml` in one folder reports itself and leaves that project on its last good scan, while every other folder in the session keeps its diagnostics current. A session with no usable folder left still starts and answers nothing, rather than exiting.
 
 #### 2.2.5 Folder changes
 
-The server advertises workspace-folder support with change notifications. On `workspace/didChangeWorkspaceFolders`, added folders are discovered and included by the same rules, removed folders stop contributing, and diagnostics are republished from the resulting snapshot set. Unusable entries are skipped as §2.2.4 says, so the rest of a mixed event still applies. Keeping a nested folder that still resolves to a project keeps that project active even when another folder for the same project is removed. Thus the initial folder order and later add/remove order cannot silently narrow references or diagnostics.
+The server advertises workspace-folder support with change notifications. On `workspace/didChangeWorkspaceFolders`, added folders are discovered and included by the same rules, removed folders stop contributing, and diagnostics are republished from the resulting set of scans. Unusable entries are skipped as §2.2.4 says, so the rest of a mixed event still applies. Keeping a nested folder that still resolves to a project keeps that project active even when another folder for the same project is removed. Thus the initial folder order and later add/remove order cannot silently narrow references or diagnostics.
 
 ### 2.3 Editor configuration (one-time, per editor)
 
@@ -204,7 +204,7 @@ The user-facing LSP setup guide ships example LSP-client snippets for the editor
 - **Neovim** — a built-in LSP snippet, compatible with `nvim-lspconfig`-based setups.
 - **Zed** — central LSP registry entry; one config block locally if not yet upstreamed.
 - **Emacs** — `eglot-server-programs` or `lsp-mode` registration (~5 lines).
-- **VSCode** — install a generic LSP client extension and point it at `grund-lsp`. A first-party VSCode extension is **not** shipped ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)).
+- **VSCode** — install a generic LSP client extension and point it at `grund-lsp`. No first-party VSCode extension duplicates the LSP server or is published to a marketplace ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)); the terminal-link extension the binary carries is not an LSP client ([§FS-integrations.3.2](FS-integrations.md#32-editor-clients-vscode-codium)).
 - **Sublime Text** — LSP package client configuration for Markdown and scanned source syntaxes.
 - **IntelliJ family** — generate the import directory with §2.4.1, then explicitly import it through LSP4IJ's **Settings | Languages & Frameworks | Language Servers**, **+ | New Language Server**, **Import from custom template...** flow.
 
@@ -234,7 +234,7 @@ The generator does not install LSP4IJ, edit JetBrains-owned files, or add editor
 
 ## 3. Configuration
 
-The server reads the `grund.toml` via the same discovery logic as `grund check` ([§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)), walking up from every workspace-folder anchor supplied by the editor's LSP `initialize` request, with the fallbacks of §2.2.1. Batch integration generation instead walks upward from the process current working directory (§2.4.2). Both consume the same effective core configuration; there is no separate LSP config or second parser.
+The server reads the `grund.toml` via the same discovery logic as `grund check` ([§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)), walking up from every workspace folder supplied by the editor's LSP `initialize` request, with the fallbacks of §2.2.1. Batch integration generation instead walks upward from the process current working directory (§2.4.2). Both consume the same effective core configuration; there is no separate LSP config or second parser.
 
 Editor-side LSP configuration (server arguments, workspace folders) is the user's responsibility per §2.3 and is not part of `grund.toml`.
 
@@ -246,7 +246,7 @@ The LSP server does not have an "interactive" mode or a confirmation prompt ([§
 
 ### 4.1 How parity is held
 
-The implementation enforces this parity by routing LSP state through `grund-core` snapshot, check, show, refs, and formatting APIs, plus focused LSP tests for linkification, configured trigger handling, workspace member marker resolution, UTF-16 ranges, and document-link targets. The full child-process sweep over `tests/e2e/cases/*` ships as `tests/integration/lsp_cli_parity.rs`: for every plain-`check` case, the diagnostics the server publishes are the located findings the CLI prints, or the build is red. The run-level warnings of §1.1.3 are held the same way against that case's stderr golden, so neither surface may carry one the other does not.
+The implementation enforces this parity by routing LSP state through `grund-core` scan, check, show, refs, and formatting APIs, plus focused LSP tests for linkification, configured trigger handling, workspace member marker resolution, UTF-16 ranges, and document-link targets. The full child-process sweep over `tests/e2e/cases/*` ships as `tests/integration/lsp_cli_parity.rs`: for every plain-`check` case, the diagnostics the server publishes are the located findings the CLI prints, or the build is red. The workspace warnings of §1.1.3 are held the same way against that case's stderr golden, so neither surface may carry one the other does not.
 
 ### 4.2 Embedded values
 
@@ -254,11 +254,11 @@ For an embedded value, this parity covers the CLI's marked-root shape and compar
 
 ### 4.3 Off-grammar declarations
 
-This parity includes exact off-grammar declarations and their declaration-backed marked citations ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): the LSP publishes the same located `declaration-near-miss` as `check`, while hover, definition, references, highlights, and document links navigate the declaration and its sections from the shared snapshot. No editor-only fallback recognition is permitted.
+This parity includes exact off-grammar declarations and their declaration-backed marked citations ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): the LSP publishes the same located `declaration-near-miss` as `check`, while hover, definition, references, highlights, and document links navigate the declaration and its sections from the shared scan. No editor-only fallback recognition is permitted.
 
 ## 5. Out of scope
 
-- **Per-editor wrappers**: VSCode/IntelliJ/Vim/Emacs first-party plugins are not shipped ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)). The LSP server is the executable surface; §2.4 ships importable configuration data but the user installs the generic client and performs the import.
+- **Per-editor wrappers**: no first-party VSCode/IntelliJ/Vim/Emacs plugin duplicates the LSP server or is published to a marketplace ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)). The LSP server is the executable surface; §2.4 ships importable configuration data but the user installs the generic client and performs the import.
 - **Refactoring (rename ID)**: `grund` does not rename IDs; the scheme says IDs are forever ([§FS-non-goals.4](FS-non-goals.md#4-cross-workspace-id-renaming)).
 - **Inline editing of declaration bodies from the hover popup**: editors already do this well; `grund-lsp` does not implement it.
 - **Network access**: the server performs no network I/O ([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)). All scanning is local.
