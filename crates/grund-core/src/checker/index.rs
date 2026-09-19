@@ -249,12 +249,14 @@ pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 /// said about a directory that plainly does, is a diagnosis a reader has to argue
 /// with.
 ///
-/// Why only the bare form is gated on the cited section resolving: §FS-check.3.17.4
-/// is the finding that names `grund fmt --write`, so it may only reach an
-/// occurrence the pass would in fact rewrite, while a link already written stands
-/// whatever `fmt` would do with it (§DF-index-entry-form.2.4). The tree is already
-/// red for the unresolved section itself (§FS-check.3.2); the ID falls to
-/// §FS-check.3.18's error, whose fix is an edit.
+/// Why only the bare form is gated on the cited section resolving and the index
+/// target staying inside the physical config root: §FS-check.3.17.4 is the finding
+/// that names `grund fmt --write`, so it may only reach an occurrence the pass
+/// would in fact rewrite, while a link already written stands whatever `fmt`
+/// would do with it (§DF-index-entry-form.2.4). The tree is already red for the
+/// unresolved section itself (§FS-check.3.2); an external file-symlink target is
+/// outside the formatter's write boundary (§FS-fmt.2.3.2). In either case the ID
+/// falls to §FS-check.3.18's error, whose fix is an edit.
 ///
 /// Why the unlinked-entry message names `grund fmt --write`: that command is only
 /// ever named on a site the pass will in fact rewrite, which is what
@@ -342,6 +344,10 @@ pub(super) fn check_kind_indexes(
             .as_deref()
             .map(|text| text.lines().collect())
             .unwrap_or_default();
+        // §FS-check.3.17.4: a bare citation is an entry only where `fmt --write`
+        // may wrap it. A link through this index path to a target outside the
+        // physical config root is readable but not writable by the formatter.
+        let bare_repairable = physical_path_key(&target.index_file).starts_with(&physical_root);
         let mut entries: BTreeMap<&Id, IndexEntryState> = BTreeMap::new();
         for citation in cited_in_index
             .get(target.index_key.as_path())
@@ -361,15 +367,16 @@ pub(super) fn check_kind_indexes(
             // neither satisfies the rule nor triggers §FS-check.3.17.5
             // (§DF-index-entry-form.2.3), so the ID is reported as unlisted.
             let form = index_citation_form(line, &citation.text, &config.marker);
-            // §FS-fmt.6.2.1: the pass has to compute a link target, and a citation
-            // naming a section no declaration declares has none — `fmt` skips the
-            // line and answers `rewrote 0 lines`. Only the bare form is gated.
-            let form =
-                if form == IndexCitationForm::Bare && !index_section_resolves(findings, citation) {
-                    IndexCitationForm::Ignored
-                } else {
-                    form
-                };
+            // §FS-fmt.6.2.1: `fmt` skips a section citation with no link target and
+            // reports `rewrote 0 lines`. The physical-root predicate above is the
+            // other §FS-check.3.17.4 gate; only the bare form is gated.
+            let form = if form == IndexCitationForm::Bare
+                && (!bare_repairable || !index_section_resolves(findings, citation))
+            {
+                IndexCitationForm::Ignored
+            } else {
+                form
+            };
             if form == IndexCitationForm::Ignored {
                 continue;
             }
