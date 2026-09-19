@@ -144,7 +144,7 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     )
     .expect("public show json api");
     let expected_json = format!(
-        "{{\"id\":\"FS-001-alpha\",\"section\":null,\"body\":\"Lead.\\n\",\"path\":\"{}\",\"line\":1,\"kind_title\":\"What: behavior, requirements, and constraints\"}}",
+        "{{\"id\":\"FS-001-alpha\",\"section\":null,\"body\":\"Lead.\\n\",\"kind_title\":\"What: behavior, requirements, and constraints\",\"path\":\"{}\",\"line\":1}}",
         "docs/functional-spec/FS-001-alpha.md"
     );
     assert_eq!(shown_json.json.as_deref(), Some(expected_json.as_str()));

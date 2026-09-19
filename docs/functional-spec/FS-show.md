@@ -318,7 +318,9 @@ pub struct Router { ... }
 
 The JSON manifest appends the optional final `kind_title` field from the selected
 E2E kind, with the same absent/empty semantics as every successful show object
-([§FS-config.3.4.3](FS-config.md#343-title)). Its existing fields and Markdown
+([§FS-config.3.4.3](FS-config.md#343-title)). Its existing `id`, `kind`, `path`
+prefix stays in that order because the installed resolver's E2E fallback reads that
+prefix; metadata does not move ahead of `path`. All existing fields and Markdown
 rendering retain their meanings.
 
 `grund E2E-<name>` returns the case's manifest ([AR-scanner.6](../architecture/AR-scanner.md#6-e2e-case-declarations)) in three parts:
@@ -416,7 +418,7 @@ Same as `text` but the opening declaration heading line is **included** verbatim
 
 #### 3.1.3 `json`
 
-A single object on stdout: `{"id":<ID>,"section":<section-path or null>,"body":<string>,"path":<declaring file or case dir>,"line":<1-indexed>}`. `body` is the same text `text` prints — `--cross-refs` wrappers flattened (§3.2). `section` is `null` when the whole declaration was requested and otherwise carries the exact numeric or named path string. With `--toc` the object additionally carries `sections` — one `{"path":<section path>,"title":<heading title after its coordinate>,"depth":<integer>}` per citable heading in the selected outline slice, in document order. For E2E cases the object is the §2.4.2 shape instead. The wire form is stable per [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible).
+A single object on stdout: `{"id":<ID>,"section":<section-path or null>,"body":<string>,"kind_title":<optional string>,"path":<declaring file>,"line":<1-indexed>}`. `body` is the same text `text` prints — `--cross-refs` wrappers flattened (§3.2). `section` is `null` when the whole declaration was requested and otherwise carries the exact numeric or named path string. With `--toc` the object additionally carries `sections` — one `{"path":<section path>,"title":<heading title after its coordinate>,"depth":<integer>}` per citable heading in the selected outline slice, in document order and before `kind_title`. `kind_title` is omitted when the selected kind has no effective title. The `path`, `line` pair always closes a declaration or section object: installed `grund-open` copies anchor on that trusted tail so arbitrary body prose cannot be mistaken for the location. For E2E cases the object is the distinct §2.4.2 shape instead. The wire form is stable per [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible).
 
 ### 3.2 Cross-reference links are flattened in `text` and `json`
 
