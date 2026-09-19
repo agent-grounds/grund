@@ -4,11 +4,15 @@ The behaviour that is not owned by any one subcommand — how `grund` is invoked
 
 ## 1. The default subcommand
 
-- `grund` with no arguments keeps the historical `check .` behavior for the current deprecation window: it prints `warning: bare \`grund\` still runs \`grund check .\`; use \`grund check\` explicitly.` on stderr, then runs the same validation as `grund check .` with the same stdout and exit code. This avoids turning old CI scripts into a successful no-op while the default interactive form moves to `grund <ID>` ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)).
-- `grund <ID>[.<section>] …` (where the first non-flag word is not a known subcommand) is the ID-read query specified by [§FS-show.1](FS-show.md#1-inputs). This includes show flags before the ID: `grund --toc FS-check` reads the same body as `grund FS-check --toc`.
+- `grund` with no arguments keeps the historical `check .` behavior for the current deprecation window: it prints `warning: bare \`grund\` still runs \`grund check .\`; use \`grund check\` explicitly.` on stderr, then runs the same validation as `grund check .` with the same stdout and exit code.
+- `grund <ID>[.<section>] …` (where the first non-flag word is not a known subcommand) is the ID-read query specified by [§FS-show.1](FS-show.md#1-inputs), byte-for-byte equivalent to the explicit `show` subcommand, including show flags written before the ID: `grund --toc FS-check` reads the same body as `grund FS-check --toc`. With no path, both resolve from `.`.
 - `grund <subcommand> …` dispatches to that subcommand: `check`, `show`, `list`, `refs`, `cover`, `fmt`, `fetch`, `id`, `init`, `config`, `agent-setup-instructions`, `completions`, `integrations`. The hidden `complete` subcommand is reserved for generated shell scripts ([§FS-completions.2](FS-completions.md#2-internal-dynamic-helper)); `fetch` is the explicit one-ID writer specified by [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot).
 
-A bare ID query and an explicit `show` subcommand are byte-for-byte equivalent ([§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id)). With no path, both resolve from `.`. The shorthand exists because resolving a cited fact is the overwhelmingly common interactive invocation; validation is explicit as `grund check [path]` for new scripts, with bare `grund` kept as a deprecated compatibility spelling for `grund check .`. Why both spellings stay — the `show` subcommand is kept alongside the bare-ID default — is recorded in [§DF-show-keep-explicit-form](../decisions/functional/DF-show-keep-explicit-form.md#df-show-keep-explicit-form-grund-keeps-show-as-a-subcommand-alongside-the-bare-id-default).
+### 1.1 Why these defaults
+
+Bare `grund` keeps running `check .` so that old CI scripts do not turn into a successful no-op while the default interactive form moves to `grund <ID>` ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)). The ID shorthand exists because resolving a cited fact is the overwhelmingly common interactive invocation; new scripts spell validation `grund check [path]`. Why the `show` subcommand is kept alongside the bare-ID default is recorded in [§DF-show-keep-explicit-form](../decisions/functional/DF-show-keep-explicit-form.md#df-show-keep-explicit-form-grund-keeps-show-as-a-subcommand-alongside-the-bare-id-default).
+
+### 1.2 A first word that is not an ID
 
 Because the first non-flag word is read as a subcommand *or* an ID query, a mistyped subcommand would otherwise be reported as an invalid ID. So when `grund <word>` cannot be parsed as an ID, the message names the default ID-query reading and the explicit check form:
 
@@ -19,15 +23,13 @@ hint: run `grund check bogus` to validate a path
 hint: run `grund --help` for the list of subcommands
 ```
 
-The final `grund --help` hint is conditional: it is emitted only when the first word contains none of `-` / `/` / `.` — the three separators an ID, a workspace-qualified ID, or a section reference would carry — because a token without any of them cannot match the default `{kind}-{slug}` shape and is overwhelmingly a botched subcommand. The full known-command list stays in `grund --help` rather than being repeated on every query failure. Empty stdout, exit `1` — the default ID lookup is a failed query, not a CLI launch failure. To validate a path or the current tree, spell the command:
+The final `grund --help` hint is emitted only when the first word contains none of `-` / `/` / `.` — the three separators an ID, a workspace-qualified ID, or a section reference would carry — because a token without any of them cannot match the default `{kind}-{slug}` shape and is overwhelmingly a botched subcommand. The full known-command list stays in `grund --help` rather than being repeated on every query failure.
 
-```
-grund check
-grund check .
-grund check docs/
-```
+Stdout is empty and the exit is `1`: the default ID lookup is a failed query, not a CLI launch failure.
 
-A help request with an unknown first word remains an unknown-command error because help dispatch happens before default ID dispatch:
+### 1.3 A help request with an unknown first word
+
+A help request with an unknown first word remains an unknown-command error, because help dispatch happens before default ID dispatch:
 
 ```
 error: unknown command: bogus
@@ -38,23 +40,45 @@ Empty stdout, exit `2` — a CLI-level error like any other unknown subcommand (
 
 ## 2. Global flags
 
-These are recognised regardless of subcommand and are handled *before* any tree scan or file write:
+`--version` (§2.1) and `--help` (§2.2, §2.3) are recognised regardless of subcommand and are handled *before* any tree scan or file write. When both a global flag and a subcommand are present, the global flag wins: `grund check --version` prints the version and exits `0` without scanning. `--version` outranks everything — with any subcommand present it is the version line, not that command's help page.
 
-- `grund --version` (alias `grund -V`) — prints `grund <semver>` on stdout and exits `0`. Nothing else is printed; the output is one line and is deterministic for a given build. This is the affordance the [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) deprecation path relies on — a warning that names "the release in which the old form stops working" is only actionable if the user can ask which release they are on.
-- `grund --help` (alias `grund -h`) — prints the top-level help on stdout and exits `0`. The page opens with a one-line statement of what `grund` is, then the three invocation forms (`grund <ID>`, `grund check <path>`, and `grund <command> …`), then a `Commands:` block — every subcommand on its own line with a one-line description and a sample invocation — then the cross-subcommand options. The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)), which this spec sets at ≤ 24 lines for the top-level page, so each description is a single terse line: the `show` line still gestures at *why* the command exists ("Print one declaration body for agent context."), and `fetch` says that it materializes one configured external snapshot, with the full rationale on each command's own help page. Every flag carries a one-line example. Help is never an error: it goes to stdout, exit `0`, so `grund --help | …` works.
-- `grund help <subcommand>` and `grund <subcommand> --help` (and `grund <subcommand> -h`) print *that subcommand's* page on stdout, exit `0`: its usage line, its arguments, every flag with a one-line example, the exit-code meanings for that subcommand, and a one-line recovery hint where the common failure has an obvious next step (e.g. `show`'s page says how to find an ID; `id`'s page shows the `$EDITOR` follow-up). `grund help` with no argument is the top-level page; `grund help <unknown>` is the unknown-command error (§4). `--version` still outranks everything — with any subcommand present it is the version line, not that command's help page.
+Help is never an error: it goes to stdout, exit `0`, so `grund --help | …` works.
 
-When both a global flag and a subcommand are present, the global flag wins: `grund check --version` prints the version and exits `0` without scanning.
+### 2.1 `--version`
+
+`grund --version` (alias `grund -V`) prints `grund <semver>` on stdout and exits `0`. Nothing else is printed; the output is one line and is deterministic for a given build. This is the affordance the [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) deprecation path relies on — a warning that names "the release in which the old form stops working" is only actionable if the user can ask which release they are on.
+
+### 2.2 The top-level help page
+
+`grund --help` (alias `grund -h`) prints the top-level help on stdout and exits `0`. The page opens with a one-line statement of what `grund` is, then the three invocation forms (`grund <ID>`, `grund check <path>`, and `grund <command> …`), then a `Commands:` block — every subcommand on its own line with a one-line description and a sample invocation — then the cross-subcommand options. Every flag carries a one-line example.
+
+The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)), which this spec sets at ≤ 24 lines, so each description is a single terse line: the `show` line still gestures at *why* the command exists ("Print one declaration body for agent context."), and `fetch` says that it materializes one configured external snapshot, with the full rationale on each command's own help page.
+
+### 2.3 A subcommand's help page
+
+`grund help <subcommand>` and `grund <subcommand> --help` (and `grund <subcommand> -h`) print *that subcommand's* page on stdout, exit `0`: its usage line, its arguments, every flag with a one-line example, the exit-code meanings for that subcommand, and a one-line recovery hint where the common failure has an obvious next step (e.g. `show`'s page says how to find an ID; `id`'s page shows the `$EDITOR` follow-up). `grund help` with no argument is the top-level page; `grund help <unknown>` is the unknown-command error (§4).
 
 ## 3. Cross-subcommand flags
 
-- `--format text|json` — accepted by the subcommands with a machine-readable result or finding surface ([§FS-errors.5](FS-errors.md#5-json-format) lists them, [§FS-integrations.5](FS-integrations.md#5-json-format)). `text` is the default; `json` opts into the stable machine shapes. The stream split is the same as the text form ([§FS-errors.1](FS-errors.md#1-streams), [§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)): the command's output — `grund check`'s findings as NDJSON when diagnostics exist, a query result as one object (or NDJSON for a list command) — goes to stdout, while a failed ID query's diagnostic and any CLI-level `error:` go to stderr, except that `show --batch --format=json` keeps a failed query inside its stdout envelope ([§FS-errors.5](FS-errors.md#5-json-format)). `grund check --format=json` stays diagnostics-only and does not emit the text-mode `success` marker. It is not a global flag: the operational commands [§FS-errors.5](FS-errors.md#5-json-format) lists, whose output is human text or generated files, reject `--format`.
-- A path argument, when a subcommand takes one, defaults to `.` and is resolved the same way everywhere (config discovery walks up from it — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). Every path-taking subcommand accepts **at most one** path: a second positional — `grund check a b`, `grund <ID> a b`, `grund refs ID a b`, `grund cover a b`, `grund fmt a b`, `grund list a b`, `grund id FS "t" a b` — is a CLI-level error (`error: <subcommand> takes at most one path argument`, exit `2`, §4), never a silent use of one and a quiet drop of the rest. `config` and `agent-setup-instructions` already enforce this; the rule is uniform across the surface, so a typo'd path is reported, never absorbed.
-- `--only <code>` and `--ignore <code>` are `check`-only diagnostic-query flags ([§FS-check.1](FS-check.md#1-inputs)); other subcommands reject them. The `check` help page documents both `--flag value` and `--flag=value`, repetition and composition, the fact that operational failures remain visible with exit `2`, selected-report exit semantics, one `--ignore agents-init` example, and the complete supported-code catalog in sorted order. The catalog is the discovery path for callers that know a message but not its code.
+- `--format text|json` — accepted by the subcommands with a machine-readable result or finding surface ([§FS-errors.5](FS-errors.md#5-json-format) lists them, [§FS-integrations.5](FS-integrations.md#5-json-format)). `text` is the default; `json` opts into the stable machine shapes, on the streams of §3.1. It is not a global flag: the operational commands [§FS-errors.5](FS-errors.md#5-json-format) lists, whose output is human text or generated files, reject `--format`.
+- A path argument, when a subcommand takes one, defaults to `.` and is resolved the same way everywhere (config discovery walks up from it — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). Every path-taking subcommand accepts at most one (§3.2).
+- `--only <code>` and `--ignore <code>` are `check`-only diagnostic-query flags ([§FS-check.1](FS-check.md#1-inputs)); other subcommands reject them. The `check` help page documents them (§3.3).
+
+### 3.1 The `--format json` streams
+
+The stream split is the same as the text form ([§FS-errors.1](FS-errors.md#1-streams), [§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)): the command's output — `grund check`'s findings as NDJSON when diagnostics exist, a query result as one object (or NDJSON for a list command) — goes to stdout, while a failed ID query's diagnostic and any CLI-level `error:` go to stderr, except that `show --batch --format=json` keeps a failed query inside its stdout envelope ([§FS-errors.5](FS-errors.md#5-json-format)). `grund check --format=json` stays diagnostics-only and does not emit the text-mode `success` marker.
+
+### 3.2 At most one path
+
+A second positional — `grund check a b`, `grund <ID> a b`, `grund refs ID a b`, `grund cover a b`, `grund fmt a b`, `grund list a b`, `grund id FS "t" a b` — is a CLI-level error (`error: <subcommand> takes at most one path argument`, exit `2`, §4), never a silent use of one and a quiet drop of the rest. `config` and `agent-setup-instructions` already enforce this; the rule is uniform across the surface, so a typo'd path is reported, never absorbed.
+
+### 3.3 The `check` selector help
+
+The `check` help page documents both `--flag value` and `--flag=value`, repetition and composition, the fact that operational failures remain visible with exit `2`, selected-report exit semantics, one `--ignore agents-init` example, and the complete supported-code catalog in sorted order. The catalog is the discovery path for callers that know a message but not its code.
 
 ## 4. Errors with no source location
 
-An unknown subcommand in help dispatch (`grund help <unknown>`), an unknown or malformed flag, or mutually-exclusive flags are CLI-level errors: `error: <message>` on stderr, empty stdout, exit `2` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages)). A bare-word first argument that is neither a known subcommand nor a valid ID is a default-`show` query failure from §1; it exits `1` and may include the explicit `grund check <path>` hint.
+An unknown subcommand in help dispatch (`grund help <unknown>`), an unknown or malformed flag, or mutually-exclusive flags are CLI-level errors: `error: <message>` on stderr, empty stdout, exit `2` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages)). A bare-word first argument that is neither a known subcommand nor a valid ID is not a CLI-level error but the failed default-`show` query of §1.2, exit `1`.
 
 `check` selector errors use the exact forms in [§FS-check.1](FS-check.md#1-inputs). Missing, empty, malformed, and unknown values are rejected before config discovery or scanning, regardless of `--format`; they therefore always leave stdout empty, remain raw text on stderr, and exit `2`.
 
