@@ -189,7 +189,7 @@ fn json_values_reject_root_key_and_element_shape_independently() {
         (
             "d-element",
             "{\n  \"CONST-bad\": [\n    true\n  ]\n}\n",
-            4,
+            3,
             5,
             "JSON value component must be a number or a nonempty edge-unspaced string without backticks or control characters",
         ),
