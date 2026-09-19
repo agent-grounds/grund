@@ -1,0 +1,2 @@
+docs/functional-spec/FS-001-orphan.md:3: error: orphan section FS-001-orphan.missing.performance: missing prefix FS-001-orphan.missing
+docs/functional-spec/FS-001-orphan.md:3: error: section FS-001-orphan.missing.performance heading level mismatch: expected ### (level 3), found ## (level 2)

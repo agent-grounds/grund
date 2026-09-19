@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+
+printf '# TICKET-9999: Wrong snapshot\n'

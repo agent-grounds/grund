@@ -108,6 +108,8 @@ fn scanner_file_home_source_kind() {
 
 // §FS-check.3.11 / §FS-check.3.12 / §FS-check.2.3: the [citations] obligation
 // and prohibition passes and the suggestions channel.
+/// The matrix exercises `must`, `never` (`must-not`), `should`, and the
+/// implicit `may`, including their gate/suggestion separation (§FS-config.3.9.1).
 #[test]
 fn citation_directions_obligations_and_prohibitions() {
     let root = test_root("citation_directions_obligations_and_prohibitions");
