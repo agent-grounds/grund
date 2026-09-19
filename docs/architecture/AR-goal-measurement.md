@@ -19,6 +19,24 @@ Not a component: the map from every goal and requirement to the spec, fixture or
 - E2E cases and benchmark reports own examples, baselines, and regression gates.
 - Integration tests (`tests/integration/`) own the proofs that span more than one part: that the server publishes what the CLI prints ([AR-lsp.5](AR-lsp.md#5-determinism-and-parity-tests)), that the frontends stay isolated ([AR-bindings.1](AR-bindings.md#1-target-workspace-layout)), that CI runs what pre-commit runs ([AR-ci.1](AR-ci.md#1-pre-commit-is-the-source-of-truth)), that the embedded assets match the tree, that nothing they ship outside the `grund-lsp` embedded payloads names an ID of this repository ([§REQ-shipped-surfaces.3](../requirements/REQ-shipped-surfaces.md#3-checked-not-remembered)), that every goal and requirement on this page is metered, that every path an architecture page names exists, that a report is the same bytes at any thread count, and that every host language has its dangling proof.
 
+The functional-spec coverage gate in `tests/integration/` requires exact test
+evidence for every leaf section of every `FS` declaration. It derives the
+catalog from the production scan and section maps, so numeric and enabled named
+paths, declaration ownership, and fenced-example exclusion remain scanner
+facts; a leaf is a recorded section with no recorded descendant. Evidence is a
+bare, one-per-line ID in `tests/e2e/cases/*/spec.refs`, or a live marked
+citation in `crates/*/src/**/tests_*.rs`, `crates/*/tests/**`, or
+`tests/integration/`. A citation of a parent is not evidence for a child, and
+the gate's own source, exception tables, inventories, and synthetic fixtures
+are not evidence.
+
+Reviewed leaves without evidence live in two explicit, disjoint tables:
+permanent non-behavioral or planned exclusions, and temporary behavioral debt.
+Every entry names an existing uncited leaf and gives a nonempty reason. The gate
+rejects duplicate, invalid, non-leaf, and newly covered entries, as well as an
+uncovered leaf absent from both tables; proof therefore retires a temporary
+entry instead of allowing the baseline to conceal it.
+
 ## 2. Goal meters
 
 | Goal | Meter |
