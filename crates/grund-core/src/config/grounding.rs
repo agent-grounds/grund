@@ -30,7 +30,7 @@ pub(super) struct ParsedGrounding {
 }
 
 /// Read one `[[kinds]]` grounding key into the row being parsed
-/// (§FS-config.3.4.8). Both keys are booleans-and-integers with no defaulting of
+/// (§FS-config.3.4.8.3). Both keys are booleans-and-integers with no defaulting of
 /// their own: an absent key stays `None` and inherits `[reference]` later.
 pub(super) fn parse_kind_grounding_key(
     path: &Path,
@@ -55,7 +55,7 @@ pub(super) fn parse_kind_grounding_key(
     Ok(())
 }
 
-/// §FS-config.3.4.8: a level outside `1..=6` names no heading Markdown can have,
+/// §FS-config.3.4.8.2: a level outside `1..=6` names no heading Markdown can have,
 /// wherever it is written.
 pub(super) fn check_grounding_level(path: &Path, line_no: usize, level: usize) -> Result<()> {
     if !GROUNDING_LEVELS.contains(&level) {
@@ -72,7 +72,7 @@ pub(super) fn check_grounding_level(path: &Path, line_no: usize, level: usize) -
     Ok(())
 }
 
-/// Every rule the two row keys have to satisfy (§FS-config.3.4.8), each closing a
+/// Every rule the two row keys have to satisfy (§FS-config.3.4.8.5), each closing a
 /// state they cannot describe. Run over the parsed entries once the rest of the
 /// `[[kinds]]` validation has passed, so a row that is already malformed is
 /// reported as that rather than as a grounding error.
@@ -87,7 +87,7 @@ pub(super) fn validate_kind_grounding(
 ) -> Result<()> {
     for entry in parsed {
         let kind = &entry.config;
-        // §FS-config.3.4.7: nothing in an unwalked home is read, so the rule
+        // §FS-config.3.4.7.4: nothing in an unwalked home is read, so the rule
         // could never fire — the reasoning that already refuses a
         // `[citations.<kind>]` rule on an unwalked citing kind.
         if kind.require_grounding == Some(true)
@@ -103,8 +103,8 @@ pub(super) fn validate_kind_grounding(
                 ),
             )?;
         }
-        // §FS-config.3.4.8: a citable single-file kind is one declaration document,
-        // which §FS-check.3.6.1 leaves alone — as `index` means nothing on a file kind.
+        // §FS-config.3.4.8.5: a citable single-file kind is one declaration document,
+        // which §FS-check.3.6.1.1 leaves alone — as `index` means nothing on a file kind.
         // A non-citable `file` home is governed like any other, so there they mean.
         if kind.file.is_some()
             && kind.citable
@@ -119,7 +119,7 @@ pub(super) fn validate_kind_grounding(
                 ),
             )?;
         }
-        // §FS-config.3.4.8: a level on a row whose *effective* `require_grounding` is
+        // §FS-config.3.4.8.5: a level on a row whose *effective* `require_grounding` is
         // off is a unit for a rule that never runs there — the row spelling of the
         // `[reference]` rejection below, and what keeps §AR-scanner.2.7 off such a tree.
         if let Some(line) = entry.grounding.level_line
@@ -154,7 +154,7 @@ fn grounding_key_site(grounding: &ParsedGrounding) -> Option<(&'static str, usiz
     }
 }
 
-/// §FS-config.3.4.8: `[reference] grounding_level` with the global boolean off
+/// §FS-config.3.4.8.5: `[reference] grounding_level` with the global boolean off
 /// and no row turning grounding on is a unit for a rule nothing switched on —
 /// the row-scoped rejection above, one scope up. Run after `[[kinds]]` is final,
 /// because "no row turns it on" is a question about the resolved table.
@@ -186,7 +186,7 @@ pub(super) fn validate_global_grounding(
 ///
 /// A `[[kinds]]` lookup over the pair below, and the one reading of it a caller
 /// does by kind name rather than by row: the scanner asks it per file
-/// (§AR-scanner.2.7) and the checker per citing kind (§FS-check.3.11), which is
+/// (§AR-scanner.2.7.1) and the checker per citing kind (§FS-check.3.11.3), which is
 /// why it sits with the keys rather than with either of them.
 pub(crate) fn grounding_level_for_kind(config: &Config, kind: &str) -> usize {
     config
@@ -198,7 +198,7 @@ pub(crate) fn grounding_level_for_kind(config: &Config, kind: &str) -> usize {
 }
 
 impl Config {
-    /// The effective grounding pair for one `[[kinds]]` row (§FS-config.3.4.8):
+    /// The effective grounding pair for one `[[kinds]]` row (§FS-config.3.4.8.3):
     /// the row's word where it has one, else the `[reference]` default — which is
     /// also what `grund check --require-grounding` sets, so an explicit row
     /// `false` wins over the flag.
@@ -209,7 +209,7 @@ impl Config {
         )
     }
 
-    /// The effective pair for the homeless kind (§FS-config.3.9.2) — its declared
+    /// The effective pair for the homeless kind (§FS-config.3.9.2.3) — its declared
     /// row when the table has one, else the `[reference]` defaults, since an
     /// undeclared complement has no row to write them on.
     pub(crate) fn homeless_grounding(&self) -> (bool, usize) {
@@ -229,12 +229,12 @@ impl Config {
     }
 
     /// The `[[kinds]]` grounding lines `grund config show` prints for one row
-    /// (§FS-config.4.2): each key only where the row's effective value differs
+    /// (§FS-config.4.2.1): each key only where the row's effective value differs
     /// from the effective global, which is printed under `[reference]`. A row
     /// that inherits both prints neither, and the shown config loads back to the
     /// same effective values — printing a key on every row would be noise, and
     /// printing a level under a row that turned grounding off would not load at
-    /// all (§FS-config.3.4.8).
+    /// all (§FS-config.3.4.8.6).
     pub fn kind_grounding_toml_lines(&self, kind: &KindConfig) -> Vec<String> {
         let (require, level) = self.kind_grounding(kind);
         let mut lines = Vec::new();
@@ -248,7 +248,7 @@ impl Config {
     }
 
     /// Whether any place asks for a unit finer than the file, which is what the
-    /// scanner records per-file structure for (§AR-scanner.2.7). Derived once, on
+    /// scanner records per-file structure for (§AR-scanner.2.7.2). Derived once, on
     /// load, so the question is a field read per file rather than a walk of the
     /// kind table.
     pub(super) fn recompute_grounding_units(&mut self) {

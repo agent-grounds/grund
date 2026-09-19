@@ -1,7 +1,7 @@
 //! What config hands this component (§AR-system.2.1): the citable `[[kinds]]`
 //! rows the ID patterns are compiled from, the scalar `grund.toml` keys a
 //! lexical reader consults beside those patterns, and the per-alias grammar a
-//! qualified citation's ID tail is read with (§FS-config.3.2, §FS-workspace.1).
+//! qualified citation's ID tail is read with (§FS-config.3.2, §FS-workspace.1.2).
 //!
 //! Records rather than lookups, and the reason this component names no `Config`
 //! (§AR-system.4). Every value here is config's decision — it owns the keys, it
@@ -19,7 +19,7 @@ use super::compiled::Grammar;
 /// Only the *citable* rows reach here. A non-citable kind declares no IDs, so
 /// its name never tokenizes and never enters a pattern — config applies that
 /// filter when it builds the list, which is why nothing below reads a `citable`
-/// flag (§AR-scanner.2.1).
+/// flag (§AR-scanner.2.1.1).
 pub(crate) struct GrammarKind {
     pub(crate) name: String,
     pub(crate) format: Option<String>,
@@ -49,7 +49,7 @@ pub(crate) struct LexicalSettings<'a> {
 }
 
 /// One project of the run whose grammar parses a qualified citation's ID tail
-/// (§FS-workspace.1, §AR-workspace.2): the alias the citation writes, and the
+/// (§FS-workspace.1.2, §AR-workspace.2): the alias the citation writes, and the
 /// compiled grammar that tail is read with — a workspace may mix `[id] format`s,
 /// and the *target's* shape is the right one to apply across a namespace
 /// boundary.

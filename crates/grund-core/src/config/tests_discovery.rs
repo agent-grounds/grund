@@ -65,7 +65,7 @@ fn the_bare_form_wins_a_tie_and_the_loser_is_recorded() {
     );
 }
 
-// §FS-check.4.3: the pair is a `warning:` — it never blocks a run, because it
+// §FS-check.4.3.1: the pair is a `warning:` — it never blocks a run, because it
 // is the ordinary transient state of a migration between the two forms.
 #[test]
 fn redundant_pair_is_reported_as_a_warning() {
@@ -97,7 +97,7 @@ fn the_bare_form_alone_warns_about_nothing() {
     );
 }
 
-/// §FS-config.1.2 / §FS-check.4.11: the config this run read is on the
+/// §FS-config.1.2.1 / §FS-check.4.11: the config this run read is on the
 /// deprecated path, so the run says so — naming the file it read and the bare
 /// `grund.toml` beside it that should hold it instead. The file is still read:
 /// deprecated is a location the tool asks you to leave, not one it refuses.
@@ -118,7 +118,7 @@ fn a_config_read_from_the_agents_location_is_reported_as_deprecated() {
     );
 }
 
-/// §FS-check.4.11 / §FS-config.1.1: the pair earns the pair's warning and no
+/// §FS-check.4.11.4 / §FS-config.1.1.1: the pair earns the pair's warning and no
 /// other. The run read the bare file, so nothing about the config in force is
 /// deprecated — two lines here would name one move twice and disagree about
 /// which of the two files is the problem.
@@ -220,7 +220,7 @@ fn init_generates_the_bare_form_and_leaves_an_agents_config_alone() {
     let fresh = test_root("init_generates_the_bare_form");
     let output = init(InitOpts {
         target: fresh.clone(),
-        // §FS-init.1.2: a bare temp root no VCS marker covers.
+        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })
@@ -240,7 +240,7 @@ fn init_generates_the_bare_form_and_leaves_an_agents_config_alone() {
     write(&existing.join(".agents/grund.toml"), MARKER_AT);
     let output = init(InitOpts {
         target: existing.clone(),
-        // §FS-init.1.2: a bare temp root no VCS marker covers.
+        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
         no_vcs: true,
         ..InitOpts::default()
     })

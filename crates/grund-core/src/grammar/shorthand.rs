@@ -21,7 +21,7 @@
 //! finding a shorthand site earns is a rule, so it is `checker/shorthand.rs`
 //! (§FS-check.3.13, §AR-checker.2.12). The unqualified whole-file resolution
 //! below stays here because it runs inside one project's own walk, against the
-//! declarations that walk just produced (§AR-scanner.2.6).
+//! declarations that walk just produced (§AR-scanner.2.6.6).
 //!
 //! What is *not* the rule sits in `id_format.rs`: the `[id] format` template and
 //! the post-match tests for where a token of that grammar ends — questions about
@@ -40,7 +40,7 @@ use crate::model::{Citation, Declaration, Findings, Id};
 
 /// One parsed ID token: the `Id`, its optional section path, and whether it was
 /// written in the number-only shorthand (§FS-check.1.2). A shorthand `Id` carries
-/// `slug: None` until the resolution pass fills it in (§AR-scanner.2.6).
+/// `slug: None` until the resolution pass fills it in (§AR-scanner.2.6.5).
 pub(crate) struct ParsedId {
     pub(crate) id: Id,
     pub(crate) section: Option<String>,
@@ -48,7 +48,7 @@ pub(crate) struct ParsedId {
 }
 
 /// `parse_id_arg` widened to also accept the number-only shorthand
-/// (§FS-check.1.2). The full grammar is tried first and its result is returned
+/// (§FS-check.1.2.6). The full grammar is tried first and its result is returned
 /// unconditionally when it matches, which is what makes "the full ID always wins"
 /// (§DF-number-only-citation-shorthand.2.6) true by construction rather than by a
 /// separate check.
@@ -83,13 +83,13 @@ pub(crate) fn parse_id_arg_with_shorthand(raw: &str, grammar: &Grammar) -> Resul
 }
 
 /// Resolve a CLI `<ID>[.<section>]` argument that may be written in the
-/// number-only shorthand (§FS-check.1.2). A query persists nothing, so the
+/// number-only shorthand (§FS-check.1.2.6). A query persists nothing, so the
 /// shorthand is simply expanded here rather than reported the way a shorthand in
 /// a file is (§DF-number-only-citation-shorthand.2.2) — this is what lets a
-/// clicked `§FS-042` open in a terminal (§FS-integrations.3.1).
+/// clicked `§FS-042` open in a terminal (§FS-integrations.3.1.7).
 ///
 /// A shorthand matching several declarations is the same class of query failure
-/// as an ambiguous full ID (§FS-show.2.2.1); one matching none keeps its
+/// as an ambiguous full ID (§FS-show.2.2.1.1); one matching none keeps its
 /// shorthand `Id`, so the caller's own "not found" path reports it as written
 /// instead of a second message saying the same thing.
 /// Why an `<ID>` argument could not be turned into one declaration
@@ -126,7 +126,7 @@ impl std::fmt::Display for IdArgError {
 }
 
 /// Every declaration whose kind and number match a shorthand `Id`, in the
-/// deterministic `BTreeMap` key order the report needs (§FS-check.3.13). One
+/// deterministic `BTreeMap` key order the report needs (§FS-check.3.13.3). One
 /// match is the resolution; zero or several is what the checker reports.
 ///
 /// One-shot lookup, for the sites that answer a single question — a CLI
@@ -165,7 +165,7 @@ pub(crate) struct ShorthandIndex<'a> {
 impl<'a> ShorthandIndex<'a> {
     /// Index canonical declarations plus exact persisted spellings which are
     /// themselves valid shorthand tokens under the effective grammar
-    /// (§FS-config.3.2). The latter must join the target set so a shorthand
+    /// (§FS-config.3.2.6). The latter must join the target set so a shorthand
     /// collision cannot silently resolve to its conforming neighbor.
     pub(crate) fn build(grammar: &Grammar, declarations: impl IntoIterator<Item = &'a Id>) -> Self {
         let mut by_number: BTreeMap<(&'a str, Option<u32>), Vec<&'a Id>> = BTreeMap::new();
@@ -200,7 +200,7 @@ impl<'a> ShorthandIndex<'a> {
 }
 
 /// The shorthand index a declared ID answers to (§DF-number-only-citation-shorthand,
-/// §FS-config.3.2): its own number, or — for a persisted off-grammar spelling that
+/// §FS-config.3.2.6): its own number, or — for a persisted off-grammar spelling that
 /// is itself a valid shorthand token — the number that spelling parses to. `None`
 /// for a declaration no shorthand can name.
 fn shorthand_index_number(grammar: &Grammar, declared: &Id) -> Option<Option<u32>> {
@@ -214,14 +214,14 @@ fn shorthand_index_number(grammar: &Grammar, declared: &Id) -> Option<Option<u32
     }
 }
 
-/// §AR-scanner.2.6: rewrite each shorthand citation's `Id` to the declaration it
+/// §AR-scanner.2.6.6: rewrite each shorthand citation's `Id` to the declaration it
 /// names, once the whole project's declarations are known. This is the step that
 /// makes a resolved shorthand invisible to everything downstream — the checker,
 /// `refs`, `cover`, the unused warning, and the LSP snapshot all read a canonical
 /// `Id` and never learn the shorthand existed.
 ///
 /// Zero or several matches leave `slug: None`, which is exactly the state
-/// §FS-check.3.13 reports as unknown or ambiguous.
+/// §FS-check.3.13.3 reports as unknown or ambiguous.
 ///
 /// The escaped citations are resolved too. Without that, `<§>FS-042` escaping a
 /// real declaration is silently exempt from a check that catches

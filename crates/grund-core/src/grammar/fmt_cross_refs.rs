@@ -10,12 +10,12 @@
 //! live one, and `grund check` still reports it. Three components read the
 //! flattening for an answer that must agree with the formatter line for line —
 //! the `show` query, the point body a size is measured on and the deprecated
-//! adapter (§FS-show.3.2, §FS-list.3.4) — and while it sat in the writers each
+//! adapter (§FS-show.3.2, §FS-list.3.4.1) — and while it sat in the writers each
 //! of them read a sibling or a component above it (§AR-system.4).
 //!
 //! The label predicate is private, which it could not be before. It sat in
 //! `scanner/legacy.rs`, with the off-grammar catalog steps whose spellings it
-//! accepts (§FS-config.3.2), and the flattening read it from there across two
+//! accepts (§FS-config.3.2.5), and the flattening read it from there across two
 //! component boundaries; now that the only caller is the line pass below, one
 //! file holds both and nothing outside names either.
 
@@ -25,9 +25,9 @@ use super::settings::LexicalSettings;
 use super::shorthand::parse_id_arg_with_shorthand;
 
 /// Whether `label` is a citation-shaped wrapper label the `--cross-refs` pass
-/// can emit (§FS-show.3.2): the configured grammar's own spelling, its
+/// can emit (§FS-show.3.2.1): the configured grammar's own spelling, its
 /// number-only shorthand, or a persisted off-grammar one, qualified or not
-/// (§FS-config.3.2). An ordinary link whose label merely starts with the marker
+/// (§FS-config.3.2.5). An ordinary link whose label merely starts with the marker
 /// is not one.
 fn formatter_wrapper_label_is_citation(label: &str, grammar: &Grammar) -> bool {
     let tail = match QUALIFIED_CITATION_PREFIX.captures(label) {
@@ -46,7 +46,7 @@ fn formatter_wrapper_label_is_citation(label: &str, grammar: &Grammar) -> bool {
 /// `[§[alias/]<ID>.<section>](path#anchor)` → `§[alias/]<ID>.<section>`. The inverse of
 /// `wrap_markdown_links` (§FS-fmt.6.2) — the wrap shape is a `[` immediately
 /// before a marker-prefixed citation token and `](…)` immediately after it,
-/// exactly what `grund fmt --cross-refs` emits and re-derives (§FS-fmt.6.3); that
+/// exactly what `grund fmt --cross-refs` emits and re-derives (§FS-fmt.6.3.1); that
 /// is the only thing flattened. Ordinary Markdown links, an unwrapped citation,
 /// a citation inside an inline-code span (illustrative, like `fmt` itself —
 /// §FS-fmt.6.4), and `--format md` output (kept verbatim by the caller) are all
@@ -79,7 +79,7 @@ fn flatten_cross_ref_links_line(line: &str, settings: LexicalSettings<'_>) -> St
         };
         let cite_end = label_start + label_close_rel;
         let token = &line[label_start..cite_end];
-        // §FS-show.3.2: require a citation-shaped label the formatter can emit,
+        // §FS-show.3.2.1: require a citation-shaped label the formatter can emit,
         // including persisted and qualified legacy spellings but excluding an
         // ordinary link whose label merely starts with the marker.
         if token.is_empty()

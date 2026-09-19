@@ -1,4 +1,4 @@
-//! The anchor a heading gets (§FS-fmt.6.7, §DF-md-link-anchor-strategy): the
+//! The anchor a heading gets (§FS-fmt.6.7.1, §DF-md-link-anchor-strategy): the
 //! heading text a section anchor is built from, and the slug each configured
 //! `anchor_format` profile derives from that text. Both are pure functions of
 //! text — no file, no config record, no findings — which is what makes them
@@ -19,7 +19,7 @@ use super::compiled::reduce_heading_text;
 
 /// Slugify a heading into a fragment anchor, dispatching on the configured
 /// `[fmt.cross_refs] anchor_format` profile (github / gitlab / mkdocs / pandoc) —
-/// §FS-fmt.6.7, §DF-md-link-anchor-strategy.
+/// §FS-fmt.6.7.1, §DF-md-link-anchor-strategy.
 pub(crate) fn anchor_slug(text: &str, profile: &str) -> String {
     match profile {
         "pandoc" => anchor_slug_pandoc(text),
@@ -108,7 +108,7 @@ fn anchor_slug_pandoc(text: &str) -> String {
 /// by `grund fmt --cross-refs` (§DF-github-anchor-fidelity).
 pub(crate) fn section_anchor_text(line: &str, section: &str) -> String {
     let trimmed = line.trim_start();
-    // §FS-fmt.6.2: named anchors derive from the complete rendered heading, so
+    // §FS-fmt.6.2.4: named anchors derive from the complete rendered heading, so
     // its explicit colon reaches the renderer (`goals: Scope`). Numeric paths
     // retain their historical normalized stored text byte for byte.
     if section

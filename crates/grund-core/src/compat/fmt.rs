@@ -37,7 +37,7 @@ pub(crate) fn command_fmt(args: &[String]) -> ExitCode {
         eprintln!("error: --check and --write cannot be used together");
         return ExitCode::from(2);
     }
-    // §FS-fmt.3 / §AR-bindings.2: the compatibility adapter uses the same
+    // §FS-fmt.3.2 / §AR-bindings.2: the compatibility adapter uses the same
     // workspace-wide strict preflight as the public API. Keeping a second
     // project loop here could let its mutation and aggregation ordering drift.
     let output = match format_references(FmtOpts {
@@ -88,7 +88,7 @@ pub(crate) fn command_fmt(args: &[String]) -> ExitCode {
         }
     }
     if !output.scan_errors.is_empty() {
-        // Partial-scan semantics (§FS-fmt.3 / §FS-check.2): what was rewritten is
+        // Partial-scan semantics (§FS-fmt.3.1 / §FS-check.2.4): what was rewritten is
         // real — and, under `--write`, already on disk — but the tree the rewrite
         // ran over was not the whole tree.
         for error in &output.scan_errors {
@@ -105,7 +105,7 @@ pub(crate) fn command_fmt(args: &[String]) -> ExitCode {
 
 /// Render the compatibility CLI's fatal formatter error. Strict scan aborts
 /// stay structured through the API boundary, so each path gets its own CLI
-/// prefix and the same unmistakable refusal as the published CLI (§FS-fmt.3).
+/// prefix and the same unmistakable refusal as the published CLI (§FS-fmt.3.4).
 fn print_fmt_error(err: &anyhow::Error) {
     if let Some(abort) = err.downcast_ref::<FmtScanAbort>() {
         for error in &abort.scan_errors {

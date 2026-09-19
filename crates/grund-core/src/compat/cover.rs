@@ -1,4 +1,4 @@
-/// §FS-cover.1: everything `cover` can answer from its argv alone, answered
+/// §FS-cover.1.1: everything `cover` can answer from its argv alone, answered
 /// there — including a bad `--format` value, which is a usage error the caller
 /// can fix without touching the repository. The scan can fail first (a
 /// workspace whose members will not expand, §FS-cover.4), and which of two
@@ -127,7 +127,7 @@ pub(super) fn command_cover(args: &[String]) -> ExitCode {
     if output.scan_errors.is_empty() {
         ExitCode::SUCCESS
     } else {
-        // Partial-scan semantics (§FS-cover.4 / §FS-check.2, §FS-workspace.8.7):
+        // Partial-scan semantics (§FS-cover.4 / §FS-check.2.4, §FS-workspace.8.7):
         // the emitted records are real but incomplete, so callers must treat the
         // result as untrusted.
         for error in &output.scan_errors {

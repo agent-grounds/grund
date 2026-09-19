@@ -7,12 +7,12 @@ use super::settings::{AliasGrammar, LexicalSettings};
 /// Every recognized citation token on one line, as byte ranges into it
 /// (§FS-check.1.1): the configured marker, `[reference] strict`, the
 /// string-literal exclusion, and workspace-qualified `§<alias>/<ID>` tokens,
-/// each read with the grammar of the project its alias names (§FS-workspace.1). Ranges may repeat and may arrive in either pass's order —
+/// each read with the grammar of the project its alias names (§FS-workspace.1.2). Ranges may repeat and may arrive in either pass's order —
 /// `line_citation_ranges` is what makes them a set.
 ///
 /// One comment line, reduced: where its citation tokens sit, and what it still
 /// says once those tokens and its comment punctuation are taken out
-/// (§FS-inline-citation-style.1, §FS-inline-citation-style.2.3).
+/// (§FS-inline-citation-style.1.4, §FS-inline-citation-style.2.3.3).
 ///
 /// These are the pure per-line functions the scanner's walk used to carry
 /// (§AR-scanner.2.3): they hold no state, read no block, and are coupled to their
@@ -144,7 +144,7 @@ pub(super) fn remove_inline_citation_tokens(line: &str, ranges: &[(usize, usize)
             continue;
         }
         let gap = &line[cursor..start];
-        // §FS-inline-citation-style.1: what joins two citations of one run is not
+        // §FS-inline-citation-style.1.4: what joins two citations of one run is not
         // note text, so it is swallowed with them rather than left behind as prose.
         if !(after_token && is_citation_run_separator(gap)) {
             out.push_str(gap);
@@ -158,7 +158,7 @@ pub(super) fn remove_inline_citation_tokens(line: &str, ranges: &[(usize, usize)
 
 /// Whether the bytes strictly between two consecutive citation tokens join them
 /// into one run rather than saying anything: whitespace, with at most one comma
-/// (§FS-inline-citation-style.1). A second comma, or any other character, is a
+/// (§FS-inline-citation-style.1.4). A second comma, or any other character, is a
 /// note — `// §A + §B` says something `// §A, §B` does not.
 fn is_citation_run_separator(gap: &str) -> bool {
     gap.chars().filter(|ch| *ch == ',').count() <= 1
@@ -189,7 +189,7 @@ pub(crate) fn comment_content_range(line: &str, prefixes: &[&str]) -> (usize, us
     let mut rest = &line[body_start..];
     for prefix in prefixes {
         if let Some(stripped) = rest.strip_prefix(*prefix) {
-            // §FS-inline-citation-style.3.3: whatever indents the content past the
+            // §FS-inline-citation-style.3.3.8: whatever indents the content past the
             // prefix goes with it: a wrapped Rustdoc continuation, an aligned ` * `
             // filler, a tab after `#`. Content starts at the first byte that says something.
             let after = stripped.trim_start_matches([' ', '\t']);
@@ -201,7 +201,7 @@ pub(crate) fn comment_content_range(line: &str, prefixes: &[&str]) -> (usize, us
     let trimmed_end = rest.trim_end();
     // Trimmed again after the closer: `/* §<ID>: */` must leave `§<ID>:`, so a
     // colon that ends the content is the grammar's empty tail rather than a space
-    // the closer happened to sit behind (§FS-inline-citation-style.3.3).
+    // the closer happened to sit behind (§FS-inline-citation-style.3.3.8).
     let rest = trimmed_end
         .strip_suffix("*/")
         .or_else(|| trimmed_end.strip_suffix("\"\"\""))

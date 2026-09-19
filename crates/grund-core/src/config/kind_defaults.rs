@@ -48,7 +48,7 @@ pub(super) fn default_kind_citable(kind: &str) -> bool {
 }
 
 /// Default home folder for each built-in kind — the directory `grund id` proposes
-/// a path under and `grund check` expects the declaration to live in (§FS-config.3.4).
+/// a path under and `grund check` expects the declaration to live in (§FS-config.3.4.11).
 pub(super) fn default_kind_folder(kind: &str) -> Option<&'static str> {
     match kind {
         "AR" => Some("docs/architecture"),

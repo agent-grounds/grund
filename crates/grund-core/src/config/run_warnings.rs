@@ -1,14 +1,14 @@
 //! The run's warning channel (§AR-system.2.3): the `[workspace]` cautions a run
 //! settles while it resolves its configuration, carried on the `Config` the run
 //! was launched with until a frontend renders them (§FS-check.4.7,
-//! §FS-check.4.8, §FS-check.4.10, §FS-workspace.6.1, §FS-distribution.3.1).
+//! §FS-check.4.8, §FS-check.4.10, §FS-workspace.6.1.7, §FS-distribution.3.1).
 //!
 //! It is here because the `Config` is what every one of these facts is settled
 //! from and what every walking command already holds — the same place the
 //! `unread_opted_out_blocks` counter sat, which is what a warning channel
 //! answers by construction (§DA-engine-renders-nothing).
 //!
-//! One of the four cannot be answered where it is asked. §FS-check.4.10 is a
+//! One of the four cannot be answered where it is asked. §FS-check.4.10.2 is a
 //! question about a *walk* — would this block have read something, had it been a
 //! project? — and the walker sits above the workspace component
 //! (§AR-resolver.placement). So that one travels as the block it was asked of and
@@ -25,7 +25,7 @@ use crate::model::Diagnostic;
 #[derive(Clone)]
 pub(crate) enum RunWarning {
     /// A warning the run already has in full: §FS-check.4.7's absorbed scan and
-    /// §FS-workspace.6.1's undecidable ancestor claim.
+    /// §FS-workspace.6.1.7's undecidable ancestor claim.
     Settled(Diagnostic),
     /// §FS-check.4.10: a block that opted out of being a project, held with the
     /// run's other project roots until a walker can be asked whether the block's
@@ -36,7 +36,7 @@ pub(crate) enum RunWarning {
         /// (§FS-workspace.6).
         config: Box<Config>,
         /// Where the *rest* of this run's projects are — the other half of the
-        /// counterfactual (§FS-check.4.10). Empty for the block the run is
+        /// counterfactual (§FS-check.4.10.2). Empty for the block the run is
         /// rooted at, whose own member boundary is already the whole prune.
         project_roots: Vec<PathBuf>,
     },
@@ -49,7 +49,7 @@ impl RunWarning {
     ///
     /// **A block with no member in scope is not this finding.** `include_root =
     /// false` with no members is already a config error at that block's own line
-    /// (§FS-workspace.6.1), and a configuration the run refuses is not one it
+    /// (§FS-workspace.6.1.3), and a configuration the run refuses is not one it
     /// also cautions about — the caution's two remedies are not the repair that
     /// block needs.
     ///

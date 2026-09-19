@@ -1,14 +1,14 @@
 // §AR-system.2.2: the model component is one Rust module, so its records are
 // declared in `model/` and what crosses the boundary is what `model/mod.rs`
-// re-exports (§AR-core-module-layout.1).
+// re-exports (§AR-core-module-layout.1.1).
 mod model;
 // §AR-system.2.1: the grammar component is one Rust module too, so the lexical
 // facts are declared in `grammar/` and what crosses the boundary is what
-// `grammar/mod.rs` re-exports (§AR-core-module-layout.1).
+// `grammar/mod.rs` re-exports (§AR-core-module-layout.1.1).
 mod grammar;
 // §AR-system.2.3: config is one Rust module too, so the effective `Config` and
 // the reader that fills it are declared in `config/` and what crosses the
-// boundary is what `config/mod.rs` re-exports (§AR-core-module-layout.1).
+// boundary is what `config/mod.rs` re-exports (§AR-core-module-layout.1.1).
 mod config;
 // §AR-system.2.4: workspace is one Rust module too, so member expansion, the
 // claims and the scope they narrow to are declared in `workspace/` and what
@@ -42,19 +42,19 @@ mod writers;
 // contract and the adapters that fill it are declared in `api/` and what an
 // embedder reaches is what `api/mod.rs` re-exports (§AR-bindings.2).
 mod api;
-// §AR-system.2.9: and its one exception, the deprecated `main_entry()` path,
+// §AR-system.2.9.1: and its one exception, the deprecated `main_entry()` path,
 // which is the only directory here that parses argv, writes to a stream or
 // returns an `ExitCode`. It may read anything; nothing may read it.
 mod compat;
 
 // The fixtures every test module shares — not a component's, because every
 // component's tests read them, and imported as `use crate::testing::{…}`
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.2).
 #[cfg(test)]
 pub(crate) mod testing;
 
 // The crate's public surface, listed rather than globbed
-// (§AR-core-module-layout.1): every name below is reachable as
+// (§AR-core-module-layout.1.2): every name below is reachable as
 // `grund_core::<name>` exactly as it was when the crate root was flat.
 
 // A component's own items are private to it; what crosses a boundary is what
@@ -85,11 +85,11 @@ pub use config::{
 };
 
 // §AR-system.2.5 scanner: the published form of what the walk raises
-// (§FS-check.2).
+// (§FS-check.2.4).
 pub use scanner::ApiScanError;
 
 // §AR-system.2.10 resolver: the one refusal shape a frontend asks about
-// (§FS-workspace.8.1.1).
+// (§FS-workspace.8.1.1.7).
 pub use resolver::names_member_id_candidate;
 
 // §AR-system.2.6 checker: the finding-code selection `grund-cli` parses
@@ -109,7 +109,7 @@ pub use queries::{
 };
 
 // §AR-system.2.11 templates: the setup skill a command prints byte-for-byte and
-// the newline canonicalization every template is read through (§FS-init.5,
+// the newline canonicalization every template is read through (§FS-init.5.3,
 // §FS-init.2.1).
 pub use templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text};
 
@@ -124,7 +124,7 @@ pub use writers::{
 
 // §AR-system.2.8 writers, the clickable-citation artifacts of §FS-integrations:
 // the client set, the detection, the agent surfaces and the managed writes. The
-// command that renders them is the CLI's (§FS-integrations.1, §AR-bindings.3).
+// command that renders them is the CLI's (§FS-integrations.1.3, §AR-bindings.3).
 pub use writers::{
     BlockOutcome, ConversationRendering, ConversationTarget, GLOBAL_AGENT_INSTRUCTION_TARGETS,
     GRUND_OPEN_RESOLVER, GlobalAgentTarget, InstallKind, IntegrationClient, LinkSupport,
@@ -152,7 +152,7 @@ pub use api::{
     show_with_scope, validate_config,
 };
 
-// §AR-system.2.9's one exception, the deprecated `main_entry()` path
+// §AR-system.2.9.1's one exception, the deprecated `main_entry()` path
 // §REQ-backwards-compatibility.2 keeps for 0.4 consumers.
 #[allow(deprecated)]
 pub use compat::main_entry;

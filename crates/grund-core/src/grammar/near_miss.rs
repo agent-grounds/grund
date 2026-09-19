@@ -12,7 +12,7 @@ use crate::model::Id;
 /// declaration patterns with the ID grammar replaced by "a configured kind, the
 /// separator an ID puts after it, and whatever follows". Two of them for the
 /// same reason the declaration pair has two — a Python docstring line carries no
-/// comment prefix (§AR-scanner.4).
+/// comment prefix (§AR-scanner.4.4).
 ///
 /// Derived with the rest of the grammar so the rule reads the *project's* kinds
 /// and comment prefixes rather than a second opinion about them, but **compiled
@@ -75,7 +75,7 @@ impl NearMissGrammar {
     /// over-approximation of the pattern, never narrower than it. Both tests are
     /// implied by the pattern itself: it requires the declaration colon, and it
     /// anchors at `#` or a comment prefix unless the line is inside a Python
-    /// docstring, where a declaration carries no prefix at all (§AR-scanner.4).
+    /// docstring, where a declaration carries no prefix at all (§AR-scanner.4.4).
     fn could_match(&self, line: &str, in_py_docstring: bool) -> bool {
         if !line.as_bytes().contains(&b':') {
             return false;
@@ -139,7 +139,7 @@ fn first_declaration_bytes(comment_prefix: &str) -> Vec<u8> {
     bytes
 }
 
-/// The heading token §FS-check.4.6 reports, or `None` when this line is not one.
+/// The heading token §FS-check.4.6.1 reports, or `None` when this line is not one.
 /// Asked only where [`declaration_captures`] already declined, so a hit is by
 /// construction a heading that came close and missed.
 pub(crate) fn near_miss_heading<'line, 'grammar>(
@@ -160,7 +160,7 @@ pub(crate) fn near_miss_heading<'line, 'grammar>(
         return Some(found);
     }
 
-    // §FS-check.4.6: retain an unambiguous rejected declaration token. Its kind's
+    // §FS-check.4.6.1: retain an unambiguous rejected declaration token. Its kind's
     // effective grammar is authoritative; the repository default cannot suppress a
     // persisted spelling rejected by an override (§FS-config.3.2).
     let caps = legacy_declaration_captures(grammar, line, in_py_docstring, is_md)?;
@@ -203,7 +203,7 @@ pub(crate) fn declaration_captures<'a>(
             .captures(line)
             .filter(|caps| is_md || caps.name("mdhashes").is_none())
     }?;
-    // §FS-config.3.2: retain the exact token written before `:`. A narrowed
+    // §FS-config.3.2.5: retain the exact token written before `:`. A narrowed
     // component pattern may match a shorter prefix (`FS-legacy` in
     // `FS-legacy-2:`); that prefix must not claim the declaration first.
     if let Some(complete) = legacy_declaration_captures(grammar, line, in_py_docstring, is_md)
@@ -236,7 +236,7 @@ fn legacy_declaration_captures<'a>(
 
 /// Parse either a conforming declaration or a catalog-compatible persisted one
 /// from a declaration-position line, returning the end of its written ID token
-/// (§FS-config.3.2). Re-read consumers use this instead of inventing their own
+/// (§FS-config.3.2.5). Re-read consumers use this instead of inventing their own
 /// compatibility fallback.
 pub(crate) fn declaration_id_on_line(
     grammar: &Grammar,
@@ -255,7 +255,7 @@ pub(crate) fn declaration_id_on_line(
 }
 
 /// Grammar-side state used only by persisted off-grammar compatibility
-/// (§FS-config.3.2, §FS-check.4.6), kept out of the canonical parser's fields.
+/// (§FS-config.3.2.5, §FS-check.4.6), kept out of the canonical parser's fields.
 #[derive(Clone)]
 pub(super) struct LegacyGrammar {
     decl_re: Regex,

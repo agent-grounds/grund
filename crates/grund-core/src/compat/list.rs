@@ -78,7 +78,7 @@ pub(super) fn command_list(args: &[String]) -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    // §FS-workspace.8.3: `--project` is only meaningful in workspace mode —
+    // §FS-workspace.8.3.2: `--project` is only meaningful in workspace mode —
     // a member-local or standalone invocation has no alias namespace.
     if !project_filter.is_empty() && !context.workspace_loaded {
         eprintln!("error: --project requires workspace mode (no [workspace] block discovered)");
@@ -106,7 +106,7 @@ pub(super) fn command_list(args: &[String]) -> ExitCode {
     // §FS-list.4: an unknown `--kind` is a CLI-level error; in workspace mode a
     // kind only needs to exist in at least one project in scope.
     for kind in &kind_filter {
-        // §FS-list.1: the selector names a *citable* kind; a configured kind that
+        // §FS-list.1.1: the selector names a *citable* kind; a configured kind that
         // declares no IDs is refused too, with the reason rather than "unknown".
         let matched = context
             .projects
@@ -166,7 +166,7 @@ pub(super) fn command_list(args: &[String]) -> ExitCode {
             if unused_only && used_counts.get(id).copied().unwrap_or(0) > 0 {
                 continue;
             }
-            // §FS-list.1 / §FS-check.4.1: `--unused` skips E2E cases by
+            // §FS-list.1.3 / §FS-check.4.1.3: `--unused` skips E2E cases by
             // default; opting back in requires explicit `--kind E2E`.
             if unused_only && id.kind == "E2E" && !kind_filter.contains("E2E") {
                 continue;
@@ -212,7 +212,7 @@ pub(super) fn command_list(args: &[String]) -> ExitCode {
         });
     }
 
-    // §FS-workspace.8.3: in workspace mode the ID column is always
+    // §FS-workspace.8.3.1: in workspace mode the ID column is always
     // qualified — even under `--project`. The helper renders `<ID>` outside
     // workspace mode and `<alias>/<ID>` inside it.
     let render_qualified = |entry: &Entry| -> String {
@@ -229,7 +229,7 @@ pub(super) fn command_list(args: &[String]) -> ExitCode {
 
     if summary {
         if context.workspace_loaded {
-            // §FS-workspace.8.3: rows sorted by alias — the same byte-wise
+            // §FS-workspace.8.3.4: rows sorted by alias — the same byte-wise
             // `str` order `entries` above sorts by — then kinds in the
             // project's configured `[[kinds]]` order.
             let mut counts: BTreeMap<(String, String), usize> = BTreeMap::new();
@@ -255,7 +255,7 @@ pub(super) fn command_list(args: &[String]) -> ExitCode {
                     }
                 }
             }
-            // §FS-workspace.8.3: the alias column is sized to the widest
+            // §FS-workspace.8.3.4: the alias column is sized to the widest
             // alias among the rows emitted, capped like `id_width` below.
             let alias_width = rows
                 .iter()
@@ -445,8 +445,8 @@ pub(super) fn command_list(args: &[String]) -> ExitCode {
     if !had_scan_errors {
         ExitCode::SUCCESS
     } else {
-        // Partial-scan semantics (§FS-check.2): the catalog may be short but is real.
-        // §FS-workspace.8.7: rendered against the run's config, like the rows above,
+        // Partial-scan semantics (§FS-check.2.4): the catalog may be short but is real.
+        // §FS-workspace.8.7.3: rendered against the run's config, like the rows above,
         // not the scanning project's — the same spelling `check` uses.
         for project in &context.projects {
             for (file, message) in &project.scan_errors {

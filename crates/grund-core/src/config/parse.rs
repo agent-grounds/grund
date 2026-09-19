@@ -43,7 +43,7 @@ pub(super) fn parse_config_file(
     let mut current_kind: Option<ParsedKind> = None;
     let mut kinds_block_seen = false;
     let mut inline_note_suggested_lines_source = None;
-    // §FS-config.3.4.8: where `[reference] grounding_level` was written, so the
+    // §FS-config.3.4.8.5: where `[reference] grounding_level` was written, so the
     // "nothing turns grounding on" rejection anchors at the key rather than at
     // line 1. Asked once the `[[kinds]]` table is final.
     let mut grounding_level_source = None;
@@ -64,7 +64,7 @@ pub(super) fn parse_config_file(
                     }
                     if section == "workspace" {
                         config.workspace_declared = true;
-                        // §FS-workspace.6.1: the block's own anchor, for the
+                        // §FS-workspace.6.1.3: the block's own anchor, for the
                         // errors that are about the block and not about a key.
                         config.workspace_section_source = Some(ConfigLocation {
                             path: path.to_path_buf(),
@@ -154,7 +154,7 @@ pub(super) fn parse_config_file(
             ("reference", "marker") => config.marker = parse_string(path, line_no, value)?,
             ("reference", "trigger") => config.trigger = parse_string(path, line_no, value)?,
             ("reference", "strict") => config.strict = parse_bool(path, line_no, value)?,
-            // §FS-config.3.1: closed persisted-form policy. Parsing the string
+            // §FS-config.3.1.1: closed persisted-form policy. Parsing the string
             // first keeps non-string failures on the ordinary located path.
             ("reference", "shorthand") => {
                 let policy = parse_string(path, line_no, value)?;
@@ -173,7 +173,7 @@ pub(super) fn parse_config_file(
             ("reference", "require_grounding") => {
                 config.require_grounding = parse_bool(path, line_no, value)?
             }
-            // §FS-config.3.4.8: the default unit inside every governed file; the
+            // §FS-config.3.4.8.2: the default unit inside every governed file; the
             // key's own rules live in `grounding.rs` with its row twin.
             ("reference", "grounding_level") => {
                 config.grounding_level = parse_usize(path, line_no, value)?;
@@ -181,7 +181,7 @@ pub(super) fn parse_config_file(
                 grounding_level_source = Some(line_no);
             }
             ("reference", "conversation") => {
-                // §FS-config.3.1, §DF-repo-conversation-opinion.2.2: closed enum with the
+                // §FS-config.3.1.6, §DF-repo-conversation-opinion.2.2: closed enum with the
                 // single member "link" — `plain` encodes machine state and stays user-scoped.
                 let opinion = parse_string(path, line_no, value)?;
                 if opinion != "link" {
@@ -193,7 +193,7 @@ pub(super) fn parse_config_file(
                 }
                 config.conversation = Some(opinion);
             }
-            // §FS-config.3.1: one closed inline table opts this project into the
+            // §FS-config.3.1.2: one closed inline table opts this project into the
             // fixed-warning lead budget. Absence is the complete off switch.
             ("reference", "lead_size_warning") => {
                 config.lead_size_warning = Some(parse_lead_size_warning(path, line_no, value)?);
@@ -251,7 +251,7 @@ pub(super) fn parse_config_file(
             ("reference", "warn_on_suggested") => {
                 config.warn_on_suggested = parse_bool(path, line_no, value)?
             }
-            // §FS-config.3.2: the keys an ID is built from share one rule — no `/` —
+            // §FS-config.3.2.3: the keys an ID is built from share one rule — no `/` —
             // so they share one arm and `id_grammar_rules.rs` answers per key; checked
             // here in the config-error style (§FS-errors.2.1), `Grammar::build` backstops.
             ("id", key @ ("format" | "section_separator" | "number_pattern" | "slug_pattern")) => {
@@ -267,7 +267,7 @@ pub(super) fn parse_config_file(
                 }
                 grammar_dirty = true;
             }
-            // §FS-config.3.2: named coordinates are an explicit, absent-by-default
+            // §FS-config.3.2.7: named coordinates are an explicit, absent-by-default
             // grammar change, so parsing the key recompiles every shared pattern.
             ("id", "named_sections") => {
                 config.named_sections = parse_bool(path, line_no, value)?;
@@ -337,7 +337,7 @@ pub(super) fn parse_config_file(
             ("output", "relative_paths") => {
                 config.relative_paths = parse_bool(path, line_no, value)?;
             }
-            // §FS-config.3.10: validated as it is parsed, so a malformed glob is a
+            // §FS-config.3.10.1: validated as it is parsed, so a malformed glob is a
             // config error at its own line rather than a surprise at the first
             // `grund fmt` (§FS-config.4.3).
             ("fmt", "exclude") => {
@@ -379,7 +379,7 @@ pub(super) fn parse_config_file(
             }
             ("workspace", "include_root") => {
                 config.workspace_include_root = parse_bool(path, line_no, value)?;
-                // §FS-check.4.10: the key that decides is the line to open, so it
+                // §FS-check.4.10.5: the key that decides is the line to open, so it
                 // is located like `members` above rather than left to the block's
                 // own `[workspace]` header.
                 config.workspace_include_root_source = Some(ConfigLocation {

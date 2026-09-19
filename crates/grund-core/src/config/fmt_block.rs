@@ -24,7 +24,7 @@ use super::record::Config;
 use crate::grammar::FmtExcluded;
 
 /// Compile `[fmt] exclude` into a matcher over config-root-relative paths
-/// (§FS-config.3.10). The root is left empty on purpose: every caller rebases
+/// (§FS-config.3.10.1). The root is left empty on purpose: every caller rebases
 /// the path itself, so the matcher never has to guess how much of an absolute
 /// path is the project.
 fn build_fmt_exclude_matcher(patterns: &[String]) -> std::result::Result<Gitignore, String> {
@@ -37,7 +37,7 @@ fn build_fmt_exclude_matcher(patterns: &[String]) -> std::result::Result<Gitigno
     builder.build().map_err(|err| err.to_string())
 }
 
-/// §FS-config.3.10: reject a malformed glob at the line that wrote it, rather
+/// §FS-config.3.10.1: reject a malformed glob at the line that wrote it, rather
 /// than at the first `grund fmt` in a repository that has forgotten about it
 /// (§FS-config.4.3).
 pub(crate) fn validate_fmt_exclude(patterns: &[String]) -> std::result::Result<(), String> {
@@ -47,9 +47,9 @@ pub(crate) fn validate_fmt_exclude(patterns: &[String]) -> std::result::Result<(
 }
 
 /// One project's §FS-fmt.2.5.1 exclusion scope: the patterns compiled, in the
-/// record the formatter and the editor both ask (§FS-fmt.2.5, §FS-lsp.1.4).
+/// record the formatter and the editor both ask (§FS-fmt.2.5, §FS-lsp.1.4.3).
 ///
-/// Patterns were already validated at load (§FS-config.3.10), so a failure here
+/// Patterns were already validated at load (§FS-config.3.10.1), so a failure here
 /// is a grund bug rather than a user error — it is still reported rather than
 /// swallowed, because the alternative is a `--write` that silently rewrites a
 /// protected file.

@@ -79,7 +79,7 @@ pub(super) fn command_id(args: &[String]) -> ExitCode {
         }
     };
     print_run_warnings(&settled_run_warnings(&config));
-    // §FS-id.1: `id` mints an ID, so the kind it is handed has to be one that
+    // §FS-id.1.1: `id` mints an ID, so the kind it is handed has to be one that
     // has IDs. A configured non-citable kind is refused with the reason — it is
     // a place, and there is nothing to allocate in it.
     let kind_config = match config

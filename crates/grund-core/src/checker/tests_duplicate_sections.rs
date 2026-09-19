@@ -44,7 +44,7 @@ fn duplicated_repo(name: &str, extra: &str) -> (PathBuf, Config) {
     (root, config)
 }
 
-/// §AR-scanner.2.2: the path is recorded once, by the first heading, and the
+/// §AR-scanner.2.2.3: the path is recorded once, by the first heading, and the
 /// later claimant goes to `duplicate_sections` rather than overwriting it.
 #[test]
 fn scanner_records_the_first_heading_and_keeps_the_rest_beside_it() {
@@ -54,7 +54,7 @@ fn scanner_records_the_first_heading_and_keeps_the_rest_beside_it() {
     let decl = &findings.declarations[&alpha()][0];
     assert_eq!(
         decl.sections["1"].line, 5,
-        "§AR-scanner.2.2: the map holds the first heading, not the last"
+        "§AR-scanner.2.2.3: the map holds the first heading, not the last"
     );
     assert_eq!(decl.sections["1"].title, "1 First");
     assert_eq!(
@@ -99,7 +99,7 @@ fn check_reports_the_collision_anchored_at_the_first_heading() {
             .map(|site| site.line)
             .collect::<Vec<_>>(),
         vec![5, 9],
-        "§FS-errors.5: a multi-site finding carries every site"
+        "§FS-errors.5.1: a multi-site finding carries every site"
     );
     // The rest of the report is the assertion too: a rule that fires once
     // correctly and once spuriously is still a rule that turns a tree red for
@@ -240,7 +240,7 @@ fn show_refuses_the_ambiguous_section_in_every_slice() {
     let (root, config) = duplicated_repo("duplicate_sections_show_refuses", "");
     let findings = scan_findings(&config, &root);
 
-    // §FS-show.2.2.2: `--toc` is exempt only over the *whole* declaration.
+    // §FS-show.2.2.2.3: `--toc` is exempt only over the *whole* declaration.
     // Selected onto the ambiguous coordinate it is one more slice of it.
     for mode in [
         ShowRenderMode::Default,
@@ -303,7 +303,7 @@ fn an_untouched_section_still_answers_and_toc_still_lists_both() {
     .expect("--toc maps the file as written");
     assert_eq!(
         toc.body, "## 1. First\n## 1. Second\n## 2. Third\n",
-        "§FS-show.2.2.2: the map shows the collision rather than refusing"
+        "§FS-show.2.2.2.3: the map shows the collision rather than refusing"
     );
 }
 

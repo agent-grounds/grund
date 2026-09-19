@@ -10,7 +10,7 @@
 use super::*;
 use crate::testing::{test_root, write};
 
-/// §FS-config.3.2: a `/` in any ID component is rejected at the line that
+/// §FS-config.3.2.3: a `/` in any ID component is rejected at the line that
 /// wrote it. Without this, `slug_pattern = "[a-z][a-z0-9/-]*"` declared and
 /// resolved `FS-a/b` while `grund m/FS-a/b` split on the last `/` and read
 /// `m/FS-a` as the alias path (§FS-workspace.1) — an ID grund emitted and
@@ -55,7 +55,7 @@ fn id_grammar_rejects_a_slash_in_every_component() {
     }
 }
 
-/// §FS-config.3.2: the rule is about what a pattern **matches**, so a pattern
+/// §FS-config.3.2.3: the rule is about what a pattern **matches**, so a pattern
 /// with no `/` in its text is rejected when it can produce one. This is the
 /// case a substring test missed: `slug_pattern = "[^.[:space:]]+"` loaded,
 /// declared `FS-a/b`, listed it — and `grund FS-a/b` then refused the ID grund
@@ -87,7 +87,7 @@ fn id_grammar_rejects_a_pattern_that_matches_a_slash_without_containing_one() {
     }
 }
 
-/// §FS-config.3.2, the other direction: a pattern that **forbids** `/` names
+/// §FS-config.3.2.3, the other direction: a pattern that **forbids** `/` names
 /// the character in its text and must load. Rejecting it broke configs that
 /// had always worked, and told their authors to delete the very exclusion the
 /// rule asks for.
@@ -126,7 +126,7 @@ fn id_grammar_accepts_a_pattern_that_forbids_a_slash() {
     );
 }
 
-/// §FS-config.3.2: `section_separator = "/"` is rejected at its own line. The
+/// §FS-config.3.2.2: `section_separator = "/"` is rejected at its own line. The
 /// alias-path boundary is the **last** `/` in a citation, so a `/` separator
 /// makes the ID/section boundary the same character: `§root/fs-x/1` — section 1
 /// of `fs-x` in project `root` — read as alias path `root/fs-x` and ID `1`, so a
@@ -161,7 +161,7 @@ fn id_grammar_rejects_a_slash_section_separator() {
     );
 }
 
-/// §FS-config.3.2: the same invariant holds for a `Config` assembled in code —
+/// §FS-config.3.2.3: the same invariant holds for a `Config` assembled in code —
 /// `Grammar::build` is the backstop under every located check above, so no
 /// caller can route around the rule the namespace grammar depends on.
 #[test]

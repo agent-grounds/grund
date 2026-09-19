@@ -15,7 +15,7 @@ use crate::writers::render_agents_append_block_at;
 
 /// A repo whose `skills/` is a non-citable home, plus the `FS` its rules
 /// point at. `[scan] include` deliberately does **not** name `skills` — the
-/// home is what puts it in scope (§FS-config.3.5).
+/// home is what puts it in scope (§FS-config.3.5.8).
 fn skills_repo(name: &str, citations: &str, skill_body: &str) -> PathBuf {
     let root = test_root(name);
     write(
@@ -41,7 +41,7 @@ fn skills_repo(name: &str, citations: &str, skill_body: &str) -> PathBuf {
     root
 }
 
-/// §FS-config.3.5: a configured home is walked whether or not `include`
+/// §FS-config.3.5.8: a configured home is walked whether or not `include`
 /// names it — otherwise the citations in it would be *invisible* rather than
 /// dangling, which is silence where a finding belongs.
 #[test]
@@ -61,7 +61,7 @@ fn a_kind_home_outside_include_is_still_walked() {
     );
 }
 
-/// §FS-check.3.7: the home admits no declaration, and the finding names the
+/// §FS-check.3.7.3: the home admits no declaration, and the finding names the
 /// place rather than a kind the author could have written instead.
 #[test]
 fn a_declaration_in_a_non_citable_home_is_misplaced() {
@@ -79,7 +79,7 @@ fn a_declaration_in_a_non_citable_home_is_misplaced() {
     );
 }
 
-/// §FS-check.3.11: the obligation unit is a *file* in the home — Markdown
+/// §FS-check.3.11.2: the obligation unit is a *file* in the home — Markdown
 /// included, which is where `code`'s per-file rule stops — and the finding
 /// names the home, because the unit has no ID to print.
 #[test]
@@ -104,7 +104,7 @@ fn an_obligation_fires_per_file_on_markdown_in_the_home() {
     );
 }
 
-/// §FS-check.3.11: the same rule is satisfied by one citation in the file —
+/// §FS-check.3.11.2: the same rule is satisfied by one citation in the file —
 /// there is no declaration to put it in.
 #[test]
 fn an_obligation_is_satisfied_by_a_citation_anywhere_in_the_file() {
@@ -123,7 +123,7 @@ fn an_obligation_is_satisfied_by_a_citation_anywhere_in_the_file() {
     );
 }
 
-/// §FS-check.3.12: a prohibition names the place too.
+/// §FS-check.3.12.1: a prohibition names the place too.
 #[test]
 fn a_prohibition_names_the_home() {
     let root = skills_repo(
@@ -176,7 +176,7 @@ fn require_grounding_reaches_markdown_in_a_non_citable_home() {
     );
 }
 
-/// §FS-config.3.4.1 / §FS-init.2.3.4.4: the generated block names the kind by
+/// §FS-config.3.4.1.2 / §FS-init.2.3.4.4.1: the generated block names the kind by
 /// its place, and leaves it out of the ID vocabulary.
 #[test]
 fn the_generated_block_names_a_non_citable_kind_by_place() {
@@ -202,7 +202,7 @@ fn the_generated_block_names_a_non_citable_kind_by_place() {
     );
 }
 
-/// §FS-config.3.4.5: prefix-freedom is about tokenization, so it stops where
+/// §FS-config.3.4.5.1: prefix-freedom is about tokenization, so it stops where
 /// tokenization does. A name that never appears in an ID has no prefix.
 #[test]
 fn a_non_citable_name_may_prefix_a_citable_one() {
@@ -370,7 +370,7 @@ fn named_homeless_repo(name: &str, citations: &str) -> PathBuf {
     root
 }
 
-/// §FS-config.3.9.2: `code` is the *default* name of the homeless kind, not a
+/// §FS-config.3.9.2.2: `code` is the *default* name of the homeless kind, not a
 /// fixed one — the complement of every home is a category, and which word
 /// fits it is the project's to decide.
 #[test]
@@ -392,7 +392,7 @@ fn a_project_may_name_the_homeless_kind() {
     );
 }
 
-/// §FS-config.3.9.2: the named kind takes the rules, and `code` is then a
+/// §FS-config.3.9.2.1: the named kind takes the rules, and `code` is then a
 /// rule about nothing — so it is refused rather than silently inert.
 #[test]
 fn the_named_homeless_kind_takes_the_rules_and_code_becomes_unknown() {
@@ -419,7 +419,7 @@ fn the_named_homeless_kind_takes_the_rules_and_code_becomes_unknown() {
     );
 }
 
-/// §FS-init.2.3.4.4 / §FS-init.2.3.5: no map row — it is the one kind that is
+/// §FS-init.2.3.4.4.1 / §FS-init.2.3.5: no map row — it is the one kind that is
 /// not a place — and a directions row last, carrying its `title` as the scope
 /// where the project wrote one.
 #[test]
@@ -492,7 +492,7 @@ fn config_error(root: &Path) -> String {
     }
 }
 
-/// §FS-list.1 / §FS-id.1: both selectors take a citable kind, and a
+/// §FS-list.1.1 / §FS-id.1.1: both selectors take a citable kind, and a
 /// configured non-citable one is refused with the reason rather than as a
 /// typo — it would select nothing, every time.
 #[test]

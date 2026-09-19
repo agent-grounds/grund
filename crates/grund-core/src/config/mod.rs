@@ -5,7 +5,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). The submodules are the former `config*` category
+//! (§AR-core-module-layout.1.1). The submodules are the former `config*` category
 //! files plus the `Config` record that sat in `model/`: discovery, the record,
 //! the reader, and one file per section of `grund.toml` that carries a grammar
 //! and cross-key rules of its own — `[[kinds]]` with its built-in defaults,
@@ -82,13 +82,13 @@ pub(crate) use workspace_block::{
     invalid_project_alias_message, is_valid_project_alias, optional_member_alias_segment,
 };
 
-// What only the crate's own test modules read (§AR-core-module-layout.1): the
+// What only the crate's own test modules read (§AR-core-module-layout.1.3): the
 // `[fmt] exclude` validator, which the suppression cases drive directly.
 #[cfg(test)]
 pub(crate) use fmt_block::validate_fmt_exclude;
 
 // The cases that pin this component, one module per behaviour area
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_discovery;
 #[cfg(test)]

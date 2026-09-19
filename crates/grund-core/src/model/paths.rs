@@ -114,7 +114,7 @@ pub(crate) fn format_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
-/// The key a list of paths is ordered by (§FS-errors.4). The same spelling
+/// The key a list of paths is ordered by (§FS-errors.4.1). The same spelling
 /// `format_path` renders, so what a reader sorts by is what they see.
 pub(crate) fn sort_path_key(path: &Path) -> String {
     format_path(path)
@@ -185,7 +185,7 @@ pub(crate) fn canonicalize_existing_prefix(path: &Path) -> PathBuf {
 
 /// Canonicalize `path` to the same normalized form `LspSnapshot` paths carry,
 /// so an LSP client's request URI matches the snapshot's declaration, stub,
-/// and citation paths (§AR-lsp.5). Existing files resolve through
+/// and citation paths (§AR-lsp.5.1). Existing files resolve through
 /// `fs::canonicalize`; a not-yet-saved overlay file resolves its existing
 /// prefix and appends the missing tail — the same absolutization the snapshot
 /// applies — so `grund-lsp` does not need a second, drift-prone copy of this

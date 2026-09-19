@@ -81,7 +81,7 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
         Err(err) => {
             // §FS-refs.1: an ID arg that does not match `[id] format` is a CLI-level
             // error (exit 2 — `refs` has no exit-`1` query-failure class, §FS-refs.4),
-            // with the same hint the ID query gives for the same stumble (§FS-show.3).
+            // with the same hint the ID query gives for the same stumble (§FS-show.3.5).
             eprintln!("error: {err:#}");
             eprintln!(
                 "hint: this repo's [id] format is `{}` (run `grund config show`); `grund list` shows the IDs that exist",
@@ -124,7 +124,7 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
     };
     let target_alias = target_project.alias.as_str();
     let render_config = &target_project.config;
-    // §FS-workspace.1: a qualified query's alias decides which grammar parses
+    // §FS-workspace.1.2: a qualified query's alias decides which grammar parses
     // the ID tail. This keeps `refs api/FS-001-session` aligned with the same
     // target namespace that `check` uses for `§api/FS-001-session`.
     let (id, inline_section) = match resolve_id_arg(raw_id, render_config, &target_project.findings)
@@ -142,7 +142,7 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
             }
             // An incomplete scan is still the run-level outcome even when the
             // selected grammar also rejects the operand (§FS-refs.4,
-            // §FS-workspace.8.7).
+            // §FS-workspace.8.7.2).
             if context
                 .projects
                 .iter()
@@ -226,7 +226,7 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
                 b.citation.column,
             ))
     });
-    // §FS-refs.2: zero citations is a normal answer, not an error — but if the ID
+    // §FS-refs.2.1: zero citations is a normal answer, not an error — but if the ID
     // is *also* undeclared, leave a breadcrumb on stderr without changing the
     // exit code.
     if hits.is_empty() && !target_project.findings.declarations.contains_key(&id) {
@@ -266,7 +266,7 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
         }
         // Each entry's citing project (the file is unique, so the project is
         // unique too — a file lives in exactly one project's tree, by the
-        // boundary rule §FS-workspace.6).
+        // boundary rule §FS-workspace.6.2).
         let project_for_file: BTreeMap<&PathBuf, &WorkspaceProject> = hits
             .iter()
             .map(|hit| (&hit.citation.file, hit.project))
@@ -346,8 +346,8 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
     if !had_scan_errors {
         ExitCode::SUCCESS
     } else {
-        // Partial-scan semantics (§FS-refs.4 / §FS-check.2): citations are real but
-        // the view was incomplete. §FS-workspace.8.7: rendered against the run's
+        // Partial-scan semantics (§FS-refs.4 / §FS-check.2.4): citations are real but
+        // the view was incomplete. §FS-workspace.8.7.3: rendered against the run's
         // config, like the hit rows above via `render_path`, not the scanning project's.
         for project in &context.projects {
             for (file, message) in &project.scan_errors {
@@ -363,7 +363,7 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
 }
 
 /// The deprecated process adapter consumes the same typed rejection and release
-/// switch as the public CLI (§FS-refs.4, §FS-errors.5).
+/// switch as the public CLI (§FS-refs.4, §FS-errors.5.2).
 fn render_compat_refs_query_failure(failure: &RefsQueryFailure, format: &str) -> ExitCode {
     if refs_query_failure_is_exit_one() {
         if format == "json" {

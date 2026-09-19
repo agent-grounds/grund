@@ -1,5 +1,5 @@
-//! Core compatibility coverage for exact-code check selection (§FS-check.1)
-//! and the first-release agents-init message migration (§FS-errors.3).
+//! Core compatibility coverage for exact-code check selection (§FS-check.1.4)
+//! and the first-release agents-init message migration (§FS-errors.3.6).
 
 use std::process::ExitCode;
 
@@ -53,7 +53,7 @@ fn issue_49_deprecated_adapter_accepts_check_finding_selectors() {
 }
 
 /// All five agents-init variants preserve their legacy text as a contiguous
-/// prefix and append one exact maintenance-and-validity tail (§FS-check.3.5).
+/// prefix and append one exact maintenance-and-validity tail (§FS-check.3.5.3).
 #[test]
 fn issue_49_agents_init_compatibility_messages_cover_all_five_variants() {
     const TAIL: &str =

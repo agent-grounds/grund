@@ -6,7 +6,7 @@
 //! it is this component's (§AR-system.2.1). Both records were the formatter's
 //! while §AR-system.2.8 was a file-name category, and the editor's on-type rule
 //! read them sideways out of it for the verdict it has to match line for line
-//! (§FS-lsp.1.4); down here the formatter and the query read one module
+//! (§FS-lsp.1.4.3); down here the formatter and the query read one module
 //! downward and neither answers for the other (§AR-system.4).
 //!
 //! The two stay in one file because §FS-fmt.2.5 asks one question twice — what
@@ -47,7 +47,7 @@ impl FmtExcluded {
     /// path is rebased against, and the matcher for its patterns — `None` where
     /// the project set no key. Nothing here can fail and nothing here knows
     /// what a pattern looks like, because both the pattern grammar of
-    /// §FS-config.3.10 and its validation at load are config's
+    /// §FS-config.3.10.1 and its validation at load are config's
     /// (`config/fmt_block.rs`, §AR-system.2.1).
     pub(crate) fn new(root: &Path, matcher: Option<Gitignore>) -> Self {
         Self {
@@ -57,7 +57,7 @@ impl FmtExcluded {
     }
 
     /// Whether `path` is excluded. The patterns are config-root-relative
-    /// (§FS-config.3.10), so the walk's path is rebased before matching and a
+    /// (§FS-config.3.10.1), so the walk's path is rebased before matching and a
     /// path that is not under the root — nothing the walk produces today — is
     /// simply not excluded rather than guessed about.
     pub(crate) fn contains(&self, path: &Path) -> bool {
@@ -98,7 +98,7 @@ impl FmtExcluded {
 }
 
 /// The `grund:fmt off` / `grund:fmt on` region state for one file
-/// (§FS-fmt.2.5.2): whether the rewrite is on at the line about to be read, and
+/// (§FS-fmt.2.5.2.1): whether the rewrite is on at the line about to be read, and
 /// how a directive is spelled in this file's syntax. Every file starts with the
 /// rewrite on — nothing carries across files.
 pub(crate) struct FmtDirectives<'a> {
@@ -120,12 +120,12 @@ impl<'a> FmtDirectives<'a> {
 
     /// Take `line` when it is a directive, returning whether it was one. A
     /// directive line is never rewritten, whichever state it leaves behind
-    /// (§FS-fmt.2.5.2) — so the caller passes it through on `true`.
+    /// (§FS-fmt.2.5.2.1) — so the caller passes it through on `true`.
     pub(crate) fn consume(&mut self, line: &str, docstring: DocstringContent<'_>) -> bool {
         match self.directive(line, docstring) {
             Some(rewriting) => {
                 // A redundant directive is a no-op: assigning the state it
-                // already holds is exactly that (§FS-fmt.2.5.2).
+                // already holds is exactly that (§FS-fmt.2.5.2.1).
                 self.rewriting = rewriting;
                 true
             }
@@ -139,7 +139,7 @@ impl<'a> FmtDirectives<'a> {
     }
 
     /// The state this line asks for, if it is a directive at all. Only an exact
-    /// content match counts (§FS-fmt.2.5.2): `grund:fmt-off` and
+    /// content match counts (§FS-fmt.2.5.2.2): `grund:fmt-off` and
     /// `grund:fmt off please` are ordinary comments.
     pub(crate) fn directive(&self, line: &str, docstring: DocstringContent<'_>) -> Option<bool> {
         // The cheap gate first — `fmt` asks this of every line of every scanned
@@ -156,7 +156,7 @@ impl<'a> FmtDirectives<'a> {
             Some(prefixes) => {
                 let text = docstring.text_of(line);
                 // A docstring line is documentation and carries no prefix of its
-                // own (§FS-fmt.2.3.1); every other source line must actually be
+                // own (§FS-fmt.2.3.1.1); every other source line must actually be
                 // a comment, or a string holding this text would toggle a region.
                 if !docstring.is_docstring()
                     && !prefixes

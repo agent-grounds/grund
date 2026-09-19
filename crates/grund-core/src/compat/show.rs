@@ -25,7 +25,7 @@ pub(super) fn command_show_default(args: &[String]) -> ExitCode {
 /// than a botched ID — no `-` (the default `{kind}-{slug}` separator), no `/`
 /// (workspace alias), no `.` (section). For those inputs the default-show
 /// diagnostic adds a `grund --help` pointer so the typo lands somewhere
-/// useful (§FS-cli.1).
+/// useful (§FS-cli.1.2).
 fn looks_like_subcommand_typo(arg: &str) -> bool {
     !arg.is_empty() && !arg.contains('-') && !arg.contains('/') && !arg.contains('.')
 }
@@ -209,14 +209,14 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
         },
     };
     let config = &project.config;
-    // §FS-workspace.1: the alias was split first; parse the ID tail with the
+    // §FS-workspace.1.2: the alias was split first; parse the ID tail with the
     // target project's grammar.
     let (id, inline_section) = match resolve_id_arg(raw_id, config, &project.findings) {
         Ok(parsed) => parsed,
         Err(err) => {
             let message = format!("{err}");
             if format == "json" {
-                // §FS-show.2.2.1: the shorthand's candidates are IDs, not sites.
+                // §FS-show.2.2.1.1: the shorthand's candidates are IDs, not sites.
                 print_bare_query_json(show_query_error_code(&message), &message, &[]);
             } else {
                 eprintln!("{message}");
@@ -244,7 +244,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
         return ExitCode::from(2);
     }
     // §FS-show.3 / partial-scan semantics: an unreadable file in scope is fatal.
-    // §FS-workspace.8.7: rendered against the run's config, not the target
+    // §FS-workspace.8.7.3: rendered against the run's config, not the target
     // project's — the same spelling `check` uses for the same tree.
     if let Some((file, message)) = project.scan_errors.first() {
         eprintln!(
@@ -293,7 +293,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             let err = with_member_id_candidates(err, &context, alias.as_deref(), raw_id);
             let message = format!("{err:#}");
             if format == "json" {
-                // §FS-errors.5: this mirror's diagnostic carries the same sites the
+                // §FS-errors.5.2: this mirror's diagnostic carries the same sites the
                 // shipped `grund` CLI does, read from the same typed carrier rather
                 // than re-parsed from `message`.
                 let sites = err
@@ -304,8 +304,8 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
             } else {
                 eprintln!("{message}");
                 if message.starts_with("ID not found:") {
-                    // §FS-show.3: the hint gives way where the line already
-                    // names the project declaring the ID (§FS-workspace.8.1.1).
+                    // §FS-show.3.5: the hint gives way where the line already
+                    // names the project declaring the ID (§FS-workspace.8.1.1.7).
                     if !names_member_id_candidate(&message) {
                         eprintln!(
                             "hint: run `grund list` to see every declared ID, or `grund id <KIND> \"<title>\"` to propose a new one"

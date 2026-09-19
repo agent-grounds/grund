@@ -78,7 +78,7 @@ fn command_complete_ids(args: &[String]) -> ExitCode {
         Ok(context) => context,
         Err(_) => return ExitCode::SUCCESS,
     };
-    // §FS-workspace.8.4: split the prefix on the *last* `/` — the left is an
+    // §FS-workspace.8.4.1: split the prefix on the *last* `/` — the left is an
     // alias path, the right is that project's ID-prefix. An alias path may
     // itself carry slashes (§FS-workspace.6.1).
     let current_config = context
@@ -199,7 +199,7 @@ pub(super) fn command_completions(args: &[String]) -> ExitCode {
 /// explicit `show`, and `refs` wired to `grund complete ids`
 /// (§FS-completions.1, §FS-completions.2).
 fn print_bash_completion() {
-    // §FS-workspace.8.4: when any candidate ends in `/` (a workspace alias
+    // §FS-workspace.8.4.4: when any candidate ends in `/` (a workspace alias
     // continuation), call `compopt -o nospace` so a Tab from `api` advances
     // to `api/` without inserting a trailing space.
     print!(
@@ -251,7 +251,7 @@ complete -F _grund grund
 /// `_describe` is reserved for the bare-ID batch, because it appends the
 /// trailing space an alias continuation must not have.
 fn print_zsh_completion() {
-    // §FS-workspace.8.4: partition slash-suffixed candidates (workspace alias
+    // §FS-workspace.8.4.4: partition slash-suffixed candidates (workspace alias
     // continuations) from bare-ID ones so alias completions do not append a
     // trailing space — they land via `compadd -S ''`, so `api` advances to `api/`.
     println!(
@@ -320,7 +320,7 @@ _grund "$@"
 /// The fish completion script — `complete -c grund …` lines, ID arguments wired to
 /// `grund complete ids` (§FS-completions.1, §FS-completions.2).
 fn print_fish_completion() {
-    // §FS-workspace.8.4: fish's `complete -k` keeps candidates verbatim and,
+    // §FS-workspace.8.4.4: fish's `complete -k` keeps candidates verbatim and,
     // with `-f` to skip file completion, appends no space after a `/`-terminated
     // candidate — perfect for workspace alias continuations.
     println!(

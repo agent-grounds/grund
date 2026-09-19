@@ -44,7 +44,7 @@ pub struct AbsentOptionalNamespace {
     pub written: String,
     /// The whole alias path this run spells the namespace with: one segment per
     /// workspace level, so an entry one `[workspace]` block down is `sub/vendored`
-    /// while the entry itself stays `vendored` (§FS-check.4.9). Expansion sets it
+    /// while the entry itself stays `vendored` (§FS-check.4.9.2). Expansion sets it
     /// to the bare segment; the walk that knows the enclosing path composes the
     /// rest.
     pub alias_path: String,
@@ -53,7 +53,7 @@ pub struct AbsentOptionalNamespace {
 }
 
 /// The persisted number-only citation policy from `[reference] shorthand`
-/// (§FS-config.3.1). Trigger input remains authoring sugar under both values;
+/// (§FS-config.3.1.1). Trigger input remains authoring sugar under both values;
 /// this enum governs only marker-origin shorthand already present in a file.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ShorthandPolicy {
@@ -78,7 +78,7 @@ pub struct Config {
     pub root: PathBuf,
     /// The resolved path argument (or cwd) — the base for reports when
     /// `[output] relative_paths = false`, i.e. the base `grund` would use if no
-    /// config were discovered (§FS-config.3.6).
+    /// config were discovered (§FS-config.3.6.1).
     pub cli_base: PathBuf,
     /// The config file that was actually read — either `.agents/grund.toml` or
     /// the bare `grund.toml` (§FS-config.1). `None` in a zero-config tree, where
@@ -99,21 +99,21 @@ pub struct Config {
     pub project_name: Option<String>,
     pub project_name_source: Option<ConfigLocation>,
     /// Optional one-line description rendered beside the project's alias in
-    /// generated workspace member lists (§FS-config.3, §FS-workspace.3,
+    /// generated workspace member lists (§FS-config.3, §FS-workspace.3.1,
     /// §DF-workspace-member-descriptions). Presentation metadata only.
     pub project_description: Option<String>,
     pub marker: String,
     pub trigger: String,
     pub strict: bool,
-    /// `[reference] shorthand` (§FS-config.3.1): whether a uniquely resolving
+    /// `[reference] shorthand` (§FS-config.3.1.1): whether a uniquely resolving
     /// marker-origin shorthand must be canonicalized or may persist unchanged.
     pub shorthand: ShorthandPolicy,
-    /// `[reference] require_grounding` (§FS-config.3.1, §FS-check.3.6,
+    /// `[reference] require_grounding` (§FS-config.3.1.7, §FS-check.3.6,
     /// §DF-require-grounding) — when true, `check` also reports every scanned
     /// source file that carries no resolving citation (and declares no ID inline).
     /// `--require-grounding` on `grund check` forces it on for one run.
     pub require_grounding: bool,
-    /// `[reference] grounding_level` (§FS-config.3.4.8, §FS-check.3.6.2) — the
+    /// `[reference] grounding_level` (§FS-config.3.4.8.2, §FS-check.3.6.2) — the
     /// default unit inside each governed file, in Markdown heading levels, for
     /// every `[[kinds]]` row that does not set its own. `1` is the file.
     pub grounding_level: usize,
@@ -123,12 +123,12 @@ pub struct Config {
     /// level-1 tree — which is every config written before the keys existed —
     /// pays nothing (§GOAL-fast-feedback).
     pub grounding_units: bool,
-    /// `[reference] conversation` (§FS-config.3.1, §DF-repo-conversation-opinion) —
+    /// `[reference] conversation` (§FS-config.3.1.3, §DF-repo-conversation-opinion) —
     /// the repository's committed conversation-rendering opinion. `None` means no
     /// opinion; the only accepted value is `"link"` (closed enum, widenable later).
     /// Read solely by the agent-entrypoint renderer (§FS-init.2.3.4.17).
     pub conversation: Option<String>,
-    /// `[reference] lead_size_warning` (§FS-config.3.1, §FS-check.4.13).
+    /// `[reference] lead_size_warning` (§FS-config.3.1.2, §FS-check.4.13.3).
     /// `None` preserves the pre-feature checker byte-for-byte and avoids all
     /// point-body measurement work.
     pub lead_size_warning: Option<LeadSizeWarning>,
@@ -136,7 +136,7 @@ pub struct Config {
     pub inline_note_suggested_lines: usize,
     pub inline_note_max_lines: usize,
     pub inline_note_max_columns: usize,
-    /// `[reference] inline_note_layout` (§FS-config.3.1,
+    /// `[reference] inline_note_layout` (§FS-config.3.1.9,
     /// §FS-inline-citation-style.3.3, §DF-inline-note-layout) — the project's
     /// house style for where citations sit inside an inline note. Closed enum:
     /// `any` (default, no constraint) or `citation-first-colon`.
@@ -166,7 +166,7 @@ pub struct Config {
     pub section_separator: String,
     pub number_pattern: String,
     pub slug_pattern: String,
-    /// The absent-by-default named-section grammar gate (§FS-config.3.2).
+    /// The absent-by-default named-section grammar gate (§FS-config.3.2.7).
     pub named_sections: bool,
     pub section_heading_levels: String,
     pub kinds: Vec<KindConfig>,
@@ -198,38 +198,38 @@ pub struct Config {
     /// Where the `[workspace]` table header itself was written (§FS-config.4.3).
     /// The anchor for an error about the *block* rather than about one key — a
     /// block with no `members` key at all still has to say which of a tree's many
-    /// blocks it is (§FS-workspace.6.1).
+    /// blocks it is (§FS-workspace.6.1.3).
     pub workspace_section_source: Option<ConfigLocation>,
     pub workspace_include_root: bool,
     /// Where `include_root` was written (§FS-config.4.3). The breadcrumb
-    /// §FS-check.4.10 wears: the key that took the block's files out of every
+    /// §FS-check.4.10.5 wears: the key that took the block's files out of every
     /// scan is the line the reader should open, which neither the `members` line
     /// nor the `[workspace]` header is. `None` where the key is absent, and the
     /// default `true` makes that unreachable for the one finding that reads it.
     pub workspace_include_root_source: Option<ConfigLocation>,
     pub workspace_boundary_roots: Vec<PathBuf>,
     /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
-    /// cautions of §FS-check.4.7, §FS-check.4.10 and §FS-workspace.6.1, in the
+    /// cautions of §FS-check.4.7, §FS-check.4.10 and §FS-workspace.6.1.7, in the
     /// order the run settled them. Accumulated on the config the run was
     /// launched with, by the points that populate a block's member boundary and
     /// climb the claimed chain, and handed to whichever frontend asked — which
     /// is what keeps the engine from writing one of them to a stream
     /// (§AR-bindings.2). Each stands in place of the `success` marker on an
-    /// otherwise clean run (§FS-check.2.1). Not a `grund.toml` key.
+    /// otherwise clean run (§FS-check.2.1.3). Not a `grund.toml` key.
     pub(crate) run_warnings: Vec<RunWarning>,
     /// §AR-workspace.6: the canonical root of **every** project this run loaded.
     /// `workspace_boundary_roots` above says what lies *below* this project, so a
     /// leaf member has none; this says where the *others* are, which is how a
     /// member's walk tells a link into a sibling — or back up into the root
     /// project — from a link into ordinary outside content. Empty for a run that
-    /// loaded no workspace, a member checked on its own included (§FS-workspace.6).
+    /// loaded no workspace, a member checked on its own included (§FS-workspace.6.3).
     pub workspace_project_roots: Vec<PathBuf>,
-    /// §FS-workspace.6.1: the alias path of the *run's* own workspace root, read
+    /// §FS-workspace.6.1.5: the alias path of the *run's* own workspace root, read
     /// from the outermost workspace and stamped onto every project the run loaded.
     /// Empty at the outermost root and for a single-project run; non-empty exactly
     /// when the run is narrowed to a subtree. Not a `grund.toml` key and never read
     /// from one (like `workspace_boundary_roots`, it is what expansion learned
-    /// about this run): §FS-check.3.8 reads it to know that a path it cannot
+    /// about this run): §FS-check.3.8.3 reads it to know that a path it cannot
     /// resolve may still be correct at the workspace root.
     pub workspace_scope_path: String,
     /// Parsed `[citations]` direction rules (§FS-config.3.9). Empty/absent unless
@@ -246,17 +246,17 @@ pub struct Config {
 }
 
 /// The **default** name of the homeless kind — the citing kind of every site
-/// outside every configured home (§AR-scanner.2.4, §FS-config.3.9.2). It is a
+/// outside every configured home (§AR-scanner.2.4.2, §FS-config.3.9.2.2). It is a
 /// default and not a fixed name: `code` is the right word for most
 /// repositories and the wrong one for a Terraform, SQL, or prose tree, so a
 /// project may declare the homeless kind itself and name it (`src`,
 /// `modules`, …). See [`Config::homeless_kind`].
 pub(super) const CODE_SOURCE_KIND: &str = "code";
-/// The default `grounding_level` (§FS-config.3.4.8): the file — the H1's own
+/// The default `grounding_level` (§FS-config.3.4.8.2): the file — the H1's own
 /// subtree, so one citation anywhere under it. It is the unit every config had
 /// before the key existed, which is what keeps the key additive.
 pub(crate) const DEFAULT_GROUNDING_LEVEL: usize = 1;
-/// The heading levels a `grounding_level` may name (§FS-config.3.4.8). Markdown
+/// The heading levels a `grounding_level` may name (§FS-config.3.4.8.2). Markdown
 /// has six, and a value outside them names no heading.
 pub(super) const GROUNDING_LEVELS: std::ops::RangeInclusive<usize> = 1..=6;
 const DEFAULT_ID_FORMAT: &str = "{kind}-{number}-{slug}";
@@ -267,7 +267,7 @@ const DEFAULT_SLUG_PATTERN: &str = r"[a-z0-9][a-z0-9-]*";
 impl Config {
     /// The built-in defaults — the canonical grammar a conformant tree gets with
     /// no config at all (§FS-config.2, §GOAL-zero-config). `grund init`
-    /// writes these same values out verbatim as a teaching surface (§FS-init.2.4).
+    /// writes these same values out verbatim as a teaching surface (§FS-init.2.4.3).
     pub(crate) fn default_for(root: PathBuf) -> Self {
         let kinds: Vec<KindConfig> = DEFAULT_KINDS
             .iter()
@@ -474,7 +474,7 @@ pub(crate) fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
 }
 
 /// Why a configured kind cannot be selected with `--kind` or minted from
-/// (§FS-list.1, §FS-id.1). A non-citable kind is not a typo — it is a real row
+/// (§FS-list.1.1, §FS-id.1.1). A non-citable kind is not a typo — it is a real row
 /// in `[[kinds]]` that will never have a declaration — so the message says that
 /// rather than calling it unknown, and names the home, which is the thing the
 /// caller can actually go and open.
@@ -492,7 +492,7 @@ pub(crate) fn non_citable_kind_error(kind: &KindConfig) -> String {
 /// configured kind, citable or not, plus `code` — but only where the table did
 /// not declare the homeless kind itself. A config that names its complement
 /// `src` has no `code`, and `[citations.code]` in it is a rule about nothing
-/// (§FS-config.3.9.2).
+/// (§FS-config.3.9.2.1).
 pub(super) fn citing_kind_names(kinds: &[KindConfig]) -> Vec<&str> {
     let named = declared_homeless_kind(kinds).is_some();
     kinds
@@ -503,7 +503,7 @@ pub(super) fn citing_kind_names(kinds: &[KindConfig]) -> Vec<&str> {
 }
 
 /// The `[[kinds]]` entry that *is* the homeless kind, if the table declares one
-/// (§FS-config.3.9.2): non-citable, and with no `folder` or `file`, because it
+/// (§FS-config.3.9.2.1): non-citable, and with no `folder` or `file`, because it
 /// is the complement of every home rather than one of them. At most one entry
 /// can be this, which the config validator holds.
 pub(super) fn declared_homeless_kind(kinds: &[KindConfig]) -> Option<&KindConfig> {

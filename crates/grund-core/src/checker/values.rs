@@ -176,7 +176,7 @@ enum EmbeddedBindingRelation {
 
 /// Find the existing marked section whose path owns this binding. Invalid roots
 /// still count as authority for syntax classification, but only a valid root's
-/// immediate child reaches comparison (§FS-values.3.1, §FS-values.5.1).
+/// immediate child reaches comparison (§FS-values.3.1.1, §FS-values.5.1).
 fn embedded_root_for_binding<'a>(
     declaration: &'a Declaration,
     section: &str,

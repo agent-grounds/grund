@@ -18,7 +18,7 @@ fn config_error(name: &str, body: &str) -> String {
     }
 }
 
-/// §FS-config.3.4.8: no file in an unwalked home is read, so the rule could
+/// §FS-config.3.4.8.5: no file in an unwalked home is read, so the rule could
 /// never fire — rejected at the key's own line.
 #[test]
 fn grounding_on_an_unwalked_row_is_rejected() {
@@ -37,8 +37,8 @@ fn grounding_on_an_unwalked_row_is_rejected() {
     );
 }
 
-/// §FS-config.3.4.8: a *citable* single-file kind is one declaration
-/// document, which §FS-check.3.6.1 leaves alone, so neither key has anything
+/// §FS-config.3.4.8.5: a *citable* single-file kind is one declaration
+/// document, which §FS-check.3.6.1.1 leaves alone, so neither key has anything
 /// to mean on it — the rejection the non-citable row below no longer earns.
 #[test]
 fn a_grounding_key_on_a_citable_file_row_is_rejected() {
@@ -56,7 +56,7 @@ fn a_grounding_key_on_a_citable_file_row_is_rejected() {
     );
 }
 
-/// §FS-config.3.4.8: there is no seventh Markdown heading level for a level
+/// §FS-config.3.4.8.5: there is no seventh Markdown heading level for a level
 /// of `7` to name.
 #[test]
 fn a_level_outside_the_heading_range_is_rejected() {
@@ -74,7 +74,7 @@ fn a_level_outside_the_heading_range_is_rejected() {
     );
 }
 
-/// §FS-config.3.4.8: a unit for a rule the same row just switched off.
+/// §FS-config.3.4.8.5: a unit for a rule the same row just switched off.
 #[test]
 fn a_level_beside_an_explicit_row_false_is_rejected() {
     let error = config_error(
@@ -93,7 +93,7 @@ fn a_level_beside_an_explicit_row_false_is_rejected() {
     );
 }
 
-/// §FS-config.3.4.8: the same rule one scope up — a `[reference]` level with
+/// §FS-config.3.4.8.5: the same rule one scope up — a `[reference]` level with
 /// nothing turning grounding on anywhere.
 #[test]
 fn a_global_level_with_grounding_off_is_rejected() {
@@ -111,7 +111,7 @@ fn a_global_level_with_grounding_off_is_rejected() {
     );
 }
 
-/// §FS-config.3.4.8: a level is dead config wherever its row's *effective*
+/// §FS-config.3.4.8.5: a level is dead config wherever its row's *effective*
 /// `require_grounding` is off, not only where the row wrote `false` — the
 /// row spelling of the `[reference]` rejection above.
 #[test]
@@ -131,8 +131,8 @@ fn a_row_level_under_an_inherited_false_is_rejected() {
     );
 }
 
-/// §FS-config.3.4.8 / §FS-config.4.2: a non-citable `file` home is governed
-/// like any other place (§FS-check.3.6.1), so both keys load on its row —
+/// §FS-config.3.4.8.5 / §FS-config.4.2.1: a non-citable `file` home is governed
+/// like any other place (§FS-check.3.6.1.1), so both keys load on its row —
 /// and print back, since the row's effective values differ from the global.
 #[test]
 fn a_non_citable_file_row_takes_both_keys() {

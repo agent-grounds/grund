@@ -22,11 +22,11 @@ pub(crate) static STUB_LINK_HEADING: Lazy<Regex> =
 /// An inline Markdown link `[text](url)` — used to reduce a heading to the text a
 /// renderer would slugify (the destination URL is not part of that text), so an
 /// anchor stays correct even when a citation in a section heading has been wrapped
-/// by `grund fmt --cross-refs` (§DF-github-anchor-fidelity, §FS-fmt.6.2).
+/// by `grund fmt --cross-refs` (§DF-github-anchor-fidelity, §FS-fmt.6.2.2).
 static MD_INLINE_LINK: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\([^)]*\)").unwrap());
 /// An HTML-tag-shaped span `<…>` — a renderer drops it from a heading's text
 /// (`## RM-read: grund <ID>` slugs as `rm-read-grund`), so it must be removed
-/// before slugging the heading (§DF-github-anchor-fidelity, §FS-fmt.6.2).
+/// before slugging the heading (§DF-github-anchor-fidelity, §FS-fmt.6.2.2).
 static HTML_TAG: Lazy<Regex> = Lazy::new(|| Regex::new(r"<[^>]*>").unwrap());
 
 /// Reduce a heading's source text to the text content a Markdown renderer would
@@ -102,7 +102,7 @@ fn inline_code_segments(text: &str) -> Vec<(&str, bool)> {
     }
     segments
 }
-/// The explicit managed-block delimiters (§FS-init.2.3,
+/// The explicit managed-block delimiters (§FS-init.2.3.9,
 /// §DF-managed-block-delimiters): standard `BEGIN`/`END` HTML-comment lines
 /// bound the managed region from block v4 on. Legacy v3-and-earlier blocks have
 /// no delimiters and are found by `AGENTS_BLOCK_H2` alone.
@@ -126,13 +126,13 @@ pub(crate) static AGENTS_SECTION_BOUNDARY: Lazy<Regex> =
 /// shape of a declaration heading or a citation. Built once per config load.
 /// Realizes §FS-config.3.1, §FS-config.3.2, §FS-config.3.3 and the regex-not-a-parser
 /// stance of §AR-scanner.5.
-/// The pattern one alias segment must match (§FS-workspace.1, §AR-workspace.2).
+/// The pattern one alias segment must match (§FS-workspace.1.1, §AR-workspace.2).
 /// One canonical place — also referenced by the config-load alias validator
 /// (`is_valid_project_alias` in `config/workspace_block.rs`).
 const PROJECT_ALIAS_PATTERN: &str = "[a-z][a-z0-9-]*";
 /// The namespace a qualified citation carries: one alias segment per workspace
 /// level, so a project nested inside a member workspace is named by its whole
-/// chain (§FS-workspace.1, §FS-workspace.6.1). Greedy by construction and the
+/// chain (§FS-workspace.1.1, §FS-workspace.6.1). Greedy by construction and the
 /// ID that follows never contains `/`, so the last `/` in the token is always
 /// the boundary between the project path and the ID.
 static PROJECT_PATH_PATTERN: Lazy<String> =
@@ -152,16 +152,16 @@ pub struct Grammar {
     pub(crate) citation_re: Regex,
     pub(super) id_input_re: Regex,
     /// The compiled grammar remembers the gate so every token consumer can
-    /// enforce the same whole-token suppression rule (§AR-scanner.2.3).
+    /// enforce the same whole-token suppression rule (§AR-scanner.2.3.4).
     pub(crate) named_sections: bool,
-    /// The per-kind near-miss patterns (§FS-check.4.6): a heading that opens
+    /// The per-kind near-miss patterns (§FS-check.4.6.1): a heading that opens
     /// with a configured kind and the literal its effective ID format puts
     /// after it, without parsing as an ID. Absent for a kind whose format puts
     /// no literal there — then "looks like a declaration" cannot be told from
     /// prose beginning with the kind name, and the rule declines rather than guess.
     pub(super) near_misses: Vec<NearMissGrammar>,
     pub(super) legacy: LegacyGrammar,
-    /// The number-only shorthand patterns (§FS-check.1.2, §AR-scanner.2.6),
+    /// The number-only shorthand patterns (§FS-check.1.2.1, §AR-scanner.2.6),
     /// present only when `[id] format` carries both `{number}` and `{slug}`.
     /// `None` is the whole opt-out: every shorthand pass downstream is gated on
     /// this being `Some`, so a `{kind}-{slug}` repo like `grund` itself compiles
@@ -173,11 +173,11 @@ pub struct Grammar {
     pub(super) override_shorthands: Vec<ShorthandGrammar>,
     /// The parsed `[id] format`. Kept so `render_id` reduces a partial `Id` by
     /// the same rule the shorthand pattern was derived from, rather than a
-    /// second interpretation of the template (§AR-scanner.2.6).
+    /// second interpretation of the template (§AR-scanner.2.6.11).
     pub(super) elements: Vec<IdElement>,
     /// Per-kind full-ID parsers and render templates. Detection uses one union
     /// regex, then parsing selects the already-known kind's exact grammar
-    /// (§FS-config.3.2, §FS-config.3.4.10).
+    /// (§FS-config.3.2, §FS-config.3.4.10.1).
     kind_parsers: Vec<(String, Regex)>,
     pub(super) kind_elements: BTreeMap<String, Vec<IdElement>>,
     pub(super) overridden_kinds: BTreeSet<String>,
@@ -188,7 +188,7 @@ impl Grammar {
     /// here (`{kind}` required, at least one of `{number}`/`{slug}`, separator must be
     /// lexically distinct) are §FS-config.3.2; the optional `§`-marker prefix on a
     /// citation is §FS-config.3.1 / §DF-reference-marker; the comment-prefix wrapper
-    /// on declaration/section regexes is §AR-scanner.4 (declarations live in code
+    /// on declaration/section regexes is §AR-scanner.4.3 (declarations live in code
     /// doc-comments too).
     ///
     /// The `/` rejections repeat `config/parse.rs` because the whole namespace grammar
@@ -215,7 +215,7 @@ impl Grammar {
         if kinds.is_empty() {
             return Err(anyhow!("[id] grammar needs at least one [[kinds]] entry"));
         }
-        // §FS-config.3.2: the "an ID never contains `/`" invariant, enforced over
+        // §FS-config.3.2.3: the "an ID never contains `/`" invariant, enforced over
         // every component an ID is built from. `config/parse.rs` rejects each key at its
         // own line first; this is the backstop for a `Config` assembled in code.
         if let Some(message) = id_grammar_literal_slash_error("[id].format", format) {
@@ -284,7 +284,7 @@ impl Grammar {
             .values()
             .any(|elements| elements.contains(&IdElement::Number));
 
-        // §FS-config.3.2: the section separator must be lexically distinguishable
+        // §FS-config.3.2.2: the section separator must be lexically distinguishable
         // from the ID grammar — otherwise a citation like `FS-foo<sep>bar` could
         // not be split into ID and section unambiguously.
         if section_separator.is_empty() {
@@ -307,9 +307,9 @@ impl Grammar {
                 ));
             }
         }
-        // §FS-config.3.2: each component pattern must be a valid regex *on its
+        // §FS-config.3.2.4: each component pattern must be a valid regex *on its
         // own*, not merely valid once spliced into `id_pat` — the number-only
-        // shorthand builds one from a subset of the elements (§FS-check.1.2).
+        // shorthand builds one from a subset of the elements (§FS-check.1.2.1).
         let slug_re = Regex::new(slug_pattern)
             .map_err(|err| anyhow!("[id].slug_pattern is not a valid regex: {err}"))?;
         if slug_re.is_match(section_separator) {
@@ -346,7 +346,7 @@ impl Grammar {
             id = id_pat
         ))?;
         let docstring_decl_re = Regex::new(&format!(r"^\s*{id}\b", id = id_pat))?;
-        // §FS-config.3.3: name-bearing headings require the explicit colon form;
+        // §FS-config.3.3.1: name-bearing headings require the explicit colon form;
         // numeric headings retain optional full stops. Rust regexes lack lookahead, so
         // punctuation stays captured and `section_path` removes it (§AR-scanner.2.2).
         let section_heading = if named_sections {
@@ -366,7 +366,7 @@ impl Grammar {
         let id_input_re = Regex::new(&format!(r"^{}{}$", id_pat, sec_suffix))?;
         let legacy = LegacyGrammar::build(kinds, format, &section_pattern, &comment_prefix)?;
 
-        // §FS-check.1.2: the same two shapes over the slug-less element list.
+        // §FS-check.1.2.1: the same two shapes over the slug-less element list.
         // Compiled only where the format has a shorthand at all, so `has_shorthand`
         // is the single gate the scanner, checker, `fmt`, and the LSP all read.
         let global_kinds = kinds
@@ -489,7 +489,7 @@ impl Grammar {
             .find(|shorthand| shorthand.prefix_re().is_match(token))
     }
 
-    /// A name-shaped section matched by the opted-in grammar (§FS-check.1.1).
+    /// A name-shaped section matched by the opted-in grammar (§FS-check.1.1.2).
     pub(crate) fn is_named_section(&self, section: Option<&str>) -> bool {
         self.named_sections
             && section.is_some_and(|path| {
@@ -500,7 +500,7 @@ impl Grammar {
 
     /// Whether a valid prefix is followed by the reserved `number.name` order.
     /// The regex crate has no lookahead, so this whole-token rejection is the
-    /// post-match half of the grammar (§AR-scanner.2.3, §FS-config.3.3).
+    /// post-match half of the grammar (§AR-scanner.2.3.4, §FS-config.3.3.1).
     pub(crate) fn has_reserved_named_tail(&self, text: &str, end: usize) -> bool {
         self.named_sections
             && text[end..]

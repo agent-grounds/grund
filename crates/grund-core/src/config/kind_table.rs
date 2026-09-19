@@ -82,7 +82,7 @@ pub(super) fn parse_kinds_key(
         // §FS-config.3.4: `kind` is the name every entry declares.
         "kind" => {
             let name = parse_string(path, line_no, value)?;
-            // §FS-config.3.2: a citable kind's name is the leading component of
+            // §FS-config.3.2.3: a citable kind's name is the leading component of
             // every ID in it, so a `/` here lands in the ID as surely as one in
             // `slug_pattern` does.
             if let Some(message) =
@@ -277,7 +277,7 @@ pub(super) fn parse_kinds_key(
 ///   file by a path no message should have to print.
 /// * **It names a Markdown file.** `--cross-refs` runs on `.md` files only
 ///   (§FS-fmt.6.1), so an index with any other extension is one the formatter can
-///   never linkify — and §FS-check.3.17, whose whole licence is that
+///   never linkify — and §FS-check.3.17.3, whose whole licence is that
 ///   `grund fmt --write` fixes it, would be an error no command could clear
 ///   (§DF-index-entry-form.2.3).
 fn kind_index_name_error(name: &str) -> Option<String> {
@@ -392,7 +392,7 @@ pub(super) fn apply_parsed_kinds(
             ));
         }
         // §FS-config.3.4: an index lists the folder's declarations
-        // (§FS-check.3.18), and a non-citable kind has none — so the key is not a
+        // (§FS-check.3.18.1), and a non-citable kind has none — so the key is not a
         // no-op here, it is a statement about a set that can never be non-empty.
         if k.index != KindIndex::Default && !k.citable {
             return Err(anyhow!(
@@ -401,7 +401,7 @@ pub(super) fn apply_parsed_kinds(
                 k.kind
             ));
         }
-        // §FS-config.3.9.2: `code` is the *default* name of the homeless kind, and a
+        // §FS-config.3.9.2.2: `code` is the *default* name of the homeless kind, and a
         // name a project may take only by declaring that kind — the complement of
         // every home. Any other row wearing it would collide with that fallback.
         if k.kind == CODE_SOURCE_KIND && !(!k.citable && k.folder.is_none() && k.file.is_none()) {
@@ -433,8 +433,8 @@ pub(super) fn apply_parsed_kinds(
             validate_value_home(path, line, &config.root, &k.kind, home, expects_file)?;
         }
     }
-    // §FS-config.3.4.7: an unwalked kind is a place and nothing more. A citable one
-    // would have declarations nobody reads — the trap §FS-config.3.5 closes — and the
+    // §FS-config.3.4.7.6: an unwalked kind is a place and nothing more. A citable one
+    // would have declarations nobody reads — the trap §FS-config.3.5.10 closes — and the
     // homeless kind has no home to leave unwalked (`[scan] include` says what is read).
     for entry in &parsed {
         let k = &entry.config;
@@ -456,7 +456,7 @@ pub(super) fn apply_parsed_kinds(
             ));
         }
     }
-    // §FS-config.3.4.8: the grounding pair, once the row shape it is validated against
+    // §FS-config.3.4.8.5: the grounding pair, once the row shape it is validated against
     // is known to be legal. The `[reference]` boolean goes with it: a row's level is
     // judged against the value the row resolves to, not the one it wrote.
     validate_kind_grounding(path, &parsed, config.require_grounding)?;
@@ -472,7 +472,7 @@ pub(super) fn apply_parsed_kinds(
             kind.resolve = Some(KindResolution::Must);
         }
     }
-    // §FS-config.3.9.2: the homeless kind is the complement of every configured home,
+    // §FS-config.3.9.2.1: the homeless kind is the complement of every configured home,
     // and a complement is one place. Two rows claiming it would leave the fallback
     // with no single answer, so the second is refused rather than resolved by order.
     let homeless: Vec<&KindConfig> = kinds

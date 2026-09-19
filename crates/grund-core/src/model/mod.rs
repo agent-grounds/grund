@@ -9,7 +9,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). The submodules are the former `model*` and
+//! (§AR-core-module-layout.1.1). The submodules are the former `model*` and
 //! `values` category files, one per record family §AR-system.2.2 names, plus
 //! `paths.rs`: the path keys a file is compared by, which came down out of
 //! `checker/homes.rs` when §AR-system.2.6 became a module because the scanner
@@ -23,7 +23,7 @@
 //! of a string or a `Path` with no stream and no `Config`. The published report
 //! records — `Report`, `Finding` and `FindingSite` — joined `report.rs` beside
 //! the internal ones they are rendered from, because the editor snapshot and the
-//! show refusal of §FS-lsp and §FS-errors.5 carry them and both are the queries'.
+//! show refusal of §FS-lsp and §FS-errors.5.2 carry them and both are the queries'.
 //! And the snapshot canonicalization of §AR-lsp.5 joined `paths.rs` out of
 //! `scanner/tree.rs`, the queries and the writers being siblings that both
 //! rebase a path against it.

@@ -1,7 +1,7 @@
 //! Test module: what counts as an **entry** in a kind's index
 //! (§DF-index-entry-form.2.3). One predicate decides it — a citation is a bare
 //! entry exactly when the next `grund fmt --write` would wrap it — and every
-//! case here is a place where the answer is no, so §FS-check.3.17 must stay
+//! case here is a place where the answer is no, so §FS-check.3.17.4 must stay
 //! silent and §FS-check.3.18's warning is what the reader gets instead. Each was
 //! a permanent, unclearable error before the predicate replaced a list of
 //! exemptions. Where the findings land, and the two carve-outs around them, are
@@ -11,7 +11,7 @@ use crate::testing::{
     check_run, codes, findings, kind_index_repo, kind_index_repo_loose, only, write,
 };
 
-/// §FS-check.3.17 / §DF-index-entry-form.2.3: an unmarked token is a
+/// §FS-check.3.17.4 / §DF-index-entry-form.2.3: an unmarked token is a
 /// recognized citation off strict mode, and `fmt --cross-refs` still leaves
 /// it alone — without `--marker` a bare token stays bare (§FS-fmt.6.5). So it
 /// is not an entry `fmt` can repair, and the error that names `grund fmt
@@ -37,9 +37,9 @@ fn an_unmarked_token_is_not_an_entry_and_is_not_an_error() {
     );
 }
 
-/// §FS-check.1.1: a bare ID-shaped token inside a Markdown link destination
+/// §FS-check.1.1.4: a bare ID-shaped token inside a Markdown link destination
 /// is not a citation at all off strict mode, because `](…)` is a zone `fmt`
-/// never writes in (§FS-fmt.2.3) — so it earns no `unlinked-index-entry`
+/// never writes in (§FS-fmt.2.3.4) — so it earns no `unlinked-index-entry`
 /// finding for the same reason no citation ever does, and the ID still falls
 /// to §FS-check.3.18's warning below (grund#131).
 #[test]

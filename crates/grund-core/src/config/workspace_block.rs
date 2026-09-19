@@ -96,13 +96,13 @@ pub(crate) fn is_valid_project_alias(alias: &str) -> bool {
 
 /// What an alias path is expected to look like, named in every diagnostic that
 /// refuses one — the slug grammar, and the fact that a path carries one segment
-/// per workspace level (§FS-workspace.1, §FS-workspace.6.1).
+/// per workspace level (§FS-workspace.1.1, §FS-workspace.6.1).
 pub(crate) const INVALID_ALIAS_PATH_EXPECTED: &str =
     "expected [a-z][a-z0-9-]*, one segment per workspace level";
 
 /// Return the first invalid segment of an alias path, preserving empty segments
 /// so each caller can render its surface's diagnostic without changing the
-/// shared validation rule (§FS-workspace.1).
+/// shared validation rule (§FS-workspace.1.1).
 pub(crate) fn invalid_alias_path_segment(alias: &str) -> Option<&str> {
     alias
         .split('/')
@@ -125,7 +125,7 @@ pub(crate) fn optional_member_alias_segment(member: &str) -> &str {
     member.rsplit('/').next().unwrap_or(member)
 }
 
-/// §FS-workspace.2.2 "one entry belongs to one list": one sentence for the two
+/// §FS-workspace.2.2.7 "one entry belongs to one list": one sentence for the two
 /// places that can catch the contradiction — the entry text here and the
 /// canonical roots at expansion — because it is one rule, and which of the two saw
 /// it is not something the author has to know.
@@ -155,7 +155,7 @@ fn validate_optional_workspace_member(
     plain: &[String],
 ) -> Result<()> {
     validate_workspace_member(path, line, member)?;
-    // §FS-workspace.2.2 "one entry belongs to one list": compared as paths, so a
+    // §FS-workspace.2.2.7 "one entry belongs to one list": compared as paths, so a
     // trailing slash is the same entry rather than a second one.
     if plain
         .iter()
@@ -167,7 +167,7 @@ fn validate_optional_workspace_member(
             both_member_lists_message(member),
         ));
     }
-    // §FS-workspace.2.2: an absent parent directory names no namespaces, so a
+    // §FS-workspace.2.2.6: an absent parent directory names no namespaces, so a
     // glob here would appear to work and do nothing. The message names the shape
     // that works, because a user who has just been refused needs the form to write.
     if member.contains('*') {

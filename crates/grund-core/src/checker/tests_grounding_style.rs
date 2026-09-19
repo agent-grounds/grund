@@ -122,7 +122,7 @@ fn inline_note_hard_caps_can_report_multiple_errors() {
     );
 }
 
-/// §FS-inline-citation-style.4.1: the site clause names every citation the
+/// §FS-inline-citation-style.4.1.2: the site clause names every citation the
 /// block carries, each exactly as written — marker and section included —
 /// in source order, and only once: a token repeated verbatim contributes
 /// nothing past its first occurrence.
@@ -157,7 +157,7 @@ fn inline_note_line_cap_names_citations_in_source_order_deduplicated() {
         );
 }
 
-/// §FS-inline-citation-style.2.3: a column is one character, so two notes of
+/// §FS-inline-citation-style.2.3.2: a column is one character, so two notes of
 /// equal length are judged alike whatever their prose costs in UTF-8
 /// (§DF-note-columns-are-characters).
 #[test]
@@ -207,7 +207,7 @@ fn inline_note_column_cap_counts_characters_not_bytes() {
     );
 }
 
-/// §FS-inline-citation-style.2.3: the cap is exact in non-ASCII prose — one
+/// §FS-inline-citation-style.2.3.2: the cap is exact in non-ASCII prose — one
 /// character over is over, and it is the only line reported.
 #[test]
 fn inline_note_column_cap_is_exact_in_non_ascii_prose() {
@@ -374,7 +374,7 @@ fn python_docstring_citations_keep_source_columns() {
             citations[0].text.as_str()
         ),
         (3, 10, "§FS-001-login"),
-        "indented docstring body citation must use original source column (§AR-scanner.4)"
+        "indented docstring body citation must use original source column (§AR-scanner.4.4)"
     );
     assert_eq!(
         (
@@ -383,7 +383,7 @@ fn python_docstring_citations_keep_source_columns() {
             citations[1].text.as_str()
         ),
         (7, 15, "§FS-001-login"),
-        "same-line triple-quoted docstring citation must be scanned after the opening delimiter (§AR-scanner.4)"
+        "same-line triple-quoted docstring citation must be scanned after the opening delimiter (§AR-scanner.4.4)"
     );
 }
 
@@ -498,7 +498,7 @@ fn config_rejects_multiline_project_description() {
     );
 }
 
-/// §FS-workspace.1, §AR-workspace.3.1: a marker-prefixed qualified
+/// §FS-workspace.1.3, §AR-workspace.3.1: a marker-prefixed qualified
 /// citation (`<§>alias/<ID>`) is recognised; an unmarked `alias/<ID>` in
 /// prose is text. There is one scan mode, not two.
 #[test]

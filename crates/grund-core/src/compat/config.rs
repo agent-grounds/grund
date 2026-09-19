@@ -86,7 +86,7 @@ pub(super) fn command_config(args: &[String]) -> ExitCode {
                 println!("marker = \"{}\"", config.marker);
                 println!("trigger = \"{}\"", config.trigger);
                 println!("strict = {}", config.strict);
-                // §FS-config.4.2: print the effective persisted-form policy,
+                // §FS-config.4.2.2: print the effective persisted-form policy,
                 // including the absent key's canonical default.
                 println!("shorthand = \"{}\"", config.shorthand.as_str());
                 println!("require_grounding = {}", config.require_grounding);
@@ -96,7 +96,7 @@ pub(super) fn command_config(args: &[String]) -> ExitCode {
                 if config.grounding_enabled() {
                     println!("grounding_level = {}", config.grounding_level);
                 }
-                // §FS-config.3.1: optional means omitted when unset; when set,
+                // §FS-config.3.1.2: optional means omitted when unset; when set,
                 // preserve the schema's canonical inline-table order.
                 if let Some(warning) = config.lead_size_warning {
                     println!(
@@ -105,7 +105,7 @@ pub(super) fn command_config(args: &[String]) -> ExitCode {
                         warning.unit.as_str()
                     );
                 }
-                // Optional opinion (§FS-config.3.1): absent means none, so only a
+                // Optional opinion (§FS-config.3.1.3): absent means none, so only a
                 // set value round-trips — there is no "none" spelling to print.
                 if let Some(conversation) = &config.conversation {
                     println!("conversation = \"{conversation}\"");
@@ -130,7 +130,7 @@ pub(super) fn command_config(args: &[String]) -> ExitCode {
                 println!("[id]");
                 println!("format = \"{}\"", config.id_format);
                 println!("section_separator = \"{}\"", config.section_separator);
-                // §FS-config.4.2: false is operationally absent; only an enabled
+                // §FS-config.4.2.3: false is operationally absent; only an enabled
                 // gate adds a line to effective-config output.
                 if config.named_sections {
                     println!("named_sections = true");
@@ -207,7 +207,7 @@ pub(super) fn command_config(args: &[String]) -> ExitCode {
                     if let Some(fetch) = &kind.fetch {
                         println!("fetch = \"{}\"", escape_toml_basic(fetch));
                     }
-                    // §FS-config.3.4.8: each grounding key only where the row's
+                    // §FS-config.3.4.8.6: each grounding key only where the row's
                     // effective value differs from the effective global printed
                     // above, so the shown config loads back as itself.
                     for line in config.kind_grounding_toml_lines(kind) {
