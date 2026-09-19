@@ -448,6 +448,13 @@ fn newly_covered_temporary_entry_must_be_retired() {
 #[test]
 fn repository_evidence_counts_sources_and_excludes_its_own_synthetic_proofs() {
     let fixture = Fixture::new();
+    let config_path = fixture.root.join("grund.toml");
+    let config = fs::read_to_string(&config_path).expect("read fixture config");
+    fs::write(
+        config_path,
+        format!("{config}\ninclude = [\"docs\", \"crates\", \"tests\"]\n"),
+    )
+    .expect("include every evidence root in the scan");
     for (path, contents) in [
         (
             "crates/sample/src/nested/tests_behavior.rs",
