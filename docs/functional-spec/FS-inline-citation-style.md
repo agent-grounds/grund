@@ -4,36 +4,25 @@ An inline citation in a code comment can carry a short rationale next to the `§
 
 ## 1. Scope
 
-An **inline citation site** is an *inline comment* block — a maximal run of adjacent comment/docstring lines, by the scanner's existing line classes ([AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)) — that contains at least one citation token recognized by [§FS-check.1.1](FS-check.md#11-recognized-citations). A **doc comment** block is not a site, whatever it carries: §1.1 draws that line and every rule below stops at it. The block forms below say where a block begins and ends, which is the scanner's existing normalization and not a verdict on which of them are sites:
-
-- `//` / `///` / `//!` line comments: a run of adjacent lines whose first non-whitespace token is the same line-comment marker.
-- `#`, `;`, `--` line comments: same rule per marker (see [§FS-config.3.5](FS-config.md#35-scan--what-gets-walked) for the full prefix set).
-- `/* … */` block comments, `/**`- and `/*!`-opened alike: from opener to closer.
-- Python triple-quoted docstrings (`""" … """` / `''' … '''`): from the opening triple-quote to the matching close.
-
-Adjacency is broken by any line that is not part of the same block: a code line, a blank line, or a different comment style. A site never spans more than one block. An empty comment line — the marker alone, such as `//` or `#`, with nothing after it — stays inside the run: it carries the marker, so only a line without one breaks it.
-
-This spec governs inline citation sites only. It does **not** govern:
-
-- Citations inside Markdown spec bodies (prose in `docs/`, `tests/e2e/`, or any other `.md` file the scanner reads). Spec text governs itself; a sentence that needs three lines of context gets three lines of context.
-- Declarations themselves — `# FS-foo: …` and `/// FS-foo: …` are declaration headings ([AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection)), and the scanner already excludes a declaration's own heading from the citations it records ([AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection)). A doc-comment whose first line is a declaration heading and whose remaining lines are spec body is a declaration, not a citation site.
-- Inline-spec stubs (`# <ID>: [<text>](<path>)`) — a `docs/` shape, not a code-comment shape.
-- Bare ID-shaped tokens that the scanner already excludes from citations: tokens inside string literals in source files ([AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection)), and any bare token at all under `[reference] strict = true` ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). If the scanner doesn't see a citation, no site exists.
-- Doc comments (§1.1). A doc comment is documentation, not a note: a citation inside one still resolves and is still checked, and no rule in this spec measures it.
-
-A *note* is any non-whitespace text inside an inline citation site that is not a comment-prefix character and not part of a `§<ID>[.<section>]` token (workspace-qualified `§<alias>/<ID>` tokens, [§FS-workspace.1](FS-workspace.md#1-citation-syntax), are citation tokens, not notes). What separates two citation tokens of one chain on one line is not a note either: whitespace, or a single comma with optional whitespace around it. So `// §FS-check.3.1  §FS-config.3.1` and `// §FS-check.3.1, §FS-config.3.1` are both pure citation comments — the second spells the chain the way §3.3 requires a note's citation run to be spelled, and writing it must not turn a pointer into prose. Anything else between two tokens is a note: a second comma, a ` + `, a ` / `, an `and`. The exemption is bounded by the line because the separator is read between two tokens the same line holds: a chain wrapped across two comment lines — `// §FS-check.3.1,` and then `// §FS-config.3.1` on the next line — leaves the trailing comma with no following token to join, so that site carries a note, and under a configured layout (§3.3) its citation-bearing lines are judged like any other.
+An **inline citation site** is an *inline comment* block — a maximal run of adjacent comment/docstring lines, by the scanner's existing line classes ([AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)) — that contains at least one citation token recognized by [§FS-check.1.1](FS-check.md#11-recognized-citations). A site never spans more than one block: a code line, a blank line, or a different comment style ends a block, and an empty comment line does not (§1.2). A **doc comment** block is not a site, whatever it carries: §1.1 draws that line and every rule below stops at it. What this spec does not govern is listed in §1.3, and what inside a site counts as a *note* is defined in §1.4.
 
 ### 1.1 Doc comments are not sites
 
-A **doc comment** documents the definition that follows it, or the file it opens. An **inline comment** is every other comment — one among statements, a detached block, a note beside the clause it grounds. Only an inline comment is an inline citation site. Nothing in this spec reaches a citation written inside a doc comment: not `citation-only` (§3.1), not the line and column budgets (§2.3, §4.1, §4.2), not the layout (§3.3, §4.4).
+A **doc comment** documents the definition that follows it, or the file it opens. An **inline comment** is every other comment — one among statements, a detached block, a note beside the clause it grounds. Only an inline comment is an inline citation site. Nothing in this spec reaches a citation written inside a doc comment: not `citation-only` (§3.1), not the line and column budgets (§2.3, §4.1, §4.2), not the layout (§3.3, §4.4). Everything else still does: the citation resolves and is dangling when it does not ([§FS-check.3.1](FS-check.md#31-dangling-citation)), counts toward the grounding floor ([§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in)) and the citation directions ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)), is judged by the target project's shorthand policy when it is a persisted shorthand ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)), and is linkified by `grund fmt` ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)).
 
-This generalizes an exemption the spec already grants. A doc comment that *declares* an ID is spec text whose shape this spec does not govern (§3.3 rule 6, §5); the doc comment beside it is documentation by the same argument. A class Javadoc or a module doc that names the spec point it implements, in the sentence that needs it, is not a three-line note that ran long — it is the language's own documentation, it renders into generated docs, and a rule about the shape of a *note* has nothing to say about it. Everything else still does: a citation in a doc comment resolves and is dangling when it does not ([§FS-check.3.1](FS-check.md#31-dangling-citation)), counts toward the grounding floor ([§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in)) and the citation directions ([§FS-check.3.11](FS-check.md#311-missing-required-citation), [§FS-check.3.12](FS-check.md#312-forbidden-citation)), is judged by the target project's shorthand policy when it is a persisted shorthand ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)), and is linkified by `grund fmt` ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)). Only the shape rules of this spec stop at the doc-comment boundary.
+This generalizes the exemption a doc comment that *declares* an ID already has (§3.3.6, §5): a class Javadoc or a module doc that names the spec point it implements, in the sentence that needs it, is the language's own documentation and renders into generated docs, not a note that ran long ([§DF-doc-comments-are-not-notes.2.1](../decisions/functional/DF-doc-comments-are-not-notes.md#21-the-site-is-an-inline-comment-a-doc-comment-is-not-a-site)).
+
+#### 1.1.1 Recognizers
 
 Which kind a block is, is read from the file's extension and one test on the block itself — never by parsing the host language (§6). Two recognizers and a default:
 
 1. **Marker languages** spell a doc comment with a marker of their own, so the marker *is* the language's own answer. The block is a doc comment when its line-comment marker — or, for a block comment, its opening line — is the doc form.
-2. **Position languages** spell a doc comment exactly like every other comment (Go `//`, Ruby `#`, shell `#`, SQL `--`), so position answers instead. The block is a doc comment when the line immediately below it, with no blank line between, is a **definition-starter** for that language, or when the block is the file's **leading comment**: every line above it is blank, or is line 1 and a `#!` shebang. The second half is how a position language spells a module doc — a header at the top of a Go, Ruby, shell, or SQL file documents the file, the way `//!` and a module docstring do where a marker exists.
+2. **Position languages** spell a doc comment exactly like every other comment (Go `//`, Ruby `#`, shell `#`, SQL `--`), so position answers instead. The block is a doc comment when the line immediately below it, with no blank line between, is a **definition-starter** for that language, or when the block is the file's **leading comment**: every line above it is blank, or is line 1 and a `#!` shebang. A leading comment is how these languages spell a module doc — a header at the top of a Go, Ruby, shell, or SQL file documents the file, the way `//!` and a module docstring do where a marker exists.
 3. **Any other extension** has no doc-comment notion, so every comment block in it is inline. That is the behavior of every release before this rule, so nothing a conformant tree already passes changes on its account.
+
+#### 1.1.2 Languages
+
+Each extension belongs to one recognizer of §1.1.1, which tests for the doc form this table gives:
 
 | extensions | recognizer | doc comment when |
 |---|---|---|
@@ -47,14 +36,41 @@ Which kind a block is, is read from the file's extension and one test on the blo
 | `sh` `bash` `zsh` | position | `function <name>`, or `<name>()` / `<name> ()`, with `<name>` matching `[A-Za-z_][A-Za-z0-9_]*`. |
 | `sql` | position | the definition-starter `create`, matched case-insensitively, so `CREATE OR REPLACE FUNCTION …` counts. |
 
-A **definition-starter** matches when the next line, with leading whitespace removed, begins with the keyword followed by a non-identifier character or the end of the line — `func(` and `func main` match, `functional` does not. Leading whitespace is allowed, so an indented Ruby `def` inside a `class` still counts.
+A **definition-starter** matches when the next line, with leading whitespace removed, begins with the keyword followed by a non-identifier character or the end of the line: `func(` and `func main` match, `functional` does not, and an indented Ruby `def` inside a `class` still counts.
 
-Four corners are known and accepted rather than repaired:
+#### 1.1.3 Accepted corners
 
-- A **dangling doc comment** — a `/** … */` or `///` inside a method body, which `javac`'s `-Xlint:dangling-doc-comments` and `rustc`'s `unused_doc_comments` lint already warn about — is a doc comment by its marker and is not measured. The language's own lint is the tool for a doc comment in the wrong place.
+Four corners are known and accepted rather than repaired ([§DF-doc-comments-are-not-notes.2.6](../decisions/functional/DF-doc-comments-are-not-notes.md#26-the-corners-it-accepts)):
+
+- A **dangling doc comment** — a `/** … */` or `///` inside a method body, which `javac`'s `-Xlint:dangling-doc-comments` and `rustc`'s `unused_doc_comments` already warn about — is a doc comment by its marker and is not measured. The language's own lint is the tool for a doc comment in the wrong place.
 - **Position recognition is recognition, not parsing.** A Go `var` inside a function body and a Ruby `private def` are classified by the same one-line test: the first reads as a doc comment, the second does not. A miss in either direction only changes whether a block is *measured*; it never changes what a citation resolves to, or whether it resolves at all. The starter sets can widen later without a `grund_config_version` bump ([§FS-config.5](FS-config.md#5-schema-versioning)).
-- A comment **trailing code** on the same line (`foo(); // §<ID>: note`) is what it already was: not a site (§3.3, rule 6).
-- **Blank-line adjacency is adjacency.** A `#` block, a blank line, then a `def` is an inline comment — the blank line broke the block off the definition, the same way it breaks one block into two (§1).
+- A comment **trailing code** on the same line (`foo(); // §<ID>: note`) is what it already was: not a site (§3.3.6).
+- **Blank-line adjacency is adjacency.** A `#` block, a blank line, then a `def` is an inline comment — the blank line broke the block off the definition, the same way it breaks one block into two (§1.2).
+
+### 1.2 Comment blocks
+
+The block forms say where a block begins and ends. They are the scanner's existing normalization, not a verdict on which blocks are sites:
+
+- `//` / `///` / `//!` line comments: a run of adjacent lines whose first non-whitespace token is the same line-comment marker.
+- `#`, `;`, `--` line comments: same rule per marker (see [§FS-config.3.5](FS-config.md#35-scan--what-gets-walked) for the full prefix set).
+- `/* … */` block comments, `/**`- and `/*!`-opened alike: from opener to closer.
+- Python triple-quoted docstrings (`""" … """` / `''' … '''`): from the opening triple-quote to the matching close.
+
+Adjacency is broken by any line that is not part of the same block: a code line, a blank line, or a different comment style. An empty comment line — the marker alone, such as `//` or `#`, with nothing after it — stays inside the run: it carries the marker, so only a line without one breaks it.
+
+### 1.3 What is not a site
+
+This spec governs inline citation sites only. It does **not** govern:
+
+- Citations inside Markdown spec bodies (prose in `docs/`, `tests/e2e/`, or any other `.md` file the scanner reads). Spec text governs itself.
+- Declarations themselves — `# FS-foo: …` and `/// FS-foo: …` are declaration headings ([AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection)), and the scanner already excludes a declaration's own heading from the citations it records ([AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection)). A doc-comment whose first line is a declaration heading and whose remaining lines are spec body is a declaration, not a citation site.
+- Inline-spec stubs (`# <ID>: [<text>](<path>)`) — a `docs/` shape, not a code-comment shape.
+- Bare ID-shaped tokens that the scanner already excludes from citations: tokens inside string literals in source files ([AR-scanner.2.3](../architecture/AR-scanner.md#23-citation-detection)), and any bare token at all under `[reference] strict = true` ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). If the scanner doesn't see a citation, no site exists.
+- Doc comments (§1.1).
+
+### 1.4 Notes
+
+A *note* is any non-whitespace text inside an inline citation site that is not a comment-prefix character and not part of a `§<ID>[.<section>]` token (workspace-qualified `§<alias>/<ID>` tokens, [§FS-workspace.1](FS-workspace.md#1-citation-syntax), are citation tokens, not notes). What separates two citation tokens of one chain on one line is not a note either: whitespace, or a single comma with optional whitespace around it. So `// §FS-check.3.1  §FS-config.3.1` and `// §FS-check.3.1, §FS-config.3.1` are both pure citation comments — the second spells the chain the way §3.3 requires a note's citation run to be spelled, and writing it must not turn a pointer into prose. Anything else between two tokens is a note: a second comma, a ` + `, a ` / `, an `and`. The exemption is bounded by the line because the separator is read between two tokens the same line holds: a chain wrapped across two comment lines — `// §FS-check.3.1,` and then `// §FS-config.3.1` on the next line — leaves the trailing comma with no following token to join, so that site carries a note, and under a configured layout (§3.3) its citation-bearing lines are judged like any other.
 
 ## 2. Configuration
 
@@ -62,9 +78,7 @@ The keys live in `[reference]`, and their values and defaults are stated there (
 
 ### 2.1 Defaults
 
-The zero-config defaults ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)) are the ones [§FS-config.3.1](FS-config.md#31-reference--citation-form) gives.
-
-The defaults preserve the convention this project already follows — a one-line rationale next to each `§<ID>` citation — and never reject sites that an existing conformant tree was already writing. `inline_note_layout = "any"` is that promise for the layout axis in particular: it imposes no shape at all, so a tree that never had a house style gains no findings and pays no classification work. `inline_note_layout_check = "off"` extends the second half of that promise to a tree that *has* adopted a house style but not the gate: with no channel for a verdict to reach, no line is classified either (§4.4).
+The zero-config defaults ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)) are the ones [§FS-config.3.1](FS-config.md#31-reference--citation-form) gives. They preserve the convention this project already follows — a one-line note next to each `§<ID>` citation — and never reject sites that an existing conformant tree was already writing. `inline_note_layout = "any"` is that promise for the layout axis in particular: it imposes no shape at all, so a tree that never had a house style gains no findings and pays no classification work. `inline_note_layout_check = "off"` extends the second half of that promise to a tree that *has* adopted a house style but not the gate: with no channel for a verdict to reach, no line is classified either (§4.4).
 
 ### 2.2 Load-time invariants
 
@@ -72,94 +86,81 @@ The load-time rules for these keys are stated with their schema in [§FS-config.
 
 ### 2.3 Counting lines and columns
 
-- **Lines.** A site's line count is the physical extent of its comment block per §1 — `last_line - first_line + 1`. A single `// …` line counts as 1; a three-line `//` run or `/* … */` block counts as 3. Blank intra-block lines (a ` * ` filler inside `/* … */`, an empty `//` line) count toward the total — the rule measures the comment's physical size.
-- **Columns.** A site's column width is the number of **characters** on its longest constituent line, counted from column 1: one column per Unicode scalar value, whatever UTF-8 spends encoding it. `é`, `—`, `×`, and the `§` marker itself are one column each and not the two or three bytes they occupy, so a note in accented or non-Latin prose gets the same budget as the same note in ASCII and a project that configures `100` gets 100 columns in every language it writes ([§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible)). Two neighbouring measures are deliberately *not* this one. It is not the **byte** length — that is the start column the scanner records on each citation ([AR-scanner.3](../architecture/AR-scanner.md#3-output)), which addresses a position for an editor to jump to rather than bounding a length, and the two agree only on a line of pure ASCII. And it is not the **display width** — a tab is one column and so is a double-width glyph, so the cap moves with neither a tabstop setting nor the font a reader renders the file in. Why the character is the unit, and why reading it as bytes was a defect rather than a policy, is decided in [§DF-note-columns-are-characters](../decisions/functional/DF-note-columns-are-characters.md#df-note-columns-are-characters-a-note-column-is-one-character-not-one-byte-and-not-one-display-cell).
-- **Note presence.** After stripping the line's comment-prefix tokens (`//`, `*`, the opening `/**`, the docstring `"""`, etc.), every citation token, and the separator joining two consecutive citation tokens on one line where that separator is whitespace with at most one comma (§1), any non-whitespace character remaining on any line of the site is a note. The stripping is per line, so a comma that a wrapped chain leaves at the end of a line joins nothing and stays note text (§1). This is the same line-normalization the scanner already does for declaration detection ([AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)) — applied to the whole block instead of one line.
+A site is measured three ways, each over the comment block §1.2 bounds: its physical lines (§2.3.1), the characters on its longest line (§2.3.2), and whether it carries a note (§2.3.3).
+
+#### 2.3.1 Lines
+
+A site's line count is the physical extent of its comment block — `last_line - first_line + 1`. A single `// …` line counts as 1; a three-line `//` run or `/* … */` block counts as 3. Blank intra-block lines (a ` * ` filler inside `/* … */`, an empty `//` line) count toward the total: the rule measures the comment's physical size.
+
+#### 2.3.2 Columns
+
+A site's column width is the number of **characters** on its longest constituent line, counted from column 1: one column per Unicode scalar value, whatever UTF-8 spends encoding it. `é`, `—`, `×`, and the `§` marker itself are one column each and not the two or three bytes they occupy, so a note in accented or non-Latin prose gets the same budget as the same note in ASCII, and a project that configures `100` gets 100 columns in every language it writes ([§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible)).
+
+The width is not the **byte** length: that is the start column the scanner records on each citation ([AR-scanner.3](../architecture/AR-scanner.md#3-output)), which addresses a position for an editor to jump to rather than bounding a length, and the two agree only on a line of pure ASCII. Nor is it the **display width**: a tab is one column and so is a double-width glyph, so the cap moves with neither a tabstop setting nor the font a reader renders the file in. Why the character is the unit, and why reading it as bytes was a defect rather than a policy, is decided in [§DF-note-columns-are-characters](../decisions/functional/DF-note-columns-are-characters.md#df-note-columns-are-characters-a-note-column-is-one-character-not-one-byte-and-not-one-display-cell).
+
+#### 2.3.3 Note presence
+
+After stripping a line's comment-prefix tokens (`//`, `*`, the opening `/**`, the docstring `"""`, etc.), every citation token, and each separator between two consecutive citation tokens on that line that §1.4 excludes from a note — whitespace with at most one comma — any non-whitespace character remaining on any line of the site is a note. The stripping is per line, so a comma that a wrapped chain leaves at the end of a line joins nothing and stays note text (§1.4). This is the same line-normalization the scanner already does for declaration detection ([AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)) — applied to the whole block instead of one line.
 
 ## 3. Styles
 
 ### 3.1 `citation-only`
 
-A citation site may contain only its comment prefix(es) and one or more `§<ID>[.<section>]` tokens, separated by whitespace or by a single comma (§1). Any non-citation, non-whitespace text in the site is an error.
-
-Allowed:
-
-```rust
-// §FS-check.3.1
-// §FS-check.3.1  §FS-config.3.1
-// §FS-check.3.1, §FS-config.3.1
-```
-
-Rejected:
-
-```rust
-// §FS-check.3.1 dangling-ref enforcement entry point
-// the per-finding shape comes from §FS-errors.2.1
-```
-
-The intended use is repositories that prefer to keep all rationale in the spec — code comments at citation sites become pure pointers. Under this style, `inline_note_*` keys have no effect.
+A citation site may contain only its comment prefix(es) and one or more `§<ID>[.<section>]` tokens, separated by whitespace or by a single comma (§1.4). A note anywhere in the site (§2.3.3) is an error. The intended use is repositories that prefer to keep all rationale in the spec, so code comments at citation sites become pure pointers. Under this style the `inline_note_*` keys have no effect (§2).
 
 ### 3.2 `citation-with-note`
 
-A citation site may contain one or more citation tokens **plus** free-text prose, bounded by `inline_note_max_lines` and `inline_note_max_columns`. The prose may appear before, after, or between citation tokens — the budgets are this style's only constraint. A project that also wants one canonical arrangement of citation and prose sets `inline_note_layout` (§3.3); at its default `any` the style is exactly as permissive as it reads here.
-
-Allowed under the defaults (one-line note, ≤ 100 columns):
-
-```rust
-// §FS-check.3.1 dangling-ref enforcement entry point
-```
-
-Allowed under `inline_note_max_lines = 3`:
-
-```rust
-// §FS-check.3.1 the dangling-ref check.
-// Walks every recognized citation in `findings.citations`, looks the ID up in
-// `findings.declarations`, and emits a finding if the lookup fails.
-fn check_dangling(...) { … }
-```
-
-Rejected — exceeds `inline_note_max_lines`:
-
-```rust
-// §FS-check.3.1 dangling-ref check entry point.
-// (… four or more comment lines of rationale …)
-```
-
-Rejected — exceeds `inline_note_max_columns`:
-
-```rust
-// §FS-check.3.1 dangling-ref check — emits a finding for any recognized citation whose ID does not resolve in `findings.declarations`, which is what makes `check` a linter
-```
+A citation site may contain one or more citation tokens **plus** a note, bounded by `inline_note_max_lines` and `inline_note_max_columns` (§2.3). The note may appear before, after, or between citation tokens — the budgets are this style's only constraint. A project that also wants one canonical arrangement of citation and note sets `inline_note_layout` (§3.3); at its default `any` the style is exactly as permissive as it reads here.
 
 ### 3.3 `inline_note_layout` — where the citations sit
 
-`inline_style` says whether a note may exist and the budgets say how big it may be; neither says where the `§<ID>` tokens sit inside it. `inline_note_layout` is that third axis, and it is orthogonal to the other two: it constrains arrangement only, never presence and never size.
-
-`inline_note_layout = "any"` (the default) imposes nothing — §3.2 as written. `inline_note_layout = "citation-first-colon"` requires the canonical form:
-
-```
-<cite>[, <cite>]*: <note>
-```
-
-read on the line's content **after** the comment prefix (`//`, `///`, `//!`, `#`, `;`, `--`, ` * `, `/**`, a docstring quote, …) and any block closer (`*/`, a closing docstring quote) have been stripped — the same normalization §2.3 already applies to decide note presence. Whatever indents the content past the prefix is stripped with it: a wrapped list continuation (`//   §<ID>: …`), an aligned ` *   ` filler, a tab after `#`. Indentation is comment formatting, not layout, so the citation run is read from the first byte of content that says anything.
-
-A leading Markdown **list marker** is skipped the same way: `-`, `*`, or `+`, or an ordered `1.` / `1)`, followed by at least one space. A bulleted block of grounded points is a common shape in a plain comment too, so a bullet is item structure rather than note text, and `// - §<ID>: note` opens with its citation run. The skip is for this rule only: §2.3 still reads the marker as note text when it decides whether a site carries a note at all, so no bulleted pointer is silently reclassified and `inline_style = "citation-only"` judges one exactly as before. One marker is skipped, not a chain of them, and only where a space follows — `// -§<ID>: note` opens with a `-`.
-
-Precisely: let `L` be a run of one or more recognized citation tokens joined by exactly `, ` (comma, one space), `W` one or more spaces, `T` any non-empty text, and `ε` the end of the content. A line **conforms** when its content matches
+`inline_style` says whether a note may exist and the budgets say how big it may be; neither says where the `§<ID>` tokens sit inside it. `inline_note_layout` is that third axis, orthogonal to the other two: it constrains arrangement only, never presence and never size. `"any"`, the default, imposes nothing — §3.2 as written (§3.3.10). `"citation-first-colon"` requires the canonical form `<cite>[, <cite>]*: <note>`. Precisely: let `L` be a run of one or more recognized citation tokens joined by exactly `, ` (comma, one space), `W` one or more spaces, `T` any non-empty text, and `ε` the end of the content. A line **conforms** when its content (§3.3.8) matches
 
 ```
 L ":" ( W T | ε )
 ```
 
-Seven rules complete the definition:
+Seven rules complete the definition, rule *n* at §3.3.*n*; §3.3.9 shows lines that conform and lines that do not.
 
-1. **Per line, not per site — and only where a note opens.** A line of the site is judged when it carries at least one recognized citation token inside its content **and** either it is the first such line of the site, or its content opens with a citation token. Every other line is unconstrained. Two shapes follow from that, both of which the other axes of this spec already promise. A line with no citation says nothing about layout, so a `//` block may open with a summary line and carry its `// §<ID>: …` lines below it. And a citation-bearing line further down that opens with *prose* is the continuation of a note that already opened correctly, so a note that wraps within its line budget (§2.3) may name a second spec point on its continuation line — the freedom rule 3 grants on one line, not taken back the moment the same note needs two. The first citation-bearing line is judged unconditionally because it is the line that opens the note: that is what keeps `// note. §<ID>`, and a summary line followed by `// prose then §<ID>`, deviations. A continuation line that *opens* with a citation token is judged too, because it is indistinguishable from a note opening — `// §<ID> and continues` reads as a malformed opener whether or not the line above it ended mid-sentence.
-2. **Only sites that carry a note.** A site whose note presence is false (§2.3) is exempt: pure citation comments have no note, and a layout is a relation between a citation and a note. Both spellings of a chain qualify — `// §FS-check.3.1  §FS-config.3.1` and the comma-joined `// §FS-check.3.1, §FS-config.3.1`, which is the very run this layout mandates in front of a colon; a project that adopts the layout must not be told its noteless pointers are now malformed for lacking one. The consequence is deliberate — a `// §<ID>` line followed by a prose-only line **in the same block** is one site *with* a note, so the citation line is judged and fails. A bulleted pointer inside such a block is the same fact wearing a list marker: skipping the marker (above) lets `// - §<ID>` open with its run, and the run still has to reach the delimiter, so a bulleted line that names an ID and says nothing is a deviation wherever the block says something elsewhere.
-3. **One edge only.** The rule constrains what *opens* the line. Citations later on the line are free, so a note may name a second spec point in passing (`// §<ID>: note (see also §<other>)`) and still conform.
-4. **Exact.** Inside the content, whitespace and punctuation deviations are deviations. A space instead of `, ` between two citations, a comma with no space, a space before the colon, a missing colon, a citation written last inside the prose, and a dash used where the colon belongs all fail. A citation run followed by a colon and nothing else conforms — the colon may end the line. The `W` that separates the colon from the note is one or more space characters, never a tab: the indentation relaxation above buys formatting *before* the content, not inside it. Exactness governs the separators inside the run and the delimiter that ends it; the indentation before the content is not part of the content.
-5. **Recognized tokens only.** "Citation token" means exactly what the scanner already recognizes on that line ([§FS-check.1.1](FS-check.md#11-recognized-citations)). Under `strict = false` a bare `// FS-x: note` line is claimed by the *declaration* recognizer before it reaches this rule ([AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection)) — an inline declaration heading is not a citation site at all (§1) — which is precisely the ambiguity the canonical form removes: with the marker written, `// <§>FS-x: note` reads as a citation carrying a rationale and can never be mistaken for a declaration of the same ID.
-6. **Same scope as the rest of this spec.** Markdown bodies have no inline citation sites and are untouched (§1), and a comment trailing code on the same line (`foo(); // §<ID>: note`) is not a site today and does not become one here. A doc-comment block is not a site at all (§1.1), so no line of one is judged here. A doc-comment whose first line is a declaration heading is a declaration and not a citation site (§1), so the `§<ID>` lines in its body are outside this rule exactly as they are outside the budgets — in a repository that declares IDs inline, that is often the densest citation block in a file, and the layout governs comments that *cite* rather than spec text that happens to live in code. §5 says the same thing to the agent.
-7. **The budgets still apply.** Layout and size are judged independently; a line may deviate from the layout, exceed the column cap, or both, and each is its own finding.
+#### 3.3.1 Per line, not per site — and only where a note opens
+
+A line of the site is judged when it carries at least one recognized citation token inside its content **and** either it is the first such line of the site, or its content opens with a citation token. Every other line is unconstrained. So a line with no citation says nothing about layout, and a `//` block may open with a summary line and carry its `// §<ID>: …` lines below it. And a citation-bearing line further down that opens with *prose* is the continuation of a note that already opened correctly, so a note that wraps within its line budget (§2.3.1) may name a second spec point on its continuation line — the freedom §3.3.3 grants on one line, not taken back the moment the same note needs two.
+
+The first citation-bearing line is judged unconditionally because it is the line that opens the note: that is what keeps `// note. §<ID>`, and a summary line followed by `// prose then §<ID>`, deviations. A continuation line that *opens* with a citation token is judged too, because it is indistinguishable from a note opening — `// §<ID> and continues` reads as a malformed opener whether or not the line above it ended mid-sentence.
+
+#### 3.3.2 Only sites that carry a note
+
+A site whose note presence is false (§2.3.3) is exempt: a layout is a relation between a citation and a note, and a pure citation comment has none. Both spellings of a chain (§1.4) qualify, the comma-joined one included — it is the very run this layout mandates in front of a colon, and a project that adopts the layout must not be told its noteless pointers are now malformed for lacking one.
+
+The consequence is deliberate: a `// §<ID>` line followed by a prose-only line **in the same block** is one site *with* a note, so the citation line is judged and fails. A bulleted pointer inside such a block is the same fact wearing a list marker: skipping the marker (§3.3.8) lets `// - §<ID>` open with its run, and the run still has to reach the delimiter, so a bulleted line that names an ID and says nothing is a deviation wherever the block says something elsewhere.
+
+#### 3.3.3 One edge only
+
+The rule constrains what *opens* the line. Citations later on the line are free, so a note may name a second spec point in passing (`// §<ID>: note (see also §<other>)`) and still conform.
+
+#### 3.3.4 Exact
+
+Inside the content, whitespace and punctuation deviations are deviations. A space instead of `, ` between two citations, a comma with no space, a space before the colon, a missing colon, a citation written last inside the prose, and a dash used where the colon belongs all fail. A citation run followed by a colon and nothing else conforms — the colon may end the line. The `W` that separates the colon from the note is one or more space characters, never a tab. Exactness governs the separators inside the run and the delimiter that ends it; the indentation before the content is not part of the content (§3.3.8).
+
+#### 3.3.5 Recognized tokens only
+
+"Citation token" means exactly what the scanner already recognizes on that line ([§FS-check.1.1](FS-check.md#11-recognized-citations)). Under `strict = false` a bare `// FS-x: note` line is claimed by the *declaration* recognizer before it reaches this rule ([AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection)) — an inline declaration heading is not a citation site at all (§1.3) — which is precisely the ambiguity the canonical form removes: with the marker written, `// <§>FS-x: note` reads as a citation carrying a rationale and can never be mistaken for a declaration of the same ID.
+
+#### 3.3.6 Same scope as the rest of this spec
+
+Markdown bodies have no inline citation sites and are untouched (§1.3), and a comment trailing code on the same line (`foo(); // §<ID>: note`) is not a site today and does not become one here. A doc-comment block is not a site at all (§1.1), so no line of one is judged here. A doc-comment whose first line is a declaration heading is a declaration and not a citation site (§1.3), so the `§<ID>` lines in its body are outside this rule exactly as they are outside the budgets — in a repository that declares IDs inline, that is often the densest citation block in a file, and the layout governs comments that *cite* rather than spec text that happens to live in code. §5 says the same thing to the agent.
+
+#### 3.3.7 The budgets still apply
+
+Layout and size are judged independently; a line may deviate from the layout, exceed the column cap, or both, and each is its own finding.
+
+#### 3.3.8 Reading a line's content
+
+The form is read on the line's content **after** the comment prefix (`//`, `///`, `//!`, `#`, `;`, `--`, ` * `, `/**`, a docstring quote, …) and any block closer (`*/`, a closing docstring quote) have been stripped — the same prefix stripping §2.3.3 applies to decide note presence. Whatever indents the content past the prefix is stripped with it: a wrapped list continuation (`//   §<ID>: …`), an aligned ` *   ` filler, a tab after `#`. Indentation is comment formatting, not layout, so the citation run is read from the first byte of content that says anything.
+
+A leading Markdown **list marker** is skipped the same way: `-`, `*`, or `+`, or an ordered `1.` / `1)`, followed by at least one space. A bulleted block of grounded points is a common shape in a plain comment too, so a bullet is item structure rather than note text, and `// - §<ID>: note` opens with its citation run. The skip is for this rule only: §2.3.3 still reads the marker as note text when it decides whether a site carries a note at all, so no bulleted pointer is silently reclassified and `inline_style = "citation-only"` judges one exactly as before. One marker is skipped, not a chain of them, and only where a space follows — `// -§<ID>: note` opens with a `-`.
+
+#### 3.3.9 Examples
 
 Conforming:
 
@@ -189,6 +190,8 @@ Nonconforming:
 /* §FS-check.3.1: a note that runs past one line and
    §FS-config.3.1 opens the continuation */
 ```
+
+#### 3.3.10 Why `any` is the default
 
 The default is `any` because a layout is a house style, not a correctness property: two projects may reasonably disagree, and a tree that adopts `grund` mid-life should not be told its comments are wrong on the day it upgrades ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)). Choosing a value, and why the enforcement level is a second key, is decided in [§DF-inline-note-layout](../decisions/functional/DF-inline-note-layout.md#df-inline-note-layout-inline-note-layout-is-a-configured-house-style-checked-per-line-and-never-normalized).
 
