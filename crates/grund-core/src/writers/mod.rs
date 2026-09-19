@@ -151,6 +151,8 @@ pub(crate) use integrations_clients::{ITERM2_SNIPPET, KITTY_SNIPPET, WEZTERM_SNI
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
 #[cfg(test)]
+mod tests_id;
+#[cfg(test)]
 mod tests_init_agents;
 #[cfg(test)]
 mod tests_init_target;

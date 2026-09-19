@@ -1,0 +1,20 @@
+grund_config_version = 1
+project_name = "alpha"
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z-]*"
+
+[[kinds]]
+kind = "TICKET"
+folder = "docs/tickets"
+format = "{kind}-{number}"
+resolve = "should"
+fetch = "scripts/fetch-ticket"
+
+[scan]
+include = ["docs"]
+respect_gitignore = false
