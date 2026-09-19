@@ -12,7 +12,7 @@ the same target-project selection as the ID query ([§FS-workspace.8.1](FS-works
 by the kind's effective grammar only, without the catalog-backed off-grammar spellings
 the query also reads ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). `grund fetch alias/TICKET-1234` loads that member's config and home, renders the qualified form in user messages, and passes only `TICKET-1234` to the integration.
 
-An ID that cannot be parsed follows the existing bare query-failure shape and exits 1.
+An ID that cannot be parsed is a bare query failure ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)) and exits 1.
 A parsed ID whose kind has no `fetch`, or whose selected project cannot supply exactly
 one configured file or folder home, is an operational refusal on stderr and exits 2.
 
