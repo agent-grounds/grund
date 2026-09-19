@@ -6,23 +6,37 @@
 
 The config file is named **`grund.toml`** and is discovered at **two locations per directory**: the bare `grund.toml` beside the project's own metadata files, then `.agents/grund.toml`. Discovery walks upward from the path argument — a file argument's parent directory, and the working directory when no path is given — probing both names in that order at every level, and stops at the first directory where either exists — mirroring how `cargo` finds `Cargo.toml`. That directory is the **config root**; relative paths inside the config are resolved against it, never against `.agents/`. One uniform rule at every level: a repository root and a workspace member each pick the form that suits them, and a workspace may mix the two ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)). Per [§DF-config-file-location](../decisions/functional/DF-config-file-location.md#df-config-file-location-grundtoml-is-discovered-at-two-names-per-directory-and-init-writes-the-bare-one).
 
-`.agents/` is a single-purpose directory: it holds agent-facing tooling configuration that does not belong at the repo root next to the project's own metadata files. Other agent tools may colocate their configuration here; `grund` only owns `.agents/grund.toml`. The bare `grund.toml` is the form `grund init` generates ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)) and the default this spec recommends, because it is the form that makes a project's grounding **visible from its root listing**: `.agents/` is a dot-directory, hidden by `ls`, by editor file trees, and by shell globs, so under that form the question "is this a grund workspace?" has no answer a reader can see. That matters most where several grund workspaces are used together — a workspace root with members, or sibling checkouts side by side — where the cost is paid once per project and the one property a reader needs at a glance is the one the layout hides. A root `grund.toml` answers it the way `Cargo.toml` answers "is this a Rust crate". See [§DF-config-file-location.2.4](../decisions/functional/DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing).
+If neither name is found anywhere up the walk, `grund` runs with the built-in defaults defined in this spec. The defaults are the canonical `grund` grammar — they are not stored in any file.
 
 ### 1.1 When one directory carries both
 
-The bare `grund.toml` wins — the form `grund init` generates is the form that governs ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)), so a project never has to hold one rule for the file grund writes and a contradicting one for the file grund reads. It is also what a user reaching for a root `grund.toml` means: a repository acquires the pair only when someone deliberately puts a bare file beside an existing `.agents/` one, and the reason to do that is to move to the recommended form. The `.agents/grund.toml` is then read by nothing at all.
+The bare `grund.toml` wins, and the `.agents/grund.toml` beside it is read by nothing at all. The form `grund init` generates is the form that governs ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)), so a project never has to hold one rule for the file grund writes and a contradicting one for the file grund reads. It is also what a user reaching for a root `grund.toml` means: a repository acquires the pair only when someone deliberately puts a bare file beside an existing `.agents/` one, and the reason to do that is to move to the recommended form (§1.3).
 
-Because a config `grund` ignores is still a config a user edits, `grund check` reports the pair as a warning naming both files ([§FS-check.4.3](FS-check.md#43-redundant-config-pair)). It is a warning and not an error because the pair is the ordinary transient state of a move in either direction, and warnings never affect the exit code ([§FS-check.2](FS-check.md#2-outputs)) — a repository mid-migration stays green while the diagnostic stays visible. The warning is what makes this order safe to state: the losing file is never silently ignored, so a config quietly replaced is reported at the first `check`. See [§DF-config-file-location.2.2](../decisions/functional/DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair). That warning is the *only* one the pair earns: the run read the bare `grund.toml`, which is the location §1.2 deprecates the other one in favour of, so there is nothing about the config in force left to deprecate.
+#### 1.1.1 The pair earns one warning
 
-If neither name is found anywhere up the walk, `grund` runs with the built-in defaults defined in this spec. The defaults are the canonical `grund` grammar — they are not stored in any file.
+Because a config `grund` ignores is still a config a user edits, `grund check` reports the pair as a warning naming both files ([§FS-check.4.3](FS-check.md#43-redundant-config-pair)), so the losing file is never silently ignored and a config quietly replaced is reported at the first `check` — which is what makes this order safe to state ([§DF-config-file-location.2.2](../decisions/functional/DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair)). It is a warning and not an error because the pair is the ordinary transient state of a move in either direction: warnings never affect the exit code ([§FS-check.2](FS-check.md#2-outputs)), so a repository mid-migration stays green while the diagnostic stays visible. It is the *only* warning the pair earns: the run read the bare `grund.toml`, the location §1.2 deprecates the other one in favour of, so nothing about the config in force is left to deprecate.
 
 ### 1.2 The `.agents/` location is deprecated
 
-Both names keep working (§1), and the bare `grund.toml` is the one a project should carry. The reason is [§DF-config-file-location.2.4](../decisions/functional/DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing)'s: a dot-directory is hidden from `ls`, from editor file trees and from shell globs, so under the `.agents/` form the question *"is this a grund project?"* has no answer a reader can see. A recommendation only this specification states is one a repository never hears, so a run whose config resolved to `.agents/grund.toml` says so — once, naming the file it read and the bare `grund.toml` it should move to ([§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)). Nothing else about that run changes: the file is read exactly as before, every key means what it meant, and the exit code is untouched. Moving is a `git mv` with no other edit ([§DF-config-file-location.2.3](../decisions/functional/DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml)), and the config root does not move with it — relative paths already resolve against the directory, never against `.agents/` (§1).
+Both names keep working (§1), and the bare `grund.toml` is the one a project should carry, for §1.3's reason. A recommendation only this specification states is one a repository never hears, so a run whose config resolved to `.agents/grund.toml` says so — once, naming the file it read and the bare `grund.toml` it should move to ([§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)). Nothing else about that run changes: the file is read exactly as before, every key means what it meant, and the exit code is untouched. Moving is a `git mv` with no other edit ([§DF-config-file-location.2.3](../decisions/functional/DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml)), and the config root does not move with it — relative paths already resolve against the directory, never against `.agents/` (§1).
 
-**Deprecated here means the tool asks you to move, not that it is going to stop reading.** There is **no release in which `.agents/grund.toml` stops being a config location**, and the message therefore names none. That is a deliberate departure from the default deprecation path ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)), which ships the new form beside the old with a warning naming the release the old one dies in, and it is stated here rather than left for a reader to notice the omission. The departure follows from what that path is *for*: a named release buys a repository the time to move before something breaks, and it is owed only where something will break. `.agents/` was `grund`'s sole config location for its whole life before dual discovery, so every repository grounded under the old rule is on it — and every one of those is a **correct** configuration rather than a broken one, because §1 reads the two names as equals and [§DF-config-file-location.2.1](../decisions/functional/DF-config-file-location.md#21-symmetric-dual-discovery)'s one rule at every level depends on a project being free to pick the form that suits it. Naming a release would promise to break configurations nothing is wrong with, to buy a uniformity this spec does not ask for. What the warning is actually for is narrower and needs no deadline: it stops a *new* project landing on the old path by copying an old one, at the moment the tools around `grund` are moving their own agent-facing files ([§DF-config-file-location.2.5](../decisions/functional/DF-config-file-location.md#25-the-agents-form-is-deprecated-and-never-removed)). A nudge that never expires is still a nudge; a deadline it cannot keep would be a lie.
+**A directory carrying both names is §1.1's case and not this one:** the config in force is already on the home path, so the directory earns the redundant pair's warning ([§FS-check.4.3](FS-check.md#43-redundant-config-pair)) and never this one. A run says either *the file you edited is ignored* or *the file you read should move*, and a repository mid-migration only ever needs one of them.
 
-**A directory carrying both names is §1.1's case and not this one.** The bare file won, so the config in force is already on the home path, and the `.agents/` file beside it is read by nothing at all — which is the redundant pair's warning to report ([§FS-check.4.3](FS-check.md#43-redundant-config-pair)) and not this one's. The two never fire on one directory: a run says either *the file you edited is ignored* or *the file you read should move*, and a repository mid-migration only ever needs one of them.
+#### 1.2.1 No release removes the `.agents/` location
+
+**Deprecated here means the tool asks you to move, not that it is going to stop reading.** There is **no release in which `.agents/grund.toml` stops being a config location**, and the message therefore names none. That is a deliberate departure from the default deprecation path ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)), which ships the new form beside the old with a warning naming the release the old one dies in, and it is stated here rather than left for a reader to notice the omission.
+
+#### 1.2.2 Why no deadline is owed
+
+A named release buys a repository the time to move before something breaks, and it is owed only where something will break. `.agents/` was `grund`'s sole config location for its whole life before dual discovery, so every repository grounded under the old rule is on it — and every one of those is a **correct** configuration rather than a broken one, because §1 reads the two names as equals and [§DF-config-file-location.2.1](../decisions/functional/DF-config-file-location.md#21-symmetric-dual-discovery)'s one rule at every level depends on a project being free to pick the form that suits it. Naming a release would promise to break configurations nothing is wrong with, to buy a uniformity this spec does not ask for.
+
+What the warning is actually for is narrower and needs no deadline: it stops a *new* project landing on the old path by copying an old one, at the moment the tools around `grund` are moving their own agent-facing files ([§DF-config-file-location.2.5](../decisions/functional/DF-config-file-location.md#25-the-agents-form-is-deprecated-and-never-removed)). A nudge that never expires is still a nudge; a deadline it cannot keep would be a lie.
+
+### 1.3 The `.agents/` directory and the recommended form
+
+`.agents/` is a single-purpose directory: it holds agent-facing tooling configuration that does not belong at the repo root next to the project's own metadata files. Other agent tools may colocate their configuration here; `grund` only owns `.agents/grund.toml`.
+
+The bare `grund.toml` is the form `grund init` generates ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)) and the default this spec recommends, because it is the form that makes a project's grounding **visible from its root listing**: `.agents/` is a dot-directory, hidden by `ls`, by editor file trees, and by shell globs, so under that form the question "is this a grund project?" has no answer a reader can see. That matters most where several grund projects are used together — a workspace root with members, or sibling checkouts side by side — where the cost is paid once per project and the one property a reader needs at a glance is the one the layout hides. A root `grund.toml` answers it the way `Cargo.toml` answers "is this a Rust crate". See [§DF-config-file-location.2.4](../decisions/functional/DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing).
 
 ## 2. Precedence
 
@@ -34,7 +48,7 @@ Compatibility note: a pre-existing `grund.toml` that omits `[[kinds]]` keeps the
 
 The config file is TOML. Every key is optional; omitted keys take the default value. Unknown keys are an **error**, not a warning, per [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) — typos in config files are bugs and grund surfaces them loudly.
 
-The recognized surface is the line-oriented subset that the schema below uses: one `key = value` per line, basic (double-quoted) strings, booleans, integers, and single-line `["…", "…"]` arrays of basic strings; `#` comments; `[table]` and `[[array.of.tables]]` headers. Multi-line arrays, inline `{ … }` tables, and other TOML constructs are not parsed, except for the closed `lead_size_warning` inline table defined in §3.1 — keep each value on one line. A line that does not fit this shape is reported as an error pointing at the offending line, per §4.3.
+The recognized surface is the line-oriented subset that the schema below uses: one `key = value` per line, basic (double-quoted) strings, booleans, integers, and single-line `["…", "…"]` arrays of basic strings; `#` comments; `[table]` and `[[array.of.tables]]` headers. Multi-line arrays, inline `{ … }` tables, and other TOML constructs are not parsed, except for the closed `lead_size_warning` inline table defined in §3.1.2 — keep each value on one line. A line that does not fit this shape is reported as an error pointing at the offending line, per §4.3.
 
 Top-level keys:
 
@@ -74,6 +88,8 @@ warn_on_suggested            = false                   # if true, soft-cap overr
 
 Per [§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger). `strict = true` requires a non-empty `marker`; `strict = false` is the compatibility mode for repositories that still rely on bare citations.
 
+#### 3.1.1 `shorthand` — persisted number-only citations
+
 `shorthand` is a closed two-value policy for a uniquely resolving, marker-origin
 number-only shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)).
 `canonical`, the default when the key is absent, reports a persisted shorthand
@@ -84,6 +100,8 @@ input, unresolved or ambiguous shorthand, or a grammar without both `{number}`
 and `{slug}`. The value set is closed: any other string or any non-string value
 is a load-time configuration error at this key (§4.3). This additive key does not
 bump `grund_config_version` (§5).
+
+#### 3.1.2 `lead_size_warning` — the oversized-lead opt-in
 
 `lead_size_warning` opts this project into the lead-only warning defined by
 [§FS-check.4.13](FS-check.md#413-oversized-lead-opt-in). Its inline table has
@@ -97,6 +115,8 @@ check output stays byte-identical. `grund config show` omits the key when absent
 and otherwise prints its canonical inline form,
 `lead_size_warning = { max = <N>, unit = "<unit>" }`.
 
+#### 3.1.3 `conversation` — one name, two scopes
+
 `conversation` selects how agents render citations in **local conversations** — the answers, reviews, and transcripts an agent writes, not the citations on disk ([§DF-repo-conversation-opinion](../decisions/functional/DF-repo-conversation-opinion.md#df-repo-conversation-opinion-repositories-may-commit-a-link-only-conversation-rendering-opinion)). It is absent by default (no opinion), and it does not affect scanning, checking, or formatting — it only selects entrypoint guidance.
 
 The key has **one name and two scopes**, and the scope decides both who is instructed and which values are legal:
@@ -106,29 +126,43 @@ The key has **one name and two scopes**, and the scope decides both who is instr
 | Repository *opinion* | the project's `grund.toml` (§1) | `link` only | every agent that clones the repo, through the generated entrypoint ([§FS-init.2.3.6](FS-init.md#236-clickable-citations)) |
 | User *preference* | `$XDG_CONFIG_HOME/grund/config.toml` | `plain` \| `link` | every agent on this machine, through its global instruction file ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions)) |
 
+The same spelling in both files is deliberate: one setting the user already knows by name, read at two scopes, rather than a second vocabulary for the same idea. Only the *values* narrow, and only in the direction a repository can actually justify.
+
+#### 3.1.4 `conversation_target` — how a link addresses its declaration
+
 A second key, **`conversation_target`**, selects how a linked citation addresses its declaration. It is
 **user-scope only** — there is no repository spelling, and setting it in the project's `grund.toml` is the
 same unknown-key error as any other (§4.3). Its accepted values are `file` (default), `path`, `web`,
 `vscode`, `vscodium`, and `cursor`; the templates each one fills, and the per-agent gate that decides
 where the linked form is instructed at all, are specified in [§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions) and decided in
 [§DF-conversation-link-target](../decisions/functional/DF-conversation-link-target.md#df-conversation-link-target-the-conversation-link-form-is-a-markdown-link-over-an-absolute-uri-addressed-per-machine). The key is inert unless the effective `conversation` is
-`link`; it is still parsed and reported either way, like the `inline_note_*` keys below. One machine
+`link`; it is still parsed and reported either way, like the `inline_note_*` keys (§3.1.8, §3.1.9). One machine
 may read several agents that do not render alike, so the same key is also accepted per agent under
 `[reference.agents.<agent>]`, a partial merged over the machine-wide value ([§FS-integrations.4.4](FS-integrations.md#44-per-agent-overrides)).
 
-The same spelling in both files is deliberate: one setting the user already knows by name, read at two scopes, rather than a second vocabulary for the same idea. Only the *values* narrow, and only in the direction a repository can actually justify.
+#### 3.1.5 What `link` commits, and when to set it
+
+`link` makes the declaration's location travel with the citation; the committed form depends on the entrypoint's agent — a Markdown link over the machine-independent `file` target in the Claude entrypoints, plain `path:line` text in every other ([§DF-conversation-link-target.2.4](../decisions/functional/DF-conversation-link-target.md#24-the-form-is-gated-per-agent-and-the-fallback-is-path)) — and the reader's own `conversation_target` may override it ([§FS-init.2.3.4.17](FS-init.md#23417-clickable-citations), [§DF-conversation-link-target.2.3](../decisions/functional/DF-conversation-link-target.md#23-the-target-is-user-scoped-but-the-default-is-committable)).
 
 **Set the repository key to `link`** when the citations your agents write should carry their declaration location for readers whose machines grund never touched — teammates on a fresh clone, cloud agent sessions, CI reviewers, and Cursor or Windsurf users, who have no user-level file grund can write. It costs installed users nothing: their recorded `plain` still wins ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions), [§DF-repo-conversation-opinion.2.3](../decisions/functional/DF-repo-conversation-opinion.md#23-precedence)). **Leave it absent** when local-conversation rendering is each contributor's own business — then the user preference governs alone, and a machine that never stated one gets today's bare citations.
 
-**`plain` is deliberately not a repository value.** It presumes an installed rendering layer, which is machine state a repository cannot know; committing it would break exactly the clones the key exists to serve ([§DF-repo-conversation-opinion.2.2](../decisions/functional/DF-repo-conversation-opinion.md#22-only-link-is-committable)). The repository value set is therefore a closed enum with the single member `link`, widenable later without a `grund_config_version` bump (§5); any other value — including `plain` — is a load-time error (§4.3), `grund init` included. `link` makes the declaration's location travel with the citation; the committed form depends on the entrypoint's agent — a Markdown link over the machine-independent `file` target in the Claude entrypoints, plain `path:line` text in every other ([§DF-conversation-link-target.2.4](../decisions/functional/DF-conversation-link-target.md#24-the-form-is-gated-per-agent-and-the-fallback-is-path)) — and the reader's own `conversation_target` may override it ([§FS-init.2.3.4.17](FS-init.md#23417-clickable-citations), [§DF-conversation-link-target.2.3](../decisions/functional/DF-conversation-link-target.md#23-the-target-is-user-scoped-but-the-default-is-committable)).
+#### 3.1.6 `plain` is deliberately not a repository value
+
+`plain` presumes an installed rendering layer, which is machine state a repository cannot know; committing it would break exactly the clones the key exists to serve ([§DF-repo-conversation-opinion.2.2](../decisions/functional/DF-repo-conversation-opinion.md#22-only-link-is-committable)). The repository value set is therefore a closed enum with the single member `link`, widenable later without a `grund_config_version` bump (§5); any other value — including `plain` — is a load-time error (§4.3), `grund init` included.
+
+#### 3.1.7 `require_grounding` and `grounding_level` — defaults for `[[kinds]]`
 
 `require_grounding = true` adds the ungrounded-source-file error ([§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in)), which says which files must be grounded and how. `grund check --require-grounding` sets the same default for one run, and an explicit `require_grounding = false` on a row wins over it (§3.4.8). Per [§DF-require-grounding](../decisions/functional/DF-require-grounding.md#df-require-grounding-an-opt-in-check-that-every-source-file-cites-a-spec); off by default so adopting the discipline is a deliberate step, like `strict`.
 
 `require_grounding` and `grounding_level` are the two keys of this section that are **defaults for the `[[kinds]]` table** rather than settings of their own: each may be written on a row, and the row wins (§3.4.8). Written here they say what every place does; written on a row they say what one place does. `grounding_level` names the unit inside each governed file — `1`, the default, is the file, which is the unit every config had before the key existed. It is inert, and a config error, where nothing turns grounding on (§3.4.8).
 
+#### 3.1.8 `inline_style` and the note budgets
+
 `inline_style`, the three budget keys (`inline_note_suggested_lines`, `inline_note_max_lines`, `inline_note_max_columns`), and `warn_on_suggested` govern the shape of inline citations in code comments — whether a `§<ID>` token may be accompanied by a short rationale, and how long that rationale may run. The budgets and the style bound *inline* comments only; a doc comment is documentation and lies outside all of them, so a citation inside one is checked for everything except its shape ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)). The full contract — modes, enforcement, agent-facing rendering — lives in [§FS-inline-citation-style](FS-inline-citation-style.md#fs-inline-citation-style-configurable-shape-of-inline-code-comment-citations). Load-time invariant: `inline_note_suggested_lines ≤ inline_note_max_lines`, and `warn_on_suggested` is a boolean; any other value is a load-time error (§4.3). Under `inline_style = "citation-only"` the three budget keys are inert (no note is ever permitted), but they are still parsed and printed by `grund config show` — the file is the canonical machine-readable form.
 
-`inline_note_layout` adds the third axis of that shape — where the `§<ID>` tokens sit inside the note — and `inline_note_layout_check` selects whether `grund check` reports a deviation and through which channel. Both are closed enums: `any` (default, no constraint) or `citation-first-colon` for the layout, and `off` (default), `warn`, or `error` for the check; an unrecognized value is a load-time error (§4.3), and either set may be widened later without a `grund_config_version` bump (§5). The layout key is the house style and the check key is the gate, so a project can publish the style to its agents ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) before it starts failing on it. `inline_note_layout_check` is inert under `inline_note_layout = "any"` and both are inert under `inline_style = "citation-only"` — still parsed, still printed, like the budgets above. The canonical form and the per-line rule live in [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit).
+#### 3.1.9 `inline_note_layout` and `inline_note_layout_check`
+
+`inline_note_layout` adds the third axis of that shape — where the `§<ID>` tokens sit inside the note — and `inline_note_layout_check` selects whether `grund check` reports a deviation and through which channel. Both are closed enums: `any` (default, no constraint) or `citation-first-colon` for the layout, and `off` (default), `warn`, or `error` for the check; an unrecognized value is a load-time error (§4.3), and either set may be widened later without a `grund_config_version` bump (§5). The layout key is the house style and the check key is the gate, so a project can publish the style to its agents ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) before it starts failing on it. `inline_note_layout_check` is inert under `inline_note_layout = "any"` and both are inert under `inline_style = "citation-only"` — still parsed, still printed, like the budgets (§3.1.8). The canonical form and the per-line rule live in [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit).
 
 ### 3.2 `[id]` — ID grammar
 
@@ -144,7 +178,13 @@ slug_pattern       = "[a-z0-9][a-z0-9-]*"
 
 `format` is a template: `{kind}`, `{number}`, `{slug}` are placeholders; everything else is literal. `{kind}` is required. `{number}` and `{slug}` are individually optional — but **at least one** of them must appear, because a bare kind would not identify a declaration. The literal characters between placeholders may be anything — `-`, `_`, `.`, `:`, etc.
 
-The three canonical shapes:
+The chosen format is the repository default. A citable `[[kinds]]` row may set
+its own `format` (§3.4.10), which is authoritative for IDs of that kind. Every
+consumer selects the kind from the token first and then applies that kind's
+grammar, so ordinary slug IDs and numeric ticket IDs may coexist without
+ambiguity. Kinds without an override retain the `[id].format` grammar exactly.
+
+#### 3.2.1 The three canonical shapes
 
 | `format`                       | Example ID            | Disambiguator                |
 |--------------------------------|-----------------------|------------------------------|
@@ -154,23 +194,24 @@ The three canonical shapes:
 
 When `{number}` is omitted, slugs must be unique within each kind — two declarations sharing a kind and slug collide on the same ID and are reported as duplicate declarations (per [§FS-check.3](FS-check.md#3-errors-detected)). When `{number}` is present, slugs are descriptive only and may repeat across declarations with different numbers.
 
-`section_separator` must not collide lexically with any literal in `format` or with `slug_pattern`. grund validates this on load and refuses ambiguous configs. It must not be — or contain — a `/` either, which is the invariant below seen from the other side: a citation is `[<alias path>/]<ID>[<sep><section>]` and its alias-path boundary is the **last** `/`, so a `/` separator makes the two boundaries the same character. With `section_separator = "/"`, `<§>root/fs-x/1` — section 1 of `fs-x` in project `root` — reads as alias path `root/fs-x` and ID `1`: a citation that resolved before alias *paths* existed stops resolving, and a `[citations]` obligation (§3.9) resting on it turns red with no config change. Rejected at that key's line.
+#### 3.2.2 `section_separator` must stay distinguishable
 
-No ID the grammar can build may contain a `/`, and what that forbids depends on how the key reaches an ID. `format` and a `[[kinds]]` `kind` name (§3.4) contribute literal text — a citable kind's name is the leading component of every ID in it — so neither may carry the character: a `/` in the key is a `/` in the ID. `number_pattern` and `slug_pattern` are regexes, and the rule asks what they **match**, not what they spell. A pattern with no `/` in its text may produce one freely (`[^.[:space:]]+`, `.+`, `[^[:space:]]+`) and is rejected; a pattern that names the character to *exclude* it (`[^/.]+`) can never produce one and loads. A `/` belongs to the citation namespace and never to an ID — a qualified citation splits on its **last** `/`, and every command that takes an `<alias>/<ID>` argument splits it the same way ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)). So a grammar permitting `FS-a/b` would declare and resolve an ID that grund cannot accept back as a query, and would make the alias-path boundary depend on which project's grammar the reader had in mind. Rejected on load at the offending key's line, like the regex check below; the message says *must not contain* for a literal key and *must not match* for a pattern, since only one of those is a question about the key's text.
+`section_separator` must not collide lexically with any literal in `format` or with `slug_pattern`. grund validates this on load and refuses ambiguous configs. It must not be — or contain — a `/` either, which is §3.2.3's invariant seen from the other side: a citation is `[<alias path>/]<ID>[<sep><section>]` and its alias-path boundary is the **last** `/`, so a `/` separator makes the two boundaries the same character. With `section_separator = "/"`, `<§>root/fs-x/1` — section 1 of `fs-x` in project `root` — reads as alias path `root/fs-x` and ID `1`: a citation that resolved before alias *paths* existed stops resolving, and a `[citations]` obligation (§3.9) resting on it turns red with no config change. Rejected at that key's line.
+
+#### 3.2.3 No ID contains a `/`
+
+No ID the grammar can build may contain a `/`, and what that forbids depends on how the key reaches an ID. `format` and a `[[kinds]]` `kind` name (§3.4) contribute literal text — a citable kind's name is the leading component of every ID in it — so neither may carry the character: a `/` in the key is a `/` in the ID. `number_pattern` and `slug_pattern` are regexes, and the rule asks what they **match**, not what they spell. A pattern with no `/` in its text may produce one freely (`[^.[:space:]]+`, `.+`, `[^[:space:]]+`) and is rejected; a pattern that names the character to *exclude* it (`[^/.]+`) can never produce one and loads. A `/` belongs to the citation namespace and never to an ID — a qualified citation splits on its **last** `/`, and every command that takes an `<alias>/<ID>` argument splits it the same way ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)). So a grammar permitting `FS-a/b` would declare and resolve an ID that grund cannot accept back as a query, and would make the alias-path boundary depend on which project's grammar the reader had in mind. Rejected on load at the offending key's line, like the regex check of §3.2.4; the message says *must not contain* for a literal key and *must not match* for a pattern, since only one of those is a question about the key's text.
+
+#### 3.2.4 Each pattern compiles on its own
 
 `number_pattern` and `slug_pattern` must each be a valid regex **on their own**, not merely valid once spliced into the ID pattern. Two that balance only against each other — `number_pattern = "("` with `slug_pattern = "a)"` — would compile as one ID pattern and then fall apart the moment grund derives a narrower pattern from a subset of the format's components, which is what the number-only shorthand does ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)). Such a config is rejected on load with the underlying regex error, rather than accepted and failed later.
 
-The chosen format is the repository default. A citable `[[kinds]]` row may set
-its own `format` (§3.4.10), which is authoritative for IDs of that kind. Every
-consumer selects the kind from the token first and then applies that kind's
-grammar, so ordinary slug IDs and numeric ticket IDs may coexist without
-ambiguity. Kinds without an override retain the `[id].format` grammar exactly.
+#### 3.2.5 Off-grammar declarations stay readable
 
 The effective format is the **authoring and conformance grammar**, not a reason
 to make a persisted declaration unreadable. A heading in declaration position
 whose exact token starts with a configured citable kind, ends at the
-declaration colon, and carries no `/` — which belongs to the citation namespace
-and never to an ID ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)) — is retained in that project's catalog
+declaration colon, and carries no `/` (§3.2.3) is retained in that project's catalog
 even when the token does not match the kind's effective format. Its exact
 written spelling, body,
 sections, and location remain available to readers, and it earns the
@@ -180,6 +221,8 @@ catalog contains an exact declaration spelling; an unmarked candidate or a
 marked candidate with no exact declaration gains no compatibility meaning.
 This catalog-backed boundary is decided in
 [§DF-off-grammar-declaration-compatibility](../decisions/functional/DF-off-grammar-declaration-compatibility.md#df-off-grammar-declaration-compatibility-persisted-declarations-remain-readable-without-relaxing-the-authoring-grammar).
+
+#### 3.2.6 Resolving an off-grammar citation
 
 Configured full IDs keep their existing precedence. Otherwise an exact
 off-grammar declaration and number-only shorthand are considered together:
@@ -191,6 +234,8 @@ interpretations fail. Duplicate exact declarations retain the ordinary
 duplicate/ambiguity behavior and sorted sites. None of these read rules changes
 `grund id`, `init`, `fetch`, config validation, `fmt --marker`, JSON schemas, or
 the forms those authoring surfaces create.
+
+#### 3.2.7 `named_sections` — the gate for section handles
 
 `named_sections` is an absent-by-default Boolean gate for explicit section handles. When absent or `false`, section scanning, citation recognition, queries, formatting, completion, LSP behavior, and operational output remain the numeric-only behavior of earlier configurations. When `true`, a named component has the fixed, configuration-independent grammar `[a-z][a-z0-9-]*`; it is not derived from `slug_pattern` or from the displayed heading title. `grund init` writes the teaching default `named_sections = false` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). Unknown values are invalid config.
 
@@ -207,7 +252,9 @@ Section coordinates are **dotted paths of arbitrary depth**. There is no maximum
 
 Section depth in the citation must match a heading at that depth in the declaration. The scanner records every citable heading inside a declaration body and validates citations against the recorded set, so a project that wants four-deep numeric nesting (`## 1.`, `### 1.1`, `#### 1.1.1`, `##### 1.1.1.1`) is supported with no config changes — the dotted path simply grows.
 
-With `named_sections = true`, any path containing a named component uses the explicit colon form `<complete-path>: <title>`. The path is written in full at every depth; the title declares nothing and may change without changing the coordinate:
+#### 3.3.1 Named components
+
+With `named_sections = true` (§3.2.7), any path containing a named component uses the explicit colon form `<complete-path>: <title>`. The path is written in full at every depth; the title declares nothing and may change without changing the coordinate:
 
 ```markdown
 ## goals: Goals
@@ -217,17 +264,19 @@ With `named_sections = true`, any path containing a named component uses the exp
 
 Named components may occur at every depth, so all-name paths such as `goals.performance.latency` are legal. A numeric component may follow a named prefix (`goals.3`), knowingly retaining positional behavior beneath that stable handle. A named component may not follow a numeric component: `1.goals` is reserved and is neither a named heading nor an alias for section `1`. Purely numeric headings keep their existing optional trailing period and title syntax; the colon form is mandatory whenever any component is named. There is no inferred title slug, dual numeric/name address, rename map, or automatic migration.
 
-`section_heading_levels` controls how the Markdown heading depth must line up with the dotted section path. The default, `"strict"`, requires the heading level to equal the declaration heading level plus the number of path components, named or numeric: under an H1 declaration, `## 1. …`, `### 1.1 …`, `## goals: …`, and `### goals.performance: …` are valid, while `## 1.1 …` and `## goals.performance: …` are `section heading level mismatch` errors in `grund check` ([§FS-check.3.9](FS-check.md#39-section-heading-level-mismatch)). `"warn"` reports the same mismatch as a warning, so CI can stay green while a repo migrates. `"loose"` preserves the historical depth behavior: any deeper heading can declare a syntactically legal complete path. The mode does not govern an ATX heading with no coordinate: inside a Markdown declaration body, every deeper ATX heading must instead be a declaration or a recognized numeric or enabled named section, and [§FS-check.4.14](FS-check.md#414-unmarked-markdown-heading) reports one that is neither. Pre-declaration titles and same-or-shallower body-closing headings remain ordinary structure; source doc-comments and non-ATX Markdown are outside this policy, and bold labels remain the non-citable alternative. There is no severity or opt-out key for this project-wide rule ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)). Unknown values are invalid config.
+#### 3.3.2 `section_heading_levels` — heading depth against path depth
+
+`section_heading_levels` controls how the Markdown heading depth must line up with the dotted section path. The default, `"strict"`, requires the heading level to equal the declaration heading level plus the number of path components, named or numeric, so under an H1 declaration `## 1.1 …` and `## goals.performance: …` are `section heading level mismatch` errors in `grund check` ([§FS-check.3.9](FS-check.md#39-section-heading-level-mismatch)). `"warn"` reports the same mismatch as a warning, so CI can stay green while a repo migrates. `"loose"` preserves the historical depth behavior: any deeper heading can declare a syntactically legal complete path. Unknown values are invalid config.
+
+The mode does not govern an ATX heading with no coordinate: inside a Markdown declaration body, every deeper ATX heading must instead be a declaration or a recognized numeric or enabled named section. [§FS-check.4.14](FS-check.md#414-unmarked-markdown-heading) reports one that is neither and names the headings the rule leaves alone; there is no severity or opt-out key for this project-wide rule ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
+
+#### 3.3.3 Every prefix of a name-bearing path is recorded
 
 Every proper prefix of a name-bearing path must itself be recorded in the same declaration. Thus `### goals.performance: …` requires `goals`, while `### missing.performance: …` is an orphan even if its Markdown placement looks nested under some other heading ([§FS-check.3.19](FS-check.md#319-orphan-name-bearing-section-path)). The invariant applies to name-bearing paths only; purely numeric paths preserve their historical behavior.
 
-The default `section_separator` is `.`. Projects that prefer `:` (`<§>FS-check:3.1.2`) or `#` (`RFC-42#3.1.2`) override it; the dotted **components** stay separated by `.` regardless of the outer separator. Example with `section_separator = "#"`:
+#### 3.3.4 The outer section separator
 
-```
-§FS-check#3.1.2     ← outer separator is `#`, intra-section separator is `.`
-```
-
-This split keeps the section grammar regular at any depth.
+The default `section_separator` is `.`. Projects that prefer `:` (`<§>FS-check:3.1.2`) or `#` (`RFC-42#3.1.2`) override it; the dotted **components** stay separated by `.` regardless of the outer separator. This split keeps the section grammar regular at any depth.
 
 ### 3.4 `[[kinds]]` — recognized kinds
 
