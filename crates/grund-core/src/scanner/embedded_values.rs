@@ -1,6 +1,6 @@
 //! Strict subtree validation for embedded section values. A root is metadata
 //! on the scanner's existing section record, never another resolver or
-//! declaration (§FS-values.2.4, §FS-values.5.1, §FS-values.6).
+//! declaration (§FS-values.2.4, §FS-values.5.1, §FS-values.6.1).
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -19,7 +19,7 @@ use crate::model::{
 
 /// Validate every marked section against its physical one-level subtree and
 /// place decoded components on the existing descendant section records
-/// (§FS-values.2.4, §FS-values.5.2). No alternate section map is built.
+/// (§FS-values.2.4.3, §FS-values.5.2). No alternate section map is built.
 pub(super) fn validate_embedded_value_roots(
     path: &Path,
     text: &str,
@@ -60,7 +60,7 @@ pub(super) fn validate_embedded_value_roots(
 
         // Root claims include resolver entries and later duplicate headings.
         // Resolve every pair by coordinate, independent of source order
-        // (§FS-values.2.4).
+        // (§FS-values.2.4.4).
         let mut claims = decl
             .sections
             .iter()
@@ -148,7 +148,7 @@ pub(super) fn validate_embedded_value_roots(
             }
             // The nested marker is the complete overlap finding; do not also
             // reinterpret its subtree as malformed outer-root children
-            // (§FS-values.2.4).
+            // (§FS-values.2.4.4).
             if roots_with_descendants.contains(&root_path) {
                 invalid.extend(reasons.into_iter().map(|(line, column, message)| {
                     InvalidValueSite {
@@ -258,7 +258,7 @@ pub(super) fn validate_embedded_value_roots(
                 component_candidates += 1;
                 // Physical position—not content validity—advances the cursor;
                 // bad text cannot cascade, and `.2` then `.1` reports both sites
-                // (§FS-values.2.4).
+                // (§FS-values.2.4.3).
                 expected += 1;
                 let coordinate_valid = child.as_deref() == Some(expected_path.as_str());
                 let depth_valid = level == Some(root_level + 1);

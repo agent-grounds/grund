@@ -12,7 +12,7 @@
 //! The scope roots it probes are the block's own list, shared with the
 //! §FS-workspace.2.1 finding that reads it from the other end: one definition of
 //! "this block's own scope", so a `[[kinds]]` home or a home the config lists
-//! without walking moves both rules together (§FS-config.3.5).
+//! without walking moves both rules together (§FS-config.3.5.8).
 
 use std::path::PathBuf;
 
@@ -25,7 +25,7 @@ use crate::workspace::{block_relative_root, uncovered_block_scope_roots, unread_
 /// block would have read as a project, named under the block root — or `None`,
 /// which is every configuration this finding stays silent about.
 ///
-/// **One root, not every root.** §FS-workspace.2.1's claim is universal and its
+/// **One root, not every root.** §FS-workspace.2.1.1's claim is universal and its
 /// list is the evidence for it; this claim is existential, one edit clears every
 /// root at once, and probing the rest would buy nothing the answer depends on. The
 /// one named is the first in *scope order* — `[scan] include` in config order,
@@ -37,13 +37,13 @@ use crate::workspace::{block_relative_root, uncovered_block_scope_roots, unread_
 /// prunes exactly as the block's own scan would have: at each member on the way
 /// down, and at every other project of the run in the directions the member list
 /// cannot see — which is what a directory symlink out of the block's scope root
-/// takes (§FS-workspace.6). Its own root belongs there because the walker prunes
+/// takes (§FS-workspace.6.2). Its own root belongs there because the walker prunes
 /// what *another* project owns, and the block owns its tree in the counterfactual
 /// this finding asks about. Which projects those are is a property of the run: a
 /// run rooted at the block does not know the projects above it, and neither would
 /// the scan it is standing in for. `scan_full` is off for the same reason
 /// [`block_scope_roots`] asks the default scope — this is a property of the
-/// configuration rather than of one walk (§FS-check.1.3).
+/// configuration rather than of one walk (§FS-check.1.3.10).
 pub(crate) fn unread_block_scope_root(
     config: &Config,
     project_roots: &[PathBuf],
@@ -59,12 +59,12 @@ pub(crate) fn unread_block_scope_root(
         .map(|root| format_path(block_relative_root(config, &root)))
 }
 
-/// §FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1, §FS-distribution.3.1: the
+/// §FS-check.4.7.7, §FS-check.4.10.11, §FS-workspace.6.1, §FS-distribution.3.1: the
 /// run's warning channel, settled — every caution the workspace pass already had
 /// in full, and every opted-out block it could only pose, in the one order the
 /// reader sees them in.
 ///
-/// This is the lowest component that can answer all four, because §FS-check.4.10's
+/// This is the lowest component that can answer all four, because §FS-check.4.10.2's
 /// question is about a walk and the walker sits above the workspace pass
 /// (§AR-resolver.placement). Nothing here renders: what comes back is a
 /// `Diagnostic` per warning, for whichever frontend asked (§AR-bindings.2).

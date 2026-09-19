@@ -130,7 +130,7 @@ fn ambiguous_id_lists_its_sites_from_the_workspace_root() {
     );
 }
 
-/// §FS-errors.5: the typed carrier's `sites` are the same `path:line` pairs
+/// §FS-errors.5.2: the typed carrier's `sites` are the same `path:line` pairs
 /// the prose above just pinned, spelled from the same report root — no
 /// consumer of the JSON diagnostic has to re-derive them from `message`.
 #[test]
@@ -152,7 +152,7 @@ fn ambiguous_id_carries_its_sites_from_the_workspace_root() {
 
     let carrier = err
         .downcast_ref::<ShowQueryError>()
-        .expect("§FS-errors.5: the refusal carries a typed error with sites");
+        .expect("§FS-errors.5.2: the refusal carries a typed error with sites");
     assert_eq!(
         carrier.sites,
         vec![

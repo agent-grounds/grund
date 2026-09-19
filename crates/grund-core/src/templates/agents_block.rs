@@ -18,7 +18,7 @@ use crate::grammar::{id_shape, inline_note_layout_sentence};
 use crate::model::plural;
 
 /// The substitutions that turn `templates/AGENTS.md` into a concrete `AGENTS.md`
-/// for a repo (§FS-init.2.3): the project name, plus the ID/marker shape taken
+/// for a repo (§FS-init.2.3.8): the project name, plus the ID/marker shape taken
 /// from the config `grund init` leaves in place — so a `{kind}-{slug}` repo gets a
 /// `<KIND>-<slug>` description, a strict repo gets the strict-mode note, custom
 /// kinds show up in the kind set, and so on. Everything *not* substituted here is
@@ -47,7 +47,7 @@ fn agents_template_substitutions(
         .replace("{kind}", "FS")
         .replace("{number}", "042")
         .replace("{slug}", "user-login");
-    // §FS-init.2.3: the worked example illustrates a non-existent ID, so it is
+    // §FS-init.2.3.8.2: the worked example illustrates a non-existent ID, so it is
     // rendered in the `<marker>`-escaped form (§FS-workspace.1).
     let cite_example = format!("<{marker}>{id_example}{sep}3{sep}1");
     let kinds_set = format!("{{{}}}", kind_prefixes(&config.kinds).join(", "));
@@ -112,7 +112,7 @@ fn section_heading_note(config: &Config, marker: &str) -> String {
     }
 }
 
-/// §FS-inline-citation-style.5: the sentence that closes the rendered copy at
+/// §FS-inline-citation-style.5.4: the sentence that closes the rendered copy at
 /// every `inline_style`, after whatever the other keys produced, so the author
 /// and the linter agree on where the shape rules stop
 /// (§FS-inline-citation-style.1.1). It moves no managed-block version: it only
@@ -121,7 +121,7 @@ fn section_heading_note(config: &Config, marker: &str) -> String {
 /// finding.
 const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a docstring, a comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.";
 
-/// §FS-inline-citation-style.5: the sentence that follows the budgets and
+/// §FS-inline-citation-style.5.2: the sentence that follows the budgets and
 /// precedes the layout sentence, under `citation-with-note` only — restating
 /// §1's block rule at the point an agent needs it to act on a cap finding. It
 /// moves no managed-block version, for the same reason the layout and
@@ -152,7 +152,7 @@ pub(crate) fn inline_citation_style_sentence(config: &Config) -> String {
             config.inline_note_max_columns
         )
     };
-    // §FS-inline-citation-style.5: the layout sentence appends to the budgets
+    // §FS-inline-citation-style.5.3: the layout sentence appends to the budgets
     // and the block sentence, empty under `any`, so a project with no layout
     // renders the byte-identical block it rendered before that key existed.
     format!(
@@ -187,7 +187,7 @@ pub(crate) fn markdown_link_destination(raw: &str) -> String {
 /// Either way, every kind with a home links to it, and an unwalked kind is one
 /// of them: its row is why it is configured.
 fn declaration_map(config: &Config) -> String {
-    // §FS-init.2.3.4.4: the homeless kind gets no row. Every row is a link to a
+    // §FS-init.2.3.4.4.1: the homeless kind gets no row. Every row is a link to a
     // place, and it is the one kind that is not a place — the complement of all
     // of them. Its citation directions still render (§FS-init.2.3.5).
     let homeless = config.homeless_kind();
@@ -225,7 +225,7 @@ fn row(label: &str, home: &str, title: &str) -> String {
 }
 
 /// The managed block — just the H2 section that `init` appends to, or replaces
-/// inside, an existing `AGENTS.md` (§FS-init.2.3). The template *is* the block;
+/// inside, an existing `AGENTS.md` (§FS-init.2.3.10). The template *is* the block;
 /// the H2 line carrying the version is its own begin marker (§FS-init.2.3.1).
 /// `workspace_members` is the §FS-init.2.3.4.15 section, rendered once per `init`
 /// invocation by `writers/init_render.rs` against the directory being
@@ -246,7 +246,7 @@ pub(crate) fn render_agents_append_block(
 }
 
 /// The full generated `AGENTS.md` for a fresh repo from a pre-rendered managed
-/// block (§FS-init.2.3) — the H1 scaffolding line, which is *unmanaged*, then
+/// block (§FS-init.2.3.10) — the H1 scaffolding line, which is *unmanaged*, then
 /// the block. Taking the block rather than rendering it is what lets one `init`
 /// run reuse it as both the full body *and* the append/update payload, so the
 /// workspace-members walk-up (§FS-init.2.3.4.15) runs once per invocation.

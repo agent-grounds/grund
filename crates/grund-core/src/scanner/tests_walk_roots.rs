@@ -1,5 +1,5 @@
 //! Scan-root regressions for directory links that cross the canonical project
-//! boundary (§FS-config.3.5.1, §AR-scanner.1). Descent cases remain in
+//! boundary (§FS-config.3.5.1, §AR-scanner.1.6). Descent cases remain in
 //! `tests_walk.rs`; these start the walk at or below the link.
 
 use super::*;

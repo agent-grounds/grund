@@ -4,7 +4,7 @@
 //!
 //! The first two sat in the deprecated path's `output` category while the
 //! queries, the writers and the api read them upward (§AR-system.4,
-//! §AR-system.2.9). None is a renderer: a function of a `&str` or a number in
+//! §AR-system.2.9.1). None is a renderer: a function of a `&str` or a number in
 //! and a `String` out, with no stream, no `Config` and no finding between them,
 //! which is §AR-system.2.2's own description of what it holds.
 //!

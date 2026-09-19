@@ -5,7 +5,7 @@ use crate::model::Id;
 use crate::resolver::WorkspaceContext;
 
 /// The two per-target-alias citation counts `grund list` needs, built in one
-/// pass (§FS-list.3.2, §DF-index-not-an-inbound-citation).
+/// pass (§FS-list.3.2.1, §DF-index-not-an-inbound-citation).
 ///
 /// §FS-workspace.8.3: each citation belongs to exactly one target project — its
 /// `namespace` when qualified, the citing project when not — so a single pass
@@ -20,7 +20,7 @@ use crate::resolver::WorkspaceContext;
 /// by construction, and is the number `--unused` selects on. One count would
 /// have to be wrong for one of the two questions; two counts printed by two
 /// commands that disagreed would be worse than one that needs a sentence of
-/// explanation, so `refs` stays the total and the sentence lives in §FS-list.3.2.
+/// explanation, so `refs` stays the total and the sentence lives in §FS-list.3.2.1.
 pub(crate) struct ListCitationCounts<'a> {
     refs: BTreeMap<&'a str, BTreeMap<&'a Id, usize>>,
     used: BTreeMap<&'a str, BTreeMap<&'a Id, usize>>,

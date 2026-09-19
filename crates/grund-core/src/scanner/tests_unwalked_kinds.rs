@@ -49,7 +49,7 @@ fn templates_repo_at(name: &str, home: &str, include: &str, extra: &str) -> Path
     root
 }
 
-/// §FS-config.3.4.7: nothing in the home is read, so neither the grounding
+/// §FS-config.3.4.7.4: nothing in the home is read, so neither the grounding
 /// rule of §FS-check.3.6 nor the dangling citation is a finding.
 #[test]
 fn an_unwalked_home_is_neither_grounded_nor_checked() {
@@ -66,7 +66,7 @@ fn an_unwalked_home_is_neither_grounded_nor_checked() {
     );
 }
 
-/// §FS-config.3.4.7 / §FS-check.1.3: `--full` walks the whole root and
+/// §FS-config.3.4.7.5 / §FS-check.1.3.3: `--full` walks the whole root and
 /// reports resolution failures only — the dangling citation surfaces, the
 /// citation-free file earns no grounding finding.
 #[test]
@@ -89,7 +89,7 @@ fn full_reaches_an_unwalked_home_as_out_of_scope_territory() {
     );
 }
 
-/// §FS-init.2.3.4.4 / §FS-init.2.3.5: the row is the point of configuring
+/// §FS-init.2.3.4.4.1 / §FS-init.2.3.5.1: the row is the point of configuring
 /// the kind; a directions bullet would promise a check nothing performs.
 #[test]
 fn the_generated_block_lists_an_unwalked_kind_without_a_directions_bullet() {
@@ -110,7 +110,7 @@ fn the_generated_block_lists_an_unwalked_kind_without_a_directions_bullet() {
     );
 }
 
-/// §FS-config.3.4.7: the home is not walked wherever the walk would meet it.
+/// §FS-config.3.4.7.2: the home is not walked wherever the walk would meet it.
 /// Left out of the roots and nothing more, `docs/templates` is still read as
 /// a descendant of the `docs` root above it, and the key is a silent no-op
 /// for every repository that keeps its scaffolds under a scanned directory.
@@ -134,7 +134,7 @@ fn an_unwalked_home_under_a_walk_root_is_not_walked() {
     );
 }
 
-/// §FS-config.3.4.7: `[scan] include` naming the home is the one way it is
+/// §FS-config.3.4.7.2: `[scan] include` naming the home is the one way it is
 /// still a *root* — where a walk cannot prune it, because a root is what is
 /// never filtered. The key written on the kind is the narrower one and wins.
 #[test]
@@ -157,7 +157,7 @@ fn an_include_entry_does_not_walk_an_unwalked_home() {
     );
 }
 
-/// §FS-config.3.4.7: a single-file home is unwalked too — and it is never a
+/// §FS-config.3.4.7.2: a single-file home is unwalked too — and it is never a
 /// directory to prune, so a rule asked only of directories would miss it and
 /// pruning its parent is not on offer, `docs` being an ordinary scanned home.
 #[test]
@@ -191,7 +191,7 @@ fn a_single_file_unwalked_home_is_not_walked() {
     );
 }
 
-/// §FS-config.3.4.7: the key describes the default scope. A path the user
+/// §FS-config.3.4.7.3: the key describes the default scope. A path the user
 /// typed reads the directory it names, the way an explicit argument already
 /// reads past `[scan] include`.
 #[test]
@@ -226,7 +226,7 @@ fn full_tiers_a_home_under_a_walk_root_as_out_of_scope() {
     );
 }
 
-/// §FS-config.3.4.7: a citable kind is always walked — unwalked, its
+/// §FS-config.3.4.7.6: a citable kind is always walked — unwalked, its
 /// declarations would be invisible rather than declared.
 #[test]
 fn scan_false_is_refused_on_a_citable_kind() {
@@ -242,7 +242,7 @@ fn scan_false_is_refused_on_a_citable_kind() {
     );
 }
 
-/// §FS-config.3.4.7: the homeless kind has no home to leave unwalked.
+/// §FS-config.3.4.7.6: the homeless kind has no home to leave unwalked.
 #[test]
 fn scan_false_is_refused_without_a_home() {
     let root = test_root("scan_false_is_refused_without_a_home");
@@ -258,7 +258,7 @@ fn scan_false_is_refused_without_a_home() {
     );
 }
 
-/// §FS-config.3.4.7: a rule on a kind none of whose files is scanned could
+/// §FS-config.3.4.7.6: a rule on a kind none of whose files is scanned could
 /// never fire, so it is refused where it makes the promise.
 #[test]
 fn a_citation_rule_on_an_unwalked_kind_is_refused() {

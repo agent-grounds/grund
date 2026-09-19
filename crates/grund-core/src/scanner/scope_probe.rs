@@ -4,7 +4,7 @@ use super::walk::walk_reads_any_file;
 use crate::config::{Config, root_scope_roots};
 
 /// Whether the effective configured scope contains a file the scanner would read
-/// (§FS-config.3.5, §FS-init.2.2). Root selection stays beside the walk so init
+/// (§FS-config.3.5, §FS-init.2.2.2). Root selection stays beside the walk so init
 /// cannot grow a second, path-existence approximation of scanner policy. Both
 /// levels use lazy `any`, stopping at the first readable file in the first root
 /// that contains one (§GOAL-fast-feedback).

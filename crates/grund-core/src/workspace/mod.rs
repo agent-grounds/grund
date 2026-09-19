@@ -11,7 +11,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). The submodules are the former `workspace*`
+//! (§AR-core-module-layout.1.1). The submodules are the former `workspace*`
 //! category files, one per question §AR-system.2.4 names — which project a scope
 //! belongs to, what one `members` list expands to, what the second list adds,
 //! which projects the whole tree holds, what a qualified ID argument names, and
@@ -26,7 +26,7 @@
 //! needs loaded findings rather than configs: `context.rs` with the loaded
 //! project set and its loaders, `id_candidates.rs` with the candidate clause
 //! that searches them — `join_alternatives` went with it, the checker still
-//! reading it downward — and the walk half of §FS-check.4.10's answer, which
+//! reading it downward — and the walk half of §FS-check.4.10.2's answer, which
 //! the boundary passes below only pose, on the run's warning channel. `WorkspaceCitationTarget` stayed,
 //! beside the expansion whose two facts it carries, and the qualified
 //! ID-argument split stayed as `id_arg.rs`: both read config text and no scan.
@@ -62,14 +62,14 @@ pub(crate) use unlisted::{
     unlisted_workspace_block_run_warnings, unlisted_workspace_block_warnings,
 };
 
-// What another component's tests read (§AR-core-module-layout.1): the
+// What another component's tests read (§AR-core-module-layout.1.3): the
 // boundary-root form of an expanded member list, which the scanner's
 // parallel-scan cases compare against. The other two went beside their cases.
 #[cfg(test)]
 pub(crate) use members::expand_workspace_members;
 
 // The cases that pin this component, one module per behaviour area
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_absorbed_scan;
 #[cfg(test)]

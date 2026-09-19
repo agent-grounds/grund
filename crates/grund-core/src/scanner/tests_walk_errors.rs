@@ -1,5 +1,5 @@
 //! Test module: what the tree walk does with a link it cannot read
-//! (§FS-config.3.5.5, §FS-config.3.5.6, §FS-check.2) — which loops and broken
+//! (§FS-config.3.5.5, §FS-config.3.5.6, §FS-check.2.4) — which loops and broken
 //! links are owed a report, where that report names them, and what the walk
 //! does *not* read on the way. Split from `tests_walk.rs` along the seam the
 //! source already draws between `walk.rs` and `walk_errors.rs`. Unix-only:
@@ -22,7 +22,7 @@ fn a_broken_link_is_reported_only_where_the_walk_would_have_read_it() {
     );
     assert!(
         run.had_scan_errors,
-        "§FS-check.2: a file the scan could not read makes the run exit 2"
+        "§FS-check.2.4: a file the scan could not read makes the run exit 2"
     );
 }
 
@@ -64,7 +64,7 @@ fn a_symlink_loop_is_reported_and_the_walk_carries_on() {
         findings(&run)
             .iter()
             .any(|line| line.ends_with("unknown reference FS-999-ghost")),
-        "§FS-check.2: the walk continues past the loop, so the findings it had already collected are still printed"
+        "§FS-check.2.4: the walk continues past the loop, so the findings it had already collected are still printed"
     );
 }
 
@@ -88,7 +88,7 @@ fn a_looping_link_an_ignore_file_covers_is_not_reported() {
     );
 }
 
-/// §FS-check.1.3: `--full` walks every `include` root beside the config root
+/// §FS-check.1.3.2: `--full` walks every `include` root beside the config root
 /// that already contains it, so an error met once per root printed twice.
 #[test]
 fn a_scan_error_is_reported_once_under_full_scope() {
@@ -100,7 +100,7 @@ fn a_scan_error_is_reported_once_under_full_scope() {
     assert_eq!(
         scan_errors(&full),
         vec!["docs/functional-spec/FS-002-gone.md: broken symlink: the target does not exist"],
-        "§FS-check.1.3: overlapping roots meet one broken link once each, and the report names it once"
+        "§FS-check.1.3.2: overlapping roots meet one broken link once each, and the report names it once"
     );
 }
 

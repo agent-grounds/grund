@@ -15,7 +15,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). Four files, out of the writers' former
+//! (§AR-core-module-layout.1.1). Four files, out of the writers' former
 //! `init_templates.rs` and `init_citation_directions.rs`: the embedded payload
 //! and its newline canonicalization, the block substitutions, the
 //! `### Citation directions` renderer, and the `### Clickable citations`
@@ -50,14 +50,14 @@ pub(crate) use assets::{
 pub(crate) use citation_directions::citation_directions_section;
 pub(crate) use clickable_citations::{ConversationSurface, clickable_citations_section};
 
-// What another component's tests read (§AR-core-module-layout.1): the
+// What another component's tests read (§AR-core-module-layout.1.3): the
 // inline-citation-style sentence the checker's layout cases read per key. The
 // citation-level legend went beside the cases that assert it stands alone.
 #[cfg(test)]
 pub(crate) use agents_block::inline_citation_style_sentence;
 
 // The cases that pin this component, one module per behaviour area
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_citation_directions;
 #[cfg(test)]

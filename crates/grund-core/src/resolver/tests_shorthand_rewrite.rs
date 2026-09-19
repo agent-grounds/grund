@@ -126,7 +126,7 @@ fn a_shorthand_prefix_of_a_longer_token_is_never_rewritten() {
     assert_eq!(expand("J (§FS-042)", true), "J (§FS-042-user-login)");
 }
 
-/// §FS-fmt.3: a line that expands a shorthand names the text it will write, so
+/// §FS-fmt.3.6: a line that expands a shorthand names the text it will write, so
 /// the invention can be reviewed *before* `--write` puts it on disk. The other
 /// rewrites leave the ID token byte-identical and `check` can still catch them;
 /// this one writes the slug into the token, and a wrong one is invisible
@@ -167,7 +167,7 @@ fn the_report_names_the_text_every_expansion_writes() {
     );
 }
 
-// §FS-fmt.2.4: a qualified `§<alias>/FS-042` is rewritten too, against the
+// §FS-fmt.2.4.4: a qualified `§<alias>/FS-042` is rewritten too, against the
 // *aliased* project's declarations — the spec promises the namespace is
 // preserved, and without it `check` would name an error `fmt` never clears.
 #[test]
@@ -209,7 +209,7 @@ fn fmt_expands_a_qualified_shorthand_against_its_own_namespace() {
     );
 }
 
-// §FS-fmt.2.4 / §FS-lsp.1.4: a typed trigger lands on the canonical form in
+// §FS-fmt.2.4.3 / §FS-lsp.1.4: a typed trigger lands on the canonical form in
 // one pass — the trigger rewrite runs first and the shorthand pass reads its
 // output, so the author never sees an intermediate `§FS-042`.
 #[test]
@@ -311,7 +311,7 @@ fn type_line_in(
     line
 }
 
-/// §FS-lsp.1.4: typing `$$FS-042` lands on the canonical ID. The expansion
+/// §FS-lsp.1.4.1: typing `$$FS-042` lands on the canonical ID. The expansion
 /// fires on the keystroke that *ends* the token, not on the one that first
 /// makes it parse — under the default format that is the first digit, and
 /// expanding there rewrites a number the author has not finished typing.
@@ -363,7 +363,7 @@ fn on_type_expands_a_shorthand_when_the_token_ends() {
     assert_eq!(type_line(&path, "See ", "$$FS-777 x", &[]), "See §FS-777 x");
 }
 
-/// §FS-fmt.2.4 / §FS-workspace.1: a qualified citation's ID tail is parsed with
+/// §FS-fmt.2.4.4 / §FS-workspace.1.2: a qualified citation's ID tail is parsed with
 /// the *target* project's grammar, never the citing project's. The scanner
 /// already routes it that way; a rewrite that used the citing grammar would
 /// edit tokens `check` never saw and skip the ones it reported — visible only
@@ -410,7 +410,7 @@ fn a_qualified_shorthand_is_matched_with_the_targets_grammar() {
     );
 }
 
-/// §FS-lsp.1.4: the live transform refuses wherever the bulk pass refuses. A
+/// §FS-lsp.1.4.3: the live transform refuses wherever the bulk pass refuses. A
 /// fenced block and a declaration heading are whole-*line* skips in `fmt`
 /// (§FS-fmt.2.3), which is why the on-type entry point takes the document
 /// rather than one line — without the lines above, the editor would silently
@@ -449,7 +449,7 @@ fn on_type_refuses_the_lines_fmt_refuses() {
     );
 }
 
-/// §FS-lsp.1.4: scoping the expansion to the edited file's project compares
+/// §FS-lsp.1.4.2: scoping the expansion to the edited file's project compares
 /// paths, and two spellings can name one directory — a symlinked root here,
 /// `/var` vs `/private/var` on macOS, a `\\?\` prefix on Windows. A raw prefix
 /// test silently filters every candidate out and the expansion just never
@@ -488,7 +488,7 @@ fn expansion_survives_a_root_reached_by_another_path() {
     );
 }
 
-// §FS-lsp.1.4: an ambiguous shorthand is never guessed at, and an expansion
+// §FS-lsp.1.4.2: an ambiguous shorthand is never guessed at, and an expansion
 // is scoped to the edited file's own project — a sibling workspace member's
 // declarations must neither supply the answer nor suppress it.
 #[test]

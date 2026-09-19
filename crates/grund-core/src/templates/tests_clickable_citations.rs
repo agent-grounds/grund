@@ -81,7 +81,7 @@ fn clickable_citations_section_renders_the_configured_marker() {
     );
 }
 
-// §FS-config.3.1: the closed enum admits only `link` — `plain` is machine
+// §FS-config.3.1.6: the closed enum admits only `link` — `plain` is machine
 // state and stays user-scoped (§DF-repo-conversation-opinion.2.2).
 #[test]
 fn repository_config_rejects_non_link_conversation() {
@@ -101,7 +101,7 @@ fn repository_config_rejects_non_link_conversation() {
     );
 }
 
-// §FS-config.3.1: `[render.links]` is the retired spelling of the user-level
+// §FS-config.3.1.3: `[render.links]` is the retired spelling of the user-level
 // preference; the two scopes now share the `[reference] conversation` name.
 // It must stay an unknown section rather than come back as a silent alias.
 #[test]

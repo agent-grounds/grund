@@ -1,5 +1,5 @@
 //! Test module: init's effective-scope decision and shared guidance renderer
-//! (§FS-init.2.2, §FS-config.3.5).
+//! (§FS-init.2.2.2, §FS-config.3.5).
 
 use std::fs;
 
@@ -28,7 +28,7 @@ fn effective_scope_recognizes_include_and_kind_home_files() {
 
     assert!(
         effective_scope_reads_any_file(&home_config),
-        "§FS-config.3.5: a walked kind file home is readable even outside includes"
+        "§FS-config.3.5.8: a walked kind file home is readable even outside includes"
     );
 }
 
@@ -72,7 +72,7 @@ fn effective_scope_rejects_files_the_scanner_skips() {
 
     assert!(
         !effective_scope_reads_any_file(&config),
-        "§FS-init.2.2: existence is insufficient when scanner policy skips every file"
+        "§FS-init.2.2.2: existence is insufficient when scanner policy skips every file"
     );
 }
 
@@ -107,11 +107,11 @@ fn shared_renderer_changes_only_the_empty_scan_suffix() {
     assert_eq!(
         empty.replacen(suffix, "", 1),
         populated,
-        "§FS-init.2.2: both command adapters share a renderer whose only scan-state difference is the suffix"
+        "§FS-init.2.2.2: both command adapters share a renderer whose only scan-state difference is the suffix"
     );
 }
 
-/// The two scan states rendered by §FS-init.2.2.
+/// The two scan states rendered by §FS-init.2.2.2.
 fn next_guidance(scan_reads_file: bool) -> InitNext {
     InitNext {
         docs: false,

@@ -298,7 +298,7 @@ pub(super) fn scan_value_bindings(
 /// opted-in value kind even when punctuation, spacing, marker, or field syntax
 /// kept the ordinary citation scanner from producing the exact binding record.
 /// Unbackticked adjacent prose and bare citations deliberately never enter this
-/// pass (§FS-values.3.1).
+/// pass (§FS-values.3.1.1).
 fn scan_noncanonical_value_binding_attempts(
     line: &CitationLine<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
@@ -318,7 +318,7 @@ fn scan_noncanonical_value_binding_attempts(
         };
         // Without an opener on this physical line, this is the closing half of
         // a multiline literal—the binding is still an invalid attempted
-        // delimited form (§FS-values.3.1).
+        // delimited form (§FS-values.3.1.1).
         let open_tick = line.scan_line[..close_tick]
             .rfind('`')
             .unwrap_or(close_tick);
@@ -413,7 +413,7 @@ fn attempted_value_id(raw: &str, config: &Config) -> Option<(Id, Option<String>)
     }
     // A named address is deliberately outside the ordinary numeric-only
     // grammar, so recover only the complete ID before the separator to classify
-    // the delimited form as an attempted value binding (§FS-values.3.1).
+    // the delimited form as an attempted value binding (§FS-values.3.1.1).
     raw.match_indices(&config.section_separator)
         .map(|(index, _)| index)
         .collect::<Vec<_>>()

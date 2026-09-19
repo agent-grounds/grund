@@ -25,7 +25,7 @@ const CITATION_DIRECTIONS_URL: &str =
 /// fixed phrases — because `grund check` re-renders it and byte-compares for
 /// drift (§FS-check.3.5): the render *is* the hash.
 
-/// The legend (§FS-init.2.3.5): which of the five levels are `grund check`
+/// The legend (§FS-init.2.3.5.1): which of the five levels are `grund check`
 /// errors and which are suggestions. Fixed text, rendered whenever `[citations]`
 /// is declared, because a bullet's verb is unreadable without it — an agent that
 /// cannot tell `should` from `must` treats every rule as one or the other.
@@ -54,7 +54,7 @@ pub(crate) fn citation_directions_section(config: &Config) -> String {
     }
     lines.push(join_sentences(CITATION_LEVEL_LEGEND, grounding.as_deref()));
     lines.push(String::new());
-    // `[[kinds]]` order, then the homeless kind last (§FS-init.2.3.5) — wherever
+    // `[[kinds]]` order, then the homeless kind last (§FS-init.2.3.5.1) — wherever
     // in the table a project happened to declare it, because it is the
     // complement of every row above it and reads as the closing case.
     let homeless = config.homeless_kind();
@@ -79,7 +79,7 @@ pub(crate) fn citation_directions_section(config: &Config) -> String {
             citation_direction_subject(config, kind, homeless)
         ));
     }
-    // Load-bearing (§FS-init.2.3.5): silence is open only when the global default
+    // Load-bearing (§FS-init.2.3.5.6): silence is open only when the global default
     // leaves it open, and a per-kind default never reaches it — that one is
     // folded into its own bullet, which is *listed above*.
     lines.push(citation_closing_line(config.citations.global_default));
@@ -94,12 +94,12 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
     }
 }
 
-/// The grounding sentence (§FS-init.2.3.5), generated from `[reference]
+/// The grounding sentence (§FS-init.2.3.5.7), generated from `[reference]
 /// require_grounding` and the configured non-citable homes. It claims only what
 /// §FS-check.3.6 enforces, and it distinguishes *cite* from *declare*: a source
 /// file grounds by citing a declared ID **or** by declaring one inline, while a
 /// file in a non-citable home can only cite, because a declaration there is
-/// misplaced (§FS-check.3.7). An unwalked home (§FS-config.3.4.7) is left out —
+/// misplaced (§FS-check.3.7.3). An unwalked home (§FS-config.3.4.7.4) is left out —
 /// nothing in it is scanned, so the rule never reaches it. Per-row grounding
 /// levels (§FS-config.3.4.8) are not this sentence's.
 fn citation_grounding_sentence(config: &Config) -> Option<String> {
@@ -123,7 +123,7 @@ fn citation_grounding_sentence(config: &Config) -> Option<String> {
     ))
 }
 
-/// What one bullet's rules are checked *per* (§FS-init.2.3.5) — the unit the
+/// What one bullet's rules are checked *per* (§FS-init.2.3.5.2) — the unit the
 /// ticket's first defect was that no bullet stated.
 ///
 /// A citable kind's unit is the top-level declaration (§FS-check.3.11). A
@@ -132,7 +132,7 @@ fn citation_grounding_sentence(config: &Config) -> Option<String> {
 /// something an agent can never write. The homeless kind has no place, so it
 /// keeps its name and says what it covers: its `title` where the project wrote
 /// one. Its unit is narrower again — a *source* file (not `.md`) that already
-/// cites something (§FS-config.3.9.2) — because the obligation constrains what a
+/// cites something (§FS-config.3.9.2.4) — because the obligation constrains what a
 /// file cites and never whether it cites at all; a util that cites nothing is
 /// not a unit. In a non-citable home the opposite holds — a skill without a spec
 /// is the defect — so nothing narrows that subject, and `require_grounding`
@@ -169,7 +169,7 @@ fn citation_direction_subject(config: &Config, kind: &str, homeless: &str) -> St
 
 /// The verb-phrase clauses for one citing kind's rules, joined by "; " in the
 /// order obligations, permissions, prohibitions, then the default
-/// (§FS-init.2.3.5). `None` when the kind has no renderable rule.
+/// (§FS-init.2.3.5.3). `None` when the kind has no renderable rule.
 ///
 /// A prohibition leads with the modal (`must not cite`, the wording
 /// §FS-check.3.12 already uses in its findings) and follows with the short form
@@ -188,7 +188,7 @@ fn citation_direction_clauses(config: &Config, rules: &KindCitationRules) -> Opt
         ));
     }
     if !rules.may.is_empty() {
-        // §FS-init.2.3.5: a closed per-kind default plus a `may` list is one
+        // §FS-init.2.3.5.5: a closed per-kind default plus a `may` list is one
         // rule — "only these" — and takes one clause, not a permission followed
         // by a prohibition of everything else.
         let only = if folded { "only " } else { "" };
@@ -226,7 +226,7 @@ fn citation_direction_clauses(config: &Config, rules: &KindCitationRules) -> Opt
 }
 
 /// Whether this kind's `may` list is the whole of what it permits, so a closed
-/// per-kind default folds into it as `may cite only …` (§FS-init.2.3.5). With a
+/// per-kind default folds into it as `may cite only …` (§FS-init.2.3.5.5). With a
 /// `must` or a `should` beside it the permitted set is wider than the `may`
 /// list, and "only" would name the wrong set — those bullets keep the explicit
 /// closing clause instead.
@@ -237,7 +237,7 @@ fn citation_permission_is_closed(rules: &KindCitationRules) -> bool {
         && rules.should.is_empty()
 }
 
-/// The clause a per-kind `default` adds to its bullet (§FS-init.2.3.5), or
+/// The clause a per-kind `default` adds to its bullet (§FS-init.2.3.5.5), or
 /// `None` when it changes nothing a reader could act on.
 ///
 /// Only `must-not` and `should-not` defaults are load-bearing: §FS-config.3.9.4
@@ -262,7 +262,7 @@ fn citation_default_clause(
     }
 }
 
-/// The section's closing line (§FS-init.2.3.5) — load-bearing either way, so an
+/// The section's closing line (§FS-init.2.3.5.6) — load-bearing either way, so an
 /// agent neither over-infers prohibitions from silence nor misses a closed
 /// world. A global default of `must` or `should` closes as open: it obliges
 /// nothing and forbids nothing (§FS-config.3.9.4).
@@ -285,7 +285,7 @@ fn citation_default_is_closed(level: Option<CitationLevel>) -> bool {
     )
 }
 
-/// Render a rule array as a target phrase (§FS-init.2.3.5): alternatives inside
+/// Render a rule array as a target phrase (§FS-init.2.3.5.4): alternatives inside
 /// one entry are joined with "or", conjunctive entries with "and". When there is
 /// more than one entry, an entry that has alternatives of its own is
 /// parenthesised — `must = ["FS|GOAL", "AR"]` is *(FS or GOAL) and AR*, and the
@@ -311,7 +311,7 @@ fn citation_rule_targets(disjunctions: &[CitationDisjunction]) -> String {
     join_english_list(&entries, "and")
 }
 
-/// One rule target as prose (§FS-init.2.3.5). A pinned alias stays exactly as
+/// One rule target as prose (§FS-init.2.3.5.4). A pinned alias stays exactly as
 /// spelled, because that is how the citation itself is written; `*/K` is rule
 /// grammar that is never a citation (§FS-config.3.9.3), so it is said in words
 /// instead of leaked into the entrypoint.
@@ -324,7 +324,7 @@ fn citation_target_phrase(target: &CitationTarget) -> String {
 }
 
 /// An English list: `A`, `A or B`, `A, B, or C` — the Oxford comma from three
-/// items on, so a three-way rule cannot be read as a two-way one (§FS-init.2.3.5).
+/// items on, so a three-way rule cannot be read as a two-way one (§FS-init.2.3.5.4).
 fn join_english_list(items: &[String], conjunction: &str) -> String {
     match items {
         [] => String::new(),

@@ -62,7 +62,7 @@ pub struct ListSizeEntry {
     pub id: String,
     pub section: Option<String>,
     /// The owning project's configured separator, used to render the text
-    /// coordinate without adding a wire field (§FS-list.3.4).
+    /// coordinate without adding a wire field (§FS-list.3.4.3).
     pub section_separator: String,
     pub kind: String,
     pub path: String,
@@ -81,17 +81,17 @@ pub struct ListSizeOutput {
     pub entries: Vec<ListSizeEntry>,
     pub scan_errors: Vec<ApiScanError>,
     /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
-    /// §FS-workspace.6.1, each anchored at the `grund.toml` line its own message
+    /// cautions of §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11 and
+    /// §FS-workspace.6.1.7, each anchored at the `grund.toml` line its own message
     /// names. A frontend renders each as one CLI-level `warning:` on stderr
-    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1).
+    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1.3).
     pub warnings: Vec<Finding>,
 }
 
 /// Programmatic point-size catalog. It selects the same declaration set as
 /// [`list`](crate::list), adds scanner-recorded section sites, and measures show-identical
-/// lead/full bodies through one per-file cache (§FS-list.2, §FS-list.3.4,
-/// §FS-workspace.8.3).
+/// lead/full bodies through one per-file cache (§FS-list.2, §FS-list.3.4.1,
+/// §FS-workspace.8.3.3).
 pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
     if opts.units.is_empty() {
         return Err(anyhow!("at least one size unit is required"));
@@ -276,7 +276,7 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
 }
 
 /// Shared validation for size mode's pre-measurement catalog selectors
-/// (§FS-list.1, §FS-workspace.8.3).
+/// (§FS-list.1, §FS-workspace.8.3.2).
 fn validate_list_scope_filters(
     context: &WorkspaceContext,
     project_filter: &BTreeSet<String>,

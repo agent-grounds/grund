@@ -83,7 +83,7 @@ pub(super) fn component_without_block_close(component: &str, block_comment: bool
 }
 
 /// Heading depth after the same configured wrapper accepted by declaration and
-/// section scanning has been removed (§FS-values.2.4). This deliberately does
+/// section scanning has been removed (§FS-values.2.4.1). This deliberately does
 /// not decide whether the heading is citable; it also identifies plain/named
 /// headings that are forbidden inside a strict embedded root.
 pub(super) fn authored_heading_level(
@@ -94,7 +94,7 @@ pub(super) fn authored_heading_level(
 ) -> Option<usize> {
     // Strip a source wrapper—including `#`—before authored heading hashes;
     // Python docstrings arrive as Markdown after quote normalization
-    // (§FS-values.2.4).
+    // (§FS-values.2.4.1).
     let content = if markdown {
         line.trim_start()
     } else {

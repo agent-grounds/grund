@@ -48,13 +48,13 @@ use crate::workspace::WorkspaceCitationTarget;
 pub(crate) struct CitationLine<'a> {
     pub(crate) scan_line: &'a str,
     /// The untransformed source line. `scan_line` may be a *slice* of it — a
-    /// Python docstring's interior with the quotes stripped (§AR-scanner.4) — so a
+    /// Python docstring's interior with the quotes stripped (§AR-scanner.4.4) — so a
     /// position on this line and a position on that one are not the same number.
     /// Every never-rewrite question is asked at a **raw-line** offset and routed to
-    /// the right text by `docstring` below (§FS-fmt.2.3.1).
+    /// the right text by `docstring` below (§FS-fmt.2.3.1.1).
     pub(crate) raw_line: &'a str,
     /// Where this line's Python docstring content sits in `raw_line`
-    /// (§FS-fmt.2.3.1) — the view every never-rewrite question is asked through,
+    /// (§FS-fmt.2.3.1.1) — the view every never-rewrite question is asked through,
     /// so a docstring line is judged on the text `fmt` reads there too.
     pub(crate) docstring: DocstringContent<'a>,
     pub(crate) column_offset: usize,
@@ -75,8 +75,8 @@ pub(crate) struct CitationLine<'a> {
 /// nested section headings (§AR-scanner.2.2), and `<ID>[.<section>]` citations
 /// (§AR-scanner.2.3, §FS-check.1.1) — skipping fenced code blocks; outside
 /// Markdown, bare ID-shaped tokens inside string literals (§FS-fmt.2.3.1); in
-/// Markdown, bare ID-shaped tokens inside a link destination (§FS-check.1.1,
-/// §FS-fmt.2.3); and any bare token at all under `[reference] strict`
+/// Markdown, bare ID-shaped tokens inside a link destination (§FS-check.1.1.4,
+/// §FS-fmt.2.3.4); and any bare token at all under `[reference] strict`
 /// (§FS-config.3.1).
 ///
 /// One citation regex is used for every scan; whether a match is qualified
@@ -84,13 +84,13 @@ pub(crate) struct CitationLine<'a> {
 /// whether the `<namespace>` capture fired (§AR-workspace.3.1). The alias
 /// prefix is only honoured when the marker precedes it — an unmarked
 /// `<alias>/<ID>` in prose is text, never a qualified citation
-/// (§FS-workspace.1, §AR-workspace.3.1).
+/// (§FS-workspace.1.3, §AR-workspace.3.1).
 ///
 /// In workspace mode the caller passes a non-empty `workspace_targets` so a
 /// `§<alias>/<ID>` token parses with the target project's grammar inline —
 /// one disk read for both unqualified and qualified citations
 /// (§AR-workspace.5.1). An empty slice falls back to the loose qualified
-/// parser used by member-local scans (§FS-workspace.5).
+/// parser used by member-local scans (§FS-workspace.5.2).
 pub(super) fn scan_file(
     path: &Path,
     config: &Config,
@@ -119,7 +119,7 @@ pub(super) fn scan_file(
 /// line whose markers are already accounted for.
 ///
 /// Text section headings also require the spans, because the shared coordinate
-/// catalog is body-local (§FS-show.2.1.2). `scan_one_file` gives this call a fresh
+/// catalog is body-local (§FS-show.2.1.2.1). `scan_one_file` gives this call a fresh
 /// `Findings`, so `findings` holds exactly this file's records.
 pub(super) fn scan_file_text(
     path: &Path,
@@ -147,14 +147,14 @@ pub(super) fn scan_file_text(
     let has_binding_candidate = text.contains('`') && text.contains(&config.marker);
     let value_line_contexts = ((scan_values || has_binding_candidate) && !is_md)
         .then(|| recognized_source_value_contexts(&text, is_py, config));
-    // §AR-scanner.2.4: citing-side classification is consumed only by the
+    // §AR-scanner.2.4.2: citing-side classification is consumed only by the
     // citation-direction checks, so it is computed only when the project declares
     // `[citations]` and the caller asked for it (§AR-benchmarks).
     let classify = config.classify_citation_sources && config.citations.declared;
-    // §AR-scanner.2.4: every Markdown heading (line, level) outside a fence — a
+    // §AR-scanner.2.4.1: every Markdown heading (line, level) outside a fence — a
     // declaration body runs until the next heading at the same or higher level.
     let mut md_headings: Vec<(usize, usize)> = Vec::new();
-    // §AR-scanner.2.2 / §FS-check.4.14: declaration and section recognition
+    // §AR-scanner.2.2.7 / §FS-check.4.14.1: declaration and section recognition
     // happen in this same fence-aware pass. Plain ATX headings wait until body
     // spans are known before becoming reportable candidates.
     let mut unmarked_heading_candidates = Vec::new();
@@ -230,7 +230,7 @@ pub(super) fn scan_file_text(
                 defined_in,
                 e2e_case: None,
                 title,
-                // §AR-scanner.2.4: real body span is assigned in the post-pass
+                // §AR-scanner.2.4.1: real body span is assigned in the post-pass
                 // below once every declaration and (for Markdown) every heading
                 // on the file is known. Default to the single declaration line.
                 body_start: lineno,
@@ -252,7 +252,7 @@ pub(super) fn scan_file_text(
             continue;
         }
 
-        // §FS-check.4.6: the line was not a declaration. Ask the near-miss pattern
+        // §FS-check.4.6.1: the line was not a declaration. Ask the near-miss pattern
         // whether it looked like one, here rather than in a second read of the tree —
         // the scan has the line, the position rules and the fence/docstring state.
         if let Some((text, format, kind)) =
@@ -292,7 +292,7 @@ pub(super) fn scan_file_text(
                 let trimmed = trimmed.strip_prefix(':').unwrap_or(trimmed).trim();
                 (!trimmed.is_empty()).then(|| trimmed.to_string())
             };
-            // §FS-config.3.2 / §AR-scanner.2.1: retain a rejected declaration-position
+            // §FS-config.3.2.5 / §AR-scanner.2.1: retain a rejected declaration-position
             // token as an ordinary catalog declaration, with exact spelling and all
             // body/section state from this same file pass.
             current = Some(Declaration {
@@ -350,7 +350,7 @@ pub(super) fn scan_file_text(
                         }
                     }),
                 };
-                // §AR-scanner.2.2: a path is recorded once, by the first heading
+                // §AR-scanner.2.2.3: a path is recorded once, by the first heading
                 // that claims it; later claimants go to `duplicate_sections` so
                 // §FS-check.3.16 can name every colliding line.
                 match decl.sections.entry(section_path.clone()) {
@@ -415,7 +415,7 @@ pub(super) fn scan_file_text(
         let workspace_mode = !workspace_targets.is_empty();
         let citation_start = findings.citations.len();
         let mut qualified_marker_starts = BTreeSet::new();
-        // §AR-scanner.2.6: every marker the full-ID pattern matched at, whether or
+        // §AR-scanner.2.6.1: every marker the full-ID pattern matched at, whether or
         // not this pass emitted a citation there. The shorthand pass skips these
         // (§DF-number-only-citation-shorthand.2.6), so the full ID always wins.
         let mut claimed_markers: Vec<usize> = Vec::new();
@@ -426,7 +426,7 @@ pub(super) fn scan_file_text(
             if has_marker {
                 claimed_markers.push(full.start() - config.marker.len());
             }
-            // §FS-check.1.1 / §AR-scanner.2.3: a reserved `number.name`
+            // §FS-check.1.1.2 / §AR-scanner.2.3.4: a reserved `number.name`
             // candidate is consumed as one rejected token, never shortened to
             // the valid numeric prefix the regex necessarily matched.
             if config
@@ -441,7 +441,7 @@ pub(super) fn scan_file_text(
             if workspace_mode && namespace.is_some() {
                 continue;
             }
-            // §FS-workspace.1, §AR-workspace.3.1: an unmarked `alias/ID` is text,
+            // §FS-workspace.1.3, §AR-workspace.3.1: an unmarked `alias/ID` is text,
             // not a citation. The slash is part of the visual token; we do not
             // fall back to recognising the trailing ID as a bare citation.
             if namespace.is_some() && !has_marker {
@@ -451,7 +451,7 @@ pub(super) fn scan_file_text(
                 continue;
             }
             // In an opted-in repository an unmarked name tail is prose as one
-            // whole token, even in compatibility scanning mode (§FS-check.1.1).
+            // whole token, even in compatibility scanning mode (§FS-check.1.1.2).
             if !has_marker
                 && config
                     .grammar
@@ -520,7 +520,7 @@ pub(super) fn scan_file_text(
         if workspace_mode {
             scan_workspace_qualified_pass(&citation_line, workspace_targets, findings);
         } else {
-            // §AR-scanner.2.6: the fallback records what it claimed into the same
+            // §AR-scanner.2.6.1.1: the fallback records what it claimed into the same
             // set, so the shorthand pass below can tell a qualified marker that
             // already became a citation from one no qualified pass could parse.
             scan_fallback_qualified_citations(
@@ -612,9 +612,9 @@ pub(super) fn scan_file_text(
     if classify {
         classify_citation_sources(findings, config, path);
     }
-    // §AR-scanner.2.7: the headings and doc-comment blocks a grounding unit finer
+    // §AR-scanner.2.7.1: the headings and doc-comment blocks a grounding unit finer
     // than the file is cut out of — recorded only where the file's own row asks
-    // for one, so a level-1 tree pays nothing (§FS-config.3.4.8).
+    // for one, so a level-1 tree pays nothing (§FS-config.3.4.8.2).
     record_file_structure(path, text, config, findings);
     Ok(())
 }

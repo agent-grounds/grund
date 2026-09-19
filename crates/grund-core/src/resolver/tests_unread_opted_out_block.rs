@@ -12,7 +12,7 @@
 //! Two things no golden there can keep, and they are this module's job. The
 //! first is that the message a reader meets in the spec is the message the
 //! binary prints, since a golden is only ever compared against the binary that
-//! produced it. The second is the **symlinked** shapes of §FS-workspace.6's
+//! produced it. The second is the **symlinked** shapes of §FS-workspace.6.2's
 //! boundary: a case directory is a tracked fixture and the corpus holds no
 //! symlink at all, so the one direction a member list cannot see — a scope root
 //! that resolves into another project of the run — has to be built at runtime.
@@ -51,7 +51,7 @@ fn repo_text(relative: &str) -> Option<String> {
     std::fs::read_to_string(repo_file(relative)).ok()
 }
 
-/// §FS-check.4.10: the message the spec shows and the message the binary
+/// §FS-check.4.10.5: the message the spec shows and the message the binary
 /// prints are one string. Without this the wording could be corrected in the
 /// golden and left stale in the document a reader reaches by citation, and
 /// every e2e case would still be green — the goldens compare the binary
@@ -116,13 +116,13 @@ fn cautioned_blocks(root: &Path) -> usize {
     .count()
 }
 
-/// §FS-check.4.10, §FS-workspace.6: the block's only scope root **is** a
+/// §FS-check.4.10.2, §FS-workspace.6.2: the block's only scope root **is** a
 /// link into the enclosing project's own `docs`. Those files are read — by
 /// the root project — so the answer to "would this block have read
 /// something, had it been a project?" is no, and the caution must not fire.
 ///
 /// The prune cannot come from the walk's directory filter: a walk root is
-/// never pruned at depth 0 (§FS-config.3.5), so the root is gated before the
+/// never pruned at depth 0 (§FS-config.3.5.9), so the root is gated before the
 /// walk or not at all.
 #[cfg(unix)]
 #[test]
@@ -133,7 +133,7 @@ fn silent_when_the_scope_root_links_into_another_project() {
     assert_eq!(cautioned_blocks(&root), 0);
 }
 
-/// §FS-check.4.10, §FS-workspace.6: the same, for a scope root that is a
+/// §FS-check.4.10.2, §FS-workspace.6.2: the same, for a scope root that is a
 /// **file**. It reaches the probe without a directory anywhere in it, so a
 /// gate written into the walk alone would miss it — and `requirements.md` is
 /// a default `[scan] include` entry, so no configuration has to ask for this
@@ -148,7 +148,7 @@ fn silent_when_a_file_scope_root_links_into_another_project() {
     assert_eq!(cautioned_blocks(&root), 0);
 }
 
-/// §FS-check.4.10, §FS-config.3.5.1: the probe shares the reporting walk's
+/// §FS-check.4.10.2, §FS-config.3.5.1: the probe shares the reporting walk's
 /// canonical-root fence. A scope root that is an outward directory link is
 /// pruned even when no loaded project owns its target, so it is not evidence
 /// that this opted-out block would have read content as a project.

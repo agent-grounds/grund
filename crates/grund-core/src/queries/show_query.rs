@@ -1,6 +1,6 @@
 //! What a show query is asked and what it refuses with (§AR-system.2.7): the
 //! options a caller passes (§FS-distribution.3.1) and the typed refusal the
-//! resolver raises (§FS-errors.5).
+//! resolver raises (§FS-errors.5.2).
 //!
 //! These sat in the api's contract file while `queries/show.rs` raised the
 //! refusal and `queries/batch.rs` read the options upward (§AR-system.4). A
@@ -15,7 +15,7 @@ use std::path::PathBuf;
 use crate::model::{FindingSite, ShowRenderMode};
 
 /// Options for programmatic declaration reads through `show`
-/// (§FS-distribution.3.0, §FS-distribution.3.1).
+/// (§FS-distribution.3.0.2, §FS-distribution.3.1).
 #[derive(Clone)]
 pub struct ShowOpts {
     pub path: PathBuf,
@@ -65,7 +65,7 @@ pub enum ShowFormat {
 }
 
 /// A failed ID query whose message names sites the JSON diagnostic can also
-/// carry (§FS-errors.5): the two-homes `ambiguous` refusal and the
+/// carry (§FS-errors.5.2): the two-homes `ambiguous` refusal and the
 /// `ambiguous-section` refusal. Raised from `queries/show.rs` and downcast by
 /// both printers, so `sites` never needs a second parse of `message`.
 /// `Display` is `message` verbatim — the text form is unchanged by this type.

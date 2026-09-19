@@ -6,7 +6,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1). The submodules are the former `scanner*` and
+//! (§AR-core-module-layout.1.1). The submodules are the former `scanner*` and
 //! `value_json` category files, one per machine §AR-scanner names — the directory
 //! traversal of §AR-scanner.1 in `walk*`, the per-file line pass of
 //! §AR-scanner.2 in `file_pass`, the passes it calls out to for citations,
@@ -18,11 +18,11 @@
 //! §AR-scanner.2.7 fills went down into `model/`, because `Findings` carries them
 //! and they are plain data, and five lexical items the flat layout parked here
 //! went down into `grammar/` (§AR-system.2.1). The snapshot canonicalization of
-//! §AR-lsp.5 followed them into `model/paths.rs` when §AR-system.2.9 became a
+//! §AR-lsp.5.1 followed them into `model/paths.rs` when §AR-system.2.9 became a
 //! module, the queries and the writers both rebasing a path against it.
 //!
 //! What the component does not hold any more either, since §AR-system.2.10
-//! became one: the qualified half of §FS-config.3.2's catalog reconciliation,
+//! became one: the qualified half of §FS-config.3.2.6's catalog reconciliation,
 //! which takes the whole loaded project set and is `resolver/legacy_promotion.rs`
 //! now — leaving it here would have had this component name the record of one
 //! above it (§AR-system.4). The per-candidate promotion it calls stays, and
@@ -41,10 +41,10 @@
 //! entrypoint files a repository *has* is a probe over the tree — it resolves
 //! symlinks and reads a file for a managed block — and `grund check`'s companion
 //! scan was reading it upward out of a component above the checker
-//! (§FS-check.3.5, §AR-checker.2.7).
+//! (§FS-check.3.5.1, §AR-checker.2.7).
 //!
 //! What came the other way with that move is `scan_error.rs`: the published form
-//! of a scan failure (§FS-check.2), which sat in the api's contract while the
+//! of a scan failure (§FS-check.2.4), which sat in the api's contract while the
 //! size catalog and the formatter read it upward (§AR-system.4). It carries the
 //! one `pub` name this component now adds to the embedding surface of
 //! §AR-core-module-layout.2, so `lib.rs` re-exports `ApiScanError` explicitly
@@ -102,14 +102,14 @@ pub(crate) use walk::{
 };
 pub(crate) use walk_boundaries::is_scannable;
 
-// What another component's tests read (§AR-core-module-layout.1): the
+// What another component's tests read (§AR-core-module-layout.1.3): the
 // workspace-wide tree entry point, which the cross-project citation cases
 // drive. The four narrower reads went beside their own cases, below.
 #[cfg(test)]
 pub(crate) use tree::scan_tree_with_workspace;
 
 // The cases that pin this component, one module per behaviour area
-// (§AR-core-module-layout.1).
+// (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_config_scan;
 #[cfg(test)]

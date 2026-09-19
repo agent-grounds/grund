@@ -345,7 +345,7 @@ fn scanner_ignores_bare_source_citations_inside_strings() {
     );
 }
 
-/// §AR-scanner.2.3: a marked *qualified* citation is suppressed inside an
+/// §AR-scanner.2.3.2: a marked *qualified* citation is suppressed inside an
 /// inline-code span or a string literal **only** in source files; in Markdown
 /// it is always a citation. This pins the whole (file-type × context) matrix
 /// end-to-end so no single detection pass can drift from the shared
@@ -391,7 +391,7 @@ fn qualified_citation_suppression_is_uniform_across_passes() {
     );
 }
 
-/// §FS-check.2.3.1: a `<§>`-escaped illustration is inert to every check, but
+/// §FS-check.2.3.1.1: a `<§>`-escaped illustration is inert to every check, but
 /// one whose ID resolves is surfaced as a suggestion (not an error). Also
 /// guards the per-file findings merge (§AR-scanner) — both escapes must
 /// survive `merge_findings`, which once dropped `escaped_citations`.

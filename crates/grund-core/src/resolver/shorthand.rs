@@ -1,5 +1,5 @@
 //! The number-only shorthand resolved against the **catalog of a run**
-//! (§FS-fmt.2.4, §FS-workspace.1, §DF-number-only-citation-shorthand): what one
+//! (§FS-fmt.2.4, §FS-workspace.1.2, §DF-number-only-citation-shorthand): what one
 //! `grund fmt` walk indexes to expand a shorthand, the one declared ID a typed
 //! token expands to, the rewrite that writes the canonical form, and the
 //! cross-namespace pass that resolves `§<alias>/FS-042` once every project has
@@ -38,7 +38,7 @@ use crate::model::{Findings, Id};
 /// is quadratic on exactly the tree this rewrite exists to clean up
 /// (§GOAL-fast-feedback).
 pub(crate) struct ShorthandTargets<'a> {
-    /// `None` until the walk has a declaration set — §FS-fmt.2.4 defers that scan
+    /// `None` until the walk has a declaration set — §FS-fmt.2.4.5 defers that scan
     /// until a shorthand is actually met, so a repo without one never pays for it.
     pub(crate) local: Option<ShorthandIndex<'a>>,
     pub(crate) by_alias: BTreeMap<&'a str, ShorthandAliasTarget<'a>>,
@@ -95,7 +95,7 @@ impl<'a> ShorthandTargets<'a> {
 /// but never fixed it would leave the §FS-check.3.13 error with no bulk remedy.
 /// A member-local run carries no workspace context and leaves the citation alone
 /// — there the alias resolves nowhere and `check` says so instead
-/// (§FS-workspace.8.5).
+/// (§FS-workspace.8.5.1).
 ///
 /// Whose grammar parses a token: the scanner routes qualified citations to the
 /// target project's grammar (`scan_workspace_qualified_pass`) and this pass has to
@@ -140,7 +140,7 @@ pub(crate) fn expand_shorthand_citations(
     )
 }
 
-/// The formatter entry point for §FS-fmt.2.4, carrying the byte offsets of
+/// The formatter entry point for §FS-fmt.2.4.3, carrying the byte offsets of
 /// markers produced from triggers so accepted persisted forms and authoring
 /// sugar remain distinct even when they share one line.
 #[allow(clippy::too_many_arguments)]
@@ -176,7 +176,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         let Some(rest) = line.get(token_start..) else {
             continue;
         };
-        // §FS-workspace.1: an `<alias>/` prefix decides *whose* grammar parses the
+        // §FS-workspace.1.2: an `<alias>/` prefix decides *whose* grammar parses the
         // rest of the token, and a lower-case initial is the one byte that skips the
         // qualified pattern for nearly every citation (§GOAL-fast-feedback).
         let alias = rest
@@ -222,7 +222,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         if !target_config.grammar.id_token_ends_cleanly(tail, match_end) {
             continue;
         }
-        // §FS-fmt.2.4.1: `§SPEC-001→SPEC-003` is a renumbering table, not a citation.
+        // §FS-fmt.2.4.1.1: `§SPEC-001→SPEC-003` is a renumbering table, not a citation.
         // The marker is the *citing* project's — what the author typed — while the
         // number shape is the target's, the same split the rewrite below uses.
         if target_config
@@ -233,14 +233,14 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         }
         // §FS-fmt.2.3: the same exclusions the other rewrites honour — inline code,
         // a link destination, a runtime string — asked of the docstring's content on
-        // a docstring line, exactly as the scanner asks it (§FS-fmt.2.3.1).
+        // a docstring line, exactly as the scanner asks it (§FS-fmt.2.3.1.1).
         if never_rewrite_context_in(docstring, line, is_md, marker_start) {
             continue;
         }
         let Some(id) = parse_id(&caps, &target_config.grammar) else {
             continue;
         };
-        // §FS-fmt.2.4: only *now* are declarations needed — every gate above rejects
+        // §FS-fmt.2.4.5: only *now* are declarations needed — every gate above rejects
         // on the line text alone, and reaching for them earlier was a measured 79%
         // regression on the benchmark fixture (§GOAL-fast-feedback, §AR-ci.5).
         let index = match target {
@@ -262,7 +262,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         if unique.legacy_spelling().is_some() {
             continue;
         }
-        // §FS-fmt.2.4 / §FS-workspace.4: an accepted project preserves only
+        // §FS-fmt.2.4.3 / §FS-workspace.4.2: an accepted project preserves only
         // marker-origin shorthand. A marker created from this line's trigger is
         // still authoring input and always expands to the canonical full ID.
         if target_config.shorthand == ShorthandPolicy::Accepted
@@ -273,7 +273,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         let namespace = alias.map(|(alias, _)| alias);
         let match_end = alias_len + match_end;
         output.push_str(&line[cursor..token_start]);
-        // §FS-fmt.3: the written and canonical forms are recorded as the line is
+        // §FS-fmt.3.6: the written and canonical forms are recorded as the line is
         // built, because this is the only point that holds both — and expanding is
         // the one rewrite here whose mistakes no later pass can see.
         let written_start = output.len();
@@ -306,7 +306,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
     Some(output)
 }
 
-/// §AR-scanner.2.6: resolve `§<alias>/FS-042` against the aliased project's
+/// §AR-scanner.2.6.6: resolve `§<alias>/FS-042` against the aliased project's
 /// declarations. A per-project scan cannot do this — it sees only its own
 /// declaration set — so the cross-namespace half of the shorthand rule lands
 /// here, once every project has been scanned. Unqualified shorthands were

@@ -20,7 +20,7 @@ use crate::model::sort_path_key;
 use crate::model::{Citation, Declaration, Findings, Id, LegacyCitationCandidate};
 
 /// Resolve a query through the canonical grammar first, then combine exact
-/// catalog compatibility with number shorthand (§FS-config.3.2, §FS-show.1).
+/// catalog compatibility with number shorthand (§FS-config.3.2.6, §FS-show.1).
 pub(crate) fn resolve_id_arg(
     raw: &str,
     config: &Config,
@@ -63,7 +63,7 @@ pub(crate) fn resolve_id_arg(
 }
 
 /// Reconcile deferred marker-prefixed candidates against the catalog produced
-/// by the same tree scan (§FS-config.3.2, §FS-check.1.1). This is deliberately
+/// by the same tree scan (§FS-config.3.2.6, §FS-check.1.1.1). This is deliberately
 /// a catalog operation: the authoring regex stays strict, and no unbacked token
 /// can become a citation.
 pub(super) fn promote_local_legacy_citations(config: &Config, findings: &mut Findings) {
@@ -138,7 +138,7 @@ pub(crate) fn promote_legacy_candidate(
             && citation.line == candidate.line
             && citation.column == candidate.column
     };
-    // §FS-config.3.2 / §FS-check.1.1: a configured parse reaching past the
+    // §FS-config.3.2.6 / §FS-check.1.1.1: a configured parse reaching past the
     // shorter legacy target owns its marker. A shorthand owns it when its
     // configured target set is non-empty; `ShorthandIndex` adds the legacy target.
     if citations.iter().any(|citation| {
@@ -177,7 +177,7 @@ pub(crate) fn promote_legacy_candidate(
     }
 }
 
-/// Apply the exact-ID-before-section precedence from §FS-config.3.2 to one
+/// Apply the exact-ID-before-section precedence from §FS-config.3.2.6 to one
 /// deferred line tail. Multiple section-prefix interpretations stay unresolved
 /// instead of selecting a declaration by iteration order.
 pub(crate) fn match_legacy_tail(
@@ -272,14 +272,14 @@ fn longest_section_prefix<'a>(tail: &'a str, config: &Config) -> Option<(&'a str
 }
 
 /// The one order citations are kept in, applied after either half of this pass
-/// promotes into the list (§FS-errors.4).
+/// promotes into the list (§FS-errors.4.1).
 pub(crate) fn sort_citations(citations: &mut [Citation]) {
     citations.sort_by(|a, b| {
         (sort_path_key(&a.file), a.line, a.column).cmp(&(sort_path_key(&b.file), b.line, b.column))
     });
 }
 
-/// §FS-fmt.6 / §FS-config.3.2: feed Markdown wrapping from the same exact
+/// §FS-fmt.6 / §FS-config.3.2.6: feed Markdown wrapping from the same exact
 /// declaration-backed boundary as scanner promotion, never a relaxed parser.
 pub(crate) fn collect_local_legacy_markdown_citations(
     line: &str,
@@ -302,7 +302,7 @@ pub(crate) fn collect_local_legacy_markdown_citations(
         let Some((id, section, consumed)) = match_legacy_tail(rest, config, &catalog) else {
             continue;
         };
-        // §FS-config.3.2 / §FS-fmt.6: do not linkify a shorthand-shaped legacy
+        // §FS-config.3.2.6 / §FS-fmt.6: do not linkify a shorthand-shaped legacy
         // ID when conforming declarations share its number. The scanner reports
         // the combined target set; formatting leaves the same bytes untouched.
         if parse_id_arg_with_shorthand(&rest[..consumed], &config.grammar).is_ok_and(|parsed| {

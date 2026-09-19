@@ -7,12 +7,12 @@
 //! (§FS-errors.4) turned expansion into a small rule set of its own, and rules
 //! are not what that file is for. Every `[workspace]` block — outermost root or
 //! nested member — expands through here, so the invariants hold at every depth
-//! (§AR-workspace.5.1, §AR-workspace.6.1).
+//! (§AR-workspace.5.1, §AR-workspace.6.1.8).
 //!
 //! The three findings this rule set produces are **returned**, never printed:
 //! each is a `Diagnostic` in the run's warning channel, anchored at the
 //! `grund.toml` line its message already names, and rendered by whichever
-//! frontend asked (§FS-check.4.7, §FS-check.4.10, §FS-workspace.6.1,
+//! frontend asked (§FS-check.4.7.7, §FS-check.4.10.11, §FS-workspace.6.1.7,
 //! §FS-distribution.3.1). Every sentence is still built apart from the
 //! diagnostic that carries it, which is what lets a test read it
 //! (§AR-core-module-layout.1).
@@ -84,7 +84,7 @@ pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMe
                     format!("workspace member glob parent does not exist: {glob_parent}"),
                 ));
             }
-            // §FS-workspace.2: reading the directory is part of interpreting
+            // §FS-workspace.2.4: reading the directory is part of interpreting
             // this config entry, so every I/O failure stays at the `members`
             // line and names the glob as written rather than escaping bare.
             let entries = fs::read_dir(&parent).map_err(|err| {
@@ -101,7 +101,7 @@ pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMe
                     )
                 })?;
                 let path = entry.path();
-                // §FS-workspace.2: classify the child by its followed metadata, so a
+                // §FS-workspace.2.4: classify the child by its followed metadata, so a
                 // symlink to a directory is a member subject to the same checks below.
                 if !path
                     .metadata()
@@ -155,7 +155,7 @@ pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMe
     // overlap rule, and the strict containment `workspace_member_root` enforces.
     let absent = expand_optional_members(config, &mut roots)?;
     roots.sort_by_key(|member| sort_path_key(&member.root));
-    // §FS-workspace.6.1: two entries naming one root are one member — a glob is
+    // §FS-workspace.6.1.4: two entries naming one root are one member — a glob is
     // allowed to name what an explicit entry also names — so dedup by root, and
     // keep the earlier entry's spelling for any diagnostic below.
     roots.dedup_by(|later, earlier| later.root == earlier.root);
@@ -186,7 +186,7 @@ fn reject_overlapping_workspace_members(
     Ok(())
 }
 
-/// §FS-workspace.6.1: resolve one `members` entry to the canonical project root
+/// §FS-workspace.6.1.4: resolve one `members` entry to the canonical project root
 /// it names, or the located error that entry earns. Both errors are reported at
 /// the block's `members` line and name the entry **as written**: a canonical root
 /// renders as nothing when it equals the render base and as an absolute path when
@@ -194,7 +194,7 @@ fn reject_overlapping_workspace_members(
 /// (§FS-errors.4).
 ///
 /// The entry has to exist, and it has to resolve *strictly inside* the block that
-/// listed it. `..` is already rejected in the entry text (§FS-workspace.2), so
+/// listed it. `..` is already rejected in the entry text (§FS-workspace.2.3), so
 /// escaping takes a symlink — and a member root outside its own block breaks what
 /// everything above it assumes. No lexical ancestor lists it, so its alias path is
 /// read from a different chain at every scope and no citation text passes both; a
@@ -206,7 +206,7 @@ fn reject_overlapping_workspace_members(
 /// `config`, because §FS-workspace.2.2 gave the block two lists that reach here and
 /// a reader sent to the wrong one of them has nothing to edit (§FS-errors.4).
 ///
-/// §FS-workspace.2.2: the default does not move. A `members` entry that is not
+/// §FS-workspace.2.2.4: the default does not move. A `members` entry that is not
 /// there is the same fatal config error it has always been, at the same line; only
 /// the sentence grows, by the one clause that stops a CI author having to guess an
 /// escape hatch exists (§FS-config.4.3).
@@ -218,7 +218,7 @@ pub(super) fn workspace_member_root(
 ) -> Result<PathBuf> {
     let located = |message: String| config_location_error(source, message);
     if !lexical.is_dir() {
-        // §FS-workspace.2.2: the unchanged default, one clause longer.
+        // §FS-workspace.2.2.4: the unchanged default, one clause longer.
         return Err(located(format!(
             "workspace member does not exist: {written} — list it in \
              [workspace] optional_members if it may be legitimately absent"
@@ -239,7 +239,7 @@ pub(super) fn workspace_member_root(
 
 /// What one `members` entry *names*, read from the entry text alone — before
 /// anyone asks whether that directory exists, or whether the config that holds
-/// the entry loads at all (§FS-workspace.6.1). This is the half of a member list
+/// the entry loads at all (§FS-workspace.6.1.7). This is the half of a member list
 /// that cannot fail, and it is all the ancestor climb needs to decide whether a
 /// block claims the directory below it.
 struct MemberClaim {
@@ -288,15 +288,15 @@ fn member_claims(root: &Path, entries: &[String]) -> Vec<MemberClaim> {
 /// The `[workspace] members` and `optional_members` entries of a config, read
 /// from the file text **on its own**: the parser's own line and section rules
 /// applied to those two keys, and nothing else — no other key, no shape rule
-/// (§FS-workspace.2), no grammar rebuild (§FS-workspace.6.1).
+/// (§FS-workspace.2.3), no grammar rebuild (§FS-workspace.6.1.7).
 ///
-/// §FS-workspace.2.2: both lists claim, by the same entry-text rule. An optional
+/// §FS-workspace.2.2.9: both lists claim, by the same entry-text rule. An optional
 /// entry claims the directory below it exactly as a `members` entry does, so a run
 /// started inside a *present* one reads its alias path out of that claim and
 /// spells itself the way the workspace root does; an absent entry claims a
 /// directory no run can be started inside, so including it costs nothing. Reading
 /// only `members` here left a present optional member's subtree named from a
-/// directory nothing lists, which is the disagreement §FS-workspace.6.1 exists to
+/// directory nothing lists, which is the disagreement §FS-workspace.6.1.5 exists to
 /// prevent.
 ///
 /// The ancestor climb needs the claim answerable for a config that does not
@@ -348,7 +348,7 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
 /// One ancestor `[workspace]` block: what its `members` entries name, the config
 /// a claim is answered from — or the error loading it produced, carried rather
 /// than raised because it is only this run's error once a claim reaches it
-/// (§FS-workspace.6.1) — and, once some directory below it turns out to be
+/// (§FS-workspace.6.1.7) — and, once some directory below it turns out to be
 /// claimed, the expanded member roots.
 struct AncestorBlock {
     claims: Vec<MemberClaim>,
@@ -357,7 +357,7 @@ struct AncestorBlock {
 }
 
 /// The `[workspace]` blocks an ancestor climb has already looked at, keyed by
-/// directory (§AR-workspace.6.1). The climb asks the same ancestors about every
+/// directory (§AR-workspace.6.1.5). The climb asks the same ancestors about every
 /// level below them — level *n* re-walks all of level *n+1*'s ancestors — so
 /// without this each ancestor's config is re-read, and its grammar regex set
 /// rebuilt, once per level: quadratic in the depth of the chain, and measurably
@@ -372,19 +372,19 @@ pub(crate) struct AncestorWorkspaces {
     /// same-shaped file in the reader's own directory (§FS-errors.4).
     report_base: PathBuf,
     /// Whether a `members` value this climb cannot read is said out loud
-    /// (§FS-workspace.6.1). True for a climb whose answer
+    /// (§FS-workspace.6.1.7). True for a climb whose answer
     /// *names* the tree below it — an alias path is built from it, so a segment
     /// that may be missing is the reader's business. False for a climb that only
     /// asks whether some directory is claimed and treats "cannot say" as "no
-    /// answer" (§FS-check.4.8): there is no alias path to protect, and the
+    /// answer" (§FS-check.4.8.2): there is no alias path to protect, and the
     /// sentence about one would be printed into runs that never asked the chain
-    /// anything (§FS-workspace.6.1).
+    /// anything (§FS-workspace.6.1.7).
     warn_undecidable: bool,
-    /// What the climb has to say, in the order it found it (§FS-workspace.6.1):
+    /// What the climb has to say, in the order it found it (§FS-workspace.6.1.7):
     /// one diagnostic per config whose `members` text could not be obtained.
     /// Collected rather than written to a stream, because the climb is seven
     /// levels below any frontend and every frontend renders it its own way
-    /// (§FS-distribution.3.1, §FS-lsp.1.1).
+    /// (§FS-distribution.3.1, §FS-lsp.1.1.3).
     warnings: Vec<Diagnostic>,
     blocks: BTreeMap<PathBuf, Option<AncestorBlock>>,
 }
@@ -400,7 +400,7 @@ impl AncestorWorkspaces {
     }
 
     /// The warnings this climb earned, taken out of it so the caller can carry
-    /// them on whatever it returns (§FS-workspace.6.1).
+    /// them on whatever it returns (§FS-workspace.6.1.7).
     pub(crate) fn take_warnings(&mut self) -> Vec<Diagnostic> {
         std::mem::take(&mut self.warnings)
     }
@@ -438,9 +438,9 @@ impl AncestorWorkspaces {
         if !self.blocks.contains_key(dir) {
             let (block, undecidable) =
                 read_ancestor_workspace_block(dir, cli_base, &self.report_base);
-            // §FS-workspace.6.1: only the climb that spells an alias path below
+            // §FS-workspace.6.1.7: only the climb that spells an alias path below
             // this directory owes the reader the sentence; the quiet climb of
-            // §FS-check.4.8 has no path to warn about and drops it.
+            // §FS-check.4.8.2 has no path to warn about and drops it.
             if self.warn_undecidable {
                 self.warnings.extend(undecidable);
             }
@@ -458,7 +458,7 @@ impl AncestorWorkspaces {
         }
         // A claim is an obligation and the file that would answer it is the one that
         // is broken, so the carried load error is raised here — the sharpest way of
-        // failing the claim — the same way an expansion failure is (§FS-workspace.6.1).
+        // failing the claim — the same way an expansion failure is (§FS-workspace.6.1.7).
         let config = match &block.config {
             Ok(config) => config,
             Err(message) => return Err(anyhow!("{message}")),
@@ -479,10 +479,10 @@ impl AncestorWorkspaces {
 /// `[workspace] members` entries — or a `members` value that could not be read
 /// at all, which is treated as no claim, because this walk climbs to the
 /// filesystem root and a stray broken `grund.toml` above a repository must not
-/// break every run beneath it (§FS-workspace.6.1, §AR-workspace.6.1). Whether
+/// break every run beneath it (§FS-workspace.6.1.7, §AR-workspace.6.1.3). Whether
 /// that last case is also *said* is the caller's: only a climb that spells the
 /// tree below it owes the reader the sentence, so the diagnostic is returned
-/// beside the block rather than raised here (§FS-workspace.6.1).
+/// beside the block rather than raised here (§FS-workspace.6.1.7).
 fn read_ancestor_workspace_block(
     dir: &Path,
     cli_base: &Path,

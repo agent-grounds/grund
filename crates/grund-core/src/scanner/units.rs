@@ -5,7 +5,7 @@
 //!
 //! This is a *description* of a file, not a list of units: the level that turns
 //! headings and doc-comment blocks into units belongs to the `[[kinds]]` row that
-//! governs the file (§FS-config.3.4.8), and the cut is made in
+//! governs the file (§FS-config.3.4.8.2), and the cut is made in
 //! `checker/grounding.rs` so the level rule is written once. It runs per file,
 //! only where that file's own row asks for a unit finer than the file, so one
 //! fine-grained place does not describe the whole tree and a project at level `1`
@@ -49,9 +49,9 @@ pub(super) fn record_file_structure(
         .insert(path.to_path_buf(), structure);
 }
 
-/// The effective `grounding_level` of the row `path` belongs to (§AR-scanner.2.7)
+/// The effective `grounding_level` of the row `path` belongs to (§AR-scanner.2.7.1)
 /// — its home kind's, or the homeless kind's where no single home claims it
-/// (§AR-scanner.2.4). That lookup is the one §FS-check.3.6.1 defers to for which
+/// (§AR-scanner.2.4.2). That lookup is the one §FS-check.3.6.1 defers to for which
 /// row governs a file, and the level it feeds is the checker's own, so what is
 /// recorded here and what is cut out of it later are one rule.
 ///
@@ -65,7 +65,7 @@ fn file_grounding_level(path: &Path, config: &Config) -> usize {
 }
 
 /// Every heading outside a fenced block, with its text (§AR-scanner.2.7). The
-/// fence state is the one §AR-scanner.2.3 keeps for citations, for the same
+/// fence state is the one §AR-scanner.2.3.3 keeps for citations, for the same
 /// reason: a `##` inside a fence is an example of a document, not a section of
 /// this one.
 fn markdown_structure(text: &str) -> FileStructure {
@@ -109,7 +109,7 @@ pub(super) fn heading_text(trimmed: &str, level: usize) -> String {
 
 /// Every doc-comment block in a source file, with its indentation
 /// (§AR-scanner.2.7). Which blocks are documentation is the per-language rule of
-/// §FS-inline-citation-style.1.1, read once per file from the extension and
+/// §FS-inline-citation-style.1.1.1, read once per file from the extension and
 /// applied to each block with one comparison — the same call the inline-site pass
 /// makes, so a block cannot be a doc comment for one rule and a note for the
 /// other.

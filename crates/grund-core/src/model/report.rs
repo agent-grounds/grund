@@ -2,7 +2,7 @@
 //! `CheckReport` the rules fill, and the published `Report` an embedder reads
 //! (§FS-errors.2.1, §FS-errors.5). The published three came down out of the
 //! api's contract file when §AR-system.2.9 became a module, because the editor
-//! snapshot of §FS-lsp carries a `Report` and the show refusal of §FS-errors.5
+//! snapshot of §FS-lsp carries a `Report` and the show refusal of §FS-errors.5.2
 //! carries a `FindingSite`, and both of those are the queries' (§AR-system.4).
 //! Only the records are here; the conversion between them needs a `Config` to
 //! spell a path with and stays in `api/report.rs`.
@@ -21,7 +21,7 @@ pub(crate) struct Site {
 /// `path:line` it occurred at, the message text, and any cross-reference `sites`.
 /// `column` is the 1-based start column of the offending token when the finding
 /// concerns a specific citation, so a consumer can anchor on that token rather
-/// than the first one on the line (§FS-lsp.1.1); it is `None` for line-anchored
+/// than the first one on the line (§FS-lsp.1.1.1); it is `None` for line-anchored
 /// findings.
 #[derive(Clone)]
 pub(crate) struct Diagnostic {
@@ -35,7 +35,7 @@ pub(crate) struct Diagnostic {
 
 /// The outcome of `check`: errors and warnings, kept apart so the exit code keys
 /// off errors only (§FS-check.2, §FS-check.4) and the printed order is fixed
-/// (§FS-errors.4, §FS-non-goals.9). `suggestions` is the third, non-severity
+/// (§FS-errors.4.1, §FS-non-goals.9). `suggestions` is the third, non-severity
 /// advisory channel (§FS-check.2.3, §DF-citation-directions.2.3): the
 /// `should` / `should-not` citation-direction findings, withheld from the
 /// default run and surfaced only under `--suggestions`. It never affects the
@@ -68,7 +68,7 @@ pub struct Finding {
     pub line: Option<usize>,
     /// 1-based start column of the offending citation when the finding concerns
     /// a specific token, so an LSP can anchor on that token rather than the first
-    /// citation on the line (§FS-lsp.1.1). `None` for line-anchored findings.
+    /// citation on the line (§FS-lsp.1.1.1). `None` for line-anchored findings.
     pub column: Option<usize>,
     pub message: String,
     pub sites: Vec<FindingSite>,

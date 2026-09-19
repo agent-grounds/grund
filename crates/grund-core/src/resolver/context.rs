@@ -50,9 +50,9 @@ pub(crate) struct WorkspaceProject {
 pub(crate) struct WorkspaceContext {
     pub(crate) projects: Vec<WorkspaceProject>,
     /// Index into `projects` for the "current project" — what `<ID>` (no
-    /// alias) resolves against (§FS-workspace.8 intro). `None` only for a
+    /// alias) resolves against (§FS-workspace.8.9 intro). `None` only for a
     /// workspace-root run with `include_root = false`, where there is no root
-    /// project for unqualified lookups (§FS-workspace.8 intro).
+    /// project for unqualified lookups (§FS-workspace.8.9 intro).
     pub(crate) current: Option<usize>,
     /// `true` only when a `[workspace]` block was discovered AND the
     /// invocation actually loads the workspace (i.e. not pinned member-local
@@ -75,11 +75,11 @@ pub(crate) struct WorkspaceContext {
     /// learned about the tree as well as how to spell it — `workspace_absent_optional`
     /// in particular, which is where `check_workspace_context` reads the
     /// §FS-check.4.9 announcement from and which no loaded project can supply when
-    /// every project in the block was the absent one (§FS-lsp.4).
+    /// every project in the block was the absent one (§FS-lsp.4.1).
     pub(crate) render_config: Config,
     /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7, §FS-check.4.8, §FS-check.4.10 and
-    /// §FS-workspace.6.1, settled and in the order the run earned them, for
+    /// cautions of §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11 and
+    /// §FS-workspace.6.1.7, settled and in the order the run earned them, for
     /// whichever frontend asked to render. Every command that walks passes
     /// through this loader, which is what puts all four on `list`, `refs`,
     /// `cover`, `fmt` and the ID read rather than on `check` alone.
@@ -193,7 +193,7 @@ pub(crate) fn load_resolved_workspace_context(
     overlays: &TextOverlays,
     classify_citation_sources: bool,
 ) -> Result<WorkspaceContext> {
-    // §AR-scanner.2.4 / §AR-benchmarks: the read-only commands (`list`, `show`,
+    // §AR-scanner.2.4.2 / §AR-benchmarks: the read-only commands (`list`, `show`,
     // `refs`, `fmt`) never read citing-side classification, so they pass `false` to
     // skip the scan post-pass. Workspace members inherit this below.
     config.classify_citation_sources = classify_citation_sources;
@@ -206,14 +206,14 @@ pub(crate) fn load_resolved_workspace_context(
 
     let mut root_config = config;
     let render_root = root_config.root.clone();
-    // §FS-workspace.8 intro: the current project is the root iff
+    // §FS-workspace.8.9 intro: the current project is the root iff
     // `include_root = true` (the helper always emits the root first).
     let current = root_config.workspace_include_root.then_some(0);
     let projects = load_workspace_projects_with_overlays(&mut root_config, overlays)?;
     // Cloned *after* the expansion, not before: what the walk learns about the
     // tree is what the report is rendered from (§FS-check.4.9).
     let render_config = root_config.clone();
-    // §FS-check.4.8: the query surfaces have no report to carry the finding, so it
+    // §FS-check.4.8.15: the query surfaces have no report to carry the finding, so it
     // joins the run's warning channel here (§DF-unlisted-workspace-block.2.3),
     // after the three the workspace pass settled — the order they were emitted in.
     let mut run_warnings = settled_run_warnings(&render_config);
@@ -283,13 +283,13 @@ fn single_project_context(
 ///
 /// `grund check` draws this line already: it takes the workspace-aggregate path
 /// only when the scope *is* the config root, and otherwise runs one narrowed scan
-/// (`scope_is_config_root`, §FS-check.1.3). A scope narrower than the root has to
-/// stay narrow — an explicit path bypasses `[scan] include` (§AR-scanner.1), so
+/// (`scope_is_config_root`, §FS-check.1.3.6). A scope narrower than the root has to
+/// stay narrow — an explicit path bypasses `[scan] include` (§AR-scanner.1.6), so
 /// widening it back to every project would both answer a question the caller did
 /// not ask and lose the files the narrowing was for.
 ///
 /// `list`, `refs`, `show`, completions, and `fmt` keep [`load_workspace_context`]:
-/// their `<path>` selects a project, it does not bound a walk (§FS-workspace.8).
+/// their `<path>` selects a project, it does not bound a walk (§FS-workspace.8.8).
 pub(crate) fn load_narrowable_workspace_context(
     path: &Path,
     path_provided: bool,
@@ -307,7 +307,7 @@ pub(crate) fn load_narrowable_workspace_context(
             false,
         );
     }
-    // §AR-scanner.2.4: the caller is a read-only query — skip the classification
+    // §AR-scanner.2.4.2: the caller is a read-only query — skip the classification
     // post-pass, exactly as `load_workspace_context` does (§AR-benchmarks).
     config.classify_citation_sources = false;
     single_project_context(config, path, path_provided, &TextOverlays::new())
@@ -335,8 +335,8 @@ fn load_workspace_projects_with_overlays(
     // scan keeps misconfiguration cheap to diagnose.
     let mut entries = expand_workspace_tree(root_config)?;
 
-    // §AR-scanner.2.4: members inherit the root's classification intent, so a
-    // read-only run skips the post-pass workspace-wide. §FS-check.1.3: `--full` is a
+    // §AR-scanner.2.4.2: members inherit the root's classification intent, so a
+    // read-only run skips the post-pass workspace-wide. §FS-check.1.3.8: `--full` is a
     // property of the run, so every member walks past its own `[scan] include` too.
     for entry in &mut entries {
         entry.config.classify_citation_sources = root_config.classify_citation_sources;
@@ -345,7 +345,7 @@ fn load_workspace_projects_with_overlays(
 
     // Stage 2: build the target list up-front so each project's scan can
     // parse `§<alias>/<ID>` citations with the target's grammar inline —
-    // no second disk pass (§FS-workspace.1, §AR-workspace.2).
+    // no second disk pass (§FS-workspace.1.2, §AR-workspace.2).
     let targets = entries
         .iter()
         .map(|entry| WorkspaceCitationTarget {

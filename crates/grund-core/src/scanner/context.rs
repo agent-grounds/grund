@@ -13,7 +13,7 @@ use crate::model::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
 use crate::workspace::WorkspaceCitationTarget;
 
 /// Narrow the shared coordinate catalog to each declaration's body and retain
-/// every rejected heading as one check site (§FS-show.2.1.2, §FS-check.3.23).
+/// every rejected heading as one check site (§FS-show.2.1.2.1, §FS-check.3.23).
 ///
 /// The line scan's current declaration runs farther than the body in Markdown,
 /// source comments, docstrings, and stubs. Applying the already-computed span
@@ -62,7 +62,7 @@ pub(crate) fn section_path_is_numeric(path: &str) -> bool {
 }
 
 /// The level of a Markdown ATX heading line (`#` count), or `None` when the line
-/// is not a heading (§FS-check.4.14). ATX syntax permits at most three leading
+/// is not a heading (§FS-check.4.14.1). ATX syntax permits at most three leading
 /// ASCII spaces and one through six `#`s followed by an ASCII space/tab or EOL.
 pub(crate) fn markdown_heading_level(line: &str) -> Option<usize> {
     let indentation = line.bytes().take_while(|byte| *byte == b' ').count();
@@ -81,7 +81,7 @@ pub(crate) fn markdown_heading_level(line: &str) -> Option<usize> {
     }
 }
 
-/// Assign every declaration in `findings` its body line span (§AR-scanner.2.4).
+/// Assign every declaration in `findings` its body line span (§AR-scanner.2.4.1).
 /// In Markdown the body runs until the next heading at the same or higher level;
 /// in a source file it is bounded by the comment/docstring block the declaration
 /// opens, capped before the next declaration sharing that block.
@@ -136,7 +136,7 @@ pub(super) fn assign_declaration_bodies(
 }
 
 /// The 1-indexed inclusive line spans of every comment / docstring block in a
-/// source file (§AR-scanner.2.4) — the shared block walk of `comment_block.rs`
+/// source file (§AR-scanner.2.4.1) — the shared block walk of `comment_block.rs`
 /// without the declares-an-ID filtering, so a declaration's body can be bounded
 /// by the block that hosts it.
 fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize, usize)> {
@@ -148,10 +148,10 @@ fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize,
 }
 
 /// Classify each citation's citing side by the three-step fallback of
-/// §AR-scanner.2.4: the enclosing declaration's kind (nearest preceding
+/// §AR-scanner.2.4.2: the enclosing declaration's kind (nearest preceding
 /// declaration whose body contains the site), else the file's unique kind home,
 /// else the homeless kind — `code`, or whatever the project named it
-/// (§FS-config.3.9.2).
+/// (§FS-config.3.9.2.2).
 pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config, path: &Path) {
     // (body_start, body_end, id) for this file's declarations, so the enclosing
     // lookup is a scan of a small local list.
@@ -162,7 +162,7 @@ pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config
         .map(|decl| (decl.body_start, decl.body_end, decl.id.clone()))
         .collect();
     let file_home = file_home_kind(path, config);
-    // §FS-config.3.9.2: step 3 of the fallback is the homeless kind, whose name
+    // §FS-config.3.9.2.2: step 3 of the fallback is the homeless kind, whose name
     // is `code` only where the project did not name it something truer.
     let homeless = config.homeless_kind();
     for cite in &mut findings.citations {
@@ -199,7 +199,7 @@ pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config
 }
 
 /// The kind whose configured home (`[[kinds]] folder` / `file`, §FS-config.3.4)
-/// uniquely contains `path` — step 2 of §AR-scanner.2.4. `None` when no home or
+/// uniquely contains `path` — step 2 of §AR-scanner.2.4.2. `None` when no home or
 /// more than one home matches, so the citation falls through to `code`.
 pub(crate) fn file_home_kind(path: &Path, config: &Config) -> Option<String> {
     // Walked file paths are canonicalized against the scan root (`scan_roots`
@@ -229,7 +229,7 @@ pub(crate) fn file_home_kind(path: &Path, config: &Config) -> Option<String> {
     matched.map(str::to_string)
 }
 
-/// The lexical half of the run's citation targets (§FS-workspace.1): which
+/// The lexical half of the run's citation targets (§FS-workspace.1.2): which
 /// project's compiled grammar reads a qualified token's ID tail, and nothing
 /// else about the target.
 ///
@@ -269,11 +269,11 @@ pub(super) fn inline_citation_sites(
         return (sites, site_lines);
     }
     let lines = text.lines().collect::<Vec<_>>();
-    // §FS-workspace.1: the lexical half of the run's citation targets, taken once
+    // §FS-workspace.1.2: the lexical half of the run's citation targets, taken once
     // per file — which project's grammar reads a qualified token's ID tail is all
     // the tokenizer below needs of a target (§AR-system.2.1).
     let alias_grammars = lexical_targets(workspace_targets);
-    // §FS-inline-citation-style.1.1: which blocks this file's language calls
+    // §FS-inline-citation-style.1.1.2: which blocks this file's language calls
     // documentation. Read once from the extension, then applied to each block
     // below with one comparison (§AR-scanner.4).
     let doc_rule = doc_comment_rule(path);
@@ -305,13 +305,13 @@ pub(super) fn inline_citation_sites(
         {
             // §FS-inline-citation-style.3.3: both verdicts are taken here, while
             // the block's lines are in hand, so the checker never re-reads one
-            // (§AR-scanner.3).
+            // (§AR-scanner.3.2).
             let (has_note, layout_violations) =
                 inline_note_verdicts(block, start + 1, config.lexical(), &alias_grammars);
             let site = InlineCitationSite {
                 first_line: start + 1,
                 last_line: end + 1,
-                // §FS-inline-citation-style.2.3: a column is one character, not one
+                // §FS-inline-citation-style.2.3.2: a column is one character, not one
                 // byte — `é` and `§` cost one each (§DF-note-columns-are-characters).
                 max_columns: block
                     .iter()
