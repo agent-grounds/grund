@@ -78,9 +78,8 @@ to the workspace or to siblings — there is no project map. Per
 qualified citation is an `unknown project alias <name>` error at the
 citation site.
 
-This is the architecturally honest default: the resolver (section 1) returns
-`None` for the unknown alias, and the caller — a single rule, in one place — turns
-`None` into a diagnostic. The opt-in to downgrade these to warnings
+This is the `None` of section 1, turned into a diagnostic by a single rule in
+one place. The opt-in to downgrade these to warnings
 (`[reference] cross_project_when_standalone = "warn"`) is deferred follow-up
 ([§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) §3.6); when it lands, it changes one branch in
 the checker, not the scanner, not the loader, not the resolver shape.
@@ -111,6 +110,9 @@ member tree preserves any pre-existing qualified wraps as-is and emits
 no new ones ([§FS-workspace.8.5](../functional-spec/FS-workspace.md#85-grund-fmt---cross-refs)).
 No command re-implements the resolver, the citation regex, or the alias
 derivation.
+The one-invocation batch loader and the unfiltered `cover` are §3.1 and §3.2.
+
+### 3.1 `grund show --batch` loads once
 
 `grund show --batch` is one consumer invocation, not a loop around the public
 single-query API. A non-empty explicit batch or `--all` calls the shared loader
@@ -120,6 +122,8 @@ The exhaustive coordinate collector reads the declarations and recorded section
 maps already in that context; it performs no preliminary completion/list scan.
 The loader exposes an opt-in test-only counting observer so focused black-box
 tests count one load for many explicit queries and one for exhaustive discovery.
+
+### 3.2 `grund cover` filters nothing
 
 `grund cover` applies **no** filter: it is keyed by file, so every project
 the loader returned contributes its scanned files and every citation in
