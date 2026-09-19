@@ -319,6 +319,15 @@ pub(crate) fn render_show_output_json(
         );
         extra.push(']');
     }
+    // §FS-config.3.4.3: append metadata from the selected target, after the section map.
+    if let Some(title) = config
+        .kinds
+        .iter()
+        .find(|kind| kind.kind == id.kind)
+        .and_then(|kind| kind.title.as_deref())
+    {
+        extra.push_str(&format!(",\"kind_title\":\"{}\"", json_escape(title)));
+    }
     format!(
         "{{\"id\":\"{}\",\"section\":{},\"body\":\"{}\",\"path\":\"{}\",\"line\":{}{}}}",
         json_escape(&render_id(&config.grammar, id)),

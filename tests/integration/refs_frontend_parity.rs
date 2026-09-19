@@ -43,3 +43,45 @@ fn unsupported_format_wins_over_resolver_rejection_in_both_process_adapters() {
     assert_eq!(compat.stdout, public.stdout);
     assert_eq!(compat.stderr, public.stderr);
 }
+
+/// §FS-config.3.4.3 / §FS-refs.3.2 / §FS-refs.3.3: both process adapters
+/// preserve exact detailed/summary shapes and target selection, including
+/// absent/empty titles and a cited but undeclared ID.
+#[test]
+fn configured_kind_title_metadata_matches_goldens_in_both_process_adapters() {
+    for case in [
+        "config-kind-title-refs-json",
+        "config-kind-title-refs-undeclared-json",
+        "config-kind-unset-refs-json",
+        "config-kind-empty-refs-json",
+        "config-kind-title-refs-summary-json",
+        "config-kind-title-refs-workspace-json",
+        "config-kind-title-refs-workspace-summary-json",
+    ] {
+        let dir = binaries::repo_root().join("tests/e2e/cases").join(case);
+        let repo = dir.join("repo");
+        let args = fs::read_to_string(dir.join("command.args"))
+            .unwrap()
+            .split_whitespace()
+            .map(|arg| {
+                if arg == "{repo}" {
+                    repo.display().to_string()
+                } else {
+                    arg.to_string()
+                }
+            })
+            .collect::<Vec<_>>();
+        let expected = fs::read(dir.join("expected.stdout")).unwrap();
+        for binary in [binaries::grund(), binaries::grund_core_compat()] {
+            let output = Command::new(&binary).args(&args).output().unwrap();
+            assert_eq!(
+                output.status.code(),
+                Some(0),
+                "{case}, {}",
+                binary.display()
+            );
+            assert_eq!(output.stdout, expected, "{case}, {}", binary.display());
+            assert_eq!(output.stderr, b"", "{case}, {}", binary.display());
+        }
+    }
+}

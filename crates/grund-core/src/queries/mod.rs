@@ -59,10 +59,13 @@ mod show_query;
 mod sizes;
 
 pub use batch::{BatchShowFailure, BatchShowQuery, BatchShowRecord, show_batch_with_scope};
-pub use editor_hover::{LspUsage, citation_under_title, lsp_title_hover_body};
+pub use editor_hover::{
+    LspUsage, citation_under_title, lsp_hover_with_kind_title, lsp_title_hover_body,
+};
 pub use editor_on_type::{DeclaredId, LineEdit, can_replace_trigger_at, on_type_line_edits};
 pub use editor_snapshot::{
-    LspCitation, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts, LspStub,
+    LspCitation, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts,
+    LspSnapshotWithMetadata, LspStub,
 };
 pub use show_query::{ShowFormat, ShowMode, ShowOpts, ShowQueryError};
 pub use sizes::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, list_sizes};

@@ -317,6 +317,14 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
             }
         }
     } else if format == "json" {
+        // §FS-refs.3.2: the deprecated adapter keeps the same final target-kind field.
+        let metadata = render_config
+            .kinds
+            .iter()
+            .find(|kind| kind.kind == id.kind)
+            .and_then(|kind| kind.title.as_deref())
+            .map(|title| format!(",\"kind_title\":\"{}\"", json_escape(title)))
+            .unwrap_or_default();
         for hit in &hits {
             let project_field = if context.workspace_loaded {
                 format!("\"project\":\"{}\",", json_escape(&hit.project.alias))
@@ -324,13 +332,14 @@ pub(crate) fn command_refs(args: &[String]) -> ExitCode {
                 String::new()
             };
             println!(
-                "{{{}{}}}",
+                "{{{}{}{}}}",
                 project_field,
                 citation_json_body(
                     &target_project.config,
                     hit.citation,
                     &render_path(hit.project, &hit.citation.file)
-                )
+                ),
+                metadata
             );
         }
     } else {

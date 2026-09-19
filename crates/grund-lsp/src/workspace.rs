@@ -13,6 +13,7 @@ fn project_root(folder: &Path) -> Result<PathBuf> {
 struct ProjectSnapshot {
     root: PathBuf,
     snapshot: LspSnapshot,
+    kind_titles: BTreeMap<String, String>,
     /// The directories `snapshot.scanned_files` lie in, so a file created since
     /// the last scan is still recognized as this project's — a new file under a
     /// symlinked or parent-relative `[scan] include` has no root prefix and is
@@ -21,7 +22,8 @@ struct ProjectSnapshot {
 }
 
 impl ProjectSnapshot {
-    fn new(root: PathBuf, snapshot: LspSnapshot) -> Self {
+    fn new(root: PathBuf, metadata: LspSnapshotWithMetadata) -> Self {
+        let snapshot = metadata.snapshot;
         let scanned_dirs = snapshot
             .scanned_files
             .iter()
@@ -30,6 +32,7 @@ impl ProjectSnapshot {
         Self {
             root,
             snapshot,
+            kind_titles: metadata.kind_titles,
             scanned_dirs,
         }
     }

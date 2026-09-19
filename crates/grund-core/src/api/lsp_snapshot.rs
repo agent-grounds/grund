@@ -26,7 +26,8 @@ use crate::model::{
     is_stub_for_inline_decl, sort_path_key,
 };
 use crate::queries::{
-    LspCitation, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts, LspStub,
+    LspCitation, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts,
+    LspSnapshotWithMetadata, LspStub,
 };
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext, load_resolved_workspace_context};
 use crate::scanner::api_scan_error;
@@ -39,6 +40,12 @@ use crate::workspace::{
 /// transport from re-implementing the reference grammar (§AR-lsp.placement).
 
 pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
+    Ok(lsp_snapshot_with_metadata(opts)?.snapshot)
+}
+
+/// Build hover metadata in the same scan as the editor snapshot (§FS-lsp.1.2).
+/// Existing snapshot carriers and the original entry point remain unchanged.
+pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWithMetadata> {
     let overlays = normalized_overlays(opts.open_documents);
     // §FS-lsp.1.1: classify citing sides so the citation-direction checks
     // (`missing-citation` / `forbidden-citation`) run and surface as editor
@@ -60,6 +67,7 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
         &render_config,
         check_workspace_context(&context, false, &overlays),
     );
+    let mut kind_titles = BTreeMap::new();
     let mut declarations = Vec::new();
     let mut sections = Vec::new();
     let mut finding_ranges = Vec::new();
@@ -113,6 +121,22 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
         for (id, decls) in &project.findings.declarations {
             let rendered = render_id(&project.config.grammar, id);
             let query_id = lsp_query_id(&context, project, &rendered, None);
+            // §FS-config.3.4.3: metadata follows the declaration's owning project.
+            if let Some(title) = project
+                .config
+                .kinds
+                .iter()
+                .find(|kind| kind.kind == id.kind)
+                .and_then(|kind| kind.title.as_ref())
+            {
+                kind_titles.insert(query_id.clone(), title.clone());
+                for section in decls.iter().flat_map(|decl| decl.sections.keys()) {
+                    kind_titles.insert(
+                        lsp_query_id(&context, project, &rendered, Some(section)),
+                        title.clone(),
+                    );
+                }
+            }
             let mut homes: Vec<&Declaration> = decls
                 .iter()
                 .filter(|decl| !is_stub_for_inline_decl(&project.config.root, decl, decls))
@@ -261,19 +285,22 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
         ))
     });
 
-    Ok(LspSnapshot {
-        root: absolutize_path(&render_config.root),
-        marker: render_config.marker,
-        trigger: render_config.trigger,
-        workspace: context.workspace_loaded,
-        report,
-        declarations,
-        sections,
-        finding_ranges,
-        stubs,
-        citations,
-        scanned_files,
-        scan_errors,
+    Ok(LspSnapshotWithMetadata {
+        kind_titles,
+        snapshot: LspSnapshot {
+            root: absolutize_path(&render_config.root),
+            marker: render_config.marker,
+            trigger: render_config.trigger,
+            workspace: context.workspace_loaded,
+            report,
+            declarations,
+            sections,
+            finding_ranges,
+            stubs,
+            citations,
+            scanned_files,
+            scan_errors,
+        },
     })
 }
 

@@ -69,8 +69,16 @@ pub(crate) fn show_e2e_case(
         .map(|path| format!("\"{}\"", json_escape(&format_path(path))))
         .collect::<Vec<_>>()
         .join(",");
+    // §FS-show.2.4: this pre-rendered form carries the same final target-kind metadata.
+    let metadata = config
+        .kinds
+        .iter()
+        .find(|kind| kind.kind == id.kind)
+        .and_then(|kind| kind.title.as_deref())
+        .map(|title| format!(",\"kind_title\":\"{}\"", json_escape(title)))
+        .unwrap_or_default();
     let json = format!(
-        "{{\"id\":\"{}\",\"kind\":\"E2E\",\"path\":\"{}\",\"args\":[{}],\"expected_exit\":{},\"fixtures\":[{}]}}",
+        "{{\"id\":\"{}\",\"kind\":\"E2E\",\"path\":\"{}\",\"args\":[{}],\"expected_exit\":{},\"fixtures\":[{}]{}}}",
         json_escape(&render_id(&config.grammar, id)),
         // path_config, not config: an `<alias>/E2E-x` shown from a workspace
         // root must report the same root-relative path as every other kind
@@ -78,7 +86,8 @@ pub(crate) fn show_e2e_case(
         json_escape(&display_path(path_config, &case.dir)),
         args_json,
         case.expected_exit,
-        fixtures_json
+        fixtures_json,
+        metadata
     );
     Ok(ShowOutput {
         body,
