@@ -11,7 +11,7 @@ use super::init_plan::{
 use super::init_render::render_agents_md;
 use super::*;
 use crate::checker::check_findings;
-use crate::config::Config;
+use crate::config::{Config, load_config};
 use crate::scanner::{
     AgentEntrypoint, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
     agents_with_own_entrypoint, companion_agent_entrypoints, scan_tree,
@@ -71,6 +71,23 @@ fn agents_guidance_uses_configured_section_separator() {
     assert!(
         !rendered.contains("§<ID>.1` / `§<ID>.1.1"),
         "section examples must not hard-code dot as the outer separator"
+    );
+}
+
+/// A configured kind title is the prose in its generated Project-map row
+/// (§FS-config.3.4.3); the kind handle and home remain the navigational parts.
+#[test]
+fn project_map_uses_the_configured_kind_title() {
+    let root = test_root("project_map_uses_the_configured_kind_title");
+    write(
+        &root.join("grund.toml"),
+        "[[kinds]]\nkind = \"FS\"\nfolder = \"docs/specs\"\ntitle = \"Product contracts\"\n",
+    );
+    let config = load_config(&root).expect("load configured kind title");
+    let rendered = render_agents_md("demo", &config, &root, true);
+    assert!(
+        rendered.contains("- [FS](docs/specs): Product contracts"),
+        "{rendered}"
     );
 }
 

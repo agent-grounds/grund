@@ -83,6 +83,8 @@ mod tests_check_full;
 #[cfg(test)]
 mod tests_citation_directions;
 #[cfg(test)]
+mod tests_citation_levels;
+#[cfg(test)]
 mod tests_declaration_near_miss;
 #[cfg(test)]
 mod tests_duplicate_sections;
@@ -104,3 +106,5 @@ mod tests_managed_block_drift;
 mod tests_nothing_recognized;
 #[cfg(test)]
 mod tests_shorthand;
+#[cfg(test)]
+mod tests_value_json_duplicates;
