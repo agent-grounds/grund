@@ -151,7 +151,7 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         assert_eq!(text(&output.stderr), format!("error: {reason}\n"));
         refused_count += 1;
     }
-    assert_eq!(refused_count, 13, "refused guide-row inventory drifted");
+    assert_eq!(refused_count, 14, "refused guide-row inventory drifted");
 }
 
 #[test]

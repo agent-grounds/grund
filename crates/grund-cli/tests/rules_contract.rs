@@ -6,6 +6,8 @@
 mod documentation;
 #[path = "rules_contract/refusals.rs"]
 mod refusals;
+#[path = "rules_contract/regressions.rs"]
+mod regressions;
 #[path = "rules_contract/support.rs"]
 mod support;
 #[path = "rules_contract/surfaces.rs"]

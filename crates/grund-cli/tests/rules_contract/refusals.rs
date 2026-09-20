@@ -55,6 +55,10 @@ fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
             "conjunctions are not accepted; accepted forms: \"Each FS must cite at least one GOAL.\" and \"Each FS must not cite any AR.\"",
         ),
         (
+            "Each FS must have exactly one  chapter.",
+            "chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter.",
+        ),
+        (
             "Each FS must cite at least one GOAL",
             "rule must end with \".\"; accepted form: Each FS must cite at least one GOAL.",
         ),
@@ -119,6 +123,7 @@ fn malformed_counts_ids_and_named_paths_are_pre_scan_refusals() {
         "Each FS must have exactly 2 requirements chapter.",
         "Each FS must have exactly one requirements chapters.",
         "Each FS must have exactly 02 requirements chapters.",
+        "Each FS must have exactly one  requirements chapter.",
         "Each FS must cite exactly 1 GOAL.",
         "AR-overview.system-overview must cite each AR exactly 1 times.",
         "FSbogus must cite at least one GOAL.",

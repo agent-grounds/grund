@@ -85,6 +85,10 @@ pub struct Declaration {
     /// §RM-gap-report.
     pub body_start: usize,
     pub body_end: usize,
+    /// Whether authored non-whitespace text follows the declaration heading in
+    /// its body. This is derived from the scanner's input bytes, so editor
+    /// overlays and disk scans share one predicate (§FS-lsp.1.1, §FS-rules.9).
+    pub body_has_content: bool,
     /// Exact source metadata for catalog consumers. Ordinary Markdown and
     /// source declarations carry `Text`; home JSON members retain both their
     /// member slice and key span (§FS-values.2.2.2, §FS-values.6.2).

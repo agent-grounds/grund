@@ -110,6 +110,7 @@ pub(super) fn assign_declaration_bodies(
         decl.body_start = decl.line;
         if decl.is_stub {
             decl.body_end = decl.line;
+            decl.body_has_content = false;
             continue;
         }
         if is_md {
@@ -132,6 +133,11 @@ pub(super) fn assign_declaration_bodies(
                 .map(|line| line - 1);
             decl.body_end = next_decl_cap.unwrap_or(block_end).max(decl.line);
         }
+        decl.body_has_content = text
+            .lines()
+            .skip(decl.line)
+            .take(decl.body_end.saturating_sub(decl.line))
+            .any(|line| !line.trim().is_empty());
     }
 }
 

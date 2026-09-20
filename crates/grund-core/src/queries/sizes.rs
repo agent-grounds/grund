@@ -7,7 +7,7 @@ use crate::config::{
     Config, PointSizeUnit, display_path, measure_point_text, non_citable_kind_error,
     run_warning_findings,
 };
-use crate::grammar::{render_id, section_display_name};
+use crate::grammar::render_id;
 use crate::model::{
     Declaration, Finding, Id, SectionInfo, TextOverlays, format_path, is_stub_for_inline_decl,
     sort_path_key,
@@ -118,9 +118,13 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
     let vocabulary = RuleVocabulary {
         kinds: kinds.clone(),
         target_kinds: kinds,
+        target_namespaces: BTreeMap::new(),
         named_sections: selected_projects().all(|project| project.config.named_sections),
         id_grammars: selected_projects()
             .map(|project| project.config.grammar.clone())
+            .collect(),
+        section_separators: selected_projects()
+            .map(|project| project.config.section_separator.clone())
             .collect(),
     };
     let selector = opts
@@ -227,22 +231,34 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
             ))
     });
     if let Some(subject) = &selector {
-        if matches!(
-            subject,
-            RuleSubject::ExactDeclaration(_) | RuleSubject::ExactChapter { .. }
-        ) {
-            let literal = match subject {
-                RuleSubject::ExactDeclaration(literal) => literal,
-                RuleSubject::ExactChapter { declaration, .. } => declaration,
-                _ => unreachable!(),
-            };
-            let matches = pending
-                .iter()
-                .filter(|row| {
-                    row.section.is_none()
-                        && render_id(&row.project_config.grammar, row.id) == *literal
-                })
-                .count();
+        let resolution = match subject {
+            RuleSubject::ExactDeclaration(literal) => Some((
+                literal.clone(),
+                pending
+                    .iter()
+                    .filter(|row| {
+                        row.section.is_none()
+                            && render_id(&row.project_config.grammar, row.id) == *literal
+                    })
+                    .count(),
+            )),
+            RuleSubject::ExactChapter {
+                declaration,
+                path,
+                separator,
+            } => Some((
+                format!("{declaration}{separator}{path}"),
+                pending
+                    .iter()
+                    .filter(|row| {
+                        row.section.is_some_and(|(section, _)| section == path)
+                            && render_id(&row.project_config.grammar, row.id) == *declaration
+                    })
+                    .count(),
+            )),
+            _ => None,
+        };
+        if let Some((literal, matches)) = resolution {
             if matches == 0 {
                 return Err(anyhow!("literal subject {literal} does not resolve"));
             }
@@ -255,15 +271,15 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
             match (subject, row.section) {
                 (RuleSubject::Kind(kind), None) => kind == &row.id.kind,
                 (RuleSubject::ExactDeclaration(literal), None) => literal == &rendered,
-                (RuleSubject::ChapterOfKind { kind, name }, Some((section, info))) => {
-                    kind == &row.id.kind
-                        && (section.rsplit('.').next() == Some(name.as_str())
-                            || section_display_name(&info.title, section)
-                                .eq_ignore_ascii_case(name))
+                (RuleSubject::ChapterOfKind { kind, name }, Some((section, _))) => {
+                    kind == &row.id.kind && section.rsplit('.').next() == Some(name.as_str())
                 }
-                (RuleSubject::ExactChapter { declaration, path }, Some((section, _))) => {
-                    declaration == &rendered && path == section
-                }
+                (
+                    RuleSubject::ExactChapter {
+                        declaration, path, ..
+                    },
+                    Some((section, _)),
+                ) => declaration == &rendered && path == section,
                 _ => false,
             }
         });

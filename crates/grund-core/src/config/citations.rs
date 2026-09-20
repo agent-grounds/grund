@@ -170,6 +170,14 @@ fn parse_citation_disjunction(
 }
 
 fn parse_citation_target(path: &Path, line_no: usize, token: &str) -> Result<CitationTarget> {
+    parse_citation_target_entry(token)
+        .map_err(|message| anyhow!("{}:{line_no}: {message}", format_path(path)))
+}
+
+/// Parse the released namespace-aware target-entry grammar without attaching a
+/// config-file location. Chapter-rule object targets reuse this exact lexical
+/// boundary (§FS-rules.2, §FS-config.3.9.3.1).
+pub(crate) fn parse_citation_target_entry(token: &str) -> Result<CitationTarget, String> {
     // §FS-config.3.9: the kind is the last segment, so a nested member is pinned
     // by its whole alias path (`group/api/AR`) exactly as it is cited
     // (§FS-workspace.6.1).
@@ -182,7 +190,7 @@ fn parse_citation_target(path: &Path, line_no: usize, token: &str) -> Result<Cit
                 // qualifier and kind, while the CLI keeps its own `<alias>/<ID>`
                 // vocabulary. Both surfaces use the same segment validation.
                 if let Some(message) = invalid_citation_target_message(token, qualifier, kind) {
-                    bail_config(path, line_no, message)?;
+                    return Err(message);
                 }
                 NamespaceMatch::Alias(qualifier.to_string())
             };
@@ -191,11 +199,7 @@ fn parse_citation_target(path: &Path, line_no: usize, token: &str) -> Result<Cit
         None => (NamespaceMatch::Local, token),
     };
     if kind.is_empty() {
-        bail_config(
-            path,
-            line_no,
-            format!("citation target `{token}` names no kind"),
-        )?;
+        return Err(format!("citation target `{token}` names no kind"));
     }
     Ok(CitationTarget {
         namespace,

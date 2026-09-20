@@ -72,7 +72,15 @@ fn adapt_projects(
             } else {
                 format!("{alias}/{bare_label}")
             };
-            for (ordinal, home) in homes.iter().enumerate() {
+            // A healthy Markdown stub and the inline declaration it names are
+            // one catalog home. Canonicalize before minting opaque keys so every
+            // downstream relation refers to the same node (§FS-rules.5.1,
+            // §FS-list.2.5).
+            for (ordinal, home) in homes
+                .iter()
+                .filter(|home| !is_stub_for_inline_decl(&config.root, home, homes))
+                .enumerate()
+            {
                 let key = NodeKey(format!(
                     "{selected}:markdown:{alias}:decl:{bare_label}:{ordinal}"
                 ));
@@ -118,7 +126,7 @@ fn adapt_projects(
                     facts.nodes.insert(
                         chapter,
                         NodeMeta {
-                            label: format!("{label}.{section}"),
+                            label: format!("{label}{}{section}", config.section_separator),
                             anchor: RuleAnchor {
                                 path: home.file.to_string_lossy().into_owned(),
                                 line: info.line,
@@ -181,18 +189,25 @@ fn adapt_projects(
             else {
                 continue;
             };
-            let target = citation
-                .section
-                .as_ref()
-                .and_then(|section| {
-                    chapters.get(&(
-                        target_alias.to_string(),
-                        citation.id.clone(),
-                        section.clone(),
-                    ))
-                })
-                .cloned()
-                .unwrap_or(target_declaration);
+            let target = match citation.section.as_ref() {
+                Some(section) => {
+                    let Some(chapter) = chapters
+                        .get(&(
+                            target_alias.to_string(),
+                            citation.id.clone(),
+                            section.clone(),
+                        ))
+                        .cloned()
+                    else {
+                        // An authored but unresolved coordinate remains an
+                        // ordinary resolver diagnostic and contributes no edge
+                        // (§FS-rules.5.1).
+                        continue;
+                    };
+                    chapter
+                }
+                None => target_declaration,
+            };
             let immediate = citation
                 .enclosing_section
                 .as_ref()

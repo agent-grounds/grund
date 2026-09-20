@@ -131,6 +131,30 @@ class RulesArchitectureTests(unittest.TestCase):
         violations = _violations(_owned_files("markdown"), ADAPTER_FORBIDDEN)
         self.assertEqual([], violations, "Markdown fact adapter crosses §AR-rules.1")
 
+    def test_checker_does_not_own_semantic_deduplication(self):
+        checker = _code(CORE / "checker" / "chapter_rules.rs")
+        forbidden = (
+            "duplicates_config",
+            "RulePolarity",
+            "RuleRelation",
+            "RuleTargets",
+            "TargetMode",
+            "Cardinality",
+        )
+        found = [token for token in forbidden if token in checker]
+        self.assertEqual([], found, "checker owns rule equivalence or precedence")
+
+    def test_engine_exports_no_diagnostic_wrapper_dto(self):
+        code = "\n".join(_code(path) for path in _owned_files("engine"))
+        self.assertNotIn("RuleDiagnostic", code)
+        self.assertNotIn("CheckReport", code)
+        exported_structs = re.findall(r"pub(?:\(crate\))?\s+struct\s+(\w+)", code)
+        self.assertEqual(
+            [],
+            exported_structs,
+            "engine/checker crossing gained a third DTO instead of Diagnostic",
+        )
+
     def test_production_rules_component_has_no_pending_contract_drivers(self):
         pending = RULES / "tests_boundaries.rs"
         text = pending.read_text(encoding="utf-8")

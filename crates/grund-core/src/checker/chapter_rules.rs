@@ -2,19 +2,17 @@
 //! §AR-checker.1). Grammar, facts, evaluation, and deduplication stay owned by
 //! the rules component; this module only sequences and merges their results.
 
-use crate::config::{Config, NamespaceMatch};
+use crate::config::Config;
 use crate::grammar::render_id;
 use crate::model::{CheckReport, Declaration, Diagnostic, Findings};
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
-use crate::rules::engine::{evaluate, subject_resolves};
-use crate::rules::markdown::{adapt_markdown, adapt_workspace};
-use crate::rules::sentence::{
-    Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
-    RuleVocabulary, TargetMode, parse_rule,
+use crate::rules::engine::{
+    citation_precedence, evaluate, evaluate_suggestions, unresolved_subject_diagnostic,
 };
+use crate::rules::markdown::{adapt_markdown, adapt_workspace};
+use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 
 pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
     let kinds = config
@@ -26,12 +24,31 @@ pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
     RuleVocabulary {
         kinds: kinds.clone(),
         target_kinds: kinds,
+        target_namespaces: BTreeMap::new(),
         named_sections: config.named_sections,
         id_grammars: vec![config.grammar.clone()],
+        section_separators: vec![config.section_separator.clone()],
     }
 }
 
 pub(crate) fn parse_ad_hoc(config: &Config, sentence: &str) -> anyhow::Result<ParsedRule> {
+    parse_ad_hoc_with_vocabulary(sentence, vocabulary(config))
+}
+
+pub(crate) fn parse_ad_hoc_with_workspace(
+    config: &Config,
+    sentence: &str,
+    projects: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
+) -> anyhow::Result<ParsedRule> {
+    let mut vocab = vocabulary(config);
+    add_workspace_targets(&mut vocab, projects);
+    parse_ad_hoc_with_vocabulary(sentence, vocab)
+}
+
+fn parse_ad_hoc_with_vocabulary(
+    sentence: &str,
+    vocabulary: RuleVocabulary,
+) -> anyhow::Result<ParsedRule> {
     parse_rule(
         sentence,
         "--rule".into(),
@@ -40,9 +57,27 @@ pub(crate) fn parse_ad_hoc(config: &Config, sentence: &str) -> anyhow::Result<Pa
             line: 0,
             column: None,
         },
-        &vocabulary(config),
+        &vocabulary,
     )
     .map_err(|error| anyhow::anyhow!(error.message))
+}
+
+fn add_workspace_targets(
+    vocabulary: &mut RuleVocabulary,
+    projects: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
+) {
+    vocabulary
+        .target_namespaces
+        .extend(projects.iter().map(|(alias, project)| {
+            let kinds = project
+                .config
+                .kinds
+                .iter()
+                .filter(|kind| kind.citable)
+                .map(|kind| kind.kind.clone())
+                .collect();
+            (alias.clone(), kinds)
+        }));
 }
 
 /// Validate configured declarations for `init` and return their exact authored
@@ -96,20 +131,8 @@ pub(crate) fn configured_rule_sentences(
             .map_err(|error| {
                 invalid_rule(&origin, path.as_ref(), declaration.line, &error.message)
             })?;
-            if !subject_resolves(&parsed, &facts) {
-                let literal = match &parsed.subject {
-                    RuleSubject::ExactDeclaration(value) => value.clone(),
-                    RuleSubject::ExactChapter { declaration, path } => {
-                        format!("{declaration}.{path}")
-                    }
-                    _ => unreachable!(),
-                };
-                return Err(invalid_rule(
-                    &origin,
-                    path.as_ref(),
-                    declaration.line,
-                    &format!("literal subject {literal} does not resolve"),
-                ));
+            if let Some(diagnostic) = unresolved_subject_diagnostic(&parsed, &facts) {
+                return Err(diagnostic);
             }
             rows.push((origin, title.to_string()));
         }
@@ -133,13 +156,7 @@ pub(crate) fn check_chapter_rules(
     }
     let mut vocab = vocabulary(config);
     if let Some((_, projects)) = workspace {
-        vocab.target_kinds.extend(
-            projects
-                .values()
-                .flat_map(|project| project.config.kinds.iter())
-                .filter(|kind| kind.citable)
-                .map(|kind| kind.kind.clone()),
-        );
+        add_workspace_targets(&mut vocab, projects);
     }
     let mut rules = Vec::new();
     let rule_kinds = config
@@ -190,63 +207,18 @@ pub(crate) fn check_chapter_rules(
         Some((selected, projects)) => adapt_workspace(selected, projects, complete),
         None => adapt_markdown(findings, config, complete),
     };
-    rules.retain(|rule| {
-        if subject_resolves(rule, &facts) {
-            return true;
-        }
-        let literal = match &rule.subject {
-            RuleSubject::ExactDeclaration(value) => value.clone(),
-            RuleSubject::ExactChapter { declaration, path } => format!("{declaration}.{path}"),
-            _ => return true,
-        };
-        let (path, line) = if rule.origin == "--rule" {
-            // The ad-hoc origin has no filesystem location, but its stable
-            // pseudo-anchor keeps this post-scan failure on the ordinary
-            // selectable finding stream (§FS-rules.4, §FS-rules.7.1).
-            (None, Some(1))
-        } else {
-            (
-                Some(rule.anchor.path.clone().into()),
-                Some(rule.anchor.line),
-            )
-        };
-        report.errors.push(Diagnostic {
-            code: "invalid-rule",
-            path,
-            line,
-            column: rule.anchor.column,
-            message: format!(
-                "{} is not a valid rule: literal subject {literal} does not resolve",
-                rule.origin
-            ),
-            sites: Vec::new(),
-        });
-        false
-    });
-    rules.retain(|rule| !duplicates_config(rule, config));
-    for result in evaluate(&rules, &facts) {
-        if result.recommended {
-            report.suggestions.push(result.diagnostic);
-        } else {
-            report.errors.push(result.diagnostic);
-        }
-    }
+    let precedence = citation_precedence(config);
+    report.errors.extend(evaluate(&rules, &precedence, &facts));
+    report
+        .suggestions
+        .extend(evaluate_suggestions(&rules, &precedence, &facts));
 }
 
 /// A rule rationale contains authored non-whitespace text after its declaration
 /// heading. Both `check` and `init` use this one predicate so a blank body can
 /// never render or execute on one surface only (§FS-rules.1, §FS-rules.4).
 pub(crate) fn rule_has_rationale(declaration: &Declaration) -> bool {
-    if declaration.body_end <= declaration.line {
-        return false;
-    }
-    let Ok(text) = fs::read_to_string(&declaration.file) else {
-        return false;
-    };
-    text.lines()
-        .skip(declaration.line)
-        .take(declaration.body_end - declaration.line)
-        .any(|line| !line.trim().is_empty())
+    declaration.body_has_content
 }
 
 fn invalid_rule(origin: &str, path: &str, line: usize, message: &str) -> Diagnostic {
@@ -258,52 +230,4 @@ fn invalid_rule(origin: &str, path: &str, line: usize, message: &str) -> Diagnos
         message: format!("{origin} is not a valid rule: {message}"),
         sites: Vec::new(),
     }
-}
-
-/// Preserve existing citation-direction bytes when its bare-kind constraint is
-/// semantically identical to a rule (§FS-rules.6).
-fn duplicates_config(rule: &ParsedRule, config: &Config) -> bool {
-    let (
-        RuleSubject::Kind(subject),
-        RuleTargets::Kinds {
-            values,
-            mode: TargetMode::Aggregate,
-        },
-    ) = (&rule.subject, &rule.targets)
-    else {
-        return false;
-    };
-    if rule.relation != RuleRelation::Cite {
-        return false;
-    }
-    let expected_cardinality = match rule.polarity {
-        RulePolarity::Positive => Cardinality::AT_LEAST_ONE,
-        RulePolarity::Prohibiting => Cardinality::NONE,
-    };
-    if rule.cardinality != expected_cardinality {
-        return false;
-    }
-    let Some(directions) = config.citations.per_kind.get(subject) else {
-        return false;
-    };
-    let entries = match (rule.level, rule.polarity) {
-        (RuleLevel::Required, RulePolarity::Positive) => &directions.must,
-        (RuleLevel::Recommended, RulePolarity::Positive) => &directions.should,
-        (RuleLevel::Required, RulePolarity::Prohibiting) => &directions.must_not,
-        (RuleLevel::Recommended, RulePolarity::Prohibiting) => &directions.should_not,
-    };
-    entries.iter().any(|entry| {
-        let mut configured = entry
-            .targets
-            .iter()
-            .map(|target| match &target.namespace {
-                NamespaceMatch::Local => target.kind.clone(),
-                NamespaceMatch::Alias(alias) => format!("{alias}/{}", target.kind),
-                NamespaceMatch::Any => format!("*/{}", target.kind),
-            })
-            .collect::<Vec<_>>();
-        configured.sort();
-        configured.dedup();
-        &configured == values
-    })
 }

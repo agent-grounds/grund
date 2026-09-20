@@ -100,6 +100,7 @@ pub(super) fn scan_e2e_cases(
                 // obligations evaluate over the case's scanned files, not a body.
                 body_start: 1,
                 body_end: 1,
+                body_has_content: false,
                 source: DeclarationSource::Text,
                 value_valid: None,
             });

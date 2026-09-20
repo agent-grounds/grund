@@ -1,5 +1,7 @@
 //! Relational chapter-rule evaluation (§FS-rules.5–7, §AR-rules.4–5).
 
+mod precedence;
+
 use super::facts::{Completeness, NodeKey, RuleFacts, SiteKey};
 use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
@@ -8,10 +10,7 @@ use super::{
 use crate::model::Diagnostic;
 use std::collections::{BTreeMap, BTreeSet};
 
-pub(crate) struct RuleDiagnostic {
-    pub(crate) diagnostic: Diagnostic,
-    pub(crate) recommended: bool,
-}
+pub(crate) use precedence::citation_precedence;
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 struct SemanticRule {
@@ -25,27 +24,74 @@ struct SemanticRule {
 
 /// Deduplicate normalized constraints and evaluate them over one snapshot. The
 /// engine never reparses prose or asks a producer for more facts (§AR-rules.4).
-pub(crate) fn evaluate(rules: &[ParsedRule], facts: &RuleFacts) -> Vec<RuleDiagnostic> {
+pub(crate) fn evaluate(
+    rules: &[ParsedRule],
+    precedence: &[ParsedRule],
+    facts: &RuleFacts,
+) -> Vec<Diagnostic> {
+    evaluate_level(rules, precedence, facts, RuleLevel::Required, true)
+}
+
+/// Recommendations use the same evaluator and return the same existing
+/// `Diagnostic` boundary; only the report channel chosen by the caller differs
+/// (§AR-rules.1, §AR-rules.5).
+pub(crate) fn evaluate_suggestions(
+    rules: &[ParsedRule],
+    precedence: &[ParsedRule],
+    facts: &RuleFacts,
+) -> Vec<Diagnostic> {
+    evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false)
+}
+
+fn evaluate_level(
+    rules: &[ParsedRule],
+    precedence: &[ParsedRule],
+    facts: &RuleFacts,
+    level: RuleLevel,
+    include_invalid: bool,
+) -> Vec<Diagnostic> {
     let mut groups: BTreeMap<SemanticRule, BTreeSet<String>> = BTreeMap::new();
+    let precedence = precedence
+        .iter()
+        .map(SemanticRule::from)
+        .collect::<BTreeSet<_>>();
+    let mut out = Vec::new();
     for rule in rules {
+        if let Some(diagnostic) = unresolved_subject_diagnostic(rule, facts) {
+            if include_invalid {
+                out.push(diagnostic);
+            }
+            continue;
+        }
+        if rule.level != level {
+            continue;
+        }
         groups
-            .entry(SemanticRule {
-                subject: rule.subject.clone(),
-                level: rule.level,
-                polarity: rule.polarity,
-                relation: rule.relation,
-                targets: rule.targets.clone(),
-                cardinality: rule.cardinality,
-            })
+            .entry(SemanticRule::from(rule))
             .or_default()
             .insert(rule.origin.clone());
     }
-    let mut out = Vec::new();
     for (rule, origins) in groups {
+        if precedence.contains(&rule) {
+            continue;
+        }
         let authority = origins.into_iter().collect::<Vec<_>>().join(", ");
         evaluate_one(&rule, &authority, facts, &mut out);
     }
     out
+}
+
+impl From<&ParsedRule> for SemanticRule {
+    fn from(rule: &ParsedRule) -> Self {
+        Self {
+            subject: rule.subject.clone(),
+            level: rule.level,
+            polarity: rule.polarity,
+            relation: rule.relation,
+            targets: rule.targets.clone(),
+            cardinality: rule.cardinality,
+        }
+    }
 }
 
 /// Post-scan literal resolution belongs with selector semantics, not sentence
@@ -59,11 +105,46 @@ pub(crate) fn subject_resolves(rule: &ParsedRule, facts: &RuleFacts) -> bool {
     }
 }
 
+/// Exact subjects resolve in the engine because resolution is selector
+/// semantics, not checker orchestration (§FS-rules.2, §AR-rules.1).
+pub(crate) fn unresolved_subject_diagnostic(
+    rule: &ParsedRule,
+    facts: &RuleFacts,
+) -> Option<Diagnostic> {
+    if subject_resolves(rule, facts) {
+        return None;
+    }
+    let literal = match &rule.subject {
+        RuleSubject::ExactDeclaration(value) => value.clone(),
+        RuleSubject::ExactChapter {
+            declaration,
+            path,
+            separator,
+        } => format!("{declaration}{separator}{path}"),
+        _ => return None,
+    };
+    Some(Diagnostic {
+        code: "invalid-rule",
+        path: (!rule.anchor.path.is_empty()).then(|| rule.anchor.path.clone().into()),
+        line: Some(if rule.origin == "--rule" {
+            1
+        } else {
+            rule.anchor.line
+        }),
+        column: rule.anchor.column,
+        message: format!(
+            "{} is not a valid rule: literal subject {literal} does not resolve",
+            rule.origin
+        ),
+        sites: Vec::new(),
+    })
+}
+
 fn evaluate_one(
     rule: &SemanticRule,
     authority: &str,
     facts: &RuleFacts,
-    out: &mut Vec<RuleDiagnostic>,
+    out: &mut Vec<Diagnostic>,
 ) {
     let subjects = select_subjects(&rule.subject, facts);
     // §FS-rules.4: every positive cardinality conclusion is closed-world.
@@ -81,9 +162,8 @@ fn evaluate_one(
                 let count = facts
                     .chapter
                     .iter()
-                    .filter(|(chapter, path, display)| {
-                        (path.rsplit('.').next() == Some(name)
-                            || display.eq_ignore_ascii_case(name))
+                    .filter(|(chapter, _, display)| {
+                        display.eq_ignore_ascii_case(name)
                             && facts
                                 .contains
                                 .iter()
@@ -93,7 +173,6 @@ fn evaluate_one(
                 if !rule.cardinality.contains(count) {
                     push_node(
                         out,
-                        rule,
                         facts,
                         &subject,
                         "chapter-cardinality",
@@ -110,7 +189,9 @@ fn evaluate_one(
             let targets = target_nodes(&rule.targets, facts);
             for subject in subjects {
                 for (site, _, target) in &facts.cites {
-                    if targets.contains(target) && site_is_in(site, &subject, facts) {
+                    if citation_matches_targets(target, &targets, facts)
+                        && site_is_in(site, &subject, facts)
+                    {
                         let code = if rule.level == RuleLevel::Required {
                             "forbidden-citation"
                         } else {
@@ -118,7 +199,6 @@ fn evaluate_one(
                         };
                         push_site(
                             out,
-                            rule,
                             facts,
                             site,
                             code,
@@ -154,7 +234,6 @@ fn evaluate_one(
                 if !rule.cardinality.contains(count) {
                     push_node(
                         out,
-                        rule,
                         facts,
                         &subject,
                         "uncited-unit",
@@ -176,7 +255,7 @@ fn evaluate_cites(
     authority: &str,
     facts: &RuleFacts,
     subjects: &[NodeKey],
-    out: &mut Vec<RuleDiagnostic>,
+    out: &mut Vec<Diagnostic>,
 ) {
     let RuleTargets::Kinds { mode, .. } = &rule.targets else {
         return;
@@ -188,12 +267,14 @@ fn evaluate_cites(
                 let count = facts
                     .cites
                     .iter()
-                    .filter(|(site, _, cited)| cited == target && site_is_in(site, subject, facts))
+                    .filter(|(site, _, cited)| {
+                        owning_declaration(facts, cited).as_ref() == Some(target)
+                            && site_is_in(site, subject, facts)
+                    })
                     .count();
                 if !rule.cardinality.contains(count) {
                     push_node(
                         out,
-                        rule,
                         facts,
                         subject,
                         "citation-cardinality",
@@ -211,7 +292,8 @@ fn evaluate_cites(
                 .cites
                 .iter()
                 .filter(|(site, _, target)| {
-                    targets.contains(target) && site_is_in(site, subject, facts)
+                    citation_matches_targets(target, &targets, facts)
+                        && site_is_in(site, subject, facts)
                 })
                 .count();
             if !rule.cardinality.contains(count) {
@@ -244,7 +326,7 @@ fn evaluate_cites(
                         rule.cardinality.wording()
                     )
                 };
-                push_node(out, rule, facts, subject, code, message);
+                push_node(out, facts, subject, code, message);
             }
         }
     }
@@ -267,8 +349,8 @@ fn select_subjects(subject: &RuleSubject, facts: &RuleFacts) -> Vec<NodeKey> {
         RuleSubject::ChapterOfKind { kind, name } => facts
             .chapter
             .iter()
-            .filter(|(chapter, path, display)| {
-                (path.rsplit('.').next() == Some(name) || display.eq_ignore_ascii_case(name))
+            .filter(|(chapter, path, _)| {
+                path.rsplit('.').next() == Some(name)
                     && facts.contains.iter().any(|(parent, child)| {
                         child == chapter
                             && facts
@@ -279,15 +361,22 @@ fn select_subjects(subject: &RuleSubject, facts: &RuleFacts) -> Vec<NodeKey> {
             })
             .map(|(n, _, _)| n.clone())
             .collect(),
-        RuleSubject::ExactChapter { declaration, path } => {
-            let wanted = format!("{declaration}.{path}");
-            facts
-                .chapter
-                .iter()
-                .filter(|(n, _, _)| facts.nodes.get(n).is_some_and(|m| m.label == wanted))
-                .map(|(n, _, _)| n.clone())
-                .collect()
-        }
+        RuleSubject::ExactChapter {
+            declaration, path, ..
+        } => facts
+            .chapter
+            .iter()
+            .filter(|(node, section, _)| {
+                section == path
+                    && owning_declaration(facts, node).is_some_and(|owner| {
+                        facts
+                            .nodes
+                            .get(&owner)
+                            .is_some_and(|meta| &meta.label == declaration)
+                    })
+            })
+            .map(|(n, _, _)| n.clone())
+            .collect(),
     }
 }
 
@@ -323,6 +412,27 @@ fn target_wording(targets: &RuleTargets) -> String {
 fn site_is_in(site: &SiteKey, node: &NodeKey, facts: &RuleFacts) -> bool {
     facts.site_in.iter().any(|(s, n)| s == site && n == node)
 }
+fn owning_declaration(facts: &RuleFacts, node: &NodeKey) -> Option<NodeKey> {
+    if facts.decl.iter().any(|(candidate, _)| candidate == node) {
+        return Some(node.clone());
+    }
+    let mut current = node;
+    while let Some((parent, _)) = facts.contains.iter().find(|(_, child)| child == current) {
+        if facts.decl.iter().any(|(candidate, _)| candidate == parent) {
+            return Some(parent.clone());
+        }
+        current = parent;
+    }
+    None
+}
+fn citation_matches_targets(
+    cited: &NodeKey,
+    targets: &BTreeSet<NodeKey>,
+    facts: &RuleFacts,
+) -> bool {
+    targets.contains(cited)
+        || owning_declaration(facts, cited).is_some_and(|owner| targets.contains(&owner))
+}
 fn declaration_kind(facts: &RuleFacts, node: &NodeKey) -> Option<String> {
     if let Some(kind) = facts
         .decl
@@ -355,8 +465,7 @@ fn label(facts: &RuleFacts, node: &NodeKey) -> String {
 }
 
 fn push_node(
-    out: &mut Vec<RuleDiagnostic>,
-    rule: &SemanticRule,
+    out: &mut Vec<Diagnostic>,
     facts: &RuleFacts,
     node: &NodeKey,
     code: &'static str,
@@ -365,21 +474,17 @@ fn push_node(
     let Some(meta) = facts.nodes.get(node) else {
         return;
     };
-    out.push(RuleDiagnostic {
-        recommended: rule.level == RuleLevel::Recommended,
-        diagnostic: Diagnostic {
-            code,
-            path: Some(meta.anchor.path.clone().into()),
-            line: Some(meta.anchor.line),
-            column: meta.anchor.column,
-            message,
-            sites: Vec::new(),
-        },
+    out.push(Diagnostic {
+        code,
+        path: Some(meta.anchor.path.clone().into()),
+        line: Some(meta.anchor.line),
+        column: meta.anchor.column,
+        message,
+        sites: Vec::new(),
     });
 }
 fn push_site(
-    out: &mut Vec<RuleDiagnostic>,
-    rule: &SemanticRule,
+    out: &mut Vec<Diagnostic>,
     facts: &RuleFacts,
     site: &SiteKey,
     code: &'static str,
@@ -388,15 +493,12 @@ fn push_site(
     let Some(meta) = facts.sites.get(site) else {
         return;
     };
-    out.push(RuleDiagnostic {
-        recommended: rule.level == RuleLevel::Recommended,
-        diagnostic: Diagnostic {
-            code,
-            path: Some(meta.anchor.path.clone().into()),
-            line: Some(meta.anchor.line),
-            column: meta.anchor.column,
-            message,
-            sites: Vec::new(),
-        },
+    out.push(Diagnostic {
+        code,
+        path: Some(meta.anchor.path.clone().into()),
+        line: Some(meta.anchor.line),
+        column: meta.anchor.column,
+        message,
+        sites: Vec::new(),
     });
 }
