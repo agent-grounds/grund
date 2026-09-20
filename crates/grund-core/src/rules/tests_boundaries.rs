@@ -78,6 +78,7 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
         anchor("docs/rules.md", 7),
         &RuleVocabulary {
             kinds: BTreeSet::from(["FS".into(), "REQ".into()]),
+            target_kinds: BTreeSet::from(["FS".into(), "REQ".into()]),
             named_sections: true,
         },
     )
