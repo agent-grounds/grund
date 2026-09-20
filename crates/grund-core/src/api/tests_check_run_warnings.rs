@@ -37,7 +37,7 @@ fn absorbed_warning() -> Finding {
          every scan root is inside a member: `docs` in `docs` — so its declarations \
          are unreachable and its citations are never checked. Point [scan] include \
          at a directory that is not a member, or set include_root = false. This \
-         becomes an error in grund 0.14.0.",
+         becomes an error in grund 0.15.0.",
     )
 }
 
