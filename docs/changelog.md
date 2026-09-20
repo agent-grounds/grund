@@ -24,6 +24,8 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ## Unreleased
 
+## 2. [0.14.0] — 2026-09-20
+
 ### Fixed
 
 - [§FS-distribution.1.1](functional-spec/FS-distribution.md#11-package-names): let the pre-release name guard recognize a package this project published before the repository moved. `scripts/check-registry-names.sh` establishes ownership from the registry's own metadata, which the *last publish* wrote, so it names the repository the package was published from — `github.com/vjovanov/grund` for all three crates at `0.13.1`. Against a pattern that matched only `agent-grounds/grund` the guard reported `crates.io/grund-core is already taken by another project` about this project's own crate, and refused every release: the move cannot reach the registry except through a publish, and the publish is what the guard stands in front of. The former repository is now accepted beside the current one, and an unrelated owner still fails. (PR #272)
@@ -134,16 +136,9 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 - [§FS-check.3.8.1](functional-spec/FS-check.md#381-a-strict-extension-of-the-narrowed-scope-is-safe-to-hint): let a narrowed `grund check` offer loaded alias candidates for a written path that strictly extends its own scope segment by segment. Shorter, equal, outside-prefix, and merely lexical-prefix paths retain the existing scope-only diagnostic. (PR #217)
 
-## 2. [0.13.1] — 2026-09-07
-
-### Added
-
-- Report intake: `.github/ISSUE_TEMPLATE/` carries four GitHub issue forms — bug report, feature request, usability report, and token or time waste — each applying the matching kind label (`bug`, `enhancement`, `usability`, `tokens`) as the issue is opened, and `config.yml` turns blank issues off so no issue can arrive without a kind. Every form asks for the fields that make a report actionable: the context (command, directory, version), what happened, what was expected, an optional workaround, and, for the token form, the cost. (PR #205)
-- [§FS-values](functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value), [§DA-explicit-value-bindings](decisions/architectural/DA-explicit-value-bindings.md#da-explicit-value-bindings-compare-only-authored-delimited-value-bindings): add opt-in first-class Markdown and home-JSON values, exact authored bindings in prose and scanned comments, arbitrary-precision decimal or decoded-string consistency checks, fixed text/NDJSON diagnostics, and shared query, formatter, workspace, core, and LSP behavior. Repositories opt in per citable kind with only `values = true`; existing repositories keep byte-identical behavior. Closes issues #37 and #38. (PR #206)
-- [§FS-config.3.2](functional-spec/FS-config.md#32-id--id-grammar), [§FS-check.3.19](functional-spec/FS-check.md#319-orphan-name-bearing-section-path), [§FS-show.2.2](functional-spec/FS-show.md#22-section): add opt-in explicit named section coordinates across checking, queries, references, formatting, completion, LSP, and generated guidance. `[id] named_sections = true` makes complete colon-form handles such as `goals.performance` stable and addressable at every depth, permits ordered numeric children such as `goals.3`, reserves `number.name`, and reports missing prefixes instead of accepting structurally orphaned paths. The absent/false default retains numeric behavior and output; `grund init` writes `named_sections = false`. (PR #204)
-
 ## 3. Older releases
 
+- [0.13.1](changelog/0.13.1.md) — 2026-09-07: - Report intake: `.github/ISSUE_TEMPLATE/` carries four GitHub issue forms — bug report, feature request, usability report, and token or time waste — each applying the matching kind label (`bug`, `enhancement`, `usability`, `tokens`) as the issue is opened, and `config.yml` turns blank issues off so no issue can arrive without a kind.
 - [0.13.0](changelog/0.13.0.md) — 2026-09-05: - [§FS-workspace.2.2](functional-spec/FS-workspace.md#22-a-member-that-may-be-legitimately-absent), [§FS-check.4.9](functional-spec/FS-check.md#49-a-workspace-member-declared-optional-is-absent): **a workspace member can be declared absent, and the run says which namespace it did not check.** A checkout where one member is legitimately missing — a private submodule CI never fetches, a sparse checkout, a sibling repository vendored in only for release builds — had no `grund check` run at all.
 - [0.12.3](changelog/0.12.3.md) — 2026-08-30: - [§FS-inline-citation-style.4.1](functional-spec/FS-inline-citation-style.md#41-errors--hard-caps): the inline-note line- and column-cap findings, and the soft-cap warning ([§FS-inline-citation-style.4.2](functional-spec/FS-inline-citation-style.md#42-warnings--opt-in-soft-cap)), now name the measured size next to the cap — `inline note is 47 columns, over the 40-column maximum` rather than just the cap — so an author does not have to re-measure or guess how a site was counted.
 - [0.12.2](changelog/0.12.2.md) — 2026-08-26: - [§FS-config.3.4.7](functional-spec/FS-config.md#347-scan--a-place-that-is-listed-not-walked): `[[kinds]] scan = false` — a non-citable kind that is listed in the generated Project map and not walked, for content that ships verbatim (scaffold templates, embedded assets, example configs).
