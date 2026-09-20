@@ -45,7 +45,7 @@ class CheckLinksTests(unittest.TestCase):
             dump_call, local_call, network_call = runner.call_args_list
             self.assertEqual(["lychee", "--dump", "SKILL.md"], dump_call.args[0])
             local_document = local_call.kwargs["input"]
-            self.assertIn(target.as_uri() + "#new-on-this-branch", local_document)
+            self.assertIn(target.resolve().as_uri() + "#new-on-this-branch", local_document)
             self.assertEqual(
                 ["--exclude", f"^{re.escape(url)}$"],
                 network_call.args[0][3:5],
