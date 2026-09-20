@@ -79,6 +79,10 @@ goldens by copying the text order ([§FS-errors.4](../../docs/functional-spec/FS
 - two headings claiming one path inside one Rust doc-comment, beside a heading in the *next* item's doc-comment and a stub whose prose repeats one: only the collision inside the declaration's own body is reported
 - fenced Markdown examples ignored under strict mode, for matched backtick and tilde fences
 - marker-prefixed citations
+- declaration-local numeric citations: owned valid and missing paths, an ownerless path, and
+  unchanged full-ID controls in one failing `check` contract
+  ([§FS-check.1.1.8](../../docs/functional-spec/FS-check.md#118-declaration-local-numeric-section-candidates),
+  [§FS-check.3.24](../../docs/functional-spec/FS-check.md#324-declaration-local-section-citation))
 - optional-mode bare citations
 - strict-mode bare tokens ignored
 - strict-mode marker citations accepted

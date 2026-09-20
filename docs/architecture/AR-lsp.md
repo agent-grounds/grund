@@ -59,6 +59,12 @@ The LSP must produce the same diagnostics for the same workspace state as `grund
 ### 5.1 The snapshot records
 
 - `grund_core::lsp_snapshot` returns the report, declaration ranges, section-heading ranges, stub ranges, citation ranges, and resolved targets from one scan/check pass.
+- Owned declaration-local numeric citations are already ordinary resolved citation records in that
+  snapshot. Their authored ranges and local text survive transport; their definition, references,
+  highlights, and section target are derived from the canonical owner ID and numeric path. Missing,
+  ownerless, ambiguous, and unsupported candidates carry findings but no invented target
+  ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics),
+  [§FS-lsp.1.3](../functional-spec/FS-lsp.md#13-go-to-definition)).
 - Named sections and embedded value roots add no server-side parser or resolver: the snapshot carries their complete section paths, heading-title ranges, citation ranges, resolved targets, and checker diagnostics in the same records used for ordinary numeric sections. For a marked root, `section_range_parts` excludes the invisible marker from the title token while raw `show --toc` hover content keeps it; a binding definition still targets the existing component heading ([§FS-values.7](../functional-spec/FS-values.md#7-workspaces-and-editor-consumers)).
 - Diagnostics, hover, definition, references, links, and highlights translate those records only.
 - `textDocument/onTypeFormatting` calls the same configured trigger/marker and ID-grammar checks as `grund fmt`.

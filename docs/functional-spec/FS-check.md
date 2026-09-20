@@ -52,6 +52,29 @@ An exact explicit value binding additionally records its authored component, but
 
 A snapshot written by [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot) is not a special input. Its configured file or folder home is in the ordinary scan scope ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)); its declaration, body, sections, and marked body citations are recognized by the rules above. `check` never invokes its configured integration.
 
+#### 1.1.8 Declaration-local numeric section candidates
+
+A configured marker followed immediately by one or more decimal components separated by literal
+dots is a declaration-local section candidate. Recognition is marker-gated under both strict and
+non-strict scanning; an unmarked number remains prose. The path separator here is always `.`,
+independent of the configured separator between a full ID and its section. Full-ID citations and
+the number-only ID shorthand of [§FS-check.1.2](FS-check.md#12-the-number-only-shorthand) claim their tokens first. Escapes and every scanner
+exclusion in [§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code) retain their precedence.
+
+The candidate must end as a whole token. If digits are followed by a tail that would otherwise
+make the numeric prefix partial, such as `<§>2.goals` or `<§>2abc`, the scanner retains the complete
+digit-starting token for the unsupported-syntax verdict in [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation); it never emits an edge to
+section `2`. Named and mixed declaration-local shorthand are not recognized.
+
+After declaration bodies are assigned, the candidate is owned only by the existing enclosing-body
+rule ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)): Markdown
+same-or-higher headings, source comment or docstring ends, and the nearest preceding declaration
+inside a multi-declaration comment are boundaries. Adjacent citations and other files do not
+supply an owner. A uniquely owned candidate becomes an ordinary citation edge to the owner's ID
+and numeric path while preserving its local token text. An ownerless or genuinely ambiguous site
+records no target. [§DF-declaration-local-section-shorthand](../decisions/functional/DF-declaration-local-section-shorthand.md#df-declaration-local-section-shorthand-local-numeric-section-citations-are-recognized-but-never-canonical)
+settles why recognition is loud but the persisted form is never canonical.
+
 ### 1.2 The number-only shorthand
 
 When a kind's effective format carries **both** `{number}` and `{slug}` ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — the default `{kind}-{number}-{slug}` that `grund init` writes — the number alone already identifies a declaration within its kind, so `§FS-042` is an abbreviation of `§FS-042-user-login` rather than a different ID. `check` **recognizes** and resolves that shape independently of the project's persisted-form policy. Under the default `[reference] shorthand = "canonical"` it reports a unique shorthand to be rewritten; under `"accepted"` the same resolved edge may persist (§3.13). It is never silently ignored, which is what [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) means by "false negatives are bugs".
@@ -325,6 +348,10 @@ The near-ID and escaped-inline-code hints (§3.1.1, §3.1.2) take precedence ove
 ### 3.2 Missing section
 
 A citation with a section suffix (`§FS-<user-login>.3.1` or, in an opted-in repository, `§FS-<user-login>.goals`) where the declaration exists but the requested section heading does not. A missing marker-prefixed named coordinate is never shortened to its declaration; it produces the ordinary `section not found` error and adds `write <§> before it to show the shape without citing it` to the message. A number-only shorthand carrying a missing named section produces both the existing shorthand finding and this finding: the persisted ID form and the requested target are independent facts ([AR-checker.2.12](../../crates/grund-core/src/checker/report.rs)).
+
+An owned declaration-local numeric candidate ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) follows the same rule. Its
+[§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) form
+finding and this missing-section finding are independent, so a missing local path reports both.
 
 For a value binding the explicit numeric component must resolve here before comparison; a missing component produces this finding alone, not a mismatch ([§FS-values.5.1](FS-values.md#51-resolve-before-comparison)).
 
@@ -808,6 +835,25 @@ The rejected heading is excluded from the shared body-local section map before a
 #### 3.23.3 An ordinary hard finding
 
 This is an ordinary hard finding under §§2–3. Text uses the located `<path>:<line>: error: <message>` form. JSON emits `{"severity":"error","path":<path>,"line":<line>,"code":"section-outside-declaration","message":<message>,"sites":null}`. `--only section-outside-declaration` retains it and `--ignore section-outside-declaration` removes it; a retained finding contributes exit `1`, while selecting it away restores the ordinary selected-report result. Parallel and workspace scans merge the record once under the workspace-relative path, never once per stale declaration. A narrowed scan judges the complete selected file, and `--full` applies the same code and message to otherwise out-of-scope files it adds. The LSP transports the same error severity, code, message, and heading range through its shared snapshot ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+
+### 3.24 Declaration-local section citation
+
+Every candidate from [§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates) receives one whole-token form verdict with code
+`local-section-citation`:
+
+- An owned numeric path is an error `local section citation <token>; write
+  <marker><owner><separator><path>`. It remains a real edge for every graph consumer. A missing
+  target section independently receives [§FS-check.3.2](FS-check.md#32-missing-section).
+- An ownerless or genuinely ambiguous site is an error that says no enclosing declaration can be
+  chosen and instructs the author to write a full citation or escape the illustration. It has no
+  guessed ID or navigation target.
+- A digit-starting mixed, named, or glued tail is an error naming the complete unsupported token
+  and giving the same full-citation-or-escape guidance. No numeric prefix becomes an edge.
+
+The finding covers the complete authored token for CLI and LSP ranges. An owned citation in a
+location protected from automatic writing still names its manual full replacement; formatter
+eligibility changes what can be rewritten, not whether persisted local form is canonical. The
+same rule applies under configured markers and both strict modes.
 
 ## 4. Warnings
 

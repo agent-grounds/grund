@@ -161,6 +161,8 @@ mod tests_integrations;
 #[cfg(test)]
 mod tests_integrations_config;
 #[cfg(test)]
+mod tests_local_section_citations;
+#[cfg(test)]
 mod tests_open_resolver;
 #[cfg(test)]
 mod tests_workspace_members;

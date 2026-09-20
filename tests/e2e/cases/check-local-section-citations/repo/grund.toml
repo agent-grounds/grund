@@ -1,0 +1,22 @@
+grund_config_version = 1
+project_name = "local-section-e2e"
+
+[reference]
+strict = true
+require_grounding = false
+
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+index = false
+
+[scan]
+include = ["docs"]
+extensions = ["md"]
+
+[output]
+relative_paths = true

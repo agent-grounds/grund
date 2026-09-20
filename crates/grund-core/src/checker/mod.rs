@@ -101,6 +101,8 @@ mod tests_kind_index_enrollment;
 #[cfg(test)]
 mod tests_kind_index_entry_form;
 #[cfg(test)]
+mod tests_local_section_citations;
+#[cfg(test)]
 mod tests_managed_block_drift;
 #[cfg(test)]
 mod tests_nothing_recognized;

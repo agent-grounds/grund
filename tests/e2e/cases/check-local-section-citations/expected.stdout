@@ -1,0 +1,6 @@
+docs/FS-a.md:3: error: local section citation §2; write §FS-a.2
+docs/FS-a.md:4: error: local section citation §2.1; write §FS-a.2.1
+docs/FS-a.md:5: error: local section citation §9.9; write §FS-a.9.9
+docs/FS-a.md:5: error: missing section FS-a.9.9
+docs/FS-a.md:7: error: missing section FS-a.9
+docs/outside.md:3: error: local section citation §2 has no enclosing declaration; write a full citation or <§>2 to show the shape without citing it

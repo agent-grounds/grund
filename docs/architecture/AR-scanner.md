@@ -152,6 +152,14 @@ Whole Markdown values and marked roots admit only contiguous immediate numeric c
 
 ### 2.3 Citation detection
 
+The full-ID and number-only-ID passes keep precedence. Beside them, the per-line scan records a
+deferred candidate for each configured-marker-plus-numeric-path token and for each unsupported
+digit-starting tail that must receive a whole-token verdict
+([§FS-check.1.1.8](../functional-spec/FS-check.md#118-declaration-local-numeric-section-candidates)).
+The candidate uses literal dots between numeric components under both strict modes, shares the
+existing fence, escape, comment/docstring, and walk exclusions, and does not infer an ID during
+lexing.
+
 The citation regex matches the configured marker ([§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger); default `§`) immediately followed by an `<ID>` token, with an optional `<sep><section-path>` suffix, anywhere in the file. Which of its matches are citations is [§FS-check.1.1](../functional-spec/FS-check.md#11-recognized-citations)'s rule: the strict default, and under `strict = false` the bare-token carve-outs for a source-file string literal and a Markdown link destination (§2.3.1). A declaration's own heading line is never counted as a citation of the ID it declares.
 
 #### 2.3.1 The carve-outs share one predicate
@@ -175,6 +183,15 @@ Under `[id] named_sections = true`, citation scanning tokenizes the complete ID 
 After emitting the ordinary citation, the same line pass recognizes the exact authored binding form and emits a `ValueBinding` containing its literal and source span. Its section path remains complete: the checker can split an embedded root from its immediate component after ordinary local/workspace resolution. In source files recognition occurs only inside the comment or doc-comment line already classified by this scanner; Markdown fences and host expressions or strings remain excluded ([§FS-values.3](../functional-spec/FS-values.md#3-explicit-value-bindings)).
 
 ### 2.4 Citing-side classification
+
+After body spans are assigned, local numeric candidates use the same enclosing-declaration result
+as ordinary citing-side classification. A unique owner promotes the candidate to an ordinary
+`Citation` carrying the canonical owner ID and numeric section plus its authored local spelling;
+the nearest preceding declaration rule handles a multi-declaration source comment. No owner, or
+an ownership state that is not unique, remains a diagnostic-only candidate. Adjacent citations
+and declarations in other files never participate. This single promotion point makes checker,
+queries, coverage, grounding, citation directions, and LSP snapshots consume one graph edge
+([§DF-declaration-local-section-shorthand.2.2](../decisions/functional/DF-declaration-local-section-shorthand.md#22-existing-body-ownership-is-the-only-owner)).
 
 The scanner knows a citation's *cited* kind from its ID, but the citation-direction rules ([§FS-config.3.9](../functional-spec/FS-config.md#39-citations--citation-direction-rules), [§DF-citation-directions](../decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels)) also need the *citing* kind — what kind of place the citation sits in. This is resolved once, at scan time, because the checker cannot reconstruct it cheaply: doc-comment declaration bodies are narrower than the file, and the same data is what [§FS-cover](../functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) and [§RM-gap-report](../roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports) need. Two scan-time additions carry it: a body range on every declaration (§2.4.1) and a source kind on every citation (§2.4.2).
 
