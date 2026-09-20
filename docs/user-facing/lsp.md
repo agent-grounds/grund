@@ -217,6 +217,19 @@ Adjust the selector to match the syntaxes you scan in `grund.toml`.
 
 Open a file containing a resolving citation such as `§FS-check`.
 
+Stored section citations use the same full-ID form. If an existing document
+contains `§2` inside an `FS-a` declaration, the server reports the canonical
+replacement `§FS-a.2`; when section 2 exists, definition, references, and
+highlights still follow that resolved edge. `§9.9` also receives the ordinary
+missing-section diagnostic when its owner lacks that heading. A local path
+outside a declaration is diagnosed without a navigation target, because the
+server never guesses an owner. Run `grund fmt --write` for safe owned sites and
+review the unresolved ones manually ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics), [§FS-lsp.1.3](../functional-spec/FS-lsp.md#13-go-to-definition)).
+
+The live typing transform remains `$$<ID>` to a full citation. `$$2` is not a
+local-section typing feature and no LSP quick-fix is added; canonicalization is
+the formatter's bulk migration path ([§FS-fmt.2.4](../functional-spec/FS-fmt.md#24-shorthand-to-canonical)).
+
 - Hover should show the same body as `grund FS-check --toc` ([§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview)).
 - Hover a whole-ID title — the `# FS-check: …` heading, the same declaration written inline in a doc-comment, or the stub that points at it — and the popup reads `` `FS-check: …` — cited at 12 sites across 5 files ``: the same sites `grund refs FS-check` lists, counted. An uncited title reads `not cited` ([§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview)). Compare from the root the editor opened — in a workspace that is `grund refs <alias>/FS-check` from the workspace root and `grund refs FS-check` from inside the member — or the two are counting different trees.
 - Hover a numeric or opted-in named section heading and the count is that section **and everything under it** — the same set the heading's own references return, and one no `grund refs` invocation prints, since `--section` keeps only citations whose coordinate is exactly the one asked for. The divergence is deliberate and stated in [§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview).

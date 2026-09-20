@@ -9,9 +9,9 @@ grund list [<path>] [--kind <KIND>[,<KIND>…]]… [--project <alias>[,<alias>..
            [--size[=<unit>[,<unit>…]]] [--top <N>] [--format text|json]
 ```
 
-`<path>` is the directory or file whose tree is scanned, `.` by default. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). `--format text|json` picks the output shape (§3), `text` by default.
+`<path>` is the directory or file whose tree is scanned, `.` by default. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). `--format text|json` picks the output shape ([§FS-list.3](FS-list.md#3-outputs)), `text` by default.
 
-`--kind` selects configured citable kinds and refuses an unknown one, or a non-citable one with the two-line message giving its reason (§1.1). `--project` narrows a workspace catalog to the named projects (§1.2). `--unused` keeps only uncited declarations, discounting a kind's index entries and leaving out `E2E` cases unless `--kind` selects them (§1.3). `--summary` prints one count per kind under those same filters (§1.4). `--size` and `--top` switch to measured point-size rows over a closed unit set (§1.5, §1.6); their syntax and combination errors are launch errors, decided before config discovery or scanning (§1.7).
+`--kind` selects configured citable kinds and refuses an unknown one, or a non-citable one with the two-line message giving its reason ([§FS-list.1.1](FS-list.md#11---kind)). `--project` narrows a workspace catalog to the named projects ([§FS-list.1.2](FS-list.md#12---project)). `--unused` keeps only uncited declarations, discounting a kind's index entries and leaving out `E2E` cases unless `--kind` selects them ([§FS-list.1.3](FS-list.md#13---unused)). `--summary` prints one count per kind under those same filters ([§FS-list.1.4](FS-list.md#14---summary)). `--size` and `--top` switch to measured point-size rows over a closed unit set ([§FS-list.1.5](FS-list.md#15---size), [§FS-list.1.6](FS-list.md#16---top)); their syntax and combination errors are launch errors, decided before config discovery or scanning ([§FS-list.1.7](FS-list.md#17-size-selector-errors)).
 
 `list` is a query, like `show` and `refs` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
 
@@ -19,7 +19,7 @@ grund list [<path>] [--kind <KIND>[,<KIND>…]]… [--project <alias>[,<alias>..
 
 `--kind <KIND>[,<KIND>…]` lists only declarations of the named kinds, each a configured *citable* `[[kinds]]` entry ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)). It accepts a comma-separated list (`--kind FS,AR`) and may be repeated (`--kind FS --kind AR`); the selections union.
 
-An unknown kind *anywhere* in the selection is a CLI-level error (§4): a typo'd `--kind` must not silently produce an empty — or merely short — catalog. A configured **non-citable** kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is refused the same way and for the same reason — it would select nothing, every time — but with the reason instead of "unknown", because it is a real row in the table rather than a typo:
+An unknown kind *anywhere* in the selection is a CLI-level error ([§FS-list.4](FS-list.md#4-exit-codes)): a typo'd `--kind` must not silently produce an empty — or merely short — catalog. A configured **non-citable** kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is refused the same way and for the same reason — it would select nothing, every time — but with the reason instead of "unknown", because it is a real row in the table rather than a typo:
 
 ```text
 error: kind `skill` declares no IDs — skills/ is not a citable home
@@ -30,7 +30,7 @@ The `known kinds:` line lists the citable kinds only: they are the whole set thi
 
 ### 1.2 `--project`
 
-`--project <alias>[,<alias>...]` lists, in workspace mode, only declarations from the named projects, and composes with `--kind` by intersection. Outside workspace mode it is a CLI-level error (exit `2`); an unknown alias is also a CLI-level error (exit `2`), the same shape as an unknown `--kind` (§4). Workspace qualification, size behavior, and member-local invocation are specified in [§FS-workspace.8.3](FS-workspace.md#83-grund-list).
+`--project <alias>[,<alias>...]` lists, in workspace mode, only declarations from the named projects, and composes with `--kind` by intersection. Outside workspace mode it is a CLI-level error (exit `2`); an unknown alias is also a CLI-level error (exit `2`), the same shape as an unknown `--kind` ([§FS-list.4](FS-list.md#4-exit-codes)). Workspace qualification, size behavior, and member-local invocation are specified in [§FS-workspace.8.3](FS-workspace.md#83-grund-list).
 
 ### 1.3 `--unused`
 
@@ -40,25 +40,25 @@ A citation that is a kind's own index entry ([§FS-check.3.18](FS-check.md#318-d
 
 ### 1.4 `--summary`
 
-`--summary` prints one line per kind instead of one per declaration, narrowed by `--kind` and `--unused` as the per-declaration form is; §3.3 gives its shape.
+`--summary` prints one line per kind instead of one per declaration, narrowed by `--kind` and `--unused` as the per-declaration form is; [§FS-list.3.3](FS-list.md#33---summary) gives its shape.
 
 ### 1.5 `--size`
 
-`--size[=<unit>[,<unit>…]]` switches from declaration rows to the point-size rows in §3.4. The optional value is accepted only in the same argument with `=`; a following bare word remains the existing `<path>` positional. Bare `--size` selects `lines,words,bytes`, in that order. An explicit list is case-sensitive, preserves caller order, and collapses repeated units to their first occurrence. The closed unit set is `lines`, `words`, and `bytes`: an empty item or any other value, including `tokens`, is a CLI-level error, and there is no recognized or reserved token-counting spelling. The flag may appear once and cannot be combined with `--summary`.
+`--size[=<unit>[,<unit>…]]` switches from declaration rows to the point-size rows in [§FS-list.3.4](FS-list.md#34---size--per-point-lead-and-full-body-measurements). The optional value is accepted only in the same argument with `=`; a following bare word remains the existing `<path>` positional. Bare `--size` selects `lines,words,bytes`, in that order. An explicit list is case-sensitive, preserves caller order, and collapses repeated units to their first occurrence. The closed unit set is `lines`, `words`, and `bytes`: an empty item or any other value, including `tokens`, is a CLI-level error, and there is no recognized or reserved token-counting spelling. The flag may appear once and cannot be combined with `--summary`.
 
 ### 1.6 `--top`
 
-`--top <N>` / `--top=<N>` retains at most the `N` rows with the largest lead in the first selected size unit, after every ordinary filter (§3.4.5). `N` is one positive base-10 integer. The flag may appear once, requires `--size`, and cannot be combined with `--summary`.
+`--top <N>` / `--top=<N>` retains at most the `N` rows with the largest lead in the first selected size unit, after every ordinary filter ([§FS-list.3.4.5](FS-list.md#345-order-and---top)). `N` is one positive base-10 integer. The flag may appear once, requires `--size`, and cannot be combined with `--summary`.
 
 ### 1.7 Size-selector errors
 
-Size-selector syntax and combination errors are validated before config discovery or scanning. They write one raw `error:` line to stderr and exit `2` (§4): `--size may only appear once`; `--size requires one or more units`; `unknown size unit \`<unit>\` (expected lines, words, or bytes)`; `--top may only appear once`; `--top requires a positive integer`; `--top requires --size`; `--size cannot be combined with --summary`; or `--top cannot be combined with --summary`.
+Size-selector syntax and combination errors are validated before config discovery or scanning. They write one raw `error:` line to stderr and exit `2` ([§FS-list.4](FS-list.md#4-exit-codes)): `--size may only appear once`; `--size requires one or more units`; `unknown size unit \`<unit>\` (expected lines, words, or bytes)`; `--top may only appear once`; `--top requires a positive integer`; `--top requires --size`; `--size cannot be combined with --summary`; or `--top cannot be combined with --summary`.
 
 ## 2. Behaviour
 
 `list` runs the same scan as `check` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)) and emits, for every declaration the scan found, one catalog line. In size mode it additionally emits every numbered or named section the same scan makes citable. The set of declarations and sections is exactly the set `check` validates and `show` can attempt to resolve, so the three never disagree on what exists. This includes Markdown, source-code doc-comment and inline declarations, JSON values and their sections, and configured `E2E` case declarations.
 
-In that catalog, JSON entries from an opted-in kind home are declarations (§2.1), a committed fetched snapshot is an ordinary declaration (§2.2), and a retained off-grammar declaration is a normal catalog row (§2.3). Declarations come out sorted by ID (§2.4). A stub-and-inline pair shows one line, at the source file holding the body (§2.5). An ID declared in several homes keeps one flagged line per home, and in size mode each claimant of a duplicated section keeps its own row (§2.6, §2.7). `list` prints no bodies or citations, modifies nothing, and never lists an ID that is cited but not declared (§2.8).
+In that catalog, JSON entries from an opted-in kind home are declarations ([§FS-list.2.1](FS-list.md#21-json-values)), a committed fetched snapshot is an ordinary declaration ([§FS-list.2.2](FS-list.md#22-per-kind-formats-and-fetched-snapshots)), and a retained off-grammar declaration is a normal catalog row ([§FS-list.2.3](FS-list.md#23-off-grammar-declarations)). Declarations come out sorted by ID ([§FS-list.2.4](FS-list.md#24-order)). A stub-and-inline pair shows one line, at the source file holding the body ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)). An ID declared in several homes keeps one flagged line per home, and in size mode each claimant of a duplicated section keeps its own row ([§FS-list.2.6](FS-list.md#26-duplicate-declarations), [§FS-list.2.7](FS-list.md#27-duplicate-sections)). `list` prints no bodies or citations, modifies nothing, and never lists an ID that is cited but not declared ([§FS-list.2.8](FS-list.md#28-what-it-is-not)).
 
 ### 2.1 JSON values
 
@@ -106,7 +106,7 @@ FS-login        docs/functional-spec/FS-login.md:1    A player can log in with e
 G-no-dangling-refs  docs/goals.md:7     every cited ID resolves to a declaration
 ```
 
-The columns are: the ID (rendered in the repo's `[id] format`, or in its kind's own `format` where the kind sets one ([§FS-config.3.4.10.1](FS-config.md#34101-format)); left-padded so the column aligns — capped so one very long ID does not blow out the table), then `<path>:<line>` of the home declaration (for a collapsed stub-and-inline pair, the source file the body is in), then the title — the heading text the author wrote after `<ID>:`. A heading with no `: <text>` tail leaves the title column empty, a broken stub shows `→ <target>` in its place, a duplicated ID's lines carry a duplicate note, and a row with marked roots appends a suffix naming them in canonical order (§3.1.1). `--kind` and `--unused` select the lines as §1.1 and §1.3 say. An empty catalog (or an empty filter result) prints nothing — that is not an error.
+The columns are: the ID (rendered in the repo's `[id] format`, or in its kind's own `format` where the kind sets one ([§FS-config.3.4.10.1](FS-config.md#34101-format)); left-padded so the column aligns — capped so one very long ID does not blow out the table), then `<path>:<line>` of the home declaration (for a collapsed stub-and-inline pair, the source file the body is in), then the title — the heading text the author wrote after `<ID>:`. A heading with no `: <text>` tail leaves the title column empty, a broken stub shows `→ <target>` in its place, a duplicated ID's lines carry a duplicate note, and a row with marked roots appends a suffix naming them in canonical order ([§FS-list.3.1.1](FS-list.md#311-row-notes)). `--kind` and `--unused` select the lines as [§FS-list.1.1](FS-list.md#11---kind) and [§FS-list.1.3](FS-list.md#13---unused) say. An empty catalog (or an empty filter result) prints nothing — that is not an error.
 
 Stderr is empty on success.
 
@@ -123,11 +123,11 @@ NDJSON on stdout — one object per catalog entry, same order as the text form:
 {"id":"FS-login","kind":"FS","path":"docs/functional-spec/FS-login.md","line":1,"title":"A player can log in with email","stub":false,"defines":null,"refs":7,"duplicate":false}
 ```
 
-Fields: `id` (rendered ID), `kind`, `path` and `line` of the home declaration, `title` (`null` when the heading has no title tail or the home is a broken stub), `stub` (true when this entry's home is a stub heading — only ever true for a *broken* stub, since a healthy one collapses into its inline declaration), `defines` (the `<target>` of a stub heading, else `null`), `refs` (the count of recognised citations of this ID — exactly the number `grund refs` would list, and not the `--unused` predicate; §3.2.1), and `duplicate` (true when the ID has more than one home). A row with marked roots adds a `value_roots` member in canonical section-path order, omitted when there are none (§3.2.2).
+Fields: `id` (rendered ID), `kind`, `path` and `line` of the home declaration, `title` (`null` when the heading has no title tail or the home is a broken stub), `stub` (true when this entry's home is a stub heading — only ever true for a *broken* stub, since a healthy one collapses into its inline declaration), `defines` (the `<target>` of a stub heading, else `null`), `refs` (the count of recognised citations of this ID — exactly the number `grund refs` would list, and not the `--unused` predicate; [§FS-list.3.2.1](FS-list.md#321-refs-counts-citations)), and `duplicate` (true when the ID has more than one home). A row with marked roots adds a `value_roots` member in canonical section-path order, omitted when there are none ([§FS-list.3.2.2](FS-list.md#322-value_roots)).
 
 #### 3.2.1 `refs` counts citations
 
-`refs` is the count of recognised citations of this ID across the scanned tree — exactly the number `grund refs` would list, carried on every entry so a tool need not run `grund refs` per ID to learn it. It is a *count of citations*, not the `--unused` predicate: where a kind's index is checked ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) that count includes the ID's index entry, which `--unused` discounts (§1.3), so an entry selected by `--unused` may carry `refs: 1`. A tool filtering for uncited IDs should pass `--unused` and read the rows, not threshold on `refs`.
+`refs` is the count of recognised citations of this ID across the scanned tree — exactly the number `grund refs` would list, carried on every entry so a tool need not run `grund refs` per ID to learn it. It is a *count of citations*, not the `--unused` predicate: where a kind's index is checked ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) that count includes the ID's index entry, which `--unused` discounts ([§FS-list.1.3](FS-list.md#13---unused)), so an entry selected by `--unused` may carry `refs: 1`. A tool filtering for uncited IDs should pass `--unused` and read the rows, not threshold on `refs`.
 
 #### 3.2.2 `value_roots`
 
@@ -146,17 +146,17 @@ FS   18    requirements.md
 …
 ```
 
-Columns: the kind prefix, the count of declarations of that kind the scan found (after `--kind` / `--unused` narrowing, if any: `--kind` keeps only the selected kinds' rows and `--unused` counts only uncited declarations, §3.3.1), and that kind's configured home (`file` for single-file kinds, otherwise `folder`; [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)) — so one line tells an agent both how big each slice of the catalog is and where to look. A kind with zero declarations in scope is omitted, which is every non-citable kind by construction; an empty result (every kind empty, or `--kind` narrowed to kinds with no declarations) prints nothing — not an error. `--format json` together with `--summary`: NDJSON, one object per kind, `{"kind":<prefix>,"title":<[[kinds]] title>,"home":<file-or-folder>,"count":<n>}`, same order. Exit codes (§4) are unchanged.
+Columns: the kind prefix, the count of declarations of that kind the scan found (after `--kind` / `--unused` narrowing, if any: `--kind` keeps only the selected kinds' rows and `--unused` counts only uncited declarations, [§FS-list.3.3.1](FS-list.md#331-narrowed-summaries)), and that kind's configured home (`file` for single-file kinds, otherwise `folder`; [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)) — so one line tells an agent both how big each slice of the catalog is and where to look. A kind with zero declarations in scope is omitted, which is every non-citable kind by construction; an empty result (every kind empty, or `--kind` narrowed to kinds with no declarations) prints nothing — not an error. `--format json` together with `--summary`: NDJSON, one object per kind, `{"kind":<prefix>,"title":<[[kinds]] title>,"home":<file-or-folder>,"count":<n>}`, same order. Exit codes ([§FS-list.4](FS-list.md#4-exit-codes)) are unchanged.
 
 #### 3.3.1 Narrowed summaries
 
-With `--kind FS,AR --summary` only those rows appear; with `--unused --summary` the counts are of uncited declarations — the same set the per-declaration `--unused` lists, under §1.3's `E2E` rule.
+With `--kind FS,AR --summary` only those rows appear; with `--unused --summary` the counts are of uncited declarations — the same set the per-declaration `--unused` lists, under [§FS-list.1.3](FS-list.md#13---unused)'s `E2E` rule.
 
 ### 3.4 `--size` — per-point lead and full-body measurements
 
-Size mode emits one row for each declaration site and each citable section site. A healthy stub collapses onto its inline home as in §2.5. A broken stub remains a row at the stub site, with no measurement. Independent duplicate declaration homes and duplicate section claimants remain separate, marked site-local rows (§2.6, §2.7).
+Size mode emits one row for each declaration site and each citable section site. A healthy stub collapses onto its inline home as in [§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical). A broken stub remains a row at the stub site, with no measurement. Independent duplicate declaration homes and duplicate section claimants remain separate, marked site-local rows ([§FS-list.2.6](FS-list.md#26-duplicate-declarations), [§FS-list.2.7](FS-list.md#27-duplicate-sections)).
 
-Each row measures exactly the lead and the full body `show` returns for that site (§3.4.1), in `lines`, `words` and `bytes` counted over its UTF-8 bytes with no locale or Unicode-table input (§3.4.2). Text rows are headerless `<coordinate>  <path>:<line>  <unit>=<lead>/<full>` lines (§3.4.3); JSON rows are NDJSON in a fixed field order, without the catalog's `title` and `refs` (§3.4.4). Rows come in normal catalog order, and `--top` keeps the largest leads in the first selected unit after every filter (§3.4.5).
+Each row measures exactly the lead and the full body `show` returns for that site ([§FS-list.3.4.1](FS-list.md#341-measured-strings)), in `lines`, `words` and `bytes` counted over its UTF-8 bytes with no locale or Unicode-table input ([§FS-list.3.4.2](FS-list.md#342-units)). Text rows are headerless `<coordinate>  <path>:<line>  <unit>=<lead>/<full>` lines ([§FS-list.3.4.3](FS-list.md#343-text-rows)); JSON rows are NDJSON in a fixed field order, without the catalog's `title` and `refs` ([§FS-list.3.4.4](FS-list.md#344-json-rows)). Rows come in normal catalog order, and `--top` keeps the largest leads in the first selected unit after every filter ([§FS-list.3.4.5](FS-list.md#345-order-and---top)).
 
 #### 3.4.1 Measured strings
 
@@ -191,7 +191,7 @@ Normal row order is existing workspace/project order and parsed-ID order, then t
 ## 4. Exit codes
 
 - `0` — the scan succeeded; the listed catalog (possibly empty) is the result.
-- `2` — scan / I/O error ([§FS-check.2](FS-check.md#2-outputs) partial-scan semantics apply: an incomplete scan exits `2` and the catalog may be short), an unknown `--kind` (any value in a comma-separated or repeated `--kind`), an invalid size selector or combination (§1.7), an unsupported `--format`, or any other CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
+- `2` — scan / I/O error ([§FS-check.2](FS-check.md#2-outputs) partial-scan semantics apply: an incomplete scan exits `2` and the catalog may be short), an unknown `--kind` (any value in a comma-separated or repeated `--kind`), an invalid size selector or combination ([§FS-list.1.7](FS-list.md#17-size-selector-errors)), an unsupported `--format`, or any other CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
 
 There is no `1`: `list` is a query that always returns *its* answer (a possibly-empty catalog), never "found something other than one body" — unlike `show`, it has no single-result expectation to violate.
 

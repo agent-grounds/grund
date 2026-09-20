@@ -91,6 +91,9 @@ fn merge_findings(target: &mut Findings, mut source: Findings) {
     target
         .legacy_citation_candidates
         .append(&mut source.legacy_citation_candidates);
+    target
+        .local_section_citation_candidates
+        .append(&mut source.local_section_citation_candidates);
     target.value_bindings.append(&mut source.value_bindings);
     target
         .invalid_value_declarations

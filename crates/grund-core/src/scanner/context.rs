@@ -196,6 +196,64 @@ pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config
             }
         }
     }
+    for candidate in &mut findings.local_section_citation_candidates {
+        let enclosing = bodies
+            .iter()
+            .filter(|(start, end, _)| *start <= candidate.line && candidate.line <= *end)
+            .max_by_key(|(start, _, _)| *start);
+        match enclosing {
+            Some((_, _, id)) => {
+                candidate.source_kind = id.kind.clone();
+                candidate.enclosing_declaration = Some(id.clone());
+            }
+            None => {
+                candidate.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());
+            }
+        }
+    }
+}
+
+/// Promote supported declaration-local paths with one body owner into the
+/// ordinary citation graph while preserving their authored token
+/// (§AR-scanner.2.4, §DF-declaration-local-section-shorthand.2.4). Unsupported
+/// and ownerless records remain diagnostic-only, so no consumer can infer a
+/// target that the body rule did not supply.
+pub(super) fn promote_local_section_citations(findings: &mut Findings) {
+    let candidates = std::mem::take(&mut findings.local_section_citation_candidates);
+    for candidate in candidates {
+        let Some(section) = candidate.section.clone() else {
+            findings.local_section_citation_candidates.push(candidate);
+            continue;
+        };
+        let Some(owner) = candidate.enclosing_declaration.clone() else {
+            findings.local_section_citation_candidates.push(candidate);
+            continue;
+        };
+        findings.citations.push(crate::model::Citation {
+            namespace: None,
+            id: owner.clone(),
+            section: Some(section),
+            file: candidate.file,
+            line: candidate.line,
+            column: candidate.column,
+            has_marker: true,
+            shorthand: false,
+            local_section: true,
+            shorthand_rewritable: candidate.rewritable,
+            numeric_run: false,
+            text: candidate.text,
+            inline_site: candidate.inline_site,
+            source_kind: candidate.source_kind,
+            enclosing_declaration: Some(owner),
+        });
+    }
+    findings.citations.sort_by(|left, right| {
+        (sort_path_key(&left.file), left.line, left.column).cmp(&(
+            sort_path_key(&right.file),
+            right.line,
+            right.column,
+        ))
+    });
 }
 
 /// The kind whose configured home (`[[kinds]] folder` / `file`, §FS-config.3.4)

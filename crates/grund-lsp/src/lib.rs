@@ -609,6 +609,13 @@ impl Server {
                 locations.extend(self.citation_locations_for_declaration(snapshot, decl));
             }
             Token::Citation(source) => {
+                // Unresolved local forms stay in the snapshot so diagnostics
+                // and declaration-side graph counts share the core edge, but
+                // the token itself has no editor reference identity
+                // (§FS-lsp.1.3).
+                if source.target_path.is_none() {
+                    return Ok(None);
+                }
                 // A citation carries its complete target query, so a section
                 // keeps the same exact subtree as its heading (§FS-lsp.1.3.1).
                 if include_decl {
@@ -691,6 +698,9 @@ impl Server {
         let mut ranges = vec![token.range(self)];
         match token {
             Token::Citation(source) => {
+                if source.target_path.is_none() {
+                    return Ok(None);
+                }
                 let section = source.query_id != source.declaration_query_id;
                 for citation in &snapshot.citations {
                     let same_query = citation.query_id == source.query_id

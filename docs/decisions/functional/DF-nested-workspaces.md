@@ -68,7 +68,7 @@ it stays true when the directory moves. If the answer to a collision is going to
 be a qualified name, the qualified name should be the model rather than a naming
 convention the tool cannot enforce.
 
-The counter-argument — "an alias path is a path, and [§DF-subproject-namespaces](DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) §5
+The counter-argument — "an alias path is a path, and [§DF-subproject-namespaces](DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) [§DF-nested-workspaces.5](DF-nested-workspaces.md#5-alternatives-considered)
 rejected path-based citations" — does not survive inspection. What that decision
 rejected was citing through the *filesystem*: `../api`, `packages/api/FS-x`,
 which break when a directory is renamed. An alias path is a chain of configured
@@ -187,18 +187,18 @@ not name the offending line.
   `[workspace]` still teaches its own.
 - Converting the issue's flat leaf list into a nested tree **does** rewrite its
   cross-project citations, once, from `<§>sprayer/<ID>` to
-  `<§>hardware-current/sprayer/<ID>`. §3.2's diagnostic is what makes that
+  `<§>hardware-current/sprayer/<ID>`. [§DF-nested-workspaces.3.2](DF-nested-workspaces.md#32-the-real-cost-is-short-names-and-it-is-paid-at-the-diagnostic)'s diagnostic is what makes that
   migration mechanical rather than a search.
 
 ## 5. Alternatives considered
 
 | Option | Why rejected |
 |---|---|
-| **Flat, globally-unique aliases.** Grammar untouched; citations stay short; nesting and un-nesting a group never rewrite a citation. | The escape hatch for a collision is renaming a project to a hand-written qualified name (`hardware-current-api`) that the tool cannot keep true when the directory moves. Nesting is adopted exactly when many sub-projects make collisions likely, so the model should carry the qualification (§3.1). |
+| **Flat, globally-unique aliases.** Grammar untouched; citations stay short; nesting and un-nesting a group never rewrite a citation. | The escape hatch for a collision is renaming a project to a hand-written qualified name (`hardware-current-api`) that the tool cannot keep true when the directory moves. Nesting is adopted exactly when many sub-projects make collisions likely, so the model should carry the qualification ([§DF-nested-workspaces.3.1](DF-nested-workspaces.md#31-the-alternative-was-flat-globally-unique-aliases)). |
 | **Flat aliases, qualify only on ambiguity.** Short form when unique, full path only when two projects share a name; ambiguity fails loudly. | Best ergonomics, but a citation's required spelling then depends on what *else* exists in the tree: adding a second `api` anywhere re-spells citations in projects that never changed. It also forces a canonical-form choice on `grund list`, `refs --format json`, `--project`, and completions that the other two models get for free. |
 | **Auto-qualify only on collision, silently.** No new syntax; no user-visible change until it is needed. | Same dependence on siblings as above, without the loud failure — the worst of the three. |
-| **Namespace as a list of segments** rather than one `/`-joined string. | Structurally tidier, but it teaches a second shape to the resolver, the scanner, completions, the `--project` filter, and the JSON keys. An ID never contains `/`, so one string with a last-separator split is unambiguous and touches nothing (§3.3). |
-| **Intermediate node is never a project** (grouping only). Simplest to explain. | Its files would be scanned by nobody — the outermost scan stops at the boundary — so citations in a grouping directory silently stop being checked (§3.5). |
+| **Namespace as a list of segments** rather than one `/`-joined string. | Structurally tidier, but it teaches a second shape to the resolver, the scanner, completions, the `--project` filter, and the JSON keys. An ID never contains `/`, so one string with a last-separator split is unambiguous and touches nothing ([§DF-nested-workspaces.3.3](DF-nested-workspaces.md#33-one-string-not-a-list-of-segments)). |
+| **Intermediate node is never a project** (grouping only). Simplest to explain. | Its files would be scanned by nobody — the outermost scan stops at the boundary — so citations in a grouping directory silently stop being checked ([§DF-nested-workspaces.3.5](DF-nested-workspaces.md#35-the-intermediate-node-reuses-include_root-and-defaults-to-a-project)). |
 | **A new `[workspace] nested = true` opt-in.** Nesting stays off unless asked for. | The nested config is already explicit — a member either declares `[workspace]` or does not. A second key to confirm the first only refuses configurations that are already unambiguous. |
-| **Name a subtree's projects from the subtree** when a run is narrowed. | A citation could pass `grund check` inside `hardware/` and fail the run CI does at the repository root (§3.4). |
+| **Name a subtree's projects from the subtree** when a run is narrowed. | A citation could pass `grund check` inside `hardware/` and fail the run CI does at the repository root ([§DF-nested-workspaces.3.4](DF-nested-workspaces.md#34-a-path-means-the-same-thing-at-every-scope)). |
 | **Depth limit (e.g. 8 levels).** Cheap termination guard. | An arbitrary number that rejects legitimate trees and, when it fires, names no offending line. The canonical-root duplicate check terminates the walk *and* diagnoses the actual mistake. |

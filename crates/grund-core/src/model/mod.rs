@@ -59,8 +59,8 @@ pub(crate) use paths::{
     scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
 pub(crate) use records::{
-    LegacyCitationCandidate, ShowRenderMode, TextOverlays, is_stub_for_inline_decl,
-    resolve_stub_target,
+    LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode, TextOverlays,
+    is_stub_for_inline_decl, resolve_stub_target,
 };
 pub(crate) use report::{CheckReport, Diagnostic, Site};
 pub(crate) use text::{format_list, json_escape, plural};

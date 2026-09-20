@@ -9,13 +9,13 @@ grund cover [<path>] [--format text|json]
 ```
 
 - `<path>` — directory or file whose tree is scanned. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). It bounds the **walk**, exactly as it does for `grund check`, and that is what decides the scope: every project at a workspace root, that member alone inside a member, that subtree alone below a config root ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
-- `--format text|json` — output shape (§3). Default `text`. An unsupported value is answered before anything is loaded (§1.1).
+- `--format text|json` — output shape ([§FS-cover.3](FS-cover.md#3-outputs)). Default `text`. An unsupported value is answered before anything is loaded ([§FS-cover.1.1](FS-cover.md#11-an-unsupported---format-is-answered-before-the-load)).
 
 `cover` is a query, like `list` and `refs` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). It reads no git history ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)) and parses no AST ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).
 
 ### 1.1 An unsupported `--format` is answered before the load
 
-A `--format` value outside `text|json` is a usage error the caller can fix without touching the repository, so it is answered **before anything is loaded**: the scan can fail first (§4), and which of two errors a caller sees must not depend on the tree they happened to point at. A `[output] format` key carrying an unsupported value is a property of the tree, so it is reported after the load, like any other config fault.
+A `--format` value outside `text|json` is a usage error the caller can fix without touching the repository, so it is answered **before anything is loaded**: the scan can fail first ([§FS-cover.4](FS-cover.md#4-exit-codes)), and which of two errors a caller sees must not depend on the tree they happened to point at. A `[output] format` key carrying an unsupported value is a property of the tree, so it is reported after the load, like any other config fault.
 
 ## 2. Behaviour
 
@@ -23,9 +23,9 @@ A `--format` value outside `text|json` is a usage error the caller can fix witho
 
 An owned declaration-local numeric citation ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) is one ordinary resolved citation in this grouping: it carries the owner's full ID and exact section while its `text` remains the authored local spelling. It therefore also counts for unused-declaration, grounding, and citation-direction questions that consume the same graph. Ownerless and unsupported local candidates contribute no guessed edge.
 
-Output is grouped by scanned file, sorted by path. Within a file, citations are sorted by `(line, column)`. Files with no recognised citations are still included, so a caller can distinguish "the file was scanned and cites nothing" from "the file was outside the scan scope." A citation object is the same shape `grund refs --format=json` emits (§3.2): path, line, column, rendered ID, optional section, marker boolean, and the verbatim token text.
+Output is grouped by scanned file, sorted by path. Within a file, citations are sorted by `(line, column)`. Files with no recognised citations are still included, so a caller can distinguish "the file was scanned and cites nothing" from "the file was outside the scan scope." A citation object is the same shape `grund refs --format=json` emits ([§FS-cover.3.2](FS-cover.md#32---format-json)): path, line, column, rendered ID, optional section, marker boolean, and the verbatim token text.
 
-Which citations count is §2.1 for a cross-project one, §2.2 for a value binding's, §2.3 for one whose fetched snapshot is missing, and §2.4 for a declaration-backed exact one.
+Which citations count is [§FS-cover.2.1](FS-cover.md#21-a-cross-project-citation-counts) for a cross-project one, [§FS-cover.2.2](FS-cover.md#22-a-value-bindings-citation) for a value binding's, [§FS-cover.2.3](FS-cover.md#23-a-citation-whose-fetched-snapshot-is-missing) for one whose fetched snapshot is missing, and [§FS-cover.2.4](FS-cover.md#24-a-declaration-backed-exact-citation) for a declaration-backed exact one.
 
 ### 2.1 A cross-project citation counts
 

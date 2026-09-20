@@ -122,18 +122,18 @@ which reads exactly like silence.
 
 ## 3. Alternatives considered
 
-**The inline table, `members = [{ path, optional }]`.** Rejected on §2.1, which
+**The inline table, `members = [{ path, optional }]`.** Rejected on [§DF-optional-workspace-members.2.1](DF-optional-workspace-members.md#21-a-sibling-list-because-this-repository-has-already-refused-the-other-shape), which
 is [§DF-workspace-member-descriptions.3.2](DF-workspace-member-descriptions.md#32-the-root-alternatives-fight-existing-semantics) applied a second time. It is the shape
 the issue asked for first, and the author withdrew it on reading the precedent.
 
-**`--allow-missing-members`.** Rejected on §2.2.
+**`--allow-missing-members`.** Rejected on [§DF-optional-workspace-members.2.2](DF-optional-workspace-members.md#22-not-a-run-flag-because-a-flag-records-no-intent).
 
 **Deriving the alias from the last segment only when the member is absent, and
-from `project_name` when it is present.** Rejected on §2.3: it is the shape that
+from `project_name` when it is present.** Rejected on [§DF-optional-workspace-members.2.3](DF-optional-workspace-members.md#23-the-alias-comes-from-the-entry-text-and-disagreement-is-an-error): it is the shape that
 makes one citation text mean two things, and it fails silently in the direction
 nobody is watching.
 
-**Allowing `optional_members = ["hardware/*"]`.** Rejected on §2.3. A tree that
+**Allowing `optional_members = ["hardware/*"]`.** Rejected on [§DF-optional-workspace-members.2.3](DF-optional-workspace-members.md#23-the-alias-comes-from-the-entry-text-and-disagreement-is-an-error). A tree that
 spells its members with a glob expands it by hand for the ones that may go
 missing; that cost is real and was accepted knowingly, because the alternative is
 a key that silently contributes nothing.
@@ -145,8 +145,8 @@ half-created directory on the unverified path and move the boundary of the blind
 spot somewhere no line of the repository records. The repository meeting that
 case names the namespaces under the submodule instead.
 
-**A stderr `warning:` for the announcement, matching [§FS-check.4.7](../../functional-spec/FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan) and §4.8.**
-Rejected on §2.4. It is the consistent shape for a fact about a `[workspace]`
+**A stderr `warning:` for the announcement, matching [§FS-check.4.7](../../functional-spec/FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan) and §DF-optional-workspace-members.4.8.**
+Rejected on [§DF-optional-workspace-members.2.4](DF-optional-workspace-members.md#24-exit-0-and-the-announcement-is-what-buys-it). It is the consistent shape for a fact about a `[workspace]`
 block, and consistency is a real argument; it loses to the author's condition
 that the announcement survive whatever quieting a CI log applies, which a stderr
 line does not.

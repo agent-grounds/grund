@@ -31,7 +31,7 @@ It is documented as the count of recognized citations across the scanned tree ([
 
 **Exclude the whole index file.** Simpler to implement and wrong in the same way "any folder README is an index" is wrong: it would silently discount a citation an author wrote as a reference, because of where they wrote it.
 
-**A designated region of the index — a managed block whose citations do not count.** That is the rendered-index design ([§DF-index-entry-form.3](DF-index-entry-form.md#3-alternatives-considered)) wearing a different hat, and it presumes the generator this check deliberately does not depend on. When the renderer lands, the region it owns is a natural refinement of §2.2, not a replacement for it.
+**A designated region of the index — a managed block whose citations do not count.** That is the rendered-index design ([§DF-index-entry-form.3](DF-index-entry-form.md#3-alternatives-considered)) wearing a different hat, and it presumes the generator this check deliberately does not depend on. When the renderer lands, the region it owns is a natural refinement of [§DF-index-not-an-inbound-citation.2.2](DF-index-not-an-inbound-citation.md#22-the-exclusion-is-the-entry-not-the-file), not a replacement for it.
 
 **Leave the accounting alone and accept the noise.** The unused signal is not decoration: it is how a tree tells its maintainer that a spec, a decision, or a discussion has fallen out of use. Trading it for an index check would have been a net loss even if the check were free.
 

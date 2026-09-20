@@ -31,7 +31,7 @@ The sentence now names a declaration it never meant, and the reader can no longe
 
 A `§` in front of `SPEC-001→SPEC-003` says *this sentence is about grund IDs*. It does not say *this one token is the citation and the rest is prose*. For a full ID the two readings coincide, because the slug makes any other reading vanishingly unlikely. For a shorthand — which is precisely the ambiguous shape — they come apart, and the marker cannot tell them apart on its own.
 
-So the shorthand needs one more piece of evidence than the marker, and §2.2 says which.
+So the shorthand needs one more piece of evidence than the marker, and [§DF-shorthand-numeric-run.2.2](DF-shorthand-numeric-run.md#22-the-evidence-for-a-run-is-the-run) says which.
 
 ### 2.2 The evidence for a run is the run
 
@@ -56,7 +56,7 @@ The three exclusions are the whole safety margin:
 
 `SPEC-001→§SPEC-003` — a run whose *tail* carries the marker — is not covered, deliberately.
 
-A run is written head-first and the marker lands on the head, which is where every reported instance put it. Reading backward as well would cost more than it buys: a left-hand neighbor that is number-shaped and glued is a common shape in ordinary prose — `2026-08-19/§FS-042`, `v1.2/§FS-042` — and refusing those would withhold the rewrite from real citations for no evidence at all. §2.5's report is what covers the residue.
+A run is written head-first and the marker lands on the head, which is where every reported instance put it. Reading backward as well would cost more than it buys: a left-hand neighbor that is number-shaped and glued is a common shape in ordinary prose — `2026-08-19/§FS-042`, `v1.2/§FS-042` — and refusing those would withhold the rewrite from real citations for no evidence at all. [§DF-shorthand-numeric-run.2.5](DF-shorthand-numeric-run.md#25-the-site-is-reported-and-the-report-names-both-exits)'s report is what covers the residue.
 
 ### 2.4 `fmt` does not guess about intent, exactly as it does not guess about resolution
 
@@ -73,7 +73,7 @@ docs/changelog.md:3: shorthand §SPEC-001 sits in a numeric run and was not rewr
 write §SPEC-001-checkout, or <§>SPEC-001 if these are old numbers
 ```
 
-Both exits are named because `grund` cannot know which one is meant, and the author knows immediately. If it was a citation, the canonical text is right there to paste. If it was a mapping, `<§>` is the escape this grammar already has for writing an ID without citing it ([§FS-check.2.3.1](../../functional-spec/FS-check.md#231-escaped-citation-resolves)), and the message says so in the same shape §3.1 already uses for a dangling citation that might be an illustration.
+Both exits are named because `grund` cannot know which one is meant, and the author knows immediately. If it was a citation, the canonical text is right there to paste. If it was a mapping, `<§>` is the escape this grammar already has for writing an ID without citing it ([§FS-check.2.3.1](../../functional-spec/FS-check.md#231-escaped-citation-resolves)), and the message says so in the same shape [§FS-check.3.1](../../functional-spec/FS-check.md#31-dangling-citation) already uses for a dangling citation that might be an illustration.
 
 An **error**, on the same argument [§DF-number-only-citation-shorthand.2.3](DF-number-only-citation-shorthand.md#23-it-is-an-error-not-a-warning-or-a-suggestion) makes: a warning leaves the exit code alone, and a finding no CI run fails on is one a repository accumulates behind forever. Upgrading costs nothing, because these sites are **already** errors — `shorthand citation §SPEC-001; write §SPEC-001-checkout` fires on them today. What changes is that the message stops advising an edit that would corrupt the line. No tree turns from green to red ([§GOAL-no-silent-breakage](../../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)); some turn from red-and-wrong to red-and-right.
 
@@ -101,7 +101,7 @@ The old report named the rewrite class and the line, which is enough to review a
 
 Skip a shorthand immediately followed by `→`, `/<digits>`, `…<digits>`, or `-<digits>` — the shape the report proposed.
 
-It fixes every reported case and was rejected for being a list. The bracket-and-quote exclusion in §2.2 is not that list returning: this one enumerates what *makes* a run, an allowlist that has to be complete to be correct and grows by one entry every time a human notices a false sentence; that one enumerates what makes it not a run, and every member is there for one stated property — it bounds a construct — so the set is closed by the property rather than by observation, and a missing member costs a withheld rewrite rather than a corrupted line. `..`, `—`, `|`, `>`, `»`, and `:` are all run delimiters somebody writes, and each would be a separate defect found the same way — by a human noticing a false sentence. Worse, the list encodes the symptom: the reason `→` is suspicious is not that it is `→`, it is that a number follows it. Naming the evidence directly derives all four listed cases and the ones nobody has hit yet, and it leaves a rule a reader can check against a line by eye.
+It fixes every reported case and was rejected for being a list. The bracket-and-quote exclusion in [§DF-shorthand-numeric-run.2.2](DF-shorthand-numeric-run.md#22-the-evidence-for-a-run-is-the-run) is not that list returning: this one enumerates what *makes* a run, an allowlist that has to be complete to be correct and grows by one entry every time a human notices a false sentence; that one enumerates what makes it not a run, and every member is there for one stated property — it bounds a construct — so the set is closed by the property rather than by observation, and a missing member costs a withheld rewrite rather than a corrupted line. `..`, `—`, `|`, `>`, `»`, and `:` are all run delimiters somebody writes, and each would be a separate defect found the same way — by a human noticing a false sentence. Worse, the list encodes the symptom: the reason `→` is suspicious is not that it is `→`, it is that a number follows it. Naming the evidence directly derives all four listed cases and the ones nobody has hit yet, and it leaves a rule a reader can check against a line by eye.
 
 ## 4. Rejected alternative: refuse every shorthand rewrite
 
@@ -113,6 +113,6 @@ That trades a rare silent corruption for a rule nobody can clear in bulk, and [�
 
 - A new `shorthand-numeric-run` error code ([§FS-check.3.15](../../functional-spec/FS-check.md#315-shorthand-citation-in-a-numeric-run)), replacing the mechanical `shorthand-citation` message at these sites only. Withheld out of scope under `--full` for the reason [§FS-check.3.14](../../functional-spec/FS-check.md#314-out-of-scope-unresolvable-citation---full-only) withholds the mechanical form, and withheld where [§FS-fmt.2.3](../../functional-spec/FS-fmt.md#23-what-is-never-rewritten) already forbids every rewrite: an illustration in inline code needs no edit.
 - `Citation` gains a `numeric_run` flag, set by the scanner beside `shorthand_rewritable` — the scanner is the only pass holding the line text, so it is the only one that can see the run ([§AR-scanner.2.6](../../architecture/AR-scanner.md#26-number-only-shorthand-citations)).
-- `fmt`'s per-line report label becomes a `String` rather than a fixed set of four, so the expansion can carry its text (§2.7).
+- `fmt`'s per-line report label becomes a `String` rather than a fixed set of four, so the expansion can carry its text ([§DF-shorthand-numeric-run.2.7](DF-shorthand-numeric-run.md#27-invention-is-reported-in-full-whatever-the-rule-decides)).
 - The LSP's live transform ([§FS-lsp.1.4](../../functional-spec/FS-lsp.md#14-live-trigger-transform)) applies the same rule, and has a residue the bulk pass does not: an author typing a fresh run keystroke by keystroke has not yet written the second number when the keystroke that ends the token fires, so the expansion happens and is then visible and undoable in the editor. That is the loud failure, not the silent one, and it is the same order of surprise as any on-type transform. A run already on the line — the paste or edit case — is refused there exactly as it is in `fmt`.
 - No `grund_config_version` bump, no `[id]` key, and no `AGENTS.md` block bump. The rule is derived from `[id] format` like the shorthand itself; a knob would let two installs disagree about what a citation *is* ([§FS-non-goals.13](../../functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)), and the block already tells an agent to write canonical citations, which stays exactly right.

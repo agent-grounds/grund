@@ -7,7 +7,7 @@ Fixes the render [§DF-citation-directions.2.7](DF-citation-directions.md#27-gen
 
 ## 1. Context
 
-The generated `### Citation directions` section is what an agent reads *instead of* `grund.toml`, and the first render of it was inexact in five ways. Rendered from the canonical config of §3 on grund 0.12.2:
+The generated `### Citation directions` section is what an agent reads *instead of* `grund.toml`, and the first render of it was inexact in five ways. Rendered from the canonical config of [§DF-directions-render.3](DF-directions-render.md#3-the-canonical-config) on grund 0.12.2:
 
 ```markdown
 - **AR** may cite FS or GOAL; unlisted citations are forbidden.
@@ -27,7 +27,7 @@ Every wording change is a managed-block version bump ([§FS-init.2.3](../../func
 
 ### 2.1 One paragraph, then bullets, then one closing line
 
-The section is a legend and a grounding sentence in one paragraph, one bullet per citing kind with any rule, and one closing line. Rendered from §3:
+The section is a legend and a grounding sentence in one paragraph, one bullet per citing kind with any rule, and one closing line. Rendered from [§DF-directions-render.3](DF-directions-render.md#3-the-canonical-config):
 
 ```markdown
 ### Citation directions
@@ -98,7 +98,7 @@ The bump is the whole cost ([§FS-init.2.3](../../functional-spec/FS-init.md#23-
 
 ## 3. The canonical config
 
-One config that hits every rendering branch. It is the fixture of the `init-citation-directions-canonical` e2e case, and §2.1 is its golden.
+One config that hits every rendering branch. It is the fixture of the `init-citation-directions-canonical` e2e case, and [§DF-directions-render.2.1](DF-directions-render.md#21-one-paragraph-then-bullets-then-one-closing-line) is its golden.
 
 ```toml
 grund_config_version = 1
@@ -167,10 +167,10 @@ The whole file is `tests/e2e/cases/init-citation-directions-canonical/repo/grund
 
 | Option | Why rejected |
 |---|---|
-| Fix the ambiguous conjunction only | Cheapest patch, but each of the other four defects is also a wording change, and each would cost its own version bump (§2.7). |
-| Choose the wording per defect as each is noticed | Five bumps and no config that proves the branches interact; the canonical fixture is what makes the render reviewable at all (§3). |
-| Keep `By default, unlisted citation pairs are treated as must.` | Describes a config key that changes nothing an agent does (§2.4); the closing line already carries what is true. |
-| Render `must not cite` / `should not cite` everywhere | One form instead of two, but it drops the short `never` / `avoid` the legend names and lengthens every multi-clause bullet (§2.6). |
-| Always fold a closed per-kind default into `may cite only …` | Names the wrong permitted set whenever a `must` or `should` entry sits beside the `may` list (§2.5). |
-| Render the grounding sentence only under `[citations]` | Ties an unrelated key to the section that happens to host it, and leaves the defect standing in exactly the repositories that have no direction rules (§4). |
-| Wait for the per-row grounding form of [§FS-config.3.4.8](../../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level) | It needs the same bump; paying one now and one later is the cost this record exists to avoid (§2.3). |
+| Fix the ambiguous conjunction only | Cheapest patch, but each of the other four defects is also a wording change, and each would cost its own version bump ([§DF-directions-render.2.7](DF-directions-render.md#27-one-version-bump-v7--v8)). |
+| Choose the wording per defect as each is noticed | Five bumps and no config that proves the branches interact; the canonical fixture is what makes the render reviewable at all ([§DF-directions-render.3](DF-directions-render.md#3-the-canonical-config)). |
+| Keep `By default, unlisted citation pairs are treated as must.` | Describes a config key that changes nothing an agent does ([§DF-directions-render.2.4](DF-directions-render.md#24-only-must-not-and-should-not-defaults-close-anything)); the closing line already carries what is true. |
+| Render `must not cite` / `should not cite` everywhere | One form instead of two, but it drops the short `never` / `avoid` the legend names and lengthens every multi-clause bullet ([§DF-directions-render.2.6](DF-directions-render.md#26-a-prohibition-that-leads-its-bullet-takes-the-modal)). |
+| Always fold a closed per-kind default into `may cite only …` | Names the wrong permitted set whenever a `must` or `should` entry sits beside the `may` list ([§DF-directions-render.2.5](DF-directions-render.md#25-folding-only-needs-the-may-list-to-be-the-whole-permission)). |
+| Render the grounding sentence only under `[citations]` | Ties an unrelated key to the section that happens to host it, and leaves the defect standing in exactly the repositories that have no direction rules ([§DF-directions-render.4](DF-directions-render.md#4-consequences)). |
+| Wait for the per-row grounding form of [§FS-config.3.4.8](../../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level) | It needs the same bump; paying one now and one later is the cost this record exists to avoid ([§DF-directions-render.2.3](DF-directions-render.md#23-two-lines-the-ticket-settled-and-why-they-differ)). |

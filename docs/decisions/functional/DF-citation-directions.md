@@ -42,7 +42,7 @@ site, with exact `file:line`. The schema lives in [§FS-config.3.9](../../functi
 
 The direct per-kind table is the **canonical form and the whole of v1** — explicit
 tables, no layering DSL. A `climb` shorthand that would generate the edges from an
-ordering is deferred (§5.10): it is config-authoring sugar that expands into the same
+ordering is deferred (resolved question 10): it is config-authoring sugar that expands into the same
 matrix and changes nothing the checker does.
 
 ### 2.2 Errors gate, suggestions report — a fixed split, not a knob
@@ -134,19 +134,19 @@ silence.
 - The checked navigational-reference form is **not** shipped; the sanctioned
   downgrade for a discouraged downward reference is a plain Markdown link, which
   composes with `strict = true` (a bare token in a link is not a citation). The
-  checked form stays reserved (§5.9).
+  checked form stays reserved (resolved question 9).
 
 ## 4. Alternatives considered
 
 | Option | Why rejected |
 |---|---|
 | Keep the climbing rule as entrypoint prose | The status quo: unenforced, drifts from any config change, and blocks [§RM-gap-report](../../roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports). |
-| `should` as a `grund check` warning | Warnings replace the `success` marker ([§FS-check.2.1](../../functional-spec/FS-check.md#21-report-format)) and grund has no suppression; one accepted deviation buries `success` forever (§2.2). |
-| A third `severity: "suggestion"` | Edits the frozen `{error, warning}` set ([§FS-config.6](../../functional-spec/FS-config.md#6-what-is-not-configured-here)); the channel model keeps the pass/fail contract intact (§2.3). |
-| Bump `grund_config_version` | `[citations]` is additive; bumping would overturn the `[workspace]`/`require_grounding` precedent (§2.4). |
+| `should` as a `grund check` warning | Warnings replace the `success` marker ([§FS-check.2.1](../../functional-spec/FS-check.md#21-report-format)) and grund has no suppression; one accepted deviation buries `success` forever ([§DF-citation-directions.2.2](DF-citation-directions.md#22-errors-gate-suggestions-report--a-fixed-split-not-a-knob)). |
+| A third `severity: "suggestion"` | Edits the frozen `{error, warning}` set ([§FS-config.6](../../functional-spec/FS-config.md#6-what-is-not-configured-here)); the channel model keeps the pass/fail contract intact ([§DF-citation-directions.2.3](DF-citation-directions.md#23-suggestions-are-a-third-channel-not-a-third-severity)). |
+| Bump `grund_config_version` | `[citations]` is additive; bumping would overturn the `[workspace]`/`require_grounding` precedent ([§DF-citation-directions.2.4](DF-citation-directions.md#24-no-grund_config_version-bump)). |
 | Inbound rules (`should-be-cited-by`) first | Inverting an outbound obligation flips the quantifier (every FS cites *some* GOAL vs. *this* GOAL is cited by *some* FS); reserved for the gap report's inbound design. |
-| Ship the `climb` shorthand in v1 | Pure authoring sugar that expands into the matrix; designing expansion + a second render mode before any direction is enforced is wasted motion (§5.10). |
-| Checked navigational references in v1 | Significant new surface (scanner recognition, anchor check, `fmt` maintenance) not needed to ship directions; plain links are the status-quo escape (§5.9). |
+| Ship the `climb` shorthand in v1 | Pure authoring sugar that expands into the matrix; designing expansion + a second render mode before any direction is enforced is wasted motion (resolved question 10). |
+| Checked navigational references in v1 | Significant new surface (scanner recognition, anchor check, `fmt` maintenance) not needed to ship directions; plain links are the status-quo escape (resolved question 9). |
 
 ## 5. Resolved questions
 

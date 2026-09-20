@@ -75,7 +75,7 @@ Landing now:
 
 Follow-ups (each tracked above as *(follow-up)*):
 
-- §2.2: `grund show` text-format marker preservation on the heading line.
+- [§DF-code-declarations-drop-hash.2.2](DF-code-declarations-drop-hash.md#22-grund-show-preserves-the-comment-marker-in-text-follow-up): `grund show` text-format marker preservation on the heading line.
 - A worked example of code-form declarations in the [§FS-config.3.2](../../functional-spec/FS-config.md#32-id--id-grammar) prose, if the spec needs to surface the grammar branch separately from [§FS-show.2.3](../../functional-spec/FS-show.md#23-inline-declarations-in-code-and-doc-comments).
 
 ## 5. Alternatives considered

@@ -74,14 +74,14 @@ the citation site). Section 2 is that consequence in full.
 
 A `grund check` invoked at a member root cannot resolve qualified citations
 to the workspace or to siblings — there is no project map. Per
-[§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) §3.6 and [§FS-workspace.5](../functional-spec/FS-workspace.md#5-command-scope), every such unresolved
+[§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) [§DF-subproject-namespaces.3.6](../decisions/functional/DF-subproject-namespaces.md#36-standalone-members-fail-loud-not-silent) and [§FS-workspace.5](../functional-spec/FS-workspace.md#5-command-scope), every such unresolved
 qualified citation is an `unknown project alias <path>` error at the
 citation site.
 
 This is the `None` of section 1, turned into a diagnostic by a single rule in
 one place. The opt-in to downgrade these to warnings
 (`[reference] cross_project_when_standalone = "warn"`) is deferred follow-up
-([§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) §3.6); when it lands, it changes one branch in
+([§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) [§DF-subproject-namespaces.3.6](../decisions/functional/DF-subproject-namespaces.md#36-standalone-members-fail-loud-not-silent)); when it lands, it changes one branch in
 the checker, not the scanner, not the loader, not the resolver shape.
 
 ## 3. Downstream commands compose, not duplicate
@@ -110,7 +110,7 @@ member tree preserves any pre-existing qualified wraps as-is and emits
 no new ones ([§FS-workspace.8.5](../functional-spec/FS-workspace.md#85-grund-fmt---cross-refs)).
 No command re-implements the resolver, the citation regex, or the alias
 derivation.
-The one-invocation batch loader and the unfiltered `cover` are §3.1 and §3.2.
+The one-invocation batch loader and the unfiltered `cover` are [§AR-resolver.3.1](AR-resolver.md#31-grund-show---batch-loads-once) and [§AR-resolver.3.2](AR-resolver.md#32-grund-cover-filters-nothing).
 
 ### 3.1 `grund show --batch` loads once
 

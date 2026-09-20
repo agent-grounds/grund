@@ -80,7 +80,7 @@ deterministic and config-derived only ([§FS-non-goals.13](../../functional-spec
   repository spelling is the spelling a user will reach for, and a scan that failed to see it
   would silently record the *opposite* preference and write it back beside what the user wrote.
   Only the accepted values differ by scope — `plain | link` for a machine, `link` for a
-  repository — which is exactly the asymmetry §2.2 argues for, expressed in values rather than
+  repository — which is exactly the asymmetry [§DF-repo-conversation-opinion.2.2](DF-repo-conversation-opinion.md#22-only-link-is-committable) argues for, expressed in values rather than
   in vocabulary.
 - The managed agent-entrypoint block bumps to v5 ([§FS-init.2.3.6](../../functional-spec/FS-init.md#236-clickable-citations)): setting the key renders one
   additional sentence in the `### Clickable citations` section.
@@ -109,7 +109,7 @@ deterministic and config-derived only ([§FS-non-goals.13](../../functional-spec
   alone (`AGENTS.override.md`), marginal for Claude Code, unsupported elsewhere, and actively
   broken for Windsurf (a gitignored rules file is not loaded). Deferred, not designed.
 - **Allowing `plain` as a committable value.** Rejected: `plain` presumes an installed resolver,
-  which is machine state a repository cannot know (§2.2); committing it would break exactly the
+  which is machine state a repository cannot know ([§DF-repo-conversation-opinion.2.2](DF-repo-conversation-opinion.md#22-only-link-is-committable)); committing it would break exactly the
   clones the repository layer exists to serve.
 - **A Markdown-link form for conversations.** Rejected here on the [§DF-neural-link-generation](DF-neural-link-generation.md#df-neural-link-generation-agents-compose-clickable-citation-links-themselves-grund-does-not-grow-a-link-command) matrix
   as recorded non-working in terminal TUIs — then **reversed** by [§DF-conversation-link-target](DF-conversation-link-target.md#df-conversation-link-target-the-conversation-link-form-is-a-markdown-link-over-an-absolute-uri-addressed-per-machine) after

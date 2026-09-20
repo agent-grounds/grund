@@ -49,6 +49,12 @@ pub(super) fn lsp_target_for_citation(
     {
         return Some((decl.file.clone(), info.line));
     }
+    // A missing local coordinate has an owner for graph and diagnostic
+    // purposes, but no editor destination: falling back to the declaration
+    // heading would invent a target for the unresolved token (§FS-lsp.1.3).
+    if citation.local_section && citation.section.is_some() {
+        return None;
+    }
     let mut homes: Vec<&Declaration> = decls
         .iter()
         .filter(|decl| !is_stub_for_inline_decl(&target_project.config.root, decl, decls))

@@ -5,7 +5,7 @@
 
 ## 1. Context
 
-`[reference] inline_note_max_columns` ([§FS-inline-citation-style.2.3](../../functional-spec/FS-inline-citation-style.md#23-counting-lines-and-columns)) bounds the longest line at an inline citation site. The key says *columns*, the finding says `inline note exceeds N-column maximum`, and the sentence rendered into the managed entrypoint block says `≤ 100 columns` ([§FS-inline-citation-style.5](../../functional-spec/FS-inline-citation-style.md#5-agent-facing-rendering)). Until this decision the rule measured **bytes**, and §2.3 said so in as many words.
+`[reference] inline_note_max_columns` ([§FS-inline-citation-style.2.3](../../functional-spec/FS-inline-citation-style.md#23-counting-lines-and-columns)) bounds the longest line at an inline citation site. The key says *columns*, the finding says `inline note exceeds N-column maximum`, and the sentence rendered into the managed entrypoint block says `≤ 100 columns` ([§FS-inline-citation-style.5](../../functional-spec/FS-inline-citation-style.md#5-agent-facing-rendering)). Until this decision the rule measured **bytes**, and [§DF-note-columns-are-characters.2.3](DF-note-columns-are-characters.md#23-not-display-width) said so in as many words.
 
 The measures agree on ASCII and diverge everywhere else, because UTF-8 spends two or three bytes on exactly the characters technical prose reaches for: an em dash, an accented letter, `×`, and the `§` marker the citation itself is made of. Two notes of identical length are therefore judged differently:
 
@@ -28,7 +28,7 @@ The character is also the only one of the three candidate units that stays a pro
 
 ### 2.2 The scanner's recorded citation column stays a byte offset
 
-The citation position the scanner records ([AR-scanner.3](../../architecture/AR-scanner.md#3-output)) is unchanged, and §2.3 now says the two are different measures rather than the same one. They answer different questions: that column addresses a place in a file so an editor or an LSP client can jump to a token, and a byte offset is the honest unit for addressing; this one counts how much an author wrote so a budget can bound it. Re-basing the recorded position would change every consumer of a citation's location — `refs --format json`, the LSP ranges, the report ordering — to fix a defect in none of them.
+The citation position the scanner records ([AR-scanner.3](../../architecture/AR-scanner.md#3-output)) is unchanged, and [§DF-note-columns-are-characters.2.3](DF-note-columns-are-characters.md#23-not-display-width) now says the two are different measures rather than the same one. They answer different questions: that column addresses a place in a file so an editor or an LSP client can jump to a token, and a byte offset is the honest unit for addressing; this one counts how much an author wrote so a budget can bound it. Re-basing the recorded position would change every consumer of a citation's location — `refs --format json`, the LSP ranges, the report ordering — to fix a defect in none of them.
 
 ### 2.3 Not display width
 
@@ -50,4 +50,4 @@ It is honest, and it is the wrong trade. The quantity an author controls while w
 
 - `InlineCitationSite::max_columns` is a character count ([AR-scanner.3](../../architecture/AR-scanner.md#3-output)). The scanner computes it with `chars().count()` over the site's lines; the checker rule that compares it against the configured cap ([§FS-inline-citation-style.4.1](../../functional-spec/FS-inline-citation-style.md#41-errors--hard-caps)) is unchanged, since only the measure moved.
 - No `grund_config_version` bump and no `AGENTS.md` block-version bump. The key, its default, its finding text, and the rendered `≤ N columns` sentence are all byte-identical; a repository's managed block does not drift.
-- Findings only disappear, never appear (§2.4). A tree carrying notes in non-ASCII prose sees its `inline-citation-style` column errors fall, and the ones that remain name lines that really are over the configured number of characters.
+- Findings only disappear, never appear ([§DF-note-columns-are-characters.2.4](DF-note-columns-are-characters.md#24-nothing-that-passed-stops-passing)). A tree carrying notes in non-ASCII prose sees its `inline-citation-style` column errors fall, and the ones that remain name lines that really are over the configured number of characters.

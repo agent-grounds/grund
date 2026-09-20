@@ -118,6 +118,22 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
                 text: heading.heading.clone(),
             }
         }));
+        // §FS-lsp.1.1 / §FS-check.3.24: unresolved local-section forms
+        // remain outside the navigation graph, but retain their exact authored
+        // spans for the shared check diagnostic.
+        finding_ranges.extend(
+            project
+                .findings
+                .local_section_citation_candidates
+                .iter()
+                .map(|candidate| LspFindingRange {
+                    code: "local-section-citation",
+                    path: absolutize_path(&candidate.file),
+                    line: candidate.line,
+                    column: candidate.column,
+                    text: candidate.text.clone(),
+                }),
+        );
         for (id, decls) in &project.findings.declarations {
             let rendered = render_id(&project.config.grammar, id);
             let query_id = lsp_query_id(&context, project, &rendered, None);

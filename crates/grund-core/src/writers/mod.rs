@@ -78,6 +78,7 @@ mod fetch_write;
 mod fmt_complete_findings;
 mod fmt_error;
 mod fmt_links;
+mod fmt_local_sections;
 mod fmt_rewrite;
 mod fmt_shorthand_links;
 mod fmt_value_bindings;

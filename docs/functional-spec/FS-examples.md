@@ -25,7 +25,7 @@ Every maintained example must map to at least one canonical `grund` use-case. Th
 
 An example may cover multiple use-cases, but it must stay small enough that a new user can tell which workflow it is teaching without reading unrelated files.
 
-The examples also include an optional first-class-values repository, specified in [§2.1](#21-the-values-example).
+The examples also include an optional first-class-values repository, specified in [§FS-examples.2.1](FS-examples.md#21-the-values-example).
 
 ### 2.1 The values example
 
@@ -51,7 +51,7 @@ Runnable examples must also be executable end-to-end tests. They may have a ligh
 
 The repo must not maintain a second, example-only implementation of the e2e contract. Adding a new e2e capability such as `command.args`, `{repo_copy}`, `expected.repo`, deterministic-output checks, or golden-output refresh must make that capability available to examples through shared code, not through a copied harness.
 
-The external-ticket example runs offline; its contract is [§5.2](#52-the-external-ticket-example-runs-offline).
+The external-ticket example runs offline; its contract is [§FS-examples.5.2](FS-examples.md#52-the-external-ticket-example-runs-offline).
 
 ### 5.1 Synthetic verdict probes always compare
 

@@ -23,6 +23,7 @@ use std::path::{Path, PathBuf};
 
 use super::fmt_complete_findings::{CompleteFindings, CompleteScan};
 use super::fmt_links::wrap_markdown_links_with_targets;
+use super::fmt_local_sections::{expand_local_section_citations, local_section_labels};
 use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::Config;
 use crate::config::{display_path, fmt_excluded};
@@ -352,10 +353,11 @@ fn rewrite_file(
         // §FS-fmt.2.5: the file's own `[fmt] exclude` verdict, or the region the
         // directives above have opened. Either one leaves only the index carve-out.
         let suppressed = opts.excluded || !directives.rewriting();
-        let (new_line, label) = fmt_line(
+        let (new_line, label) = fmt_line_at(
             line,
             entry,
             path,
+            idx + 1,
             config,
             is_md,
             opts,
@@ -363,7 +365,16 @@ fn rewrite_file(
             &mut saw_shorthand_candidate,
         );
         if new_line != line {
-            changes.push((path.to_path_buf(), idx + 1, label));
+            let local_labels = local_section_labels(path, idx + 1, config, opts.findings);
+            if local_labels.is_empty() {
+                changes.push((path.to_path_buf(), idx + 1, label));
+            } else {
+                changes.extend(
+                    local_labels
+                        .into_iter()
+                        .map(|label| (path.to_path_buf(), idx + 1, label)),
+                );
+            }
             changed = true;
         }
         lines.push(new_line);
@@ -421,10 +432,11 @@ pub(crate) struct FmtLineOpts<'a> {
 /// still see a mistake in them; this one writes the slug *into* the token, and a
 /// wrong one is a well-formed citation of the wrong declaration.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn fmt_line(
+fn fmt_line_at(
     line: &str,
     docstrings: DocstringCursor,
     path: &Path,
+    lineno: usize,
     config: &Config,
     is_md: bool,
     opts: &FmtLineOpts<'_>,
@@ -449,6 +461,17 @@ pub(crate) fn fmt_line(
         triggered.line
     };
     let marker_changed = opts.add_marker && marked != line && !trigger_changed;
+    let local_expansion = expand_local_section_citations(
+        &marked,
+        path,
+        lineno,
+        config,
+        opts.findings,
+        &trigger_marker_starts,
+        saw_shorthand_candidate,
+    );
+    let local_changed = local_expansion.is_some();
+    let marked = local_expansion.unwrap_or(marked);
     // Each stage below takes ownership of the previous stage's line rather than
     // cloning it: `fmt` touches every line of every scanned file, so one avoidable
     // allocation per line is a measurable share of the command (§GOAL-fast-feedback).
@@ -493,6 +516,8 @@ pub(crate) fn fmt_line(
         "trigger \u{2192} marker"
     } else if marker_changed {
         "bare \u{2192} marker"
+    } else if local_changed {
+        "local section \u{2192} canonical"
     } else if shorthand_changed {
         "shorthand \u{2192} canonical"
     } else if link_changed {
@@ -516,6 +541,33 @@ pub(crate) fn fmt_line(
         )
     };
     (final_line, label)
+}
+
+/// Test/editor-facing single-line entry point. A standalone line has no scan
+/// coordinate, so declaration-local rewrites are intentionally unavailable;
+/// the tree formatter calls `fmt_line_at` with the real line number.
+#[cfg(test)]
+pub(crate) fn fmt_line(
+    line: &str,
+    docstrings: DocstringCursor,
+    path: &Path,
+    config: &Config,
+    is_md: bool,
+    opts: &FmtLineOpts<'_>,
+    suppressed: bool,
+    saw_shorthand_candidate: &mut bool,
+) -> (String, String) {
+    fmt_line_at(
+        line,
+        docstrings,
+        path,
+        0,
+        config,
+        is_md,
+        opts,
+        suppressed,
+        saw_shorthand_candidate,
+    )
 }
 
 /// One line of a suppressed scope (§FS-fmt.2.5): an excluded file, or a

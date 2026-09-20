@@ -6,7 +6,7 @@
 
 A `[[kinds]]` row opts whole declarations in only with `values = true`, which is absent and false by default; [§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations) fixes which rows may carry it. It does not create a kind, change the configured ID grammar, or make any whole declaration outside the row's existing home authoritative.
 
-Independently, the exact section marker in §2.4 opts that one numbered section into value authority in any supported scanned Markdown declaration or source doc-comment. It needs no `values = true`, does not make its enclosing declaration or sibling sections authoritative, and adds no configuration key or identifier grammar.
+Independently, the exact section marker in [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) opts that one numbered section into value authority in any supported scanned Markdown declaration or source doc-comment. It needs no `values = true`, does not make its enclosing declaration or sibling sections authoritative, and adds no configuration key or identifier grammar.
 
 The declaration ID is a normal full local ID of that kind. Its slug carries stable identity rather than its value: for example, `CONST-field-price`, not `V-1200-USD`. The feature adds no second identifier grammar and no `value_sources` key.
 
@@ -14,7 +14,7 @@ The declaration ID is a normal full local ID of that kind. Its slug carries stab
 
 ### 2.1 Markdown declarations
 
-A whole-declaration Markdown value is an ordinary declaration in its opted-in kind home. Its value fields are the declaration's immediate citable child headings and must be one nonempty contiguous run `.1` through `.N`, where `N >= 1`. Each heading uses the configured strict depth for that coordinate; gaps, zero or leading-zero coordinates, nested or named citable sections, and duplicate fields make the declaration invalid. A marked root (§2.4) is a separate form; its descendants do not weaken this declaration-rooted grammar.
+A whole-declaration Markdown value is an ordinary declaration in its opted-in kind home. Its value fields are the declaration's immediate citable child headings and must be one nonempty contiguous run `.1` through `.N`, where `N >= 1`. Each heading uses the configured strict depth for that coordinate; gaps, zero or leading-zero coordinates, nested or named citable sections, and duplicate fields make the declaration invalid. A marked root ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) is a separate form; its descendants do not weaken this declaration-rooted grammar.
 
 A value field's text is the entire heading title after the numeric coordinate. It must fit on that physical line, be nonempty, and have no leading or trailing whitespace, backtick, or control character. Lead prose, bodies below value-field headings, and plain non-citable headings carry no value. A value field is numeric only when its complete text matches JSON number grammar; otherwise it is a string.
 
@@ -30,7 +30,7 @@ A source is one top-level object. Every ordered member key is a full, unaliased 
 
 #### 2.2.2 Reader fidelity
 
-The reader preserves member order, duplicate keys, raw number and string spellings, decoded strings, and exact key/member/element spans before building lookup maps. It never applies a JSON library's “last key wins” behavior. A source that §5.3 counts as incomplete is an incomplete-scan failure; readable semantic violations are ordinary value errors.
+The reader preserves member order, duplicate keys, raw number and string spellings, decoded strings, and exact key/member/element spans before building lookup maps. It never applies a JSON library's “last key wins” behavior. A source that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete is an incomplete-scan failure; readable semantic violations are ordinary value errors.
 
 ### 2.3 Duplicates and ownership
 
@@ -50,7 +50,7 @@ The marker is removed only from semantic heading content. The section title, der
 
 #### 2.4.3 The component run
 
-A valid marked root owns exactly one nonempty, physical-order run of immediate numeric children, with relative coordinates `.1` through `.N` contiguous and in order. Each child is written exactly one heading level below the root and satisfies §2.1's one-line component-title grammar; its existing section record and exact value span are the component. Blank lines and the outer delimiters of a source block comment are harmless. Every other nonblank line within the root is invalid: root lead prose, a component body, a named or plain child heading, a grandchild, and a child with invalid component text are reported at that line. Zero components is reported at the root marker. A gap or out-of-order coordinate is reported at each heading that differs from the next expected index. A duplicate retains [§FS-check.3.3](FS-check.md#33-duplicate-declaration) or the ordinary duplicate-section finding and also receives `invalid-value-declaration` at its duplicate heading.
+A valid marked root owns exactly one nonempty, physical-order run of immediate numeric children, with relative coordinates `.1` through `.N` contiguous and in order. Each child is written exactly one heading level below the root and satisfies [§FS-values.2.1](FS-values.md#21-markdown-declarations)'s one-line component-title grammar; its existing section record and exact value span are the component. Blank lines and the outer delimiters of a source block comment are harmless. Every other nonblank line within the root is invalid: root lead prose, a component body, a named or plain child heading, a grandchild, and a child with invalid component text are reported at that line. Zero components is reported at the root marker. A gap or out-of-order coordinate is reported at each heading that differs from the next expected index. A duplicate retains [§FS-check.3.3](FS-check.md#33-duplicate-declaration) or the ordinary duplicate-section finding and also receives `invalid-value-declaration` at its duplicate heading.
 
 #### 2.4.4 Misplaced and overlapping marks
 
@@ -94,7 +94,7 @@ Three fixed-severity errors are reported and exit `1`:
 
 - `invalid-value-declaration` identifies a readable whole declaration or marked root whose value grammar or marker location is invalid.
 - `invalid-value-binding` identifies an attempted delimited binding whose grammar or marked-root relationship is invalid.
-- `value-mismatch` identifies a valid binding whose authored and declared components are unequal under §4.
+- `value-mismatch` identifies a valid binding whose authored and declared components are unequal under [§FS-values.4](FS-values.md#4-exact-equality).
 
 They are errors regardless of `strict` or `--suggestions` and are never suggestions. A mismatch uses this canonical lowercase, no-period text, with the declaration site in both text and structured forms:
 
@@ -104,13 +104,13 @@ docs/offer.md:7: error: value mismatch for CONST-field-price.1: bound `1250`, de
 
 ### 5.3 Incomplete input and deterministic output
 
-Invalid config stops before scanning. A missing, unreadable, malformed-UTF-8, or syntactically incomplete home JSON source preserves the existing incomplete-scan exit `2`; readable semantic JSON errors use exit `1`. For readable input, declaration and citation-resolution findings precede comparison as §5.1 specifies.
+Invalid config stops before scanning. A missing, unreadable, malformed-UTF-8, or syntactically incomplete home JSON source preserves the existing incomplete-scan exit `2`; readable semantic JSON errors use exit `1`. For readable input, declaration and citation-resolution findings precede comparison as [§FS-values.5.1](FS-values.md#51-resolve-before-comparison) specifies.
 
 Text and NDJSON use the existing streams, schema, and deterministic ordering ([§FS-output-shapes.1](FS-output-shapes.md#1-diagnostic-object), [§FS-output-shapes.3](FS-output-shapes.md#3-text-report-ordering)). The NDJSON `code`, message, primary location, and declaration `sites` describe the same finding as text. A clean text check prints `success`; a clean JSON check remains empty.
 
 ## 6. Shared catalog consumers
 
-Markdown, JSON, and marked roots enter one declaration/section catalog. `refs` and `cover` count a binding's citation once, as the ordinary citation §3.2 makes it; completion offers whole-value IDs and numbered fields; and unused and duplicate checks apply normally.
+Markdown, JSON, and marked roots enter one declaration/section catalog. `refs` and `cover` count a binding's citation once, as the ordinary citation [§FS-values.3.2](FS-values.md#32-recognized-text-contexts) makes it; completion offers whole-value IDs and numbered fields; and unused and duplicate checks apply normally.
 
 ### 6.1 Marked roots in the catalog
 
@@ -128,10 +128,10 @@ An unqualified binding resolves in its local project. The qualified form `<§>al
 
 ## 8. Formatting stability
 
-`fmt --cross-refs` may perform its existing trigger and safe shorthand rewrites, but it never wraps or otherwise rewrites the citation bytes inside a recognized binding: replacing `§ID` with a Markdown link would destroy the only accepted binding form. It never inserts, canonicalizes, moves, or removes a §2.4 marker, and preserves its authored bytes and trailing whitespace on both `--check` and `--write` passes. Every other citation keeps the existing formatter behavior.
+`fmt --cross-refs` may perform its existing trigger and safe shorthand rewrites, but it never wraps or otherwise rewrites the citation bytes inside a recognized binding: replacing `§ID` with a Markdown link would destroy the only accepted binding form. It never inserts, canonicalizes, moves, or removes a [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) marker, and preserves its authored bytes and trailing whitespace on both `--check` and `--write` passes. Every other citation keeps the existing formatter behavior.
 
 ## 9. Compatibility and explicit exclusions
 
-Without `values = true`, whole-declaration and JSON discovery retain their prior absence. Without the exact §2.4 marker, no marked root, binding record, value diagnostic, output field, or extra read occurs; unmarked sections, malformed lookalikes, citations, and prose retain byte-identical behavior and never gain authority by inference ([§FS-non-goals.2](FS-non-goals.md#2-spelling-grammar-prose-quality)). The exact previously inert marker now has the explicit meaning §2.4 assigns it. Applications may reuse opted-in JSON by reading that source directly. `grund` neither generates nor freshness-checks language modules.
+Without `values = true`, whole-declaration and JSON discovery retain their prior absence. Without the exact [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) marker, no marked root, binding record, value diagnostic, output field, or extra read occurs; unmarked sections, malformed lookalikes, citations, and prose retain byte-identical behavior and never gain authority by inference ([§FS-non-goals.2](FS-non-goals.md#2-spelling-grammar-prose-quality)). The exact previously inert marker now has the explicit meaning [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) assigns it. Applications may reuse opted-in JSON by reading that source directly. `grund` neither generates nor freshness-checks language modules.
 
 The feature adds no rendering or interpolation, inferred adjacent-value or bare-literal lint, range/unit semantics, derived arithmetic, generated artifact, target fingerprint, history, `reconcile` or `stale` command, excluded-path hint, value-aware search, generated-file policy, embedded JSON root, nested marked root, or orphan relief. It does not change `[reference] strict`, scan scope or filters, custom citation markers or separators, named-section authority, whole-value Markdown/JSON behavior, or the history, AST, documentation-generation, offline, and deterministic-install non-goals ([§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do)).

@@ -7,7 +7,7 @@ listed under "Spec changes this drafts into" below.
 
 Amended on 2026-08-11, after testing the instruction path end to end against Claude and Codex
 ([§DF-neural-link-generation](../../decisions/functional/DF-neural-link-generation.md#df-neural-link-generation-agents-compose-clickable-citation-links-themselves-grund-does-not-grow-a-link-command) rows 3 and 11): precedence inverted to
-*user preference over repository opinion* (§3), and a serving matrix added (§5) recording which
+*user preference over repository opinion* ([§DISC-conversation-rendering-layers.3](2026-07-21-conversation-rendering-layers.md#3-proposal)), and a serving matrix added ([§DISC-conversation-rendering-layers.5](2026-07-21-conversation-rendering-layers.md#5-user-layer-the-global-block-becomes-self-scoping)) recording which
 layer reaches which agent and environment. A preference-only design — deleting the repository key
 — was considered and rejected there: it permanently orphans every reader whose only channel is
 the committed entrypoint.
@@ -30,7 +30,7 @@ Two frictions with the global-only design surfaced in practice:
    declaration links would work out of the box in their agent surface.
 
 A third idea — appending the guidance to a repo-local file excluded from version control — was
-researched and turns out to be portable to exactly one agent (§4).
+researched and turns out to be portable to exactly one agent ([§DISC-conversation-rendering-layers.4](2026-07-21-conversation-rendering-layers.md#4-repository-layer-an-opt-in-committed-opinion)).
 
 ## 3. Proposal
 
@@ -73,7 +73,7 @@ reads the committed entrypoint, done.
 ## 5. User layer: the global block becomes self-scoping
 
 The [§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions) mechanism is kept unchanged — it is the only machine-local instruction
-channel that exists for six of the eight supported agents (§4) — but the canonical block texts are
+channel that exists for six of the eight supported agents ([§DISC-conversation-rendering-layers.4](2026-07-21-conversation-rendering-layers.md#4-repository-layer-an-opt-in-committed-opinion)) — but the canonical block texts are
 rewritten to gate themselves on grund presence:
 
 - `plain`: `In repositories with a .agents/grund.toml: write citations bare in local
@@ -166,7 +166,7 @@ neither can absorb the other.
 
 Reading the columns down: the user layer serves six agents but only after a per-machine write;
 the repository layer serves every reader but knows nothing about any machine. The precedence in
-§3 composes them so each reader gets the best form its channels allow — which is why
+[§DISC-conversation-rendering-layers.3](2026-07-21-conversation-rendering-layers.md#3-proposal) composes them so each reader gets the best form its channels allow — which is why
 preference-only was rejected: it deletes the only row-4 and row-5 channel, and those readers
 cannot be reached any other way.
 

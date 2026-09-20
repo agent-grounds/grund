@@ -5,7 +5,7 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use super::file_pass::CitationLine;
+use super::citation_line::CitationLine;
 use super::tree::path_starts_with;
 use super::value_context::{binding_span_is_inside, value_binding_context};
 use crate::config::Config;

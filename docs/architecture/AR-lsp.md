@@ -18,7 +18,7 @@ A frontend ([§AR-system.3](README.md#3-frontends)) depending on `grund-core` an
 
 ## 2. State
 
-The server holds one in-memory `LspSnapshot` per discovered Grund project, built by `grund-core` from the scan/check data [§AR-scanner.3](AR-scanner.md#3-output) produces, plus the resolved declaration, section-heading, stub, citation, and link ranges editor requests need and the set of files the scan read. The snapshots are the cache for everything else: hover, definition, references, document links, and diagnostics all answer from the snapshot of the document's owner (§2.2), and independent projects are never merged ([§FS-lsp.2.2](../functional-spec/FS-lsp.md#22-lifecycle)). An edit rebuilds only the projects that can see the edited file (§2.1).
+The server holds one in-memory `LspSnapshot` per discovered Grund project, built by `grund-core` from the scan/check data [§AR-scanner.3](AR-scanner.md#3-output) produces, plus the resolved declaration, section-heading, stub, citation, and link ranges editor requests need and the set of files the scan read. The snapshots are the cache for everything else: hover, definition, references, document links, and diagnostics all answer from the snapshot of the document's owner ([§AR-lsp.2.2](AR-lsp.md#22-which-snapshot-answers)), and independent projects are never merged ([§FS-lsp.2.2](../functional-spec/FS-lsp.md#22-lifecycle)). An edit rebuilds only the projects that can see the edited file ([§AR-lsp.2.1](AR-lsp.md#21-what-rebuilds-a-snapshot)).
 
 ### 2.1 What rebuilds a snapshot
 
@@ -38,7 +38,7 @@ Requests and diagnostics alike take their snapshot from one resolution of the do
 
 ### 3.1 Full re-scan on every change (v1)
 
-Initial implementation: every `didChange` triggers `grund_core::scan(project_root)` and a fresh `grund_core::check` for each project that can see the edited file (§2.1). This is simple and correct. The [§GOAL-fast-feedback.1](../goals.md#1-performance-targets) targets are the budget it rests on: a scan within them makes a full re-scan per keystroke invisible on small and medium projects, and acceptable per-save on large ones.
+Initial implementation: every `didChange` triggers `grund_core::scan(project_root)` and a fresh `grund_core::check` for each project that can see the edited file ([§AR-lsp.2.1](AR-lsp.md#21-what-rebuilds-a-snapshot)). This is simple and correct. The [§GOAL-fast-feedback.1](../goals.md#1-performance-targets) targets are the budget it rests on: a scan within them makes a full re-scan per keystroke invisible on small and medium projects, and acceptable per-save on large ones.
 
 ### 3.2 Incremental scan (v2, when budget breaks)
 
@@ -54,7 +54,7 @@ Any argument is dispatched before the transport is constructed. Valid batch comm
 
 ## 5. Determinism and parity tests
 
-The LSP must produce the same diagnostics for the same workspace state as `grund check` does — byte-for-byte on the message text, position-for-position on the line numbers ([§FS-lsp.4](../functional-spec/FS-lsp.md#4-determinism-and-parity-with-the-cli)). It does so as the same engine with a different transport, not a parallel implementation that could drift: `grund-core` does all engine work, returning the snapshot records of one scan/check pass (§5.1) and the hover answers read from them (§5.2), and `grund-lsp` only translates those into protocol ranges. Tests hold it, down to a child-process sweep against the CLI (§5.3).
+The LSP must produce the same diagnostics for the same workspace state as `grund check` does — byte-for-byte on the message text, position-for-position on the line numbers ([§FS-lsp.4](../functional-spec/FS-lsp.md#4-determinism-and-parity-with-the-cli)). It does so as the same engine with a different transport, not a parallel implementation that could drift: `grund-core` does all engine work, returning the snapshot records of one scan/check pass ([§AR-lsp.5.1](AR-lsp.md#51-the-snapshot-records)) and the hover answers read from them ([§AR-lsp.5.2](AR-lsp.md#52-hover)), and `grund-lsp` only translates those into protocol ranges. Tests hold it, down to a child-process sweep against the CLI ([§AR-lsp.5.3](AR-lsp.md#53-tests)).
 
 ### 5.1 The snapshot records
 
@@ -72,7 +72,7 @@ The LSP must produce the same diagnostics for the same workspace state as `grund
 ### 5.2 Hover
 
 - `textDocument/hover` previews a citation's body by calling the same `show` engine as `grund <ID> --toc`, with open-document overlays applied; a declaration-side title returns the whole-title range and its usage counts ([§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview)).
-- Those counts are read from the snapshot, not from a fresh `refs` query: `grund_core::refs` is the CLI's entry point and loads its own workspace context — one full scan per call — so calling it per hover would re-walk the tree on a keystroke-adjacent request and break [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible). The snapshot comes from the same scan `refs` and `check` run (§2), so what is shared is the rule rather than the walk: `grund_core::citation_under_title` is the single definition of which citations belong to a declaration-side title, and `LspSnapshot::title_usage` and `LspSnapshot::title_citations` are the count and the list built from it, so the hover number and the `textDocument/references` result cannot drift apart ([§FS-lsp.1.3.1](../functional-spec/FS-lsp.md#131-references-from-declarations)). A test runs `grund_core::refs` over the same tree and compares.
+- Those counts are read from the snapshot, not from a fresh `refs` query: `grund_core::refs` is the CLI's entry point and loads its own workspace context — one full scan per call — so calling it per hover would re-walk the tree on a keystroke-adjacent request and break [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible). The snapshot comes from the same scan `refs` and `check` run ([§AR-lsp.2](AR-lsp.md#2-state)), so what is shared is the rule rather than the walk: `grund_core::citation_under_title` is the single definition of which citations belong to a declaration-side title, and `LspSnapshot::title_usage` and `LspSnapshot::title_citations` are the count and the list built from it, so the hover number and the `textDocument/references` result cannot drift apart ([§FS-lsp.1.3.1](../functional-spec/FS-lsp.md#131-references-from-declarations)). A test runs `grund_core::refs` over the same tree and compares.
 - The hover body bytes are formed in `grund_core::lsp_title_hover_body`, beside the counts rather than in the transport, so the singular/plural and zero wording of [§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview) is unit-testable without a server process and cannot be re-worded by a second frontend.
 
 ### 5.3 Tests

@@ -112,9 +112,11 @@ pub struct SectionInfo {
     pub value_root: Option<EmbeddedValueRoot>,
 }
 
-/// One citation site: an `<ID>[.<section>]` token, optionally `§`-prefixed
-/// (§AR-scanner.2.3, §FS-check.1.1). `has_marker` drives strict-mode filtering
-/// (§FS-config.3.1) and is what `grund fmt` upgrades a bare token from (§FS-fmt.2.2).
+/// One citation site: an `<ID>[.<section>]` token, optionally `§`-prefixed, or
+/// a uniquely owned local section spelling promoted to the same graph edge
+/// (§AR-scanner.2.3, §AR-scanner.2.4). `has_marker` drives strict-mode
+/// filtering (§FS-config.3.1) and is what `grund fmt` upgrades a bare token
+/// from (§FS-fmt.2.2).
 #[derive(Debug)]
 pub struct Citation {
     pub namespace: Option<String>,
@@ -132,13 +134,20 @@ pub struct Citation {
     /// `id`. When `id.slug` is still `None` the shorthand resolved to zero or
     /// several declarations.
     pub shorthand: bool,
-    /// Whether `grund fmt` is allowed to canonicalize this shorthand in place —
-    /// `false` inside inline code, a Markdown link destination, or a runtime
-    /// string literal, the contexts §FS-fmt.2.3 forbids every rewrite from
-    /// touching. The site is still a citation in every other sense; the flag only
-    /// withholds the §FS-check.3.13.1 error that names `grund fmt --write` as its
-    /// fix, so `check` never demands an edit the formatter refuses to make.
-    /// Always `true` when `shorthand` is `false`.
+    /// Written as a declaration-local numeric section path such as `§2.1`.
+    /// The scanner has already resolved `id` to the uniquely enclosing
+    /// declaration, so graph consumers read this as an ordinary edge; only the
+    /// checker and formatter inspect the flag to require canonical storage
+    /// (§FS-check.3.24, §AR-scanner.2.4).
+    pub local_section: bool,
+    /// Whether `grund fmt` may canonicalize this noncanonical citation in place:
+    /// a number-only shorthand or a local section spelling. It is `false` inside
+    /// inline code, a Markdown link destination, or a runtime string literal,
+    /// the contexts §FS-fmt.2.3 forbids every rewrite from touching. The site is
+    /// still a citation in every other sense. For number-only shorthand, the
+    /// flag also withholds the §FS-check.3.13.1 error that names
+    /// `grund fmt --write`, so `check` never demands an edit the formatter
+    /// refuses to make. It is always `true` for canonical citations.
     pub shorthand_rewritable: bool,
     /// Whether this shorthand is glued to a second number — `§SPEC-001→SPEC-003`
     /// — which makes it a numeral in a run rather than a citation, and forbids
@@ -167,6 +176,24 @@ pub struct Citation {
     /// Lets the obligation pass ask "does this declaration cite the target?" as
     /// a lookup rather than a re-scan.
     pub enclosing_declaration: Option<Id>,
+}
+
+/// A configured-marker-plus-digit token deferred until declaration body spans
+/// are known (§FS-check.1.1.8, §AR-scanner.2.3). Supported numeric paths
+/// with one enclosing declaration are promoted to [`Citation`]; unsupported or
+/// ownerless forms stay here so the checker can diagnose them without inventing
+/// a graph target (§AR-scanner.2.4).
+#[derive(Debug)]
+pub(crate) struct LocalSectionCitationCandidate {
+    pub(crate) text: String,
+    pub(crate) section: Option<String>,
+    pub(crate) file: PathBuf,
+    pub(crate) line: usize,
+    pub(crate) column: usize,
+    pub(crate) rewritable: bool,
+    pub(crate) inline_site: Option<InlineCitationSite>,
+    pub(crate) source_kind: String,
+    pub(crate) enclosing_declaration: Option<Id>,
 }
 
 /// A marker-prefixed token the configured grammar rejected, retained during
@@ -245,6 +272,7 @@ pub struct Findings {
     /// suggested coordinate before any checker consumes this list.
     pub unmarked_headings: Vec<UnmarkedHeading>,
     pub(crate) legacy_citation_candidates: Vec<LegacyCitationCandidate>,
+    pub(crate) local_section_citation_candidates: Vec<LocalSectionCitationCandidate>,
     pub value_bindings: Vec<ValueBinding>,
     pub invalid_value_declarations: Vec<InvalidValueSite>,
     pub invalid_value_bindings: Vec<InvalidValueSite>,
