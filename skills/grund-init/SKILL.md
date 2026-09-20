@@ -14,7 +14,7 @@ Guide the user through `grund` adoption. `grund init` itself is non-interactive,
 3. If existing specs or spec-like artifacts are present, show the canonical `grund` artifact types beside the detected project-specific sections/tags/document classes, then ask which artifact model to adopt before writing config or refactoring docs.
 4. Ask each remaining setup/config question below. For every question, include the recommended value, repo evidence, pros, cons, and when to choose something else.
 5. Write `grund.toml` from the analysis before running `grund init`, so generated guidance reflects the repository's actual grammar, marker, strict mode, kinds, artifact folders, and scan scope.
-6. Run `grund init [path] [--name NAME] [--force]`, adding `--docs` only when the repo is fresh or the user selected a canonical-layout migration that needs the scaffold. Preview the run with `--dry-run` if the user wants to inspect what will change before committing, and offer `--check` — the same preview, writing nothing and exiting `1` when a file is still pending — as the pre-commit or CI gate that catches a managed block whose text drifted while its version heading stayed current. `init` refuses a target that no `.git`, `.hg`, `.jj`, or `.svn` marker covers, in it or any ancestor: for a directory not yet under version control, either run the VCS's own init first or pass `--no-vcs`. It also refuses the home directory and the machine-global agent instruction files (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and the rest of that set) with no flag at all — those say the path is wrong, not that an option is missing, so re-point the run rather than trying to force it.
+6. Run `grund init [path] [--name NAME] [--force]`, adding `--docs` only when the repo is fresh or the user selected a canonical-layout migration that needs the scaffold. Omit `--name` to reuse a target config's `project_name`, falling back to the target directory name when the config has none; pass it only to override that generated identity for this run. Preview the run with `--dry-run` if the user wants to inspect what will change before committing, and offer `--check` — the same preview, writing nothing and exiting `1` when a file is still pending — as the pre-commit or CI gate that catches a managed block whose text drifted while its version heading stayed current. `init` refuses a target that no `.git`, `.hg`, `.jj`, or `.svn` marker covers, in it or any ancestor: for a directory not yet under version control, either run the VCS's own init first or pass `--no-vcs`. It also refuses the home directory and the machine-global agent instruction files (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, and the rest of that set) with no flag at all — those say the path is wrong, not that an option is missing, so re-point the run rather than trying to force it.
 7. Run `grund config validate [path]` and `grund check [path]`.
 8. Summarize generated files, validation results, existing specs/artifacts found, and any follow-up cleanup.
 9. Optionally offer to wire the user's editor to the `grund-lsp` server (see Editor Setup). Editor configuration is the user's one-time work, not something `grund init` writes — so only offer it, and prefer editor **user** settings over a per-repo config so the server works in every project.
@@ -54,7 +54,7 @@ The user should be able to accept the full recommendation set quickly, but still
 Ask first:
 
 - Target path: default `.`
-- Project name: default target directory basename
+- Project name: default target config value, then target directory basename
 - Artifact model when existing specs are detected: canonical `grund`, canonical core plus project-specific extras, or existing structure with citations
 - Scaffold docs/e2e with `--docs`: default no for existing repos, yes for fresh repos
 - Existing file behavior: append/update default, or `--force`
@@ -98,7 +98,7 @@ Do not ask unless the user is migrating schemas. Keep `1`.
 
 Pros of explicit name: stable display name for agents/tools.
 Cons: one more metadata value to maintain if repo is renamed.
-Default: derived from target directory.
+Default: the target config's existing value, otherwise the target directory name.
 
 ### `[reference]`
 

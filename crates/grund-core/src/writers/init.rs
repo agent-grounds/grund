@@ -9,9 +9,7 @@ use super::init_guidance::{InitNext, docs_scaffold};
 use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
 use super::init_plan::{InitAgentEntrypointSelection, selected_init_agent_entrypoints};
 use super::init_render::{agents_workspace_members_section, init_pending_effective_config};
-use super::init_target::{
-    derive_default_name, refuse_init_global_instruction_paths, refuse_init_target,
-};
+use super::init_target::{refuse_init_global_instruction_paths, refuse_init_target};
 use crate::checker::configured_rule_sentences;
 use crate::config::{Config, config_file_in, display_path};
 use crate::model::{Diagnostic, Finding, FindingSite, format_path};
@@ -27,6 +25,8 @@ use crate::workspace::populate_workspace_boundary;
 #[derive(Clone)]
 pub struct InitOpts {
     pub target: PathBuf,
+    /// Explicit generated project identity. When absent, `init` uses the
+    /// target-local configured name before the basename (§FS-init.2.3.8).
     pub name: Option<String>,
     /// `--description` — pending one-line `project_description` for a freshly
     /// written config (§FS-init.1, §DF-workspace-member-descriptions).
@@ -248,16 +248,13 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         return Err(InitError::new(message));
     }
 
-    let resolved_name = match name {
-        Some(value) => value,
-        None => derive_default_name(&target).map_err(|err| InitError::new(err.to_string()))?,
-    };
-
     // §FS-init.2.3.8: render agent instructions against the config `init` leaves
-    // in place, so the ID-shape / kind / marker prose matches `grund.toml`; read
-    // before the entrypoint plan (§FS-init.2.1.1.1, §FS-init.2.3.4.17).
-    let mut init_config =
-        init_pending_effective_config(&target, &resolved_name, description.as_deref())
+    // in place, and select the generated project name from the explicit flag,
+    // that target-local config, then the target basename. Do both before the
+    // entrypoint plan (§FS-init.2.1.1.1, §FS-init.2.3.4.17), so every renderer
+    // consumes the same identity and effective grammar.
+    let (mut init_config, resolved_name) =
+        init_pending_effective_config(&target, name.as_deref(), description.as_deref())
             .map_err(|err| InitError::new(err.to_string()))?;
     // §FS-init.2.2.2: the guidance probe consumes the exact §AR-workspace.6
     // boundary used by scanner commands. Keep this best-effort: the existing

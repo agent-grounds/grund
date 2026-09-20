@@ -28,6 +28,8 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 - [§FS-check.1.1.3.1](functional-spec/FS-check.md#1131-assigned-python-triple-quoted-data), [§FS-refs.2](functional-spec/FS-refs.md#2-behaviour): recover real Python docstrings after a simple top-level assigned triple-quoted string and stop treating the assigned runtime data as citations. No configuration migration is required; move intentional edges from qualifying assigned data to a `#` comment or real docstring, and note that recovered docstrings can expose genuine findings that were previously hidden. Closes issue #264. (PR #268)
 
+- [§FS-init.2.3.8](functional-spec/FS-init.md#238-substituted-content): keep the configured `project_name` when creating or forcibly regenerating canonical `AGENTS.md` without an explicit `--name`, falling back to the target directory name only when the target config has no name. (PR #269)
+
 - [§FS-config.3.4.3](functional-spec/FS-config.md#343-title): expose the resolved target kind title as optional `kind_title` metadata on successful show JSON and detailed refs JSON, and as a separate literal Kind paragraph in hover. Keep declaration and section show objects compatible with installed resolvers by placing metadata before their terminal `path`, `line` pair; preserve the E2E manifest prefix, Markdown previews, refs summary shapes and existing callable APIs. (PR #254)
 
 - [§FS-id.3](functional-spec/FS-id.md#3-slug-derivation): trim leading as well as trailing literal hyphens when deriving an ID slug, including hyphens accepted by the configured character class. (PR #254)

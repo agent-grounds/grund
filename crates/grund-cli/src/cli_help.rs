@@ -298,7 +298,7 @@ fn print_subcommand_help(cmd: &str) {
                 "  --docs         also write docs/ (grund, goals, roadmap, changelog, spec READMEs) and e2e/"
             );
             println!(
-                "  --name NAME    project name to interpolate (default: derived from the directory)"
+                "  --name NAME    project name (default: target project_name, then directory name)"
             );
             println!(
                 "  --description TEXT  one-line project description written to grund.toml (shown next to this project in workspace member lists)"
