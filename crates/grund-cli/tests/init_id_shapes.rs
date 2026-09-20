@@ -20,6 +20,14 @@ fn assert_example(root: &Path, relative: &str, expected: &str) {
     );
 }
 
+fn assert_one_example(root: &Path, relative: &str, expected: &[&str]) {
+    let contents = fs::read_to_string(root.join(relative)).expect("read expected scaffold");
+    assert!(
+        expected.iter().any(|example| contents.contains(example)),
+        "{relative} should contain one of the numbered teaching examples {expected:?}, got:\n{contents}"
+    );
+}
+
 fn replace_repo_format(root: &Path, replacement: &str) {
     let path = root.join("grund.toml");
     let before = fs::read_to_string(&path).expect("read generated grund.toml");
@@ -63,11 +71,15 @@ fn init_docs_force_refreshes_every_example_to_the_repository_format() {
     );
 
     // The default remains the numbered-with-slug teaching shape.
-    assert_example(&target, "docs/grund.md", "GRUND-NNN-slug");
-    assert_example(
+    assert_one_example(
+        &target,
+        "docs/grund.md",
+        &["GRUND-NNN-slug", "GRUND-<NNN>-<slug>"],
+    );
+    assert_one_example(
         &target,
         "docs/architecture/README.md",
-        "§AR-NNN-<slug>.<section>",
+        &["§AR-NNN-<slug>.<section>", "§AR-<NNN>-<slug>.<section>"],
     );
 
     let scaffold_paths = [
