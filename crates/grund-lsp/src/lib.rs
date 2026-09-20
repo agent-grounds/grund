@@ -609,9 +609,8 @@ impl Server {
                 locations.extend(self.citation_locations_for_declaration(snapshot, decl));
             }
             Token::Citation(source) => {
-                // Unresolved local forms stay in the snapshot so diagnostics
-                // and declaration-side graph counts share the core edge, but
-                // the token itself has no editor reference identity
+                // Unresolved local forms stay in the snapshot for diagnostics
+                // and graph counts, but have no editor reference identity
                 // (§FS-lsp.1.3).
                 if source.target_path.is_none() {
                     return Ok(None);

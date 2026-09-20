@@ -31,6 +31,7 @@ fn fixture(name: &str) -> PathBuf {
             "Missing \u{a7}9.9.\n",
             "Unsupported \u{a7}2.goals.\n",
             "Glued \u{a7}2abc.\n",
+            "Malformed \u{a7}2..1 and \u{a7}2... and \u{a7}2..goals.\n",
             "Full valid \u{a7}FS-a.2.\n",
             "Full missing \u{a7}FS-a.9.\n\n",
             "## 2. Target\n\n",
@@ -76,7 +77,10 @@ fn check_text_reports_owned_missing_unsupported_and_ownerless_local_forms() {
             "docs/FS-a.md:5: error: missing section FS-a.9.9\n",
             "docs/FS-a.md:6: error: unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it\n",
             "docs/FS-a.md:7: error: unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it\n",
-            "docs/FS-a.md:9: error: missing section FS-a.9\n",
+            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it\n",
+            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it\n",
+            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it\n",
+            "docs/FS-a.md:10: error: missing section FS-a.9\n",
             "docs/outside.md:3: error: local section citation \u{a7}2 has no enclosing declaration; write a full citation or <§>2 to show the shape without citing it\n",
         )
     );
@@ -92,7 +96,7 @@ fn check_json_reports_the_same_local_verdicts() {
         .lines()
         .map(|line| serde_json::from_str::<serde_json::Value>(line).expect("JSON finding"))
         .collect::<Vec<_>>();
-    assert_eq!(rows.len(), 8, "{rows:?}");
+    assert_eq!(rows.len(), 11, "{rows:?}");
     assert_eq!(rows[0]["code"], "local-section-citation");
     assert_eq!(
         rows[0]["message"],
@@ -100,9 +104,9 @@ fn check_json_reports_the_same_local_verdicts() {
     );
     assert_eq!(rows[2]["code"], "local-section-citation");
     assert_eq!(rows[3]["code"], "missing-section");
-    assert_eq!(rows[6]["message"], "missing section FS-a.9");
-    assert_eq!(rows[7]["path"], "docs/outside.md");
-    assert_eq!(rows[7]["code"], "local-section-citation");
+    assert_eq!(rows[9]["message"], "missing section FS-a.9");
+    assert_eq!(rows[10]["path"], "docs/outside.md");
+    assert_eq!(rows[10]["code"], "local-section-citation");
     assert_eq!(stderr(&output), "");
 }
 
@@ -117,14 +121,14 @@ fn refs_text_includes_local_spelling_in_whole_id_and_exact_section_queries() {
             "docs/FS-a.md:3: \u{a7}2\n",
             "docs/FS-a.md:4: \u{a7}2.1\n",
             "docs/FS-a.md:5: \u{a7}9.9\n",
-            "docs/FS-a.md:8: \u{a7}FS-a.2\n",
-            "docs/FS-a.md:9: \u{a7}FS-a.9\n",
+            "docs/FS-a.md:9: \u{a7}FS-a.2\n",
+            "docs/FS-a.md:10: \u{a7}FS-a.9\n",
         )
     );
     let exact = run(&root, &["refs", "FS-a.2"]);
     assert_eq!(
         stdout(&exact),
-        "docs/FS-a.md:3: \u{a7}2\ndocs/FS-a.md:8: \u{a7}FS-a.2\n"
+        "docs/FS-a.md:3: \u{a7}2\ndocs/FS-a.md:9: \u{a7}FS-a.2\n"
     );
 }
 

@@ -206,8 +206,8 @@ fn a_list_marker_is_skipped_like_indentation() {
         assert!(!conforms(&config, line), "must reject `{line}`");
     }
 
-    // §2.3 is untouched: the marker is still note text when note presence is
-    // decided, so a bulleted pointer is not silently reclassified.
+    // §FS-inline-citation-style.2.3: the marker is still note text when note
+    // presence is decided, so a bulleted pointer is not silently reclassified.
     assert!(has_note(&config, &["// - §FS-001-login"]));
 }
 

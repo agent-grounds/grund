@@ -21,6 +21,7 @@ fn fixture(name: &str) -> std::path::PathBuf {
         concat!(
             "# FS-alpha: Alpha\n\n",
             "Rewrite \u{a7}2 and \u{a7}2.1.\n",
+            "Malformed \u{a7}2..1, \u{a7}2..., and \u{a7}2..goals.\n",
             "Protected `\u{a7}2`, [link](\u{a7}2), and ownerless stays elsewhere.\n\n",
             "```text\n\u{a7}2\n```\n\n",
             "## 2. Target\n\n### 2.1 Child\n",
@@ -78,6 +79,7 @@ fn formatter_write_expands_owned_local_paths_and_preserves_protected_sites() {
     .expect("format write");
     let written = std::fs::read_to_string(root.join("docs/FS-alpha.md")).expect("read result");
     assert!(written.contains("Rewrite \u{a7}FS-alpha.2 and \u{a7}FS-alpha.2.1."));
+    assert!(written.contains("Malformed \u{a7}2..1, \u{a7}2..., and \u{a7}2..goals."));
     assert!(written.contains("Protected `\u{a7}2`, [link](\u{a7}2)"));
     assert!(written.contains("```text\n\u{a7}2\n```"));
     assert_eq!(

@@ -378,7 +378,7 @@ fn aliased_include_root_repo(name: &str, real: &str, link: &str) -> std::path::P
 /// §FS-check.1.3.2: the wider walk reads each *file* once, not each path once.
 /// An aliased root hands the same file to two walks under two spellings, so
 /// the byte-identical dedup cannot see the reread — and the declaration the
-/// plain run reads once would be reported as a duplicate of itself (§3.3),
+/// plain run reads once would be reported as a duplicate of itself (§FS-check.3.3),
 /// turning a green run red on a tree nobody changed.
 #[cfg(unix)]
 #[test]

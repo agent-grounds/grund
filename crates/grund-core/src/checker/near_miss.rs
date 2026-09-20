@@ -36,7 +36,7 @@ pub(super) fn check_declaration_near_misses(findings: &Findings, report: &mut Ch
 
 /// The sentence: the token as written, the configured template, and the shape
 /// that template reads. Three facts, no proposal — `check` reports facts about
-/// the tree and the config (§FS-check.3 vs §4), and the corrected ID is the one
+/// the tree and the config (§FS-check.3 vs §FS-check.4), and the corrected ID is the one
 /// thing here that would be a guess.
 fn near_miss_message(format: &str, text: &str) -> String {
     let deadline = if declaration_near_miss_is_error() {

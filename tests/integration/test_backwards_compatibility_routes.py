@@ -178,7 +178,8 @@ class RequirementRouteTests(unittest.TestCase):
 
     def test_unapproved_route_cannot_hide_from_the_exhaustive_check(self):
         mutated = self.text.replace(
-            "moves only by §2, §3, or §5", "moves only by §2, §3, §5, or §6"
+            "moves only by \u00a72, \u00a73, or \u00a75",
+            "moves only by \u00a72, \u00a73, \u00a75, or \u00a76",
         )
         self.assertEqual({"2", "3", "5", "6"}, _verdict_route_citations(mutated))
 
@@ -204,7 +205,7 @@ class RequirementRouteTests(unittest.TestCase):
         )
         self.assertRegex(
             conditions["Accepted proof"],
-            r"accepted decision record.*proves both the conflict.*neither the §2 .* nor the §3",
+            r"accepted decision record.*proves both the conflict.*neither the \u00a72 .* nor the \u00a73",
         )
         self.assertRegex(
             conditions["Named release"], r"release names the verdict change"
@@ -248,9 +249,9 @@ but there is no conflict proof, ordinary-route analysis, or release record.
         self.assertIn(
             "the route must prove that the prior verdict violated the citation", errors
         )
-        self.assertIn("the route must explain why §2 deprecation does not fit", errors)
+        self.assertIn("the route must explain why \u00a72 deprecation does not fit", errors)
         self.assertIn(
-            "the route must explain why §3 mechanical migration does not fit", errors
+            "the route must explain why \u00a73 mechanical migration does not fit", errors
         )
         self.assertIn("the decision must have a matching release record", errors)
 

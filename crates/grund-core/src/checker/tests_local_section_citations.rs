@@ -15,7 +15,8 @@ fn local_section_findings_are_actionable_and_missing_is_independent() {
             "# FS-001-alpha: Alpha\n\n",
             "Valid \u{a7}2.\n",
             "Missing \u{a7}9.9.\n",
-            "Unsupported \u{a7}2.goals and \u{a7}2abc.\n\n",
+            "Unsupported \u{a7}2.goals and \u{a7}2abc.\n",
+            "Malformed \u{a7}2..1 and \u{a7}2... and \u{a7}2..goals.\n\n",
             "## 2. Target\n",
         ),
     );
@@ -50,6 +51,18 @@ fn local_section_findings_are_actionable_and_missing_is_independent() {
         (
             "local-section-citation",
             "unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it",
+        ),
+        (
+            "local-section-citation",
+            "unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it",
+        ),
+        (
+            "local-section-citation",
+            "unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it",
+        ),
+        (
+            "local-section-citation",
+            "unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it",
         ),
         (
             "local-section-citation",

@@ -42,6 +42,7 @@ Supported check finding codes:
   invalid-value-binding
   invalid-value-declaration
   io
+  local-section-citation
   misplaced-declaration
   missing-citation
   missing-index-entry
@@ -51,6 +52,7 @@ Supported check finding codes:
   optional-member-absent
   orphan-section
   out-of-scope-dangling
+  out-of-scope-local-section-citation
   out-of-scope-missing-section
   out-of-scope-shorthand-citation
   out-of-scope-unknown-project

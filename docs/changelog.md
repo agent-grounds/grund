@@ -20,7 +20,7 @@ One bullet per change, present tense, leading with the affected ID. Example: `§
 
 ### 1.4 Progressive discovery
 
-Only **Unreleased** and the **most recent release** are inline. When a new release ships, the previous "latest" section is moved verbatim to `docs/changelog/<version>.md` and a one-line link is added under [§3 Older releases](#3-older-releases). The most recent release stays inline so the common reader and agent path — "what changed lately?" — is one file deep.
+Only **Unreleased** and the **most recent release** are inline. When a new release ships, the previous "latest" section is moved verbatim to `docs/changelog/<version>.md` and a one-line link is added under [section 3, Older releases](#3-older-releases). The most recent release stays inline so the common reader and agent path — "what changed lately?" — is one file deep.
 
 ## Unreleased
 
@@ -135,7 +135,7 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 ## 3. Older releases
 
 - [0.13.0](changelog/0.13.0.md) — 2026-09-05: - [§FS-workspace.2.2](functional-spec/FS-workspace.md#22-a-member-that-may-be-legitimately-absent), [§FS-check.4.9](functional-spec/FS-check.md#49-a-workspace-member-declared-optional-is-absent): **a workspace member can be declared absent, and the run says which namespace it did not check.** A checkout where one member is legitimately missing — a private submodule CI never fetches, a sparse checkout, a sibling repository vendored in only for release builds — had no `grund check` run at all.
-- [0.12.3](changelog/0.12.3.md) — 2026-08-30: - [§FS-inline-citation-style.4.1](functional-spec/FS-inline-citation-style.md#41-errors--hard-caps): the inline-note line- and column-cap findings, and the soft-cap warning ([§4.2](functional-spec/FS-inline-citation-style.md#42-warnings--opt-in-soft-cap)), now name the measured size next to the cap — `inline note is 47 columns, over the 40-column maximum` rather than just the cap — so an author does not have to re-measure or guess how a site was counted.
+- [0.12.3](changelog/0.12.3.md) — 2026-08-30: - [§FS-inline-citation-style.4.1](functional-spec/FS-inline-citation-style.md#41-errors--hard-caps): the inline-note line- and column-cap findings, and the soft-cap warning ([§FS-inline-citation-style.4.2](functional-spec/FS-inline-citation-style.md#42-warnings--opt-in-soft-cap)), now name the measured size next to the cap — `inline note is 47 columns, over the 40-column maximum` rather than just the cap — so an author does not have to re-measure or guess how a site was counted.
 - [0.12.2](changelog/0.12.2.md) — 2026-08-26: - [§FS-config.3.4.7](functional-spec/FS-config.md#347-scan--a-place-that-is-listed-not-walked): `[[kinds]] scan = false` — a non-citable kind that is listed in the generated Project map and not walked, for content that ships verbatim (scaffold templates, embedded assets, example configs).
 - [0.12.1](changelog/0.12.1.md) — 2026-08-26: - [§FS-check.4.6](functional-spec/FS-check.md#46-declaration-near-miss): `grund check` warns on a heading that opens like a declaration and parses as none — `# FS-login: …` under the default `{kind}-{number}-{slug}`, the `-NNN-` left out.
 - [0.12.0](changelog/0.12.0.md) — 2026-08-25: - [§FS-config.3.9.2](functional-spec/FS-config.md#392-the-homeless-kind): the citing kind of every site outside every configured home is now **nameable**.

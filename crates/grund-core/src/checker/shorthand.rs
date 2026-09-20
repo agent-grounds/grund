@@ -121,7 +121,7 @@ pub(super) type ShorthandIndexes<'a> = BTreeMap<Option<String>, ShorthandIndex<'
 
 /// §FS-check.3.13.3 / §AR-checker.2.12: report one citation's shorthand finding, if
 /// it earns one. Returns `true` when the citation resolved to nothing and the
-/// caller should skip its remaining rules — §3.1 in particular, which would
+/// caller should skip its remaining rules — §FS-check.3.1 in particular, which would
 /// otherwise name a token that is not a full ID.
 ///
 /// "Resolved" is read off the candidate set this check can see, not off the

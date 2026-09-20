@@ -20,10 +20,10 @@ use crate::grammar::{CITATION_RUN_SEPARATOR, LayoutChannel, layout_channel};
 use crate::model::{CheckReport, Citation, Diagnostic, Findings, InlineCitationSite, plural};
 
 /// The citation tokens of one inline citation site, for the message a budget
-/// finding names (§FS-inline-citation-style.4.1.2, §4.2): each citation's `text`
+/// finding names (§FS-inline-citation-style.4.1.2, §FS-inline-citation-style.4.2): each citation's `text`
 /// exactly as written — marker, qualifier, section — in source order,
 /// duplicates dropped after the first, chain-spelled with
-/// `CITATION_RUN_SEPARATOR` the way §3.3 already joins a citation run.
+/// `CITATION_RUN_SEPARATOR` the way §FS-inline-citation-style.3.3 already joins a citation run.
 fn site_citation_texts(findings: &Findings) -> BTreeMap<(&Path, usize), String> {
     let mut per_site: BTreeMap<(&Path, usize), Vec<&str>> = BTreeMap::new();
     for cite in &findings.citations {
@@ -44,7 +44,7 @@ fn site_citation_texts(findings: &Findings) -> BTreeMap<(&Path, usize), String> 
 }
 
 /// The site clause a budget finding appends to name what it measured
-/// (§FS-inline-citation-style.4.1.2, §4.2): the block's line span and the
+/// (§FS-inline-citation-style.4.1.2, §FS-inline-citation-style.4.2): the block's line span and the
 /// citations that made it a site, as written. A one-line site — only possible
 /// for the column cap — reads `line N cites`; a longer one `lines A-B cite`.
 fn site_clause(first_line: usize, last_line: usize, citations: &str) -> String {
@@ -56,7 +56,7 @@ fn site_clause(first_line: usize, last_line: usize, citations: &str) -> String {
 }
 
 /// §FS-inline-citation-style.4.1.3: the fix-it clause a line-count finding
-/// carries — the block-splitting rule (§1) the author needs to act on the site
+/// carries — the block-splitting rule (§FS-inline-citation-style.1) the author needs to act on the site
 /// clause above. The column cap omits it: a wide line is fixed by wrapping,
 /// not by splitting.
 const BLOCK_SPLIT_CLAUSE: &str = "; a blank line splits a note, an empty comment line does not";

@@ -123,9 +123,9 @@ const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a doc
 
 /// §FS-inline-citation-style.5.2: the sentence that follows the budgets and
 /// precedes the layout sentence, under `citation-with-note` only — restating
-/// §1's block rule at the point an agent needs it to act on a cap finding. It
+/// §FS-inline-citation-style.1's block rule at the point an agent needs it to act on a cap finding. It
 /// moves no managed-block version, for the same reason the layout and
-/// doc-comment sentences do not (§2.2): a block that predates it teaches the
+/// doc-comment sentences do not (§FS-inline-citation-style.2.2): a block that predates it teaches the
 /// same rule less precisely, an over-careful comment, never a finding.
 const BLOCK_SENTENCE: &str =
     " A note is one comment block: a blank line splits it, an empty comment line does not.";
@@ -199,7 +199,7 @@ fn declaration_map(config: &Config) -> String {
             let title = kind.title.as_deref().unwrap_or("Declaration");
             // A non-citable kind is labelled by its home, which `place_label`
             // already renders. An unwalked kind (§FS-config.3.4.7) is one of them;
-            // its missing directions bullet is §2.3.5's.
+            // its missing directions bullet is §FS-init.2.3.5's.
             match (
                 kind.file.as_deref().or(kind.folder.as_deref()),
                 kind.citable,

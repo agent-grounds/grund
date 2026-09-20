@@ -134,7 +134,7 @@ pub struct Citation {
     /// `id`. When `id.slug` is still `None` the shorthand resolved to zero or
     /// several declarations.
     pub shorthand: bool,
-    /// Written as a declaration-local numeric section path such as `§2.1`.
+    /// Written as a declaration-local numeric section path such as `<§>2.1`.
     /// The scanner has already resolved `id` to the uniquely enclosing
     /// declaration, so graph consumers read this as an ordinary edge; only the
     /// checker and formatter inspect the flag to require canonical storage

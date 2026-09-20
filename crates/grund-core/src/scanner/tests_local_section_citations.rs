@@ -22,6 +22,7 @@ fn local_numeric_paths_use_marker_boundaries_and_markdown_body_ownership() {
         concat!(
             "# FS-001-alpha: Alpha\n\n",
             "Owned @2 and @2.1; unmarked 2.1; unsupported @2.goals and @2abc.\n",
+            "Malformed @2..1 and @2... and @2..goals.\n",
             "Full @FS-001-alpha.2 and escaped <@>2.\n\n",
             "```text\n@2\n```\n\n",
             "## 2. Target\n\n### 2.1 Child\n\n",
@@ -59,6 +60,22 @@ fn local_numeric_paths_use_marker_boundaries_and_markdown_body_ownership() {
             .map(|citation| citation.section.as_deref())
             .collect::<Vec<_>>(),
         [Some("2"), Some("2.1")]
+    );
+    assert_eq!(
+        scans[0]
+            .local_section_citation_candidates
+            .iter()
+            .map(|candidate| (candidate.text.as_str(), candidate.section.as_deref()))
+            .collect::<Vec<_>>(),
+        [
+            ("@2.goals", None),
+            ("@2abc", None),
+            ("@2..1", None),
+            ("@2...", None),
+            ("@2..goals", None),
+            ("@2", None),
+        ],
+        "malformed dotted tokens stay whole and never become graph edges"
     );
     assert_eq!(
         scans[0]
