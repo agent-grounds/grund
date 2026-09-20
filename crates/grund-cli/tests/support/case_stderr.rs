@@ -28,10 +28,12 @@ fn assert_expected_errors_are_concise(case: &Path, name: &str, args: &[String], 
 }
 
 /// The judgement, isolated from the filesystem. A `--format json` case's
-/// stderr is not uniformly JSON (§FS-errors.5.2): a launch-time `error: …` line
-/// and a run-level `warning:` / `hint:` stay text and keep the plain 180-byte
-/// cap. Only a line that opens a JSON object is parsed and judged by its
-/// `message` field instead of its serialized length — the scaffolding around
+/// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
+/// line and a run-level `warning:` / `hint:` stay text and keep the plain
+/// 180-byte cap, which is why the judgement is split by prefix at all rather
+/// than parsing every line. Only a line that opens a JSON object is parsed and
+/// judged by its `message` field instead of its serialized length — the
+/// scaffolding around
 /// it (§FS-distribution.3.0.1's `severity`, `path`, `line`, `code`, `sites`) is
 /// fixed cost the conciseness policy was never about.
 fn assert_stderr_is_concise(name: &str, json_case: bool, stderr: &str) {

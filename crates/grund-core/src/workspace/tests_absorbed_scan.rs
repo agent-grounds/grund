@@ -53,9 +53,10 @@ fn version(text: &str) -> Vec<u32> {
         .collect()
 }
 
-/// §FS-check.4.7.8, §REQ-backwards-compatibility.2: the warning names the
-/// release it becomes an error in, and a named release that has already
-/// passed is a promise grund broke. Held ahead of the running version so the
+/// §FS-check.4.7.8, §REQ-backwards-compatibility.2, §FS-workspace.2.1.4: the
+/// finding arrives as a warning on a deprecation path rather than as an error,
+/// so it names the release it becomes an error in — and a named release that
+/// has already passed is a promise grund broke. Held ahead of the running version so the
 /// bump that reaches the deadline fails the build rather than shipping a
 /// message the binary is behind — the guard §RM-workspace-absorbed-scan-error
 /// is spent against, and the same one
@@ -98,9 +99,10 @@ fn the_release_constant_is_the_release_the_message_names() {
     );
 }
 
-/// §FS-check.4.7.1: the whole sentence, assembled from the covered pairs the
-/// rule found — the golden with its `members`-line breadcrumb taken off the
-/// front. Held here as well as end to end because this is where a failure
+/// §FS-check.4.7.1, §FS-workspace.2.1.1: the whole sentence, assembled from
+/// the covered pairs the rule found — each covered root named beside the member
+/// entry it is inside — with the golden's `members`-line breadcrumb taken off
+/// the front. Held here as well as end to end because this is where a failure
 /// names the sentence rather than a whole run's stderr.
 #[test]
 fn the_message_is_assembled_from_the_covered_pairs() {

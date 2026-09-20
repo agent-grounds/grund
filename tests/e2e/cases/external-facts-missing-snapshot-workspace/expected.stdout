@@ -1,0 +1,1 @@
+docs/guide.md:3: warning: no snapshot for api/TICKET-1234 in api/docs/tickets.md — run grund fetch api/TICKET-1234

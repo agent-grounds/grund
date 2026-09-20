@@ -111,6 +111,16 @@ fn nonblank_lines(text: &str) -> usize {
         .count()
 }
 
+/// Every source form the scanner recognises — Markdown, an inline source
+/// declaration behind a stub, a JSON value home, and an E2E case — becomes one
+/// size row at its own coordinate, so JSON entries are catalog declarations at
+/// their exact location like any other (§FS-list.2.1). The row order is the
+/// normal one, declaration before its byte-sorted sections (§FS-list.3.4.5); an
+/// explicit `--size=<units>` list selects exactly those units and preserves the
+/// caller's order (§FS-list.1.5); each measurement is checked against the body
+/// `show` returns for that coordinate in the matching slice (§FS-list.3.4.1);
+/// and the NDJSON keys hold their fixed prefix order with `title` and `refs`
+/// absent (§FS-list.3.4.4).
 #[test]
 fn size_rows_cover_every_source_form_and_measure_the_show_slices() {
     let repo = Repo::new("forms");
@@ -258,6 +268,12 @@ fn list_help_documents_the_complete_size_surface_without_a_token_unit() {
     assert!(!text.contains("tokens"));
 }
 
+/// `--project` narrows a workspace catalog to the named projects and
+/// intersects with `--kind`, down to the empty intersection that still succeeds
+/// (§FS-list.1.2). `--top N` keeps the N largest leads in the first selected
+/// unit (§FS-list.1.6) after `--project`, `--kind` and `--unused` have run,
+/// with `--unused` retaining the section rows of the declarations it selects
+/// (§FS-list.3.4.5).
 #[test]
 fn top_filtering_workspace_qualification_and_ties_are_deterministic() {
     let repo = Repo::new("order");
@@ -343,6 +359,9 @@ fn top_filtering_workspace_qualification_and_ties_are_deterministic() {
     );
 }
 
+/// `--top` ranks by the lead value of the *first* requested unit, so the same
+/// tree answers with a different row depending on which unit was asked for
+/// first (§FS-list.1.6, §FS-list.3.4.5).
 #[test]
 fn top_uses_the_first_requested_unit_before_the_normal_order_tiebreak() {
     let repo = Repo::new("first-unit");
@@ -362,6 +381,11 @@ fn top_uses_the_first_requested_unit_before_the_normal_order_tiebreak() {
     assert_eq!(by_words[0]["id"], "FS-words");
 }
 
+/// An ID declared in two independent homes keeps one flagged row per home,
+/// measured from that site alone and with no winner picked (§FS-list.2.6), and
+/// a duplicated section coordinate likewise keeps one marked row per claimant
+/// while `show` still refuses it (§FS-list.2.7). The text form carries those
+/// site-local and broken-stub suffixes (§FS-list.3.4.3).
 #[test]
 fn duplicate_and_stub_rows_are_site_local_without_changing_show_ambiguity() {
     let repo = Repo::new("duplicates");

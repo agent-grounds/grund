@@ -383,8 +383,10 @@ fn an_outward_directory_link_used_as_a_scan_root_is_pruned() {
     );
 }
 
-/// §FS-config.3.5.1: a plain parent-relative scan root states its external
-/// scope directly, so it is not treated as directory-link traversal.
+/// §FS-config.3.5.1 / §FS-config.3.5.7: `include` is walked from the config
+/// root, and a plain parent-relative entry such as `../shared` intentionally
+/// names external content, so it states its external scope directly and is
+/// still walked rather than being treated as directory-link traversal.
 #[test]
 fn a_parent_relative_scan_root_outside_the_project_is_still_followed() {
     let base = test_root("a_parent_relative_scan_root_outside_the_project_is_still_followed");

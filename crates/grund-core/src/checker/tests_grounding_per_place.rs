@@ -95,8 +95,9 @@ fn a_row_false_exempts_its_home_under_a_global_true() {
     );
 }
 
-/// §FS-check.1: the flag and the global key are one knob, so the flag sets
-/// the same default and the row's more specific word still wins.
+/// §FS-check.1 / §FS-config.3.1.7: the flag and the global key are one knob,
+/// so the flag sets the same default for the `[[kinds]]` table and the row's
+/// more specific word — an explicit `require_grounding = false` — still wins.
 #[test]
 fn the_flag_does_not_override_an_explicit_row_false() {
     let root = repo(
@@ -114,8 +115,10 @@ fn the_flag_does_not_override_an_explicit_row_false() {
     );
 }
 
-/// §FS-check.3.6.2.1: at level 2 every `##` subtree is a unit, and the file
-/// stays one — satisfied here by the citation before the first heading.
+/// §FS-check.3.6.2.1 / §FS-config.3.4.8.2: at level 2 every `##` subtree is a
+/// unit, and the file stays one — satisfied here by the citation before the
+/// first heading, which is what makes level `1` the whole file and level `2`
+/// the file plus each `##` subtree.
 #[test]
 fn level_two_asks_each_section_of_a_markdown_home() {
     let run = check_run(
@@ -200,7 +203,11 @@ fn source_repo(name: &str, level: usize) -> PathBuf {
 }
 
 /// §FS-check.3.6.2.2: level 2 reaches the *unindented* doc-comment blocks —
-/// the parse-free stand-in for a top-level item (§FS-non-goals.3).
+/// the parse-free stand-in for a top-level item (§FS-non-goals.3), which is the
+/// source half of the unit §FS-config.3.4.8.2 names: a file has no headings, so
+/// the level buys the two ranks grund can see by indentation. The level is
+/// written on the homeless row here, which takes both keys like any other
+/// (§FS-config.3.4.8.4).
 #[test]
 fn level_two_reaches_only_unindented_doc_comments() {
     let run = check_run(
@@ -463,9 +470,11 @@ fn structure_is_recorded_only_for_the_row_that_asks_for_it() {
     assert_eq!(described, vec!["SKILL.md".to_string()]);
 }
 
-/// §FS-config.3.4.8 / §REQ-backwards-compatibility.1: a config that writes
-/// only the global key behaves exactly as it did — every row inherits it,
-/// every level is the file.
+/// §FS-config.3.1.7 / §REQ-backwards-compatibility.1: a config that writes
+/// only the global keys behaves exactly as it did — the `[reference]` pair is
+/// the default for every `[[kinds]]` row, so every row inherits it and the
+/// default level `1` is the file, the unit every config had before the key
+/// existed.
 #[test]
 fn a_global_only_config_grounds_every_place_at_the_file() {
     let run = check_run(
@@ -487,9 +496,10 @@ fn a_global_only_config_grounds_every_place_at_the_file() {
     );
 }
 
-/// §FS-config.4.2.1: each key prints on a row only where its effective value
-/// differs from the effective global, and the printed config loads back to
-/// the same effective values.
+/// §FS-config.4.2.1 / §FS-config.3.4.8.6: each key prints on a row only where
+/// its effective value differs from the effective global — which is kept and
+/// printed under `[reference]` — and the printed config loads back to the same
+/// effective values.
 #[test]
 fn config_show_prints_a_row_key_only_where_it_differs() {
     let root = repo(

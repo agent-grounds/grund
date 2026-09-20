@@ -10,6 +10,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+/// §FS-lsp.2.4.4: top-level help and `integrations` help explain the boundary
+/// and document exits `0` and `2`; listing writes nothing; an unknown template
+/// and a missing write directory each leave stdout empty, print one `error:`
+/// line and exit `2`. Every argument is handled as batch input, so none of this
+/// enters the protocol loop.
 #[test]
 fn help_list_and_errors_dispatch_without_starting_lsp() {
     let sandbox = Sandbox::with_binary(&workspace_binary(), "dispatch");
@@ -64,6 +69,8 @@ fn help_list_and_errors_dispatch_without_starting_lsp() {
     );
 }
 
+/// §FS-lsp.2.4.4: an invalid discovered config is one of the batch failures —
+/// stdout empty, one `error:` diagnostic on stderr, exit `2`.
 #[test]
 fn invalid_config_is_a_batch_error() {
     let sandbox = Sandbox::with_binary(&workspace_binary(), "invalid-config");
@@ -75,6 +82,13 @@ fn invalid_config_is_a_batch_error() {
     );
 }
 
+/// §FS-lsp.2.4.1: the preview is read-only — it prints the generated
+/// `template.json` and the import steps and writes nothing into the project.
+///
+/// §FS-lsp.2.4.2: generation starts at the process working directory and walks
+/// upward for the config, so the nested run reads the parent's `[scan]
+/// extensions`; each extension becomes one `*.ext` pattern, with a conventional
+/// language ID for a known one and the extension itself for `mystery`.
 #[test]
 fn preview_snapshots_effective_extensions_and_quoted_commands() {
     let sandbox = Sandbox::with_binary(&workspace_binary(), "preview");
@@ -121,6 +135,9 @@ fn preview_snapshots_effective_extensions_and_quoted_commands() {
     );
 }
 
+/// §FS-lsp.2.4.3: the launch command selected on the generating host is
+/// executable there, and a double quote, a space, or a shell metacharacter in
+/// the executable or project path changes neither the command nor the JSON.
 #[cfg(not(windows))]
 #[test]
 fn posix_launch_preserves_double_quotes_in_executable_and_project_paths() {
@@ -142,6 +159,12 @@ fn posix_launch_preserves_double_quotes_in_executable_and_project_paths() {
     assert_host_command_launches(&template, &project);
 }
 
+/// §FS-lsp.2.4.1: `--write <directory>` creates exactly `template.json` and
+/// `README.md`, prints `created <directory>` with the import steps, and exits
+/// `0`; repeating it against those byte-identical files is `unchanged
+/// <directory>`. A root with a modified, missing, or extra entry is a conflict:
+/// every existing byte stays, and one `error:` on stderr says to move or remove
+/// the root — there is no force option.
 #[test]
 fn write_is_exact_idempotent_and_preserves_every_conflict() {
     let sandbox = Sandbox::with_binary(&workspace_binary(), "write");

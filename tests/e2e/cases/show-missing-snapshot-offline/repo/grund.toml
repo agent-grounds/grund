@@ -1,0 +1,24 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z-]*"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+index = false
+
+[[kinds]]
+kind = "TICKET"
+file = "docs/tickets.md"
+format = "{kind}-{number}"
+fetch = "scripts/fetch-ticket"
+resolve = "should"
+
+[scan]
+include = ["docs"]
+respect_gitignore = false

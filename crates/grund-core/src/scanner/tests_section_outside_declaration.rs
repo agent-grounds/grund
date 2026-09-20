@@ -29,10 +29,12 @@ fn section_paths(findings: &Findings, id: &Id, file_suffix: &str) -> Vec<String>
         .collect()
 }
 
-/// The ticket shape, plus its two controls: deeper headings before the
-/// body-closing plain chapter remain coordinates, while a fenced
-/// pseudo-heading remains content. Numeric and enabled named headings after
-/// that chapter are findings, not coordinates.
+/// §FS-check.3.23.1, the Markdown half: ownership is the declaration's body
+/// span, and a same-or-higher plain heading ends that body even though it
+/// carries no coordinate. The ticket shape, plus its two controls: deeper
+/// headings before the body-closing plain chapter remain coordinates, while a
+/// fenced pseudo-heading remains content. Numeric and enabled named headings
+/// after that chapter are findings, not coordinates.
 #[test]
 fn markdown_section_map_stops_at_the_declaration_body() {
     let root = test_root("section_outside_markdown");
@@ -100,8 +102,11 @@ fn markdown_section_map_stops_at_the_declaration_body() {
     assert_eq!(format!("{error:#}"), "section not found: FS-001-alpha.1");
 }
 
-/// Source block ends, docstring ends, stub bodies, and a next declaration in
-/// one shared block all use the already-defined body spans. The first three
+/// §FS-check.3.23.1, the source half: the end of a doc-comment or docstring
+/// ends ownership, a stub owns only its single heading line, and a later
+/// declaration in the same comment block ends the earlier body and begins its
+/// own. Source block ends, docstring ends, stub bodies, and a next declaration
+/// in one shared block all use the already-defined body spans. The first three
 /// leave a heading outside; the shared-block control transfers ownership to
 /// the second declaration instead of creating an orphan.
 #[test]

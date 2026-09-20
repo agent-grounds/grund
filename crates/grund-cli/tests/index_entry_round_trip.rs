@@ -143,6 +143,9 @@ fn assert_round_trip(dir: &Path, case: &str) {
 }
 
 /// A marker-prefixed bare ID — the ordinary case the error is written for.
+/// §FS-config.3.4.2.1: the fixture's `FS` kind leaves `index` out, so the
+/// default follows `folder` — `README.md` under it — which is the only reason
+/// the index rule has a file to report an entry in at all.
 #[test]
 fn fmt_write_clears_a_bare_entry() {
     let dir = build_fixture(

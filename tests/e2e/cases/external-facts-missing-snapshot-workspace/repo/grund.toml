@@ -1,0 +1,16 @@
+grund_config_version = 1
+project_name = "root"
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z-]*"
+
+[scan]
+include = ["docs"]
+respect_gitignore = false
+
+[workspace]
+members = ["api"]

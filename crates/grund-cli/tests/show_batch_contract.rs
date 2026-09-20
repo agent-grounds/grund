@@ -119,6 +119,9 @@ fn loads(path: &Path) -> usize {
     fs::read_to_string(path).unwrap_or_default().lines().count()
 }
 
+/// One NDJSON envelope per query in query order, the failure carried inside its
+/// own envelope with stderr empty, and the aggregate exiting `1` after every
+/// record has been emitted (§FS-show.3.3).
 #[test]
 fn show_batch_ambiguous_shorthand_is_a_query_failure_and_continues() {
     // §FS-show.2.6.3: an ambiguous shorthand is one failed coordinate, not a
@@ -143,6 +146,9 @@ fn show_batch_ambiguous_shorthand_is_a_query_failure_and_continues() {
     assert_eq!(stderr(&output), "");
 }
 
+/// An explicit query is answered by the same default/`--brief`/`--toc`/`--full`
+/// renderer as single-coordinate `show`, and the one invocation-level mode
+/// applies to every record (§FS-show.2.6.1).
 #[test]
 fn show_batch_all_four_modes_use_single_show_rendering() {
     let repo = Repo::new("modes");
@@ -182,6 +188,8 @@ fn show_batch_all_four_modes_use_single_show_rendering() {
     }
 }
 
+/// Malformed batch input is a run-level failure: exit `2`, empty stdout, the
+/// error on stderr, and no envelope at all (§FS-show.3.3).
 #[test]
 fn show_batch_rejects_the_whole_malformed_stream_before_scanning() {
     let repo = Repo::new("malformed");
@@ -201,6 +209,8 @@ fn show_batch_rejects_the_whole_malformed_stream_before_scanning() {
     assert_eq!(loads(&log), 0, "malformed input must be rejected pre-scan");
 }
 
+/// An empty explicit stream is one of the aggregate's success cases: exit `0`
+/// with no envelopes on either stream (§FS-show.3.3).
 #[test]
 fn show_batch_empty_input_is_a_successful_no_scan_noop() {
     let repo = Repo::new("empty");
@@ -213,6 +223,9 @@ fn show_batch_empty_input_is_a_successful_no_scan_noop() {
     assert_eq!(loads(&log), 0);
 }
 
+/// `--batch --all` takes no stdin and discovers its query set from the selected
+/// scope, answering it from the same single workspace load an explicit stream
+/// gets (§FS-show.1.9).
 #[test]
 fn show_batch_loads_one_workspace_for_many_queries_and_for_all() {
     let repo = Repo::new("load-count");

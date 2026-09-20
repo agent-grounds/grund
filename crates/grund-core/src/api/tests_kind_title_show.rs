@@ -108,6 +108,10 @@ fn kind_title_show_uses_effective_defaults() {
     );
 }
 
+/// For a JSON value declaration every read mode returns the exact available
+/// member or element source slice, with `path`/`line` at that slice's span
+/// start and no synthesized Markdown — `--brief`, the default, `--toc` and
+/// `--full` all collapse onto it (§FS-values.6.2, §FS-output-shapes.4.3).
 #[test]
 fn kind_title_show_e2e_and_json_values_keep_their_alternate_shapes() {
     let root = test_root("kind_title_show_alternate_shapes");

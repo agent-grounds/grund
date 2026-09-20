@@ -144,8 +144,9 @@ fn a_third_heading_joins_the_same_finding() {
     );
 }
 
-/// §DF-duplicate-section-path.2.2: a section path is addressed as
-/// `<ID>.<path>`, so the same number under two declarations never collided.
+/// §DF-duplicate-section-path.2.2 / §FS-check.3.16.1: a section path is
+/// addressed as `<ID>.<path>`, so the same number under two declarations is two
+/// distinct coordinates and never collided.
 #[test]
 fn the_same_path_under_two_declarations_is_not_a_collision() {
     let root = test_root("duplicate_sections_scoped_to_one_declaration");
@@ -171,9 +172,9 @@ fn the_same_path_under_two_declarations_is_not_a_collision() {
     );
 }
 
-/// §DF-duplicate-section-path.2.2: the collision is a collision in every
-/// `[id] section_heading_levels` mode — `"loose"`, where `## 1.` and `### 1.`
-/// both claim path `1`, most of all.
+/// §DF-duplicate-section-path.2.2 / §FS-check.3.16.3: the collision is a
+/// collision in every `[id] section_heading_levels` mode — `"loose"`, where
+/// `## 1.` and `### 1.` both claim path `1`, most of all.
 #[test]
 fn loose_heading_levels_do_not_excuse_the_collision() {
     let root = test_root("duplicate_sections_loose_mode");
@@ -269,8 +270,9 @@ fn show_refuses_the_ambiguous_section_in_every_slice() {
     }
 }
 
-/// §FS-show.2.2.2: only the *requested* path can be ambiguous, and `--toc`
-/// over the whole declaration still maps what is written.
+/// §FS-show.2.2.2 / §FS-show.2.2.2.4: only the *requested* path can be
+/// ambiguous — the untouched `2` answers normally beside the colliding `1` —
+/// and `--toc` over the whole declaration still maps what is written.
 #[test]
 fn an_untouched_section_still_answers_and_toc_still_lists_both() {
     let (root, config) = duplicated_repo(

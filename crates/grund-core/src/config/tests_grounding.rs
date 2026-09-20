@@ -94,7 +94,10 @@ fn a_level_beside_an_explicit_row_false_is_rejected() {
 }
 
 /// §FS-config.3.4.8.5: the same rule one scope up — a `[reference]` level with
-/// nothing turning grounding on anywhere.
+/// nothing turning grounding on anywhere. This is also where §FS-config.3.1.7's
+/// last clause bites: the global pair is a *default for the rows*, so a level
+/// written in `[reference]` is inert, and a config error, where no place reads
+/// it.
 #[test]
 fn a_global_level_with_grounding_off_is_rejected() {
     let error = config_error(
@@ -134,6 +137,9 @@ fn a_row_level_under_an_inherited_false_is_rejected() {
 /// §FS-config.3.4.8.5 / §FS-config.4.2.1: a non-citable `file` home is governed
 /// like any other place (§FS-check.3.6.1.1), so both keys load on its row —
 /// and print back, since the row's effective values differ from the global.
+/// Printing the row keys beside the `[reference]` globals that stay is
+/// §FS-config.3.4.8.6's half of the same rule: the shown config loads back as
+/// itself.
 #[test]
 fn a_non_citable_file_row_takes_both_keys() {
     let root = test_root("a_non_citable_file_row_takes_both_keys");

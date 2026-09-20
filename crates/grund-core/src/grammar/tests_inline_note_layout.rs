@@ -61,9 +61,13 @@ fn any_layout_accepts_every_arrangement() {
     }
 }
 
-// §FS-inline-citation-style.3.3: the canonical form, its multi-citation
-// spelling, a citation later in the note, a colon that ends the line, and a
-// line with no citation at all.
+/// §FS-inline-citation-style.3.3: the canonical form, its multi-citation
+/// spelling, a citation later in the note, a colon that ends the line, and a
+/// line with no citation at all.
+///
+/// §FS-inline-citation-style.3.3.3: the rule constrains what *opens* the line
+/// only, so `(see also §…)` later in the note conforms.
+/// §FS-inline-citation-style.3.3.9: these are the conforming example lines.
 #[test]
 fn citation_first_colon_accepts_the_canonical_forms() {
     let config = layout_config(
@@ -89,8 +93,9 @@ fn citation_first_colon_accepts_the_canonical_forms() {
     }
 }
 
-// §FS-inline-citation-style.3.3.4, rule 4: the form is exact, so each near miss
-// is a deviation rather than a tolerated spelling.
+/// §FS-inline-citation-style.3.3.4, rule 4: the form is exact, so each near miss
+/// is a deviation rather than a tolerated spelling.
+/// §FS-inline-citation-style.3.3.9: these are the nonconforming example lines.
 #[test]
 fn citation_first_colon_rejects_near_misses() {
     let config = layout_config(
@@ -267,9 +272,14 @@ fn a_site_without_a_note_is_exempt() {
     assert_eq!(violations(&config, &block, true), vec![1]);
 }
 
-// §FS-inline-citation-style.1.4: what joins two citations of one run says
-// nothing, so a chain stays a pure citation comment however it is spelled —
-// including with the `, ` the layout itself mandates in front of a colon.
+/// §FS-inline-citation-style.1.4: what joins two citations of one run says
+/// nothing, so a chain stays a pure citation comment however it is spelled —
+/// including with the `, ` the layout itself mandates in front of a colon.
+///
+/// §FS-inline-citation-style.2.3.3: note presence is what is being decided here
+/// — after the prefixes, the citation tokens, and the whitespace-and-one-comma
+/// separators are stripped, anything non-whitespace left is a note, which is
+/// why ` + `, an `and`, a second comma, and a colon-led sentence all carry one.
 #[test]
 fn a_citation_chain_carries_no_note() {
     let config = checked_layout_config(
@@ -348,6 +358,10 @@ fn citation_only_accepts_a_comma_joined_chain() {
 /// short-circuit stands on its own, so neither the default nor a
 /// documented-only layout ever asks the classifier a question
 /// (§GOAL-fast-feedback).
+///
+/// §FS-inline-citation-style.7.2: that is what the scanner pays for the field —
+/// one comparison per inline citation site under the default and under a
+/// documented-only layout, and no line tokenized or classified on its account.
 #[test]
 fn no_layout_records_no_violations() {
     let root = test_root("no_layout_records_no_violations");
@@ -392,10 +406,13 @@ fn filled_slots(block: &BlockCitations<'_>) -> usize {
     block.ranges.iter().filter(|slot| slot.is_some()).count()
 }
 
-/// §GOAL-fast-feedback: the sharing between the two note verdicts is a memo
+/// §GOAL-fast-feedback, §FS-inline-citation-style.7.2: the sharing between the
+/// two note verdicts is a memo
 /// filled as a pass reaches a line, never up front — the property the rest of
 /// this module cannot see, since an eager tokenization answers every question
-/// above identically and only costs more. Pinned here because it has already
+/// above identically and only costs more. A documented-only layout allocates no
+/// memo and tokenizes nothing on the field's account; only a gated one reads
+/// every line. Pinned here because it has already
 /// been regressed once and caught by hand.
 #[test]
 fn note_walk_tokenizes_only_the_lines_it_reads() {

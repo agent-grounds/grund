@@ -1,0 +1,6 @@
+complete
+ids
+--prefix
+alpha/FS-alpha-thing
+--sections
+{repo}

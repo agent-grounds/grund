@@ -182,6 +182,9 @@ members = ["packages/*"]
     );
 }
 
+/// §FS-config.3.5.7: an explicit path argument overrides `include` rather than
+/// being filtered by it — a run handed one file scans exactly that file, so a
+/// dangling citation in a sibling the `include` roots cover is not reported.
 #[test]
 fn explicit_file_scope_ignores_unrelated_findings() {
     let root = test_root("explicit_file_scope_ignores_unrelated_findings");
@@ -209,6 +212,9 @@ fn explicit_file_scope_ignores_unrelated_findings() {
     );
 }
 
+/// §FS-config.3.4.11: a home is a declaration-home boundary — a declaration
+/// inside exactly one configured `folder` home must declare that folder's kind,
+/// and the finding names the kind it wrote and the home it sits in.
 #[test]
 fn check_rejects_declaration_in_wrong_unique_kind_home() {
     let root = test_root("check_rejects_declaration_in_wrong_unique_kind_home");
@@ -295,6 +301,9 @@ fn check_uses_scanned_symlink_path_for_kind_home() {
     );
 }
 
+/// §FS-config.3.4.11: the other side of that boundary — a file covered by
+/// several configured homes has no single expected kind, so the home-kind rule
+/// says nothing about the declaration in it.
 #[test]
 fn check_skips_home_kind_rule_for_overlapping_kind_homes() {
     let root = test_root("check_skips_home_kind_rule_for_overlapping_kind_homes");

@@ -435,3 +435,92 @@ fn an_edit_in_one_project_leaves_the_others_answering() {
     wait_for_exit(&mut child);
     let _ = fs::remove_dir_all(&root);
 }
+
+/// The on-type edits the server returns for the cursor at the end of `line`.
+/// The document is read from disk, so a case can rewrite the fixture between
+/// requests without sending a `didChange`.
+fn on_type_edits(
+    child: &mut Child,
+    stdin: &mut ChildStdin,
+    receiver: &mpsc::Receiver<Value>,
+    id: i64,
+    path: &Path,
+    line: &str,
+) -> Vec<Value> {
+    send_message(
+        stdin,
+        json!({
+            "jsonrpc": "2.0",
+            "id": id,
+            "method": "textDocument/onTypeFormatting",
+            "params": {
+                "textDocument": { "uri": file_uri(path) },
+                "position": { "line": 0, "character": line.chars().count() },
+                "ch": line.chars().last().map(String::from).unwrap_or_default(),
+                "options": { "tabSize": 4, "insertSpaces": true }
+            }
+        }),
+    );
+    recv_response_or_panic(receiver, child, id)["result"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default()
+}
+
+/// §FS-lsp.1.4.6: which configuration drives the live transform. The trigger
+/// and marker that answer a keystroke are the ones resolved for the *edited
+/// document*, so a workspace member's `[reference]` overrides win over the
+/// root's — the same document-to-config mapping `grund fmt` uses.
+///
+/// Through the protocol rather than the helper: the resolution happens per
+/// request, so a session that had resolved the root's config once at
+/// `initialize` and kept it would still satisfy a helper-level case.
+#[test]
+fn on_type_formatting_follows_the_edited_members_trigger_and_marker() {
+    let root = std::env::temp_dir().join(format!("grund-lsp-on-type-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&root);
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n[reference]\ntrigger = \"$$\"\nmarker = \"\u{a7}\"\n\
+         [workspace]\nmembers = [\"packages/app\"]\n",
+    );
+    write(
+        &root.join("packages/app/grund.toml"),
+        "grund_config_version = 1\n[reference]\ntrigger = \"%%\"\nmarker = \"@\"\n",
+    );
+    let member_doc = root.join("packages/app/src/lib.rs");
+
+    let (mut child, mut stdin, receiver) = start_server(&root);
+
+    let member_line = "//! %%FS-001-login";
+    write(&member_doc, &format!("{member_line}\n"));
+    let edits = on_type_edits(
+        &mut child,
+        &mut stdin,
+        &receiver,
+        2,
+        &member_doc,
+        member_line,
+    );
+    assert_eq!(
+        edits
+            .iter()
+            .map(|edit| edit["newText"].as_str().unwrap_or("?"))
+            .collect::<Vec<_>>(),
+        vec!["@"],
+        "the member's own marker replaces the member's own trigger: {edits:?}"
+    );
+
+    let root_line = "//! $$FS-001-login";
+    write(&member_doc, &format!("{root_line}\n"));
+    let ignored = on_type_edits(&mut child, &mut stdin, &receiver, 3, &member_doc, root_line);
+    assert!(
+        ignored.is_empty(),
+        "the root's trigger is not a trigger inside the member: {ignored:?}"
+    );
+
+    stop_server(&mut child, &mut stdin, &receiver, 4);
+    drop(stdin);
+    wait_for_exit(&mut child);
+    let _ = fs::remove_dir_all(&root);
+}

@@ -14,7 +14,7 @@ use anyhow::Result;
 
 use super::*;
 use crate::config::load_config;
-use crate::testing::{test_root, write};
+use crate::testing::{check_run, located_diagnostics, test_root, write};
 
 /// The root config every case here starts from: a workspace block written by
 /// the caller, and an ID grammar the fixtures' `SPEC-NNN-slug` headings match.
@@ -75,6 +75,51 @@ fn a_present_optional_member_is_an_ordinary_member() {
     let aliases = expand(&root).expect("a present optional member must load");
 
     assert_eq!(aliases, vec!["acme".to_string(), "vendored".to_string()]);
+}
+
+/// §FS-workspace.2.2.1.1: the case that tempts a wider key and must not get
+/// one. Git materializes an uninitialized submodule as an **empty directory**,
+/// so a repository whose member *is* the submodule has a member that exists: it
+/// expands under the canonical defaults, contributes zero declarations, and
+/// turns a citation into it into `unknown reference` (§FS-check.3.1) rather
+/// than the `unknown project alias` §FS-workspace.2.2 is about. Written as a
+/// unit case because git cannot carry an empty directory in a fixture tree.
+#[test]
+fn an_empty_directory_member_is_present_and_owns_its_namespace() {
+    let root = test_root("an_empty_directory_member_is_present_and_owns_its_namespace");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\nproject_name = \"acme\"\n\n\
+             [workspace]\nmembers = [\"hardware\"]\n\n\
+             [reference]\nmarker = \"\u{a7}\"\nstrict = true\n\n\
+             [id]\nformat = \"{kind}-{number}-{slug}\"\n\n\
+             [[kinds]]\nkind = \"SPEC\"\nfile = \"docs/spec.md\"\n\
+             title = \"What the service does\"\n\n\
+             [scan]\ninclude = [\"docs\"]\nextensions = [\"md\"]\n",
+    );
+    write(
+        &root.join("docs/spec.md"),
+        "# SPEC-001-checkout: The customer can pay for a basket.\n\nA basket becomes a receipt.\n",
+    );
+    write(
+        &root.join("docs/notes.md"),
+        "# Notes\n\nLocal: \u{a7}SPEC-001-checkout. Into the submodule: \u{a7}hardware/AR-001-bus.\n",
+    );
+    std::fs::create_dir_all(root.join("hardware")).expect("materialize the gitlink directory");
+
+    assert_eq!(
+        expand(&root).expect("an empty-directory member exists and must load"),
+        vec!["acme".to_string(), "hardware".to_string()],
+        "the directory is there, so it is an ordinary member under the canonical defaults"
+    );
+
+    let run = check_run(&root, false);
+    assert_eq!(
+        located_diagnostics(&run.config, run.report.errors.iter()),
+        vec!["docs/notes.md:3: unknown reference hardware/AR-001-bus".to_string()],
+        "the namespace is owned and empty, so the citation is a dangling reference \
+             inside it rather than a citation into a namespace nobody claims"
+    );
 }
 
 /// §FS-workspace.2.2.4, §FS-check.4.9: the default does not move. A member

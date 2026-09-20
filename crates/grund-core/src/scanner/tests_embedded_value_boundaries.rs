@@ -171,6 +171,9 @@ fn non_comment_source_markers_are_inert() {
     assert!(catalog.entries[0].value_roots.is_empty());
 }
 
+/// Overlapping marks invalidate both roots whichever physical order they were
+/// written in, and a marker on a duplicated section path invalidates the
+/// primary claim as well (§FS-values.2.4.4).
 #[test]
 fn reversed_and_duplicate_root_claims_invalidate_catalog_authority() {
     let (config, findings) = scan_embedded_value(

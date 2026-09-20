@@ -7,9 +7,13 @@ use super::*;
 use crate::grammar::INTEGRATIONS_BLOCK_VERSION;
 use crate::testing::{test_root, write};
 
-// §FS-integrations.4.4.1: `[reference.agents.<agent>]` is a partial of the
-// machine-wide keys — a key present under an agent replaces the base for
-// that agent, an absent key inherits it.
+/// §FS-integrations.4.4.1: `[reference.agents.<agent>]` is a partial of the
+/// machine-wide keys — a key present under an agent replaces the base for
+/// that agent, an absent key inherits it.
+/// §FS-config.3.1.4: `conversation_target` is read out of the user-scope config
+/// and the same key is also accepted per agent, as a partial merged over the
+/// machine-wide value — one machine reads several agents that do not render
+/// alike.
 #[test]
 fn agent_partial_overrides_only_what_it_names() {
     let text = concat!(
@@ -40,9 +44,10 @@ fn agent_partial_overrides_only_what_it_names() {
     );
 }
 
-// §FS-integrations.4.4: an override under an unknown agent names the closed
-// set rather than the key — the mistake is nearly always the spelling — and
-// an unknown key inside a known agent is the ordinary unused-key warning.
+/// §FS-integrations.4.4 / §FS-integrations.4.3.5.2: an override under an
+/// unknown agent names the closed set rather than the key — the mistake is
+/// nearly always the spelling — and an unknown key inside a known agent is the
+/// ordinary unused-key warning.
 #[test]
 fn agent_partial_reports_unknown_agents_and_keys() {
     let scan = scan_user_config("[reference.agents.codx]\nconversation_target = \"web\"\n");
@@ -137,8 +142,10 @@ fn agent_override_cannot_outrank_the_gate() {
     );
 }
 
-// §FS-integrations.4.3: the user preference is installed without rewriting
-// unrelated configuration and an explicit override replaces only its line.
+/// §FS-integrations.4.3: the user preference is installed without rewriting
+/// unrelated configuration and an explicit override replaces only its line.
+/// §FS-integrations.4.3.1: the key is `[reference] conversation`, and in this
+/// user scope both `plain` and `link` are legal values of it.
 #[test]
 fn conversation_preference_appends_and_updates() {
     let existing = "keep = true\n";
@@ -162,9 +169,12 @@ fn conversation_preference_appends_and_updates() {
     assert_eq!(again, linked);
 }
 
-// §FS-integrations.4.3.4: every TOML spelling of the key is the same setting.
-// A spelling grund failed to *see* would be silently reversed to the default
-// and written back beside the original, so these are read, not ignored.
+/// §FS-integrations.4.3.4: every TOML spelling of the key is the same setting.
+/// A spelling grund failed to *see* would be silently reversed to the default
+/// and written back beside the original, so these are read, not ignored.
+/// §FS-integrations.6.1: idempotence reaches the preference file too — a
+/// recorded value equal to the effective one is left byte-for-byte alone,
+/// comment included, rather than re-emitted in grund's own spelling.
 #[test]
 fn conversation_preference_reads_equivalent_toml_spellings() {
     for text in [
@@ -204,10 +214,11 @@ fn conversation_preference_rewrite_preserves_key_spelling() {
     );
 }
 
-/// §FS-integrations.4.3.5: nothing in this file fails. A value grund cannot
-/// interpret leaves it with no preference — the state of a machine that never
-/// wrote one — and a duplicate resolves to the first, which is the occurrence
-/// a write rewrites, so a read and a write cannot disagree.
+/// §FS-integrations.4.3.5: nothing in this file fails. §FS-integrations.4.3.5.3:
+/// a value grund cannot interpret leaves it with no preference — the state of a
+/// machine that never wrote one. §FS-integrations.4.3.5.4: a duplicate resolves
+/// to the first, which is the occurrence a write rewrites, so a read and a
+/// write cannot disagree about which line is the setting.
 #[test]
 fn user_config_reports_bad_values_and_duplicates_without_failing() {
     let scan = scan_user_config("[reference]\nconversation = \"neither\"\n");
@@ -241,9 +252,10 @@ fn user_config_reports_bad_values_and_duplicates_without_failing() {
     );
 }
 
-// §FS-integrations.4.3.5: nothing else in this file has any effect, so every
-// unconsumed key is reported with its line — a typo, a retired spelling, and
-// a repository-only key set here all read as "configured" otherwise.
+/// §FS-integrations.4.3.5.1: nothing else in this file has any effect, so every
+/// unconsumed key is reported with its line and the set grund does read — a
+/// typo, a retired spelling, and a repository-only key set here all read as
+/// "configured" otherwise.
 #[test]
 fn user_config_reports_every_unused_key() {
     let scan = scan_user_config(
@@ -285,8 +297,11 @@ fn user_config_reports_nothing_when_every_key_is_read() {
     }
 }
 
-// §FS-integrations.4.3.14: global agent guidance is versioned, idempotent, and
-// preserves user-authored text around its managed block.
+/// §FS-integrations.4.3.14: global agent guidance is versioned, idempotent, and
+/// preserves user-authored text around its managed block.
+/// §FS-integrations.4.3.11: the `plain` block is the one that tells agents to
+/// write citations bare, and switching the preference to `link` takes that
+/// sentence out again.
 #[test]
 fn agent_guidance_block_tracks_user_preference() {
     let (plain, outcome) = install_agent_guidance_block(

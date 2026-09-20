@@ -91,6 +91,12 @@ fn assert_success(output: &Output) {
     );
 }
 
+/// §FS-check.4.13.1: the fixed `oversized-lead` code, warning severity, and
+/// the exact message text after the `<path>:<line>: ` prefix, in both the text
+/// and JSON renderings. §FS-check.4.13.3: only the key activates it — with the
+/// key absent the same tree is byte-stable `success` on stdout and empty on
+/// stderr, and `--only` / `--ignore` select the finding after the complete
+/// check rather than switching the measurement on.
 #[test]
 fn absent_config_is_byte_stable_and_word_threshold_is_strict_with_exact_message() {
     let repo = Repo::new("word-threshold");
@@ -220,6 +226,11 @@ fn duplicate_sites_warn_locally_broken_stubs_stay_silent_and_errors_still_win() 
     );
 }
 
+/// §FS-check.4.13.4: which sites the rule judges. An explicit-path check
+/// judges only the sites scanned at that path, `--full` adds no lead warning
+/// outside the configured scan scope, and in a workspace each member's own
+/// effective key governs only that member's sites — the member without the key
+/// stays silent beside the one that opted in.
 #[test]
 fn configured_scope_is_per_project_explicit_path_and_not_widened_by_full() {
     let repo = Repo::new("scope");

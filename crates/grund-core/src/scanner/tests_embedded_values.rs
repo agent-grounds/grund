@@ -57,6 +57,9 @@ fn exact_marker_probe_is_total_for_utf8_and_rejects_lookalikes() {
     }
 }
 
+/// The exact marker on a plain heading grants no authority and is reported as
+/// `invalid-value-declaration` at that marker, while a cased lookalike on a
+/// numeric heading stays inert prose (§FS-values.2.4.4).
 #[test]
 fn exact_marker_requires_a_citable_numeric_heading() {
     let (_, findings) = scan_embedded(
@@ -74,6 +77,10 @@ fn exact_marker_requires_a_citable_numeric_heading() {
     );
 }
 
+/// The marker is recognised after the configured comment wrapper is removed,
+/// in every supported source form: the `//`, `///`, `//!`, `#`, `;` and `--`
+/// line comments, the `/** … */` block doc-comments with their `*`
+/// continuations, and both Python docstring quotes (§FS-values.2.4.1).
 #[test]
 fn every_source_wrapper_and_python_docstring_compares_values() {
     let line_forms = [
@@ -160,6 +167,8 @@ fn assert_single_mismatch(root: &Path, path: &Path, name: &str) {
     );
 }
 
+/// A child whose component text is invalid is reported at its own line only;
+/// the rest of the run keeps its coordinates (§FS-values.2.4.3).
 #[test]
 fn bad_component_text_does_not_cascade_to_following_coordinates() {
     assert_eq!(
@@ -172,6 +181,9 @@ fn bad_component_text_does_not_cascade_to_following_coordinates() {
     );
 }
 
+/// The run must be contiguous and in physical order, so an out-of-order pair is
+/// reported at each heading that differs from the next expected index
+/// (§FS-values.2.4.3).
 #[test]
 fn every_out_of_order_physical_position_is_located() {
     assert_eq!(
@@ -184,6 +196,11 @@ fn every_out_of_order_physical_position_is_located() {
     );
 }
 
+/// Every way a marked root's component run can fail its strict physical shape —
+/// zero components at the root marker, a gap, a named or plain child, a
+/// grandchild, root lead prose, a component body, an empty title, the wrong
+/// heading depth, a duplicated coordinate — is reported at the offending line
+/// (§FS-values.2.4.3).
 #[test]
 fn strict_shape_branches_report_the_offending_lines() {
     let cases = [
@@ -231,6 +248,9 @@ fn strict_shape_branches_report_the_offending_lines() {
     );
 }
 
+/// A marked root nested inside another marked root invalidates both, so the
+/// bindings aimed at the inner root and below its component are the ones that
+/// lose their authority (§FS-values.2.4.4).
 #[test]
 fn longest_invalid_root_suppresses_its_component_binding_only() {
     let (config, findings) = scan_embedded(

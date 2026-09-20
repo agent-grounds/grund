@@ -1,0 +1,9 @@
+grund_config_version = 1
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+index = "README.md"
+
+[scan]
+include = ["docs"]

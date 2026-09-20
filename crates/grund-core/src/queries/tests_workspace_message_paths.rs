@@ -1,6 +1,11 @@
 //! Test module: a path baked *into* a message is spelled from the report root,
-//! not from the project the finding came out of (§FS-workspace.8.1,
-//! §FS-config.3.6). The printer already renders `Diagnostic.path` that way; a
+//! not from the project the finding came out of (§FS-errors.3.1,
+//! §FS-workspace.8.1, §FS-config.3.6). The three cases below are that leaf's
+//! three named examples: a duplicate declaration's other home, an ambiguous
+//! ID's competing sites, and the stub a broken-stub refusal names — with the
+//! stub's own link target left verbatim, because it is the user's text quoted
+//! back rather than a path grund resolved.
+//! The printer already renders `Diagnostic.path` that way; a
 //! site named inside the message text has to agree, or one workspace line has
 //! two halves relative to two different roots and an editor can follow only the
 //! first of them.

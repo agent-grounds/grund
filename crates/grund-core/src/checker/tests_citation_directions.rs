@@ -110,6 +110,10 @@ fn scanner_file_home_source_kind() {
 // and prohibition passes and the suggestions channel.
 /// The matrix exercises `must`, `never` (`must-not`), `should`, and the
 /// implicit `may`, including their gate/suggestion separation (§FS-config.3.9.1).
+/// §FS-config.3.9.1.1: an obligation is asked of each top-level declaration of
+/// the citing kind and satisfied anywhere in its body, while a prohibition
+/// fires once per offending citation site, anchored at that site's own
+/// `file:line`.
 #[test]
 fn citation_directions_obligations_and_prohibitions() {
     let root = test_root("citation_directions_obligations_and_prohibitions");
@@ -240,9 +244,11 @@ must = ["FS"]
     );
 }
 
-// §FS-config.3.9 / §FS-check.3.11.6: an E2E case with no scanned citations is
-// still an obligation unit, so `[citations.E2E] must = ["FS"]` is a hard gate
-// in a normal root check that skips direct fixture trees.
+/// §FS-config.3.9.1.2 / §FS-check.3.11.6: `E2E` obligations are per case, and
+/// an otherwise empty evidence set fails a `must` entry rather than satisfying
+/// it vacuously — so `[citations.E2E] must = ["FS"]` is a hard gate on a case
+/// with no scanned citations, in a normal root check that skips direct fixture
+/// trees.
 #[test]
 fn citation_directions_e2e_must_is_not_vacuous_without_scanned_files() {
     let root = test_root("citation_directions_e2e_must_is_not_vacuous_without_scanned_files");
@@ -284,8 +290,11 @@ must = ["FS"]
     );
 }
 
-// §FS-config.3.9: E2E `spec.refs` entries count as case-level evidence for
-// citation-direction obligations without entering the ordinary citation stream.
+/// §FS-config.3.9.1.2: an `E2E` obligation evaluates the case's scanned files
+/// *plus* its manifest's `spec.refs` entries, and such an entry is kind-shaped
+/// evidence rather than an ordinary citation — it satisfies the `must` while
+/// naming an ID that does not resolve locally, and never enters the citation
+/// stream the dangling check reads.
 #[test]
 fn citation_directions_e2e_spec_refs_satisfy_must() {
     let root = test_root("citation_directions_e2e_spec_refs_satisfy_must");

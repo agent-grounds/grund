@@ -174,6 +174,9 @@ fn home_directory_refusal_is_lifted_by_no_flag() {
     assert!(!home.join("grund.toml").exists(), "grund.toml was written");
 }
 
+/// §FS-init.1.2.5: the refusal names the rule that declined the run and, where
+/// one exists, the flag that proceeds — here `--no-vcs`, which the next run
+/// passes to the same target and is let through.
 #[test]
 fn target_outside_version_control_is_refused_until_no_vcs() {
     let target = outside_repo_dir("no_vcs");

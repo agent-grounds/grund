@@ -49,7 +49,9 @@ class ClauseReadingTests(unittest.TestCase):
     def test_a_removals_two_tenses_read_as_opposite_directions(self):
         """The same removal, promised and made: one clause each, so a deprecation
         that names its release is refused above it and the message that replaces
-        it is refused below it."""
+        it is refused below it. §FS-distribution.4.2.3 is why the pending half is
+        spelled `is removed in` rather than "will be removed in" — the two tenses
+        of one removal read as the same claim."""
         found = claims("is removed in 0.15.0\nwas removed in 0.13.0")
         self.assertEqual(
             [(c.direction, c.release) for c in found],
@@ -62,7 +64,20 @@ class ClauseReadingTests(unittest.TestCase):
             self.assertEqual(claim.release, "0.13.0", text)
 
     def test_the_clause_vocabulary_is_closed(self):
+        """§FS-distribution.4.2.3 — the vocabulary is closed on purpose: a ramp
+        written outside the wording the warnings already use names no release the
+        guard can read, so "will be removed in" is not a clause."""
         self.assertEqual(claims("this will be removed in 0.15.0 one day"), [])
+
+    def test_the_wording_clause_is_specified_but_not_read_yet(self):
+        """§FS-distribution.4.2.6 — this assertion pins an *unimplemented*
+        clause, deliberately. `wording changes in <release>` is specified and
+        the guard does not read it, so the gap is stated here rather than left
+        for a reader of `CLAUSES` to discover. The follow-up that adds the
+        clause inverts this test; it does not delete it."""
+        self.assertNotIn("wording changes in", [clause for clause, _ in ramps.CLAUSES])
+        self.assertEqual(claims("wording changes in 0.15.0"), [])
+        self.assertEqual(claims("wording changes in grund 0.15.0"), [])
 
     def test_a_release_is_never_read_across_a_line_break(self):
         self.assertEqual(claims("… becomes an error in\ngrund 0.14.0."), [])
@@ -104,10 +119,16 @@ class VerdictTests(unittest.TestCase):
         self.assertEqual(refused(self.REMOVAL, "0.12.4"), [])
 
     def test_a_tree_that_landed_and_still_promises_one_release_can_cut_nothing(self):
+        """§FS-distribution.4.2.5 — the window of releases left can be empty, and
+        an empty window is itself the answer: a tree that landed one ramp and
+        still promises another at the same release may be published as nothing."""
         report = refused(f"{self.LANDED}\n{self.PENDING}", "0.12.4")
         self.assertTrue(any("no release at all" in line for line in report))
 
     def test_the_window_is_the_highest_landed_and_the_lowest_promised(self):
+        """§FS-distribution.4.2.5 — the window the refusal names is bounded by the
+        highest release a landed message claims and the lowest one a pending
+        message promises."""
         found = claims('"was removed in 0.11.0"\n"was removed in 0.13.0"\n"becomes an error in 0.14.0"')
         self.assertEqual(ramps.release_window(found), ("0.13.0", "0.14.0"))
 

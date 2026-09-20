@@ -138,9 +138,10 @@ fn a_prohibition_names_the_home() {
     );
 }
 
-/// §FS-check.3.6: `require_grounding` reaches Markdown inside a non-citable
-/// home, and only there — the exemption is about documents, and this home is
-/// one the maintainer declared matters.
+/// §FS-check.3.6 / §FS-config.3.4.1.1: grounding is one of the things a
+/// non-citable kind keeps — over every scanned file in its home, `.md`
+/// included, and only there, because the exemption is about documents and this
+/// home is one the maintainer declared matters.
 #[test]
 fn require_grounding_reaches_markdown_in_a_non_citable_home() {
     let root = skills_repo(
@@ -176,8 +177,10 @@ fn require_grounding_reaches_markdown_in_a_non_citable_home() {
     );
 }
 
-/// §FS-config.3.4.1.2 / §FS-init.2.3.4.4.1: the generated block names the kind by
-/// its place, and leaves it out of the ID vocabulary.
+/// §FS-config.3.4.1.1 / §FS-config.3.4.1.2 / §FS-init.2.3.4.4.1: the row a
+/// non-citable kind keeps in the generated Project map and directions names the
+/// kind by its *place*, never by its name, and leaves it out of the ID
+/// vocabulary.
 #[test]
 fn the_generated_block_names_a_non_citable_kind_by_place() {
     let root = skills_repo(
@@ -246,8 +249,13 @@ fn citable_names_still_collide_and_names_are_unique() {
     );
 }
 
-/// §FS-config.3.4.1: the keys a non-citable kind may not combine — an index
-/// lists declarations it will never have, and a place with no home is `code`.
+/// §FS-config.3.4.1 / §FS-config.3.4.2.2: the keys a non-citable kind may not
+/// combine — `index` is valid only on a citable folder kind, because it lists
+/// declarations this one will never have, and a place with no home is `code`.
+/// §FS-check.3.18.1: "a non-citable kind declares nothing to index" is the
+/// config refusal that keeps the enrollment rule off such a kind — the set it
+/// would index can never be non-empty, so the mistake is caught at load rather
+/// than passing as a silent no-op.
 #[test]
 fn a_non_citable_kind_needs_a_home_and_takes_no_index() {
     let root = test_root("a_non_citable_kind_needs_a_home_and_takes_no_index");
@@ -284,8 +292,10 @@ fn a_non_citable_kind_is_not_a_citation_target() {
 /// the goldens and these assertions copy it rather than build it.
 const PREFIX_REMOVED: &str = "[[kinds]] `prefix` was removed in grund 0.13.0 — rename it to `kind`";
 
-/// §FS-config.3.4.6: the key stopped loading, and the refusal names `kind`
-/// at the line `prefix` is written on rather than dropping the row's name.
+/// §FS-config.3.4.6 / §FS-config.3.4.6.1: the key stopped loading, and the
+/// migration is that rename — the refusal names `kind` at the line `prefix` is
+/// written on, which is the line to make the edit on, rather than dropping the
+/// row's name.
 #[test]
 fn the_removed_prefix_key_is_refused_at_its_own_line() {
     let root = test_root("the_removed_prefix_key_is_refused_at_its_own_line");
@@ -419,9 +429,9 @@ fn the_named_homeless_kind_takes_the_rules_and_code_becomes_unknown() {
     );
 }
 
-/// §FS-init.2.3.4.4.1 / §FS-init.2.3.5: no map row — it is the one kind that is
-/// not a place — and a directions row last, carrying its `title` as the scope
-/// where the project wrote one.
+/// §FS-config.3.9.2.5 / §FS-init.2.3.4.4.1 / §FS-init.2.3.5: no map row — it is
+/// the one kind that is not a place — and a directions row rendered last,
+/// carrying its `title` as the scope where the project wrote one.
 #[test]
 fn the_homeless_kind_renders_as_directions_only() {
     let root = named_homeless_repo(
@@ -449,8 +459,10 @@ fn the_homeless_kind_renders_as_directions_only() {
     assert!(fs < src, "the homeless kind closes the list: {directions}");
 }
 
-/// §FS-config.3.9.2: a complement is one place, and `code` is a name a row
-/// may take only by *being* that complement.
+/// §FS-config.3.9.2 / §FS-config.3.4.5.2: a complement is one place, and `code`
+/// is reserved to it — a row may take that name only by *being* the complement,
+/// so a homed row wearing it is refused while a homeless `citable = false` row
+/// declaring it simply retitles the kind.
 #[test]
 fn the_homeless_kind_is_one_row_and_code_is_reserved_to_it() {
     let root = test_root("the_homeless_kind_is_one_row_and_code_is_reserved_to_it");

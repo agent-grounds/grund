@@ -51,6 +51,11 @@ fn render_shared(name: &str, rules: &str) -> String {
 /// §FS-init.2.3.5.2: three units sit under one verb — a declaration, a file in
 /// a home, and a source file that already cites something — so every bullet
 /// says which one it is.
+///
+/// §FS-init.2.3.5.2.1 is how the last two are spelled: a non-citable kind is
+/// named by its place (`skills/`, `docs/runbook.md`), because its name is a
+/// config handle no citation can carry, while the homeless kind has no place,
+/// keeps its name, and narrows its subject with *that cites anything*.
 #[test]
 fn every_bullet_names_the_unit_its_rules_are_checked_per() {
     let section = render_shared(
@@ -355,10 +360,12 @@ must-not = ["GOAL"]
     );
 }
 
-/// §DF-directions-render.2.4: the closing line reports the *global* default
-/// alone, and only `must-not` / `should-not` close anything — a `must` or
-/// `should` default invents no obligation and forbids nothing
-/// (§FS-config.3.9.4).
+/// §DF-directions-render.2.4 / §FS-init.2.3.5.6: the closing line reports the
+/// *global* default alone, and only `must-not` / `should-not` close anything —
+/// a `must` or `should` default invents no obligation and forbids nothing
+/// (§FS-config.3.9.4). All three wordings are pinned here, because the open
+/// one keeps an agent from over-inferring prohibitions from silence and the
+/// closed ones keep it from missing a closed world.
 #[test]
 fn the_closing_line_reports_the_global_default() {
     let config = |global: &str| {
@@ -403,10 +410,10 @@ fn the_closing_line_reports_the_global_default() {
 }
 
 /// §FS-init.2.3.5.1: the opening paragraph is the legend plus the grounding
-/// sentence. The sentence distinguishes citing from declaring (§FS-check.3.6)
-/// and names the non-citable homes, whose files can only cite
-/// (§FS-check.3.7.3); an unwalked home is left out because nothing in it is
-/// scanned.
+/// sentence. §FS-init.2.3.5.7.1: the sentence distinguishes citing from
+/// declaring (§FS-check.3.6) and extends with the walked non-citable homes,
+/// whose files can only cite (§FS-check.3.7.3); an unwalked home is left out
+/// because nothing in it is scanned.
 #[test]
 fn the_legend_and_the_grounding_sentence_open_the_section() {
     let section = render_shared(

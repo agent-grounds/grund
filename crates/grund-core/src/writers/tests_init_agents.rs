@@ -40,6 +40,84 @@ fn agent_setup_instructions_match_the_distributable_skill() {
     );
 }
 
+/// §FS-init.5.1: what the instructions *say*, as against the byte-identity of
+/// the two copies above. They read as an agent skill: inspect the target repo
+/// and its existing artifacts first, recommend with repo evidence and pros and
+/// cons, ask the user to confirm or override, write `grund.toml` **before**
+/// `grund init` so the generated managed block reflects the chosen grammar, and
+/// only then validate with `grund config validate` and `grund check`. The three
+/// offsets are the ordering claim — a workflow with the right steps in the
+/// wrong order writes a block against a grammar nobody chose.
+#[test]
+fn agent_setup_instructions_name_the_ordered_adoption_workflow() {
+    let text = AGENT_SETUP_INSTRUCTIONS;
+    for phrase in [
+        "Inspect the target repo before asking questions",
+        "roadmaps, changelogs, decisions, plans, tests, and agent instruction files",
+        "repo evidence",
+        "- Pros.",
+        "- Cons.",
+        "confirm or override every option",
+        "grund config validate",
+        "grund check",
+    ] {
+        assert!(
+            text.contains(phrase),
+            "the setup instructions must name {phrase:?}"
+        );
+    }
+
+    let write_config = text
+        .find("Write `grund.toml` from the analysis")
+        .expect("the instructions write the config");
+    let run_init = text
+        .find("Run `grund init [path]")
+        .expect("the instructions run init");
+    let validate = text
+        .find("Run `grund config validate [path]`")
+        .expect("the instructions validate");
+    assert!(
+        write_config < run_init,
+        "the config must be written before `grund init`, or the managed block reflects a grammar nobody chose"
+    );
+    assert!(
+        run_init < validate,
+        "validation is what the run is checked by, so it comes last"
+    );
+}
+
+/// §FS-init.5.2: adopting a docs-heavy repository is a choice made *before* any
+/// write — the canonical artifact types are shown beside what the repository
+/// already has, the three adoption models are offered, and the recommended
+/// `grund init` form reaches for `--docs` only where a scaffold is wanted.
+#[test]
+fn agent_setup_instructions_offer_the_three_adoption_models_before_any_write() {
+    let text = AGENT_SETUP_INSTRUCTIONS;
+    assert!(
+        text.contains(
+            "canonical `grund`, canonical core plus project-specific extras, or existing structure with citations"
+        ),
+        "the three adoption models are the choice the user is asked to make"
+    );
+    assert!(
+        text.contains(
+            "adding `--docs` only when the repo is fresh or the user selected a canonical-layout migration"
+        ),
+        "existing specs are represented in the config rather than replaced by generic scaffold folders"
+    );
+
+    let show_beside = text
+        .find("show the canonical `grund` artifact types beside the detected")
+        .expect("the instructions show the canonical types beside the detected ones");
+    let write_config = text
+        .find("Write `grund.toml` from the analysis")
+        .expect("the instructions write the config");
+    assert!(
+        show_beside < write_config,
+        "the adoption choice is made before config or docs are written"
+    );
+}
+
 #[test]
 fn embedded_templates_are_lf_canonical() {
     assert_eq!(
@@ -57,6 +135,10 @@ fn embedded_templates_are_lf_canonical() {
     }
 }
 
+/// §FS-init.2.3.8.1: the `[id].section_separator` is one of the things the
+/// effective config fills into the block rather than the `vN` text fixing — so
+/// a repository that separates sections with `#` reads its own separator back
+/// out of the rendered examples.
 #[test]
 fn agents_guidance_uses_configured_section_separator() {
     let mut config = Config::default_for(PathBuf::from("."));
@@ -115,6 +197,10 @@ fn agents_update_does_not_append_current_block_twice() {
     assert_eq!(updated.matches(current_marker()).count(), 1);
 }
 
+/// §FS-init.2.3.10.1: a file already holding a supported block is re-rendered
+/// and, where the render differs from the managed region on disk, only those
+/// bytes are replaced — the content before the block stays byte-identical and
+/// the run reports `Updated`, without `--force`.
 #[test]
 fn agents_update_rewrites_current_block_from_rendered_template() {
     // A block that differs from the current render (here: an extra hand-added
@@ -135,6 +221,9 @@ fn agents_update_rewrites_current_block_from_rendered_template() {
     assert_eq!(updated.matches(current_marker()).count(), 1);
 }
 
+/// §FS-init.3.2: the delimiters are the ownership boundary, so everything
+/// before and after the block — and the block's position between them — is
+/// preserved byte-for-byte on an update that is not a `--force` rewrite.
 #[test]
 fn agents_update_keeps_current_block_in_middle_position() {
     // §FS-init.2.3.1 / §FS-init.2.2: a block already current and already
@@ -179,6 +268,9 @@ fn agents_update_handles_crlf_line_endings() {
     assert!(!updated.contains("stale body line"));
 }
 
+/// §FS-init.2.3.9.2: a v3-and-earlier block predates the delimiters, so the H2
+/// heading opens it and the next H1/H2 closes it. `init` still recognizes that
+/// form and migrates it to the delimited one in place, reported `Updated`.
 #[test]
 fn agents_update_migrates_legacy_block_to_delimited_form() {
     // §FS-init.2.3.9 / §DF-managed-block-delimiters: a legacy H2-bounded block
@@ -210,6 +302,24 @@ fn agents_update_preserves_non_heading_content_after_delimited_block() {
 
     assert_eq!(result, AgentsUpdateResult::Unchanged);
     assert!(updated.contains("<!-- rhei:begin -->\nother tool's region\n<!-- rhei:end -->\n"));
+}
+
+/// §FS-init.2.3.10.2: an entrypoint carrying a block version this binary does
+/// not support is a refusal, not a downgrade — the splice never runs, so the
+/// caller has the original text to leave on disk unchanged, and the message
+/// names the version it found beside the one it supports.
+#[test]
+fn agents_update_refuses_a_newer_block_version() {
+    let existing = "# Local notes\n\n<!-- BEGIN GRUND MANAGED BLOCK -->\n\
+         ## Grounding with grund (v99)\n\nbody from a newer grund\n\
+         <!-- END GRUND MANAGED BLOCK -->\n";
+    let err = update_agents_text(existing, &current_block(), "AGENTS.md")
+        .expect_err("a newer block version must refuse the update");
+    let message = format!("{err:#}");
+    assert!(
+        message.contains("AGENTS.md contains newer grund init block v99"),
+        "the refusal names the file and the version it found: {message}"
+    );
 }
 
 #[test]
@@ -277,6 +387,9 @@ fn check_reports_malformed_agents_block() {
     );
 }
 
+/// §FS-init.2.3.8.2: the worked example citation is written in the escaped
+/// illustration form, never as a live citation — its ID is deliberately not a
+/// declaration of the host repo, so a live marker would dangle.
 #[test]
 fn rendered_block_citation_example_is_escaped() {
     // §FS-init.2.3.8: the worked example must be the `<§>`-escaped illustration
@@ -453,6 +566,9 @@ fn check_ignores_companion_agent_entrypoints_without_canonical_agents_md() {
     );
 }
 
+/// §FS-init.2.3.7.2: agent-entrypoint validation reads the marker line and the
+/// version it carries, not a byte-diff against the canonical text — the body
+/// here is arbitrary, and the finding is about `v99` alone.
 #[test]
 fn check_validates_managed_companion_without_canonical_agents_md() {
     let root = test_root("check_validates_managed_companion_without_canonical_agents_md");

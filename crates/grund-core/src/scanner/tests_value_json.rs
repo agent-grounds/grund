@@ -49,6 +49,12 @@ fn declarations<'a>(findings: &'a Findings, kind: &str, slug: &str) -> &'a [crat
         .unwrap_or(&[])
 }
 
+/// The reader keeps member order, the raw number and string spellings, the
+/// decoded strings, and the exact key/member/element spans, all before any
+/// lookup map could reorder them (§FS-values.2.2.2).
+/// §FS-config.3.4.9.2: the `folder` home `values` is the JSON source boundary —
+/// its direct `.json` child `catalog.json` is what contributes, read whole and
+/// normalized, without the generic `[scan] include` reaching for it.
 #[test]
 fn json_values_preserve_scalar_kind_spelling_and_member_order() {
     let root = one_kind("json_values_preserve_scalar_kind_spelling_and_member_order");
@@ -157,6 +163,10 @@ fn json_values_preserve_scalar_kind_spelling_and_member_order() {
     assert!(findings.invalid_value_declarations.is_empty());
 }
 
+/// A source must be one top-level object whose every key is a full unaliased
+/// local ID of the owning kind and whose every element is a JSON number or
+/// string; a non-object root, an ID-shaped non-ID, a wrong-kind key, and a
+/// boolean component are each their own invalid declaration (§FS-values.2.2.1).
 #[test]
 fn json_values_reject_root_key_and_element_shape_independently() {
     let root = value_root(

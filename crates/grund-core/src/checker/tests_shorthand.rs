@@ -30,8 +30,9 @@ fn check_tree(config: &Config, root: &Path) -> (Findings, CheckReport) {
 /// §FS-check.3.13.3: a shorthand that names exactly one declaration is reported
 /// once, with the canonical form to write — and, per §FS-check.1.2.4, it still
 /// counts as a citation everywhere else. The uncited warning firing here was
-/// the original defect: `check` said "declared but never cited" about a
-/// declaration this file cites twice.
+/// the original defect (§FS-check.4.1.1): `check` said "declared but never
+/// cited" about a declaration this file cites twice, so the resolving
+/// shorthand has to count for §FS-check.4.1 like any other citation.
 #[test]
 fn resolvable_shorthand_reports_once_and_counts_as_a_citation() {
     let root = test_root("resolvable_shorthand_reports_once_and_counts_as_a_citation");
@@ -150,9 +151,9 @@ fn bare_shorthand_is_text_even_when_strict_is_off() {
     assert!(messages(&report).is_empty(), "{:?}", messages(&report));
 }
 
-// §DF-number-only-citation-shorthand.2.6: the full-ID pass claims its tokens
-// first, so a full citation is never also read as the shorthand prefix
-// inside it.
+/// §FS-check.1.2.3 / §DF-number-only-citation-shorthand.2.6: the full-ID pass
+/// claims its tokens first, so a full citation is never also read as the
+/// shorthand prefix inside it.
 #[test]
 fn full_id_wins_over_the_shorthand_prefix_inside_it() {
     let root = test_root("full_id_wins_over_the_shorthand_prefix_inside_it");
@@ -172,9 +173,10 @@ fn full_id_wins_over_the_shorthand_prefix_inside_it() {
     assert!(messages(&report).is_empty(), "{:?}", messages(&report));
 }
 
-// §FS-id.4.1: a format missing `{number}` or `{slug}` has no shorthand, so
-// neither the grammar nor any pass downstream does anything. `grund` itself
-// is on `{kind}-{slug}`, which is why its own tree gains no findings.
+/// §FS-check.1.2.1 / §FS-id.4.1: a format missing `{number}` or `{slug}` has
+/// no shorthand, so neither the grammar nor any pass downstream does anything.
+/// `grund` itself is on `{kind}-{slug}`, which is why its own tree gains no
+/// findings.
 #[test]
 fn number_less_and_slug_less_formats_have_no_shorthand() {
     let root = test_root("number_less_and_slug_less_formats_have_no_shorthand");
@@ -368,9 +370,11 @@ fn an_escaped_shorthand_that_resolves_is_suggested() {
     );
 }
 
-// §AR-scanner.2.6.11: the reduction drops the placeholder together with one
-// adjacent separator, whichever side carries it — so a format that puts the
-// slug in the middle still yields `{kind}-{number}`.
+/// §FS-check.1.2.1 / §AR-scanner.2.6.11: the shorthand shape is the kind's
+/// effective format with `{slug}` and one adjacent literal separator removed.
+/// The reduction drops the placeholder together with one adjacent separator,
+/// whichever side carries it — so a format that puts the slug in the middle
+/// still yields `{kind}-{number}`.
 #[test]
 fn shorthand_shape_is_derived_from_either_separator_side() {
     let root = test_root("shorthand_shape_is_derived_from_either_separator_side");
@@ -391,9 +395,11 @@ fn shorthand_shape_is_derived_from_either_separator_side() {
     );
 }
 
-// §FS-check.3.13: the same boundary in the scanner — a site the rewrite will
-// not touch must not be reported either, and reporting it would name a token
-// (`§FS-042`) that does not appear in the file.
+/// §FS-check.1.2.3 / §FS-check.3.13: the trailing boundary in the scanner. A
+/// shorthand claims a token only where the character after the match cannot
+/// continue an ID, so `§FS-042-User-Login` and `§FS-042abc` are no citation at
+/// all — reporting one would name a token (`§FS-042`) that does not appear in
+/// the file, and a site the rewrite will not touch must not be reported either.
 #[test]
 fn a_shorthand_prefix_of_a_longer_token_is_never_reported() {
     let root = test_root("a_shorthand_prefix_of_a_longer_token_is_never_reported");

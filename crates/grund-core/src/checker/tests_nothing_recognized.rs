@@ -68,7 +68,9 @@ fn a_tree_written_for_another_id_format_stops_reporting_success() {
 
 /// §FS-check.4.5.6: the caution's own remaining ground — a tree whose headings
 /// are not kind-shaped at all, where §FS-check.4.6 has nothing to say and the
-/// run still has to stop printing `success`.
+/// run still has to stop printing `success`. It is also §FS-check.4.5.1's
+/// second usual cause read straight: headings that open with a prefix no
+/// configured kind claims leave every one of them a non-declaration.
 #[test]
 fn a_tree_with_no_near_miss_still_earns_the_caution() {
     let root = test_root("a_tree_with_no_near_miss_still_earns_the_caution");

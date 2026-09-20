@@ -6,8 +6,13 @@ use crate::config::{Config, load_config};
 use crate::grammar::{anchor_slug_github, reduce_heading_text, section_anchor_text};
 use crate::model::{Id, ShowRenderMode};
 use crate::queries::show_declaration;
-use crate::testing::{canonical_test_path, numbered_config, test_root, write};
+use crate::testing::{canonical_test_path, numbered_config, scan_findings, test_root, write};
 
+/// §FS-check.1.1.5: a fenced code block is read as neither prose nor code, so
+/// nothing inside it is a citation. A fence opens with at most three leading
+/// spaces and a run of at least three backticks or tildes, closes only on a
+/// run of the same character at least as long, and a backtick opener carrying
+/// a backtick in its info string opens nothing.
 #[test]
 fn markdown_fences_match_the_opening_delimiter() {
     let root = test_root("markdown_fences_match_the_opening_delimiter");
@@ -360,4 +365,87 @@ fn bare_token_in_markdown_link_destination_is_not_a_citation() {
              link destination to begin with: {:?}",
         strict_findings.citations
     );
+}
+
+/// §FS-check.1.1.6: an exact explicit value binding records its authored
+/// component *beside* the ordinary citation, and its marker-prefixed token
+/// still counts as exactly one citation under every recognition rule above —
+/// a binding adds a record, it does not add a second citation. The second half
+/// is the other claim: under `[reference] strict = false` the same delimited
+/// shape written without the marker is still recognized as a citation, and is
+/// still not a binding — it is the `invalid-value-binding` of §FS-values.3.1.1,
+/// because the marker requirement belongs to the binding grammar
+/// (§FS-values.3.1) and `strict` never removes it.
+#[test]
+fn an_exact_value_binding_is_one_citation_and_keeps_its_marker_requirement() {
+    for (name, strict, line, bindings) in [
+        (
+            "an_exact_value_binding_is_one_citation",
+            true,
+            "The offer quotes `1200` (\u{a7}CONST-field-price.1) today.\n",
+            1usize,
+        ),
+        (
+            "an_unmarked_value_binding_attempt_is_still_refused_when_loose",
+            false,
+            "The offer quotes `1200` (CONST-field-price.1) today.\n",
+            0usize,
+        ),
+    ] {
+        let root = test_root(name);
+        write(
+            &root.join("grund.toml"),
+            &format!(
+                "grund_config_version = 1\n\n\
+                 [reference]\nstrict = {strict}\n\n\
+                 [id]\nformat = \"{{kind}}-{{slug}}\"\nslug_pattern = \"[a-z][a-z0-9-]*\"\n\n\
+                 [[kinds]]\nkind = \"CONST\"\nfolder = \"values\"\nindex = false\nvalues = true\n\n\
+                 [scan]\ninclude = [\"docs\", \"values\"]\nextensions = [\"md\"]\n"
+            ),
+        );
+        write(
+            &root.join("values/field-price.md"),
+            "# CONST-field-price: Reference field price\n## 1. 1200\n",
+        );
+        write(&root.join("docs/offer.md"), line);
+
+        let config = load_config(&root).expect("load the value fixture config");
+        let findings = scan_findings(&config, &root);
+
+        assert_eq!(
+            findings.citations.len(),
+            1,
+            "{name}: the token is one citation, binding or not: {:?}",
+            findings.citations
+        );
+        assert_eq!(
+            findings.citations[0].has_marker, strict,
+            "{name}: the marked half carries the marker and the loose half does not"
+        );
+        assert_eq!(
+            findings.value_bindings.len(),
+            bindings,
+            "{name}: only the marker-prefixed form binds: {:?}",
+            findings.value_bindings
+        );
+        assert_eq!(
+            findings.invalid_value_bindings.len(),
+            1 - bindings,
+            "{name}: dropping the marker does not make the attempt legal, \
+                 whatever `strict` says: {:?}",
+            findings.invalid_value_bindings
+        );
+        if let Some(binding) = findings.value_bindings.first() {
+            assert_eq!(binding.authored.decoded, "1200");
+            assert_eq!(binding.section, "1");
+            assert_eq!(binding.id.slug.as_deref(), Some("field-price"));
+        }
+        if let Some(refused) = findings.invalid_value_bindings.first() {
+            assert_eq!(
+                refused.message,
+                "value binding must be exactly `literal` (marker-prefixed full \
+                 value ID with one positive numeric field)"
+            );
+        }
+    }
 }

@@ -10,6 +10,9 @@ use crate::testing::{check_run, drifted_include_repo, located_diagnostics, test_
 // Only the shared fixtures are read here: every case drives `check` through
 // `crate::testing::check_run`, so this module names none of the api's own items.
 
+/// §FS-check.1.3.4: purely additive. Strip the out-of-scope tier from the
+/// `--full` report and what is left is exactly what `grund check` prints on
+/// the same tree, so the flag can only ever turn a green run red.
 #[test]
 fn full_scope_leaves_the_in_scope_report_unchanged() {
     let root = drifted_include_repo("full_scope_leaves_the_in_scope_report_unchanged");

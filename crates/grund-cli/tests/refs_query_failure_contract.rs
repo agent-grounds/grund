@@ -175,6 +175,10 @@ fn ambiguous_shorthand_obeys_both_release_phases_in_text_and_json() {
     assert_run(&json, expected_json.0, &expected_json.1);
 }
 
+/// §FS-errors.2.3.2: `show` is one of the ID queries the bare query-failure
+/// shape is for — an invalid ID and an ambiguous ID both print the message with
+/// no `error:` prefix on stderr, leave stdout empty, and exit `1`, whichever
+/// release phase `refs` is in.
 #[test]
 fn show_bytes_and_status_do_not_move_with_refs() {
     let fixture = Fixture::new("show-seam");
@@ -193,6 +197,10 @@ fn show_bytes_and_status_do_not_move_with_refs() {
     );
 }
 
+/// §FS-errors.2.2.2: the exit code each prefix accompanies, read off the two
+/// neighbours of a query failure — an unknown project alias and an unscannable
+/// tree are launch/run failures, so both keep the `error:` prefix and exit `2`,
+/// while a satisfiable query with an empty answer stays silent at exit `0`.
 #[test]
 fn empty_answer_and_context_failures_keep_their_neighboring_statuses() {
     let fixture = Fixture::new("negative-seams");
@@ -230,6 +238,11 @@ fn empty_answer_and_context_failures_keep_their_neighboring_statuses() {
     assert!(!stderr(&scan_failure).contains(WARNING.trim_end()));
 }
 
+/// §FS-distribution.4.2.4: the version-gated contract test the scalar ramp
+/// clause leans on. The `refs` warning is the one line the `will exit … in
+/// <release>` clause is written for, so this tree may carry its golden only
+/// below the release it names; from 0.15.0 the assertions above expect the
+/// ordinary failed-query bytes at exit `1` and no warning at all.
 #[test]
 fn warning_phase_cannot_survive_the_release_it_names() {
     let warning_golden =

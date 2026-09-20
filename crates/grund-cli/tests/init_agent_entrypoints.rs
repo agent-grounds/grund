@@ -99,6 +99,9 @@ fn init_workspace_symlinked_alias_writes_canonical_target() {
     );
 }
 
+/// §FS-init.3.1: `.github/` is generic GitHub metadata, so it is not the
+/// unambiguous signal `.github/copilot-instructions.md` needs — the fixture has
+/// the directory and the file is still never created.
 #[test]
 fn init_creates_agent_aliases_when_agent_workspaces_exist() {
     // §FS-init.2.1.2 / §FS-init.2.3.12.1: missing neutral companion aliases are created
@@ -201,6 +204,9 @@ fn init_cursor_workspace_creates_cursor_rules_alias() {
 /// attribute to Zed by existence alone — automatic mode must NOT pick it
 /// up. Only an explicit `--zed` flag, or a `.zed/` workspace directory,
 /// creates or updates `.rules`.
+///
+/// §FS-init.3.1: that is the second ambiguous companion of the guarantee — the
+/// signal has to be unambiguous, and a bare `.rules` is not one.
 #[test]
 fn init_zed_rules_is_only_workspace_or_flag_gated() {
     let target = workdir("init_zed_rules_is_only_workspace_or_flag_gated");
@@ -323,6 +329,37 @@ fn init_preserves_lone_override_entrypoint_without_creating_agents_md() {
         "AGENTS.override.md should keep existing notes and append the managed block:\n{override_contents}"
     );
 }
+/// §FS-init.2.3.10.2: an entrypoint whose managed block is newer than this
+/// binary supports stops the run at exit `2` and leaves the file byte-for-byte
+/// as it was — a downgrade would silently replace a block written by a grund
+/// that knows more than this one.
+#[test]
+fn init_refuses_a_newer_block_version_and_leaves_the_file_unchanged() {
+    let target = workdir("init_refuses_a_newer_block_version_and_leaves_the_file_unchanged");
+    let existing = "# Local notes\n\n<!-- BEGIN GRUND MANAGED BLOCK -->\n\
+                    ## Grounding with grund (v99)\n\nbody from a newer grund\n\
+                    <!-- END GRUND MANAGED BLOCK -->\n";
+    fs::write(target.join("AGENTS.md"), existing).expect("write AGENTS.md");
+
+    let output = run_grund(&["init", target.to_str().unwrap()], manifest_dir());
+    assert_eq!(
+        output.status.code(),
+        Some(2),
+        "a newer block is a refusal, got stderr={}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("newer grund init block v99"),
+        "the refusal names the version it found, got:\n{stderr}"
+    );
+    assert_eq!(
+        fs::read_to_string(target.join("AGENTS.md")).expect("read AGENTS.md"),
+        existing,
+        "the refused entrypoint keeps its bytes"
+    );
+}
+
 /// §FS-init.2.1.1 / §FS-init.3: `init` created neither file, but the symlink
 /// resolves to the canonical entrypoint this run also writes, so Claude reads
 /// the same block twice — the state §FS-init.3 promises is never left

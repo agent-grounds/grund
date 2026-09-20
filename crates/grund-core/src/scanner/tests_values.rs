@@ -97,6 +97,8 @@ fn source_bindings_follow_complete_comment_spans() {
     );
 }
 
+/// A literal that is never closed, or that runs across two physical lines, is
+/// an invalid attempted binding rather than prose (§FS-values.3.1.1).
 #[test]
 fn unterminated_and_multiline_value_bindings_are_located_errors() {
     for (name, binding, line) in [
@@ -122,6 +124,9 @@ fn unterminated_and_multiline_value_bindings_are_located_errors() {
     }
 }
 
+/// A missing space or missing parentheses is an invalid *attempted* binding,
+/// while an unbackticked adjacent token is never inferred as one and stays
+/// ordinary prose with one ordinary citation (§FS-values.3.1.1).
 #[test]
 fn malformed_delimiters_are_errors_but_unbackticked_adjacency_is_prose() {
     for (name, binding) in [

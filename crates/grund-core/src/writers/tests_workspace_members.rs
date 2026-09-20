@@ -227,7 +227,9 @@ fn workspace_members_suppresses_duplicate_aliases() {
 /// §FS-init.2.3.4.15.5 + §DF-workspace-member-descriptions: a project's
 /// `project_description` renders after its link (before any trailing
 /// marker), and a project without one keeps the link-only bullet. Mirrors
-/// §FS-init-fixtures.6.4.
+/// §FS-init-fixtures.6.4. §FS-workspace.3.1 is the residency rule the rows
+/// read: each member's description comes from that member's own config and a
+/// member without one has none, which `packages/ui` is here for.
 #[test]
 fn workspace_members_renders_configured_descriptions() {
     let root = test_root("workspace_members_renders_configured_descriptions");

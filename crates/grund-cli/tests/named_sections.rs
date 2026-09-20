@@ -88,6 +88,12 @@ fn doc() -> &'static str {
      ## 1. Numeric\n\nExisting numeric section.\n"
 }
 
+/// §FS-config.3.3.1: the fixture is the named grammar at every depth — the
+/// explicit `<complete-path>: <title>` colon form, an all-name path
+/// (`goals.performance.latency`), and a numeric component under a named prefix
+/// (`goals.3`) — read back by `show`, `refs`, the JSON surface and completion.
+/// §FS-config.4.2.3: an enabled repository's `config show` prints
+/// `named_sections = true`.
 #[test]
 fn named_sections_drive_show_refs_json_and_completion() {
     let repo = Repo::new("readers");
@@ -202,6 +208,18 @@ fn named_sections_drive_show_refs_json_and_completion() {
     assert!(stdout(&shown).contains("named_sections = true"));
 }
 
+/// §FS-config.3.3.3: `missing.performance` is an orphan because the prefix
+/// `missing` is recorded nowhere in the declaration, however the Markdown
+/// nests it. §FS-config.3.3.1: the reserved `number.name` shape — `FS-doc.1.goals`
+/// — is neither a named heading nor an alias for section `1`, so the query
+/// fails instead of truncating to the numeric section.
+///
+/// §FS-check.1.1.2: the fixture runs at `strict = false` and holds all three
+/// candidate readings at once — the marker-prefixed `<§>FS-doc.absent` is a
+/// citation even though the named section is missing, the unmarked
+/// `FS-doc.absent` is one prose token suppressed whole rather than falling
+/// back to a bare-ID citation, and the reserved `<§>FS-doc.1.goals` is never
+/// truncated to its numeric prefix.
 #[test]
 fn named_sections_report_missing_reserved_orphan_depth_and_duplicates() {
     let repo = Repo::new("diagnostics");
@@ -287,6 +305,10 @@ fn named_sections_preserve_full_ids_before_shorthand_and_findings_compose() {
     assert_eq!(findings.matches("section not found").count(), 2);
 }
 
+/// §FS-fmt.6.2.4: the rendered text of `## goals: Scope` carries the handle and
+/// colon, so the wrapper points at `#goals-scope`; retitling the heading to
+/// `## goals: Intent` refreshes that wrapper to `#goals-intent` on the next
+/// pass while the stored handle and the citation text stay `goals`.
 #[test]
 fn named_section_formatting_uses_rendered_anchor_and_never_changes_handles() {
     let repo = Repo::new("formatting");
@@ -316,6 +338,9 @@ fn named_section_formatting_uses_rendered_anchor_and_never_changes_handles() {
     assert!(reader.contains("\u{a7}FS-doc.goals"));
 }
 
+/// §FS-config.4.2.3: `named_sections` prints only when enabled — an absent key
+/// and an explicit `false` produce byte-identical `config show` output, so a
+/// repository that never opted in keeps the bytes it had.
 #[test]
 fn init_teaches_false_and_the_disabled_gate_is_an_operational_guard() {
     let initialized = Repo::new("init");

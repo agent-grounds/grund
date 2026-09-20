@@ -1,7 +1,9 @@
 //! §REQ-no-missed-citation.3 — every doc-comment form the scanner claims to
 //! support is proven by a dangling citation planted in that form, and
-//! §FS-config.3.5 makes the claim concrete: every default extension and every
-//! default comment prefix. Read from the corpus goldens — an `unknown
+//! §FS-config.3.5.14 makes the claim concrete: `comment_prefixes` and
+//! `extensions` compose, so every default comment prefix must have a path
+//! through the default extension list, and every such claimed form must have a
+//! strict-mode executable case behind it. Read from the corpus goldens — an `unknown
 //! reference` error line in the public text shape from §FS-check.2.1 names the
 //! file and the line, and the fixture shows the form — so an extension nobody
 //! plants a dangling citation in, a comment prefix no reported line opens with,
