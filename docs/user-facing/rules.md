@@ -56,6 +56,7 @@ The complete accepted sentence forms, with representative findings, are:
 - `Each FS must have exactly one requirements chapter.` → `chapter-cardinality`.
 - `Each FS should have exactly 2 review chapters.` → suggestion `chapter-cardinality`.
 - `Each FS must cite at least one GOAL or REQ.` → zero matches reuse `missing-citation`.
+- `Each FS should cite at least one GOAL.` → suggestion `suggested-citation`.
 - `FS-login.requirements should cite at most 2 REQ.` → suggestion `citation-cardinality`.
 - `FS-login.requirements must cite exactly one REQ.` → `citation-cardinality`.
 - `AR-overview.system-overview must cite each AR at least once.` → one `citation-cardinality` per missed AR.

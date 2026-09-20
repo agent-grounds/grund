@@ -86,6 +86,9 @@ pub(super) fn command_init(args: &[String]) -> ExitCode {
         }
     };
     print_init_output(&output);
+    if output.has_errors() {
+        return ExitCode::from(1);
+    }
     // §FS-init.4: the verdict is drawn from the report that was just printed,
     // and only `--check` asks for one — `--dry-run` alone keeps its `0`.
     if check && output.has_pending_changes() {
@@ -96,6 +99,14 @@ pub(super) fn command_init(args: &[String]) -> ExitCode {
 
 fn print_init_output(output: &InitOutput) {
     print_published_run_warnings(&output.warnings);
+    for finding in &output.errors {
+        match (finding.path.as_deref(), finding.line) {
+            (Some(path), Some(line)) => {
+                println!("{path}:{line}: {}: {}", finding.severity, finding.message)
+            }
+            _ => println!("{}: {}", finding.severity, finding.message),
+        }
+    }
     for event in &output.events {
         eprintln!("{} {}", event.verb, event.path);
     }

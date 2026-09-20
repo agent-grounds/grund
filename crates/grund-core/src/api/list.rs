@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use crate::config::{Config, KindConfig, display_path, non_citable_kind_error};
-use crate::grammar::render_id;
+use crate::grammar::{render_id, section_display_name};
 use crate::model::{Declaration, Finding, Id, format_path, is_stub_for_inline_decl, sort_path_key};
 use crate::queries::ListCitationCounts;
 use crate::resolver::{WorkspaceProject, load_workspace_context};
@@ -190,6 +190,9 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         kinds: kinds.clone(),
         target_kinds: kinds,
         named_sections: selected_projects().all(|project| project.config.named_sections),
+        id_grammars: selected_projects()
+            .map(|project| project.config.grammar.clone())
+            .collect(),
     };
     let selector = opts
         .selector
@@ -361,13 +364,13 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                     .iter()
                     .filter(|(section, info)| {
                         section.rsplit('.').next() == Some(name.as_str())
-                            || info.title.eq_ignore_ascii_case(name)
+                            || section_display_name(&info.title, section).eq_ignore_ascii_case(name)
                     })
                     .map(|(section, info)| {
                         let mut row = base();
                         row.section = Some(section.clone());
                         row.line = info.line;
-                        row.title = Some(info.title.clone());
+                        row.title = Some(section_display_name(&info.title, section).to_string());
                         row.stub = false;
                         row.defines = None;
                         row.refs = 0;
@@ -387,7 +390,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                             let mut row = base();
                             row.section = Some(path.clone());
                             row.line = info.line;
-                            row.title = Some(info.title.clone());
+                            row.title = Some(section_display_name(&info.title, path).to_string());
                             row.stub = false;
                             row.defines = None;
                             row.refs = 0;

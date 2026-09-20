@@ -82,6 +82,9 @@ fn command_init(args: &[String]) -> ExitCode {
         }
     };
     render_init_output(&output);
+    if output.has_errors() {
+        return ExitCode::from(1);
+    }
     // §FS-init.4.1: `--check` draws its verdict from the report it just printed —
     // `1` when any reported path was a `would-…`, nothing else. `--dry-run`
     // alone keeps `0` (§REQ-backwards-compatibility.1).
@@ -96,6 +99,15 @@ fn render_init_output(output: &InitOutput) {
     // outermost workspace above its target, so it carries the run's warnings
     // ahead of its own report (§FS-distribution.3.1).
     render_run_warnings(&output.warnings);
+    for finding in &output.errors {
+        match (finding.path.as_deref(), finding.line) {
+            (Some(path), Some(line)) => println!(
+                "{path}:{line}: {}: {}",
+                finding.severity, finding.message
+            ),
+            _ => println!("{}: {}", finding.severity, finding.message),
+        }
+    }
     for event in &output.events {
         eprintln!("{} {}", event.verb, event.path);
     }

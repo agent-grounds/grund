@@ -1,7 +1,7 @@
 //! Exact production-aware refusal bytes for every common near miss required by
 //! §FS-rules.3.5 and the pre-scan lifecycle of §FS-rules.4.
 
-use super::support::{assert_run, fixture, run, scratch};
+use super::support::{assert_run, fixture, run, scratch, text};
 use std::fs;
 
 #[test]
@@ -111,4 +111,29 @@ fn named_chapter_subject_requires_the_named_sections_gate() {
         "",
         "error: named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-demo.requirements must cite at least one REQ.\n",
     );
+}
+
+#[test]
+fn malformed_counts_ids_and_named_paths_are_pre_scan_refusals() {
+    for sentence in [
+        "Each FS must have exactly 2 requirements chapter.",
+        "Each FS must have exactly one requirements chapters.",
+        "Each FS must have exactly 02 requirements chapters.",
+        "Each FS must cite exactly 1 GOAL.",
+        "AR-overview.system-overview must cite each AR exactly 1 times.",
+        "FSbogus must cite at least one GOAL.",
+        "FS-demo.bad_path must cite at least one REQ.",
+    ] {
+        let output = run(&fixture(), &["check", ".", "--rule", sentence]);
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "non-production was accepted: {sentence}"
+        );
+        let stderr = text(&output.stderr);
+        assert!(
+            stderr.contains("accepted form:"),
+            "refusal has no accepted rewrite: {sentence}: {stderr}"
+        );
+    }
 }

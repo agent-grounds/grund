@@ -1,7 +1,7 @@
 //! The four synchronized documentation pins required by §FS-rules.10: runnable
 //! example goldens, executable guide rows, skill bytes, and managed rendering.
 
-use super::support::repo_root;
+use super::support::{fixture, repo_root, run, scratch, text};
 use std::fs;
 
 fn marked<'a>(bytes: &'a [u8], begin: &[u8], end: &[u8]) -> &'a [u8] {
@@ -51,24 +51,107 @@ fn guide_writing_section_and_both_skill_copies_are_byte_identical() {
 }
 
 #[test]
-fn guide_marks_every_accepted_family_refusal_finding_and_channel_for_extraction() {
+fn guide_marked_rows_execute_against_the_released_parser() {
     let root = repo_root();
     let guide = fs::read_to_string(root.join("docs/user-facing/rules.md")).expect("rules guide");
-    for marker in [
-        "BEGIN chapter-rules-accepted",
-        "BEGIN chapter-rules-refused",
-        "chapter-cardinality",
-        "citation-cardinality",
-        "missing-citation",
-        "uncited-unit",
-        "forbidden-citation",
-        "suggested-citation",
-        "discouraged-citation",
-        "--suggestions",
-        "RULE-a, RULE-b",
-    ] {
-        assert!(guide.contains(marker), "rules guide is missing {marker}");
+    let accepted = marked(
+        guide.as_bytes(),
+        b"<!-- BEGIN chapter-rules-accepted -->\n",
+        b"<!-- END chapter-rules-accepted -->",
+    );
+    let accepted = std::str::from_utf8(accepted).expect("accepted guide rows");
+    let accepted_root = scratch("documented-accepted-rows");
+    let accepted_config =
+        fs::read_to_string(accepted_root.join("grund.toml")).expect("fixture config");
+    fs::write(
+        accepted_root.join("grund.toml"),
+        accepted_config.replace("rules = true\n", ""),
+    )
+    .expect("disable configured rules");
+    let mut accepted_count = 0;
+    for line in accepted.lines().filter(|line| line.starts_with("- `")) {
+        let sentence_end = line[3..].find('`').expect("accepted sentence end") + 3;
+        let sentence = &line[3..sentence_end];
+        let result = &line[sentence_end + 1..];
+        let code_start = result.find('`').expect("accepted finding start") + 1;
+        let code_end = result[code_start..]
+            .find('`')
+            .expect("accepted finding end")
+            + code_start;
+        let code = &result[code_start..code_end];
+        let suggestion = result.contains("suggestion");
+        let mut args = vec![
+            "check", ".", "--rule", sentence, "--only", code, "--format", "json",
+        ];
+        if suggestion {
+            args.push("--suggestions");
+        }
+        let output = run(&accepted_root, &args);
+        assert_ne!(
+            output.status.code(),
+            Some(2),
+            "documented accepted row was refused: {sentence}: {}",
+            text(&output.stderr)
+        );
+        for row in text(&output.stdout).lines() {
+            assert!(
+                row.contains(&format!("\"code\":\"{code}\"")),
+                "documented row produced the wrong finding: {sentence}: {row}"
+            );
+            assert_eq!(
+                row.contains("\"channel\":\"suggestion\""),
+                suggestion,
+                "documented row produced the wrong channel: {sentence}: {row}"
+            );
+        }
+        accepted_count += 1;
     }
+    assert_eq!(accepted_count, 17, "accepted guide-row inventory drifted");
+
+    let refused = marked(
+        guide.as_bytes(),
+        b"<!-- BEGIN chapter-rules-refused -->\n",
+        b"<!-- END chapter-rules-refused -->",
+    );
+    let refused = std::str::from_utf8(refused).expect("refused guide rows");
+    let named_off = scratch("documented-named-sections-refusal");
+    let config = fs::read_to_string(named_off.join("grund.toml")).expect("fixture config");
+    fs::write(
+        named_off.join("grund.toml"),
+        config.replace("named_sections = true", "named_sections = false"),
+    )
+    .expect("disable named sections");
+    let fixture_root = fixture();
+    let mut refused_count = 0;
+    for line in refused.lines().filter(|line| line.starts_with("- ")) {
+        let arrow = line.find(" → ").expect("refused row arrow");
+        let left = &line[..arrow];
+        let sentence_start = left.find('`').expect("refused sentence start") + 1;
+        let sentence_end = left[sentence_start..]
+            .find('`')
+            .expect("refused sentence end")
+            + sentence_start;
+        let sentence = &left[sentence_start..sentence_end];
+        let right = &line[arrow + " → ".len()..];
+        let reason_start = right.find('`').expect("refusal reason start") + 1;
+        let reason_end = right.rfind('`').expect("refusal reason end");
+        let reason = &right[reason_start..reason_end];
+        let repo = if left.starts_with("- With named sections off") {
+            &named_off
+        } else {
+            &fixture_root
+        };
+        let output = run(repo, &["check", ".", "--rule", sentence]);
+        assert_eq!(
+            output.status.code(),
+            Some(2),
+            "refusal was accepted: {sentence}"
+        );
+        assert_eq!(text(&output.stdout), "");
+        assert_eq!(text(&output.stderr), format!("error: {reason}\n"));
+        refused_count += 1;
+    }
+    assert_eq!(refused_count, 13, "refused guide-row inventory drifted");
 }
 
 #[test]

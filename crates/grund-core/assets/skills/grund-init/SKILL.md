@@ -535,61 +535,8 @@ comment_prefixes = ["//", "/*", "*"]
 Pros: covers normal solution layout.
 Cons: generated code folders may need extra excludes.
 
-### Ruby / Rails
-
-Evidence: `Gemfile`, `app/`, `lib/`, `spec/`, `test/`.
-
-```toml
-include = ["requirements.md", "docs", "e2e", "app", "lib", "spec", "test"]
-extensions = ["md", "rb"]
-exclude = ["vendor", "tmp", "log", "coverage", ".git"]
-comment_prefixes = ["#"]
-```
-
-Pros: covers Rails and library conventions.
-Cons: Rails apps may need to skip generated schema or fixture-heavy paths.
-
-### PHP
-
-Evidence: `composer.json`, `src/`, `app/`, `tests/`.
-
-```toml
-include = ["requirements.md", "docs", "e2e", "src", "app", "tests"]
-extensions = ["md", "php"]
-exclude = ["vendor", "var", "cache", "build", ".git"]
-comment_prefixes = ["//", "#", "/*", "*"]
-```
-
-Pros: works for Composer apps and frameworks.
-Cons: framework cache dirs vary; inspect before finalizing.
-
-### Swift
-
-Evidence: `Package.swift`, `Sources/`, `Tests/`.
-
-```toml
-include = ["requirements.md", "docs", "e2e", "Sources", "Tests"]
-extensions = ["md", "swift"]
-exclude = [".build", "DerivedData", ".git"]
-comment_prefixes = ["//", "/*", "*"]
-```
-
-Pros: matches Swift Package Manager.
-Cons: Xcode projects may have different app/test directories.
-
-### Scala
-
-Evidence: `build.sbt`, `src/main/scala`, `src/test/scala`.
-
-```toml
-include = ["requirements.md", "docs", "e2e", "src"]
-extensions = ["md", "scala"]
-exclude = ["target", "project/target", ".bloop", ".metals", ".git"]
-comment_prefixes = ["//", "/*", "*"]
-```
-
-Pros: covers sbt source layout.
-Cons: generated sources may need explicit exclusion.
+More repository-shape examples for Ruby/Rails, PHP, Swift, and Scala live in
+the [supplementary init examples](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init-repo-shapes.md).
 
 ### SQL / Data Projects
 
@@ -683,6 +630,7 @@ The complete accepted sentence forms, with representative findings, are:
 - `Each FS must have exactly one requirements chapter.` → `chapter-cardinality`.
 - `Each FS should have exactly 2 review chapters.` → suggestion `chapter-cardinality`.
 - `Each FS must cite at least one GOAL or REQ.` → zero matches reuse `missing-citation`.
+- `Each FS should cite at least one GOAL.` → suggestion `suggested-citation`.
 - `FS-login.requirements should cite at most 2 REQ.` → suggestion `citation-cardinality`.
 - `FS-login.requirements must cite exactly one REQ.` → `citation-cardinality`.
 - `AR-overview.system-overview must cite each AR at least once.` → one `citation-cardinality` per missed AR.

@@ -601,7 +601,7 @@ pub(super) fn scan_file_text(
         );
     }
     if classify || has_local_section_candidates {
-        classify_citation_sources(findings, config, path);
+        classify_citation_sources(findings, config, path, &md_headings);
     }
     if has_local_section_candidates {
         promote_local_section_citations(findings);

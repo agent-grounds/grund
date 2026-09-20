@@ -51,6 +51,14 @@ fn ad_hoc_rule_is_additive_and_suggestions_do_not_change_the_exit() {
 
 #[test]
 fn selector_listing_has_exact_text_and_json_rows() {
+    let output = run(&fixture(), &["list", ".", "--selector", "FS"]);
+    assert_run(
+        &output,
+        0,
+        "FS-demo  docs/fs/FS-demo.md:1  A chapter-scoped obligation\n",
+        "",
+    );
+
     let output = run(&fixture(), &["list", ".", "--selector", "FS.requirements"]);
     assert_run(
         &output,
@@ -97,6 +105,87 @@ fn unresolved_literal_is_a_post_scan_finding() {
         "error: --rule is not a valid rule: literal subject FS-missing does not resolve\n",
         "",
     );
+
+    let output = run(
+        &fixture(),
+        &[
+            "check",
+            ".",
+            "--rule",
+            "FS-missing must cite at least one GOAL.",
+            "--only",
+            "invalid-rule",
+            "--format",
+            "json",
+        ],
+    );
+    assert_run(
+        &output,
+        1,
+        "{\"severity\":\"error\",\"path\":null,\"line\":1,\"code\":\"invalid-rule\",\"message\":\"--rule is not a valid rule: literal subject FS-missing does not resolve\",\"sites\":null}\n",
+        "",
+    );
+}
+
+#[test]
+fn display_name_matches_presence_rules_and_selector_rows() {
+    let sentence = "Each FS must have exactly one Requirements chapter.";
+    let output = run(
+        &fixture(),
+        &[
+            "check",
+            ".",
+            "--rule",
+            sentence,
+            "--only",
+            "chapter-cardinality",
+        ],
+    );
+    assert_run(&output, 0, "success\n", "");
+}
+
+#[test]
+fn every_markdown_sibling_heading_closes_the_accepted_chapter() {
+    let root = scratch("chapter-sibling-scope");
+    write(
+        &root,
+        "docs/fs/FS-demo.md",
+        "# FS-demo: Sibling scope\n\n## requirements: Requirements\n\nNo citation here.\n\n## Plain unmarked heading\n\nLater \u{a7}REQ-demo must not leak backward.\n",
+    );
+    let output = run(&root, &["check", ".", "--only", "missing-citation"]);
+    assert_run(
+        &output,
+        1,
+        "docs/fs/FS-demo.md:3: error: FS-demo.requirements must cite REQ (RULE-requirements)\n",
+        "",
+    );
+}
+
+#[test]
+fn whitespace_only_rule_rationale_is_invalid_and_never_executes() {
+    let root = scratch("empty-rule-rationale");
+    write(
+        &root,
+        "docs/rules/RULE-empty.md",
+        "# RULE-empty: Each FS must cite at least one GOAL.\n\n   \n\t\n",
+    );
+    let output = run(
+        &root,
+        &[
+            "check",
+            ".",
+            "--only",
+            "invalid-rule",
+            "--only",
+            "missing-citation",
+        ],
+    );
+    let stdout = text(&output.stdout);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(stdout.contains(
+        "docs/rules/RULE-empty.md:1: error: RULE-empty is not a valid rule: rule rationale is empty\n"
+    ));
+    assert!(!stdout.contains("(RULE-empty)"));
 }
 
 #[test]
@@ -121,7 +210,7 @@ fn semantic_duplicates_collapse_in_both_directions() {
     write(
         &root,
         "docs/fs/FS-demo.md",
-        "# FS-demo: Missing goal\n\n## requirements: Requirements\n\nNo goal citation.\n",
+        "# FS-demo: Missing goal\n\n## requirements: Requirements\n\nThe inherited chapter rule is satisfied by \u{a7}REQ-demo.\n",
     );
     let output = run(&root, &["check", ".", "--only", "missing-citation"]);
     assert_run(
@@ -254,9 +343,12 @@ fn invalid_rule_makes_init_a_no_write_operation() {
     let root_arg = root.to_string_lossy();
     let output = run(&root, &["init", &root_arg]);
     assert_eq!(output.status.code(), Some(1));
-    assert!(text(&output.stdout).contains(
-        "RULE-requirements is not a valid rule: modality \"may not\" is not accepted; accepted form: Each FS must not cite any AR."
-    ));
+    assert_run(
+        &output,
+        1,
+        "docs/rules/RULE-requirements.md:1: error: RULE-requirements is not a valid rule: modality \"may not\" is not accepted; accepted form: Each FS must not cite any AR.\n",
+        "",
+    );
     assert_eq!(fs::read(root.join("AGENTS.md")).expect("sentinel"), before);
 }
 
@@ -310,4 +402,7 @@ fn a_project_without_rule_opt_in_keeps_the_old_check_bytes() {
     let agents = fs::read_to_string(root.join("AGENTS.md")).expect("rendered AGENTS.md");
     assert!(agents.contains("Grounding with grund (v10)"));
     assert!(!agents.contains("### Chapter rules"));
+
+    let output = run(&root, &["check", ".", "--only", "agents-init"]);
+    assert_run(&output, 0, "success\n", "");
 }

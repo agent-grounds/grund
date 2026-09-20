@@ -7,7 +7,7 @@ use crate::config::{
     Config, PointSizeUnit, display_path, measure_point_text, non_citable_kind_error,
     run_warning_findings,
 };
-use crate::grammar::render_id;
+use crate::grammar::{render_id, section_display_name};
 use crate::model::{
     Declaration, Finding, Id, SectionInfo, TextOverlays, format_path, is_stub_for_inline_decl,
     sort_path_key,
@@ -119,6 +119,9 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
         kinds: kinds.clone(),
         target_kinds: kinds,
         named_sections: selected_projects().all(|project| project.config.named_sections),
+        id_grammars: selected_projects()
+            .map(|project| project.config.grammar.clone())
+            .collect(),
     };
     let selector = opts
         .selector
@@ -255,7 +258,8 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
                 (RuleSubject::ChapterOfKind { kind, name }, Some((section, info))) => {
                     kind == &row.id.kind
                         && (section.rsplit('.').next() == Some(name.as_str())
-                            || info.title.eq_ignore_ascii_case(name))
+                            || section_display_name(&info.title, section)
+                                .eq_ignore_ascii_case(name))
                 }
                 (RuleSubject::ExactChapter { declaration, path }, Some((section, _))) => {
                     declaration == &rendered && path == section
