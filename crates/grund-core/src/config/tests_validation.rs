@@ -105,6 +105,18 @@ fn rules_key_requires_a_citable_scanned_markdown_home() {
             "not Markdown",
             "kind = \"RULE\"\nfile = \"docs/rules.txt\"\nrules = true\n",
         ),
+        (
+            "unwalked",
+            "kind = \"RULE\"\nfolder = \"docs/rules\"\nscan = false\nrules = true\n",
+        ),
+        (
+            "JSON-value",
+            "kind = \"RULE\"\nfile = \"docs/rules.json\"\nvalues = true\nrules = true\n",
+        ),
+        (
+            "external-snapshot",
+            "kind = \"RULE\"\nfile = \"docs/rules.md\"\nfetch = \"scripts/fetch-rules\"\nrules = true\n",
+        ),
     ] {
         let err = match load(kind_row) {
             Ok(_) => panic!("a {shape} rule kind should be refused"),

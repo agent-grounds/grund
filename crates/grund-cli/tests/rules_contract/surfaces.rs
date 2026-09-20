@@ -368,8 +368,8 @@ fn invalid_rule_makes_init_a_no_write_operation() {
     assert_eq!(fs::read(root.join("AGENTS.md")).expect("sentinel"), before);
 }
 
-/// §FS-init.2.3.5.10: a rule kind renders `### Chapter rules` after the
-/// directions, each bullet the authored sentence and its live rule citation.
+/// §FS-init.2.3.5.10: a rule kind renders the exact ordered `### Chapter rules`
+/// section after the directions, and `check` rejects any byte drift in it.
 #[test]
 fn valid_rules_render_exact_sentences_in_a_v11_managed_section() {
     let root = scratch("init-rendering");
@@ -380,13 +380,40 @@ fn valid_rules_render_exact_sentences_in_a_v11_managed_section() {
     assert!(agents.contains("Grounding with grund (v11)"));
     let directions = agents.find("### Citation directions").expect("directions");
     let rules = agents.find("### Chapter rules").expect("rules section");
+    let clickable = agents[rules..]
+        .find("### Clickable citations")
+        .map(|offset| rules + offset)
+        .expect("section after chapter rules");
     assert!(directions < rules);
-    assert!(agents.contains(
-        "The requirements chapter of each FS must cite at least one REQ. \u{a7}RULE-requirements"
-    ));
-    assert!(agents.contains(
-        "AR-overview.system-overview must cite each AR exactly once. \u{a7}RULE-overview"
-    ));
+    let expected = concat!(
+        "### Chapter rules\n\n",
+        "`must`/`must not` are `grund check` errors; `should`/`should not` are ",
+        "suggestions (`grund check --suggestions`).\n\n",
+        "- AR-overview.system-overview must cite each AR exactly once. ",
+        "\u{a7}RULE-overview\n",
+        "- The requirements chapter of each FS must cite at least one REQ. ",
+        "\u{a7}RULE-requirements\n\n",
+    );
+    assert_eq!(&agents[rules..clickable], expected);
+
+    let drifted = agents.replacen(
+        "- AR-overview.system-overview must cite each AR exactly once.",
+        "- AR-overview.system-overview must cite each AR exactly once. (edited)",
+        1,
+    );
+    assert_ne!(drifted, agents, "the fixture must drift the rule section");
+    write(&root, "AGENTS.md", &drifted);
+    let output = run(&root, &["check", ".", "--only", "agents-init"]);
+    assert_run(
+        &output,
+        1,
+        concat!(
+            "AGENTS.md:3: error: stale grund init block: chapter rules differ from ",
+            "grund.toml (run `grund init` to refresh) ",
+            "\u{2014} repo maintenance; citation checks still ran; wording changes in grund 0.14.0\n",
+        ),
+        "",
+    );
 }
 
 /// §FS-rules.1: the rule title is a grammar island no formatter pass rewrites.
