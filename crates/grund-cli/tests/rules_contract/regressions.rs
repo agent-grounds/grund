@@ -94,7 +94,7 @@ fn resolved_section_citations_count_by_kind_but_missing_sections_make_no_edge() 
     write(
         &root,
         "docs/fs/FS-demo.md",
-        "# FS-demo: Section target\n\n## requirements: Requirements\n\nCites §REQ-demo.evidence.\n",
+        "# FS-demo: Section target\n\n## requirements: Requirements\n\nCites \u{a7}REQ-demo.evidence.\n",
     );
     let output = run(&root, &["check", ".", "--only", "missing-citation"]);
     assert_run(&output, 0, "success\n", "");
@@ -102,7 +102,7 @@ fn resolved_section_citations_count_by_kind_but_missing_sections_make_no_edge() 
     write(
         &root,
         "docs/fs/FS-demo.md",
-        "# FS-demo: Missing section target\n\n## requirements: Requirements\n\nCites §REQ-demo.missing.\n",
+        "# FS-demo: Missing section target\n\n## requirements: Requirements\n\nCites \u{a7}REQ-demo.missing.\n",
     );
     let output = run(&root, &["check", ".", "--only", "missing-citation"]);
     assert_run(
@@ -152,7 +152,7 @@ fn configured_separator_is_used_by_rules_and_normal_list_rows() {
     write(
         &root,
         "docs/rules/RULE-overview.md",
-        "# RULE-overview: AR-overview#system-overview must cite each AR exactly once.\n\nBecause §GOAL-rules.\n",
+        "# RULE-overview: AR-overview#system-overview must cite each AR exactly once.\n\nBecause \u{a7}GOAL-rules.\n",
     );
     write(
         &root,
@@ -208,6 +208,7 @@ fn object_targets_validate_qualifiers_and_workspace_kinds() {
     assert!(text(&output.stderr).contains("invalid namespace qualifier segment (empty)"));
 
     let workspace = scratch("workspace-target-kind");
+    fs::remove_file(workspace.join("docs/fs/FS-demo.md")).expect("remove root fixture FS");
     write(
         &workspace,
         "grund.toml",
