@@ -26,6 +26,34 @@ fn a_broken_link_is_reported_only_where_the_walk_would_have_read_it() {
     );
 }
 
+/// §FS-config.3.5.6.1: the declared blind spot. `docs/shared -> ../nonexistent-dir`
+/// has no extension at all, so nothing on disk distinguishes the directory it
+/// would have been descended into from an ordinary `bin/tool -> nowhere` — only
+/// the target could have said which, and it is not there. The walk stays silent
+/// rather than reporting every extensionless dangling link, which is the noise
+/// this gate exists to prevent.
+#[test]
+fn a_broken_link_with_no_extension_at_all_is_a_declared_blind_spot() {
+    let root = linked_repo("a_broken_link_with_no_extension_at_all_is_a_declared_blind_spot");
+    symlink("../nonexistent-dir", &root.join("docs/shared"));
+
+    let run = check_run(&root, false);
+
+    assert_eq!(
+        scan_errors(&run),
+        Vec::<String>::new(),
+        "an extensionless broken link could have been a directory or a file, and the walk says so by saying nothing"
+    );
+    assert!(
+        !run.had_scan_errors,
+        "§FS-check.2.4: a blind spot is not a file the scan failed to read, so the run does not exit 2"
+    );
+}
+
+/// §FS-config.3.5.15: `respect_gitignore` is on by default and honours every
+/// ignore-file form the `ignore` crate recognizes, `.ignore` included, so a
+/// path one covers is never walked — and a broken link there is not a hole the
+/// run has to report.
 #[test]
 fn a_broken_link_an_ignore_file_covers_is_not_reported() {
     let root = linked_repo("a_broken_link_an_ignore_file_covers_is_not_reported");
@@ -68,8 +96,10 @@ fn a_symlink_loop_is_reported_and_the_walk_carries_on() {
     );
 }
 
-/// §DF-symlink-scan.2.4: the loop branch asked only the hidden-name and
-/// `[scan] exclude` tests, so an ignored looping link still turned the run red.
+/// §DF-symlink-scan.2.4 / §FS-config.3.5.15: the loop branch asked only the
+/// hidden-name and `[scan] exclude` tests rather than the ignore files
+/// `respect_gitignore` honours, so an ignored looping link still turned the run
+/// red.
 #[test]
 fn a_looping_link_an_ignore_file_covers_is_not_reported() {
     let root = linked_repo("a_looping_link_an_ignore_file_covers_is_not_reported");

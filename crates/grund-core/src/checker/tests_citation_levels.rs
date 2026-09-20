@@ -34,6 +34,11 @@ fn check_rules(name: &str, rules: &str, body: &str) -> (PathBuf, CheckReport) {
     (root, report)
 }
 
+/// §FS-config.3.9.1.3: the level→surface mapping is fixed — `must` and
+/// `must-not` gate as `grund check` errors while `should` and `should-not` stay
+/// off the gating channels and surface only on demand. §FS-config.6.1: that is
+/// a separate advisory channel rather than a third severity, so the frozen
+/// `{error, warning}` set stays exactly two.
 #[test]
 fn citation_levels_keep_both_suggestions_out_of_gating_channels() {
     let (root, report) = check_rules(
@@ -133,6 +138,10 @@ fn explicit_may_overrides_a_restrictive_default() {
     }
 }
 
+/// §FS-config.3.9.1.1: an obligation asks whether the citing declaration
+/// carries a citation to the target kind anywhere in its body, and multiple
+/// array entries are conjunctive while a `|` inside one entry is satisfied by
+/// any one alternative.
 #[test]
 fn citation_obligations_require_each_entry_but_allow_either_alternative() {
     for level in ["must", "should"] {

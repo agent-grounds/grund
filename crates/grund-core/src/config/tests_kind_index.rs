@@ -34,8 +34,9 @@ fn index_false_opts_the_kind_out() {
     );
 }
 
-/// §FS-config.3.4: `index` names a file *inside* `folder`, so a kind with no
-/// folder has nothing to index and the key is a config error.
+/// §FS-config.3.4.2.2: `index` names a file *inside* `folder`, so a kind with
+/// no folder has nothing to index and the key is a config error — the same
+/// reason it is refused on a single-file or non-citable kind.
 #[test]
 fn index_without_a_folder_is_a_config_error() {
     let root = test_root("index_without_a_folder_is_a_config_error");
@@ -51,7 +52,7 @@ fn index_without_a_folder_is_a_config_error() {
     );
 }
 
-/// §FS-config.3.4: `index = true` names no file. The default is spelled by
+/// §FS-config.3.4.2.2: `index = true` names no file. The default is spelled by
 /// leaving the key out, so `true` is rejected rather than read as one.
 #[test]
 fn index_true_is_a_config_error() {
@@ -68,8 +69,8 @@ fn index_true_is_a_config_error() {
     );
 }
 
-/// §FS-config.3.4: `index = "<name>"` names another file, resolved relative
-/// to `folder`.
+/// §FS-config.3.4.2.3: a named `index` is a relative path *inside* `folder`,
+/// so `"<name>"` names another file resolved against the folder.
 #[test]
 fn a_named_index_is_resolved_under_the_folder() {
     let root = test_root("a_named_index_is_resolved_under_the_folder");
@@ -97,9 +98,10 @@ fn a_named_index_is_resolved_under_the_folder() {
     );
 }
 
-/// §FS-config.3.4: an index the cross-reference pass can never run on
-/// (§FS-fmt.6.1) would carry an error class whose one documented fix declines
-/// to act, so the name is refused at config time instead.
+/// §FS-config.3.4.2.3: a named `index` must name a **Markdown** file — one the
+/// cross-reference pass can never run on (§FS-fmt.6.1) would carry an error
+/// class whose one documented fix declines to act, so the name is refused at
+/// config time instead.
 #[test]
 fn index_naming_a_non_markdown_file_is_a_config_error() {
     let root = test_root("index_naming_a_non_markdown_file_is_a_config_error");
@@ -116,9 +118,10 @@ fn index_naming_a_non_markdown_file_is_a_config_error() {
     );
 }
 
-/// §FS-config.3.4: `index` is joined onto `folder`, so an absolute path or one
-/// that climbs out with `..` replaces the folder rather than naming a file in
-/// it — and `check` would then read outside the tree the config describes.
+/// §FS-config.3.4.2.3: `index` is joined onto `folder`, so an absolute path or
+/// one that climbs out with `..` replaces the folder rather than naming a file
+/// *in* it — and `check` would then read outside the tree the config
+/// describes.
 #[test]
 fn an_index_outside_its_folder_is_a_config_error() {
     for (case, value) in [
@@ -145,9 +148,10 @@ fn an_index_outside_its_folder_is_a_config_error() {
     }
 }
 
-/// §FS-config.3.4: the `index` default is keyed on the prefix, and a declared
+/// §FS-config.3.4.2.4: the `index` default is per kind *name*, and a declared
 /// `[[kinds]]` block that omits the key gets the same answer the built-in list
-/// does. Without this every config `grund init` wrote before the key existed
+/// does — `E2E` defaults to `false`, every other citable folder kind to
+/// `README.md`. Without this every config `grund init` wrote before the key existed
 /// would take one §FS-check.3.18 warning per e2e case on upgrade.
 #[test]
 fn a_declared_e2e_kind_takes_the_index_false_default() {

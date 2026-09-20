@@ -121,7 +121,9 @@ fn a_config_read_from_the_agents_location_is_reported_as_deprecated() {
 /// §FS-check.4.11.4 / §FS-config.1.1.1: the pair earns the pair's warning and no
 /// other. The run read the bare file, so nothing about the config in force is
 /// deprecated — two lines here would name one move twice and disagree about
-/// which of the two files is the problem.
+/// which of the two files is the problem. That is §FS-check.4.3.3 from the
+/// other side: the deprecated-location sibling fires where the run *read* the
+/// `.agents/` file, which is the one case the pair can never be in.
 #[test]
 fn the_redundant_pair_earns_no_deprecation_line() {
     let root = test_root("the_redundant_pair_earns_no_deprecation_line");
@@ -212,9 +214,14 @@ fn no_config_under_either_name_stays_zero_config() {
     );
 }
 
-// §FS-init.2.4: `init` generates the bare form, and probes both before it
-// writes — a repository already on `.agents/` is reported at the name it was
-// found under and never grows the pair §FS-check.4.3 warns about.
+/// §FS-init.2.4: `init` generates the bare form, and probes both before it
+/// writes — a repository already on `.agents/` is reported at the name it was
+/// found under and never grows the pair §FS-check.4.3 warns about.
+///
+/// §FS-init.2.4.1: both discovery locations are probed, which is what the two
+/// halves here assert — a fresh target gets the bare `grund.toml` and no
+/// `.agents/grund.toml`, while a target already carrying `.agents/grund.toml`
+/// is reported `exists .agents/grund.toml` and never grows the redundant pair.
 #[test]
 fn init_generates_the_bare_form_and_leaves_an_agents_config_alone() {
     let fresh = test_root("init_generates_the_bare_form");

@@ -145,6 +145,54 @@ fn full_scope_withholds_the_mechanical_shorthand_rewrite() {
     );
 }
 
+/// §FS-check.3.15.5: the numeric-run finding is withheld out of scope for the
+/// reason §FS-check.3.14.4 withholds the mechanical rewrite — `fmt` scopes by
+/// `[scan] include` too, so out there the error would name an edit no run in
+/// that scope is asking for. The fixture writes the *same* construct twice,
+/// once under `include` and once past it: the in-scope one is the error, the
+/// out-of-scope one is silent, and an unresolvable shorthand beside it is
+/// still reported, so the tier is demonstrably reading that file.
+#[test]
+fn full_scope_withholds_the_shorthand_numeric_run_finding() {
+    let root = test_root("full_scope_withholds_the_shorthand_numeric_run_finding");
+    write(
+        &root.join("grund.toml"),
+        "grund_config_version = 1\n\n[reference]\nshorthand = \"accepted\"\n\n[id]\nformat = \"{kind}-{number}-{slug}\"\n\n[scan]\ninclude = [\"docs\"]\n",
+    );
+    write(
+        &root.join("docs/functional-spec/FS-042-user-login.md"),
+        "# FS-042-user-login: A user can log in\n\nBody.\n",
+    );
+    write(
+        &root.join("docs/functional-spec/FS-043-user-logout.md"),
+        "# FS-043-user-logout: A user can log out\n\nBody.\n",
+    );
+    // The default config indexes `FS`, so the fixture owes both entries
+    // (§FS-check.3.18) or the run is red for a reason this case is not about.
+    write(
+        &root.join("docs/functional-spec/README.md"),
+        "# Functional spec\n\n- [§FS-042-user-login](FS-042-user-login.md#fs-042-user-login-a-user-can-log-in)\n- [§FS-043-user-logout](FS-043-user-logout.md#fs-043-user-logout-a-user-can-log-out)\n",
+    );
+    write(
+        &root.join("docs/notes.md"),
+        "# Notes\n\nRenumbered on import: §FS-042→FS-043, inside `include`.\n",
+    );
+    write(
+        &root.join("sim/world.py"),
+        "# Renumbered on import: §FS-042→FS-043, out past `include`\n# Unknown shorthand §FS-777\n",
+    );
+
+    let full = check_run(&root, true);
+    assert_eq!(
+        located_diagnostics(&full.config, &full.report.errors),
+        vec![
+            "docs/notes.md:3: shorthand §FS-042 sits in a numeric run and was not rewritten; write §FS-042-user-login, or <§>FS-042 if these are old numbers",
+            "sim/world.py:2: outside [scan] include: shorthand citation §FS-777 matches no declaration",
+        ],
+        "§FS-check.3.15.5: the same numeric run is an error under `include` and silent past it, while a shorthand matching nothing out there is still a resolution failure"
+    );
+}
+
 #[test]
 fn full_scope_does_not_resolve_an_in_scope_shorthand_against_the_wider_walk() {
     let root =

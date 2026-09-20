@@ -51,8 +51,13 @@ fn style_findings(config: &Config, root: &Path) -> (Vec<usize>, Vec<usize>) {
     (lines(&report.errors), lines(&report.warnings))
 }
 
-// §FS-inline-citation-style.4.4.1: one error per nonconforming line, anchored at
-// the line — never at the site's opener, and never on a conforming sibling.
+/// §FS-inline-citation-style.4.4.1: one error per nonconforming line, anchored
+/// at the line — never at the site's opener, and never on a conforming sibling.
+///
+/// §FS-inline-citation-style.7.3: the rule is a pure pass over `Findings`. The
+/// verdicts arrive on the inline citation site the scanner recorded, so
+/// `check_findings` is handed no root and no file and could not re-read a line
+/// to decide its shape even if it wanted to.
 #[test]
 fn layout_error_reports_one_finding_per_offending_line() {
     let root = layout_fixture("layout_error_reports_one_finding_per_offending_line");
@@ -67,8 +72,12 @@ fn layout_error_reports_one_finding_per_offending_line() {
     );
 }
 
-// §FS-inline-citation-style.4.4: `warn` reports the same lines with the same
-// message on the warning channel, which never moves the exit code.
+/// §FS-inline-citation-style.4.4: `warn` reports the same lines with the same
+/// message on the warning channel, which never moves the exit code.
+///
+/// §FS-inline-citation-style.4.4.3: the level chooses the channel and nothing
+/// else — the same two lines come back in the same deterministic order as at
+/// `error`, on the other channel, with neither leaking into the first.
 #[test]
 fn layout_warn_reports_the_same_lines_as_warnings() {
     let root = layout_fixture("layout_warn_reports_the_same_lines_as_warnings");
@@ -102,8 +111,12 @@ fn layout_message_names_the_form_with_the_configured_marker() {
     );
 }
 
-// §FS-inline-citation-style.4.4: both keys default to the inert value, and the
-// check key is inert on its own under `any` — an upgrade turns nothing red.
+/// §FS-inline-citation-style.4.4: both keys default to the inert value, and the
+/// check key is inert on its own under `any` — an upgrade turns nothing red.
+///
+/// §FS-inline-citation-style.3.3.10: `any` is the default, and it imposes
+/// nothing — the deviating lines this fixture holds are exactly the comments a
+/// tree that adopts `grund` mid-life already had, and they earn no finding.
 #[test]
 fn layout_is_silent_when_either_key_is_inert() {
     let root = layout_fixture("layout_is_silent_when_either_key_is_inert");
@@ -166,6 +179,14 @@ fn both_layout_keys_load_and_reject_unknown_values() {
 /// project's marker and absent under `any` so no existing managed block
 /// drifts on that key. The doc-comment sentence closes the copy at every
 /// `inline_style`, after whatever the other keys produced.
+///
+/// §FS-inline-citation-style.5.1: the budgets line opens the copy, in the
+/// `suggested < max` form here and in the `citation-only` form below.
+/// §FS-inline-citation-style.5.2: the block sentence follows it under
+/// `citation-with-note` only, and no such sentence is added under
+/// `citation-only`.
+/// §FS-inline-citation-style.5.3.2: the enforcement level is not part of the
+/// house style, so `off` renders byte-for-byte what `error` renders.
 #[test]
 fn agents_sentence_teaches_the_configured_layout() {
     let root = test_root("agents_sentence_teaches_the_configured_layout");
@@ -199,5 +220,71 @@ fn agents_sentence_teaches_the_configured_layout() {
     assert!(
         inline_citation_style_sentence(&citation_only).contains("are documentation, not notes"),
         "the doc-comment sentence must close `citation-only` too"
+    );
+}
+
+/// §FS-inline-citation-style.3.3.7: layout and size are judged independently.
+/// One line can deviate from the layout *and* exceed the column budget, and
+/// then it earns one finding for each — neither verdict absorbs the other, and
+/// neither is withheld because the other already fired.
+///
+/// Its own fixture rather than a case appended to `layout_fixture`: the two
+/// suites above assert the exact line list a run produces, so a third
+/// offending line there would be a change to their assertions rather than an
+/// addition to the module.
+#[test]
+fn a_line_can_break_the_layout_and_the_column_budget_at_once() {
+    let root = test_root("a_line_can_break_the_layout_and_the_column_budget_at_once");
+    write(
+        &root.join("docs/functional-spec/FS-001-login.md"),
+        "# FS-001-login: Login\n",
+    );
+    write(
+        &root.join("src/auth.rs"),
+        concat!(
+            "// §FS-001-login: short, and laid out the way the project asked\n",
+            "pub fn login() {}\n",
+            "\n",
+            "// §FS-001-login and this one note opens with no colon at all and \
+             also runs well past the hundredth column on purpose\n",
+            "pub fn sweep() {}\n",
+        ),
+    );
+    let mut config = layout_config(root.clone(), "citation-first-colon");
+    config.inline_note_layout_check = "error".into();
+
+    let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan root");
+    let report = check_findings(&findings, &config);
+    let style = report
+        .errors
+        .iter()
+        .filter(|finding| finding.code == "inline-citation-style")
+        .map(|finding| (finding.line, finding.message.clone()))
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        style.len(),
+        2,
+        "one layout finding and one budget finding: {style:?}"
+    );
+    assert!(
+        style.iter().all(|(line, _)| *line == Some(4)),
+        "both findings are about the same line: {style:?}"
+    );
+    assert_eq!(
+        style
+            .iter()
+            .filter(|(_, message)| message.starts_with("inline note must open"))
+            .count(),
+        1,
+        "{style:?}"
+    );
+    assert_eq!(
+        style
+            .iter()
+            .filter(|(_, message)| message.contains("over the 100-column maximum"))
+            .count(),
+        1,
+        "{style:?}"
     );
 }

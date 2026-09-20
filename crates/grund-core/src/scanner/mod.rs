@@ -119,6 +119,8 @@ mod tests_embedded_values;
 #[cfg(test)]
 mod tests_file_pass;
 #[cfg(test)]
+mod tests_inline_site;
+#[cfg(test)]
 mod tests_scope_probe;
 #[cfg(test)]
 mod tests_section_body_scope;

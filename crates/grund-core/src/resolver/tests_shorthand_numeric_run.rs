@@ -42,7 +42,9 @@ fn messages(report: &CheckReport) -> Vec<String> {
 /// left one attaches today's slug to a number that named something else —
 /// producing a well-formed citation of the wrong declaration that `check` can
 /// never question. The discriminator is the second number, so no delimiter is
-/// enumerated and every glue character behaves alike.
+/// enumerated and every glue character behaves alike (§FS-fmt.2.4.1.2), and the
+/// three exclusions that keep the clause from over-firing are here too:
+/// whitespace, a marker on the neighbour, and the forward-only reading.
 #[test]
 fn a_shorthand_glued_to_a_second_number_is_never_rewritten() {
     let root = test_root("a_shorthand_glued_to_a_second_number_is_never_rewritten");
@@ -122,7 +124,8 @@ fn a_shorthand_glued_to_a_second_number_is_never_rewritten() {
     );
 }
 
-/// §FS-fmt.2.4.1 clause 1: a bracket or a quote bounds a construct, so the walk
+/// §FS-fmt.2.4.1 clause 1, §FS-fmt.2.4.1.2: a bracket or a quote bounds a
+/// construct, so the walk
 /// for delimiters stops at one. Without that the characters closing the
 /// citation's own construct join the ones opening the next, and whatever number
 /// the next construct carries reads as the second number of a run — which turns
@@ -217,14 +220,16 @@ fn a_construct_boundary_does_not_open_a_run() {
     );
 }
 
-/// §FS-check.3.15.1: a shorthand glued to a second number is a numeral in a run,
-/// so `fmt` will not rewrite it and the report says so — naming the canonical
-/// form *and* the escape, because only the author knows which was meant. This
-/// is §3.13's site with a different verdict, not a second finding on top of it.
+/// §FS-check.3.15.1, §FS-fmt.2.4.1.3: a shorthand glued to a second number is a
+/// numeral in a run, so `fmt` will not rewrite it and the report says so —
+/// naming the canonical form *and* the escape, because only the author knows
+/// which was meant. This is §3.13's site with a different verdict, not a second
+/// finding on top of it.
 ///
-/// Why the recognition assertions ride along with the message ones: dropping
-/// the edge would reintroduce exactly the false negative the shorthand rule
-/// was added to end.
+/// Why the recognition assertions ride along with the message ones: the site
+/// stays a citation in every other respect — it resolves, it counts as an edge,
+/// it grounds its file — and dropping the edge would reintroduce exactly the
+/// false negative the shorthand rule was added to end.
 #[test]
 fn a_shorthand_in_a_numeric_run_names_both_exits() {
     let root = test_root("a_shorthand_in_a_numeric_run_names_both_exits");
@@ -267,12 +272,13 @@ fn a_shorthand_in_a_numeric_run_names_both_exits() {
     );
 }
 
-/// §FS-check.3.15.4: the run verdict replaces only the *mechanical* message. A
+/// §FS-check.3.15.4, §FS-fmt.2.4.1.3: the run verdict replaces only the
+/// *mechanical* message, and only where the shorthand resolves. A
 /// shorthand in a run that resolves to nothing or to several declarations is a
 /// resolution failure, reported on its own terms — a run is no reason to say
 /// less about it. And where §FS-fmt.2.3 already forbids every rewrite, the run
-/// finding is withheld like §3.13's: an illustration in inline code wants no
-/// edit at all.
+/// finding is withheld like §3.13's (§FS-check.3.15.3): an illustration in
+/// inline code wants no edit at all.
 #[test]
 fn a_numeric_run_changes_only_the_message_that_names_the_rewrite() {
     let root = test_root("a_numeric_run_changes_only_the_message_that_names_the_rewrite");

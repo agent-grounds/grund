@@ -1,0 +1,1 @@
+docs/functional-spec/login-cli.md:1: error: duplicate declaration of FS-login (also declared at docs/functional-spec/login-web.md:1)

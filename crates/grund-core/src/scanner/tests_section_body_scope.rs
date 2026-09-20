@@ -312,9 +312,11 @@ fn a_collision_in_the_inline_home_refuses_through_the_stub() {
     );
 }
 
-/// The premise of the whole rule, as one assertion over a tree holding every
-/// shape that has broken it: `grund <ID>.<path>` refuses **if and only if**
-/// `check` reports `duplicate-section` for that exact coordinate. Two readers
+/// §FS-check.3.16.4: the rule and `grund show` answer from one recorded
+/// section set. The premise of the whole rule, as one assertion over a tree
+/// holding every shape that has broken it: `grund <ID>.<path>` refuses **if
+/// and only if** `check` reports `duplicate-section` for that exact
+/// coordinate, and returns a body exactly when it does not. Two readers
 /// each deciding for themselves is how §DF-duplicate-section-path.1 happened,
 /// and a coordinate `check` calls clean that `show` will not resolve is
 /// §REQ-no-wrong-citation failing in the quiet direction.

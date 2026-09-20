@@ -1,0 +1,20 @@
+grund_config_version = 1
+project_name = "api"
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z-]*"
+
+[[kinds]]
+kind = "TICKET"
+file = "docs/tickets.md"
+format = "{kind}-{number}"
+resolve = "should"
+fetch = "scripts/fetch-ticket"
+
+[scan]
+include = ["docs"]
+respect_gitignore = false

@@ -1,0 +1,7 @@
+# The twin of `fmt-index-external-file-symlink`, on the other side of the config
+# root. The target is inside the root, so `fmt --write` writes through the link
+# instead of refusing it, and the golden carries the consequence the spec names
+# rather than a fix for it: `indexes/fs.md` is read under its scanned spelling
+# `docs/fs/README.md`, so the relative target written into it (`FS-001-login.md`)
+# resolves from `docs/fs/` and not from `indexes/`.
+project/docs/fs/README.md -> ../../indexes/fs.md

@@ -45,6 +45,40 @@ fn integrations_block_updates_in_place() {
     assert!(!updated.contains("OLD"));
 }
 
+/// §FS-integrations.4.1.6: the three outcomes a splice can have map to the
+/// three stderr verbs, and `exists` is the one that says the disk was not
+/// touched. One file carrying two managed keys is reported once, so the verbs
+/// are merged: `exists` only when neither line moved, and an append anywhere
+/// makes the whole write an append — a file that gained a key was not
+/// "updated", it was written into.
+#[test]
+fn install_outcomes_map_to_their_verbs_and_merge_towards_the_stronger_one() {
+    assert_eq!(block_outcome_verb(BlockOutcome::Appended), "appended");
+    assert_eq!(block_outcome_verb(BlockOutcome::Updated), "updated");
+    assert_eq!(block_outcome_verb(BlockOutcome::Unchanged), "exists");
+
+    let (exists, updated, appended) = (
+        BlockOutcome::Unchanged,
+        BlockOutcome::Updated,
+        BlockOutcome::Appended,
+    );
+    for (first, second, merged) in [
+        (exists, exists, exists),
+        (exists, updated, updated),
+        (updated, exists, updated),
+        (exists, appended, appended),
+        (updated, appended, appended),
+        (appended, updated, appended),
+        (updated, updated, updated),
+    ] {
+        assert_eq!(
+            merge_outcomes(first, second),
+            merged,
+            "{first:?} beside {second:?}"
+        );
+    }
+}
+
 // §FS-integrations.4.1.4: a block newer than this binary is a hard error.
 #[test]
 fn integrations_block_rejects_newer_version() {
@@ -297,10 +331,10 @@ fn wezterm_wiring_note_reads_only_outside_the_block() {
     }
 }
 
-/// §DF-conversation-link-target.2.4: an agent is instructed only in the form
-/// its renderer is verified to honor. The gate can hold a target where it
-/// was, never make one worse — every downgrade lands on `path`, the form
-/// that surface already had.
+/// §DF-conversation-link-target.2.4 / §FS-integrations.4.3.3: an agent is
+/// instructed only in the form its renderer is verified to honor. The gate can
+/// hold a target where it was, never make one worse — every downgrade lands on
+/// `path`, the form that surface already had.
 #[test]
 fn link_support_gates_unverified_targets_to_path() {
     for target in ConversationTarget::ALL {
@@ -349,8 +383,11 @@ fn link_support_gates_unverified_targets_to_path() {
     }
 }
 
-// §FS-integrations.4.3.12: the `link` block addresses the declaration through
-// the effective target, and `path` keeps the plain-location sentence.
+/// §FS-integrations.4.3.12: the `link` block addresses the declaration through
+/// the effective target, and `path` keeps the plain-location sentence.
+/// §FS-integrations.4.3.2: each value of the key names one fixed template, and
+/// these are the templates — `file://<abs>#L<line>`, the editor scheme form,
+/// the forge URL for `web`, and no URI at all under `path`.
 #[test]
 fn link_instruction_names_the_effective_target() {
     let path_form = ConversationRendering::Link.instruction(ConversationTarget::Path);
@@ -399,9 +436,13 @@ fn link_instruction_names_the_effective_target() {
     );
 }
 
-// §FS-integrations.4.3.5: the two keys are independent — an unreadable target
-// never costs the `plain`/`link` preference recorded beside it, and both are
-// recorded even when the target is inert under `plain`.
+/// §FS-integrations.4.3.5: the two keys are independent — an unreadable target
+/// never costs the `plain`/`link` preference recorded beside it, and both are
+/// recorded even when the target is inert under `plain`.
+/// §FS-config.3.1.4: the accepted values are the closed set the refusal names,
+/// and the key is inert under `plain` yet still parsed and reported either way
+/// — the `plain` fixture reports `reference.marker` unused while neither
+/// conversation key is.
 #[test]
 fn conversation_target_is_recorded_independently() {
     let (written, outcome) = install_reference_key(

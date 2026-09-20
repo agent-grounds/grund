@@ -63,7 +63,8 @@ fn fmt_expands_resolvable_shorthands_only() {
     );
 }
 
-/// §DF-number-only-citation-shorthand.2.6: the shorthand pattern is anchored at
+/// §FS-fmt.2.4.2, §DF-number-only-citation-shorthand.2.6: only a whole token is
+/// a shorthand. The pattern is anchored at
 /// the start only, so it matches the `FS-042` inside a longer ID-shaped token.
 /// Claiming that prefix and rewriting it splices the canonical slug into the
 /// middle of the author's text and leaves the tail glued on — the token has to

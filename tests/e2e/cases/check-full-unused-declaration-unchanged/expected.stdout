@@ -1,0 +1,2 @@
+sim/world.py:3: error: outside [scan] include: unknown reference FS-999-missing
+docs/FS-001-a.md:1: warning: declared but never cited: FS-001-a

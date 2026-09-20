@@ -91,8 +91,9 @@ fn enclosing_workspace_with_an_invalid_alias_fails_the_narrowed_run() {
     );
 }
 
-/// §FS-workspace.6.1.7: every obligation of the ancestor climb is scoped to a
-/// **claim**. A block four levels up that declares `[workspace]`, lists one
+/// §FS-workspace.6.1.7, §FS-workspace.6.1.7.3: every obligation of the ancestor
+/// climb is scoped to a **claim**, and a block that does not name this directory
+/// is not asked. A block four levels up that declares `[workspace]`, lists one
 /// directory that does not exist, and never lists this repository says nothing
 /// about this tree — so its error is not this run's error. Expanding every
 /// declaring ancestor instead made one broken `members` list anywhere above a
@@ -129,7 +130,8 @@ fn an_ancestor_that_claims_nothing_here_cannot_break_the_run() {
     );
 }
 
-/// §FS-workspace.6.1.7, the same rule against a different expansion failure:
+/// §FS-workspace.6.1.7 / §FS-workspace.6.1.7.3, the same rule against a different
+/// expansion failure:
 /// overlapping members. The class is what matters — a non-claiming ancestor is
 /// never expanded, so *no* error its member list could earn reaches a run
 /// below it.
@@ -189,8 +191,8 @@ fn an_ancestor_with_overlapping_members_that_claims_nothing_is_climbed_past() {
 /// §FS-workspace.6.1.7 / §AR-workspace.5.3: a glob claims the directories under
 /// its parent, so a block whose only mention of this repository is
 /// `deep/*` still owes it an answer — and a `members` list it cannot expand
-/// still fails the run. The claim is read from the entry text, and the entry
-/// text here names a set.
+/// still fails the run. §FS-workspace.6.1.7.4: the claim is read from the entry
+/// text, and the entry text here names a set.
 ///
 /// The claimed directory declares `[workspace]` for the same reason as the case
 /// above: only a run that reads an alias path climbs for one (§FS-workspace.5.1).
@@ -223,7 +225,8 @@ fn an_ancestor_glob_claims_the_child_and_still_owes_it_an_answer() {
 
 /// §FS-workspace.6.1.7: a claiming ancestor whose config does not **load** owes
 /// this run the same answer as one that cannot expand its members — its own
-/// error, from its own `members` line. The claim is read from the `members`
+/// error, from its own `members` line. §FS-workspace.6.1.7.4: the claim is read
+/// from the `members`
 /// entries on their own for exactly this reason, so it survives a file the
 /// loader rejects. Read off a *loaded* config instead, two mistakes on one
 /// `members` line behaved oppositely: `"missing"` failed the subtree run
@@ -271,7 +274,8 @@ fn an_enclosing_workspace_whose_config_does_not_load_fails_the_narrowed_run() {
     );
 }
 
-/// §FS-workspace.6.1.7, the half above must not cost: a config that does not load
+/// §FS-workspace.6.1.7 / §FS-workspace.6.1.7.3, the half above must not cost: a
+/// config that does not load
 /// and claims **nothing** here is still climbed past, whatever is wrong with it.
 /// A stray `grund.toml` above a repository — in a workspace that never mentions
 /// it — is not that repository's problem, at any depth up to `/`.
@@ -312,7 +316,8 @@ fn an_ancestor_that_does_not_load_and_claims_nothing_here_is_climbed_past() {
     );
 }
 
-/// §FS-workspace.6.1.7: the residue of the members-only read — a config whose
+/// §FS-workspace.6.1.7 / §FS-workspace.6.1.7.5: the residue of the members-only
+/// read — a config whose
 /// `members` text cannot be obtained at all, so the claim is undecidable in
 /// *both* directions. Failing would let one unreadable `grund.toml` above a
 /// repository break every run inside it, so the run continues; staying silent
@@ -357,7 +362,8 @@ fn an_ancestor_whose_members_text_cannot_be_read_warns_and_lets_the_run_through(
     assert_eq!(aliases, vec!["repo", "api"]);
 }
 
-/// §FS-workspace.6.1.7: the other way the residue is reached — a config file that
+/// §FS-workspace.6.1.7 / §FS-workspace.6.1.7.5: the other way the residue is
+/// reached — a config file that
 /// cannot be read as text at all. Bytes that are not UTF-8 are the portable
 /// case (a permission bit is not one: `root` can read anything), and they reach
 /// the same warning, because the reason is whatever the read failure said.
@@ -389,8 +395,10 @@ fn an_ancestor_config_that_is_not_text_is_reported_and_climbed_past() {
     assert_eq!(aliases, vec!["repo", "api"]);
 }
 
-/// §FS-workspace.5.1 / §FS-workspace.6.1.7: the asymmetry every claim case above
-/// rests on — a run climbs only when it has an alias path to read. A project
+/// §FS-workspace.5.1 / §FS-workspace.6.1.7 / §FS-workspace.6.1.7.1: the asymmetry
+/// every claim case above
+/// rests on — only a run that reads a path carries the obligation, so a run
+/// climbs only when it has an alias path to read. A project
 /// that declares no `[workspace]` of its own is a single project, resolving its
 /// own IDs and nothing else, so no enclosing claim is consulted and none can
 /// fail it; the same broken claim fails a run one directory up, at the block
@@ -426,5 +434,44 @@ fn a_run_at_a_project_with_no_workspace_block_never_climbs() {
         format!("{err:#}"),
         "../grund.toml:4: workspace member does not exist: missing — list it in \
              [workspace] optional_members if it may be legitimately absent"
+    );
+}
+
+/// §FS-workspace.2.2.9.1: the climb reads `optional_members` beside `members`,
+/// from the entry text by the same rule. A **present** optional entry claims the
+/// directory below it, so a run started inside it reads its alias path out of
+/// that claim and spells the subtree the way the workspace root does —
+/// `vendored`, `vendored/inner` — rather than re-spelling it from itself as
+/// `vendored`, `inner`. (An absent entry claims a directory no run can be
+/// started inside, so this is the only half there is to test.)
+#[test]
+fn the_ancestor_climb_reads_a_present_optional_members_claim() {
+    let root = test_root("the_ancestor_climb_reads_a_present_optional_members_claim");
+    for (dir, body) in [
+        (
+            "",
+            "project_name = \"acme\"\n\n[workspace]\noptional_members = [\"vendored\"]\n",
+        ),
+        (
+            "vendored",
+            "project_name = \"vendored\"\n\n[workspace]\nmembers = [\"inner\"]\n",
+        ),
+        ("vendored/inner", "project_name = \"inner\"\n"),
+    ] {
+        write(&root.join(dir).join("grund.toml"), body);
+    }
+
+    let mut config = load_config(&root.join("vendored")).expect("load the optional member config");
+    let aliases = expand_workspace_tree(&mut config)
+        .expect("a run inside a present optional member must load")
+        .into_iter()
+        .map(|entry| entry.alias)
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        aliases,
+        vec!["vendored", "vendored/inner"],
+        "the entry in `optional_members` claims this directory, so the subtree \
+             carries the alias path the workspace root gives it"
     );
 }

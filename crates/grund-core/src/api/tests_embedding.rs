@@ -13,6 +13,13 @@ use crate::queries::{LspSnapshotOpts, ShowFormat, ShowMode, ShowOpts, can_replac
 use crate::testing::{canonical_test_path, test_root, write};
 use crate::writers::{InitFsHome, InitOpts, docs_scaffold, init};
 
+/// §FS-distribution.3.0.2: the `ShowOpts` a binding's `show` takes, at the
+/// shape the leaf spells. The three calls here pin it: `..ShowOpts::default()`
+/// alone returns the lead body, so `mode` defaults to `lead` and `format` to
+/// `text`; the full literal `{ section: None, mode: ShowMode::Lead, format:
+/// ShowFormat::Text }` names every field, so the option set cannot grow or
+/// shrink without this stopping compiling; and `format: ShowFormat::Json`
+/// carries the third spelling of `format`.
 #[test]
 fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
     let root = test_root("public_embedding_api_checks_and_shows_without_cli_dispatch");

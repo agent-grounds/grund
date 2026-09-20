@@ -98,7 +98,10 @@ fn a_missing_index_file_reports_once_per_declaration() {
 }
 
 /// §FS-check.3.17: the entry is there and is not a link. Reported at the
-/// citation's own line in the index, naming the command that fixes it.
+/// citation's own line in the index, naming the command that fixes it — and
+/// §FS-check.3.17.6, one finding per ID: the bare entry earns exactly one
+/// `unlinked-index-entry` and never also §FS-check.3.18's missing-entry
+/// error, because one cause never yields both findings.
 #[test]
 fn a_bare_entry_is_an_error_at_its_line_in_the_index() {
     let root = kind_index_repo("a_bare_entry_is_an_error_at_its_line_in_the_index");
@@ -161,9 +164,9 @@ fn a_linked_entry_satisfies_the_rule_whatever_the_target_says() {
     );
 }
 
-/// §DF-index-entry-form.2.2: a declaration whose home is a source file links
-/// to the bare path with no anchor — "full link" is the link `fmt` writes
-/// here, not "carries an anchor".
+/// §FS-check.3.17.1 / §DF-index-entry-form.2.2: the required form is the link
+/// `grund fmt --cross-refs` writes, not "has an anchor" — a declaration whose
+/// home is a source file links to the bare file path with no anchor at all.
 #[test]
 fn an_anchorless_link_to_a_source_home_is_a_full_link() {
     let root = test_root("an_anchorless_link_to_a_source_home_is_a_full_link");
@@ -195,8 +198,10 @@ fn an_anchorless_link_to_a_source_home_is_a_full_link() {
     );
 }
 
-/// §DF-index-entry-form.2.3: one link per ID. A prose mention beside a real
-/// linked entry is untouched — the AR index in this repository is the case.
+/// §FS-check.3.18.6 / §DF-index-entry-form.2.3: and nothing more. One link per
+/// ID is enough, and every other occurrence of the ID in the index — a prose
+/// mention beside a real linked entry — is untouched and never a finding. The
+/// AR index in this repository is the case.
 #[test]
 fn one_link_satisfies_an_id_that_is_also_mentioned_bare() {
     let root = kind_index_repo("one_link_satisfies_an_id_that_is_also_mentioned_bare");
@@ -214,8 +219,10 @@ fn one_link_satisfies_an_id_that_is_also_mentioned_bare() {
     );
 }
 
-/// §DF-index-entry-form.2.5: the walk is the folder's whole subtree, because
-/// a kind's folder routinely holds a directory per topic.
+/// §FS-check.3.18.2 / §DF-index-entry-form.2.5: which declarations are
+/// covered — every ID of the kind with a declaration site anywhere under
+/// `folder`, the whole subtree and not its top level, because a kind's folder
+/// routinely holds a directory per topic.
 #[test]
 fn the_walk_reaches_a_declaration_in_a_subdirectory() {
     let root = kind_index_repo("the_walk_reaches_a_declaration_in_a_subdirectory");

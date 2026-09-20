@@ -328,6 +328,9 @@ fn the_runs_own_workspace_root_is_never_reported_under_full() {
 /// run that never reaches the block says nothing — the same stance §FS-check.3.18.8
 /// takes for an index the run did not scan. This is the residue the spec keeps
 /// recording rather than papering over.
+/// §FS-workspace.6.1.8.1: this is the first of the two unreported shapes — a
+/// block the walk never reaches, here behind a narrowed scope, because a run
+/// that cannot see something does not judge it.
 #[test]
 fn a_run_narrowed_away_from_the_block_reports_nothing() {
     let root = unlisted_block_repo("a_run_narrowed_away_from_the_block_reports_nothing");
@@ -426,6 +429,10 @@ fn repo_under_an_ancestor_listing(name: &str, members: &str) -> PathBuf {
 /// `repo/b` listed beside a member that does not exist, so the list will not
 /// expand — leaves the block undecidable in both directions (§FS-workspace.6.1.8)
 /// and unreported. No answer is not the answer that nothing claims it.
+/// §FS-workspace.6.1.7.2: the quiet climb asked this ancestor and read its entry
+/// text; an ancestor it cannot read out leaves the claim unanswered, and that
+/// question fails no run. §FS-workspace.6.1.8.1: the second of the two
+/// unreported shapes — the unanswered claim, as against the unreached block.
 #[test]
 fn a_claim_the_ancestor_cannot_answer_leaves_the_block_unreported() {
     let root = repo_under_an_ancestor_listing(

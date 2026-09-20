@@ -135,9 +135,12 @@ fn declaration_title_hover_uses_singular_nouns_at_one() {
     );
 }
 
-/// §FS-lsp.1.2: an uncited title reads `not cited` — the whole clause is
+/// §FS-lsp.1.2.7: an uncited title reads `not cited` — the count at zero,
+/// worded as a count. The whole clause is
 /// replaced, and the hover is not suppressed, so the title keeps its
-/// whole-title hover range and the answer is never mistaken for silence.
+/// whole-title hover range and the answer is never mistaken for silence; the
+/// unused-declaration warning below carries the finding, and the hover
+/// restates none of it.
 #[test]
 fn uncited_declaration_title_hover_reads_not_cited() {
     let root = test_root("uncited_declaration_title_hover_reads_not_cited");

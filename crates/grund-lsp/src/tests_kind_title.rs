@@ -57,6 +57,13 @@ fn expected(body: &str, line: u32, start: u32, end: u32) -> Value {
         "range":{"start":{"line":line,"character":start},"end":{"line":line,"character":end}}})
 }
 
+/// §FS-lsp.1.2.8: the target kind's effective title is appended to a successful
+/// hover as a `Kind: ` paragraph — on citation previews, declarations, sections,
+/// inline-source titles and stubs alike, fenced by the §FS-lsp.1.2.4 backtick
+/// convention. No title leaves the hover unchanged, an empty one still adds the
+/// paragraph, the metadata stays literal while only the preview is linkified,
+/// and usage counts, ranges, navigation and the missing-target suppression are
+/// the same at every value.
 #[test]
 fn kind_title_handler_preserves_each_title_preview_and_navigation() {
     let root = test_root("kind_title_handler");

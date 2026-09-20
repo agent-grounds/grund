@@ -132,6 +132,10 @@ fn every_initial_workspace_folder_gets_an_independent_snapshot() {
     let _ = fs::remove_dir_all(root);
 }
 
+/// §FS-lsp.2.2.5: on `workspace/didChangeWorkspaceFolders` an added folder is
+/// discovered by the same rules and starts answering, and a removed one stops
+/// contributing — so a later add/remove order cannot silently narrow
+/// references.
 #[test]
 fn workspace_folder_changes_rebuild_and_remove_project_snapshots() {
     let root = test_root("changed-workspace-folders");
@@ -190,6 +194,9 @@ fn workspace_folder_changes_rebuild_and_remove_project_snapshots() {
     let _ = fs::remove_dir_all(root);
 }
 
+/// §FS-lsp.2.2.5: keeping a folder that still resolves to a project keeps that
+/// project active when another folder for the same project is removed, so the
+/// remaining anchor answers exactly as it did before the event.
 #[test]
 fn removing_one_of_two_folders_keeps_the_shared_project_snapshot() {
     let root = test_root("shared-project-workspace-folders");

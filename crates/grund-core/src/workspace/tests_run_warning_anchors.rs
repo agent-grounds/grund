@@ -190,7 +190,8 @@ fn an_unlisted_block_anchors_at_its_workspace_line() {
     );
 }
 
-/// §FS-workspace.6.1.7: the undecidable ancestor claim "anchors at the config it
+/// §FS-workspace.6.1.7 / §FS-workspace.6.1.7.6: the undecidable ancestor claim
+/// travels as one of the run's warnings and "anchors at the config it
 /// could not read — that file and no line, because the `members` value whose
 /// line would be the anchor is exactly what could not be obtained".
 #[test]

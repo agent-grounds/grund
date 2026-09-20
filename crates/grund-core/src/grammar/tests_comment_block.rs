@@ -9,6 +9,9 @@ use crate::testing::{
     inline_style_findings, inline_style_findings_with, over_the_column_cap, over_the_line_cap,
 };
 
+/// §FS-inline-citation-style.1.2: a line-comment block is the run of adjacent
+/// lines carrying the same marker, and a blank line or a code line ends it — the
+/// three runs here are three blocks, and only the `//` one is a site.
 #[test]
 fn rust_measures_slash_slash_but_not_slash_slash_slash_or_bang() {
     let findings = inline_style_findings(
@@ -36,6 +39,10 @@ fn rust_measures_slash_slash_but_not_slash_slash_slash_or_bang() {
     assert_eq!(findings, over_the_line_cap(12, 4, "§FS-001-login"));
 }
 
+/// §FS-inline-citation-style.1.2: a block comment runs from opener to closer,
+/// and §FS-inline-citation-style.2.3.1: the measured size is that physical
+/// extent — the `/*` and ` */` lines carry no prose and still count, so a
+/// three-sentence note reports as five lines.
 #[test]
 fn java_measures_a_plain_block_comment_but_not_a_javadoc() {
     let findings = inline_style_findings(
@@ -293,9 +300,15 @@ fn citation_only_does_not_reach_a_javadoc() {
     );
 }
 
-/// §FS-inline-citation-style.1.1: the note layout does not reach a doc
+/// §FS-inline-citation-style.1.1, §FS-inline-citation-style.3.3.6: the note
+/// layout does not reach a doc
 /// comment either, so a Rustdoc summary line above a cited sentence is not a
 /// badly laid-out note. The `//` block below it shows the gate is live.
+///
+/// §FS-inline-citation-style.5.3.1: that is the gap the rendered house style is
+/// deliberately wider than — the sentence asks an agent to lay out every note
+/// citation-first, while the check judges inline citation sites only, so the
+/// Rustdoc line here is asked for and never reported.
 #[test]
 fn the_note_layout_check_does_not_reach_a_doc_comment() {
     let findings = inline_style_findings_with(

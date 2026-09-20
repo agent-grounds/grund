@@ -7,6 +7,11 @@ mod support;
 use std::fs;
 use support::*;
 
+/// §FS-check.1.1.7: a fetched snapshot is not a special input. Once `grund
+/// fetch` has written it, its configured file home sits in the ordinary scan
+/// scope and its declaration and body are recognized by the ordinary rules —
+/// the offline leg runs with the integration renamed away, so `check`, `show`
+/// and `refs` all answer from the scanned file alone.
 #[cfg(unix)]
 #[test]
 fn external_facts_citation_materializes_then_resolves_offline() {
@@ -63,6 +68,15 @@ fn external_facts_citation_materializes_then_resolves_offline() {
     assert!(stdout(&refs).contains("docs/guide.md:3:"));
 }
 
+/// §FS-check.3.1.3: for a fetch-enabled kind whose effective resolution is
+/// `must`, the dangling finding is the fixed `unknown reference <ID>; no
+/// snapshot in <home> — run grund fetch <ID>` — code `dangling`, severity
+/// error, exit 1 — beside §FS-check.4.12's `should` warning on the same tree.
+///
+/// §FS-errors.3.5: the two frozen identities of a missing fetch-backed
+/// declaration are driven from one table here — `dangling`/`error` and
+/// `missing-snapshot`/`warning`, each with its exact message bytes and its
+/// bare-text fetch remedy, in both the text and the JSON rendering.
 #[test]
 fn external_facts_missing_snapshot_text_and_json_have_fixed_identities() {
     for (resolve, code, text, exit) in [
@@ -179,6 +193,11 @@ fn external_facts_should_snapshot_is_a_full_scope_error_in_text_json_and_workspa
     }
 }
 
+/// §FS-check.4.12.1 / §FS-check.3.1.3: a hint takes the fetch tail's place.
+/// The near-ID and inline-code-illustration hints outrank the fetch action at
+/// both levels, so the message keeps its `no snapshot … in <home>` base and
+/// substitutes the conditional tail for the em-dash one — and no site names
+/// `grund fetch` beside a hint.
 #[test]
 fn external_facts_existing_hints_replace_only_the_fetch_action_at_both_levels() {
     for (resolve, base, exit) in [
@@ -234,6 +253,16 @@ fn external_facts_existing_hints_replace_only_the_fetch_action_at_both_levels() 
     }
 }
 
+/// §FS-check.1.1.7: `check` never invokes a fetch-enabled kind's configured
+/// integration — the snapshot home is read as an ordinary scanned file, and
+/// the `fetch-ran` marker the script would drop is absent after `check`,
+/// `show`, `refs`, `list`, `cover` and `fmt` have all run over the tree.
+///
+/// §FS-list.2.2: `list .` is one of those consumers, so the per-kind
+/// `format`/`fetch`/`resolve` of the `TICKET` kind is parsed through the same
+/// shared catalog, the committed snapshots in `docs/tickets.md` list as
+/// ordinary declarations, and listing never executes the fetcher — the run
+/// exits `0` and no `fetch-ran` marker exists afterwards.
 #[cfg(unix)]
 #[test]
 fn external_facts_per_kind_grammar_is_shared_by_every_cli_consumer() {

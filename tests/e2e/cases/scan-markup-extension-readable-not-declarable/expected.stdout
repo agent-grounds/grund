@@ -1,0 +1,2 @@
+docs/functional-spec/FS-001-login.md:3: error: unknown reference FS-002-session
+docs/guide.rst:7: error: unknown reference FS-999-missing

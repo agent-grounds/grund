@@ -398,10 +398,14 @@ title = "Architecture decision"
     );
 }
 
+/// §FS-config.2 / §FS-init.2.1: existing configs without explicit kind homes keep
+/// the legacy FS folder, and `init --docs` must scaffold that effective home.
+/// §FS-init.1.3 is that rule seen from the `--docs` side: a config that omits
+/// `[[kinds]]` keeps the compatibility FS home, so the scaffold writes
+/// `docs/functional-spec/README.md` and the next-step guidance points at
+/// `docs/functional-spec` rather than at the generated `requirements.md`.
 #[test]
 fn init_docs_existing_implicit_legacy_config_uses_legacy_fs_home() {
-    // §FS-config.2 / §FS-init.2.1: existing configs without explicit kind homes
-    // keep the legacy FS folder, and `init --docs` must scaffold that effective home.
     let target = workdir("init_docs_existing_implicit_legacy_config_uses_legacy_fs_home");
     fs::create_dir_all(target.join(".agents")).expect("create .agents");
     fs::write(

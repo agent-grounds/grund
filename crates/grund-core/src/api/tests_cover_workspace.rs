@@ -107,9 +107,10 @@ fn rows(output: &CoverOutput) -> Vec<String> {
 }
 
 /// §FS-workspace.8.6: the member's files are in the index, spelled from the
-/// workspace root, and carrying their own alias. Before this, a run at the
-/// root saw only `docs/` and exited `0` over a tree it had not read
-/// (§REQ-no-missed-citation.1).
+/// workspace root, and carrying their own alias. §FS-workspace.8.6.2 is why the
+/// index spans every project rather than one: before this, a run at the root saw
+/// only `docs/` and exited `0` over a tree it had not read — the silent skip
+/// §REQ-no-missed-citation.1 forbids.
 #[test]
 fn cover_at_a_workspace_root_indexes_every_member() {
     let root = workspace(
@@ -128,9 +129,10 @@ fn cover_at_a_workspace_root_indexes_every_member() {
     );
 }
 
-/// §DF-cover-workspace-scope.2.2: a `§<alias>/<ID>` is one of the citing
-/// file's citations. A file whose citations are all qualified used to print
-/// as `(no citations)` — the report a reader takes for "ungrounded".
+/// §FS-workspace.8.6.3, §DF-cover-workspace-scope.2.2: a `§<alias>/<ID>` is one
+/// of the citing file's citations, listed at its own `(line, column)`. A file
+/// whose citations are all qualified used to print as `(no citations)` — the
+/// report a reader takes for "ungrounded".
 #[test]
 fn cover_counts_a_qualified_citation_toward_the_citing_file() {
     let root = workspace(

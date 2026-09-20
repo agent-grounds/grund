@@ -199,6 +199,14 @@ fn external_facts_folder_home_replaces_nested_snapshot_and_refuses_nested_duplic
     assert_eq!(tree_with_directories(&duplicate), before);
 }
 
+/// §FS-config.3.4.10.2, §FS-config.3.4.10.4: the schema half of the external
+/// facts rows, from the surface that reads them back. `config show` on a row
+/// that wrote only `file` and `fetch` prints an explicit `format`, the `fetch`
+/// it was given, and the *effective* `resolve` — the defaulted `must`, which
+/// is the value a reader cannot otherwise see. The refusal table then pins the
+/// coupling in both directions (`resolve` without `fetch`, and the closed
+/// `must | should` enum with no `may`) and the exactly-one-home rule from both
+/// sides, neither home and both homes.
 #[test]
 fn external_facts_config_validation_pins_coupling_enum_homes_and_default() {
     let valid = root("config-default");

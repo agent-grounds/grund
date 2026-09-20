@@ -1,0 +1,2 @@
+invalid ID `FS-alpha.1.2`
+hint: this repo's [id] format is `{kind}-{number}-{slug}` (run `grund config show`); `grund list` shows the IDs that exist

@@ -440,6 +440,9 @@ fn inline_style_strips_block_comment_continuation_prefix() {
     );
 }
 
+/// §FS-config.3.1.8: the load-time invariant the three budget keys carry —
+/// `inline_note_suggested_lines ≤ inline_note_max_lines` — so a config that
+/// suggests more lines than it permits is refused rather than loaded.
 #[test]
 fn inline_note_config_rejects_soft_cap_above_hard_cap() {
     let root = test_root("inline_note_config_rejects_soft_cap_above_hard_cap");
