@@ -40,6 +40,16 @@ The current pre-commit gate runs the same Rust format/build/test commands that d
 
 The gate also runs `grund check --full`, including the grounding floor from [§FS-check.3.6](../functional-spec/FS-check.md#36-ungrounded-source-file-opt-in), `grund fmt --write` for canonical citation links, and `lychee` for Markdown links. Running both in CI preserves the boundary [§FS-non-goals.1](../functional-spec/FS-non-goals.md#1-markdown-link-validation) draws: `grund` owns ID citations across docs and source, `lychee` regular Markdown links and URLs.
 
+A canonical `https://github.com/agent-grounds/grund/blob/main/<path>` link in
+the checked tree is a same-repository link. Before the network pass, the link
+gate maps it to `<path>` in the current checkout and asks `lychee` to validate
+that local file and any fragment. Only the exact URLs that pass this local
+check are excluded from the network pass; missing paths, bad fragments,
+malformed self URLs, and links to every other repository or host remain
+failures of the local or network check. This makes a durable default-branch URL
+checkable on the branch that first adds its target without accepting a 404 or
+pinning a shipped address to that branch.
+
 `--full` ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)) is here because a citation in a file outside `grund`'s own `[scan] include` and every kind home ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-walked)) is invisible to the plain run rather than merely unchecked — the drift this repository asks its users to guard against is one it can suffer too. The flag is purely additive, so the gate still asserts everything it asserted before.
 
 ### 3.2 The managed block's text

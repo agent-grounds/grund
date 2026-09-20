@@ -291,7 +291,7 @@ Repositories can also declare controlled-English constraints over declarations,
 named chapters, and citations. The [chapter-rules guide](docs/user-facing/rules.md)
 lists every accepted sentence and refusal rewrite; the runnable
 [`examples/rules/`](examples/rules/) repository demonstrates the findings and
-deduplication behavior ([§FS-rules](docs/functional-spec/FS-rules.md#fs-rules-controlled-english-rules-over-declarations-chapters-and-citations)).
+deduplication behavior ([§FS-rules](docs/functional-spec/FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules)).
 
 | Kind | What it is | Where it lives |
 | --- | --- | --- |

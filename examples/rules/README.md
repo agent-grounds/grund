@@ -1,7 +1,7 @@
 # Chapter rules
 
 This runnable repository shows the grounded rule declarations of
-[§FS-rules](../../docs/functional-spec/FS-rules.md#fs-rules-controlled-english-rules-over-declarations-chapters-and-citations).
+[§FS-rules](../../docs/functional-spec/FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules).
 Run it from the project root:
 
 ```bash

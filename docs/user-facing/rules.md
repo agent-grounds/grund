@@ -2,8 +2,8 @@
 
 Chapter rules turn repository conventions into checked, agent-readable
 declarations. They are deliberately a small language: if a sentence parses, a
-reader and `grund check` give it the same meaning. See §FS-rules.1 and
-§FS-rules.10.
+reader and `grund check` give it the same meaning. See [§FS-rules.1](../functional-spec/FS-rules.md#1-rule-declarations-and-opt-in) and
+[§FS-rules.10](../functional-spec/FS-rules.md#10-documentation-and-executable-examples).
 
 Opt in one citable Markdown kind, then put one sentence and a non-empty
 rationale in every declaration:
@@ -123,4 +123,4 @@ passing and violated instance of all five families, shared-prefix coverage
 targets, both deduplication directions, both channels, and the strict refusal
 inventory. `grund init` repeats valid configured sentences under a v11
 `### Chapter rules` managed section; without a rule kind, v10 bytes are
-unchanged. §FS-rules.6 §FS-rules.7.6 §FS-rules.9
+unchanged. [§FS-rules.6](../functional-spec/FS-rules.md#6-semantic-deduplication) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits) [§FS-rules.9](../functional-spec/FS-rules.md#9-managed-guidance-and-editor-parity)

@@ -312,6 +312,8 @@ For `grund check`, `code` is also the exact public selector vocabulary for
 ```text
 agents-init
 broken-stub
+chapter-cardinality
+citation-cardinality
 dangling
 declaration-near-miss
 deprecated-config-location
@@ -324,6 +326,7 @@ escaped-citation-resolves
 forbidden-citation
 full-scope-ignored
 inline-citation-style
+invalid-rule
 invalid-value-binding
 invalid-value-declaration
 io
@@ -346,6 +349,7 @@ section-outside-declaration
 shorthand-citation
 shorthand-numeric-run
 suggested-citation
+uncited-unit
 ungrounded
 unknown-project
 unlinked-index-entry
@@ -354,6 +358,10 @@ unmarked-heading
 unused
 value-mismatch
 ```
+
+The chapter-rule codes `chapter-cardinality`, `citation-cardinality`,
+`invalid-rule`, and `uncited-unit` are selectable on the same surfaces as every
+other code ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)).
 
 Every future check diagnostic code enters this catalog in the release that
 introduces it; renaming or removing one requires compatibility treatment. The
