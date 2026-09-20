@@ -40,7 +40,7 @@ input boundary and corrected in a file. A project may deliberately opt into
 persist alongside the full citation. The default remains `canonical`, including
 when the key is absent ([§FS-config.3.1](../../functional-spec/FS-config.md#31-reference--citation-form)).
 
-This is the same principle [§DISC-declaration-local-shorthand](../../discussions/proposals/2026-05-24-declaration-local-shorthand.md#disc-declaration-local-shorthand-declaration-local-shorthand-for-citing-sections-of-the-same-declaration) already records for section-local shorthand — *persist canonical citations, keep resolution explicit* — and that note reaches the same verdict in advance: "Persisted marker shorthand such as `§2` should not be accepted by `check` as a citation. If supported at all, it should be reported or corrected to the full canonical form."
+This is the same principle [§DISC-declaration-local-shorthand](../../discussions/proposals/2026-05-24-declaration-local-shorthand.md#disc-declaration-local-shorthand-declaration-local-shorthand-for-citing-sections-of-the-same-declaration) already records for section-local shorthand — *persist canonical citations, keep resolution explicit* — and that note reaches the same verdict in advance: "Persisted marker shorthand such as `<§>2` should not be accepted by `check` as a citation. If supported at all, it should be reported or corrected to the full canonical form."
 
 Two properties pay for the canonical default:
 

@@ -51,10 +51,15 @@ When code realizes a named behavior, it carries a `§<ID>` citation — on its d
 
 `grund` doesn't invent these citations — that's the contributor's call. What `grund` does is make sure the ones you wrote *resolve*. With `require_grounding = true` — in `[reference]` for every place at once, or on one `[[kinds]]` row for that place alone, at a `grounding_level` from the whole file down to every `##` of it ([§FS-config.3.4.8](docs/functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) — it also fails what carries no resolving citation; the stronger diff-aware "implementation changed with its spec or test" gate is tracked separately in [§RM-cochange-gate](docs/roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test).
 
-Store section citations with their full ID. A local-looking `§2.1` inside an
-`FS-login` body is recognized as that declaration's edge, but `grund check`
-reports `local section citation §2.1; write §FS-login.2.1`; `grund fmt
---write` applies that safe expansion. A missing local section also gets the
+Store section citations with their full ID. A local-looking `<§>2.1` inside the
+`FS-check` body is recognized as that declaration's edge, but `grund check`
+reports:
+
+```text
+local section citation §2.1; write §FS-check.2.1
+```
+
+`grund fmt --write` applies that safe expansion. A missing local section also gets the
 ordinary missing-section error, while a site outside a declaration is left
 unresolved and must be replaced manually with a full citation or escaped as an
 illustration. This is intentionally newly loud compatibility behavior for a

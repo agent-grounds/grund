@@ -14,7 +14,7 @@ The portable section model is unchanged from [§AR-scanner.2.2](../../architectu
 
 ## 3. Principles
 
-- **Persist canonical citations.** `§2`, `$$2`, or any other local shorthand should not become a new stored citation grammar. At most, it is authoring sugar that immediately expands to `§<current-ID>.2`.
+- **Persist canonical citations.** `<§>2`, `$$2`, or any other local shorthand should not become a new stored citation grammar. At most, it is authoring sugar that immediately expands to `<§><current-ID>.2`.
 - **Keep resolution explicit.** A citation in the file should be understandable without remembering the containing declaration. This keeps grep, `refs`, `cover`, and moved prose simple — and is the reason the shorthand must expand eagerly rather than persist.
 
 ## 4. Authoring correction
@@ -38,9 +38,9 @@ The correction should only run when all of these are true:
 - the site is not a declaration heading, fenced code block, inline code span, or Markdown link destination;
 - the rewrite is minimal and idempotent, matching the existing trigger-to-marker ergonomics ([§FS-fmt.2.1](../../functional-spec/FS-fmt.md#21-trigger-to-marker), [§FS-lsp.1.4](../../functional-spec/FS-lsp.md#14-live-trigger-transform)).
 
-Persisted marker shorthand such as `§2` should not be accepted by `check` as a citation. If supported at all, it should be reported or corrected to the full canonical form.
+Persisted marker shorthand such as `<§>2` should not be accepted by `check` as a citation. If supported at all, it should be reported or corrected to the full canonical form.
 
 ## 5. Open questions
 
 - Should declaration-local shorthand be LSP-only, `fmt --write` only, or both?
-- Should shorthand use only the configured trigger (`$$2`) or also correct marker shorthand (`§2`)?
+- Should shorthand use only the configured trigger (`$$2`) or also correct marker shorthand (`<§>2`)?

@@ -128,7 +128,7 @@ fn citation_grounding_sentence(config: &Config) -> Option<String> {
 ///
 /// A citable kind's unit is the top-level declaration (§FS-check.3.11). A
 /// non-citable kind's is every scanned file in its home, so the bullet names the
-/// place, as the Project map does (§2.3.4.4) — naming the kind would name
+/// place, as the Project map does (§FS-init.2.3.4.4) — naming the kind would name
 /// something an agent can never write. The homeless kind has no place, so it
 /// keeps its name and says what it covers: its `title` where the project wrote
 /// one. Its unit is narrower again — a *source* file (not `.md`) that already

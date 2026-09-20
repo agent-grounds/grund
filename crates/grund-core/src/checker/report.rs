@@ -596,7 +596,7 @@ pub(crate) fn check_with_workspace_and_overlays(
 
     // §FS-check.3.18 / §FS-check.3.17: a kind's index must list every declaration
     // in its folder, as a full link. In `index.rs` — one file per
-    // invariant family, the arrangement §2.15's section rules already use.
+    // invariant family, the arrangement §AR-checker.2.15's section rules already use.
     check_kind_indexes(findings, config, path_config, &mut report);
 
     // §FS-check.4.1: a declaration nothing cites is a warning, not an error —

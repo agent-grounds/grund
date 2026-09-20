@@ -62,9 +62,12 @@ the number-only ID shorthand of [§FS-check.1.2](FS-check.md#12-the-number-only-
 exclusion in [§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code) retain their precedence.
 
 The candidate must end as a whole token. If digits are followed by a tail that would otherwise
-make the numeric prefix partial, such as `<§>2.goals` or `<§>2abc`, the scanner retains the complete
-digit-starting token for the unsupported-syntax verdict in [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation); it never emits an edge to
-section `2`. Named and mixed declaration-local shorthand are not recognized.
+make the numeric prefix partial, such as `<§>2.goals`, `<§>2abc`, or a path with an empty
+component such as `<§>2..1`, the scanner retains the complete digit-starting token for the
+unsupported-syntax verdict in [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation); it never emits an edge to
+section `2`. One dot after an otherwise complete token is sentence punctuation and is not part of
+the candidate; a repeated terminal dot run is retained as unsupported syntax rather than reduced
+to that punctuation case. Named and mixed declaration-local shorthand are not recognized.
 
 After declaration bodies are assigned, the candidate is owned only by the existing enclosing-body
 rule ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)): Markdown

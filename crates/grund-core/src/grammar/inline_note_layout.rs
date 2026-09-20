@@ -125,7 +125,7 @@ pub(crate) fn inline_layout_violations(
 
 /// One line reduced to what this rule reads: its content window with any leading
 /// list marker skipped, and the citation tokens inside that window rebased onto
-/// it. The window is the one §2.3 uses — comment prefix and block closer stripped
+/// it. The window is the one §FS-inline-citation-style.2.3 uses — comment prefix and block closer stripped
 /// — and the tokens are the ones the scanner itself recognizes on the line
 /// (§FS-inline-citation-style.3.3.5, rule 5), translated rather than re-tokenized
 /// in the stripped copy. `None` when no citation falls inside the window, which

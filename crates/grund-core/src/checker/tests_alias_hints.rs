@@ -256,7 +256,7 @@ fn last_segment_tier_offers_the_same_leaf_under_another_parent() {
 }
 
 /// §FS-check.3.8.2: the typo tier — no suffix and no shared leaf, so the
-/// near-match rule §3.1 uses decides.
+/// near-match rule §FS-check.3.1 uses decides.
 #[test]
 fn typo_tier_offers_a_project_one_edit_away() {
     let known = ["root", "hardware", "left/api"];

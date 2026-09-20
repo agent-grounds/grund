@@ -36,12 +36,12 @@ fn redundant_config_warning(config: &Config) -> Option<Diagnostic> {
 /// §FS-check.4.11: the warning for a config the run read from the deprecated
 /// `.agents/` location — the file still governs the project, so the message
 /// names the move a reader can type rather than a fault (§FS-config.1.2.1).
-/// `line`-less for §4.3's reason, which this finding shares whole: the subject
+/// `line`-less for §FS-check.4.3's reason, which this finding shares whole: the subject
 /// is which file the run read, not a site inside it.
 ///
 /// Keyed off the file actually read, which is what excludes the redundant pair
 /// by construction: there the bare name won the tie, so `config_file` already
-/// names the home path and §4.3 is the finding the directory earns
+/// names the home path and §FS-check.4.3 is the finding the directory earns
 /// (§FS-config.1.1).
 fn deprecated_config_location_warning(config: &Config) -> Option<Diagnostic> {
     let found = config.config_file.as_ref()?;

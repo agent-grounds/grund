@@ -218,9 +218,9 @@ Adjust the selector to match the syntaxes you scan in `grund.toml`.
 Open a file containing a resolving citation such as `§FS-check`.
 
 Stored section citations use the same full-ID form. If an existing document
-contains `§2` inside an `FS-a` declaration, the server reports the canonical
-replacement `§FS-a.2`; when section 2 exists, definition, references, and
-highlights still follow that resolved edge. `§9.9` also receives the ordinary
+contains `<§>2.1` inside the `FS-check` declaration, the server reports the canonical
+replacement `§FS-check.2.1`; when section 2.1 exists, definition, references, and
+highlights still follow that resolved edge. `<§>9.9` also receives the ordinary
 missing-section diagnostic when its owner lacks that heading. A local path
 outside a declaration is diagnosed without a navigation target, because the
 server never guesses an owner. Run `grund fmt --write` for safe owned sites and

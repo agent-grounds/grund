@@ -57,44 +57,22 @@ pub(super) fn scan_local_section_candidates(
         if !rest.starts_with(|ch: char| ch.is_ascii_digit()) {
             continue;
         }
-        let bytes = rest.as_bytes();
-        let mut token_len = bytes
-            .iter()
-            .take_while(|byte| byte.is_ascii_digit())
-            .count();
-        while bytes.get(token_len) == Some(&b'.')
-            && bytes.get(token_len + 1).is_some_and(u8::is_ascii_digit)
-        {
-            token_len += 1;
-            token_len += bytes[token_len..]
-                .iter()
-                .take_while(|byte| byte.is_ascii_digit())
-                .count();
-        }
-        // A sentence-ending dot is a boundary. A dot followed by a name, or a
-        // glued alphanumeric/`_`/`-` tail, belongs to one unsupported token
-        // (§FS-check.1.1.8); consume it whole so `§2.goals` never becomes
-        // an edge to section 2.
-        let unsupported_tail = bytes
-            .get(token_len)
-            .is_some_and(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
-            || bytes.get(token_len) == Some(&b'.')
-                && bytes.get(token_len + 1).is_some_and(|byte| {
-                    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-')
-                });
-        if unsupported_tail {
-            token_len = rest
-                .char_indices()
-                .find_map(|(offset, ch)| {
-                    (!(ch.is_alphanumeric() || matches!(ch, '.' | '_' | '-'))).then_some(offset)
-                })
-                .unwrap_or(rest.len());
-            // Sentence punctuation is not part of the digit-starting token.
-            // Internal dots remain, including doubled ones that make the
-            // complete token unsupported.
-            while token_len > 0 && rest.as_bytes().get(token_len - 1) == Some(&b'.') {
-                token_len -= 1;
-            }
+        // Scan the maximal token before deciding whether its dotted components
+        // are supported (§FS-check.1.1.8). This keeps empty components in
+        // `<§>2..1` and `<§>2...` from being truncated into an edge to section 2.
+        let mut token_len = rest
+            .char_indices()
+            .find_map(|(offset, ch)| {
+                (!(ch.is_alphanumeric() || matches!(ch, '.' | '_' | '-'))).then_some(offset)
+            })
+            .unwrap_or(rest.len());
+        let token = &rest[..token_len];
+        let trailing_dots = token.bytes().rev().take_while(|byte| *byte == b'.').count();
+        // One terminal dot is sentence punctuation. A repeated terminal run is
+        // itself malformed dotted syntax and stays inside the whole-token
+        // unsupported verdict (§FS-check.3.24).
+        if trailing_dots == 1 {
+            token_len -= 1;
         }
         let tail = &rest[..token_len];
         let supported = tail

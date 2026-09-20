@@ -223,7 +223,7 @@ fn a_construct_boundary_does_not_open_a_run() {
 /// §FS-check.3.15.1, §FS-fmt.2.4.1.3: a shorthand glued to a second number is a
 /// numeral in a run, so `fmt` will not rewrite it and the report says so —
 /// naming the canonical form *and* the escape, because only the author knows
-/// which was meant. This is §3.13's site with a different verdict, not a second
+/// which was meant. This is §FS-check.3.13's site with a different verdict, not a second
 /// finding on top of it.
 ///
 /// Why the recognition assertions ride along with the message ones: the site
@@ -277,7 +277,7 @@ fn a_shorthand_in_a_numeric_run_names_both_exits() {
 /// shorthand in a run that resolves to nothing or to several declarations is a
 /// resolution failure, reported on its own terms — a run is no reason to say
 /// less about it. And where §FS-fmt.2.3 already forbids every rewrite, the run
-/// finding is withheld like §3.13's (§FS-check.3.15.3): an illustration in
+/// finding is withheld like §FS-check.3.13's (§FS-check.3.15.3): an illustration in
 /// inline code wants no edit at all.
 #[test]
 fn a_numeric_run_changes_only_the_message_that_names_the_rewrite() {

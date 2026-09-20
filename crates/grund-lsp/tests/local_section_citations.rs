@@ -28,6 +28,7 @@ fn fixture(name: &str) -> (std::path::PathBuf, std::path::PathBuf, std::path::Pa
             "Valid \u{a7}2.\n",
             "Missing \u{a7}9.9.\n",
             "Unsupported \u{a7}2.goals and \u{a7}2abc.\n",
+            "Malformed \u{a7}2..1 and \u{a7}2... and \u{a7}2..goals.\n",
             "Full valid \u{a7}FS-a.2.\n",
             "Full missing \u{a7}FS-a.9.\n\n",
             "## 2. Target\n\n",
@@ -85,7 +86,7 @@ fn stop(
 #[test]
 fn local_section_diagnostics_keep_cli_messages_and_exact_token_ranges() {
     let (root, _, _) = fixture("local-section-diagnostics");
-    let (mut child, stdin, receiver) = start_server(&root);
+    let (mut child, mut stdin, receiver) = start_server(&root);
     let diagnostics = recv_diagnostics(&receiver, &mut child, "FS-a.md");
 
     let expected = [
@@ -118,6 +119,27 @@ fn local_section_diagnostics_keep_cli_messages_and_exact_token_ranges() {
             25,
             30,
         ),
+        (
+            "local-section-citation",
+            "unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it",
+            5,
+            10,
+            15,
+        ),
+        (
+            "local-section-citation",
+            "unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it",
+            5,
+            20,
+            25,
+        ),
+        (
+            "local-section-citation",
+            "unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it",
+            5,
+            30,
+            39,
+        ),
     ];
     for (code, message, line, start, end) in expected {
         let diagnostic = diagnostics
@@ -132,6 +154,19 @@ fn local_section_diagnostics_keep_cli_messages_and_exact_token_ranges() {
                 "end": { "line": line, "character": end }
             })
         );
+    }
+    for character in [11, 21, 31] {
+        let definition = request(
+            &mut stdin,
+            &receiver,
+            &mut child,
+            20 + character as i64,
+            "textDocument/definition",
+            &file_uri(&root.join("docs/FS-a.md")),
+            5,
+            character,
+        );
+        assert_eq!(definition, json!(null));
     }
     stop(child, stdin, &receiver);
     let _ = fs::remove_dir_all(root);
@@ -194,7 +229,7 @@ fn owned_local_sections_navigate_and_unresolved_forms_never_gain_targets() {
         .as_array()
         .unwrap_or_else(|| panic!("local definition links: {definition:?}"));
     assert!(links.iter().any(|link| {
-        link["targetSelectionRange"]["start"]["line"].as_u64() == Some(8)
+        link["targetSelectionRange"]["start"]["line"].as_u64() == Some(9)
             && link["originSelectionRange"]["start"]["character"].as_u64() == Some(6)
             && link["originSelectionRange"]["end"]["character"].as_u64() == Some(8)
     }));
@@ -206,7 +241,7 @@ fn owned_local_sections_navigate_and_unresolved_forms_never_gain_targets() {
         3,
         "textDocument/references",
         &spec_uri,
-        8,
+        9,
         5,
     );
     assert_eq!(
@@ -216,7 +251,7 @@ fn owned_local_sections_navigate_and_unresolved_forms_never_gain_targets() {
             .iter()
             .map(|location| location["range"]["start"]["line"].as_u64().unwrap())
             .collect::<Vec<_>>(),
-        [8, 2, 5]
+        [9, 2, 6]
     );
 
     let highlights = request(

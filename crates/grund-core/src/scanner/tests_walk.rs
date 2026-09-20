@@ -204,7 +204,7 @@ fn an_e2e_case_directory_reached_through_a_link_is_not_scanned() {
     );
 }
 
-/// §DF-symlink-scan §3: the identity pass no longer waits for `--full`, so a
+/// §DF-symlink-scan.3: the identity pass no longer waits for `--full`, so a
 /// plain run stops reporting the duplicate two spellings of one root produced.
 #[test]
 fn a_plain_run_collapses_an_aliased_root() {

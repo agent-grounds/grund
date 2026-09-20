@@ -375,7 +375,7 @@ The section is what an agent reads *instead of* `grund.toml`, so it states rules
 
 ##### 2.3.5.1 Layout
 
-The section opens with one paragraph — the fixed legend ``must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).``, followed by the grounding sentence (§2.3.5.7) where any row's effective `require_grounding` is on — then one bullet per citing kind that has any rule, in `[[kinds]]` order with the homeless kind (§FS-config.3.9.2) last, then one closing line (§2.3.5.6). An unwalked kind (§FS-config.3.4.7) has no bullet at all: it can carry no `[citations.<kind>]` rule.
+The section opens with one paragraph — the fixed legend ``must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).``, followed by the grounding sentence (§FS-init.2.3.5.7) where any row's effective `require_grounding` is on — then one bullet per citing kind that has any rule, in `[[kinds]]` order with the homeless kind (§FS-config.3.9.2) last, then one closing line (§FS-init.2.3.5.6). An unwalked kind (§FS-config.3.4.7) has no bullet at all: it can carry no `[citations.<kind>]` rule.
 
 ##### 2.3.5.2 The subject names its unit
 
