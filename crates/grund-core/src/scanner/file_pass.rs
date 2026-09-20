@@ -123,11 +123,10 @@ pub(super) fn scan_file_text(
     let has_binding_candidate = text.contains('`') && text.contains(&config.marker);
     let value_line_contexts = ((scan_values || has_binding_candidate) && !is_md)
         .then(|| recognized_source_value_contexts(&text, is_py, config));
-    // §AR-scanner.2.4.2: citing-side classification is consumed only by the
-    // citation-direction checks, so it is computed only when the project declares
-    // `[citations]` and the caller asked for it (§AR-benchmarks).
-    let classify = config.classify_citation_sources
-        && (config.citations.declared || config.kinds.iter().any(|kind| kind.rules));
+    // §AR-scanner.2.4.2: citing-side classification is consumed by citation-direction
+    // checks and chapter rules, so it is computed whenever the caller asks for it.
+    // Read-only commands still pass `false`; check and LSP pass `true`.
+    let classify = config.classify_citation_sources;
     // §AR-scanner.2.4.1: every Markdown heading (line, level) outside a fence — a
     // declaration body runs until the next heading at the same or higher level.
     let mut md_headings: Vec<(usize, usize)> = Vec::new();
