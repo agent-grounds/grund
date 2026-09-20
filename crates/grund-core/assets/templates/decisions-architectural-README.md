@@ -1,6 +1,6 @@
 # Architectural decisions
 
-Decisions about how the system is built, and the tradeoffs behind them. One file per decision; each H1 declares a `DA-NNN-<slug>` ID and the body is the record.
+Decisions about how the system is built, and the tradeoffs behind them. One file per decision; each H1 declares a `{DA_ID_SHAPE}` ID and the body is the record.
 
 Cite a decision from the architecture point it settles, so the structure and the argument for it stay one hop apart. A decision that nothing cites is a note, and `grund check` will say so.
 

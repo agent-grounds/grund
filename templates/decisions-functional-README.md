@@ -1,6 +1,6 @@
 # Functional decisions
 
-Product-behavior decisions and the tradeoffs behind them — *why* the behavior is the one it is. One file per decision; each H1 declares a `DF-NNN-<slug>` ID and the body is the record.
+Product-behavior decisions and the tradeoffs behind them — *why* the behavior is the one it is. One file per decision; each H1 declares a `{DF_ID_SHAPE}` ID and the body is the record.
 
 Cite a decision from the spec point it settles, so the rule and the argument for it stay one hop apart. A decision that nothing cites is a note, and `grund check` will say so.
 
