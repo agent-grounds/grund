@@ -305,8 +305,13 @@ fn target_kind_matches(targets: &RuleTargets, kind: &str, facts: &RuleFacts) -> 
     };
     values.iter().any(|target| match target.split_once('/') {
         None => target == kind,
-        Some(("*", target_kind)) => target_kind == kind,
-        Some((project, target_kind)) => project == facts.header.project && target_kind == kind,
+        Some(("*", target_kind)) => {
+            kind == target_kind || kind.ends_with(&format!("/{target_kind}"))
+        }
+        Some((project, target_kind)) => {
+            kind == format!("{project}/{target_kind}")
+                || (project == facts.header.project && kind == target_kind)
+        }
     })
 }
 fn target_wording(targets: &RuleTargets) -> String {

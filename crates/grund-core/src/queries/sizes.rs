@@ -110,12 +110,14 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
             opts.project_filter.is_empty() || opts.project_filter.contains(&project.alias)
         })
     };
+    let kinds = selected_projects()
+        .flat_map(|project| project.config.kinds.iter())
+        .filter(|kind| kind.citable)
+        .map(|kind| kind.kind.clone())
+        .collect::<BTreeSet<_>>();
     let vocabulary = RuleVocabulary {
-        kinds: selected_projects()
-            .flat_map(|project| project.config.kinds.iter())
-            .filter(|kind| kind.citable)
-            .map(|kind| kind.kind.clone())
-            .collect(),
+        kinds: kinds.clone(),
+        target_kinds: kinds,
         named_sections: selected_projects().all(|project| project.config.named_sections),
     };
     let selector = opts

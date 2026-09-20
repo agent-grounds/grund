@@ -362,6 +362,10 @@ fn check_workspace_context(
         })
         .collect::<BTreeMap<_, _>>();
     let mut report = CheckReport::default();
+    let rules_complete = context
+        .projects
+        .iter()
+        .all(|project| project.scan_errors.is_empty());
     for project in &context.projects {
         let mut config = project.config.clone();
         // §FS-check.1: the same global default the key sets, per member — an
@@ -393,8 +397,11 @@ fn check_workspace_context(
         check_chapter_rules(
             &project.findings,
             &config,
-            project.scan_errors.is_empty(),
+            rules_complete,
             None,
+            context
+                .workspace_loaded
+                .then_some((project.alias.as_str(), &workspace)),
             &mut project_report,
         );
         let project_has_findings =

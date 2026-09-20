@@ -99,6 +99,7 @@ pub(crate) struct ParsedRule {
 #[derive(Clone, Debug)]
 pub(crate) struct RuleVocabulary {
     pub(crate) kinds: BTreeSet<String>,
+    pub(crate) target_kinds: BTreeSet<String>,
     pub(crate) named_sections: bool,
 }
 
@@ -232,13 +233,13 @@ pub(crate) fn parse_rule(
 
 fn parse_subject(text: &str, vocab: &RuleVocabulary) -> Result<RuleSubject, RuleParseError> {
     if let Some(kind) = text.strip_prefix("Each ") {
-        known(kind, vocab)?;
+        known_subject(kind, vocab)?;
         return Ok(RuleSubject::Kind(kind.into()));
     }
     if let Some(rest) = text.strip_prefix("The ")
         && let Some((name, kind)) = rest.split_once(" chapter of each ")
     {
-        known(kind, vocab)?;
+        known_subject(kind, vocab)?;
         if !vocab.named_sections {
             return Err(error(format!(
                 "named chapter subjects require [id] named_sections = true; accepted form after enabling it: The {name} chapter of each {kind} must cite at least one REQ."
@@ -256,7 +257,7 @@ fn parse_subject(text: &str, vocab: &RuleVocabulary) -> Result<RuleSubject, Rule
     }
     let Some((declaration, section)) = text.split_once('.') else {
         let kind = subject_kind(text, vocab)?;
-        known(&kind, vocab)?;
+        known_subject(&kind, vocab)?;
         return Ok(RuleSubject::ExactDeclaration(text.into()));
     };
     if section.contains('*') {
@@ -273,7 +274,7 @@ fn parse_subject(text: &str, vocab: &RuleVocabulary) -> Result<RuleSubject, Rule
         )));
     }
     let kind = subject_kind(declaration, vocab)?;
-    known(&kind, vocab)?;
+    known_subject(&kind, vocab)?;
     if !vocab.named_sections {
         return Err(error(format!(
             "named chapter subjects require [id] named_sections = true; accepted form after enabling it: {text} must cite at least one REQ."
@@ -300,8 +301,18 @@ fn subject_kind(text: &str, vocab: &RuleVocabulary) -> Result<String, RuleParseE
         })
 }
 
-fn known(kind: &str, vocab: &RuleVocabulary) -> Result<(), RuleParseError> {
+fn known_subject(kind: &str, vocab: &RuleVocabulary) -> Result<(), RuleParseError> {
     if vocab.kinds.contains(kind) {
+        Ok(())
+    } else {
+        Err(error(format!(
+            "unknown kind \"{kind}\"; accepted form: Each FS must cite at least one GOAL."
+        )))
+    }
+}
+
+fn known_target(kind: &str, vocab: &RuleVocabulary) -> Result<(), RuleParseError> {
+    if vocab.target_kinds.contains(kind) {
         Ok(())
     } else {
         Err(error(format!(
@@ -463,7 +474,7 @@ fn kind_targets(
 ) -> Result<RuleTargets, RuleParseError> {
     let mut values = text.split(" or ").map(str::to_string).collect::<Vec<_>>();
     for target in &values {
-        known(target.rsplit('/').next().unwrap_or(target), vocab)?;
+        known_target(target.rsplit('/').next().unwrap_or(target), vocab)?;
     }
     values.sort();
     values.dedup();

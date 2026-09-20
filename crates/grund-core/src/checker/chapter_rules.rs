@@ -5,23 +5,26 @@
 use crate::config::{Config, NamespaceMatch};
 use crate::grammar::render_id;
 use crate::model::{CheckReport, Diagnostic, Findings};
+use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{evaluate, subject_resolves};
-use crate::rules::markdown::adapt_markdown;
+use crate::rules::markdown::{adapt_markdown, adapt_workspace};
 use crate::rules::sentence::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
     RuleVocabulary, TargetMode, parse_rule,
 };
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
+    let kinds = config
+        .kinds
+        .iter()
+        .filter(|kind| kind.citable)
+        .map(|kind| kind.kind.clone())
+        .collect::<BTreeSet<_>>();
     RuleVocabulary {
-        kinds: config
-            .kinds
-            .iter()
-            .filter(|kind| kind.citable)
-            .map(|kind| kind.kind.clone())
-            .collect::<BTreeSet<_>>(),
+        kinds: kinds.clone(),
+        target_kinds: kinds,
         named_sections: config.named_sections,
     }
 }
@@ -106,12 +109,22 @@ pub(crate) fn check_chapter_rules(
     config: &Config,
     complete: bool,
     ad_hoc: Option<ParsedRule>,
+    workspace: Option<(&str, &BTreeMap<String, WorkspaceCheckTarget<'_>>)>,
     report: &mut CheckReport,
 ) {
     if !config.kinds.iter().any(|kind| kind.rules) && ad_hoc.is_none() {
         return;
     }
-    let vocab = vocabulary(config);
+    let mut vocab = vocabulary(config);
+    if let Some((_, projects)) = workspace {
+        vocab.target_kinds.extend(
+            projects
+                .values()
+                .flat_map(|project| project.config.kinds.iter())
+                .filter(|kind| kind.citable)
+                .map(|kind| kind.kind.clone()),
+        );
+    }
     let mut rules = Vec::new();
     let rule_kinds = config
         .kinds
@@ -157,7 +170,10 @@ pub(crate) fn check_chapter_rules(
     if let Some(rule) = ad_hoc {
         rules.push(rule);
     }
-    let facts = adapt_markdown(findings, config, complete);
+    let facts = match workspace {
+        Some((selected, projects)) => adapt_workspace(selected, projects, complete),
+        None => adapt_markdown(findings, config, complete),
+    };
     rules.retain(|rule| {
         if subject_resolves(rule, &facts) {
             return true;
@@ -245,9 +261,10 @@ fn duplicates_config(rule: &ParsedRule, config: &Config) -> bool {
         let mut configured = entry
             .targets
             .iter()
-            .filter_map(|target| match target.namespace {
-                NamespaceMatch::Local => Some(target.kind.clone()),
-                _ => None,
+            .map(|target| match &target.namespace {
+                NamespaceMatch::Local => target.kind.clone(),
+                NamespaceMatch::Alias(alias) => format!("{alias}/{}", target.kind),
+                NamespaceMatch::Any => format!("*/{}", target.kind),
             })
             .collect::<Vec<_>>();
         configured.sort();

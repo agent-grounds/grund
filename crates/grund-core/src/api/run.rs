@@ -82,6 +82,7 @@ pub(crate) fn run_check(
         &config,
         scan_errors.is_empty(),
         ad_hoc,
+        None,
         &mut report,
     );
     let had_scan_errors = append_scan_errors(&mut report, scan_errors);
@@ -175,6 +176,9 @@ fn run_workspace_check(
         retain_findings_in_scope(&mut project.findings, scope.as_ref());
     }
 
+    let rules_complete = projects
+        .iter()
+        .all(|project| project.scan_errors.is_empty());
     let workspace = projects
         .iter()
         .map(|project| {
@@ -202,8 +206,9 @@ fn run_workspace_check(
         check_chapter_rules(
             &project.findings,
             &project.config,
-            project.scan_errors.is_empty(),
+            rules_complete,
             ad_hoc.clone(),
+            Some((&project.alias, &workspace)),
             &mut project_report,
         );
         let project_has_findings =
