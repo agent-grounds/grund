@@ -107,7 +107,7 @@ pub(crate) fn command_check(args: &[String]) -> ExitCode {
         eprintln!("error: unsupported check format `{format}`");
         return ExitCode::from(2);
     }
-    let mut run = match run_check(&path, path_provided, require_grounding, full) {
+    let mut run = match run_check(&path, path_provided, require_grounding, full, None) {
         Ok(run) => run,
         Err(err) => {
             eprintln!("error: {err:#}");

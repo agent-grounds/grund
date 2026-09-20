@@ -4,7 +4,7 @@ fn print_check_help() {
     println!("grund check — validate every ID citation across the repo.");
     println!();
     println!(
-        "Usage:  grund check [PATH] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--format text|json]"
+        "Usage:  grund check [PATH] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--format text|json]"
     );
     println!();
     println!(
@@ -34,6 +34,9 @@ fn print_check_help() {
     );
     println!(
         "  --suggestions        also surface should/should-not citation-direction findings ([citations])."
+    );
+    println!(
+        "  --rule <sentence>    add one controlled-English chapter/citation rule to configured rules."
     );
     println!(
         "  --only <code>        retain one exact finding code; repeat for a union (`--only=<code>` also works)."
@@ -66,6 +69,9 @@ fn print_check_help() {
     println!("  grund check              # check the whole repo");
     println!("  grund check docs/        # check one subtree");
     println!("  grund check --full       # plus unresolved references and outside sections beyond include");
+    println!(
+        "  grund check --rule \"Each FS should have exactly one requirements chapter.\" --suggestions"
+    );
     println!(
         "  grund check --ignore agents-init # ask whether the selected content report has errors"
     );

@@ -35,7 +35,7 @@ COMPONENTS = (
 # §AR-rules.6: `rules` may be absent or test-only before implementation; the
 # commit declaring production `mod rules;` removes this marker and enables the
 # four contract drivers.
-PENDING_COMPONENTS = {"rules"}
+PENDING_COMPONENTS = set()
 
 INCLUDE = re.compile(r'include!\("([^"]+)"\)')
 

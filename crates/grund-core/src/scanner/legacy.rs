@@ -179,6 +179,7 @@ pub(crate) fn promote_legacy_candidate(
         inline_site: candidate.inline_site,
         source_kind: candidate.source_kind,
         enclosing_declaration: candidate.enclosing_declaration,
+        enclosing_section: candidate.enclosing_section,
     });
     if let (Some(site), Some(block_lines)) = (site, block_lines) {
         reconcile_promoted_inline_site(source_config, citations, &file, site, &block_lines);

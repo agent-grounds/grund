@@ -13,11 +13,31 @@ fn command_list(args: &[String]) -> ExitCode {
     let mut top: Option<usize> = None;
     let mut top_seen = false;
     let mut format_override: Option<String> = None;
+    let mut selector = None;
     let mut idx = 0;
     while idx < args.len() {
         match args[idx].as_str() {
             "--unused" => unused_only = true,
             "--summary" => summary = true,
+            "--selector" => {
+                if selector.is_some() {
+                    eprintln!("error: --selector may only appear once");
+                    return ExitCode::from(2);
+                }
+                idx += 1;
+                if idx >= args.len() {
+                    eprintln!("error: --selector requires a value");
+                    return ExitCode::from(2);
+                }
+                selector = Some(args[idx].clone());
+            }
+            other if other.starts_with("--selector=") => {
+                if selector.is_some() {
+                    eprintln!("error: --selector may only appear once");
+                    return ExitCode::from(2);
+                }
+                selector = Some(other.trim_start_matches("--selector=").to_string());
+            }
             "--size" => {
                 if size_units.is_some() {
                     eprintln!("error: --size may only appear once");
@@ -153,6 +173,7 @@ fn command_list(args: &[String]) -> ExitCode {
             kind_filter,
             project_filter,
             unused_only,
+            selector,
             units,
             top,
         }) {
@@ -186,6 +207,7 @@ fn command_list(args: &[String]) -> ExitCode {
         kind_filter,
         project_filter,
         unused_only,
+        selector,
     });
     render_run_warnings(&run_warnings);
     let output = match listed {
@@ -281,10 +303,12 @@ fn render_list_entry_json(entry: &ListEntry) -> String {
             .join(",");
         format!(",\"value_roots\":[{roots}]")
     };
+    let section_field = entry.section.as_deref().map(|section| format!("\"section\":\"{}\",", json_escape(section))).unwrap_or_default();
     format!(
-        "{{{}\"id\":\"{}\",\"kind\":\"{}\",\"path\":\"{}\",\"line\":{},\"title\":{},\"stub\":{},\"defines\":{},\"refs\":{},\"duplicate\":{}{}}}",
+        "{{{}\"id\":\"{}\",{}\"kind\":\"{}\",\"path\":\"{}\",\"line\":{},\"title\":{},\"stub\":{},\"defines\":{},\"refs\":{},\"duplicate\":{}{}}}",
         project_field,
         json_escape(&entry.id),
+        section_field,
         json_escape(&entry.kind),
         json_escape(&entry.path),
         entry.line,
@@ -308,7 +332,7 @@ fn render_list_entry_json(entry: &ListEntry) -> String {
 fn render_list_text(entries: &[ListEntry]) {
     let id_width = entries
         .iter()
-        .map(|entry| entry.id.chars().count())
+        .map(|entry| list_coordinate(entry).chars().count())
         .max()
         .unwrap_or(0)
         .min(40);
@@ -350,11 +374,15 @@ fn render_list_text(entries: &[ListEntry]) {
             }
         }
         if note.is_empty() {
-            println!("{:<id_width$}  {location}", entry.id);
+            println!("{:<id_width$}  {location}", list_coordinate(entry));
         } else {
-            println!("{:<id_width$}  {location}  {note}", entry.id);
+            println!("{:<id_width$}  {location}  {note}", list_coordinate(entry));
         }
     }
+}
+
+fn list_coordinate(entry: &ListEntry) -> String {
+    entry.section.as_deref().map(|section| format!("{}.{}", entry.id, section)).unwrap_or_else(|| entry.id.clone())
 }
 
 /// Render the owning project's exact declaration/section coordinate

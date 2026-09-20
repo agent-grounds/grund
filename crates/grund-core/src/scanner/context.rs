@@ -155,11 +155,19 @@ fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize,
 pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config, path: &Path) {
     // (body_start, body_end, id) for this file's declarations, so the enclosing
     // lookup is a scan of a small local list.
-    let bodies: Vec<(usize, usize, Id)> = findings
+    let bodies: Vec<(usize, usize, Id, Vec<(String, usize, usize)>)> = findings
         .declarations
         .values()
         .flatten()
-        .map(|decl| (decl.body_start, decl.body_end, decl.id.clone()))
+        .map(|decl| {
+            let mut sections = decl
+                .sections
+                .iter()
+                .map(|(path, info)| (path.clone(), info.line, info.heading_level))
+                .collect::<Vec<_>>();
+            sections.sort_by_key(|(_, line, _)| *line);
+            (decl.body_start, decl.body_end, decl.id.clone(), sections)
+        })
         .collect();
     let file_home = file_home_kind(path, config);
     // §FS-config.3.9.2.2: step 3 of the fallback is the homeless kind, whose name
@@ -168,13 +176,28 @@ pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config
     for cite in &mut findings.citations {
         let enclosing = bodies
             .iter()
-            .filter(|(start, end, _)| *start <= cite.line && cite.line <= *end)
+            .filter(|(start, end, _, _)| *start <= cite.line && cite.line <= *end)
             // Nearest preceding declaration: the one whose body starts latest.
-            .max_by_key(|(start, _, _)| *start);
+            .max_by_key(|(start, _, _, _)| *start);
         match enclosing {
-            Some((_, _, id)) => {
+            Some((_, _, id, sections)) => {
                 cite.source_kind = id.kind.clone();
                 cite.enclosing_declaration = Some(id.clone());
+                cite.enclosing_section = sections
+                    .iter()
+                    .filter(|(_, line, _)| *line <= cite.line)
+                    .max_by_key(|(_, line, _)| *line)
+                    .and_then(|(path, line, depth)| {
+                        let end = sections
+                            .iter()
+                            .filter(|(_, next_line, next_depth)| {
+                                next_line > line && next_depth <= depth
+                            })
+                            .map(|(_, next_line, _)| next_line - 1)
+                            .min()
+                            .unwrap_or(usize::MAX);
+                        (cite.line <= end).then(|| path.clone())
+                    });
             }
             None => {
                 cite.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());
@@ -184,12 +207,17 @@ pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config
     for candidate in &mut findings.legacy_citation_candidates {
         let enclosing = bodies
             .iter()
-            .filter(|(start, end, _)| *start <= candidate.line && candidate.line <= *end)
-            .max_by_key(|(start, _, _)| *start);
+            .filter(|(start, end, _, _)| *start <= candidate.line && candidate.line <= *end)
+            .max_by_key(|(start, _, _, _)| *start);
         match enclosing {
-            Some((_, _, id)) => {
+            Some((_, _, id, sections)) => {
                 candidate.source_kind = id.kind.clone();
                 candidate.enclosing_declaration = Some(id.clone());
+                candidate.enclosing_section = sections
+                    .iter()
+                    .filter(|(_, line, _)| *line <= candidate.line)
+                    .max_by_key(|(_, line, _)| *line)
+                    .map(|(path, _, _)| path.clone());
             }
             None => {
                 candidate.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());

@@ -386,7 +386,7 @@ pub(crate) fn located_diagnostics<'a>(
 }
 
 pub(crate) fn check_run(root: &Path, full: bool) -> CheckRun {
-    run_check(root, true, false, full).expect("check run")
+    run_check(root, true, false, full, None).expect("check run")
 }
 
 /// A symlink, for the cases that are about one. Unix only: creating one on

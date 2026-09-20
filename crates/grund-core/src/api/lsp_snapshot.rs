@@ -18,7 +18,7 @@ use super::lsp_ranges::{
 };
 use super::report::{public_lsp_report, public_lsp_run_warnings};
 use super::scope_cautions::scan_scope_caution;
-use crate::checker::{check_with_workspace_and_overlays, sort_diagnostics};
+use crate::checker::{check_chapter_rules, check_with_workspace_and_overlays, sort_diagnostics};
 use crate::config::display_path;
 use crate::grammar::render_id;
 use crate::model::{
@@ -390,6 +390,13 @@ fn check_workspace_context(
                 overlays,
             )
         };
+        check_chapter_rules(
+            &project.findings,
+            &config,
+            project.scan_errors.is_empty(),
+            None,
+            &mut project_report,
+        );
         let project_has_findings =
             !project_report.errors.is_empty() || !project_report.warnings.is_empty();
         report.errors.append(&mut project_report.errors);

@@ -5,7 +5,7 @@ use crate::config::Config;
 use crate::grammar::{
     AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
 };
-use crate::model::{CheckReport, Diagnostic};
+use crate::model::{CheckReport, Diagnostic, Findings};
 use crate::scanner::companion_agent_entrypoints;
 use crate::templates::{
     ConversationSurface, citation_directions_section, clickable_citations_section,
@@ -25,17 +25,28 @@ fn agents_init_compatibility_message(legacy: String) -> String {
 /// binary — an older `vN` is "run `grund init`" (§FS-init.2.3.7), a newer one is
 /// fatal. `AGENTS.md` is canonical; known companion entrypoints are checked when
 /// present and not symlinked to `AGENTS.md`.
-pub(super) fn check_agents_block_version(config: &Config, report: &mut CheckReport) {
+pub(super) fn check_agents_block_version(
+    findings: &Findings,
+    config: &Config,
+    report: &mut CheckReport,
+) {
+    let rule_rows = super::configured_rule_sentences(findings, config).ok();
     let root = &config.root;
     let canonical = root.join("AGENTS.md");
     let canonical_exists = canonical.exists();
     if canonical_exists {
-        check_agent_block_path(config, &canonical, report, true);
+        check_agent_block_path_with_rules(config, &canonical, report, true, rule_rows.as_deref());
     }
     match companion_agent_entrypoints(root) {
         Ok(companions) => {
             for companion in companions {
-                check_agent_block_path(config, &companion, report, canonical_exists);
+                check_agent_block_path_with_rules(
+                    config,
+                    &companion,
+                    report,
+                    canonical_exists,
+                    rule_rows.as_deref(),
+                );
             }
         }
         Err((path, message)) => {
@@ -66,11 +77,22 @@ pub(super) fn check_agents_block_version(config: &Config, report: &mut CheckRepo
 /// `[reference] conversation` without re-running `grund init` must surface as
 /// drift, and the sentence also varies by entrypoint — so the comparison derives
 /// the surface from the path, the same way `init` chose it.
+#[cfg(test)]
 pub(crate) fn check_agent_block_path(
     config: &Config,
     path: &Path,
     report: &mut CheckReport,
     require_block: bool,
+) {
+    check_agent_block_path_with_rules(config, path, report, require_block, None);
+}
+
+fn check_agent_block_path_with_rules(
+    config: &Config,
+    path: &Path,
+    report: &mut CheckReport,
+    require_block: bool,
+    rule_rows: Option<&[(String, String)]>,
 ) {
     if !path.exists() {
         return;
@@ -110,9 +132,14 @@ pub(crate) fn check_agent_block_path(
         AgentsBlockLookup::Found(block) => Some(block),
         AgentsBlockLookup::Absent => None,
     };
+    let expected_version = if config.kinds.iter().any(|kind| kind.rules) {
+        11
+    } else {
+        10
+    };
     if let Some(block) = block {
         let line = line_for_byte_index(&text, block.start);
-        if block.version < AGENTS_BLOCK_VERSION {
+        if block.version < expected_version {
             report.errors.push(Diagnostic {
                 code: "agents-init",
                 path: Some(path.to_path_buf()),
@@ -120,11 +147,11 @@ pub(crate) fn check_agent_block_path(
                 column: None,
                 message: agents_init_compatibility_message(format!(
                     "outdated grund init block v{} (run `grund init` to update to v{})",
-                    block.version, AGENTS_BLOCK_VERSION
+                    block.version, expected_version
                 )),
                 sites: Vec::new(),
             });
-        } else if block.version > AGENTS_BLOCK_VERSION {
+        } else if block.version > AGENTS_BLOCK_VERSION || block.version > expected_version {
             report.errors.push(Diagnostic {
                 code: "agents-init",
                 path: Some(path.to_path_buf()),
@@ -132,7 +159,7 @@ pub(crate) fn check_agent_block_path(
                 column: None,
                 message: agents_init_compatibility_message(format!(
                     "unsupported grund init block v{} (this grund supports v{})",
-                    block.version, AGENTS_BLOCK_VERSION
+                    block.version, expected_version
                 )),
                 sites: Vec::new(),
             });
@@ -141,7 +168,7 @@ pub(crate) fn check_agent_block_path(
             // from `[citations]`, so the version marker alone cannot catch a
             // config edit that left the block stale. Re-render and byte-compare.
             let block_text = text[block.start..block.end].replace('\r', "");
-            let generated_sections = [
+            let mut generated_sections = vec![
                 (
                     "### Citation directions",
                     citation_directions_section(config),
@@ -156,6 +183,13 @@ pub(crate) fn check_agent_block_path(
                     "clickable citations",
                 ),
             ];
+            if let Some(rows) = rule_rows {
+                generated_sections.push((
+                    "### Chapter rules",
+                    chapter_rules_section(rows),
+                    "chapter rules",
+                ));
+            }
             for (heading, expected, noun) in generated_sections {
                 if section_in_block(&block_text, heading) != Some(expected.trim_end()) {
                     report.errors.push(Diagnostic {
@@ -183,10 +217,23 @@ pub(crate) fn check_agent_block_path(
         column: None,
         message: agents_init_compatibility_message(format!(
             "missing grund init block v{}",
-            AGENTS_BLOCK_VERSION
+            expected_version
         )),
         sites: Vec::new(),
     });
+}
+
+/// Re-render the config-derived v11 section so `check` can byte-compare what
+/// `init` wrote (§FS-rules.9). The inputs are already parsed and ordered rule
+/// titles; this owns no sentence grammar or rule semantics.
+fn chapter_rules_section(rows: &[(String, String)]) -> String {
+    let mut section = String::from(
+        "### Chapter rules\n\n`must`/`must not` are `grund check` errors; `should`/`should not` are suggestions (`grund check --suggestions`).\n\n",
+    );
+    for (origin, sentence) in rows {
+        section.push_str(&format!("- {sentence} §{origin}\n"));
+    }
+    section
 }
 
 /// The text of a `heading`-led section inside the managed block, from the heading

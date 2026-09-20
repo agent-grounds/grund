@@ -1,36 +1,152 @@
-//! Pending boundary drivers for §AR-rules.6.
-//!
-//! Each sentinel is deliberately red when forced with `--ignored`. The
-//! implementation replaces its body with the named arrangement and assertion,
-//! then removes `#[ignore]`; the architecture guard refuses a production
-//! `rules` module while any sentinel remains.
+//! Executable parser/facts/engine boundary drivers (§AR-rules.6).
+
+use super::RuleAnchor;
+use super::engine::evaluate;
+use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts};
+use super::markdown::adapt_markdown;
+use super::sentence::{
+    Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
+    RuleVocabulary, TargetMode, parse_rule,
+};
+use crate::testing::{legacy_fs_folder_config, scan_findings, test_root, write};
+use std::collections::{BTreeMap, BTreeSet};
+
+fn anchor(path: &str, line: usize) -> RuleAnchor {
+    RuleAnchor {
+        path: path.into(),
+        line,
+        column: None,
+    }
+}
+
+fn rule() -> ParsedRule {
+    ParsedRule {
+        origin: "RULE-fs".into(),
+        anchor: anchor("docs/rules.md", 1),
+        subject: RuleSubject::Kind("FS".into()),
+        level: RuleLevel::Required,
+        polarity: RulePolarity::Positive,
+        relation: RuleRelation::Cite,
+        targets: RuleTargets::Kinds {
+            values: vec!["GOAL".into()],
+            mode: TargetMode::Aggregate,
+        },
+        cardinality: Cardinality::AT_LEAST_ONE,
+    }
+}
+
+fn facts(completeness: Completeness) -> RuleFacts {
+    let fs = NodeKey("opaque-fs".into());
+    let goal = NodeKey("opaque-goal".into());
+    RuleFacts {
+        header: FactHeader {
+            schema: 1,
+            project: "demo".into(),
+            producer: "test".into(),
+            completeness,
+        },
+        decl: vec![(fs.clone(), "FS".into()), (goal.clone(), "GOAL".into())],
+        chapter: Vec::new(),
+        contains: Vec::new(),
+        cites: Vec::new(),
+        site_in: Vec::new(),
+        nodes: BTreeMap::from([
+            (
+                fs,
+                NodeMeta {
+                    label: "FS-demo".into(),
+                    anchor: anchor("docs/fs.md", 2),
+                },
+            ),
+            (
+                goal,
+                NodeMeta {
+                    label: "GOAL-demo".into(),
+                    anchor: anchor("docs/goals.md", 3),
+                },
+            ),
+        ]),
+        sites: BTreeMap::new(),
+    }
+}
 
 #[test]
-#[ignore = "implementation pending: parse through ParsedRule only"]
 fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics() {
-    panic!(
-        "replace with hand-written title, origin, anchor, and vocabulary; assert every ParsedRule field"
+    let parsed = parse_rule(
+        "The requirements chapter of each FS should cite exactly one REQ.",
+        "RULE-one".into(),
+        anchor("docs/rules.md", 7),
+        &RuleVocabulary {
+            kinds: BTreeSet::from(["FS".into(), "REQ".into()]),
+            named_sections: true,
+        },
+    )
+    .expect("released sentence");
+    assert_eq!(parsed.origin, "RULE-one");
+    assert_eq!(parsed.anchor, anchor("docs/rules.md", 7));
+    assert_eq!(
+        parsed.subject,
+        RuleSubject::ChapterOfKind {
+            kind: "FS".into(),
+            name: "requirements".into()
+        }
+    );
+    assert_eq!(parsed.level, RuleLevel::Recommended);
+    assert_eq!(parsed.polarity, RulePolarity::Positive);
+    assert_eq!(parsed.relation, RuleRelation::Cite);
+    assert_eq!(
+        parsed.targets,
+        RuleTargets::Kinds {
+            values: vec!["REQ".into()],
+            mode: TargetMode::Aggregate
+        }
+    );
+    assert_eq!(
+        parsed.cardinality,
+        Cardinality {
+            minimum: Some(1),
+            maximum: Some(1)
+        }
     );
 }
 
 #[test]
-#[ignore = "implementation pending: evaluate boundary values only"]
 fn logic_engine_evaluates_hand_built_rule_and_facts_without_parser_or_scanner() {
-    panic!("replace with hand-built ParsedRule and complete RuleFacts; assert located diagnostics");
+    let diagnostics = evaluate(&[rule()], &facts(Completeness::Complete));
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].diagnostic.code, "missing-citation");
+    assert_eq!(diagnostics[0].diagnostic.line, Some(2));
+    assert_eq!(
+        diagnostics[0].diagnostic.message,
+        "FS-demo must cite GOAL (RULE-fs)"
+    );
 }
 
 #[test]
-#[ignore = "implementation pending: prove producer replacement"]
 fn markdown_adapter_and_second_producer_drive_the_same_engine_result() {
-    panic!(
-        "replace with equivalent Markdown-adapter and test-producer RuleFacts; assert equal diagnostics"
+    let root = test_root("rules_producer_replacement");
+    write(
+        &root.join("docs/functional-spec/FS-001-demo.md"),
+        "# FS-001-demo: Demo\n\nNo goal citation.\n",
     );
+    let config = legacy_fs_folder_config(root.clone());
+    let findings = scan_findings(&config, &root);
+    let markdown = adapt_markdown(&findings, &config, true);
+    let mut second = markdown.clone();
+    second.header.producer = "test-producer".into();
+    let left = evaluate(&[rule()], &markdown)
+        .into_iter()
+        .map(|d| (d.diagnostic.code, d.diagnostic.message))
+        .collect::<Vec<_>>();
+    let right = evaluate(&[rule()], &second)
+        .into_iter()
+        .map(|d| (d.diagnostic.code, d.diagnostic.message))
+        .collect::<Vec<_>>();
+    assert_eq!(left, right);
 }
 
 #[test]
-#[ignore = "implementation pending: gate closed-world conclusions"]
 fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
-    panic!(
-        "replace with complete and incomplete snapshots; assert only the complete one yields absence/count conclusions"
-    );
+    assert_eq!(evaluate(&[rule()], &facts(Completeness::Complete)).len(), 1);
+    assert!(evaluate(&[rule()], &facts(Completeness::Incomplete)).is_empty());
 }

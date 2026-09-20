@@ -401,7 +401,7 @@ pub(crate) fn check_with_workspace_and_overlays(
     // §FS-check.3.5: managed agent-entrypoint blocks that are out of date (or
     // newer than this binary), or whose generated citation-directions section
     // has drifted from `[citations]`, are check errors.
-    check_agents_block_version(config, &mut report);
+    check_agents_block_version(findings, config, &mut report);
 
     // §FS-check.3.3: an ID with more than one non-stub home is a duplicate.
     for (id, decls) in &findings.declarations {
