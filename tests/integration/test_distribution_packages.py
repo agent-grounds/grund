@@ -2,10 +2,10 @@
 package layer of the distribution spec, read off the manifests and the
 pre-release name guard that actually carry it.
 
-None of this reaches a registry: §1.1's table is asserted against the guard
+None of this reaches a registry: §FS-distribution.1.1's table is asserted against the guard
 script's own calls rather than against the live registries, so the claim that
 the release re-verifies *these* names is testable offline. The manifests are
-parsed rather than grepped, because what §1.3 forbids is a dependency edge, not
+parsed rather than grepped, because what §FS-distribution.1.3 forbids is a dependency edge, not
 a spelling."""
 
 import re
@@ -76,7 +76,7 @@ class PackageNameTests(unittest.TestCase):
         )
 
     def test_npm_claims_grund_cli_because_the_bare_name_is_occupied(self):
-        """The asymmetry §1.1 records: PyPI takes the bare name, npm takes
+        """The asymmetry §FS-distribution.1.1 records: PyPI takes the bare name, npm takes
         `grund-cli`, and the bare npm name is watched rather than claimed."""
         claimed = set(self.calls["check_claimed_json_name"])
         self.assertIn(("npm", "grund-cli"), claimed)
@@ -105,7 +105,7 @@ class PackageNameTests(unittest.TestCase):
 
 class SupportPackageReadmeTests(unittest.TestCase):
     """§FS-distribution.1.2 — the support package's registry README points at
-    the CLI. `grund-lsp` is not asserted here: §1.2 names siblings "once they
+    the CLI. `grund-lsp` is not asserted here: §FS-distribution.1.2 names siblings "once they
     exist" as published packages, and no release has published one yet."""
 
     @classmethod

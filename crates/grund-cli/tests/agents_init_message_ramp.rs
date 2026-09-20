@@ -133,7 +133,7 @@ fn release(text: &str) -> (u64, u64, u64) {
 /// final form may not have leaked in early.
 ///
 /// From `0.14.0` the other branch is the live one: no tail, and every one of
-/// the five wearing §3.6.1's fixed frame — the `repo maintenance: `
+/// the five wearing §FS-errors.3.6.1's fixed frame — the `repo maintenance: `
 /// classification in front and the `(does not affect citation validity)` clause
 /// behind. The frame is asserted rather than the five filled strings because
 /// the templates interpolate the managed-block version, which is not what this
