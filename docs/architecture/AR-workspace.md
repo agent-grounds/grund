@@ -432,7 +432,7 @@ selection
 
 | Invariant                                        | Test or fixture |
 |--------------------------------------------------|---|
-| Single regex, marker-anchored                    | `marked_qualified_citation_is_recognised_unmarked_one_is_text` (`crates/grund-core/src/checker/tests_grounding_style.rs`); `tests/e2e/cases/non-strict-bare-slash-not-citation` |
+| Single regex, marker-anchored                    | `marked_qualified_citation_is_recognised_unmarked_one_is_text` (`crates/grund-core/src/scanner/tests_qualified_citations.rs`); `tests/e2e/cases/non-strict-bare-slash-not-citation` |
 | Resolver returns `None` ⇒ diagnostic, never skip | `tests/e2e/cases/workspace-unknown-alias`; `tests/e2e/cases/workspace-standalone-cross-project` |
 | Alias check fires at use, both for `project_name` and the basename fallback | `tests/e2e/cases/workspace-invalid-auto-alias`; `tests/e2e/cases/workspace-duplicate-auto-alias` |
 | Missing section on a qualified citation reports at the citation site | `tests/e2e/cases/workspace-cross-project-missing-section` |
