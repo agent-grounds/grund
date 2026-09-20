@@ -12,45 +12,16 @@ from typing import Callable, Sequence
 from urllib.parse import unquote, urlsplit
 
 
+SELF_PREFIX = "https://github.com/agent-grounds/grund/blob/main/"
 SELF_PATH_PREFIX = "/agent-grounds/grund/blob/main/"
-SELF_LINK_RE = re.compile(r"https://github\.com/agent-grounds/grund/blob/main/[^\s<>()\[\]\"'`]+")
-LYCHEE_EXTENSIONS = {
-    ".css",
-    ".htm",
-    ".html",
-    ".markdown",
-    ".md",
-    ".mdown",
-    ".mdwn",
-    ".mkd",
-    ".mkdn",
-    ".mkdown",
-    ".mdx",
-    ".txt",
-}
 
 
 class SelfLinkError(Exception):
     pass
 
 
-def _input_files(inputs: Sequence[str], repo_root: Path):
-    for raw in inputs:
-        path = repo_root / raw
-        if path.is_file():
-            yield path
-        elif path.is_dir():
-            for candidate in sorted(path.rglob("*")):
-                if candidate.is_file() and candidate.suffix.lower() in LYCHEE_EXTENSIONS:
-                    yield candidate
-
-
-def self_links(inputs: Sequence[str], repo_root: Path) -> list[str]:
-    links = set()
-    for path in _input_files(inputs, repo_root):
-        text = path.read_text(encoding="utf-8", errors="replace")
-        links.update(match.group(0) for match in SELF_LINK_RE.finditer(text))
-    return sorted(links)
+def self_links(dumped: str) -> list[str]:
+    return sorted({line for line in dumped.splitlines() if line.startswith(SELF_PREFIX)})
 
 
 def _local_url(url: str, repo_root: Path) -> str:
@@ -91,7 +62,16 @@ def check_links(
     lychee: str = "lychee",
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> int:
-    urls = self_links(inputs, repo_root)
+    dumped = runner(
+        [lychee, "--dump", *inputs],
+        cwd=repo_root,
+        stdout=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if dumped.returncode != 0:
+        return dumped.returncode
+    urls = self_links(dumped.stdout)
     if urls:
         local_document = "".join(f"[self-link](<{_local_url(url, repo_root)}>)\n" for url in urls)
         local = runner(
