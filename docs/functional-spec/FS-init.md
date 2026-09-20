@@ -170,6 +170,22 @@ Each scaffolded markdown file is a minimal starter — enough structure to teach
 - `decisions/architectural/README.md`, `decisions/functional/README.md` — the same shape for the two decision folders: the H1, the note on how `DA-`/`DF-` IDs declare into the directory and on citing a decision from the spec point it settles, the index rule, and an empty `| ID | Subject |` table. Every citable `folder` kind whose `index` the generated config leaves at its default gets one, which under those defaults is `AR`, `DF`, and `DA` — the two test kinds are non-citable and have no index at all ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)).
 - `tests/e2e/README.md` — the H1 (`# e2e`) plus a note that every behaviour described in the effective FS home has at least one case, and that each case cites the spec point it proves. It is a layout note, not an index: `e2e` is a non-citable kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) and has no declarations to list. `tests/integration/` gets the `.gitkeep` instead of a README of its own, so the second configured test home survives a `git add` without a second near-identical note.
 
+Every scaffold-owned ID-shape example uses the effective format of the kind it
+illustrates: that kind's `[[kinds]].format` when present, otherwise the
+repository `[id].format` ([§FS-config.3.2](FS-config.md#32-id--id-grammar),
+[§FS-config.3.4.10.1](FS-config.md#34101-format)). A kind row without a format
+and an absent kind row both use the repository fallback. The examples remain
+schematic: they substitute the illustrated kind and the `<NNN>` / `<slug>`
+components into the configured template while preserving its literal
+delimiters. This supports the numbered-with-slug, number-only, and slug-only
+forms.
+
+The rule covers the declaration example in `grund.md`, `goals.md`, and the
+effective FS home (`requirements.md` or `functional-spec/README.md`); the
+declaration/bare ID, citation ID portion (without changing its marker or section
+suffix), and inline-stub ID in `architecture/README.md`; and the declaration
+example in each decision README.
+
 The `.gitkeep` file exists solely so an empty directory that gets no README of its own survives a `git add`; its content is a single line: `# placeholder — replace this directory's contents with real integration tests`.
 
 ### 2.2 Stdout / stderr
