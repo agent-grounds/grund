@@ -13,12 +13,16 @@ const TEXT_FINDINGS: &str = concat!(
     "docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements)\n",
 );
 
+/// §FS-check.3.27: each off-count target of a `cite each` sentence is one
+/// `citation-cardinality` error at the subject title.
 #[test]
 fn chapter_scope_and_exact_once_coverage_are_hard_findings() {
     let output = run(&fixture(), &["check", "."]);
     assert_run(&output, 1, TEXT_FINDINGS, "");
 }
 
+/// §FS-rules.7.6: rule-derived JSON adds no source-list field, and same-anchor
+/// rows sort by target-ID bytes even where one target prefixes another.
 #[test]
 fn rule_findings_have_exact_ndjson_codes_and_bytes() {
     let output = run(&fixture(), &["check", ".", "--format", "json"]);
@@ -36,6 +40,9 @@ fn rule_findings_have_exact_ndjson_codes_and_bytes() {
     assert_run(&output, 1, expected, "");
 }
 
+/// §FS-rules.3.1, §FS-rules.7.2, §FS-check.3.26: a `have` sentence counts the named
+/// direct chapters and reports a zero count at the declaration title; as a
+/// `should` it is a suggestion, which never moves the exit (§FS-rules.7.6).
 #[test]
 fn ad_hoc_rule_is_additive_and_suggestions_do_not_change_the_exit() {
     let sentence = "Each FS should have exactly one security chapter.";
@@ -86,6 +93,8 @@ fn selector_listing_has_exact_text_and_json_rows() {
     );
 }
 
+/// §FS-rules.7.1, §FS-check.3.25: a literal subject that resolves nowhere is
+/// `invalid-rule`, named `--rule` for an ad-hoc sentence, in text and JSON.
 #[test]
 fn unresolved_literal_is_a_post_scan_finding() {
     let output = run(
@@ -161,6 +170,8 @@ fn every_markdown_sibling_heading_closes_the_accepted_chapter() {
     );
 }
 
+/// §FS-rules.1, §FS-check.3.25: the rationale must be non-empty; without one the
+/// declaration is `invalid-rule` at its heading and its sentence never runs.
 #[test]
 fn whitespace_only_rule_rationale_is_invalid_and_never_executes() {
     let root = scratch("empty-rule-rationale");
@@ -235,6 +246,9 @@ fn semantic_duplicates_collapse_in_both_directions() {
     );
 }
 
+/// §FS-rules.3.4, §FS-rules.7.4, §FS-check.3.28: an inbound count off its
+/// constraint is `uncited-unit` at the chapter title; a hard prohibition
+/// reuses `forbidden-citation` with the rule ID in its message (§FS-rules.7.5).
 #[test]
 fn inbound_and_prohibition_families_reach_their_released_findings() {
     let root = scratch("remaining-families");
@@ -276,6 +290,8 @@ fn inbound_and_prohibition_families_reach_their_released_findings() {
     );
 }
 
+/// §FS-rules.7.5: `should cite` and `should not cite` reuse `suggested-citation`
+/// and `discouraged-citation`, each naming its rule.
 #[test]
 fn positive_and_negative_citation_recommendations_reuse_suggestion_codes() {
     let root = scratch("recommendations");
@@ -352,6 +368,8 @@ fn invalid_rule_makes_init_a_no_write_operation() {
     assert_eq!(fs::read(root.join("AGENTS.md")).expect("sentinel"), before);
 }
 
+/// §FS-init.2.3.5.10: a rule kind renders `### Chapter rules` after the
+/// directions, each bullet the authored sentence and its live rule citation.
 #[test]
 fn valid_rules_render_exact_sentences_in_a_v11_managed_section() {
     let root = scratch("init-rendering");
@@ -371,6 +389,7 @@ fn valid_rules_render_exact_sentences_in_a_v11_managed_section() {
     ));
 }
 
+/// §FS-rules.1: the rule title is a grammar island no formatter pass rewrites.
 #[test]
 fn formatter_treats_the_rule_sentence_as_a_grammar_island() {
     let root = scratch("grammar-island");
@@ -388,6 +407,8 @@ fn formatter_treats_the_rule_sentence_as_a_grammar_island() {
     assert_eq!(after.lines().next(), Some(first.as_str()));
 }
 
+/// §FS-rules.1: without a `rules = true` row, check output and the managed
+/// block are what they were before the feature.
 #[test]
 fn a_project_without_rule_opt_in_keeps_the_old_check_bytes() {
     let root = scratch("no-opt-in");

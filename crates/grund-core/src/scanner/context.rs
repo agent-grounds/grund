@@ -153,12 +153,32 @@ fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize,
         .collect()
 }
 
+/// Settle who owns each citation site once body spans are known: classify the
+/// citing side, then promote the local candidates that gained a unique owner
+/// (§AR-scanner.2.4.2, §AR-scanner.2.4). Promotion reads what classification
+/// wrote, so the order is fixed here rather than left to the caller.
+pub(super) fn resolve_citation_owners(
+    findings: &mut Findings,
+    config: &Config,
+    path: &Path,
+    md_headings: &[(usize, usize)],
+    classify: bool,
+) {
+    let has_local_candidates = !findings.local_section_citation_candidates.is_empty();
+    if classify || has_local_candidates {
+        classify_citation_sources(findings, config, path, md_headings);
+    }
+    if has_local_candidates {
+        promote_local_section_citations(findings);
+    }
+}
+
 /// Classify each citation's citing side by the three-step fallback of
 /// §AR-scanner.2.4.2: the enclosing declaration's kind (nearest preceding
 /// declaration whose body contains the site), else the file's unique kind home,
 /// else the homeless kind — `code`, or whatever the project named it
 /// (§FS-config.3.9.2.2).
-pub(super) fn classify_citation_sources(
+fn classify_citation_sources(
     findings: &mut Findings,
     config: &Config,
     path: &Path,
@@ -221,12 +241,14 @@ pub(super) fn classify_citation_sources(
     for candidate in &mut findings.local_section_citation_candidates {
         let enclosing = bodies
             .iter()
-            .filter(|(start, end, _)| *start <= candidate.line && candidate.line <= *end)
-            .max_by_key(|(start, _, _)| *start);
+            .filter(|(start, end, _, _)| *start <= candidate.line && candidate.line <= *end)
+            .max_by_key(|(start, _, _, _)| *start);
         match enclosing {
-            Some((_, _, id)) => {
+            Some((_, _, id, sections)) => {
                 candidate.source_kind = id.kind.clone();
                 candidate.enclosing_declaration = Some(id.clone());
+                candidate.enclosing_section =
+                    enclosing_section(sections, md_headings, candidate.line);
             }
             None => {
                 candidate.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());
@@ -240,7 +262,7 @@ pub(super) fn classify_citation_sources(
 /// (§AR-scanner.2.4, §DF-declaration-local-section-shorthand.2.4). Unsupported
 /// and ownerless records remain diagnostic-only, so no consumer can infer a
 /// target that the body rule did not supply.
-pub(super) fn promote_local_section_citations(findings: &mut Findings) {
+fn promote_local_section_citations(findings: &mut Findings) {
     let candidates = std::mem::take(&mut findings.local_section_citation_candidates);
     for candidate in candidates {
         let Some(section) = candidate.section.clone() else {
@@ -267,6 +289,7 @@ pub(super) fn promote_local_section_citations(findings: &mut Findings) {
             inline_site: candidate.inline_site,
             source_kind: candidate.source_kind,
             enclosing_declaration: Some(owner),
+            enclosing_section: candidate.enclosing_section,
         });
     }
     findings.citations.sort_by(|left, right| {

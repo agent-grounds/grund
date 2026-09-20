@@ -458,7 +458,7 @@ The canonical text for a given block version `vN` is embedded in the `grund` bin
 The current schema for a repository without a rule kind is **v10**; v10 adds
 the in-body Markdown heading policy in [§FS-init.2.3.4.5.1](FS-init.md#23451-unmarked-headings), and an existing v9 block is
 the supported predecessor, repaired by the same one-command `grund init`
-re-render ([§FS-init.2.3.10.1](FS-init.md#23101-re-rendering-an-existing-block)). A rule-enabled repository uses **v11** because §FS-init.2.3.5.10
+re-render ([§FS-init.2.3.10.1](FS-init.md#23101-re-rendering-an-existing-block)). A rule-enabled repository uses **v11** because [§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules)
 adds byte-compared content. Removing the opt-in returns to byte-identical v10
 output rather than making v11 universal. The v9 history remains the point-size
 sweep added in [§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding), with v8 as its predecessor.

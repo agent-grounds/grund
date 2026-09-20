@@ -887,7 +887,7 @@ location protected from automatic writing still names its manual full replacemen
 eligibility changes what can be rewritten, not whether persisted local form is canonical. The
 same rule applies under configured markers and both strict modes.
 
-### 3.24 Invalid rule
+### 3.25 Invalid rule
 
 A rule declaration whose title, rationale, vocabulary, named-section gate, or
 exact literal subject is invalid produces `invalid-rule` at its heading. The
@@ -895,23 +895,23 @@ exact parse and resolution messages, and the pre-scan distinction for
 `check --rule`, are [§FS-rules.4](FS-rules.md#4-validation-lifecycle) and
 [§FS-rules.7.1](FS-rules.md#71-invalid-rule)'s.
 
-### 3.25 Chapter cardinality
+### 3.26 Chapter cardinality
 
 A `have` sentence whose named direct-chapter count is outside its constraint
 produces `chapter-cardinality` at the subject declaration title, including
 zero and surplus counts. Its fixed message is
 [§FS-rules.7.2](FS-rules.md#72-chapter-cardinality)'s.
 
-### 3.26 Citation cardinality
+### 3.27 Citation cardinality
 
-An outbound count not covered by §3.11, and each off-count target of a
+An outbound count not covered by [§FS-check.3.11](FS-check.md#311-missing-required-citation), and each off-count target of a
 `cite each` sentence, produces `citation-cardinality` at the subject title.
 Multiplicity, self-inclusion, per-target rows, message shape, and ordering are
 [§FS-rules.3.2](FS-rules.md#32-outbound-citation-count),
 [§FS-rules.3.3](FS-rules.md#33-per-target-coverage), and
 [§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinality)'s.
 
-### 3.27 Uncited unit
+### 3.28 Uncited unit
 
 An inbound `be cited by` count outside its constraint produces `uncited-unit`
 at the subject declaration or named-chapter title. Its count and message are

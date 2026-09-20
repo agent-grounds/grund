@@ -70,6 +70,8 @@ fn facts(completeness: Completeness) -> RuleFacts {
     }
 }
 
+/// §FS-rules.11: the sentence front end returns a complete `ParsedRule` and
+/// knows neither facts nor findings.
 #[test]
 fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics() {
     let parsed = parse_rule(
@@ -114,6 +116,8 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
     );
 }
 
+/// §FS-rules.11, §FS-rules.5.2: the engine evaluates a family clause over
+/// hand-built facts, with no sentence text, Markdown or scanner record.
 #[test]
 fn logic_engine_evaluates_hand_built_rule_and_facts_without_parser_or_scanner() {
     let diagnostics = evaluate(&[rule()], &[], &facts(Completeness::Complete));
@@ -187,6 +191,8 @@ fn markdown_adapter_and_second_producer_drive_the_same_engine_result() {
     assert_eq!(left, right);
 }
 
+/// §FS-rules.5.2: negation and aggregates are closed-world only over a
+/// complete snapshot.
 #[test]
 fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
     assert_eq!(

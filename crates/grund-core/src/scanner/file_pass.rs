@@ -20,8 +20,8 @@ use super::citations::{
     scan_local_section_candidates, scan_shorthand_citations, scan_workspace_qualified_pass,
 };
 use super::context::{
-    assign_declaration_bodies, classify_citation_sources, inline_citation_sites,
-    markdown_heading_level, promote_local_section_citations, retain_in_body_sections,
+    assign_declaration_bodies, inline_citation_sites, markdown_heading_level,
+    resolve_citation_owners, retain_in_body_sections,
 };
 use super::embedded_value_context::{
     EMBEDDED_VALUE_MARKER, authored_heading_level, embedded_value_marker_for_line,
@@ -601,12 +601,7 @@ pub(super) fn scan_file_text(
             findings,
         );
     }
-    if classify || has_local_section_candidates {
-        classify_citation_sources(findings, config, path, &md_headings);
-    }
-    if has_local_section_candidates {
-        promote_local_section_citations(findings);
-    }
+    resolve_citation_owners(findings, config, path, &md_headings, classify);
     // §AR-scanner.2.7.1: the headings and doc-comment blocks a grounding unit finer
     // than the file is cut out of — recorded only where the file's own row asks
     // for one, so a level-1 tree pays nothing (§FS-config.3.4.8.2).

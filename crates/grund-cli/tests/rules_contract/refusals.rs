@@ -35,6 +35,9 @@ fn every_released_family_subject_modality_and_count_spelling_is_accepted() {
     }
 }
 
+/// §FS-rules.12: the deliberate phase-1 absences a sentence can spell - path
+/// subjects, wildcard namespaces, component wildcards, chapter quantification -
+/// are refused by name with the accepted rewrite.
 #[test]
 fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
     let rows = [

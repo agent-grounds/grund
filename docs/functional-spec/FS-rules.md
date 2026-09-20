@@ -53,13 +53,13 @@ A token exactly equal to a configured citable kind name is the quantified kind
 selector; any longer token must parse as a full ID under that kind's effective
 grammar. Named components require `[id] named_sections = true` and obey the
 configured named-section grammar. An exact literal subject must resolve to one
-unit; zero matches or ambiguity produces `invalid-rule` (§7.1). A quantified
+unit; zero matches or ambiguity produces `invalid-rule` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)). A quantified
 kind or chapter subject matching no declarations is valid, vacuously true, and
 silent. Kind-level existence is not expressible in phase 1.
 
 Subject-side namespaces, including aliases and `*/`, component wildcards,
 numbered chapter literals, `Each chapter of each KIND`, and file, directory, or
-path subjects are refused (§3.5). The future component wildcard, if admitted,
+path subjects are refused ([§FS-rules.3.5](FS-rules.md#35-strict-refusals)). The future component wildcard, if admitted,
 will consume exactly one accepted section component; phase 1 accepts no such
 token.
 
@@ -138,7 +138,7 @@ Prohibition has one spelling and no count synonym:
 ```
 
 Every offending physical citation site produces the existing
-`forbidden-citation` or `discouraged-citation` finding (§7.5).
+`forbidden-citation` or `discouraged-citation` finding ([§FS-rules.7.5](FS-rules.md#75-prohibition-and-recommendation-reuse)).
 
 ### 3.5 Strict refusals
 
@@ -165,7 +165,7 @@ least these exact rows:
 
 `FS-missing must cite at least one GOAL.` is syntactically valid and therefore
 is not a pre-scan refusal. After scanning it produces the exact resolution
-message `literal subject FS-missing does not resolve` (§4).
+message `literal subject FS-missing does not resolve` ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 
 ## 4. Validation lifecycle
 
@@ -240,7 +240,7 @@ forbidden_site(s, p) :- s in S, cites(p, _, t), t in T, site_in(p, s).
 
 Positive families report where `not within(n, cardinality)`. Prohibitions
 report every `forbidden_site`. Negation and aggregates are closed-world only
-when the snapshot is complete (§4).
+when the snapshot is complete ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 
 ## 6. Semantic deduplication
 
@@ -352,7 +352,7 @@ exit, invocation/config failures exit 2, and incomplete scans stay 2.
 
 `grund check --rule "<sentence>" [<path>]` adds exactly one ad-hoc rule to all
 configured rules. It never disables configured rules and deduplicates against
-an identical one. Its validation and exit behavior are §4's.
+an identical one. Its validation and exit behavior are [§FS-rules.4](FS-rules.md#4-validation-lifecycle)'s.
 
 `grund list --selector "<selector>" [<path>]` filters the shared catalog to
 matched declaration and chapter units and composes by intersection with the
@@ -394,7 +394,7 @@ validation lifecycle, and every explicit phase-1 absence.
 The guide has a marked `### Chapter rules` writing section. Both repository and
 binary-embedded copies of `skills/grund-init/SKILL.md` contain a marked byte-
 identical copy of that section and remain wholly byte-identical to one another.
-The section includes every accepted family, every §3.5 refusal with its exact
+The section includes every accepted family, every [§FS-rules.3.5](FS-rules.md#35-strict-refusals) refusal with its exact
 rewrite, and the finding each example produces.
 
 The runnable example contains at least one passing and one violated instance of
@@ -425,7 +425,7 @@ returns `ParsedRule`: origin, anchor, subject selector, modality, relation,
 normalized target set, and cardinality. It may not know `RuleFacts`, evaluate,
 deduplicate, or synthesize findings.
 
-Fact producers return only complete, immutable, versioned `RuleFacts` as §5.1
+Fact producers return only complete, immutable, versioned `RuleFacts` as [§FS-rules.5.1](FS-rules.md#51-facts-and-identity)
 defines. The Markdown producer is phase 1's only producer, but the scanner is
 rule-blind and contributes structural records rather than evaluating a rule.
 The logic engine evaluates only `ParsedRule` over `RuleFacts`, deduplicates

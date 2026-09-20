@@ -90,6 +90,7 @@ pub(super) fn scan_local_section_candidates(
                 inline_site: line.inline_sites.get(&line.lineno).cloned(),
                 source_kind: String::new(),
                 enclosing_declaration: None,
+                enclosing_section: None,
             });
     }
 }
