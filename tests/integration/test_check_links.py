@@ -34,6 +34,7 @@ class CheckLinksTests(unittest.TestCase):
             source.write_text(f"See [the new guide]({url}).\n", encoding="utf-8")
             runner = Mock(
                 side_effect=[
+                    CompletedProcess(args=[], returncode=0, stdout=f"{url}\n"),
                     CompletedProcess(args=[], returncode=0),
                     CompletedProcess(args=[], returncode=0),
                 ]
@@ -41,7 +42,8 @@ class CheckLinksTests(unittest.TestCase):
 
             self.assertEqual(0, check_links.check_links(["SKILL.md"], root, runner=runner))
 
-            local_call, network_call = runner.call_args_list
+            dump_call, local_call, network_call = runner.call_args_list
+            self.assertEqual(["lychee", "--dump", "SKILL.md"], dump_call.args[0])
             local_document = local_call.kwargs["input"]
             self.assertIn(target.as_uri() + "#new-on-this-branch", local_document)
             self.assertEqual(
@@ -59,11 +61,12 @@ class CheckLinksTests(unittest.TestCase):
                 "docs/missing.md).\n",
                 encoding="utf-8",
             )
-            runner = Mock()
+            url = "https://github.com/agent-grounds/grund/blob/main/docs/missing.md"
+            runner = Mock(return_value=CompletedProcess(args=[], returncode=0, stdout=f"{url}\n"))
 
             with self.assertRaisesRegex(check_links.SelfLinkError, "target is missing"):
                 check_links.check_links(["SKILL.md"], root, runner=runner)
-            runner.assert_not_called()
+            runner.assert_called_once()
 
     def test_bad_local_fragment_stops_before_the_network_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -77,10 +80,16 @@ class CheckLinksTests(unittest.TestCase):
                 "docs/guide.md#absent).\n",
                 encoding="utf-8",
             )
-            runner = Mock(return_value=CompletedProcess(args=[], returncode=2))
+            url = "https://github.com/agent-grounds/grund/blob/main/docs/guide.md#absent"
+            runner = Mock(
+                side_effect=[
+                    CompletedProcess(args=[], returncode=0, stdout=f"{url}\n"),
+                    CompletedProcess(args=[], returncode=2),
+                ]
+            )
 
             self.assertEqual(2, check_links.check_links(["SKILL.md"], root, runner=runner))
-            runner.assert_called_once()
+            self.assertEqual(2, runner.call_count)
 
 
 if __name__ == "__main__":
