@@ -283,7 +283,7 @@ pub(crate) fn unknown_project_message<'a>(
         // §FS-check.3.8.1: 0.13.2 keeps the legacy diagnostic as a prefix while
         // appending §FS-errors.3.3's fixed compatibility explanation and horizon.
         return format!(
-            "unknown project alias {namespace}; only the {scope_path} subtree is in scope here — check from the workspace root for a path outside it — here, the {scope_path} subtree means the {scope_path} project and its descendants; this wording changes in grund 0.14.0"
+            "unknown project alias {namespace}; only the {scope_path} subtree is in scope here — check from the workspace root for a path outside it — here, the {scope_path} subtree means the {scope_path} project and its descendants; this wording changes in grund 0.15.0"
         );
     }
     let candidates = nearest_project_aliases(namespace, known);

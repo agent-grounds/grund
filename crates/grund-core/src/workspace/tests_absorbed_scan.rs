@@ -34,8 +34,8 @@ fn repo_text(relative: &str) -> Option<String> {
     std::fs::read_to_string(repo_file(relative)).ok()
 }
 
-/// The release named in a message, e.g. `0.14.0` out of `… an error in
-/// grund 0.14.0.` — read as the digits-and-dots run after the clause, with
+/// The release named in a message, e.g. `0.15.0` out of `… an error in
+/// grund 0.15.0.` — read as the digits-and-dots run after the clause, with
 /// the sentence's full stop trimmed off the end.
 fn named_release(text: &str) -> Option<String> {
     let tail = text.split(DEADLINE).nth(1)?;
@@ -60,7 +60,7 @@ fn version(text: &str) -> Vec<u32> {
 /// bump that reaches the deadline fails the build rather than shipping a
 /// message the binary is behind — the guard §RM-workspace-absorbed-scan-error
 /// is spent against, and the same one
-/// `the_named_error_release_is_0_14_0_and_still_ahead` keeps for the
+/// `the_named_error_release_is_0_15_0_and_still_ahead` keeps for the
 /// unlisted-block ramp. These two are what is left of the pending half
 /// `scripts/check_release_ramps.py` now asks of every message
 /// (§FS-distribution.4.2.1).

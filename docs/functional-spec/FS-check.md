@@ -402,7 +402,7 @@ A legacy H2-bounded block from v3 or earlier ([§FS-init.2.3](FS-init.md#23-gene
 
 #### 3.5.3 Code and message
 
-Every variant remains an error with code `agents-init`, and the default run still reports it after every content pass completes. Its text follows the two-release migration in [§FS-errors.3](FS-errors.md#3-message-text): during the compatibility release the legacy message is a verbatim contiguous prefix followed by the fixed maintenance tail; in `0.14.0` the final text explicitly classifies the work as repository maintenance and states that citation validity is unaffected. A selector may retain or remove this ordinary coded error, but never changes the checker pass that produced it.
+Every variant remains an error with code `agents-init`, and the default run still reports it after every content pass completes. Its text follows the three-release migration in [§FS-errors.3](FS-errors.md#3-message-text): during the two compatibility releases the legacy message is a verbatim contiguous prefix followed by the fixed maintenance tail; in `0.15.0` the final text explicitly classifies the work as repository maintenance and states that citation validity is unaffected. A selector may retain or remove this ordinary coded error, but never changes the checker pass that produced it.
 
 ### 3.6 Ungrounded source file *(opt-in)*
 
@@ -501,7 +501,7 @@ That is the rule working as designed, not a gap in it: `citable = false` says th
 
 An alias-qualified citation whose alias path is unknown is reported at the citation site in every run, with or without a `[workspace]` ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)); in a workspace run, so is one whose target declaration or target section is missing. The namespace and resolution rules live in [§FS-workspace.4](FS-workspace.md#4-resolution).
 
-An unknown alias path names the projects it could have meant, so the fix is in the diagnostic rather than in the config: the outermost workspace root searches every project in scope ([§FS-check.3.8.2](FS-check.md#382-candidates-at-the-outermost-root)); a run narrowed to a subtree searches only for a strict extension of its scope ([§FS-check.3.8.1](FS-check.md#381-a-strict-extension-of-the-narrowed-scope-is-safe-to-hint)) and otherwise names the subtree it covers ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)), in the wording [§FS-check.3.8.4](FS-check.md#384-the-scope-only-message-across-two-releases) stages. The citation remains unresolved and the run still fails.
+An unknown alias path names the projects it could have meant, so the fix is in the diagnostic rather than in the config: the outermost workspace root searches every project in scope ([§FS-check.3.8.2](FS-check.md#382-candidates-at-the-outermost-root)); a run narrowed to a subtree searches only for a strict extension of its scope ([§FS-check.3.8.1](FS-check.md#381-a-strict-extension-of-the-narrowed-scope-is-safe-to-hint)) and otherwise names the subtree it covers ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)), in the wording [§FS-check.3.8.4](FS-check.md#384-the-scope-only-message-across-three-releases) stages. The citation remains unresolved and the run still fails.
 
 #### 3.8.1 A strict extension of the narrowed scope is safe to hint
 
@@ -509,7 +509,7 @@ A narrowed run may search for a candidate only when its non-empty scope path is 
 
 An eligible path gets the outermost root's ordered tiers, sorting, three-result limit, prose joining, and `; did you mean …?` rendering ([§FS-check.3.8.2](FS-check.md#382-candidates-at-the-outermost-root)); when the loaded aliases yield no candidate, the message is the bare `unknown project alias <path>` form. Outermost-root runs keep their unconditional candidate search.
 
-Shorter and equal paths, paths whose segments do not begin with the scope, and merely lexical prefixes remain ineligible: in scope `group`, that excludes `alpha`, `group`, `outside/alpha`, and `grouped/alpha` alike. Each gets the scope-only message of [§FS-check.3.8.4](FS-check.md#384-the-scope-only-message-across-two-releases) with `<scope>` = `group` — in `0.13.2` the staged form with its exact compatibility suffix, from `0.14.0` the final template. Eligibility, candidate selection, resolution, and the failing verdict do not change in either release.
+Shorter and equal paths, paths whose segments do not begin with the scope, and merely lexical prefixes remain ineligible: in scope `group`, that excludes `alpha`, `group`, `outside/alpha`, and `grouped/alpha` alike. Each gets the scope-only message of [§FS-check.3.8.4](FS-check.md#384-the-scope-only-message-across-three-releases) with `<scope>` = `group` — in `0.13.2` and `0.14.0` the staged form with its exact compatibility suffix, from `0.15.0` the final template. Eligibility, candidate selection, resolution, and the failing verdict do not change in any of the three releases.
 
 #### 3.8.2 Candidates at the outermost root
 
@@ -527,15 +527,15 @@ A run narrowed to a subtree ([§FS-workspace.6.1](FS-workspace.md#61-nested-work
 
 In every ineligible case it names the subtree it covers — as a *subtree*, since that scope's own alias path is one project among the several it holds — rather than reporting the path bare, which is neither "delete this" nor "re-prefix this" but "check this from the root."
 
-#### 3.8.4 The scope-only message across two releases
+#### 3.8.4 The scope-only message across three releases
 
-In `0.13.2`, the complete legacy diagnostic remains a contiguous prefix for consumers that match it, and the exact suffix clarifies that a subtree includes the named project and its descendants while warning when the wording changes:
+In `0.13.2` and `0.14.0`, the complete legacy diagnostic remains a contiguous prefix for consumers that match it, and the exact suffix clarifies that a subtree includes the named project and its descendants while warning when the wording changes:
 
 ```text
-unknown project alias <path>; only the <scope> subtree is in scope here — check from the workspace root for a path outside it — here, the <scope> subtree means the <scope> project and its descendants; this wording changes in grund 0.14.0
+unknown project alias <path>; only the <scope> subtree is in scope here — check from the workspace root for a path outside it — here, the <scope> subtree means the <scope> project and its descendants; this wording changes in grund 0.15.0
 ```
 
-In `0.14.0`, that compatibility form must be replaced with exactly:
+In `0.15.0`, that compatibility form must be replaced with exactly:
 
 ```text
 unknown project alias <path>; the <scope> project and its descendants are in scope here — check from the workspace root for a path outside that subtree
@@ -1049,7 +1049,7 @@ A `[workspace]` block every one of whose walk roots lies inside one of its own m
 The line carries the block's `members` line as its breadcrumb the way a config error does ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)), then each covered root and the member entry it is inside, in config order. The member entry is named **as the config wrote it**; the covered root is named by its path **under the block root**, which is that spelling normalized rather than the spelling itself — an `include = ["./docs/"]` entry is named `docs`. Neither is the resolved path: that renders as nothing when it equals the render base and as an absolute path when it does not, and an author can edit neither ([§FS-errors.4](FS-errors.md#4-determinism)):
 
 ```
-warning: grund.toml:16: [workspace] members swallows this project's whole scan — every scan root is inside a member: `docs` in `docs` — so its declarations are unreachable and its citations are never checked. Point [scan] include at a directory that is not a member, or set include_root = false. This becomes an error in grund 0.14.0.
+warning: grund.toml:16: [workspace] members swallows this project's whole scan — every scan root is inside a member: `docs` in `docs` — so its declarations are unreachable and its citations are never checked. Point [scan] include at a directory that is not a member, or set include_root = false. This becomes an error in grund 0.15.0.
 ```
 
 #### 4.7.2 Every command that walks says it, not just `check`
@@ -1113,7 +1113,7 @@ The key answers "is this block's root a project?"; the finding asks "does anythi
 The message carries the block, what the absorption costs, the two config edits that clear it, and the release it becomes an error in:
 
 ```
-warning: b/grund.toml:3: this [workspace] is listed by no enclosing workspace — the projects under it are absorbed into `root` instead of named under their own alias path; add "b" to [workspace] members in grund.toml, or keep it out of that project's [scan] — an unlisted [workspace] becomes an error in grund 0.14.0
+warning: b/grund.toml:3: this [workspace] is listed by no enclosing workspace — the projects under it are absorbed into `root` instead of named under their own alias path; add "b" to [workspace] members in grund.toml, or keep it out of that project's [scan] — an unlisted [workspace] becomes an error in grund 0.15.0
 ```
 
 #### 4.8.7 The location sits inside the text

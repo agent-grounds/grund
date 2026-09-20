@@ -410,7 +410,7 @@ fn valid_rules_render_exact_sentences_in_a_v11_managed_section() {
         concat!(
             "AGENTS.md:3: error: stale grund init block: chapter rules differ from ",
             "grund.toml (run `grund init` to refresh) ",
-            "\u{2014} repo maintenance; citation checks still ran; wording changes in grund 0.14.0\n",
+            "\u{2014} repo maintenance; citation checks still ran; wording changes in grund 0.15.0\n",
         ),
         "",
     );

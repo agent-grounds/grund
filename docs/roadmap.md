@@ -294,6 +294,8 @@ Raise the finding from a load-time `warning:` to the config error [§FS-config.4
 
 The two-release window is the point of the ramp, so this is not a milestone to pull forward: a repository that upgrades on the day of the flip must have had a release in which the warning told it what was coming, and told it in a run rather than in release notes.
 
+The release this lands in is `0.15.0`. It was `0.14.0` until that release was cut without it, which moved the deadline the messages name rather than letting a shipped date pass ([§DF-absorbed-scan-warning.2.3](decisions/functional/DF-absorbed-scan-warning.md#23-the-release-is-named-in-the-message-not-only-in-the-changelog)).
+
 ### 2. Why now
 
 The e2e goldens carry the release as literal bytes and a unit test asserts it is still ahead of `CARGO_PKG_VERSION`, so the version bump that reaches the deadline fails CI — the same forcing function [§DF-index-compatibility-ramp.2.3](decisions/functional/DF-index-compatibility-ramp.md#23-both-findings-name-their-versions-and-a-test-keeps-the-names-honest) states, and the one that carried the `[[kinds]] prefix` removal ([§FS-config.3.4.6](functional-spec/FS-config.md#346-prefix-the-former-spelling-of-kind-removed-in-0130)) and the missing-index-entry flip ([§FS-check.3.18](functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)) to the release each named, for the same reason: a deadline that can pass quietly is not a deadline. The release path asks the same question of every message it ships, in both directions ([§FS-distribution.4.2](functional-spec/FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)).
@@ -315,6 +317,8 @@ Move `unlisted-workspace-block` from the walk's warnings to `report.errors` in `
 The other five surfaces keep the warning shape they have: `list`, `refs`, `cover`, `fmt`, and the ID read have no error channel for a fact about the run, and the exit-code mapping [§FS-cli.5](functional-spec/FS-cli.md#5-exit-code-mapping-is-fixed) freezes is not theirs to move. The flip is `check`'s verdict, which is where the guarantee is gated.
 
 The two-release window is the whole point of the ramp, so this is not a milestone to pull forward: a repository that upgrades on the day of the flip must have had a release in which the warning told it what was coming.
+
+The release this lands in is `0.15.0`, moved from `0.14.0` when that release was cut without it, so the deadline the warning names is still ahead of the binary printing it.
 
 ### 2. Why now
 

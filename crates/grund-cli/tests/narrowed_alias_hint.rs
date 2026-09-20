@@ -38,7 +38,7 @@ fn assert_failed_with(output: &Output, expected_stdout: &str, command: &str) {
     );
 }
 
-const SCOPE_SUFFIX: &str = " — here, the {scope} subtree means the {scope} project and its descendants; this wording changes in grund 0.14.0";
+const SCOPE_SUFFIX: &str = " — here, the {scope} subtree means the {scope} project and its descendants; this wording changes in grund 0.15.0";
 
 fn scope_only(alias: &str, scope: &str) -> String {
     format!(

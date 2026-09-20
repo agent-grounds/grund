@@ -12,7 +12,7 @@ use crate::templates::{
 };
 
 const AGENTS_INIT_COMPATIBILITY_TAIL: &str =
-    " — repo maintenance; citation checks still ran; wording changes in grund 0.14.0";
+    " — repo maintenance; citation checks still ran; wording changes in grund 0.15.0";
 
 /// Preserve the legacy diagnostic as a contiguous prefix while giving readers
 /// the maintenance classification during the two-release migration (§FS-errors.3.6).

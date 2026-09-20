@@ -168,8 +168,8 @@ The unknown-project recovery shape in [§FS-check.3.8](FS-check.md#38-cross-proj
 
 ### 3.3 The narrowed-run unknown-project wording migration
 
-The narrowed-run scope-only unknown-project message has a two-release wording
-migration, whose `0.13.2` compatibility form and `0.14.0` final template are
+The narrowed-run scope-only unknown-project message has a three-release wording
+migration, whose `0.13.2` compatibility form and `0.15.0` final template are
 fixed in [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure). The `0.13.2` suffix is part of the existing error
 message, not a second warning diagnostic. Exact-line consumers must migrate
 during this window to the stable `code == "unknown-project"`; the code, error
@@ -192,17 +192,17 @@ near-ID or illustration hint over the fetch-action tail.
 
 ### 3.6 The `agents-init` messages
 
-The five `agents-init` messages migrate over two releases. In the first release,
+The five `agents-init` messages migrate over three releases. In the first two,
 each existing message stays as a verbatim contiguous prefix and gains exactly
 ` — repo maintenance; citation checks still ran; wording changes in grund
-0.14.0`. This compatibility form both preserves prefix consumers and tells a
+0.15.0`. This compatibility form both preserves prefix consumers and tells a
 reader that the complete citation check already ran. Exact-line consumers must
 migrate during this window to the stable `code == "agents-init"`; code, error
-severity, and the default exit verdict do not change. The final `0.14.0` templates are [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates).
+severity, and the default exit verdict do not change. The final `0.15.0` templates are [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates).
 
 #### 3.6.1 The final templates
 
-In `0.14.0`, the compatibility tail is removed and the five final templates are:
+In `0.15.0`, the compatibility tail is removed and the five final templates are:
 
 ```text
 repo maintenance: malformed grund managed block: <detail> (does not affect citation validity)

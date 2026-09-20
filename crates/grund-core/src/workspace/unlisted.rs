@@ -36,7 +36,7 @@ use crate::model::{format_path, relative_from_base};
 /// maintainer they have a problem and not that they have a deadline; held ahead of
 /// the running version by a unit test, so the deadline fails the build rather than
 /// passing unnoticed.
-const UNLISTED_WORKSPACE_BLOCK_ERROR_RELEASE: &str = "0.14.0";
+const UNLISTED_WORKSPACE_BLOCK_ERROR_RELEASE: &str = "0.15.0";
 
 /// §FS-check.4.8: one warning per outermost `[workspace]` block this run's walk
 /// met that no enclosing block lists.

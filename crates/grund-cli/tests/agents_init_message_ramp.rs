@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 const MAINTENANCE_TAIL: &str =
-    " — repo maintenance; citation checks still ran; wording changes in grund 0.14.0";
+    " — repo maintenance; citation checks still ran; wording changes in grund 0.15.0";
 
 fn fixture_root(name: &str) -> PathBuf {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -124,7 +124,7 @@ fn release(text: &str) -> (u64, u64, u64) {
     )
 }
 
-/// §FS-errors.3.6.1: the five final templates land in `0.14.0`, where the
+/// §FS-errors.3.6.1: the five final templates land in `0.15.0`, where the
 /// compatibility tail is removed. Below that release there are no final
 /// templates to observe, so what this case pins is the window itself, in the
 /// shape `warning_phase_cannot_survive_the_release_it_names` uses for the other
@@ -132,7 +132,7 @@ fn release(text: &str) -> (u64, u64, u64) {
 /// be at or above the release the tail names, and the closing clause of the
 /// final form may not have leaked in early.
 ///
-/// From `0.14.0` the other branch is the live one: no tail, and every one of
+/// From `0.15.0` the other branch is the live one: no tail, and every one of
 /// the five wearing §FS-errors.3.6.1's fixed frame — the `repo maintenance: `
 /// classification in front and the `(does not affect citation validity)` clause
 /// behind. The frame is asserted rather than the five filled strings because
@@ -149,8 +149,8 @@ fn the_agents_init_tail_cannot_survive_the_release_it_names() {
 
     if tailed > 0 {
         assert!(
-            release(env!("CARGO_PKG_VERSION")) < release("0.14.0"),
-            "this tree reached 0.14.0; land §FS-errors.3.6.1's five final templates instead of shipping the compatibility tail"
+            release(env!("CARGO_PKG_VERSION")) < release("0.15.0"),
+            "this tree reached 0.15.0; land §FS-errors.3.6.1's five final templates instead of shipping the compatibility tail"
         );
         assert_eq!(
             tailed, 5,
