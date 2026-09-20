@@ -92,7 +92,7 @@ fn goldens_are_in_canonical_form() {
 
 /// §FS-examples.2.1: the first-class-values example is part of the maintained
 /// suite rather than a stray fixture — `discover_examples` finds it, so the
-/// passes above run it — and it still shows every ingredient §2.1 asks a
+/// passes above run it — and it still shows every ingredient §FS-examples.2.1 asks a
 /// reader to see.
 ///
 /// Asserted beside the runs rather than inside them because deleting the

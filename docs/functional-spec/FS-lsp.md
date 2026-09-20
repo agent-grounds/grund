@@ -46,7 +46,7 @@ A committed fetched snapshot is an ordinary declaration on this path: hover, def
 
 #### 1.2.1 Citation preview
 
-`textDocument/hover` on a citation returns the body `grund <ID> --toc` would print ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), or the `--toc` body of the requested section if the citation includes one ([§FS-show.2.2](FS-show.md#22-section)); a named citation previews the exact named section slice that `grund <ID>.<path> --toc` returns. When the declaration's home is in source code (a stub points at `src/bus.rs`), the hover body is the comment-stripped prose per [§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers) — the same content the CLI returns. Hovering a Markdown, source-comment, or JSON value binding likewise uses the exact `show --toc` slice; no rendered or interpolated value surface is invented ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)). The unadorned preview and the `show --toc` query produce the same bytes before editor linkification; the full hover may also carry the separate kind-metadata paragraph (§1.2.8).
+`textDocument/hover` on a citation returns the body `grund <ID> --toc` would print ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), or the `--toc` body of the requested section if the citation includes one ([§FS-show.2.2](FS-show.md#22-section)); a named citation previews the exact named section slice that `grund <ID>.<path> --toc` returns. When the declaration's home is in source code (a stub points at `src/bus.rs`), the hover body is the comment-stripped prose per [§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers) — the same content the CLI returns. Hovering a Markdown, source-comment, or JSON value binding likewise uses the exact `show --toc` slice; no rendered or interpolated value surface is invented ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)). The unadorned preview and the `show --toc` query produce the same bytes before editor linkification; the full hover may also carry the separate kind-metadata paragraph ([§FS-lsp.1.2.8](FS-lsp.md#128-target-kind-metadata)).
 
 The citation hover content is Markdown. Any resolving `§<ID>` citation inside it is emitted as a normal link to its declaration target, so users can keep following the grounding graph without closing the hover.
 
@@ -91,7 +91,7 @@ The counts are read from the scan of the project that owns the document ([§FS-l
 When the resolved target kind has an effective title, append `"\n\nKind: "`
 and that title as a CommonMark code span to the existing successful hover,
 without trimming or rewriting its content. Use the title-token backtick fencing
-and padding convention of §1.2.4. This applies to citation and value-binding
+and padding convention of [§FS-lsp.1.2.4](FS-lsp.md#124-the-title-hovers-text). This applies to citation and value-binding
 previews, declarations, sections, inline-source titles and stubs. No title
 returns the existing hover unchanged; an empty configured title still adds
 the paragraph. Metadata is literal: do not interpret Markdown or linkify

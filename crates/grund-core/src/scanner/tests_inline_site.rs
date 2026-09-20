@@ -4,7 +4,7 @@
 //! layout.
 //!
 //! Asserted on the `Citation` the scan returns rather than through a checker
-//! finding, because §7.1 is a claim about the record: every other suite reads
+//! finding, because §FS-inline-citation-style.7.1 is a claim about the record: every other suite reads
 //! these fields through a verdict, which cannot distinguish a field that is
 //! wrong from a rule that never fired.
 
