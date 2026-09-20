@@ -46,7 +46,7 @@ fn lsp_rule_rationale_follows_unsaved_addition_and_deletion() {
         path_provided: true,
         open_documents: BTreeMap::from([(
             rule,
-            format!("{title}\nUnsaved rationale for §GOAL-rules.\n"),
+            format!("{title}\nUnsaved rationale for \u{a7}GOAL-rules.\n"),
         )]),
     })
     .expect("snapshot with added rationale");

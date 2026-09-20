@@ -72,9 +72,8 @@ fn adapt_projects(
             } else {
                 format!("{alias}/{bare_label}")
             };
-            // A healthy Markdown stub and the inline declaration it names are
-            // one catalog home. Canonicalize before minting opaque keys so every
-            // downstream relation refers to the same node (§FS-rules.5.1,
+            // A healthy Markdown stub and its inline declaration are one catalog home.
+            // Canonicalize before minting keys so relations share a node (§FS-rules.5.1,
             // §FS-list.2.5).
             for (ordinal, home) in homes
                 .iter()
