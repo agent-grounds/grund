@@ -138,7 +138,7 @@ dependencies = [
 
 [[package]]
 name = "grund"
-version = "0.13.2-dev"
+version = "0.14.0"
 dependencies = [
  "grund-core",
  "iai-callgrind",
@@ -148,7 +148,7 @@ dependencies = [
 
 [[package]]
 name = "grund-core"
-version = "0.13.2-dev"
+version = "0.14.0"
 dependencies = [
  "anyhow",
  "ignore",
@@ -161,7 +161,7 @@ dependencies = [
 
 [[package]]
 name = "grund-integration-tests"
-version = "0.13.2-dev"
+version = "0.14.0"
 dependencies = [
  "grund-core",
  "serde_json",
@@ -170,7 +170,7 @@ dependencies = [
 
 [[package]]
 name = "grund-lsp"
-version = "0.13.2-dev"
+version = "0.14.0"
 dependencies = [
  "anyhow",
  "grund-core",
