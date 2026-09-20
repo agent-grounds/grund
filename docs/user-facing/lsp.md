@@ -217,14 +217,30 @@ Adjust the selector to match the syntaxes you scan in `grund.toml`.
 
 Open a file containing a resolving citation such as `§FS-check`.
 
-Stored section citations use the same full-ID form. If an existing document
-contains `<§>2.1` inside the `FS-check` declaration, the server reports the canonical
-replacement `§FS-check.2.1`; when section 2.1 exists, definition, references, and
-highlights still follow that resolved edge. `<§>9.9` also receives the ordinary
-missing-section diagnostic when its owner lacks that heading. A local path
+Stored section citations use the same full-ID form. Consider this example input
+inside an `FS-check` declaration body with section 2.1 but no section 9.9:
+
+```text
+See §2.1 and §9.9.
+```
+
+Both live local citations receive canonical-form errors naming their full
+replacements, alongside the independent missing-section diagnostic:
+
+```text
+local section citation §2.1; write §FS-check.2.1
+local section citation §9.9; write §FS-check.9.9
+missing section FS-check.9.9
+```
+
+Definition, references, and highlights follow the existing section
+2.1 edge. The section 9.9 citation also receives an independent missing-section
+diagnostic and has no navigation target. A local path
 outside a declaration is diagnosed without a navigation target, because the
 server never guesses an owner. Run `grund fmt --write` for safe owned sites and
-review the unresolved ones manually ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics), [§FS-lsp.1.3](../functional-spec/FS-lsp.md#13-go-to-definition)).
+review protected or unresolved sites manually. Escaping either token as `<§>2.1`
+or `<§>9.9` makes it an inert illustration with no citation diagnostic or navigation
+([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics), [§FS-lsp.1.3](../functional-spec/FS-lsp.md#13-go-to-definition)).
 
 The live typing transform remains `$$<ID>` to a full citation. `$$2` is not a
 local-section typing feature and no LSP quick-fix is added; canonicalization is
