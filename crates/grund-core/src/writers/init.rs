@@ -249,10 +249,10 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     }
 
     // §FS-init.2.3.8: render agent instructions against the config `init` leaves
-    // in place, and select the generated project name from the explicit flag,
-    // that target-local config, then the target basename. Do both before the
-    // entrypoint plan (§FS-init.2.1.1.1, §FS-init.2.3.4.17), so every renderer
-    // consumes the same identity and effective grammar.
+    // in place; select the name from explicit flag, target config, then basename.
+
+    // §FS-init.2.1.1.1, §FS-init.2.3.4.17: do both before the entrypoint plan,
+    // so each renderer consumes the same identity and effective grammar.
     let (mut init_config, resolved_name) =
         init_pending_effective_config(&target, name.as_deref(), description.as_deref())
             .map_err(|err| InitError::new(err.to_string()))?;
