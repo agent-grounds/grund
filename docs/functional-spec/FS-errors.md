@@ -240,6 +240,12 @@ lexicographically-first site ([§FS-check.2.1](FS-check.md#21-report-format)).
 
 A message that would otherwise be non-deterministic (e.g. the order of duplicate-declaration sites) is sorted before printing.
 
+Rule findings obey this same ordering without a rule-specific sorter. In a
+same-anchor `cite each` group, the fixed message puts the target ID immediately
+after `<subject> cites ` and before its count, so bytewise message ordering also
+orders shared-prefix target IDs bytewise
+([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)).
+
 ### 4.2 Diagnostic selection
 
 `grund check --only` and `--ignore` preserve [§FS-errors.4](FS-errors.md#4-determinism)'s contract: selection precedes

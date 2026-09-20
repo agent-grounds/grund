@@ -48,6 +48,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-nothing-recognized](DF-nothing-recognized.md#df-nothing-recognized-a-run-that-recognized-nothing-says-so-and-says-it-as-a-warning) — a run that recognized nothing says so, and says it as a warning
 - [§DF-duplicate-section-path](DF-duplicate-section-path.md#df-duplicate-section-path-a-section-coordinate-names-one-heading-or-the-run-says-so) — a section coordinate names one heading, or the run says so
 - [§DF-citation-directions](DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels) — encode citation directions as checked config with RFC-2119 levels
+- [§DF-chapter-rules](DF-chapter-rules.md#df-chapter-rules-chapter-rules-are-grounded-controlled-english-declarations-over-producer-neutral-facts) — chapter rules are grounded controlled-English declarations over producer-neutral facts
 
 ## Config, discovery, and workspaces
 

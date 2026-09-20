@@ -11,6 +11,10 @@ The `check` command walks a repo and reports every violation of the grund refere
 - `--watch` is reserved for the planned resident checker ([§FS-check.6](FS-check.md#6-watch-mode---watch)) and is not accepted by the current CLI.
 - `--require-grounding` — turn the grounding check ([§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in)) on for this run regardless of `[reference] require_grounding` in `grund.toml` ([§FS-config.3.1](FS-config.md#31-reference--citation-form)). It only ever *adds* the check; it cannot switch off a config that already sets it. The flag and the key are **one knob**: the flag sets the same global default, so a `[[kinds]]` row that says `require_grounding = false` is still exempt under it, and `grounding_level` has no flag at all ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)). A run-level flag that overrode the row would make the flag mean something the key cannot say.
 - `--suggestions` — emit the suggestions channel ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)) for this run. The flag never adds an error or changes the exit code: it only surfaces the advisory records [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) lists, which the default run withholds.
+- `--rule "<sentence>"` — add one ad-hoc chapter rule to the configured rules
+  for this run. It never disables them; validation, deduplication, and exits are
+  [§FS-rules.4](FS-rules.md#4-validation-lifecycle) and
+  [§FS-rules.8](FS-rules.md#8-command-surfaces)'s.
 - `--only <code>` — retain only diagnostics whose exact finding code is in the selected set ([§FS-check.1.4](FS-check.md#14-selecting-diagnostics-with---only-and---ignore)).
 - `--ignore <code>` — remove diagnostics whose exact finding code is in the selected set ([§FS-check.1.4](FS-check.md#14-selecting-diagnostics-with---only-and---ignore)).
 - `--full` — walk the whole config root past `[scan] include`, reporting unresolved references on their own tier ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full), [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)) plus the scanner-invariant `section-outside-declaration` error ([§FS-check.3.23](FS-check.md#323-section-outside-a-declaration)). It only ever *adds* findings; the in-scope report is unchanged.
@@ -328,6 +332,12 @@ Unqualified `<§>ID` and qualified `<§>alias/ID` escapes are both covered. The 
 
 `grund gap` ([§RM-gap-report](../roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports)) is the standing home for these records once it ships — a should-level miss is precisely "the graph is thinner than recommended," and gap is exit-code-neutral by design.
 
+Chapter-rule `should` and `should not` results use this same opt-in channel
+([§FS-rules.7](FS-rules.md#7-findings-and-channels)). They are withheld without
+`--suggestions`, carry the suggestion channel in text and JSON, and never affect
+the exit code. This adds no suppression mechanism and does not change why the
+channel is opt-in.
+
 ### 2.4 An incomplete run
 
 An invalid `grund.toml` aborts before any file is read ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)): exit `2`, a single `error:` line on stderr, nothing on stdout. A per-file failure *during* the walk — a file that cannot be read or decoded, an unreadable directory, or a link the walk cannot resolve ([§FS-config.3.5.5](FS-config.md#355-a-link-the-walk-cannot-resolve-is-reported-and-not-walked-into)) — does not abort: the offending path is reported as `error: <path>: <reason>` on stderr, in the CLI-level shape of [§FS-errors.2.2](FS-errors.md#22-cli-level-message) because the path has no line to point at and "I could not read this" is about the run, not a finding about the graph; the walk continues over the remaining files; every finding collected from the readable files is still printed to stdout in the normal located `check` form; and the run exits `2` because the view of the tree was incomplete. A `2` therefore always means "do not trust this report as complete"; the printed findings are still real. Malformed input is answered with a diagnostic naming the path and a truthful code, never an abort ([§REQ-never-crashes](../requirements/REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out)).
@@ -553,6 +563,12 @@ docs/architecture/AR-router.md:1: AR-router must cite FS or GOAL (citation direc
 
 The body extent and the citing-side classification come from the scanner ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)); the obligation pass is [AR-checker.2.9](../../crates/grund-core/src/checker/report.rs). The homeless kind ([§FS-check.3.11.1](FS-check.md#3111-the-homeless-kind)) and a non-citable kind ([§FS-check.3.11.2](FS-check.md#3112-a-non-citable-kind)) are asked per file instead, at the row's `grounding_level` ([§FS-check.3.11.3](FS-check.md#3113-the-unit-follows-grounding_level)); every failing unit is reported ([§FS-check.3.11.4](FS-check.md#3114-every-failing-unit-is-reported)), a file with no citation is no unit ([§FS-check.3.11.5](FS-check.md#3115-a-file-with-no-citation-is-no-unit)), and an `E2E` case has its own unit ([§FS-check.3.11.6](FS-check.md#3116-an-e2e-case)). The parallel `should` obligation is not an error; it is a suggestion ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)).
 
+The ordinary rule sentence `<subject> must cite at least one <target-set>.`
+reuses this code only when its actual count is zero. Rule-to-rule and the narrow
+config-to-rule bridge deduplicate as
+[§FS-rules.6](FS-rules.md#6-semantic-deduplication) specifies; when config
+participates, this section's existing message stays byte-for-byte unchanged.
+
 #### 3.11.1 The homeless kind
 
 A **homeless-kind** obligation ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — is per file rather than per declaration: a source file that contains at least one citation but none satisfying the obligation is the error, anchored at line 1.
@@ -592,6 +608,11 @@ docs/functional-spec/FS-login.md:42: FS must not cite AR (citation direction) �
 This message is specified but not implemented today: the binary currently prints the bare fault; the fix is still to re-point the citation or downgrade it to a plain Markdown link.
 
 The prohibition pass is [AR-checker.2.10](../../crates/grund-core/src/checker/report.rs); how it reads the citing and the cited kind is [§FS-check.3.12.1](FS-check.md#3121-how-the-two-kinds-are-read). The parallel `should-not` prohibition is not an error; it is a suggestion ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). The sanctioned way to keep a discouraged downward pointer is a plain Markdown link, which is not a citation under `strict = true` and so is exempt from this rule.
+
+A rule sentence `<subject> must not cite any <target-set>.` reuses this code and
+the exact citation-site anchor. Its message replaces only the fixed `(citation
+direction)` authority tail with `(<RULE-ID>)`; a config-derived duplicate keeps
+this section's bytes unchanged ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
 
 #### 3.12.1 How the two kinds are read
 
@@ -865,6 +886,37 @@ The finding covers the complete authored token for CLI and LSP ranges. An owned 
 location protected from automatic writing still names its manual full replacement; formatter
 eligibility changes what can be rewritten, not whether persisted local form is canonical. The
 same rule applies under configured markers and both strict modes.
+
+### 3.24 Invalid rule
+
+A rule declaration whose title, rationale, vocabulary, named-section gate, or
+exact literal subject is invalid produces `invalid-rule` at its heading. The
+exact parse and resolution messages, and the pre-scan distinction for
+`check --rule`, are [§FS-rules.4](FS-rules.md#4-validation-lifecycle) and
+[§FS-rules.7.1](FS-rules.md#71-invalid-rule)'s.
+
+### 3.25 Chapter cardinality
+
+A `have` sentence whose named direct-chapter count is outside its constraint
+produces `chapter-cardinality` at the subject declaration title, including
+zero and surplus counts. Its fixed message is
+[§FS-rules.7.2](FS-rules.md#72-chapter-cardinality)'s.
+
+### 3.26 Citation cardinality
+
+An outbound count not covered by §3.11, and each off-count target of a
+`cite each` sentence, produces `citation-cardinality` at the subject title.
+Multiplicity, self-inclusion, per-target rows, message shape, and ordering are
+[§FS-rules.3.2](FS-rules.md#32-outbound-citation-count),
+[§FS-rules.3.3](FS-rules.md#33-per-target-coverage), and
+[§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinality)'s.
+
+### 3.27 Uncited unit
+
+An inbound `be cited by` count outside its constraint produces `uncited-unit`
+at the subject declaration or named-chapter title. Its count and message are
+[§FS-rules.3.4](FS-rules.md#34-inbound-citation-count-and-prohibition) and
+[§FS-rules.7.4](FS-rules.md#74-inbound-citation-cardinality)'s.
 
 ## 4. Warnings
 

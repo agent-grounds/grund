@@ -5,7 +5,7 @@ The `list` subcommand prints the repo's ID catalog: every declaration, where it 
 ## 1. Inputs
 
 ```
-grund list [<path>] [--kind <KIND>[,<KIND>…]]… [--project <alias>[,<alias>...]] [--unused] [--summary]
+grund list [<path>] [--selector <selector>] [--kind <KIND>[,<KIND>…]]… [--project <alias>[,<alias>...]] [--unused] [--summary]
            [--size[=<unit>[,<unit>…]]] [--top <N>] [--format text|json]
 ```
 
@@ -14,6 +14,12 @@ grund list [<path>] [--kind <KIND>[,<KIND>…]]… [--project <alias>[,<alias>..
 `--kind` selects configured citable kinds and refuses an unknown one, or a non-citable one with the two-line message giving its reason ([§FS-list.1.1](FS-list.md#11---kind)). `--project` narrows a workspace catalog to the named projects ([§FS-list.1.2](FS-list.md#12---project)). `--unused` keeps only uncited declarations, discounting a kind's index entries and leaving out `E2E` cases unless `--kind` selects them ([§FS-list.1.3](FS-list.md#13---unused)). `--summary` prints one count per kind under those same filters ([§FS-list.1.4](FS-list.md#14---summary)). `--size` and `--top` switch to measured point-size rows over a closed unit set ([§FS-list.1.5](FS-list.md#15---size), [§FS-list.1.6](FS-list.md#16---top)); their syntax and combination errors are launch errors, decided before config discovery or scanning ([§FS-list.1.7](FS-list.md#17-size-selector-errors)).
 
 `list` is a query, like `show` and `refs` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
+
+`--selector <selector>` filters the shared catalog to the declaration and
+named-chapter units matched by a phase-1 rule subject, and is always a flag so
+the existing positional remains the scan path. Its composition, text/JSON
+rows, empty-success result, and exit-2 refusals are
+[§FS-rules.8](FS-rules.md#8-command-surfaces)'s.
 
 ### 1.1 `--kind`
 

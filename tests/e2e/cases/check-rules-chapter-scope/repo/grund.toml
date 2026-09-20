@@ -1,0 +1,40 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+
+[[kinds]]
+kind = "GOAL"
+folder = "docs/goals"
+index = false
+
+[[kinds]]
+kind = "REQ"
+folder = "docs/req"
+index = false
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+index = false
+
+[[kinds]]
+kind = "AR"
+folder = "docs/ar"
+index = false
+
+[[kinds]]
+kind = "RULE"
+folder = "docs/rules"
+index = false
+rules = true
+
+[citations.RULE]
+must = ["GOAL"]
+
+[scan]
+include = ["docs"]
