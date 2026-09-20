@@ -26,6 +26,11 @@ mod scanner;
 // set, the citation-to-target function and the two answers read off a recorded
 // span are declared in `resolver/` (§AR-resolver).
 mod resolver;
+// §AR-rules.6: architecture lands before production code. This test-only module
+// carries the four pending boundary drivers; implementation removes `cfg(test)`
+// when it adds the component and enables those tests.
+#[cfg(test)]
+mod rules;
 // §AR-system.2.6: the checker is one Rust module too, so every rule and the
 // report they fill are declared in `checker/` and what crosses the boundary is
 // what `checker/mod.rs` re-exports (§AR-checker).

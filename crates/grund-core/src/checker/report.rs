@@ -24,27 +24,34 @@ use crate::scanner::is_scannable;
 
 /// AR-checker: how grund validates the scanner's findings
 ///
-/// The checker takes the `Findings` produced by §AR-scanner and produces a
-/// `CheckReport`. It implements the rules in §FS-check.
+/// The checker takes the resolved `Findings` produced from §AR-scanner, asks
+/// §AR-rules for chapter-rule diagnostics, and produces one `CheckReport`. It
+/// implements the checks in §FS-check and orchestrates, but does not implement,
+/// the parser/facts/engine split of §FS-rules.11.
 ///
 /// ## placement: Where the checker sits
 ///
 /// ```text
-/// scanner ─► Findings ─┐
-/// config ──────────────┴─► [ checker ] ─► Report ─► api ─► cli, lsp
+/// resolver ─► loaded Findings ─┐
+/// rules ─► Diagnostic ─────────┼─► [ checker ] ─► Report ─► api ─► cli, lsp
+/// config ──────────────────────┘
 /// ```
 ///
 /// The sixth box of the pipeline (§AR-system.2.6). It takes `Findings` from the
-/// scanner (§AR-system.2.5) and the config it needs to resolve them, and gives
-/// one `Report` to the api (§AR-system.2.9), which every frontend renders
-/// unchanged. It knows no frontend and reads no file, except in the two rules
-/// below that must re-read one (§AR-checker.2.5, §AR-checker.2.16).
+/// resolver (§AR-system.2.10), rule diagnostics from §AR-system.2.12, and the
+/// config it needs to judge them, and gives one `Report` to the api
+/// (§AR-system.2.9), which every frontend renders unchanged. It knows no
+/// frontend and reads no file, except in the two rules below that must re-read
+/// one (§2.5, §2.16). Chapter-rule sentence parsing, fact adaptation,
+/// evaluation, and semantic deduplication stay in §AR-rules; this component
+/// only sequences them and merges their diagnostics.
 ///
 /// ## 1. Inputs and outputs
 ///
-/// - Input: `Findings` from the scanner, plus the repo root and config (needed
-///   to resolve stub-link paths, to read managed agent-entrypoint init blocks,
-///   and to know whether `[reference] require_grounding` is on).
+/// - Input: loaded `Findings` from the resolver, chapter-rule `Diagnostic`s
+///   from §AR-rules, plus the repo root and config (needed to resolve stub-link
+///   paths, to read managed agent-entrypoint init blocks, and to know whether
+///   `[reference] require_grounding` is on).
 /// - Output: a `CheckReport` containing three channel partitions: `errors`,
 ///   `warnings`, and opt-in `suggestions`. Each partition is deterministic; the
 ///   CLI renderer groups text by channel while preserving JSON's global order
