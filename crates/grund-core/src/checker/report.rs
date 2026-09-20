@@ -42,7 +42,7 @@ use crate::scanner::is_scannable;
 /// config it needs to judge them, and gives one `Report` to the api
 /// (§AR-system.2.9), which every frontend renders unchanged. It knows no
 /// frontend and reads no file, except in the two rules below that must re-read
-/// one (§2.5, §2.16). Chapter-rule sentence parsing, fact adaptation,
+/// one (§AR-checker.2.5, §AR-checker.2.16). Chapter-rule sentence parsing, fact adaptation,
 /// evaluation, and semantic deduplication stay in §AR-rules; this component
 /// only sequences them and merges their diagnostics.
 ///

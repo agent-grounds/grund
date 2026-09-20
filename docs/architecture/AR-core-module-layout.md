@@ -28,8 +28,8 @@ sits under, `model/records.rs` to **model** and `compat/list.rs` to **compat** �
 and it holds one thing, named for what that is: the invariant, rule or record a
 reader would look for under that name. That is what a citation of this section
 from a file's own doc comment means, and it is why a file grown past two
-subjects is a split rather than an exception (§3).
-The boundary, the one file outside it, where a test module sits, and the two tests that hold this against the tree are §1.1 to §1.4.
+subjects is a split rather than an exception ([§AR-core-module-layout.3](AR-core-module-layout.md#3-file-size)).
+The boundary, the one file outside it, where a test module sits, and the two tests that hold this against the tree are [§AR-core-module-layout.1.1](AR-core-module-layout.md#11-modrs-is-the-components-whole-boundary) to [§AR-core-module-layout.1.4](AR-core-module-layout.md#14-two-tests-hold-the-layout-against-the-tree).
 
 ### 1.1 `mod.rs` is the component's whole boundary
 
@@ -39,10 +39,10 @@ It declares the component's files, carries the doc comment citing the component'
 
 As the crate entrypoint it holds one `mod` line per component plus `compat`, the
 explicit `pub use <component>::{…}` list that **is** the crate's public surface
-(§2), and `#[cfg(test)] pub(crate) mod testing;` for the fixtures every test
+([§AR-core-module-layout.2](AR-core-module-layout.md#2-refactor-boundary)), and `#[cfg(test)] pub(crate) mod testing;` for the fixtures every test
 module shares. It holds no implementation and re-exports nothing by glob, so a
 name is public because this list says so rather than because a module happened
-to leave it `pub`. Every test module sits in its component (§1.3), so `lib.rs`
+to leave it `pub`. Every test module sits in its component ([§AR-core-module-layout.1.3](AR-core-module-layout.md#13-a-test-module-sits-beside-the-code-it-pins)), so `lib.rs`
 carries neither a `#[cfg(test)]` prelude of private globs nor an `include!` line:
 there is no flat module left for either to serve.
 
@@ -61,7 +61,7 @@ remains is an error, so the implementation must turn the component on
 deliberately.
 `tests/integration/test_dependency_direction.py` holds the order of
 [§AR-system.4](README.md#4-dependency-direction) across those directories,
-skipping every `tests_*.rs` and `testing.rs` (§1.3): every
+skipping every `tests_*.rs` and `testing.rs` ([§AR-core-module-layout.1.3](AR-core-module-layout.md#13-a-test-module-sits-beside-the-code-it-pins)): every
 `crate::<other>` reference runs downward, except the reads listed in it one by
 one, each of which must still exist and still carry its
 [§AR-system.4](README.md#4-dependency-direction) note at the import — so that

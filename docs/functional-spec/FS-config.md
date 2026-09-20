@@ -646,7 +646,7 @@ rule catalog, or gives its title another source contract. These relationships
 are config validation; sentence titles are scanned declaration data and are
 validated later as located findings ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 
-The key is optional and additive, so `grund_config_version` remains 1 (§5).
+The key is optional and additive, so `grund_config_version` remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)).
 An older binary rejects the unknown key loudly rather than silently ignoring a
 rule-enabled repository.
 

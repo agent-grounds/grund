@@ -137,3 +137,45 @@ fn source_local_paths_use_comment_boundaries_and_nearest_preceding_declaration()
     assert_eq!(local[1].id.num, Some(2));
     assert_eq!(local[1].section.as_deref(), Some("2.1"));
 }
+
+/// A promoted local citation is an ordinary graph edge, so it reports the
+/// chapter it sits in exactly as a full citation beside it does
+/// (§AR-scanner.2.4, §AR-scanner.2.4.4).
+#[test]
+fn promoted_local_citation_carries_its_enclosing_chapter() {
+    let root = test_root("promoted_local_citation_carries_its_enclosing_chapter");
+    let path = root.join("docs/functional-spec/FS-001-alpha.md");
+    write(
+        &path,
+        concat!(
+            "# FS-001-alpha: Alpha\n\n",
+            "Lead \u{a7}2.\n\n",
+            "## 1. Source\n\n",
+            "Local \u{a7}2 and full \u{a7}FS-001-alpha.2.\n\n",
+            "## 2. Target\n",
+        ),
+    );
+    let config = numbered_config(root);
+
+    let (findings, errors) = scan_tree(&config, Some(&path), true).expect("scan fixture");
+    assert!(errors.is_empty(), "unexpected scan errors: {errors:?}");
+    let chapters = findings
+        .citations
+        .iter()
+        .map(|citation| {
+            (
+                citation.text.as_str(),
+                citation.line,
+                citation.enclosing_section.as_deref(),
+            )
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        chapters,
+        vec![
+            ("\u{a7}2", 3, None),
+            ("\u{a7}2", 7, Some("1")),
+            ("\u{a7}FS-001-alpha.2", 7, Some("1")),
+        ]
+    );
+}

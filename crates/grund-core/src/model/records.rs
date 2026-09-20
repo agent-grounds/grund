@@ -202,6 +202,7 @@ pub(crate) struct LocalSectionCitationCandidate {
     pub(crate) inline_site: Option<InlineCitationSite>,
     pub(crate) source_kind: String,
     pub(crate) enclosing_declaration: Option<Id>,
+    pub(crate) enclosing_section: Option<String>,
 }
 
 /// A marker-prefixed token the configured grammar rejected, retained during

@@ -63,3 +63,67 @@ fn config_rejects_multiline_project_description() {
         "unexpected error: {err:#}"
     );
 }
+
+/// §FS-config.3.4.12: `rules = true` loads on a citable, scanned Markdown kind
+/// with a home, and every other shape is refused at load, before any title is
+/// read as a sentence.
+#[test]
+fn rules_key_requires_a_citable_scanned_markdown_home() {
+    let root = test_root("rules_key_requires_a_citable_scanned_markdown_home");
+    let load = |kind_row: &str| {
+        write(
+            &root.join("grund.toml"),
+            &format!(
+                "grund_config_version = 1\n\n[[kinds]]\nkind = \"FS\"\nfolder = \"docs/fs\"\n\n[[kinds]]\n{kind_row}"
+            ),
+        );
+        load_config(&root)
+    };
+
+    let config =
+        load("kind = \"RULE\"\nfolder = \"docs/rules\"\nrules = true\n").expect("rule kind");
+    assert!(
+        config
+            .kinds
+            .iter()
+            .any(|kind| kind.kind == "RULE" && kind.rules)
+    );
+    assert!(
+        config
+            .kinds
+            .iter()
+            .any(|kind| kind.kind == "FS" && !kind.rules)
+    );
+
+    for (shape, kind_row) in [
+        (
+            "non-citable",
+            "kind = \"skill\"\nfolder = \"skills\"\ncitable = false\nrules = true\n",
+        ),
+        ("homeless", "kind = \"RULE\"\nrules = true\n"),
+        (
+            "not Markdown",
+            "kind = \"RULE\"\nfile = \"docs/rules.txt\"\nrules = true\n",
+        ),
+    ] {
+        let err = match load(kind_row) {
+            Ok(_) => panic!("a {shape} rule kind should be refused"),
+            Err(err) => err.to_string(),
+        };
+        assert!(
+            err.contains(
+                "sets `rules = true` but rule kinds must be citable, scanned Markdown kinds"
+            ),
+            "{shape}: unexpected error: {err}"
+        );
+    }
+
+    let err = match load("kind = \"RULE\"\nfolder = \"docs/rules\"\nrules = true\nrules = true\n") {
+        Ok(_) => panic!("a repeated key should be refused"),
+        Err(err) => err.to_string(),
+    };
+    assert!(
+        err.contains("[[kinds]] sets `rules` twice"),
+        "unexpected error: {err}"
+    );
+}
