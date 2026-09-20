@@ -89,6 +89,8 @@ pub(crate) use run::CheckRun;
 #[cfg(test)]
 mod tests_check_full_scope;
 #[cfg(test)]
+mod tests_check_run_warnings;
+#[cfg(test)]
 mod tests_cover_workspace;
 #[cfg(test)]
 mod tests_embedding;
