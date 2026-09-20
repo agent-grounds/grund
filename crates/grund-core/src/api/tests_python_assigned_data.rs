@@ -98,6 +98,61 @@ fn multiline_data_recovers_tails_and_later_docstrings() {
     );
 }
 
+/// An `=` inside a quoted annotation is not the assignment boundary. The
+/// direct assigned value stays data, while both the later docstring and a
+/// triple string reached after an expression remain ordinary source
+/// (§FS-check.1.1.3.1).
+#[test]
+fn annotation_equals_selects_only_the_direct_triple_string_rhs() {
+    let source = concat!(
+        "from typing import Literal\n",
+        "\n",
+        "DATA: Literal[\"kind=value\"] = \"\"\"stored §FS-999-missing\n",
+        "\"\"\"\n",
+        "\n",
+        "def later():\n",
+        "    \"\"\"Cites §FS-042-user-login.\"\"\"\n",
+        "EXPRESSION: str = choose(value=\"\"\"§FS-042-user-login\"\"\")\n",
+    );
+    let root = assigned_repo(
+        "annotation_equals_selects_only_the_direct_triple_string_rhs",
+        source,
+        "",
+    );
+    assert_eq!(
+        source_sites(&root),
+        vec![
+            (7, 14, "§FS-042-user-login".into()),
+            (8, 35, "§FS-042-user-login".into()),
+        ]
+    );
+}
+
+/// An escaped candidate can overlap the matching close by two quote bytes.
+/// Assigned bytes remain excluded, and the close's tail and later docstring
+/// resume at their exact raw sites (§FS-check.1.1.3.1).
+#[test]
+fn escaped_candidate_does_not_skip_an_overlapping_close() {
+    let source = r#"PAYLOAD = """stored §FS-999-missing
+escaped quote then close: \""""  # §FS-042-user-login
+
+def later():
+    """Cites §FS-042-user-login."""
+"#;
+    let root = assigned_repo(
+        "escaped_candidate_does_not_skip_an_overlapping_close",
+        source,
+        "",
+    );
+    assert_eq!(
+        source_sites(&root),
+        vec![
+            (2, 36, "§FS-042-user-login".into()),
+            (5, 14, "§FS-042-user-login".into()),
+        ]
+    );
+}
+
 /// The exception removes all citation forms from assigned data without merging
 /// their existing rules: marked and bare citations in the tail remain live in
 /// non-strict mode, as does a qualified citation outside the data span.
