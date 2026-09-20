@@ -148,12 +148,13 @@ pub use api::{
     CoverTextCitation, CoverTextEntry, CoverTextOutput, FmtChange, FmtOpts, FmtOutput, IdOpts,
     IdProposal, IdProposalOutcome, ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot,
     REFS_QUERY_FAILURE_WARNING, RefHit, ReferenceStyle, RefsOpts, RefsOutcome, RefsOutput,
-    RefsQueryFailure, RefsQueryFailureKind, RefsWithMetadata, check, check_with_opts, complete_ids,
-    complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover, cover_text,
-    effective_config, format_references, list, list_with_run_warnings, lsp_snapshot,
-    lsp_snapshot_with_metadata, propose_id, propose_id_with_run_warnings, reference_style, refs,
-    refs_outcome, refs_query_failure_is_exit_one, refs_with_metadata, render_finding_sites_json,
-    scan, show, show_with_overlays, show_with_scope, validate_config,
+    RefsQueryFailure, RefsQueryFailureKind, RefsWithMetadata, check, check_with_opts,
+    check_with_run_warnings, complete_ids, complete_ids_with_run_warnings, config_run_warnings,
+    config_warnings, cover, cover_text, effective_config, format_references, list,
+    list_with_run_warnings, lsp_snapshot, lsp_snapshot_with_metadata, propose_id,
+    propose_id_with_run_warnings, reference_style, refs, refs_outcome,
+    refs_query_failure_is_exit_one, refs_with_metadata, render_finding_sites_json, scan, show,
+    show_with_overlays, show_with_scope, validate_config,
 };
 
 // §AR-system.2.9.1's one exception, the deprecated `main_entry()` path

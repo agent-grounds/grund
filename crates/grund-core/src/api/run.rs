@@ -14,6 +14,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::config_findings::config_diagnostics;
+use super::report::public_run_warnings;
 use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
 use crate::checker::{
     check_chapter_rules, check_findings, check_with_workspace, configured_scope,
@@ -22,8 +23,8 @@ use crate::checker::{
     workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::Config;
-use crate::model::{CheckReport, Diagnostic};
-use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects};
+use crate::model::{CheckReport, Diagnostic, Finding};
+use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
 use crate::scanner::scan_tree;
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, resolve_workspace_config,
@@ -50,7 +51,33 @@ pub(crate) fn run_check(
     full: bool,
     ad_hoc_sentence: Option<&str>,
 ) -> Result<CheckRun> {
+    let mut ignored_warnings = Vec::new();
+    run_check_with_run_warnings(
+        path,
+        path_provided,
+        force_require_grounding,
+        full,
+        ad_hoc_sentence,
+        &mut ignored_warnings,
+    )
+}
+
+/// Run `check` while preserving the root warnings a later workspace-expansion
+/// refusal must not discard (§FS-check.4.7.9, §FS-check.4.10.8). The side channel is
+/// returned data, never rendered here (§FS-distribution.3.1).
+pub(super) fn run_check_with_run_warnings(
+    path: &Path,
+    path_provided: bool,
+    force_require_grounding: bool,
+    full: bool,
+    ad_hoc_sentence: Option<&str>,
+    run_warnings: &mut Vec<Finding>,
+) -> Result<CheckRun> {
     let mut config = resolve_workspace_config(path)?;
+    // §FS-check.4.7.9, §FS-check.4.10.8: root boundary population has answered
+    // everything a failed expansion is allowed to carry. Capture it before a
+    // nested member can refuse; questions below the root do not exist yet.
+    *run_warnings = public_run_warnings(&config, settled_run_warnings(&config));
     // §FS-rules.4: ad-hoc grammar/vocabulary refusals happen before scanning.
     // §FS-check.1.3: `--full` cancels `[scan] include` for the walk. It is a
     // per-run flag, never a config key (§DF-check-full-scope.2.5).
@@ -62,7 +89,11 @@ pub(crate) fn run_check(
         config.require_grounding = true;
     }
     if config.workspace_declared && scope_is_config_root(&config, path, path_provided) {
-        return run_workspace_check(config, force_require_grounding, full, ad_hoc_sentence);
+        let run = run_workspace_check(config, force_require_grounding, full, ad_hoc_sentence)?;
+        // §FS-check.4.7.9, §FS-check.4.10.8: successful expansion may settle more
+        // blocks, so the successful side channel is the complete ordered set.
+        *run_warnings = public_run_warnings(&run.config, settled_run_warnings(&run.config));
+        return Ok(run);
     }
     let ad_hoc = ad_hoc_sentence
         .map(|sentence| parse_ad_hoc(&config, sentence))
@@ -126,11 +157,13 @@ pub(crate) fn run_check(
     report.errors.extend(out_of_scope);
     sort_diagnostics(&mut report.errors);
 
-    Ok(CheckRun {
+    let run = CheckRun {
         config,
         report,
         had_scan_errors,
-    })
+    };
+    *run_warnings = public_run_warnings(&run.config, settled_run_warnings(&run.config));
+    Ok(run)
 }
 
 /// The workspace arm of `grund check`: every member checked in turn, its findings

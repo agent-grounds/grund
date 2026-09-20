@@ -108,14 +108,19 @@ fn command_check(args: &[String]) -> ExitCode {
         eprintln!("error: unsupported check format `{format}`");
         return ExitCode::from(2);
     }
-    let mut output = match check_with_opts(CheckOpts {
+    let (run_warnings, output) = check_with_run_warnings(CheckOpts {
         path,
         path_provided,
         require_grounding,
         include_suggestions,
         full,
         rule,
-    }) {
+    });
+    // §FS-check.4.7.9, §FS-check.4.10.8: render root warnings once, before the report
+    // or later refusal. They remain data until this frontend chooses their stream
+    // and shape (§FS-distribution.3.1).
+    render_run_warnings(&run_warnings);
+    let mut output = match output {
         Ok(output) => output,
         Err(err) => {
             eprintln!("error: {err:#}");
@@ -141,14 +146,10 @@ fn command_check(args: &[String]) -> ExitCode {
         .report
         .suggestions
         .retain(|finding| selection.retains(finding.code));
-    // §FS-check.4.7.7, §FS-check.4.10.11, §FS-workspace.6.1.7: the run's warning channel
-    // first, in the position the engine used to write it from and in the same
-    // shape under either format.
-    render_run_warnings(&output.warnings);
     if format == "json" {
         render_check_json(&output.report);
     } else {
-        render_check_text(&output.report, output.warnings.len());
+        render_check_text(&output.report, run_warnings.len());
     }
     if output.had_scan_errors {
         ExitCode::from(2)
