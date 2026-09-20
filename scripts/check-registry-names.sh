@@ -8,7 +8,10 @@
 set -euo pipefail
 
 ua="grund-release-name-check/0.1"
-repo_pattern='github.com[/:]agent-grounds/grund'
+# Metadata names the repository the last publish came from, so a move reaches
+# the registry only through the next release — the one this guard gates. The
+# former owner passes beside the current one (§FS-distribution.1.1).
+repo_pattern='github.com[/:](agent-grounds|vjovanov)/grund'
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 
