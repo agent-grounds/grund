@@ -75,6 +75,18 @@ class PackageNameTests(unittest.TestCase):
             set(self.calls["check_claimed_json_name"]),
         )
 
+    def test_the_owner_pattern_accepts_the_repository_it_was_published_from(self):
+        """§FS-distribution.1.1: ownership is read off metadata the last publish
+        wrote, so it names the repository the package was published *from*. A
+        repository move reaches the registry only with the next release — the one
+        this guard stands in front of — so the former owner passes beside the
+        current one, and nobody else does."""
+        pattern = re.search(r"repo_pattern='([^']+)'", NAME_GUARD.read_text()).group(1)
+        for owner in ("agent-grounds", "vjovanov"):
+            with self.subTest(owner=owner):
+                self.assertRegex(f"https://github.com/{owner}/grund", pattern)
+        self.assertNotRegex("https://github.com/someone-else/grund", pattern)
+
     def test_npm_claims_grund_cli_because_the_bare_name_is_occupied(self):
         """The asymmetry §FS-distribution.1.1 records: PyPI takes the bare name, npm takes
         `grund-cli`, and the bare npm name is watched rather than claimed."""
