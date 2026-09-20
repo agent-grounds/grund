@@ -11,7 +11,10 @@ fn test_root(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join("grund-lsp-tests").join(unique);
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).expect("create test root");
-    dir
+    // The server answers from canonical paths, so a fixture URI built from this
+    // root must be canonical too — `env::temp_dir()` is `/var/…` behind a
+    // symlink on macOS, where the two spellings are not the same string.
+    fs::canonicalize(&dir).expect("canonical test root")
 }
 
 fn write(path: &Path, text: &str) {
