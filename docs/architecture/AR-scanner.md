@@ -193,7 +193,7 @@ and declarations in other files never participate. This single promotion point m
 queries, coverage, grounding, citation directions, and LSP snapshots consume one graph edge
 ([§DF-declaration-local-section-shorthand.2.2](../decisions/functional/DF-declaration-local-section-shorthand.md#22-existing-body-ownership-is-the-only-owner)).
 
-The scanner knows a citation's *cited* kind from its ID, but the citation-direction rules ([§FS-config.3.9](../functional-spec/FS-config.md#39-citations--citation-direction-rules), [§DF-citation-directions](../decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels)) also need the *citing* kind — what kind of place the citation sits in. This is resolved once, at scan time, because the checker cannot reconstruct it cheaply: doc-comment declaration bodies are narrower than the file, and the same data is what [§FS-cover](../functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) and [§RM-gap-report](../roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports) need. Two scan-time additions carry it: a body range on every declaration ([§AR-scanner.2.4.1](AR-scanner.md#241-declaration-body-range)) and a source kind on every citation ([§AR-scanner.2.4.2](AR-scanner.md#242-citation-source-kind)).
+The scanner knows a citation's *cited* kind from its ID, but the citation-direction rules ([§FS-config.3.9](../functional-spec/FS-config.md#39-citations--citation-direction-rules), [§DF-citation-directions](../decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels)) also need the *citing* kind — what kind of place the citation sits in. This is resolved once, at scan time, because the checker cannot reconstruct it cheaply: doc-comment declaration bodies are narrower than the file, and the same data is what [§FS-cover](../functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) and [§RM-gap-report](../roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports) need. Three scan-time additions carry it: a body range on every declaration (§2.4.1), a source kind on every citation (§2.4.2), and the accepted chapter that immediately encloses the site (§2.4.4).
 
 #### 2.4.1 Declaration body range
 
@@ -208,6 +208,23 @@ Every `Citation` records the citing kind, resolved by three-step fallback with t
 The enclosing declaration is also recorded on the citation, so the obligation pass ([§AR-checker.2.9](../../crates/grund-core/src/checker/report.rs)) can ask "does this declaration's body cite the target?" as a lookup rather than a re-scan.
 
 Unmarked Markdown candidates ([§AR-scanner.2.2.7](AR-scanner.md#227-unmarked-markdown-headings)) use the same body ranges and nearest-enclosing lookup. That shared ownership is why a candidate under a nested declaration names the nested ID, while a pre-declaration title or a same-or-shallower ATX heading that closed the body has no owner and remains legal ([§FS-check.4.14](../functional-spec/FS-check.md#414-unmarked-markdown-heading)).
+
+#### 2.4.4 The enclosing accepted chapter
+
+Every citation site also records its immediate enclosing accepted chapter, if
+one exists. The scanner answers this while it holds the heading stack: the
+nearest preceding accepted section whose subtree contains the site wins, and a
+same-or-shallower heading closes it. A duplicate or rejected section path is
+not an accepted chapter and cannot own a site. This is structural attribution,
+not rule evaluation ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)).
+
+The scanner neither imports the rules component nor constructs `RuleFacts`.
+The Markdown fact adapter reads this field from the resolved structural model
+and decides which `cites` and `site_in` relations it implies
+([§FS-rules.11](../functional-spec/FS-rules.md#11-functional-architecture-constraint),
+[§AR-rules.3](AR-rules.md#3-rulefacts)). That keeps a scan reusable by every
+command and lets a non-Markdown producer supply the same fact boundary without
+imitating scanner records.
 
 ### 2.5 Escaped-citation illustrations
 

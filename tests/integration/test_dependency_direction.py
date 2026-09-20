@@ -2,10 +2,10 @@
 `crate::<other>` reference in every `.rs` file under
 `crates/grund-core/src/<component>/` is judged against the order §AR-system.1
 draws: model, grammar, config, then workspace and templates as siblings that may
-not read each other, scanner, resolver, checker, then queries and writers as
-siblings that may not read each other either, then api, then compat, which may
-read anything and which nothing may read. The ledger of reads that still run the
-other way is **empty**, and must stay so: every entry it held was one of the four
+not read each other, scanner, resolver, rules, checker, then queries and writers
+as siblings that may not read each other either, then api, then compat, which
+may read anything and which nothing may read. The ledger of reads that still run
+the other way is **empty**, and must stay so: every entry it held was one of the four
 `[workspace]` findings that `workspace/` and `resolver/` printed through
 `compat/`, and each travels as a diagnostic in the run's warning channel now
 (§DA-engine-renders-nothing). The mechanism is kept rather than deleted — a
@@ -41,11 +41,12 @@ ORDER = {
     "templates": 3,
     "scanner": 4,
     "resolver": 5,
-    "checker": 6,
-    "queries": 7,
-    "writers": 7,
-    "api": 8,
-    "compat": 9,
+    "rules": 6,
+    "checker": 7,
+    "queries": 8,
+    "writers": 8,
+    "api": 9,
+    "compat": 10,
 }
 
 # `crate::<component>::<item>` or `crate::<component>::{<item>, …}`, in a `use`

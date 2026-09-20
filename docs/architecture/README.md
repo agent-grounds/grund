@@ -1,10 +1,24 @@
-# AR-system: one engine, eleven components, three frontends
+# AR-system: one engine, twelve components, three frontends
 
-`grund` is one pipeline. A single tree walk reads every file once and produces `Findings`; rules turn `Findings` into a `Report`; queries and writers answer from the same `Findings`; and thin frontends render or transport what the engine returns. Everything that decides lives in the engine crate `grund-core`, so the CLI, the LSP server and the planned bindings are the same verdicts behind different surfaces ([§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms), [§FS-distribution](../functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets)). Speed is set by the walk, which is why the walk happens once ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). This page is the whole system, described once; each page in the index below describes one part and names its box here in a `placement` chapter (section 5).
+`grund` is one pipeline. A single tree walk reads every file once and produces
+`Findings`; the resolver completes the structural model; chapter-rule parsing
+and fact production meet only as `ParsedRule` and `RuleFacts` in the rules
+engine; checker rules turn that model into a `Report`; queries and writers
+answer from the same model; and thin frontends render or transport what the
+engine returns. Everything that decides lives in the engine crate `grund-core`,
+so the CLI, the LSP server and the planned bindings are the same verdicts behind
+different surfaces ([§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms),
+[§FS-distribution](../functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets),
+[§FS-rules.11](../functional-spec/FS-rules.md#11-functional-architecture-constraint)).
+Speed is set by the walk, which is why the walk happens once
+([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)).
+This page is the whole system, described once; each page in the index below
+describes one part and names its box here in a `placement` chapter (section 5).
 
 ## 1. The system
 
-Eleven components in one crate, stacked in the order they may read each other, and the frontends above them:
+Twelve components in one crate, stacked in the order they may read each other,
+and the frontends above them:
 
 ```text
              ┌───────────┐  ┌───────────┐  ┌──────────────────────┐
@@ -21,6 +35,8 @@ Eleven components in one crate, stacked in the order they may read each other, a
              │      editor answers     │                          │
              ├─────────────────────────┴──────────────────────────┤
              │ 2.6  checker                                       │
+             ├────────────────────────────────────────────────────┤
+             │ 2.12 rules                                         │
              ├────────────────────────────────────────────────────┤
              │ 2.10 resolver                                      │
              ├────────────────────────────────────────────────────┤
@@ -42,17 +58,21 @@ The same components as the data moves through them:
 ```text
                grund.toml ──► config ──► workspace ──┐
                                                      ▼
-  tree ──► scanner ──► Findings ─────────────────► resolver ──┐
-                                                              ▼
-                       loaded Findings ──► checker ──► Report ─┐
-                              │                                │
-                              ├──► queries ──► data ───────────┤
-                              └──► writers ──► edits ──────────┤
-                                                               ▼
-                                                              api
-                                                               │
-                                   ┌──────────────┬────────────┴───────────┐
-                                  cli            lsp           node, py (planned)
+  tree ──► scanner ──► Findings ─────────────────► resolver ────────────────┐
+                                                        │                  │
+                             rule titles + vocabulary ──┤                  │
+                                                        ▼                  ▼
+                              ParsedRule + RuleFacts ─► rules ─► Diagnostic│
+                                                                           ▼
+                       loaded Findings ─────────────────► checker ─► Report ─┐
+                              │                                             │
+                              ├──► queries ──► data ────────────────────────┤
+                              └──► writers ──► edits ───────────────────────┤
+                                                                            ▼
+                                                                           api
+                                                                            │
+                                                ┌──────────────┬────────────┴───────────┐
+                                               cli            lsp           node, py (planned)
 ```
 
 Data flows along the arrows and so does knowledge: a component knows only what the arrows into it carry (section 4).
@@ -83,7 +103,15 @@ Consumes the scope and the grammar. Produces `Findings`: every declaration, sect
 
 ### 2.6 checker
 
-Consumes `Findings`. Produces the `Report`: errors, warnings and suggestions, each rule one pass over part of the findings ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-reference-in-a-repo)). Reads no file except in the two rules that must, and knows no frontend. Design: [§AR-checker](../../crates/grund-core/src/checker/report.rs). Module: `crates/grund-core/src/checker/`.
+Consumes the resolver's loaded `Findings` and diagnostics from the rules
+component. Produces the `Report`: errors, warnings and suggestions, each check
+one pass over its owned input ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-reference-in-a-repo),
+[§FS-rules.11](../functional-spec/FS-rules.md#11-functional-architecture-constraint)).
+It orchestrates rule parsing, fact production and evaluation without owning any
+of their grammar or relational meaning. Reads no file except in the two checks
+that must, and knows no frontend. Design:
+[§AR-checker](../../crates/grund-core/src/checker/report.rs). Module:
+`crates/grund-core/src/checker/`.
 
 ### 2.7 queries
 
@@ -111,13 +139,39 @@ Consumes the project map from workspace and every project's `Findings` from the 
 
 Consumes config and the managed-block markers the grammar recognizes. Produces the text a managed block should say as a function of that config: the `AGENTS.md` block of [§FS-init.2.3](../functional-spec/FS-init.md#23-generated-agent-entrypoints) with its config-derived sections, the generated `grund.toml`, and the embedded scaffold payload ([§FS-init.2.1](../functional-spec/FS-init.md#21-files-written-updated-or-left-in-place), [§FS-init.2.4](../functional-spec/FS-init.md#24-generated-grundtoml), [§FS-init.5](../functional-spec/FS-init.md#5-agent-setup-instructions)). Rendering is deterministic, so a fresh render is the hash: `init` writes it and `check` re-renders its `### Citation directions` and `### Clickable citations` sections and byte-compares them for drift ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block), [§AR-checker.2.7](../../crates/grund-core/src/checker/report.rs)) — two commands asking one component for the same answer from opposite directions, which is why it is a box rather than a corner of the writers. Knows no file, no rule and no rendering of a report: it writes nothing and reads no tree, and the one block section that needs a walk arrives already rendered from the run that walked for it ([§FS-init.2.3.4.15](../functional-spec/FS-init.md#23415-workspace-members)). Module: `crates/grund-core/src/templates/`.
 
+### 2.12 rules
+
+Consumes authored rule titles with config vocabulary and the resolver's complete
+structural model. Produces located rule `Diagnostic`s for the checker through
+exactly two internal data boundaries: `ParsedRule` from the sentence front end
+and `RuleFacts` from the Markdown adapter. The logic engine evaluates only
+those values and owns semantic deduplication; the scanner remains rule-blind
+([§FS-rules.11](../functional-spec/FS-rules.md#11-functional-architecture-constraint)).
+Knows no frontend, renderer or filesystem beyond repository-relative fact
+anchors. Design: [§AR-rules](AR-rules.md#ar-rules-sentences-and-facts-meet-only-in-the-rule-engine).
+Module: `crates/grund-core/src/rules/` (created with the implementation).
+
 ## 3. Frontends
 
 Two today, two planned, and none has engine logic ([§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms)). `grund-cli` parses arguments, renders text and JSON, and maps exit codes ([§AR-bindings.3](AR-bindings.md#3-grund-cli-the-cli-binary), [§FS-cli](../functional-spec/FS-cli.md#fs-cli-grunds-command-line-surface-conventions)). `grund-lsp` speaks LSP over stdio and translates every request into an api call ([§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built)). `grund-node` and `grund-py` will marshal the same functions ([§AR-bindings.5](AR-bindings.md#5-grund-node-the-napi-rs-binding), [§AR-bindings.6](AR-bindings.md#6-grund-py-the-pyo3-binding)). Each depends on `grund-core` and on nothing of the others, so the CLI carries no JSON-RPC and the server no terminal renderer ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary)).
 
 ## 4. Dependency direction
 
-One rule: **no component reads one above it.** The stack in section 1 is the rule drawn: the frontends sit above api; api above the queries and the writers, which are siblings and read nothing of each other; those above the checker; the checker above the resolver; the resolver above the scanner; the scanner above workspace and templates, which are siblings and read nothing of each other; both above config; config above grammar; and grammar above model, which reads nothing but std. Two things hold it. The compiler holds a component's privacy — nothing outside a module directory can name what its `mod.rs` does not re-export ([§AR-core-module-layout.1.1](AR-core-module-layout.md#11-modrs-is-the-components-whole-boundary)) — and `tests/integration/test_dependency_direction.py` holds the order across those directories, with every read that still runs the other way listed one by one and marked at its import, so the list can only shrink. Three consequences are held by tests of their own:
+One rule: **no component reads one above it.** The stack in section 1 is the
+rule drawn: the frontends sit above api; api above the queries and the writers,
+which are siblings and read nothing of each other; those above the checker; the
+checker above rules; rules above resolver; resolver above scanner; scanner above
+workspace and templates, which are siblings and read nothing of each other;
+both above config; config above grammar; and grammar above model, which reads
+nothing but std. Two things hold it. The compiler holds a component's privacy —
+nothing outside a module directory can name what its `mod.rs` does not re-export
+([§AR-core-module-layout.1.1](AR-core-module-layout.md#11-modrs-is-the-components-whole-boundary)) —
+and `tests/integration/test_dependency_direction.py` holds the order across
+those directories, with every read that still runs the other way listed one by
+one and marked at its import, so the list can only shrink. The rules component's
+internal direction and stronger parser/engine prohibitions are held by
+`tests/integration/test_rules_architecture.py` ([§AR-rules.6](AR-rules.md#6-boundary-tests)).
+Three consequences are held by tests of their own:
 
 - The engine writes no stream and exits no process; the frontends render (`tests/integration/test_engine_boundary.py`).
 - The engine names no frontend's protocol: no LSP types in `grund-core`, no CLI in `grund-lsp` (`tests/integration/test_frontend_isolation.py`).
@@ -137,7 +191,7 @@ The system:
 
 | ID | Subject |
 |---|---|
-| [§AR-system](README.md#ar-system-one-engine-eleven-components-three-frontends) | one engine, eleven components, three frontends — this page |
+| [§AR-system](README.md#ar-system-one-engine-twelve-components-three-frontends) | one engine, twelve components, three frontends — this page |
 
 The components and frontends:
 
@@ -147,6 +201,7 @@ The components and frontends:
 | [§AR-checker](../../crates/grund-core/src/checker/report.rs) | how grund validates the scanner's findings — declared and enrolled directly from `crates/grund-core/src/checker/report.rs` |
 | [§AR-workspace](AR-workspace.md#ar-workspace-how-the-config-time-workspace-layer-composes-with-the-config-loader-and-the-scanner) | how the config-time workspace layer composes with the config loader and the scanner |
 | [§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them) | how a run loads every project and resolves a citation to one of them |
+| [§AR-rules](AR-rules.md#ar-rules-sentences-and-facts-meet-only-in-the-rule-engine) | how sentence parsing and relational evaluation meet only through `ParsedRule` and `RuleFacts` |
 | [§AR-bindings](AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms) | the engine's contract with its frontends, and the shape of the planned ones |
 | [§AR-lsp](AR-lsp.md#ar-lsp-how-the-lsp-server-is-built) | how the LSP server is built |
 | [§AR-core-module-layout](AR-core-module-layout.md#ar-core-module-layout-core-implementation-is-split-by-category) | how the engine's files are named, owned and sized |

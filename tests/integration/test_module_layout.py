@@ -1,10 +1,10 @@
 """§AR-core-module-layout.1 — the engine is one Rust module per component: every
 `.rs` file under `crates/grund-core/src/` is `lib.rs`, the shared test fixtures
-in `testing.rs`, or a file inside one of the twelve component directories
-§AR-system.2 names; each of those directories exists and declares its files in a
-`mod.rs`, which is the whole of what crosses its boundary; and `lib.rs` splices
-in nothing at all, because a test module sits beside the code it pins and is a
-`mod` line in its component's `mod.rs` like any other file."""
+in `testing.rs`, or a file inside one of the thirteen module directories
+§AR-system.2 names; each present directory declares its files in a `mod.rs`,
+which is the whole of what crosses its boundary; and `lib.rs` splices nothing
+at all. The `rules/` directory is test-only before implementation, and declaring
+it as a production module while that allowance remains fails this test."""
 
 import re
 import unittest
@@ -14,7 +14,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CORE = REPO_ROOT / "crates" / "grund-core" / "src"
 
-# One directory per component of §AR-system.2, named after it — the eleven
+# One directory per component of §AR-system.2, named after it — the twelve
 # components and the deprecated path beside the api (§AR-system.2.9).
 COMPONENTS = (
     "api",
@@ -25,11 +25,17 @@ COMPONENTS = (
     "model",
     "queries",
     "resolver",
+    "rules",
     "scanner",
     "templates",
     "workspace",
     "writers",
 )
+
+# §AR-rules.6: `rules` may be absent or test-only before implementation; the
+# commit declaring production `mod rules;` removes this marker and enables the
+# four contract drivers.
+PENDING_COMPONENTS = {"rules"}
 
 INCLUDE = re.compile(r'include!\("([^"]+)"\)')
 
@@ -38,16 +44,50 @@ def _relative(path):
     return path.relative_to(CORE).as_posix()
 
 
+def _production_modules():
+    """Modules declared without a neighbouring `#[cfg(test)]` attribute."""
+    lines = (CORE / "lib.rs").read_text(encoding="utf-8").splitlines()
+    modules = set()
+    for index, line in enumerate(lines):
+        match = re.fullmatch(r"mod ([a-z_][a-z0-9_]*);", line.strip())
+        if not match:
+            continue
+        attributes = []
+        cursor = index - 1
+        while cursor >= 0 and lines[cursor].strip().startswith("#["):
+            attributes.append(lines[cursor].strip())
+            cursor -= 1
+        if "#[cfg(test)]" not in attributes:
+            modules.add(match.group(1))
+    return modules
+
+
 class ModuleLayoutTests(unittest.TestCase):
     def test_every_component_has_a_directory_with_a_mod_rs(self):
         missing = []
         for component in COMPONENTS:
             directory = CORE / component
+            if component in PENDING_COMPONENTS and not directory.exists():
+                continue
             if not directory.is_dir():
                 missing.append(f"{component}/ is not a directory")
             elif not (directory / "mod.rs").is_file():
                 missing.append(f"{component}/mod.rs is missing")
         self.assertEqual([], missing, "\n".join(missing))
+
+    def test_a_declared_component_is_not_still_marked_pending(self):
+        """The architecture-only allowance cannot survive implementation."""
+        stale = sorted(
+            component
+            for component in PENDING_COMPONENTS
+            if component in _production_modules()
+        )
+        self.assertEqual(
+            [],
+            stale,
+            "declared components still marked pending; remove the allowance and "
+            "enable their boundary contracts",
+        )
 
     def test_every_source_file_is_lib_the_fixtures_or_inside_a_component(self):
         """A file at the crate root that is not `lib.rs` or `testing.rs` belongs
