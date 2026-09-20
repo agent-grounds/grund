@@ -17,7 +17,7 @@
 
 use std::collections::BTreeMap;
 
-use super::references::ScanScope;
+use super::reference_scope::ScanScope;
 use super::support::{heading_marks, section_depth};
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;

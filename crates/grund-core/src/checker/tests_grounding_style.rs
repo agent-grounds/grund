@@ -1,12 +1,9 @@
 //! Test module: the grounding floor and inline citation style (§FS-check.3.6, §FS-inline-citation-style)
 
-use std::path::Path;
-
 use super::*;
-use crate::config::{Config, load_config};
+use crate::config::Config;
 use crate::scanner::scan_tree;
-use crate::testing::{canonical_test_path, test_root, write};
-use crate::workspace::scope_is_config_root;
+use crate::testing::{test_root, write};
 
 #[test]
 fn require_grounding_off_by_default() {
@@ -437,131 +434,5 @@ fn inline_style_strips_block_comment_continuation_prefix() {
             .iter()
             .any(|error| error.code == "inline-citation-style"),
         "block-comment `*` continuation markers must be stripped when `/*` is configured"
-    );
-}
-
-/// §FS-config.3.1.8: the load-time invariant the three budget keys carry —
-/// `inline_note_suggested_lines ≤ inline_note_max_lines` — so a config that
-/// suggests more lines than it permits is refused rather than loaded.
-#[test]
-fn inline_note_config_rejects_soft_cap_above_hard_cap() {
-    let root = test_root("inline_note_config_rejects_soft_cap_above_hard_cap");
-    write(
-        &root.join("grund.toml"),
-        "grund_config_version = 1\n\n[reference]\ninline_note_suggested_lines = 4\ninline_note_max_lines = 3\n",
-    );
-
-    let err = match load_config(&root) {
-        Ok(_) => panic!("invalid inline-note caps should fail"),
-        Err(err) => err,
-    };
-    assert!(
-        err.to_string()
-            .contains("reference.inline_note_suggested_lines must be <= inline_note_max_lines"),
-        "unexpected error: {err:#}"
-    );
-}
-
-/// §FS-config.3: `project_description` parses as optional one-line
-/// top-level metadata next to `project_name`.
-#[test]
-fn config_parses_project_description() {
-    let root = test_root("config_parses_project_description");
-    write(
-        &root.join("grund.toml"),
-        "project_name = \"api\"\nproject_description = \"Payment API service\"\n",
-    );
-
-    let config = load_config(&root).expect("load config");
-    assert_eq!(
-        config.project_description.as_deref(),
-        Some("Payment API service")
-    );
-}
-
-/// §FS-config.3: a `project_description` with an embedded line break is a
-/// config error at the offending line — the key feeds single-line
-/// workspace member bullets.
-#[test]
-fn config_rejects_multiline_project_description() {
-    let root = test_root("config_rejects_multiline_project_description");
-    write(
-        &root.join("grund.toml"),
-        "project_description = \"first\\nsecond\"\n",
-    );
-
-    let err = match load_config(&root) {
-        Ok(_) => panic!("multi-line project_description should fail"),
-        Err(err) => err,
-    };
-    assert!(
-        err.to_string()
-            .contains("project_description must be a single line"),
-        "unexpected error: {err:#}"
-    );
-}
-
-/// §FS-workspace.1.3, §AR-workspace.3.1: a marker-prefixed qualified
-/// citation (`<§>alias/<ID>`) is recognised; an unmarked `alias/<ID>` in
-/// prose is text. There is one scan mode, not two.
-#[test]
-fn marked_qualified_citation_is_recognised_unmarked_one_is_text() {
-    let root = test_root("marked_qualified_citation_is_recognised_unmarked_one_is_text");
-    let body = format!(
-        "# FS-login: Login\n\nMarked qualified: {marker}api/FS-login.\nBare path-shaped token: api/FS-login is just prose.\n",
-        marker = "§"
-    );
-    write(&root.join("docs/functional-spec/FS-login.md"), &body);
-
-    let mut config = Config::default_for(root.clone());
-    config.id_format = "{kind}-{slug}".into();
-    config.slug_pattern = "[a-z][a-z0-9-]*".into();
-    config.rebuild_grammar().expect("rebuild grammar");
-    let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan root");
-
-    assert_eq!(findings.citations.len(), 1, "exactly one citation expected");
-    let cite = &findings.citations[0];
-    assert_eq!(cite.namespace.as_deref(), Some("api"));
-    assert_eq!(cite.line, 3);
-}
-
-/// §AR-workspace.3.1: in non-strict mode, an unmarked `path/<ID>` must
-/// not be silently promoted to a qualified citation. Was a regression on
-/// the first workspace slice; this test pins the marker-anchored rule.
-#[test]
-fn non_strict_bare_token_with_slash_prefix_is_not_a_citation() {
-    let root = test_root("non_strict_bare_token_with_slash_prefix_is_not_a_citation");
-    write(
-        &root.join("docs/functional-spec/FS-login.md"),
-        "# FS-login: Login\n\nA bare path-looking token api/FS-other in prose.\n",
-    );
-
-    let mut config = Config::default_for(root.clone());
-    config.id_format = "{kind}-{slug}".into();
-    config.slug_pattern = "[a-z][a-z0-9-]*".into();
-    config.strict = false;
-    config.rebuild_grammar().expect("rebuild grammar");
-    let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan root");
-
-    assert!(
-        findings.citations.is_empty(),
-        "non-strict mode must not turn `path/FS-x` in prose into a citation"
-    );
-}
-
-#[test]
-fn workspace_root_scope_requires_canonical_root_for_explicit_path() {
-    let root = canonical_test_path(&test_root(
-        "workspace_root_scope_requires_canonical_root_for_explicit_path",
-    ));
-    let subdir = root.join("apps/api");
-    std::fs::create_dir_all(&subdir).expect("create subdir");
-    let config = Config::default_for(root.clone());
-
-    assert!(scope_is_config_root(&config, Path::new("."), false));
-    assert!(scope_is_config_root(&config, &root, true));
-    assert!(
-        !scope_is_config_root(&config, &subdir, true),
-        "an explicit subdirectory scope must not be promoted to workspace root"
     );
 }

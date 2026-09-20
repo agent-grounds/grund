@@ -83,4 +83,6 @@ mod tests_optional_members;
 #[cfg(test)]
 mod tests_run_warning_anchors;
 #[cfg(test)]
+mod tests_scope;
+#[cfg(test)]
 mod tests_unlisted_block;

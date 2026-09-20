@@ -99,3 +99,5 @@ mod tests_id_grammar;
 mod tests_kind_index;
 #[cfg(test)]
 mod tests_non_citable_kinds;
+#[cfg(test)]
+mod tests_validation;

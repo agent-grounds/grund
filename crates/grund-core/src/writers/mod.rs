@@ -81,6 +81,7 @@ mod fmt_links;
 mod fmt_local_sections;
 mod fmt_rewrite;
 mod fmt_shorthand_links;
+mod fmt_tree;
 mod fmt_value_bindings;
 mod fmt_workspace;
 mod id;
@@ -105,7 +106,7 @@ pub use init_plan::InitAgentEntrypointSelection;
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use fmt_rewrite::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};
+pub(crate) use fmt_tree::{FmtRunOpts, auto_cross_refs_for_scope, fmt_tree};
 pub(crate) use fmt_workspace::fmt_workspace_projects;
 pub(crate) use id::{format_id, slugify_title};
 
@@ -151,6 +152,8 @@ pub(crate) use integrations_clients::{ITERM2_SNIPPET, KITTY_SNIPPET, WEZTERM_SNI
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
+#[cfg(test)]
+mod tests_agent_entrypoints;
 #[cfg(test)]
 mod tests_id;
 #[cfg(test)]
