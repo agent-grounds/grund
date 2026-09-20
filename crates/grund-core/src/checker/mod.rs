@@ -40,6 +40,7 @@ mod index;
 mod index_entries;
 mod inline_style;
 mod near_miss;
+mod reference_scope;
 mod references;
 mod report;
 mod sections;
@@ -57,7 +58,7 @@ pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
 pub(crate) use homes::file_declares_inline_home;
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
-pub(crate) use references::{
+pub(crate) use reference_scope::{
     configured_scope, out_of_scope_references, retain_findings_in_scope,
     workspace_out_of_scope_references,
 };

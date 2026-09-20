@@ -124,6 +124,8 @@ mod tests_inline_site;
 #[cfg(test)]
 mod tests_local_section_citations;
 #[cfg(test)]
+mod tests_qualified_citations;
+#[cfg(test)]
 mod tests_scope_probe;
 #[cfg(test)]
 mod tests_section_body_scope;

@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use super::fmt_error::FmtScanAbort;
-use super::fmt_rewrite::{FmtRunOpts, FmtTreeOutcome, auto_cross_refs_for_scope, fmt_tree};
+use super::fmt_tree::{FmtRunOpts, FmtTreeOutcome, auto_cross_refs_for_scope, fmt_tree};
 use crate::config::Config;
 use crate::resolver::WorkspaceContext;
 

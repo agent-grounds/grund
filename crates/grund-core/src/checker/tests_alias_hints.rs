@@ -7,7 +7,8 @@
 //! the tiers never mix, when a narrowed run may reach them, that the list is
 //! sorted and cut at three, and how it is joined.
 
-use super::references::{nearest_project_aliases, tag_out_of_scope, unknown_project_message};
+use super::reference_scope::tag_out_of_scope;
+use super::references::{nearest_project_aliases, unknown_project_message};
 use crate::model::Diagnostic;
 use crate::resolver::join_alternatives;
 
