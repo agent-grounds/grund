@@ -2,7 +2,7 @@
 
 These supplementary examples turn repository evidence into `[scan]` settings
 without making the shipped init skill's primary workflow harder to scan. They
-apply the generated-config contract in §FS-init.2.4; include only directories
+apply the generated-config contract in [§FS-init.2.4](../functional-spec/FS-init.md#24-generated-grundtoml); include only directories
 that exist in the repository under analysis.
 
 ## Ruby / Rails
