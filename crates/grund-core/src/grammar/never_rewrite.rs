@@ -22,11 +22,10 @@ pub(crate) fn never_rewrite_context(line: &str, is_md: bool, marker_start: usize
     }
 }
 
-/// Where a Python docstring's **content** sits on one raw source line: the text
-/// between the `"""` / `'''` delimiters, and the byte offset it starts at
-/// (§AR-scanner.4.4). Empty on every other line — a code line, any line of a file
-/// that is not `.py`, any line under `docstring_python = false` — where the raw
-/// line is its own content and nothing below changes.
+/// Where a Python docstring's **content** and any assigned-data span sit on one
+/// raw source line (§AR-scanner.4.4, §FS-check.1.1.3.1). The docstring view is
+/// empty on every other line; the assigned-data span separately protects only
+/// its own raw bytes from scanner-aligned rewrites.
 ///
 /// §FS-fmt.2.3.1.1: a docstring's delimiters are doc-comment syntax, not quotes, so
 /// the never-rewrite walk runs over this slice rather than the raw line and a
@@ -37,17 +36,20 @@ pub(crate) fn never_rewrite_context(line: &str, is_md: bool, marker_start: usize
 #[derive(Clone, Copy, Default)]
 pub(crate) struct DocstringContent<'a> {
     span: Option<(usize, &'a str)>,
+    assigned_data_span: Option<(usize, usize)>,
 }
 
 impl<'a> DocstringContent<'a> {
     /// The content span of a line the scanner has already normalized
     /// (§AR-scanner.4.4). `SourceScanLine::text` is a slice of the raw line starting
     /// at `column_offset`, which is exactly the pair this view is.
-    pub(crate) fn of(scan: &SourceScanLine<'a>) -> Self {
+    pub(crate) fn of(scan: &SourceScanLine<'a>, raw_line: &'a str) -> Self {
         Self {
-            span: scan
-                .in_py_docstring
-                .then_some((scan.column_offset, scan.text)),
+            span: scan.in_py_docstring.then(|| {
+                let start = scan.column_offset;
+                (start, &raw_line[start..start + scan.text.len()])
+            }),
+            assigned_data_span: scan.assigned_data_span,
         }
     }
 
@@ -62,6 +64,12 @@ impl<'a> DocstringContent<'a> {
         self.span.is_some()
     }
 
+    /// Whether this line contains bytes belonging to an assigned triple-quoted
+    /// data span (§FS-check.1.1.3.1).
+    pub(crate) fn has_assigned_data(self) -> bool {
+        self.assigned_data_span.is_some()
+    }
+
     /// The text a never-rewrite question at raw-line offset `pos` is asked of, with
     /// `pos` translated into it. A position outside the content — the delimiter
     /// itself, or the code after a one-line docstring closes — is judged on the raw
@@ -73,6 +81,11 @@ impl<'a> DocstringContent<'a> {
             }
             _ => (raw_line, pos),
         }
+    }
+
+    fn is_assigned_data(self, pos: usize) -> bool {
+        self.assigned_data_span
+            .is_some_and(|(start, end)| start <= pos && pos < end)
     }
 }
 
@@ -86,6 +99,9 @@ pub(crate) fn never_rewrite_context_in(
     is_md: bool,
     marker_start: usize,
 ) -> bool {
+    if docstring.is_assigned_data(marker_start) {
+        return true;
+    }
     let (text, pos) = docstring.view(line, marker_start);
     never_rewrite_context(text, is_md, pos)
 }
@@ -94,6 +110,9 @@ pub(crate) fn never_rewrite_context_in(
 /// two `fmt` passes with no Markdown branch of their own, `replace_trigger` and
 /// `add_markers`, use.
 pub(crate) fn string_literal_in(docstring: DocstringContent<'_>, line: &str, pos: usize) -> bool {
+    if docstring.is_assigned_data(pos) {
+        return true;
+    }
     let (text, pos) = docstring.view(line, pos);
     is_inside_string_literal(text, pos)
 }
@@ -112,14 +131,14 @@ pub(crate) struct DocstringCursor {
     /// `true` only for a `.py` file in a project that scans docstrings; otherwise
     /// every line yields an empty view and no work is done.
     scanning: bool,
-    quote: Option<&'static str>,
+    state: PythonDocstringScanState,
 }
 
 impl DocstringCursor {
     pub(crate) fn new(is_py: bool, docstring_python: bool) -> Self {
         Self {
             scanning: is_py && docstring_python,
-            quote: None,
+            state: PythonDocstringScanState::default(),
         }
     }
 
@@ -128,10 +147,8 @@ impl DocstringCursor {
         if !self.scanning {
             return DocstringContent::default();
         }
-        let mut state = PythonDocstringScanState { quote: self.quote };
-        let scan = source_scan_line(line, true, true, &mut state);
-        self.quote = state.quote;
-        DocstringContent::of(&scan)
+        let scan = source_scan_line(line, true, true, &mut self.state);
+        DocstringContent::of(&scan, line)
     }
 
     /// The content view of `line` read from this cursor's *current* state, leaving

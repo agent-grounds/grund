@@ -152,7 +152,7 @@ pub(super) fn scan_file_text(
             md_headings.push((lineno, level));
         }
         let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
-        let scan_line = scan.text;
+        let scan_line = scan.text.as_ref();
         let source_value_context = value_line_contexts
             .as_ref()
             .and_then(|contexts| contexts.get(idx).copied().flatten());
@@ -484,7 +484,7 @@ pub(super) fn scan_file_text(
         let citation_line = CitationLine {
             scan_line,
             raw_line: line,
-            docstring: DocstringContent::of(&scan),
+            docstring: DocstringContent::of(&scan, line),
             column_offset: scan.column_offset,
             lineno,
             path,

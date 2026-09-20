@@ -2,9 +2,7 @@ use std::path::Path;
 
 use super::near_miss::declaration_id_on_line;
 use super::settings::LexicalSettings;
-use super::source_line::{
-    PythonDocstringScanState, SourceScanLine, python_docstring_quote, source_scan_line,
-};
+use super::source_line::{PythonDocstringScanState, SourceScanLine, source_scan_line};
 
 /// One comment block, classified: what opens it, where a docstring closes it,
 /// whether it declares an ID, and whether the language it is written in calls it
@@ -24,17 +22,10 @@ pub(crate) enum CommentBlockKind {
     PythonDocstring,
 }
 
-fn comment_block_kind(
-    line: &str,
-    is_py: bool,
-    lexical: LexicalSettings<'_>,
-) -> Option<CommentBlockKind> {
+fn comment_block_kind(line: &str, lexical: LexicalSettings<'_>) -> Option<CommentBlockKind> {
     let trimmed = line.trim_start();
     if trimmed.is_empty() {
         return None;
-    }
-    if lexical.docstring_python && is_py && python_docstring_quote(line).is_some() {
-        return Some(CommentBlockKind::PythonDocstring);
     }
     if lexical.comment_prefixes.iter().any(|prefix| prefix == "/*") && trimmed.starts_with("/*") {
         return Some(CommentBlockKind::Block);
@@ -71,10 +62,39 @@ pub(crate) fn comment_blocks(
     is_py: bool,
     lexical: LexicalSettings<'_>,
 ) -> Vec<(usize, usize, CommentBlockKind)> {
+    // §FS-check.1.1.3.1: use the shared line reader so assigned data cannot be
+    // mistaken for a docstring block by declaration, value, inline, or grounding
+    // consumers.
+    let mut py_state = PythonDocstringScanState::default();
+    let python_lines = lines
+        .iter()
+        .map(|line| {
+            let scan = source_scan_line(line, is_py, lexical.docstring_python, &mut py_state);
+            (
+                scan.in_py_docstring,
+                scan.closed_py_docstring,
+                scan.assigned_data_span.is_some(),
+            )
+        })
+        .collect::<Vec<_>>();
     let mut blocks = Vec::new();
     let mut index = 0;
     while index < lines.len() {
-        let Some(kind) = comment_block_kind(lines[index], is_py, lexical) else {
+        if python_lines[index].0 {
+            let start = index;
+            let mut end = index;
+            while end + 1 < lines.len() && !python_lines[end].1 {
+                end += 1;
+            }
+            blocks.push((start, end, CommentBlockKind::PythonDocstring));
+            index = end + 1;
+            continue;
+        }
+        if python_lines[index].2 {
+            index += 1;
+            continue;
+        }
+        let Some(kind) = comment_block_kind(lines[index], lexical) else {
             index += 1;
             continue;
         };
@@ -84,7 +104,7 @@ pub(crate) fn comment_blocks(
                 let mut end = index;
                 while end + 1 < lines.len()
                     && matches!(
-                        comment_block_kind(lines[end + 1], is_py, lexical),
+                        comment_block_kind(lines[end + 1], lexical),
                         Some(CommentBlockKind::Line(next)) if next == *marker
                     )
                 {
@@ -99,31 +119,12 @@ pub(crate) fn comment_blocks(
                 }
                 end
             }
-            CommentBlockKind::PythonDocstring => {
-                let quote = python_docstring_quote(lines[index]).unwrap_or("\"\"\"");
-                let mut end = index;
-                while end + 1 < lines.len()
-                    && !python_docstring_closes(lines[end], quote, end == start)
-                {
-                    end += 1;
-                }
-                end
-            }
+            CommentBlockKind::PythonDocstring => unreachable!("handled by the shared reader"),
         };
         blocks.push((start, end, kind));
         index = end + 1;
     }
     blocks
-}
-
-fn python_docstring_closes(line: &str, quote: &str, is_opening_line: bool) -> bool {
-    let trimmed = line.trim_start();
-    let search = if is_opening_line {
-        trimmed.strip_prefix(quote).unwrap_or(trimmed)
-    } else {
-        trimmed
-    };
-    search.contains(quote)
 }
 
 pub(crate) fn block_declares_id(
@@ -137,13 +138,20 @@ pub(crate) fn block_declares_id(
             source_scan_line(line, true, lexical.docstring_python, &mut py_docstring)
         } else {
             SourceScanLine {
-                text: line,
+                text: (*line).into(),
                 in_py_docstring: false,
                 column_offset: 0,
                 closed_py_docstring: false,
+                assigned_data_span: None,
             }
         };
-        declaration_id_on_line(lexical.grammar, scan.text, scan.in_py_docstring, false).is_some()
+        declaration_id_on_line(
+            lexical.grammar,
+            scan.text.as_ref(),
+            scan.in_py_docstring,
+            false,
+        )
+        .is_some()
     })
 }
 
