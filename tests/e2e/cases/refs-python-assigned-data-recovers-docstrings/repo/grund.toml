@@ -1,0 +1,12 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[[kinds]]
+kind = "FS"
+file = "docs/spec.md"
+
+[scan]
+include = ["docs", "src"]
+extensions = ["md", "py"]
