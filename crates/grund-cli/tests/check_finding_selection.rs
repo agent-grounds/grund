@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 const MAINTENANCE_TAIL: &str =
-    " — repo maintenance; citation checks still ran; wording changes in grund 0.14.0";
+    " — repo maintenance; citation checks still ran; wording changes in grund 0.15.0";
 const OUTDATED: &str = "outdated grund init block v3 (run `grund init` to update to v10)";
 
 fn fixture_root(name: &str) -> PathBuf {

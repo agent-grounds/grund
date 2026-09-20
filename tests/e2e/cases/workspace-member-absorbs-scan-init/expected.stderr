@@ -1,5 +1,5 @@
-warning: grund.toml:16: [workspace] members swallows this project's whole scan — every scan root is inside a member: `docs` in `docs` — so its declarations are unreachable and its citations are never checked. Point [scan] include at a directory that is not a member, or set include_root = false. This becomes an error in grund 0.14.0.
-warning: docs/grund.toml:16: [workspace] members swallows this project's whole scan — every scan root is inside a member: `sub` in `sub` — so its declarations are unreachable and its citations are never checked. Point [scan] include at a directory that is not a member, or set include_root = false. This becomes an error in grund 0.14.0.
+warning: grund.toml:16: [workspace] members swallows this project's whole scan — every scan root is inside a member: `docs` in `docs` — so its declarations are unreachable and its citations are never checked. Point [scan] include at a directory that is not a member, or set include_root = false. This becomes an error in grund 0.15.0.
+warning: docs/grund.toml:16: [workspace] members swallows this project's whole scan — every scan root is inside a member: `sub` in `sub` — so its declarations are unreachable and its citations are never checked. Point [scan] include at a directory that is not a member, or set include_root = false. This becomes an error in grund 0.15.0.
 would-append CLAUDE.md
 exists grund.toml
 

@@ -57,7 +57,7 @@ fn issue_49_deprecated_adapter_accepts_check_finding_selectors() {
 #[test]
 fn issue_49_agents_init_compatibility_messages_cover_all_five_variants() {
     const TAIL: &str =
-        " — repo maintenance; citation checks still ran; wording changes in grund 0.14.0";
+        " — repo maintenance; citation checks still ran; wording changes in grund 0.15.0";
 
     let stale = current_block().replacen(
         "### Citation directions\n",

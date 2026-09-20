@@ -75,7 +75,7 @@ fn unlisted_block_repo_at(root: PathBuf) -> PathBuf {
 const TICKET_MESSAGE: &str = "b/grund.toml:7: this [workspace] is listed by no enclosing workspace \
          — the projects under it are absorbed into `root` instead of named under their own alias path; \
          add \"b\" to [workspace] members in grund.toml, or keep it out of that project's [scan] \
-         — an unlisted [workspace] becomes an error in grund 0.14.0";
+         — an unlisted [workspace] becomes an error in grund 0.15.0";
 
 /// Every message this rule reported, in report order — what a case about *how
 /// many* findings one block earns asserts on.
@@ -472,8 +472,8 @@ fn an_ancestor_that_names_nothing_here_silences_nothing() {
 /// §FS-check.3.18.9 records. Read out of the message rather than off the
 /// constant on purpose: the message is the promise a user was given.
 #[test]
-fn the_named_error_release_is_0_14_0_and_still_ahead() {
-    let root = unlisted_block_repo("the_named_error_release_is_0_14_0_and_still_ahead");
+fn the_named_error_release_is_0_15_0_and_still_ahead() {
+    let root = unlisted_block_repo("the_named_error_release_is_0_15_0_and_still_ahead");
     let run = check_run(&root, false);
     let message = only(&run, "unlisted-workspace-block").message.clone();
     let marker = "becomes an error in grund ";
@@ -483,7 +483,7 @@ fn the_named_error_release_is_0_14_0_and_still_ahead() {
         .unwrap_or_else(|| panic!("the warning must name its release: {message}"))
         .trim()
         .to_string();
-    assert_eq!(named, "0.14.0", "#72 and #78 ramp into the same release");
+    assert_eq!(named, "0.15.0", "#72 and #78 ramp into the same release");
     let version = |text: &str| {
         text.split('.')
             .map(|part| part.trim_end_matches(|c: char| !c.is_ascii_digit()))

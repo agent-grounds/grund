@@ -12,7 +12,7 @@ use super::references::{nearest_project_aliases, unknown_project_message};
 use crate::model::Diagnostic;
 use crate::resolver::join_alternatives;
 
-const SCOPE_CLARIFICATION_SUFFIX: &str = " — here, the {scope} subtree means the {scope} project and its descendants; this wording changes in grund 0.14.0";
+const SCOPE_CLARIFICATION_SUFFIX: &str = " — here, the {scope} subtree means the {scope} project and its descendants; this wording changes in grund 0.15.0";
 
 fn legacy_scope_only_message(namespace: &str, scope: &str) -> String {
     format!(
@@ -105,7 +105,7 @@ fn proper_prefix_messages_use_the_exact_candidate_phrasing() {
 /// §FS-check.3.8.4 / §FS-errors.3.3: the scope-only message across two
 /// releases. In 0.13.2 the complete legacy diagnostic stays a contiguous
 /// prefix for consumers that match it, and the clarification suffix that
-/// announces the 0.14.0 wording is byte-exact.
+/// announces the 0.15.0 wording is byte-exact.
 #[test]
 fn narrowed_scope_only_message_has_the_0132_compatibility_form() {
     let actual = unknown_project_message("alpha", ["group/alpha"].into_iter(), "group");

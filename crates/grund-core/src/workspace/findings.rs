@@ -30,7 +30,7 @@ use crate::model::{Diagnostic, format_path, relative_from_base};
 /// when it bites tells a maintainer they have a problem and not that they have a
 /// deadline, and a unit test holds it ahead of the running version so the window
 /// cannot expire unnoticed.
-pub(crate) const ABSORBED_SCAN_ERROR_RELEASE: &str = "0.14.0";
+pub(crate) const ABSORBED_SCAN_ERROR_RELEASE: &str = "0.15.0";
 
 /// §FS-workspace.2.1.1: each of the block's own walk roots that a member root
 /// covers, rendered `` `<root>` in `<member>` `` — empty unless **every** root
