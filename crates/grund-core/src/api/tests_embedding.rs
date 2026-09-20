@@ -11,6 +11,7 @@ use super::*;
 use crate::compat::main_entry;
 use crate::queries::{LspSnapshotOpts, ShowFormat, ShowMode, ShowOpts, can_replace_trigger_at};
 use crate::testing::{canonical_test_path, test_root, write};
+use crate::writers::{InitOpts, init};
 
 /// §FS-distribution.3.0.2: the `ShowOpts` a binding's `show` takes, at the
 /// shape the leaf spells. The three calls here pin it: `..ShowOpts::default()`
