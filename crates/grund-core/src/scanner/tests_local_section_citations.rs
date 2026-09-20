@@ -73,9 +73,9 @@ fn local_numeric_paths_use_marker_boundaries_and_markdown_body_ownership() {
             ("@2..1", None),
             ("@2...", None),
             ("@2..goals", None),
-            ("@2", None),
+            ("@2", Some("2")),
         ],
-        "malformed dotted tokens stay whole and never become graph edges"
+        "unsupported tokens stay whole; the ownerless numeric candidate keeps its syntax"
     );
     assert_eq!(
         scans[0]

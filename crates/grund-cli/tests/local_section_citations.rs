@@ -1,5 +1,6 @@
 //! CLI contracts for declaration-local numeric citations across check, refs, and
-//! cover text/JSON surfaces (§FS-check.3.24, §FS-refs.2, §FS-cover.2).
+//! cover text/JSON surfaces (§FS-check.3.24, §FS-refs.2, §FS-cover.2), with
+//! deterministic finding order (§FS-errors.4.1).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -77,8 +78,8 @@ fn check_text_reports_owned_missing_unsupported_and_ownerless_local_forms() {
             "docs/FS-a.md:5: error: missing section FS-a.9.9\n",
             "docs/FS-a.md:6: error: unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it\n",
             "docs/FS-a.md:7: error: unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it\n",
-            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it\n",
             "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it\n",
+            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it\n",
             "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it\n",
             "docs/FS-a.md:10: error: missing section FS-a.9\n",
             "docs/outside.md:3: error: local section citation \u{a7}2 has no enclosing declaration; write a full citation or <§>2 to show the shape without citing it\n",

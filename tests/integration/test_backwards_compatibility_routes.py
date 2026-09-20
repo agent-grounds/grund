@@ -59,10 +59,14 @@ def _release_entry(text, *markers):
 
 def _verdict_route_citations(text):
     section = _section(text, 1)
-    clause = re.search(r"The \*\*verdict\*\*[^.\n]*\.", section)
+    clause = re.search(r"The \*\*verdict\*\*[^\n]*?\.(?=\s|$)", section)
     if not clause:
         raise AssertionError("section 1 has no verdict-route clause")
-    return set(re.findall(r"§(\d+(?:\.\d+)*)\b", clause.group(0)))
+    return {
+        section
+        for requirement, section in REQUIREMENT_SECTION_RE.findall(clause.group(0))
+        if requirement == "REQ-backwards-compatibility"
+    }
 
 
 def _release_entries():
@@ -122,7 +126,8 @@ def _correction_route_errors(text, release_entries, catalog):
 
     for section, name in (("2", "deprecation"), ("3", "mechanical migration")):
         if not re.search(
-            rf"§{section}[^.\n]*(?:cannot|does not|doesn't|has no|there is no)",
+            rf"\u00a7REQ-backwards-compatibility\.{section}(?![\w.-])"
+            rf"(?:\]\([^\n)]+\))?[^.\n]*(?:cannot|does not|doesn't|has no|there is no)",
             route,
             re.IGNORECASE,
         ):
@@ -178,9 +183,13 @@ class RequirementRouteTests(unittest.TestCase):
 
     def test_unapproved_route_cannot_hide_from_the_exhaustive_check(self):
         mutated = self.text.replace(
-            "moves only by \u00a72, \u00a73, or \u00a75",
-            "moves only by \u00a72, \u00a73, \u00a75, or \u00a76",
+            "or [\u00a7REQ-backwards-compatibility.5]",
+            "[\u00a7REQ-backwards-compatibility.6]"
+            "(REQ-backwards-compatibility.md#6-unapproved-route), "
+            "or [\u00a7REQ-backwards-compatibility.5]",
+            1,
         )
+        self.assertNotEqual(self.text, mutated, "the synthetic route must be inserted")
         self.assertEqual({"2", "3", "5", "6"}, _verdict_route_citations(mutated))
 
     def test_correction_route_keeps_all_five_gates_conjunctive(self):
@@ -205,7 +214,9 @@ class RequirementRouteTests(unittest.TestCase):
         )
         self.assertRegex(
             conditions["Accepted proof"],
-            r"accepted decision record.*proves both the conflict.*neither the \u00a72 .* nor the \u00a73",
+            r"accepted decision record.*proves both the conflict.*"
+            r"neither the \[\u00a7REQ-backwards-compatibility\.2\].* "
+            r"nor the \[\u00a7REQ-backwards-compatibility\.3\]",
         )
         self.assertRegex(
             conditions["Named release"], r"release names the verdict change"
