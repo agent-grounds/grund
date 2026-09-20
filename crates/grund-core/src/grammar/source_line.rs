@@ -173,8 +173,7 @@ fn python_assigned_data_quote(line: &str) -> Option<(usize, usize, &'static str)
         cursor += 1;
     }
     if bytes.get(cursor) == Some(&b':') {
-        cursor += 1;
-        cursor += line[cursor..].find('=')?;
+        cursor = annotation_assignment_index(line, cursor + 1)?;
     }
     if bytes.get(cursor) != Some(&b'=') {
         return None;
@@ -204,6 +203,50 @@ fn python_assigned_data_quote(line: &str) -> Option<(usize, usize, &'static str)
     Some((literal_start, cursor, quote))
 }
 
+/// Find the top-level assignment after an annotation without parsing the
+/// annotation as a Python expression (§FS-check.1.1.3.1). Quotes and balanced
+/// delimiters are enough to keep their internal `=` bytes from becoming the
+/// assignment boundary; the caller still requires a direct triple-string RHS.
+fn annotation_assignment_index(line: &str, mut cursor: usize) -> Option<usize> {
+    let bytes = line.as_bytes();
+    let mut nesting = 0usize;
+    while let Some(byte) = bytes.get(cursor).copied() {
+        match byte {
+            b'\'' | b'"' => {
+                let quote_len = if bytes.get(cursor..cursor + 3) == Some(&[byte, byte, byte][..]) {
+                    3
+                } else {
+                    1
+                };
+                let quote = &line[cursor..cursor + quote_len];
+                let close = matching_unescaped_quote(line, cursor + quote_len, quote)?;
+                cursor = close + quote_len;
+            }
+            b'(' | b'[' | b'{' => {
+                nesting += 1;
+                cursor += 1;
+            }
+            b')' | b']' | b'}' => {
+                nesting = nesting.saturating_sub(1);
+                cursor += 1;
+            }
+            b'=' if nesting == 0 && is_assignment_equal(bytes, cursor) => return Some(cursor),
+            b'#' if nesting == 0 => return None,
+            _ => cursor += 1,
+        }
+    }
+    None
+}
+
+fn is_assignment_equal(bytes: &[u8], index: usize) -> bool {
+    !matches!(
+        index
+            .checked_sub(1)
+            .and_then(|previous| bytes.get(previous)),
+        Some(b'=' | b'!' | b'<' | b'>' | b':')
+    ) && bytes.get(index + 1) != Some(&b'=')
+}
+
 /// Find a matching delimiter whose immediately preceding backslash run is even
 /// (§FS-check.1.1.3.1).
 fn matching_unescaped_quote(line: &str, mut from: usize, quote: &str) -> Option<usize> {
@@ -217,7 +260,7 @@ fn matching_unescaped_quote(line: &str, mut from: usize, quote: &str) -> Option<
         if slash_count % 2 == 0 {
             return Some(index);
         }
-        from = index + quote.len();
+        from = index + 1;
     }
     None
 }
