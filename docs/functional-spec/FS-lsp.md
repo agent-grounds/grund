@@ -12,6 +12,12 @@ A single malformed or failing message is not fatal to the session: a request tha
 
 ### 1.1 Diagnostics
 
+The server publishes every declaration-local numeric citation verdict from
+[§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) through the ordinary core
+report: the same code, severity, message, and complete authored-token range as `check`. A missing
+owned path also publishes the independent missing-section finding. Ownerless and unsupported
+forms receive no guessed target.
+
 `textDocument/publishDiagnostics` pushes `grund check` results as the user edits. Each unknown reference, missing section, duplicate declaration, broken stub, and citation-direction violation — a required citation absent ([§FS-check.3.11](FS-check.md#311-missing-required-citation)) or a forbidden one present ([§FS-check.3.12](FS-check.md#312-forbidden-citation)) — becomes a diagnostic with the same `path:line: <message>` content the CLI prints to stdout ([§FS-errors.2.1](FS-errors.md#21-located-finding)). The advisory `should` / `should-not` suggestions channel ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)) is opt-in on the CLI and is not pushed as diagnostics. Severity follows the engine's severity model ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization) — not configurable).
 
 Where each diagnostic anchors is §1.1.1. Value, named-section, and missing-snapshot findings are transported from the core report rather than derived by the server (§1.1.2), and the `[workspace]` warnings on the run's warning channel are published too (§1.1.3).
@@ -96,6 +102,14 @@ diagnostic suppression remain unchanged
 ([§FS-config.3.4.3](FS-config.md#343-title)).
 
 ### 1.3 Go-to-definition
+
+An owned declaration-local numeric citation has the same definition target as its canonical full
+citation: the exact numeric section heading. It participates in declaration and exact-section
+references and in document highlights while retaining its local origin range. A missing,
+ownerless, ambiguous, or unsupported local token has no definition, reference identity, document
+link, hover target, or highlights. This adds no `$$2` on-type expansion and no quick-fix;
+[§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform) continues to transform only the existing
+trigger and number-only ID shorthand forms.
 
 `textDocument/definition` on a citation jumps to the declaration's `path:line`. For a stub-and-inline-source pair ([§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub)), the server follows the stub's link and lands on the inline declaration line directly — the user does not stop at the stub — and the same is true anywhere on the stub heading's ID or title text, which is one navigable title span. A normal Markdown declaration heading uses the same whole-title span for declaration-side requests: definition-as-usages and references return the citations of that ID. A numbered section heading inside a declaration body — `## 1. …`, addressable as `<ID>.<section>` — is itself a declaration-side title with the same behaviour, scoped to the section: definition and references on it return the citations of that section (`§<ID>.<section>` and any deeper subsection) rather than of the whole ID.
 

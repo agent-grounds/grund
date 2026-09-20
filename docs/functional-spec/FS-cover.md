@@ -21,6 +21,8 @@ A `--format` value outside `text|json` is a usage error the caller can fix witho
 
 `cover` runs the same scan as `check`, `list`, and `refs` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)) and only renders the `Findings` the scanner already collected. It does not decide whether a file is sufficiently covered, whether a hunk is behavioral, or whether a spec/test co-change is required; those are recipe concerns ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)).
 
+An owned declaration-local numeric citation ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) is one ordinary resolved citation in this grouping: it carries the owner's full ID and exact section while its `text` remains the authored local spelling. It therefore also counts for unused-declaration, grounding, and citation-direction questions that consume the same graph. Ownerless and unsupported local candidates contribute no guessed edge.
+
 Output is grouped by scanned file, sorted by path. Within a file, citations are sorted by `(line, column)`. Files with no recognised citations are still included, so a caller can distinguish "the file was scanned and cites nothing" from "the file was outside the scan scope." A citation object is the same shape `grund refs --format=json` emits (§3.2): path, line, column, rendered ID, optional section, marker boolean, and the verbatim token text.
 
 Which citations count is §2.1 for a cross-project one, §2.2 for a value binding's, §2.3 for one whose fetched snapshot is missing, and §2.4 for a declaration-backed exact one.

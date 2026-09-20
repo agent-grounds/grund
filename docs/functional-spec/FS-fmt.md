@@ -100,7 +100,17 @@ ID-shaped text inside a Markdown link destination is not rewritten, because rewr
 
 Where a marker-origin number-only shorthand citation ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) resolves to exactly one declaration, consult the target project's `[reference] shorthand` policy. Under `canonical`, rewrite it to the canonical full ID: `§FS-042` becomes `§FS-042-user-login`, preserving any `.<section>` suffix and any `<alias>/` namespace. This is the bulk fix-it for the [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) error — `grund fmt --write` clears a tree of them in one pass, which is what lets that finding be an error ([§DF-number-only-citation-shorthand.2.2](../decisions/functional/DF-number-only-citation-shorthand.md#22-where-the-shorthand-is-accepted-and-where-it-is-an-error)), except in a suppressed scope (§2.5) or an external file-symlink target (§2.3.2), which it does not write. Under `accepted`, dry-run and write mode offer no shorthand-to-canonical change and preserve the visible shorthand token byte-for-byte.
 
+An owned declaration-local numeric citation ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) is expanded to the configured marker, its unique enclosing declaration's full ID, the configured ID/section separator, and its numeric path. This rewrite is independent of `[reference] shorthand`: declaration-local spelling is never an accepted stored form ([§DF-declaration-local-section-shorthand](../decisions/functional/DF-declaration-local-section-shorthand.md#df-declaration-local-section-shorthand-local-numeric-section-citations-are-recognized-but-never-canonical)). Dry-run reports the complete replacement and write mode applies the same bytes.
+
 A shorthand that matches no declaration, or more than one, is **left alone**: `fmt` normalizes, it does not guess, and `check` is where the ambiguity is reported. The never-rewrite zones of §2.3 apply unchanged — and because the ones for inline code, a Markdown link destination, and a source string literal do, [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) withholds its canonical-policy error there, so no finding in those places asks for a rewrite this pass refuses to make.
+
+For a declaration-local candidate, automatic replacement likewise requires one owner and a site
+permitted by every existing writer rule. Ownerless, ambiguous, and unsupported tokens are left
+byte-identical. Suppression, external symlinks, fences, inline code, Markdown link destinations,
+declaration headings, and source strings keep their existing protections. Unlike number-only ID
+shorthand, [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) remains loud in a
+protected site and supplies the manual full replacement for an owned token, or full-citation/
+escape guidance where no target is known.
 
 The rewrite fires only on a whole token (§2.4.2) outside a numeric run (§2.4.1). A typed trigger expands under both policies (§2.4.3), a qualified citation follows the aliased project (§2.4.4), the declaration set is scanned on first use (§2.4.5), and the report labels each expansion `shorthand → canonical` with the text it writes (§3.6).
 
