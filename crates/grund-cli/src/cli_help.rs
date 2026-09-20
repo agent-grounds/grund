@@ -82,7 +82,7 @@ fn print_subcommand_help(cmd: &str) {
             );
             println!();
             println!(
-                "Usage:  grund list [PATH] [--kind KIND[,KIND]...] [--unused] [--summary]"
+                "Usage:  grund list [PATH] [--kind KIND[,KIND]...] [--selector SUBJECT] [--unused] [--summary]"
             );
             println!(
                 "                   [--size[=lines,words,bytes]] [--top N] [--format text|json]"
@@ -101,6 +101,9 @@ fn print_subcommand_help(cmd: &str) {
             println!("Options:");
             println!(
                 "  --kind KIND[,KIND]  only selected kinds; repeatable       e.g. grund list --kind FS,AR"
+            );
+            println!(
+                "  --selector SUBJECT  only one declaration/chapter selector, e.g. FS.requirements"
             );
             println!(
                 "  --unused            only declarations nothing cites yet (skips E2E unless E2E is selected)"
@@ -126,6 +129,7 @@ fn print_subcommand_help(cmd: &str) {
             println!("  grund list                      # the whole catalog");
             println!("  grund list --kind FS,AR docs/   # specs and architecture IDs under docs/");
             println!("  grund list --summary            # counts by kind");
+            println!("  grund list --selector FS.requirements # every FS requirements chapter");
             println!("  grund list --size=words --top 10 # largest point leads");
             println!(
                 "  grund list --unused             # uncited declarations (specs, decisions, …) — E2E cases excluded"

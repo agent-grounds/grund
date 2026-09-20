@@ -16,9 +16,9 @@ use std::path::{Path, PathBuf};
 use super::config_findings::config_diagnostics;
 use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
 use crate::checker::{
-    check_findings, check_with_workspace, configured_scope, out_of_scope_references,
-    out_of_scope_section_headings, retain_findings_in_scope, sort_diagnostics,
-    workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
+    check_chapter_rules, check_findings, check_with_workspace, configured_scope,
+    out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc, retain_findings_in_scope,
+    sort_diagnostics, workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Diagnostic};
@@ -47,8 +47,13 @@ pub(crate) fn run_check(
     path_provided: bool,
     force_require_grounding: bool,
     full: bool,
+    ad_hoc_sentence: Option<&str>,
 ) -> Result<CheckRun> {
     let mut config = resolve_workspace_config(path)?;
+    // §FS-rules.4: ad-hoc grammar/vocabulary refusals happen before scanning.
+    let ad_hoc = ad_hoc_sentence
+        .map(|sentence| parse_ad_hoc(&config, sentence))
+        .transpose()?;
     // §FS-check.1.3: `--full` cancels `[scan] include` for the walk. It is a
     // per-run flag, never a config key (§DF-check-full-scope.2.5).
     config.scan_full = full;
@@ -59,7 +64,7 @@ pub(crate) fn run_check(
         config.require_grounding = true;
     }
     if config.workspace_declared && scope_is_config_root(&config, path, path_provided) {
-        return run_workspace_check(config, force_require_grounding, full);
+        return run_workspace_check(config, force_require_grounding, full, ad_hoc);
     }
 
     let (mut findings, scan_errors) = scan_tree(&config, Some(path), path_provided)?;
@@ -72,6 +77,13 @@ pub(crate) fn run_check(
     out_of_scope.extend(out_of_scope_section_headings(&findings, scope.as_ref()));
     retain_findings_in_scope(&mut findings, scope.as_ref());
     let mut report = check_findings(&findings, &config);
+    check_chapter_rules(
+        &findings,
+        &config,
+        scan_errors.is_empty(),
+        ad_hoc,
+        &mut report,
+    );
     let had_scan_errors = append_scan_errors(&mut report, scan_errors);
     // §FS-check.2.2 / §FS-check.4.5: a walk that read no files, or read them and
     // recognized nothing in them, is almost always a misconfigured scope rather
@@ -140,6 +152,7 @@ fn run_workspace_check(
     mut root_config: Config,
     force_require_grounding: bool,
     full: bool,
+    ad_hoc: Option<crate::rules::sentence::ParsedRule>,
 ) -> Result<CheckRun> {
     let mut projects = load_workspace_projects(&mut root_config)?;
     // §FS-check.3.5: `--require-grounding` propagates to every member's
@@ -185,6 +198,13 @@ fn run_workspace_check(
             &root_config,
             Some(&project.alias),
             &workspace,
+        );
+        check_chapter_rules(
+            &project.findings,
+            &project.config,
+            project.scan_errors.is_empty(),
+            ad_hoc.clone(),
+            &mut project_report,
         );
         let project_has_findings =
             !project_report.errors.is_empty() || !project_report.warnings.is_empty();

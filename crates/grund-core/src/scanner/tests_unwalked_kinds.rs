@@ -197,7 +197,7 @@ fn a_single_file_unwalked_home_is_not_walked() {
 #[test]
 fn an_explicit_path_argument_reads_an_unwalked_home() {
     let root = templates_repo("an_explicit_path_argument_reads_an_unwalked_home", "");
-    let run = run_check(&root.join("templates"), true, false, false).expect("check run");
+    let run = run_check(&root.join("templates"), true, false, false, None).expect("check run");
     let codes = codes(&run);
     assert!(
         codes.iter().any(|code| code == "dangling"),

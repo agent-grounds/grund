@@ -107,7 +107,7 @@ fn the_flag_does_not_override_an_explicit_row_false() {
         UNCITED_SKILL,
         UNCITED_CODE,
     );
-    let run = run_check(&root, true, true, false).expect("check run");
+    let run = run_check(&root, true, true, false, None).expect("check run");
     assert_eq!(
         ungrounded(&run),
         vec!["src/main.rs:1: ungrounded source file: no § citation to a declared ID"],

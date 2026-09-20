@@ -33,6 +33,7 @@
 //! reads it downward (§AR-system.4).
 
 mod agents;
+mod chapter_rules;
 mod citations;
 mod grounding;
 mod homes;
@@ -55,6 +56,7 @@ pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
+pub(crate) use chapter_rules::{check_chapter_rules, configured_rule_sentences, parse_ad_hoc};
 pub(crate) use homes::file_declares_inline_home;
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;

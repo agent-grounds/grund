@@ -282,6 +282,7 @@ impl Config {
                 require_grounding: None,
                 grounding_level: None,
                 values: false,
+                rules: false,
                 format: None,
                 resolve: None,
                 fetch: None,

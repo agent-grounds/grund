@@ -126,7 +126,8 @@ pub(super) fn scan_file_text(
     // §AR-scanner.2.4.2: citing-side classification is consumed only by the
     // citation-direction checks, so it is computed only when the project declares
     // `[citations]` and the caller asked for it (§AR-benchmarks).
-    let classify = config.classify_citation_sources && config.citations.declared;
+    let classify = config.classify_citation_sources
+        && (config.citations.declared || config.kinds.iter().any(|kind| kind.rules));
     // §AR-scanner.2.4.1: every Markdown heading (line, level) outside a fence — a
     // declaration body runs until the next heading at the same or higher level.
     let mut md_headings: Vec<(usize, usize)> = Vec::new();
@@ -479,6 +480,7 @@ pub(super) fn scan_file_text(
                 // §AR-scanner.2.4: classified in the post-pass below.
                 source_kind: String::new(),
                 enclosing_declaration: None,
+                enclosing_section: None,
             });
         }
         let citation_line = CitationLine {

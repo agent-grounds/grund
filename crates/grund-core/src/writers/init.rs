@@ -10,11 +10,12 @@ use super::init_render::{agents_workspace_members_section, init_pending_effectiv
 use super::init_target::{
     derive_default_name, refuse_init_global_instruction_paths, refuse_init_target,
 };
+use crate::checker::configured_rule_sentences;
 use crate::config::{Config, config_file_in};
 use crate::model::{Finding, format_path};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
-    effective_scope_reads_any_file,
+    effective_scope_reads_any_file, scan_tree,
 };
 use crate::templates::{
     AS_README_TEMPLATE, ConversationSurface, DA_README_TEMPLATE, DF_README_TEMPLATE,
@@ -175,6 +176,38 @@ impl std::fmt::Display for InitError {
 
 impl std::error::Error for InitError {}
 
+/// Add v11's conditional chapter-rule section while leaving the v10 bytes
+/// untouched for every project without a rule kind (§FS-rules.9).
+fn render_chapter_rules(
+    mut block: String,
+    rule_kind_enabled: bool,
+    rows: &[(String, String)],
+) -> String {
+    if !rule_kind_enabled {
+        return block;
+    }
+    block = block.replacen(
+        "Grounding with grund (v10)",
+        "Grounding with grund (v11)",
+        1,
+    );
+    let mut section = String::from(
+        "### Chapter rules\n\n`must`/`must not` are `grund check` errors; `should`/`should not` are suggestions (`grund check --suggestions`).\n\n",
+    );
+    for (origin, sentence) in rows {
+        section.push_str(&format!("- {sentence} §{origin}\n"));
+    }
+    let insertion = block
+        .find("\n### Clickable citations")
+        .or_else(|| block.find("\n<!-- END GRUND MANAGED BLOCK -->"));
+    if let Some(index) = insertion {
+        block.insert_str(index, &format!("\n{section}"));
+    } else {
+        block.push_str(&format!("\n{section}"));
+    }
+    block
+}
+
 /// Scaffold a grund setup into `opts.target`: the agent-instruction
 /// entrypoints, `grund.toml`, and — with `--docs` — the documentation stubs.
 ///
@@ -260,6 +293,20 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     // workspace renderer owns init's diagnostics and error-tolerant behavior.
     let _ = populate_workspace_boundary(&mut init_config);
     let reach = CanonicalSurfaceReach::for_config(&init_config);
+    // §FS-rules.4 / §FS-init.2.3.5: validate scanned rule declarations before
+    // any entrypoint write, then reuse their exact titles in managed guidance.
+    let rule_kind_enabled = init_config.kinds.iter().any(|kind| kind.rules);
+    let rule_rows = if rule_kind_enabled {
+        let (findings, errors) = scan_tree(&init_config, Some(&target), true)
+            .map_err(|err| InitError::new(err.to_string()))?;
+        if let Some((path, message)) = errors.first() {
+            return Err(InitError::new(format!("{}: {message}", path.display())));
+        }
+        configured_rule_sentences(&findings, &init_config)
+            .map_err(|err| InitError::new(err.to_string()))?
+    } else {
+        Vec::new()
+    };
 
     let agent_entrypoints = match selected_init_agent_entrypoints(&target, &agent_selection, reach)
     {
@@ -293,7 +340,9 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     // Render the managed block once and reuse it for both surfaces: the two
     // surfaces differ in one sentence only (§FS-init.2.3.4.17.2).
     let render_block = |surface| {
-        render_agents_append_block(&resolved_name, &init_config, &workspace_members, surface)
+        let block =
+            render_agents_append_block(&resolved_name, &init_config, &workspace_members, surface);
+        render_chapter_rules(block, rule_kind_enabled, &rule_rows)
     };
     let agents_block = render_block(ConversationSurface::Plain);
     let claude_block = agent_entrypoints

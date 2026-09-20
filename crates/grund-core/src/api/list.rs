@@ -16,6 +16,7 @@ use crate::grammar::render_id;
 use crate::model::{Declaration, Finding, Id, format_path, is_stub_for_inline_decl, sort_path_key};
 use crate::queries::ListCitationCounts;
 use crate::resolver::{WorkspaceProject, load_workspace_context};
+use crate::rules::sentence::{RuleSubject, RuleVocabulary, parse_selector};
 
 use super::report::context_run_warnings;
 use crate::scanner::{ApiScanError, api_scan_error};
@@ -27,6 +28,8 @@ pub struct ListOpts {
     pub kind_filter: BTreeSet<String>,
     pub project_filter: BTreeSet<String>,
     pub unused_only: bool,
+    /// Optional declaration/chapter selector (§FS-rules.8).
+    pub selector: Option<String>,
 }
 
 impl Default for ListOpts {
@@ -37,6 +40,7 @@ impl Default for ListOpts {
             kind_filter: BTreeSet::new(),
             project_filter: BTreeSet::new(),
             unused_only: false,
+            selector: None,
         }
     }
 }
@@ -45,6 +49,8 @@ impl Default for ListOpts {
 pub struct ListEntry {
     pub project: Option<String>,
     pub id: String,
+    /// Exact named-section path for a chapter row; declaration rows omit it.
+    pub section: Option<String>,
     pub kind: String,
     pub path: String,
     pub line: usize,
@@ -170,6 +176,24 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             return Err(anyhow!("{headline}\nknown kinds: {}", known.join(", ")));
         }
     }
+    let selected_projects = || {
+        context.projects.iter().filter(|project| {
+            opts.project_filter.is_empty() || opts.project_filter.contains(&project.alias)
+        })
+    };
+    let vocabulary = RuleVocabulary {
+        kinds: selected_projects()
+            .flat_map(|project| project.config.kinds.iter())
+            .filter(|kind| kind.citable)
+            .map(|kind| kind.kind.clone())
+            .collect(),
+        named_sections: selected_projects().all(|project| project.config.named_sections),
+    };
+    let selector = opts
+        .selector
+        .as_deref()
+        .map(|raw| parse_selector(raw, &vocabulary).map_err(|error| anyhow!(error.message)))
+        .transpose()?;
 
     struct Entry<'a> {
         project_alias: &'a str,
@@ -245,6 +269,29 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         });
     }
 
+    // Validate the selector against the selected catalog before producing any
+    // rows. Kind selectors may span workspace members; an exact literal must
+    // resolve once, just as a rule subject does (§FS-rules.2, §FS-rules.8).
+    if let Some(subject) = &selector {
+        let literal = match subject {
+            RuleSubject::ExactDeclaration(literal) => Some(literal.as_str()),
+            RuleSubject::ExactChapter { declaration, .. } => Some(declaration.as_str()),
+            _ => None,
+        };
+        if let Some(literal) = literal {
+            let exact_matches = entries
+                .iter()
+                .filter(|entry| render_id(&entry.project_config.grammar, entry.id) == literal)
+                .collect::<Vec<_>>();
+            if exact_matches.is_empty() {
+                return Err(anyhow!("literal subject {literal} does not resolve"));
+            }
+            if exact_matches.len() > 1 {
+                return Err(anyhow!("literal subject {literal} is ambiguous"));
+            }
+        }
+    }
+
     let render_qualified = |entry: &Entry<'_>| -> String {
         if context.workspace_loaded {
             format!(
@@ -259,49 +306,110 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
     let render_config = context.render_config();
     let public_entries = entries
         .iter()
-        .map(|entry| ListEntry {
-            project: context
-                .workspace_loaded
-                .then(|| entry.project_alias.to_string()),
-            id: render_qualified(entry),
-            kind: entry.id.kind.clone(),
-            path: display_path(render_config, &entry.home.file),
-            line: entry.home.line,
-            title: entry.home.title.clone(),
-            stub: entry.home.is_stub,
-            defines: entry
-                .home
-                .defined_in
-                .as_ref()
-                .map(|target| format_path(target)),
-            refs: entry.refs,
-            duplicate: entry.duplicate,
-            value_roots: entry
-                .home
-                .sections
-                .iter()
-                .filter_map(|(section, info)| {
-                    info.value_root.as_ref().map(|root| ListValueRoot {
-                        id: format!(
-                            "{}{}{}",
-                            render_qualified(entry),
-                            entry.project_config.section_separator,
-                            section
-                        ),
-                        valid: root.valid,
+        .flat_map(|entry| {
+            let rendered_id = render_qualified(entry);
+            let base = || ListEntry {
+                project: context
+                    .workspace_loaded
+                    .then(|| entry.project_alias.to_string()),
+                id: rendered_id.clone(),
+                section: None,
+                kind: entry.id.kind.clone(),
+                path: display_path(render_config, &entry.home.file),
+                line: entry.home.line,
+                title: entry.home.title.clone(),
+                stub: entry.home.is_stub,
+                defines: entry
+                    .home
+                    .defined_in
+                    .as_ref()
+                    .map(|target| format_path(target)),
+                refs: entry.refs,
+                duplicate: entry.duplicate,
+                value_roots: entry
+                    .home
+                    .sections
+                    .iter()
+                    .filter_map(|(section, info)| {
+                        info.value_root.as_ref().map(|root| ListValueRoot {
+                            id: format!(
+                                "{}{}{}",
+                                render_qualified(entry),
+                                entry.project_config.section_separator,
+                                section
+                            ),
+                            valid: root.valid,
+                        })
                     })
-                })
-                .collect(),
+                    .collect(),
+            };
+            match &selector {
+                None => vec![base()],
+                Some(RuleSubject::Kind(kind)) if kind == &entry.id.kind => {
+                    vec![base()]
+                }
+                Some(RuleSubject::ExactDeclaration(subject))
+                    if subject == &render_id(&entry.project_config.grammar, entry.id) =>
+                {
+                    vec![base()]
+                }
+                Some(RuleSubject::ChapterOfKind { kind, name }) if kind == &entry.id.kind => entry
+                    .home
+                    .sections
+                    .iter()
+                    .filter(|(section, info)| {
+                        section.rsplit('.').next() == Some(name.as_str())
+                            || info.title.eq_ignore_ascii_case(name)
+                    })
+                    .map(|(section, info)| {
+                        let mut row = base();
+                        row.section = Some(section.clone());
+                        row.line = info.line;
+                        row.title = Some(info.title.clone());
+                        row.stub = false;
+                        row.defines = None;
+                        row.refs = 0;
+                        row.duplicate = false;
+                        row.value_roots.clear();
+                        row
+                    })
+                    .collect(),
+                Some(RuleSubject::ExactChapter { declaration, path })
+                    if declaration == &render_id(&entry.project_config.grammar, entry.id) =>
+                {
+                    entry
+                        .home
+                        .sections
+                        .get(path)
+                        .map(|info| {
+                            let mut row = base();
+                            row.section = Some(path.clone());
+                            row.line = info.line;
+                            row.title = Some(info.title.clone());
+                            row.stub = false;
+                            row.defines = None;
+                            row.refs = 0;
+                            row.duplicate = false;
+                            row.value_roots.clear();
+                            row
+                        })
+                        .into_iter()
+                        .collect()
+                }
+                _ => Vec::new(),
+            }
         })
         .collect::<Vec<_>>();
 
     let mut summaries = Vec::new();
     if context.workspace_loaded {
         let mut counts: BTreeMap<(String, String), usize> = BTreeMap::new();
-        for entry in &entries {
-            *counts
-                .entry((entry.project_alias.to_string(), entry.id.kind.clone()))
-                .or_insert(0) += 1;
+        for entry in &public_entries {
+            if let Some(project) = &entry.project {
+                *counts
+                    .entry((project.clone(), entry.kind.clone()))
+                    .or_insert(0) += 1;
+            }
         }
         // §FS-workspace.8.3.4: rows sorted by alias — the same byte-wise `str`
         // order the catalog above sorts `entries` by — then by that
@@ -334,8 +442,8 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         }
     } else {
         let mut counts: BTreeMap<&str, usize> = BTreeMap::new();
-        for entry in &entries {
-            *counts.entry(&entry.id.kind).or_insert(0) += 1;
+        for entry in &public_entries {
+            *counts.entry(&entry.kind).or_insert(0) += 1;
         }
         for kind in &render_config.kinds {
             let count = counts.get(kind.kind.as_str()).copied().unwrap_or(0);

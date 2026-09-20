@@ -167,6 +167,7 @@ pub(super) fn scan_fallback_qualified_citations(
             // §AR-scanner.2.4: classified in the post-pass in `scan_file`.
             source_kind: String::new(),
             enclosing_declaration: None,
+            enclosing_section: None,
         });
     }
 }
@@ -249,6 +250,7 @@ pub(super) fn scan_workspace_qualified_pass(
             // §AR-scanner.2.4: classified in the post-pass in `scan_file`.
             source_kind: String::new(),
             enclosing_declaration: None,
+            enclosing_section: None,
         });
     }
 }
@@ -292,6 +294,7 @@ pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings:
                 inline_block_lines: line.inline_block_lines.get(&line.lineno).cloned(),
                 source_kind: String::new(),
                 enclosing_declaration: None,
+                enclosing_section: None,
             });
     }
 }
@@ -353,6 +356,7 @@ pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Fin
             inline_site: None,
             source_kind: String::new(),
             enclosing_declaration: None,
+            enclosing_section: None,
         });
     }
 }
@@ -465,6 +469,7 @@ pub(super) fn scan_shorthand_citations(
             // §AR-scanner.2.4: classified in the post-pass in `scan_file`.
             source_kind: String::new(),
             enclosing_declaration: None,
+            enclosing_section: None,
         });
     }
 }

@@ -32,6 +32,8 @@ pub struct CheckOpts {
     /// flag at the library level. Purely additive: the findings inside the
     /// configured scope are unchanged by it.
     pub full: bool,
+    /// One additive controlled-English constraint (§FS-rules.8).
+    pub rule: Option<String>,
 }
 
 impl Default for CheckOpts {
@@ -42,6 +44,7 @@ impl Default for CheckOpts {
             require_grounding: false,
             include_suggestions: false,
             full: false,
+            rule: None,
         }
     }
 }
@@ -80,6 +83,7 @@ pub fn check(path: &Path) -> Result<Report> {
         require_grounding: false,
         include_suggestions: false,
         full: false,
+        rule: None,
     })?
     .report)
 }
@@ -92,6 +96,7 @@ pub fn check_with_opts(opts: CheckOpts) -> Result<CheckOutput> {
         opts.path_provided,
         opts.require_grounding,
         opts.full,
+        opts.rule.as_deref(),
     )?;
     let warnings = public_run_warnings(&run.config, settled_run_warnings(&run.config));
     Ok(CheckOutput {

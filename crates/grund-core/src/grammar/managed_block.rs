@@ -65,7 +65,10 @@ use super::compiled::{
 /// v10 (§FS-init.2.3.4.5.1): Markdown declaration bodies teach that ATX headings
 /// need section coordinates, with the body/fence/source exemptions and bold
 /// label alternative of §FS-check.4.14.1.
-pub(crate) const AGENTS_BLOCK_VERSION: u32 = 10;
+/// v11 (§FS-init.2.3.5, §FS-rules.9): projects with a rule kind gain the exact
+/// accepted sentences under `### Chapter rules`; projects without one continue
+/// to render v10 byte for byte.
+pub(crate) const AGENTS_BLOCK_VERSION: u32 = 11;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation

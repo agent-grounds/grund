@@ -30,6 +30,7 @@ pub(super) struct ParsedKind {
     /// owns both keys and every rule about them.
     pub(super) grounding: ParsedGrounding,
     values_line: Option<usize>,
+    rules_line: Option<usize>,
 }
 
 impl ParsedKind {
@@ -46,6 +47,7 @@ impl ParsedKind {
                 require_grounding: None,
                 grounding_level: None,
                 values: false,
+                rules: false,
                 format: None,
                 resolve: None,
                 fetch: None,
@@ -54,6 +56,7 @@ impl ParsedKind {
             named: false,
             grounding: ParsedGrounding::default(),
             values_line: None,
+            rules_line: None,
         }
     }
 }
@@ -145,6 +148,23 @@ pub(super) fn parse_kinds_key(
                 bail_config(path, line_no, "[[kinds]] sets `values` twice".to_string())?;
             }
             slot.config.values = values;
+        }
+        // §FS-config.3.4.12 / §FS-rules.1: opt a citable Markdown kind into
+        // declaration-title rules. Parsing the titles remains a post-scan job.
+        "rules" => {
+            let rules = parse_bool(path, line_no, value)?;
+            let Some(slot) = current_kind.as_mut() else {
+                bail_config(
+                    path,
+                    line_no,
+                    "`rules` outside of [[kinds]] block".to_string(),
+                )?;
+                unreachable!();
+            };
+            if slot.rules_line.replace(line_no).is_some() {
+                bail_config(path, line_no, "[[kinds]] sets `rules` twice".to_string())?;
+            }
+            slot.config.rules = rules;
         }
         "folder" => {
             let folder = parse_string(path, line_no, value)?;
@@ -338,6 +358,23 @@ pub(super) fn apply_parsed_kinds(
     }
     for entry in &parsed {
         let k = &entry.config;
+        let rule_file_is_markdown = k.file.as_deref().is_none_or(|file| {
+            Path::new(file).extension().and_then(|ext| ext.to_str()) == Some("md")
+        });
+        if k.rules
+            && (!k.citable
+                || !k.scan
+                || (k.folder.is_none() && k.file.is_none())
+                || !rule_file_is_markdown
+                || k.values
+                || k.fetch.is_some())
+        {
+            return Err(anyhow!(
+                "{}: kind `{}` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`",
+                format_path(path),
+                k.kind
+            ));
+        }
         // §FS-config.3.4.10: an override belongs only to an ID namespace; an
         // explicit obligation needs the fetch remedy, and fetching needs one
         // unambiguous snapshot home.

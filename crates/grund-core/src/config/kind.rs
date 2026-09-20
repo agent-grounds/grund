@@ -43,6 +43,9 @@ pub struct KindConfig {
     /// The absent-by-default first-class-value opt-in (§FS-config.3.4.9,
     /// §FS-values.1).
     pub values: bool,
+    /// Whether declarations of this kind are executable controlled-English
+    /// chapter rules (§FS-config.3.4.12, §FS-rules.1).
+    pub rules: bool,
     /// A grammar override for this kind; absent inherits `[id].format`
     /// (§FS-config.3.4.10.1). Public because [`KindConfig`] is part of the
     /// embedding API, so consumers can inspect the effective snapshot shape.

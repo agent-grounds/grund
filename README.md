@@ -287,6 +287,12 @@ See the [external facts guide](docs/user-facing/external-facts.md) and runnable
 
 Every fact has a stable ID. The default kinds, all configurable — `*` marks a *place* rather than an ID namespace (`citable = false`: a home, a title and citation rules, no declarations), which is what a test is, and what any directory an agent must be told about can be. See [Citation directions](docs/user-facing/citation-directions.md) for the complete `[citations]` grammar and its rendered examples:
 
+Repositories can also declare controlled-English constraints over declarations,
+named chapters, and citations. The [chapter-rules guide](docs/user-facing/rules.md)
+lists every accepted sentence and refusal rewrite; the runnable
+[`examples/rules/`](examples/rules/) repository demonstrates the findings and
+deduplication behavior ([§FS-rules](docs/functional-spec/FS-rules.md#fs-rules-controlled-english-rules-over-declarations-chapters-and-citations)).
+
 | Kind | What it is | Where it lives |
 | --- | --- | --- |
 | `GRUND` | Why: project motivation | `docs/grund.md` (one declaration, all of it inline) |
@@ -527,6 +533,7 @@ That rule plus a clean `grund check` is the whole contract: every reference reso
 - [`docs/user-facing/clickable-citations.md`](docs/user-facing/clickable-citations.md) — make citations clickable in your terminal
 - [`docs/user-facing/external-facts.md`](docs/user-facing/external-facts.md) — materialize external tickets as committed offline snapshots
 - [`docs/user-facing/point-sizes.md`](docs/user-facing/point-sizes.md) — measure point leads and opt into oversized-lead warnings
+- [`docs/user-facing/rules.md`](docs/user-facing/rules.md) — write checked chapter and citation rules in controlled English
 - [`docs/user-facing/values.md`](docs/user-facing/values.md) — declare and check shared values in Markdown, JSON, prose, and code comments
 - [`docs/grund.md`](docs/grund.md) — why this exists
 - [`docs/goals.md`](docs/goals.md) — what we measure ourselves against

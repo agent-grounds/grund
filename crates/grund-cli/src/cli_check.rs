@@ -8,6 +8,7 @@ fn command_check(args: &[String]) -> ExitCode {
     let mut require_grounding = false;
     let mut include_suggestions = false;
     let mut full = false;
+    let mut rule = None;
     let mut selection = CheckFindingSelection::default();
     let mut idx = 0;
     while idx < args.len() {
@@ -25,6 +26,25 @@ fn command_check(args: &[String]) -> ExitCode {
             }
             "--require-grounding" => require_grounding = true,
             "--suggestions" => include_suggestions = true,
+            "--rule" => {
+                if rule.is_some() {
+                    eprintln!("error: --rule may only appear once");
+                    return ExitCode::from(2);
+                }
+                idx += 1;
+                if idx >= args.len() {
+                    eprintln!("error: --rule requires a sentence");
+                    return ExitCode::from(2);
+                }
+                rule = Some(args[idx].clone());
+            }
+            other if other.starts_with("--rule=") => {
+                if rule.is_some() {
+                    eprintln!("error: --rule may only appear once");
+                    return ExitCode::from(2);
+                }
+                rule = Some(other.trim_start_matches("--rule=").to_string());
+            }
             other if other.starts_with("--only=") => {
                 let value = other
                     .strip_prefix("--only=")
@@ -94,6 +114,7 @@ fn command_check(args: &[String]) -> ExitCode {
         require_grounding,
         include_suggestions,
         full,
+        rule,
     }) {
         Ok(output) => output,
         Err(err) => {

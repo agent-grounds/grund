@@ -176,6 +176,10 @@ pub struct Citation {
     /// Lets the obligation pass ask "does this declaration cite the target?" as
     /// a lookup rather than a re-scan.
     pub enclosing_declaration: Option<Id>,
+    /// The nearest accepted named chapter containing this physical site,
+    /// recorded by the scanner without knowing any rule vocabulary
+    /// (§AR-scanner.2.4.4, §FS-rules.5.1).
+    pub enclosing_section: Option<String>,
 }
 
 /// A configured-marker-plus-digit token deferred until declaration body spans
@@ -210,6 +214,7 @@ pub(crate) struct LegacyCitationCandidate {
     pub(crate) inline_block_lines: Option<std::sync::Arc<[String]>>,
     pub(crate) source_kind: String,
     pub(crate) enclosing_declaration: Option<Id>,
+    pub(crate) enclosing_section: Option<String>,
 }
 
 /// The enclosing source-comment citation site for one citation

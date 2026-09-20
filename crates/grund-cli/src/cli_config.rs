@@ -183,6 +183,11 @@ fn print_effective_config(config: &Config) {
                     if kind.values {
                         println!("values = true");
                     }
+                    // §FS-config.3.4.12: false is absent; enabled rule kinds
+                    // round-trip through the effective config surface.
+                    if kind.rules {
+                        println!("rules = true");
+                    }
                     // §FS-config.3.4.10.4: external snapshot metadata is printed
                     // in its effective, round-trippable form.
                     if let Some(format) = &kind.format {

@@ -13,6 +13,7 @@ use crate::model::{
     sort_path_key,
 };
 use crate::resolver::{PointBodyCache, WorkspaceContext, load_workspace_context, point_body_pair};
+use crate::rules::sentence::{RuleSubject, RuleVocabulary, parse_selector};
 use crate::scanner::{ApiScanError, api_scan_error};
 
 /// Options for the additive per-point size catalog (§FS-list.1, §FS-list.3.4).
@@ -23,6 +24,8 @@ pub struct ListSizeOpts {
     pub kind_filter: BTreeSet<String>,
     pub project_filter: BTreeSet<String>,
     pub unused_only: bool,
+    /// Optional declaration/chapter selector (§FS-rules.8).
+    pub selector: Option<String>,
     pub units: Vec<PointSizeUnit>,
     pub top: Option<usize>,
 }
@@ -35,6 +38,7 @@ impl Default for ListSizeOpts {
             kind_filter: BTreeSet::new(),
             project_filter: BTreeSet::new(),
             unused_only: false,
+            selector: None,
             units: vec![
                 PointSizeUnit::Lines,
                 PointSizeUnit::Words,
@@ -101,6 +105,24 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
     }
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
     validate_list_scope_filters(&context, &opts.project_filter, &opts.kind_filter)?;
+    let selected_projects = || {
+        context.projects.iter().filter(|project| {
+            opts.project_filter.is_empty() || opts.project_filter.contains(&project.alias)
+        })
+    };
+    let vocabulary = RuleVocabulary {
+        kinds: selected_projects()
+            .flat_map(|project| project.config.kinds.iter())
+            .filter(|kind| kind.citable)
+            .map(|kind| kind.kind.clone())
+            .collect(),
+        named_sections: selected_projects().all(|project| project.config.named_sections),
+    };
+    let selector = opts
+        .selector
+        .as_deref()
+        .map(|raw| parse_selector(raw, &vocabulary).map_err(|error| anyhow!(error.message)))
+        .transpose()?;
 
     struct Pending<'a> {
         project_alias: &'a str,
@@ -199,6 +221,47 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
                     .unwrap_or(b.declaration.line),
             ))
     });
+    if let Some(subject) = &selector {
+        if matches!(
+            subject,
+            RuleSubject::ExactDeclaration(_) | RuleSubject::ExactChapter { .. }
+        ) {
+            let literal = match subject {
+                RuleSubject::ExactDeclaration(literal) => literal,
+                RuleSubject::ExactChapter { declaration, .. } => declaration,
+                _ => unreachable!(),
+            };
+            let matches = pending
+                .iter()
+                .filter(|row| {
+                    row.section.is_none()
+                        && render_id(&row.project_config.grammar, row.id) == *literal
+                })
+                .count();
+            if matches == 0 {
+                return Err(anyhow!("literal subject {literal} does not resolve"));
+            }
+            if matches > 1 {
+                return Err(anyhow!("literal subject {literal} is ambiguous"));
+            }
+        }
+        pending.retain(|row| {
+            let rendered = render_id(&row.project_config.grammar, row.id);
+            match (subject, row.section) {
+                (RuleSubject::Kind(kind), None) => kind == &row.id.kind,
+                (RuleSubject::ExactDeclaration(literal), None) => literal == &rendered,
+                (RuleSubject::ChapterOfKind { kind, name }, Some((section, info))) => {
+                    kind == &row.id.kind
+                        && (section.rsplit('.').next() == Some(name.as_str())
+                            || info.title.eq_ignore_ascii_case(name))
+                }
+                (RuleSubject::ExactChapter { declaration, path }, Some((section, _))) => {
+                    declaration == &rendered && path == section
+                }
+                _ => false,
+            }
+        });
+    }
 
     let overlays = TextOverlays::new();
     let mut cache = PointBodyCache::new(&overlays);

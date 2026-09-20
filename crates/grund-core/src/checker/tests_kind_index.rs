@@ -378,8 +378,14 @@ fn a_run_that_did_not_scan_the_index_does_not_judge_it() {
         "# Specs\n\n- [§FS-001-login](FS-001-login.md#fs-001-login-a-user-logs-in)\n",
     );
 
-    let run = run_check(&root.join("docs/specs/FS-001-login.md"), true, false, false)
-        .expect("narrowed check run");
+    let run = run_check(
+        &root.join("docs/specs/FS-001-login.md"),
+        true,
+        false,
+        false,
+        None,
+    )
+    .expect("narrowed check run");
     let codes: Vec<&str> = run
         .report
         .errors
