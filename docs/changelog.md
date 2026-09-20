@@ -24,6 +24,10 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ## Unreleased
 
+### Fixed
+
+- [§FS-check.4.7.9](functional-spec/FS-check.md#479-a-later-expansion-refusal-does-not-discard-it), [§FS-check.4.10.8](functional-spec/FS-check.md#4108-a-failed-workspace-expansion-withholds-it), [§FS-distribution.3.1](functional-spec/FS-distribution.md#31-rust-grund-core-crate): preserve warnings already settled or answerable at the run root when a later workspace-member expansion refuses, and render them once before the unchanged config error. Questions below the root that failed expansion leaves unanswered remain silent. (PR #273)
+
 ## 2. [0.14.0] — 2026-09-20
 
 ### Fixed

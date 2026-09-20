@@ -50,7 +50,7 @@ mod run;
 mod scope_cautions;
 mod show;
 
-pub use check::{CheckOpts, CheckOutput, check, check_with_opts, scan};
+pub use check::{CheckOpts, CheckOutput, check, check_with_opts, check_with_run_warnings, scan};
 pub use complete_ids::{CompleteIdsOpts, complete_ids, complete_ids_with_run_warnings};
 pub use config::{
     ReferenceStyle, config_run_warnings, config_warnings, effective_config, reference_style,

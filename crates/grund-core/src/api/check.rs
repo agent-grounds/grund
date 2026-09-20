@@ -11,10 +11,9 @@
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-use super::report::{public_report, public_run_warnings};
-use super::run::run_check;
+use super::report::public_report;
+use super::run::run_check_with_run_warnings;
 use crate::model::{Finding, Findings, Report};
-use crate::resolver::settled_run_warnings;
 use crate::scanner::scan_tree_strict;
 use crate::workspace::resolve_workspace_config;
 
@@ -91,17 +90,31 @@ pub fn check(path: &Path) -> Result<Report> {
 /// Programmatic `check` with the same scope and grounding options as the CLI,
 /// returning data instead of printing a report or mapping a process exit.
 pub fn check_with_opts(opts: CheckOpts) -> Result<CheckOutput> {
-    let run = run_check(
+    check_with_run_warnings(opts).1
+}
+
+/// [`check_with_opts`] with the run-root warnings preserved beside a later
+/// refusal (§FS-check.4.7.9, §FS-check.4.10.8). Frontends render the returned data;
+/// the engine writes no stream (§FS-distribution.3.1).
+#[doc(hidden)]
+pub fn check_with_run_warnings(opts: CheckOpts) -> (Vec<Finding>, Result<CheckOutput>) {
+    let mut warnings = Vec::new();
+    let output = check_run(opts, &mut warnings);
+    (warnings, output)
+}
+
+fn check_run(opts: CheckOpts, warnings: &mut Vec<Finding>) -> Result<CheckOutput> {
+    let run = run_check_with_run_warnings(
         &opts.path,
         opts.path_provided,
         opts.require_grounding,
         opts.full,
         opts.rule.as_deref(),
+        warnings,
     )?;
-    let warnings = public_run_warnings(&run.config, settled_run_warnings(&run.config));
     Ok(CheckOutput {
         output_format: run.config.output_format.clone(),
-        warnings,
+        warnings: warnings.clone(),
         report: public_report(&run.config, run.report, opts.include_suggestions),
         had_scan_errors: run.had_scan_errors,
     })
