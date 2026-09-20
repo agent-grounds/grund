@@ -132,3 +132,21 @@ pub(crate) fn section_anchor_text(line: &str, section: &str) -> String {
     .trim()
     .to_string()
 }
+
+/// The human-facing title of one accepted chapter, without its named-section
+/// coordinate (§FS-rules.3.1, §FS-rules.5.1). `SectionInfo::title` retains the
+/// complete rendered heading for anchor fidelity; rule facts and selector rows
+/// need the semantic display name that follows `name:` instead.
+pub(crate) fn section_display_name<'a>(title: &'a str, section: &str) -> &'a str {
+    let Some(name) = section.rsplit('.').next() else {
+        return title;
+    };
+    if !name.as_bytes().first().is_some_and(u8::is_ascii_lowercase) {
+        return title;
+    }
+    title
+        .strip_prefix(name)
+        .and_then(|rest| rest.strip_prefix(':'))
+        .map(str::trim_start)
+        .unwrap_or(title)
+}

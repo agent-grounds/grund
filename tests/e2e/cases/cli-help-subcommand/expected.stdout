@@ -1,6 +1,6 @@
 grund check — validate every ID citation across the repo.
 
-Usage:  grund check [PATH] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--format text|json]
+Usage:  grund check [PATH] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--format text|json]
 
 PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback.
 With no config, grund scans `docs/`, `e2e/`, and `src/`; set `[scan] include` to widen it.
@@ -13,6 +13,7 @@ Options:
   --full               also walk past [scan] include and report unresolved references or section headings outside declaration bodies there.
   --require-grounding  also require every source file to cite a declared ID ([reference] require_grounding; a [[kinds]] row that sets it false stays exempt).
   --suggestions        also surface should/should-not citation-direction findings ([citations]).
+  --rule <sentence>    add one controlled-English chapter/citation rule to configured rules.
   --only <code>        retain one exact finding code; repeat for a union (`--only=<code>` also works).
   --ignore <code>      remove one exact finding code; repeat for a union; ignore wins over only (`--ignore=<code>` also works).
 
@@ -27,6 +28,8 @@ the selected report has no errors, not that the unselected repository is clean.
 Supported check finding codes:
   agents-init
   broken-stub
+  chapter-cardinality
+  citation-cardinality
   dangling
   declaration-near-miss
   deprecated-config-location
@@ -39,6 +42,7 @@ Supported check finding codes:
   forbidden-citation
   full-scope-ignored
   inline-citation-style
+  invalid-rule
   invalid-value-binding
   invalid-value-declaration
   io
@@ -63,6 +67,7 @@ Supported check finding codes:
   shorthand-citation
   shorthand-numeric-run
   suggested-citation
+  uncited-unit
   ungrounded
   unknown-project
   unlinked-index-entry
@@ -77,5 +82,6 @@ Examples:
   grund check              # check the whole repo
   grund check docs/        # check one subtree
   grund check --full       # plus unresolved references and outside sections beyond include
+  grund check --rule "Each FS should have exactly one requirements chapter." --suggestions
   grund check --ignore agents-init # ask whether the selected content report has errors
   grund check --format json | jq # machine-readable diagnostics for CI

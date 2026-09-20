@@ -1,6 +1,10 @@
 //! The controlled-English sentence front end (§FS-rules.2–4, §AR-rules.2).
 
+mod count;
+
 use super::RuleAnchor;
+use crate::grammar::{Grammar, parse_id_arg, render_id};
+use count::{CountSpelling, count_prefix, positive};
 use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -51,37 +55,6 @@ pub(crate) struct Cardinality {
     pub(crate) maximum: Option<usize>,
 }
 
-impl Cardinality {
-    pub(crate) const AT_LEAST_ONE: Self = Self {
-        minimum: Some(1),
-        maximum: None,
-    };
-    pub(crate) const NONE: Self = Self {
-        minimum: None,
-        maximum: Some(0),
-    };
-    pub(crate) fn contains(self, count: usize) -> bool {
-        self.minimum.is_none_or(|n| count >= n) && self.maximum.is_none_or(|n| count <= n)
-    }
-    pub(crate) fn wording(self) -> String {
-        match (self.minimum, self.maximum) {
-            (Some(1), None) => "at least one".into(),
-            (Some(n), None) => format!("at least {n}"),
-            (None, Some(n)) => format!("at most {n}"),
-            (Some(1), Some(1)) => "exactly one".into(),
-            (Some(n), Some(m)) if n == m => format!("exactly {n}"),
-            _ => "the configured count".into(),
-        }
-    }
-    pub(crate) fn times_wording(self) -> String {
-        if self.minimum == Some(1) && self.maximum == Some(1) {
-            "exactly once".into()
-        } else {
-            self.wording()
-        }
-    }
-}
-
 /// Immutable normalized rule; authored sentence text does not cross this
 /// boundary (§FS-rules.11, §AR-rules.2).
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -96,11 +69,14 @@ pub(crate) struct ParsedRule {
     pub(crate) cardinality: Cardinality,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub(crate) struct RuleVocabulary {
     pub(crate) kinds: BTreeSet<String>,
     pub(crate) target_kinds: BTreeSet<String>,
     pub(crate) named_sections: bool,
+    /// Effective lexical grammars for the catalogs this vocabulary can select.
+    /// The sentence front end sees syntax, never scan facts (§AR-rules.1).
+    pub(crate) id_grammars: Vec<Grammar>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -128,6 +104,18 @@ pub(crate) fn parse_selector(
     text: &str,
     vocabulary: &RuleVocabulary,
 ) -> Result<RuleSubject, RuleParseError> {
+    if vocabulary.kinds.contains(text) {
+        return Ok(RuleSubject::Kind(text.into()));
+    }
+    if let Some((kind, name)) = text.split_once('.')
+        && vocabulary.kinds.contains(kind)
+    {
+        validate_named_path(name, vocabulary, text)?;
+        return Ok(RuleSubject::ChapterOfKind {
+            kind: kind.into(),
+            name: name.into(),
+        });
+    }
     parse_subject(text, vocabulary)
 }
 
@@ -245,6 +233,7 @@ fn parse_subject(text: &str, vocab: &RuleVocabulary) -> Result<RuleSubject, Rule
                 "named chapter subjects require [id] named_sections = true; accepted form after enabling it: The {name} chapter of each {kind} must cite at least one REQ."
             )));
         }
+        validate_named_path(name, vocab, text)?;
         return Ok(RuleSubject::ChapterOfKind {
             kind: kind.into(),
             name: name.into(),
@@ -255,50 +244,94 @@ fn parse_subject(text: &str, vocab: &RuleVocabulary) -> Result<RuleSubject, Rule
             "subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one GOAL.",
         ));
     }
-    let Some((declaration, section)) = text.split_once('.') else {
-        let kind = subject_kind(text, vocab)?;
-        known_subject(&kind, vocab)?;
-        return Ok(RuleSubject::ExactDeclaration(text.into()));
-    };
-    if section.contains('*') {
+    if let Some((declaration, section)) = text.split_once('.')
+        && section.contains('*')
+    {
         return Err(error(format!(
             "section-component wildcards are not accepted in phase 1; accepted form: {declaration}.requirements must cite at least one REQ."
         )));
     }
-    if section
-        .split('.')
-        .any(|part| part.bytes().all(|b| b.is_ascii_digit()))
+    if let Some((declaration, section)) = text.split_once('.')
+        && section
+            .split('.')
+            .any(|part| part.bytes().all(|b| b.is_ascii_digit()))
     {
         return Err(error(format!(
             "numbered chapter subjects can detach when headings move; accepted form: {declaration}.requirements must cite at least one REQ."
         )));
     }
-    let kind = subject_kind(declaration, vocab)?;
-    known_subject(&kind, vocab)?;
-    if !vocab.named_sections {
+    if text.contains('.') && !vocab.named_sections {
         return Err(error(format!(
             "named chapter subjects require [id] named_sections = true; accepted form after enabling it: {text} must cite at least one REQ."
         )));
     }
-    Ok(RuleSubject::ExactChapter {
-        declaration: declaration.into(),
-        path: section.into(),
-    })
+    for grammar in &vocab.id_grammars {
+        if let Ok((id, section)) = parse_id_arg(text, grammar) {
+            known_subject(&id.kind, vocab)?;
+            return Ok(match section {
+                Some(path) => RuleSubject::ExactChapter {
+                    declaration: render_id(grammar, &id),
+                    path,
+                },
+                None => RuleSubject::ExactDeclaration(text.into()),
+            });
+        }
+    }
+    // A hand-built parser boundary test may provide only scalar vocabulary.
+    // Production callers always pass the effective compiled grammar.
+    if vocab.id_grammars.is_empty()
+        && let Some(kind) = vocab
+            .kinds
+            .iter()
+            .filter(|kind| text.starts_with(&format!("{kind}-")))
+            .max_by_key(|kind| kind.len())
+    {
+        known_subject(kind, vocab)?;
+        return Ok(match text.split_once('.') {
+            Some((declaration, path)) => RuleSubject::ExactChapter {
+                declaration: declaration.into(),
+                path: path.into(),
+            },
+            None => RuleSubject::ExactDeclaration(text.into()),
+        });
+    }
+    Err(error(format!(
+        "literal subject \"{text}\" does not match the configured ID grammar; accepted form: FS-login must cite at least one GOAL."
+    )))
 }
 
-fn subject_kind(text: &str, vocab: &RuleVocabulary) -> Result<String, RuleParseError> {
-    vocab
-        .kinds
-        .iter()
-        .filter(|k| text.starts_with(k.as_str()) && text.len() > k.len())
-        .max_by_key(|k| k.len())
-        .cloned()
-        .ok_or_else(|| {
-            error(format!(
-                "unknown kind \"{}\"; accepted form: Each FS must cite at least one GOAL.",
-                text.split(['-', '_']).next().unwrap_or(text)
-            ))
-        })
+fn validate_named_path(
+    path: &str,
+    vocab: &RuleVocabulary,
+    authored: &str,
+) -> Result<(), RuleParseError> {
+    if !vocab.named_sections {
+        return Err(error(format!(
+            "named chapter subjects require [id] named_sections = true; accepted form after enabling it: {authored} must cite at least one REQ."
+        )));
+    }
+    let scalar_valid = !path.is_empty()
+        && path.split('.').all(|component| {
+            component
+                .as_bytes()
+                .first()
+                .is_some_and(u8::is_ascii_lowercase)
+                && component
+                    .bytes()
+                    .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+        });
+    let grammar_valid = vocab.id_grammars.is_empty()
+        || vocab
+            .id_grammars
+            .iter()
+            .any(|grammar| grammar.is_section_path(path));
+    if scalar_valid && grammar_valid {
+        Ok(())
+    } else {
+        Err(error(format!(
+            "named chapter subject \"{authored}\" does not match the configured section grammar; accepted form: FS-login.requirements must cite at least one REQ."
+        )))
+    }
 }
 
 fn known_subject(kind: &str, vocab: &RuleVocabulary) -> Result<(), RuleParseError> {
@@ -339,9 +372,37 @@ fn parse_predicate(
         ));
     }
     if let Some(rest) = text.strip_prefix("have ") {
-        let (card, object) = count_prefix(rest)?;
-        let name = object.strip_suffix(" chapters").or_else(|| object.strip_suffix(" chapter"))
-            .ok_or_else(|| error("chapter presence must end in \"chapter\"; accepted form: Each FS must have exactly one requirements chapter."))?;
+        let (card, object, spelling) = count_prefix(rest)?;
+        let (name, plural) = if let Some(name) = object.strip_suffix(" chapters") {
+            (name, true)
+        } else if let Some(name) = object.strip_suffix(" chapter") {
+            (name, false)
+        } else {
+            return Err(error(
+                "chapter presence must end in \"chapter\"; accepted form: Each FS must have exactly one requirements chapter.",
+            ));
+        };
+        let expects_plural = match spelling {
+            CountSpelling::AtLeastOne | CountSpelling::ExactlyOne => false,
+            CountSpelling::AtMost(n) => n != 1,
+            CountSpelling::Exactly(_) => true,
+        };
+        if plural != expects_plural {
+            let count = match spelling {
+                CountSpelling::AtLeastOne => "at least one".to_string(),
+                CountSpelling::ExactlyOne => "exactly one".to_string(),
+                CountSpelling::AtMost(n) => format!("at most {n}"),
+                CountSpelling::Exactly(n) => format!("exactly {n}"),
+            };
+            let noun = if expects_plural {
+                "chapters"
+            } else {
+                "chapter"
+            };
+            return Err(error(format!(
+                "chapter count has the wrong singular/plural spelling; accepted form: Each FS must have {count} {name} {noun}."
+            )));
+        }
         return Ok((
             RuleRelation::HaveChapter,
             RuleTargets::Chapter(name.into()),
@@ -370,8 +431,13 @@ fn parse_predicate(
             if let Some((kind, raw)) = rest.split_once(marker) {
                 let n = positive(
                     raw.strip_suffix(" times")
-                        .ok_or_else(|| error("per-target counts must end in \"times\""))?,
+                        .ok_or_else(|| error("per-target counts must end in \"times\"; accepted form: AR-overview.system-overview must cite each AR exactly 2 times."))?,
                 )?;
+                if marker.contains("exactly") && n == 1 {
+                    return Err(error(
+                        "numeric \"exactly 1 times\" is not canonical; accepted form: AR-overview.system-overview must cite each AR exactly once.",
+                    ));
+                }
                 let card = if marker.contains("at most") {
                     Cardinality {
                         minimum: None,
@@ -402,7 +468,7 @@ fn parse_predicate(
                 "quantifier \"a\" is ambiguous; accepted forms: \"Each FS must cite at least one GOAL.\" or \"Each FS must cite exactly one GOAL.\"",
             ));
         }
-        let (card, kinds) = count_prefix(rest)?;
+        let (card, kinds, _) = count_prefix(rest)?;
         return Ok((
             RuleRelation::Cite,
             kind_targets(kinds, TargetMode::Aggregate, vocab)?,
@@ -410,7 +476,7 @@ fn parse_predicate(
         ));
     }
     if let Some(rest) = text.strip_prefix("be cited by ") {
-        let (card, kinds) = count_prefix(rest)?;
+        let (card, kinds, _) = count_prefix(rest)?;
         return Ok((
             RuleRelation::BeCitedBy,
             kind_targets(kinds, TargetMode::Aggregate, vocab)?,
@@ -420,51 +486,6 @@ fn parse_predicate(
     Err(error(
         "verb is not accepted; accepted form: Each FS must cite at least one GOAL.",
     ))
-}
-
-fn count_prefix(text: &str) -> Result<(Cardinality, &str), RuleParseError> {
-    if let Some(rest) = text.strip_prefix("at least one ") {
-        return Ok((Cardinality::AT_LEAST_ONE, rest));
-    }
-    if let Some(rest) = text.strip_prefix("exactly one ") {
-        return Ok((
-            Cardinality {
-                minimum: Some(1),
-                maximum: Some(1),
-            },
-            rest,
-        ));
-    }
-    for prefix in ["at most ", "exactly "] {
-        if let Some(rest) = text.strip_prefix(prefix) {
-            let (raw, object) = rest
-                .split_once(' ')
-                .ok_or_else(|| error("count has no object"))?;
-            let n = positive(raw)?;
-            let card = if prefix == "at most " {
-                Cardinality {
-                    minimum: None,
-                    maximum: Some(n),
-                }
-            } else {
-                Cardinality {
-                    minimum: Some(n),
-                    maximum: Some(n),
-                }
-            };
-            return Ok((card, object));
-        }
-    }
-    Err(error(
-        "count is not accepted; accepted form: Each FS must cite at least one GOAL.",
-    ))
-}
-
-fn positive(raw: &str) -> Result<usize, RuleParseError> {
-    raw.parse()
-        .ok()
-        .filter(|n| *n > 0)
-        .ok_or_else(|| error("count must be a positive base-10 integer"))
 }
 
 fn kind_targets(

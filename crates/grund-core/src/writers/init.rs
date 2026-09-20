@@ -4,6 +4,8 @@ use std::path::PathBuf;
 use super::init_block::{
     AgentsUpdateResult, update_agents_block, write_or_update_canonical_agent_entrypoint,
 };
+pub(crate) use super::init_guidance::init_fs_home;
+use super::init_guidance::{InitNext, docs_scaffold};
 use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
 use super::init_plan::{InitAgentEntrypointSelection, selected_init_agent_entrypoints};
 use super::init_render::{agents_workspace_members_section, init_pending_effective_config};
@@ -11,17 +13,14 @@ use super::init_target::{
     derive_default_name, refuse_init_global_instruction_paths, refuse_init_target,
 };
 use crate::checker::configured_rule_sentences;
-use crate::config::{Config, config_file_in};
-use crate::model::{Finding, format_path};
+use crate::config::{Config, config_file_in, display_path};
+use crate::model::{Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
     effective_scope_reads_any_file, scan_tree,
 };
 use crate::templates::{
-    AS_README_TEMPLATE, ConversationSurface, DA_README_TEMPLATE, DF_README_TEMPLATE,
-    E2E_README_TEMPLATE, FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE,
-    REQUIREMENTS_TEMPLATE, canonical_template_text, render_agents_append_block,
-    render_agents_md_from_block, render_grund_toml,
+    ConversationSurface, render_agents_append_block, render_agents_md_from_block, render_grund_toml,
 };
 use crate::workspace::populate_workspace_boundary;
 
@@ -80,45 +79,13 @@ impl InitEvent {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct InitNext {
-    pub docs: bool,
-    pub entrypoint: String,
-    pub fs_home: InitFsHome,
-    /// Whether the effective scanner found a readable file before this guidance
-    /// was rendered (§FS-init.2.2.2). Both command adapters consume this decision;
-    /// neither reconstructs scanner policy from paths.
-    pub scan_reads_file: bool,
-}
-
-impl InitNext {
-    /// Render the shared trailing guidance for the shipped CLI and the deprecated
-    /// core command adapter (§FS-init.2.2.2).
-    pub fn render(&self) -> String {
-        render_next_block_for_home(
-            self.docs,
-            Some(&self.entrypoint),
-            &self.fs_home,
-            self.scan_reads_file,
-        )
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum InitFsHome {
-    File {
-        path: String,
-        heading_name: &'static str,
-        heading_marker: &'static str,
-    },
-    Folder {
-        path: String,
-    },
-}
-
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct InitOutput {
     pub events: Vec<InitEvent>,
+    /// Located validation findings discovered before any write (§FS-rules.4).
+    /// They are ordinary report rows and make `init` exit 1, not operational
+    /// failures that would exit 2.
+    pub errors: Vec<Finding>,
     /// Things the run could not do that the caller would otherwise have to
     /// notice for itself (§FS-init.2.3.4.17.4). Reported, never fatal.
     pub notes: Vec<String>,
@@ -140,6 +107,10 @@ impl InitOutput {
     /// finding.
     pub fn has_pending_changes(&self) -> bool {
         self.events.iter().any(InitEvent::is_change)
+    }
+
+    pub fn has_errors(&self) -> bool {
+        !self.errors.is_empty()
     }
 }
 
@@ -302,8 +273,15 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         if let Some((path, message)) = errors.first() {
             return Err(InitError::new(format!("{}: {message}", path.display())));
         }
-        configured_rule_sentences(&findings, &init_config)
-            .map_err(|err| InitError::new(err.to_string()))?
+        match configured_rule_sentences(&findings, &init_config) {
+            Ok(rows) => rows,
+            Err(diagnostic) => {
+                return Ok(InitOutput {
+                    errors: vec![init_finding(&init_config, diagnostic)],
+                    ..InitOutput::default()
+                });
+            }
+        }
     } else {
         Vec::new()
     };
@@ -560,79 +538,30 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     }
     Ok(InitOutput {
         events,
+        errors: Vec::new(),
         notes,
         next,
         warnings: run_warnings,
     })
 }
 
-/// The trailing `next:` guidance block (§FS-init.2.2.2). Suppressed by the caller
-/// when every reported path was `exists ` — when the repo is already current
-/// there is no next step to teach. `entrypoint` is the first agent entrypoint
-/// `init` touched, used in the final `see <entrypoint> …` pointer; `None`
-/// falls back to the canonical `AGENTS.md`.
-fn render_next_block_for_home(
-    docs: bool,
-    entrypoint: Option<&str>,
-    fs_home: &InitFsHome,
-    scan_reads_file: bool,
-) -> String {
-    let mut output = "\nnext:\n".to_string();
-    if docs {
-        output.push_str("  1. run `grund check` — a freshly scaffolded tree is clean\n");
-        match fs_home {
-            InitFsHome::File {
-                path,
-                heading_name,
-                heading_marker,
-            } => {
-                output.push_str(&format!(
-                    "  2. allocate an ID:  ID=$(grund id FS \"…\")  then add it to {path}\n"
-                ));
-                output.push_str(&format!(
-                    "     ({heading_name}: `{heading_marker} <ID>: <one-line statement of the behavior>`)\n"
-                ));
-            }
-            InitFsHome::Folder { path } => {
-                output.push_str(&format!(
-                    "  2. allocate an ID:  ID=$(grund id FS \"…\")  then add it under {path}\n"
-                ));
-                output.push_str("     (H1: `# <ID>: <one-line statement of the behavior>`)\n");
-            }
-        }
-        output.push_str(
-            "  3. cite it as §<ID> from the docs and e2e tests that depend on it, then `grund check` again\n",
-        );
-    } else {
-        let fs_home_path = match fs_home {
-            InitFsHome::File { path, .. } | InitFsHome::Folder { path } => path,
-        };
-        output.push_str(&format!(
-            "  1. re-run with --docs to scaffold the FS home ({fs_home_path}), docs/, and tests/ (or create them yourself)"
-        ));
-        if !scan_reads_file {
-            output.push_str(" — until then `grund check` has nothing to scan");
-        }
-        output.push('\n');
-        output.push_str("  2. run `grund check` — a scaffolded tree is clean\n");
-        match fs_home {
-            InitFsHome::File { path, .. } => {
-                output.push_str(&format!(
-                    "  3. allocate an ID:  ID=$(grund id FS \"…\")  then add it to {path}\n"
-                ));
-            }
-            InitFsHome::Folder { path } => {
-                output.push_str(&format!(
-                    "  3. allocate an ID:  ID=$(grund id FS \"…\")  then add it under {path}\n"
-                ));
-            }
-        }
+fn init_finding(config: &Config, diagnostic: Diagnostic) -> Finding {
+    Finding {
+        severity: "error",
+        code: diagnostic.code,
+        path: diagnostic.path.map(|path| display_path(config, &path)),
+        line: diagnostic.line,
+        column: diagnostic.column,
+        message: diagnostic.message,
+        sites: diagnostic
+            .sites
+            .into_iter()
+            .map(|site| FindingSite {
+                path: display_path(config, &site.path),
+                line: site.line,
+            })
+            .collect(),
     }
-    output.push_str(&format!(
-        "see {} for the full workflow.\n",
-        entrypoint.unwrap_or(CANONICAL_AGENT_ENTRYPOINT)
-    ));
-    output
 }
 
 /// Stderr verb for a newly written file. `--dry-run` reports `would-write `
@@ -647,105 +576,4 @@ pub(super) fn verb_appended(dry_run: bool) -> &'static str {
 
 pub(super) fn verb_updated(dry_run: bool) -> &'static str {
     if dry_run { "would-update" } else { "updated" }
-}
-
-/// The `--docs` scaffold: the default requirements/spec home, canonical `docs/`
-/// files (`grund.md`, `goals.md`, `roadmap.md`, `changelog.md`, and an index
-/// README for each folder kind that has one — architecture and the two decision
-/// folders), plus the two test homes — the file list of §FS-init.2.1, each a
-/// minimal starter that leaves `grund check` clean.
-pub(crate) fn init_fs_home(config: &Config) -> InitFsHome {
-    if let Some(kind) = config.kinds.iter().find(|kind| kind.kind == "FS") {
-        if let Some(file) = &kind.file {
-            let (heading_name, heading_marker) = if file == "docs/grund.md" {
-                ("H1", "#")
-            } else {
-                ("H2", "##")
-            };
-            return InitFsHome::File {
-                path: file.clone(),
-                heading_name,
-                heading_marker,
-            };
-        }
-        if let Some(folder) = &kind.folder {
-            return InitFsHome::Folder {
-                path: folder.clone(),
-            };
-        }
-    }
-    InitFsHome::File {
-        path: "requirements.md".to_string(),
-        heading_name: "H2",
-        heading_marker: "##",
-    }
-}
-
-/// The `--docs` scaffold: each stub `init` writes, paired with the path it
-/// lands at.
-///
-/// Which folder kinds get an index README: under the generated config's
-/// defaults that is `AR`, `DF` and `DA`, while `E2E` sets `index = false`.
-///
-/// What the two test homes get instead: `tests/e2e/README.md` is the layout
-/// note, and `tests/integration` gets the placeholder that makes an empty
-/// directory survive `git add`.
-pub(crate) fn docs_scaffold(fs_home: &InitFsHome) -> Vec<(String, String)> {
-    let mut files = Vec::new();
-    match fs_home {
-        InitFsHome::File { path, .. } => {
-            files.push((path.clone(), canonical_template_text(REQUIREMENTS_TEMPLATE)))
-        }
-        InitFsHome::Folder { path } => files.push((
-            format!("{path}/README.md"),
-            canonical_template_text(FS_README_TEMPLATE),
-        )),
-    }
-    files.extend(
-        [
-            ("docs/grund.md", canonical_template_text(GRUND_DOC_TEMPLATE)),
-            ("docs/goals.md", canonical_template_text(GOALS_TEMPLATE)),
-            (
-                "docs/roadmap.md",
-                "# Roadmap\n\n<!-- placeholder - replace with real content -->\n".to_string(),
-            ),
-            (
-                "docs/changelog.md",
-                "# Changelog\n\n<!-- placeholder - replace with real content -->\n".to_string(),
-            ),
-            (
-                "docs/architecture/README.md",
-                canonical_template_text(AS_README_TEMPLATE),
-            ),
-            // §FS-init.2.1.3 / §FS-check.3.18.1: every folder kind the generated config
-            // leaves at the default `index` gets its index README scaffolded, not a
-            // bare `.gitkeep` (§FS-config.3.4).
-            (
-                "docs/decisions/architectural/README.md",
-                canonical_template_text(DA_README_TEMPLATE),
-            ),
-            (
-                "docs/decisions/functional/README.md",
-                canonical_template_text(DF_README_TEMPLATE),
-            ),
-            // §FS-init.2.1.3: the two test homes the generated config names
-            // (§FS-config.3.4). Both are non-citable kinds, so neither gets an index
-            // README.
-            ("tests/e2e/README.md", render_e2e_readme(fs_home)),
-            (
-                "tests/integration/.gitkeep",
-                canonical_template_text(GITKEEP_TEMPLATE),
-            ),
-        ]
-        .into_iter()
-        .map(|(path, contents)| (path.to_string(), contents)),
-    );
-    files
-}
-
-fn render_e2e_readme(fs_home: &InitFsHome) -> String {
-    let fs_home_path = match fs_home {
-        InitFsHome::File { path, .. } | InitFsHome::Folder { path } => path,
-    };
-    canonical_template_text(E2E_README_TEMPLATE).replace("{fs_home}", fs_home_path)
 }

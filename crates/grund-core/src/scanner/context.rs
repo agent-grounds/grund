@@ -152,7 +152,12 @@ fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize,
 /// declaration whose body contains the site), else the file's unique kind home,
 /// else the homeless kind — `code`, or whatever the project named it
 /// (§FS-config.3.9.2.2).
-pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config, path: &Path) {
+pub(super) fn classify_citation_sources(
+    findings: &mut Findings,
+    config: &Config,
+    path: &Path,
+    md_headings: &[(usize, usize)],
+) {
     // (body_start, body_end, id) for this file's declarations, so the enclosing
     // lookup is a scan of a small local list.
     let bodies: Vec<(usize, usize, Id, Vec<(String, usize, usize)>)> = findings
@@ -183,21 +188,7 @@ pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config
             Some((_, _, id, sections)) => {
                 cite.source_kind = id.kind.clone();
                 cite.enclosing_declaration = Some(id.clone());
-                cite.enclosing_section = sections
-                    .iter()
-                    .filter(|(_, line, _)| *line <= cite.line)
-                    .max_by_key(|(_, line, _)| *line)
-                    .and_then(|(path, line, depth)| {
-                        let end = sections
-                            .iter()
-                            .filter(|(_, next_line, next_depth)| {
-                                next_line > line && next_depth <= depth
-                            })
-                            .map(|(_, next_line, _)| next_line - 1)
-                            .min()
-                            .unwrap_or(usize::MAX);
-                        (cite.line <= end).then(|| path.clone())
-                    });
+                cite.enclosing_section = enclosing_section(sections, md_headings, cite.line);
             }
             None => {
                 cite.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());
@@ -213,11 +204,8 @@ pub(super) fn classify_citation_sources(findings: &mut Findings, config: &Config
             Some((_, _, id, sections)) => {
                 candidate.source_kind = id.kind.clone();
                 candidate.enclosing_declaration = Some(id.clone());
-                candidate.enclosing_section = sections
-                    .iter()
-                    .filter(|(_, line, _)| *line <= candidate.line)
-                    .max_by_key(|(_, line, _)| *line)
-                    .map(|(path, _, _)| path.clone());
+                candidate.enclosing_section =
+                    enclosing_section(sections, md_headings, candidate.line);
             }
             None => {
                 candidate.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());
@@ -282,6 +270,37 @@ pub(super) fn promote_local_section_citations(findings: &mut Findings) {
             right.column,
         ))
     });
+}
+
+/// Resolve the nearest accepted chapter while letting every Markdown sibling
+/// heading close it (§FS-rules.2, §AR-scanner.2.4.4). Rejected, duplicate and
+/// unmarked headings are absent from `sections`, but remain present in the full
+/// fence-aware heading stack and therefore still delimit the preceding unit.
+fn enclosing_section(
+    sections: &[(String, usize, usize)],
+    md_headings: &[(usize, usize)],
+    site_line: usize,
+) -> Option<String> {
+    let (path, line, depth) = sections
+        .iter()
+        .filter(|(_, line, _)| *line <= site_line)
+        .max_by_key(|(_, line, _)| *line)?;
+    let end = if md_headings.is_empty() {
+        sections
+            .iter()
+            .filter(|(_, next_line, next_depth)| next_line > line && next_depth <= depth)
+            .map(|(_, next_line, _)| next_line - 1)
+            .min()
+            .unwrap_or(usize::MAX)
+    } else {
+        md_headings
+            .iter()
+            .filter(|(next_line, next_depth)| next_line > line && next_depth <= depth)
+            .map(|(next_line, _)| next_line - 1)
+            .min()
+            .unwrap_or(usize::MAX)
+    };
+    (site_line <= end).then(|| path.clone())
 }
 
 /// The kind whose configured home (`[[kinds]] folder` / `file`, §FS-config.3.4)

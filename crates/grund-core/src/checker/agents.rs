@@ -30,7 +30,12 @@ pub(super) fn check_agents_block_version(
     config: &Config,
     report: &mut CheckReport,
 ) {
-    let rule_rows = super::configured_rule_sentences(findings, config).ok();
+    let rule_rows = config
+        .kinds
+        .iter()
+        .any(|kind| kind.rules)
+        .then(|| super::configured_rule_sentences(findings, config).ok())
+        .flatten();
     let root = &config.root;
     let canonical = root.join("AGENTS.md");
     let canonical_exists = canonical.exists();

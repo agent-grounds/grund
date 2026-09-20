@@ -4,7 +4,7 @@
 use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use crate::config::Config;
-use crate::grammar::render_id;
+use crate::grammar::{render_id, section_display_name};
 use crate::model::{Findings, Id, is_stub_for_inline_decl};
 use crate::resolver::WorkspaceCheckTarget;
 use std::collections::BTreeMap;
@@ -110,9 +110,11 @@ fn adapt_projects(
                         (alias.to_string(), id.clone(), section.clone()),
                         chapter.clone(),
                     );
-                    facts
-                        .chapter
-                        .push((chapter.clone(), section.clone(), info.title.clone()));
+                    facts.chapter.push((
+                        chapter.clone(),
+                        section.clone(),
+                        section_display_name(&info.title, section).to_string(),
+                    ));
                     facts.nodes.insert(
                         chapter,
                         NodeMeta {

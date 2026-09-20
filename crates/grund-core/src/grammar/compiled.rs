@@ -463,7 +463,7 @@ impl Grammar {
 
     /// Parse one already-delimited full ID using the exact grammar configured
     /// for its kind (§FS-config.3.2).
-    pub(super) fn parse_token(&self, token: &str) -> Option<Id> {
+    pub(crate) fn parse_token(&self, token: &str) -> Option<Id> {
         self.kind_parsers.iter().find_map(|(kind, parser)| {
             let caps = parser.captures(token)?;
             let num = caps

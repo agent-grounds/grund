@@ -41,6 +41,7 @@ FS-demo should have at most 2 requirements chapters.
 Each FS must have exactly one requirements chapter.
 Each FS should have exactly 2 requirements chapters.
 Each FS must cite at least one GOAL or REQ.
+Each FS should cite at least one GOAL.
 The requirements chapter of each FS should cite at most 2 REQ.
 FS-demo.requirements must cite exactly one REQ.
 AR-overview.system-overview must cite each AR at least once.

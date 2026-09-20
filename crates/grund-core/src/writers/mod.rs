@@ -87,6 +87,7 @@ mod fmt_workspace;
 mod id;
 mod init;
 mod init_block;
+mod init_guidance;
 mod init_notes;
 mod init_plan;
 mod init_render;
@@ -100,7 +101,8 @@ mod integrations_user_config;
 
 pub use fetch::{FetchFailure, FetchFailureKind, fetch_snapshot, fetch_snapshot_with_run_warnings};
 pub use fmt_error::FmtScanAbort;
-pub use init::{InitError, InitEvent, InitFsHome, InitNext, InitOpts, InitOutput, init};
+pub use init::{InitError, InitEvent, InitOpts, InitOutput, init};
+pub use init_guidance::{InitFsHome, InitNext};
 pub use init_plan::InitAgentEntrypointSelection;
 
 // What the other components read, each by this module's path (§AR-system.4):
@@ -144,7 +146,7 @@ pub(crate) use fmt_links::wrap_markdown_links;
 #[cfg(test)]
 pub(crate) use fmt_rewrite::{FmtLineOpts, fmt_line};
 #[cfg(test)]
-pub(crate) use init::docs_scaffold;
+pub(crate) use init_guidance::docs_scaffold;
 #[cfg(test)]
 pub(crate) use init_render::render_agents_append_block_at;
 #[cfg(test)]

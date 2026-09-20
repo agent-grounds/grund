@@ -4,7 +4,7 @@
 
 use crate::config::{Config, NamespaceMatch};
 use crate::grammar::render_id;
-use crate::model::{CheckReport, Diagnostic, Findings};
+use crate::model::{CheckReport, Declaration, Diagnostic, Findings};
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{evaluate, subject_resolves};
@@ -14,6 +14,7 @@ use crate::rules::sentence::{
     RuleVocabulary, TargetMode, parse_rule,
 };
 use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
 
 pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
     let kinds = config
@@ -26,6 +27,7 @@ pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
         kinds: kinds.clone(),
         target_kinds: kinds,
         named_sections: config.named_sections,
+        id_grammars: vec![config.grammar.clone()],
     }
 }
 
@@ -48,7 +50,7 @@ pub(crate) fn parse_ad_hoc(config: &Config, sentence: &str) -> anyhow::Result<Pa
 pub(crate) fn configured_rule_sentences(
     findings: &Findings,
     config: &Config,
-) -> anyhow::Result<Vec<(String, String)>> {
+) -> Result<Vec<(String, String)>, Diagnostic> {
     let vocab = vocabulary(config);
     let facts = adapt_markdown(findings, config, true);
     let rule_kinds = config
@@ -64,12 +66,21 @@ pub(crate) fn configured_rule_sentences(
         }
         for declaration in declarations {
             let origin = render_id(&config.grammar, id);
+            let path = declaration.file.to_string_lossy();
             let title = declaration.title.as_deref().ok_or_else(|| {
-                anyhow::anyhow!("{origin} is not a valid rule: rule declaration has no title")
+                invalid_rule(
+                    &origin,
+                    path.as_ref(),
+                    declaration.line,
+                    "rule declaration has no title",
+                )
             })?;
-            if declaration.body_end <= declaration.line {
-                return Err(anyhow::anyhow!(
-                    "{origin} is not a valid rule: rule rationale is empty"
+            if !rule_has_rationale(declaration) {
+                return Err(invalid_rule(
+                    &origin,
+                    path.as_ref(),
+                    declaration.line,
+                    "rule rationale is empty",
                 ));
             }
             let parsed = parse_rule(
@@ -82,7 +93,9 @@ pub(crate) fn configured_rule_sentences(
                 },
                 &vocab,
             )
-            .map_err(|error| anyhow::anyhow!("{origin} is not a valid rule: {}", error.message))?;
+            .map_err(|error| {
+                invalid_rule(&origin, path.as_ref(), declaration.line, &error.message)
+            })?;
             if !subject_resolves(&parsed, &facts) {
                 let literal = match &parsed.subject {
                     RuleSubject::ExactDeclaration(value) => value.clone(),
@@ -91,8 +104,11 @@ pub(crate) fn configured_rule_sentences(
                     }
                     _ => unreachable!(),
                 };
-                return Err(anyhow::anyhow!(
-                    "{origin} is not a valid rule: literal subject {literal} does not resolve"
+                return Err(invalid_rule(
+                    &origin,
+                    path.as_ref(),
+                    declaration.line,
+                    &format!("literal subject {literal} does not resolve"),
                 ));
             }
             rows.push((origin, title.to_string()));
@@ -151,7 +167,7 @@ pub(crate) fn check_chapter_rules(
                     parse_rule(title, origin.clone(), anchor, &vocab).map_err(|error| error.message)
                 });
             match parsed {
-                Ok(rule) if declaration.body_end > declaration.line => rules.push(rule),
+                Ok(rule) if rule_has_rationale(declaration) => rules.push(rule),
                 Ok(_) => report.errors.push(invalid_rule(
                     &origin,
                     declaration.file.to_string_lossy().as_ref(),
@@ -184,7 +200,10 @@ pub(crate) fn check_chapter_rules(
             _ => return true,
         };
         let (path, line) = if rule.origin == "--rule" {
-            (None, None)
+            // The ad-hoc origin has no filesystem location, but its stable
+            // pseudo-anchor keeps this post-scan failure on the ordinary
+            // selectable finding stream (§FS-rules.4, §FS-rules.7.1).
+            (None, Some(1))
         } else {
             (
                 Some(rule.anchor.path.clone().into()),
@@ -212,6 +231,22 @@ pub(crate) fn check_chapter_rules(
             report.errors.push(result.diagnostic);
         }
     }
+}
+
+/// A rule rationale contains authored non-whitespace text after its declaration
+/// heading. Both `check` and `init` use this one predicate so a blank body can
+/// never render or execute on one surface only (§FS-rules.1, §FS-rules.4).
+pub(crate) fn rule_has_rationale(declaration: &Declaration) -> bool {
+    if declaration.body_end <= declaration.line {
+        return false;
+    }
+    let Ok(text) = fs::read_to_string(&declaration.file) else {
+        return false;
+    };
+    text.lines()
+        .skip(declaration.line)
+        .take(declaration.body_end - declaration.line)
+        .any(|line| !line.trim().is_empty())
 }
 
 fn invalid_rule(origin: &str, path: &str, line: usize, message: &str) -> Diagnostic {
