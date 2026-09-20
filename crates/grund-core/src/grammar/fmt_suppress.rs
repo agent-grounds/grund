@@ -144,7 +144,7 @@ impl<'a> FmtDirectives<'a> {
     pub(crate) fn directive(&self, line: &str, docstring: DocstringContent<'_>) -> Option<bool> {
         // The cheap gate first — `fmt` asks this of every line of every scanned
         // file, and almost none of them carry the text (§GOAL-fast-feedback).
-        if !line.contains(FMT_DIRECTIVE) {
+        if !line.contains(FMT_DIRECTIVE) || docstring.has_assigned_data() {
             return None;
         }
         let content = match &self.prefixes {

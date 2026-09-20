@@ -201,7 +201,7 @@ pub(super) fn extract_declaration_body_cached(
             break;
         }
         let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
-        let scan_line = scan.text;
+        let scan_line = scan.text.as_ref();
         if in_decl
             && scan.in_py_docstring
             && scan.closed_py_docstring

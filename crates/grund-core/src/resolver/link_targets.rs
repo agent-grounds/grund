@@ -184,7 +184,7 @@ fn section_heading_text(
     let mut py_docstring = PythonDocstringScanState::default();
     for line in text.lines() {
         let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
-        let scan_line = scan.text;
+        let scan_line = scan.text.as_ref();
         if let Some((found, _)) =
             declaration_id_on_line(&config.grammar, scan_line, scan.in_py_docstring, is_md)
         {
