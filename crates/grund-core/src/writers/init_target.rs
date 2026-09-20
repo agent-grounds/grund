@@ -104,8 +104,8 @@ pub(crate) fn refuse_init_global_instruction_paths(entrypoints: &[PathBuf]) -> O
     })
 }
 
-/// The default project name when `--name` is omitted: the basename of `<path>`
-/// resolved to an absolute path (§FS-init.1).
+/// The final project-name fallback when neither `--name` nor the target config
+/// supplies one: the basename of resolved `<path>` (§FS-init.2.3.8).
 pub(super) fn derive_default_name(target: &Path) -> Result<String> {
     let absolute =
         fs::canonicalize(target).with_context(|| format!("resolve {}", target.display()))?;

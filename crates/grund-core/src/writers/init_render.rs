@@ -10,6 +10,7 @@
 use anyhow::Result;
 use std::path::Path;
 
+use super::init_target::derive_default_name;
 use super::init_workspace_members::render_workspace_members_section_with_run_warnings;
 use crate::config::{Config, config_file_in, load_config};
 use crate::model::Finding;
@@ -46,15 +47,15 @@ pub(super) fn agents_workspace_members_section(
     )
 }
 
-/// The config that `grund init` will leave governing `target`, which the generated
-/// `AGENTS.md` must describe (§FS-init.2.3.8): `target`'s existing config in either
-/// discovery form if there is one (§FS-config.1), otherwise the defaults plus the
-/// *pending* `project_name` and `project_description` that `init` is about to
-/// write into `target/grund.toml` (§FS-init.2.4.7). The `pending` in the name flags
-/// that the returned `Config` may carry values that are not yet on disk —
-/// callers must not treat it as reflecting persisted state. We do **not** walk
-/// up to an ancestor's config here — `init` always writes a config *in*
-/// `target` when one is absent.
+/// The config and generated name that `grund init` will leave governing
+/// `target`, which the generated `AGENTS.md` must describe (§FS-init.2.3.8):
+/// `target`'s existing config in either discovery form if there is one
+/// (§FS-config.1), otherwise the defaults plus the *pending* `project_name` and
+/// `project_description` that `init` is about to write into `target/grund.toml`
+/// (§FS-init.2.4.7). The `pending` in the name flags that the returned `Config`
+/// may carry values that are not yet on disk — callers must not treat it as
+/// reflecting persisted state. We do **not** walk up to an ancestor's config
+/// here — `init` always writes a config *in* `target` when one is absent.
 ///
 /// A config that fails to load is an error, not a fallback to defaults
 /// (§FS-init.2.3.8.3): the block is rendered *from* this config, so silently
@@ -64,17 +65,25 @@ pub(super) fn agents_workspace_members_section(
 /// success. `grund check` rejects the same file with exit `2`.
 pub(super) fn init_pending_effective_config(
     target: &Path,
-    name: &str,
+    explicit_name: Option<&str>,
     description: Option<&str>,
-) -> Result<Config> {
-    if config_file_in(target).is_some() {
-        load_config(target)
+) -> Result<(Config, String)> {
+    let mut config = if config_file_in(target).is_some() {
+        load_config(target)?
     } else {
-        let mut config = Config::default_for(target.to_path_buf());
-        config.project_name = Some(name.to_string());
+        Config::default_for(target.to_path_buf())
+    };
+    // §FS-init.2.3.8: every canonical renderer consumes one generated identity:
+    // the explicit flag, then target-local config, then the target basename.
+    let name = match explicit_name.or(config.project_name.as_deref()) {
+        Some(name) => name.to_string(),
+        None => derive_default_name(target)?,
+    };
+    if config.config_file.is_none() {
+        config.project_name = Some(name.clone());
         config.project_description = description.map(str::to_string);
-        Ok(config)
     }
+    Ok((config, name))
 }
 
 /// `templates::render_agents_append_block` with the §FS-init.2.3.4.15 section
