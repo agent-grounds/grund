@@ -1,7 +1,7 @@
 //! Executable parser/facts/engine boundary drivers (§AR-rules.6).
 
 use super::RuleAnchor;
-use super::engine::evaluate;
+use super::engine::{evaluate, evaluate_suggestions};
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use super::markdown::adapt_markdown;
 use super::sentence::{
@@ -79,8 +79,10 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
         &RuleVocabulary {
             kinds: BTreeSet::from(["FS".into(), "REQ".into()]),
             target_kinds: BTreeSet::from(["FS".into(), "REQ".into()]),
+            target_namespaces: BTreeMap::new(),
             named_sections: true,
             id_grammars: Vec::new(),
+            section_separators: vec![".".into()],
         },
     )
     .expect("released sentence");
@@ -114,14 +116,30 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
 
 #[test]
 fn logic_engine_evaluates_hand_built_rule_and_facts_without_parser_or_scanner() {
-    let diagnostics = evaluate(&[rule()], &facts(Completeness::Complete));
+    let diagnostics = evaluate(&[rule()], &[], &facts(Completeness::Complete));
     assert_eq!(diagnostics.len(), 1);
-    assert_eq!(diagnostics[0].diagnostic.code, "missing-citation");
-    assert_eq!(diagnostics[0].diagnostic.line, Some(2));
-    assert_eq!(
-        diagnostics[0].diagnostic.message,
-        "FS-demo must cite GOAL (RULE-fs)"
+    assert_eq!(diagnostics[0].code, "missing-citation");
+    assert_eq!(diagnostics[0].line, Some(2));
+    assert_eq!(diagnostics[0].message, "FS-demo must cite GOAL (RULE-fs)");
+}
+
+#[test]
+fn logic_engine_owns_precedence_and_existing_report_channels() {
+    let hard = rule();
+    let suppressed = evaluate(
+        std::slice::from_ref(&hard),
+        std::slice::from_ref(&hard),
+        &facts(Completeness::Complete),
     );
+    assert!(suppressed.is_empty());
+
+    let recommended = ParsedRule {
+        level: RuleLevel::Recommended,
+        ..rule()
+    };
+    let diagnostics = evaluate_suggestions(&[recommended], &[], &facts(Completeness::Complete));
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].code, "suggested-citation");
 }
 
 #[test]
@@ -158,21 +176,24 @@ fn markdown_adapter_and_second_producer_drive_the_same_engine_result() {
         )]),
         sites: BTreeMap::new(),
     };
-    let left = evaluate(&[rule()], &markdown)
+    let left = evaluate(&[rule()], &[], &markdown)
         .into_iter()
-        .map(|d| (d.diagnostic.code, d.diagnostic.message))
+        .map(|d| (d.code, d.message))
         .collect::<Vec<_>>();
-    let right = evaluate(&[rule()], &second)
+    let right = evaluate(&[rule()], &[], &second)
         .into_iter()
-        .map(|d| (d.diagnostic.code, d.diagnostic.message))
+        .map(|d| (d.code, d.message))
         .collect::<Vec<_>>();
     assert_eq!(left, right);
 }
 
 #[test]
 fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
-    assert_eq!(evaluate(&[rule()], &facts(Completeness::Complete)).len(), 1);
-    assert!(evaluate(&[rule()], &facts(Completeness::Incomplete)).is_empty());
+    assert_eq!(
+        evaluate(&[rule()], &[], &facts(Completeness::Complete)).len(),
+        1
+    );
+    assert!(evaluate(&[rule()], &[], &facts(Completeness::Incomplete)).is_empty());
 
     let fs = NodeKey("partial-fs".into());
     let ar = NodeKey("partial-ar".into());
@@ -233,7 +254,7 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
         cardinality: Cardinality::NONE,
         ..rule()
     };
-    let diagnostics = evaluate(&[rule(), exact_count, prohibition], &partial);
+    let diagnostics = evaluate(&[rule(), exact_count, prohibition], &[], &partial);
     assert_eq!(diagnostics.len(), 1);
-    assert_eq!(diagnostics[0].diagnostic.code, "forbidden-citation");
+    assert_eq!(diagnostics[0].code, "forbidden-citation");
 }

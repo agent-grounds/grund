@@ -53,6 +53,7 @@ pub use citations::{
     CitationDisjunction, CitationLevel, CitationRules, CitationTarget, KindCitationRules,
     NamespaceMatch,
 };
+pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
 pub use kind::{KindConfig, KindIndex, KindResolution};
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
 pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
@@ -60,7 +61,6 @@ pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolic
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use citations::render_citation_target;
 pub(crate) use discovery::{
     config_file_in, home_form_of, load_config, load_config_at, load_config_at_with_report_base,
 };

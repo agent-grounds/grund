@@ -1,18 +1,31 @@
 //! The controlled-English sentence front end (§FS-rules.2–4, §AR-rules.2).
 
 mod count;
+mod subjects;
+mod targets;
 
 use super::RuleAnchor;
-use crate::grammar::{Grammar, parse_id_arg, render_id};
+use crate::grammar::Grammar;
 use count::{CountSpelling, count_prefix, positive};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
+use subjects::parse_subject;
+use targets::kind_targets;
+
+pub(crate) use subjects::parse_selector;
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) enum RuleSubject {
     Kind(String),
     ExactDeclaration(String),
-    ChapterOfKind { kind: String, name: String },
-    ExactChapter { declaration: String, path: String },
+    ChapterOfKind {
+        kind: String,
+        name: String,
+    },
+    ExactChapter {
+        declaration: String,
+        path: String,
+        separator: String,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -73,10 +86,14 @@ pub(crate) struct ParsedRule {
 pub(crate) struct RuleVocabulary {
     pub(crate) kinds: BTreeSet<String>,
     pub(crate) target_kinds: BTreeSet<String>,
+    /// Citable target kinds by full workspace alias. Bare targets continue to
+    /// use `target_kinds`; qualified targets must resolve in their namespace.
+    pub(crate) target_namespaces: BTreeMap<String, BTreeSet<String>>,
     pub(crate) named_sections: bool,
     /// Effective lexical grammars for the catalogs this vocabulary can select.
     /// The sentence front end sees syntax, never scan facts (§AR-rules.1).
     pub(crate) id_grammars: Vec<Grammar>,
+    pub(crate) section_separators: Vec<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -95,28 +112,6 @@ fn error(message: impl Into<String>) -> RuleParseError {
     RuleParseError {
         message: message.into(),
     }
-}
-
-/// Parse the one subject-selector grammar shared by rule sentences and catalog
-/// filtering (§FS-rules.2, §FS-rules.8). Resolution of exact literals remains a
-/// post-scan concern for the caller.
-pub(crate) fn parse_selector(
-    text: &str,
-    vocabulary: &RuleVocabulary,
-) -> Result<RuleSubject, RuleParseError> {
-    if vocabulary.kinds.contains(text) {
-        return Ok(RuleSubject::Kind(text.into()));
-    }
-    if let Some((kind, name)) = text.split_once('.')
-        && vocabulary.kinds.contains(kind)
-    {
-        validate_named_path(name, vocabulary, text)?;
-        return Ok(RuleSubject::ChapterOfKind {
-            kind: kind.into(),
-            name: name.into(),
-        });
-    }
-    parse_subject(text, vocabulary)
 }
 
 /// Parse exactly the five released families (§FS-rules.3). Near misses receive
@@ -219,141 +214,6 @@ pub(crate) fn parse_rule(
     })
 }
 
-fn parse_subject(text: &str, vocab: &RuleVocabulary) -> Result<RuleSubject, RuleParseError> {
-    if let Some(kind) = text.strip_prefix("Each ") {
-        known_subject(kind, vocab)?;
-        return Ok(RuleSubject::Kind(kind.into()));
-    }
-    if let Some(rest) = text.strip_prefix("The ")
-        && let Some((name, kind)) = rest.split_once(" chapter of each ")
-    {
-        known_subject(kind, vocab)?;
-        if !vocab.named_sections {
-            return Err(error(format!(
-                "named chapter subjects require [id] named_sections = true; accepted form after enabling it: The {name} chapter of each {kind} must cite at least one REQ."
-            )));
-        }
-        validate_named_path(name, vocab, text)?;
-        return Ok(RuleSubject::ChapterOfKind {
-            kind: kind.into(),
-            name: name.into(),
-        });
-    }
-    if text.contains('/') {
-        return Err(error(
-            "subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one GOAL.",
-        ));
-    }
-    if let Some((declaration, section)) = text.split_once('.')
-        && section.contains('*')
-    {
-        return Err(error(format!(
-            "section-component wildcards are not accepted in phase 1; accepted form: {declaration}.requirements must cite at least one REQ."
-        )));
-    }
-    if let Some((declaration, section)) = text.split_once('.')
-        && section
-            .split('.')
-            .any(|part| part.bytes().all(|b| b.is_ascii_digit()))
-    {
-        return Err(error(format!(
-            "numbered chapter subjects can detach when headings move; accepted form: {declaration}.requirements must cite at least one REQ."
-        )));
-    }
-    if text.contains('.') && !vocab.named_sections {
-        return Err(error(format!(
-            "named chapter subjects require [id] named_sections = true; accepted form after enabling it: {text} must cite at least one REQ."
-        )));
-    }
-    for grammar in &vocab.id_grammars {
-        if let Ok((id, section)) = parse_id_arg(text, grammar) {
-            known_subject(&id.kind, vocab)?;
-            return Ok(match section {
-                Some(path) => RuleSubject::ExactChapter {
-                    declaration: render_id(grammar, &id),
-                    path,
-                },
-                None => RuleSubject::ExactDeclaration(text.into()),
-            });
-        }
-    }
-    // A hand-built parser boundary test may provide only scalar vocabulary.
-    // Production callers always pass the effective compiled grammar.
-    if vocab.id_grammars.is_empty()
-        && let Some(kind) = vocab
-            .kinds
-            .iter()
-            .filter(|kind| text.starts_with(&format!("{kind}-")))
-            .max_by_key(|kind| kind.len())
-    {
-        known_subject(kind, vocab)?;
-        return Ok(match text.split_once('.') {
-            Some((declaration, path)) => RuleSubject::ExactChapter {
-                declaration: declaration.into(),
-                path: path.into(),
-            },
-            None => RuleSubject::ExactDeclaration(text.into()),
-        });
-    }
-    Err(error(format!(
-        "literal subject \"{text}\" does not match the configured ID grammar; accepted form: FS-login must cite at least one GOAL."
-    )))
-}
-
-fn validate_named_path(
-    path: &str,
-    vocab: &RuleVocabulary,
-    authored: &str,
-) -> Result<(), RuleParseError> {
-    if !vocab.named_sections {
-        return Err(error(format!(
-            "named chapter subjects require [id] named_sections = true; accepted form after enabling it: {authored} must cite at least one REQ."
-        )));
-    }
-    let scalar_valid = !path.is_empty()
-        && path.split('.').all(|component| {
-            component
-                .as_bytes()
-                .first()
-                .is_some_and(u8::is_ascii_lowercase)
-                && component
-                    .bytes()
-                    .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
-        });
-    let grammar_valid = vocab.id_grammars.is_empty()
-        || vocab
-            .id_grammars
-            .iter()
-            .any(|grammar| grammar.is_section_path(path));
-    if scalar_valid && grammar_valid {
-        Ok(())
-    } else {
-        Err(error(format!(
-            "named chapter subject \"{authored}\" does not match the configured section grammar; accepted form: FS-login.requirements must cite at least one REQ."
-        )))
-    }
-}
-
-fn known_subject(kind: &str, vocab: &RuleVocabulary) -> Result<(), RuleParseError> {
-    if vocab.kinds.contains(kind) {
-        Ok(())
-    } else {
-        Err(error(format!(
-            "unknown kind \"{kind}\"; accepted form: Each FS must cite at least one GOAL."
-        )))
-    }
-}
-
-fn known_target(kind: &str, vocab: &RuleVocabulary) -> Result<(), RuleParseError> {
-    if vocab.target_kinds.contains(kind) {
-        Ok(())
-    } else {
-        Err(error(format!(
-            "unknown kind \"{kind}\"; accepted form: Each FS must cite at least one GOAL."
-        )))
-    }
-}
-
 fn parse_predicate(
     text: &str,
     polarity: RulePolarity,
@@ -382,6 +242,11 @@ fn parse_predicate(
                 "chapter presence must end in \"chapter\"; accepted form: Each FS must have exactly one requirements chapter.",
             ));
         };
+        if name.is_empty() || name.trim() != name || name.chars().any(char::is_whitespace) {
+            return Err(error(
+                "chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter.",
+            ));
+        }
         let expects_plural = match spelling {
             CountSpelling::AtLeastOne | CountSpelling::ExactlyOne => false,
             CountSpelling::AtMost(n) => n != 1,
@@ -486,18 +351,4 @@ fn parse_predicate(
     Err(error(
         "verb is not accepted; accepted form: Each FS must cite at least one GOAL.",
     ))
-}
-
-fn kind_targets(
-    text: &str,
-    mode: TargetMode,
-    vocab: &RuleVocabulary,
-) -> Result<RuleTargets, RuleParseError> {
-    let mut values = text.split(" or ").map(str::to_string).collect::<Vec<_>>();
-    for target in &values {
-        known_target(target.rsplit('/').next().unwrap_or(target), vocab)?;
-    }
-    values.sort();
-    values.dedup();
-    Ok(RuleTargets::Kinds { values, mode })
 }

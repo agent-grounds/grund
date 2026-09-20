@@ -280,6 +280,7 @@ fn check_uses_scanned_symlink_path_for_kind_home() {
             title: Some("Router".to_string()),
             body_start: 1,
             body_end: 1,
+            body_has_content: false,
             source: DeclarationSource::Text,
             value_valid: None,
         }],

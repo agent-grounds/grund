@@ -382,7 +382,11 @@ fn render_list_text(entries: &[ListEntry]) {
 }
 
 fn list_coordinate(entry: &ListEntry) -> String {
-    entry.section.as_deref().map(|section| format!("{}.{}", entry.id, section)).unwrap_or_else(|| entry.id.clone())
+    entry
+        .section
+        .as_deref()
+        .map(|section| format!("{}{}{}", entry.id, entry.section_separator, section))
+        .unwrap_or_else(|| entry.id.clone())
 }
 
 /// Render the owning project's exact declaration/section coordinate

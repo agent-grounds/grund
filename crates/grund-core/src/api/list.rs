@@ -19,7 +19,9 @@ use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::rules::sentence::{RuleSubject, RuleVocabulary, parse_selector};
 
 use super::report::context_run_warnings;
-use crate::scanner::{ApiScanError, api_scan_error};
+use crate::scanner::api_scan_error;
+
+pub use super::list_output::{ListEntry, ListOutput, ListSummary, ListValueRoot};
 
 #[derive(Clone)]
 pub struct ListOpts {
@@ -43,56 +45,6 @@ impl Default for ListOpts {
             selector: None,
         }
     }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ListEntry {
-    pub project: Option<String>,
-    pub id: String,
-    /// Exact named-section path for a chapter row; declaration rows omit it.
-    pub section: Option<String>,
-    pub kind: String,
-    pub path: String,
-    pub line: usize,
-    pub title: Option<String>,
-    pub stub: bool,
-    pub defines: Option<String>,
-    pub refs: usize,
-    pub duplicate: bool,
-    /// Embedded value authorities owned by this declaration's existing
-    /// sections, omitted by serializers when empty (§FS-values.6.1,
-    /// §FS-list.3.1.1).
-    pub value_roots: Vec<ListValueRoot>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ListValueRoot {
-    pub id: String,
-    pub valid: bool,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ListSummary {
-    pub project: Option<String>,
-    pub kind: String,
-    pub title: String,
-    pub home: String,
-    pub count: usize,
-}
-
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ListOutput {
-    pub output_format: String,
-    pub workspace: bool,
-    pub entries: Vec<ListEntry>,
-    pub summaries: Vec<ListSummary>,
-    pub scan_errors: Vec<ApiScanError>,
-    /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11 and
-    /// §FS-workspace.6.1.7, each anchored at the `grund.toml` line its own message
-    /// names. A frontend renders each as one CLI-level `warning:` on stderr
-    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1.3).
-    pub warnings: Vec<Finding>,
 }
 
 fn list_summary_home(kind: &KindConfig) -> String {
@@ -189,9 +141,13 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
     let vocabulary = RuleVocabulary {
         kinds: kinds.clone(),
         target_kinds: kinds,
+        target_namespaces: BTreeMap::new(),
         named_sections: selected_projects().all(|project| project.config.named_sections),
         id_grammars: selected_projects()
             .map(|project| project.config.grammar.clone())
+            .collect(),
+        section_separators: selected_projects()
+            .map(|project| project.config.section_separator.clone())
             .collect(),
     };
     let selector = opts
@@ -278,20 +234,43 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
     // rows. Kind selectors may span workspace members; an exact literal must
     // resolve once, just as a rule subject does (§FS-rules.2, §FS-rules.8).
     if let Some(subject) = &selector {
-        let literal = match subject {
-            RuleSubject::ExactDeclaration(literal) => Some(literal.as_str()),
-            RuleSubject::ExactChapter { declaration, .. } => Some(declaration.as_str()),
+        let resolution = match subject {
+            RuleSubject::ExactDeclaration(literal) => Some((
+                literal.clone(),
+                entries
+                    .iter()
+                    .filter(|entry| render_id(&entry.project_config.grammar, entry.id) == *literal)
+                    .count(),
+            )),
+            RuleSubject::ExactChapter {
+                declaration,
+                path,
+                separator,
+            } => Some((
+                format!("{declaration}{separator}{path}"),
+                entries
+                    .iter()
+                    .filter(|entry| {
+                        render_id(&entry.project_config.grammar, entry.id) == *declaration
+                    })
+                    .map(|entry| {
+                        usize::from(entry.home.sections.contains_key(path))
+                            + entry
+                                .home
+                                .duplicate_sections
+                                .iter()
+                                .filter(|(section, _)| section == path)
+                                .count()
+                    })
+                    .sum(),
+            )),
             _ => None,
         };
-        if let Some(literal) = literal {
-            let exact_matches = entries
-                .iter()
-                .filter(|entry| render_id(&entry.project_config.grammar, entry.id) == literal)
-                .collect::<Vec<_>>();
-            if exact_matches.is_empty() {
+        if let Some((literal, exact_matches)) = resolution {
+            if exact_matches == 0 {
                 return Err(anyhow!("literal subject {literal} does not resolve"));
             }
-            if exact_matches.len() > 1 {
+            if exact_matches > 1 {
                 return Err(anyhow!("literal subject {literal} is ambiguous"));
             }
         }
@@ -319,6 +298,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                     .then(|| entry.project_alias.to_string()),
                 id: rendered_id.clone(),
                 section: None,
+                section_separator: entry.project_config.section_separator.clone(),
                 kind: entry.id.kind.clone(),
                 path: display_path(render_config, &entry.home.file),
                 line: entry.home.line,
@@ -362,10 +342,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                     .home
                     .sections
                     .iter()
-                    .filter(|(section, info)| {
-                        section.rsplit('.').next() == Some(name.as_str())
-                            || section_display_name(&info.title, section).eq_ignore_ascii_case(name)
-                    })
+                    .filter(|(section, _)| section.rsplit('.').next() == Some(name.as_str()))
                     .map(|(section, info)| {
                         let mut row = base();
                         row.section = Some(section.clone());
@@ -379,28 +356,26 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                         row
                     })
                     .collect(),
-                Some(RuleSubject::ExactChapter { declaration, path })
-                    if declaration == &render_id(&entry.project_config.grammar, entry.id) =>
-                {
-                    entry
-                        .home
-                        .sections
-                        .get(path)
-                        .map(|info| {
-                            let mut row = base();
-                            row.section = Some(path.clone());
-                            row.line = info.line;
-                            row.title = Some(section_display_name(&info.title, path).to_string());
-                            row.stub = false;
-                            row.defines = None;
-                            row.refs = 0;
-                            row.duplicate = false;
-                            row.value_roots.clear();
-                            row
-                        })
-                        .into_iter()
-                        .collect()
-                }
+                Some(RuleSubject::ExactChapter {
+                    declaration, path, ..
+                }) if declaration == &render_id(&entry.project_config.grammar, entry.id) => entry
+                    .home
+                    .sections
+                    .get(path)
+                    .map(|info| {
+                        let mut row = base();
+                        row.section = Some(path.clone());
+                        row.line = info.line;
+                        row.title = Some(section_display_name(&info.title, path).to_string());
+                        row.stub = false;
+                        row.defines = None;
+                        row.refs = 0;
+                        row.duplicate = false;
+                        row.value_roots.clear();
+                        row
+                    })
+                    .into_iter()
+                    .collect(),
                 _ => Vec::new(),
             }
         })

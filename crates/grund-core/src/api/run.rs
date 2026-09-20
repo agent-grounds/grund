@@ -17,8 +17,9 @@ use super::config_findings::config_diagnostics;
 use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
 use crate::checker::{
     check_chapter_rules, check_findings, check_with_workspace, configured_scope,
-    out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc, retain_findings_in_scope,
-    sort_diagnostics, workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
+    out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc,
+    parse_ad_hoc_with_workspace, retain_findings_in_scope, sort_diagnostics,
+    workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Diagnostic};
@@ -51,9 +52,6 @@ pub(crate) fn run_check(
 ) -> Result<CheckRun> {
     let mut config = resolve_workspace_config(path)?;
     // §FS-rules.4: ad-hoc grammar/vocabulary refusals happen before scanning.
-    let ad_hoc = ad_hoc_sentence
-        .map(|sentence| parse_ad_hoc(&config, sentence))
-        .transpose()?;
     // §FS-check.1.3: `--full` cancels `[scan] include` for the walk. It is a
     // per-run flag, never a config key (§DF-check-full-scope.2.5).
     config.scan_full = full;
@@ -64,8 +62,11 @@ pub(crate) fn run_check(
         config.require_grounding = true;
     }
     if config.workspace_declared && scope_is_config_root(&config, path, path_provided) {
-        return run_workspace_check(config, force_require_grounding, full, ad_hoc);
+        return run_workspace_check(config, force_require_grounding, full, ad_hoc_sentence);
     }
+    let ad_hoc = ad_hoc_sentence
+        .map(|sentence| parse_ad_hoc(&config, sentence))
+        .transpose()?;
 
     let (mut findings, scan_errors) = scan_tree(&config, Some(path), path_provided)?;
     // §FS-check.1.3 / §FS-check.3.14: read the out-of-scope tier off the whole
@@ -153,7 +154,7 @@ fn run_workspace_check(
     mut root_config: Config,
     force_require_grounding: bool,
     full: bool,
-    ad_hoc: Option<crate::rules::sentence::ParsedRule>,
+    ad_hoc_sentence: Option<&str>,
 ) -> Result<CheckRun> {
     let mut projects = load_workspace_projects(&mut root_config)?;
     // §FS-check.3.5: `--require-grounding` propagates to every member's
@@ -191,6 +192,9 @@ fn run_workspace_check(
             )
         })
         .collect::<BTreeMap<_, _>>();
+    let ad_hoc = ad_hoc_sentence
+        .map(|sentence| parse_ad_hoc_with_workspace(&root_config, sentence, &workspace))
+        .transpose()?;
     let mut report = CheckReport::default();
     let mut had_scan_errors = false;
     for project in &projects {

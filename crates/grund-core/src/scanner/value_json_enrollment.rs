@@ -64,6 +64,7 @@ pub(super) fn enroll_json_member(
         title: None,
         body_start: member_line,
         body_end: json_line_column(text, member.span.end).0,
+        body_has_content: false,
         source: DeclarationSource::Json {
             member_slice,
             key_column,

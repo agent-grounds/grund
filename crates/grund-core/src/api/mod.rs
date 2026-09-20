@@ -40,6 +40,7 @@ mod cover;
 mod fmt;
 mod id;
 mod list;
+mod list_output;
 mod lsp_ranges;
 mod lsp_snapshot;
 mod refs;
@@ -103,6 +104,8 @@ mod tests_init_guidance;
 mod tests_python_assigned_data;
 #[cfg(test)]
 mod tests_refs_query_failures;
+#[cfg(test)]
+mod tests_rule_overlays;
 #[cfg(test)]
 mod tests_shorthand_docstring;
 #[cfg(test)]

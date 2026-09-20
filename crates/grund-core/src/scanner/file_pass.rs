@@ -212,6 +212,7 @@ pub(super) fn scan_file_text(
                 // on the file is known. Default to the single declaration line.
                 body_start: lineno,
                 body_end: lineno,
+                body_has_content: false,
                 source: DeclarationSource::Text,
                 value_valid: None,
             });
@@ -294,6 +295,7 @@ pub(super) fn scan_file_text(
                 title,
                 body_start: lineno,
                 body_end: lineno,
+                body_has_content: false,
                 source: DeclarationSource::Text,
                 value_valid: None,
             });
