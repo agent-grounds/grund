@@ -28,10 +28,10 @@ Then reload the client and click:
 | Client | Reload with | Click with |
 | --- | --- | --- |
 | **kitty** | `ctrl+shift+F5` | `ctrl+shift+p` `g`, then the hint label |
-| **wezterm** | automatic — but **wire it up first** ([§1](#1-install)) | ctrl-click, or `ctrl+shift+g` then the label |
+| **wezterm** | automatic — but **wire it up first** ([section 1](#1-install)) | ctrl-click, or `ctrl+shift+g` then the label |
 | **tmux** | `tmux source-file ~/.tmux.conf` | select in copy mode, then `prefix` + `g` |
 | **vscode**, **codium** | *Developer: Reload Window* | click the link in the integrated terminal |
-| **iterm2** | — **apply the rule by hand** ([§1](#1-install)) | cmd-click the citation |
+| **iterm2** | — **apply the rule by hand** ([section 1](#1-install)) | cmd-click the citation |
 
 **The three checks.** Each has a quiet failure mode, and on a machine where one
 of them is false every click silently does nothing:
@@ -45,7 +45,7 @@ echo "${GRUND_OPEN_CMD:-${EDITOR:-<none — falls back to code/codium>}}"
 The second is where the resolver script is installed, and on **macOS it is not
 on the default `PATH`** — add it to your shell profile before going further. The
 third is the editor the resolver opens files with. Both are explained in
-[§4](#4-when-a-click-does-nothing), which is also where to look when a click
+[section 4](#4-when-a-click-does-nothing), which is also where to look when a click
 does nothing.
 
 **Also in this guide:** [install](#1-install) · [check it
@@ -77,7 +77,7 @@ grund integrations kitty --write
 ```
 
 The write is idempotent and lands as a marked block, so re-running is safe and
-removing it later is a matter of deleting the block ([§7](#7-remove-it)).
+removing it later is a matter of deleting the block ([section 7](#7-remove-it)).
 
 Three clients need a step grund cannot take for you.
 
@@ -95,7 +95,7 @@ the resolver and then prints the rule to add under
 `grund-open --peek \0` to get peek on the right-click menu.
 
 Before you do any of that, though, see the note at the end of
-[§3](#3-peek-without-leaving-the-terminal) — on iTerm2 you may not need a rule
+[section 3](#3-peek-without-leaving-the-terminal) — on iTerm2 you may not need a rule
 at all.
 
 **WezTerm needs one manual edit — but only if you already have a config.** It
@@ -183,7 +183,7 @@ grund FS-integrations.4.3 --format json
 The last row is the other clickable shape: a location needs no `grund` and no
 grund repository at all — the resolver climbs to the nearest ancestor holding
 the file and opens it at that line — so the text agents write beside citations
-in the `link` conversation form ([§5](#5-citations-in-conversations)) is a link
+in the `link` conversation form ([section 5](#5-citations-in-conversations)) is a link
 in its own right.
 
 Then confirm it works from anywhere in the tree, because a click carries no
@@ -274,7 +274,7 @@ grund-open '§FS-integrations.3.1'
 **If that opens the file**, the resolver is fine and the terminal is not
 matching or not wired. Reload the client's config. For WezTerm, check that
 `grund_apply_hyperlink_rule(config)` is actually called on the config you
-return ([§1](#1-install)).
+return ([section 1](#1-install)).
 
 **If the command is not found**, `~/.local/bin` — where `--write` installs the
 resolver — is not on your `PATH`. On **macOS this is usually the one that
@@ -337,17 +337,17 @@ Everything so far makes citations clickable in your *terminal*. This section
 is about the citations agents write in *conversation* — answers, reviews,
 session transcripts. Two independent things can make those navigable:
 
-1. **A rendering layer on your machine** ([§1](#1-install)) turns a bare `§<ID>`
+1. **A rendering layer on your machine** ([section 1](#1-install)) turns a bare `§<ID>`
    into a click.
 2. **The agent carrying the declaration's location with each citation** — as a
    Markdown link over an absolute URI, so the visible text stays the citation
    and the click opens the file. Which scheme it uses is yours to pick
-   ([§5.2](#52-which-scheme-the-link-uses)).
+   ([section 5.2](#52-which-scheme-the-link-uses)).
 
 Pick your situation:
 
 **Your terminal is supported (wezterm, kitty, tmux, iterm2, vscode).**
-Install the integration ([§1](#1-install)). That records the `plain`
+Install the integration ([section 1](#1-install)). That records the `plain`
 preference: agents write bare `§<ID>` citations and your terminal makes them
 clickable — no location noise beside every citation.
 
@@ -362,7 +362,7 @@ This preference-only form touches no terminal config; it updates your grund
 config and the global instruction files. By default agents then write
 `[§FS-check](file:///abs/path/docs/functional-spec/FS-check.md#L1)` — the
 citation as the visible text, the file behind it. Pick a different scheme with
-`--conversation-target` ([§5.2](#52-which-scheme-the-link-uses));
+`--conversation-target` ([section 5.2](#52-which-scheme-the-link-uses));
 `--conversation-target path` gets you the older plain `path:line` form, which
 iTerm2 and the VS Code terminal click natively and the terminal integrations
 match as a *location*.
@@ -400,15 +400,15 @@ conversation = "plain"   # or "link"
 ```
 
 **Use the machine file** to describe *your* setup: `plain` when you installed
-an integration from [§1](#1-install) and bare citations are already clickable
+an integration from [section 1](#1-install) and bare citations are already clickable
 for you, `link` when they are not. `grund integrations --write` writes it for
 you, but editing it by hand is equivalent — run `grund integrations --write
 --conversation <value>` afterwards to push the change into the global
 instruction files.
 
 `reference.conversation` and `reference.conversation_target`
-([§5.2](#52-which-scheme-the-link-uses)), and
-`reference.agents.<agent>.conversation_target` ([§5.4](#54-overriding-one-agent))
+([section 5.2](#52-which-scheme-the-link-uses)), and
+`reference.agents.<agent>.conversation_target` ([section 5.4](#54-overriding-one-agent))
 are the **only** keys grund reads from this file, and nothing in it is ever
 fatal. Anything grund did not act on is reported at its line and then ignored:
 
@@ -450,7 +450,7 @@ bare clickable citations — while everyone else gets locations. Concretely:
 | Reader | Where the guidance comes from | What they get |
 |---|---|---|
 | You, integration installed | your global instruction files (`plain`) | bare `§<ID>`, clickable in the terminal |
-| You, no rendering layer | your global instruction files (`link`) | `[§<ID>](<uri>)` in Claude, in the scheme you picked ([§5.2](#52-which-scheme-the-link-uses)) |
+| You, no rendering layer | your global instruction files (`link`) | `[§<ID>](<uri>)` in Claude, in the scheme you picked ([section 5.2](#52-which-scheme-the-link-uses)) |
 | A teammate, fresh clone | the committed entrypoint | the same link over `file:`, zero setup |
 | Cloud / CI agent session | the committed entrypoint | a citation carrying its location in the transcript |
 | Cursor / Windsurf | the committed entrypoint (their only grund channel) | `§<ID>` + `path:line` in the panel |
@@ -475,7 +475,7 @@ skipped /home/you/.pi/agent/AGENTS.md (no ~/.pi)
 ```
 
 The parenthesized annotation reports the target and its per-agent gate; see
-[§5.2](#52-which-scheme-the-link-uses) for targets and [§5.4](#54-overriding-one-agent)
+[section 5.2](#52-which-scheme-the-link-uses) for targets and [section 5.4](#54-overriding-one-agent)
 for per-agent overrides.
 
 Install one of those agents later and re-run the same command; it is
@@ -536,7 +536,7 @@ only decision left is whether the transcripts you read there are worth pointing
 at the forge instead of at your disk.
 
 If you read both Claude and Codex, you do not have to pick — override the one
-that differs ([§5.4](#54-overriding-one-agent)).
+that differs ([section 5.4](#54-overriding-one-agent)).
 
 ### 5.4 Overriding one agent
 
@@ -567,7 +567,7 @@ names are `codex`, `claude`, `gemini`, `copilot`, `zed`, and `pi`; anything else
 is an error listing the six.
 
 **An override is a preference, not evidence.** It sets what you *ask* for; the
-gate in [§5.3](#53-codex-specifically) still decides what gets written. Asking
+gate in [section 5.3](#53-codex-specifically) still decides what gets written. Asking
 for `vscodium` under `codex` resolves to `vscodium` and is then held at `path`,
 exactly as the machine-wide value would be — because the click-test says the
 citation would be worse there, and no key should be able to buy that
@@ -616,7 +616,7 @@ today.
    Selection rule you added by hand.
 2. **The resolver**, at `~/.local/bin/grund-open`.
 3. **The conversation preference**, in `~/.config/grund/config.toml` — the
-   `[reference]` keys of [§5.1](#51-the-key-and-where-to-put-it). Delete the
+   `[reference]` keys of [section 5.1](#51-the-key-and-where-to-put-it). Delete the
    file if grund wrote it for you.
 4. **The global agent instruction blocks**, one per agent you have installed
    (`~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.gemini/GEMINI.md`,
@@ -626,7 +626,7 @@ today.
    outside it is yours and was never touched.
 
 No repository is involved in any of this. If you also committed the
-`[reference] conversation` opinion of [§5.1](#51-the-key-and-where-to-put-it)
+`[reference] conversation` opinion of [section 5.1](#51-the-key-and-where-to-put-it)
 in a repository's `grund.toml`, that is a separate, checked-in setting —
 remove it there and re-run `grund init`.
 

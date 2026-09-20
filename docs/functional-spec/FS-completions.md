@@ -10,13 +10,13 @@ grund completions <bash|zsh|fish>
 
 Prints a completion script for the requested shell on stdout, empty stderr, exit `0`. Unsupported shells are CLI-level errors: `error: unsupported shell \`<shell>\`` plus `known shells: bash, zsh, fish` on stderr, empty stdout, exit `2`.
 
-The generated scripts complete every top-level subcommand [§FS-cli.1](FS-cli.md#1-the-default-subcommand) dispatches and complete declared IDs in the first ID position of `grund <ID>`, the explicit `show` form, `grund refs <ID>`, and `grund fetch <ID>`. Which typed prefixes ask for IDs is §1.1.
+The generated scripts complete every top-level subcommand [§FS-cli.1](FS-cli.md#1-the-default-subcommand) dispatches and complete declared IDs in the first ID position of `grund <ID>`, the explicit `show` form, `grund refs <ID>`, and `grund fetch <ID>`. Which typed prefixes ask for IDs is [§FS-completions.1.1](FS-completions.md#11-the-first-argument-and-the-id-slots).
 
 The scripts do not complete IDs for arbitrary shell words, citations inside files, or editor buffers, nor declaration bodies or Markdown links. A committed external snapshot is an ordinary declared ID and is completed under its kind's effective format; a missing snapshot has no catalog candidate.
 
 ### 1.1 The first argument and the ID slots
 
-For the first argument, the scripts offer subcommands and, once the typed prefix is non-empty and not a flag, also ask the dynamic helper (§2) for IDs. This completes both uppercase bare IDs (`FS-login`) and lowercase workspace aliases (`api/`) in the bare-ID default while keeping an empty prompt cheap. For explicit `show`, `refs`, and `fetch`, the first positional argument is always an ID slot, so the helper runs for any prefix.
+For the first argument, the scripts offer subcommands and, once the typed prefix is non-empty and not a flag, also ask the dynamic helper ([§FS-completions.2](FS-completions.md#2-internal-dynamic-helper)) for IDs. This completes both uppercase bare IDs (`FS-login`) and lowercase workspace aliases (`api/`) in the bare-ID default while keeping an empty prompt cheap. For explicit `show`, `refs`, and `fetch`, the first positional argument is always an ID slot, so the helper runs for any prefix.
 
 ## 2. Internal dynamic helper
 
@@ -26,7 +26,7 @@ The scripts call a hidden machine surface:
 grund complete ids [<path>] [--prefix <prefix>] [--sections] [--path <path>]
 ```
 
-It prints one candidate per line on stdout, sorted lexicographically and deduplicated, with empty stderr and exit `0`. Its arguments are §2.1; which declarations it offers is §2.2.
+It prints one candidate per line on stdout, sorted lexicographically and deduplicated, with empty stderr and exit `0`. Its arguments are [§FS-completions.2.1](FS-completions.md#21-arguments-and-candidate-modes); which declarations it offers is [§FS-completions.2.2](FS-completions.md#22-what-the-catalog-offers).
 
 Completion is invoked on every tab press, so config and scan failures are quiet: if config cannot be loaded or the tree cannot be scanned, the helper prints nothing and exits `0`. This is the one deliberate exception to the exit-code meaning ([§REQ-never-crashes.2](../requirements/REQ-never-crashes.md#2-exit-codes-are-the-api)) — a keystroke helper that reported failure would put errors in the user's prompt, and no caller reads this code. Invalid helper flags are still CLI errors (`2`) because they indicate a broken installed completion script.
 
@@ -40,7 +40,7 @@ Completion is invoked on every tab press, so config and scan failures are quiet:
 
 ### 2.2 What the catalog offers
 
-The shared declaration catalog (§3) includes JSON value IDs and their numbered array components, so ID and section completion offers them under the same ordering and prefix rules as Markdown declarations ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
+The shared declaration catalog ([§FS-completions.3](FS-completions.md#3-determinism)) includes JSON value IDs and their numbered array components, so ID and section completion offers them under the same ordering and prefix rules as Markdown declarations ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
 
 It also includes exact off-grammar declarations retained for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)), so their raw IDs and section candidates are offered exactly as written. Completion does not promote an unmatched candidate or mint a nonconforming form; authoring remains governed by the effective format.
 

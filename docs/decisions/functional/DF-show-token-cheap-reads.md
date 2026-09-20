@@ -2,7 +2,7 @@
 
 **Status:** Superseded
 **Date:** 2026-05-12
-**Superseded by:** [§DF-show-default-token-cheap](DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in) — the four-flag surface (`--head` / `--outline` / `--brief` / `--full`) introduced here proved harder to learn than expected; the default flips to the cheap read and the slice flags are renamed around an incremental ladder. The "structural, not generated" and "`check` is not abridged" properties (§2.2, §2.3) carry over unchanged.
+**Superseded by:** [§DF-show-default-token-cheap](DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in) — the four-flag surface (`--head` / `--outline` / `--brief` / `--full`) introduced here proved harder to learn than expected; the default flips to the cheap read and the slice flags are renamed around an incremental ladder. The "structural, not generated" and "`check` is not abridged" properties ([§DF-show-token-cheap-reads.2.2](DF-show-token-cheap-reads.md#22-slices-are-structural-never-generated), [§DF-show-token-cheap-reads.2.3](DF-show-token-cheap-reads.md#23-check-is-not-abridged)) carry over unchanged.
 
 ## 1. Context
 

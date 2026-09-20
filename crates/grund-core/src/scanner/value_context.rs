@@ -1,7 +1,7 @@
 //! Source comment-span classification for explicit value bindings
 //! (§FS-values.3.2, §AR-scanner.2.3.5).
 
-use super::file_pass::CitationLine;
+use super::citation_line::CitationLine;
 use crate::config::Config;
 use crate::grammar::{CommentBlockKind, comment_blocks};
 

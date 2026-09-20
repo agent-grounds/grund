@@ -51,6 +51,7 @@
 //! beside the component's otherwise `pub(crate)` glob.
 
 mod agent_entrypoints;
+mod citation_line;
 mod citations;
 mod context;
 mod e2e;

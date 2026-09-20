@@ -14,13 +14,14 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use super::citation_line::CitationLine;
 use super::citations::{
     scan_escaped_citations, scan_fallback_qualified_citations, scan_legacy_citation_candidates,
-    scan_shorthand_citations, scan_workspace_qualified_pass,
+    scan_local_section_candidates, scan_shorthand_citations, scan_workspace_qualified_pass,
 };
 use super::context::{
     assign_declaration_bodies, classify_citation_sources, inline_citation_sites,
-    markdown_heading_level, retain_in_body_sections,
+    markdown_heading_level, promote_local_section_citations, retain_in_body_sections,
 };
 use super::embedded_value_context::{
     EMBEDDED_VALUE_MARKER, authored_heading_level, embedded_value_marker_for_line,
@@ -40,35 +41,10 @@ use crate::grammar::{
     source_scan_line,
 };
 use crate::model::{
-    Citation, Declaration, DeclarationSource, EmbeddedValueRoot, Findings, Id, InlineCitationSite,
-    NearMissHeading, SectionInfo, UnmarkedHeadingCandidate,
+    Citation, Declaration, DeclarationSource, EmbeddedValueRoot, Findings, Id, NearMissHeading,
+    SectionInfo, UnmarkedHeadingCandidate,
 };
 use crate::workspace::WorkspaceCitationTarget;
-
-pub(crate) struct CitationLine<'a> {
-    pub(crate) scan_line: &'a str,
-    /// The untransformed source line. `scan_line` may be a *slice* of it — a
-    /// Python docstring's interior with the quotes stripped (§AR-scanner.4.4) — so a
-    /// position on this line and a position on that one are not the same number.
-    /// Every never-rewrite question is asked at a **raw-line** offset and routed to
-    /// the right text by `docstring` below (§FS-fmt.2.3.1.1).
-    pub(crate) raw_line: &'a str,
-    /// Where this line's Python docstring content sits in `raw_line`
-    /// (§FS-fmt.2.3.1.1) — the view every never-rewrite question is asked through,
-    /// so a docstring line is judged on the text `fmt` reads there too.
-    pub(crate) docstring: DocstringContent<'a>,
-    pub(crate) column_offset: usize,
-    pub(crate) lineno: usize,
-    pub(crate) path: &'a Path,
-    pub(crate) config: &'a Config,
-    pub(crate) is_md: bool,
-    /// The bytes on this physical source line that the scanner's shared block
-    /// walk recognizes as comment content. Markdown and Python docstrings use
-    /// their already-normalized `scan_line` instead (§FS-values.3.2).
-    pub(crate) value_comment_range: Option<(usize, usize)>,
-    pub(crate) inline_sites: &'a BTreeMap<usize, InlineCitationSite>,
-    pub(crate) inline_block_lines: &'a BTreeMap<usize, std::sync::Arc<[String]>>,
-}
 
 /// The per-file scan (§AR-scanner.2): line by line, find declaration headings
 /// (§AR-scanner.2.1 — in Markdown or in a code/`"""` doc-comment, §AR-scanner.4),
@@ -495,6 +471,7 @@ pub(super) fn scan_file_text(
                 column: scan.column_offset + start + 1,
                 has_marker,
                 shorthand: false,
+                local_section: false,
                 shorthand_rewritable: true,
                 numeric_run: false,
                 text,
@@ -536,6 +513,12 @@ pub(super) fn scan_file_text(
             &qualified_marker_starts,
             findings,
         );
+        scan_local_section_candidates(
+            &citation_line,
+            &claimed_markers,
+            &qualified_marker_starts,
+            findings,
+        );
         scan_legacy_citation_candidates(&citation_line, findings);
         scan_escaped_citations(&citation_line, findings);
         // Exact candidates stay in this pass. The checker activates them only
@@ -573,7 +556,13 @@ pub(super) fn scan_file_text(
             .flatten()
             .any(|decl| kind_uses_values(config, &decl.id.kind));
     let has_unmarked_headings = !unmarked_heading_candidates.is_empty();
-    if classify || has_text_sections || has_value_declarations || has_embedded_roots {
+    let has_local_section_candidates = !findings.local_section_citation_candidates.is_empty();
+    if classify
+        || has_text_sections
+        || has_value_declarations
+        || has_embedded_roots
+        || has_local_section_candidates
+    {
         assign_declaration_bodies(
             findings,
             is_md,
@@ -609,8 +598,11 @@ pub(super) fn scan_file_text(
             findings,
         );
     }
-    if classify {
+    if classify || has_local_section_candidates {
         classify_citation_sources(findings, config, path);
+    }
+    if has_local_section_candidates {
+        promote_local_section_citations(findings);
     }
     // §AR-scanner.2.7.1: the headings and doc-comment blocks a grounding unit finer
     // than the file is cut out of — recorded only where the file's own row asks

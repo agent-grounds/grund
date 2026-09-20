@@ -35,7 +35,7 @@ The audience for this budget is `grund` running on every save, commit, and push 
 
 ### 3.4 Not "both", for now
 
-Running criterion *and* iai-callgrind doubles the harness, the CI time, and the maintenance surface for a marginal gain — the recorded ms baseline (§3.2) already supplies the headline figure without a second framework. If a future need appears for continuous wall-clock tracking (say, to catch a regression that is invisible in instruction count because it is I/O- or syscall-bound), criterion can be added then as a second `[[bench]]`; the decision here is not to start with it.
+Running criterion *and* iai-callgrind doubles the harness, the CI time, and the maintenance surface for a marginal gain — the recorded ms baseline ([§DA-benchmark-instruction-counting.3.2](DA-benchmark-instruction-counting.md#32-the-ms-budget-is-still-covered--twice)) already supplies the headline figure without a second framework. If a future need appears for continuous wall-clock tracking (say, to catch a regression that is invisible in instruction count because it is I/O- or syscall-bound), criterion can be added then as a second `[[bench]]`; the decision here is not to start with it.
 
 ## 4. Consequences
 
@@ -48,7 +48,7 @@ Running criterion *and* iai-callgrind doubles the harness, the CI time, and the 
 
 | Option | Why rejected |
 |---|---|
-| **(1) Wall-clock micro-benchmarks (criterion / divan).** Measures the budget's actual units (ms); familiar; great developer-facing profiler. | Variance on shared CI runners forces the regression gate to choose between flaking and uselessness (§3.1). Good for ad-hoc local profiling, wrong for a CI-gating check. |
-| **(3) Both criterion and iai-callgrind.** Headline ms figure *and* a stable regression gate. | Doubles harness, CI time, and maintenance for a gain the recorded-baseline ms figure (§3.2) already covers. Deferred, not foreclosed — criterion can be added as a second `[[bench]]` if a wall-clock-only regression ever needs continuous tracking. |
-| **Library benchmarks instead of binary benchmarks.** Slightly faster to run; no subprocess. | Misses the cost in `main` (start-up, arg parsing, config discovery, formatting) that an actual invocation pays; and as of 0.1.0 there is no stable public library surface to bench anyway (§3.3). |
-| **(2), against the binary — chosen.** | See §2 and §3. |
+| **(1) Wall-clock micro-benchmarks (criterion / divan).** Measures the budget's actual units (ms); familiar; great developer-facing profiler. | Variance on shared CI runners forces the regression gate to choose between flaking and uselessness ([§DA-benchmark-instruction-counting.3.1](DA-benchmark-instruction-counting.md#31-determinism-is-what-makes-fail-on-regression-implementable)). Good for ad-hoc local profiling, wrong for a CI-gating check. |
+| **(3) Both criterion and iai-callgrind.** Headline ms figure *and* a stable regression gate. | Doubles harness, CI time, and maintenance for a gain the recorded-baseline ms figure ([§DA-benchmark-instruction-counting.3.2](DA-benchmark-instruction-counting.md#32-the-ms-budget-is-still-covered--twice)) already covers. Deferred, not foreclosed — criterion can be added as a second `[[bench]]` if a wall-clock-only regression ever needs continuous tracking. |
+| **Library benchmarks instead of binary benchmarks.** Slightly faster to run; no subprocess. | Misses the cost in `main` (start-up, arg parsing, config discovery, formatting) that an actual invocation pays; and as of 0.1.0 there is no stable public library surface to bench anyway ([§DA-benchmark-instruction-counting.3.3](DA-benchmark-instruction-counting.md#33-benchmark-the-binary-because-that-is-what-gets-invoked)). |
+| **(2), against the binary — chosen.** | See [§DA-benchmark-instruction-counting.2](DA-benchmark-instruction-counting.md#2-decision) and [§DA-benchmark-instruction-counting.3](DA-benchmark-instruction-counting.md#3-why-this-shape). |

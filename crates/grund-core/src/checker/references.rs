@@ -122,6 +122,9 @@ pub(crate) fn retain_findings_in_scope(findings: &mut Findings, scope: Option<&S
         !decls.is_empty()
     });
     findings.citations.retain(|cite| scope.contains(&cite.file));
+    findings
+        .local_section_citation_candidates
+        .retain(|candidate| scope.contains(&candidate.file));
     retain_heading_findings_in_scope(findings, scope);
     findings
         .value_bindings
@@ -226,9 +229,10 @@ pub(crate) fn tag_out_of_scope(mut diagnostic: Diagnostic) -> Diagnostic {
     diagnostic.code = match diagnostic.code {
         "dangling" => "out-of-scope-dangling",
         "missing-section" => "out-of-scope-missing-section",
+        "local-section-citation" => "out-of-scope-local-section-citation",
         "unknown-project" => "out-of-scope-unknown-project",
         "shorthand-citation" => "out-of-scope-shorthand-citation",
-        // `check_citation_resolution` emits exactly the four above; anything
+        // `check_citation_resolution` emits exactly the five families above; anything
         // else would be a new rule joining the family without a tier code.
         other => other,
     };
@@ -255,6 +259,56 @@ pub(super) fn check_citation_resolution(
     outside: Option<&ScanScope>,
     report: &mut CheckReport,
 ) {
+    // §FS-check.3.24: every persisted local spelling is independently loud.
+    // Resolved forms are ordinary citations; unresolved/unsupported forms stay
+    // in the diagnostic-only candidate list and never acquire a target.
+    for cite in findings.citations.iter().filter(|cite| cite.local_section) {
+        if outside.is_some_and(|scope| scope.contains(&cite.file)) {
+            continue;
+        }
+        let section = cite.section.as_deref().unwrap_or_default();
+        report.errors.push(Diagnostic {
+            code: "local-section-citation",
+            path: Some(cite.file.clone()),
+            line: Some(cite.line),
+            column: Some(cite.column),
+            message: format!(
+                "local section citation {}; write {}{}{}{}",
+                cite.text.trim(),
+                config.marker,
+                render_qualified_id(&config.grammar, None, &cite.id),
+                config.section_separator,
+                section,
+            ),
+            sites: Vec::new(),
+        });
+    }
+    for candidate in &findings.local_section_citation_candidates {
+        if outside.is_some_and(|scope| scope.contains(&candidate.file)) {
+            continue;
+        }
+        let written = candidate.text.trim();
+        let tail = written.strip_prefix(&config.marker).unwrap_or(written);
+        let message = if candidate.section.is_none() {
+            format!(
+                "unsupported local section citation {written}; write a full citation or <{}>{tail} to show the shape without citing it",
+                config.marker,
+            )
+        } else {
+            format!(
+                "local section citation {written} has no enclosing declaration; write a full citation or <{}>{tail} to show the shape without citing it",
+                config.marker,
+            )
+        };
+        report.errors.push(Diagnostic {
+            code: "local-section-citation",
+            path: Some(candidate.file.clone()),
+            line: Some(candidate.line),
+            column: Some(candidate.column),
+            message,
+            sites: Vec::new(),
+        });
+    }
     let mut shorthand_indexes = ShorthandIndexes::default();
     for cite in &findings.citations {
         if let Some(scope) = outside

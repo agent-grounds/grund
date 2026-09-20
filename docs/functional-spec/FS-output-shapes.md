@@ -164,7 +164,7 @@ Fields:
 {"kind":"AR","title":"How: high-level implementation, structure, and design","home":"docs/architecture","count":1}
 ```
 
-`list --size --format=json` emits point-site rows instead (§5.2).
+`list --size --format=json` emits point-site rows instead ([§FS-output-shapes.5.2](FS-output-shapes.md#52-list---size---formatjson)).
 
 ### 5.1 `refs --format=json`
 
@@ -201,7 +201,7 @@ when the same invalid config blocks another subcommand.
 
 ### 6.1 `refs` resolver rejections across 0.14.0 and 0.15.0
 
-During grund 0.14.0, `refs` preserves the former CLI-level classification for resolver-rejected operands and warns about the 0.15.0 change ([§FS-refs.4](FS-refs.md#4-exit-codes)); at 0.15.0 the rejection becomes a failed query with exit `1`. §6.1.1 and §6.1.2 give an invalid ID's exact output at each stage; an ambiguous number-only shorthand follows the same stages, without a hint.
+During grund 0.14.0, `refs` preserves the former CLI-level classification for resolver-rejected operands and warns about the 0.15.0 change ([§FS-refs.4](FS-refs.md#4-exit-codes)); at 0.15.0 the rejection becomes a failed query with exit `1`. [§FS-output-shapes.6.1.1](FS-output-shapes.md#611-in-0140) and [§FS-output-shapes.6.1.2](FS-output-shapes.md#612-from-0150) give an invalid ID's exact output at each stage; an ambiguous number-only shorthand follows the same stages, without a hint.
 
 #### 6.1.1 In 0.14.0
 
@@ -232,7 +232,7 @@ An ambiguous number-only shorthand's 0.15.0 JSON code is `ambiguous` and `sites`
 
 ## 7. Stream matrix
 
-For each case above, §7.1 lists what reaches stdout and stderr and the exit code.
+For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix) lists what reaches stdout and stderr and the exit code.
 
 ### 7.1 The matrix
 

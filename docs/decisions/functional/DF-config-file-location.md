@@ -30,7 +30,7 @@ from within the config, because it is what has to be found before any key can be
 ### 2.1 Symmetric dual discovery
 
 At **every** directory of the upward walk, `grund` probes two names in order — the bare `grund.toml`
-first, then `.agents/grund.toml` — and the first that exists is the config. §2.2 is why the order
+first, then `.agents/grund.toml` — and the first that exists is the config. [§DF-config-file-location.2.2](DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair) is why the order
 runs that way; here what matters is only that it is fixed rather than searched, so the answer to
 "which file governs this directory" never depends on filesystem iteration order. The directory
 holding the file is the config root, exactly as before: relative paths inside the config resolve
@@ -57,7 +57,7 @@ the two forms would not be interchangeable.
 ### 2.2 The bare `grund.toml` wins a tie, and `check` warns about the pair
 
 When one directory carries both names, the bare `grund.toml` is the config. **The form the tool
-generates is the form that wins.** §2.3 makes `grund init` write the bare file and argues it is the
+generates is the form that wins.** [§DF-config-file-location.2.3](DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml) makes `grund init` write the bare file and argues it is the
 better default; a tie-break that then handed the decision to the other file would say the opposite,
 and a user would have to hold two rules — "grund writes this one" and "grund reads that one" —
 whose only relationship is that they disagree.
@@ -67,7 +67,7 @@ way: someone deliberately puts a bare file next to an existing `.agents/` one, a
 that is to move to the form the tool recommends. Winning the tie is that move working; losing it is
 the move silently doing nothing.
 
-And it is the only order that does not invert §2.4. If the hidden file outranked the visible one,
+And it is the only order that does not invert [§DF-config-file-location.2.4](DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing). If the hidden file outranked the visible one,
 then a reader who *can* see a config in the root listing would be reading the one that does not
 apply — strictly worse than either file alone, because the visible artifact would now actively
 mislead about the grammar in force.
@@ -94,12 +94,12 @@ the one that needs a directory created for it is recommending the other one by o
 
 The bare form is also what the rest of the ecosystem does. `Cargo.toml`, `package.json`,
 `pyproject.toml`, `deno.json` are all root-visible, and every "where do I change the marker"
-question answers itself from a directory listing. The deeper reason is §2.4.
+question answers itself from a directory listing. The deeper reason is [§DF-config-file-location.2.4](DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing).
 
 Existing repositories are untouched. `init` never overwrites a config it finds ([§FS-init.3](../../functional-spec/FS-init.md#3-non-intrusive-guarantees)), and
 that rule now reads across both names: a repository with `.agents/grund.toml` gets
 `exists .agents/grund.toml` and no second file, so re-running `init` after this change cannot
-produce the redundant pair §2.2 warns about. Under §2.2's tie-break that probe is load-bearing
+produce the redundant pair [§DF-config-file-location.2.2](DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair) warns about. Under [§DF-config-file-location.2.2](DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair)'s tie-break that probe is load-bearing
 rather than tidy: a bare file written beside an existing `.agents/` config would *take over* the
 repository's grammar, not sit inert. Moving an existing config to the root is a `git mv` with no
 other edit, and never required.
@@ -124,18 +124,18 @@ most needs at a glance is the one the layout hides. A root `grund.toml` answers 
 `Cargo.toml` answers "is this a Rust crate": from the listing, with no tool and no prior knowledge.
 
 The `.agents/` rationale is not wrong, it is just narrower than it looked: keeping agent tooling off
-a crowded root is worth something, and a project that values it keeps the form (§2.1). What it
+a crowded root is worth something, and a project that values it keeps the form ([§DF-config-file-location.2.1](DF-config-file-location.md#21-symmetric-dual-discovery)). What it
 cannot buy back is discoverability across a set of projects, and that is what the default now
 optimizes for ([§GOAL-friendliness-first](../../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) — the same argument as loud config errors, applied one
 step earlier, to finding out there is a config at all).
 
 ### 2.5 The `.agents/` form is deprecated and never removed
 
-§2.1 reads the two names as equals and §2.3 makes the bare one the form `init` writes. Between them sits the case neither decides: a repository already on `.agents/grund.toml`, doing nothing wrong, that will never move because nothing ever tells it to. §2.4 is the reason to move, and an argument that lives only in a decision record is one no repository hears. So the fallback is **deprecated** — still read, still governing, and named on every run that reads it ([§FS-config.1.2](../../functional-spec/FS-config.md#12-the-agents-location-is-deprecated), [§FS-check.4.11](../../functional-spec/FS-check.md#411-config-read-from-the-deprecated-agents-location)). That is the whole of the change: one line on `check`, `config validate` and `config show`, and nothing else about the run different.
+[§DF-config-file-location.2.1](DF-config-file-location.md#21-symmetric-dual-discovery) reads the two names as equals and [§DF-config-file-location.2.3](DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml) makes the bare one the form `init` writes. Between them sits the case neither decides: a repository already on `.agents/grund.toml`, doing nothing wrong, that will never move because nothing ever tells it to. [§DF-config-file-location.2.4](DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing) is the reason to move, and an argument that lives only in a decision record is one no repository hears. So the fallback is **deprecated** — still read, still governing, and named on every run that reads it ([§FS-config.1.2](../../functional-spec/FS-config.md#12-the-agents-location-is-deprecated), [§FS-check.4.11](../../functional-spec/FS-check.md#411-config-read-from-the-deprecated-agents-location)). That is the whole of the change: one line on `check`, `config validate` and `config show`, and nothing else about the run different.
 
-Deprecated with **no removal**, which is not the usual shape and is therefore argued rather than assumed. The default path ships a deprecation warning naming the release the old form stops working in ([§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)); this one names none, and never will. A named release is a promise to break something, and the thing it would break is not broken: every repository grounded before §2.1 is on `.agents/`, and §2.1's own uniform rule is that a directory picks the form that suits it. The second probe costs one `is_file()` per level of a walk that has already stat'd the directory, so removal would buy back nothing measurable and cost every such repository a migration it never asked for. What deprecation is doing here is the one job §2.4's argument could not do on its own — being audible from inside the repository, at the moment somebody runs the tool — and it is finished the moment it is heard.
+Deprecated with **no removal**, which is not the usual shape and is therefore argued rather than assumed. The default path ships a deprecation warning naming the release the old form stops working in ([§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)); this one names none, and never will. A named release is a promise to break something, and the thing it would break is not broken: every repository grounded before [§DF-config-file-location.2.1](DF-config-file-location.md#21-symmetric-dual-discovery) is on `.agents/`, and [§DF-config-file-location.2.1](DF-config-file-location.md#21-symmetric-dual-discovery)'s own uniform rule is that a directory picks the form that suits it. The second probe costs one `is_file()` per level of a walk that has already stat'd the directory, so removal would buy back nothing measurable and cost every such repository a migration it never asked for. What deprecation is doing here is the one job [§DF-config-file-location.2.4](DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing)'s argument could not do on its own — being audible from inside the repository, at the moment somebody runs the tool — and it is finished the moment it is heard.
 
-**No `.agent-grounds/grund.toml`.** `fissile`, `rhei` and `ephor` are moving their own configuration out of `.agents/` into `.agent-grounds/`, because `codex` mounts `.agents/` read-only inside a checkout and an agent therefore cannot maintain a file kept there ([agent-grounds/fissile#61](https://github.com/agent-grounds/fissile/issues/61), [agent-grounds/rhei#184](https://github.com/agent-grounds/rhei/issues/184), [agent-grounds/ephor#71](https://github.com/agent-grounds/ephor/issues/71)). `grund` has that problem too — an `.agents/grund.toml` is a config an agent cannot edit under that runtime — and it already has the answer, because its config left the agent directory in §2.1 and for the stronger reason: §2.4's visibility holds under every runtime, while read-only mounts are one runtime's convention. Following the siblings would add a third name to a rule §2.1 built on there being two, buy a repository nothing the root file does not already give it, and put the config back in a hidden directory the same release this decision recommends leaving one. What the siblings' move does change is the timing rather than the destination: with three neighbouring tools writing new paths into repositories at once, this is the release in which `grund` saying which of *its* paths is the home will actually be read.
+**No `.agent-grounds/grund.toml`.** `fissile`, `rhei` and `ephor` are moving their own configuration out of `.agents/` into `.agent-grounds/`, because `codex` mounts `.agents/` read-only inside a checkout and an agent therefore cannot maintain a file kept there ([agent-grounds/fissile#61](https://github.com/agent-grounds/fissile/issues/61), [agent-grounds/rhei#184](https://github.com/agent-grounds/rhei/issues/184), [agent-grounds/ephor#71](https://github.com/agent-grounds/ephor/issues/71)). `grund` has that problem too — an `.agents/grund.toml` is a config an agent cannot edit under that runtime — and it already has the answer, because its config left the agent directory in [§DF-config-file-location.2.1](DF-config-file-location.md#21-symmetric-dual-discovery) and for the stronger reason: [§DF-config-file-location.2.4](DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing)'s visibility holds under every runtime, while read-only mounts are one runtime's convention. Following the siblings would add a third name to a rule [§DF-config-file-location.2.1](DF-config-file-location.md#21-symmetric-dual-discovery) built on there being two, buy a repository nothing the root file does not already give it, and put the config back in a hidden directory the same release this decision recommends leaving one. What the siblings' move does change is the timing rather than the destination: with three neighbouring tools writing new paths into repositories at once, this is the release in which `grund` saying which of *its* paths is the home will actually be read.
 
 ## 3. Consequences
 
@@ -154,19 +154,19 @@ Deprecated with **no removal**, which is not the usual shape and is therefore ar
   reader's tree answer where it sits — agent-guidance block v3 → **v4**
   ([§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions)). The repository entrypoint block changes for a different reason: its
   namespace rule tells an agent to give a new subproject its own config, and that instruction now
-  names the bare form §2.3 generates — agent-entrypoint block v6 → **v7**
+  names the bare form [§DF-config-file-location.2.3](DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml) generates — agent-entrypoint block v6 → **v7**
   ([§FS-init.2.3](../../functional-spec/FS-init.md#23-generated-agent-entrypoints)). Both are taught-workflow changes rather than wording, so each carries the
   version bump its marked-block contract requires ([§GOAL-no-silent-breakage](../../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)) instead of
   propagating silently at the next write: an agent reading a stale v6 block would keep creating
   configs in the form the tool no longer generates, and nothing would say so.
 - **Two names to search for.** Anyone grepping a machine for grund configs, and any future tool that
   wants to read one, has two paths to consider instead of one. This is the standing cost of the
-  decision, paid once per such consumer, and the reason §2.1 fixes the probe order rather than
-  leaving it to a search. Note that it does not undo §2.4: a *search* getting harder is a cost to
-  tooling, while what §2.4 buys is an answer with no search at all.
+  decision, paid once per such consumer, and the reason [§DF-config-file-location.2.1](DF-config-file-location.md#21-symmetric-dual-discovery) fixes the probe order rather than
+  leaving it to a search. Note that it does not undo [§DF-config-file-location.2.4](DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing): a *search* getting harder is a cost to
+  tooling, while what [§DF-config-file-location.2.4](DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing) buys is an answer with no search at all.
 - **Every repository still on `.agents/` gains one line, and a clean run stops printing `success`.** A warning stands in place of the success marker ([§FS-check.2.1](../../functional-spec/FS-check.md#21-report-format)), so a green repository on the old path prints the deprecation line where it printed `success` — a verdict change [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered) governs and permits, since the exit code does not move. This repository pays it in its own e2e corpus: the fixtures that were on `.agents/` for no reason move to the bare form, and the ones that stay are the ones whose subject is discovery itself.
 - **A grounded project is identifiable without running anything.** `ls` across a set of checkouts
-  now separates the grounded ones from the rest (§2.4). Repositories that keep the `.agents/` form
+  now separates the grounded ones from the rest ([§DF-config-file-location.2.4](DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing)). Repositories that keep the `.agents/` form
   keep the old invisibility — that is their choice to make, and `grund check` still tells anyone who
   runs it, but the default no longer requires a tool to answer "is this grounded".
 
@@ -180,7 +180,7 @@ Deprecated with **no removal**, which is not the usual shape and is therefore ar
   adopted `grund` under the old rule would break at once, with a config silently ignored rather than
   reported — the failure mode [§GOAL-no-silent-breakage](../../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) exists to prevent. Dual discovery reaches the
   same destination for new projects while costing existing ones nothing.
-- **`.agents/grund.toml` wins the tie.** Rejected in favor of §2.2. The argument for it is that a
+- **`.agents/grund.toml` wins the tie.** Rejected in favor of [§DF-config-file-location.2.2](DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair). The argument for it is that a
   bare file dropped beside an existing `.agents/` one cannot then take over the grammar a
   repository's citations were written against, and this repository supplied evidence for exactly
   that shape: six e2e fixtures carried dead root copies orphaned when their configs moved into
@@ -188,12 +188,12 @@ Deprecated with **no removal**, which is not the usual shape and is therefore ar
   predate dual discovery — under the old rule a bare `grund.toml` was neither generated nor read, so
   every one of them is an artifact of a form that was never live, not a case of a user writing the
   file on purpose. Going forward the bare file is the deliberate one, `check` reports the pair
-  either way (§2.2), and the cost of this order is a rule that contradicts the tool's own default.
-- **Adding `.agent-grounds/grund.toml` as a third location.** Rejected in §2.5: the siblings move there to escape a read-only mount, and `grund`'s config already left `.agents/` for the stronger reason, so a third name would re-hide the file §2.4 exists to make visible.
-- **Deprecating `.agents/` with a removal release, the [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) shape.** Rejected in §2.5: a named release promises to break configurations that are correct under §2.1, in exchange for a uniformity no rule in the spec requires.
+  either way ([§DF-config-file-location.2.2](DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair)), and the cost of this order is a rule that contradicts the tool's own default.
+- **Adding `.agent-grounds/grund.toml` as a third location.** Rejected in [§DF-config-file-location.2.5](DF-config-file-location.md#25-the-agents-form-is-deprecated-and-never-removed): the siblings move there to escape a read-only mount, and `grund`'s config already left `.agents/` for the stronger reason, so a third name would re-hide the file [§DF-config-file-location.2.4](DF-config-file-location.md#24-a-projects-grounding-must-be-visible-from-its-root-listing) exists to make visible.
+- **Deprecating `.agents/` with a removal release, the [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) shape.** Rejected in [§DF-config-file-location.2.5](DF-config-file-location.md#25-the-agents-form-is-deprecated-and-never-removed): a named release promises to break configurations that are correct under [§DF-config-file-location.2.1](DF-config-file-location.md#21-symmetric-dual-discovery), in exchange for a uniformity no rule in the spec requires.
 - **Erroring on the redundant pair.** Rejected in favor of warning, for the migration reason in
-  §2.2. Revisitable if the pair turns out to arise from anything other than a move in progress.
+  [§DF-config-file-location.2.2](DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair). Revisitable if the pair turns out to arise from anything other than a move in progress.
 - **Keeping `init` on `.agents/` while supporting both.** Rejected: it makes the supported bare form
   a thing users must discover from the specification rather than from the tool, and leaves the
-  default at the option §2.3 argues is the worse first meeting. `init` is where a default is
+  default at the option [§DF-config-file-location.2.3](DF-config-file-location.md#23-grund-init-writes-the-bare-grundtoml) argues is the worse first meeting. `init` is where a default is
   actually expressed.

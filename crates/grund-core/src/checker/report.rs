@@ -38,7 +38,7 @@ use crate::scanner::is_scannable;
 /// scanner (§AR-system.2.5) and the config it needs to resolve them, and gives
 /// one `Report` to the api (§AR-system.2.9), which every frontend renders
 /// unchanged. It knows no frontend and reads no file, except in the two rules
-/// below that must re-read one (§2.5, §2.16).
+/// below that must re-read one (§AR-checker.2.5, §AR-checker.2.16).
 ///
 /// ## 1. Inputs and outputs
 ///
@@ -60,7 +60,7 @@ use crate::scanner::is_scannable;
 /// For each ID with more than one declaration, emit one error anchored at the
 /// lexicographically-first site (sort by `path`, then `line`); list every other
 /// site parenthetically in the message. This keeps the report's `path:line:`
-/// prefix invariant (§3, §FS-check.2.1) while still naming all sites. A stub and
+/// prefix invariant (§AR-checker.3, §FS-check.2.1) while still naming all sites. A stub and
 /// the inline declaration it points at count as one home, not two.
 ///
 /// ### 2.2 Misplaced declarations (§FS-check.3.7)
@@ -134,7 +134,7 @@ use crate::scanner::is_scannable;
 /// subtrees the scanner recorded for a Markdown file, or its doc-comment blocks
 /// for a source one (§AR-scanner.2.7), each finding anchored at its own unit. The
 /// pass is `grounding.rs`; `[citations]` obligations read the same cut
-/// (§2.9), so *whether* and *what* are asked of one thing.
+/// (§AR-checker.2.9), so *whether* and *what* are asked of one thing.
 ///
 /// ### 2.9 Citation-direction obligations (§FS-check.3.11, §FS-config.3.9, §DF-citation-directions)
 ///
@@ -162,7 +162,7 @@ use crate::scanner::is_scannable;
 /// The scanner records every `<§>`-escaped illustration (§AR-scanner.2.5) into
 /// `findings.escaped_citations`, a list inert to every rule above. This pass is
 /// its only reader: for each escape it runs the same resolver as the dangling
-/// check (§2.3) and, when the ID resolves to a real declaration, emits an
+/// check (§AR-checker.2.3) and, when the ID resolves to a real declaration, emits an
 /// `escaped-citation-resolves` suggestion — the mirror of dangling, which fires
 /// when a *live* citation does not resolve. It is a suggestion, never a warning
 /// or error, so it is withheld unless `--suggestions` is passed and never moves
@@ -174,8 +174,8 @@ use crate::scanner::is_scannable;
 /// the same walk, rewrites the uniquely-resolving ones to their canonical `Id`
 /// (§AR-scanner.2.6.6). So by the time the checker runs, a resolved shorthand is
 /// indistinguishable from a full citation to every rule above — which is the
-/// point: `refs`, `cover`, the unused warning (§2.6), and the direction passes
-/// (§2.9, §2.10) all count it without knowing it exists.
+/// point: `refs`, `cover`, the unused warning (§AR-checker.2.6), and the direction passes
+/// (§AR-checker.2.9, §AR-checker.2.10) all count it without knowing it exists.
 ///
 /// This pass adds the one thing that does differ: under the target project's
 /// `canonical` policy, a finding naming the canonical form to write; under
@@ -184,10 +184,10 @@ use crate::scanner::is_scannable;
 /// policies. It looks the candidate set up in a per-namespace `(kind,
 /// number)` index — built on first use, because deriving it per site is quadratic
 /// on the tree this rule asks people to migrate — so the three outcomes (unique,
-/// ambiguous, unknown) pick the message. The dangling check (§2.3) skips shorthand
+/// ambiguous, unknown) pick the message. The dangling check (§AR-checker.2.3) skips shorthand
 /// sites, so one *cause* never yields two findings; rules judging a different fact
-/// about the same site, such as a missing section (§2.4) or a forbidden direction
-/// (§2.10), are untouched and report alongside it.
+/// about the same site, such as a missing section (§AR-checker.2.4) or a forbidden direction
+/// (§AR-checker.2.10), are untouched and report alongside it.
 ///
 /// A resolving shorthand at a site `grund fmt` may not rewrite (§FS-fmt.2.3 — inline
 /// code, a link destination, a runtime string) is not reported at all. The citation
@@ -218,7 +218,7 @@ use crate::scanner::is_scannable;
 /// budgets, and `inline_note_layout`. Everything it compares — the block's span,
 /// its widest column, whether it carries a note, and which of its lines deviate
 /// from the configured layout — was recorded by the scanner (§AR-scanner.3), so
-/// like every rule above except §2.5 this one reads no file. A site that misses
+/// like every rule above except §AR-checker.2.5 this one reads no file. A site that misses
 /// several caps yields one finding per cap; a block whose layout deviates yields
 /// one per offending *line*, anchored there rather than at the block's opener,
 /// because that is the line an author edits (§FS-inline-citation-style.4.4.1). Two
@@ -226,7 +226,7 @@ use crate::scanner::is_scannable;
 /// `warn_on_suggested`, the layout under `inline_note_layout_check`.
 ///
 /// The rule is `inline_style.rs` rather than here — one file per invariant, the
-/// arrangement §2.12's shorthand rule already uses for the same reason. The
+/// arrangement §AR-checker.2.12's shorthand rule already uses for the same reason. The
 /// classifier it judges by stays in `grammar/inline_note_layout.rs`, which is
 /// what the scanner annotates a site from: the two stages read one answer about
 /// what a well-laid-out note is, and only this component turns it into a
@@ -238,7 +238,7 @@ use crate::scanner::is_scannable;
 /// the first heading that claims it, and appends every later claimant *inside the
 /// declaration's own body* to `duplicate_sections` (§AR-scanner.2.2.3); this rule
 /// groups that list by path and emits one error per collided path, anchored at
-/// the first heading with the rest named in the message — §2.1's shape for
+/// the first heading with the rest named in the message — §AR-checker.2.1's shape for
 /// declarations, one level down. The heading-level rule above reads only the map,
 /// so a duplicate heading is not additionally judged for depth: nothing resolves
 /// to it, and the run has already said it should not exist
@@ -255,10 +255,10 @@ use crate::scanner::is_scannable;
 /// One pass per `[[kinds]]` entry that has a `folder` and an enabled `index`
 /// (§FS-config.3.4). For each, membership is the declarations under that
 /// folder's whole subtree — a stub and the inline body it points at collapsing
-/// to one ID, as in §2.1 — plus an external inline declaration whose canonical
+/// to one ID, as in §AR-checker.2.1 — plus an external inline declaration whose canonical
 /// bare-ID source link enrolls it directly (§FS-check.3.18.3). The citations already
 /// recorded in the index file say which members it names. The index file itself
-/// is re-read, the second and last rule that touches disk after §2.5, because
+/// is re-read, the second and last rule that touches disk after §AR-checker.2.5, because
 /// wrapper form and an external enrollment's exact destination are facts about
 /// the line, not the citation record. Ordinary in-folder entries still require
 /// only the wrapper shape; only external enrollment compares the destination to
@@ -269,7 +269,7 @@ use crate::scanner::is_scannable;
 /// They arrived at that verdict by different routes — the bare entry on arrival,
 /// the missing one at the end of a ramp (§DF-index-compatibility-ramp.3) — and
 /// the anchors are what still tells them apart. The same pass owns the carve-out
-/// that keeps §2.6 honest: an index entry is not an inbound citation, so the
+/// that keeps §AR-checker.2.6 honest: an index entry is not an inbound citation, so the
 /// unused warning still fires for a declaration only its own index names
 /// (§DF-index-not-an-inbound-citation). The finding pass lives in
 /// `index.rs` and its shared membership derivation in

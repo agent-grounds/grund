@@ -26,7 +26,7 @@ A citation in a local conversation renders as a **Markdown link whose label is t
 whose target is an absolute URI**. Which scheme addresses the declaration is the machine's choice,
 recorded as `[reference] conversation_target` in the user configuration ([§FS-config.3.1](../../functional-spec/FS-config.md#31-reference--citation-form),
 [§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions)), and the form is instructed only to agents whose renderers are verified to
-honor it (§2.4). `conversation = "link"` remains the switch that decides *whether* a location travels
+honor it ([§DF-conversation-link-target.2.4](DF-conversation-link-target.md#24-the-form-is-gated-per-agent-and-the-fallback-is-path)). `conversation = "link"` remains the switch that decides *whether* a location travels
 with the citation; this key decides only *how it is addressed*.
 
 ### 2.1 The label is the citation, the target is the location
@@ -74,7 +74,7 @@ already governs this pair ([§DF-repo-conversation-opinion.2.3](DF-repo-conversa
 
 Row 3 of the matrix is the constraint: the Codex TUI renders a local-path destination *in place of the
 link label*, erasing the visible citation. Instructing the link form there would destroy the one thing
-§2.1 exists to protect, on a surface where the failure is silent — the transcript reads as if the agent
+[§DF-conversation-link-target.2.1](DF-conversation-link-target.md#21-the-label-is-the-citation-the-target-is-the-location) exists to protect, on a surface where the failure is silent — the transcript reads as if the agent
 never cited anything.
 
 A target is therefore instructed to an agent only where the pair is verified, and every other agent's
@@ -105,7 +105,7 @@ guaranteed floor rather than the ceiling: `file` and `web` click under **both** 
 scheme only under one. A reader whose terminal grund never saw is the case the table has to be right
 for, so Pi is listed at what works everywhere. The ceiling is reachable and worth reaching — it needs
 grund to know the reader's terminal at the moment the instruction is written, which is a real
-extension of §2.4 rather than a correction to it.
+extension of [§DF-conversation-link-target.2.4](DF-conversation-link-target.md#24-the-form-is-gated-per-agent-and-the-fallback-is-path) rather than a correction to it.
 
 The gate can only hold a surface at the form it already had, never make one worse, and it is reported
 rather than silent: `grund integrations --write` names the effective form per target ([§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions)),
@@ -127,7 +127,7 @@ together by naming convention rather than by structure, and both would have to b
 what one agent gets. A partial of the parent is the same idea expressed as data, so a second key
 is one more accepted name inside it rather than a second map.
 
-What the layer must *not* become is a way around §2.4. The override sets the **request**; the gate
+What the layer must *not* become is a way around [§DF-conversation-link-target.2.4](DF-conversation-link-target.md#24-the-form-is-gated-per-agent-and-the-fallback-is-path). The override sets the **request**; the gate
 sets the **verdict**, and it still runs last. `[reference.agents.codex] conversation_target =
 "vscodium"` resolves to `vscodium` and is then gated to `path`, precisely as the machine-wide value
 would be. The distinction is the whole reason the layer is safe to add: a user asserting a

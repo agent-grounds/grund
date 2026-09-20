@@ -16,15 +16,15 @@ grund show --batch [<path>] --format=json [--brief | --toc | --full] [--path <pa
 grund show --batch --all [<path>] --format=json [--brief | --toc | --full] [--path <path>]
 ```
 
-The first form reads one coordinate: `<ID>` names it (§1.1, §1.2), `show` itself
-may be omitted (§1.3), `<path>` picks the tree (§1.4), `--section` or the dotted
-form picks a section (§1.5), one slice flag picks how much (§1.6), and `--format`
-picks the shape (§1.7). The two `--batch` forms answer many coordinates from one
-load: an explicit query stream (§1.8) or every coordinate in scope (§1.9).
+The first form reads one coordinate: `<ID>` names it ([§FS-show.1.1](FS-show.md#11-id), [§FS-show.1.2](FS-show.md#12-the-number-only-shorthand)), `show` itself
+may be omitted ([§FS-show.1.3](FS-show.md#13-show-is-optional)), `<path>` picks the tree ([§FS-show.1.4](FS-show.md#14-path-and---path)), `--section` or the dotted
+form picks a section ([§FS-show.1.5](FS-show.md#15---section-s)), one slice flag picks how much ([§FS-show.1.6](FS-show.md#16-how-much---brief-the-default---toc---full)), and `--format`
+picks the shape ([§FS-show.1.7](FS-show.md#17---format)). The two `--batch` forms answer many coordinates from one
+load: an explicit query stream ([§FS-show.1.8](FS-show.md#18---batch-an-explicit-query-stream)) or every coordinate in scope ([§FS-show.1.9](FS-show.md#19---batch---all-every-coordinate-in-scope)).
 
 ### 1.1 `<ID>`
 
-`<ID>` is the full ID without the marker (e.g. `FS-check`). It may include an inline section (`FS-check.3.1`); the dotted form uses the configured `[id] section_separator`. Beyond the kind's grammar it accepts an exact off-grammar ID the catalog retains (§1.1.1); the catalog-prefix ambiguity fails rather than guesses (§1.1.2); and a missing fetch-backed snapshot is a failed offline query (§1.1.3).
+`<ID>` is the full ID without the marker (e.g. `FS-check`). It may include an inline section (`FS-check.3.1`); the dotted form uses the configured `[id] section_separator`. Beyond the kind's grammar it accepts an exact off-grammar ID the catalog retains ([§FS-show.1.1.1](FS-show.md#111-exact-off-grammar-ids)); the catalog-prefix ambiguity fails rather than guesses ([§FS-show.1.1.2](FS-show.md#112-where-the-id-ends-and-the-section-begins)); and a missing fetch-backed snapshot is a failed offline query ([§FS-show.1.1.3](FS-show.md#113-a-missing-fetched-snapshot)).
 
 #### 1.1.1 Exact off-grammar IDs
 
@@ -52,20 +52,20 @@ In a kind whose effective format carries both `{number}` and `{slug}`, the numbe
 
 ### 1.5 `--section <s>`
 
-`--section <s>` is an alternative way to specify a section path (`3.1`). Mutually exclusive with the dotted form. Composes with each `--brief` / `--toc` / `--full` slice exactly as the dotted form does (§2.2).
+`--section <s>` is an alternative way to specify a section path (`3.1`). Mutually exclusive with the dotted form. Composes with each `--brief` / `--toc` / `--full` slice exactly as the dotted form does ([§FS-show.2.2](FS-show.md#22-section)).
 
 ### 1.6 How much: `--brief`, the default, `--toc`, `--full`
 
-`--brief`, `--toc`, and `--full` are mutually exclusive — each picks one rung on the "how much" ladder: title + 1 paragraph → lead prose → lead + section map → full body. The rungs' bodies are strictly nested (each contains the previous), so escalating is always one more flag; in `text` only `--brief` keeps the whole-declaration H1 (§2.1.1, §3.1), so for a one-paragraph lead it is longer than the default and not contained in it.
+`--brief`, `--toc`, and `--full` are mutually exclusive — each picks one rung on the "how much" ladder: title + 1 paragraph → lead prose → lead + section map → full body. The rungs' bodies are strictly nested (each contains the previous), so escalating is always one more flag; in `text` only `--brief` keeps the whole-declaration H1 ([§FS-show.2.1.1](FS-show.md#211-brief---brief), [§FS-show.3.1](FS-show.md#31-format-variants)), so for a one-paragraph lead it is longer than the default and not contained in it.
 
-- `--brief` — the cheapest "what is this about" view, a hover-preview slice (§2.1.1).
-- (no flag, the default) — the lead, cut at the first *citable* point, so an agent landing on a bare `§<ID>` reads enough to know whether to fetch a deeper section (§2.1).
-- `--toc` — the move when the next step is `grund <ID>.<sec>` and the section number needs to be chosen (§2.1.2).
-- `--full` — print the entire body: heading down to the end of its body span (§2.1.2.1), all subsections recursively included. The escalation when narrower slices are not enough (§2.1.3).
+- `--brief` — the cheapest "what is this about" view, a hover-preview slice ([§FS-show.2.1.1](FS-show.md#211-brief---brief)).
+- (no flag, the default) — the lead, cut at the first *citable* point, so an agent landing on a bare `§<ID>` reads enough to know whether to fetch a deeper section ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)).
+- `--toc` — the move when the next step is `grund <ID>.<sec>` and the section number needs to be chosen ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)).
+- `--full` — print the entire body: heading down to the end of its body span ([§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span)), all subsections recursively included. The escalation when narrower slices are not enough ([§FS-show.2.1.3](FS-show.md#213-full-body---full)).
 
 ### 1.7 `--format`
 
-`--format` — output shape (§3.1); defaults to `text`.
+`--format` — output shape ([§FS-show.3.1](FS-show.md#31-format-variants)); defaults to `text`.
 
 ### 1.8 `--batch`: an explicit query stream
 
@@ -77,13 +77,13 @@ malformed JSON, and any other shape are batch-input errors. The `id` field
 accepts every local, qualified, shorthand, and inline-section spelling the
 single-coordinate form accepts. An explicit non-null `section` and an inline
 section in `id` form a valid record whose query fails rather than malformed
-input (§2.6.3). The whole input is validated before configuration discovery or
+input ([§FS-show.2.6.3](FS-show.md#263-query-failures-and-run-level-failures)). The whole input is validated before configuration discovery or
 scanning.
 
 ### 1.9 `--batch --all`: every coordinate in scope
 
 `--batch --all` reads no stdin and discovers its query set from the selected
-scope (§2.6.2). `--all` requires `--batch`; stdin supplied with `--all` is not a
+scope ([§FS-show.2.6.2](FS-show.md#262-exhaustive-generation)). `--all` requires `--batch`; stdin supplied with `--all` is not a
 query source. Both batch forms use one invocation-level slice mode. `--section`
 is rejected in batch mode because each explicit record owns its section and the
 exhaustive form generates sections. `<path>` and `--path` retain their existing
@@ -101,7 +101,7 @@ Opted-in JSON value declarations are members of the same catalog. For one, `show
 
 `grund FS-check` prints the *lead* — the prose between the declaration heading and the first child citable section heading (`## 1. ...`, or `## goals: ...` when named sections are enabled). The opening heading is omitted in `text` format and included in `md`. A named heading is a citable point and cuts its parent's lead exactly as a numbered heading does; a plain heading remains prose and does not cut it. This is the new default: a 1–2 paragraph slice that names what the declaration is about, without paying for the whole body. Decided in [§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in).
 
-A declaration with no lead prints nothing (§2.1.4); a selected section gets the same cut one level down (§2.1.5).
+A declaration with no lead prints nothing ([§FS-show.2.1.4](FS-show.md#214-a-declaration-with-no-lead-prints-nothing)); a selected section gets the same cut one level down ([§FS-show.2.1.5](FS-show.md#215-a-sections-lead)).
 
 #### 2.1.1 Brief (`--brief`)
 
@@ -109,7 +109,7 @@ A declaration with no lead prints nothing (§2.1.4); a selected section gets the
 
 `--brief` always includes the heading line so the slice is self-labeled, regardless of `text` vs `md`. This is the one mode where the `text` rule of "omit the H1" yields ([§FS-show.3.1](FS-show.md#31-format-variants)): a single paragraph with no title is unreadable for the hover-preview use case. In `text` the heading is rendered as written, with the leading `#` prefixes preserved.
 
-With no lead prose, `--brief` prints the heading line alone and exits `0`; with `--section` or the dotted form it prints the section heading and its first paragraph, or the heading alone when a sub-subsection opens the section (§2.1.1.1).
+With no lead prose, `--brief` prints the heading line alone and exits `0`; with `--section` or the dotted form it prints the section heading and its first paragraph, or the heading alone when a sub-subsection opens the section ([§FS-show.2.1.1.1](FS-show.md#2111-with-no-lead-the-heading-alone)).
 
 ##### 2.1.1.1 With no lead, the heading alone
 
@@ -117,9 +117,9 @@ If the declaration has no lead prose (opens directly with `## 1. ...`), `--brief
 
 #### 2.1.2 Section map (`--toc`)
 
-`grund --toc FS-check` prints the default lead (§2.1), then a blank line, then every citable section heading in the declaration body, one per line, in document order, each at the depth and in the complete form it was written (`## 1. Inputs`, `## goals: Goals`, `### goals.performance: Performance`, …). No section bodies. The heading lines are emitted verbatim — the same bytes `--full` would show for those lines — so the coordinate the reader needs is right there to feed back into `grund FS-check.<path>`. No generated summary, ever: `--toc` is a structural slice, as deterministic as the default ([§FS-errors.4](FS-errors.md#4-determinism)). A whole-declaration TOC still lists every claimant of a duplicate named coordinate; selecting that coordinate refuses as ambiguous (§2.2.2.3).
+`grund --toc FS-check` prints the default lead ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)), then a blank line, then every citable section heading in the declaration body, one per line, in document order, each at the depth and in the complete form it was written (`## 1. Inputs`, `## goals: Goals`, `### goals.performance: Performance`, …). No section bodies. The heading lines are emitted verbatim — the same bytes `--full` would show for those lines — so the coordinate the reader needs is right there to feed back into `grund FS-check.<path>`. No generated summary, ever: `--toc` is a structural slice, as deterministic as the default ([§FS-errors.4](FS-errors.md#4-determinism)). A whole-declaration TOC still lists every claimant of a duplicate named coordinate; selecting that coordinate refuses as ambiguous ([§FS-show.2.2.2.3](FS-show.md#2223-the-whole-declaration-map-still-lists-both)).
 
-Which headings the map holds is §2.1.2.1; what it prints when the lead or the map is empty is §2.1.2.2; a selected section's map is §2.1.2.3.
+Which headings the map holds is [§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span); what it prints when the lead or the map is empty is [§FS-show.2.1.2.2](FS-show.md#2122-an-empty-lead-an-empty-map); a selected section's map is [§FS-show.2.1.2.3](FS-show.md#2123-a-selected-sections-map).
 
 ##### 2.1.2.1 The map is the declaration's body span
 
@@ -131,7 +131,7 @@ comment block, and a stub's single declaration line each end ownership. A
 deeper numeric or enabled named heading before that boundary remains a section;
 one after it is absent from the map and is reported by
 [§FS-check.3.23](FS-check.md#323-section-outside-a-declaration). Fenced Markdown
-pseudo-headings remain content under §2.5. This boundary does not make an
+pseudo-headings remain content under [§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example). This boundary does not make an
 otherwise legal plain heading inside a body an error; that separate policy is
 outside this contract.
 
@@ -145,7 +145,7 @@ If the lead is empty (`## 1.` or `## goals:` opens the body), the leading blank 
 
 #### 2.1.3 Full body (`--full`)
 
-`grund --full FS-check` prints from the heading of `FS-check` to the end of its body span (§2.1.2.1): in Markdown, the start of the next same-or-higher heading, whether or not it declares an ID (or end of file). Every subsection and sub-subsection body is included. With `--section` / the dotted form, `--full` prints the selected section's heading and full body — the same slice §2.2 defines. The opening heading is omitted in `text` and included in `md`, as in the default.
+`grund --full FS-check` prints from the heading of `FS-check` to the end of its body span ([§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span)): in Markdown, the start of the next same-or-higher heading, whether or not it declares an ID (or end of file). Every subsection and sub-subsection body is included. With `--section` / the dotted form, `--full` prints the selected section's heading and full body — the same slice [§FS-show.2.2](FS-show.md#22-section) defines. The opening heading is omitted in `text` and included in `md`, as in the default.
 
 `--full` is the escalation path when `--brief`, the default, and `--toc` are not enough. It is also the way to recover today's pre-[§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in) behavior: use `grund <ID> --full`.
 
@@ -155,7 +155,7 @@ If a declaration has no lead paragraph (its body opens directly with `## 1. ...`
 
 #### 2.1.5 A section's lead
 
-`grund FS-check.3.1` applies the same cut one level down. It prints the selected section heading (`### 3.1 ...`), kept in `text` as in `md` (§2.2), and the prose between that heading and the first *child* heading (`#### 3.1.1 ...`). If the section opens directly with a sub-subsection, the output is just the section heading line. A section that does not exist is still a `section not found` error.
+`grund FS-check.3.1` applies the same cut one level down. It prints the selected section heading (`### 3.1 ...`), kept in `text` as in `md` ([§FS-show.2.2](FS-show.md#22-section)), and the prose between that heading and the first *child* heading (`#### 3.1.1 ...`). If the section opens directly with a sub-subsection, the output is just the section heading line. A section that does not exist is still a `section not found` error.
 
 ### 2.2 Section
 
@@ -166,7 +166,7 @@ If a declaration has no lead paragraph (its body opens directly with `## 1. ...`
 - `--toc`: section heading + lead + nested heading map.
 - `--full`: section heading + full body (everything down to the next sibling-or-shallower heading; nested deeper headings included).
 
-The selected section heading is printed verbatim in all four modes — `text` strips only the whole-declaration H1, not section headings (§3.1). For `--brief`, the section heading is the slice's self-label. Named paths, including `name.number`, compose with default, brief, TOC, full, and `--section` exactly as numeric paths do. Arbitrary nesting depth is supported per [§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth). Every surface that names a section reads the same map (§2.2.3).
+The selected section heading is printed verbatim in all four modes — `text` strips only the whole-declaration H1, not section headings ([§FS-show.3.1](FS-show.md#31-format-variants)). For `--brief`, the section heading is the slice's self-label. Named paths, including `name.number`, compose with default, brief, TOC, full, and `--section` exactly as numeric paths do. Arbitrary nesting depth is supported per [§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth). Every surface that names a section reads the same map ([§FS-show.2.2.3](FS-show.md#223-every-surface-reads-the-same-section-map)).
 
 #### 2.2.1 Ambiguous ID
 
@@ -178,7 +178,7 @@ ambiguous ID: <ID> (declared at <path>:<line>, <path>:<line>[, ...])
 
 Sites are listed in lexicographic `path:line` order so the message is stable across runs. The repo must be fixed (run `grund check` first) before `show` will return a body. With `--format=json`, those same sites travel in the diagnostic's `sites` field, `[{ path, line }]` in the same order ([§FS-errors.5](FS-errors.md#5-json-format)).
 
-This shape matches the bare-message form used for `ID not found` and `section not found` ([§FS-show.3](FS-show.md#3-outputs)): all three are queries that found something other than exactly one body. An ambiguous number-only shorthand fails the same way but names candidates rather than sites (§2.2.1.1).
+This shape matches the bare-message form used for `ID not found` and `section not found` ([§FS-show.3](FS-show.md#3-outputs)): all three are queries that found something other than exactly one body. An ambiguous number-only shorthand fails the same way but names candidates rather than sites ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)).
 
 ##### 2.2.1.1 An ambiguous shorthand names its candidates
 
@@ -198,23 +198,23 @@ The same refusal one level down. If two citable headings inside the selected dec
 ambiguous section: FS-001-login.1 (declared at docs/functional-spec/FS-001-login.md:5, docs/functional-spec/FS-001-login.md:9)
 ```
 
-Sites are in `path:line` order, as in §2.2.1, and the exit is `1` with the bare stderr line of [§FS-errors.2.3](FS-errors.md#23-bare-query-failure). The repo must be fixed before `show` will return a body. With `--format=json`, the same sites travel in the diagnostic's `sites` field too ([§FS-errors.5](FS-errors.md#5-json-format)).
+Sites are in `path:line` order, as in [§FS-show.2.2.1](FS-show.md#221-ambiguous-id), and the exit is `1` with the bare stderr line of [§FS-errors.2.3](FS-errors.md#23-bare-query-failure). The repo must be fixed before `show` will return a body. With `--format=json`, the same sites travel in the diagnostic's `sites` field too ([§FS-errors.5](FS-errors.md#5-json-format)).
 
 What this replaces is worse than a pick: the reader used to get *both* headings and both bodies concatenated into one slice, a body no heading in the file spans ([§DF-duplicate-section-path.1](../decisions/functional/DF-duplicate-section-path.md#1-context)).
 
-The failure has its own code (§2.2.2.1) and refuses exactly what `check` reports (§2.2.2.2); the whole-declaration map still lists both headings (§2.2.2.3), and only the requested path can collide (§2.2.2.4).
+The failure has its own code ([§FS-show.2.2.2.1](FS-show.md#2221-its-own-code-ambiguous-section)) and refuses exactly what `check` reports ([§FS-show.2.2.2.2](FS-show.md#2222-the-headings-check-counts)); the whole-declaration map still lists both headings ([§FS-show.2.2.2.3](FS-show.md#2223-the-whole-declaration-map-still-lists-both)), and only the requested path can collide ([§FS-show.2.2.2.4](FS-show.md#2224-only-the-requested-path-can-collide)).
 
 ##### 2.2.2.1 Its own code, `ambiguous-section`
 
-The code is `ambiguous-section`, not §2.2.1's `ambiguous` ([§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)). The two failures need different edits — one ID with two homes is fixed in whichever file should not have declared it, one declaration with two `1.` headings is fixed by renumbering inside it — and the check side already spells that difference `duplicate` versus `duplicate-section` ([§FS-check.3.16](FS-check.md#316-duplicate-section-path)). Reusing one code would leave a JSON consumer parsing the message prose to tell them apart, the cost [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) refused to pay for its own four rules. Nothing regresses by adding it: before this rule the query returned a body and exit `0`, so no consumer ever saw `ambiguous` here to filter on.
+The code is `ambiguous-section`, not [§FS-show.2.2.1](FS-show.md#221-ambiguous-id)'s `ambiguous` ([§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)). The two failures need different edits — one ID with two homes is fixed in whichever file should not have declared it, one declaration with two `1.` headings is fixed by renumbering inside it — and the check side already spells that difference `duplicate` versus `duplicate-section` ([§FS-check.3.16](FS-check.md#316-duplicate-section-path)). Reusing one code would leave a JSON consumer parsing the message prose to tell them apart, the cost [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) refused to pay for its own four rules. Nothing regresses by adding it: before this rule the query returned a body and exit `0`, so no consumer ever saw `ambiguous` here to filter on.
 
 ##### 2.2.2.2 The headings `check` counts
 
-Which headings count is [§FS-check.3.16](FS-check.md#316-duplicate-section-path)'s question, answered once: `show` refuses exactly the coordinates that rule reports, from the same recorded section set, so no coordinate is clean in `check` and unresolvable in `show`. For a stub (§2.3.4) that set is the **inline home's** — the file the query reads — never the stub's own prose.
+Which headings count is [§FS-check.3.16](FS-check.md#316-duplicate-section-path)'s question, answered once: `show` refuses exactly the coordinates that rule reports, from the same recorded section set, so no coordinate is clean in `check` and unresolvable in `show`. For a stub ([§FS-show.2.3.4](FS-show.md#234-broken-stub)) that set is the **inline home's** — the file the query reads — never the stub's own prose.
 
 ##### 2.2.2.3 The whole-declaration map still lists both
 
-`--toc` over the **whole declaration** (§2.1.2) is the exception and still lists both heading lines — it is a map of what is written, and seeing the collision is the point. `grund FS-001-login.1 --toc` is not that map: it selects the ambiguous coordinate, so it refuses like every other slice. The exemption is for the query that asks what the declaration contains, not for the one that asks which of two headings section `1` is.
+`--toc` over the **whole declaration** ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)) is the exception and still lists both heading lines — it is a map of what is written, and seeing the collision is the point. `grund FS-001-login.1 --toc` is not that map: it selects the ambiguous coordinate, so it refuses like every other slice. The exemption is for the query that asks what the declaration contains, not for the one that asks which of two headings section `1` is.
 
 ##### 2.2.2.4 Only the requested path can collide
 
@@ -222,29 +222,29 @@ A duplicate elsewhere in the declaration is not this error: only a collision on 
 
 #### 2.2.3 Every surface reads the same section map
 
-Every coordinate-bearing surface reads the same body-local map (§2.1.2.1):
+Every coordinate-bearing surface reads the same body-local map ([§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span)):
 direct and batch `show`, exhaustive batch generation, citation and value
 resolution, `refs`, completion, list/size output, duplicate detection, and LSP
 navigation, references, highlights, and hover counts. A heading rejected by
-§2.1.2.1 can therefore neither resolve nor be suggested, listed, measured, navigated to,
+[§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span) can therefore neither resolve nor be suggested, listed, measured, navigated to,
 validated as an embedded-value root, or treated as a duplicate claimant. A
 query for its coordinate has the ordinary `section not found` result and hint
-from §3, emits none of the outside heading's body, and never substitutes the
+from [§FS-show.3](FS-show.md#3-outputs), emits none of the outside heading's body, and never substitutes the
 located `check` finding for query semantics.
 
 ### 2.3 Inline declarations in code and doc-comments
 
-When the ID's home is in code — whether discovered directly, enrolled by its kind's canonical index link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), or paired with a [§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub) stub — `show` extracts the comment block surrounding the inline declaration, strips comment markers, and prints the resulting prose. Index enrollment creates no declaration and therefore changes no query resolution. The same section logic applies — and so do the `--brief` / (default) / `--toc` / `--full` slices, computed over the stripped block exactly as over a `.md` body (the lead is what precedes the first citable heading inside the comment; the section map is the citable headings recorded within it, per §2.3.3).
+When the ID's home is in code — whether discovered directly, enrolled by its kind's canonical index link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), or paired with a [§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub) stub — `show` extracts the comment block surrounding the inline declaration, strips comment markers, and prints the resulting prose. Index enrollment creates no declaration and therefore changes no query resolution. The same section logic applies — and so do the `--brief` / (default) / `--toc` / `--full` slices, computed over the stripped block exactly as over a `.md` body (the lead is what precedes the first citable heading inside the comment; the section map is the citable headings recorded within it, per [§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)).
 
 A code-resident declaration is written as `<comment-marker> <ID>: <title>` (or bare `<ID>: <title>` inside a Python docstring), with no markdown `#` prefix. Decided in [§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix).
 
-The doc-comment forms are §2.3.5, and one doc-comment may hold several declarations (§2.3.6).
+The doc-comment forms are [§FS-show.2.3.5](FS-show.md#235-the-doc-comment-forms), and one doc-comment may hold several declarations ([§FS-show.2.3.6](FS-show.md#236-several-declarations-in-one-doc-comment)).
 
 #### 2.3.1 What counts as the "comment block"
 
 Extraction is precisely defined so that the implementation has no freedom and the same input produces the same output across editor, CLI, and binding callers.
 
-A declaration is found on a "declaration line" — a line that matches the declaration regex from [AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection) *and* sits inside a comment or docstring. The block surrounding it runs from an open boundary (§2.3.1.1) to a close boundary (§2.3.1.2), and ends early at any other declaration line (§2.3.1.3).
+A declaration is found on a "declaration line" — a line that matches the declaration regex from [AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection) *and* sits inside a comment or docstring. The block surrounding it runs from an open boundary ([§FS-show.2.3.1.1](FS-show.md#2311-find-the-open-boundary)) to a close boundary ([§FS-show.2.3.1.2](FS-show.md#2312-find-the-close-boundary)), and ends early at any other declaration line ([§FS-show.2.3.1.3](FS-show.md#2313-terminate-early-on-another-declaration)).
 
 ##### 2.3.1.1 Find the open boundary
 
@@ -291,15 +291,15 @@ broken stub: <ID> (stub at <path>:<line> points at <target>, which does not exis
 broken stub: <ID> (stub at <path>:<line> points at <target>, which contains no inline declaration of <ID>)
 ```
 
-This is the same "found something other than exactly one body" family as `ID not found` and `ambiguous ID` (§3). Run `grund check` to see the error in located form; fix the stub or the target before `show` will return a body.
+This is the same "found something other than exactly one body" family as `ID not found` and `ambiguous ID` ([§FS-show.3](FS-show.md#3-outputs)). Run `grund check` to see the error in located form; fix the stub or the target before `show` will return a body.
 
 #### 2.3.5 The doc-comment forms
 
-The scanner recognizes the same doc-comment forms enumerated in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architectural spec can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the comment-stripped Javadoc lead (§2.3.2); the optional LSP server's hover shows the `--toc` slice of the same prose, the lead plus its section map ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
+The scanner recognizes the same doc-comment forms enumerated in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architectural spec can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the comment-stripped Javadoc lead ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers)); the optional LSP server's hover shows the `--toc` slice of the same prose, the lead plus its section map ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
 
 #### 2.3.6 Several declarations in one doc-comment
 
-A single doc-comment may declare **multiple** IDs — most usefully an `AR-` and an `FS-` co-located on the same class — and each gets its own body. The scanner ends each declaration's block at the next declaration line in either direction (§2.3.1.3):
+A single doc-comment may declare **multiple** IDs — most usefully an `AR-` and an `FS-` co-located on the same class — and each gets its own body. The scanner ends each declaration's block at the next declaration line in either direction ([§FS-show.2.3.1.3](FS-show.md#2313-terminate-early-on-another-declaration)):
 
 ```rust
 /// AR-router: In-process event router
@@ -334,7 +334,7 @@ fixtures:
 …
 ```
 
-The first line is the invocation (`grund check` when the case has no `command.args`); then an `expected exit: <code>` line; then a `fixtures:` line followed by one `- <path>` line per file in the case directory, paths relative to that directory, sorted lexicographically — deterministic for a given tree. How each slice prints it is §2.4.1; its JSON object is §2.4.2.
+The first line is the invocation (`grund check` when the case has no `command.args`); then an `expected exit: <code>` line; then a `fixtures:` line followed by one `- <path>` line per file in the case directory, paths relative to that directory, sorted lexicographically — deterministic for a given tree. How each slice prints it is [§FS-show.2.4.1](FS-show.md#241-the-slices-over-a-manifest); its JSON object is [§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json).
 
 #### 2.4.1 The slices over a manifest
 
@@ -346,11 +346,11 @@ The first line is the invocation (`grund check` when the case has no `command.ar
 
 ### 2.5 A heading inside a fenced code block is an example
 
-In a Markdown body, a line inside a fenced block (```` ``` ````, `~~~`) is content, never structure. It does not end a lead (§2.1), does not bound a section (§2.2), does not appear in a `--toc` map (§2.1.2), and does not open or close a declaration — the fence delimiters and everything between them are printed verbatim as part of whatever slice contains them. Verbatim includes the final text/JSON cross-reference pass: a complete citation wrapper inside the fence stays byte-for-byte as authored rather than being flattened (§3.2), while wrapper flattening resumes after a valid closer.
+In a Markdown body, a line inside a fenced block (```` ``` ````, `~~~`) is content, never structure. It does not end a lead (§FS-show.2.1), does not bound a section (§FS-show.2.2), does not appear in a `--toc` map (§FS-show.2.1.2), and does not open or close a declaration — the fence delimiters and everything between them are printed verbatim as part of whatever slice contains them. Verbatim includes the final text/JSON cross-reference pass: a complete citation wrapper inside the fence stays byte-for-byte as authored rather than being flattened (§FS-show.3.2), while wrapper flattening resumes after a valid closer.
 
-This is the carve-out [§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code) already makes for citations, applied to headings and post-slice flattening for the same reason and for one more: the scan bounds a declaration's sections by exactly this rule, so a slice that disagreed would cut a body where the recorded section map says no section starts. The shared grammar recognizes both backtick and tilde fences, their close/resume rules, and an unclosed fence through end of body; a short or wrong-character would-be closer leaves the fence open. A spec whose §1 opens with a fenced `# FS-001-login: …` example — the shape these documents are written in — would otherwise print three lines and stop.
+This is the carve-out [§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code) already makes for citations, applied to headings and post-slice flattening for the same reason and for one more: the scan bounds a declaration's sections by exactly this rule, so a slice that disagreed would cut a body where the recorded section map says no section starts. The shared grammar recognizes both backtick and tilde fences, their close/resume rules, and an unclosed fence through end of body; a short or wrong-character would-be closer leaves the fence open. A spec whose [§FS-show.1](FS-show.md#1-inputs) opens with a fenced `# FS-001-login: …` example — the shape these documents are written in — would otherwise print three lines and stop.
 
-The rule is Markdown's. Inside a code or docstring comment block (§2.3) a fence is not tracked, on either side: the scan does not track it there either, so the two still agree.
+The rule is Markdown's. Inside a code or docstring comment block ([§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments)) a fence is not tracked, on either side: the scan does not track it there either, so the two still agree.
 
 ### 2.6 Batch resolution
 
@@ -362,8 +362,8 @@ load; an empty catalog then succeeds with no records.
 
 The operation is additive: the existing one-query core API and every
 single-coordinate CLI spelling keep their signatures and behavior. How explicit
-queries are answered is §2.6.1, what the exhaustive form generates is §2.6.2,
-and which failures stay inside one query is §2.6.3.
+queries are answered is [§FS-show.2.6.1](FS-show.md#261-explicit-queries), what the exhaustive form generates is [§FS-show.2.6.2](FS-show.md#262-exhaustive-generation),
+and which failures stay inside one query is [§FS-show.2.6.3](FS-show.md#263-query-failures-and-run-level-failures).
 
 #### 2.6.1 Explicit queries
 
@@ -388,7 +388,7 @@ one coordinate and let normal resolution report its ambiguity.
 
 A well-formed query that names an invalid, missing, or ambiguous ID; a missing or
 ambiguous section; a broken stub; an unknown project alias; or both an inline and
-explicit section produces that query's failed envelope (§3) and does not stop
+explicit section produces that query's failed envelope ([§FS-show.3](FS-show.md#3-outputs)) and does not stop
 later records. Malformed input or invocation, configuration failure, and any scan
 failure are run-level errors: stdout stays empty, stderr carries the error, and no
 query is attempted. In particular, malformed explicit input is diagnosed as
@@ -398,41 +398,41 @@ query is attempted. In particular, malformed explicit input is diagnosed as
 
 - `0` — printed successfully.
 - `1` — ID not found, ambiguous ID (multiple homes — [§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), ambiguous section (two headings claiming the requested path — [§FS-show.2.2.2](FS-show.md#222-ambiguous-section)), broken stub ([§FS-show.2.3.4](FS-show.md#234-broken-stub)), or section not found in declaration.
-- `2` — I/O error, or a CLI-level failure that stops the query before it runs: the commonest is a qualified ID naming a project this run does not hold, which exits `2` with `error: unknown project alias` however many segments the path has ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)). An ID the grammar rejects is *not* one of these — `invalid ID` is a failed query, `1` (§3.5.1).
+- `2` — I/O error, or a CLI-level failure that stops the query before it runs: the commonest is a qualified ID naming a project this run does not hold, which exits `2` with `error: unknown project alias` however many segments the path has ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)). An ID the grammar rejects is *not* one of these — `invalid ID` is a failed query, `1` ([§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects)).
 
 Stdout carries the body (or, with `--format=json`, the result object — one JSON object, never NDJSON, per [§FS-errors.5.1.1](FS-errors.md#511-query-results)). Stderr carries errors. Stdout is empty on error.
 
-Format variants are §3.1, link flattening §3.2, batch mode §3.3, what a failed query prints §3.4, and each failure's hint §3.5.
+Format variants are [§FS-show.3.1](FS-show.md#31-format-variants), link flattening [§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json), batch mode [§FS-show.3.3](FS-show.md#33-batch-mode), what a failed query prints [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints), and each failure's hint [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
 
 ### 3.1 Format variants
 
-`show` prints in one of three formats: `text`, the default (§3.1.1), `md` (§3.1.2), and `json` (§3.1.3). Verbose `show --format=json` examples, including failed-query stream behavior, live in [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes).
+`show` prints in one of three formats: `text`, the default ([§FS-show.3.1.1](FS-show.md#311-text)), `md` ([§FS-show.3.1.2](FS-show.md#312-md)), and `json` ([§FS-show.3.1.3](FS-show.md#313-json)). Verbose `show --format=json` examples, including failed-query stream behavior, live in [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes).
 
 #### 3.1.1 `text`
 
-The body only. The whole-declaration H1 (`# FS-<x>: …`) is omitted; section headings inside the slice are kept verbatim, including explicit named handles. Mode-by-mode: the default prints the lead prose (§2.1); `--brief` prints the heading line and the first paragraph (§2.1.1) — the one mode that includes the H1 in `text`, since the slice would otherwise be unlabeled; `--toc` prints the lead plus the citable heading lines (§2.1.2); `--full` prints the full body (§2.1.3); a selected section is printed with its own section heading in every mode (§2.2). For an inline-source declaration the body is the comment-stripped prose (§2.3.2); for an E2E case it is the manifest (§2.4). A `grund fmt --cross-refs` link wrapper around a citation (`[§FS-<x>.goals](FS-<x>.md#goals-scope)`) is flattened back to the bare citation — §3.2.
+The body only. The whole-declaration H1 (`# FS-<x>: …`) is omitted; section headings inside the slice are kept verbatim, including explicit named handles. Mode-by-mode: the default prints the lead prose ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)); `--brief` prints the heading line and the first paragraph ([§FS-show.2.1.1](FS-show.md#211-brief---brief)) — the one mode that includes the H1 in `text`, since the slice would otherwise be unlabeled; `--toc` prints the lead plus the citable heading lines ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)); `--full` prints the full body ([§FS-show.2.1.3](FS-show.md#213-full-body---full)); a selected section is printed with its own section heading in every mode ([§FS-show.2.2](FS-show.md#22-section)). For an inline-source declaration the body is the comment-stripped prose ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers)); for an E2E case it is the manifest ([§FS-show.2.4](FS-show.md#24-e2e-cases)). A `grund fmt --cross-refs` link wrapper around a citation (`[§FS-<x>.goals](FS-<x>.md#goals-scope)`) is flattened back to the bare citation — [§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json).
 
 #### 3.1.2 `md`
 
-Same as `text` but the opening declaration heading line is **included** verbatim, and `--cross-refs` link wrappers are kept as written — that is the renderable form (§3.2). For the default and `--toc`, the heading is prefixed; for `--brief` it is already included in `text` and stays as written in `md`; for `--full`, the heading is prefixed. The kind's `[[kinds]] title` ([§FS-config.3.4.3](FS-config.md#343-title)) is *not* injected — it is metadata that no `show` format carries, exposed in JSON only by `grund list --summary --format json` ([§FS-list.3.3](FS-list.md#33---summary)). For an inline-source declaration the included heading is the one written in the doc-comment (`AR-<event-bus>: In-process event broadcaster`), comment-markers stripped.
+Same as `text` but the opening declaration heading line is **included** verbatim, and `--cross-refs` link wrappers are kept as written — that is the renderable form ([§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)). For the default and `--toc`, the heading is prefixed; for `--brief` it is already included in `text` and stays as written in `md`; for `--full`, the heading is prefixed. The kind's `[[kinds]] title` ([§FS-config.3.4.3](FS-config.md#343-title)) is *not* injected — it is metadata that no `show` format carries, exposed in JSON only by `grund list --summary --format json` ([§FS-list.3.3](FS-list.md#33---summary)). For an inline-source declaration the included heading is the one written in the doc-comment (`AR-<event-bus>: In-process event broadcaster`), comment-markers stripped.
 
 #### 3.1.3 `json`
 
-A single object on stdout: `{"id":<ID>,"section":<section-path or null>,"body":<string>,"kind_title":<optional string>,"path":<declaring file>,"line":<1-indexed>}`. `body` is the same text `text` prints — `--cross-refs` wrappers flattened (§3.2). `section` is `null` when the whole declaration was requested and otherwise carries the exact numeric or named path string. With `--toc` the object additionally carries `sections` — one `{"path":<section path>,"title":<heading title after its coordinate>,"depth":<integer>}` per citable heading in the selected outline slice, in document order and before `kind_title`. `kind_title` is omitted when the selected kind has no effective title. The `path`, `line` pair always closes a declaration or section object: installed `grund-open` copies anchor on that trusted tail so arbitrary body prose cannot be mistaken for the location. For E2E cases the object is the distinct §2.4.2 shape instead. The wire form is stable per [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible).
+A single object on stdout: `{"id":<ID>,"section":<section-path or null>,"body":<string>,"kind_title":<optional string>,"path":<declaring file>,"line":<1-indexed>}`. `body` is the same text `text` prints — `--cross-refs` wrappers flattened ([§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)). `section` is `null` when the whole declaration was requested and otherwise carries the exact numeric or named path string. With `--toc` the object additionally carries `sections` — one `{"path":<section path>,"title":<heading title after its coordinate>,"depth":<integer>}` per citable heading in the selected outline slice, in document order and before `kind_title`. `kind_title` is omitted when the selected kind has no effective title. The `path`, `line` pair always closes a declaration or section object: installed `grund-open` copies anchor on that trusted tail so arbitrary body prose cannot be mistaken for the location. For E2E cases the object is the distinct [§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json) shape instead. The wire form is stable per [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible).
 
 ### 3.2 Cross-reference links are flattened in `text` and `json`
 
 A repo that has run `grund fmt --cross-refs` ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)) carries each citation in its `.md` files as a Markdown link *wrapping* the citation — `[§FS-check.1](FS-check.md#1-inputs)` instead of `§FS-check.1`. That wrapper is a rendered-view convenience ([§DF-md-link-emission](../decisions/functional/DF-md-link-emission.md#df-md-link-emission-grund-fmt-may-emit-clickable-markdown-links-alongside--prefixed-citations)), not the canonical form; for an agent pulling a fact into context it is noise, and the relative path inside it is the wrong pointer — the consumer should resolve the citation with `grund <ID>`, not open the file.
 
-So when `show` prints a body in `text` or in the `json` `body` field, it **flattens** every such wrapper back to the bare citation; the exact wrap shape it collapses is §3.2.1; what it leaves as written, and that it resolves nothing, is §3.2.2. Decided in [§DF-show-cross-ref-flattening](../decisions/functional/DF-show-cross-ref-flattening.md#df-show-cross-ref-flattening-grund-show-flattens-cross-reference-link-wrappers).
+So when `show` prints a body in `text` or in the `json` `body` field, it **flattens** every such wrapper back to the bare citation; the exact wrap shape it collapses is [§FS-show.3.2.1](FS-show.md#321-the-wrap-shape-it-collapses); what it leaves as written, and that it resolves nothing, is [§FS-show.3.2.2](FS-show.md#322-what-is-left-as-written). Decided in [§DF-show-cross-ref-flattening](../decisions/functional/DF-show-cross-ref-flattening.md#df-show-cross-ref-flattening-grund-show-flattens-cross-reference-link-wrappers).
 
 #### 3.2.1 The wrap shape it collapses
 
-A `[` immediately before a marker-prefixed citation token and `](…)` immediately after it — exactly the wrap shape `grund fmt --cross-refs` emits and re-derives ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)) — collapses to just the `§[<alias>/]<ID>[.<section>]` text when it occurs in ordinary Markdown prose. This includes qualified workspace citations such as `[<§>api/FS-login](...)`, because they are the same presentation wrapper over the same canonical citation syntax ([§FS-workspace.8.5](FS-workspace.md#85-grund-fmt---cross-refs)). It does not collapse inside a fenced code block recognized by §2.5; fenced-content preservation takes precedence until that fence closes.
+A `[` immediately before a marker-prefixed citation token and `](…)` immediately after it — exactly the wrap shape `grund fmt --cross-refs` emits and re-derives ([§FS-fmt.6.3](FS-fmt.md#63-idempotency-and-re-derive)) — collapses to just the `§[<alias>/]<ID>[.<section>]` text when it occurs in ordinary Markdown prose. This includes qualified workspace citations such as `[<§>api/FS-login](...)`, because they are the same presentation wrapper over the same canonical citation syntax ([§FS-workspace.8.5](FS-workspace.md#85-grund-fmt---cross-refs)). It does not collapse inside a fenced code block recognized by [§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example); fenced-content preservation takes precedence until that fence closes.
 
 #### 3.2.2 What is left as written
 
-Nothing else changes: an ordinary Markdown link in the prose, a citation that is not wrapped, a complete wrapper on a Markdown fence delimiter or within its fenced contents, and a `grund <ID> --format md` body (the self-contained markdown fragment, §3.1.2) are all left exactly as written. Fence-looking lines in a source doc-comment, a JSON value slice, or an E2E manifest do not acquire Markdown fence semantics: those source forms keep their existing interpretation. In particular, a manually authored complete wrapper in a source doc-comment is still flattened even between fence-looking lines, although `fmt --cross-refs` never writes that shape to source ([§FS-fmt.6.1](FS-fmt.md#61-scope)). The flattening is purely textual — it does not resolve the citation, so a dangling wrapper in ordinary prose is flattened just the same and `grund check` still reports it.
+Nothing else changes: an ordinary Markdown link in the prose, a citation that is not wrapped, a complete wrapper on a Markdown fence delimiter or within its fenced contents, and a `grund <ID> --format md` body (the self-contained markdown fragment, [§FS-show.3.1.2](FS-show.md#312-md)) are all left exactly as written. Fence-looking lines in a source doc-comment, a JSON value slice, or an E2E manifest do not acquire Markdown fence semantics: those source forms keep their existing interpretation. In particular, a manually authored complete wrapper in a source doc-comment is still flattened even between fence-looking lines, although `fmt --cross-refs` never writes that shape to source ([§FS-fmt.6.1](FS-fmt.md#61-scope)). The flattening is purely textual — it does not resolve the citation, so a dangling wrapper in ordinary prose is flattened just the same and `grund check` still reports it.
 
 ### 3.3 Batch mode
 
@@ -447,16 +447,16 @@ batch rules do not change any single-coordinate byte, stream, or exit behavior.
 
 ### 3.4 What a failed query prints
 
-A failed query (`1`) prints the bare result line and, where the next step is obvious, one extra `hint:` line on stderr below it — never on stdout. With `--format=json`, stderr instead carries one diagnostic JSON object per [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output), with `path` and `line` set to `null` because the failure has no single source location. The hint each failure gets is §3.5.
+A failed query (`1`) prints the bare result line and, where the next step is obvious, one extra `hint:` line on stderr below it — never on stdout. With `--format=json`, stderr instead carries one diagnostic JSON object per [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output), with `path` and `line` set to `null` because the failure has no single source location. The hint each failure gets is [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
 
-`ambiguous ID`, `ambiguous section` and `broken stub` get no hint: the fix (run `grund check`, then edit the duplicate, renumber one of the two headings, or repair the stub) is already stated in §2.2.1 / §2.2.2 / §2.3.4 and the message names the sites.
+`ambiguous ID`, `ambiguous section` and `broken stub` get no hint: the fix (run `grund check`, then edit the duplicate, renumber one of the two headings, or repair the stub) is already stated in [§FS-show.2.2.1](FS-show.md#221-ambiguous-id) / [§FS-show.2.2.2](FS-show.md#222-ambiguous-section) / [§FS-show.2.3.4](FS-show.md#234-broken-stub) and the message names the sites.
 
 ### 3.5 The hint for each failure
 
 - `ID not found: <ID>` → `hint: run \`grund list\` to see every declared ID, or \`grund id <KIND> "<title>"\` to propose a new one` — withheld in the one case where the result line already names the answer, a workspace run whose refusal carries a `did you mean <alias>/<ID>?` clause ([§FS-workspace.8.1.1](FS-workspace.md#811-an-unqualified-id-another-project-declares))
 - a missing snapshot for an ID whose parsed kind carries `fetch` in the loaded config → `hint: run grund fetch <qualified-ID>` — this remains offline and is the prescribed materialization hint ([§FS-check.4.12](FS-check.md#412-missing-snapshot), [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)). This branch is specified but not implemented today: `show` currently emits the generic `ID not found` hint.
 - `section not found: <ID>.<s>` → `hint: run \`grund <ID> --toc\` to print the lead with the section map`
-- a `<ID>` argument that does not match its kind's effective format → `invalid ID` and a format hint, §3.5.1
+- a `<ID>` argument that does not match its kind's effective format → `invalid ID` and a format hint, [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects)
 
 #### 3.5.1 An ID the grammar rejects
 
@@ -470,10 +470,10 @@ Without `show`, an agent retrieving a spec section either loads the whole file (
 grund FS-check.3.1
 ```
 
-When the citation names no section, which slice to start from and when to widen or narrow it is §4.1.
+When the citation names no section, which slice to start from and when to widen or narrow it is [§FS-show.4.1](FS-show.md#41-a-citation-with-no-section).
 
 This is the agent-grounding loop: declarations live in one place, and any agent — at any time — can fetch one, or just its lead, or just its map, with a single command.
 
 ### 4.1 A citation with no section
 
-When the citation is a bare `§FS-check` with no section, the cheap first move is just `grund FS-check` — the new default prints the lead paragraph, enough to know whether this is the right declaration. If the section needs to be chosen, `grund FS-check --toc` adds the section map; `grund FS-check --full` holds the full body in reserve for when even that is not enough. An agent that grounds itself this way pays for the fact it needs, not the file it lives in. `grund FS-check --brief` is the narrowest body slice of all — heading plus one paragraph — for hover previews and "is this the right ID?" checks before committing to a deeper read, though in `text` it alone keeps the H1, so on a one-paragraph lead like `FS-check`'s it prints more than the default (§3.1.1).
+When the citation is a bare `§FS-check` with no section, the cheap first move is just `grund FS-check` — the new default prints the lead paragraph, enough to know whether this is the right declaration. If the section needs to be chosen, `grund FS-check --toc` adds the section map; `grund FS-check --full` holds the full body in reserve for when even that is not enough. An agent that grounds itself this way pays for the fact it needs, not the file it lives in. `grund FS-check --brief` is the narrowest body slice of all — heading plus one paragraph — for hover previews and "is this the right ID?" checks before committing to a deeper read, though in `text` it alone keeps the H1, so on a one-paragraph lead like `FS-check`'s it prints more than the default ([§FS-show.3.1.1](FS-show.md#311-text)).

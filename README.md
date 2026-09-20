@@ -13,7 +13,7 @@
 `grund` is built around one workflow:
 
 0. **Specify your intent.** Declare the goal, spec, or decision as a `# <ID>: …` heading before any code or doc cites it.
-1. **Cite as you write.** Every code unit carries a `§<ID>` back to the spec section it implements (`§<KIND>-<slug>[.section]` — full grammar in [§4](#4-the-structure-that-gets-cited)).
+1. **Cite as you write.** Every code unit carries a `§<ID>` back to the spec section it implements (`§<KIND>-<slug>[.section]` — full grammar in [section 4](#4-the-structure-that-gets-cited)).
 2. **Re-read before you edit.** `grund <ID>.<section>` pulls just that subsection into context — no full-file reads, no token bloat.
 3. **No dangling pointers.** `grund check` validates that every cited ID resolves — in `.md`, Rust `///`, Java doc-comments, Python docstrings, Go `//`, JSDoc, every doc-comment form `grund` knows about.
 
@@ -30,7 +30,7 @@ Keep agents grounded in the spec — fewer bugs, cheaper LLM context,
 faster onboarding. …
 ```
 
-That heading lives in the configured home for its kind (`GRUND` → `docs/grund.md`, `FS` → `requirements.md`, `GOAL` → `docs/goals.md`, and so on — see [§4](#4-the-structure-that-gets-cited)). Once it's declared, any code, doc, or test can cite `§GRUND-grund` and `grund check` will resolve it. A declaration can live in code too: drop the `#` in a doc-comment — `grund`'s own architecture spec [`AR-checker`](crates/grund-core/src/checker/report.rs) opens with `/// AR-checker: how grund validates the scanner's findings`, right on the code it describes ([§4](#4-the-structure-that-gets-cited) shows the wiring).
+That heading lives in the configured home for its kind (`GRUND` → `docs/grund.md`, `FS` → `requirements.md`, `GOAL` → `docs/goals.md`, and so on — see [section 4](#4-the-structure-that-gets-cited)). Once it's declared, any code, doc, or test can cite `§GRUND-grund` and `grund check` will resolve it. A declaration can live in code too: drop the `#` in a doc-comment — `grund`'s own architecture spec [`AR-checker`](crates/grund-core/src/checker/report.rs) opens with `/// AR-checker: how grund validates the scanner's findings`, right on the code it describes ([section 4](#4-the-structure-that-gets-cited) shows the wiring).
 
 ## 1. Cite as you write
 
@@ -50,6 +50,15 @@ When code realizes a named behavior, it carries a `§<ID>` citation — on its d
 ```
 
 `grund` doesn't invent these citations — that's the contributor's call. What `grund` does is make sure the ones you wrote *resolve*. With `require_grounding = true` — in `[reference]` for every place at once, or on one `[[kinds]]` row for that place alone, at a `grounding_level` from the whole file down to every `##` of it ([§FS-config.3.4.8](docs/functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) — it also fails what carries no resolving citation; the stronger diff-aware "implementation changed with its spec or test" gate is tracked separately in [§RM-cochange-gate](docs/roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test).
+
+Store section citations with their full ID. A local-looking `§2.1` inside an
+`FS-login` body is recognized as that declaration's edge, but `grund check`
+reports `local section citation §2.1; write §FS-login.2.1`; `grund fmt
+--write` applies that safe expansion. A missing local section also gets the
+ordinary missing-section error, while a site outside a declaration is left
+unresolved and must be replaced manually with a full citation or escaped as an
+illustration. This is intentionally newly loud compatibility behavior for a
+form that older releases silently skipped ([§FS-check.3.24](docs/functional-spec/FS-check.md#324-declaration-local-section-citation), [§FS-fmt.2.4](docs/functional-spec/FS-fmt.md#24-shorthand-to-canonical)).
 
 ## 2. Re-read before you edit
 
@@ -197,7 +206,7 @@ parent-relative `[scan] include` paths remain readable
 
 A citable kind can opt its numbered fields into exact value checking:
 
-An explicit `[[kinds]]` list replaces the implicit default kinds; copy the default rows from [`FS-config` §3.4.4](docs/functional-spec/FS-config.md#344-the-default-kinds) first, or existing declarations may disappear from `list` and `check` remains green because those kinds no longer exist.
+An explicit `[[kinds]]` list replaces the implicit default kinds; copy the default rows from [`FS-config` section 3.4.4](docs/functional-spec/FS-config.md#344-the-default-kinds) first, or existing declarations may disappear from `list` and `check` remains green because those kinds no longer exist.
 
 ```toml
 [[kinds]]

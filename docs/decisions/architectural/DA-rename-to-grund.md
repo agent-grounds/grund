@@ -33,7 +33,7 @@ No `gnd` binary or package was ever published — `0.1.0` is the first release �
 
 - [§FS-distribution](../../functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets) records the `grund` package names; the release process re-checks them before publish ([§FS-distribution.4](../../functional-spec/FS-distribution.md#4-release-process)).
 - `scripts/check-registry-names.sh` queries the claimed names — `grund` and `grund-lsp` on crates.io, `grund-cli` and `grund-lsp` on npm and PyPI — and reports the unscoped `grund` on npm (dormant squat) and PyPI (currently free) as notices.
-- The `gnd` → `grund` change is itself a changelog entry under §2.5 *Renamed* in the `0.1.0` release.
+- The `gnd` → `grund` change is itself a changelog entry under section 2.5, *Renamed*, in the `0.1.0` release.
 - [§DA-reference-checker-name](DA-reference-checker-name.md#da-reference-checker-name-name-for-the-spec-reference-checker-tool) and [§DA-pypi-package-name](DA-pypi-package-name.md#da-pypi-package-name-pypi-uses-gnd-cli-as-the-package-name) are marked **Superseded** and link here. Their bodies are kept verbatim: the name-evaluation table in the first still records *how* names were judged, and the second records the PyPI collision that pushed toward an explicit alternate — both inputs to this decision.
 
 ## 4. Alternatives considered

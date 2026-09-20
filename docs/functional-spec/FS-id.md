@@ -1,6 +1,6 @@
 # FS-id: grund proposes IDs for new declarations
 
-The `id` subcommand emits one conflict-free ID for a new declaration — `<KIND>-<NNN>-<slug>` under the default format (§2.1). The name is deliberate: `id` is the pure allocator, while `new` is reserved for a future command that would create a declaration stub ([§DF-keep-id-for-pure-id-allocation-and-reserve-new-for-stub](../decisions/functional/DF-keep-id-for-pure-id-allocation-and-reserve-new-for-stub.md#df-keep-id-for-pure-id-allocation-and-reserve-new-for-stub-keep-id-for-pure-id-allocation-and-reserve-new-for-stub-creation)). Authors, agents and editor "new declaration" actions all call this one primitive (§8), so the next number for a kind and the canonical slug for a title are computed in exactly one place. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) (no human picks the next number by reading a directory listing) and [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) (proposed IDs cannot collide with existing declarations).
+The `id` subcommand emits one conflict-free ID for a new declaration — `<KIND>-<NNN>-<slug>` under the default format ([§FS-id.2.1](FS-id.md#21---format-text-default)). The name is deliberate: `id` is the pure allocator, while `new` is reserved for a future command that would create a declaration stub ([§DF-keep-id-for-pure-id-allocation-and-reserve-new-for-stub](../decisions/functional/DF-keep-id-for-pure-id-allocation-and-reserve-new-for-stub.md#df-keep-id-for-pure-id-allocation-and-reserve-new-for-stub-keep-id-for-pure-id-allocation-and-reserve-new-for-stub-creation)). Authors, agents and editor "new declaration" actions all call this one primitive ([§FS-id.8](FS-id.md#8-why-this-exists)), so the next number for a kind and the canonical slug for a title are computed in exactly one place. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) (no human picks the next number by reading a directory listing) and [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) (proposed IDs cannot collide with existing declarations).
 
 ## 1. Inputs
 
@@ -8,18 +8,18 @@ The `id` subcommand emits one conflict-free ID for a new declaration — `<KIND>
 grund id <KIND> "<title>" [<path>] [--width <N>] [--explain] [--format text|json]
 ```
 
-- `<KIND>` — required: a configured *citable* `[[kinds]]` entry ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)); an unknown or non-citable kind is refused (§1.1).
-- `<title>` — required: a free-form title for the new declaration, slugged per §3.
+- `<KIND>` — required: a configured *citable* `[[kinds]]` entry ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)); an unknown or non-citable kind is refused ([§FS-id.1.1](FS-id.md#11-unknown-and-non-citable-kinds)).
+- `<title>` — required: a free-form title for the new declaration, slugged per [§FS-id.3](FS-id.md#3-slug-derivation).
 - `<path>` — the directory whose tree is scanned for the next free number; defaults to the current directory and is resolved as by every `grund` command ([§FS-cli.3](FS-cli.md#3-cross-subcommand-flags)): config discovery walks up to `grund.toml`, else takes the defaults.
-- `--width <N>` — minimum digit width of the number, default `3` ([§DF-id-number-width](../decisions/functional/DF-id-number-width.md#df-id-number-width-grund-id-zero-pads-minted-numbers-to-a-default-width-of-3)), a floor rather than a cap (§1.2).
-- `--explain` — text only: also print a one-line `next:` hint on stderr (§2.3). No effect in `--format json`, which already carries the `folder`.
-- `--format text|json` — output shape (§2). Default `text`.
+- `--width <N>` — minimum digit width of the number, default `3` ([§DF-id-number-width](../decisions/functional/DF-id-number-width.md#df-id-number-width-grund-id-zero-pads-minted-numbers-to-a-default-width-of-3)), a floor rather than a cap ([§FS-id.1.2](FS-id.md#12-number-width)).
+- `--explain` — text only: also print a one-line `next:` hint on stderr ([§FS-id.2.3](FS-id.md#23---explain-text-only)). No effect in `--format json`, which already carries the `folder`.
+- `--format text|json` — output shape ([§FS-id.2](FS-id.md#2-outputs)). Default `text`.
 
 `id` is non-interactive — no prompt, no confirmation ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). Text `stdout` is always exactly the proposed ID, so `$(grund id …)` is safe.
 
 ### 1.1 Unknown and non-citable kinds
 
-An unknown kind is a CLI-level error, exit `2` (§6): an `error:` line naming the kind, then a `known kinds: …` line listing the citable kinds, on stderr — the shape `grund list --kind <unknown>` produces, so a typo never reads as a clean run. A configured **non-citable** kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is refused in the same shape with the reason in place of "unknown" — `error: kind `skill` declares no IDs — skills/ is not a citable home` — because it has no ID to allocate.
+An unknown kind is a CLI-level error, exit `2` ([§FS-id.6](FS-id.md#6-exit-codes)): an `error:` line naming the kind, then a `known kinds: …` line listing the citable kinds, on stderr — the shape `grund list --kind <unknown>` produces, so a typo never reads as a clean run. A configured **non-citable** kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is refused in the same shape with the reason in place of "unknown" — `error: kind `skill` declares no IDs — skills/ is not a citable home` — because it has no ID to allocate.
 
 ### 1.2 Number width
 
@@ -29,7 +29,7 @@ The default `3` matches the canonical form's `-NNN-`; [§DF-id-number-width](../
 
 ### 2.1 `--format text` (default)
 
-One line on stdout: the proposed ID, with no marker prefix, then a newline. Its shape follows the kind's effective format — its `[[kinds]].format` override when present, otherwise `[id].format` ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — whose placeholders decide what is allocated (§4.1 for number-less forms):
+One line on stdout: the proposed ID, with no marker prefix, then a newline. Its shape follows the kind's effective format — its `[[kinds]].format` override when present, otherwise `[id].format` ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — whose placeholders decide what is allocated ([§FS-id.4.1](FS-id.md#41-number-less-id-formats) for number-less forms):
 
 ```
 $ grund id FS "User can log in with email"        # default [id] format = {kind}-{number}-{slug}
@@ -38,7 +38,7 @@ $ grund id FS "User can log in with email"        # a repo whose [id] format = {
 FS-user-can-log-in-with-email
 ```
 
-`id` never invokes a configured fetcher ([§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)). Stderr is empty on success unless `--explain` was passed (§2.3). The `path:line:` prefix of [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements) does not apply: `id` synthesizes; it points at no source location.
+`id` never invokes a configured fetcher ([§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)). Stderr is empty on success unless `--explain` was passed ([§FS-id.2.3](FS-id.md#23---explain-text-only)). The `path:line:` prefix of [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements) does not apply: `id` synthesizes; it points at no source location.
 
 ### 2.2 `--format json`
 
@@ -46,7 +46,7 @@ FS-user-can-log-in-with-email
 {"id":"FS-008-user-can-log-in-with-email","kind":"FS","number":8,"slug":"user-can-log-in-with-email","folder":"","file":"requirements.md"}
 ```
 
-`folder` and `file` are the kind's configured `[[kinds]]` home ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)); usually exactly one is non-empty. They are there so an editor "create new declaration" action can place the declaration without a second lookup. Under a number-less effective format, `number` is `null` (§4.1).
+`folder` and `file` are the kind's configured `[[kinds]]` home ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)); usually exactly one is non-empty. They are there so an editor "create new declaration" action can place the declaration without a second lookup. Under a number-less effective format, `number` is `null` ([§FS-id.4.1](FS-id.md#41-number-less-id-formats)).
 
 ### 2.3 `--explain` (text only)
 
@@ -58,7 +58,7 @@ FS-008-user-can-log-in-with-email
 next: add the declaration to requirements.md  (H2: `## FS-008-user-can-log-in-with-email: <one-line statement>`), then cite it as §FS-008-user-can-log-in-with-email
 ```
 
-For a kind with a configured `folder`, the hint names the new declaration file under that folder and uses an H1; for a kind with neither, it names the H1 and the citation but no path. `E2E` is the exception to the folder form: its declaration is a case directory, not a Markdown file ([§FS-config.3.4.4.3](FS-config.md#3443-e2e-is-configured-not-a-default)), so its hint names the case directory to create under that folder, with `expected.exit` and fixtures. The bare ID still composes in `$(…)`, while a person who ran `grund id` by hand gets the next step without recalling the layout. It creates no file (§7).
+For a kind with a configured `folder`, the hint names the new declaration file under that folder and uses an H1; for a kind with neither, it names the H1 and the citation but no path. `E2E` is the exception to the folder form: its declaration is a case directory, not a Markdown file ([§FS-config.3.4.4.3](FS-config.md#3443-e2e-is-configured-not-a-default)), so its hint names the case directory to create under that folder, with `expected.exit` and fixtures. The bare ID still composes in `$(…)`, while a person who ran `grund id` by hand gets the next step without recalling the layout. It creates no file ([§FS-id.7](FS-id.md#7-what-id-does-not-do)).
 
 ## 3. Slug derivation
 
@@ -71,11 +71,11 @@ The title becomes a slug deterministically: the same title and the same configur
 5. Collapse runs of two or more `-` into one.
 6. Truncate to 60 characters at the nearest preceding `-`, so a slug never ends mid-word.
 
-An empty slug is refused (§3.1).
+An empty slug is refused ([§FS-id.3.1](FS-id.md#31-an-empty-slug)).
 
 ### 3.1 An empty slug
 
-When no character of the title is a slug character, the slug is empty and `id` exits `1` with a bare query-failure line on stderr, no `error:` prefix (§6):
+When no character of the title is a slug character, the slug is empty and `id` exits `1` with a bare query-failure line on stderr, no `error:` prefix ([§FS-id.6](FS-id.md#6-exit-codes)):
 
 ```
 title produces empty slug after normalization: "<original title>"
@@ -93,9 +93,9 @@ A failed scan (I/O, a malformed file) exits `2` with the underlying error and ne
 
 ### 4.1 Number-less ID formats
 
-When the kind's effective format (§2.1) has no `{number}` — `{kind}-{slug}`, the form `grund` itself uses — there is nothing to derive: the proposed ID is the format with `{kind}` and `{slug}` substituted. `--width` is accepted and has no effect, and the JSON `number` is `null`. The collision check (§5) still runs and carries more weight: with no number to tell them apart, two declarations sharing a kind and a slug are the same ID.
+When the kind's effective format ([§FS-id.2.1](FS-id.md#21---format-text-default)) has no `{number}` — `{kind}-{slug}`, the form `grund` itself uses — there is nothing to derive: the proposed ID is the format with `{kind}` and `{slug}` substituted. `--width` is accepted and has no effect, and the JSON `number` is `null`. The collision check ([§FS-id.5](FS-id.md#5-collision-check)) still runs and carries more weight: with no number to tell them apart, two declarations sharing a kind and a slug are the same ID.
 
-When the format has no `{slug}` — `{kind}-{number}` — the title is still required: it still produces the slug, which is refused when empty (§3.1) and reported as the JSON `slug`, and has no part in the ID. The proposed ID is the kind and the next number.
+When the format has no `{slug}` — `{kind}-{number}` — the title is still required: it still produces the slug, which is refused when empty ([§FS-id.3.1](FS-id.md#31-an-empty-slug)) and reported as the JSON `slug`, and has no part in the ID. The proposed ID is the kind and the next number.
 
 Neither one-component format has the number-only citation shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)), so neither can produce a [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) finding.
 
@@ -108,7 +108,7 @@ After deriving slug and number, `id` verifies that the full proposed ID is not a
 
 The declarations checked include JSON value declarations from opted-in kind homes: `id` may reject a candidate already declared in JSON, but stays a Markdown-oriented allocator that never creates or edits JSON ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
 
-A collision exits `1` with a bare query-failure line on stderr, no `error:` prefix (§6):
+A collision exits `1` with a bare query-failure line on stderr, no `error:` prefix ([§FS-id.6](FS-id.md#6-exit-codes)):
 
 ```
 proposed ID `FS-user-login` already declared at docs/functional-spec/FS-user-login.md:1
@@ -119,7 +119,7 @@ Authors disambiguate by editing the title.
 ## 6. Exit codes
 
 - `0` — proposed ID emitted.
-- `1` — empty slug (§3.1) or collision (§5). These are query failures — the request was well-formed but has no ID to return — so they print a bare stderr line with no `error:` prefix, as ID queries do for `ID not found` ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)).
+- `1` — empty slug ([§FS-id.3.1](FS-id.md#31-an-empty-slug)) or collision ([§FS-id.5](FS-id.md#5-collision-check)). These are query failures — the request was well-formed but has no ID to return — so they print a bare stderr line with no `error:` prefix, as ID queries do for `ID not found` ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)).
 - `2` — a scan or I/O error, an unknown kind, an unknown `--format`, or any other CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)). These print `error: <message>` on stderr — the prefix CI scripts grep for to tell a launch-time failure from a clean run.
 
 ## 7. What `id` does **not** do

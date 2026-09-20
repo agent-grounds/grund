@@ -1,11 +1,11 @@
 use std::collections::BTreeSet;
 
-use super::file_pass::CitationLine;
+use super::citation_line::CitationLine;
 use crate::grammar::{
     QUALIFIED_CITATION_PREFIX, never_rewrite_context_in, parse_id, parse_longest_id_prefix,
     parse_loose_qualified_id_prefix, qualified_suppressed_in_source,
 };
-use crate::model::{Citation, Findings, LegacyCitationCandidate};
+use crate::model::{Citation, Findings, LegacyCitationCandidate, LocalSectionCitationCandidate};
 use crate::workspace::WorkspaceCitationTarget;
 
 /// Whether `fmt` may rewrite the citation whose marker starts at `marker_start` —
@@ -21,6 +21,99 @@ fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> 
         line.is_md,
         line.column_offset + marker_start,
     )
+}
+
+/// Retain one whole configured-marker-plus-digit token until declaration body
+/// spans are available (§FS-check.1.1.8, §AR-scanner.2.3). Full citations and
+/// number-only ID shorthand have already claimed their marker offsets. A
+/// digit-starting tail is kept whole for the unsupported-form verdict rather
+/// than truncating a plausible numeric prefix into an edge.
+pub(super) fn scan_local_section_candidates(
+    line: &CitationLine<'_>,
+    claimed_markers: &[usize],
+    qualified_claimed: &BTreeSet<usize>,
+    findings: &mut Findings,
+) {
+    if line.config.marker.is_empty() {
+        return;
+    }
+    for (marker_start, _) in line.scan_line.match_indices(&line.config.marker) {
+        if claimed_markers.contains(&marker_start) || qualified_claimed.contains(&marker_start) {
+            continue;
+        }
+        let column = line.column_offset + marker_start + 1;
+        if findings.citations.iter().any(|citation| {
+            citation.file == line.path && citation.line == line.lineno && citation.column == column
+        }) {
+            // The shorthand pass runs first and may itself begin with a digit
+            // under a configured ID format; it owns that marker just as the
+            // full-ID pass does (§FS-check.1.1.8).
+            continue;
+        }
+        let token_start = marker_start + line.config.marker.len();
+        let Some(rest) = line.scan_line.get(token_start..) else {
+            continue;
+        };
+        if !rest.starts_with(|ch: char| ch.is_ascii_digit()) {
+            continue;
+        }
+        let bytes = rest.as_bytes();
+        let mut token_len = bytes
+            .iter()
+            .take_while(|byte| byte.is_ascii_digit())
+            .count();
+        while bytes.get(token_len) == Some(&b'.')
+            && bytes.get(token_len + 1).is_some_and(u8::is_ascii_digit)
+        {
+            token_len += 1;
+            token_len += bytes[token_len..]
+                .iter()
+                .take_while(|byte| byte.is_ascii_digit())
+                .count();
+        }
+        // A sentence-ending dot is a boundary. A dot followed by a name, or a
+        // glued alphanumeric/`_`/`-` tail, belongs to one unsupported token
+        // (§FS-check.1.1.8); consume it whole so `§2.goals` never becomes
+        // an edge to section 2.
+        let unsupported_tail = bytes
+            .get(token_len)
+            .is_some_and(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
+            || bytes.get(token_len) == Some(&b'.')
+                && bytes.get(token_len + 1).is_some_and(|byte| {
+                    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-')
+                });
+        if unsupported_tail {
+            token_len = rest
+                .char_indices()
+                .find_map(|(offset, ch)| {
+                    (!(ch.is_alphanumeric() || matches!(ch, '.' | '_' | '-'))).then_some(offset)
+                })
+                .unwrap_or(rest.len());
+            // Sentence punctuation is not part of the digit-starting token.
+            // Internal dots remain, including doubled ones that make the
+            // complete token unsupported.
+            while token_len > 0 && rest.as_bytes().get(token_len - 1) == Some(&b'.') {
+                token_len -= 1;
+            }
+        }
+        let tail = &rest[..token_len];
+        let supported = tail
+            .split('.')
+            .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()));
+        findings
+            .local_section_citation_candidates
+            .push(LocalSectionCitationCandidate {
+                text: line.scan_line[marker_start..token_start + token_len].to_string(),
+                section: supported.then(|| tail.to_string()),
+                file: line.path.to_path_buf(),
+                line: line.lineno,
+                column,
+                rewritable: scanned_citation_rewritable(line, marker_start),
+                inline_site: line.inline_sites.get(&line.lineno).cloned(),
+                source_kind: String::new(),
+                enclosing_declaration: None,
+            });
+    }
 }
 
 /// §FS-workspace.5.2: a member-local scan must still recognize marker-qualified
@@ -88,6 +181,7 @@ pub(super) fn scan_fallback_qualified_citations(
             // The loose parser has no target grammar to derive a shorthand from,
             // so a fallback-parsed qualified citation is never one (§AR-scanner.2.6).
             shorthand: false,
+            local_section: false,
             shorthand_rewritable: true,
             numeric_run: false,
             text: line.scan_line[marker_start..token_end].to_string(),
@@ -163,6 +257,7 @@ pub(super) fn scan_workspace_qualified_pass(
             // project's declarations, so `fmt` can name the canonical form here too.
             shorthand_rewritable: scanned_citation_rewritable(line, marker_start),
             shorthand: parsed.shorthand,
+            local_section: false,
             // §FS-fmt.2.4.1: the marker is the citing project's, the number shape
             // the target's — the same split the rewrite itself uses.
             numeric_run: parsed.shorthand
@@ -271,6 +366,7 @@ pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Fin
             column: line.column_offset + escape_start + 1,
             has_marker: false,
             shorthand: parsed.shorthand,
+            local_section: false,
             // An escape is check-inert; nothing rewrites it (§AR-scanner.2.5), so
             // the run question — which only ever gates a rewrite — never arises.
             shorthand_rewritable: false,
@@ -380,6 +476,7 @@ pub(super) fn scan_shorthand_citations(
             column: line.column_offset + marker_start + 1,
             has_marker: true,
             shorthand: true,
+            local_section: false,
             // §FS-check.3.13.1: still a citation here — it resolves, it counts, it
             // grounds its file — but `fmt` may not rewrite it (§FS-fmt.2.3), so the
             // checker withholds the "write the canonical form" error.

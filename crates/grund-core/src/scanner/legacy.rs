@@ -84,6 +84,13 @@ pub(super) fn promote_local_legacy_citations(config: &Config, findings: &mut Fin
             &mut findings.citations,
         );
     }
+    findings.local_section_citation_candidates.retain(|local| {
+        !findings.citations.iter().any(|citation| {
+            citation.file == local.file
+                && citation.line == local.line
+                && citation.column == local.column
+        })
+    });
     sort_citations(&mut findings.citations);
 }
 
@@ -165,6 +172,7 @@ pub(crate) fn promote_legacy_candidate(
         column: candidate.column,
         has_marker: true,
         shorthand: false,
+        local_section: false,
         shorthand_rewritable: true,
         numeric_run: false,
         text,

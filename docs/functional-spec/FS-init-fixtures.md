@@ -157,7 +157,7 @@ These failures leave the target tree unchanged.
 
 ## 6. Workspace members
 
-§6.1 to §6.4 together cover [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members): a root-side and a member-side run over one workspace, a non-workspace repo, and projects that carry `project_description`.
+[§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init) to [§FS-init-fixtures.6.4](FS-init-fixtures.md#64-workspace-member-descriptions) together cover [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members): a root-side and a member-side run over one workspace, a non-workspace repo, and projects that carry `project_description`.
 
 ### 6.1 Workspace root init
 
@@ -199,11 +199,11 @@ The list is sorted lexicographically by alias. `api` is initialized, so its bull
 
 ### 6.2 Workspace member init
 
-Same precondition as §6.1, but with `apps/api/AGENTS.md` removed so the member is uninitialized.
+Same precondition as [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init), but with `apps/api/AGENTS.md` removed so the member is uninitialized.
 
 Command: `grund init {repo_copy}/apps/api`.
 
-The generated `{repo_copy}/apps/api/AGENTS.md` contains a `### Workspace members` section for the same logical workspace as §6.1, with `api` itself omitted and the remaining paths rewritten relative to the AGENTS.md being written:
+The generated `{repo_copy}/apps/api/AGENTS.md` contains a `### Workspace members` section for the same logical workspace as [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init), with `api` itself omitted and the remaining paths rewritten relative to the AGENTS.md being written:
 
 ```markdown
 ### Workspace members
@@ -215,7 +215,7 @@ Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 - [`ui`](../../packages/ui/) *(not yet initialized)*
 ```
 
-`root` remains a foreign row because `include_root` is true, and is marked uninitialized because `{repo_copy}/AGENTS.md` does not exist; its link points at the workspace root directory rather than the file that would 404. The discoverability line and foreign-row grammar match §6.1 exactly; each perspective omits its own canonical project and sorts the remaining aliases.
+`root` remains a foreign row because `include_root` is true, and is marked uninitialized because `{repo_copy}/AGENTS.md` does not exist; its link points at the workspace root directory rather than the file that would 404. The discoverability line and foreign-row grammar match [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init) exactly; each perspective omits its own canonical project and sorts the remaining aliases.
 
 ### 6.3 Non-workspace repo
 
@@ -223,11 +223,11 @@ Precondition: `{repo_copy}` exists and contains no `[workspace]` block in its co
 
 Command: `grund init {repo_copy}`.
 
-The generated `AGENTS.md` contains no `### Workspace members` section anywhere. The `### Project map` block is byte-identical to the default-form fixture (§1) — surfacing workspace mode is gated on a `[workspace]` block, the target's own or a claiming ancestor's, so a single-project repo's block is unchanged from before [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) landed.
+The generated `AGENTS.md` contains no `### Workspace members` section anywhere. The `### Project map` block is byte-identical to the default-form fixture ([§FS-init-fixtures.1](FS-init-fixtures.md#1-default-form)) — surfacing workspace mode is gated on a `[workspace]` block, the target's own or a claiming ancestor's, so a single-project repo's block is unchanged from before [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) landed.
 
 ### 6.4 Workspace member descriptions
 
-Same shape as §6.1, but the root and two members carry `project_description` metadata ([§FS-config.3](FS-config.md#3-schema), [§FS-workspace.3](FS-workspace.md#3-aliases), [§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists)). Precondition: `{repo_copy}` exists with `grund.toml`:
+Same shape as [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init), but the root and two members carry `project_description` metadata ([§FS-config.3](FS-config.md#3-schema), [§FS-workspace.3](FS-workspace.md#3-aliases), [§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists)). Precondition: `{repo_copy}` exists with `grund.toml`:
 
 ```toml
 project_name = "root"
@@ -253,4 +253,4 @@ Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 - [`ui`](packages/ui/) *(not yet initialized)*
 ```
 
-Each described foreign project appends `: <description>` after its link; `core` shows the description rendering *before* the trailing `*(not yet initialized)*` marker; `ui` has no config, therefore no description, and its bullet is byte-identical to the §6.1 form. The root's configured description is absent with its omitted self row, but remains available when the root is foreign in a member entrypoint.
+Each described foreign project appends `: <description>` after its link; `core` shows the description rendering *before* the trailing `*(not yet initialized)*` marker; `ui` has no config, therefore no description, and its bullet is byte-identical to the [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init) form. The root's configured description is absent with its omitted self row, but remains available when the root is foreign in a member entrypoint.

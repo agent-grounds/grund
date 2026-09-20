@@ -36,11 +36,11 @@ error: unknown command: bogus
 known commands: check, show, list, refs, cover, fmt, fetch, id, init, config, agent-setup-instructions, completions, integrations
 ```
 
-Empty stdout, exit `2` — a CLI-level error like any other unknown subcommand (§4).
+Empty stdout, exit `2` — a CLI-level error like any other unknown subcommand ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
 
 ## 2. Global flags
 
-`--version` (§2.1) and `--help` (§2.2, §2.3) are recognised regardless of subcommand and are handled *before* any tree scan or file write. When both a global flag and a subcommand are present, the global flag wins: `grund check --version` prints the version and exits `0` without scanning. `--version` outranks everything — with any subcommand present it is the version line, not that command's help page.
+`--version` ([§FS-cli.2.1](FS-cli.md#21---version)) and `--help` ([§FS-cli.2.2](FS-cli.md#22-the-top-level-help-page), [§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)) are recognised regardless of subcommand and are handled *before* any tree scan or file write. When both a global flag and a subcommand are present, the global flag wins: `grund check --version` prints the version and exits `0` without scanning. `--version` outranks everything — with any subcommand present it is the version line, not that command's help page.
 
 Help is never an error: it goes to stdout, exit `0`, so `grund --help | …` works.
 
@@ -56,13 +56,13 @@ The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard
 
 ### 2.3 A subcommand's help page
 
-`grund help <subcommand>` and `grund <subcommand> --help` (and `grund <subcommand> -h`) print *that subcommand's* page on stdout, exit `0`: its usage line, its arguments, every flag with a one-line example, the exit-code meanings for that subcommand, and a one-line recovery hint where the common failure has an obvious next step (e.g. `show`'s page says how to find an ID; `id`'s page shows the `$EDITOR` follow-up). `grund help` with no argument is the top-level page; `grund help <unknown>` is the unknown-command error (§4).
+`grund help <subcommand>` and `grund <subcommand> --help` (and `grund <subcommand> -h`) print *that subcommand's* page on stdout, exit `0`: its usage line, its arguments, every flag with a one-line example, the exit-code meanings for that subcommand, and a one-line recovery hint where the common failure has an obvious next step (e.g. `show`'s page says how to find an ID; `id`'s page shows the `$EDITOR` follow-up). `grund help` with no argument is the top-level page; `grund help <unknown>` is the unknown-command error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
 
 ## 3. Cross-subcommand flags
 
-- `--format text|json` — accepted by the subcommands with a machine-readable result or finding surface ([§FS-errors.5](FS-errors.md#5-json-format) lists them, [§FS-integrations.5](FS-integrations.md#5-json-format)). `text` is the default; `json` opts into the stable machine shapes, on the streams of §3.1. It is not a global flag: the operational commands [§FS-errors.5](FS-errors.md#5-json-format) lists, whose output is human text or generated files, reject `--format`.
-- A path argument, when a subcommand takes one, defaults to `.` and is resolved the same way everywhere (config discovery walks up from it — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). Every path-taking subcommand accepts at most one (§3.2).
-- `--only <code>` and `--ignore <code>` are `check`-only diagnostic-query flags ([§FS-check.1](FS-check.md#1-inputs)); other subcommands reject them. The `check` help page documents them (§3.3).
+- `--format text|json` — accepted by the subcommands with a machine-readable result or finding surface ([§FS-errors.5](FS-errors.md#5-json-format) lists them, [§FS-integrations.5](FS-integrations.md#5-json-format)). `text` is the default; `json` opts into the stable machine shapes, on the streams of [§FS-cli.3.1](FS-cli.md#31-the---format-json-streams). It is not a global flag: the operational commands [§FS-errors.5](FS-errors.md#5-json-format) lists, whose output is human text or generated files, reject `--format`.
+- A path argument, when a subcommand takes one, defaults to `.` and is resolved the same way everywhere (config discovery walks up from it — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). Every path-taking subcommand accepts at most one ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)).
+- `--only <code>` and `--ignore <code>` are `check`-only diagnostic-query flags ([§FS-check.1](FS-check.md#1-inputs)); other subcommands reject them. The `check` help page documents them ([§FS-cli.3.3](FS-cli.md#33-the-check-selector-help)).
 
 ### 3.1 The `--format json` streams
 
@@ -70,7 +70,7 @@ The stream split is the same as the text form ([§FS-errors.1](FS-errors.md#1-st
 
 ### 3.2 At most one path
 
-A second positional — `grund check a b`, `grund <ID> a b`, `grund refs ID a b`, `grund cover a b`, `grund fmt a b`, `grund list a b`, `grund id FS "t" a b` — is a CLI-level error (`error: <subcommand> takes at most one path argument`, exit `2`, §4), never a silent use of one and a quiet drop of the rest. `config` and `agent-setup-instructions` already enforce this; the rule is uniform across the surface, so a typo'd path is reported, never absorbed.
+A second positional — `grund check a b`, `grund <ID> a b`, `grund refs ID a b`, `grund cover a b`, `grund fmt a b`, `grund list a b`, `grund id FS "t" a b` — is a CLI-level error (`error: <subcommand> takes at most one path argument`, exit `2`, [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)), never a silent use of one and a quiet drop of the rest. `config` and `agent-setup-instructions` already enforce this; the rule is uniform across the surface, so a typo'd path is reported, never absorbed.
 
 ### 3.3 The `check` selector help
 
@@ -78,7 +78,7 @@ The `check` help page documents both `--flag value` and `--flag=value`, repetiti
 
 ## 4. Errors with no source location
 
-An unknown subcommand in help dispatch (`grund help <unknown>`), an unknown or malformed flag, or mutually-exclusive flags are CLI-level errors: `error: <message>` on stderr, empty stdout, exit `2` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages)). A bare-word first argument that is neither a known subcommand nor a valid ID is not a CLI-level error but the failed default-`show` query of §1.2, exit `1`.
+An unknown subcommand in help dispatch (`grund help <unknown>`), an unknown or malformed flag, or mutually-exclusive flags are CLI-level errors: `error: <message>` on stderr, empty stdout, exit `2` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages)). A bare-word first argument that is neither a known subcommand nor a valid ID is not a CLI-level error but the failed default-`show` query of [§FS-cli.1.2](FS-cli.md#12-a-first-word-that-is-not-an-id), exit `1`.
 
 `check` selector errors use the exact forms in [§FS-check.1](FS-check.md#1-inputs). Missing, empty, malformed, and unknown values are rejected before config discovery or scanning, regardless of `--format`; they therefore always leave stdout empty, remain raw text on stderr, and exit `2`.
 

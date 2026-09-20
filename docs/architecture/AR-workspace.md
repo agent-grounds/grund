@@ -15,8 +15,8 @@ and is one box up, [§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-ev
 
 Three slips of one shape motivated this page, each a *workspace-only branch
 beside the single-project path*: two scanner modes that disagreed on what
-`path/ID` means (§2), alias validation gated on which section a config file
-happened to hold (§5.2), and a silent skip at member scope that contradicted
+`path/ID` means ([§AR-workspace.2](AR-workspace.md#2-single-citation-grammar)), alias validation gated on which section a config file
+happened to hold ([§AR-workspace.5.2](AR-workspace.md#52-validation-runs-once-at-the-right-layer)), and a silent skip at member scope that contradicted
 [§DF-subproject-namespaces.3.6](../decisions/functional/DF-subproject-namespaces.md#36-standalone-members-fail-loud-not-silent).
 The invariants below rule out all three.
 
@@ -33,7 +33,7 @@ Everything here is answered from config text alone. Anything that needs a walk, 
 
 ## 1. Layering
 
-The single-project pipeline ([§AR-system.1](README.md#1-the-system)) gains one dimension and no new layer. Read top down: the core's shared loader, `load_workspace_context` / `run_check` ([§AR-resolver.3](AR-resolver.md#3-downstream-commands-compose-not-duplicate)), decides workspace versus single-project run and assembles the project map and current alias; the checker calls the resolver and asks neither "is this a workspace?" nor "what alias am I?"; the resolver is the one function that knows what "qualified" means at runtime ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)); the scanner emits `Citation { namespace, … }` from one regex (§2) and obeys the workspace boundary roots in one walk, never asking "am I in a workspace?" (§3.2). The CLI never reaches into a regex, and no layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)).
+The single-project pipeline ([§AR-system.1](README.md#1-the-system)) gains one dimension and no new layer. Read top down: the core's shared loader, `load_workspace_context` / `run_check` ([§AR-resolver.3](AR-resolver.md#3-downstream-commands-compose-not-duplicate)), decides workspace versus single-project run and assembles the project map and current alias; the checker calls the resolver and asks neither "is this a workspace?" nor "what alias am I?"; the resolver is the one function that knows what "qualified" means at runtime ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)); the scanner emits `Citation { namespace, … }` from one regex ([§AR-workspace.2](AR-workspace.md#2-single-citation-grammar)) and obeys the workspace boundary roots in one walk, never asking "am I in a workspace?" ([§AR-workspace.3.2](AR-workspace.md#32-the-scanner-never-branches-on-workspace)). The CLI never reaches into a regex, and no layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)).
 
 ## 2. Single citation grammar
 
@@ -52,7 +52,7 @@ destination). One regex, one capture group, one decision rule downstream.
 
 Nesting widened the capture to a `/`-joined run of alias segments and changed
 nothing else: one capture still holds one string, which the token's last `/`
-separates from the ID (§6.1).
+separates from the ID ([§AR-workspace.6.1](AR-workspace.md#61-nested-workspaces-are-one-recursion-not-a-second-namespace-model)).
 
 In a workspace run, the alias still controls the ID grammar: a qualified
 citation's `ID[.section]` tail is parsed with the target project's config, not
@@ -85,12 +85,12 @@ this as a citation."
 
 It is also the whole of the rule, in every repository: a `<namespace>` capture is
 matched wherever the marker precedes it outside the source-file string literals and inline-code spans [§AR-scanner.2.3](AR-scanner.md#23-citation-detection) skips, not only where a workspace is
-configured, and a `<namespace>` is a run of segments (§2). So a *marked* file
+configured, and a `<namespace>` is a run of segments ([§AR-workspace.2](AR-workspace.md#2-single-citation-grammar)). So a *marked* file
 path whose last segment parses as an ID — `<§>docs/functional-spec/FS-login.md` —
 is a qualified citation with a two-segment alias path, in a single-project
 repository as much as in a workspace, and reports `unknown project alias` because
 the resolver never skips ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)). Widening one capture is what admits it; the
-alternative is a scanner that branches on whether a workspace exists, which §3.2
+alternative is a scanner that branches on whether a workspace exists, which [§AR-workspace.3.2](AR-workspace.md#32-the-scanner-never-branches-on-workspace)
 rules out. Unmarking the path is the fix, and [§FS-workspace.1](../functional-spec/FS-workspace.md#1-citation-syntax) says so where an
 author writes one.
 
@@ -102,10 +102,10 @@ the resolver lives one layer up ([§AR-system.4](README.md#4-dependency-directio
 
 The scanner reads two workspace-shaped knobs. `workspace_boundary_roots` holds
 the canonical paths the tree walk must *not* descend into, because a
-root-project scan must not absorb member declarations (§6), and is consulted as
+root-project scan must not absorb member declarations ([§AR-workspace.6](AR-workspace.md#6-the-workspace-boundary)), and is consulted as
 a directory filter during the walk. `workspace_project_roots` holds the
 canonical root of every project the run loaded, and is the ownership test asked
-of a link-reached directory (§6.2). Neither is ever a per-citation rule.
+of a link-reached directory ([§AR-workspace.6.2](AR-workspace.md#62-a-directory-reached-through-a-symlink-is-compared-canonically)). Neither is ever a per-citation rule.
 
 ## 5. The config: one parse, one validation pass
 
@@ -143,7 +143,7 @@ must hold for *every* shape of config the loader can return:
 - `project_name` is *not* universal. [§FS-config.3](../functional-spec/FS-config.md#3-schema) makes it free-form metadata
   when the project is standalone, and only an alias when it participates in a
   workspace. The slug check therefore lives in `derive_alias`
-  (§5.3) — the one place that already needs to know "this is being used as
+  ([§AR-workspace.5.3](AR-workspace.md#53-alias-derivation-has-one-canonical-source)) — the one place that already needs to know "this is being used as
   an alias." Putting it earlier would force `grund init`'s `--name`, which
   predates workspaces, to write only sluggable names.
 
@@ -182,11 +182,11 @@ boundaries, and its `WalkBuilder` filter prunes entries whose relative path
 matches a boundary. Boundary roots are computed once per workspace run, not per
 directory entry, so the per-entry cost is one path comparison and no
 `canonicalize` syscall. A directory reached through a symlink is the one
-exception (§6.2).
+exception ([§AR-workspace.6.2](AR-workspace.md#62-a-directory-reached-through-a-symlink-is-compared-canonically)).
 
 Members are scanned recursively as independent projects. A member that declares
 its own `[workspace]` block contributes its whole subtree instead of one
-project (§6.1).
+project ([§AR-workspace.6.1](AR-workspace.md#61-nested-workspaces-are-one-recursion-not-a-second-namespace-model)).
 
 ### 6.1 Nested workspaces are one recursion, not a second namespace model
 
@@ -199,7 +199,7 @@ is its whole path, one segment per level ([§FS-workspace.6.1](../functional-spe
 That key is what keeps nesting out of every layer below the expansion step. The
 namespace stays **one string**, so the resolver still does a map lookup
 ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)),
-the grammar (§2) still has one optional capture, and alias derivation (§5.3)
+the grammar ([§AR-workspace.2](AR-workspace.md#2-single-citation-grammar)) still has one optional capture, and alias derivation ([§AR-workspace.5.3](AR-workspace.md#53-alias-derivation-has-one-canonical-source))
 still yields one segment that the walk composes. Had it become a *list*, the
 resolver, the citation regex, the completion candidates, the `--project` filter,
 and the `refs`/`list` JSON keys would each have grown a second shape
@@ -242,7 +242,7 @@ inside it, at any depth up to `/`, for a block that claimed nothing there ([§FS
 
 `enclosing_alias_prefix` is called from `expand_workspace_tree` and nowhere else, so the alias-path climb happens only for a config that carries a `[workspace]` block: a run at a project with no block of
 its own takes the single-project path in `load_workspace_context` / `run_check` and reads no alias path, which is why an enclosing claim it cannot answer never reaches such a run and a test that
-wants that consequence has to point at a run root that declares a block ([§FS-workspace.5](../functional-spec/FS-workspace.md#5-command-scope), §9).
+wants that consequence has to point at a run root that declares a block ([§FS-workspace.5](../functional-spec/FS-workspace.md#5-command-scope), [§AR-workspace.9](AR-workspace.md#9-test-contracts)).
 
 #### 6.1.5 The climb caches the blocks it reads
 
@@ -253,9 +253,9 @@ is also why it needs no invalidation: nothing outlives the walk that built it.
 
 #### 6.1.6 A block the claimed chain never lists
 
-The chain of mutual claims (§6.1.1) is also the boundary of the guarantee, and what it bounds is the **scope** a command starts at, not the project that scope names: a `[workspace]` block no enclosing block lists is outside it — absorbed into the enclosing namespace at the outer scope, a root of its own from the inside. The projects *below* such a block can still be reached by the chain, since a multi-segment entry hops the block, and a run started at the block re-spells them anyway ([§FS-workspace.6.1](../functional-spec/FS-workspace.md#61-nested-workspaces)).
+The chain of mutual claims ([§AR-workspace.6.1.1](AR-workspace.md#611-an-alias-path-is-read-from-the-outermost-claiming-block)) is also the boundary of the guarantee, and what it bounds is the **scope** a command starts at, not the project that scope names: a `[workspace]` block no enclosing block lists is outside it — absorbed into the enclosing namespace at the outer scope, a root of its own from the inside. The projects *below* such a block can still be reached by the chain, since a multi-segment entry hops the block, and a run started at the block re-spells them anyway ([§FS-workspace.6.1](../functional-spec/FS-workspace.md#61-nested-workspaces)).
 
-What a run now *says* about such a block is one pass of its own, `workspace/unlisted.rs`, and it sits **above** the walk rather than inside it (§1, [§FS-check.4.8](../functional-spec/FS-check.md#48-unlisted-workspace-block)). `walk_scannable_files_reporting` carries out the directories it descended into, scan roots included, and asks nothing of them; the rule then probes each one for a config (`config_file_in`, which is what finds the `.agents/` form in a directory the walk never descends into), reads the `[workspace]` header line out of that file's text without loading it, and asks the same `enclosing_workspace_of` climb the alias prefix asks — one `AncestorWorkspaces` cache for the whole pass, for the same reason one climb shares one (§6.1.5), built by `quiet_for_run_at` so the undecidable-claim warning stays with the climb that spells an alias path out of the answer.
+What a run now *says* about such a block is one pass of its own, `workspace/unlisted.rs`, and it sits **above** the walk rather than inside it ([§AR-workspace.1](AR-workspace.md#1-layering), [§FS-check.4.8](../functional-spec/FS-check.md#48-unlisted-workspace-block)). `walk_scannable_files_reporting` carries out the directories it descended into, scan roots included, and asks nothing of them; the rule then probes each one for a config (`config_file_in`, which is what finds the `.agents/` form in a directory the walk never descends into), reads the `[workspace]` header line out of that file's text without loading it, and asks the same `enclosing_workspace_of` climb the alias prefix asks — one `AncestorWorkspaces` cache for the whole pass, for the same reason one climb shares one ([§AR-workspace.6.1.5](AR-workspace.md#615-the-climb-caches-the-blocks-it-reads)), built by `quiet_for_run_at` so the undecidable-claim warning stays with the climb that spells an alias path out of the answer.
 
 This rule spells none: it treats a claim it cannot decide as no finding, and printing that warning from here put the sentence into single-project runs that had never asked the chain anything, and a second, wrongly based copy of it into workspace runs that had ([§FS-check.4.8](../functional-spec/FS-check.md#48-unlisted-workspace-block)).
 
@@ -273,20 +273,20 @@ Expansion is bounded by **containment**. Every member root has to land strictly 
 
 #### 6.1.8 Three invariants are per-block
 
-Every `[workspace]` block is a workspace root in its own right (§5.1 — one
+Every `[workspace]` block is a workspace root in its own right ([§AR-workspace.5.1](AR-workspace.md#51-one-loader-one-parser) — one
 loader, whatever the depth), so three invariants are per-block:
-`workspace_boundary_roots` (§6) comes from that block's own member list, so each
+`workspace_boundary_roots` ([§AR-workspace.6](AR-workspace.md#6-the-workspace-boundary)) comes from that block's own member list, so each
 scan stops at its own members; `include_root` decides that block's own project
 only; and alias uniqueness is checked within one sibling set, since paths under
 different parents cannot collide.
 
 ### 6.2 A directory reached through a symlink is compared canonically
 
-The relative-path compare of §6 answers the question only while the tree spells a
+The relative-path compare of [§AR-workspace.6](AR-workspace.md#6-the-workspace-boundary) answers the question only while the tree spells a
 member one way. A **symlink** gives it a second spelling — `docs/link -> ../sub`,
 or `docs/link -> ../packages` with the member one level below it — and a member
 reached under a link name matches no precomputed suffix, so the root scan
-descends into the member namespace §6 forbids and reports the member's
+descends into the member namespace [§AR-workspace.6](AR-workspace.md#6-the-workspace-boundary) forbids and reports the member's
 own declarations as duplicates of themselves. The boundary is a property of the
 directory, not of the name it is reached under, so a directory the walk reached
 **through a link** is resolved with `canonicalize` and compared against the
@@ -326,7 +326,7 @@ The architecture is observable. Each invariant above has a fixture or unit test
 that fails if the invariant is broken — and so does each of the three the
 resolver took with it
 ([§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them)),
-which is why their rows are still in this one table, §9.4: the cases are
+which is why their rows are still in this one table, [§AR-workspace.9.4](AR-workspace.md#94-each-invariant-and-the-test-that-pins-it): the cases are
 workspace cases whichever half they pin.
 `tests/integration/test_architecture_coverage_table.py` fails when a row names a
 case directory or a test function that does not exist, so the table cannot
@@ -334,8 +334,8 @@ outlive what it cites.
 
 These are the contracts a future change must keep green: a change that cannot
 keep one of them green is breaking the layering, not the test. How a golden is
-spelled on disk is §9.1, which platforms run the symlink cases §9.2, and how a
-pass decides §9.3.
+spelled on disk is [§AR-workspace.9.1](AR-workspace.md#91-a-golden-has-one-on-disk-spelling), which platforms run the symlink cases [§AR-workspace.9.2](AR-workspace.md#92-which-platforms-actually-run-the-symlink-cases), and how a
+pass decides [§AR-workspace.9.3](AR-workspace.md#93-a-mismatch-is-data-not-a-panic).
 
 ### 9.1 A golden has one on-disk spelling
 
@@ -352,9 +352,9 @@ has exactly one canonical form:
 - an **exit golden** (`expected.exit`) holds the decimal exit code followed by
   exactly one `\n`.
 
-The invariant the canonical form exists for is §9.1.4: a refresh over an
+The invariant the canonical form exists for is [§AR-workspace.9.1.4](AR-workspace.md#914-a-refresh-over-an-unchanged-tree-writes-the-bytes-already-there): a refresh over an
 unchanged tree writes the bytes that are already there. Why the newline and not
-zero bytes, what that costs, and how the form is checked are §9.1.1 to §9.1.3.
+zero bytes, what that costs, and how the form is checked are [§AR-workspace.9.1.1](AR-workspace.md#911-why-the-newline-and-not-zero-bytes) to [§AR-workspace.9.1.3](AR-workspace.md#913-checked-not-remembered).
 
 #### 9.1.1 Why the newline and not zero bytes
 
@@ -377,11 +377,11 @@ routinely mangle.
 #### 9.1.3 Checked, not remembered
 
 `goldens_are_in_canonical_form` (`crates/grund-cli/tests/e2e.rs`) walks every
-case under both roots of §9.1.4 and reads the bytes, never the reader's
+case under both roots of [§AR-workspace.9.1.4](AR-workspace.md#914-a-refresh-over-an-unchanged-tree-writes-the-bytes-already-there) and reads the bytes, never the reader's
 normalized string — through the reader the very difference under test
 disappears. It names every offending file in one failure with what is wrong with
 each, the same "account for every case, then decide once" shape as the pass of
-§9.3, so the tree can be normalized from the message alone. The writer's half is
+[§AR-workspace.9.3](AR-workspace.md#93-a-mismatch-is-data-not-a-panic), so the tree can be normalized from the message alone. The writer's half is
 a property rather than a corpus:
 `crates/grund-cli/tests/support/case_golden_form.rs` writes each representative
 output, reads it back through the reader, and writes it again — the second write
@@ -397,7 +397,7 @@ harness writes both.
 
 ### 9.2 Which platforms actually run the symlink cases
 
-One row of §9.4, a member root escaping its own block, is not covered everywhere:
+One row of [§AR-workspace.9.4](AR-workspace.md#94-each-invariant-and-the-test-that-pins-it), a member root escaping its own block, is not covered everywhere:
 a member root can only escape its own block through a symlink, so every unit
 test for that rule is `#[cfg(unix)]` and the two e2e cases build their links at
 run time into `target/e2e-work/`. Where a directory symlink cannot be created —
@@ -419,7 +419,7 @@ is collected rather than asserted, so a mismatch on the first case, or the first
 surface of a case, does not hide a second one. The pass fails once, after the
 last case, naming every mismatched case in discovery order with each surface
 that differed under it — the same "account for and name every case, then decide
-once" shape the skip accounting of §9.2 already uses.
+once" shape the skip accounting of [§AR-workspace.9.2](AR-workspace.md#92-which-platforms-actually-run-the-symlink-cases) already uses.
 
 A fixture-validity error — a malformed manifest, an unreadable golden, a
 non-concise `expected.stderr` — still aborts at the case: the case itself cannot
