@@ -103,6 +103,8 @@ pub(crate) fn comment_blocks(
             CommentBlockKind::Line(marker) => {
                 let mut end = index;
                 while end + 1 < lines.len()
+                    && !python_lines[end + 1].0
+                    && !python_lines[end + 1].2
                     && matches!(
                         comment_block_kind(lines[end + 1], lexical),
                         Some(CommentBlockKind::Line(next)) if next == *marker
