@@ -53,10 +53,9 @@ class PrepareChangelogReleaseTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.tempdir.cleanup()
 
-    # §FS-distribution.4.5 — the changelog rotation a version bump includes: the
-    # curated `## Unreleased` bullets become the new inline release section, the
-    # former inline latest is archived under docs/changelog/<version>.md, and the
-    # older-release index gains that archive link.
+    # §FS-distribution.4.5 — rotation moves curated `## Unreleased` bullets into
+    # the inline release section, archives the former latest under
+    # docs/changelog/<version>.md, and adds its link to the older-release index.
     def test_prepare_promotes_unreleased_and_archives_previous_latest(self) -> None:
         changelog = self.write_changelog()
 
@@ -151,8 +150,7 @@ Previous release.
 
     # §FS-distribution.4.7 — the changelog is the source of the GitHub release
     # notes: the requested vX.Y.Z section is extracted from docs/changelog.md and
-    # handed over as the release body, and the older-release index is not part of
-    # it.
+    # handed over as the release body; the older-release index is not part of it.
     def test_extract_notes_writes_inline_release_body(self) -> None:
         changelog = self.write_changelog()
         output = changelog.parent / "release-notes.md"
