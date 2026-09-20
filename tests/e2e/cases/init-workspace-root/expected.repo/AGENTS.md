@@ -1,4 +1,4 @@
-# repo — agent instructions
+# root — agent instructions
 
 <!-- BEGIN GRUND MANAGED BLOCK -->
 ## Grounding with grund (v10)
