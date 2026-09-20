@@ -8,7 +8,8 @@
 //! `writers/init.rs` decides *which* of these a `--docs` scaffold writes and
 //! where, and this file only says what each one says (§AR-system.2.11).
 
-use crate::config::escape_toml_basic;
+use crate::config::{Config, escape_toml_basic};
+use crate::grammar::id_shape;
 
 pub(super) const AGENTS_TEMPLATE: &str = include_str!("../../assets/templates/AGENTS.md");
 /// The scaffold config. Its `[citations]` block comment explains the five levels
@@ -50,6 +51,21 @@ pub const AGENT_SETUP_INSTRUCTIONS: &str = include_str!("../../assets/skills/gru
 
 pub fn canonical_template_text(template: &str) -> String {
     template.replace("\r\n", "\n").replace('\r', "\n")
+}
+
+/// Render one docs-scaffold template's owned ID examples from the illustrated
+/// kind's effective grammar. An absent kind row and a row without an override
+/// both use the repository format (§FS-init.2.1.3).
+pub(crate) fn render_scaffold_id_shapes(template: &str, kind: &str, config: &Config) -> String {
+    let effective_format = config
+        .kinds
+        .iter()
+        .find(|candidate| candidate.kind == kind)
+        .map_or(config.id_format.as_str(), |candidate| {
+            candidate.effective_format(config)
+        });
+    let shape = id_shape(effective_format).replace("<KIND>", kind);
+    canonical_template_text(template).replace(&format!("{{{kind}_ID_SHAPE}}"), &shape)
 }
 
 /// The generated `grund.toml` — every default written out explicitly as a

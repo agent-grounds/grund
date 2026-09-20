@@ -1,3 +1,3 @@
 # Functional Spec
 
-Declare one requirement/spec per file: `# FS-NNN-slug: …`.
+Declare one requirement/spec per file: `# {FS_ID_SHAPE}: …`.

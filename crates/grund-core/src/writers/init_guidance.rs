@@ -5,7 +5,7 @@ use crate::scanner::CANONICAL_AGENT_ENTRYPOINT;
 use crate::templates::{
     AS_README_TEMPLATE, DA_README_TEMPLATE, DF_README_TEMPLATE, E2E_README_TEMPLATE,
     FS_README_TEMPLATE, GITKEEP_TEMPLATE, GOALS_TEMPLATE, GRUND_DOC_TEMPLATE,
-    REQUIREMENTS_TEMPLATE, canonical_template_text,
+    REQUIREMENTS_TEMPLATE, canonical_template_text, render_scaffold_id_shapes,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -135,22 +135,33 @@ pub(crate) fn init_fs_home(config: &Config) -> InitFsHome {
     }
 }
 
-/// Every `--docs` stub, paired with the path it lands at (§FS-init.2.1).
-pub(crate) fn docs_scaffold(fs_home: &InitFsHome) -> Vec<(String, String)> {
+/// Every `--docs` stub, paired with the path it lands at (§FS-init.2.1). Every
+/// owned ID example is rendered from its kind's effective format (§FS-init.2.1.3).
+pub(crate) fn docs_scaffold_for_config(
+    fs_home: &InitFsHome,
+    config: &Config,
+) -> Vec<(String, String)> {
     let mut files = Vec::new();
     match fs_home {
-        InitFsHome::File { path, .. } => {
-            files.push((path.clone(), canonical_template_text(REQUIREMENTS_TEMPLATE)))
-        }
+        InitFsHome::File { path, .. } => files.push((
+            path.clone(),
+            render_scaffold_id_shapes(REQUIREMENTS_TEMPLATE, "FS", config),
+        )),
         InitFsHome::Folder { path } => files.push((
             format!("{path}/README.md"),
-            canonical_template_text(FS_README_TEMPLATE),
+            render_scaffold_id_shapes(FS_README_TEMPLATE, "FS", config),
         )),
     }
     files.extend(
         [
-            ("docs/grund.md", canonical_template_text(GRUND_DOC_TEMPLATE)),
-            ("docs/goals.md", canonical_template_text(GOALS_TEMPLATE)),
+            (
+                "docs/grund.md",
+                render_scaffold_id_shapes(GRUND_DOC_TEMPLATE, "GRUND", config),
+            ),
+            (
+                "docs/goals.md",
+                render_scaffold_id_shapes(GOALS_TEMPLATE, "GOAL", config),
+            ),
             (
                 "docs/roadmap.md",
                 "# Roadmap\n\n<!-- placeholder - replace with real content -->\n".to_string(),
@@ -161,15 +172,15 @@ pub(crate) fn docs_scaffold(fs_home: &InitFsHome) -> Vec<(String, String)> {
             ),
             (
                 "docs/architecture/README.md",
-                canonical_template_text(AS_README_TEMPLATE),
+                render_scaffold_id_shapes(AS_README_TEMPLATE, "AR", config),
             ),
             (
                 "docs/decisions/architectural/README.md",
-                canonical_template_text(DA_README_TEMPLATE),
+                render_scaffold_id_shapes(DA_README_TEMPLATE, "DA", config),
             ),
             (
                 "docs/decisions/functional/README.md",
-                canonical_template_text(DF_README_TEMPLATE),
+                render_scaffold_id_shapes(DF_README_TEMPLATE, "DF", config),
             ),
             ("tests/e2e/README.md", render_e2e_readme(fs_home)),
             (
@@ -181,6 +192,12 @@ pub(crate) fn docs_scaffold(fs_home: &InitFsHome) -> Vec<(String, String)> {
         .map(|(path, contents)| (path.to_string(), contents)),
     );
     files
+}
+
+/// The scaffold under the default config, for tests that read its shape.
+#[cfg(test)]
+pub(crate) fn docs_scaffold(fs_home: &InitFsHome) -> Vec<(String, String)> {
+    docs_scaffold_for_config(fs_home, &Config::default_for(std::path::PathBuf::from(".")))
 }
 
 fn render_e2e_readme(fs_home: &InitFsHome) -> String {

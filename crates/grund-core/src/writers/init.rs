@@ -5,7 +5,7 @@ use super::init_block::{
     AgentsUpdateResult, update_agents_block, write_or_update_canonical_agent_entrypoint,
 };
 pub(crate) use super::init_guidance::init_fs_home;
-use super::init_guidance::{InitNext, docs_scaffold};
+use super::init_guidance::{InitNext, docs_scaffold_for_config};
 use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
 use super::init_plan::{InitAgentEntrypointSelection, selected_init_agent_entrypoints};
 use super::init_render::{agents_workspace_members_section, init_pending_effective_config};
@@ -469,7 +469,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
 
     let fs_home = init_fs_home(&init_config);
     let files: Vec<(String, String)> = if docs {
-        docs_scaffold(&fs_home)
+        docs_scaffold_for_config(&fs_home, &init_config)
     } else {
         Vec::new()
     };
