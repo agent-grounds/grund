@@ -55,7 +55,9 @@ pub fn canonical_template_text(template: &str) -> String {
 
 /// Render one docs-scaffold template's owned ID examples from the illustrated
 /// kind's effective grammar. An absent kind row and a row without an override
-/// both use the repository format (§FS-init.2.1.3).
+/// both use the repository format. Bind the kind placeholder before rendering
+/// the remaining schematic components so configured literals stay unchanged
+/// (§FS-init.2.1.3).
 pub(crate) fn render_scaffold_id_shapes(template: &str, kind: &str, config: &Config) -> String {
     let effective_format = config
         .kinds
@@ -64,7 +66,7 @@ pub(crate) fn render_scaffold_id_shapes(template: &str, kind: &str, config: &Con
         .map_or(config.id_format.as_str(), |candidate| {
             candidate.effective_format(config)
         });
-    let shape = id_shape(effective_format).replace("<KIND>", kind);
+    let shape = id_shape(&effective_format.replace("{kind}", kind));
     canonical_template_text(template).replace(&format!("{{{kind}_ID_SHAPE}}"), &shape)
 }
 

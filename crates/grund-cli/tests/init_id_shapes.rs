@@ -202,3 +202,49 @@ format = "{kind}_{number}_{slug}"
         assert_example(&target, "docs/architecture/README.md", expected);
     }
 }
+
+#[test]
+fn init_docs_preserves_literal_kind_tokens_in_fallback_and_override_shapes() {
+    let target = workdir("init_docs_preserves_literal_kind_tokens_in_fallback_and_override_shapes");
+    fs::create_dir_all(target.join(".agents")).expect("create config directory");
+    fs::write(
+        target.join(".agents/grund.toml"),
+        r#"grund_config_version = 1
+
+[id]
+format = "{kind}<KIND>:{slug}"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+title = "Goals"
+format = "{kind}<KIND>_{number}"
+"#,
+    )
+    .expect("write literal-delimiter config");
+
+    let output = run_grund(
+        &["init", target.to_str().unwrap(), "--docs"],
+        manifest_dir(),
+    );
+    assert!(
+        output.status.success(),
+        "literal-delimiter init --docs failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // Absent kind rows use the repository fallback without interpreting the
+    // literal `<KIND>` delimiter as the schematic kind placeholder.
+    assert_example(&target, "docs/grund.md", "# GRUND<KIND>:<slug>: …");
+    for expected in [
+        "`AR<KIND>:<slug>` ID",
+        "`§AR<KIND>:<slug>.<section>`",
+        "`# AR<KIND>:<slug>: [<path>](<path>)`",
+    ] {
+        assert_example(&target, "docs/architecture/README.md", expected);
+    }
+
+    // A kind override follows the same literal-preservation rule while proving
+    // that its effective format, rather than the repository fallback, won.
+    assert_example(&target, "docs/goals.md", "# GOAL<KIND>_<NNN>: …");
+}
