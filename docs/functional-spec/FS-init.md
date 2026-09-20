@@ -425,6 +425,18 @@ Because the section's content derives from config rather than the template alone
 
 The managed-block version was bumped to carry this config-derived content under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), and bumped again to **v8** when the rendering of [§FS-init.2.3.5.1](FS-init.md#2351-layout) to [§FS-init.2.3.5.7](FS-init.md#2357-the-grounding-sentence) replaced the flat one this section used to specify — which stated no unit, grouped no conjunction, rendered no grounding sentence, and leaked `*/AR` into prose ([§DF-directions-render](../decisions/functional/DF-directions-render.md#df-directions-render-the-citation-directions-wording-is-chosen-once-against-a-canonical-config)). The later v9 bump is solely the point-size sweep in [§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding); it changes no citation-direction rendering.
 
+##### 2.3.5.10 Chapter rules
+
+When at least one kind enables `rules = true`, the block renders a
+`### Chapter rules` section immediately after `### Citation directions`, with
+the existing `must`/`should` legend and one bullet per valid rule in qualified
+rule-ID order. Each bullet contains the exact authored sentence followed by its
+live rule citation. The section and its refusal/no-write lifecycle are
+[§FS-rules.4](FS-rules.md#4-validation-lifecycle) and
+[§FS-rules.9](FS-rules.md#9-managed-guidance-and-editor-parity)'s. `check`
+re-renders and byte-compares it as config-derived content; a mismatch is
+`agents-init`.
+
 #### 2.3.6 Clickable citations
 
 The managed block renders a `### Clickable citations` section carrying the content points in [§FS-init.2.3.4.17](FS-init.md#23417-clickable-citations): the fixed repository-web sentence always, plus the local-conversation sentence when `[reference] conversation = "link"` is set. The section is deterministic from the effective config and the entrypoint's own agent ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)): byte-identical in every project with the same key state, for the same entrypoint file. The per-agent split of [§FS-init.2.3.4.17.2](FS-init.md#234172-the-form-per-agent) is the one axis on which two entrypoints in the *same* repository differ, and it is a pure function of the target path, so it is as reproducible as the rest.
@@ -443,7 +455,14 @@ The canonical text for a given block version `vN` is embedded in the `grund` bin
 
 ##### 2.3.7.1 The current version
 
-The current schema is **v10**; v10 adds the in-body Markdown heading policy in [§FS-init.2.3.4.5.1](FS-init.md#23451-unmarked-headings), and an existing v9 block is the supported predecessor, repaired by the same one-command `grund init` re-render ([§FS-init.2.3.10.1](FS-init.md#23101-re-rendering-an-existing-block)). The v9 history remains the point-size sweep added in [§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding), with v8 as its predecessor.
+The current schema for a repository without a rule kind is **v10**; v10 adds
+the in-body Markdown heading policy in [§FS-init.2.3.4.5.1](FS-init.md#23451-unmarked-headings), and an existing v9 block is
+the supported predecessor, repaired by the same one-command `grund init`
+re-render ([§FS-init.2.3.10.1](FS-init.md#23101-re-rendering-an-existing-block)). A rule-enabled repository uses **v11** because §FS-init.2.3.5.10
+adds byte-compared content. Removing the opt-in returns to byte-identical v10
+output rather than making v11 universal. The v9 history remains the point-size
+sweep added in [§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding), with v8 as its predecessor.
+
 
 ##### 2.3.7.2 What `check` compares
 
@@ -631,7 +650,7 @@ For an existing docs-heavy repo, the instructions make the adoption choice expli
 
 ### 5.3 One body, two surfaces
 
-The core instructions must not fork from the distributable skill. The repository keeps the distributable skill at `skills/grund-init/SKILL.md` and the binary-embedded copy at `crates/grund-core/assets/skills/grund-init/SKILL.md`; they must be byte-identical, and `grund agent-setup-instructions` prints that Markdown source byte-for-byte. The source package therefore exposes the instructions in two ways with one body: agents that can read the repository may load `skills/grund-init/SKILL.md` as a skill; agents that only have the installed CLI may run `grund agent-setup-instructions`. A release that edits one surface without the other is invalid. The skill's `### [citations]` section contains a marked byte-identical copy of `docs/user-facing/citation-directions.md`; the asset-sync integration check prevents either copy from drifting.
+The core instructions must not fork from the distributable skill. The repository keeps the distributable skill at `skills/grund-init/SKILL.md` and the binary-embedded copy at `crates/grund-core/assets/skills/grund-init/SKILL.md`; they must be byte-identical, and `grund agent-setup-instructions` prints that Markdown source byte-for-byte. The source package therefore exposes the instructions in two ways with one body: agents that can read the repository may load `skills/grund-init/SKILL.md` as a skill; agents that only have the installed CLI may run `grund agent-setup-instructions`. A release that edits one surface without the other is invalid. The skill's `### [citations]` section contains a marked byte-identical copy of `docs/user-facing/citation-directions.md`; its marked `### Chapter rules` section likewise contains the byte-identical writing section from `docs/user-facing/rules.md`. The asset-sync integration check prevents either pair from drifting ([§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples)).
 
 ## 6. Why this exists
 

@@ -38,6 +38,7 @@ Behavior every subcommand inherits.
 - [§FS-errors](FS-errors.md#fs-errors-grund-emits-messages-in-fixed-shapes) — grund emits messages in fixed shapes
 - [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes) — machine-readable output shapes
 - [§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value) — opted-in kinds bind authored components to one declared value
+- [§FS-rules](FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules) — grounded declarations state and enforce chapter rules
 
 ## Verbose fixtures
 

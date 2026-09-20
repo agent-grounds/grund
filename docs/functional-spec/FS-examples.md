@@ -27,6 +27,10 @@ An example may cover multiple use-cases, but it must stay small enough that a ne
 
 The examples also include an optional first-class-values repository, specified in [§FS-examples.2.1](FS-examples.md#21-the-values-example).
 
+They include the chapter-rules repository at `examples/rules/`, whose runnable
+goldens and documentation coverage are normative in
+[§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples).
+
 ### 2.1 The values example
 
 The examples include an optional first-class-values repository showing `values = true`, Markdown and home JSON declarations, exact numeric equality, prose and scanned-comment bindings, direct runtime JSON use, and a caught mismatch. It demonstrates the deliberate unbackticked non-binding without implying interpolation or value inference ([§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)).
@@ -45,11 +49,19 @@ Runnable examples must stay executable and regression-tested. If an example has 
 
 When a new canonical workflow becomes part of the README or functional spec, the examples tree must either gain a maintained example for it or explicitly link to an existing example that already teaches it. Removing an example requires either removing the advertised workflow or replacing the example with an equivalent maintained path.
 
+The rules workflow is held as one unit: guide rows, every accepted family and
+listed refusal, exact findings and both channels, deterministic shared-anchor
+ordering, both deduplication directions, README/index links, skill copies, and
+managed rendering move together under [§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples).
+
 ## 5. E2E reuse without duplication
 
 Runnable examples must also be executable end-to-end tests. They may have a lighter manifest than `tests/e2e/cases/` when that keeps the user-facing directory readable, but their command invocation, expected exit code, stdout/stderr comparison, mutable-repo handling, and final-repo snapshot comparison must be run by the same test runner logic used for ordinary e2e cases.
 
 The repo must not maintain a second, example-only implementation of the e2e contract. Adding a new e2e capability such as `command.args`, `{repo_copy}`, `expected.repo`, deterministic-output checks, or golden-output refresh must make that capability available to examples through shared code, not through a copied harness.
+
+`examples/rules/expected.*` is run by this shared runner, not a rules-specific
+harness ([§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples)).
 
 The external-ticket example runs offline; its contract is [§FS-examples.5.2](FS-examples.md#52-the-external-ticket-example-runs-offline).
 

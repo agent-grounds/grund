@@ -631,6 +631,25 @@ TOML loads back to the same effective values.
 
 Declarations are still recognized outside configured homes — including inline source declarations — and declarations in files covered by zero or multiple configured homes are not rejected by the home-kind rule because there is no single expected kind. So a kind with no configured home meets [§FS-check.3.7](FS-check.md#37-misplaced-declaration-configured-kind-home) only when one of its declarations sits inside some other kind's unique configured home.
 
+#### 3.4.12 `rules` — rule declaration kinds
+
+`rules = true` opts every declaration of a citable Markdown kind into the rule
+contract of [§FS-rules](FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules): the declaration title is one executable controlled-English
+sentence and its body is a non-empty rationale. The Boolean is absent and false
+by default, and `config show` prints it only when enabled. Multiple local kinds
+may enable it.
+
+The key requires a citable kind and a `file` or `folder` home whose declarations
+are Markdown. It is invalid on a non-citable, homeless, unwalked, external-
+snapshot, or JSON-value kind: each either declares no IDs, supplies no scanned
+rule catalog, or gives its title another source contract. These relationships
+are config validation; sentence titles are scanned declaration data and are
+validated later as located findings ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
+
+The key is optional and additive, so `grund_config_version` remains 1 (§5).
+An older binary rejects the unknown key loudly rather than silently ignoring a
+rule-enabled repository.
+
 ### 3.5 `[scan]` — what gets walked
 
 ```toml

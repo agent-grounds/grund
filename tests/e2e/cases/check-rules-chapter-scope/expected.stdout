@@ -1,0 +1,3 @@
+docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one 2 times; RULE-overview requires exactly once
+docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one-more 0 times; RULE-overview requires exactly once
+docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements)

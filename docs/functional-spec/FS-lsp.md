@@ -18,7 +18,7 @@ report: the same code, severity, message, and complete authored-token range as `
 owned path also publishes the independent missing-section finding. Ownerless and unsupported
 forms receive no guessed target.
 
-`textDocument/publishDiagnostics` pushes `grund check` results as the user edits. Each unknown reference, missing section, duplicate declaration, broken stub, and citation-direction violation — a required citation absent ([§FS-check.3.11](FS-check.md#311-missing-required-citation)) or a forbidden one present ([§FS-check.3.12](FS-check.md#312-forbidden-citation)) — becomes a diagnostic with the same `path:line: <message>` content the CLI prints to stdout ([§FS-errors.2.1](FS-errors.md#21-located-finding)). The advisory `should` / `should-not` suggestions channel ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)) is opt-in on the CLI and is not pushed as diagnostics. Severity follows the engine's severity model ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization) — not configurable).
+`textDocument/publishDiagnostics` pushes `grund check` results as the user edits. Each unknown reference, missing section, duplicate declaration, broken stub, citation-direction violation, hard chapter-rule violation, and `invalid-rule` becomes a diagnostic with the same path, line, code, severity, message, and title/citation range as the CLI's shared core report ([§FS-rules.9](FS-rules.md#9-managed-guidance-and-editor-parity)). The advisory `should` / `should-not` suggestions channel ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)) is opt-in on the CLI and is not pushed as diagnostics. Severity follows the engine's severity model ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization) — not configurable).
 
 Where each diagnostic anchors is [§FS-lsp.1.1.1](FS-lsp.md#111-where-a-diagnostic-anchors). Value, named-section, and missing-snapshot findings are transported from the core report rather than derived by the server ([§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)), and the `[workspace]` warnings on the run's warning channel are published too ([§FS-lsp.1.1.3](FS-lsp.md#113-workspace-warnings-on-the-runs-warning-channel)).
 
@@ -276,6 +276,11 @@ The LSP server does not have an "interactive" mode or a confirmation prompt ([§
 ### 4.1 How parity is held
 
 The implementation enforces this parity by routing LSP state through `grund-core` scan, check, show, refs, and formatting APIs, plus focused LSP tests for linkification, configured trigger handling, workspace member marker resolution, UTF-16 ranges, and document-link targets. The full child-process sweep over `tests/e2e/cases/*` ships as `tests/integration/lsp_cli_parity.rs`: for every plain-`check` case, the diagnostics the server publishes are the located findings the CLI prints, or the build is red. The workspace warnings of [§FS-lsp.1.1.3](FS-lsp.md#113-workspace-warnings-on-the-runs-warning-channel) are held the same way against that case's stderr golden, so neither surface may carry one the other does not.
+
+The sweep includes the plain-check rules fixture. Rule parsing and evaluation
+remain core behavior: the server transports hard findings and `invalid-rule`
+and contains no parallel rule implementation
+([§FS-rules.9](FS-rules.md#9-managed-guidance-and-editor-parity)).
 
 ### 4.2 Embedded values
 
