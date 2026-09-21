@@ -4,10 +4,11 @@
 
 use super::agents::section_in_block;
 use super::*;
-use crate::config::load_config;
+use crate::config::{Config, load_config};
+use crate::model::CheckReport;
 use crate::scanner::scan_tree;
 use crate::templates::{ConversationSurface, citation_directions_section};
-use crate::testing::{test_root, write};
+use crate::testing::{current_block, test_root, write};
 use crate::writers::{
     BlockOutcome, ConversationRendering, ConversationTarget, install_agent_guidance_block,
     render_agents_append_block_at,
@@ -252,4 +253,74 @@ fn citation_directions_section_extraction_is_position_independent() {
         section_in_block(&drifted, "### Citation directions"),
         Some(section)
     );
+}
+
+/// All five agents-init variants preserve their legacy text as a contiguous
+/// prefix and append one exact maintenance-and-validity tail until
+/// §FS-errors.3.6.1's separate 0.15.0 wording migration lands. This checker
+/// contract survives removal of the deprecated process adapter.
+#[test]
+fn agents_init_compatibility_messages_cover_all_five_variants() {
+    const TAIL: &str =
+        " — repo maintenance; citation checks still ran; wording changes in grund 0.15.0";
+
+    let stale = current_block().replacen(
+        "### Citation directions\n",
+        "### Citation directions\nstale generated guidance\n",
+        1,
+    );
+    let cases = [
+        (
+            "malformed",
+            "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v10)\n",
+            "malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->`",
+        ),
+        (
+            "outdated",
+            "## Grounding with grund (v3)\n\nlegacy body\n",
+            "outdated grund init block v3 (run `grund init` to update to v10)",
+        ),
+        (
+            "unsupported",
+            "## Grounding with grund (v99)\n\nfuture body\n",
+            "unsupported grund init block v99 (this grund supports v10)",
+        ),
+        (
+            "stale",
+            stale.as_str(),
+            "stale grund init block: citation directions differ from grund.toml (run `grund init` to refresh)",
+        ),
+        (
+            "missing",
+            "# Project instructions\n",
+            "missing grund init block v10",
+        ),
+    ];
+
+    for (name, contents, legacy) in cases {
+        let root = test_root(&format!("agents_init_{name}"));
+        let path = root.join("AGENTS.md");
+        write(&path, contents);
+        let config = Config::default_for(root);
+        let mut report = CheckReport::default();
+
+        check_agent_block_path(&config, &path, &mut report, true);
+
+        assert_eq!(
+            report.errors.len(),
+            1,
+            "{name}: {:?}",
+            report
+                .errors
+                .iter()
+                .map(|error| (error.code, error.message.as_str()))
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(report.errors[0].code, "agents-init", "{name}");
+        assert_eq!(
+            report.errors[0].message,
+            format!("{legacy}{TAIL}"),
+            "{name}"
+        );
+    }
 }

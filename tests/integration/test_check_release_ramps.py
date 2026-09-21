@@ -151,14 +151,19 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertIn("crates", homes)
         self.assertIn("tests", homes)
 
-    def test_the_deprecation_this_tree_promises_refuses_a_0_15_0_release(self):
-        """§FS-distribution.3.1.1: `main_entry()`'s note names 0.15.0, so the guard
-        reads the promise rather than a person remembering it."""
-        report = ramps.report(self.claims, "0.15.0")
-        self.assertTrue(
-            any("compat/cli.rs" in line and "is removed in 0.15.0" in line for line in report),
-            "the deprecation note must be what refuses a 0.15.0 release of this tree",
-        )
+    def test_the_fulfilled_main_entry_removal_is_no_longer_pending(self):
+        """§FS-distribution.3.1.1: 0.14.0 shipped the removal notice and 0.15.0
+        removes the symbol, so this tree no longer carries that pending claim.
+        Other 0.15.0 ramps remain ordinary input to the generic release gate."""
+        pending = [
+            claim
+            for claim in self.claims
+            if claim.path == "crates/grund-core/src/compat/cli.rs"
+            and claim.clause == "is removed in"
+            and claim.release == "0.15.0"
+            and claim.direction == ramps.PENDING
+        ]
+        self.assertEqual([], pending, "main_entry() is still pending removal in 0.15.0")
 
     def test_the_removal_this_tree_landed_holds_the_floor_at_0_13_0(self):
         floor, _ = ramps.release_window(self.claims)
