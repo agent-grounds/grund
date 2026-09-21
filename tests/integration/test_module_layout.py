@@ -1,10 +1,9 @@
 """§AR-core-module-layout.1 — the engine is one Rust module per component: every
 `.rs` file under `crates/grund-core/src/` is `lib.rs`, the shared test fixtures
-in `testing.rs`, or a file inside one of the thirteen module directories
-§AR-system.2 names; each present directory declares its files in a `mod.rs`,
-which is the whole of what crosses its boundary; and `lib.rs` splices nothing
-at all. The `rules/` directory is test-only before implementation, and declaring
-it as a production module while that allowance remains fails this test."""
+in `testing.rs`, or a file inside one of the twelve component directories
+§AR-system.2 names; each directory declares its files in a `mod.rs`, which is
+the whole of what crosses its boundary; the retired `compat/` directory is not
+a component; and `lib.rs` splices nothing at all."""
 
 import re
 import unittest
@@ -14,12 +13,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CORE = REPO_ROOT / "crates" / "grund-core" / "src"
 
-# One directory per component of §AR-system.2, named after it — the twelve
-# components and the deprecated path beside the api (§AR-system.2.9).
+# One directory per component of §AR-system.2, named after it.
 COMPONENTS = (
     "api",
     "checker",
-    "compat",
     "config",
     "grammar",
     "model",
@@ -63,6 +60,10 @@ def _production_modules():
 
 
 class ModuleLayoutTests(unittest.TestCase):
+    def test_the_deprecated_compat_directory_is_absent(self):
+        """§AR-system.2.9.1 leaves no process-frontend module beside `api/`."""
+        self.assertFalse(CORE.joinpath("compat").exists(), "compat/ still exists")
+
     def test_every_component_has_a_directory_with_a_mod_rs(self):
         missing = []
         for component in COMPONENTS:

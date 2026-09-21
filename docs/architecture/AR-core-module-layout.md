@@ -16,19 +16,19 @@ Not a component: the rule for how the engine's files are named, owned and sized,
 API surface, and every implementation file under it belongs to one **module
 directory**: one per component of [§AR-system.2](README.md#2-components), named
 after it — `model/`, `grammar/`, `config/`, `workspace/`, `templates/`,
-`scanner/`, `resolver/`, `rules/`, `checker/`, `queries/`, `writers/`, `api/` —
-and `compat/`, a module directory but no component, for the deprecated path
-beside the api ([§AR-system.2.9](README.md#29-api)). What each one implements,
-consumes and must not know is its component's subsection, and what it may *read*
-is [§AR-system.4](README.md#4-dependency-direction); this section says only how
-its files are arranged.
+`scanner/`, `resolver/`, `rules/`, `checker/`, `queries/`, `writers/`, `api/`.
+What each one implements, consumes and must not know is its component's
+subsection, and what it may *read* is [§AR-system.4](README.md#4-dependency-direction);
+this section says only how its files are arranged. There is no `compat/`
+directory beside the api: the engine has no process frontend
+([§AR-system.2.9.1](README.md#291-no-process-frontend-lives-in-the-engine)).
 
-A file belongs to exactly one of those thirteen module directories — the one it
-sits under, `model/records.rs` to **model** and `compat/list.rs` to **compat** —
-and it holds one thing, named for what that is: the invariant, rule or record a
+A file belongs to exactly one of those twelve module directories — for example,
+`model/records.rs` belongs to **model** and `api/show.rs` belongs to **api** — and
+it holds one thing, named for what that is: the invariant, rule or record a
 reader would look for under that name. That is what a citation of this section
-from a file's own doc comment means, and it is why a file grown past two
-subjects is a split rather than an exception ([§AR-core-module-layout.3](AR-core-module-layout.md#3-file-size)).
+from a file's own doc comment means, and it is why a file grown past two subjects
+is a split rather than an exception ([§AR-core-module-layout.3](AR-core-module-layout.md#3-file-size)).
 The boundary, the one file outside it, where a test module sits, and the two tests that hold this against the tree are [§AR-core-module-layout.1.1](AR-core-module-layout.md#11-modrs-is-the-components-whole-boundary) to [§AR-core-module-layout.1.4](AR-core-module-layout.md#14-two-tests-hold-the-layout-against-the-tree).
 
 ### 1.1 `mod.rs` is the component's whole boundary
@@ -37,7 +37,7 @@ It declares the component's files, carries the doc comment citing the component'
 
 ### 1.2 `lib.rs` is the one file outside every component
 
-As the crate entrypoint it holds one `mod` line per component plus `compat`, the
+As the crate entrypoint it holds one `mod` line per component, the
 explicit `pub use <component>::{…}` list that **is** the crate's public surface
 ([§AR-core-module-layout.2](AR-core-module-layout.md#2-refactor-boundary)), and `#[cfg(test)] pub(crate) mod testing;` for the fixtures every test
 module shares. It holds no implementation and re-exports nothing by glob, so a
@@ -54,11 +54,9 @@ All 67 are `<component>/tests_<subject>.rs`, declared in that component's `mod.r
 
 `tests/integration/test_module_layout.py` holds the layout: every `.rs` under
 `crates/grund-core/src/` is `lib.rs`, `testing.rs`, or a file inside one of the
-thirteen directories, each present directory has a `mod.rs`, and `lib.rs`
-`include!`s nothing at all. Its one pending allowance is a missing or test-only
-`rules/` directory; declaring production `mod rules;` while that allowance
-remains is an error, so the implementation must turn the component on
-deliberately.
+twelve component directories, each present directory has a `mod.rs`, and `lib.rs`
+`include!`s nothing at all. Its pending-component set is empty; a named
+component directory or its `mod.rs` going missing is an error.
 `tests/integration/test_dependency_direction.py` holds the order of
 [§AR-system.4](README.md#4-dependency-direction) across those directories,
 skipping every `tests_*.rs` and `testing.rs` ([§AR-core-module-layout.1.3](AR-core-module-layout.md#13-a-test-module-sits-beside-the-code-it-pins)): every
