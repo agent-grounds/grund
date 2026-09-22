@@ -2,12 +2,9 @@
 //! config, scan, check, and fold in the cautions and the config findings the run
 //! earns (§FS-check.1, §FS-check.2, §FS-workspace.5).
 //!
-//! It sat in the deprecated `check` adapter while `check_with_opts` — the whole
-//! published `check` — called into it, which had the api reading a renderer
-//! (§AR-system.4, §AR-system.2.9). Only `command_check` was the renderer; the run
-//! is what every surface shares, and the api is the lowest component that holds
-//! it, so `compat/check.rs` now reads it downward and the deprecated path and the
-//! embedding surface cannot report different things about one tree.
+//! The run is what every data-returning check surface shares, and the api is the
+//! lowest component that holds it. Process parsing and rendering stay in the
+//! CLI, outside the engine (§AR-system.2.9.1, §AR-bindings.2).
 
 use anyhow::Result;
 use std::collections::BTreeMap;

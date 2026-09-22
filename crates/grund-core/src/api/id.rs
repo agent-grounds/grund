@@ -4,8 +4,8 @@
 //!
 //! The two questions the answer is built from — what a title slugs to and how an
 //! `Id` renders under `[id] format` — are the writers' (§AR-system.2.8), read
-//! downward, so this surface and the deprecated `compat/id.rs` adapter cannot
-//! disagree about either.
+//! downward. The CLI renders the returned proposal; no process adapter lives in
+//! the engine (§AR-system.2.9.1).
 
 use anyhow::Result;
 use std::path::PathBuf;

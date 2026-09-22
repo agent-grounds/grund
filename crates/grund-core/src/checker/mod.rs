@@ -72,8 +72,8 @@ pub(crate) use support::{diagnostic_cmp, sort_diagnostics};
 pub(crate) use values::binding_target_has_any_value_authority;
 
 // What another component's tests read (§AR-core-module-layout.1.3): the managed
-// block path the compat selector cases drive, and the dangling sentence the
-// scanner's config cases compare against; the rest went beside their own cases.
+// block path the drift cases drive, and the dangling sentence the scanner's
+// config cases compare against; the rest went beside their own cases.
 #[cfg(test)]
 pub(crate) use agents::check_agent_block_path;
 #[cfg(test)]

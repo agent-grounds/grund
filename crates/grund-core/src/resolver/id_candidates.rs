@@ -49,9 +49,9 @@ pub fn names_member_id_candidate(message: &str) -> bool {
 ///
 /// Applied at the seam where the whole run is in hand — every `show` frontend
 /// resolves through a [`WorkspaceContext`] before it renders — so the shipped
-/// CLI and the deprecated `main_entry()` mirror (§AR-bindings.2) print the same
-/// bytes from one builder, and the context that already holds every member's
-/// findings is not loaded a second time to answer (§GOAL-fast-feedback).
+/// CLI reads one engine answer (§AR-bindings.2), and the context that already
+/// holds every member's findings is not loaded a second time to answer
+/// (§GOAL-fast-feedback).
 ///
 /// Everything else is left exactly as raised: a qualified lookup already named
 /// its project, an ID the current grammar rejects fails earlier as `invalid ID`,

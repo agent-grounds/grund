@@ -1,11 +1,9 @@
-//! Core contract for the typed `refs` query-failure carrier and the deprecated
-//! compatibility adapter (§FS-refs.4, §FS-errors.2.3).
+//! Core contract for the typed `refs` query-failure carrier
+//! (§FS-refs.4, §FS-errors.2.3).
 
 use std::path::{Path, PathBuf};
-use std::process::ExitCode;
 
 use super::*;
-use crate::compat::command_refs;
 use crate::testing::{test_root, write};
 use anyhow::Result;
 
@@ -99,32 +97,4 @@ fn successful_and_setup_outcomes_do_not_receive_the_query_failure_carrier() {
         "invalid ID `FS-bar`\n\
          hint: this repo's [id] format is `{kind}-{number}-{slug}` (run `grund config show`); `grund list` shows the IDs that exist"
     );
-}
-
-fn version(text: &str) -> (u64, u64, u64) {
-    let mut parts = text.split('.').map(|part| {
-        part.split(|ch: char| !ch.is_ascii_digit())
-            .next()
-            .unwrap_or("0")
-            .parse::<u64>()
-            .unwrap_or(0)
-    });
-    (
-        parts.next().unwrap_or(0),
-        parts.next().unwrap_or(0),
-        parts.next().unwrap_or(0),
-    )
-}
-
-#[test]
-fn deprecated_compat_refs_uses_the_same_release_mapping() {
-    let root = refs_repo("compat_refs_query_failure_mapping");
-    let args = vec!["FS-bar".to_string(), root.display().to_string()];
-    let actual = command_refs(&args);
-    let expected = if version(env!("CARGO_PKG_VERSION")) >= version("0.15.0") {
-        ExitCode::from(1)
-    } else {
-        ExitCode::from(2)
-    };
-    assert_eq!(actual, expected);
 }

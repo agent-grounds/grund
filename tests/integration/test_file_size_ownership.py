@@ -37,11 +37,10 @@ OWNERSHIP = (
     ("crates/grund-core/src/workspace/tests_scope.rs", "tests", 450),
 )
 
-# The exact 67-test baseline, assigned to the owners approved for each subject.
+# The exact 66-test baseline, assigned to the owners approved for each subject.
 # A new test is allowed; losing or leaving one outside its approved owner is not.
 EXPECTED_TESTS_BY_PATH = {
     "crates/grund-core/src/api/tests_embedding.rs": {
-        "deprecated_main_entry_symbol_remains_available_for_0_4_consumers",
         "list_summary_reports_single_file_kind_home",
         "public_check_api_returns_relative_slash_normalized_paths",
         "public_embedding_api_checks_and_shows_without_cli_dispatch",
@@ -205,8 +204,8 @@ class FileSizeOwnershipTests(unittest.TestCase):
                 problems.append(f"missing test: {path}::{name}")
 
         expected_count = sum(map(len, EXPECTED_TESTS_BY_PATH.values()))
-        self.assertEqual(67, expected_count, "the pinned baseline inventory changed")
-        self.assertEqual(67, len(expected_inventory), "a test name is assigned twice")
+        self.assertEqual(66, expected_count, "the pinned baseline inventory changed")
+        self.assertEqual(66, len(expected_inventory), "a test name is assigned twice")
         self.assertEqual([], problems, "\n" + "\n".join(problems))
 
 

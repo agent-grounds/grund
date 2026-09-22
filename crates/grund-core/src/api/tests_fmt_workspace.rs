@@ -1,12 +1,10 @@
-//! Workspace-wide strict formatter preflight through the public API and the
-//! deprecated compatibility adapter (§FS-fmt.3.3).
+//! Workspace-wide strict formatter preflight through the public API
+//! (§FS-fmt.3.3).
 
 use std::fs;
 use std::path::PathBuf;
-use std::process::ExitCode;
 
 use super::*;
-use crate::compat::command_fmt;
 use crate::scanner::ApiScanError;
 use crate::testing::{test_root, write};
 use crate::writers::FmtScanAbort;
@@ -92,19 +90,6 @@ fn public_fmt_api_preflights_later_member_before_workspace_write() {
     assert_eq!(
         fs::read_to_string(root.join("docs/FS-root-thing.md"))
             .expect("read root document after public fmt"),
-        ROOT_DOCUMENT
-    );
-}
-
-#[test]
-fn compatibility_fmt_preflights_later_member_before_workspace_write() {
-    let root = build_workspace_fixture("fmt_workspace_compat_write", false);
-    let args = vec!["--write".to_string(), root.to_string_lossy().into_owned()];
-
-    assert_eq!(command_fmt(&args), ExitCode::from(2));
-    assert_eq!(
-        fs::read_to_string(root.join("docs/FS-root-thing.md"))
-            .expect("read root document after compatibility fmt"),
         ROOT_DOCUMENT
     );
 }

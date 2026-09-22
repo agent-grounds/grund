@@ -2,13 +2,8 @@
 
 use std::collections::BTreeMap;
 use std::path::Path;
-use std::process::ExitCode;
 
 use super::*;
-// §REQ-backwards-compatibility.2: the symbol this module pins is deprecated on
-// purpose, so naming it is not a warning here.
-#[allow(deprecated)]
-use crate::compat::main_entry;
 use crate::queries::{LspSnapshotOpts, ShowFormat, ShowMode, ShowOpts, can_replace_trigger_at};
 use crate::testing::{canonical_test_path, test_root, write};
 use crate::writers::{InitOpts, init};
@@ -418,11 +413,4 @@ fn validate_config_at_a_workspace_root_fails_on_a_broken_member() {
         message.contains("[id].slug_pattern must not match `/`"),
         "the error must carry the member's own diagnosis: {message}"
     );
-}
-
-#[test]
-fn deprecated_main_entry_symbol_remains_available_for_0_4_consumers() {
-    #[allow(deprecated)]
-    let entry: fn() -> ExitCode = main_entry;
-    let _ = entry;
 }

@@ -37,17 +37,12 @@
 //! formatter's suppression both read it (§AR-lsp.5.1).
 //!
 //! This is the first component whose files were **split** rather than moved.
-//! Five of them wrote to a stream, because the deprecated `main_entry()` path
-//! renders inside the engine (§AR-system.2.9.1): the `command_*` adapters that
-//! parse argv, print text or JSON and return an `ExitCode` are the deprecated
-//! path's, not a query's, so they are `compat/show.rs`, `compat/refs.rs`,
-//! `compat/cover.rs`, `compat/list.rs` and `compat/completions.rs`. `refs`,
-//! `cover` and `completions` had no data half at all — the citer walk is
-//! `command_refs`'s own, the coverage index is `cover` in `api/cover.rs`, and a
-//! completion script is bytes printed to stdout — so those three files went to
-//! `compat/` whole. What crosses back the other way is `measure_point_text`,
-//! which went down into `config/point_sizes.rs` beside the `PointSizeUnit` whose
-//! meaning it is.
+//! Only data-returning questions stayed here; the five argv/rendering adapters
+//! retired with the engine process frontend (§AR-system.2.9.1). The coverage
+//! index is `cover` in `api/cover.rs`, while completion scripts are rendered by
+//! the CLI. What crosses back the other way is `measure_point_text`, which went
+//! down into `config/point_sizes.rs` beside the `PointSizeUnit` whose meaning it
+//! is.
 
 mod batch;
 mod citation_counts;
