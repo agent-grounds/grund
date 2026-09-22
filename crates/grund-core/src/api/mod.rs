@@ -76,6 +76,7 @@ pub use show::{show, show_with_overlays, show_with_scope};
 
 // What another component's tests read (§AR-core-module-layout.1.3): the same run
 // record and entry point the public `check` API uses.
+#[cfg(test)]
 pub(crate) use run::run_check;
 
 // What only the crate's own test modules read (§AR-core-module-layout.1.3): the

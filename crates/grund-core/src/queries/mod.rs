@@ -69,7 +69,11 @@ pub use sizes::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use citation_counts::ListCitationCounts;
-pub(crate) use show::{render_show_output_json, show_declaration, show_declaration_with_overlays};
+pub(crate) use show::{render_show_output_json, show_declaration_with_overlays};
+
+// What other components' tests read (§AR-core-module-layout.1.3).
+#[cfg(test)]
+pub(crate) use show::show_declaration;
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).

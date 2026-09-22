@@ -49,10 +49,9 @@ NOTE = "§AR-system.4"
 
 # The ledger of reads against the direction of §AR-system.1, and it is empty.
 
-# It once held six reads used to print four `[workspace]` findings. Each finding
-# is a `Diagnostic` in the run's warning channel now (§FS-check.4.7.7,
-# §FS-check.4.8.15, §FS-check.4.10.11, §FS-workspace.6.1.7), rendered by each
-# frontend for itself (§AR-system.2.9.1).
+# Six former compat reads printed four `[workspace]` findings. Each is now a
+# `Diagnostic` in the run's warning channel (§FS-check.4.7.7, §FS-check.4.8.15,
+# §FS-check.4.10.11, §FS-workspace.6.1.7), rendered by its frontend (§AR-system.2.9.1).
 
 # An entry is (file, `<component>::<item>`) and buys nothing else: the file must
 # still make the read, and the import must still carry its §AR-system.4 note.
