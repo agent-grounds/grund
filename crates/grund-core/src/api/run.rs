@@ -41,6 +41,7 @@ pub(crate) struct CheckRun {
 /// agent-entrypoint check (§FS-check.3.5) runs even when no source file is scanned,
 /// so a missing or stale `AGENTS.md` block still reports normally and suppresses
 /// both cautions.
+#[cfg(test)]
 pub(crate) fn run_check(
     path: &Path,
     path_provided: bool,

@@ -12,6 +12,7 @@ use crate::model::{
 };
 use crate::resolver::{extract_declaration_body, show_e2e_case};
 
+#[cfg(test)]
 pub(crate) fn show_declaration(
     config: &Config,
     path_config: &Config,

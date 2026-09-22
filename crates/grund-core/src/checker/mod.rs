@@ -68,7 +68,7 @@ pub(crate) use reference_scope::{
 };
 pub(crate) use report::{check_findings, check_with_workspace, check_with_workspace_and_overlays};
 pub(crate) use sections::{out_of_scope_section_headings, workspace_out_of_scope_section_headings};
-pub(crate) use support::{diagnostic_cmp, sort_diagnostics};
+pub(crate) use support::sort_diagnostics;
 pub(crate) use values::binding_target_has_any_value_authority;
 
 // What another component's tests read (§AR-core-module-layout.1.3): the managed
@@ -76,6 +76,8 @@ pub(crate) use values::binding_target_has_any_value_authority;
 // config cases compare against; the rest went beside their own cases.
 #[cfg(test)]
 pub(crate) use agents::check_agent_block_path;
+#[cfg(test)]
+pub(crate) use support::diagnostic_cmp;
 #[cfg(test)]
 pub(crate) use support::dangling_message;
 

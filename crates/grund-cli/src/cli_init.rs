@@ -122,7 +122,7 @@ fn render_init_output(output: &InitOutput) {
 }
 
 fn render_init_next(next: &InitNext) {
-    // §FS-init.2.2.2: both command adapters print the core-rendered decision, so
-    // the shipped CLI cannot drift from the deprecated compatibility path.
+    // §FS-init.2.2.2: the single process frontend prints the core-rendered
+    // decision, so the shipped CLI stays bound to the engine's data.
     eprint!("{}", next.render());
 }

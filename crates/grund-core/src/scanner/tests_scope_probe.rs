@@ -97,7 +97,7 @@ fn effective_scope_stops_after_the_first_readable_root() {
 }
 
 #[test]
-fn shared_renderer_changes_only_the_empty_scan_suffix() {
+fn init_guidance_renderer_changes_only_the_empty_scan_suffix() {
     let populated = next_guidance(true).render();
     let empty = next_guidance(false).render();
     let suffix = " — until then `grund check` has nothing to scan";
@@ -107,7 +107,7 @@ fn shared_renderer_changes_only_the_empty_scan_suffix() {
     assert_eq!(
         empty.replacen(suffix, "", 1),
         populated,
-        "§FS-init.2.2.2: both command adapters share a renderer whose only scan-state difference is the suffix"
+        "§FS-init.2.2.2: the init guidance renderer changes only the empty-scan suffix"
     );
 }
 

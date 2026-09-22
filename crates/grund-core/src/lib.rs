@@ -41,10 +41,9 @@ mod queries;
 // proposal, the init scaffold (§FS-init) and the integrations artifacts
 // (§FS-integrations) — and `writers/mod.rs` says what crosses the boundary.
 mod writers;
-// §AR-system.2.9: the embedding surface is one Rust module too, so the public
-// contract and the adapters that fill it are declared in `api/` and what an
-// embedder reaches is what `api/mod.rs` re-exports. No process frontend lives
-// beside it (§AR-system.2.9.1, §AR-bindings.2).
+// §AR-system.2.9: the embedding surface is one module; its public contract and
+// adapters live in `api/` and cross through `api/mod.rs`. No process frontend
+// lives beside it (§AR-system.2.9.1, §AR-bindings.2).
 mod api;
 
 // The fixtures every test module shares — not a component's, because every
