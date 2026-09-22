@@ -8,10 +8,6 @@
 use std::path::{Path, PathBuf};
 
 use super::*;
-use crate::compat::{
-    compat_cover_citation_json, compat_cover_project_field, parse_compat_cover_args,
-};
-use crate::model::json_escape;
 #[cfg(unix)]
 use crate::testing::symlink;
 use crate::testing::{test_root, write};
@@ -340,98 +336,4 @@ fn cover_text_indexes_the_same_files_as_cover() {
         ]
     );
     assert_eq!(text.scan_errors, json.scan_errors);
-}
-
-/// §FS-cover.3.2: the deprecated compat surface (`grund_core::main_entry`,
-/// §AR-bindings.2) renders `cover` JSON from its own copy of the
-/// emitter, and nothing in the corpus reaches it — every e2e case drives the
-/// `grund` binary, which is `grund-cli`. A mutation to the compat renderer
-/// therefore passed the whole gate. This pins the bytes directly, so the two
-/// copies cannot drift.
-#[test]
-fn the_compat_renderer_emits_the_same_json_the_cli_does() {
-    let root = workspace(
-        "the_compat_renderer_emits_the_same_json_the_cli_does",
-        SLUG_ID,
-        "FS-sub-thing.md",
-        "# FS-root-thing: Root\n\nRoot leans on \u{a7}sub/FS-sub-thing.\n",
-        "# FS-sub-thing: Sub\n\nSub body.\n",
-    );
-    let output = cover_at(&root);
-    let rendered: Vec<String> = output
-        .entries
-        .iter()
-        .map(|entry| {
-            let citations = entry
-                .citations
-                .iter()
-                .map(compat_cover_citation_json)
-                .collect::<Vec<_>>()
-                .join(",");
-            format!(
-                "{{{}\"path\":\"{}\",\"citations\":[{}]}}",
-                compat_cover_project_field(entry.project.as_deref()),
-                json_escape(&entry.path),
-                citations
-            )
-        })
-        .collect();
-    assert_eq!(
-        rendered,
-        vec![
-            "{\"project\":\"root\",\"path\":\"docs/FS-root-thing.md\",\"citations\":[\
-             {\"project\":\"root\",\"path\":\"docs/FS-root-thing.md\",\"line\":3,\"column\":15,\
-             \"id\":\"sub/FS-sub-thing\",\"section\":null,\"marker\":true,\
-             \"text\":\"\u{a7}sub/FS-sub-thing\"}]}"
-                .to_string(),
-            "{\"project\":\"sub\",\"path\":\"packages/sub/docs/FS-sub-thing.md\",\"citations\":[]}"
-                .to_string(),
-        ]
-    );
-}
-
-/// §FS-cover.1.1: the compat surface answers a bad `--format` from the argv,
-/// before anything is loaded — the CLI already did, and the two disagreed:
-/// `cover --format=bogus /nope` reported the missing path on one and the
-/// bad format on the other. Both answers exit 2, so only the message
-/// separates them and no exit-code assertion can; `parse_compat_cover_args`
-/// holds no path to a loader, which is what makes the order provable here.
-#[test]
-fn the_compat_surface_answers_a_bad_format_before_it_loads_anything() {
-    let args = ["--format=bogus".to_string(), "/nope".to_string()];
-    assert_eq!(
-        parse_compat_cover_args(&args).err(),
-        Some("unsupported cover format `bogus`".to_string())
-    );
-    let args = [
-        "--format".to_string(),
-        "json".to_string(),
-        "/nope".to_string(),
-    ];
-    let (opts, format) = parse_compat_cover_args(&args).expect("parse");
-    assert_eq!(format.as_deref(), Some("json"));
-    assert_eq!(opts.path, PathBuf::from("/nope"));
-    assert!(opts.path_provided);
-}
-
-/// The other half of the same contract: outside workspace mode the compat
-/// renderer adds no field, so a single-project repository's bytes are the
-/// ones it always had (§DF-cover-workspace-scope.2.3).
-#[test]
-fn the_compat_renderer_adds_no_project_field_outside_a_workspace() {
-    let root = test_root("the_compat_renderer_adds_no_project_field_outside_a_workspace");
-    write(&root.join("grund.toml"), &member_config(SLUG_ID));
-    write(
-        &root.join("docs/FS-only.md"),
-        "# FS-only: Only\n\nBody with \u{a7}FS-only.\n",
-    );
-    let output = cover_at(&root);
-    let entry = &output.entries[0];
-    assert_eq!(entry.project, None);
-    assert_eq!(compat_cover_project_field(entry.project.as_deref()), "");
-    assert_eq!(
-        compat_cover_citation_json(&entry.citations[0]),
-        "{\"path\":\"docs/FS-only.md\",\"line\":3,\"column\":11,\"id\":\"FS-only\",\
-         \"section\":null,\"marker\":true,\"text\":\"\u{a7}FS-only\"}"
-    );
 }

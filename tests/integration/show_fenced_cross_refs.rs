@@ -1,5 +1,5 @@
-//! §AR-bindings.2: single show, batch show and the deprecated process adapter
-//! expose the fenced-wrapper contract of §FS-show.2.5 and §FS-show.3.2 alike.
+//! §AR-bindings.2: single and batch show expose the fenced-wrapper contract of
+//! §FS-show.2.5 and §FS-show.3.2 alike.
 
 mod binaries;
 
@@ -194,18 +194,6 @@ fn batch_show_uses_the_same_fenced_body_as_single_show() {
     assert_eq!(output.stderr, b"");
     let envelope: Value = serde_json::from_slice(&output.stdout).expect("batch envelope");
     assert_eq!(envelope["result"]["body"], SECTION_ONE);
-}
-
-#[test]
-fn deprecated_adapter_uses_the_same_fenced_body_as_single_show() {
-    let output = run(
-        binaries::grund_core_compat(),
-        &["show", "FS-001-wraps.1"],
-        &fixture(),
-    );
-    assert_eq!(output.status.code(), Some(0));
-    assert_eq!(output.stderr, b"");
-    assert_eq!(stdout(&output), SECTION_ONE);
 }
 
 #[test]

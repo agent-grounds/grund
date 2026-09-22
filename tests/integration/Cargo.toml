@@ -41,26 +41,12 @@ name = "embedded_value_source_forms"
 path = "embedded_value_source_forms.rs"
 
 [[test]]
-name = "refs_frontend_parity"
-path = "refs_frontend_parity.rs"
-
-[[test]]
-name = "check_frontend_parity"
-path = "check_frontend_parity.rs"
-
-[[test]]
 name = "show_fenced_cross_refs"
 path = "show_fenced_cross_refs.rs"
 
 [[test]]
 name = "functional_spec_coverage"
 path = "functional_spec_coverage.rs"
-
-[[bin]]
-name = "grund-core-compat-test"
-path = "compat_frontend.rs"
-test = false
-bench = false
 
 [dependencies]
 grund-core = { path = "../../crates/grund-core" }

@@ -3,11 +3,10 @@
 //! (§FS-check.4.11), both known from the file the run read rather than from the
 //! walk.
 //!
-//! They left the deprecated path's `output` category because the published
-//! `config_warnings` reads them (§FS-config.4.1) and so does the run beside them,
-//! which had the api reading a renderer (§AR-system.4). Neither prints: the
-//! `warning:` line a `config` frontend puts them on is `compat/output.rs`'s and
-//! `grund-cli`'s own.
+//! They are data because the published `config_warnings` reads them
+//! (§FS-config.4.1) and so does the run beside them. Neither prints: the
+//! `warning:` line a process frontend puts them on belongs to `grund-cli`
+//! (§AR-system.2.9.1, §AR-bindings.2).
 
 /// §FS-check.4.3: the warning for a config root holding both discovery names —
 /// the bare `grund.toml` won, and the `.agents/grund.toml` beside it is read by

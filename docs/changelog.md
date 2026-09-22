@@ -24,6 +24,10 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ## Unreleased
 
+### Removed
+
+- [§DA-engine-renders-nothing](decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires), [§FS-distribution.3.1](functional-spec/FS-distribution.md#31-rust-grund-core-crate): remove the deprecated `grund_core::main_entry()` process frontend and its engine renderer after 0.14.0 shipped the removal notice; process callers use the `grund` CLI package and embedders use the data-returning core APIs. (PR #276)
+
 ## 2. [0.14.1] — 2026-09-21
 
 ### Fixed

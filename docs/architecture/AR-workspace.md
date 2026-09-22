@@ -471,7 +471,6 @@ selection
 | `cover` under a member path stays member-local    | `tests/e2e/cases/workspace-cover-member-local` |
 | `cover` renders a qualified `id` under the target project's grammar | `tests/e2e/cases/workspace-cover-json-target-grammar`; `a_qualified_id_renders_under_the_target_projects_config` (`crates/grund-core/src/api/tests_cover_workspace.rs`) |
 | `cover` under `include_root = false` drops the root's files with its catalog entry | `tests/e2e/cases/workspace-cover-include-root-false` |
-| The compat `cover` renderer emits the CLI's bytes (no e2e case reaches it) | `the_compat_renderer_emits_the_same_json_the_cli_does`, `the_compat_renderer_adds_no_project_field_outside_a_workspace` (`crates/grund-core/src/api/tests_cover_workspace.rs`) |
 | `cover` fails a workspace whose members cannot be expanded | `tests/e2e/cases/workspace-cover-broken-members` |
 | `cover <dir>` narrows instead of aggregating, like `check <dir>` | `tests/e2e/cases/workspace-cover-narrowed-path`; `cover_under_a_narrowed_path_loads_no_workspace` (`crates/grund-core/src/api/tests_cover_workspace.rs`) |
 | `[workspace] members` shape rejected at load     | `tests/e2e/cases/workspace-member-absolute-path`; `tests/e2e/cases/workspace-member-parent-segment`; `tests/e2e/cases/workspace-member-windows-drive`; `tests/e2e/cases/workspace-member-windows-path`; `tests/e2e/cases/workspace-member-multi-glob` |

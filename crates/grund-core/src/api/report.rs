@@ -130,9 +130,9 @@ fn public_path(config: &Config, path: &Path) -> String {
 }
 
 /// The `sites` value of a query-refusal JSON diagnostic (§FS-errors.5.2): `null`
-/// when empty, else `[{ path, line }]` in the caller's order. Shared by the
-/// `grund` CLI and the deprecated `grund_core::main_entry()` mirror so the two
-/// printers cannot drift on the same bytes.
+/// when empty, else `[{ path, line }]` in the caller's order. The `grund` CLI
+/// consumes this data-returning helper without moving rendering into the engine
+/// (§AR-bindings.2).
 pub fn render_finding_sites_json(sites: &[FindingSite]) -> String {
     if sites.is_empty() {
         return "null".to_string();

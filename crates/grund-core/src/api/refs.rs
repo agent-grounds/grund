@@ -96,8 +96,9 @@ impl RefsQueryFailure {
     }
 }
 
-/// The compatibility warning is shared by both CLI entry points so the public
-/// and deprecated adapters cannot drift during the §FS-refs.4 release ramp.
+/// The compatibility warning is engine data consumed by the CLI during the
+/// §FS-refs.4 release ramp; no process policy lives in the engine
+/// (§AR-system.2.9.1).
 pub const REFS_QUERY_FAILURE_WARNING: &str = "warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.15.0";
 
 /// Whether §FS-refs.4's resolver-rejection mapping has reached its exit-`1`

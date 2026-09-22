@@ -43,12 +43,9 @@ mod queries;
 mod writers;
 // §AR-system.2.9: the embedding surface is one Rust module too, so the public
 // contract and the adapters that fill it are declared in `api/` and what an
-// embedder reaches is what `api/mod.rs` re-exports (§AR-bindings.2).
+// embedder reaches is what `api/mod.rs` re-exports. No process frontend lives
+// beside it (§AR-system.2.9.1, §AR-bindings.2).
 mod api;
-// §AR-system.2.9.1: and its one exception, the deprecated `main_entry()` path,
-// which is the only directory here that parses argv, writes to a stream or
-// returns an `ExitCode`. It may read anything; nothing may read it.
-mod compat;
 
 // The fixtures every test module shares — not a component's, because every
 // component's tests read them, and imported as `use crate::testing::{…}`
@@ -96,7 +93,7 @@ pub use scanner::ApiScanError;
 pub use resolver::names_member_id_candidate;
 
 // §AR-system.2.6 checker: the finding-code selection `grund-cli` parses
-// `--only` and `--skip` into. `#[doc(hidden)]`, so it is not one of the 132
+// `--only` and `--skip` into. `#[doc(hidden)]`, so it is not one of the 131
 // documented names, but a frontend reads it (§FS-check.5).
 pub use checker::{CHECK_FINDING_CODES, CheckFindingSelection};
 
@@ -156,8 +153,3 @@ pub use api::{
     refs_query_failure_is_exit_one, refs_with_metadata, render_finding_sites_json, scan, show,
     show_with_overlays, show_with_scope, validate_config,
 };
-
-// §AR-system.2.9.1's one exception, the deprecated `main_entry()` path
-// §REQ-backwards-compatibility.2 keeps for 0.4 consumers.
-#[allow(deprecated)]
-pub use compat::main_entry;

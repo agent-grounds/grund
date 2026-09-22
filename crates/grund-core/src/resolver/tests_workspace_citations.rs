@@ -1,11 +1,9 @@
 //! Test module: workspace boundaries and cross-project qualified citations (§FS-workspace)
 
 use std::collections::BTreeMap;
-use std::process::ExitCode;
 
 use super::*;
 use crate::checker::{check_findings, check_with_workspace};
-use crate::compat::command_check;
 use crate::config::Config;
 use crate::grammar::parse_id_arg;
 use crate::model::ShowRenderMode;
@@ -360,25 +358,6 @@ members = ["apps/api"]
         wrapped,
         "See [§api/FS-001-session](../../apps/api/docs/functional-spec/FS-001-session.md#fs-001-session-session)."
     );
-}
-
-/// §FS-workspace.2 / §FS-check.2.1.3: an explicitly empty workspace is a
-/// configuration error for `check`, not a successful scan of nothing.
-#[test]
-fn check_rejects_workspace_with_no_projects_in_scope() {
-    let root = test_root("check_rejects_workspace_with_no_projects_in_scope");
-    write(
-        &root.join("grund.toml"),
-        r#"grund_config_version = 1
-
-[workspace]
-include_root = false
-members = []
-"#,
-    );
-
-    let code = command_check(&[root.to_string_lossy().into_owned()]);
-    assert_eq!(code, ExitCode::from(2));
 }
 
 /// §FS-errors.2.1 / §AR-workspace.5.1: member config parse errors loaded

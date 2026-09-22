@@ -14,11 +14,11 @@
 //! size register was holding a ceiling for: the contract is what a caller reads,
 //! the adapters are the machinery behind it, and no file holds both.
 //!
-//! Two things came *up* into this component with the move, both out of the
-//! deprecated `check` adapter, because the published `check` was reading them
-//! and nothing may read `compat/`: the check run itself — config, scan, check,
-//! cautions, config findings — and the scope cautions of §FS-check.2.2 and
-//! §FS-check.4.5 that ride with it. Only `command_check` was ever the renderer.
+//! Two things came *up* into this component with the split: the check run itself
+//! — config, scan, check, cautions, config findings — and the scope cautions of
+//! §FS-check.2.2 and §FS-check.4.5 that ride with it. They remain data-returning;
+//! the retired `command_check` process adapter was the renderer
+//! (§AR-system.2.9.1).
 //!
 //! Five groups went *down*, each to the lowest component that reads it
 //! (§AR-system.4). The published report records `Report`, `Finding` and
@@ -30,7 +30,7 @@
 //! being what raises one. And the snapshot path canonicalization of §AR-lsp.5 is
 //! `model/paths.rs`'s, because the queries and the writers are siblings and both
 //! rebase a path against it. Every one stays `pub` and `lib.rs` re-exports it, so
-//! the embedding surface is the same 132 names it was.
+//! the data-returning embedding surface remains available.
 
 mod check;
 mod complete_ids;
@@ -74,9 +74,8 @@ pub use refs::{
 pub use report::render_finding_sites_json;
 pub use show::{show, show_with_overlays, show_with_scope};
 
-// What the deprecated `compat/check.rs` renderer reads, by module path because
-// nothing here may import it (§AR-system.2.9.1): the run the published `check` and
-// the deprecated one share, so neither can report what the other does not.
+// What another component's tests read (§AR-core-module-layout.1.3): the same run
+// record and entry point the public `check` API uses.
 pub(crate) use run::run_check;
 
 // What only the crate's own test modules read (§AR-core-module-layout.1.3): the

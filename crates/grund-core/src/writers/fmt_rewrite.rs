@@ -5,8 +5,9 @@
 //! decisions inside it. The link construction §FS-fmt.6 needs is
 //! `fmt_links.rs`, the two suppressed scopes of §FS-fmt.2.5 are
 //! `grammar/fmt_suppress.rs` — recognizing them is lexical, and the editor's
-//! on-type rule reads the same two records (§FS-lsp.1.4.3) — and the deprecated
-//! command surface around all of it is `compat/fmt.rs` (§AR-system.2.9.1).
+//! on-type rule reads the same two records (§FS-lsp.1.4.3). The command surface
+//! lives in `grund-cli`; this engine file only returns edits
+//! (§AR-system.2.9.1).
 //!
 //! Named for the rewrite rather than for the category, because the category is
 //! the `writers/` directory now (§AR-core-module-layout.1). Tree and scope

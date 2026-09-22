@@ -77,7 +77,7 @@ relative to `crates/grund-core/src/`.
 | --- | --- | --- |
 | `writers/fmt_rewrite.rs` | `writers/fmt_tree.rs` | `FmtRunOpts`, `FmtTreeOutcome`, `fmt_tree`, tree and scope orchestration, and automatic cross-reference enabling ([§FS-fmt.6.6](../functional-spec/FS-fmt.md#66-why-generated-configs-enable-cross-references)); per-file and per-line rewriting stays in `fmt_rewrite.rs`. |
 | `checker/references.rs` | `checker/reference_scope.rs` | `ScanScope`, configured-scope narrowing, out-of-scope passes, and diagnostic tagging; citation resolution, alias hints, and their diagnostics stay in `references.rs`. |
-| `api/tests_embedding.rs` | `api/tests_init_guidance.rs` | The three init-next and scaffold cases; the remaining embedding, list, check, config, and compatibility cases stay in `tests_embedding.rs`. |
+| `api/tests_embedding.rs` | `api/tests_init_guidance.rs` | The three init-next and scaffold cases; the remaining embedding, list, check, and config cases stay in `tests_embedding.rs`. |
 | `writers/tests_integrations.rs` | None | The already-compliant owner and its 18 cases stay intact and remain part of acceptance. |
 | `writers/tests_init_agents.rs` | `writers/tests_agent_entrypoints.rs` | Companion-entrypoint discovery, selection, and validation cases; template and managed-block cases stay in `tests_init_agents.rs`. |
 | `checker/tests_grounding_style.rs` | `config/tests_validation.rs` | Configuration-validation cases; grounding-floor and inline-style checker cases stay in `tests_grounding_style.rs`. |
@@ -96,9 +96,10 @@ path must have its configured line measurement and remain at or below its
 `fissile` soft limit: `core-source` for the production modules and `tests` for
 the test modules ([§AR-ci.9](AR-ci.md#9-file-size-budget-gate)). An absent owner,
 destination, or measurement is a failure; an exception is not an alternative
-for this split. The 67 test functions present before the split remain in their
-mapped owners and destinations, additions are allowed, and the Rust workspace
-suite must still execute them with their assertions unchanged.
+for this split. The 66 surviving test functions remain in their mapped owners
+and destinations after the scheduled `main_entry()` availability case retires
+with that symbol (§FS-distribution.3.1.1); additions are allowed, and the Rust
+workspace suite must still execute them with their assertions unchanged.
 
 ## 2. Refactor boundary
 

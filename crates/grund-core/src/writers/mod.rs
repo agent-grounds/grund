@@ -20,17 +20,13 @@
 //! artifacts (the closed client set, detection, the agent instruction surfaces,
 //! the installs and their byte-current probes, and the user configuration).
 //!
-//! One half of this component is `compat/init.rs`: the deprecated `main_entry()`
-//! adapter for the scaffold, which renders inside the engine (§AR-system.2.9.1)
-//! and nothing here may import. The line is the one
-//! `tests/integration/test_engine_boundary.py` measures — a function that writes
-//! to a stream or returns an `ExitCode` is a renderer and went there, so no file
-//! under this directory prints. The `integrations` command was the second half
-//! and is not here any more: its argv, its bytes and its exit codes are
+//! No process counterpart remains in the engine (§AR-system.2.9.1).
+//! `tests/integration/test_engine_boundary.py` measures that no file under this
+//! directory writes to a stream or returns an `ExitCode`. The `integrations`
+//! command's argv, bytes and exit codes are
 //! `crates/grund-cli/src/cli_integrations*.rs`, the frontend that owns rendering
 //! (§FS-integrations.1.3, §AR-bindings.3), and what it reads of this component is
-//! the `pub` block below rather than a renderer `lib.rs` re-exports
-//! (§DA-engine-renders-nothing).
+//! the `pub` block below (§DA-engine-renders-nothing).
 //!
 //! What the component does **not** hold any more. Four lexical items went down
 //! into `grammar/` (§AR-system.2.1), because a component below was reading each
@@ -44,9 +40,9 @@
 //! §FS-integrations.4.1. The `[fmt] exclude` glob grammar of §FS-config.3.10.1 and
 //! the TOML basic-string escaper went down into `config/`, and `plural` — by way
 //! of `checker/` — into `model/text.rs`, each to the lowest component that reads
-//! it. What came the other way is the §FS-fmt.6.6 auto-enable pair, out of the
-//! deprecated `fmt` adapter: neither of its two callers is the command
-//! (§AR-system.2.9.1).
+//! it. What came the other way is the §FS-fmt.6.6 auto-enable pair from the
+//! former command adapter: both current callers are data-returning engine
+//! functions (§AR-system.2.9.1).
 //!
 //! `fmt_link_targets.rs` left the same way when §AR-system.2.10 became a
 //! component: where a citation's link points is a function of the loaded

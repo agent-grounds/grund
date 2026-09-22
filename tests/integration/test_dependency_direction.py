@@ -3,14 +3,10 @@
 `crates/grund-core/src/<component>/` is judged against the order §AR-system.1
 draws: model, grammar, config, then workspace and templates as siblings that may
 not read each other, scanner, resolver, rules, checker, then queries and writers
-as siblings that may not read each other either, then api, then compat, which
-may read anything and which nothing may read. The ledger of reads that still run
-the other way is **empty**, and must stay so: every entry it held was one of the four
-`[workspace]` findings that `workspace/` and `resolver/` printed through
-`compat/`, and each travels as a diagnostic in the run's warning channel now
-(§DA-engine-renders-nothing). The mechanism is kept rather than deleted — a
-future read against the direction is recorded here with its note, or it is not
-made at all — and the list can only shrink.
+as siblings that may not read each other either, then api. The ledger of reads
+that still run the other way is **empty**, and must stay so. The mechanism is
+kept rather than deleted — a future read against the direction is recorded here
+with its note, or it is not made at all — and the list can only shrink.
 
 A component's test modules — `tests_*.rs` beside the code they pin, and the
 shared fixtures in `testing.rs` — are skipped: a test module may read any
@@ -31,8 +27,6 @@ CORE = REPO_ROOT / "crates" / "grund-core" / "src"
 # `workspace` and `templates` — one answers about config text, the other renders
 # from config, and neither is about the other — and `queries` and `writers`.
 
-# `compat` is above everything, which is the same fact twice: the deprecated
-# frontend may read anything, and nothing may read it.
 ORDER = {
     "model": 0,
     "grammar": 1,
@@ -46,7 +40,6 @@ ORDER = {
     "queries": 8,
     "writers": 8,
     "api": 9,
-    "compat": 10,
 }
 
 # `crate::<component>::<item>` or `crate::<component>::{<item>, …}`, in a `use`
@@ -56,12 +49,10 @@ NOTE = "§AR-system.4"
 
 # The ledger of reads against the direction of §AR-system.1, and it is empty.
 
-# It held six: `workspace/` and `resolver/` reached `compat/` to print four
-# `[workspace]` findings settled before a report exists.
-
-# Each is a `Diagnostic` in the run's warning channel now (§FS-check.4.7.7,
-# §FS-check.4.8.15, §FS-check.4.10.11, §FS-workspace.6.1.7), rendered by every frontend
-# for itself, so nothing below `compat/` reads it (§DA-engine-renders-nothing).
+# It once held six reads used to print four `[workspace]` findings. Each finding
+# is a `Diagnostic` in the run's warning channel now (§FS-check.4.7.7,
+# §FS-check.4.8.15, §FS-check.4.10.11, §FS-workspace.6.1.7), rendered by each
+# frontend for itself (§AR-system.2.9.1).
 
 # An entry is (file, `<component>::<item>`) and buys nothing else: the file must
 # still make the read, and the import must still carry its §AR-system.4 note.

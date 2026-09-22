@@ -2,8 +2,8 @@
 //! declaration or citation whose exact spelling predates the configured
 //! `[id] format`, reconciled against the catalog the same tree scan produced.
 //!
-//! Named `legacy` for the spellings it matches, not for the deprecated frontend
-//! `compat` now means (§AR-system.2.9). Deliberately a **catalog** operation: the
+//! Named `legacy` for the spellings it matches, not for the retired process
+//! frontend (§AR-system.2.9.1). Deliberately a **catalog** operation: the
 //! authoring grammar stays strict and no unbacked token becomes a citation, so
 //! everything here runs after the walk rather than inside a line pass.
 
