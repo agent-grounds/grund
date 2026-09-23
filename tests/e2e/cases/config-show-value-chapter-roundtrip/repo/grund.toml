@@ -1,0 +1,21 @@
+grund_config_version = 1
+project_name = "chapter-values"
+
+[reference]
+strict = true
+
+[id]
+named_sections = true
+
+[[kinds]]
+kind = "AR"
+folder = "docs"
+index = false
+value_chapter = "values"
+
+[[kinds]]
+kind = "TERM"
+file = "terms.md"
+
+[scan]
+include = ["docs"]

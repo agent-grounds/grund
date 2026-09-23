@@ -564,13 +564,13 @@ Five combinations are config errors, reported per [§FS-config.4.3](FS-config.md
 
 #### 3.4.9 `values` — first-class value declarations
 
-`values = true` opts whole declarations in this row's home into [§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value). It is absent and false by default, and is the only value-related config key; in particular there is no `value_sources` key. An enabled row must be citable, have exactly one existing `file` or `folder`, and normalize that home inside the project root. Each violation is a located config error. Validation checks these structural relationships without parsing declaration content.
+`values = true` opts whole declarations in this row's home into [§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value). It is absent and false by default. It is one of the two value-related config keys: `values` opts whole declarations in, while `value_chapter` ([§FS-config.3.4.13](FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values)) makes the named children of one chapter into roots inside declarations. The two are refused on one row, and there is still no `value_sources` key. An enabled row must be citable, have exactly one existing `file` or `folder`, and normalize that home inside the project root. Each violation is a located config error. Validation checks these structural relationships without parsing declaration content.
 
 `grund config show` prints `values = true` only for an enabled row; a false or absent value prints no key. The key is additive and does not change `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)).
 
 ##### 3.4.9.1 The value suffix is a separate authority
 
-The exact `<!-- grund:value -->` section suffix is a separate in-document authority ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)). It works in any supported scanned declaration independently of this key and its home, and it neither opts the enclosing declaration in nor changes JSON discovery. No new config key, scan input, or migration accompanies it.
+The exact `<!-- grund:value -->` section suffix is a separate in-document authority ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)). It works in any supported scanned declaration independently of this key and its home, and it neither opts the enclosing declaration in nor changes JSON discovery. No new config key, scan input, or migration accompanies it. Chapter authority is the third and last one, taken per kind rather than per document: `value_chapter` makes every named child of one named chapter a root without any mark ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)).
 
 ##### 3.4.9.2 The home is the JSON source boundary
 
@@ -649,6 +649,44 @@ validated later as located findings ([§FS-rules.4](FS-rules.md#4-validation-lif
 The key is optional and additive, so `grund_config_version` remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)).
 An older binary rejects the unknown key loudly rather than silently ignoring a
 rule-enabled repository.
+
+#### 3.4.13 `value_chapter` — the chapter whose named children are values
+
+`value_chapter` names, for one `[[kinds]]` row, the chapter whose named direct
+children are value roots in every declaration of that kind ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)):
+
+```toml
+[[kinds]]
+kind = "AR"
+folder = "docs/architecture"
+value_chapter = "values"
+```
+
+The value is a section handle: a string matching the fixed named-component
+grammar `[a-z][a-z0-9-]*` of [§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-section-handles), never a displayed heading title
+and never a `slug_pattern` match. The key is absent by default, absent and set
+to nothing mean the same, and `grund config show` prints it only on a row that
+sets it. It is optional and additive, so `grund_config_version` remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)),
+and an older binary rejects the unknown key loudly rather than silently reading
+a chapter-enabled repository as if it declared no values.
+
+An enabled row must be citable, must have exactly one existing `file` or
+`folder` home normalizing inside the project root, and must not set `scan =
+false`: a non-citable row declares no IDs so no coordinate could exist, a
+homeless row has no declarations of its own, and a listed-but-unwalked place is
+never read, so its chapter could never be seen. The row must not also set
+`values = true`: a whole-declaration value's immediate children must be a
+contiguous numeric run ([§FS-values.2.1](FS-values.md#21-markdown-declarations)), so a named chapter cannot legally
+exist inside one, and the pair is refused rather than merged. Setting the key
+twice on one row is an error, as `values` and `rules` already are.
+
+`[id] named_sections = true` is a prerequisite of the key rather than a
+consequence of it: a project that sets `value_chapter` while `named_sections` is
+absent or false is a located config error naming the missing gate, not a silent
+no-op, and the `named_sections` default does not change ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-section-handles)). Each
+violation above is a located config error. Validation checks these structural
+relationships without parsing declaration content; a chapter that a declaration
+fills wrongly is scanned data and is reported later as a located finding ([§FS-check.3.20](FS-check.md#320-invalid-value-declaration)).
 
 ### 3.5 `[scan]` — what gets walked
 

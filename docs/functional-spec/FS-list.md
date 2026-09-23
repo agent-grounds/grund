@@ -118,7 +118,7 @@ Stderr is empty on success.
 
 #### 3.1.1 Row notes
 
-A declaration whose heading carries no `: <text>` tail has an empty title column. A broken stub shows `→ <target>` in place of a title. A duplicated ID's lines carry a `(duplicate declaration — grund check)` note. A row with marked roots ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) appends ` [value roots: <ID.path>, <ID.path> (invalid)]`, ordered by canonical section path; a row without them is byte-identical to its prior form.
+A declaration whose heading carries no `: <text>` tail has an empty title column. A broken stub shows `→ <target>` in place of a title. A duplicated ID's lines carry a `(duplicate declaration — grund check)` note. A row with value roots — marked ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) or chapter-declared ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)) — appends ` [value roots: <ID.path>, <ID.path> (invalid)]`, ordered by canonical section path and not by origin; a row without them is byte-identical to its prior form.
 
 ### 3.2 `--format json`
 
@@ -137,7 +137,7 @@ Fields: `id` (rendered ID), `kind`, `path` and `line` of the home declaration, `
 
 #### 3.2.2 `value_roots`
 
-A row with marked roots adds `"value_roots":[{"id":"FS-pricing.2","valid":true},{"id":"FS-pricing.4","valid":false}]` in canonical section-path order. This member is omitted, rather than emitted as an empty array, when the declaration has no marked roots. No root changes `refs`, creates a row, or changes `--summary`. The additive conditional member and all existing wire fields are stable per [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
+A row with value roots of either origin adds `"value_roots":[{"id":"FS-pricing.2","valid":true},{"id":"FS-pricing.4","valid":false}]` in canonical section-path order. The member records no origin. It is omitted, rather than emitted as an empty array, when the declaration has no value roots. No root changes `refs`, creates a row, or changes `--summary`. The additive conditional member and all existing wire fields are stable per [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
 
 ### 3.3 `--summary`
 

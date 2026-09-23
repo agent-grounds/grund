@@ -1,0 +1,1 @@
+error: grund.toml:10: [[kinds]] sets `value_chapter` but [id] named_sections is not true
