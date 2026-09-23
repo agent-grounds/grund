@@ -371,7 +371,7 @@ class CratesIoOwnershipTests(unittest.TestCase):
                     self.assertEqual(1, run.returncode)
                     self.assertIn(UNTRUSTED.format(name=name), run.stderr)
                     self.assertIn(OWNERS_URL.format(name=name), run.stderr)
-                    self.assertNotIn(f"ok: crates.io/{name}", run.stdout)
+                    self.assertNotIn(f"ok: crates.io/{name} is", run.stdout)
 
     def test_only_an_exact_user_record_is_the_projects_identity(self):
         """`kind` is exactly `user` and `login` is exactly `vjovanov`. Every other
@@ -418,7 +418,7 @@ class CratesIoEvidenceTests(unittest.TestCase):
                 self.assertEqual(1, run.returncode)
                 self.assertIn(OWNERS_URL.format(name=name), run.stderr)
                 self.assertNotIn(UNTRUSTED.format(name=name), run.stderr)
-                self.assertNotIn(f"ok: crates.io/{name}", run.stdout)
+                self.assertNotIn(f"ok: crates.io/{name} is", run.stdout)
 
     def test_an_owner_endpoint_that_fails_stops_the_release(self):
         """`404` on the *owner* endpoint is not a free name — the package endpoint
@@ -433,7 +433,7 @@ class CratesIoEvidenceTests(unittest.TestCase):
                 self.assertEqual(1, run.returncode)
                 self.assertIn(str(status), run.stderr)
                 self.assertIn(OWNERS_URL.format(name=name), run.stderr)
-                self.assertNotIn(f"ok: crates.io/{name}", run.stdout)
+                self.assertNotIn(f"ok: crates.io/{name} is", run.stdout)
                 self.assertNotIn(f"crates.io/{name} is available", run.stdout)
 
     def test_a_transport_failure_stops_the_release(self):
@@ -443,7 +443,7 @@ class CratesIoEvidenceTests(unittest.TestCase):
         run = run_guard(existing_crate(name, OUR_REPOSITORY, TRANSPORT_FAILURE))
         self.assertEqual(1, run.returncode)
         self.assertIn(OWNERS_URL.format(name=name), run.stderr)
-        self.assertNotIn(f"ok: crates.io/{name}", run.stdout)
+        self.assertNotIn(f"ok: crates.io/{name} is", run.stdout)
 
     def test_the_four_failures_are_told_apart(self):
         """Distinct diagnostics, because the operator's next move differs: take
@@ -484,7 +484,7 @@ class FreeNameTests(unittest.TestCase):
                 run = run_guard({CRATE_URL.format(name=name): answer})
                 self.assertNotEqual(0, run.returncode)
                 self.assertNotIn(f"crates.io/{name} is available", run.stdout)
-                self.assertNotIn(f"ok: crates.io/{name}", run.stdout)
+                self.assertNotIn(f"ok: crates.io/{name} is", run.stdout)
 
 
 class NpmAndPyPiTests(unittest.TestCase):
