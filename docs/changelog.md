@@ -28,6 +28,10 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 - [§DA-engine-renders-nothing](decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires), [§FS-distribution.3.1](functional-spec/FS-distribution.md#31-rust-grund-core-crate): remove the deprecated `grund_core::main_entry()` process frontend and its engine renderer after 0.14.0 shipped the removal notice; process callers use the `grund` CLI package and embedders use the data-returning core APIs. (PR #276)
 
+### Fixed
+
+- [§FS-distribution.1.1](functional-spec/FS-distribution.md#11-package-names), [§FS-distribution.1.1.1](functional-spec/FS-distribution.md#111-cratesio-ownership-is-the-registrys-owner-record), [§FS-distribution.1.1.2](functional-spec/FS-distribution.md#112-unproven-cratesio-ownership-stops-the-release): the pre-release name guard reads crates.io ownership from the registry's own owner record instead of the `repository` field the package declares about itself. A repository move no longer deadlocks the release that would correct that field, and copying one of this project's repository URLs into an unrelated crate no longer passes as ownership. A crate that exists and cannot be proved this project's now stops the release with a diagnostic saying which of the four things went wrong — untrusted owners, unreadable owner data, a failing owner endpoint, or a failed request — rather than falling back to unauthoritative data. npm and PyPI keep the repository-metadata rule and its diagnostics unchanged. (PR #N)
+
 ## 2. [0.14.1] — 2026-09-21
 
 ### Fixed
