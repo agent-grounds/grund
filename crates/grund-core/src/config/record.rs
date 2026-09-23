@@ -282,6 +282,7 @@ impl Config {
                 require_grounding: None,
                 grounding_level: None,
                 values: false,
+                value_chapter: None,
                 rules: false,
                 format: None,
                 resolve: None,
@@ -533,4 +534,16 @@ pub(crate) fn kind_uses_values(config: &Config, kind: &str) -> bool {
         .kinds
         .iter()
         .any(|configured| configured.kind == kind && configured.values)
+}
+
+/// The chapter a `[[kinds]]` row declared its values under, if any
+/// (§FS-config.3.4.13, §FS-values.2.5). The same `[[kinds]]` lookup as
+/// `kind_uses_values` above, and the only thing that turns a named section into
+/// a value root.
+pub(crate) fn kind_value_chapter<'a>(config: &'a Config, kind: &str) -> Option<&'a str> {
+    config
+        .kinds
+        .iter()
+        .find(|configured| configured.kind == kind)
+        .and_then(|configured| configured.value_chapter.as_deref())
 }

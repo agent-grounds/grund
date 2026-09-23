@@ -41,6 +41,7 @@ mod grounding;
 mod kind;
 mod kind_defaults;
 mod kind_table;
+mod kind_values;
 mod parse;
 mod point_sizes;
 mod record;
@@ -70,7 +71,8 @@ pub(crate) use kind::escape_toml_basic;
 pub(crate) use parse::{parse_string_list, strip_comment};
 pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{
-    DEFAULT_GROUNDING_LEVEL, kind_prefixes, kind_uses_values, non_citable_kind_error,
+    DEFAULT_GROUNDING_LEVEL, kind_prefixes, kind_uses_values, kind_value_chapter,
+    non_citable_kind_error,
 };
 pub(crate) use report_paths::{display_path, run_warning_findings};
 pub(crate) use run_warnings::RunWarning;

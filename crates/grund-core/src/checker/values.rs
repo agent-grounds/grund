@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use crate::config::{Config, display_path, kind_uses_values};
+use crate::config::{Config, display_path, kind_uses_values, kind_value_chapter};
 use crate::grammar::{render_id, render_qualified_id};
 use crate::model::{
     CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Findings, Id, Site, ValueBinding,
@@ -223,10 +223,27 @@ fn binding_target_reports_invalid_attempt(
         .into_iter()
         .flatten()
         .any(|declaration| {
-            embedded_root_for_binding(declaration, section).is_some_and(|(_, relation)| {
-                !matches!(relation, EmbeddedBindingRelation::InvalidImmediateComponent)
-            })
+            // §FS-values.3.1.1: the declared chapter heading is a refusal of its
+            // own — the form aims at value authority even though the chapter is
+            // not itself a root, so it may not fall back to ordinary prose.
+            binding_aims_at_declared_chapter(config, id, declaration, section)
+                || embedded_root_for_binding(declaration, section).is_some_and(|(_, relation)| {
+                    !matches!(relation, EmbeddedBindingRelation::InvalidImmediateComponent)
+                })
         })
+}
+
+/// Whether `section` is the declaration's own declared value chapter
+/// (§FS-values.2.5). A same-named chapter nested deeper is not one, because the
+/// path the key names is the declaration's direct chapter and nothing else.
+fn binding_aims_at_declared_chapter(
+    config: &Config,
+    id: &Id,
+    declaration: &Declaration,
+    section: &str,
+) -> bool {
+    kind_value_chapter(config, &id.kind) == Some(section)
+        && declaration.sections.contains_key(section)
 }
 
 pub(crate) fn binding_target_has_any_value_authority(

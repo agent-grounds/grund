@@ -6,16 +6,17 @@
 //! defaults a declared row picks up in `kind_defaults.rs`.
 
 use anyhow::{Result, anyhow};
-use std::fs;
+
 use std::path::{Component, Path};
 
 use super::grounding::{ParsedGrounding, validate_kind_grounding};
 use super::kind::{KindConfig, KindIndex, KindResolution};
 use super::kind_defaults::default_kind_index;
+use super::kind_values::validate_kind_value_keys;
 use super::parse::{bail_config, parse_bool, parse_string};
 use super::record::{CODE_SOURCE_KIND, Config};
 use crate::grammar::id_grammar_literal_slash_error;
-use crate::model::{format_path, normalize_path_lexically};
+use crate::model::{format_path, named_section_component};
 
 /// One `[[kinds]]` entry as the parser has it so far: the entry itself, the line
 /// its `[[kinds]]` header sat on (what an entry-level error anchors at), and
@@ -29,8 +30,11 @@ pub(super) struct ParsedKind {
     /// was written on (§FS-config.3.4.8) — read by `grounding.rs`, which
     /// owns both keys and every rule about them.
     pub(super) grounding: ParsedGrounding,
-    values_line: Option<usize>,
+    pub(super) values_line: Option<usize>,
     rules_line: Option<usize>,
+    /// The line `value_chapter` was written on, which its own refusals anchor
+    /// at (§FS-config.3.4.13).
+    pub(super) value_chapter_line: Option<usize>,
 }
 
 impl ParsedKind {
@@ -47,6 +51,7 @@ impl ParsedKind {
                 require_grounding: None,
                 grounding_level: None,
                 values: false,
+                value_chapter: None,
                 rules: false,
                 format: None,
                 resolve: None,
@@ -57,6 +62,7 @@ impl ParsedKind {
             grounding: ParsedGrounding::default(),
             values_line: None,
             rules_line: None,
+            value_chapter_line: None,
         }
     }
 }
@@ -148,6 +154,43 @@ pub(super) fn parse_kinds_key(
                 bail_config(path, line_no, "[[kinds]] sets `values` twice".to_string())?;
             }
             slot.config.values = values;
+        }
+        // §FS-config.3.4.13 / §FS-values.2.5: name the chapter whose named
+        // children are this kind's value roots. The handle grammar is checked
+        // here; every relationship it needs is checked in `apply_parsed_kinds`.
+        "value_chapter" => {
+            let chapter = parse_string(path, line_no, value)?;
+            let Some(slot) = current_kind.as_mut() else {
+                bail_config(
+                    path,
+                    line_no,
+                    "`value_chapter` outside of [[kinds]] block".to_string(),
+                )?;
+                unreachable!();
+            };
+            if slot.value_chapter_line.replace(line_no).is_some() {
+                bail_config(
+                    path,
+                    line_no,
+                    "[[kinds]] sets `value_chapter` twice".to_string(),
+                )?;
+            }
+            // §FS-config.3.2.7: the value is a section handle, so an empty
+            // string is the key's own absence rather than a nameless chapter.
+            if chapter.is_empty() {
+                slot.config.value_chapter = None;
+            } else {
+                if !named_section_component(&chapter) {
+                    bail_config(
+                        path,
+                        line_no,
+                        format!(
+                            "[[kinds]] `value_chapter` must be a section handle matching `[a-z][a-z0-9-]*` (`{chapter}` is not)"
+                        ),
+                    )?;
+                }
+                slot.config.value_chapter = Some(chapter);
+            }
         }
         // §FS-config.3.4.12 / §FS-rules.1: opt a citable Markdown kind into
         // declaration-title rules. Parsing the titles remains a post-scan job.
@@ -447,28 +490,7 @@ pub(super) fn apply_parsed_kinds(
                 format_path(path)
             ));
         }
-        if k.values {
-            let line = entry.values_line.unwrap_or(entry.header_line);
-            if !k.citable {
-                return Err(anyhow!(
-                    "{}:{line}: kind `{}` sets `values = true` with `citable = false`",
-                    format_path(path),
-                    k.kind
-                ));
-            }
-            let (home, expects_file) = match (&k.file, &k.folder) {
-                (Some(home), None) => (home, true),
-                (None, Some(home)) => (home, false),
-                _ => {
-                    return Err(anyhow!(
-                        "{}:{line}: kind `{}` sets `values = true` without exactly one `file` or `folder` home",
-                        format_path(path),
-                        k.kind
-                    ));
-                }
-            };
-            validate_value_home(path, line, &config.root, &k.kind, home, expects_file)?;
-        }
+        validate_kind_value_keys(path, entry, config)?;
     }
     // §FS-config.3.4.7.6: an unwalked kind is a place and nothing more. A citable one
     // would have declarations nobody reads — the trap §FS-config.3.5.10 closes — and the
@@ -557,40 +579,5 @@ pub(super) fn apply_parsed_kinds(
         }
     }
     config.kinds = kinds;
-    Ok(())
-}
-
-/// A value home is mandatory, existing, and physically inside the project root
-/// (§FS-config.3.4.9, §FS-values.1). Resolving both paths closes `..`, absolute,
-/// and symlink escapes through the same located config error.
-fn validate_value_home(
-    config_path: &Path,
-    line: usize,
-    root: &Path,
-    kind: &str,
-    home: &str,
-    expects_file: bool,
-) -> Result<()> {
-    let candidate = normalize_path_lexically(&root.join(home));
-    let root = fs::canonicalize(root).unwrap_or_else(|_| normalize_path_lexically(root));
-    let resolved = fs::canonicalize(&candidate).map_err(|_| {
-        anyhow!(
-            "{}:{line}: value home for kind `{kind}` does not exist: {home}",
-            format_path(config_path)
-        )
-    })?;
-    if !resolved.starts_with(&root) {
-        return Err(anyhow!(
-            "{}:{line}: value home for kind `{kind}` must normalize inside the project root: {home}",
-            format_path(config_path)
-        ));
-    }
-    if (expects_file && !resolved.is_file()) || (!expects_file && !resolved.is_dir()) {
-        let expected = if expects_file { "file" } else { "folder" };
-        return Err(anyhow!(
-            "{}:{line}: value home for kind `{kind}` must be an existing {expected}: {home}",
-            format_path(config_path)
-        ));
-    }
     Ok(())
 }

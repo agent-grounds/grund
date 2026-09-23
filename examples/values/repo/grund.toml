@@ -7,6 +7,7 @@ strict = true
 [id]
 format = "{kind}-{slug}"
 slug_pattern = "[a-z][a-z0-9-]*"
+named_sections = true
 
 [[kinds]]
 kind = "CONST"
@@ -18,6 +19,7 @@ values = true
 kind = "DOC"
 folder = "docs"
 index = false
+value_chapter = "values"
 
 [scan]
 include = ["docs", "src"]

@@ -14,3 +14,12 @@ The intentionally stale discount is `0.30` (§CONST-discount.1).
 ## 2. Embedded use
 
 The independently marked regional floor agrees: `45.0` (§DOC-offer.1.1).
+
+The chapter-declared voltage agrees too: `24` (§DOC-offer.values.aux-voltage.1).
+
+## values: Values
+
+### values.aux-voltage: Auxiliary supply voltage
+
+#### values.aux-voltage.1: 24
+#### values.aux-voltage.2: V

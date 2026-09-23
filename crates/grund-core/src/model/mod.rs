@@ -46,7 +46,7 @@ pub use records::{
 pub use report::{Finding, FindingSite, Report};
 pub use values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
-    ValueComponentKind,
+    ValueComponentKind, ValueRootOrigin,
 };
 
 // What the other components read, each by this module's path (§AR-system.4):
@@ -65,5 +65,6 @@ pub(crate) use records::{
 pub(crate) use report::{CheckReport, Diagnostic, Site};
 pub(crate) use text::{format_list, json_escape, plural};
 pub(crate) use values::{
-    JSON_NUMBER_RE, authored_component, component_text_is_valid, value_components_equal,
+    JSON_NUMBER_RE, authored_component, component_text_is_valid, named_section_component,
+    value_binding_section_shape_is_valid, value_components_equal,
 };

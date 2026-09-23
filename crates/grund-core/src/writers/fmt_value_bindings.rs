@@ -5,7 +5,7 @@
 use crate::checker::binding_target_has_any_value_authority;
 use crate::config::Config;
 use crate::grammar::MarkdownLineCitation;
-use crate::model::{Findings, component_text_is_valid};
+use crate::model::{Findings, component_text_is_valid, value_binding_section_shape_is_valid};
 use crate::resolver::WorkspaceContext;
 
 pub(super) fn markdown_citation_is_value_binding(
@@ -28,14 +28,16 @@ pub(super) fn markdown_citation_is_value_binding(
     let Some(section) = citation.section.as_deref() else {
         return false;
     };
-    if !section.split('.').all(|part| {
-        !part.is_empty() && !part.starts_with('0') && part.bytes().all(|byte| byte.is_ascii_digit())
-    }) || !binding_target_has_any_value_authority(
-        target_findings,
-        target_config,
-        &citation.id,
-        section,
-    ) {
+    // §FS-values.8: the same shape the scanner recognizes, so a binding under
+    // either authority is protected by the same test that made it one.
+    if !value_binding_section_shape_is_valid(section)
+        || !binding_target_has_any_value_authority(
+            target_findings,
+            target_config,
+            &citation.id,
+            section,
+        )
+    {
         return false;
     }
     let Some(before_marker) = line[..citation.marker_start].strip_suffix(" (") else {
