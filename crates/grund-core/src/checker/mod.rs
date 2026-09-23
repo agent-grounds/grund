@@ -77,9 +77,9 @@ pub(crate) use values::binding_target_has_any_value_authority;
 #[cfg(test)]
 pub(crate) use agents::check_agent_block_path;
 #[cfg(test)]
-pub(crate) use support::diagnostic_cmp;
-#[cfg(test)]
 pub(crate) use support::dangling_message;
+#[cfg(test)]
+pub(crate) use support::diagnostic_cmp;
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
