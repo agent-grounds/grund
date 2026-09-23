@@ -2,7 +2,9 @@
 //! scanner's local/workspace records so formatting cannot turn a binding into a
 //! link and silently disable comparison (§FS-values.8, §AR-scanner.2.3.5).
 
-use crate::checker::binding_target_has_any_value_authority;
+use crate::checker::{
+    binding_aims_at_embedded_value_authority, binding_target_has_any_value_authority,
+};
 use crate::config::Config;
 use crate::grammar::MarkdownLineCitation;
 use crate::model::{Findings, component_text_is_valid, value_binding_section_shape_is_valid};
@@ -29,9 +31,17 @@ pub(super) fn markdown_citation_is_value_binding(
         return false;
     };
     // §FS-values.8: the same shape the scanner recognizes, so a binding under
-    // either authority is protected by the same test that made it one.
-    if !value_binding_section_shape_is_valid(section)
-        || !binding_target_has_any_value_authority(
+    // either authority is protected by the test that made it one — and a form
+    // aimed at a root or a declared chapter is protected as the refusal it is.
+    let is_binding_shape = value_binding_section_shape_is_valid(section)
+        && binding_target_has_any_value_authority(
+            target_findings,
+            target_config,
+            &citation.id,
+            section,
+        );
+    if !is_binding_shape
+        && !binding_aims_at_embedded_value_authority(
             target_findings,
             target_config,
             &citation.id,
