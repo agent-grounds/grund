@@ -114,6 +114,8 @@ pub(crate) use tree::scan_tree_with_workspace;
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
 #[cfg(test)]
+mod tests_chapter_values;
+#[cfg(test)]
 mod tests_config_scan;
 #[cfg(test)]
 mod tests_embedded_value_boundaries;

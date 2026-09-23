@@ -1,0 +1,13 @@
+grund_config_version = 1
+
+[id]
+named_sections = true
+
+[[kinds]]
+kind = "AR"
+folder = "docs"
+index = false
+value_chapter = "values"
+
+[scan]
+include = ["docs"]

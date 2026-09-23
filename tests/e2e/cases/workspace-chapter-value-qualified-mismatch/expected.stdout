@@ -1,0 +1,1 @@
+shop/docs/offer.md:3: error: value mismatch for power/AR-004-value-probe.values.aux-voltage.1: bound `48`, declared `24` at power/docs/power.md:7

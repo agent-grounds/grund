@@ -167,54 +167,76 @@ fn value_chapter_key_requires_named_sections_and_a_scanned_home() {
     )
     .expect("a citable, scanned, homed kind takes the key under named sections");
 
-    for (shape, id_block, kind_row) in [
+    for (shape, id_block, kind_row, expected) in [
         (
             "without named sections",
             "",
             "kind = \"AR\"\nfolder = \"docs/architecture\"\nvalue_chapter = \"values\"\n",
+            "[[kinds]] sets `value_chapter` but [id] named_sections is not true",
         ),
         (
             "non-citable",
             named,
             "kind = \"skill\"\nfolder = \"docs/architecture\"\ncitable = false\nvalue_chapter = \"values\"\n",
+            "kind `skill` sets `value_chapter` with `citable = false`",
         ),
         (
             "homeless",
             named,
             "kind = \"AR\"\nvalue_chapter = \"values\"\n",
+            "kind `AR` sets `value_chapter` without exactly one `file` or `folder` home",
         ),
         (
             "unwalked",
             named,
             "kind = \"AR\"\nfolder = \"docs/architecture\"\nscan = false\nvalue_chapter = \"values\"\n",
+            "kind `AR` sets `value_chapter` with `scan = false`",
         ),
         (
             "whole-value",
             named,
             "kind = \"AR\"\nfile = \"values.json\"\nvalues = true\nvalue_chapter = \"values\"\n",
+            "kind `AR` sets `value_chapter` and `values = true`",
         ),
         (
             "off-grammar handle",
             named,
             "kind = \"AR\"\nfolder = \"docs/architecture\"\nvalue_chapter = \"Values\"\n",
+            "[[kinds]] `value_chapter` must be a section handle matching `[a-z][a-z0-9-]*`",
         ),
         (
             "set twice",
             named,
             "kind = \"AR\"\nfolder = \"docs/architecture\"\nvalue_chapter = \"values\"\nvalue_chapter = \"specs\"\n",
+            "[[kinds]] sets `value_chapter` twice",
+        ),
+        (
+            "missing home",
+            named,
+            "kind = \"AR\"\nfolder = \"docs/absent\"\nvalue_chapter = \"values\"\n",
+            "value home for kind `AR` does not exist",
         ),
     ] {
         let err = match load(id_block, kind_row) {
             Ok(_) => panic!("a {shape} value chapter should be refused"),
             Err(err) => err.to_string(),
         };
-        assert!(
-            err.contains("value_chapter"),
-            "{shape}: unexpected error: {err}"
-        );
+        assert!(err.contains(expected), "{shape}: unexpected error: {err}");
         assert!(
             !err.contains("unknown config key"),
             "{shape}: the key is refused as unknown rather than validated: {err}"
         );
     }
+
+    // §FS-config.3.4.13: absent and set to nothing are the same, so the key's
+    // own absence is not a nameless chapter waiting for a declaration.
+    let config = load(
+        named,
+        "kind = \"AR\"\nfolder = \"docs/architecture\"\nvalue_chapter = \"\"\n",
+    )
+    .expect("an empty handle is the key's absence");
+    assert!(
+        config.kinds.iter().all(|kind| kind.value_chapter.is_none()),
+        "an empty handle left a chapter behind"
+    );
 }
