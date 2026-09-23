@@ -98,7 +98,7 @@ the test modules ([§AR-ci.9](AR-ci.md#9-file-size-budget-gate)). An absent owne
 destination, or measurement is a failure; an exception is not an alternative
 for this split. The 66 surviving test functions remain in their mapped owners
 and destinations after the scheduled `main_entry()` availability case retires
-with that symbol (§FS-distribution.3.1.1); additions are allowed, and the Rust
+with that symbol ([§FS-distribution.3.1.1](../functional-spec/FS-distribution.md#311-main_entry-is-absent-from-the-embedding-api)); additions are allowed, and the Rust
 workspace suite must still execute them with their assertions unchanged.
 
 ## 2. Refactor boundary
