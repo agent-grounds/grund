@@ -1,3 +1,4 @@
+scripts/*.sh text eol=lf
 tests/e2e/cases/** text eol=lf
 examples/** text eol=lf
 crates/grund-core/assets/** text eol=lf
