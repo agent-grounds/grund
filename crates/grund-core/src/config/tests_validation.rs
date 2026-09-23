@@ -139,3 +139,82 @@ fn rules_key_requires_a_citable_scanned_markdown_home() {
         "unexpected error: {err}"
     );
 }
+
+/// §FS-config.3.4.13: `value_chapter` loads on a citable, scanned kind with one
+/// existing home in a project that enables named sections, and every other shape
+/// is refused at load — before any declaration's chapter is read.
+/// §FS-values.2.5: authority comes from this key alone, so a project that never
+/// sets it can never grow a chapter root.
+#[test]
+fn value_chapter_key_requires_named_sections_and_a_scanned_home() {
+    let root = test_root("value_chapter_key_requires_named_sections_and_a_scanned_home");
+    std::fs::create_dir_all(root.join("docs/architecture")).expect("create folder home");
+    write(&root.join("values.json"), "{}\n");
+    let load = |id_block: &str, kind_row: &str| {
+        write(
+            &root.join("grund.toml"),
+            &format!(
+                "grund_config_version = 1\n{id_block}\n[[kinds]]\nkind = \"FS\"\nfolder = \"docs/fs\"\n\n[[kinds]]\n{kind_row}"
+            ),
+        );
+        load_config(&root)
+    };
+    let named = "\n[id]\nnamed_sections = true\n";
+
+    load(
+        named,
+        "kind = \"AR\"\nfolder = \"docs/architecture\"\nvalue_chapter = \"values\"\n",
+    )
+    .expect("a citable, scanned, homed kind takes the key under named sections");
+
+    for (shape, id_block, kind_row) in [
+        (
+            "without named sections",
+            "",
+            "kind = \"AR\"\nfolder = \"docs/architecture\"\nvalue_chapter = \"values\"\n",
+        ),
+        (
+            "non-citable",
+            named,
+            "kind = \"skill\"\nfolder = \"docs/architecture\"\ncitable = false\nvalue_chapter = \"values\"\n",
+        ),
+        (
+            "homeless",
+            named,
+            "kind = \"AR\"\nvalue_chapter = \"values\"\n",
+        ),
+        (
+            "unwalked",
+            named,
+            "kind = \"AR\"\nfolder = \"docs/architecture\"\nscan = false\nvalue_chapter = \"values\"\n",
+        ),
+        (
+            "whole-value",
+            named,
+            "kind = \"AR\"\nfile = \"values.json\"\nvalues = true\nvalue_chapter = \"values\"\n",
+        ),
+        (
+            "off-grammar handle",
+            named,
+            "kind = \"AR\"\nfolder = \"docs/architecture\"\nvalue_chapter = \"Values\"\n",
+        ),
+        (
+            "set twice",
+            named,
+            "kind = \"AR\"\nfolder = \"docs/architecture\"\nvalue_chapter = \"values\"\nvalue_chapter = \"specs\"\n",
+        ),
+    ] {
+        let err = match load(id_block, kind_row) {
+            Ok(_) => panic!("a {shape} value chapter should be refused"),
+            Err(err) => err.to_string(),
+        };
+        assert!(
+            err.contains("value_chapter"),
+            "{shape}: unexpected error: {err}"
+        );
+        assert!(
+            !err.contains("unknown config key"),
+            "{shape}: the key is refused as unknown rather than validated: {err}"
+        );
+    }
+}
