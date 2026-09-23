@@ -35,7 +35,7 @@ use super::units::{heading_text, record_file_structure};
 use super::unmarked_headings::assign_unmarked_heading_owners;
 use super::value_context::recognized_source_value_contexts;
 use super::values::{scan_value_bindings, validate_markdown_value_declarations};
-use crate::config::{Config, kind_uses_values, kind_value_chapter};
+use crate::config::{Config, KindConfig, kind_uses_values, kind_value_chapter};
 use crate::grammar::{
     DocstringContent, PythonDocstringScanState, STUB_LINK_HEADING,
     bare_token_in_never_rewrite_zone, declaration_captures, markdown_fence_delimiter,
@@ -113,14 +113,15 @@ pub(super) fn scan_file_text(
     let mut markdown_fence = None;
     let mut py_docstring = PythonDocstringScanState::default();
     let mut current: Option<Declaration> = None;
-    // An exact embedded marker independently enables value authority in any
-    // scanned document (§FS-values.1, §FS-values.9). This is still the
-    // already-read file buffer; unmarked trees gain no extra filesystem read.
+    // A marker enables value authority in any scanned document (§FS-values.1),
+    // and a declared chapter is recognized in the same source doc-comments
+    // (§FS-values.2.5); unopted trees gain no extra read (§FS-values.9).
+    let value_kind = |kind: &KindConfig| kind.values || kind.value_chapter.is_some();
     let scan_values = text.contains(EMBEDDED_VALUE_MARKER)
-        || config.kinds.iter().any(|kind| kind.values)
+        || config.kinds.iter().any(value_kind)
         || workspace_targets
             .iter()
-            .any(|target| target.config.kinds.iter().any(|kind| kind.values));
+            .any(|target| target.config.kinds.iter().any(value_kind));
     let has_binding_candidate = text.contains('`') && text.contains(&config.marker);
     let value_line_contexts = ((scan_values || has_binding_candidate) && !is_md)
         .then(|| recognized_source_value_contexts(&text, is_py, config));
