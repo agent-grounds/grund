@@ -1,0 +1,1 @@
+docs/use.md:5: error: value mismatch for AR-004-value-probe.values.aux-voltage.1: bound `48`, declared `24` at src/probe.rs:10
