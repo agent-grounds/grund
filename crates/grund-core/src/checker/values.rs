@@ -246,6 +246,31 @@ fn binding_aims_at_declared_chapter(
         && declaration.sections.contains_key(section)
 }
 
+/// Whether a delimited form aims at embedded value authority at all — a value
+/// root's own heading whichever authority made it, a section below one of its
+/// components, or the kind's declared chapter heading. `check` refuses every
+/// one of these (§FS-values.3.1.1), and a chapter root's path carries names, so
+/// this is the part of the refusal that [`value_binding_section_shape_is_valid`]
+/// cannot see (§FS-values.8).
+pub(crate) fn binding_aims_at_embedded_value_authority(
+    findings: &Findings,
+    config: &Config,
+    id: &Id,
+    section: &str,
+) -> bool {
+    findings
+        .declarations
+        .get(id)
+        .into_iter()
+        .flatten()
+        .any(|declaration| {
+            binding_aims_at_declared_chapter(config, id, declaration, section)
+                || embedded_root_for_binding(declaration, section).is_some_and(|(_, relation)| {
+                    !matches!(relation, EmbeddedBindingRelation::InvalidImmediateComponent)
+                })
+        })
+}
+
 pub(crate) fn binding_target_has_any_value_authority(
     findings: &Findings,
     config: &Config,
