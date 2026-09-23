@@ -20,7 +20,10 @@ fn invalid_cover_format_precedes_missing_path_load() {
     ));
     let _ = fs::remove_file(&missing);
     let _ = fs::remove_dir_all(&missing);
-    assert!(!missing.exists(), "fixture path must be absent: {missing:?}");
+    assert!(
+        !missing.exists(),
+        "fixture path must be absent: {missing:?}"
+    );
 
     let invalid = run(&["cover", "--format=bogus"], &missing);
     assert_eq!(invalid.status.code(), Some(2));
