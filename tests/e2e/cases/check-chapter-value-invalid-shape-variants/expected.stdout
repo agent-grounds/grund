@@ -1,2 +1,3 @@
 docs/power.md:5: error: invalid value declaration for AR-004-value-probe: a declared value chapter holds only named value-root headings
 docs/power.md:9: error: invalid value declaration for AR-004-value-probe: embedded value component must be nonempty, single-line, edge-unspaced, and contain no backtick or control character
+docs/power.md:1: warning: declared but never cited: AR-004-value-probe
