@@ -255,8 +255,8 @@ fn citation_directions_section_extraction_is_position_independent() {
     );
 }
 
-/// All five agents-init variants preserve their legacy text as a contiguous
-/// prefix and append one exact maintenance-and-validity tail until
+/// §FS-check.3.5.3: all five agents-init variants preserve their legacy text as
+/// a contiguous prefix and append one exact maintenance-and-validity tail until
 /// §FS-errors.3.6.1's separate 0.15.0 wording migration lands. This checker
 /// contract survives removal of the deprecated process adapter.
 #[test]
