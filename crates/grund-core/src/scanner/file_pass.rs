@@ -14,6 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use super::chapter_values::validate_declared_value_chapters;
 use super::citation_line::CitationLine;
 use super::citations::{
     scan_escaped_citations, scan_fallback_qualified_citations, scan_legacy_citation_candidates,
@@ -28,21 +29,21 @@ use super::embedded_value_context::{
     push_invalid_embedded_marker,
 };
 use super::embedded_values::validate_embedded_value_roots;
+use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
 use super::units::{heading_text, record_file_structure};
 use super::unmarked_headings::assign_unmarked_heading_owners;
 use super::value_context::recognized_source_value_contexts;
 use super::values::{scan_value_bindings, validate_markdown_value_declarations};
-use crate::config::{Config, kind_uses_values};
+use crate::config::{Config, kind_uses_values, kind_value_chapter};
 use crate::grammar::{
     DocstringContent, PythonDocstringScanState, STUB_LINK_HEADING,
     bare_token_in_never_rewrite_zone, declaration_captures, markdown_fence_delimiter,
-    near_miss_heading, parse_id, qualified_suppressed_in_source, section_anchor_text, section_path,
-    source_scan_line,
+    near_miss_heading, parse_id, qualified_suppressed_in_source, section_path, source_scan_line,
 };
 use crate::model::{
-    Citation, Declaration, DeclarationSource, EmbeddedValueRoot, Findings, Id, NearMissHeading,
-    SectionInfo, UnmarkedHeadingCandidate,
+    Citation, Declaration, DeclarationSource, Findings, Id, NearMissHeading,
+    UnmarkedHeadingCandidate,
 };
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -308,50 +309,19 @@ pub(super) fn scan_file_text(
             && let Some(decl) = current.as_mut()
             && let Some(sec) = section_path(&caps)
         {
-            let heading_level =
-                heading_level_for_line(scan_line, is_md || scan.in_py_docstring, &caps);
-            if heading_level > decl.heading_level {
-                let section_path = sec.to_string();
-                let numeric = sec
-                    .split('.')
-                    .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()));
-                embedded_marker_attached = embedded_marker.is_some() && numeric;
-                let info = SectionInfo {
-                    title: section_anchor_text(scan_line, sec),
-                    line: lineno,
-                    heading_level,
-                    value: None,
-                    value_root: embedded_marker.filter(|_| numeric).map(|marker_start| {
-                        EmbeddedValueRoot {
-                            valid: true,
-                            marker_column: scan.column_offset + marker_start + 1,
-                        }
-                    }),
-                };
-                // §AR-scanner.2.2.3: a path is recorded once, by the first heading
-                // that claims it; later claimants go to `duplicate_sections` so
-                // §FS-check.3.16 can name every colliding line.
-                match decl.sections.entry(section_path.clone()) {
-                    std::collections::btree_map::Entry::Vacant(slot) => {
-                        slot.insert(info);
-                    }
-                    std::collections::btree_map::Entry::Occupied(_) => {
-                        if let Some(marker_start) = embedded_marker {
-                            embedded_marker_attached = true;
-                            push_invalid_embedded_marker(
-                                findings,
-                                Some(decl.id.clone()),
-                                path,
-                                lineno,
-                                scan.column_offset,
-                                marker_start,
-                                "embedded value root coordinate is duplicated",
-                            );
-                        }
-                        decl.duplicate_sections.push((section_path, info));
-                    }
-                }
-            }
+            embedded_marker_attached = record_section_heading(
+                decl,
+                &caps,
+                sec,
+                scan_line,
+                &scan,
+                is_md,
+                lineno,
+                embedded_marker,
+                config,
+                path,
+                findings,
+            );
         }
         if is_md
             && !recognized_section
@@ -552,6 +522,14 @@ pub(super) fn scan_file_text(
         .flatten()
         .flat_map(|decl| decl.sections.values())
         .any(|section| section.value_root.is_some());
+    // §FS-values.2.5: the declared chapter is strict at its own level whether or
+    // not it managed to hold a single root, so this is asked of the kind rather
+    // than of what enrollment found.
+    let has_declared_chapters = findings
+        .declarations
+        .values()
+        .flatten()
+        .any(|decl| kind_value_chapter(config, &decl.id.kind).is_some());
     let has_value_declarations = scan_values
         && findings
             .declarations
@@ -564,6 +542,7 @@ pub(super) fn scan_file_text(
         || has_text_sections
         || has_value_declarations
         || has_embedded_roots
+        || has_declared_chapters
         || has_local_section_candidates
     {
         assign_declaration_bodies(
@@ -589,6 +568,17 @@ pub(super) fn scan_file_text(
     }
     if has_value_declarations {
         validate_markdown_value_declarations(path, &text, is_md, config, findings);
+    }
+    if has_declared_chapters {
+        validate_declared_value_chapters(
+            path,
+            &text,
+            is_md,
+            is_py,
+            config,
+            value_line_contexts.as_deref(),
+            findings,
+        );
     }
     if has_embedded_roots {
         validate_embedded_value_roots(

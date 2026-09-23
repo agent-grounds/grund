@@ -43,6 +43,11 @@ pub struct KindConfig {
     /// The absent-by-default first-class-value opt-in (§FS-config.3.4.9,
     /// §FS-values.1).
     pub values: bool,
+    /// The chapter whose named direct children are value roots in every
+    /// declaration of this kind (§FS-config.3.4.13, §FS-values.2.5). A section
+    /// handle, never a displayed title; absent by default, and absent and set
+    /// to nothing mean the same.
+    pub value_chapter: Option<String>,
     /// Whether declarations of this kind are executable controlled-English
     /// chapter rules (§FS-config.3.4.12, §FS-rules.1).
     pub rules: bool,

@@ -12,7 +12,7 @@ use crate::config::Config;
 use crate::grammar::{QUALIFIED_CITATION_PREFIX, parse_id_arg, parse_longest_id_prefix};
 use crate::model::{
     DeclarationSource, Findings, Id, InvalidValueSite, ValueBinding, authored_component,
-    component_text_is_valid, paths_same_location,
+    component_text_is_valid, paths_same_location, value_binding_section_shape_is_valid,
 };
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -248,13 +248,10 @@ pub(super) fn scan_value_bindings(
             continue;
         }
         let section = citation.section.as_deref();
-        let valid_section = section.is_some_and(|section| {
-            section.split('.').all(|part| {
-                !part.is_empty()
-                    && !part.starts_with('0')
-                    && part.bytes().all(|byte| byte.is_ascii_digit())
-            })
-        });
+        // §FS-values.3.1: a valid root path — marked or chapter-declared — then
+        // one positive numeric immediate-component coordinate. Whether that root
+        // path *is* a root is the checker's question (§FS-values.5.1).
+        let valid_section = section.is_some_and(value_binding_section_shape_is_valid);
         if citation.shorthand {
             // The ordinary noncanonical-shorthand finding owns this site and
             // suppresses value handling (§FS-values.5.1).

@@ -6,15 +6,15 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use super::embedded_value_context::{
-    EMBEDDED_VALUE_MARKER, authored_heading_level, authored_numeric_heading_path,
-    component_without_block_close, semantic_comment_content,
+    EMBEDDED_VALUE_MARKER, authored_heading_level, authored_heading_path,
+    component_without_block_close, normalized_value_lines, semantic_comment_content,
 };
 use super::value_context::SourceValueLineContext;
 use super::values::{markdown_component, value_declaration_is_in_home};
 use crate::config::Config;
-use crate::grammar::{PythonDocstringScanState, source_scan_line};
 use crate::model::{
-    Findings, InvalidValueSite, authored_component, component_text_is_valid, paths_same_location,
+    EmbeddedValueRoot, Findings, InvalidValueSite, authored_component, component_text_is_valid,
+    paths_same_location,
 };
 
 /// Validate every marked section against its physical one-level subtree and
@@ -29,20 +29,7 @@ pub(super) fn validate_embedded_value_roots(
     source_contexts: Option<&[Option<SourceValueLineContext>]>,
     findings: &mut Findings,
 ) {
-    let raw_lines = text.lines().collect::<Vec<_>>();
-    let mut normalized = Vec::with_capacity(raw_lines.len());
-    let mut py_docstring = PythonDocstringScanState::default();
-    for (index, line) in raw_lines.iter().enumerate() {
-        let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
-        normalized.push((
-            scan.text.to_string(),
-            scan.column_offset,
-            scan.in_py_docstring,
-            source_contexts
-                .and_then(|contexts| contexts.get(index).copied().flatten())
-                .is_some_and(|context| context.block_comment),
-        ));
-    }
+    let normalized = normalized_value_lines(text, is_py, config, source_contexts);
 
     let mut invalid = Vec::new();
     for decl in findings
@@ -67,12 +54,12 @@ pub(super) fn validate_embedded_value_roots(
             .filter_map(|(path, info)| {
                 info.value_root
                     .as_ref()
-                    .map(|root| (path.clone(), info.line, root.marker_column))
+                    .map(|root| (path.clone(), info.line, root.marker_column()))
             })
             .chain(decl.duplicate_sections.iter().filter_map(|(path, info)| {
                 info.value_root
                     .as_ref()
-                    .map(|root| (path.clone(), info.line, root.marker_column))
+                    .map(|root| (path.clone(), info.line, root.marker_column()))
             }))
             .collect::<Vec<_>>();
         claims.sort_by_key(|(_, line, _)| *line);
@@ -98,7 +85,7 @@ pub(super) fn validate_embedded_value_roots(
                 invalid_root_paths.insert(left_path.clone());
                 invalid_root_paths.insert(right_path.clone());
                 roots_with_descendants.insert(ancestor.clone());
-                overlap_sites.insert((descendant_line, Some(descendant_column)));
+                overlap_sites.insert((descendant_line, descendant_column));
             }
         }
         for (root_path, info) in &mut decl.sections {
@@ -141,7 +128,7 @@ pub(super) fn validate_embedded_value_roots(
                     decl.sections
                         .get(&root_path)
                         .and_then(|info| info.value_root.as_ref())
-                        .map(|root| root.marker_column),
+                        .and_then(EmbeddedValueRoot::marker_column),
                     "embedded value root may not occur inside a whole-declaration value"
                         .to_string(),
                 ));
@@ -169,7 +156,16 @@ pub(super) fn validate_embedded_value_roots(
                 continue;
             };
             let root_level = root_info.heading_level;
-            let root_marker_column = root_info.value_root.as_ref().map(|root| root.marker_column);
+            // §FS-values.2.4.3: a chapter root has no marker to locate a
+            // root-level failure at, so it falls back to the root heading.
+            let marked = root_info
+                .value_root
+                .as_ref()
+                .is_some_and(|root| root.marker_column().is_some());
+            let root_marker_column = root_info
+                .value_root
+                .as_ref()
+                .and_then(EmbeddedValueRoot::marker_column);
             let root_title_valid = normalized
                 .get(root_line.saturating_sub(1))
                 .and_then(|(line, _, _, block_comment)| {
@@ -181,14 +177,16 @@ pub(super) fn validate_embedded_value_roots(
                         .strip_suffix(&format!(" {EMBEDDED_VALUE_MARKER}"))
                 })
                 .is_some_and(|title| !title.is_empty());
-            if !(decl.body_start..=decl.body_end).contains(&root_line) {
+            // §FS-values.2.4.4: both are statements about the marker's own
+            // placement, which a chapter root has not made (§FS-values.2.5).
+            if marked && !(decl.body_start..=decl.body_end).contains(&root_line) {
                 reasons.push((
                     root_line,
                     root_marker_column,
                     "embedded value marker must be inside its declaration body".to_string(),
                 ));
             }
-            if !root_title_valid {
+            if marked && !root_title_valid {
                 reasons.push((
                     root_line,
                     root_marker_column,
@@ -234,7 +232,7 @@ pub(super) fn validate_embedded_value_roots(
                 if content.is_empty() || matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
                     continue;
                 }
-                let child = authored_numeric_heading_path(line, markdown, *block_comment, config);
+                let child = authored_heading_path(line, markdown, *block_comment, config);
                 let level = authored_heading_level(line, markdown, *block_comment, config);
                 let expected_path = format!("{root_path}.{expected}");
                 let immediate_numeric = child.as_deref().is_some_and(|path| {

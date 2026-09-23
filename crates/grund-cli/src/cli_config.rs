@@ -183,6 +183,12 @@ fn print_effective_config(config: &Config) {
                     if kind.values {
                         println!("values = true");
                     }
+                    // §FS-config.3.4.13: absent by default, so it is printed
+                    // only on the row that sets it — and the shown config has
+                    // to load back as itself.
+                    if let Some(chapter) = &kind.value_chapter {
+                        println!("value_chapter = \"{}\"", escape_toml_basic(chapter));
+                    }
                     // §FS-config.3.4.12: false is absent; enabled rule kinds
                     // round-trip through the effective config surface.
                     if kind.rules {

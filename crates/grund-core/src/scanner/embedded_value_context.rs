@@ -5,7 +5,8 @@ use std::path::Path;
 
 use super::value_context::SourceValueLineContext;
 use crate::config::Config;
-use crate::model::{DeclarationSource, Findings, Id, InvalidValueSite};
+use crate::grammar::{PythonDocstringScanState, source_scan_line};
+use crate::model::{DeclarationSource, Findings, Id, InvalidValueSite, named_section_component};
 
 pub(crate) const EMBEDDED_VALUE_MARKER: &str = "<!-- grund:value -->";
 
@@ -55,6 +56,33 @@ pub(super) fn embedded_value_marker_for_line(
     context
         .contains(marker, marker + EMBEDDED_VALUE_MARKER.len())
         .then_some(marker)
+}
+
+/// Every line of a file with its source wrapper resolved, as the two value
+/// validators read it: the semantic text, its authored column offset, whether
+/// it is inside an enabled Python docstring, and whether it is inside a block
+/// comment (§FS-values.2.4.1).
+pub(super) fn normalized_value_lines(
+    text: &str,
+    is_py: bool,
+    config: &Config,
+    source_contexts: Option<&[Option<SourceValueLineContext>]>,
+) -> Vec<(String, usize, bool, bool)> {
+    let mut py_docstring = PythonDocstringScanState::default();
+    text.lines()
+        .enumerate()
+        .map(|(index, line)| {
+            let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
+            (
+                scan.text.to_string(),
+                scan.column_offset,
+                scan.in_py_docstring,
+                source_contexts
+                    .and_then(|contexts| contexts.get(index).copied().flatten())
+                    .is_some_and(|context| context.block_comment),
+            )
+        })
+        .collect()
 }
 
 pub(super) fn push_invalid_embedded_marker(
@@ -109,10 +137,13 @@ pub(super) fn authored_heading_level(
     .then_some(level)
 }
 
-/// A numeric heading coordinate before title validation. This recognizes the
-/// physical child slot even when the title is absent, so the component's own
-/// error does not manufacture a second zero-component error at its root.
-pub(super) fn authored_numeric_heading_path(
+/// A heading coordinate before title validation. This recognizes the physical
+/// child slot even when the title is absent, so the component's own error does
+/// not manufacture a second zero-component error at its root. Named components
+/// are recognized too, because a chapter root's own path carries them
+/// (§FS-values.2.5); whether the *tail* below a root is numeric stays the
+/// caller's question (§FS-values.2.4.3).
+pub(super) fn authored_heading_path(
     line: &str,
     markdown: bool,
     block_comment: bool,
@@ -129,6 +160,25 @@ pub(super) fn authored_numeric_heading_path(
         return None;
     }
     let token = rest.trim_start().split_whitespace().next()?;
+    // §FS-config.3.3.1: a numeric heading's full stop is optional punctuation
+    // and a name-bearing one's colon is mandatory; neither is part of the path.
+    if let Some(coordinate) = config
+        .grammar
+        .named_sections
+        .then(|| token.strip_suffix(':'))
+        .flatten()
+    {
+        let mut seen_numeric = false;
+        let well_formed = coordinate.split('.').all(|part| {
+            if part.bytes().all(|byte| byte.is_ascii_digit()) && !part.is_empty() {
+                seen_numeric = true;
+                true
+            } else {
+                !seen_numeric && named_section_component(part)
+            }
+        });
+        return well_formed.then(|| coordinate.to_string());
+    }
     let coordinate = token.strip_suffix('.').unwrap_or(token);
     coordinate
         .split('.')

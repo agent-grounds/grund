@@ -51,6 +51,7 @@
 //! beside the component's otherwise `pub(crate)` glob.
 
 mod agent_entrypoints;
+mod chapter_values;
 mod citation_line;
 mod citations;
 mod context;
@@ -63,6 +64,7 @@ mod legacy;
 mod legacy_inline;
 mod scan_error;
 mod scope_probe;
+mod section_record;
 mod tree;
 mod units;
 mod unmarked_headings;

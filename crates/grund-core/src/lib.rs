@@ -67,7 +67,7 @@ pub use model::{
     EmbeddedValueRoot, FileHeading, FileStructure, Finding, FindingSite, Findings, Id,
     InlineCitationSite, InvalidValueSite, NearMissHeading, Report,
     SectionHeadingOutsideDeclaration, SectionInfo, ShowOutput, ShowSection, UnmarkedHeading,
-    ValueBinding, ValueComponent, ValueComponentKind, canonical_snapshot_path,
+    ValueBinding, ValueComponent, ValueComponentKind, ValueRootOrigin, canonical_snapshot_path,
 };
 
 // §AR-system.2.1 grammar: the compiled ID grammar, the one lexical fact an

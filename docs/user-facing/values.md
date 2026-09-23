@@ -57,7 +57,10 @@ Every other valid component is a string.
 When the surrounding declaration should stay prose, end one citable numeric
 section heading with one ASCII space and the exact lowercase
 `<!-- grund:value -->` marker. This independently authorizes that section; no
-`values = true` kind setting is needed ([§FS-values.1](../functional-spec/FS-values.md#1-per-kind-opt-in-and-identity), [§FS-values.2.4](../functional-spec/FS-values.md#24-embedded-section-value-roots)):
+`values = true` kind setting is needed ([§FS-values.1](../functional-spec/FS-values.md#1-per-kind-opt-in-and-identity), [§FS-values.2.4](../functional-spec/FS-values.md#24-embedded-section-value-roots)). It is one of two ways a
+section becomes a value root — the other is
+[a declared values chapter](#declare-a-values-chapter-for-a-kind), which needs
+no marker and works on *named* headings rather than numeric ones:
 
 ```markdown
 # FS-pricing: Pricing rules
@@ -93,7 +96,9 @@ Python docstrings. The source wrapper is outside the heading depth:
 `//`, `///`, `//!`, `;`, `--`, `/* ... */` / `*` Javadoc or JSDoc lines, and
 both Python triple-quote delimiters follow the same rule. Lookalike marker
 spellings are inert prose. An exact marker on a nonnumeric heading is a located
-`invalid-value-declaration` instead of guessed authority.
+`invalid-value-declaration` instead of guessed authority — including a named
+heading inside a declared values chapter, where the chapter has already made the
+root and the marker adds nothing.
 
 The root and components keep their existing dotted section identities.
 `show` returns the raw section slice (including the marker), `refs` and `cover`
@@ -101,6 +106,64 @@ count the binding citation once, completion offers the same section paths, and
 the LSP navigates to the component heading. `list` keeps one enclosing row and
 adds `[value roots: FS-pricing.2]` in text or an optional `value_roots` member in
 NDJSON ([§FS-values.6](../functional-spec/FS-values.md#6-shared-catalog-consumers), [§FS-values.7](../functional-spec/FS-values.md#7-workspaces-and-editor-consumers)). `fmt --cross-refs` preserves marker and binding bytes so another pass cannot disable comparison ([§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)).
+
+## Declare a values chapter for a kind
+
+A marker names one root at a time. When a whole *kind* keeps its quantities in
+one place, name that place once instead: `value_chapter` on the `[[kinds]]` row
+makes every named direct child of that chapter a value root in every declaration
+of the kind ([§FS-config.3.4.13](../functional-spec/FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values), [§FS-values.2.5](../functional-spec/FS-values.md#25-chapter-declared-value-roots)). Nothing is marked, so nothing can be
+forgotten:
+
+```toml
+[id]
+named_sections = true
+
+[[kinds]]
+kind = "AR"
+folder = "docs/architecture"
+value_chapter = "values"
+```
+
+```markdown
+# AR-value-probe: Auxiliary power
+
+## values: Values
+### values.aux-voltage: Auxiliary supply voltage
+#### values.aux-voltage.1: 24
+#### values.aux-voltage.2: V
+
+## 2. Use
+
+The regulator expects `24` (§AR-value-probe.values.aux-voltage.1) volts.
+```
+
+`values.aux-voltage` keeps its coordinate whatever is inserted or reordered
+around it, which is the point of naming it rather than numbering it.
+
+Four things decide what the key does and do not bend:
+
+- **`[id] named_sections = true` is a prerequisite**, not a consequence. Setting
+  `value_chapter` without it is a located config error rather than a quiet
+  no-op, because without named sections the handle the key names is not a
+  section at all ([§FS-config.3.2.7](../functional-spec/FS-config.md#327-named_sections--the-gate-for-section-handles)).
+- **The chapter is the declaration's own direct chapter**, matched on the
+  handle and never on the displayed title. A same-named chapter nested deeper —
+  `subsystems.pump.values` — is ordinary prose and gains nothing.
+- **The chapter holds roots and nothing else.** Chapter lead prose, a numeric
+  child of the chapter, a plain heading, and a grandchild below a root are each
+  `invalid-value-declaration` at their own line. So a kind whose declarations
+  already use that chapter name for prose reports on every one of them the next
+  time `grund check` runs — loudly, at the offending line, and only because you
+  opted in.
+- **Each root's components are the same strict run** as a marked root's:
+  contiguous `.1` through `.N`, one heading level below, one line each.
+
+The key is absent by default, refused on a row that also sets `values = true`,
+and printed by `grund config show` only where it is set. A project that does not
+set it reads, reports, and exits exactly as before ([§FS-values.9](../functional-spec/FS-values.md#9-compatibility-and-explicit-exclusions)). An older
+binary refuses the unknown key loudly, so adopting it pins the repository to
+this release or later.
 
 ## Declare values in JSON
 
@@ -161,10 +224,13 @@ Unknown aliases, dangling IDs, duplicates, invalid declarations, missing
 fields, and noncanonical shorthand are reported first and suppress comparison
 at that site.
 
-For an embedded value, the citation names the marked root path plus its one
-immediate component, such as `<§>FS-pricing.2.1`. A binding aimed at the root
-itself or below a component is invalid; the same delimited shape aimed at an
-ordinary unmarked dotted section remains ordinary prose and a citation.
+For an embedded value, the citation names the root path plus its one immediate
+component — `<§>FS-pricing.2.1` for a marked root,
+`<§>AR-value-probe.values.aux-voltage.1` for a chapter-declared one. A binding
+aimed at a root itself, at a declared chapter heading, or below a component is
+invalid; the same delimited shape aimed at an ordinary unmarked dotted section,
+or at a named section outside every declared chapter, remains ordinary prose and
+a citation.
 
 An unbackticked adjacent token and a bare citation are deliberately ordinary
 prose/citations, not binding near-misses:

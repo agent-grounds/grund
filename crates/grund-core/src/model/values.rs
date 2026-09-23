@@ -35,13 +35,76 @@ pub enum ValueComponentKind {
     String,
 }
 
+/// Which of the two enrollment routes made a section a value root
+/// (§AR-scanner.2.2.8). `Marker` carries the authored, one-based byte column of
+/// the exact suffix (§FS-values.2.4); `Chapter` carries nothing, because a
+/// chapter-declared root has no marker bytes to point at (§FS-values.2.5).
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum ValueRootOrigin {
+    Marker { column: usize },
+    Chapter,
+}
+
 /// Authority metadata attached to an ordinary section record
-/// (§FS-values.2.4). `marker_column` is the authored, one-based byte column;
-/// semantic title consumers omit the marker while raw readers keep the source.
+/// (§FS-values.2.4, §FS-values.2.5). Semantic title consumers omit a marker
+/// while raw readers keep the source; downstream validation, resolution and
+/// comparison read this record rather than the route that wrote it
+/// (§AR-scanner.2.2.8).
 #[derive(Debug, Clone)]
 pub struct EmbeddedValueRoot {
     pub valid: bool,
-    pub marker_column: usize,
+    pub origin: ValueRootOrigin,
+}
+
+impl EmbeddedValueRoot {
+    /// The authored marker column, or `None` for a chapter root — which is also
+    /// the location a root-level failure has to fall back to the root heading
+    /// for (§FS-values.2.4.3).
+    pub fn marker_column(&self) -> Option<usize> {
+        match self.origin {
+            ValueRootOrigin::Marker { column } => Some(column),
+            ValueRootOrigin::Chapter => None,
+        }
+    }
+}
+
+/// Whether a binding's cited section path is a value-binding shape at all: a
+/// valid root path — every component numeric, or a named prefix as
+/// §FS-config.3.3.1 permits — followed by one positive numeric immediate
+/// coordinate (§FS-values.3.1). Whether that root path *is* a root is the
+/// checker's question; this is only the grammar.
+pub(crate) fn value_binding_section_shape_is_valid(section: &str) -> bool {
+    let mut parts = section.split('.').collect::<Vec<_>>();
+    let Some(coordinate) = parts.pop() else {
+        return false;
+    };
+    if !positive_numeric_component(coordinate) {
+        return false;
+    }
+    // §FS-config.3.3.1: a numeric component may follow a named prefix, never
+    // the other way round, so `2.values` stays reserved.
+    let mut seen_numeric = false;
+    for part in parts {
+        if positive_numeric_component(part) {
+            seen_numeric = true;
+        } else if seen_numeric || !named_section_component(part) {
+            return false;
+        }
+    }
+    true
+}
+
+fn positive_numeric_component(part: &str) -> bool {
+    !part.is_empty() && !part.starts_with('0') && part.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+/// One `[a-z][a-z0-9-]*` section handle — the fixed named-component grammar
+/// `value_chapter` is also held to (§FS-config.3.2.7, §FS-config.3.4.13).
+pub(crate) fn named_section_component(part: &str) -> bool {
+    part.as_bytes().first().is_some_and(u8::is_ascii_lowercase)
+        && part
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
 }
 
 /// An exact authored binding beside the ordinary citation the scanner emits

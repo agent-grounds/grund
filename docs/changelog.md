@@ -24,6 +24,18 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ## Unreleased
 
+### Added
+
+- [§FS-config.3.4.13](functional-spec/FS-config.md#3413-value_chapter--the-chapter-whose-named-children-are-values), [§FS-values.2.5](functional-spec/FS-values.md#25-chapter-declared-value-roots): `[[kinds]] value_chapter` names the chapter whose named direct children are value roots in every declaration of that kind, so a record keeps a checked quantity under a stable name beside the declaration that explains it. Until now a named section held a value nothing compared: the citation resolved and `grund check` said `success`. The key needs `[id] named_sections = true`, is refused beside `values = true`, and a project that does not set it reads, reports, and exits byte-identically. (PR #278)
+
+### Changed
+
+- [§AR-scanner.2.2.8](architecture/AR-scanner.md#228-value-components): `EmbeddedValueRoot` records which of the two enrollment routes made the section a root — `origin: ValueRootOrigin` replaces the bare `marker_column` field, which a chapter root has none of. Embedders reading that field call `marker_column()` instead. (PR #278)
+
+### Fixed
+
+- [§FS-values.8](functional-spec/FS-values.md#8-formatting-stability): `grund fmt --cross-refs` no longer rewrites the citation bytes of a binding whose root a declared chapter made, which would have turned it into a Markdown link and silently stopped the comparison. A repository that hand-wrote the named binding form and ran `--write` before this release already has link-form lines that are not bindings; there is no migration for them, so look for them by hand. (PR #278)
+
 ### Removed
 
 - [§DA-engine-renders-nothing](decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires), [§FS-distribution.3.1](functional-spec/FS-distribution.md#31-rust-grund-core-crate): remove the deprecated `grund_core::main_entry()` process frontend and its engine renderer after 0.14.0 shipped the removal notice; process callers use the `grund` CLI package and embedders use the data-returning core APIs. (PR #276)
