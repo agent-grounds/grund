@@ -13,6 +13,7 @@ dependency edge, not a spelling."""
 import json
 import os
 import re
+import shutil
 import subprocess
 import tempfile
 import tomllib
@@ -24,6 +25,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CRATES = REPO_ROOT / "crates"
 NAME_GUARD = REPO_ROOT / "scripts" / "check-registry-names.sh"
+
+# Resolved rather than named, because `subprocess` hands a bare program name to
+# `CreateProcess`, which searches System32 before PATH and so finds Windows'
+# WSL stub `bash.exe` — it exits 1 with a "no installed distributions" notice
+# on stdout and never reads the script. PATH order is what we want.
+BASH = shutil.which("bash") or "bash"
 
 # Any top-level `<helper> "<registry>" "<name>" "<url>"` invocation, matched by
 # shape rather than by helper name; the `notice_` prefix is what separates a
@@ -296,7 +303,7 @@ def run_guard(plan):
         environment["GUARD_FAKE_PLAN"] = json.dumps(plan)
         environment["GUARD_FAKE_LOG"] = str(log)
         done = subprocess.run(
-            ["bash", str(NAME_GUARD)],
+            [BASH, str(NAME_GUARD)],
             cwd=REPO_ROOT,
             env=environment,
             capture_output=True,
