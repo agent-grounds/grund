@@ -1,6 +1,6 @@
 # FS-values: opted-in kinds bind authored components to one declared value
 
-`grund` lets a repository make numbered components authoritative values. The feature is explicit and current-tree-only: a kind opts whole declarations in, an author marks one citable numeric section, or a kind declares the chapter whose named children are values; a use names one exact component, and `grund check` compares the authored component with that declaration. Repositories that use neither authority retain byte-identical behavior. This serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) and [§GOAL-polyglot-citation](../goals.md#goal-polyglot-citation-ids-cite-cleanly-from-anywhere-they-are-useful).
+`grund` lets a repository make numbered components authoritative values. The feature is explicit and current-tree-only: a kind opts whole declarations in, an author marks one citable numeric section, or a kind declares the chapter whose named children are values; a use names one exact component, and `grund check` compares the authored component with that declaration. Repositories that use none of the three retain byte-identical behavior. This serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) and [§GOAL-polyglot-citation](../goals.md#goal-polyglot-citation-ids-cite-cleanly-from-anywhere-they-are-useful).
 
 ## 1. Per-kind opt-in and identity
 

@@ -32,10 +32,6 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 - [§AR-scanner.2.2.8](architecture/AR-scanner.md#228-value-components): `EmbeddedValueRoot` records which of the two enrollment routes made the section a root — `origin: ValueRootOrigin` replaces the bare `marker_column` field, which a chapter root has none of. Embedders reading that field call `marker_column()` instead. (PR #278)
 
-### Fixed
-
-- [§FS-values.8](functional-spec/FS-values.md#8-formatting-stability): `grund fmt --cross-refs` no longer rewrites the citation bytes of a binding whose root a declared chapter made, which would have turned it into a Markdown link and silently stopped the comparison. A repository that hand-wrote the named binding form and ran `--write` before this release already has link-form lines that are not bindings; there is no migration for them, so look for them by hand. (PR #278)
-
 ### Removed
 
 - [§DA-engine-renders-nothing](decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires), [§FS-distribution.3.1](functional-spec/FS-distribution.md#31-rust-grund-core-crate): remove the deprecated `grund_core::main_entry()` process frontend and its engine renderer after 0.14.0 shipped the removal notice; process callers use the `grund` CLI package and embedders use the data-returning core APIs. (PR #276)
@@ -43,6 +39,7 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 ### Fixed
 
 - [§FS-distribution.1.1](functional-spec/FS-distribution.md#11-package-names), [§FS-distribution.1.1.1](functional-spec/FS-distribution.md#111-cratesio-ownership-is-the-registrys-owner-record), [§FS-distribution.1.1.2](functional-spec/FS-distribution.md#112-unproven-cratesio-ownership-stops-the-release): the pre-release name guard reads crates.io ownership from the registry's own owner record instead of the `repository` field the package declares about itself. A repository move no longer deadlocks the release that would correct that field, and copying one of this project's repository URLs into an unrelated crate no longer passes as ownership. A crate that exists and cannot be proved this project's now stops the release with a diagnostic saying which of the four things went wrong — untrusted owners, unreadable owner data, a failing owner endpoint, or a failed request — rather than falling back to unauthoritative data. npm and PyPI keep the repository-metadata rule and its diagnostics unchanged. (PR #279)
+- [§FS-values.8](functional-spec/FS-values.md#8-formatting-stability): `grund fmt --cross-refs` no longer rewrites the citation bytes of a binding whose root a declared chapter made, which would have turned it into a Markdown link and silently stopped the comparison. A repository that hand-wrote the named binding form and ran `--write` before this release already has link-form lines that are not bindings; there is no migration for them, so look for them by hand. (PR #278)
 
 ## 2. [0.14.1] — 2026-09-21
 
