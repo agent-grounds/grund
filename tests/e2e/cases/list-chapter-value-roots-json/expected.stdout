@@ -1,0 +1,1 @@
+{"id":"AR-004-value-probe","kind":"AR","path":"docs/power.md","line":1,"title":"Auxiliary power","stub":false,"defines":null,"refs":0,"duplicate":false,"value_roots":[{"id":"AR-004-value-probe.values.aux-voltage","valid":true},{"id":"AR-004-value-probe.values.empty","valid":false}]}
