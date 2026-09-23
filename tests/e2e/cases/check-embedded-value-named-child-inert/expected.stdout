@@ -1,0 +1,4 @@
+docs/power.md:3: error: invalid value declaration for AR-004-value-probe: embedded value root must define contiguous numbered components starting at `.1`
+docs/power.md:5: error: invalid value declaration for AR-004-value-probe: embedded value components must be immediate numeric headings `.1` through `.N` (expected `2.1`)
+docs/power.md:1: warning: declared but never cited: AR-004-value-probe
+docs/power.md:5: warning: unmarked heading inside AR-004-value-probe; number it (### 2.1. 2.1: Ten) as AR-004-value-probe.2.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0

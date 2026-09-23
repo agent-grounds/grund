@@ -76,7 +76,7 @@ pub(super) fn validate_declared_value_chapters(
                     is_md,
                     config,
                 );
-                if authored_heading_path(line, markdown, *block_comment, config).is_some_and(
+                if authored_heading_path(line, markdown, *block_comment, true, config).is_some_and(
                     |found| section_is_chapter_value_root(config, &decl.id.kind, &found),
                 ) {
                     continue;

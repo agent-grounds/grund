@@ -139,14 +139,18 @@ pub(super) fn authored_heading_level(
 
 /// A heading coordinate before title validation. This recognizes the physical
 /// child slot even when the title is absent, so the component's own error does
-/// not manufacture a second zero-component error at its root. Named components
-/// are recognized too, because a chapter root's own path carries them
-/// (§FS-values.2.5); whether the *tail* below a root is numeric stays the
-/// caller's question (§FS-values.2.4.3).
+/// not manufacture a second zero-component error at its root. `named` asks for
+/// the name-bearing coordinate form as well, because a chapter root's own path
+/// carries it (§FS-values.2.5); whether the *tail* below a root is numeric
+/// stays the caller's question (§FS-values.2.4.3). Only a chapter's own level
+/// and a chapter root's subtree pass it: marker authority governs everywhere
+/// else and reads exactly the numeric-only grammar it always did, so a project
+/// that declares no chapter is unaffected (§FS-values.2.5, §FS-values.9).
 pub(super) fn authored_heading_path(
     line: &str,
     markdown: bool,
     block_comment: bool,
+    named: bool,
     config: &Config,
 ) -> Option<String> {
     let content = if markdown {
@@ -162,9 +166,7 @@ pub(super) fn authored_heading_path(
     let token = rest.trim_start().split_whitespace().next()?;
     // §FS-config.3.3.1: a numeric heading's full stop is optional punctuation
     // and a name-bearing one's colon is mandatory; neither is part of the path.
-    if let Some(coordinate) = config
-        .grammar
-        .named_sections
+    if let Some(coordinate) = (named && config.grammar.named_sections)
         .then(|| token.strip_suffix(':'))
         .flatten()
     {

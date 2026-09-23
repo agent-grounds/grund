@@ -13,8 +13,8 @@ use super::value_context::SourceValueLineContext;
 use super::values::{markdown_component, value_declaration_is_in_home};
 use crate::config::Config;
 use crate::model::{
-    EmbeddedValueRoot, Findings, InvalidValueSite, authored_component, component_text_is_valid,
-    paths_same_location,
+    EmbeddedValueRoot, Findings, InvalidValueSite, ValueRootOrigin, authored_component,
+    component_text_is_valid, paths_same_location,
 };
 
 /// Validate every marked section against its physical one-level subtree and
@@ -166,6 +166,13 @@ pub(super) fn validate_embedded_value_roots(
                 .value_root
                 .as_ref()
                 .and_then(EmbeddedValueRoot::marker_column);
+            // §FS-values.2.5: only a chapter root's path carries names, so a
+            // marked root's subtree keeps the numeric-only grammar it had
+            // before the key existed (§FS-values.9).
+            let chapter_root = root_info
+                .value_root
+                .as_ref()
+                .is_some_and(|root| matches!(root.origin, ValueRootOrigin::Chapter));
             let root_title_valid = normalized
                 .get(root_line.saturating_sub(1))
                 .and_then(|(line, _, _, block_comment)| {
@@ -232,7 +239,8 @@ pub(super) fn validate_embedded_value_roots(
                 if content.is_empty() || matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
                     continue;
                 }
-                let child = authored_heading_path(line, markdown, *block_comment, config);
+                let child =
+                    authored_heading_path(line, markdown, *block_comment, chapter_root, config);
                 let level = authored_heading_level(line, markdown, *block_comment, config);
                 let expected_path = format!("{root_path}.{expected}");
                 let immediate_numeric = child.as_deref().is_some_and(|path| {
