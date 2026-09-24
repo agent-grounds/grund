@@ -19,7 +19,7 @@ Tier 1 is most of the value and the only part that fits inside `grund-core` with
 
 ### 2.1 A new opt-in error class
 
-Add `[reference] require_grounding` ([§FS-config.3.1](../../functional-spec/FS-config.md#31-reference--citation-form)), default `false`, plus `grund check --require-grounding` to force it on for one run. When set, `check` reports an `ungrounded source file` error ([§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-source-file-opt-in)) for every scanned file whose extension is not `.md` and that is not *grounded*.
+Add `[reference] require_grounding` ([§FS-config.3.1](../../functional-spec/FS-config.md#31-reference--citation-form)), default `false`, plus `grund check --require-grounding` to force it on for one run. When set, `check` reports an `ungrounded source file` error ([§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-unit-opt-in)) for every scanned file whose extension is not `.md` and that is not *grounded*.
 
 ### 2.2 "Grounded" is defined syntactically
 
@@ -40,7 +40,7 @@ Like `strict`, grounding is a discipline a repo opts into once it is ready (and 
 
 ## 3. Consequences
 
-- `Config` gains a `require_grounding: bool`; `check` gains the [§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-source-file-opt-in) loop over the scanner's file list (a new `Findings.scanned_files`); `grund config show` prints the key; `grund check --help` lists the flag; `templates/grund.toml` carries `require_grounding = false` so the generated config still documents every key ([§FS-init.2.4](../../functional-spec/FS-init.md#24-generated-grundtoml)).
+- `Config` gains a `require_grounding: bool`; `check` gains the [§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-unit-opt-in) loop over the scanner's file list (a new `Findings.scanned_files`); `grund config show` prints the key; `grund check --help` lists the flag; `templates/grund.toml` carries `require_grounding = false` so the generated config still documents every key ([§FS-init.2.4](../../functional-spec/FS-init.md#24-generated-grundtoml)).
 - No `grund_config_version` bump: a v1 config without the key keeps working, and a v1 config that sets it is only understood by a `grund` new enough to have this record — an additive change, like `[fmt.cross_refs]`.
 - The reverse-lookup story tightens: in a `require_grounding` repo, `grund refs <ID>` over the source tree is complete by construction, because an ungrounded file cannot land.
 - Tiers 2 and 3 ([§FS-cover](../../functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§RM-cochange-gate](../../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)) build on this; the co-change gate in particular lives in the pre-commit / CI recipe layer, not in `grund-core` — a third first-party surface is out of scope ([§FS-non-goals.12](../../functional-spec/FS-non-goals.md#12-surfaces-outside-grund-core-and-the-lsp-transport)).
@@ -58,7 +58,7 @@ Two things this record settled in 2026-05 turned out to be one setting each wher
 
 ### 4.1 The decision
 
-`require_grounding` and a new `grounding_level` become **`[[kinds]]` row keys**, each with its `[reference]` twin as the default for rows that do not say — the shape `index` already has ([§FS-config.3.4.2](../../functional-spec/FS-config.md#342-index--the-kinds-index-file)). The row wins. `require_grounding` stays the boolean it is; `grounding_level` is an integer in Markdown heading levels, `1` being the file and therefore [§DF-require-grounding.2.3](DF-require-grounding.md#23-file-granularity-not-hunk-granularity)'s rule under a name. The full contract is [§FS-config.3.4.8](../../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level) and [§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-source-file-opt-in).
+`require_grounding` and a new `grounding_level` become **`[[kinds]]` row keys**, each with its `[reference]` twin as the default for rows that do not say — the shape `index` already has ([§FS-config.3.4.2](../../functional-spec/FS-config.md#342-index--the-kinds-index-file)). The row wins. `require_grounding` stays the boolean it is; `grounding_level` is an integer in Markdown heading levels, `1` being the file and therefore [§DF-require-grounding.2.3](DF-require-grounding.md#23-file-granularity-not-hunk-granularity)'s rule under a name. The full contract is [§FS-config.3.4.8](../../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level) and [§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-unit-opt-in).
 
 The level is stated in heading levels rather than in a vocabulary of its own because authors already think in `##`, and because `[id] section_heading_levels` already uses *level* for the same count. A source file has no headings, so it gets the two ranks grund can see without parsing code ([§FS-non-goals.3](../../functional-spec/FS-non-goals.md#3-code-ast-parsing)) — unindented doc-comment blocks, and all of them — read by indentation rather than by syntax.
 

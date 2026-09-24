@@ -58,7 +58,7 @@ Consequence: that window closed. `prefix` stopped loading in 0.13.0, the match a
 
 `code` escapes the same problem through a per-file branch that excludes Markdown, and inheriting that filter here would have made the obligation inert a second time: a non-citable home is usually *all* Markdown. The exclusion reasons about implementation versus document ([§DF-require-grounding.2.2](DF-require-grounding.md#22-grounded-is-defined-syntactically)); a home the maintainer declared matters is neither guess.
 
-Units are built from citations, so a file with none produces no unit and `must` cannot reach it. `[reference] require_grounding` closes that hole in a non-citable home, over every scanned file in it including Markdown ([§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-source-file-opt-in)) — so "cite something" and "cite an `FS`" are two keys that compose instead of one rule with a hole.
+Units are built from citations, so a file with none produces no unit and `must` cannot reach it. `[reference] require_grounding` closes that hole in a non-citable home, over every scanned file in it including Markdown ([§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-unit-opt-in)) — so "cite something" and "cite an `FS`" are two keys that compose instead of one rule with a hole.
 
 ### 2.6 A configured home is in the scan scope by construction
 

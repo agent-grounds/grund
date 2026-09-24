@@ -425,7 +425,7 @@ The section opens with one paragraph — the fixed legend ``must`/`never` are `g
 
 ###### 2.3.5.2.1 Places, and what the homeless kind covers
 
-A non-citable kind is named by its place, as in the Project map ([§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places)), so the bullet reads as the instruction it is: files in this directory cite that. The homeless kind has no place, so it keeps its name and says what it covers. Its *that cites anything* is load-bearing: the obligation constrains what a source file cites and never whether it cites at all ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), so a util that cites nothing is not a unit. A non-citable home is the opposite case — a file there with no citation is the defect — so nothing narrows that subject, and `require_grounding` is what closes the hole ([§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in)).
+A non-citable kind is named by its place, as in the Project map ([§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places)), so the bullet reads as the instruction it is: files in this directory cite that. The homeless kind has no place, so it keeps its name and says what it covers. Its *that cites anything* is load-bearing: the obligation constrains what a source file cites and never whether it cites at all ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)), so a util that cites nothing is not a unit. A non-citable home is the opposite case — a file there with no citation is the defect — so nothing narrows that subject, and `require_grounding` is what closes the hole ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)).
 
 ##### 2.3.5.3 The clauses
 
@@ -445,7 +445,7 @@ The closing line reports the global default alone, because a per-kind default is
 
 ##### 2.3.5.7 The grounding sentence
 
-The grounding sentence is generated from each row's effective `require_grounding` — the row's own key, else `[reference] require_grounding`, because the row decides ([§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs), [§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) — and the configured non-citable homes, and it renders whether or not `[citations]` is declared, because grounding is not a direction rule ([§FS-init.2.3.4.10](FS-init.md#23410-citation-direction)). It claims only what [§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in) enforces, so it names a place exactly when that place's row has grounding on; naming the level per place ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) is not its work.
+The grounding sentence is generated from each row's effective `require_grounding` — the row's own key, else `[reference] require_grounding`, because the row decides ([§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs), [§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) — and the configured non-citable homes, and it renders whether or not `[citations]` is declared, because grounding is not a direction rule ([§FS-init.2.3.4.10](FS-init.md#23410-citation-direction)). It claims only what [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) enforces, so it names a place exactly when that place's row has grounding on; naming the level per place ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)) is not its work.
 
 ###### 2.3.5.7.1 Citing, not declaring
 
