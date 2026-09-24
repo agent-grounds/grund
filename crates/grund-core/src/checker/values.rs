@@ -217,20 +217,9 @@ fn binding_target_reports_invalid_attempt(
         return true;
     }
     let Some(section) = section else { return false };
-    findings
-        .declarations
-        .get(id)
-        .into_iter()
-        .flatten()
-        .any(|declaration| {
-            // §FS-values.3.1.1: the declared chapter heading is a refusal of its
-            // own — the form aims at value authority even though the chapter is
-            // not itself a root, so it may not fall back to ordinary prose.
-            binding_aims_at_declared_chapter(config, id, declaration, section)
-                || embedded_root_for_binding(declaration, section).is_some_and(|(_, relation)| {
-                    !matches!(relation, EmbeddedBindingRelation::InvalidImmediateComponent)
-                })
-        })
+    // §FS-values.3.1.1: one predicate, so check's refusal set and the set
+    // fmt protects (§FS-values.8) cannot drift apart.
+    binding_aims_at_embedded_value_authority(findings, config, id, section)
 }
 
 /// Whether `section` is the declaration's own declared value chapter
@@ -249,9 +238,13 @@ fn binding_aims_at_declared_chapter(
 /// Whether a delimited form aims at embedded value authority at all — a value
 /// root's own heading whichever authority made it, a section below one of its
 /// components, or the kind's declared chapter heading. `check` refuses every
-/// one of these (§FS-values.3.1.1), and a chapter root's path carries names, so
-/// this is the part of the refusal that [`value_binding_section_shape_is_valid`]
-/// cannot see (§FS-values.8).
+/// one of these (§FS-values.3.1.1) and `fmt --cross-refs` leaves every one of
+/// their citation bytes alone, because a link would carry the refusal away
+/// (§FS-values.8, §FS-values.9.1). The single predicate behind both, so the
+/// refused set and the protected set cannot drift apart; it is also the part of
+/// the refusal that [`value_binding_section_shape_is_valid`] cannot see, a
+/// chapter root's path carrying names and a marked root's subtree reaching
+/// below a component.
 pub(crate) fn binding_aims_at_embedded_value_authority(
     findings: &Findings,
     config: &Config,
