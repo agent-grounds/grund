@@ -1,0 +1,11 @@
+grund_config_version = 1
+
+[id]
+format = "{kind}-{number}-{slug}"
+
+# A single-file kind whose file holds the kind's single declaration, exactly as
+# `GRUND`'s does — and not named `GRUND` (§FS-config.3.4.4.1).
+[[kinds]]
+kind = "WHY"
+file = "docs/why.md"
+title = "Why: project motivation"

@@ -1,0 +1,4 @@
+# `docs` is a directory link, `docs/spec` is not. The named scan root is
+# therefore not itself a link, so the root gate does not refuse it and the
+# text behind the linked parent is read (§FS-config.3.5.1).
+project/docs -> ../shared-docs
