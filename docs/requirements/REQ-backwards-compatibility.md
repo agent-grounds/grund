@@ -4,13 +4,13 @@ Upgrading `grund` must not turn a passing repository into a failing one behind t
 
 ## 1. What is covered
 
-Everything user-visible: the CLI surface, the exit-code mapping ([§FS-cli.5](../functional-spec/FS-cli.md#5-exit-code-mapping-is-fixed)), the JSON schemas, the config schema and its version gate ([§FS-config.5](../functional-spec/FS-config.md#5-schema-versioning)), the citation grammar, and the managed agent-entrypoint block.
+Everything user-visible, which [§GOAL-no-silent-breakage.1](../goals.md#1-what-counts-as-user-visible) lists: one list, so the two cannot come apart. The exit-code mapping ([§FS-cli.5](../functional-spec/FS-cli.md#5-exit-code-mapping-is-fixed)) and the config version gate ([§FS-config.5](../functional-spec/FS-config.md#5-schema-versioning)) are where two of those surfaces are written down.
 
 Two guarantees of different strength live inside that list. The **verdict** — whether a tree passes — moves only by [§REQ-backwards-compatibility.2](REQ-backwards-compatibility.md#2-the-deprecation-path), [§REQ-backwards-compatibility.3](REQ-backwards-compatibility.md#3-loud-mechanical-migrations), or [§REQ-backwards-compatibility.5](REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids). The **bytes** are narrower: the text of an existing finding is stable phrasing that tools grep on and changes only through [§REQ-backwards-compatibility.2](REQ-backwards-compatibility.md#2-the-deprecation-path) ([§FS-errors.3](../functional-spec/FS-errors.md#3-message-text)). Adding a new finding necessarily changes a run's bytes, since any warning stands in place of the `success` marker ([§FS-check.2.1](../functional-spec/FS-check.md#21-report-format)); that is governed as a verdict change, not forbidden as a byte change.
 
 ## 2. The deprecation path
 
-The default path for anything in [§REQ-backwards-compatibility.1](REQ-backwards-compatibility.md#1-what-is-covered): release `N` ships the new form beside the old, with a warning naming the release in which the old form stops working, and the old form dies no earlier than `N+1`. Bare `grund` keeping its historical `check .` behavior through a named window is the worked example ([§FS-cli.1](../functional-spec/FS-cli.md#1-the-default-subcommand)).
+The default path for anything in [§REQ-backwards-compatibility.1](REQ-backwards-compatibility.md#1-what-is-covered): release `N` ships the new form beside the old, with a warning, and the old form dies no earlier than `N+1`. A named release buys a repository the time to move before something breaks, and it is owed only where something will break ([§FS-config.1.2.2](../functional-spec/FS-config.md#122-why-no-deadline-is-owed)), so the warning names the release where the old form will stop working and nudges without a deadline where it will not ([§FS-config.1.2](../functional-spec/FS-config.md#12-the-agents-location-is-deprecated)). Bare `grund` keeping its historical `check .` behavior through a named window is the worked example ([§FS-cli.1](../functional-spec/FS-cli.md#1-the-default-subcommand)).
 
 ## 3. Loud, mechanical migrations
 

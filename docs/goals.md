@@ -28,11 +28,11 @@ See [AR-goal-measurement.2](architecture/AR-goal-measurement.md#2-goal-meters).
 
 ## GOAL-no-dangling-refs: every cited ID resolves to a declaration
 
-A passing repo has zero dangling references and zero broken section coordinates. False negatives are bugs. This is the correctness floor under [§GRUND-consistency](grund.md#grund-consistency-the-structure-stays-consistent): a citation an agent cannot trust grounds nothing.
+A passing repo has zero dangling references and zero broken section coordinates in the text the run read — the declared, bounded blind spots of [§REQ-no-missed-citation.2](requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded) included, which [§FS-check.1.3](functional-spec/FS-check.md#13-the-full-tree-scope---full)'s `--full` is the switch for. False negatives are bugs. This is the correctness floor under [§GRUND-consistency](grund.md#grund-consistency-the-structure-stays-consistent): a citation an agent cannot trust grounds nothing.
 
 ### 1. What "resolves" means
 
-A citation resolves when its declaration exists, its section path exists, and any stub points at an inline declaration of the same ID.
+A citation resolves when exactly one declaration of its ID exists, its section path exists, and any stub points at an inline declaration of the same ID. Two are an error, not a ranking ([§FS-id](functional-spec/FS-id.md#fs-id-grund-proposes-ids-for-new-declarations)).
 
 ### 2. Measurable
 
@@ -114,7 +114,7 @@ Friendliness is an ordering principle beside speed: prefer output and workflows 
 
 ### 1. Hard requirements
 
-- Errors point at `path:line`.
+- A finding at a site in the repository points at `path:line`; a message about the run itself names the run ([§FS-errors.2.2](functional-spec/FS-errors.md#22-cli-level-message)).
 - JSON output has stable shapes.
 - `grund <ID>` returns the smallest useful grounded read.
 - Top-level help fits one screen.
@@ -124,7 +124,7 @@ Friendliness is an ordering principle beside speed: prefer output and workflows 
 
 ### 2. What this rules out
 
-No configurable severity, report ordering, exit-code mapping, hidden prompts, or extra verbs in frequent workflows.
+No configurable set of severity levels, report ordering, exit-code mapping, hidden prompts, or extra verbs in frequent workflows ([§FS-config.6](functional-spec/FS-config.md#6-what-is-not-configured-here)).
 
 ### 3. Measurable
 
@@ -156,7 +156,7 @@ Defaults fit canonical `grund`; config makes different project conventions first
 
 ### 1. What is configurable
 
-Kinds, ID format, marker/trigger, strictness, scan scope, comment prefixes, and output defaults per [FS-config](functional-spec/FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up).
+Every key [§FS-config.3](functional-spec/FS-config.md#3-schema) declares, which is where the list is kept so it cannot fall behind the tool: the kinds, the ID format, the marker and trigger, strictness, scan scope, comment prefixes, inline citation style, and the output defaults.
 
 ### 2. What is NOT configurable
 
@@ -181,7 +181,7 @@ CLI surface, output bytes, JSON schema, config schema/version, citation grammar,
 
 ### 2. The deprecation path
 
-Release N adds the new form while the old form warns; release N+1 or later may remove it after the named horizon.
+Release N adds the new form while the old form warns; release N+1 or later may remove it after the named horizon ([§REQ-backwards-compatibility.2](requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). Two bounded routes join it, each argued rather than assumed: a loud mechanical migration whose fix is one command the tool ships ([§REQ-backwards-compatibility.3](requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations)), and the correction of a verdict another hard requirement already forbade, on an accepted decision record ([§REQ-backwards-compatibility.5](requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids)). What is never available is the fourth way — moving a verdict with neither a window nor a record.
 
 ### 3. Measurable
 
