@@ -7,6 +7,7 @@ use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
     TargetMode,
 };
+use crate::checker::CITATION_DIRECTION_REPAIR;
 use crate::model::Diagnostic;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -192,10 +193,15 @@ fn evaluate_one(
                     if citation_matches_targets(target, &targets, facts)
                         && site_is_in(site, &subject, facts)
                     {
-                        let code = if rule.level == RuleLevel::Required {
-                            "forbidden-citation"
+                        // §FS-rules.7.5: the hard prohibition reuses
+                        // §FS-check.3.12's wording, repair suffix included,
+                        // with `(<RULE-ID>)` for the authority tail. The
+                        // recommendation reuses `discouraged-citation`, which
+                        // carries no repair.
+                        let (code, repair) = if rule.level == RuleLevel::Required {
+                            ("forbidden-citation", CITATION_DIRECTION_REPAIR)
                         } else {
-                            "discouraged-citation"
+                            ("discouraged-citation", "")
                         };
                         push_site(
                             out,
@@ -203,7 +209,7 @@ fn evaluate_one(
                             site,
                             code,
                             format!(
-                                "{} {} not cite {} ({authority})",
+                                "{} {} not cite {} ({authority}){repair}",
                                 declaration_kind(facts, &subject)
                                     .unwrap_or_else(|| label(facts, &subject)),
                                 if rule.level == RuleLevel::Required {

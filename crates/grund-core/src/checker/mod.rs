@@ -59,6 +59,7 @@ pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
 pub(crate) use chapter_rules::{
     check_chapter_rules, configured_rule_sentences, parse_ad_hoc, parse_ad_hoc_with_workspace,
 };
+pub(crate) use citations::CITATION_DIRECTION_REPAIR;
 pub(crate) use homes::file_declares_inline_home;
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;

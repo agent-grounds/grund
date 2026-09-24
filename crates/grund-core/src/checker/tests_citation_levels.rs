@@ -80,7 +80,7 @@ must-not = ["AR"]"#,
                 "forbidden-citation",
                 path.clone(),
                 Some(4),
-                "FS must not cite AR (citation direction)".into()
+                "FS must not cite AR (citation direction) — re-point the citation or downgrade it to a plain Markdown link".into()
             ),
         ]
     );

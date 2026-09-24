@@ -626,8 +626,6 @@ When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direct
 docs/functional-spec/FS-login.md:42: FS must not cite AR (citation direction) — re-point the citation or downgrade it to a plain Markdown link
 ```
 
-This message is specified but not implemented today: the binary currently prints the bare fault; the fix is still to re-point the citation or downgrade it to a plain Markdown link.
-
 The prohibition pass is [AR-checker.2.10](../../crates/grund-core/src/checker/report.rs); how it reads the citing and the cited kind is [§FS-check.3.12.1](FS-check.md#3121-how-the-two-kinds-are-read). The parallel `should-not` prohibition is not an error; it is a suggestion ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)). The sanctioned way to keep a discouraged downward pointer is a plain Markdown link, which is not a citation under `strict = true` and so is exempt from this rule.
 
 A rule sentence `<subject> must not cite any <target-set>.` reuses this code and

@@ -134,7 +134,10 @@ fn print_id_proposal(proposal: &IdProposal, format: &str, explain: bool) {
         ),
         None if proposal.file.is_some() => {
             let file = proposal.file.as_deref().unwrap();
-            let (heading_name, heading_marker) = if proposal.kind == "GRUND" {
+            // §FS-id.2.3: an H2 by convention, or the H1 where the file
+            // holds the kind's single declaration — which is a fact about
+            // that file, not about the kind being named `GRUND`.
+            let (heading_name, heading_marker) = if proposal.file_holds_single_declaration {
                 ("H1", "#")
             } else {
                 ("H2", "##")

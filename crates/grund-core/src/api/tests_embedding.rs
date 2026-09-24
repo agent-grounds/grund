@@ -106,6 +106,7 @@ fn public_embedding_api_checks_and_shows_without_cli_dispatch() {
             folder: Some("docs/functional-spec".to_string()),
             file: None,
             e2e_case_dir: None,
+            file_holds_single_declaration: false,
         })
     );
 

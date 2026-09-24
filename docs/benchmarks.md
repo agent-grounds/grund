@@ -4,7 +4,7 @@ This report is a local wall-clock snapshot for the `grund` repo. It complements 
 
 ## Instruction-Count Baseline
 
-The release-blocking meter is Callgrind instruction count, not wall-clock time ([§DA-benchmark-instruction-counting](decisions/architectural/DA-benchmark-instruction-counting.md#da-benchmark-instruction-counting-the-performance-harness-counts-instructions-not-wall-clock-seconds)). Pull-request CI compares against the current base branch and fails when `Ir` grows by more than 5% ([§AR-ci.5](architecture/AR-ci.md#5-benchmark-job)); the table below is the committed human-readable snapshot from `cargo bench -p grund --features bench --locked --bench instructions -- --save-summary=json` on 2026-05-20.
+The release-blocking meter is Callgrind instruction count, not wall-clock time ([§DA-benchmark-instruction-counting](decisions/architectural/DA-benchmark-instruction-counting.md#da-benchmark-instruction-counting-the-performance-harness-counts-instructions-not-wall-clock-seconds)). Pull-request CI compares against the current base branch and records the `Ir` comparison in its summaries; the limits are not wired up, so growth does not yet fail the build ([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)); the table below is the committed human-readable snapshot from `cargo bench -p grund --features bench --locked --bench instructions -- --save-summary=json` on 2026-05-20.
 
 | Benchmark | Input | Instructions (`Ir`) | Estimated Cycles |
 |---|---|---:|---:|
