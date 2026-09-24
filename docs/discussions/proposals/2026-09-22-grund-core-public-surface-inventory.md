@@ -18,7 +18,7 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 **Structural** — for a name no frontend spells: the chain from something one does call, so `via check_with_run_warnings → CheckOutput` means the CLI receives the type without naming it. `—` where the consumer column already answers. `none found` in both columns means no repository consumer of either kind was found.
 
-**Disposition** — the target [§DISC-grund-core-public-surface.6](2026-09-22-grund-core-public-surface.md#6-what-this-discussion-still-has-to-settle) argues for. `keep` changes nothing. `keep, hidden` is an existing `#[doc(hidden)]` seam left as it is. `keep, name in the spec` is a documented data-returning entry point the specification does not yet reach — the gap is the specification's, not the surface's. `hide` proposes `#[doc(hidden)]` with the frontend that reads it named beside it, which retires no symbol. `facade, then retire` is one of the 34 integrations items a coarse entry point would replace, and it is the only disposition that ends in a removal, so it is the only one that owes [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) a notice release.
+**Disposition** — the target [§DISC-grund-core-public-surface.6](2026-09-22-grund-core-public-surface.md#6-what-this-discussion-still-has-to-settle) argues for. `keep` changes nothing. `keep, hidden` is an existing `#[doc(hidden)]` seam left as it is. `keep, name in the spec` is a documented data-returning entry point the specification does not yet reach — the gap is the specification's, not the surface's. `hide` proposes `#[doc(hidden)]`, with the frontend that reads it named beside it wherever this inventory found one, which retires no symbol. `facade, then retire` is one of the 34 integrations items a coarse entry point would replace, and it is the only removal this discussion proposes, so it is the only one that owes [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) a notice release. `retire with the ramp` is a name a release ramp already written into the tree removes, so this inventory records the removal rather than proposing one — the disposition is the ramp's and the argument for it is [§FS-refs.4](../../functional-spec/FS-refs.md#4-exit-codes)'s, not [§DISC-grund-core-public-surface.6](2026-09-22-grund-core-public-surface.md#6-what-this-discussion-still-has-to-settle)'s.
 
 ## What the columns add up to
 
@@ -35,7 +35,8 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 | Disposition keep | 106 |
 | Disposition keep, hidden | 13 |
 | Disposition keep, name in the spec | 16 |
-| Disposition hide | 13 |
+| Disposition hide | 12 |
+| Disposition retire with the ramp | 1 |
 | Disposition facade, then retire | 34 |
 
 The two count columns do not line up, and they are not meant to: 38 names have no repository consumer while 78 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
@@ -186,7 +187,7 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `refs` | api | visible | related API | none found | none found | keep |
 | `refs_outcome` | api | visible | related API | none found | none found | keep |
 | `refs_query_failure_is_exit_one` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `REFS_QUERY_FAILURE_WARNING` | api | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | hide |
+| `REFS_QUERY_FAILURE_WARNING` | api | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | retire with the ramp |
 | `refs_with_metadata` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `RefsOpts` | api | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `RefsOutcome` | api | visible | data type of `refs_outcome` | none found | via refs_with_metadata → RefsWithMetadata → RefsOutcome `grund-cli/src/cli_refs.rs:58` | keep |

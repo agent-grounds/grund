@@ -1,6 +1,6 @@
 # Discussions
 
-Working notes for ideas that are not yet accepted specs or decision records. Use this area for design sketches, trade-off notes, and proposals that need more review before they become `FS-*`, `AR-*`, `DF-*`, `DA-*`, or roadmap entries. Each proposal lives in its own file under `proposals/`, named by the date it was opened; the H1 declares a `DISC-<slug>` ID, and the proposal's own **Status** section says where it stands.
+Working notes for ideas that are not yet accepted specs or decision records. Use this area for design sketches, trade-off notes, and proposals that need more review before they become `FS-*`, `AR-*`, `DF-*`, `DA-*`, or roadmap entries. Each proposal lives in its own file under `proposals/`, named by the date it was opened; the H1 declares a `DISC-<slug>` ID, and the proposal's own **Status** section says where it stands — except for an evidence file a proposal argues from, which is carried beside it under the same date, declares no ID and states no status of its own, because the proposal it serves holds both.
 
 Discussion notes use the project-local `DISC` kind declared in `grund.toml`. Proposals, oldest first:
 
