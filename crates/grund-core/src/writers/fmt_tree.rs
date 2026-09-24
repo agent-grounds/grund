@@ -89,7 +89,7 @@ pub(crate) struct FmtRunOpts<'a> {
 /// declaration heading or anything inside a fenced code block (§FS-fmt.2.3) — and
 /// either write the changes back (`--write`) or just collect `(path, line, label)`
 /// for `--check`/dry-run (§FS-fmt.3). `--cross-refs` needs the full `Findings` first
-/// so a link is only emitted when its target resolves (§FS-fmt.6.3).
+/// so a link is only emitted when its target resolves (§FS-fmt.6.4).
 ///
 /// Why the link pass takes the whole project's declarations and the shorthand
 /// pass does not: a wrap's URL is computed from the declaration's home file,

@@ -3,7 +3,8 @@ use std::path::{Path, PathBuf};
 use super::record::Config;
 
 /// One `[[kinds]]` entry: the kind name plus the folder its declarations live in
-/// and the human title `grund id` prints (§FS-config.3.4). When `file` is set,
+/// and the human title `grund list --summary --format json`, IDE hover and the
+/// Project map row surface (§FS-config.3.4, §FS-config.3.4.3). When `file` is set,
 /// every declaration of this kind must live in that exact file — a *single-file
 /// kind*, used by `GRUND`/`GOAL`/`RM` whose IDs all live in one document
 /// (`docs/grund.md`, `docs/goals.md`, `docs/roadmap.md`).

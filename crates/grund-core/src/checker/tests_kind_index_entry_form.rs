@@ -2,7 +2,7 @@
 //! (§DF-index-entry-form.2.3). One predicate decides it — a citation is a bare
 //! entry exactly when the next `grund fmt --write` would wrap it — and every
 //! case here is a place where the answer is no, so §FS-check.3.17.4 must stay
-//! silent and §FS-check.3.18's warning is what the reader gets instead — which
+//! silent and §FS-check.3.18's error is what the reader gets instead — which
 //! is §FS-check.3.17.5 read over the whole module: anything else in the index
 //! is not an entry, satisfies §FS-check.3.18 no more than it is reported here,
 //! and leaves the ID to the finding whose fix is a human edit. Each was

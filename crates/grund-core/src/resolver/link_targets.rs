@@ -30,7 +30,7 @@ use crate::model::{Declaration, Findings, Id, is_stub_for_inline_decl, resolve_s
 /// `.<section>` citation, the declaration's own heading for a bare-ID citation
 /// (§FS-fmt.6.2, §DF-md-link-anchor-strategy, §DF-declaration-anchor). A source-file
 /// home (a stub's target) and the `none` profile both get a bare file link.
-/// `None` if the ID does not resolve (§FS-fmt.6.3).
+/// `None` if the ID does not resolve (§FS-fmt.6.4).
 pub(crate) fn markdown_link_target(
     from_file: &Path,
     id: &Id,

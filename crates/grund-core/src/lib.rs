@@ -92,8 +92,8 @@ pub use scanner::ApiScanError;
 pub use resolver::names_member_id_candidate;
 
 // §AR-system.2.6 checker: the finding-code selection `grund-cli` parses
-// `--only` and `--skip` into. `#[doc(hidden)]`, so it is not one of the 131
-// documented names, but a frontend reads it (§FS-check.5).
+// `--only` and `--ignore` into. `#[doc(hidden)]`, so it is not one of the 131
+// documented names, but a frontend reads it (§FS-check.1.4).
 pub use checker::{CHECK_FINDING_CODES, CheckFindingSelection};
 
 // §AR-system.2.7 queries: the answers read straight from `Findings` — the

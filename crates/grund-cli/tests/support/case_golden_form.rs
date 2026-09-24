@@ -93,8 +93,9 @@ mod golden_form_tests {
     /// hands the comparison. The third row is the recorded limitation of
     /// §AR-workspace.9.1.2 — a whole-file newline means "no output", so a case whose
     /// real output is one newline reads back as empty and cannot be pinned. The
-    /// fourth is the one the writer gets wrong today: it emits the run's line
-    /// endings while the reader folds them.
+    /// fourth is the canonical fold both sides agree on: `write_expected` folds
+    /// `\r\n` to `\n` (§AR-workspace.9.1), so writer and reader hand the
+    /// comparison the same bytes.
     const OUTPUTS: [(&str, &str, &str); 4] = [
         ("", "\n", ""),
         ("x\n", "x\n", "x\n"),
