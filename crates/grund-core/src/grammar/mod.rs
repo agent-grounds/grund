@@ -96,7 +96,7 @@ pub(crate) use id_format::{
 };
 pub(crate) use id_rules::{id_grammar_key_slash_error, id_grammar_literal_slash_error};
 pub(crate) use ids::{
-    MarkdownLineCitation, parse_id, parse_id_arg, parse_loose_qualified_id_prefix, render_id,
+    MarkdownLineCitation, parse_id, parse_id_arg, parse_qualified_id_prefix, render_id,
     render_qualified_id,
 };
 pub(crate) use inline_note_layout::{

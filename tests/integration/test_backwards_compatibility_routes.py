@@ -13,6 +13,7 @@ DECISIONS = REPO_ROOT / "docs" / "decisions"
 COVER_DECISION = DECISIONS / "functional" / "DF-cover-workspace-scope.md"
 RELEASE = REPO_ROOT / "docs" / "changelog" / "0.10.1.md"
 RELEASES = REPO_ROOT / "docs" / "changelog"
+CHANGELOG = REPO_ROOT / "docs" / "changelog.md"
 CORRECTION_ROUTE = "§REQ-backwards-compatibility.5"
 CONFLICT_PROOF = "§REQ-no-missed-citation.1"
 REQUIREMENT_SECTION_RE = re.compile(r"§(REQ-[a-z0-9-]+)\.(\d+(?:\.\d+)*)")
@@ -70,12 +71,31 @@ def _verdict_route_citations(text):
 
 
 def _release_entries():
+    """Every release bullet, the unreleased ones included.
+
+    A record lands with the change it justifies and before the release that
+    carries it, so reading only the archived releases under `docs/changelog/`
+    would make condition .5.3 unsatisfiable on the day the record merges. The
+    `## Unreleased` section of `docs/changelog.md` becomes those release notes
+    verbatim when `prepare_changelog_release.py` cuts the version, so it is the
+    same text read one release earlier. Every other condition stays conjunctive.
+    """
     return [
         line
         for path in sorted(RELEASES.glob("*.md"))
         for line in path.read_text(encoding="utf-8").splitlines()
         if line.startswith("- ")
+    ] + [
+        line
+        for line in _unreleased_section().splitlines()
+        if line.startswith("- ")
     ]
+
+
+def _unreleased_section():
+    text = CHANGELOG.read_text(encoding="utf-8")
+    match = re.search(r"^## Unreleased$(.*?)(?=^## \d+\.|\Z)", text, re.M | re.S)
+    return match.group(1) if match else ""
 
 
 def _correction_route_errors(text, release_entries, catalog):

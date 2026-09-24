@@ -153,9 +153,8 @@ fn propose_id_run(
         });
     }
     // §FS-id.2.3: the H1 hint is owed where the kind's file holds the kind's
-    // single declaration — counted in that file, since a declaration of the
-    // kind written elsewhere is the single-file rule's error to report
-    // (§FS-check.3.7), not this hint's fact.
+    // single declaration, counted in that file — a declaration of the kind
+    // written elsewhere is §FS-check.3.7's error, not this hint's fact.
     let file_holds_single_declaration = kind_config.file.as_deref().is_some_and(|file| {
         let home = config.root.join(file);
         findings

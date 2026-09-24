@@ -194,10 +194,8 @@ fn evaluate_one(
                         && site_is_in(site, &subject, facts)
                     {
                         // §FS-rules.7.5: the hard prohibition reuses
-                        // §FS-check.3.12's wording, repair suffix included,
-                        // with `(<RULE-ID>)` for the authority tail. The
-                        // recommendation reuses `discouraged-citation`, which
-                        // carries no repair.
+                        // §FS-check.3.12's wording, repair included, with
+                        // `(<RULE-ID>)` for the tail; the recommendation not.
                         let (code, repair) = if rule.level == RuleLevel::Required {
                             ("forbidden-citation", CITATION_DIRECTION_REPAIR)
                         } else {

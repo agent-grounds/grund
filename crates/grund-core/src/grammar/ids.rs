@@ -65,23 +65,7 @@ pub(crate) fn parse_id_arg(raw: &str, grammar: &Grammar) -> Result<(Id, Option<S
 /// grammar (`scan_workspace_qualified_pass`) and is not affected by this
 /// fallback's assumptions.
 pub(crate) fn parse_loose_qualified_id_prefix(raw: &str) -> Option<(Id, Option<String>, usize)> {
-    let mut end = raw
-        .char_indices()
-        .find(|(_, ch)| !(ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.')))
-        .map(|(idx, _)| idx)
-        .unwrap_or(raw.len());
-    while end > 0
-        && raw[..end]
-            .chars()
-            .next_back()
-            .is_some_and(|ch| matches!(ch, '.' | ',' | ';' | ':' | '!' | '?'))
-    {
-        end -= raw[..end]
-            .chars()
-            .next_back()
-            .map(char::len_utf8)
-            .unwrap_or(1);
-    }
+    let end = loose_token_end(raw);
     let token = raw.get(..end)?;
     let (id_text, section) = split_loose_section(token);
     let (kind, rest) = id_text
@@ -107,6 +91,56 @@ pub(crate) fn parse_loose_qualified_id_prefix(raw: &str) -> Option<(Id, Option<S
             kind: kind.to_string(),
             num,
             slug: Some(slug.to_string()),
+        },
+        section.map(str::to_string),
+        end,
+    ))
+}
+
+/// The span a qualified tail occupies: ID characters up to the first byte that
+/// is not one, with sentence punctuation trimmed off the end.
+fn loose_token_end(raw: &str) -> usize {
+    let mut end = raw
+        .char_indices()
+        .find(|(_, ch)| !(ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.')))
+        .map(|(idx, _)| idx)
+        .unwrap_or(raw.len());
+    while end > 0
+        && raw[..end]
+            .chars()
+            .next_back()
+            .is_some_and(|ch| matches!(ch, '.' | ',' | ';' | ':' | '!' | '?'))
+    {
+        end -= raw[..end]
+            .chars()
+            .next_back()
+            .map(char::len_utf8)
+            .unwrap_or(1);
+    }
+    end
+}
+
+/// §FS-workspace.5.2: the tail of a marked qualified citation, whatever its
+/// grammar. The fallback `KIND[-NUM]-SLUG` shape decides how a tail is *read*,
+/// never whether the citation is *recognized* — "the unknown thing is the
+/// alias, which needs no tail grammar" — so a tail the loose grammar declines
+/// still yields a citation, with its bytes kept whole as the ID. Nothing
+/// resolves through that ID: the run reporting it has no workspace catalogue,
+/// so the alias is unknown or unverified and the citation ends there. The
+/// workspace-root run parses the tail with the target project's grammar and is
+/// the one place that judges it.
+pub(crate) fn parse_qualified_id_prefix(raw: &str) -> Option<(Id, Option<String>, usize)> {
+    if let Some(parsed) = parse_loose_qualified_id_prefix(raw) {
+        return Some(parsed);
+    }
+    let end = loose_token_end(raw);
+    let token = raw.get(..end).filter(|token| !token.is_empty())?;
+    let (id_text, section) = split_loose_section(token);
+    Some((
+        Id {
+            kind: id_text.to_string(),
+            num: None,
+            slug: None,
         },
         section.map(str::to_string),
         end,

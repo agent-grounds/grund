@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 use super::citation_line::CitationLine;
 use crate::grammar::{
     QUALIFIED_CITATION_PREFIX, never_rewrite_context_in, parse_id, parse_longest_id_prefix,
-    parse_loose_qualified_id_prefix, qualified_suppressed_in_source,
+    parse_qualified_id_prefix, qualified_suppressed_in_source,
 };
 use crate::model::{Citation, Findings, LegacyCitationCandidate, LocalSectionCitationCandidate};
 use crate::workspace::WorkspaceCitationTarget;
@@ -100,16 +100,18 @@ pub(super) fn scan_local_section_candidates(
 /// fallback, `§root/FS-root` in a default member can disappear just because the
 /// root uses `{kind}-{slug}`.
 ///
-/// The fallback parses the ID tail with the conventional `KIND[-NUM]-SLUG`
-/// shape (`parse_loose_qualified_id_prefix`), not the citing or any target
-/// project's configured `[id] format`. Member-local scans have no workspace
-/// catalogue, so the target's grammar is unreachable here. The tradeoff:
-/// non-default ID grammars (lowercase kinds, slug-only shapes that don't
-/// separate on `-`/`_`, kinds with characters outside `[A-Z0-9]`) won't be
-/// recognised as qualified citations at member scope and will fall through
-/// to be diagnosed at the workspace-root run instead. Workspace-root and
+/// The fallback reads the ID tail with the conventional `KIND[-NUM]-SLUG`
+/// shape, not the citing or any target project's configured `[id] format`:
+/// member-local scans have no workspace catalogue, so the target's grammar is
+/// unreachable here. That shape decides how the tail is *read* and never
+/// whether the citation is *recognized* (§FS-workspace.5.2) — the unknown
+/// thing is the alias, which needs no tail grammar, so a tail outside the
+/// shape (lowercase kinds, slug-only grammars that don't split on `-`/`_`,
+/// kinds with characters outside `[A-Z0-9]`) is reported here rather than
+/// falling through to the workspace-root run. Workspace-root and
 /// workspace-aware paths use the target's actual grammar via
-/// `scan_workspace_qualified_pass`.
+/// `scan_workspace_qualified_pass`, which is the one place the tail itself is
+/// judged.
 ///
 /// `qualified_claimed` carries the marker offsets a qualified citation already
 /// exists at — the full-ID pass's on entry, this pass's own on return. The
@@ -144,7 +146,10 @@ pub(super) fn scan_fallback_qualified_citations(
         let Some(id_rest) = line.scan_line.get(id_start..) else {
             continue;
         };
-        let Some((id, section, id_len)) = parse_loose_qualified_id_prefix(id_rest) else {
+        // §FS-workspace.5.2: the tail grammar does not decide recognition — a
+        // tail outside `KIND[-NUM]-SLUG` is an `unknown project alias` error
+        // all the same, at its own site.
+        let Some((id, section, id_len)) = parse_qualified_id_prefix(id_rest) else {
             continue;
         };
         let token_end = id_start + id_len;
