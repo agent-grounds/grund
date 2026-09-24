@@ -193,8 +193,9 @@ fn bare_config_resolves_scan_paths_against_its_own_directory() {
     assert_eq!(ids[0].slug.as_deref(), Some("alpha"));
 }
 
-// §GOAL-zero-config: neither name anywhere up the walk is still a valid tree,
-// and the added probe must not turn that into a discovered config.
+// §GOAL-zero-config / §FS-config.requirements.2: neither name anywhere up the
+// walk is still a valid tree governed by the canonical defaults, and the added
+// probe must not turn that into a discovered config.
 #[test]
 fn no_config_under_either_name_stays_zero_config() {
     let root = test_root("no_config_under_either_name_stays_zero_config");

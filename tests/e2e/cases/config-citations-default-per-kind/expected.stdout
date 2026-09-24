@@ -1,0 +1,3 @@
+docs/functional-spec/FS-001-login.md:3: error: FS must not cite GOAL (citation direction)
+docs/architecture/AR-001-router.md:1: warning: declared but never cited: AR-001-router
+docs/functional-spec/FS-001-login.md:1: warning: declared but never cited: FS-001-login
