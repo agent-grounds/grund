@@ -62,8 +62,9 @@ pre-existing omission it is shown; certifying the completeness of unchanged pros
 that is not part of it.
 
 The comparison is over senses, not tokens. A spec that writes `note:` for a stderr hint
-line, or "CLI-level error", is not leaning on *note* or on *level*, and a word used only
-in the sense its own row retires is not a lean either.
+line, or "CLI-level error", is not leaning on *note* or on *level*, a word used only
+in the sense its own row retires is not a lean either, and a token occurring only
+inside a link target, a heading anchor or a frozen code name is a name, not a use.
 
 ### terms.1: Declarations and coordinates
 
