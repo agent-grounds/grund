@@ -25,7 +25,7 @@ use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run
 use crate::scanner::scan_tree;
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, resolve_workspace_config,
-    scope_is_config_root, unlisted_workspace_block_warnings,
+    scope_is_config_root, unlisted_workspace_block_errors,
 };
 
 pub(crate) struct CheckRun {
@@ -140,10 +140,10 @@ pub(super) fn run_check_with_run_warnings(
         path_provided,
         full,
     ));
-    // §FS-check.3.29.13: the blocks this walk met that no enclosing one lists. A report
-    // warning, not a line printed past it: that is what stands it in place of
-    // `success` (§FS-check.2.1.3) and makes §DF-unlisted-workspace-block.2.1's ramp work.
-    report.warnings.extend(unlisted_workspace_block_warnings(
+    // §FS-check.3.29.13: the blocks this walk met that no enclosing one lists — one of
+    // the report's *errors* since the ramp ended (§FS-check.3.29.14), and located, so it
+    // reaches the exit code rather than standing in place of `success` (§FS-check.2.1.3).
+    report.errors.extend(unlisted_workspace_block_errors(
         &config,
         &config,
         None,
@@ -285,7 +285,7 @@ fn run_workspace_check(
     // the absorbing namespace is its own. Rendered against the workspace root like
     // every other message here (§FS-workspace.8.1).
     for project in &projects {
-        report.warnings.extend(unlisted_workspace_block_warnings(
+        report.errors.extend(unlisted_workspace_block_errors(
             &project.config,
             &root_config,
             Some(&project.alias),

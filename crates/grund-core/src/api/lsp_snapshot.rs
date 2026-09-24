@@ -33,6 +33,7 @@ use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext, load_resolved_work
 use crate::scanner::api_scan_error;
 use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, resolve_workspace_config,
+    unlisted_workspace_block_errors,
 };
 
 /// Programmatic snapshot for `grund-lsp`: all scanner-derived declaration and
@@ -301,10 +302,10 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
         ))
     });
 
-    // §FS-lsp.1.1.3: the four run-level `[workspace]` warnings, published for the
-    // first time on the `grund.toml` each one anchors at — the same channel the
-    // CLI renders, from the same place (§FS-lsp.4.1).
-    let run_warnings = public_lsp_run_warnings(&render_config, context.run_warnings.clone());
+    // §FS-lsp.1.1.3: the run-level `[workspace]` warnings, published on the `grund.toml`
+    // each one anchors at — the same channel the CLI renders, from the same place
+    // (§FS-lsp.4.1).
+    let run_warnings = public_lsp_run_warnings(&render_config, editor_run_warnings(&context));
     Ok(LspSnapshotWithMetadata {
         kind_titles,
         snapshot: LspSnapshot {
@@ -420,6 +421,17 @@ fn check_workspace_context(
             project.scan_errors.is_empty() && !project_has_findings,
         ));
     }
+    // §FS-check.3.29.13, §FS-check.3.29.11: per project, the blocks that walk met that
+    // no enclosing one lists — located report errors, the decision `run_workspace_check`
+    // makes, so an editor and a terminal place one diagnostic at one line (§FS-lsp.4.1).
+    for project in &context.projects {
+        report.errors.extend(unlisted_workspace_block_errors(
+            &project.config,
+            context.render_config(),
+            context.workspace_loaded.then_some(project.alias.as_str()),
+            &project.findings.walked_dirs,
+        ));
+    }
     // §FS-check.4.9, §FS-check.2.2: the announcements and the caution — see this
     // function's docs.
     report
@@ -432,6 +444,24 @@ fn check_workspace_context(
     sort_diagnostics(&mut report.errors);
     sort_diagnostics(&mut report.warnings);
     report
+}
+
+/// §FS-lsp.1.1.3, §FS-check.3.29.15: the run's warning channel as the editor sees it —
+/// the three `[workspace]` cautions the run settled, without the unlisted block.
+///
+/// The five walking surfaces that have no report of their own keep that finding on this
+/// channel, which is why the context still settles it (§FS-check.3.29.9). The editor
+/// takes it off `report` instead, located and as an error (§FS-check.3.29.13), and a copy
+/// left here would publish a second, warning-severity squiggle on the same line — the one
+/// way the flip can go wrong invisibly, so the drop is a named step rather than a filter
+/// buried in the call.
+fn editor_run_warnings(context: &WorkspaceContext) -> Vec<Diagnostic> {
+    context
+        .run_warnings
+        .iter()
+        .filter(|warning| warning.code != "unlisted-workspace-block")
+        .cloned()
+        .collect()
 }
 
 fn append_lsp_scan_errors(
