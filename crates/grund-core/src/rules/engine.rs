@@ -7,8 +7,7 @@ use super::{
     Cardinality, ParsedRule, RuleLevel, RulePolarity, RuleRelation, RuleSubject, RuleTargets,
     TargetMode,
 };
-use crate::checker::CITATION_DIRECTION_REPAIR;
-use crate::model::Diagnostic;
+use crate::model::{CITATION_DIRECTION_REPAIR, Diagnostic};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) use precedence::citation_precedence;
