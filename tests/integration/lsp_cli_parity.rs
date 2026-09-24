@@ -8,14 +8,16 @@
 //! root are skipped and counted, never silently, and a floor on the number of
 //! compared cases keeps the sweep from shrinking unnoticed.
 //!
-//! The run-level `[workspace]` warnings of §FS-lsp.1.1.3 are held the same way,
-//! against the same case's stderr: §FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11
+//! The three run-level `[workspace]` warnings of §FS-lsp.1.1.3 are held the same
+//! way, against the same case's stderr golden: §FS-check.4.7.7, §FS-check.4.10.11
 //! and §FS-workspace.6.1.7 travel in the run's warning channel and are rendered by
 //! each frontend, so neither surface may carry one the other does not. They are
 //! compared as their own set because the two shapes differ by design — the CLI
-//! prints three of them as §FS-check.2.1.1 lines on stderr and §FS-check.3.29.13's
-//! as one of `check`'s report objects with a null location, while the editor
-//! publishes each on the `grund.toml` it anchors at. Every other
+//! prints them as §FS-check.2.1.1 lines on stderr, while the editor publishes each
+//! on the `grund.toml` it anchors at. §FS-check.3.29's unlisted block is not among
+//! them and is not held that way: it is a located error on both surfaces now
+//! (§FS-check.3.29.15), so the sweep compares it like any other `Finding` — same
+//! path, line, `error` severity, code and message (§FS-lsp.4.1). Every other
 //! CLI-level `warning:` or `error:` line (§FS-errors.2.2) is stepped over: it is
 //! settled before a report exists and neither surface carries it as a located
 //! diagnostic.

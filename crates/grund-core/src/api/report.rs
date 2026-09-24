@@ -98,12 +98,19 @@ fn public_finding(
 /// `[workspace]` caution the run settled, as the `Finding`s a frontend renders
 /// (§FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11, §FS-workspace.6.1.7).
 ///
-/// Each keeps the anchor the engine gave it — the `grund.toml` line its own
-/// message already names — so an editor publishes it without reading a location
-/// back out of the text (§FS-lsp.1.1.3, §AR-bindings.2). A terminal renders the
-/// message alone, in §FS-check.2.1.1's CLI-level shape: the render shape is a
-/// property of the finding rather than a consequence of whether a location is
-/// known, which is why the anchor rides along unused there.
+/// Three of them keep the anchor the engine gave it — the `grund.toml` line its
+/// own message already names — so an editor publishes those without reading a
+/// location back out of the text (§FS-lsp.1.1.3, §AR-bindings.2). A terminal
+/// renders the message alone, in §FS-check.2.1.1's CLI-level shape: the render
+/// shape is a property of the finding rather than a consequence of whether a
+/// location is known, which is why the anchor rides along unused there.
+///
+/// §FS-check.3.29.15's is the exception and carries no location at all — `path`
+/// and `line` are both `None`. On the five walking surfaces this channel serves
+/// it states its location *inside* its own text and nowhere else
+/// (§FS-check.3.29.7), so a location field here would be carried for nobody.
+/// The editor does not publish that one off this channel: it takes it off
+/// `check`'s report instead, located and as an error (§FS-check.3.29.13).
 pub(super) fn public_run_warnings(config: &Config, warnings: Vec<Diagnostic>) -> Vec<Finding> {
     run_warning_findings(config, warnings)
 }

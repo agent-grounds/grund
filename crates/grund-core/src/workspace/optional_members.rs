@@ -221,8 +221,10 @@ pub(super) fn qualify_absent_optional(
 /// §FS-check.4.9.1: one warning per absent optional entry, in the order the list
 /// writes them, anchored at the `optional_members` line of the block that holds it.
 ///
-/// A **located** finding on stdout, where its two nearest neighbours (§FS-check.4.7,
-/// §FS-check.3.29) are CLI-level `warning:` lines on stderr. Those two report a
+/// A **located** finding on stdout, where its nearest neighbour §FS-check.4.7 is a
+/// CLI-level `warning:` line on stderr — as §FS-check.3.29 still is on the five
+/// walking surfaces that have no report to put it in (§FS-check.3.29.9), though in
+/// `check` it is a located error on stdout now (§FS-check.3.29.13). Those two report a
 /// misconfiguration that makes every command in the tree wrong; nothing is
 /// misconfigured here — the repository declared this may happen and it happened —
 /// and what is at stake is only the coverage of `check`'s own report. Exit `2` is
