@@ -1,5 +1,5 @@
 //! The built-in kind table (§FS-config.3.4): the canonical kind set a
-//! zero-config tree gets (§FS-config.2, §GOAL-zero-config) and one function per
+//! zero-config tree gets (§FS-config.3, §GOAL-zero-config) and one function per
 //! key whose default is keyed on the kind's name.
 //!
 //! Separate from `kind_table.rs` because the two answer different questions

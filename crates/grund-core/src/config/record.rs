@@ -1,7 +1,8 @@
 //! The effective configuration record (§AR-system.2.3): one validated `Config`
 //! per project — every `grund.toml` key (§FS-config.3) merged over the built-in
-//! defaults (§FS-config.2) — with the `[scan]` defaults it starts from and the
-//! `[[kinds]]` lookups that answer questions about the finalized kind set.
+//! defaults (§FS-config.principle.unit) — with the `[scan]` defaults it starts
+//! from and the `[[kinds]]` lookups that answer questions about the finalized
+//! kind set.
 //!
 //! The record rather than the reader: `parse.rs` fills one of these in, and this
 //! file says what there is to fill and what a filled one means. It lived in
@@ -71,8 +72,8 @@ impl ShorthandPolicy {
 }
 
 /// The effective configuration: every `grund.toml` key (§FS-config.3) merged
-/// over the built-in defaults (§FS-config.2), plus the compiled `Grammar` and the
-/// `root` / `cli_base` paths the walk and the report use.
+/// over the built-in defaults (§FS-config.principle.unit), plus the compiled
+/// `Grammar` and the `root` / `cli_base` paths the walk and the report use.
 #[derive(Clone)]
 pub struct Config {
     pub root: PathBuf,
@@ -266,7 +267,7 @@ const DEFAULT_SLUG_PATTERN: &str = r"[a-z0-9][a-z0-9-]*";
 
 impl Config {
     /// The built-in defaults — the canonical grammar a conformant tree gets with
-    /// no config at all (§FS-config.2, §GOAL-zero-config). `grund init`
+    /// no config at all (§FS-config.3, §GOAL-zero-config). `grund init`
     /// writes these same values out verbatim as a teaching surface (§FS-init.2.4.3).
     pub(crate) fn default_for(root: PathBuf) -> Self {
         let kinds: Vec<KindConfig> = DEFAULT_KINDS

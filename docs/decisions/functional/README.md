@@ -53,6 +53,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 ## Config, discovery, and workspaces
 
 - [§DF-config-file-location](DF-config-file-location.md#df-config-file-location-grundtoml-is-discovered-at-two-names-per-directory-and-init-writes-the-bare-one) — grund.toml is discovered at two names per directory, and init writes the bare one
+- [§DF-config-scope-override](DF-config-scope-override.md#df-config-scope-override-the-committed-scopes-are-one-relation-stated-once) — the committed scopes are one relation, stated once
 - [§DF-non-citable-kinds](DF-non-citable-kinds.md#df-non-citable-kinds-a-kind-may-declare-no-ids-and-stays-one-kinds-table-when-it-does) — a kind may declare no IDs, and stays one `[[kinds]]` table when it does
 - [§DF-unwalked-kind-home](DF-unwalked-kind-home.md#df-unwalked-kind-home-a-kind-may-be-a-place-that-is-listed-but-not-walked) — a kind may be a place that is listed but not walked
 - [§DF-symlink-scan](DF-symlink-scan.md#df-symlink-scan-a-symlink-in-the-scanned-tree-is-followed-and-the-report-names-the-link) — a symlink in the scanned tree is followed, and the report names the link

@@ -208,7 +208,7 @@ fn no_config_under_either_name_stays_zero_config() {
 
     assert_eq!(config.config_file, None);
     assert_eq!(config.redundant_config_file, None);
-    assert_eq!(config.marker, "§", "§FS-config.2: the built-in default");
+    assert_eq!(config.marker, "§", "§FS-config.3: the built-in default");
     assert!(
         config_warnings(&config).is_empty(),
         "§FS-config.1.2: no file was read, so there is no location to deprecate"
