@@ -324,7 +324,7 @@ it is not a literal copy; two decisions come with it:
 
 - **`.md` must count.** `code_by_file` (`checker.rs:532`) deliberately excludes
   Markdown, on the same reasoning that exempts it from `require_grounding`
-  ([§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-source-file-opt-in)): documents are not implementation. A `SKILL` home is
+  ([§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-unit-opt-in)): documents are not implementation. A `SKILL` home is
   usually *all* Markdown, so inheriting that filter would make the obligation
   inert a second time. An ID-less kind's home is declared to matter, so every
   scanned file in it should be a unit.
@@ -399,7 +399,7 @@ change, but one the maintainer causes with a config edit — fine under
 [§REQ-backwards-compatibility](../../requirements/REQ-backwards-compatibility.md#req-backwards-compatibility-an-upgrade-never-changes-a-verdict-quietly), and worth stating so it is not discovered.
 
 **`require_grounding` still applies** to any non-`.md` file in the new home
-([§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-source-file-opt-in)). Point an ID-less kind at a folder of `.py` prompts and each
+([§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-unit-opt-in)). Point an ID-less kind at a folder of `.py` prompts and each
 file must carry a resolving citation. Probably desirable; not obvious.
 
 **Obligations need a per-file unit rule**, or `must` / `should` on an ID-less

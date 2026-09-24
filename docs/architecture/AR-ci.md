@@ -38,7 +38,7 @@ The current pre-commit gate runs the same Rust format/build/test commands that d
 
 ### 3.1 Citations and links
 
-The gate also runs `grund check --full`, including the grounding floor from [§FS-check.3.6](../functional-spec/FS-check.md#36-ungrounded-source-file-opt-in), `grund fmt --write` for canonical citation links, and `lychee` for Markdown links. Running both in CI preserves the boundary [§FS-non-goals.1](../functional-spec/FS-non-goals.md#1-markdown-link-validation) draws: `grund` owns ID citations across docs and source, `lychee` regular Markdown links and URLs.
+The gate also runs `grund check --full`, including the grounding floor from [§FS-check.3.6](../functional-spec/FS-check.md#36-ungrounded-unit-opt-in), `grund fmt --write` for canonical citation links, and `lychee` for Markdown links. Running both in CI preserves the boundary [§FS-non-goals.1](../functional-spec/FS-non-goals.md#1-markdown-link-validation) draws: `grund` owns ID citations across docs and source, `lychee` regular Markdown links and URLs.
 
 A canonical `https://github.com/agent-grounds/grund/blob/main/<path>` link in
 the checked tree is a same-repository link. Before the network pass, the link

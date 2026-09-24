@@ -103,7 +103,7 @@ workspace suite must still execute them with their assertions unchanged.
 
 ## 2. Refactor boundary
 
-Splitting the core and CLI crates is an architectural refactor only: it must not change CLI output, diagnostics, scan behavior, template bytes, or public entrypoints. The CLI package calls no compatibility command adapter any more — `integrations` was the last and it renders in `grund-cli` ([§AR-bindings.3](AR-bindings.md#3-grund-cli-the-cli-binary)) — and embedders use the public API in `crates/grund-core/src/api/`, whose contract files carry the published signatures and whose adapter files carry the conversions behind them, reaching it through the explicit `pub use` list in `lib.rs` ([§AR-core-module-layout.1.2](AR-core-module-layout.md#12-librs-is-the-one-file-outside-every-component)) — the one place a name becomes public.
+Splitting the core and CLI crates is an architectural refactor only: it must not change CLI output, diagnostics, scan behavior, template bytes, or public entrypoints. The CLI package calls no compatibility command adapter any more — `integrations` was the last and it renders in `grund-cli` ([§AR-bindings.3](AR-bindings.md#3-cratesgrund-cli-the-cli-binary)) — and embedders use the public API in `crates/grund-core/src/api/`, whose contract files carry the published signatures and whose adapter files carry the conversions behind them, reaching it through the explicit `pub use` list in `lib.rs` ([§AR-core-module-layout.1.2](AR-core-module-layout.md#12-librs-is-the-one-file-outside-every-component)) — the one place a name becomes public.
 
 ## 3. File size
 

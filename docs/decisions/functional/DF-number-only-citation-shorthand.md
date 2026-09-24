@@ -108,7 +108,7 @@ Nothing forbids two declarations sharing a kind and number — `grund check` cat
 
 ### 2.8 A resolved shorthand is a real edge
 
-Once a shorthand resolves to exactly one declaration, it is a citation like any other for every graph question: `grund refs` lists it, `grund cover` groups it, the declaration is no longer "declared but never cited" ([§FS-check.4.1](../../functional-spec/FS-check.md#41-unused-declaration)), it grounds its file under `require_grounding` ([§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-source-file-opt-in)), and it counts for citation directions ([§FS-config.3.9](../../functional-spec/FS-config.md#39-citations--citation-direction-rules)).
+Once a shorthand resolves to exactly one declaration, it is a citation like any other for every graph question: `grund refs` lists it, `grund cover` groups it, the declaration is no longer "declared but never cited" ([§FS-check.4.1](../../functional-spec/FS-check.md#41-unused-declaration)), it grounds its file under `require_grounding` ([§FS-check.3.6](../../functional-spec/FS-check.md#36-ungrounded-unit-opt-in)), and it counts for citation directions ([§FS-config.3.9](../../functional-spec/FS-config.md#39-citations--citation-direction-rules)).
 
 This is the half of the fix that is easy to skip and expensive to omit. The original report's most damaging symptom was not the missing dangling error — it was `declared but never cited` printed about a declaration cited twice. A rule that flagged the shorthand but still refused to count it would have left that lie in place.
 
