@@ -33,6 +33,7 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 ### Changed
 
 - [§AR-scanner.2.2.8](architecture/AR-scanner.md#228-value-components): `EmbeddedValueRoot` records which of the two enrollment routes made the section a root — `origin: ValueRootOrigin` replaces the bare `marker_column` field, which a chapter root has none of. Embedders reading that field call `marker_column()` instead. (PR #278)
+- [§FS-config.principle](functional-spec/FS-config.md#principle-a-setting-written-at-a-narrower-scope-wins), [§FS-config.requirements](functional-spec/FS-config.md#requirements-what-the-config-contract-holds-to), [§FS-config.2](functional-spec/FS-config.md#2-precedence): state once how `grund.toml`'s committed scopes relate — built-in default, project, kind — with the four settings admitted at both the project and the kind scope listed in one place, and eight marked requirements on the schema as a whole. [§FS-config.2](functional-spec/FS-config.md#2-precedence)'s "Layering is shallow" sentence was a wrong description of `grund`, which merges key by key, and is withdrawn; its `[[kinds]]`-omission compatibility note moves intact to [§FS-config.3.4.4.4](functional-spec/FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home). No behavior changes: no key is renamed, none gains a scope it did not have, and `grund_config_version` stays 1. (PR #287)
 
 ### Removed
 

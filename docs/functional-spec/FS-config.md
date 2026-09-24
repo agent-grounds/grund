@@ -51,7 +51,7 @@ Four settings are admitted at both the project scope and the kind scope, and for
 | `[id] format` | a row's `format` | [§FS-config.3.4.10.1](FS-config.md#34101-format) |
 | `[citations] default` | `[citations.<KIND>] default` | [§FS-config.3.9.4](FS-config.md#394-defaults-and-precedence) |
 
-Every other key of [§FS-config.3](FS-config.md#3-schema) is admitted at one committed scope only, so [§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list) never reaches it and its table section is the whole statement of where it may be written. The list is derived from the parse sites and the resolution sites rather than read off this prose, and the derivation is recorded with the decision behind this chapter, so that a reader re-runs it instead of trusting it. A key that gains a second scope is added here in the same change, and that is additive surface ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)).
+Every other key of [§FS-config.3](FS-config.md#3-schema) is admitted at one committed scope only, so [§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list) never reaches it and its table section is the whole statement of where it may be written. The list is derived from the parse sites and the resolution sites rather than read off this prose, and the derivation is recorded with the decision behind this chapter ([§DF-config-scope-override.2.2](../decisions/functional/DF-config-scope-override.md#22-the-inventory-is-derived-in-two-stages)), so that a reader re-runs it instead of trusting it. A key that gains a second scope is added here in the same change, and that is additive surface ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)).
 
 ## requirements: What the config contract holds to
 
@@ -129,9 +129,7 @@ The bare `grund.toml` is the form `grund init` generates ([§FS-init.2.4](FS-ini
 
 ## 2. Precedence
 
-CLI flags > `grund.toml` > built-in defaults. Layering is shallow: a value present in `grund.toml` overrides the entire corresponding default; CLI flags override individual leaf values.
-
-Compatibility note: a pre-existing `grund.toml` that omits `[[kinds]]` keeps the pre-`requirements.md` implicit FS home (`folder = "docs/functional-spec"`) until the project writes an explicit `[[kinds]]` table. New zero-config projects and freshly generated configs use the canonical defaults in [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds), where `FS` is `file = "requirements.md"`. This preserves existing configs without adding a new schema version.
+Two sources decide a setting: the committed `grund.toml` and the CLI inputs of the one run. A value written in `grund.toml` stands over the built-in default ([§FS-config.3](FS-config.md#3-schema)), and a CLI input is not a third source above both — it enters at the scope its flag spells and resolves from there ([§FS-config.principle.cli](FS-config.md#principlecli-a-cli-input-enters-at-the-scope-its-flag-spells)), which is why `grund check --require-grounding` sets the project default and an explicit `require_grounding = false` on a row still wins over it. Both statements are about one leaf key at a time ([§FS-config.principle.unit](FS-config.md#principleunit-one-leaf-key-overrides-and-one-value-is-whole)): a table naming one key leaves every other key of that table at its default, and what a key does override is its whole value, an array included. How the scopes inside the file relate is stated once in [§FS-config.principle](FS-config.md#principle-a-setting-written-at-a-narrower-scope-wins), and this section does not restate it. Per [§DF-config-scope-override](../decisions/functional/DF-config-scope-override.md#df-config-scope-override-the-committed-scopes-are-one-relation-stated-once), which records what this section said before and why it was withdrawn.
 
 ## 3. Schema
 
@@ -243,7 +241,7 @@ may read several agents that do not render alike, so the same key is also accept
 
 `require_grounding = true` adds the ungrounded-source-file error ([§FS-check.3.6](FS-check.md#36-ungrounded-source-file-opt-in)), which says which files must be grounded and how. `grund check --require-grounding` sets the same default for one run, and an explicit `require_grounding = false` on a row wins over it ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)). Per [§DF-require-grounding](../decisions/functional/DF-require-grounding.md#df-require-grounding-an-opt-in-check-that-every-source-file-cites-a-spec); off by default so adopting the discipline is a deliberate step, like `strict`.
 
-`require_grounding` and `grounding_level` are the two keys of this section that are **defaults for the `[[kinds]]` table** rather than settings of their own: each may be written on a row, and the row wins ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)). Written here they say what every place does; written on a row they say what one place does. `grounding_level` names the unit inside each governed file — `1`, the default, is the file, which is the unit every config had before the key existed. It is inert, and a config error, where nothing turns grounding on ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
+`require_grounding` and `grounding_level` are the two keys of this section admitted at both the project scope and the kind scope: each may also be written on a `[[kinds]]` row, and the row is the narrower scope ([§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list), [§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)). Written here they say what every place does; written on a row they say what one place does. They are an instance of that relation rather than an exception to this table: every other key of this section is admitted at the project scope alone, which is what [§FS-config.principle.admission](FS-config.md#principleadmission-the-relation-reaches-only-scopes-that-admit-the-setting) says of a key whose point names no second scope, and [§FS-config.principle.inventory](FS-config.md#principleinventory-the-settings-admitted-at-both-the-project-and-the-kind-scope) carries the complete list. `grounding_level` names the unit inside each governed file — `1`, the default, is the file, which is the unit every config had before the key existed. It is inert, and a config error, where nothing turns grounding on ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
 
 #### 3.1.8 `inline_style` and the note budgets
 
@@ -461,7 +459,7 @@ correction are recorded in
 
 #### 3.4.4 The default kinds
 
-The defaults declare these nine, in this order (an existing `grund.toml` that omits `[[kinds]]` gets them with the older `FS` home of [§FS-config.2](FS-config.md#2-precedence)):
+The defaults declare these nine, in this order (an existing `grund.toml` that omits `[[kinds]]` gets them with the older `FS` home of [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home)):
 
 ```toml
 [[kinds]]
@@ -525,6 +523,10 @@ A test cites the document whose claim it proves, and is never cited back: an `e2
 ##### 3.4.4.3 `E2E` is configured, not a default
 
 `E2E` is **not** in this list, and is still a fully supported kind: a repository whose e2e suite is a corpus of case directories declares it (`kind = "E2E"`, `folder = "e2e/cases"`, `index = false`) and gets the case-declaration machinery of [AR-scanner.6](../architecture/AR-scanner.md#6-e2e-case-declarations) — `E2E-<case>` IDs, `grund <ID>` over the case manifest, per-case obligations, and the fixture-tree pruning that keeps a nested case repo out of the host scan. That machinery follows the configured `E2E` home, so a config that wants it names it. Decided in [§DF-non-citable-kinds.3](../decisions/functional/DF-non-citable-kinds.md#3-consequences), which also records what a default-config repository with an `e2e/cases` tree sees on upgrade.
+
+##### 3.4.4.4 A config that omits `[[kinds]]` keeps the older `FS` home
+
+Compatibility note: a pre-existing `grund.toml` that omits `[[kinds]]` keeps the pre-`requirements.md` implicit FS home (`folder = "docs/functional-spec"`) until the project writes an explicit `[[kinds]]` table. New zero-config projects and freshly generated configs use the canonical defaults in [§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds), where `FS` is `file = "requirements.md"`. This preserves existing configs without adding a new schema version.
 
 #### 3.4.5 Name rules
 
@@ -687,8 +689,10 @@ remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)).
 ##### 3.4.10.1 `format`
 
 `format` uses exactly the template placeholders and the repository's
-`number_pattern` and `slug_pattern` validation from [§FS-config.3.2](FS-config.md#32-id--id-grammar). It overrides only
-this kind; `[id].format` remains the default for every other kind. It is valid
+`number_pattern` and `slug_pattern` validation from [§FS-config.3.2](FS-config.md#32-id--id-grammar). It is
+[§FS-config.3.2](FS-config.md#32-id--id-grammar)'s `format` written at the kind scope, and resolves like any setting
+admitted at two scopes ([§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list)): it overrides only this kind, and
+`[id].format` remains the default for every other kind. It is valid
 without `resolve` or `fetch`, but invalid on a non-citable kind.
 
 ##### 3.4.10.2 `fetch` and `resolve`

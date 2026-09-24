@@ -73,8 +73,8 @@ pub(crate) fn home_form_of(config_file: &Path) -> Option<PathBuf> {
 
 /// Discover and load the effective config: walk upward from `start` for the
 /// nearest directory carrying either config name (§FS-config.1), parse it over
-/// the defaults (§FS-config.2), or fall back to the pure defaults if none is
-/// found (§GOAL-zero-config).
+/// the defaults (§FS-config.principle.unit), or fall back to the pure defaults
+/// if none is found (§GOAL-zero-config).
 ///
 /// Why the fallback root is the working directory: `[scan] include` must resolve
 /// against the repository, so `grund check src/` scopes *into* `src/` instead of

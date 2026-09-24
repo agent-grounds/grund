@@ -398,7 +398,7 @@ title = "Architecture decision"
     );
 }
 
-/// §FS-config.2 / §FS-init.2.1: existing configs without explicit kind homes keep
+/// §FS-config.3.4.4.4 / §FS-init.2.1: existing configs without explicit kind homes keep
 /// the legacy FS folder, and `init --docs` must scaffold that effective home.
 /// §FS-init.1.3 is that rule seen from the `--docs` side: a config that omits
 /// `[[kinds]]` keeps the compatibility FS home, so the scaffold writes

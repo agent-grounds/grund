@@ -83,7 +83,7 @@ These are refusals, not prompts: `init` still never asks a question ([§FS-non-g
 
 ### 1.3 `--docs` and the effective config
 
-The root-level `requirements.md` stub is scaffolded because the generated `FS` kind uses it as the default requirements/spec home ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). An existing config that omits `[[kinds]]` instead keeps the compatibility FS home from [§FS-config.2](FS-config.md#2-precedence), so `--docs` scaffolds `docs/functional-spec/README.md` and points next-step guidance at `docs/functional-spec`. `roadmap.md` and `changelog.md` are scaffolded because the generated managed block's `docs/` table links to them ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
+The root-level `requirements.md` stub is scaffolded because the generated `FS` kind uses it as the default requirements/spec home ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). An existing config that omits `[[kinds]]` instead keeps the compatibility FS home from [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home), so `--docs` scaffolds `docs/functional-spec/README.md` and points next-step guidance at `docs/functional-spec`. `roadmap.md` and `changelog.md` are scaffolded because the generated managed block's `docs/` table links to them ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
 
 ### 1.4 Why `--check` exists
 
