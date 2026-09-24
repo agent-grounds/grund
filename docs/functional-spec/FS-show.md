@@ -8,6 +8,22 @@ for every resolvable coordinate. Serves
 [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file),
 and [§GOAL-fast-feedback.1](../goals.md#1-performance-targets).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section, coordinate,
+lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, shorthand, canonical form),
+[§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (source declaration, stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope,
+workspace, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, fetcher,
+snapshot).
+
+- **slice** — How much of a body a read returns — `--brief`, the default, `--toc`, `--full`, and
+  the section forms. The slices are strictly nested, so escalating is one more flag.
+- **brief** — The cheapest slice: the heading line and the first paragraph, the hover preview.
+- **section map** — What `--toc` returns: the nested map of the coordinates a body records,
+  without their prose.
+- **batch query** — One `--batch` invocation answering an ordered stream of coordinates, or
+  every coordinate in scope, from a single load.
+
 ## 1. Inputs
 
 ```

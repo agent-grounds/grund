@@ -2,6 +2,27 @@
 
 The `check` command walks a repo and reports every violation of the grund reference scheme. Validation is explicit as `grund check [<path>]`; the bare `grund <ID>` default belongs to [§FS-show.1](FS-show.md#1-inputs). Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) and [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section, coordinate,
+lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, qualified citation, shorthand,
+canonical form, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (source declaration, stub, doc-comment, note),
+[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, workspace, member, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings)
+(finding, severity, suggestion, caution, verdict, anchor), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction, level,
+rule, grounded), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, component, binding, snapshot).
+
+- **grounding unit** — What `require_grounding` measures: a whole scanned file, or one
+  doc-comment block where the row's `grounding_level` says so. A unit is grounded when it holds
+  at least one recognized citation.
+- **obligation** — A `must` or `should` entry of `[citations.<kind>]`, asking whether each unit
+  of the citing kind cites the target kind at least once. It is answered per unit.
+- **prohibition** — A `must-not` or `should-not` entry, which fires once per offending citation
+  site rather than once per unit.
+- **blind spot** — A place the default scope never reads, bounded and declared rather than
+  discovered, and what `--full` exists to look into.
+- **full-tree scope** — The scope `--full` selects: every file the walk can reach, in place of
+  the configured default scope.
+
 ## 1. Inputs
 
 - Optional path argument; defaults to the current directory. May be a directory or a single file (`grund check crates/grund-core/src/scanner/file_pass.rs` scopes the scan to one file but still discovers the `grund.toml` by walking up — [§FS-config.1](FS-config.md#1-file-location-and-discovery)).
@@ -302,7 +323,7 @@ This is a warning, not an error: the exit code stays `0` (a genuinely empty tree
 
 ### 2.3 Suggestions channel *(opt-in)*
 
-The `should` / `should-not` levels of `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) produce **suggestions**, not findings: they are advisory by RFC-2119 definition and grund has no per-site suppression mechanism, so surfacing them in the default run would replace the `success` marker ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)) on a repo that has consciously accepted a deviation, and it would never recover. They are therefore withheld from the default run and live on a separate channel, decided in [§DF-citation-directions](../decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels).
+The `should` / `should-not` levels of `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) produce **suggestions** — findings carried on the suggestions channel rather than at a third severity ([§FS-terms.terms.5](FS-terms.md#terms5-findings), [§FS-distribution.3.0.1](FS-distribution.md#301-report-and-finding), [§FS-rules.7](FS-rules.md#7-findings-and-channels)): they are advisory by RFC-2119 definition and grund has no per-site suppression mechanism, so surfacing them in the default run would replace the `success` marker ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)) on a repo that has consciously accepted a deviation, and it would never recover. They are therefore withheld from the default run and live on a separate channel, decided in [§DF-citation-directions](../decisions/functional/DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels).
 
 `grund check --suggestions` ([§FS-check.1](FS-check.md#1-inputs)) emits them. A suggestion is a third report channel, **not** a third severity: [§FS-config.6](FS-config.md#6-what-is-not-configured-here) freezes the severity set at `{error, warning}`, so a suggestion carries `"channel": "suggestion"` rather than a `severity` ([§FS-errors.5](FS-errors.md#5-json-format)). The codes are `suggested-citation` (a `should` obligation a declaration does not meet), `discouraged-citation` (a `should-not` citation site), and `escaped-citation-resolves` ([§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves)).
 
@@ -324,7 +345,7 @@ Unqualified `<§>ID` and qualified `<§>alias/ID` escapes are both covered. The 
 
 `--only` and `--ignore` select suggestions only after `--suggestions` has enabled this channel: a selector cannot surface a suggestion the run did not request. Selecting away every enabled suggestion restores the ordinary empty selected-report behavior from [§FS-check.2.1.3](FS-check.md#213-the-success-marker).
 
-- **Text** — `--suggestions` prints each suggestion in the located-finding shape `<path>:<line>: suggestion: <message>` ([§FS-check.2.1](FS-check.md#21-report-format)), after the error and warning groups in the same deterministic within-group order ([§FS-errors.4](FS-errors.md#4-determinism)). Without the flag, suggestions are not printed, and the `success` marker still appears for a run with zero errors and zero warnings even if suggestions exist — a suggestion is not a finding about well-formedness.
+- **Text** — `--suggestions` prints each suggestion in the located-finding shape `<path>:<line>: suggestion: <message>` ([§FS-check.2.1](FS-check.md#21-report-format)), after the error and warning groups in the same deterministic within-group order ([§FS-errors.4](FS-errors.md#4-determinism)). Without the flag, suggestions are not printed, and the `success` marker still appears for a run with zero errors and zero warnings even if suggestions exist — a suggestion says the graph is thinner than recommended, not that it is malformed.
 - **Exit code** — suggestions, retained or not, never affect it (`0`/`1`/`2` unchanged), exactly like the empty-scan caution.
 - **JSON** — under `--suggestions`, suggestion objects are emitted on stdout alongside the findings with `"channel": "suggestion"`; a consumer filtering on `severity ∈ {error, warning}` is unaffected. Without the flag none are emitted.
 

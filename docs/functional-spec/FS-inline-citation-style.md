@@ -2,6 +2,20 @@
 
 An inline citation in a code comment can carry a short rationale next to the `§<ID>` token — the project explains *why* this clause is grounded in that spec point. This spec defines a project-level house style for that rationale: whether it is allowed at all, how long it may run, and where the citation sits inside it. The same configuration drives `grund check` enforcement and the agent-facing copy in `AGENTS.md` / `CLAUDE.md` so the LLM that authors citations and the linter that validates them agree on the rules. Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable) and [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker,
+citation, shorthand, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub, doc-comment, note),
+[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity), and
+[§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction).
+
+- **comment block** — The contiguous run of comment lines a site is measured over. A blank line
+  ends one; an empty comment line does not.
+- **definition-starter** — The language keyword on the line below a block that makes the block a
+  doc-comment rather than an inline comment.
+- **leading comment** — A block with only blank lines or a shebang above it — how a language
+  with no doc-comment syntax spells a module doc.
+
 ## 1. Scope
 
 An **inline citation site** is an *inline comment* block — a maximal run of adjacent comment/docstring lines, by the scanner's existing line classes ([AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)) — that contains at least one citation token recognized by [§FS-check.1.1](FS-check.md#11-recognized-citations). An inline citation site never spans more than one block: a code line, a blank line, or a different comment style ends a block, and an empty comment line does not ([§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)). A **doc comment** block is not one, whatever it carries: [§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites) draws that line and every rule below stops at it. What this spec does not govern is listed in [§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site), and what inside an inline citation site counts as a *note* is defined in [§FS-inline-citation-style.1.4](FS-inline-citation-style.md#14-notes).

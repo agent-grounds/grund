@@ -2,6 +2,19 @@
 
 Locally, a plain `§<ID>` citation is meant to be clickable and hoverable — resolution belongs to the rendering layer ([§DF-neural-link-generation](../decisions/functional/DF-neural-link-generation.md#df-neural-link-generation-agents-compose-clickable-citation-links-themselves-grund-does-not-grow-a-link-command)). That layer is user-side, one-time configuration in the spirit of the editor LSP snippets ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor)): grund ships no first-party marketplace plugin. `grund integrations` is the one-stop shop that makes those integrations installable by humans and agents alike — the binary carries every artifact and prints it on demand, in the same dry-run-first ethos as `grund completions` ([§FS-completions](FS-completions.md#fs-completions-grund-completes-declared-ids-in-shells)) and `grund init` ([§FS-init](FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo)). It exists so that `cargo install grund` is enough to get clickable citations in a terminal or editor, serving [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) without asking the user to hand-assemble scripts. Why a one-time-setup command earns a slot on the frozen subcommand surface when a per-citation `link` command did not is recorded in [§DF-integrations-command](../decisions/functional/DF-integrations-command.md#df-integrations-command-integrations-earns-a-cli-slot-as-one-time-setup-where-a-per-citation-link-command-did-not).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section, lead, catalog),
+[§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, shorthand), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, config root,
+workspace, member, alias), and [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding).
+
+- **rendering layer** — Whatever makes a bare citation clickable where the reader is — a
+  terminal, an editor, or a forge — and where resolution belongs.
+- **client** — One supported application this command prints an artifact for, or writes one
+  into.
+- **resolver script** — The embedded `grund-open` shell script that takes a citation, resolves
+  it to a `path:line` site, and opens it.
+
 ## 1. User-facing command
 
 ```

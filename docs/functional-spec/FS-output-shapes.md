@@ -2,6 +2,13 @@
 
 This file is the verbose output-shape companion to [§FS-errors](FS-errors.md#fs-errors-grund-emits-messages-in-fixed-shapes). It collects the JSON/text envelopes that are spread across [§FS-check](FS-check.md#fs-check-grund-validates-every-reference-in-a-repo), [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id), [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id), [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file), [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations), and [§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up). The examples here are normative for fields, stream split, and ordering.
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section, lead),
+[§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation, shorthand, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub),
+[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, suggestion,
+caution), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, binding).
+
 ## 1. Diagnostic object
 
 Diagnostics use this shape:

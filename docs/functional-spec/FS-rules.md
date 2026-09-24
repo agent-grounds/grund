@@ -7,6 +7,24 @@ agents before they write. This closes the checked-guidance loop of
 existing checker. The product decision is
 [§DF-chapter-rules](../decisions/functional/DF-chapter-rules.md#df-chapter-rules-chapter-rules-are-grounded-controlled-english-declarations-over-producer-neutral-facts).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, citable, body, section, catalog),
+[§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, shorthand, citation site), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, alias),
+[§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, suggestion, verdict), and [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction,
+level, rule, grounded).
+
+- **subject** — The authored phrase that opens a rule sentence and names the units the rule is
+  about.
+- **selector** — What a subject or target spelling matches: a kind, a named chapter, or one
+  exact ID.
+- **chapter** — A rule's unit inside a declaration: one named child heading of it, as against
+  the declaration's whole body. The rule grammar's subject-unit word.
+- **family** — One accepted rule grammar. A sentence outside every family is refused rather than
+  reinterpreted.
+- **facts** — The `RuleFacts` an evaluator reads: the versioned, immutable record of the units,
+  chapters and counts one scan produced.
+
 ## 1. Rule declarations and opt-in
 
 One or more citable Markdown kinds may set the optional Boolean

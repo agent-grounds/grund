@@ -18,7 +18,14 @@ INDEX = FUNCTIONAL_SPEC / "README.md"
 VOCABULARY = "FS-terms"
 ENTRY = re.compile(r"\[§(FS-[a-z][a-z0-9-]*)(?:\.[^\]]*)?\]\(([^)#]+)(?:#[^)]*)?\)")
 TERMS = re.compile(r"^## terms: Terms\s*$")
-LEAN = "Leans on " + "§" + "FS-terms.terms."
+MARKER = "§"
+# `[fmt.cross_refs]` is on, so the stored lean line carries the linked form of the
+# citation; accept both, because the assertion is about the lean line and not about
+# whether `grund fmt --write` has run. The marker stays out of any literal a scan
+# would read as a citation of a group: such a citation from tests/integration/ is
+# coverage evidence for that leaf and turns its listed exception into a failure.
+LEAN = re.compile(r"^Leans on \[?" + MARKER + r"FS-terms\.terms\.\d")
+LEAN_SHAPE = "Leans on " + MARKER + "FS-terms.terms.<N>"
 HEADING = re.compile(r"^#{1,2} ")
 
 
@@ -67,9 +74,9 @@ class FunctionalSpecTermsTests(unittest.TestCase):
                 problems.append(f"{ident}: no `## terms: Terms` chapter in {path.name}")
             elif len(chapters) > 1:
                 problems.append(f"{ident}: {len(chapters)} `## terms: Terms` chapters in {path.name}")
-            elif not _first_line(chapters[0]).startswith(LEAN):
+            elif not LEAN.match(_first_line(chapters[0])):
                 problems.append(
-                    f"{ident}: the Terms chapter does not open with `{LEAN}…`, "
+                    f"{ident}: the Terms chapter does not open with `{LEAN_SHAPE}…`, "
                     f"it opens with {_first_line(chapters[0])!r}"
                 )
         carried = len(specs) - len(problems)

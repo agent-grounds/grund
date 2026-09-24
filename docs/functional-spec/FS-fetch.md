@@ -5,6 +5,12 @@ complete Markdown declaration and stores it in that kind's configured home. It i
 only external-materialization surface; all later scanning and resolution use the saved
 declaration under [§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, body, section, catalog),
+[§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, config root, workspace, member, alias),
+and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (fetcher, snapshot).
+
 ## 1. Input and project selection
 
 The command accepts exactly one local or workspace-qualified ID and no section. It uses

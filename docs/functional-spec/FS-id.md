@@ -2,6 +2,12 @@
 
 The `id` subcommand emits one conflict-free ID for a new declaration — `<KIND>-<NNN>-<slug>` under the default format ([§FS-id.2.1](FS-id.md#21---format-text-default)). The name is deliberate: `id` is the pure allocator, while `new` is reserved for a future command that would create a declaration stub ([§DF-keep-id-for-pure-id-allocation-and-reserve-new-for-stub](../decisions/functional/DF-keep-id-for-pure-id-allocation-and-reserve-new-for-stub.md#df-keep-id-for-pure-id-allocation-and-reserve-new-for-stub-keep-id-for-pure-id-allocation-and-reserve-new-for-stub-creation)). Authors, agents and editor "new declaration" actions all call this one primitive ([§FS-id.8](FS-id.md#8-why-this-exists)), so the next number for a kind and the canonical slug for a title are computed in exactly one place. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) (no human picks the next number by reading a directory listing) and [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) (proposed IDs cannot collide with existing declarations).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker,
+citation, shorthand, canonical form), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding), and
+[§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, fetcher).
+
 ## 1. Inputs
 
 ```

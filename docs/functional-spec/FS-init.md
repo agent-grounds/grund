@@ -6,6 +6,24 @@ The `init` subcommand writes the minimum set of files a project needs to start u
 
 Verbose implementer fixtures — exact stderr transcripts, final tree expectations, and common existing-file cases — are in [§FS-init-fixtures](FS-init-fixtures.md#fs-init-fixtures-concrete-init-fixtures); they are examples of this spec, not a separate feature.
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section, lead, index),
+[§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, shorthand, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (source
+declaration, stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member, alias),
+[§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, suggestion, verdict), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction, rule), and
+[§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value).
+
+- **entrypoint** — A file an agent reads at session start that `init` writes or updates — the
+  canonical `AGENTS.md`, or an agent's own.
+- **companion** — An entrypoint written beside the canonical one for an agent whose directory
+  already exists. A symlink to `AGENTS.md` counts as one.
+- **managed block** — The region of an entrypoint `init` owns and rewrites whole. Every byte
+  outside it is preserved, including line endings.
+- **delimiter** — The comment line that opens a managed block and the one that closes it.
+- **legacy block** — A block at v3 or earlier, written before the delimiters: its H2 heading is
+  the begin marker and the next H1 or H2 ends it.
+
 ## 1. Inputs
 
 ```

@@ -4,6 +4,11 @@ This file is the verbose fixture companion to [§FS-init](FS-init.md#fs-init-gru
 
 The fixtures use `{repo}` for an existing target directory and `{repo_copy}` for a mutable copy of that directory. Per [§FS-init.2.2](FS-init.md#22-stdout--stderr), every success case has empty stdout and every path `init` prints is relative to the target directory. The stderr blocks below are exact apart from the placeholder path in the missing-target case.
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation), and
+[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, member, alias).
+
 ## 1. Default form
 
 Command:

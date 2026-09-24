@@ -4,6 +4,12 @@ This spec exists to prevent feature creep. Every entry below is a thing `grund` 
 
 A non-goal is not the same as "we'll do it later." Non-goals are commitments. To turn one into a goal requires a decision record under `docs/decisions/architectural/` overturning this spec, with a clear rationale.
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, lead), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation),
+[§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace), [§FS-terms.terms.5](FS-terms.md#terms5-findings)
+(finding, severity, suggestion, anchor), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, component, binding).
+
 ## 1. Markdown link validation
 
 `grund` does **not** validate `[text](url)` links, anchor `#section` references inside markdown, or HTTP URLs. Use [`lychee`](https://github.com/lycheeverse/lychee) for those — it is fast, focused, and well-maintained. Reasoning: there is no token-cheap reason to merge two lints into one binary.

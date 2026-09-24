@@ -2,6 +2,18 @@
 
 `grund` lets a repository make numbered components authoritative values. The feature is explicit and current-tree-only: a kind opts whole declarations in, an author marks one citable numeric section, or a kind declares the chapter whose named children are values; a use names one exact component, and `grund check` compares the authored component with that declaration. Repositories that use none of the three retain byte-identical behavior. This serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) and [§GOAL-polyglot-citation](../goals.md#goal-polyglot-citation-ids-cite-cleanly-from-anywhere-they-are-useful).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section, coordinate,
+lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, shorthand), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms)
+(source declaration, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member, alias),
+[§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, suggestion, anchor), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction), and
+[§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, component, binding).
+
+- **value root** — The declaration or section whose numbered children carry the authored values.
+- **authority** — What makes a section a root — the `values = true` row, the embedded marker, or
+  the declared chapter. A second authority over the same root is an error, not a confirmation.
+
 ## 1. Per-kind opt-in and identity
 
 A `[[kinds]]` row opts whole declarations in only with `values = true`, which is absent and false by default; [§FS-config.3.4.9](FS-config.md#349-values--first-class-value-declarations) fixes which rows may carry it. It does not create a kind, change the configured ID grammar, or make any whole declaration outside the row's existing home authoritative.
