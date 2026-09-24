@@ -23,17 +23,19 @@ fn command_output_format(
 
 /// The run's `[workspace]` warnings, in §FS-check.2.1.1's CLI-level shape: one
 /// `warning: ` line each on **stderr**, ahead of whatever the command itself
-/// prints, exit code untouched (§FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11,
-/// §FS-workspace.6.1.7).
+/// prints, exit code untouched here (§FS-check.4.7.7, §FS-check.3.29.15,
+/// §FS-check.4.10.11, §FS-workspace.6.1.7).
 ///
 /// The engine settles these before any report exists and hands them back as
 /// diagnostics; this is the terminal's rendering of them, and it is the same text
 /// under `--format json`, because the shape is fixed by each finding's own spec
-/// section rather than read off the channel it travels in (§FS-errors.5.2). The
-/// anchor each one carries is for an editor (§FS-lsp.1.1.3) — here the message
-/// already names the line, so a `<path>:<line>:` prefix would say it twice and
-/// put a fact about the run's configuration in the stream reserved for findings
-/// about the citation graph.
+/// section rather than read off the channel it travels in (§FS-errors.5.2). Three
+/// of them carry an anchor, and it is for an editor (§FS-lsp.1.1.3);
+/// §FS-check.3.29.15's carries none here, because the message names the line
+/// itself and the editor takes that finding off `check`'s report instead
+/// (§FS-check.3.29.13). Either way the message already names the line, so a
+/// `<path>:<line>:` prefix would say it twice and put a fact about the run's
+/// configuration in the stream reserved for findings about the citation graph.
 fn render_run_warnings(warnings: &[Finding]) {
     for warning in warnings {
         eprintln!("warning: {}", warning.message);

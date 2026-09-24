@@ -272,9 +272,9 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
                 case.name
             ));
         }
-        // §FS-lsp.1.1.3, §FS-lsp.4: the four run-level `[workspace]` warnings, held
-        // against the same case's stderr — neither surface may carry one the other
-        // does not, and the message is the CLI's byte for byte.
+        // §FS-lsp.1.1.3, §FS-lsp.4: the three run-level `[workspace]` warnings, held against
+        // the same case's stderr — neither surface may carry one the other does not, and the
+        // message is the CLI's byte for byte. The unlisted block is an ordinary `Finding` above.
         if !cli_run_warnings.is_empty() {
             run_warning_cases += 1;
         }

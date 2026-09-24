@@ -18,9 +18,9 @@ impl Server {
                     by_uri.entry(uri).or_default().push(diagnostic);
                 }
             }
-            // §FS-lsp.1.1.3: the four run-level `[workspace]` warnings, each on the
-            // `grund.toml` it anchors at — the engine's own anchor, never a
-            // location read back out of the message text (§AR-bindings.2).
+            // §FS-lsp.1.1.3: the three run-level `[workspace]` warnings, each on the
+            // `grund.toml` it anchors at, never a location read back out of the text
+            // (§AR-bindings.2). The unlisted block is a `report` error (§FS-check.3.29.13).
             for finding in project.snapshot.run_warnings.clone() {
                 if let Some((uri, diagnostic)) =
                     self.diagnostic_for_finding(project, finding, DiagnosticSeverity::WARNING)
