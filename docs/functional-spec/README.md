@@ -40,6 +40,12 @@ Behavior every subcommand inherits.
 - [§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value) — opted-in kinds bind authored components to one declared value
 - [§FS-rules](FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules) — grounded declarations state and enforce chapter rules
 
+## Vocabulary
+
+The words the specs share, settled once so a slice read alone still reads alone.
+
+- [§FS-terms](FS-terms.md#fs-terms-the-shared-vocabulary-of-the-functional-spec) — the shared vocabulary of the functional spec
+
 ## Verbose fixtures
 
 Concrete fixtures that keep the command specs readable while pinning exact examples.
