@@ -118,15 +118,11 @@ pub(crate) fn walk_scannable_files_reporting(
         // §AR-workspace.6: a root scan starts outside member namespaces; an
         // included path at or below a member boundary belongs to the member scan,
         // and one in another project belongs there (§FS-workspace.6.2).
-        if outward_directory_link_root(
-            &scan_root,
-            &canonical_scan_root,
-            &config.root,
-            &physical_root,
-        ) || config
-            .workspace_boundary_roots
-            .iter()
-            .any(|root| canonical_scan_root.starts_with(root))
+        if outward_directory_link_root(&scan_root, &canonical_scan_root, &physical_root)
+            || config
+                .workspace_boundary_roots
+                .iter()
+                .any(|root| canonical_scan_root.starts_with(root))
             || owned_by_another_project(config, &physical_root, &canonical_scan_root)
         {
             continue;
@@ -367,15 +363,11 @@ pub(crate) fn walk_reads_any_file(config: &Config, scan_root: &Path) -> bool {
     // §FS-config.3.5.1, §FS-workspace.6: the reporting walk's own scan-root
     // gates, ahead of the branch below, because neither a file root nor a walk
     // root ever reaches the filter.
-    if outward_directory_link_root(
-        scan_root,
-        &canonical_scan_root,
-        &config.root,
-        &physical_root,
-    ) || config
-        .workspace_boundary_roots
-        .iter()
-        .any(|root| canonical_scan_root.starts_with(root))
+    if outward_directory_link_root(scan_root, &canonical_scan_root, &physical_root)
+        || config
+            .workspace_boundary_roots
+            .iter()
+            .any(|root| canonical_scan_root.starts_with(root))
         || owned_by_another_project(config, &physical_root, &canonical_scan_root)
     {
         return false;

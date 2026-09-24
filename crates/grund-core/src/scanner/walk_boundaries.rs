@@ -29,30 +29,26 @@ pub(super) fn owned_by_another_project(config: &Config, own_root: &Path, canonic
         .is_some_and(|owner| owner.as_path() != own_root)
 }
 
-/// Whether directory-link traversal carried a scan root outside the canonical
-/// project root (§FS-config.3.5.1, §AR-scanner.1.6). For an in-project spelling,
-/// every component below the project root is checked: the named root may be a
-/// descendant of the link rather than the link itself. An external spelling is
-/// rejected only when the named root itself is a link, so a plain parent-relative
-/// external root remains intentional scope. Comparing the resolved roots first
-/// keeps an aliased config root and in-root links readable.
+/// Whether the scan root *is itself* a directory link pointing outside the
+/// canonical project root (§FS-config.3.5.1, §AR-scanner.1.6). §FS-config.3.5.1
+/// gates link *traversal*: a directory link is followed only while its target
+/// stays inside the project, "and the same gate applies when a configured or
+/// explicit scan root is itself a directory symlink". A root written below a
+/// linked ancestor traverses no link — the walk starts under it — so it is
+/// ordinary scope, and refusing it left a kind home behind a linked parent
+/// unread with nothing saying so (§REQ-no-missed-citation.2,
+/// §DF-undeclared-blind-spots). The spelling of the root does not change the
+/// question; comparing the resolved roots first keeps an aliased config root
+/// and in-root links readable.
 pub(super) fn outward_directory_link_root(
     scan_root: &Path,
     canonical_scan_root: &Path,
-    project_root: &Path,
     physical_root: &Path,
 ) -> bool {
     if canonical_scan_root.starts_with(physical_root) {
         return false;
     }
-    let Ok(relative) = scan_root.strip_prefix(project_root) else {
-        return is_directory_symlink(scan_root);
-    };
-    let mut component_path = project_root.to_path_buf();
-    relative.components().any(|component| {
-        component_path.push(component);
-        is_directory_symlink(&component_path)
-    })
+    is_directory_symlink(scan_root)
 }
 
 pub(super) fn is_directory_symlink(path: &Path) -> bool {
