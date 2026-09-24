@@ -50,10 +50,43 @@ the target project's grammar, remains the one place the tail itself is judged.
 
 ### 2.2 The root gate asks about the root, not its ancestors
 
-A scan root written below a linked directory traverses no link — the walk starts under it
-— so it is ordinary scope, and the canonical-root fence still refuses a root that *is* an
-outward link. That keeps the gate's purpose (a link may not carry a walk out of the
-project) while ending the skip it was also performing.
+[§FS-config.3.5.1](../../functional-spec/FS-config.md#351-a-symlink-in-the-tree-is-followed)
+is three sentences, and the code read the wrong one. In full:
+
+> A **file symlink** inside a walked tree is followed wherever its target resolves. A
+> **directory symlink** is followed only while its canonical target remains inside the
+> independently checked project's canonical root; when the target is outside that root,
+> the directory is pruned and no file below it is scanned. The same gate applies when a
+> configured or explicit scan root is itself a directory symlink.
+
+**The second sentence binds traversal, not location.** "The directory is pruned and no
+file below it is scanned" is one clause, not two: what is pruned is a directory the walk
+*met*, and pruning is the mechanism by which the files under it go unread. The paragraph
+that immediately follows it says so — "this is a boundary on link traversal, not on scan
+paths generally: a non-symlink parent-relative `include` may still name external
+content" — and
+[§FS-config.3.5.7](../../functional-spec/FS-config.md#357-include-is-walked-from-the-config-root)
+says it again about the entry that names a root: "a plain parent-relative entry such as
+`../shared` intentionally names external content and is still walked".
+
+Read the second sentence as a rule about *where a file sits* instead, and the verdict
+turns on a spelling. `include = ["docs/spec"]` behind `docs -> ../shared-docs` and
+`include = ["../shared-docs/spec"]` name one directory and read one set of bytes; the
+second is intentional external scope beyond argument, and only the first passes through a
+link that no walk ever traverses. A boundary that admits the tree under one spelling and
+declares it unreadable under the other is not the boundary this sentence draws.
+
+**A root below a linked ancestor is neither sentence's case.** It is canonicalized before
+the walk starts, so the walk begins at the link's target and traverses no link: sentence 2
+prunes a directory nothing walks to. And the written root is `docs/spec`, not `docs` — it
+is not itself a symlink, so sentence 3 does not reach it either. It has the standing of a
+plain `../shared` entry, and that is the rule the scanner now has: a canonical directory
+root outside the canonical project root is skipped when the *written* root is a symlink,
+while a plain parent-relative root remains intentional scan scope (AR-scanner.1.6).
+
+The fence still refuses a root that *is* an outward directory link, configured or handed
+in, which is sentence 3's whole content. That keeps the gate's purpose — a link may not
+carry a walk out of the project — while ending the skip it was also performing.
 
 ## 3. Rejected alternative: narrow the two specification points to the code
 
