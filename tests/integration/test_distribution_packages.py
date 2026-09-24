@@ -266,7 +266,7 @@ UNREADABLE_OWNERS = {
 }
 
 FAKE_CURL = '''#!/usr/bin/env python3
-"""A `curl` that answers from GUARD_FAKE_PLAN and logs every URL it is asked for."""
+"""A `curl` answering from the plan GUARD_FAKE_PLAN points at, logging every URL."""
 
 import json
 import os
@@ -278,7 +278,8 @@ destination = argv[argv.index("-o") + 1]
 with open(os.environ["GUARD_FAKE_LOG"], "a", encoding="utf-8") as log:
     log.write(url + "\\n")
 
-answer = json.loads(os.environ["GUARD_FAKE_PLAN"]).get(url, {"status": 404, "body": "{}"})
+with open(os.environ["GUARD_FAKE_PLAN"], "r", encoding="utf-8") as plan:
+    answer = json.load(plan).get(url, {"status": 404, "body": "{}"})
 if answer.get("transport"):
     sys.stderr.write("curl: (6) Could not resolve host\\n")
     raise SystemExit(6)
@@ -305,10 +306,15 @@ def run_guard(plan):
         curl.chmod(0o755)
         log = Path(tmp) / "requests"
         log.write_text("", encoding="utf-8")
+        # The plan travels as a file rather than as JSON in the environment:
+        # MSYS rewrites values that look like paths on the way to a native
+        # program, and a URL-shaped one arrives mangled.
+        answers = Path(tmp) / "plan.json"
+        answers.write_text(json.dumps(plan), encoding="utf-8")
 
         environment = dict(os.environ)
         environment["PATH"] = os.pathsep.join([str(binaries), environment["PATH"]])
-        environment["GUARD_FAKE_PLAN"] = json.dumps(plan)
+        environment["GUARD_FAKE_PLAN"] = str(answers)
         environment["GUARD_FAKE_LOG"] = str(log)
         done = subprocess.run(
             [BASH, "-c", UNDER_FAKE_CURL, "bash", str(binaries), str(NAME_GUARD)],
