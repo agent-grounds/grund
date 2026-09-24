@@ -4,7 +4,7 @@ A citation resolves to exactly the declaration its ID names, or it is reported �
 
 ## 1. No wrong resolution
 
-Ambiguity is an error, not a choice: a number-only shorthand matching more than one declaration is rejected with the candidate list ([§FS-check.3.13](../functional-spec/FS-check.md#313-number-only-shorthand-citation)), duplicate declarations are reported rather than ranked ([§FS-check.3.3](../functional-spec/FS-check.md#33-duplicate-declaration)), and a section coordinate resolves to the declaration's recorded heading or fails ([§FS-check.3.2](../functional-spec/FS-check.md#32-missing-section)). The resolver never substitutes a near miss — a "did you mean" hint is message text, and the citation still dangles and still fails the run.
+Ambiguity is an error, not a choice: a number-only shorthand matching more than one declaration is rejected with the candidate list ([§FS-check.3.13.3](../functional-spec/FS-check.md#3133-one-finding-per-site-in-three-forms)), duplicate declarations are reported rather than ranked ([§FS-check.3.3](../functional-spec/FS-check.md#33-duplicate-declaration)), and a section coordinate resolves to the declaration's recorded heading or fails ([§FS-check.3.2](../functional-spec/FS-check.md#32-missing-section)). The resolver never substitutes a near miss — a "did you mean" hint is message text, and the citation still dangles and still fails the run.
 
 Where a lookup *can* be satisfied two ways, the rule that picks must be written down. Silently preferring the first of two identical section paths is the shape of a guess even when it is deterministic.
 
