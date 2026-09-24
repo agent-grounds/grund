@@ -63,7 +63,7 @@ pub(crate) use records::{
     is_stub_for_inline_decl, resolve_stub_target,
 };
 pub(crate) use report::{CheckReport, Diagnostic, Site};
-pub(crate) use text::{format_list, json_escape, plural};
+pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};
 pub(crate) use values::{
     JSON_NUMBER_RE, authored_component, component_text_is_valid, named_section_component,
     value_binding_section_shape_is_valid, value_components_equal,

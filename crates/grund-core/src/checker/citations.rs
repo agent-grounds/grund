@@ -16,7 +16,8 @@ use crate::config::{
 };
 use crate::grammar::render_id;
 use crate::model::{
-    CheckReport, Citation, Diagnostic, E2eSpecRef, Findings, Id, paths_same_location,
+    CITATION_DIRECTION_REPAIR, CheckReport, Citation, Diagnostic, E2eSpecRef, Findings, Id,
+    paths_same_location,
 };
 use crate::scanner::file_home_kind;
 
@@ -358,14 +359,6 @@ fn obligation_diagnostic(
         sites: Vec::new(),
     }
 }
-
-/// The repair §FS-check.3.12 appends to every `forbidden-citation` error, so the
-/// finding says what to do about the offence and not only that it happened. A
-/// rule sentence reuses these bytes with `(<RULE-ID>)` in place of the
-/// `(citation direction)` authority tail and nothing else changed
-/// (§FS-rules.7.5).
-pub(crate) const CITATION_DIRECTION_REPAIR: &str =
-    " — re-point the citation or downgrade it to a plain Markdown link";
 
 /// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
 /// its target is a `forbidden-citation` error (`must-not`) or a

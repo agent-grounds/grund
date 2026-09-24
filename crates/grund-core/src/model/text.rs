@@ -1,6 +1,7 @@
 //! The text spellings every component shares (§AR-system.2.2): the JSON string
-//! escape of §FS-errors.5, the English list a message reads out, and the plural
-//! `s` a count earns.
+//! escape of §FS-errors.5, the English list a message reads out, the plural
+//! `s` a count earns, and the repair a forbidden-citation error ends with
+//! (§FS-check.3.12).
 //!
 //! The first two sat in the deprecated path's `output` category while the
 //! queries, the writers and the api read them upward (§AR-system.4,
@@ -54,3 +55,14 @@ pub(crate) fn format_list(items: &[&str], conjunction: &str) -> String {
 pub(crate) fn plural(value: usize) -> &'static str {
     if value == 1 { "" } else { "s" }
 }
+
+/// The repair §FS-check.3.12 appends to every `forbidden-citation` error, so the
+/// finding says what to do about the offence and not only that it happened. A
+/// rule sentence reuses these bytes with `(<RULE-ID>)` in place of the
+/// `(citation direction)` authority tail and nothing else changed
+/// (§FS-rules.7.5). Lives here rather than beside either message: the
+/// citation-direction pass is the checker's and the rule sentence is the rules',
+/// and the rules sit below the checker, so the spelling goes all the way down
+/// (§AR-system.4).
+pub(crate) const CITATION_DIRECTION_REPAIR: &str =
+    " — re-point the citation or downgrade it to a plain Markdown link";
