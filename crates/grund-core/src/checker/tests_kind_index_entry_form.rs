@@ -44,7 +44,7 @@ fn an_unmarked_token_is_not_an_entry_and_is_not_an_error() {
 /// is not a citation at all off strict mode, because `](…)` is a zone `fmt`
 /// never writes in (§FS-fmt.2.3.4) — so it earns no `unlinked-index-entry`
 /// finding for the same reason no citation ever does, and the ID still falls
-/// to §FS-check.3.18's warning below (grund#131).
+/// to §FS-check.3.18's error below (grund#131).
 #[test]
 fn an_id_shaped_link_destination_is_not_an_entry() {
     let root = kind_index_repo_loose("an_id_shaped_link_destination_is_not_an_entry");
