@@ -115,11 +115,15 @@ fn section_heading_note(config: &Config, marker: &str) -> String {
 /// §FS-inline-citation-style.5.4: the sentence that closes the rendered copy at
 /// every `inline_style`, after whatever the other keys produced, so the author
 /// and the linter agree on where the shape rules stop
-/// (§FS-inline-citation-style.1.1). It moves no managed-block version: it only
-/// widens what an author may write, so a block that predates it teaches a
-/// narrower rule than the gate enforces — an over-careful comment, never a
-/// finding.
-const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a docstring, a comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.";
+/// (§FS-inline-citation-style.1.1). Its bytes are §FS-inline-citation-style.5.4's
+/// verbatim, and the position languages it names are
+/// §FS-inline-citation-style.1.1.2's: a plain `//` or `#` block above a
+/// definition is an inline note in every other language, so naming them all
+/// taught a rule the gate does not enforce. It moves no managed-block version
+/// (§FS-inline-citation-style.5.6): the sentence is rendered, not live, and a
+/// block that predates this correction teaches a wider rule than the gate
+/// enforces until the repository's next `grund init`.
+const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.";
 
 /// §FS-inline-citation-style.5.2: the sentence that follows the budgets and
 /// precedes the layout sentence, under `citation-with-note` only — restating
