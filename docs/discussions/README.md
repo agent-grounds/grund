@@ -18,5 +18,6 @@ Discussion notes use the project-local `DISC` kind declared in `grund.toml`. Pro
 - [§DISC-id-less-kinds](proposals/2026-08-25-id-less-kinds.md#disc-id-less-kinds-kinds-that-declare-no-ids) — *(closed)* Kinds that declare no IDs — decided in [§DF-non-citable-kinds](../decisions/functional/DF-non-citable-kinds.md#df-non-citable-kinds-a-kind-may-declare-no-ids-and-stays-one-kinds-table-when-it-does)
 - [§DISC-external-facts](proposals/2026-09-07-external-facts.md#disc-external-facts-external-facts-are-committed-declarations-materialized-explicitly) — *(concluded)* External facts are committed declarations materialized explicitly — realized by [§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)
 - [§DISC-grund-core-public-surface](proposals/2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) — What `grund_core`'s public root surface is, and what it should be
+  - [The `grund-core` public root surface, name by name](proposals/2026-09-22-grund-core-public-surface-inventory.md) — the evidence it argues from: one classified row per public root name
 
 This index is navigational — citations should target the proposal ID directly, never this file.
