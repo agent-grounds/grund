@@ -1,15 +1,26 @@
 //! Scan-root regressions for directory links that cross the canonical project
 //! boundary (§FS-config.3.5.1, §AR-scanner.1.6). Descent cases remain in
-//! `tests_walk.rs`; these start the walk at or below the link.
+//! `tests_walk.rs`; these start the walk at or below the link, which is the
+//! distinction the gate turns on: a root that *is* an outward link is refused,
+//! a root written *below* one is canonicalized before the walk begins and is
+//! ordinary scope (§DF-undeclared-blind-spots).
 
 use super::*;
 use crate::testing::{
     canonical_test_path, legacy_fs_folder_config, scanned, symlink, test_root, write,
 };
 
+/// §AR-scanner.1.6 skips a canonical root outside the project "when the written
+/// root is a symlink; a plain parent-relative root remains intentional scan
+/// scope". A root spelled below a linked ancestor is neither: it is
+/// canonicalized before the walk starts, so the walk traverses no link and
+/// §FS-config.3.5.1's third sentence — the gate on a root that *is* a directory
+/// symlink — does not reach it. Refusing it left a kind home behind a linked
+/// parent unread with nothing saying so (§DF-undeclared-blind-spots). The file
+/// keeps the spelling the root gave it, as §AR-scanner.1.8 asks of any root.
 #[test]
-fn a_scan_root_below_an_outward_directory_link_is_pruned() {
-    let base = test_root("a_scan_root_below_an_outward_directory_link_is_pruned");
+fn a_scan_root_below_an_outward_directory_link_is_ordinary_scope() {
+    let base = test_root("a_scan_root_below_an_outward_directory_link_is_ordinary_scope");
     let root = base.join("project");
     write(
         &base.join("external/nested/FS-001-foreign.md"),
@@ -25,13 +36,38 @@ fn a_scan_root_below_an_outward_directory_link_is_pruned() {
         scan_tree(&explicit, Some(&explicit.root.join("linked/nested")), true)
             .expect("explicit root");
 
-    assert!(
-        scanned(&configured, &configured_findings).is_empty(),
-        "§FS-config.3.5.1: a configured descendant cannot bypass its outward directory link"
+    assert_eq!(
+        scanned(&configured, &configured_findings),
+        vec!["linked/nested/FS-001-foreign.md"],
+        "§AR-scanner.1.6: a configured descendant of a linked ancestor is intentional scan scope"
     );
+    assert_eq!(
+        scanned(&explicit, &explicit_findings),
+        vec!["linked/nested/FS-001-foreign.md"],
+        "§AR-scanner.1.6: an explicit descendant of a linked ancestor is the same scope"
+    );
+}
+
+/// The half of §FS-config.3.5.1's third sentence the fixture above does not
+/// reach: the written root *is* the outward directory link, configured rather
+/// than handed in, and the gate still refuses it.
+#[test]
+fn a_configured_directory_link_root_leaving_the_project_is_pruned() {
+    let base = test_root("a_configured_directory_link_root_leaving_the_project_is_pruned");
+    let root = base.join("project");
+    write(
+        &base.join("external/FS-001-foreign.md"),
+        "# FS-001-foreign: Foreign\n",
+    );
+    symlink("../external", &root.join("linked"));
+
+    let mut config = legacy_fs_folder_config(root);
+    config.include = Some(vec!["linked".into()]);
+    let (findings, _) = scan_tree(&config, None, false).expect("configured linked root");
+
     assert!(
-        scanned(&explicit, &explicit_findings).is_empty(),
-        "§FS-config.3.5.1: an explicit descendant cannot bypass its outward directory link"
+        scanned(&config, &findings).is_empty(),
+        "§FS-config.3.5.1: the gate applies when a configured scan root is itself a directory symlink"
     );
 }
 
