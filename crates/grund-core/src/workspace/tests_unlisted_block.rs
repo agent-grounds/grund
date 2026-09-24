@@ -1,5 +1,5 @@
-//! Test module: the `[workspace]` block no enclosing block lists, and the warning
-//! a run that walks into one earns (§FS-check.4.8, §FS-workspace.6.1.8).
+//! Test module: the `[workspace]` block no enclosing block lists, and the error
+//! a run that walks into one earns (§FS-check.3.29, §FS-workspace.6.1.8).
 //!
 //! Split from `tests_claims.rs`, which keeps the naming half — which block
 //! claims a directory and what the projects below it are therefore called.
@@ -12,6 +12,8 @@
 use std::path::PathBuf;
 
 use crate::api::CheckRun;
+use crate::api::{ListOpts, list_with_run_warnings};
+use crate::model::Finding;
 #[cfg(unix)]
 use crate::testing::symlink;
 use crate::testing::{check_run, codes, only, test_root, write};
@@ -70,25 +72,37 @@ fn unlisted_block_repo_at(root: PathBuf) -> PathBuf {
     root
 }
 
-/// The message the ticket's tree earns, in full. `b/grund.toml`'s `[workspace]`
-/// sits on line 7 of the fixture above.
-const TICKET_MESSAGE: &str = "b/grund.toml:7: this [workspace] is listed by no enclosing workspace \
+/// The message the ticket's tree earns in `check`, in full. It is a located error
+/// now (§FS-check.3.29.13), so the location is the finding's own `path` and `line`
+/// and no longer opens the text (§FS-check.3.29.7); `b/grund.toml`'s `[workspace]`
+/// sits on line 7 of the fixture above, which is what those two fields carry.
+const TICKET_MESSAGE: &str = "this [workspace] is listed by no enclosing workspace \
          — the projects under it are absorbed into `root` instead of named under their own alias path; \
          add \"b\" to [workspace] members in grund.toml, or keep it out of that project's [scan] \
-         — an unlisted [workspace] becomes an error in grund 0.15.0";
+         — an unlisted [workspace] became an error in grund 0.15.0";
+
+/// The same sentence as the five walking surfaces of §FS-check.3.29.9 print it:
+/// the CLI-level `warning:` form, whose location sits inside the text because
+/// nothing places it (§FS-check.3.29.15).
+const TICKET_RUN_WARNING_MESSAGE: &str = "b/grund.toml:7: this [workspace] is listed by no \
+         enclosing workspace \
+         — the projects under it are absorbed into `root` instead of named under their own alias path; \
+         add \"b\" to [workspace] members in grund.toml, or keep it out of that project's [scan] \
+         — an unlisted [workspace] became an error in grund 0.15.0";
 
 /// Every message this rule reported, in report order — what a case about *how
-/// many* findings one block earns asserts on.
+/// many* findings one block earns asserts on. §FS-check.3.29.13: the report's
+/// errors, since the ramp ended.
 fn block_findings(run: &CheckRun) -> Vec<String> {
     run.report
-        .warnings
+        .errors
         .iter()
         .filter(|diagnostic| diagnostic.code == "unlisted-workspace-block")
         .map(|diagnostic| diagnostic.message.clone())
         .collect()
 }
 
-/// §FS-check.4.8: the finding itself. One warning, at the unlisted block's own
+/// §FS-check.3.29: the finding itself. One error, at the unlisted block's own
 /// `[workspace]` line, saying its projects are absorbed rather than named under
 /// their own alias path — which is the fact `grund check` used to leave to
 /// `unknown project alias c` and nothing else.
@@ -101,44 +115,81 @@ fn an_unlisted_workspace_block_is_reported_at_its_own_workspace_line() {
     assert_eq!(diagnostic.message, TICKET_MESSAGE);
 }
 
-/// §FS-check.4.8.13: it is a *warning*, and a CLI-level one — `path` and `line`
-/// null, the location inside the message text (§FS-errors.2.2.1, §FS-errors.5.2).
-/// Being one of the report's warnings is what stands it in place of the
-/// `success` marker (§FS-check.2.1.3), which is what makes the deprecation path
-/// of §DF-unlisted-workspace-block.2.1 the right one; a line printed past the
-/// report would leave `check` printing `success` beside its own caution.
+/// §FS-check.3.29.13, §DF-unlisted-workspace-error-shape.2.1: the ramp ended, so
+/// it is one of the report's *errors* and it is **located** — `path` the block's
+/// own config and `line` its `[workspace]` line, the two fields that were null
+/// for as long as this was a CLI-level warning. Being an error is what reaches
+/// the exit code (§FS-check.3); being located is what puts it on stdout behind
+/// §FS-check.2.1's mandatory prefix and populates the JSON object.
 #[test]
-fn the_finding_is_a_report_warning_with_no_path_or_line() {
-    let root = unlisted_block_repo("the_finding_is_a_report_warning_with_no_path_or_line");
+fn the_finding_is_a_report_error_at_the_blocks_workspace_line() {
+    let root = unlisted_block_repo("the_finding_is_a_report_error_at_the_blocks_workspace_line");
     let run = check_run(&root, false);
-    assert!(
-        run.report
-            .warnings
-            .iter()
-            .any(|diagnostic| diagnostic.code == "unlisted-workspace-block"),
-        "the finding is a warning, so it displaces `success`: {:?}",
-        codes(&run)
-    );
-    let diagnostic = only(&run, "unlisted-workspace-block");
-    assert_eq!(
-        diagnostic.path, None,
-        "a CLI-level diagnostic carries no path"
-    );
-    assert_eq!(
-        diagnostic.line, None,
-        "a CLI-level diagnostic carries no line"
-    );
-    assert!(diagnostic.sites.is_empty(), "one block, one site");
     assert!(
         run.report
             .errors
             .iter()
+            .any(|diagnostic| diagnostic.code == "unlisted-workspace-block"),
+        "an error, so it reaches the exit code: {:?}",
+        codes(&run)
+    );
+    let diagnostic = only(&run, "unlisted-workspace-block");
+    assert!(
+        diagnostic
+            .path
+            .as_deref()
+            .is_some_and(|path| path.ends_with("b/grund.toml")),
+        "the block's own config, not the enclosing project's: {:?}",
+        diagnostic.path
+    );
+    assert_eq!(
+        diagnostic.line,
+        Some(7),
+        "the block's `[workspace]` line — the anchor the flip did not move"
+    );
+    assert!(
+        diagnostic.sites.is_empty(),
+        "one block, one site, `sites` null"
+    );
+    assert!(
+        run.report
+            .warnings
+            .iter()
             .all(|diagnostic| diagnostic.code != "unlisted-workspace-block"),
-        "a warning, so the exit code is unchanged"
+        "an error, so the report carries no warning for the same block: {:?}",
+        codes(&run)
     );
 }
 
-/// §FS-check.4.8.1: the block's config is found under both discovery names
+/// §FS-check.3.29.15: the five walking surfaces of §FS-check.3.29.9 keep the
+/// CLI-level `warning:` form, and it keeps its location *inside* the text —
+/// §FS-errors.2.2.1's shape, since the CLI is the only frontend they have and it
+/// prints the sentence rather than placing it. Without this the flip would take
+/// the location away from `list`, `refs`, `cover`, `fmt` and the ID read, which
+/// were promised one word of change.
+#[test]
+fn the_run_warning_form_keeps_the_location_inside_its_text() {
+    let root = unlisted_block_repo("the_run_warning_form_keeps_the_location_inside_its_text");
+    let (run_warnings, result) = list_with_run_warnings(ListOpts {
+        path: root.clone(),
+        path_provided: true,
+        ..ListOpts::default()
+    });
+    result.expect("list the fixture");
+    let carried: Vec<&Finding> = run_warnings
+        .iter()
+        .filter(|warning| warning.message.contains("listed by no enclosing workspace"))
+        .collect();
+    assert_eq!(carried.len(), 1, "one block, one line: {run_warnings:?}");
+    assert_eq!(carried[0].message, TICKET_RUN_WARNING_MESSAGE);
+    assert_eq!(
+        carried[0].path, None,
+        "the in-text form carries no location field (§FS-check.3.29.15)"
+    );
+    assert_eq!(carried[0].line, None, "same, for the line");
+}
+
+/// §FS-check.3.29.1: the block's config is found under both discovery names
 /// (§FS-config.1). The walk prunes hidden directories, so `.agents/` is never
 /// met as a walked entry — the probe has to ask each walked *directory* which
 /// config it carries, or half the blocks in the wild go unreported.
@@ -156,13 +207,17 @@ fn an_unlisted_block_configured_under_agents_is_found() {
     let run = check_run(&root, false);
     let diagnostic = only(&run, "unlisted-workspace-block");
     assert!(
-        diagnostic.message.starts_with("b/.agents/grund.toml:7:"),
-        "the `.agents/` form is named as the file it is: {}",
-        diagnostic.message
+        diagnostic
+            .path
+            .as_deref()
+            .is_some_and(|path| path.ends_with("b/.agents/grund.toml")),
+        "the `.agents/` form is anchored at the file it is: {:?}",
+        diagnostic.path
     );
+    assert_eq!(diagnostic.line, Some(7), "the block's `[workspace]` line");
 }
 
-/// §FS-check.4.8.5: `include_root = false` on the unlisted block changes nothing.
+/// §FS-check.3.29.5: `include_root = false` on the unlisted block changes nothing.
 /// The key answers "is this block's own root a project?"; the finding asks
 /// "does anything claim this block?" — and the block still contributes a
 /// segment to every alias path below it, so the two scopes still disagree.
@@ -185,7 +240,7 @@ fn include_root_false_on_the_unlisted_block_reports_the_same_finding() {
     );
 }
 
-/// §FS-check.4.8.4: only the outermost block of a chain. A block below an
+/// §FS-check.3.29.4: only the outermost block of a chain. A block below an
 /// unlisted one *is* claimed — by the unlisted block — so listing the outer one
 /// puts the whole chain back in the claimed chain. Two lines for one edit is
 /// what this rule refuses.
@@ -215,7 +270,7 @@ fn only_the_outermost_unlisted_block_of_a_chain_is_reported() {
     );
 }
 
-/// §FS-check.4.8.3: a nested directory carrying a plain `grund.toml` with no
+/// §FS-check.3.29.3: a nested directory carrying a plain `grund.toml` with no
 /// `[workspace]` table declares no projects to absorb. It is ordinary tree to
 /// the enclosing walk (§FS-check.1.3.1) and this rule says nothing about it.
 #[test]
@@ -256,7 +311,7 @@ fn a_nested_config_with_no_workspace_table_is_not_reported() {
     );
 }
 
-/// §FS-check.4.8.3: a block that *is* listed is inside the claimed chain, so
+/// §FS-check.3.29.3: a block that *is* listed is inside the claimed chain, so
 /// listing it is one of the two edits that clear the finding.
 #[test]
 fn a_listed_block_is_not_reported() {
@@ -276,7 +331,7 @@ fn a_listed_block_is_not_reported() {
     );
 }
 
-/// §FS-check.4.8.3: a run started *at* the block is the block. Its own project
+/// §FS-check.3.29.3: a run started *at* the block is the block. Its own project
 /// roots are never candidates — they are the scopes it names everything else
 /// from — so the run that has the disagreement to itself says nothing about it.
 #[test]
@@ -290,7 +345,7 @@ fn a_run_started_at_the_unlisted_block_reports_nothing() {
     );
 }
 
-/// §FS-check.4.8.3: the same exemption where it would bite hardest. `--full`
+/// §FS-check.3.29.3: the same exemption where it would bite hardest. `--full`
 /// makes the config root a walk root (§FS-check.1.3), so a rule that did not
 /// exempt the run's own project roots would report every workspace repository
 /// that sits under no enclosing one — which is nearly all of them.
@@ -324,7 +379,7 @@ fn the_runs_own_workspace_root_is_never_reported_under_full() {
     );
 }
 
-/// §FS-check.4.8.12: the scope is the walk the run already makes, so a narrowed
+/// §FS-check.3.29.12: the scope is the walk the run already makes, so a narrowed
 /// run that never reaches the block says nothing — the same stance §FS-check.3.18.8
 /// takes for an index the run did not scan. This is the residue the spec keeps
 /// recording rather than papering over.
@@ -342,7 +397,7 @@ fn a_run_narrowed_away_from_the_block_reports_nothing() {
     );
 }
 
-/// §FS-check.4.8.4 "one finding for one edit": the walk reaches `b` twice, once
+/// §FS-check.3.29.4 "one finding for one edit": the walk reaches `b` twice, once
 /// as itself and once through a directory symlink inside `docs`, and one edit —
 /// listing `b` — clears both. The claim test resolves symlinks, so the second
 /// spelling answers exactly as the first did; only the report has to agree, and
@@ -379,7 +434,7 @@ fn plain_repo_absorbing_the_block(name: &str, project_name: Option<&str>) -> Pat
     root
 }
 
-/// §FS-check.4.8.7: a run that loaded no workspace has no alias path to quote, so
+/// §FS-check.3.29.7: a run that loaded no workspace has no alias path to quote, so
 /// the absorbing project is named the way the reader would see it the moment the
 /// block is listed — the root's `project_name` (§AR-workspace.5.3), which is what
 /// §FS-list prints for it once the namespace becomes a workspace.
@@ -425,7 +480,7 @@ fn repo_under_an_ancestor_listing(name: &str, members: &str) -> PathBuf {
     root
 }
 
-/// §FS-check.4.8.2: a claim an ancestor *names* and then cannot answer — here
+/// §FS-check.3.29.2: a claim an ancestor *names* and then cannot answer — here
 /// `repo/b` listed beside a member that does not exist, so the list will not
 /// expand — leaves the block undecidable in both directions (§FS-workspace.6.1.8)
 /// and unreported. No answer is not the answer that nothing claims it.
@@ -463,38 +518,21 @@ fn an_ancestor_that_names_nothing_here_silences_nothing() {
     );
 }
 
-/// §REQ-backwards-compatibility.2, §DF-unlisted-workspace-block.2.1: the
-/// warning names the release it becomes an error in, and that release is held
-/// ahead of the running version so the deadline fails the build rather than
-/// passing unnoticed — the forcing function §DF-index-compatibility-ramp.2.3
-/// states, and the one that carried `[[kinds]] prefix` to the removal
-/// §FS-config.3.4.6 records and a missing index entry to the error
-/// §FS-check.3.18.9 records. Read out of the message rather than off the
-/// constant on purpose: the message is the promise a user was given.
+/// §FS-check.3.29.14, §FS-distribution.4.2: the ramp ended, so the clause reports
+/// the release it ended in rather than promising one. A test can hold only the
+/// pending half (§FS-distribution.4.2.1) — the deadline test that held `0.15.0`
+/// ahead of `CARGO_PKG_VERSION` is gone with the promise it guarded, because the
+/// tree sits below that version until the release is cut — so what holds the
+/// landed half is an assertion on the clause's own bytes, the shape
+/// `checker/tests_kind_index.rs` already uses for the missing index entry.
 #[test]
-fn the_named_error_release_is_0_15_0_and_still_ahead() {
-    let root = unlisted_block_repo("the_named_error_release_is_0_15_0_and_still_ahead");
+fn the_landed_clause_reports_0_15_0_in_the_past_tense() {
+    let root = unlisted_block_repo("the_landed_clause_reports_0_15_0_in_the_past_tense");
     let run = check_run(&root, false);
     let message = only(&run, "unlisted-workspace-block").message.clone();
-    let marker = "becomes an error in grund ";
-    let named = message
-        .split(marker)
-        .nth(1)
-        .unwrap_or_else(|| panic!("the warning must name its release: {message}"))
-        .trim()
-        .to_string();
-    assert_eq!(named, "0.15.0", "#72 and #78 ramp into the same release");
-    let version = |text: &str| {
-        text.split('.')
-            .map(|part| part.trim_end_matches(|c: char| !c.is_ascii_digit()))
-            .map(|part| part.parse::<u32>().unwrap_or(0))
-            .collect::<Vec<_>>()
-    };
     assert!(
-        version(env!("CARGO_PKG_VERSION")) < version(&named),
-        "this tree is {}, which has reached the release §FS-check.4.8.14 promised the warning \
-             would become an error in ({named}). Ship §RM-unlisted-workspace-error rather than \
-             moving the date.",
-        env!("CARGO_PKG_VERSION")
+        message.ends_with("— an unlisted [workspace] became an error in grund 0.15.0")
+            && !message.contains("becomes an error in grund"),
+        "§FS-check.3.29.14: the deadline clause is spent and reports its release: {message}"
     );
 }

@@ -23,7 +23,7 @@ fn command_output_format(
 
 /// The run's `[workspace]` warnings, in §FS-check.2.1.1's CLI-level shape: one
 /// `warning: ` line each on **stderr**, ahead of whatever the command itself
-/// prints, exit code untouched (§FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11,
+/// prints, exit code untouched (§FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11,
 /// §FS-workspace.6.1.7).
 ///
 /// The engine settles these before any report exists and hands them back as

@@ -119,7 +119,7 @@ pub struct RefsOutput {
     pub note: Option<String>,
     pub scan_errors: Vec<ApiScanError>,
     /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11 and
+    /// cautions of §FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11 and
     /// §FS-workspace.6.1.7, each anchored at the `grund.toml` line its own message
     /// names. A frontend renders each as one CLI-level `warning:` on stderr
     /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1.3).

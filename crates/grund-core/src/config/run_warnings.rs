@@ -1,7 +1,7 @@
 //! The run's warning channel (§AR-system.2.3): the `[workspace]` cautions a run
 //! settles while it resolves its configuration, carried on the `Config` the run
 //! was launched with until a frontend renders them (§FS-check.4.7,
-//! §FS-check.4.8, §FS-check.4.10, §FS-workspace.6.1.7, §FS-distribution.3.1).
+//! §FS-check.3.29, §FS-check.4.10, §FS-workspace.6.1.7, §FS-distribution.3.1).
 //!
 //! It is here because the `Config` is what every one of these facts is settled
 //! from and what every walking command already holds — the same place the

@@ -1,4 +1,4 @@
-//! The unlisted-`[workspace]` rule (§FS-check.4.8), in a file of its own beside
+//! The unlisted-`[workspace]` rule (§FS-check.3.29), in a file of its own beside
 //! the rest of the workspace machinery (§AR-system.2.4, §AR-core-module-layout.1,
 //! §AR-workspace.6.1.6): a directory this run's walk reached that declares
 //! `[workspace]` and that no enclosing block lists among its `members` is
@@ -29,16 +29,15 @@ use crate::config::{Config, config_file_in, strip_comment};
 use crate::model::Diagnostic;
 use crate::model::{format_path, relative_from_base};
 
-/// The release §FS-check.4.8.14's warning becomes an error in
-/// (§REQ-backwards-compatibility.2, §DF-unlisted-workspace-block.2.1,
-/// §RM-unlisted-workspace-error). Named in the
+/// The release §FS-check.3.29.14's warning becomes an error in
+/// (§REQ-backwards-compatibility.2, §DF-unlisted-workspace-block.2.1). Named in the
 /// message text, because a warning that does not say when it bites tells a
 /// maintainer they have a problem and not that they have a deadline; held ahead of
 /// the running version by a unit test, so the deadline fails the build rather than
 /// passing unnoticed.
 const UNLISTED_WORKSPACE_BLOCK_ERROR_RELEASE: &str = "0.15.0";
 
-/// §FS-check.4.8: one warning per outermost `[workspace]` block this run's walk
+/// §FS-check.3.29: one warning per outermost `[workspace]` block this run's walk
 /// met that no enclosing block lists.
 ///
 /// `config` is the project whose walk produced `walked_dirs` — the namespace the
@@ -60,7 +59,7 @@ pub(crate) fn unlisted_workspace_block_warnings(
     block_warnings(config, render, alias, walked_dirs, false)
 }
 
-/// §FS-check.4.8.15, §FS-lsp.1.1.3: the same findings for the five surfaces that have
+/// §FS-check.3.29.15, §FS-lsp.1.1.3: the same findings for the five surfaces that have
 /// no report to carry them, **anchored at each block's `[workspace]` line** so a
 /// frontend places one without reading the location back out of the message text.
 ///
@@ -90,7 +89,7 @@ fn block_warnings(
     // `enclosing_alias_prefix` shares one per climb — every candidate walks the same
     // ancestors, and without it each ancestor's config is re-read per candidate.
 
-    // Quiet (§FS-check.4.8.2): this climb spells no alias path, so an ancestor it
+    // Quiet (§FS-check.3.29.2): this climb spells no alias path, so an ancestor it
     // cannot read is this rule's silence rather than the reader's warning.
     let mut ancestors = AncestorWorkspaces::quiet_for_run_at(&config.root);
     let mut reported = BTreeSet::new();
@@ -98,21 +97,21 @@ fn block_warnings(
     for dir in walked_dirs {
         // The probe first: two `is_file` calls, and all a tree with no nested config
         // pays (§FS-config.1). It is what finds the `.agents/` form, which the walk
-        // never meets as a file entry — it prunes hidden directories (§FS-check.4.8.1).
+        // never meets as a file entry — it prunes hidden directories (§FS-check.3.29.1).
         let Some(config_path) = config_file_in(dir) else {
             continue;
         };
         let Some(line) = workspace_table_line(&config_path) else {
             continue;
         };
-        // §FS-check.4.8.3: a project root of this run is never a candidate — without it
+        // §FS-check.3.29.3: a project root of this run is never a candidate — without it
         // `--full`, which makes the config root a walk root (§FS-check.1.3), reports
         // every workspace repository against itself. Canonicalizing is the dear half.
         let canonical = canonical_workspace_path(dir);
         if is_project_root_of_run(config, &canonical) {
             continue;
         }
-        // §FS-check.4.8.4 "one finding for one edit": one block the walk reached under
+        // §FS-check.3.29.4 "one finding for one edit": one block the walk reached under
         // two spellings answers the claim test identically, so the first spelling met
         // is the one reported and a symlinked second is not another finding.
         if !reported.insert(canonical) {
@@ -123,7 +122,7 @@ fn block_warnings(
             Ok(Some(_)) => continue,
             // §FS-workspace.6.1.8: a claim an ancestor names but cannot answer is
             // undecidable in both directions, so the block is left unreported and
-            // unexplained (§FS-check.4.8.2) rather than called unlisted.
+            // unexplained (§FS-check.3.29.2) rather than called unlisted.
             Err(_) => continue,
             Ok(None) => {}
         }
@@ -149,7 +148,7 @@ fn block_warnings(
     warnings
 }
 
-/// §FS-check.4.8.6: the sentence, built apart from the reporting so both channels
+/// §FS-check.3.29.6: the sentence, built apart from the reporting so both channels
 /// print one text — `check`'s report warning and the direct stderr line every
 /// other walking surface prints (§DF-unlisted-workspace-block.2.4).
 ///
@@ -202,7 +201,7 @@ fn absorbing_project_name(config: &Config, alias: Option<&str>) -> String {
     }
 }
 
-/// §FS-check.4.8.3: whether this canonical directory is one of the project roots the
+/// §FS-check.3.29.3: whether this canonical directory is one of the project roots the
 /// run names everything else from — its own root, and each member root the walk
 /// stops at (§FS-workspace.6).
 fn is_project_root_of_run(config: &Config, canonical: &Path) -> bool {
@@ -215,7 +214,7 @@ fn is_project_root_of_run(config: &Config, canonical: &Path) -> bool {
 }
 
 /// The line a config's `[workspace]` table opens on, or `None` when it declares
-/// none (§FS-check.4.8.1).
+/// none (§FS-check.3.29.1).
 ///
 /// A text-only read, for the same reason `ancestor_member_entries` is one
 /// (§FS-workspace.6.1.7): the question is asked of a config this run does not

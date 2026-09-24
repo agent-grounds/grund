@@ -1,5 +1,5 @@
 //! Test module: where each of the four run-level `[workspace]` warnings anchors
-//! (§FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11, §FS-workspace.6.1.7).
+//! (§FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11, §FS-workspace.6.1.7).
 //!
 //! The *text* of each is pinned end to end, in `tests/e2e/cases/`, because a byte
 //! on stderr is what a repository greps. The anchor is not on stderr at all: it
@@ -9,9 +9,10 @@
 //! so it is held here, one case per section that names one.
 //!
 //! Each case reads the anchor off the surface that carries that warning: three
-//! travel on `check`'s own output, and §FS-check.4.8.13 is one of `check`'s report
-//! warnings with a deliberately null location (§FS-errors.5.2), so its anchor is
-//! read where it exists — the editor snapshot the server publishes from.
+//! travel on `check`'s own warning channel, and §FS-check.3.29.13 is one of
+//! `check`'s report *errors* since its ramp ended, so its anchor is read off the
+//! report — through the editor snapshot, which is the surface that has to place it
+//! and the one §FS-lsp.4 holds against the terminal.
 
 use std::path::{Path, PathBuf};
 
@@ -137,13 +138,57 @@ fn an_unread_block_with_no_include_root_key_falls_back_to_the_workspace_line() {
     );
 }
 
-/// §FS-check.4.8.15, §FS-lsp.1.1.3: the unlisted block anchors at its `[workspace]`
-/// line — "the reader has two files to open and this is the one that is wrong".
-/// `check`'s own report keeps the location null on purpose (§FS-errors.5.2), so
-/// the anchor is read off the snapshot the editor publishes from.
+/// §FS-check.3.29.15, §FS-lsp.1.1.3: the unlisted block anchors at its `[workspace]`
+/// line — "the reader has two files to open and this is the one that is wrong" —
+/// and that anchor is the one thing the flip did not move. What moved is the
+/// channel: it is one of `check`'s report errors now (§FS-check.3.29.13), so the
+/// editor takes it from the report and publishes it there as an error.
 #[test]
 fn an_unlisted_block_anchors_at_its_workspace_line() {
-    let root = test_root("anchor-unlisted-block");
+    let snapshot = unlisted_block_snapshot("anchor-unlisted-block");
+    let anchors: Vec<(Option<&str>, Option<usize>)> = snapshot
+        .report
+        .errors
+        .iter()
+        .filter(|finding| finding.code == "unlisted-workspace-block")
+        .map(|finding| (finding.path.as_deref(), finding.line))
+        .collect();
+    assert_eq!(
+        anchors.len(),
+        1,
+        "one unlisted block, one report error: {anchors:?}"
+    );
+    let (path, line) = anchors[0];
+    assert_eq!(line, Some(12), "the block's `[workspace]` line");
+    assert!(
+        path.is_some_and(|path| Path::new(path).ends_with("b/grund.toml")),
+        "the block's own config, not the enclosing project's: {path:?}"
+    );
+}
+
+/// §FS-lsp.1.1.3: three warnings on the run's channel, not four. The editor shows
+/// this finding once, and it shows it as an error off the report — a copy left on
+/// the warning channel would publish a second, warning-severity squiggle on the
+/// same line, which is the one way this change can go wrong invisibly.
+#[test]
+fn the_snapshot_carries_no_unlisted_block_on_the_run_warning_channel() {
+    let snapshot = unlisted_block_snapshot("anchor-unlisted-block-once");
+    let carried: Vec<&str> = snapshot
+        .run_warnings
+        .iter()
+        .map(|warning| warning.message.as_str())
+        .filter(|message| message.contains("listed by no enclosing workspace"))
+        .collect();
+    assert!(
+        carried.is_empty(),
+        "the finding reaches the editor from the report alone: {carried:?}"
+    );
+}
+
+/// The fixture both snapshot cases read: the ticket's tree with the block's
+/// `[workspace]` on line 12 of `b/grund.toml`.
+fn unlisted_block_snapshot(name: &str) -> crate::LspSnapshot {
+    let root = test_root(name);
     write(
         &root.join("grund.toml"),
         &format!(
@@ -166,28 +211,12 @@ fn an_unlisted_block_anchors_at_its_workspace_line() {
         &root.join("b/c/grund.toml"),
         "grund_config_version = 1\nproject_name = \"c\"\n",
     );
-    let snapshot = lsp_snapshot(LspSnapshotOpts {
+    lsp_snapshot(LspSnapshotOpts {
         path: root.clone(),
         path_provided: true,
         ..LspSnapshotOpts::default()
     })
-    .expect("snapshot the fixture");
-    let anchors: Vec<(Option<&str>, Option<usize>)> = snapshot
-        .run_warnings
-        .iter()
-        .map(|warning| (warning.path.as_deref(), warning.line))
-        .collect();
-    assert_eq!(
-        anchors.len(),
-        1,
-        "one unlisted block, one warning: {anchors:?}"
-    );
-    let (path, line) = anchors[0];
-    assert_eq!(line, Some(12), "the block's `[workspace]` line");
-    assert!(
-        path.is_some_and(|path| Path::new(path).ends_with("b/grund.toml")),
-        "the block's own config, not the enclosing project's: {path:?}"
-    );
+    .expect("snapshot the fixture")
 }
 
 /// §FS-workspace.6.1.7 / §FS-workspace.6.1.7.6: the undecidable ancestor claim

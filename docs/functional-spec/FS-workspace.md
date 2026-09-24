@@ -770,7 +770,7 @@ The claim rule is about the scopes that *do* read a path, which are the blocks.
 ##### 6.1.7.2 The quiet climb asks the same ancestors
 
 The chain is still *asked* about such a run, by a second, **quiet** climb that
-reads no path out of it: [§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)'s
+reads no path out of it: [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)'s
 rule walks these same ancestors, with this same entry-text read ([§FS-workspace.6.1.7.4](FS-workspace.md#6174-the-claim-is-read-from-members-entries-alone)),
 about a `[workspace]` block the run's own walk met rather than about the run's
 own name — so what an ancestor lists decides whether that block is reported.
@@ -829,7 +829,7 @@ while a run started **at** it names every path from itself — a run started at 
 block *below* it that the chain does list is back inside the guarantee. A run whose own tree walk meets such a block reports it, naming the
 block's `[workspace]` line and saying that the projects under it are absorbed
 into the enclosing namespace instead of named under their own alias path
-([§FS-check.4.8](FS-check.md#48-unlisted-workspace-block)). Two shapes stay
+([§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)). Two shapes stay
 unreported ([§FS-workspace.6.1.8.1](FS-workspace.md#6181-two-shapes-stay-unreported)).
 
 ##### 6.1.8.1 Two shapes stay unreported

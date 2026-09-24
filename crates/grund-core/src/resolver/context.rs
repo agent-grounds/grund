@@ -78,7 +78,7 @@ pub(crate) struct WorkspaceContext {
     /// every project in the block was the absent one (§FS-lsp.4.1).
     pub(crate) render_config: Config,
     /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11 and
+    /// cautions of §FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11 and
     /// §FS-workspace.6.1.7, settled and in the order the run earned them, for
     /// whichever frontend asked to render. Every command that walks passes
     /// through this loader, which is what puts all four on `list`, `refs`,
@@ -213,7 +213,7 @@ pub(crate) fn load_resolved_workspace_context(
     // Cloned *after* the expansion, not before: what the walk learns about the
     // tree is what the report is rendered from (§FS-check.4.9).
     let render_config = root_config.clone();
-    // §FS-check.4.8.15: the query surfaces have no report to carry the finding, so it
+    // §FS-check.3.29.15: the query surfaces have no report to carry the finding, so it
     // joins the run's warning channel here (§DF-unlisted-workspace-block.2.3),
     // after the three the workspace pass settled — the order they were emitted in.
     let mut run_warnings = settled_run_warnings(&render_config);
@@ -252,7 +252,7 @@ fn single_project_context(
         scan_tree_with_workspace_overlays(&config, Some(path), path_provided, &[], overlays)?;
     let render_root = config.root.clone();
     let render_config = config.clone();
-    // §FS-check.4.8: the same finding for the runs that loaded one project — a
+    // §FS-check.3.29: the same finding for the runs that loaded one project — a
     // narrowed scope inside a workspace, or a repository with no `[workspace]` block
     // of its own that still walks into one.
     let mut run_warnings = settled_run_warnings(&config);

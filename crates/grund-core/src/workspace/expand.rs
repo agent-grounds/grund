@@ -209,7 +209,7 @@ pub(crate) fn expand_workspace_tree(
 }
 
 /// [`expand_workspace_tree`] with the base every block's config path is rendered
-/// against named explicitly (§FS-check.4.8.7, §FS-errors.4).
+/// against named explicitly (§FS-check.3.29.7, §FS-errors.4).
 ///
 /// One run renders every block against one base, and that base is the root the
 /// run was launched at — the same one [`AncestorWorkspaces::for_run_at`] carries
@@ -243,7 +243,7 @@ pub(crate) fn expand_workspace_tree_with_report_base(
 ) -> Result<Vec<WorkspaceProjectEntry>> {
     let expanded = expand_workspace_member_list(root_config)?;
     let members = expanded.members;
-    // §FS-check.4.8: no warning here. Every route in asks this block first —
+    // §FS-check.3.29: no warning here. Every route in asks this block first —
     // `resolve_workspace_config` (§AR-workspace.5.1), or `find_init_workspace_root`
     // for `init` — so this only repopulates that boundary; asking again says it twice.
     root_config.workspace_boundary_roots = members.iter().map(|m| m.root.clone()).collect();
@@ -456,7 +456,7 @@ fn collect_workspace_members(
         // contributes its whole subtree, and `include_root` on *its* block
         // decides whether the grouping directory is one of the projects.
         let nested = expand_workspace_member_list(&member_config)?;
-        // §FS-check.4.8: a block below the run's root is populated here and
+        // §FS-check.3.29: a block below the run's root is populated here and
         // nowhere else, so this is where it is asked — once, at its own
         // `members` line (§FS-errors.4).
         absorbed.extend(absorbed_scan_diagnostic(&member_config, &nested.members));
