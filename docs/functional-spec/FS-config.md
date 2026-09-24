@@ -2,6 +2,95 @@
 
 `grund` is zero-config out of the box ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)) and fully configurable when a project's conventions diverge ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable)). This spec defines the contract: where the config lives, what it contains, what it overrides, and how malformed configs are reported.
 
+## principle: A setting written at a narrower scope wins
+
+Every setting `grund` reads from a repository is written at one of three **committed scopes**, from widest to narrowest: the **built-in default** the tool supplies ([§FS-config.3](FS-config.md#3-schema)), the **project** — the top-level tables of `grund.toml` — and the **kind**, one `[[kinds]]` row ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)). This chapter states once how those scopes relate, so that a key's own point may say what the key means and leave how it resolves to one place. It describes what `grund` already does: it is the general form of sentences this specification carries one at a time ([§FS-config.3.4.8.3](FS-config.md#3483-precedence-is-row-over-global), [§FS-config.3.4.7.2](FS-config.md#3472-not-walked-however-the-walk-arrives), [§FS-config.4.2.1](FS-config.md#421-kinds-rows-print-what-they-do-not-inherit)), and it adds no behavior and no key.
+
+It serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable) by making *can I set this per kind?* one read instead of a hunt through ten table sections. Every clause below is conditional on a setting being **admitted** at more than one committed scope ([§FS-config.principle.admission](FS-config.md#principleadmission-the-relation-reaches-only-scopes-that-admit-the-setting)); none of them claims that every default is overridable everywhere, and [§FS-config.principle.inventory](FS-config.md#principleinventory-the-settings-admitted-at-both-the-project-and-the-kind-scope) is the complete list of the settings this chapter's override clauses reach at all.
+
+### principle.rungs: The committed scopes are a relation, not a closed list
+
+Where a setting is admitted at more than one committed scope, the value written at the **narrower** scope is the effective one for everything that scope governs, and the wider value stands wherever the narrower scope is silent. Narrowness is the ordering above — a `[[kinds]]` row is narrower than the project's tables, which are narrower than the built-in defaults — and it is stated as a relation rather than as an enumeration of three: a scope introduced later, whether finer than a kind or between the project and the kind, takes its place in the same relation without this chapter being rewritten. No such scope exists today, and adding one would be additive surface rather than a new schema version ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)).
+
+### principle.unit: One leaf key overrides, and one value is whole
+
+Two units, and they are not the same one. What overrides is a single **leaf key**: writing one key at a narrower scope leaves every other key that scope inherits exactly as it was, which is why a `[reference]` table naming one key does not discard the rest of the `[reference]` defaults — every key is optional and an omitted key takes the default value ([§FS-config.3](FS-config.md#3-schema)). What is overridden is the **whole value**, an array included: a key whose value is a list replaces the inherited list rather than merging into it. Writing `[[kinds]]` at all replaces the built-in kind list entirely ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)) — that is this whole-value rule applied to the list of rows, not a second rule beside it.
+
+### principle.admission: The relation reaches only scopes that admit the setting
+
+A scope **admits** a fixed set of keys, and the relation above holds only between the scopes that admit the same setting. A key written at a scope that does not admit it is not a weaker override: it is not a key there at all, and it is refused as an unknown key pointing at its line ([§FS-config.3](FS-config.md#3-schema), [§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). So `inline_style` under `[reference]` and `inline_style` on a `[[kinds]]` row are not a wide and a narrow spelling of one setting ([§FS-config.3.1.8](FS-config.md#318-inline_style-and-the-note-budgets)) — the second does not exist. A key's own point states its scopes only where it is admitted at more than one; where it is admitted at one, the table it is documented under is that statement. This chapter says where a key may be written, and what is not a key at all stays [§FS-config.6](FS-config.md#6-what-is-not-configured-here)'s: a thing named there has no scopes, because it is not a setting.
+
+### principle.cli: A CLI input enters at the scope its flag spells
+
+A command-line input is not a fourth scope that wins over all three. It enters the relation at the scope its flag spells and resolves from there like any value written at that scope. `grund check --require-grounding` spells the **project** default, so an explicit `require_grounding = false` on a row still wins over the flag ([§FS-config.3.4.8.3](FS-config.md#3483-precedence-is-row-over-global)): the flag and the key are one knob, and the row's word is the more specific one.
+
+### principle.boundary: The project is the widest committed scope
+
+Scopes stop at the project. A workspace member is configured by its own `grund.toml`, or by the built-in defaults where it has none, and no section of a member's config inherits from the workspace root's ([§FS-config.3.9.3](FS-config.md#393-namespace-matching), [§FS-workspace.2](FS-workspace.md#2-workspace-configuration)). A root and a member are therefore a **boundary rather than a rung**: there is no precedence between them, because neither is ever consulted for the other's values. This is a statement about which config governs a member's own files, and not about which config a command discovers from a given directory — that is [§FS-config.1](FS-config.md#1-file-location-and-discovery)'s, and the two answer different questions.
+
+### principle.declared-rows: A declared row does not inherit from a built-in one
+
+A `[[kinds]]` row a project writes starts from the schema defaults rather than from the built-in row of the same name: writing `[[kinds]]` replaces the built-in list entirely ([§FS-config.principle.unit](FS-config.md#principleunit-one-leaf-key-overrides-and-one-value-is-whole)), so there is no wider row left to inherit from, and a declared `FS` row takes the schema's own default for `citable` rather than the built-in row's and has no home at all until it names one. Exactly one built-in attribute still reaches a declared row, and it is keyed on the kind's **name** rather than on a scope: `index` ([§FS-config.3.4.2.4](FS-config.md#3424-the-default-is-per-kind-name)), applied only where the row left `index` unset, names a `folder`, and is citable. The built-in home, file, title, and `citable` of a same-named built-in kind reach nothing a project declares.
+
+### principle.exceptions: Two shapes that look like rungs and are not
+
+Two places in this schema resemble the relation above without being it, and each keeps the wording it already has. The first is the top term of [§FS-config.3.9.4](FS-config.md#394-defaults-and-precedence)'s ladder — an explicit target list over a `default` — which is specificity of **target match** between keys each admitted at one scope, not a narrower scope overriding a wider one; its lower two terms are an ordinary instance and appear in the inventory below. The second is [§FS-config.3.4.2.4](FS-config.md#3424-the-default-is-per-kind-name)'s `index`, which is **produced from the kind name** at the default-producing end rather than resolved between two written values; overriding it on a row is the ordinary instance, bounded by [§FS-config.principle.declared-rows](FS-config.md#principledeclared-rows-a-declared-row-does-not-inherit-from-a-built-in-one). Neither is an exception to the rule: each is a different shape the rule does not describe.
+
+### principle.install-local: The relation governs committed repository state only
+
+Every scope above is something a repository commits. The **install-local** axis lies outside it: the user's conversation citation preference and its per-agent partial are machine state installed by `grund integrations --write`, and their precedence is stated where they live ([§FS-integrations.4.3](FS-integrations.md#43-user-preference-and-global-agent-instructions), [§FS-integrations.4.4](FS-integrations.md#44-per-agent-overrides)) rather than restated here. Naming it here is what keeps the boundary visible from the chapter that states the relation, and the line it does not cross is unmoved: no machine-local value may change whether a repository is well-formed ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). For the author of a new key the order is **classify first, verify by reach** — decide whether the key carries committed repository semantics or install-local presentation, then check that its reach agrees. Reach alone does not classify: inert `[output] color` ([§FS-config.3.6](FS-config.md#36-output--report-format)) changes no verdict and is committed repository state all the same.
+
+### principle.inventory: The settings admitted at both the project and the kind scope
+
+Four settings are admitted at both the project scope and the kind scope, and for the schema of [§FS-config.3](FS-config.md#3-schema) this list is complete:
+
+| Project scope | Kind scope | Stated at |
+|---|---|---|
+| `[reference] require_grounding` | a row's `require_grounding` | [§FS-config.3.4.8.3](FS-config.md#3483-precedence-is-row-over-global) |
+| `[reference] grounding_level` | a row's `grounding_level` | [§FS-config.3.4.8.3](FS-config.md#3483-precedence-is-row-over-global) |
+| `[id] format` | a row's `format` | [§FS-config.3.4.10.1](FS-config.md#34101-format) |
+| `[citations] default` | `[citations.<KIND>] default` | [§FS-config.3.9.4](FS-config.md#394-defaults-and-precedence) |
+
+Every other key of [§FS-config.3](FS-config.md#3-schema) is admitted at one committed scope only, so [§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list) never reaches it and its table section is the whole statement of where it may be written. The list is derived from the parse sites and the resolution sites rather than read off this prose, and the derivation is recorded with the decision behind this chapter, so that a reader re-runs it instead of trusting it. A key that gains a second scope is added here in the same change, and that is additive surface ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)).
+
+## requirements: What the config contract holds to
+
+Eight requirements on the schema as a whole, each carrying a **mark**: *realized* where `grund` behaves this way today and a point of this specification says so; *directional* where it binds what is written from here on rather than describing everything already written; *deferred* where a named follow-up owes it. The mark is part of the requirement — a direction is never a statement about how `grund` behaves today, and reading one as the other is the mistake this chapter exists to prevent.
+
+There is no ninth. *Every key appears in a user-facing reference* is a property of this repository's documentation rather than of what `grund` does, and `FS` states behavior; its behavioral half — that a generated `grund.toml` carries exactly this schema, no extra keys and none missing — is already required, and more strongly, by [§FS-init.2.4.3](FS-init.md#243-every-written-key-is-the-default).
+
+### requirements.1: Every default is overridable where it has a meaning — directional
+
+A setting admitted at more than one committed scope is overridable at each of them, and a key admitted at one scope says so at its own point together with the reason ([§FS-config.principle.admission](FS-config.md#principleadmission-the-relation-reaches-only-scopes-that-admit-the-setting)). This binds keys added from here on; it is not a claim about every key already written, and what it reaches today is exactly [§FS-config.principle.inventory](FS-config.md#principleinventory-the-settings-admitted-at-both-the-project-and-the-kind-scope). Deliberate refusals stay refusals — everything [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree) rules out, and `section_separator`, which is project-only because a citation is parsed before its kind is known ([§FS-config.3.2.2](FS-config.md#322-section_separator-must-stay-distinguishable)). Serves [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable).
+
+### requirements.2: Zero config works — realized
+
+Every key is optional, and no config file anywhere up the walk means the canonical defaults of this specification rather than a refusal ([§FS-config.1](FS-config.md#1-file-location-and-discovery), [§FS-config.3](FS-config.md#3-schema)). Serves [§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree).
+
+### requirements.3: One key means one thing at every scope — directional
+
+A key admitted at two scopes keeps its name, its value domain, and its meaning at both; only its reach changes ([§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list)). Two keys that share a spelling across scopes without sharing a setting are not an instance of this and are not made into one: `[scan]` and a row's `scan` are two settings whose reconciliation is stated where they are ([§FS-config.3.4.7.2](FS-config.md#3472-not-walked-however-the-walk-arrives)), and `[id] format` is not `[output] format`. Directional for the same reason as [§FS-config.requirements.1](FS-config.md#requirements1-every-default-is-overridable-where-it-has-a-meaning--directional) — it binds the next key, and renaming one already written is a compatibility question of its own ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)).
+
+### requirements.4: Every value has exactly one resolution — realized
+
+The effective value of any key at any scope is a function of the committed config files and the CLI inputs alone. It never depends on the order two keys were written in, on an environment variable, or on machine state, and no two rules ever both claim one value — which is why [§FS-config.principle.exceptions](FS-config.md#principleexceptions-two-shapes-that-look-like-rungs-and-are-not) names the two shapes that are not rungs rather than leaving them implied. Serves [§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes) and [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree).
+
+### requirements.5: A mistake in the config fails loudly — realized, one case deferred
+
+An unknown key and an invalid value are errors naming the line, never a silent default ([§FS-config.3](FS-config.md#3-schema), [§FS-config.4.3](FS-config.md#43-invalid-config-behavior)), per [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible). A key written at a scope that does not admit it is refused today as an unknown key, which is loud and locatable but names the wrong mistake; saying *this key is not admitted here* instead is owed and **deferred** to its own change, and nothing in this specification depends on the current wording.
+
+### requirements.6: The effective configuration is inspectable — realized, provenance deferred
+
+`grund config show` prints the effective configuration, and what it prints loads back to the same effective values ([§FS-config.4.2](FS-config.md#42-grund-config-show-path)). The round trip is of the **effective** config, not of the authored text: a key the run resolved to its default prints as that default, and a key that is inert under another key's value is still parsed and still printed ([§FS-config.3.1.8](FS-config.md#318-inline_style-and-the-note-budgets)), so the output is what applies rather than what was typed. Which scope a value came from — default, project, row, or flag — is **deferred**; what the output shows today is one step of it, a row printing a key only where its effective value differs from what it inherits ([§FS-config.4.2.1](FS-config.md#421-kinds-rows-print-what-they-do-not-inherit)).
+
+### requirements.7: An upgrade never changes the meaning of an existing config — realized
+
+A new key, or a new scope for an existing key, is additive and does not bump `grund_config_version` ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)); an incompatible change to the meaning of an existing key does, and a binary refuses a config whose version it does not know ([§FS-config.5](FS-config.md#5-schema-versioning)). Serves [§REQ-backwards-compatibility](../requirements/REQ-backwards-compatibility.md#req-backwards-compatibility-an-upgrade-never-changes-a-verdict-quietly).
+
+### requirements.8: A project's meaning is self-contained — realized
+
+The committed config of one project decides that project's verdict: nothing is inherited across a project boundary ([§FS-config.principle.boundary](FS-config.md#principleboundary-the-project-is-the-widest-committed-scope)) and nothing is read from the machine ([§FS-config.principle.install-local](FS-config.md#principleinstall-local-the-relation-governs-committed-repository-state-only)). Serves [§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service) and [§FS-workspace.2](FS-workspace.md#2-workspace-configuration).
+
 ## 1. File location and discovery
 
 The config file is named **`grund.toml`** and is discovered at **two locations per directory**: the bare `grund.toml` beside the project's own metadata files, then `.agents/grund.toml`. Discovery walks upward from the path argument — a file argument's parent directory, and the working directory when no path is given — probing both names in that order at every level, and stops at the first directory where either exists — mirroring how `cargo` finds `Cargo.toml`. That directory is the **config root**; relative paths inside the config are resolved against it, never against `.agents/`. One uniform rule at every level: a repository root and a workspace member each pick the form that suits them, and a workspace may mix the two ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)). Per [§DF-config-file-location](../decisions/functional/DF-config-file-location.md#df-config-file-location-grundtoml-is-discovered-at-two-names-per-directory-and-init-writes-the-bare-one).

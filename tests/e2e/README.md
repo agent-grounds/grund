@@ -88,6 +88,7 @@ goldens by copying the text order ([§FS-errors.4](../../docs/functional-spec/FS
 - strict-mode marker citations accepted
 - config unknown-key failure
 - config unsupported-version failure (newer `grund_config_version` refused, with upgrade hint)
+- the two settings of [§FS-config.principle.inventory](../../docs/functional-spec/FS-config.md#principleinventory-the-settings-admitted-at-both-the-project-and-the-kind-scope) the grounding pair does not already cover, each case carrying the override and its absence in one run: a row's `format` against `[id] format`, where the two near-miss warnings name a different effective format per kind, and `[citations.AR] default` against the global `default`, where one citation to a `GOAL` is forbidden from an `FS` declaration and permitted from an `AR` one
 - config custom marker in strict mode
 - config discovered as a bare root `grund.toml` from a subdirectory — which is also the case that pins the nothing-recognized caution to whole-project runs, since its one file holds neither a declaration nor a citation and its narrowed run must stay silent about that
 - config redundant pair (the bare `grund.toml` wins, the `.agents/` file is warned about) — and, beside it, the nothing-recognized caution the same run earns, the two cautions being independent facts about it

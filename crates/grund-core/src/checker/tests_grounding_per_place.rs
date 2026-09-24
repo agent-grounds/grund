@@ -98,6 +98,8 @@ fn a_row_false_exempts_its_home_under_a_global_true() {
 /// §FS-check.1 / §FS-config.3.1.7: the flag and the global key are one knob,
 /// so the flag sets the same default for the `[[kinds]]` table and the row's
 /// more specific word — an explicit `require_grounding = false` — still wins.
+/// §FS-config.principle.cli: the flag enters at the scope it spells, which is
+/// the project's, rather than over every scope at once.
 #[test]
 fn the_flag_does_not_override_an_explicit_row_false() {
     let root = repo(

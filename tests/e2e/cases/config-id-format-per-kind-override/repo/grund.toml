@@ -1,0 +1,19 @@
+grund_config_version = 1
+
+[id]
+format = "{kind}-{number}"
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+format = "{kind}-{slug}"
+index = false
+
+[[kinds]]
+kind = "AR"
+folder = "docs/architecture"
+index = false
+
+[scan]
+include = ["docs"]
