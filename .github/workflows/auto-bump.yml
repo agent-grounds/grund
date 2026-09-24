@@ -119,7 +119,7 @@ jobs:
           fi
           echo "CI on $sha is green."
 
-      # §FS-distribution.4.2.7: a landed ramp reddens no test at a version below
+      # §FS-distribution.4.2.6: a landed ramp reddens no test at a version below
       # the release its own error names, and a patch bump is that direction.
       # release.yml asks again on the candidate; here nothing is pushed yet.
       - name: Gate — the tree can be released as this version
