@@ -107,13 +107,13 @@ other edit, and never required.
 ### 2.4 A project's grounding must be visible from its root listing
 
 This is the argument the other two rest on, and it comes from practice rather than principle:
-**several grund workspaces are used together.** A workspace root with members, sibling repositories
+**several grund projects are used together.** A workspace root with its members, sibling repositories
 checked out side by side, a machine carrying a dozen projects some of which are grounded and some
 of which are not.
 
 `.agents/` is a dot-directory, and dot-directories are hidden by construction — `ls` omits them,
 editor file trees and file managers hide them by default, and shell globs skip them unless asked. So
-under the old layout the question *"is this a grund workspace?"* had no answer you could see. You
+under the old layout the question *"is this a grund project?"* had no answer you could see. You
 had to already know to look inside a hidden directory, or run a command per candidate, or grep. The
 config was not merely inconvenient to find; the **existence of the grounding** was invisible.
 
