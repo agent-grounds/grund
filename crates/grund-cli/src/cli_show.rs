@@ -160,7 +160,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
         eprintln!("error: unsupported show format `{format}`");
         return ExitCode::from(2);
     };
-    // §FS-check.4.7.2, §FS-check.4.8.9, §FS-check.4.10.7, §FS-workspace.6.1.7: the ID read
+    // §FS-check.4.7.2, §FS-check.3.29.9, §FS-check.4.10.7, §FS-workspace.6.1.7: the ID read
     // walks like every other command, and a refused query still owes the reader
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
     let (run_warnings, result) = show_with_scope(

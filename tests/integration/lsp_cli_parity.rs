@@ -9,11 +9,11 @@
 //! compared cases keeps the sweep from shrinking unnoticed.
 //!
 //! The run-level `[workspace]` warnings of §FS-lsp.1.1.3 are held the same way,
-//! against the same case's stderr: §FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11
+//! against the same case's stderr: §FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11
 //! and §FS-workspace.6.1.7 travel in the run's warning channel and are rendered by
 //! each frontend, so neither surface may carry one the other does not. They are
 //! compared as their own set because the two shapes differ by design — the CLI
-//! prints three of them as §FS-check.2.1.1 lines on stderr and §FS-check.4.8.13's
+//! prints three of them as §FS-check.2.1.1 lines on stderr and §FS-check.3.29.13's
 //! as one of `check`'s report objects with a null location, while the editor
 //! publishes each on the `grund.toml` it anchors at. Every other
 //! CLI-level `warning:` or `error:` line (§FS-errors.2.2) is stepped over: it is
@@ -40,7 +40,7 @@ use support::{send_message, start_server, wait_for_exit};
 /// into other commands should trip it.
 const MIN_COMPARED_CASES: usize = 80;
 
-/// Fewer cases carrying one of the four run-level `[workspace]` warnings than
+/// Fewer cases carrying one of the three run-level `[workspace]` warnings than
 /// this is a sweep that has stopped holding §FS-lsp.1.1.3: the corpus has several,
 /// and a comparison that met none of them would pass on an LSP that publishes
 /// nothing.
@@ -54,18 +54,25 @@ const MIN_RUN_WARNING_CASES: usize = 4;
 /// here to be.
 const CLI_LEVEL_PREFIXES: [&str; 2] = ["error: ", "warning: "];
 
-/// The four run-level `[workspace]` warnings §FS-lsp.1.1.3 names, each by a phrase
+/// The three run-level `[workspace]` warnings §FS-lsp.1.1.3 names, each by a phrase
 /// of its own fixed text (§FS-errors.3): §FS-check.4.7's absorbed scan,
-/// §FS-check.4.8's unlisted block, §FS-check.4.10's unread opted-out block and
-/// §FS-workspace.6.1.7's undecidable ancestor claim.
+/// §FS-check.4.10's unread opted-out block and §FS-workspace.6.1.7's undecidable
+/// ancestor claim.
+///
+/// Three, not four. §FS-check.3.29's unlisted block left this list when its ramp
+/// ended: it is a located error in `check` and a located error in the editor now
+/// (§FS-check.3.29.15), so it is compared below as an ordinary `Finding` — same
+/// path, line, `error` severity, code and message on both surfaces. That is the
+/// assertion that would catch the terminal and the editor drifting apart on the
+/// one finding whose location has two places it could come from, and it is
+/// stronger than holding a message against a stderr golden.
 ///
 /// Matched on the message rather than on a code, because that is the one thing
 /// both surfaces carry: the CLI prints these as text and never as a JSON object,
-/// so there is no `code` on its side to compare. Naming the four here is also
+/// so there is no `code` on its side to compare. Naming the three here is also
 /// what makes this sweep say which warnings it holds.
-const RUN_LEVEL_WARNINGS: [&str; 4] = [
+const RUN_LEVEL_WARNINGS: [&str; 3] = [
     "[workspace] members swallows this project's whole scan",
-    "this [workspace] is listed by no enclosing workspace",
     "no project scans `",
     "cannot read [workspace] members (",
 ];
@@ -122,9 +129,9 @@ fn cli_findings(grund: &Path, root: &Path) -> Option<(BTreeSet<Finding>, BTreeSe
                     root.display()
                 );
             };
-            // §FS-check.4.8.13 is one of `check`'s report warnings, so under `--format
-            // json` it arrives as an object with `path` and `line` `null` — the same
-            // warning in that command's shape, held with its three siblings.
+            // §FS-check.3.29.13: a run-level warning carried in the report rather
+            // than the warning channel arrives as a nulls object — none of the three
+            // does today, so this guard keeps the reduction honest if one moves back.
             if let Some(message) = value["message"].as_str()
                 && is_run_level_warning(message)
             {

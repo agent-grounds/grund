@@ -96,7 +96,7 @@ fn public_finding(
 
 /// The run's warning channel, published (§FS-distribution.3.1): every
 /// `[workspace]` caution the run settled, as the `Finding`s a frontend renders
-/// (§FS-check.4.7.7, §FS-check.4.8.15, §FS-check.4.10.11, §FS-workspace.6.1.7).
+/// (§FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11, §FS-workspace.6.1.7).
 ///
 /// Each keeps the anchor the engine gave it — the `grund.toml` line its own
 /// message already names — so an editor publishes it without reading a location

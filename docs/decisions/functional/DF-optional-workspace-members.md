@@ -145,7 +145,7 @@ half-created directory on the unverified path and move the boundary of the blind
 spot somewhere no line of the repository records. The repository meeting that
 case names the namespaces under the submodule instead.
 
-**A stderr `warning:` for the announcement, matching [§FS-check.4.7](../../functional-spec/FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan) and [§FS-check.4.8](../../functional-spec/FS-check.md#48-unlisted-workspace-block).**
+**A stderr `warning:` for the announcement, matching [§FS-check.4.7](../../functional-spec/FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan) and [§FS-check.3.29](../../functional-spec/FS-check.md#329-unlisted-workspace-block).**
 Rejected on [§DF-optional-workspace-members.2.4](DF-optional-workspace-members.md#24-exit-0-and-the-announcement-is-what-buys-it). It is the consistent shape for a fact about a `[workspace]`
 block, and consistency is a real argument; it loses to the author's condition
 that the announcement survive whatever quieting a CI log applies, which a stderr

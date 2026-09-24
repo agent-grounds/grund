@@ -222,7 +222,7 @@ pub(super) fn qualify_absent_optional(
 /// writes them, anchored at the `optional_members` line of the block that holds it.
 ///
 /// A **located** finding on stdout, where its two nearest neighbours (§FS-check.4.7,
-/// §FS-check.4.8) are CLI-level `warning:` lines on stderr. Those two report a
+/// §FS-check.3.29) are CLI-level `warning:` lines on stderr. Those two report a
 /// misconfiguration that makes every command in the tree wrong; nothing is
 /// misconfigured here — the repository declared this may happen and it happened —
 /// and what is at stake is only the coverage of `check`'s own report. Exit `2` is

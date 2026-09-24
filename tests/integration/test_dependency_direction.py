@@ -50,7 +50,7 @@ NOTE = "§AR-system.4"
 # The ledger of reads against the direction of §AR-system.1, and it is empty.
 
 # Six former compat reads printed four `[workspace]` findings. Each is now a
-# `Diagnostic` in the run's warning channel (§FS-check.4.7.7, §FS-check.4.8.15,
+# `Diagnostic` in the run's warning channel (§FS-check.4.7.7, §FS-check.3.29.15,
 # §FS-check.4.10.11, §FS-workspace.6.1.7), rendered by its frontend (§AR-system.2.9.1).
 
 # An entry is (file, `<component>::<item>`) and buys nothing else: the file must

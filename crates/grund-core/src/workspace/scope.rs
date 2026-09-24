@@ -50,7 +50,7 @@ pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
 /// roots. The boundary is the same list that `run_workspace_check`
 /// computes; setting it on the Config makes the scanner skip those subtrees.
 ///
-/// §FS-check.4.8.9, §FS-check.4.10.7: it is also where the block a run is rooted at is
+/// §FS-check.3.29.9, §FS-check.4.10.7: it is also where the block a run is rooted at is
 /// asked what that boundary leaves it — anything to read, and anything it reads
 /// that nobody else will. Every command that walks resolves its config through
 /// here, so asking at this one point is what puts both warnings on `list`, `refs`,
@@ -179,7 +179,7 @@ pub(super) fn config_location_error(
 /// The breadcrumb every diagnostic about a config key wears — `<config>:<line>:`
 /// ahead of the sentence (§FS-config.4.3) — built apart from the error above
 /// because a *warning* about such a key needs the same one and is not an error
-/// (§FS-check.4.8.7).
+/// (§FS-check.3.29.7).
 pub(crate) fn config_location_message(source: Option<&ConfigLocation>, message: String) -> String {
     match source {
         Some(source) => format!("{}:{}: {message}", format_path(&source.path), source.line),

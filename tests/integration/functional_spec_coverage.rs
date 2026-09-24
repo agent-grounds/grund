@@ -110,7 +110,7 @@ fn functional_spec_sections(catalog: &Findings) -> BTreeSet<String> {
 const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-check.1.3.10", reason: "rationale for a flag rather than a second, weaker config key" },
     Exception { id: "FS-check.3.6.4", reason: "rationale that the rule is a function of tree and config" },
-    Exception { id: "FS-check.4.8.10", reason: "rationale for where the fact becomes knowable" },
+    Exception { id: "FS-check.3.29.10", reason: "rationale for where the fact becomes knowable" },
     Exception { id: "FS-check.5.1", reason: "finding selection reference, not a behavioral requirement" },
     Exception { id: "FS-cli.1.1", reason: "rationale for the two defaults" },
     Exception { id: "FS-completions.4", reason: "shell installation examples" },

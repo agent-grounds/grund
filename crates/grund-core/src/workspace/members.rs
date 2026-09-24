@@ -332,7 +332,7 @@ pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>,
         }
         // Last assignment wins, exactly as it does in a full parse. Each key names
         // itself in the residue, because the sentence that reports one is what tells
-        // the reader which line to open (§FS-check.4.8).
+        // the reader which line to open (§FS-check.3.29).
         let (slot, name) = match key.trim() {
             "members" => (&mut entries, "members"),
             "optional_members" => (&mut optional, "optional_members"),
@@ -376,7 +376,7 @@ pub(crate) struct AncestorWorkspaces {
     /// *names* the tree below it — an alias path is built from it, so a segment
     /// that may be missing is the reader's business. False for a climb that only
     /// asks whether some directory is claimed and treats "cannot say" as "no
-    /// answer" (§FS-check.4.8.2): there is no alias path to protect, and the
+    /// answer" (§FS-check.3.29.2): there is no alias path to protect, and the
     /// sentence about one would be printed into runs that never asked the chain
     /// anything (§FS-workspace.6.1.7).
     warn_undecidable: bool,
@@ -440,7 +440,7 @@ impl AncestorWorkspaces {
                 read_ancestor_workspace_block(dir, cli_base, &self.report_base);
             // §FS-workspace.6.1.7: only the climb that spells an alias path below
             // this directory owes the reader the sentence; the quiet climb of
-            // §FS-check.4.8.2 has no path to warn about and drops it.
+            // §FS-check.3.29.2 has no path to warn about and drops it.
             if self.warn_undecidable {
                 self.warnings.extend(undecidable);
             }

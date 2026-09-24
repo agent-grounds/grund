@@ -197,13 +197,22 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertIn("tests", homes)
         self.assertEqual({claim.direction for claim in wording}, {ramps.PENDING})
 
-    def test_the_removal_this_tree_landed_holds_the_floor_at_0_13_0(self):
+    def test_the_flip_this_tree_landed_holds_the_floor_at_0_15_0(self):
+        """§FS-distribution.4.2 — the unlisted-`[workspace]` flip landed, so the
+        tree reports `became an error in 0.15.0` and cannot be cut below it
+        (§FS-check.3.29.14). The older landed clauses are still read: a 0.12.x
+        release is still refused by the `prefix` removal."""
         floor, _ = ramps.release_window(self.claims)
-        self.assertEqual(floor, "0.13.0")
+        self.assertEqual(floor, "0.15.0")
+        report = ramps.report(self.claims, "0.14.3")
+        self.assertTrue(
+            any("became an error in 0.15.0" in line for line in report),
+            "the unlisted-[workspace] flip must be what refuses a 0.14.x release",
+        )
         report = ramps.report(self.claims, "0.12.4")
         self.assertTrue(
             any("config/kind_table.rs" in line for line in report),
-            "the `prefix` removal must be what refuses a 0.12.x release of this tree",
+            "the `prefix` removal is still read as a landed clause of this tree",
         )
 
 

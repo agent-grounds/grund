@@ -70,7 +70,7 @@ What turns the pass on is that **list**, not a flag. A tree with no symlink and 
 
 ### 1.10 The walk carries out the directories it descended into
 
-Beside the file list, the walk carries out **the directories it descended into**, scan roots included, sorted and deduplicated. It asks nothing of them: the one caller is the unlisted-`[workspace]` rule ([§FS-check.4.8](../functional-spec/FS-check.md#48-unlisted-workspace-block)), which probes each for a config and answers the claim above this layer, because the scanner never asks "am I in a workspace?" ([§AR-workspace.1](AR-workspace.md#1-layering)). Collecting them here keeps that rule from needing a second traversal: the entries are already being enumerated, and a directory is exactly what falls out of the extension filter.
+Beside the file list, the walk carries out **the directories it descended into**, scan roots included, sorted and deduplicated. It asks nothing of them: the one caller is the unlisted-`[workspace]` rule ([§FS-check.3.29](../functional-spec/FS-check.md#329-unlisted-workspace-block)), which probes each for a config and answers the claim above this layer, because the scanner never asks "am I in a workspace?" ([§AR-workspace.1](AR-workspace.md#1-layering)). Collecting them here keeps that rule from needing a second traversal: the entries are already being enumerated, and a directory is exactly what falls out of the extension filter.
 
 ### 1.11 The unread-block probe runs the walk and scans nothing
 
