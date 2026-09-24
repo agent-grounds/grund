@@ -1,5 +1,4 @@
-grund — ground your agents in the spec.
-Checks ID-based citations (§<ID>.<section>) across Markdown docs and source-code doc-comments, so every reader — human or AI — points at the same facts.
+grund — ground your agents in the spec: §<ID>.<section> citations checked across docs and code.
 
 Usage:
   grund <ID>[.<section>] [OPTIONS]    print one declaration body
@@ -17,9 +16,9 @@ Commands:
   id       Next conflict-free ID for a new declaration.             e.g. grund id FS "user login"
   init     Scaffold agent instructions + grund.toml.                e.g. grund init --docs
   config   Validate or show the effective grund.toml.               e.g. grund config show
-  agent-setup-instructions  Print AI setup guide.                   e.g. grund agent-setup-instructions
+  agent-setup-instructions  Print AI setup guide.              e.g. grund agent-setup-instructions
   completions  Print shell completion scripts.                      e.g. grund completions bash
   integrations  Print/install clickable-citation integrations.      e.g. grund integrations wezterm
 
 Options:  --format text|json   per-command (place after the subcommand); text is the default.
-          --version, -V        print version.   --help, -h   show this screen.   Docs: docs/functional-spec/
+          --version, -V  print version.  --help, -h  show this screen.  Docs: docs/functional-spec/

@@ -284,7 +284,7 @@ fn inbound_and_prohibition_families_reach_their_released_findings() {
         concat!(
             "docs/fs/FS-demo.md:6: error: FS-demo.requirements is cited by AR 0 times; ",
             "RULE-inbound requires at least one\n",
-            "docs/fs/FS-demo.md:8: error: FS must not cite AR (RULE-prohibition)\n",
+            "docs/fs/FS-demo.md:8: error: FS must not cite AR (RULE-prohibition) — re-point the citation or downgrade it to a plain Markdown link\n",
         ),
         "",
     );

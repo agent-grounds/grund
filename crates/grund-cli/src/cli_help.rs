@@ -1,23 +1,24 @@
 /// `grund --help` / `grund help` — the top-level usage text: the subcommand list and
 /// global flags (§FS-cli.2.2). `grund help <cmd>` defers to `print_subcommand_help`.
 fn print_help() {
-    println!("grund — ground your agents in the spec.");
-    println!("Checks ID-based citations (§<ID>.<section>) across Markdown docs and source-code doc-comments, so every reader — human or AI — points at the same facts.");
+    println!(
+        "grund — ground your agents in the spec: §<ID>.<section> citations checked across docs and code."
+    );
     println!();
     println!("Usage:");
-    println!(
-        "  grund <ID>[.<section>] [OPTIONS]    print one declaration body"
-    );
-    println!(
-        "  grund check [PATH] [OPTIONS]        validate a repo or subtree"
-    );
+    println!("  grund <ID>[.<section>] [OPTIONS]    print one declaration body");
+    println!("  grund check [PATH] [OPTIONS]        validate a repo or subtree");
     println!(
         "  grund <COMMAND> [ARGS] [OPTIONS]    run `grund <COMMAND> --help` for that command's options"
     );
     println!();
     println!("Commands:");
-    println!("  show     Print one declaration body for agent context (default).  e.g. grund FS-login.3");
-    println!("  check    Validate every reference in a repo.                      e.g. grund check .");
+    println!(
+        "  show     Print one declaration body for agent context (default).  e.g. grund FS-login.3"
+    );
+    println!(
+        "  check    Validate every reference in a repo.                      e.g. grund check ."
+    );
     println!(
         "  list     The ID catalog: every declared ID, path:line, title.     e.g. grund list --kind FS"
     );
@@ -30,7 +31,9 @@ fn print_help() {
     println!(
         "  fmt      Rewrite `$$` triggers to `§`; --marker upgrades cites.   e.g. grund fmt --check"
     );
-    println!("  fetch    Materialize one configured external snapshot.            e.g. grund fetch TICKET-1234");
+    println!(
+        "  fetch    Materialize one configured external snapshot.            e.g. grund fetch TICKET-1234"
+    );
     println!(
         "  id       Next conflict-free ID for a new declaration.             e.g. grund id FS \"user login\""
     );
@@ -41,7 +44,7 @@ fn print_help() {
         "  config   Validate or show the effective grund.toml.               e.g. grund config show"
     );
     println!(
-        "  agent-setup-instructions  Print AI setup guide.                   e.g. grund agent-setup-instructions"
+        "  agent-setup-instructions  Print AI setup guide.              e.g. grund agent-setup-instructions"
     );
     println!(
         "  completions  Print shell completion scripts.                      e.g. grund completions bash"
@@ -54,7 +57,7 @@ fn print_help() {
         "Options:  --format text|json   per-command (place after the subcommand); text is the default."
     );
     println!(
-        "          --version, -V        print version.   --help, -h   show this screen.   Docs: docs/functional-spec/"
+        "          --version, -V  print version.  --help, -h  show this screen.  Docs: docs/functional-spec/"
     );
 }
 
@@ -68,9 +71,15 @@ fn print_subcommand_help(cmd: &str) {
         "fetch" => {
             println!("grund fetch — materialize one configured external fact snapshot.");
             println!("\nUsage:  grund fetch <ID>\n");
-            println!("The selected kind's [[kinds]].fetch executable receives the local ID and returns one declaration, validated before an atomic write.");
-            println!("No check, query, formatter, completion, or LSP operation runs the integration implicitly.");
-            println!("\nExit:  0 stored · 1 invalid ID · 2 missing integration, rejected output, or operational error.");
+            println!(
+                "The selected kind's [[kinds]].fetch executable receives the local ID and returns one declaration, validated before an atomic write."
+            );
+            println!(
+                "No check, query, formatter, completion, or LSP operation runs the integration implicitly."
+            );
+            println!(
+                "\nExit:  0 stored · 1 invalid ID · 2 missing integration, rejected output, or operational error."
+            );
         }
         "list" => {
             println!("grund list — the ID catalog: every declared ID in the repo, with where it's");
@@ -337,16 +346,18 @@ fn print_subcommand_help(cmd: &str) {
             println!("Examples:");
             println!("  grund init --docs                  # full first-time scaffold");
             println!("  grund init --dry-run               # preview without writing");
-            println!("  grund init --check                 # the same preview as a gate: exit 1 if pending");
+            println!(
+                "  grund init --check                 # the same preview as a gate: exit 1 if pending"
+            );
             println!(
                 "  grund init --name \"My Service\"      # auto-detect entrypoint, else AGENTS.md"
             );
-            println!("  grund init --claude --gemini        # create/update both agent entrypoints");
+            println!(
+                "  grund init --claude --gemini        # create/update both agent entrypoints"
+            );
         }
         "config" => {
-            println!(
-                "grund config — inspect the effective `grund.toml` discovered from a path."
-            );
+            println!("grund config — inspect the effective `grund.toml` discovered from a path.");
             println!();
             println!("Usage:  grund config <show | validate> [PATH]");
             println!();
@@ -374,7 +385,9 @@ fn print_subcommand_help(cmd: &str) {
             println!("Usage:  grund completions <bash|zsh|fish>");
             println!();
             println!("The generated scripts complete subcommands and complete declared IDs for");
-            println!("`grund <ID>`, explicit `show`, and `grund refs <ID>` by calling the hidden helper:");
+            println!(
+                "`grund <ID>`, explicit `show`, and `grund refs <ID>` by calling the hidden helper:"
+            );
             println!("`grund complete ids --prefix <word>`.");
             println!();
             println!("Install examples:");
@@ -389,9 +402,7 @@ fn print_subcommand_help(cmd: &str) {
                 "grund integrations — print or install the clickable-citation terminal/editor integrations."
             );
             println!();
-            println!(
-                "Usage:  grund integrations [<client>] [--write] [--conversation plain|link]"
-            );
+            println!("Usage:  grund integrations [<client>] [--write] [--conversation plain|link]");
             println!(
                 "                          [--conversation-target file|path|web|vscode|vscodium|cursor]"
             );
@@ -403,7 +414,9 @@ fn print_subcommand_help(cmd: &str) {
             println!("what applies. With a client — codium, iterm2, kitty, tmux, vscode, or");
             println!("wezterm — prints that integration's snippet and the grund-open resolver;");
             println!("--write installs it as a managed, idempotent block instead of printing. A");
-            println!("write also records the local conversation preference and updates global agent");
+            println!(
+                "write also records the local conversation preference and updates global agent"
+            );
             println!("instructions. With no client, --write with either conversation flag changes");
             println!("only that preference. --conversation-target picks how a linked citation");
             println!("addresses its declaration; --agent scopes that choice to one agent instead");
@@ -414,10 +427,16 @@ fn print_subcommand_help(cmd: &str) {
             println!("  grund integrations wezterm            # print the snippet + resolver");
             println!("  grund integrations wezterm --write    # install it, idempotently");
             println!("  grund integrations --write --conversation link  # preference only");
-            println!("  grund integrations --write --conversation-target vscodium  # open in the editor");
-            println!("  grund integrations --write --agent codex --conversation-target web  # that agent only");
+            println!(
+                "  grund integrations --write --conversation-target vscodium  # open in the editor"
+            );
+            println!(
+                "  grund integrations --write --agent codex --conversation-target web  # that agent only"
+            );
             println!();
-            println!("Exit:  0 printed or installed · 2 invalid options, missing write target, or a newer block.");
+            println!(
+                "Exit:  0 printed or installed · 2 invalid options, missing write target, or a newer block."
+            );
         }
         "agent-setup-instructions" => {
             println!(

@@ -12,7 +12,7 @@ use std::path::PathBuf;
 
 use super::config::config_run_warnings;
 use crate::config::{display_path, kind_prefixes, non_citable_kind_error};
-use crate::model::{Finding, Id};
+use crate::model::{Finding, Id, paths_same_location};
 use crate::scanner::{e2e_case_dir_name, scan_tree_strict};
 use crate::workspace::resolve_workspace_config;
 use crate::writers::{format_id, slugify_title};
@@ -43,6 +43,12 @@ pub struct IdProposal {
     pub folder: Option<String>,
     pub file: Option<String>,
     pub e2e_case_dir: Option<String>,
+    /// Whether the kind's configured `file` already holds exactly one
+    /// declaration of the kind, which is what makes the new declaration's
+    /// hint an H1 rather than the H2 convention (§FS-id.2.3,
+    /// §FS-config.3.4.4). It is a fact about the file's contents, not about
+    /// the kind's name: `GRUND`'s scaffolded home is the shape, not the test.
+    pub file_holds_single_declaration: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -146,8 +152,24 @@ fn propose_id_run(
             ),
         });
     }
+    // §FS-id.2.3: the H1 hint is owed where the kind's file holds the kind's
+    // single declaration — counted in that file, since a declaration of the
+    // kind written elsewhere is the single-file rule's error to report
+    // (§FS-check.3.7), not this hint's fact.
+    let file_holds_single_declaration = kind_config.file.as_deref().is_some_and(|file| {
+        let home = config.root.join(file);
+        findings
+            .declarations
+            .iter()
+            .filter(|(declared, _)| declared.kind == kind)
+            .flat_map(|(_, decls)| decls.iter())
+            .filter(|decl| paths_same_location(&decl.file, &home))
+            .count()
+            == 1
+    });
     Ok(IdProposalOutcome::Proposed(IdProposal {
         e2e_case_dir: (kind == "E2E").then(|| e2e_case_dir_name(&config, &rendered)),
+        file_holds_single_declaration,
         id: rendered,
         kind: kind.to_string(),
         number,

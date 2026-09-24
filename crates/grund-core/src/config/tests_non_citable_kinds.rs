@@ -134,7 +134,7 @@ fn a_prohibition_names_the_home() {
     let run = check_run(&root, false);
     assert_eq!(
         only(&run, "forbidden-citation").message,
-        "skills/ must not cite FS (citation direction)",
+        "skills/ must not cite FS (citation direction) — re-point the citation or downgrade it to a plain Markdown link",
     );
 }
 
@@ -398,7 +398,7 @@ fn a_project_may_name_the_homeless_kind() {
     // says it back.
     assert_eq!(
         only(&check_run(&root, false), "forbidden-citation").message,
-        "src must not cite FS (citation direction)",
+        "src must not cite FS (citation direction) — re-point the citation or downgrade it to a plain Markdown link",
     );
 }
 
