@@ -5,7 +5,7 @@ docs/fs/FS-demo.md:1: error: FS-demo must cite GOAL (citation direction)
 docs/fs/FS-demo.md:6: error: FS-demo.requirements cites REQ 0 times; RULE-requirements-count requires exactly 2
 docs/fs/FS-demo.md:6: error: FS-demo.requirements is cited by AR 0 times; RULE-inbound, RULE-inbound-copy requires at least one
 docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements)
-docs/fs/FS-demo.md:8: error: FS must not cite AR (RULE-prohibition)
+docs/fs/FS-demo.md:8: error: FS must not cite AR (RULE-prohibition) — re-point the citation or downgrade it to a plain Markdown link
 docs/rules/RULE-invalid.md:1: error: RULE-invalid is not a valid rule: modality "may not" is not accepted; accepted form: Each FS must not cite any AR.
 docs/fs/FS-demo.md:1: suggestion: FS-demo should cite GOAL (RULE-positive, RULE-positive-copy)
 docs/fs/FS-demo.md:8: suggestion: FS should not cite AR (RULE-negative)
