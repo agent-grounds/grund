@@ -156,7 +156,7 @@ Defaults fit canonical `grund`; config makes different project conventions first
 
 ### 1. What is configurable
 
-Every key [§FS-config.3](functional-spec/FS-config.md#3-schema) declares, which is where the list is kept so it cannot fall behind the tool: the kinds, the ID format, the marker and trigger, strictness, scan scope, comment prefixes, inline citation style, and the output defaults.
+Every key [§FS-config.3](functional-spec/FS-config.md#3-schema) declares. The schema is the list and this goal does not repeat it: a second copy falls behind the first the next time a key is added, and a goal that names keys is wrong rather than merely stale when it does. What puts a key on this side of the goal is not which key it is but what it governs — a project's own convention for how it names, files and cites, which `grund` reads instead of imposing canonical `grund`'s.
 
 ### 2. What is NOT configurable
 
