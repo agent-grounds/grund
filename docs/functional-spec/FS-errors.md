@@ -6,6 +6,20 @@ The shapes are **frozen** by the same logic as [§FS-non-goals.9](FS-non-goals.m
 
 For verbose implementer examples of JSON objects, empty-output behavior, stream split, and ordering, see [§FS-output-shapes](FS-output-shapes.md#fs-output-shapes-machine-readable-output-shapes). This file defines the general rules; that appendix pins representative wire examples.
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, body, section, catalog),
+[§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation, shorthand), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan,
+scope, workspace, member, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, suggestion, caution,
+verdict), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction, rule), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, binding, snapshot).
+
+- **located finding** — A finding about the repository, printed with its `<path>:<line>: `
+  prefix — as against a CLI-level message, which is about the run and carries no location.
+- **code catalog** — The sorted, published set of `check` finding codes. A compound of this
+  file's own: it is not the declaration catalog.
+- **report base** — The directory every `path` in a report is rendered against, selected by
+  `relative_paths`.
+
 ## 1. Streams
 
 `grund` follows the **linter convention** (`eslint`, `ruff`, `shellcheck`, `golangci-lint`): a checker's findings *are* its output, so they go to **stdout** — `grund check | grep …`, `grund check > findings.txt`, and `grund check --format=json | jq …` all work with no stream redirection. `stderr` is reserved for what the command says *about* the run, not *as* its output. What stdout carries is [§FS-errors.1.1](FS-errors.md#11-what-stdout-carries), and what stderr carries is [§FS-errors.1.2](FS-errors.md#12-what-stderr-carries).

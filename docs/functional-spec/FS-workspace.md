@@ -7,6 +7,26 @@ before the local ID. This keeps the zero-config single-project path intact
 without forcing project names into every ID ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable)). The alias
 syntax is chosen in [§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section, coordinate,
+lead, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, qualified citation, shorthand, citation
+site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, workspace,
+member, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, caution, verdict, anchor), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions)
+(grounded), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, component, binding).
+
+- **workspace root** — The project whose config carries the `[workspace]` block a run reads its
+  members from.
+- **boundary** — Where one project's scan stops because a member's own project begins.
+- **claimed chain** — The `[workspace]` blocks from the outermost root down, each claiming the
+  next, which is what an alias path is read along.
+- **current project** — The project the run's own directory sits in, and what an unqualified
+  citation resolves against.
+- **absent** — Of an optional member: declared and not on disk. The block loads without it and
+  the run continues.
+- **unverified** — Of a citation into an absent member's namespace: neither resolved nor
+  reported, a third outcome beside valid and dangling.
+
 ## 1. Citation syntax
 
 A normal citation still resolves inside the current project:

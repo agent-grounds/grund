@@ -2,6 +2,12 @@
 
 The `examples/` tree is a user-facing learning surface, not an incidental test-data dump. Its maintained examples explain the canonical ways users are expected to adopt and operate `grund`: choosing an ID scheme, declaring facts, citing them, resolving citations, checking a tree, and using reports during review. This serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) by making the common path legible before a user reads the implementation or the e2e suite, and it serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) because agents can learn the intended workflow from maintained, runnable material.
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, home, index), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation),
+[§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (workspace), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding,
+verdict), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (rule), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, binding, fetcher, snapshot).
+
 ## 1. Scope
 
 An example is any maintained directory or document under `examples/` that is advertised from the README, from `examples/README.md`, or from a functional spec. Scratch fixtures, private experiments, and e2e-only test cases are not examples until they are linked from one of those user-facing surfaces.

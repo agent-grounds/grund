@@ -2,6 +2,13 @@
 
 The `list` subcommand prints the repo's ID catalog: every declaration, where it lives, and its one-line title — or, narrowed with `--kind`/`--summary`, just the slice an agent asked for. It is the index that `grund <ID>` reads from and the broad counterpart of `grund refs` — `refs` answers "who cites *this* ID?", `list` answers "what IDs are there?". An agent that has been told to ground itself with `grund <ID>` needs a way to discover the `<ID>`s; a human auditing a spec tree needs the same. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) (no `grep` for `^# [A-Z]+-` across the tree), [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file), and the agent-grounding loop in [§GRUND-grund](../grund.md#grund-grund-agents-stay-grounded-in-the-spec).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section, coordinate,
+lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub, doc-comment),
+[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member, alias), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (rule), and
+[§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, fetcher, snapshot).
+
 ## 1. Inputs
 
 ```

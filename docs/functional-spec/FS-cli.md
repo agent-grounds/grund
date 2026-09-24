@@ -2,6 +2,11 @@
 
 The behaviour that is not owned by any one subcommand — how `grund` is invoked with no subcommand, the two global flags that short-circuit before any work, and the cross-subcommand flags. Serves [§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible) (one screen of help, no surprises) and [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) (the CLI surface — subcommands, flags, exit-code mapping — is user-visible, so it changes only backward-compatibly or through a named deprecation window).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan,
+workspace), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, verdict), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (snapshot).
+
 ## 1. The default subcommand
 
 - `grund` with no arguments keeps the historical `check .` behavior for the current deprecation window: it prints `warning: bare \`grund\` still runs \`grund check .\`; use \`grund check\` explicitly.` on stderr, then runs the same validation as `grund check .` with the same stdout and exit code.

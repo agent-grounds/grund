@@ -4,6 +4,22 @@
 
 `grund` does not ship per-editor wrappers ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)): the first-party executable editor surface is the LSP server, and per-editor configuration is one-time work the user does, with example snippets and importable configuration data in the user-facing LSP setup guide.
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section, coordinate, catalog),
+[§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, qualified citation, shorthand, citation site),
+[§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member,
+alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, suggestion), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction, rule),
+and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, component, binding, fetcher, snapshot).
+
+- **diagnostic** — The LSP protocol object a finding is published as. The word names the
+  protocol object here and nothing else.
+- **workspace folder** — A root the editor supplies in its `initialize` request, from which
+  config discovery walks up.
+- **snapshot (narrowed)** — [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations). In this spec, within the server's own state, it
+  also names the immutable scan result one request is answered from; elsewhere the shared
+  definition applies.
+
 ## 1. Capabilities
 
 The minimum viable set — everything the server speaks at version 1.0. Diagnostics ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)), hover ([§FS-lsp.1.2](FS-lsp.md#12-hover-preview)), and go-to-definition ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)) are illustrated in the project README; each illustration is captured for both light and dark editor themes (paired `<name>-light.png` and `<name>.png` `prefers-color-scheme` sources), so a screenshot refresh updates both variants together.

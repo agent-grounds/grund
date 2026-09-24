@@ -2,6 +2,13 @@
 
 The `cover` subcommand exposes the citation graph as data: for each scanned file, which spec IDs does it cite, and where? This is the plumbing surface for the diff-aware co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)): git decides what changed, `cover` says which IDs the changed files lean on. Serves [§GOAL-agent-grounding.1](../goals.md#1-the-three-layers) and keeps the policy layer out of `grund-core`.
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, section, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations)
+(marker, citation), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, workspace, member, alias),
+[§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value,
+binding, snapshot).
+
 ## 1. Inputs
 
 ```

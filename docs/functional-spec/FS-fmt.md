@@ -2,6 +2,24 @@
 
 The `fmt` subcommand rewrites the citations in a tree in four passes: trigger sequences become markers, (optionally) bare citations become marker-prefixed, a number-only shorthand is expanded to its full ID where its `shorthand` policy asks ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)), and citations in Markdown are wrapped as links ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)). It is the batch counterpart to the optional LSP server's live trigger transform ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)) and the always-available path: every install of `grund` ships `fmt`, while the LSP server is opt-in. Implements [§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section, index, catalog),
+[§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, qualified citation, shorthand, canonical form),
+[§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, workspace,
+member, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, anchor), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, binding,
+fetcher, snapshot).
+
+- **never-rewrite zone** — A span whose bytes every pass preserves exactly — a string literal, a
+  fenced block, a link target — because a rewrite there would change what the file means.
+- **suppressed scope** — A file `[fmt] exclude` names, or a region between a `grund:fmt off`
+  directive and the `grund:fmt on` that closes it. The repository asked for it, so every finding
+  there stays.
+- **numeric run** — Digits adjoining a number-only shorthand that leave the token's end
+  ambiguous, which is why the shorthand there is not rewritten.
+- **dry run** — The run that reports what `--write` would change and writes nothing — `--check`,
+  or no flag at all. It predicts `--write` exactly.
+
 ## 1. Inputs
 
 ```

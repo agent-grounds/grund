@@ -2,6 +2,24 @@
 
 `grund` is zero-config out of the box ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)) and fully configurable when a project's conventions diverge ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable)). This spec defines the contract: where the config lives, what it contains, what it overrides, and how malformed configs are reported.
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section, coordinate,
+lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, qualified citation, shorthand,
+citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (source declaration, stub, doc-comment, note),
+[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, workspace, member, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings)
+(finding, severity, suggestion), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction, level, rule, grounded), and
+[§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, snapshot).
+
+- **place** — Where a per-place key is written, and therefore what it governs: on a `[[kinds]]`
+  row it says what one place does, at the top of the file what every place does.
+- **homeless kind** — The row with neither `folder` nor `file`: the complement of every home,
+  whose default name is `code`.
+- **citing kind** — The kind a citation is attributed to — the kind of the home its file sits
+  in, or the homeless kind when no home claims it.
+- **CLI base** — The directory a report's paths are rendered against under `relative_paths =
+  false`, in place of the config root.
+
 ## principle: A setting written at a narrower scope wins
 
 Every setting `grund` reads from a repository is written at one of three **committed scopes**, from widest to narrowest: the **built-in default** the tool supplies ([§FS-config.3](FS-config.md#3-schema)), the **project** — the top-level tables of `grund.toml` — and the **kind**, written either as a `[[kinds]]` row ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)) or as a `[citations.<KIND>]` table ([§FS-config.3.9.4](FS-config.md#394-defaults-and-precedence)), which are two spellings of writing at the one scope. This chapter states once how those scopes relate, so that a key's own point may say what the key means and leave how it resolves to one place. It describes what `grund` already does: it is the general form of sentences this specification carries one at a time ([§FS-config.3.4.8.3](FS-config.md#3483-precedence-is-row-over-global), [§FS-config.3.4.7.2](FS-config.md#3472-not-walked-however-the-walk-arrives), [§FS-config.4.2.1](FS-config.md#421-kinds-rows-print-what-they-do-not-inherit)), and it adds no behavior and no key.

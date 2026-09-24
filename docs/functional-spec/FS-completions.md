@@ -2,6 +2,12 @@
 
 Shell completion makes the read loop cheap: after `grund list` tells a user what exists and `grund <ID>` reads one body, the shell should complete `<ID>` without making the user copy it. This spec covers shell completion only; editor completion remains the LSP surface in [§FS-lsp.1.5](FS-lsp.md#15-capabilities-reserved-for-later).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section, coordinate, catalog),
+[§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, alias), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations)
+(value, component, fetcher, snapshot).
+
 ## 1. User-facing command
 
 ```
