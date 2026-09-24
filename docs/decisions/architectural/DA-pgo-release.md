@@ -7,7 +7,7 @@
 
 [§GOAL-fast-feedback](../../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) makes speed an ordering principle, and `grund` is a branch-heavy program — a scanner walking a tree, line-classifying, and matching regexes — exactly the shape profile-guided optimization helps most (the compiler lays out the hot blocks and inlines along the paths a representative run actually takes). The `[profile.release]` settings already opt into `lto = true` / `codegen-units = 1`; PGO is the next layer. Two questions: how is the PGO pipeline wired (it cannot live in `Cargo.toml`), and what is the training corpus?
 
-[§AR-benchmarks](../../architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) already pins a workload — `grund check`, `list`, `show`, `refs`, `cover`, `fmt --check` over this repo's own conformant tree — chosen as "the commands agents and CI invoke most". That is also a faithful answer to "what should the optimizer profile against".
+[§AR-benchmarks](../../architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) already pins a workload — `grund check`, `list`, `show`, `refs`, `cover`, `fmt --check` — chosen as "the commands agents and CI invoke most". That is also a faithful answer to "what should the optimizer profile against".
 
 ## 2. Decision
 
@@ -23,7 +23,7 @@ This applies to **release and benchmarking** paths only. `cargo install grund` b
 
 ### 3.2 This repo's tree as the training input
 
-The training run scans `grund`'s own repository — the same input the self-host loop ([§AR-ci.1](../../architecture/AR-ci.md#1-pre-commit-is-the-source-of-truth)) and the benchmarks already use. It is a real conformant tree of the size the small-repo promise targets ([§GOAL-small-and-large.1](../../goals.md#1-small-repo-promise)), with the full spread of file types (Markdown specs, Rust sources, e2e fixture manifests), so the recorded profile generalizes to the common case. A generated large synthetic tree (the one [§AR-benchmarks](../../architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) adds) can be folded into the training run later if profiling it ever changes the layout the optimizer picks; starting with the real repo keeps the pipeline simple and the profile honest.
+The training run scans `grund`'s own repository — the same input the self-host loop ([§AR-ci.1](../../architecture/AR-ci.md#1-pre-commit-is-the-source-of-truth)) already uses. The benchmarks run the same commands against generated fixtures instead, because a gate needs a stable input where a profile needs a representative one ([§AR-benchmarks.1.5](../../architecture/AR-benchmarks.md#15-the-same-command-list-trains-pgo)). It is a real conformant tree of the size the small-repo promise targets ([§GOAL-small-and-large.1](../../goals.md#1-small-repo-promise)), with the full spread of file types (Markdown specs, Rust sources, e2e fixture manifests), so the recorded profile generalizes to the common case. A generated large synthetic tree (the one [§AR-benchmarks](../../architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) adds) can be folded into the training run later if profiling it ever changes the layout the optimizer picks; starting with the real repo keeps the pipeline simple and the profile honest.
 
 ### 3.3 A script, not a `Cargo.toml` profile
 
