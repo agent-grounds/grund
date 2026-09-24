@@ -198,6 +198,13 @@ const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-init.2.3.4.13", reason: "covered by the byte-exact generated init block" },
     Exception { id: "FS-init.2.3.4.14", reason: "covered by the byte-exact generated init block" },
     Exception { id: "FS-init.2.3.4.16", reason: "covered by the byte-exact generated init block" },
+    Exception { id: "FS-terms.terms.1", reason: "vocabulary, not a behavioral requirement" },
+    Exception { id: "FS-terms.terms.2", reason: "vocabulary, not a behavioral requirement" },
+    Exception { id: "FS-terms.terms.3", reason: "vocabulary, not a behavioral requirement" },
+    Exception { id: "FS-terms.terms.4", reason: "vocabulary, not a behavioral requirement" },
+    Exception { id: "FS-terms.terms.5", reason: "vocabulary, not a behavioral requirement" },
+    Exception { id: "FS-terms.terms.6", reason: "vocabulary, not a behavioral requirement" },
+    Exception { id: "FS-terms.terms.7", reason: "vocabulary, not a behavioral requirement" },
 ];
 
 #[rustfmt::skip]
