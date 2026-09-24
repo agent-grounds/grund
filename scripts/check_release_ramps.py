@@ -40,6 +40,10 @@ CLAUSES = (
     ("was removed in", LANDED),
     ("stopped loading in", LANDED),
     ("unchecked in", LANDED),
+    # A wording ramp has only the pending tense (§FS-distribution.4.2.2): the
+    # message promising its own wording changes at a named release is rewritten
+    # by then, and what replaces it says nothing about when it changed.
+    ("wording changes in", PENDING),
 )
 
 PATTERNS = tuple(
