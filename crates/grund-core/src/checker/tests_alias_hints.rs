@@ -127,6 +127,62 @@ fn narrowed_scope_only_message_has_the_0132_compatibility_form() {
     assert_eq!(actual, migrating_scope_only_message("alpha", "group"));
 }
 
+/// The scope-only message §FS-check.3.8.4 fixes for `0.15.0`, once the
+/// compatibility suffix is gone.
+fn final_scope_only_message(namespace: &str, scope: &str) -> String {
+    format!(
+        "unknown project alias {namespace}; the {scope} project and its descendants are in scope here — check from the workspace root for a path outside that subtree"
+    )
+}
+
+/// The `major.minor.patch` of a version string, ignoring any `-dev` tail.
+fn release(text: &str) -> (u64, u64, u64) {
+    let mut parts = text.split('.').map(|part| {
+        part.split(|ch: char| !ch.is_ascii_digit())
+            .next()
+            .unwrap_or("0")
+            .parse::<u64>()
+            .unwrap_or_else(|_| panic!("not a version: {text}"))
+    });
+    (
+        parts.next().unwrap_or(0),
+        parts.next().unwrap_or(0),
+        parts.next().unwrap_or(0),
+    )
+}
+
+/// §FS-check.3.8.4: the suffix names the release its own wording changes in, so
+/// it may not survive that release. `narrowed_scope_only_message_has_the_0132_compatibility_form`
+/// above pins the suffix byte-exactly but reads no version, so nothing there
+/// reddens at the bump that reaches `0.15.0`; this case is the deadline half, in
+/// the shape `the_agents_init_tail_cannot_survive_the_release_it_names` uses for
+/// the other wording ramp this tree carries.
+///
+/// While the compatibility form ships, this tree may not be at or above the
+/// release the suffix names, and the final wording may not have leaked in early.
+/// From `0.15.0` the other branch is the live one: no suffix, and the message is
+/// exactly the final form. It passes today by design — the running version has
+/// not reached `0.15.0` — and reddens at the bump that does.
+#[test]
+fn the_scope_clarification_suffix_cannot_survive_the_release_it_names() {
+    let actual = unknown_project_message("alpha", ["group/alpha"].into_iter(), "group");
+    let suffix = SCOPE_CLARIFICATION_SUFFIX.replace("{scope}", "group");
+
+    if actual.ends_with(&suffix) {
+        assert!(
+            release(env!("CARGO_PKG_VERSION")) < release("0.15.0"),
+            "this tree reached 0.15.0; land §FS-check.3.8.4's final scope-only wording instead of shipping the compatibility suffix"
+        );
+        assert!(
+            !actual.contains("are in scope here"),
+            "the final wording landed before its release: {actual}"
+        );
+        return;
+    }
+
+    assert_eq!(actual, final_scope_only_message("alpha", "group"));
+}
+
 /// §FS-check.3.8.3: narrowed runs still suppress the new tier. When `--full`
 /// finds the same error outside `include`, its scope clause remains first.
 #[test]

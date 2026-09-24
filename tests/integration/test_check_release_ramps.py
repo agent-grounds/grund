@@ -1,8 +1,8 @@
 """§FS-distribution.4.2.2 — the release gate reads the release each message names
 out of the tree's own message text and refuses a version that contradicts one.
 The synthetic trees below pin the two directions and the closed clause
-vocabulary; the last three run the gate against this repository, because a gate
-wired to text nobody writes any more would pass everything in silence."""
+vocabulary; `ThisRepositoryTests` runs the gate against this repository, because
+a gate wired to text nobody writes any more would pass everything in silence."""
 
 import importlib.util
 import unittest
@@ -68,16 +68,17 @@ class ClauseReadingTests(unittest.TestCase):
         written outside the wording the warnings already use names no release the
         guard can read, so "will be removed in" is not a clause."""
         self.assertEqual(claims("this will be removed in 0.15.0 one day"), [])
+        self.assertEqual(claims("the wording changed in 0.15.0"), [])
 
-    def test_the_wording_clause_is_specified_but_not_read_yet(self):
-        """§FS-distribution.4.2.6 — this assertion pins an *unimplemented*
-        clause, deliberately. `wording changes in <release>` is specified and
-        the guard does not read it, so the gap is stated here rather than left
-        for a reader of `CLAUSES` to discover. The follow-up that adds the
-        clause inverts this test; it does not delete it."""
-        self.assertNotIn("wording changes in", [clause for clause, _ in ramps.CLAUSES])
-        self.assertEqual(claims("wording changes in 0.15.0"), [])
-        self.assertEqual(claims("wording changes in grund 0.15.0"), [])
+    def test_a_pending_wording_change_names_its_release(self):
+        """§FS-distribution.4.2.2 — the inverted form of the assertion that used
+        to pin this clause as unimplemented. A message promising that its own
+        wording changes at a named release makes a pending claim about that
+        release, in both spellings the other clauses accept."""
+        self.assertIn(("wording changes in", ramps.PENDING), ramps.CLAUSES)
+        for text in ("wording changes in 0.15.0", "wording changes in grund 0.15.0"):
+            (claim,) = claims(text)
+            self.assertEqual((claim.release, claim.direction), ("0.15.0", ramps.PENDING), text)
 
     def test_a_release_is_never_read_across_a_line_break(self):
         self.assertEqual(claims("… becomes an error in\ngrund 0.14.0."), [])
@@ -91,6 +92,7 @@ class VerdictTests(unittest.TestCase):
     LANDED = '"`prefix` was removed in grund 0.13.0"'
     PENDING = '"an index entry becomes an error in grund 0.13.0"'
     REMOVAL = '"is removed in 0.13.0; use the `grund` CLI package"'
+    WORDING = '"… the {scope} subtree; this wording changes in grund 0.14.0"'
 
     def test_a_landed_change_may_not_ship_below_the_release_it_names(self):
         report = refused(self.LANDED, "0.12.4")
@@ -117,6 +119,25 @@ class VerdictTests(unittest.TestCase):
 
     def test_a_named_removal_ships_below_the_release_it_names(self):
         self.assertEqual(refused(self.REMOVAL, "0.12.4"), [])
+
+    def test_a_promised_wording_change_ships_below_the_release_it_names(self):
+        """§FS-distribution.4.2.2 — the clause's own three cases, on a fixture
+        that names nothing else, so no other ramp in the tree can supply or
+        mask the verdict. Below its deadline the promise is still ahead of the
+        tree, so the release is allowed."""
+        self.assertEqual(refused(self.WORDING, "0.13.2"), [])
+
+    def test_a_promised_wording_change_may_not_ship_at_the_release_it_names(self):
+        report = refused(self.WORDING, "0.14.0")
+        self.assertTrue(report)
+        self.assertIn("cannot be released as 0.14.0", report[0])
+        self.assertTrue(any("wording changes in 0.14.0" in line for line in report))
+
+    def test_a_promised_wording_change_may_not_ship_above_the_release_it_names(self):
+        report = refused(self.WORDING, "0.15.0")
+        self.assertTrue(report)
+        self.assertIn("cannot be released as 0.15.0", report[0])
+        self.assertTrue(any("wording changes in 0.14.0" in line for line in report))
 
     def test_a_tree_that_landed_and_still_promises_one_release_can_cut_nothing(self):
         """§FS-distribution.4.2.5 — the window of releases left can be empty, and
@@ -164,6 +185,17 @@ class ThisRepositoryTests(unittest.TestCase):
             and claim.direction == ramps.PENDING
         ]
         self.assertEqual([], pending, "main_entry() is still pending removal in 0.15.0")
+
+    def test_the_wording_ramps_this_tree_carries_are_read(self):
+        """§FS-distribution.4.2.2 — while the two wording constants ship, the
+        guard must see them in both homes it scans: a `crates/` source and an
+        e2e golden. A clause wired to text nobody writes passes in silence."""
+        wording = [claim for claim in self.claims if claim.clause == "wording changes in"]
+        self.assertTrue(wording, "this tree carries no `wording changes in` ramp to read")
+        homes = {claim.path.split("/")[0] for claim in wording}
+        self.assertIn("crates", homes)
+        self.assertIn("tests", homes)
+        self.assertEqual({claim.direction for claim in wording}, {ramps.PENDING})
 
     def test_the_removal_this_tree_landed_holds_the_floor_at_0_13_0(self):
         floor, _ = ramps.release_window(self.claims)

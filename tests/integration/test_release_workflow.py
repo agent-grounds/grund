@@ -1,4 +1,4 @@
-"""§FS-distribution.4.2.7, §FS-distribution.4.3, §FS-distribution.4.8,
+"""§FS-distribution.4.2.6, §FS-distribution.4.3, §FS-distribution.4.8,
 §FS-distribution.4.9, §FS-distribution.4.10 — what the release workflows must
 still do for a release to mean what the spec says it means: run the release
 guard on every publication path, publish a commit that already carries its
@@ -100,7 +100,7 @@ def step_index(job_steps, wanted):
 
 
 class ReleaseGuardTests(unittest.TestCase):
-    """§FS-distribution.4.2.7 — every publication path runs the release guard,
+    """§FS-distribution.4.2.6 — every publication path runs the release guard,
     on the version it is about to publish or compute rather than on a literal
     somebody has to remember to change."""
 

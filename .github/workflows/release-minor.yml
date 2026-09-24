@@ -83,7 +83,7 @@ jobs:
           fi
           echo "CI on $sha is green."
 
-      # §FS-distribution.4.2.7: refuse a minor release the tree's own messages
+      # §FS-distribution.4.2.6: refuse a minor release the tree's own messages
       # contradict - a ramp still promising this release, or one already landed
       # for a later one. Fails before a candidate branch is pushed.
       - name: Gate - the tree can be released as this version
