@@ -32,7 +32,7 @@ A passing repo has zero dangling references and zero broken section coordinates 
 
 ### 1. What "resolves" means
 
-A citation resolves when exactly one declaration of its ID exists, its section path exists, and any stub points at an inline declaration of the same ID. Two are an error, not a ranking ([§FS-id](functional-spec/FS-id.md#fs-id-grund-proposes-ids-for-new-declarations)).
+A citation resolves when exactly one declaration of its ID exists, its section path exists, and any stub points at an inline declaration of the same ID. Two are an error, not a ranking ([§FS-check.3.3](functional-spec/FS-check.md#33-duplicate-declaration)).
 
 ### 2. Measurable
 
