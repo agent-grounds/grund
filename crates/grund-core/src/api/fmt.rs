@@ -58,9 +58,15 @@ pub struct FmtOutput {
     pub refused_writes: Vec<String>,
     /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
     /// cautions of §FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11 and
-    /// §FS-workspace.6.1.7, each anchored at the `grund.toml` line its own message
-    /// names. A frontend renders each as one CLI-level `warning:` on stderr
-    /// (§FS-check.2.1.1); an editor publishes it on that line (§FS-lsp.1.1.3).
+    /// §FS-workspace.6.1.7. A frontend renders each as one CLI-level `warning:`
+    /// on stderr (§FS-check.2.1.1).
+    ///
+    /// Three keep the anchor the engine gave them — the `grund.toml` line their
+    /// own message already names — and an editor publishes those on that line
+    /// (§FS-lsp.1.1.3). §FS-check.3.29.15's is the exception: it carries no
+    /// location field at all, states its location inside its own text
+    /// (§FS-check.3.29.7), and reaches an editor off `check`'s report instead,
+    /// located and as an error (§FS-check.3.29.13).
     pub warnings: Vec<Finding>,
 }
 
