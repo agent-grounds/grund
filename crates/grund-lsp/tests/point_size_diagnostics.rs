@@ -1,5 +1,5 @@
 //! LSP parity for the configured lead-size warning (§FS-check.4.13.2,
-//! §FS-lsp.1.2).
+//! §FS-lsp.1.1).
 
 mod support;
 

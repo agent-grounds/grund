@@ -190,7 +190,7 @@ pub(super) fn paths_same_location_key(left: &Path, right: &Path) -> bool {
 
 /// Whether `path` contains a real (non-stub) inline declaration of `id` —
 /// the check that a stub's link target actually carries the inline home it claims
-/// (§FS-check.3.4, §AR-checker.2.4, §AR-scanner.4).
+/// (§FS-check.3.4, §AR-checker.2.5, §AR-scanner.4).
 pub(crate) fn file_declares_inline_home(path: &Path, id: &Id, config: &Config) -> Result<bool> {
     let text = fs::read_to_string(path)?;
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");

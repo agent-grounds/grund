@@ -2,7 +2,7 @@
 //! of being a project leaves a tree no scan reaches, which only a walk can say.
 //!
 //! The *question* is workspace's and is posed at config time — `RunWarning::unread_block`
-//! reads two config fields and touches no disk (§AR-workspace.6). Answering it
+//! reads two config fields and touches no disk (§AR-workspace.placement). Answering it
 //! runs the scanner's walker against the block's own config in the
 //! counterfactual where the block had been a project, so the answer sits above
 //! the scanner and reads it downward, which is what retires the one walk this

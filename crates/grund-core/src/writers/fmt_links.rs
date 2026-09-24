@@ -33,7 +33,7 @@ use crate::scanner::{
 /// Wrap each `§<ID>[.<section>]` citation on this Markdown line as `[§<ID>…](url)`
 /// — the `--cross-refs` rewrite (§FS-fmt.6.2): re-derive an existing wrapper's URL,
 /// skip citations in inline code (§FS-fmt.6.4), and emit nothing when the target
-/// does not resolve (§FS-fmt.6.3).
+/// does not resolve (§FS-fmt.6.4).
 ///
 /// `workspace` is `None` for single-project runs (and for member-local
 /// runs in a workspace — §FS-workspace.8.5.1). When `Some`, a qualified
