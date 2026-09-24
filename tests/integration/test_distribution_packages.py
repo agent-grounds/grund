@@ -32,6 +32,14 @@ NAME_GUARD = REPO_ROOT / "scripts" / "check-registry-names.sh"
 # on stdout and never reads the script. PATH order is what we want.
 BASH = shutil.which("bash") or "bash"
 
+# Git Bash's `bash.exe` is a wrapper that puts `/mingw64/bin` and `/usr/bin` at
+# the front of PATH after the environment is handed to it, and Git ships a
+# `curl` there — so a directory prepended from outside is never what the guard
+# calls. The fake goes in front from inside the shell instead, and the guard is
+# sourced rather than re-run so no second wrapper undoes it. `cygpath` is
+# absent off Windows, where the directory is already a POSIX path.
+UNDER_FAKE_CURL = 'PATH="$(cygpath -u "$1" 2>/dev/null || printf %s "$1"):$PATH"; shift; . "$1"'
+
 # Any top-level `<helper> "<registry>" "<name>" "<url>"` invocation, matched by
 # shape rather than by helper name; the `notice_` prefix is what separates a
 # claim from a notice.
@@ -303,7 +311,7 @@ def run_guard(plan):
         environment["GUARD_FAKE_PLAN"] = json.dumps(plan)
         environment["GUARD_FAKE_LOG"] = str(log)
         done = subprocess.run(
-            [BASH, str(NAME_GUARD)],
+            [BASH, "-c", UNDER_FAKE_CURL, "bash", str(binaries), str(NAME_GUARD)],
             cwd=REPO_ROOT,
             env=environment,
             capture_output=True,
