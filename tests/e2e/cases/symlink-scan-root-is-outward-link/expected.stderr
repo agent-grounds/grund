@@ -1,0 +1,1 @@
+warning: nothing to scan — grund looked under [scan] include = ["docs"] and found no files. Run `grund init --docs` to scaffold the canonical requirements.md, docs/, and e2e/ trees, point `[scan] include` in `grund.toml` at your sources, or pass a path explicitly (`grund check <dir>`).

@@ -1,0 +1,4 @@
+# The named scan root is itself the directory link, and its canonical target
+# is outside the project root: the root gate keeps refusing it
+# (§FS-config.3.5.1).
+project/docs -> ../shared-docs

@@ -1,0 +1,21 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[[kinds]]
+kind = "FS"
+file = "docs/fs.md"
+
+[[kinds]]
+kind = "AR"
+file = "docs/ar.md"
+
+[scan]
+include = ["docs"]
+
+[citations]
+default = "may"
+
+[citations.FS]
+must-not = ["AR"]
