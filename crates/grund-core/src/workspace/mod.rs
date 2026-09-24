@@ -58,9 +58,7 @@ pub(crate) use scope::{
     apply_workspace_boundary, populate_workspace_boundary, resolve_workspace_config,
     scope_is_config_root,
 };
-pub(crate) use unlisted::{
-    unlisted_workspace_block_run_warnings, unlisted_workspace_block_warnings,
-};
+pub(crate) use unlisted::{unlisted_workspace_block_errors, unlisted_workspace_block_run_warnings};
 
 // What another component's tests read (§AR-core-module-layout.1.3): the
 // boundary-root form of an expanded member list, which the scanner's

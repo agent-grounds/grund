@@ -61,7 +61,8 @@ pub struct CheckOutput {
     /// carries none of them, and none enters the §FS-errors.5.5 selector
     /// vocabulary — but a caller renders each as a CLI-level `warning:`
     /// (§FS-check.2.1.1) and a run that earns one prints no `success`
-    /// (§FS-check.2.1.3). §FS-check.3.29 is a report warning and is not here.
+    /// (§FS-check.2.1.3). §FS-check.3.29 is one of the report's errors
+    /// (§FS-check.3.29.13) and is not here.
     pub warnings: Vec<Finding>,
 }
 

@@ -46,13 +46,15 @@ pub struct LspSnapshot {
     pub trigger: String,
     pub workspace: bool,
     pub report: Report,
-    /// The run's warning channel (§FS-distribution.3.1, §FS-lsp.1.1.3): the four
-    /// `[workspace]` cautions of §FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11 and
+    /// The run's warning channel (§FS-distribution.3.1, §FS-lsp.1.1.3): the three
+    /// `[workspace]` cautions of §FS-check.4.7.7, §FS-check.4.10.11 and
     /// §FS-workspace.6.1.7, each anchored at the `grund.toml` it names — at that
     /// file's anchored line, or at its first line for the undecidable claim,
     /// which names no line because the line is what it could not read. Not
     /// report findings: they are settled before a report exists, and the server
-    /// publishes them beside `report` rather than inside it.
+    /// publishes them beside `report` rather than inside it. The unlisted
+    /// `[workspace]` block was the fourth and travels in `report` now, as a
+    /// located error (§FS-check.3.29.13).
     pub run_warnings: Vec<Finding>,
     pub declarations: Vec<LspDeclaration>,
     /// Citable section headings (`<ID>.<section>`) inside declaration bodies,

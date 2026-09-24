@@ -29,16 +29,32 @@ use crate::config::{Config, config_file_in, strip_comment};
 use crate::model::Diagnostic;
 use crate::model::{format_path, relative_from_base};
 
-/// The release §FS-check.3.29.14's warning becomes an error in
-/// (§REQ-backwards-compatibility.2, §DF-unlisted-workspace-block.2.1). Named in the
-/// message text, because a warning that does not say when it bites tells a
-/// maintainer they have a problem and not that they have a deadline; held ahead of
-/// the running version by a unit test, so the deadline fails the build rather than
-/// passing unnoticed.
-const UNLISTED_WORKSPACE_BLOCK_ERROR_RELEASE: &str = "0.15.0";
+/// Where a finding of this rule states the block's `[workspace]` line
+/// (§FS-check.3.29.7, §DF-unlisted-workspace-error-shape.2.2). The two channels the
+/// rule is left with differ in this and in nothing else: one sentence, two
+/// placements (§FS-check.3.29.6).
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum Placement {
+    /// The location is the finding's own `path` and `line` and the message does not
+    /// repeat it — §FS-errors.2.2.1's shape for a finding a frontend places:
+    /// `check`'s report error behind the §FS-check.2.1 prefix, and the editor's
+    /// diagnostic (§FS-check.3.29.13).
+    Located,
+    /// No location fields, and the message opens with `<path>:<line>: `: the five
+    /// walking surfaces of §FS-check.3.29.9 print the sentence and place nothing, so
+    /// the file and the line have to be in the text a reader greps
+    /// (§FS-check.3.29.15).
+    InText,
+}
 
-/// §FS-check.3.29: one warning per outermost `[workspace]` block this run's walk
-/// met that no enclosing block lists.
+/// §FS-check.3.29, §FS-check.3.29.13: one **located error** per outermost
+/// `[workspace]` block this run's walk met that no enclosing block lists — `path`
+/// the block's own config and `line` its `[workspace]` line.
+///
+/// An error since the ramp ended in `0.15.0` (§FS-check.3.29.14,
+/// §DF-unlisted-workspace-error-shape.2.1): being an error is what reaches the exit
+/// code (§FS-check.3), and being located is what puts it on stdout behind the
+/// mandatory prefix and the anchor into its JSON object.
 ///
 /// `config` is the project whose walk produced `walked_dirs` — the namespace the
 /// block is absorbed into, and the root both remedies are written from. `render`
@@ -50,40 +66,40 @@ const UNLISTED_WORKSPACE_BLOCK_ERROR_RELEASE: &str = "0.15.0";
 /// Outermost-only falls out of the claim test rather than needing a pass of its
 /// own: a block below an unlisted one *is* claimed — by the unlisted block — so
 /// `enclosing_workspace_of` answers it, and one edit fixes the chain.
-pub(crate) fn unlisted_workspace_block_warnings(
+pub(crate) fn unlisted_workspace_block_errors(
     config: &Config,
     render: &Config,
     alias: Option<&str>,
     walked_dirs: &[PathBuf],
 ) -> Vec<Diagnostic> {
-    block_warnings(config, render, alias, walked_dirs, false)
+    block_diagnostics(config, render, alias, walked_dirs, Placement::Located)
 }
 
-/// §FS-check.3.29.15, §FS-lsp.1.1.3: the same findings for the five surfaces that have
-/// no report to carry them, **anchored at each block's `[workspace]` line** so a
-/// frontend places one without reading the location back out of the message text.
+/// §FS-check.3.29.15, §FS-check.3.29.9: the same findings for the five walking
+/// surfaces that have no report to carry them — `list`, `refs`, `cover`, `fmt` and
+/// the ID read — one CLI-level `warning:` each, with the location **inside the
+/// text** because the CLI prints the sentence rather than placing it
+/// (§FS-errors.2.2.1).
 ///
-/// The anchor is the one thing that differs from the report form above, and it
-/// differs deliberately: in `check` this is one of the report's warnings and its
-/// JSON object keeps `path`, `line` and `sites` `null` (§FS-errors.5.2), because a
-/// change about which side renders must not move a consumer's filter. Everywhere
-/// else it travels in the run's warning channel, which no surface renders as JSON,
-/// so there it carries the location an editor needs.
+/// The channel is what the flip moved, not the anchor. `check` and the editor take
+/// this finding off the report, located and as an error; these five keep the
+/// warning, whose exit codes §FS-cli.5 freezes, with one word of it changed
+/// (§DF-unlisted-workspace-block.2.4, §DF-unlisted-workspace-error-shape.2.3).
 pub(crate) fn unlisted_workspace_block_run_warnings(
     config: &Config,
     render: &Config,
     alias: Option<&str>,
     walked_dirs: &[PathBuf],
 ) -> Vec<Diagnostic> {
-    block_warnings(config, render, alias, walked_dirs, true)
+    block_diagnostics(config, render, alias, walked_dirs, Placement::InText)
 }
 
-fn block_warnings(
+fn block_diagnostics(
     config: &Config,
     render: &Config,
     alias: Option<&str>,
     walked_dirs: &[PathBuf],
-    anchored: bool,
+    placement: Placement,
 ) -> Vec<Diagnostic> {
     // §GOAL-fast-feedback: one cache for the whole rule, the way
     // `enclosing_alias_prefix` shares one per climb — every candidate walks the same
@@ -93,7 +109,7 @@ fn block_warnings(
     // cannot read is this rule's silence rather than the reader's warning.
     let mut ancestors = AncestorWorkspaces::quiet_for_run_at(&config.root);
     let mut reported = BTreeSet::new();
-    let mut warnings = Vec::new();
+    let mut diagnostics = Vec::new();
     for dir in walked_dirs {
         // The probe first: two `is_file` calls, and all a tree with no nested config
         // pays (§FS-config.1). It is what finds the `.agents/` form, which the walk
@@ -126,13 +142,14 @@ fn block_warnings(
             Err(_) => continue,
             Ok(None) => {}
         }
-        warnings.push(Diagnostic {
+        let located = placement == Placement::Located;
+        diagnostics.push(Diagnostic {
             code: "unlisted-workspace-block",
-            // §FS-errors.2.2.1, §DF-unlisted-workspace-block.2.4: the report form is
-            // `line`-less, so it prints as one `warning:` on stderr with the
-            // location in the text and its JSON object keeps the nulls.
-            path: anchored.then(|| config_path.clone()),
-            line: anchored.then_some(line),
+            // §FS-check.3.29.7: the located form carries the block's `[workspace]`
+            // line in these two fields, and the in-text form carries it in the
+            // message instead — the one difference between the two channels.
+            path: located.then(|| config_path.clone()),
+            line: located.then_some(line),
             column: None,
             message: unlisted_workspace_block_message(
                 config,
@@ -141,20 +158,23 @@ fn block_warnings(
                 dir,
                 &config_path,
                 line,
+                placement,
             ),
+            // §FS-check.3.29.13: one block, one site, so `sites` stays null.
             sites: Vec::new(),
         });
     }
-    warnings
+    diagnostics
 }
 
 /// §FS-check.3.29.6: the sentence, built apart from the reporting so both channels
-/// print one text — `check`'s report warning and the direct stderr line every
-/// other walking surface prints (§DF-unlisted-workspace-block.2.4).
+/// print one text — `check`'s report error and the direct stderr line the five
+/// other walking surfaces print (§DF-unlisted-workspace-block.2.4). `placement`
+/// decides only whether it opens with the location (§FS-check.3.29.7).
 ///
-/// Four facts and one deadline: the block's `[workspace]` line, what the
+/// Four facts and a spent deadline: the block's `[workspace]` line, what the
 /// absorption costs, the two config edits that clear it, and the release the
-/// finding becomes an error in. The second remedy is stated as an outcome rather
+/// finding became an error in (§FS-check.3.29.14). The second remedy is stated as an outcome rather
 /// than as a key on purpose — `[scan] exclude` prunes descendants and never the
 /// directory a walk starts at (§FS-check.1.3.2), so a block that is itself an
 /// `include` root takes `include` and one below it takes `exclude`.
@@ -165,6 +185,7 @@ fn unlisted_workspace_block_message(
     dir: &Path,
     config_path: &Path,
     line: usize,
+    placement: Placement,
 ) -> String {
     // Both remedies are written from the enclosing project's root, so the entry is
     // spelled from there — while the two file paths render against the run's report
@@ -174,14 +195,18 @@ fn unlisted_workspace_block_message(
         .config_file
         .clone()
         .unwrap_or_else(|| config.root.join("grund.toml"));
+    // §FS-check.3.29.7: only the in-text form opens with the anchor; the located
+    // form leaves it to the two fields the frontend reads it from.
+    let location = match placement {
+        Placement::Located => String::new(),
+        Placement::InText => format!("{}:{line}: ", display_path(render, config_path)),
+    };
     format!(
-        "{block}:{line}: this [workspace] is listed by no enclosing workspace \
+        "{location}this [workspace] is listed by no enclosing workspace \
          — the projects under it are absorbed into `{absorbing}` instead of named under \
          their own alias path; add \"{entry}\" to [workspace] members in {enclosing}, \
          or keep it out of that project's [scan] \
-         — an unlisted [workspace] becomes an error in grund \
-         {UNLISTED_WORKSPACE_BLOCK_ERROR_RELEASE}",
-        block = display_path(render, config_path),
+         — an unlisted [workspace] became an error in grund 0.15.0",
         absorbing = absorbing_project_name(config, alias),
         enclosing = display_path(render, &enclosing_config),
     )
