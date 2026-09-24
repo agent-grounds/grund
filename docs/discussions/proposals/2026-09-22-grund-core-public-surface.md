@@ -14,11 +14,11 @@ A surface moves, so an audit of one is worth nothing without the commit it was t
 
 | | |
 | --- | --- |
-| Commit | `a6cb20e3ecf7cce7e3e99f900dbf1fec1edd64db` — "Format cover precedence test" |
+| Commit | `7283e23bb023e659a596c4bee43f318d43a109c7` — "Hold check's refusal set and fmt's protected set in one predicate" |
 | Workspace version | `0.14.2-dev` |
-| Nearest release tag | `v0.14.1`, as `v0.14.1-7-ga6cb20e3ec` |
+| Nearest release tag | `v0.14.1`, as `v0.14.1-26-g7283e23bb0` |
 | Contains | `af4cd0cfe7` — "Remove the deprecated core renderer" |
-| Public root names under [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name) | 181 |
+| Public root names under [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name) | 182 |
 
 `af4cd0cfe7` is a condition of the audit rather than a detail of it: it is the commit that removed `crates/grund-core/src/compat/` and `grund_core::main_entry()`, so a count taken before it is a count of a different crate and cannot be carried forward. Any earlier tally in the issue thread or in this repository's history is read that way — as evidence about the surface as it then was.
 
@@ -66,9 +66,51 @@ The check holds the count, not the judgement. Rustdoc visibility against the sou
 
 ## 6. What this discussion still has to settle
 
-The sections above fix the baseline, the convention, the row and the check. What remains is the argument, and it is not written yet:
+The sections above fix the baseline, the convention, the row and the check. What follows is the argument, and it is a position put to this discussion rather than a decision it records: [§DISC-grund-core-public-surface.1](2026-09-22-grund-core-public-surface.md#1-status) still holds, so accepting any of it authorizes a later change that is separately specified and separately shipped, and refusing any of it costs nothing already shipped.
 
-1. A target disposition for every row, and the target surface they add up to.
-2. The coarse integrations entry point: one data-returning facade over the existing `writers` mechanisms in place of the fine-grained items the integrations command reads across the crate boundary — argued against keeping argv, rendering and exit policy in `grund-cli`, where [§FS-integrations.1.3](../../functional-spec/FS-integrations.md#13-which-side-owns-what) and [§AR-bindings.3](../../architecture/AR-bindings.md#3-grund-cli-the-cli-binary) put them, and against the engine's data-only boundary of [§AR-system.2.9](../../architecture/README.md#29-api) and [§AR-bindings.2](../../architecture/AR-bindings.md#2-grund-core-the-only-place-logic-lives).
-3. Frontend-only seams left public but hidden from Rustdoc, each with the frontend that reads it named beside it — argued as what it is, a change of discoverability rather than of availability, and therefore neither privacy nor removal.
-4. For every recommended removal, concrete releases counted from this baseline: release `N` ships the replacement beside the old name with a deprecation note naming the removal release, and release `N+1` or later removes it. The 0.15.0 deletion already taken is not permission for a fresh cut.
+### 6.1 The target disposition of every row
+
+Five dispositions cover the 182 rows, and the inventory carries one on each.
+
+| Disposition | Rows | What it does to the symbol |
+| --- | --- | --- |
+| keep | 106 | nothing |
+| keep, hidden | 13 | nothing; an existing `#[doc(hidden)]` seam stays as it is |
+| keep, name in the spec | 16 | nothing; [§FS-distribution.3.1](../../functional-spec/FS-distribution.md#31-rust-grund-core-crate) grows to reach it |
+| hide | 13 | `#[doc(hidden)]`, with the frontend that reads it named beside it |
+| facade, then retire | 34 | replaced by a coarse entry point, then removed |
+
+They add up to a target of **148 public root names plus whatever the facade itself exports**, of which 122 are documented and 26 hidden — against 182 and 169 today. One group does the work: the 34 integrations items are a fifth of the whole surface, and every other proposal here moves documentation rather than symbols.
+
+Two of the five deserve saying out loud, because they are what the inventory found rather than what the ticket expected.
+
+The **16 `keep, name in the spec`** rows are `init` and its records, `fetch_snapshot` and its failure, and `list_sizes` and its records: data-returning entry points that behave exactly like the embedding surface and that [§FS-distribution.3.1](../../functional-spec/FS-distribution.md#31-rust-grund-core-crate) does not reach, because it names `check`, `show`, `scan` "and related APIs" and these live outside the `api` component. That is a gap in the specification, not surface to cut. Hiding them would tell an embedder that a documented, data-returning function is not for them; the fix is the other direction.
+
+The **38 rows with no repository consumer of either kind** are not a removal list, and the inventory says so on every one of them. Most of them are what `scan` returns: `Findings` and the model records under it are specification-supported ([§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries)), and the frontends simply do not embed the engine — they call the seams instead. A surface built for embedders is expected to look unused from inside.
+
+### 6.2 The coarse integrations entry point
+
+Thirty-four names — `INTEGRATIONS_BLOCK_VERSION` and the 33 `writers` items beside it — are public for exactly one caller: the `grund integrations` command, which reads them across the crate boundary. None is reachable from any documented entry point, so [§FS-distribution.3.1](../../functional-spec/FS-distribution.md#31-rust-grund-core-crate) supports embedding none of them, and each is one client list, one detection, one managed write or one artifact payload.
+
+For the facade: the command assembles its output from a fixed sequence of engine answers, and a surface that exposes every step of an assembly is a surface that pins the assembly. Two data-returning functions — one that reports what the integrations command would find and write, one that applies a requested write and returns its outcome — say the same thing in a shape an embedder could use, and shrink the surface by a fifth in one change.
+
+Against it, and the reason it is argued rather than assumed: a facade over a command is how an engine acquires a rendering API by accident. [§FS-integrations.1.3](../../functional-spec/FS-integrations.md#13-which-side-owns-what) and [§AR-bindings.3](../../architecture/AR-bindings.md#3-grund-cli-the-cli-binary) put argv, rendering and exit policy in `grund-cli`, and [§AR-system.2.9](../../architecture/README.md#29-api) and [§AR-bindings.2](../../architecture/AR-bindings.md#2-grund-core-the-only-place-logic-lives) keep the engine returning data and writing to no stream. So the facade is proposed with the boundary as its acceptance test: every field it returns is a fact the CLI decides how to print, no field is a line of output, and the CLI still owns which of them reaches a terminal. An artifact the engine writes byte-for-byte — the resolver script, the VS Code payloads — is content, not rendering, and stays content on the far side of the facade.
+
+If that test cannot be met, the right answer is to keep the 34 rather than to ship a facade that fails it.
+
+### 6.3 Frontend-only seams left public but hidden
+
+Thirteen names serve one frontend and nothing else, and the inventory names the reader of each: `canonical_snapshot_path`, `citation_under_title`, `lsp_hover_with_kind_title`, `lsp_title_hover_body`, `on_type_line_edits`, `can_replace_trigger_at`, `DeclaredId`, `LineEdit` and `LspUsage` are `grund-lsp`'s editor mechanics; `names_member_id_candidate`, `AGENT_SETUP_INSTRUCTIONS`, `canonical_template_text` and `REFS_QUERY_FAILURE_WARNING` are `grund-cli`'s. `can_replace_trigger_at` has no repository consumer at all and is grouped here because it is an editor mechanism, not because it is unused — which is a reason to look at it, not a reason to cut it.
+
+Hiding them is a change of discoverability and nothing else, and the distinction is the whole argument. `#[doc(hidden)]` removes a name from Rustdoc; the symbol still links, so an embedder already calling one keeps compiling and [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) is not engaged. It is neither privacy nor removal, and a proposal that treated it as either would be proposing something else.
+
+What it buys: an embedder reading docs.rs today cannot tell `show` from `lsp_title_hover_body`, because both render identically, and the specification is the only place that says which is meant for them. What it costs: a dependency taken on a hidden name is harder to notice, both for the embedder and for us. The note naming the frontend is the mitigation, and it is why the disposition is "hide, with its reader named" rather than "hide".
+
+### 6.4 The releases
+
+The baseline's nearest tag is `v0.14.1` and the workspace is `0.14.2-dev`, so the next minor is 0.15.0 and that is where the notice goes.
+
+- **0.15.0** ships the facade of [§DISC-grund-core-public-surface.6.2](2026-09-22-grund-core-public-surface.md#62-the-coarse-integrations-entry-point) beside all 34 names, each carrying a deprecation note naming 0.16.0 as the release that removes it. In the same release, the 13 hidings of [§DISC-grund-core-public-surface.6.3](2026-09-22-grund-core-public-surface.md#63-frontend-only-seams-left-public-but-hidden) land, with a changelog entry under **Changed** saying which names left the documentation and which frontend reads each, and the 16 specification additions of [§DISC-grund-core-public-surface.6.1](2026-09-22-grund-core-public-surface.md#61-the-target-disposition-of-every-row) land, which change no code.
+- **0.16.0**, or later, removes the 34. Nothing else in this proposal removes anything, so this is the only release the proposal puts a removal in.
+
+That is [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)'s path taken literally: release `N` ships the new form beside the old with a warning naming the release the old form stops working in, and the old form dies no earlier than `N+1`. The deletion already taken in this cycle is not permission to skip it — a caller who moved off `main_entry()` last release is exactly the caller who has not yet noticed the 34, and shortening the window for them is what [§GOAL-no-silent-breakage.2](../../goals.md#2-the-deprecation-path) exists to stop.
