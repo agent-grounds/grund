@@ -9,7 +9,7 @@ workspace), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity
 
 ## 1. The default subcommand
 
-- `grund` with no arguments keeps the historical `check .` behavior for the current deprecation window: it prints `warning: bare \`grund\` still runs \`grund check .\`; use \`grund check\` explicitly.` on stderr, then runs the same validation as `grund check .` with the same stdout and exit code.
+- `grund` with no arguments keeps the historical `check .` behavior until grund 0.16.0: it prints `warning: bare \`grund\` still runs \`grund check .\`; use \`grund check\` explicitly. This fallback is removed in grund 0.16.0.` on stderr, then runs the same validation as `grund check .` with the same stdout and exit code.
 - `grund <ID>[.<section>] …` (where the first non-flag word is not a known subcommand) is the ID-read query specified by [§FS-show.1](FS-show.md#1-inputs), byte-for-byte equivalent to the explicit `show` subcommand, including show flags written before the ID: `grund --toc FS-check` reads the same body as `grund FS-check --toc`. With no path, both resolve from `.`.
 - `grund <subcommand> …` dispatches to that subcommand: `check`, `show`, `list`, `refs`, `cover`, `fmt`, `fetch`, `id`, `init`, `config`, `agent-setup-instructions`, `completions`, `integrations`. The hidden `complete` subcommand is reserved for generated shell scripts ([§FS-completions.2](FS-completions.md#2-internal-dynamic-helper)); `fetch` is the explicit one-ID writer specified by [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot).
 
