@@ -378,7 +378,6 @@ class ReleaseRouteTests(unittest.TestCase):
         self.assertIn("names a location and a fix", entry)
 
 
-
 class DeprecationWindowTests(unittest.TestCase):
     """§REQ-backwards-compatibility.2's worked example, held to the path it is
     the example of.
