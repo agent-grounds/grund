@@ -48,6 +48,12 @@ section whose prose never contains it, because the section is named for it. And 
 is not part of the address: a check's row in the catalog of [§FS-errors.5.5](../functional-spec/FS-errors.md#55-the-check-code-catalog) carries its
 severity, so promoting a warning to an error edits a cell and moves no coordinate.
 
+The clause binds every check, and it is arrived at one concept spec at a time. What is
+staged is when each code reaches its section, never whether: the codes whose section does
+not exist yet are listed in `tests/integration/test_check_codes_are_section_handles.py`,
+so that list is the remainder of the migration rather than a set of exemptions, and a
+positional address is never an end state a code may keep.
+
 ## reserved: Reserved and forbidden names
 
 These names mean one thing wherever they appear, and a check may not take one of them:

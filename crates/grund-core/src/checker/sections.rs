@@ -170,8 +170,8 @@ pub(super) fn check_section_headings(
         }
     }
     // §FS-declarations.checks.duplicate-section: two headings in one declaration claiming one
-    // dotted path give `§<ID>.<path>` two destinations — §FS-declarations.checks.duplicate one
-    // level down, reported in its shape (§DF-duplicate-section-path.2.1).
+    // dotted path give `§<ID>.<path>` two destinations — §FS-declarations.checks.duplicate's
+    // ambiguity one level down, reported in its shape (§DF-duplicate-section-path.2.1).
     for (id, decls) in &findings.declarations {
         for decl in decls {
             let mut colliding: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
