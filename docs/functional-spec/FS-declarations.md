@@ -6,8 +6,9 @@ declared exactly once, it is declared where its kind's home allows it, and every
 inside its body is either a coordinate a citation can reach or a finding `check` reports.
 The checks below are that sentence enforced, save two that hold what an address is worth
 once it resolves: that the declaration is in the form its ID grammar gives it
-([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), and that its lead stays inside the size its kind
-budgets ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)). Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) and
+([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), and that its lead, and every citable section
+lead in its body, stays inside the size its project budgets where that project asks for
+one ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)). Serves [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) and
 [§GOAL-token-economy.1](../goals.md#1-what-this-requires).
 
 ## terms: Terms
