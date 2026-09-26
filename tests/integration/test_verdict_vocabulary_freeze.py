@@ -59,17 +59,16 @@ SEVERITIES = {"error", "warning"}
 
 @functools.lru_cache(maxsize=None)
 def _grund() -> str:
-    """The binary under test, found beside the checkout or built on demand.
+    """The binary under test, built from this checkout once per process.
 
-    The python suite runs before `cargo build` in CI (§AR-ci.1), so a cold
-    cache has no binary to find; `-p grund` builds only what is needed and the
+    It is built rather than found. CI restores `target` from a prefix-keyed
+    cache and runs this suite before the workspace build, so a
+    `target/*/grund` that exists may have been built at an older commit, and
+    these tests would then read this tree's `grund.toml` with a binary that
+    does not know its keys. `-p grund` builds only what is needed, and the
     later workspace build reuses it.
     """
     target = Path(os.environ.get("CARGO_TARGET_DIR") or REPO_ROOT / "target")
-    for profile in ("release", "debug"):
-        candidate = target / profile / EXE
-        if candidate.is_file():
-            return str(candidate)
     cargo = os.environ.get("CARGO", "cargo")
     subprocess.run([cargo, "build", "-p", "grund", "--locked"], cwd=REPO_ROOT, check=True)
     built = target / "debug" / EXE
