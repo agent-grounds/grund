@@ -1,6 +1,7 @@
 """§AR-goal-measurement.3 — the backward-compatibility meter proves that each
 verdict route is explicit, bounded, and exercised by its repository record."""
 
+import importlib.util
 import re
 import unittest
 from pathlib import Path
@@ -17,6 +18,24 @@ CHANGELOG = REPO_ROOT / "docs" / "changelog.md"
 CORRECTION_ROUTE = "§REQ-backwards-compatibility.5"
 CONFLICT_PROOF = "§REQ-no-missed-citation.1"
 REQUIREMENT_SECTION_RE = re.compile(r"§(REQ-[a-z0-9-]+)\.(\d+(?:\.\d+)*)")
+RELEASE_GUARD = REPO_ROOT / "scripts" / "check_release_ramps.py"
+
+_GUARD_SPEC = importlib.util.spec_from_file_location("check_release_ramps", RELEASE_GUARD)
+ramps = importlib.util.module_from_spec(_GUARD_SPEC)
+assert _GUARD_SPEC.loader is not None
+_GUARD_SPEC.loader.exec_module(ramps)
+
+# Where a message's bytes are fixed: every tree the release guard reads
+# (§FS-distribution.4.2.2), plus the functional spec, which quotes warnings
+# verbatim and which those sources do not cover — the gap this file closes.
+MESSAGE_HOMES = ramps.SOURCES + (("docs/functional-spec", "*.md"),)
+SPECIFICATION_SITE = "docs/functional-spec/FS-cli.md"
+
+# The bare-`grund` warning as each site writes it. The wildcards stand in for the
+# backticks around the command name, which the specification escapes and the
+# message does not, so one pattern finds every site. It names no release and no
+# clause, because the defect is the absence of a window rather than a phrasing.
+FALLBACK_WARNING_RE = re.compile(r"bare .{0,2}grund.{0,2} still runs")
 DECISION_CITATION_RE = re.compile(
     r"§((?:DF|DA)-[a-z0-9-]+)(?:\.[a-z0-9-]+)*\b"
 )
@@ -31,6 +50,28 @@ def _section(text, number):
     if not match:
         raise AssertionError(f"section {number} is missing")
     return match.group(0)
+
+
+def _message_sites(pattern):
+    """Every `(path, line number, line)` in a message home the pattern matches."""
+    sites = []
+    for directory, glob in MESSAGE_HOMES:
+        base = REPO_ROOT / directory
+        if not base.is_dir():
+            continue
+        for path in sorted(base.rglob(glob)):
+            text = path.read_text(encoding="utf-8", errors="replace")
+            for number, line in enumerate(text.splitlines(), start=1):
+                if pattern.search(line):
+                    sites.append(
+                        (path.relative_to(REPO_ROOT).as_posix(), number, line)
+                    )
+    return sites
+
+
+def _named_releases(site):
+    path, _, line = site
+    return [claim.release for claim in ramps.scan_text(path, line)]
 
 
 def _requirement_catalog():
@@ -335,6 +376,110 @@ class ReleaseRouteTests(unittest.TestCase):
         self.assertIn("`grund cover` indexes every project the run loaded", entry)
         self.assertIn("Verdicts move `0` → `2` in workspaces", entry)
         self.assertIn("names a location and a fix", entry)
+
+
+
+class DeprecationWindowTests(unittest.TestCase):
+    """§REQ-backwards-compatibility.2's worked example, held to the path it is
+    the example of.
+
+    Bare `grund` keeping its historical `check .` behavior through a named window
+    is that path's worked example (§FS-cli.1), so every site that fixes the
+    warning's bytes has to name the release the fallback stops working in, in a
+    clause of §FS-distribution.4.2.3's closed vocabulary — and all of them have
+    to name the *same* release. The release guard holds the first half for the
+    sources it reads and nothing holds the second at all, which is how the
+    specification's own copy came to name no release while promising a window.
+
+    Nothing here asserts a particular release or a particular phrasing: the
+    clause vocabulary and the matcher are the gate's own, read out of
+    `scripts/check_release_ramps.py`, so no rewording satisfies these tests and
+    the maintainer's choice of release is free to be any release.
+    """
+
+    def setUp(self):
+        self.sites = _message_sites(FALLBACK_WARNING_RE)
+        self.assertTrue(
+            self.sites,
+            "no message home carries the bare `grund` warning, so these tests no "
+            "longer ask the question they were written for",
+        )
+
+    def test_a_written_in_clause_is_read_at_every_site(self):
+        # The positive control. `9.9.9` is a placeholder proving the matcher can
+        # see a named release in these exact lines, so a site reported below as
+        # naming none means a missing window rather than a blind matcher.
+        for site in self.sites:
+            path, number, line = site
+            with self.subTest(site=f"{path}:{number}"):
+                written_in = line.replace(
+                    "still runs", "is removed in grund 9.9.9 and still runs"
+                )
+                self.assertIn("9.9.9", _named_releases((path, number, written_in)))
+
+    def test_an_unlisted_phrasing_names_no_release_the_gate_can_see(self):
+        # The negative control, and the reason the wording is not free: the
+        # vocabulary is closed, so a release named outside it is named nowhere.
+        self.assertEqual(
+            [],
+            _named_releases(
+                (SPECIFICATION_SITE, 1, "this fallback will be removed in grund 9.9.9")
+            ),
+        )
+
+    def test_every_site_names_the_release_the_fallback_is_removed_in(self):
+        unnamed = [
+            f"{path}:{number}"
+            for path, number, line in self.sites
+            if not _named_releases((path, number, line))
+        ]
+        self.assertEqual(
+            [],
+            unnamed,
+            "these sites fix the bare `grund` warning's bytes and name no release "
+            "in the closed clause vocabulary, so the deprecation path of "
+            "§REQ-backwards-compatibility.2 owes a window it does not give",
+        )
+
+    def test_the_sites_name_one_release_between_them(self):
+        # Every site reduced to the releases it names, so a site naming none
+        # cannot be satisfied by a sibling that does: the drift this test exists
+        # for is two sites promising two different windows, and the gate catches
+        # neither of them.
+        by_site = {
+            f"{path}:{number}": tuple(sorted(set(_named_releases((path, number, line)))))
+            for path, number, line in self.sites
+        }
+        self.assertEqual(
+            1,
+            len(set(by_site.values())),
+            "the sites that fix the bare `grund` warning's bytes must agree on the "
+            f"release the fallback is removed in; they name {by_site}",
+        )
+        (named,) = set(by_site.values())
+        self.assertEqual(
+            1,
+            len(named),
+            "every site must name exactly one release in the closed clause "
+            f"vocabulary; each of them names {list(named)}",
+        )
+
+    def test_the_specification_copy_sits_outside_the_release_guards_sources(self):
+        """§FS-distribution.4.2.2: the guard reads message text and the goldens
+        that pin it, and nothing under `docs/`. So the specification's verbatim
+        copy of this warning is held by the test above and by review alone, which
+        is why `MESSAGE_HOMES` extends the guard's sources rather than reusing
+        them."""
+        self.assertNotIn(
+            SPECIFICATION_SITE,
+            [
+                path.relative_to(REPO_ROOT).as_posix()
+                for directory, glob in ramps.SOURCES
+                if (REPO_ROOT / directory).is_dir()
+                for path in (REPO_ROOT / directory).rglob(glob)
+            ],
+        )
+        self.assertIn(SPECIFICATION_SITE, [path for path, _, _ in self.sites])
 
 
 if __name__ == "__main__":
