@@ -25,7 +25,7 @@ fn caution(run: &CheckRun) -> Option<&Diagnostic> {
 /// `{kind}-{number}-{slug}` declares nothing, cites nothing, and used to print
 /// the same word as a tree that checked clean.
 ///
-/// §FS-check.4.6 now answers this tree per heading, so the caution is
+/// §FS-declarations.checks.declaration-near-miss now answers this tree per heading, so the caution is
 /// withheld under its own "any other finding" rule — the specific fact
 /// displaces the general one. What the test pins is unchanged: the run stops
 /// saying `success`, and the exit code is untouched either way.
@@ -45,7 +45,7 @@ fn a_tree_written_for_another_id_format_stops_reporting_success() {
     let run = check_run(&root, false);
     assert!(
         caution(&run).is_none(),
-        "§FS-check.4.6 named the headings, so the caution has nothing left to add: {:?}",
+        "§FS-declarations.checks.declaration-near-miss named the headings, so the caution has nothing left to add: {:?}",
         findings(&run)
     );
     let named = run
@@ -67,7 +67,7 @@ fn a_tree_written_for_another_id_format_stops_reporting_success() {
 }
 
 /// §FS-check.4.5.6: the caution's own remaining ground — a tree whose headings
-/// are not kind-shaped at all, where §FS-check.4.6 has nothing to say and the
+/// are not kind-shaped at all, where §FS-declarations.checks.declaration-near-miss has nothing to say and the
 /// run still has to stop printing `success`. It is also §FS-check.4.5.1's
 /// second usual cause read straight: headings that open with a prefix no
 /// configured kind claims leave every one of them a non-declaration.
@@ -135,7 +135,8 @@ fn the_caution_offers_both_readings_of_the_fact() {
 fn the_caution_proposes_no_id() {
     let root = test_root("the_caution_proposes_no_id");
     write(&root.join("grund.toml"), DEFAULT_CONFIG);
-    // Not kind-shaped, so §FS-check.4.6.1 stays silent and the caution speaks.
+    // Not kind-shaped, so §FS-declarations.checks.declaration-near-miss.1 stays silent and the
+    // caution speaks.
     write(&root.join("docs/alpha.md"), "# The alpha spec\n");
 
     let message = caution(&check_run(&root, false))

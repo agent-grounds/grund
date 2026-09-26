@@ -279,7 +279,7 @@ Value diagnostics are [§FS-errors.5.4](FS-errors.md#54-value-diagnostics); the 
 
 ### 5.1 On stdout — the command's output
 
-`grund check --format=json` emits its findings as NDJSON, one object per line, in the binding-level shape from [§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes) (`{ severity, path, line, code, message, sites }`); `severity` carries the `error`/`warning` distinction as a structured field, while text carries the explicit channel marker after its location prefix ([§FS-errors.3.4](FS-errors.md#34-the-check-channel-marker)), and `sites` is `null` for an ordinary single-site finding, a `[{ path, line }]` list naming every site for a multi-site finding (a duplicate declaration, [§FS-check.3.3](FS-check.md#33-duplicate-declaration)). A clean JSON check emits no `success` object. A **suggestion** ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)), emitted only under `grund check --suggestions`, carries `"channel": "suggestion"` in place of a `severity` — keeping the frozen `{error, warning}` severity set ([§FS-config.6](FS-config.md#6-what-is-not-configured-here)) intact, so a consumer filtering on `severity` never sees one. Query subcommands' results are [§FS-errors.5.1.1](FS-errors.md#511-query-results).
+`grund check --format=json` emits its findings as NDJSON, one object per line, in the binding-level shape from [§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes) (`{ severity, path, line, code, message, sites }`); `severity` carries the `error`/`warning` distinction as a structured field, while text carries the explicit channel marker after its location prefix ([§FS-errors.3.4](FS-errors.md#34-the-check-channel-marker)), and `sites` is `null` for an ordinary single-site finding, a `[{ path, line }]` list naming every site for a multi-site finding (a duplicate declaration, [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)). A clean JSON check emits no `success` object. A **suggestion** ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)), emitted only under `grund check --suggestions`, carries `"channel": "suggestion"` in place of a `severity` — keeping the frozen `{error, warning}` severity set ([§FS-config.6](FS-config.md#6-what-is-not-configured-here)) intact, so a consumer filtering on `severity` never sees one. Query subcommands' results are [§FS-errors.5.1.1](FS-errors.md#511-query-results).
 
 #### 5.1.1 Query results
 
@@ -321,57 +321,64 @@ Value diagnostics use the same object and streams. `invalid-value-declaration`, 
 ### 5.5 The `check` code catalog
 
 For `grund check`, `code` is also the exact public selector vocabulary for
-[§FS-check.1](FS-check.md#1-inputs). The supported catalog is sorted and is:
+[§FS-check.1](FS-check.md#1-inputs). The catalog is sorted by code, and one row is the whole of what the
+catalog says about a code: the severity it carries, the release a ramp still
+ahead of it changes that severity in, what has to be configured or passed for it
+to fire at all, and the specification point that specifies it. Severity lives
+here rather than in the section that specifies the check, so promoting a warning
+to an error edits this cell and moves no coordinate
+([§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). A code whose row names `—` under *Enabled by* fires on every
+run; `Ramp` is `—` where no promotion is promised, a ramp already spent included.
 
-```text
-agents-init
-broken-stub
-chapter-cardinality
-citation-cardinality
-dangling
-declaration-near-miss
-deprecated-config-location
-discouraged-citation
-duplicate
-duplicate-section
-empty-citation-obligation
-empty-scan
-escaped-citation-resolves
-forbidden-citation
-full-scope-ignored
-inline-citation-style
-invalid-rule
-invalid-value-binding
-invalid-value-declaration
-io
-misplaced-declaration
-missing-citation
-missing-index-entry
-missing-section
-missing-snapshot
-nothing-recognized
-optional-member-absent
-orphan-section
-out-of-scope-dangling
-out-of-scope-missing-section
-out-of-scope-shorthand-citation
-out-of-scope-unknown-project
-oversized-lead
-redundant-config
-section-heading-level
-section-outside-declaration
-shorthand-citation
-shorthand-numeric-run
-suggested-citation
-uncited-unit
-ungrounded
-unknown-project
-unlinked-index-entry
-unlisted-workspace-block
-unmarked-heading
-unused
-value-mismatch
-```
+| Code | Severity | Ramp | Enabled by | Check |
+|---|---|---|---|---|
+| `agents-init` | error | — | — | [§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block) |
+| `broken-stub` | error | — | — | [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) |
+| `chapter-cardinality` | error | — | `rules = true` on a kind | [§FS-check.3.26](FS-check.md#326-chapter-cardinality) |
+| `citation-cardinality` | error | — | `rules = true` on a kind | [§FS-check.3.27](FS-check.md#327-citation-cardinality) |
+| `dangling` | error | — | — | [§FS-check.3.1](FS-check.md#31-dangling-citation) |
+| `declaration-near-miss` | warning | error in 0.15.0 | — | [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss) |
+| `deprecated-config-location` | warning | — | — | [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location) |
+| `discouraged-citation` | none — suggestion | — | `--suggestions`, on a `should-not` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
+| `duplicate` | error | — | — | [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) |
+| `duplicate-section` | error | — | — | [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path) |
+| `empty-citation-obligation` | warning | — | a `must` or `should` entry | [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) |
+| `empty-scan` | warning | — | — | [§FS-check.2.2](FS-check.md#22-empty-scan) |
+| `escaped-citation-resolves` | none — suggestion | — | `--suggestions` | [§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves) |
+| `forbidden-citation` | error | — | a `must-not` entry | [§FS-check.3.12](FS-check.md#312-forbidden-citation) |
+| `full-scope-ignored` | warning | — | `--full` with an explicit path | [§FS-check.1.3.7](FS-check.md#137-a-path-the-flag-cannot-widen-earns-a-caution-not-a-refusal) |
+| `inline-citation-style` | error; warning for the two opt-in forms | — | `[reference] inline_style`; `warn_on_suggested`; `inline_note_layout_check` | [§FS-check.3.10](FS-check.md#310-inline-citation-style-violation) |
+| `invalid-rule` | error | — | `rules = true` on a kind | [§FS-check.3.25](FS-check.md#325-invalid-rule) |
+| `invalid-value-binding` | error | — | `values = true` on a kind | [§FS-check.3.21](FS-check.md#321-invalid-value-binding) |
+| `invalid-value-declaration` | error | — | `values = true` on a kind | [§FS-check.3.20](FS-check.md#320-invalid-value-declaration) |
+| `io` | error | — | — | [§FS-check.2.4](FS-check.md#24-an-incomplete-run) |
+| `misplaced-declaration` | error | — | a configured kind home | [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) |
+| `missing-citation` | error | — | a `must` entry | [§FS-check.3.11](FS-check.md#311-missing-required-citation) |
+| `missing-index-entry` | error | — | — | [§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index) |
+| `missing-section` | error | — | — | [§FS-check.3.2](FS-check.md#32-missing-section) |
+| `missing-snapshot` | warning | — | `fetch` on a kind | [§FS-check.4.12](FS-check.md#412-missing-snapshot) |
+| `nothing-recognized` | warning | — | — | [§FS-check.4.5](FS-check.md#45-nothing-recognized) |
+| `optional-member-absent` | warning | — | `optional = true` on a member | [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) |
+| `orphan-section` | error | — | `[id] named_sections` | [§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path) |
+| `out-of-scope-dangling` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
+| `out-of-scope-missing-section` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
+| `out-of-scope-shorthand-citation` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
+| `out-of-scope-unknown-project` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
+| `oversized-lead` | warning | — | `[reference] lead_size_warning` | [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) |
+| `redundant-config` | warning | — | — | [§FS-check.4.3](FS-check.md#43-redundant-config-pair) |
+| `section-heading-level` | error or warning, by the mode | — | `[id] section_heading_levels` | [§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch) |
+| `section-outside-declaration` | error | — | — | [§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration) |
+| `shorthand-citation` | error | — | — | [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) |
+| `shorthand-numeric-run` | error | — | — | [§FS-check.3.15](FS-check.md#315-shorthand-citation-in-a-numeric-run) |
+| `suggested-citation` | none — suggestion | — | `--suggestions`, on a `should` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
+| `uncited-unit` | error | — | `rules = true` on a kind | [§FS-check.3.28](FS-check.md#328-uncited-unit) |
+| `ungrounded` | error | — | `require_grounding` | [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) |
+| `unknown-project` | error | — | — | [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) |
+| `unlinked-index-entry` | error | — | — | [§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link) |
+| `unlisted-workspace-block` | error | — | — | [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) |
+| `unmarked-heading` | warning | error in 0.15.0 | — | [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) |
+| `unused` | warning | — | — | [§FS-check.4.1](FS-check.md#41-unused-declaration) |
+| `value-mismatch` | error | — | `values = true` on a kind | [§FS-check.3.22](FS-check.md#322-value-mismatch) |
 
 The chapter-rule codes `chapter-cardinality`, `citation-cardinality`,
 `invalid-rule`, and `uncited-unit` are selectable on the same surfaces as every

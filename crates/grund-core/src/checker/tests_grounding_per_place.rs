@@ -341,7 +341,7 @@ fn the_no_unit_warning_asks_for_grounding_only_where_it_is_off() {
 
 /// §FS-check.3.6.2.3: the inline-declaration escape is a source file's and has
 /// no effect in a non-citable home, where the declaration is misplaced to
-/// begin with (§FS-check.3.7.3) — so the file earns both findings.
+/// begin with (§FS-declarations.checks.misplaced-declaration.3) — so the file earns both findings.
 #[test]
 fn an_inline_declaration_does_not_ground_a_non_citable_home() {
     let root = repo(

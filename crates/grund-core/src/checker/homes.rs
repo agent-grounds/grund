@@ -23,7 +23,7 @@ pub(super) struct DeclarationHome<'a> {
 }
 
 impl DeclarationHome<'_> {
-    /// How a non-citable home is named in a finding (§FS-check.3.7.3,
+    /// How a non-citable home is named in a finding (§FS-declarations.checks.misplaced-declaration.3,
     /// §FS-check.3.6) — the same `<folder>/` label the citation-direction
     /// findings and the generated block use, so one home reads one way
     /// everywhere.
@@ -67,9 +67,9 @@ impl<'a> KindHomeIndex<'a> {
 
         for kind in &config.kinds {
             if let Some(file) = kind.file.as_deref() {
-                // §FS-check.3.7: only a citable kind has declarations to keep in one
-                // document, so the single-file rule says nothing about a non-citable
-                // `file` home — the home-kind rule below reports what is there, once.
+                // §FS-declarations.checks.misplaced-declaration: only a citable kind has
+                // declarations to keep in one document, so the single-file rule says nothing about
+                // a non-citable `file` home — the home-kind rule below reports what is there, once.
                 if kind.citable {
                     single_files.push(SingleFileHome {
                         kind: kind.kind.as_str(),
@@ -121,7 +121,7 @@ impl<'a> KindHomeIndex<'a> {
     /// The configured kind home that contains `path`, when exactly one
     /// `[[kinds]]` home matches it. `file` homes are exact; `folder` homes are
     /// path-prefix matches against the scanner-recorded path, not the symlink
-    /// target (§FS-config.3.4.11, §FS-check.3.7.2).
+    /// target (§FS-config.3.4.11, §FS-declarations.checks.misplaced-declaration.2).
     pub(super) fn unique_decl_home_for_file(&self, path: &Path) -> Option<DeclarationHome<'a>> {
         let path = scanned_decl_relative_path(path, &self.configured_root, &self.physical_root)?;
         if !self.overlapping_homes {
@@ -181,7 +181,7 @@ fn homes_overlap(left: &ConfiguredHome<'_>, right: &ConfiguredHome<'_>) -> bool 
 }
 
 /// The one location test written against a key that has already been taken
-/// (§FS-check.3.7.1): the single-file rule holds one `physical_path` per kind home
+/// (§FS-declarations.checks.misplaced-declaration.1): the single-file rule holds one `physical_path` per kind home
 /// and compares every declaration's file to it, so re-deriving the right-hand
 /// side per declaration would canonicalize the same home once per ID.
 pub(super) fn paths_same_location_key(left: &Path, right: &Path) -> bool {
@@ -190,7 +190,7 @@ pub(super) fn paths_same_location_key(left: &Path, right: &Path) -> bool {
 
 /// Whether `path` contains a real (non-stub) inline declaration of `id` —
 /// the check that a stub's link target actually carries the inline home it claims
-/// (§FS-check.3.4, §AR-checker.2.5, §AR-scanner.4).
+/// (§FS-declarations.checks.broken-stub, §AR-checker.2.5, §AR-scanner.4).
 pub(crate) fn file_declares_inline_home(path: &Path, id: &Id, config: &Config) -> Result<bool> {
     let text = fs::read_to_string(path)?;
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");

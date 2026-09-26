@@ -30,6 +30,12 @@ How `grund` is shipped.
 
 - [§FS-distribution](FS-distribution.md#fs-distribution-grund-distribution-targets) — grund distribution targets
 
+## The ground
+
+What holds for the model itself, whichever command reads it. A check `grund check` enforces is a section of the spec whose ground it defends, named by the diagnostic code it reports ([§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)).
+
+- [§FS-declarations](FS-declarations.md#fs-declarations-a-declaration-is-addressable-once-from-one-allowed-place-and-holds-nothing-that-is-neither-a-coordinate-nor-a-finding) — a declaration is addressable once, from one allowed place, and holds nothing that is neither a coordinate nor a finding
+
 ## Cross-cutting
 
 Behavior every subcommand inherits.

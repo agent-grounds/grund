@@ -52,7 +52,7 @@ fn assert_code(output: &Output, expected: i32, label: &str) {
 
 /// A narrowed component regex cannot claim a shorter configured prefix before
 /// the complete colon-delimited spelling reaches the catalog (§FS-config.3.2.5,
-/// §FS-show.1.1, §FS-list.2.3, §FS-refs.1, §FS-check.4.6.4).
+/// §FS-show.1.1, §FS-list.2.3, §FS-refs.1, §FS-declarations.checks.declaration-near-miss.4).
 #[test]
 fn off_grammar_narrowed_slug_pattern_retains_the_exact_written_token() {
     let root = test_root("narrowed-pattern");

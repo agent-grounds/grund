@@ -9,7 +9,7 @@
 //! declaration's body sliced by the spans a scan recorded is a function of the
 //! loaded findings rather than of one command's answer, and the checker's
 //! lead-budget rule was reading it upward out of this component
-//! (§FS-check.4.13, §AR-system.4). `body.rs` is `resolver/body.rs` now, the
+//! (§FS-declarations.checks.oversized-lead, §AR-system.4). `body.rs` is `resolver/body.rs` now, the
 //! point-body pair `resolver/point_body.rs`, and the E2E case manifest that
 //! pair asks for `resolver/e2e_body.rs`, out of `show.rs` with the three text
 //! helpers only the slicer reads (§AR-resolver.placement).

@@ -129,7 +129,7 @@ pub struct Config {
     /// opinion; the only accepted value is `"link"` (closed enum, widenable later).
     /// Read solely by the agent-entrypoint renderer (§FS-init.2.3.4.17).
     pub conversation: Option<String>,
-    /// `[reference] lead_size_warning` (§FS-config.3.1.2, §FS-check.4.13.3).
+    /// `[reference] lead_size_warning` (§FS-config.3.1.2, §FS-declarations.checks.oversized-lead.3).
     /// `None` preserves the pre-feature checker byte-for-byte and avoids all
     /// point-body measurement work.
     pub lead_size_warning: Option<LeadSizeWarning>,

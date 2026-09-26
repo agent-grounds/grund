@@ -63,7 +63,7 @@ pub struct LspSnapshot {
     /// whole-ID home set stays the bare-ID declarations.
     pub sections: Vec<LspDeclaration>,
     /// Exact spans for located findings that must not become editor navigation
-    /// targets (§FS-lsp.1.1, §FS-lsp.1.1.1, §FS-check.3.23.2).
+    /// targets (§FS-lsp.1.1, §FS-lsp.1.1.1, §FS-declarations.checks.section-outside-declaration.2).
     pub finding_ranges: Vec<LspFindingRange>,
     pub stubs: Vec<LspStub>,
     pub citations: Vec<LspCitation>,

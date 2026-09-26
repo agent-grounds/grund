@@ -1,7 +1,7 @@
 //! The point-body pair (§AR-system.2.10): one catalog site's lead and full body,
 //! sliced through the exact `show` slicer beside it, for the two rules that
 //! measure a lead — the size catalog of §FS-list.3.4 and the lead-budget warning
-//! of §FS-check.4.13.
+//! of §FS-declarations.checks.oversized-lead.
 //!
 //! It is one file rather than a function in `body.rs` because it is the *answer*
 //! a measurement reads, not the slicer: it chooses the body a site has at all —

@@ -1,5 +1,5 @@
 //! Binary-level compatibility contract for unmarked Markdown headings, their
-//! 0.15.0 deadline, and managed-block v10 repair (§FS-check.4.14,
+//! 0.15.0 deadline, and managed-block v10 repair (§FS-declarations.checks.unmarked-heading,
 //! §FS-init.2.3.4.5.1, §RM-unmarked-heading-error).
 
 use std::fs;
@@ -59,7 +59,7 @@ fn version(text: &str) -> Vec<u32> {
         .collect()
 }
 
-/// §FS-check.4.14.5: the warning is scheduled to become an error in grund
+/// §FS-declarations.checks.unmarked-heading.5: the warning is scheduled to become an error in grund
 /// 0.15.0, so the deadline it prints is held ahead of the running version —
 /// the bump that reaches 0.15.0 fails here rather than shipping a message the
 /// binary is already past.
@@ -72,7 +72,7 @@ fn unmarked_heading_warning_deadline_is_ahead_of_the_running_version() {
     );
 }
 
-/// §FS-check.4.14.6: no command numbers the heading, and nothing else moves
+/// §FS-declarations.checks.unmarked-heading.6: no command numbers the heading, and nothing else moves
 /// either — `grund_config_version` stays `1`, no `unmarked_headings` key
 /// appears, and the managed agent block is the mechanical repair surface that
 /// moves to v10 under `grund init`.
@@ -200,7 +200,7 @@ fn suggested_titles_preserve_hash_text_and_only_remove_atx_closers() {
     assert_eq!(stdout(&repaired), "success\n");
 }
 
-/// §FS-check.4.14.3: the suggested coordinate is guidance, not a rewrite, and
+/// §FS-declarations.checks.unmarked-heading.3: the suggested coordinate is guidance, not a rewrite, and
 /// a titleless ATX heading has no authored title to preserve — so the
 /// otherwise-identical suggestion uses the literal title `Untitled`, and
 /// applying that complete suggested heading produces a recognized section and
@@ -239,7 +239,7 @@ fn titleless_heading_gets_a_self_valid_suggestion() {
     assert_eq!(stdout(&repaired), "success\n");
 }
 
-/// §FS-check.4.14.6: `show`, `list` and the slices they cut keep their current
+/// §FS-declarations.checks.unmarked-heading.6: `show`, `list` and the slices they cut keep their current
 /// behaviour — the warning names a heading, it never renumbers one or shortens
 /// the body a reader gets.
 #[test]
