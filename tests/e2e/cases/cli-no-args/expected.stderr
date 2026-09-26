@@ -1,1 +1,1 @@
-warning: bare `grund` still runs `grund check .`; use `grund check` explicitly.
+warning: bare `grund` still runs `grund check .`; use `grund check` explicitly. This fallback is removed in grund 0.16.0.

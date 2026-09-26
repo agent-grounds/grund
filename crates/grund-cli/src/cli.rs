@@ -142,8 +142,10 @@ pub fn main_entry() -> ExitCode {
     }
     match first {
         None => {
+            // The window §REQ-backwards-compatibility.2 asks a deprecation to name, in
+            // the one clause §FS-distribution.4.2.3 admits for a removal not yet made.
             eprintln!(
-                "warning: bare `grund` still runs `grund check .`; use `grund check` explicitly."
+                "warning: bare `grund` still runs `grund check .`; use `grund check` explicitly. This fallback is removed in grund 0.16.0."
             );
             command_check(&[])
         }
