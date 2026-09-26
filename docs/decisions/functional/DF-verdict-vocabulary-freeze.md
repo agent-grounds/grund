@@ -17,7 +17,7 @@ Serves [§GOAL-configurable](../../goals.md#goal-configurable-every-default-is-o
 
 ### 2.1 The doctrine
 
-For every project and every install alike, the **set** of severity levels is exactly `{error, warning}`, the **mapping** from a report to an exit code is the one [§FS-cli.5](../../functional-spec/FS-cli.md#5-exit-code-mapping-is-fixed) fixes, and the **ordering of the report** is the bytewise one of [§FS-errors.4.1](../../functional-spec/FS-errors.md#41-ordering). That trio is the verdict *vocabulary*, and nothing configures it.
+For every project and every install alike, the **set** of severity levels is exactly `{error, warning}`, the **mapping** from a report to an exit code is the one [§FS-cli.5](../../functional-spec/FS-cli.md#5-exit-code-mapping-is-fixed) fixes, and the **ordering of the report** is the grouped, bytewise one of [§FS-errors.4.1](../../functional-spec/FS-errors.md#41-ordering). That trio is the verdict *vocabulary*, and nothing configures it.
 
 What a project's committed configuration may choose is which of the specified rules are in force over its own tree, and — where a rule's own specification fixes the complete set of channels its finding may speak through — which of those channels it speaks through there. Neither choice touches the trio: a project that holds one rule at advisory standing has configured that rule, not the severity set.
 
@@ -29,7 +29,7 @@ A proposed setting is **admissible** only if all four limbs hold. They are limbs
 
 1. **The set.** No legal value of the key adds, removes or renames a severity. A suggestion is not a third severity; it rides the separate advisory channel of [§FS-check.2.3](../../functional-spec/FS-check.md#23-suggestions-channel-opt-in), which is why the set stays exactly two ([§FS-config.6.1](../../functional-spec/FS-config.md#61-suggestions-are-not-a-third-severity)).
 2. **The mapping and the order.** No legal value changes the report→exit function or the order findings are reported in. A key may change *what is in* the report; the function from a report to an exit code, and the order, are not its to move.
-3. **Locality.** The key is declared at the one rule it governs, reaches no other rule, takes no rule or finding as its argument from outside that rule's point, and has its complete value→channel ladder fixed in that rule's own specification. A closed ladder written at the rule is what keeps the blind spot it opens declared and bounded, which is what [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded) asks of every blind spot.
+3. **Locality.** The key is declared at the one rule it governs, reaches no other rule, takes no rule or finding as its argument from outside that rule's point, and has its complete value→channel ladder fixed in that rule's own specification. A closed ladder written at the rule keeps the blind spot it opens declared and bounded — the same discipline [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded) applies to the regions the scanner does not read.
 4. **Scope.** A verdict-affecting key is committed repository state. An install-local key is classified as presentation and then verified to change no verdict, per [§FS-config.principle.install-local](../../functional-spec/FS-config.md#principleinstall-local-the-relation-governs-committed-repository-state-only).
 
 Whether a given rule *should* have such a ladder is a specification judgement made at that rule. It is not an output of this test, and no gate answers it.
@@ -38,14 +38,14 @@ Whether a given rule *should* have such a ladder is a specification judgement ma
 
 Four committed settings move a verdict today. All four are admissible, and always were.
 
-| Setting | What it moves | Which limb admits it |
+| Setting | What it moves | The limb that decides it |
 | --- | --- | --- |
 | `[citations.FS]` and its siblings, `must` against `should` ([§FS-config.3.9](../../functional-spec/FS-config.md#39-citations--citation-direction-rules)) | a direction's standing: exit `0` → `1` on an unchanged tree | 1, 2 — the obligation is in force or it is not; the level→surface mapping is itself fixed ([§FS-config.3.9.1.3](../../functional-spec/FS-config.md#3913-the-levelsurface-mapping-is-fixed)) |
-| `[reference] shorthand = "accepted"` ([§FS-config.3.1.1](../../functional-spec/FS-config.md#311-shorthand--persisted-number-only-citations)) | whether the persisted-shorthand rule fires at all: exit `1` → `0` | 1, 2 — chooses which rule is in force |
+| `[reference] shorthand = "accepted"` ([§FS-config.3.1.1](../../functional-spec/FS-config.md#311-shorthand--persisted-number-only-citations)) | whether the persisted-shorthand rule fires at all: exit `1` → `0` | 1, 2 — the rule fires or it does not; neither value touches the set or the report→exit function |
 | `[reference] inline_note_layout_check`, `off / warn / error` ([§FS-config.3.1.9](../../functional-spec/FS-config.md#319-inline_note_layout-and-inline_note_layout_check)) | that rule's channel, and with it the exit code | 3 — a closed ladder fixed at the rule |
 | `[id] section_heading_levels`, `strict / warn / loose` ([§FS-config.3.3.2](../../functional-spec/FS-config.md#332-section_heading_levels--heading-depth-against-path-depth)) | that rule's severity `error` → `warning`, exit `1` → `0`, identical code and byte-identical message | 3 — a closed ladder fixed at the rule |
 
-`[reference] lead_size_warning` ([§FS-config.3.1.2](../../functional-spec/FS-config.md#312-lead_size_warning--the-oversized-lead-opt-in)) is the control on the other side: it conjures warnings out of a clean tree and the exit code stays `0`, because it has no severity field to move. It is admissible under limb 1 for the same reason the other four are — the severity set it draws from is the frozen one.
+`[reference] lead_size_warning` ([§FS-config.3.1.2](../../functional-spec/FS-config.md#312-lead_size_warning--the-oversized-lead-opt-in)) is the control on the other side: it conjures warnings out of a clean tree and the exit code stays `0`, because it has no severity field to move. It holds all four limbs, as the other four do; limb 1 is the one at issue, and the severity set its warnings draw from is the frozen one.
 
 ### 2.4 What the test refuses
 
