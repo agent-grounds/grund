@@ -48,7 +48,8 @@ not which rules a project holds in force
 ([§DF-verdict-vocabulary-freeze.2.4](DF-verdict-vocabulary-freeze.md#24-what-the-test-refuses)).
 The warning window follows
 [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)
-for the same reason.
+because the migration cannot be mechanized: with no command able to choose the
+hierarchy, every affected heading is hand work.
 
 ## 3. Rejected alternatives
 
