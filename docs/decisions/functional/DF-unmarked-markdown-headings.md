@@ -18,7 +18,7 @@ therefore produced the same clean result.
 The first report also exposed a separate scanner defect: a section-like heading
 beyond a declaration body could remain in the prior declaration's section map.
 Issue #225 and PR #226 corrected that invariant under
-[§FS-check.3.23](../../functional-spec/FS-check.md#323-section-outside-a-declaration).
+[§FS-declarations.checks.section-outside-declaration](../../functional-spec/FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration).
 This decision begins at the body-local map that predecessor established and does
 not reopen its `show --full` boundary.
 
@@ -26,7 +26,7 @@ not reopen its `show --full` boundary.
 
 Every non-declaration ATX heading deeper than a Markdown declaration heading and
 still inside its body must carry a recognized numeric or enabled named section
-coordinate. Before grund 0.15.0, [§FS-check.4.14](../../functional-spec/FS-check.md#414-unmarked-markdown-heading)
+coordinate. Before grund 0.15.0, [§FS-declarations.checks.unmarked-heading](../../functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)
 reports an unmarked heading as a fixed warning at the heading, names the nearest
 enclosing declaration, and suggests a deterministic unused coordinate. In
 0.15.0 the same project-wide finding becomes an error.

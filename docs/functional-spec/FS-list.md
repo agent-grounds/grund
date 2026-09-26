@@ -83,7 +83,7 @@ Per-kind formats ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetc
 
 ### 2.3 Off-grammar declarations
 
-An exact off-grammar declaration retained under [§FS-config.3.2](FS-config.md#32-id--id-grammar) is a normal catalog row, rendered exactly as written with its body-independent metadata, sections, reference count, duplicate flag, and stable sort position. Text and JSON keep their existing schemas. The row cannot disappear merely because `check` also reports its conformance mismatch ([§FS-check.4.6](FS-check.md#46-declaration-near-miss)).
+An exact off-grammar declaration retained under [§FS-config.3.2](FS-config.md#32-id--id-grammar) is a normal catalog row, rendered exactly as written with its body-independent metadata, sections, reference count, duplicate flag, and stable sort position. Text and JSON keep their existing schemas. The row cannot disappear merely because `check` also reports its conformance mismatch ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)).
 
 ### 2.4 Order
 
@@ -91,11 +91,11 @@ Declarations come out sorted by ID — kind, then number, then slug. The result 
 
 ### 2.5 Inline homes stay canonical
 
-When an ID's home is an inline declaration in source code with a one-line stub in a `docs/` file pointing at it (the [§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub) / [§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments) arrangement), `list` shows **one** line for that ID, naming the source file where the body lives. An external inline declaration enrolled directly by its kind's index ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) likewise appears once at the source home: the index link creates no declaration to collapse. A *broken* stub (its target missing, or the target has no matching inline declaration) is not paired with anything, so it does appear, listed at the stub's own location with a `→ <target>` note; `check` reports the breakage in located form.
+When an ID's home is an inline declaration in source code with a one-line stub in a `docs/` file pointing at it (the [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) / [§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments) arrangement), `list` shows **one** line for that ID, naming the source file where the body lives. An external inline declaration enrolled directly by its kind's index ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) likewise appears once at the source home: the index link creates no declaration to collapse. A *broken* stub (its target missing, or the target has no matching inline declaration) is not paired with anything, so it does appear, listed at the stub's own location with a `→ <target>` note; `check` reports the breakage in located form.
 
 ### 2.6 Duplicate declarations
 
-When an ID is declared in more than one independent home — the [§FS-check.3.3](FS-check.md#33-duplicate-declaration) error — `list` prints one line per home, each flagged so the duplication is visible at a glance. `list` does not pick a winner; it shows the situation and leaves the located error to `check`.
+When an ID is declared in more than one independent home — the [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) error — `list` prints one line per home, each flagged so the duplication is visible at a glance. `list` does not pick a winner; it shows the situation and leaves the located error to `check`.
 
 ### 2.7 Duplicate sections
 
@@ -173,7 +173,7 @@ Each row measures exactly the lead and the full body `show` returns for that sit
 
 #### 3.4.1 Measured strings
 
-The measured strings are exactly the text bodies returned for that site by the corresponding default and `--full` show modes ([§FS-show.2.1](FS-show.md#21-whole-declaration-default), [§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments)): a declaration excludes its declaration heading; a section includes its section heading; a default read stops before the first child heading; `--full` includes descendants; doc-comment markers are stripped; cross-reference wrappers are flattened in ordinary prose and preserved inside Markdown fences ([§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)); and an empty lead is the empty string. JSON declaration and section rows measure their exact available source slice, for which lead equals full. Preserving a fenced destination can increase byte and word counts and can therefore cross the opt-in [§FS-check.4.13](FS-check.md#413-oversized-lead-opt-in) warning threshold; it does not change line counts.
+The measured strings are exactly the text bodies returned for that site by the corresponding default and `--full` show modes ([§FS-show.2.1](FS-show.md#21-whole-declaration-default), [§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments)): a declaration excludes its declaration heading; a section includes its section heading; a default read stops before the first child heading; `--full` includes descendants; doc-comment markers are stripped; cross-reference wrappers are flattened in ordinary prose and preserved inside Markdown fences ([§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)); and an empty lead is the empty string. JSON declaration and section rows measure their exact available source slice, for which lead equals full. Preserving a fenced destination can increase byte and word counts and can therefore cross the opt-in [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in) warning threshold; it does not change line counts.
 
 #### 3.4.2 Units
 

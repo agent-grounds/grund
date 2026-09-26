@@ -128,9 +128,9 @@ impl Server {
         {
             return Some(citation_range(citation, self));
         }
-        // Rejected section headings and unresolved local-section forms retain
-        // their exact range solely for diagnostics; they remain absent from
-        // every navigation collection (§FS-check.3.23.2, §FS-lsp.1.1).
+        // Rejected section headings and unresolved local-section forms retain their exact range
+        // solely for diagnostics; they remain absent from every navigation collection
+        // (§FS-declarations.checks.section-outside-declaration.2, §FS-lsp.1.1).
         if let Some(range) = snapshot.finding_ranges.iter().find(|range| {
             range.code == finding.code
                 && same_path(&range.path, path)

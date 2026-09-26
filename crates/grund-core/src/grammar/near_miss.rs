@@ -8,7 +8,7 @@ use crate::model::Id;
 // `LegacyGrammar` below is this component's own, moved down out of the scanner
 // with §AR-system.2.5.
 
-/// The near-miss half of the compiled [`Grammar`] (§FS-check.4.6): the
+/// The near-miss half of the compiled [`Grammar`] (§FS-declarations.checks.declaration-near-miss): the
 /// declaration patterns with the ID grammar replaced by "a configured kind, the
 /// separator an ID puts after it, and whatever follows". Two of them for the
 /// same reason the declaration pair has two — a Python docstring line carries no
@@ -54,8 +54,8 @@ impl NearMissGrammar {
         after_kind: &str,
         format: &str,
     ) -> Self {
-        // §FS-check.4.6 reads only the shape it names, `<KIND>-…: <title>`: the
-        // trailing `:` is the discriminator, and the token stops at whitespace, at
+        // §FS-declarations.checks.declaration-near-miss reads only the shape it names, `<KIND>-…:
+        // <title>`: the trailing `:` is the discriminator, and the token stops at whitespace, at
         // the colon, and at a backtick.
         let near = format!(
             r"(?P<near>(?:{kind_alt}){after}[^\s:`]*):",
@@ -139,7 +139,7 @@ fn first_declaration_bytes(comment_prefix: &str) -> Vec<u8> {
     bytes
 }
 
-/// The heading token §FS-check.4.6.1 reports, or `None` when this line is not one.
+/// The heading token §FS-declarations.checks.declaration-near-miss.1 reports, or `None` when this line is not one.
 /// Asked only where [`declaration_captures`] already declined, so a hit is by
 /// construction a heading that came close and missed.
 pub(crate) fn near_miss_heading<'line, 'grammar>(
@@ -160,9 +160,9 @@ pub(crate) fn near_miss_heading<'line, 'grammar>(
         return Some(found);
     }
 
-    // §FS-check.4.6.1: retain an unambiguous rejected declaration token. Its kind's
-    // effective grammar is authoritative; the repository default cannot suppress a
-    // persisted spelling rejected by an override (§FS-config.3.2).
+    // §FS-declarations.checks.declaration-near-miss.1: retain an unambiguous rejected declaration
+    // token. Its kind's effective grammar is authoritative; the repository default cannot suppress
+    // a persisted spelling rejected by an override (§FS-config.3.2).
     let caps = legacy_declaration_captures(grammar, line, in_py_docstring, is_md)?;
     let text = caps.name("near")?.as_str();
     grammar
@@ -255,7 +255,7 @@ pub(crate) fn declaration_id_on_line(
 }
 
 /// Grammar-side state used only by persisted off-grammar compatibility
-/// (§FS-config.3.2.5, §FS-check.4.6), kept out of the canonical parser's fields.
+/// (§FS-config.3.2.5, §FS-declarations.checks.declaration-near-miss), kept out of the canonical parser's fields.
 #[derive(Clone)]
 pub(super) struct LegacyGrammar {
     decl_re: Regex,

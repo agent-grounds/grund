@@ -114,9 +114,9 @@ pub(crate) fn retain_findings_in_scope(findings: &mut Findings, scope: Option<&S
     findings
         .escaped_citations
         .retain(|cite| scope.contains(&cite.file));
-    // §FS-check.4.6 asks a question about the configured scope, so a `--full`
-    // walk's extra files are dropped with the rest: `--full` widens the
-    // *reference* tier (§FS-check.3.14.2) and nothing else.
+    // §FS-declarations.checks.declaration-near-miss asks a question about the configured scope, so
+    // a `--full` walk's extra files are dropped with the rest: `--full` widens the *reference* tier
+    // (§FS-check.3.14.2) and nothing else.
     findings
         .near_miss_headings
         .retain(|heading| scope.contains(&heading.file));

@@ -325,7 +325,7 @@ fn full_scope_still_prunes_excluded_hidden_and_ignored_descendants() {
 /// §FS-check.1.3.2: overlapping roots name one file once. `include` may already
 /// nest one root inside another, and under `--full` every root is walked
 /// beside the config root that contains them all — a second read would report
-/// each declaration as a duplicate of itself (§FS-check.3.3).
+/// each declaration as a duplicate of itself (§FS-declarations.checks.duplicate).
 #[test]
 fn full_scope_reads_each_file_once_across_overlapping_roots() {
     let root = test_root("full_scope_reads_each_file_once_across_overlapping_roots");
@@ -378,7 +378,7 @@ fn aliased_include_root_repo(name: &str, real: &str, link: &str) -> std::path::P
 /// §FS-check.1.3.2: the wider walk reads each *file* once, not each path once.
 /// An aliased root hands the same file to two walks under two spellings, so
 /// the byte-identical dedup cannot see the reread — and the declaration the
-/// plain run reads once would be reported as a duplicate of itself (§FS-check.3.3),
+/// plain run reads once would be reported as a duplicate of itself (§FS-declarations.checks.duplicate),
 /// turning a green run red on a tree nobody changed.
 #[cfg(unix)]
 #[test]

@@ -48,7 +48,7 @@ lead_size_warning = { max = 600, unit = "words" }
 The key accepts a non-negative `max` and one of `lines`, `words`, or `bytes`.
 It is absent by default. A lead strictly over the maximum produces the fixed
 `oversized-lead` warning; equality passes and warnings do not change the exit
-status ([§FS-check.4.13](../functional-spec/FS-check.md#413-oversized-lead-opt-in)).
+status ([§FS-declarations.checks.oversized-lead](../functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
 
 The remedy is structural, not deletion: move detailed prose into citable child
 sections, which keeps the parent coordinate stable, or promote a child section

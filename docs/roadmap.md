@@ -16,7 +16,10 @@ In grund 0.15.0, change `unmarked-heading` from warning to error and replace its
 future-tense deadline with `this became an error in grund 0.15.0`. Keep its code,
 location, containing declaration, deterministic coordinate suggestion, scope,
 and text/JSON/LSP transport unchanged
-([§FS-check.4.14](functional-spec/FS-check.md#414-unmarked-markdown-heading)).
+([§FS-declarations.checks.unmarked-heading](functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)).
+The severity is one cell of the code catalog ([§FS-errors.5.5](functional-spec/FS-errors.md#55-the-check-code-catalog)), so the promotion
+edits that cell; the check keeps the section its code names and no citation of it
+moves ([§REQ-spec-section-names.code](requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)).
 
 ### 2. Why now
 
@@ -45,8 +48,11 @@ must end rather than becoming a permanent promise.
 
 In grund 0.15.0, change `declaration-near-miss` from warning to error and replace
 its future-tense deadline with the past-tense report that it became an error in
-0.15.0 ([§FS-check.4.6](functional-spec/FS-check.md#46-declaration-near-miss)). Keep its code, declaration location, message identity,
-and the catalog-backed lookup and citation compatibility unchanged. The
+0.15.0 ([§FS-declarations.checks.declaration-near-miss](functional-spec/FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)). Keep its code, declaration location, message identity,
+and the catalog-backed lookup and citation compatibility unchanged. The severity
+is one cell of the code catalog ([§FS-errors.5.5](functional-spec/FS-errors.md#55-the-check-code-catalog)), so the promotion edits that
+cell; the check keeps the section its code names and no citation of it moves
+([§REQ-spec-section-names.code](requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). The
 release-ramp guard must reject a version at or beyond 0.15.0 while the warning
 form remains.
 
@@ -184,7 +190,7 @@ The recipe, run in this repo's CI on a synthetic branch, fails a commit that edi
 
 ## RM-doc-comment-declarations: declarations only in class/method doc-comments
 
-Per [§DISC-doc-comment-declarations](discussions/proposals/2026-05-21-doc-comment-declarations.md#disc-doc-comment-declarations-declarations-live-only-in-classmethod-doc-comments-never-inline). Tightens the [§AR-scanner.4](architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) recognizer so a code-resident declaration is seen only inside a doc-comment that documents the immediately-following definition (class, method, module, …), never a plain inline or trailing comment — with a default-on `[scan]` switch that restores today's any-comment behavior. Composes with [§FS-check.4.6](functional-spec/FS-check.md#46-declaration-near-miss): the gate drops the phantom declaration, the near-miss optionally surfaces "this looks like a declaration but is ignored." The marker/position classifier this milestone planned already exists — `comment_block.rs` decides doc comment or inline comment per block for the inline citation sites of [§FS-inline-citation-style.1.1](functional-spec/FS-inline-citation-style.md#11-doc-comments-are-not-sites) — so the declaration gate reuses it rather than building a second one.
+Per [§DISC-doc-comment-declarations](discussions/proposals/2026-05-21-doc-comment-declarations.md#disc-doc-comment-declarations-declarations-live-only-in-classmethod-doc-comments-never-inline). Tightens the [§AR-scanner.4](architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) recognizer so a code-resident declaration is seen only inside a doc-comment that documents the immediately-following definition (class, method, module, …), never a plain inline or trailing comment — with a default-on `[scan]` switch that restores today's any-comment behavior. Composes with [§FS-declarations.checks.declaration-near-miss](functional-spec/FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss): the gate drops the phantom declaration, the near-miss optionally surfaces "this looks like a declaration but is ignored." The marker/position classifier this milestone planned already exists — `comment_block.rs` decides doc comment or inline comment per block for the inline citation sites of [§FS-inline-citation-style.1.1](functional-spec/FS-inline-citation-style.md#11-doc-comments-are-not-sites) — so the declaration gate reuses it rather than building a second one.
 
 ### 1. What
 

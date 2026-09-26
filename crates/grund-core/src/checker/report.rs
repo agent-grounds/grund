@@ -62,7 +62,7 @@ use crate::scanner::is_scannable;
 /// Each rule is a single pass over part of the findings. Rules are independent —
 /// adding a rule does not force re-scanning.
 ///
-/// ### 2.1 Duplicate declarations (§FS-check.3.3)
+/// ### 2.1 Duplicate declarations (§FS-declarations.checks.duplicate)
 ///
 /// For each ID with more than one declaration, emit one error anchored at the
 /// lexicographically-first site (sort by `path`, then `line`); list every other
@@ -70,7 +70,7 @@ use crate::scanner::is_scannable;
 /// prefix invariant (§AR-checker.3, §FS-check.2.1) while still naming all sites. A stub and
 /// the inline declaration it points at count as one home, not two.
 ///
-/// ### 2.2 Misplaced declarations (§FS-check.3.7)
+/// ### 2.2 Misplaced declarations (§FS-declarations.checks.misplaced-declaration)
 ///
 /// For each declaration, validate placement from the scanner-recorded `file` and
 /// `id.kind`. A single-file kind (`[[kinds]].file`) must live in that exact file.
@@ -96,7 +96,7 @@ use crate::scanner::is_scannable;
 /// For each citation with a section path, look up the section in the matching
 /// declaration's recorded sections. Missing → one error at the citation site.
 ///
-/// ### 2.5 Broken inline-spec stubs (§FS-check.3.4)
+/// ### 2.5 Broken inline-spec stubs (§FS-declarations.checks.broken-stub)
 ///
 /// For each declaration whose H1 has the stub shape `# <ID>: [<text>](<path>)`
 /// (description after the colon is a single bare markdown link), extract the link
@@ -239,7 +239,7 @@ use crate::scanner::is_scannable;
 /// what a well-laid-out note is, and only this component turns it into a
 /// finding (§AR-system.2.1).
 ///
-/// ### 2.15 Duplicate section paths (§FS-check.3.16, §DF-duplicate-section-path)
+/// ### 2.15 Duplicate section paths (§FS-declarations.checks.duplicate-section, §DF-duplicate-section-path)
 ///
 /// One pass over the declarations. The scanner records a section path once, by
 /// the first heading that claims it, and appends every later claimant *inside the
@@ -255,7 +255,7 @@ use crate::scanner::is_scannable;
 /// answered that once, which is what makes `show`'s refusal (§FS-show.2.2.2.2) name
 /// exactly the coordinates this rule reports. A heading in the next item's
 /// doc-comment and a stub's prose are outside the body and never reach the list,
-/// so neither is filtered here (§FS-check.3.16.2).
+/// so neither is filtered here (§FS-declarations.checks.duplicate-section.2).
 ///
 /// ### 2.16 Kind indexes (§FS-check.3.18, §FS-check.3.17, §DF-index-entry-form)
 ///
@@ -283,7 +283,7 @@ use crate::scanner::is_scannable;
 /// `index_entries.rs`, one file per invariant family and bounded helper
 /// (§AR-core-module-layout.1, §AR-core-module-layout.3).
 ///
-/// ### 2.17 Named section prefixes (§FS-check.3.19)
+/// ### 2.17 Named section prefixes (§FS-declarations.checks.orphan-section)
 ///
 /// One pass over each declaration's scanner-recorded section set. For every
 /// name-bearing path, walk its proper prefixes and emit one `orphan-section`
@@ -305,14 +305,14 @@ use crate::scanner::is_scannable;
 /// unique numbered target reaches exact decimal-or-decoded-string equality,
 /// producing the fixed value errors and declaration site required by §FS-values.5.
 ///
-/// ### 2.19 Sections outside declarations (§FS-check.3.23)
+/// ### 2.19 Sections outside declarations (§FS-declarations.checks.section-outside-declaration)
 ///
 /// The scanner narrows both section maps against the declaration body span and
 /// retains each rejected numeric or enabled named heading as one located site.
 /// This pass translates those sites into hard findings; no consumer can resolve
 /// them because checking happens after the shared maps have already been pruned.
 ///
-/// ### 2.20 Unmarked Markdown headings (§FS-check.4.14)
+/// ### 2.20 Unmarked Markdown headings (§FS-declarations.checks.unmarked-heading)
 ///
 /// One pass translates the scanner's body-owned Markdown-only candidates into
 /// fixed warning findings. The scanner has already selected the nearest enclosing
@@ -348,7 +348,7 @@ pub(crate) fn check_findings(findings: &Findings, config: &Config) -> CheckRepor
 }
 
 /// Disk-backed compatibility entry for the shared checker; the LSP sibling
-/// below supplies overlays so §FS-check.4.13 measures the editor's live text.
+/// below supplies overlays so §FS-declarations.checks.oversized-lead measures the editor's live text.
 pub(crate) fn check_with_workspace(
     findings: &Findings,
     config: &Config,
@@ -403,7 +403,7 @@ pub(crate) fn check_with_workspace_and_overlays(
     // has drifted from `[citations]`, are check errors.
     check_agents_block_version(findings, config, &mut report);
 
-    // §FS-check.3.3: an ID with more than one non-stub home is a duplicate.
+    // §FS-declarations.checks.duplicate: an ID with more than one non-stub home is a duplicate.
     for (id, decls) in &findings.declarations {
         let duplicate_homes: Vec<&Declaration> = decls
             .iter()
@@ -447,9 +447,9 @@ pub(crate) fn check_with_workspace_and_overlays(
         }
     }
 
-    // §FS-check.3.7: declarations must respect configured kind homes. A
-    // single-file kind must live in its exact `file`; any declaration inside a
-    // unique configured home must match that home's kind.
+    // §FS-declarations.checks.misplaced-declaration: declarations must respect configured kind
+    // homes. A single-file kind must live in its exact `file`; any declaration inside a unique
+    // configured home must match that home's kind.
     for (id, decls) in &findings.declarations {
         for decl in decls {
             if let Some(expected) = kind_homes.single_file_for_kind(&id.kind)
@@ -475,8 +475,8 @@ pub(crate) fn check_with_workspace_and_overlays(
                 continue;
             };
             if home.kind != id.kind {
-                // §FS-check.3.7.3: a non-citable home has no kind an author could
-                // have declared instead, so the message names the place and says
+                // §FS-declarations.checks.misplaced-declaration.3: a non-citable home has no kind
+                // an author could have declared instead, so the message names the place and says
                 // why, rather than pointing at a kind that does not exist.
                 let message = if home.citable {
                     format!(
@@ -542,9 +542,9 @@ pub(crate) fn check_with_workspace_and_overlays(
         }
     }
 
-    // §FS-check.3.9 / §FS-check.3.16: the depth a declaration's own section
-    // headings write, and whether two claim one path. One file per invariant
-    // family in `sections.rs` (§AR-checker.2.15, §AR-core-module-layout.1).
+    // §FS-declarations.checks.section-heading-level / §FS-declarations.checks.duplicate-section:
+    // the depth a declaration's own section headings write, and whether two claim one path. One
+    // file per invariant family in `sections.rs` (§AR-checker.2.15, §AR-core-module-layout.1).
     check_section_headings(findings, config, path_config, &mut report);
 
     // §FS-inline-citation-style.4: inline source-comment citation sites are
@@ -552,13 +552,13 @@ pub(crate) fn check_with_workspace_and_overlays(
     // declaration bodies carry no site and are ignored here.
     check_inline_citation_style(findings, config, &mut report);
 
-    // §FS-check.4.13: an absent key stops before any body read; an opted-in
+    // §FS-declarations.checks.oversized-lead: an absent key stops before any body read; an opted-in
     // project judges only the already-scoped scanner sites, including duplicate
     // claimants, through the shared show slicer. Warnings never affect exit.
     check_oversized_leads(findings, config, current_alias, overlays, &mut report);
 
-    // §FS-check.3.4: a `# <ID>: [text](path)` stub is broken if `path` does not
-    // exist, or exists but does not itself declare `<ID>` inline (§AR-checker.2.4).
+    // §FS-declarations.checks.broken-stub: a `# <ID>: [text](path)` stub is broken if `path` does
+    // not exist, or exists but does not itself declare `<ID>` inline (§AR-checker.2.4).
     for (id, decls) in &findings.declarations {
         for decl in decls {
             if !decl.is_stub {
@@ -656,7 +656,8 @@ pub(crate) fn check_with_workspace_and_overlays(
     // row and per unit, in `grounding.rs` (§AR-checker.2.8).
     check_grounding(findings, config, &kind_homes, workspace, &mut report);
 
-    // §FS-check.4.6: headings that open like a declaration and parse as none.
+    // §FS-declarations.checks.declaration-near-miss: headings that open like a declaration and
+    // parse as none.
     check_declaration_near_misses(findings, &mut report);
 
     // §FS-config.3.9 / §FS-check.3.11 / §FS-check.3.12: citation-direction

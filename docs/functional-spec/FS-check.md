@@ -38,7 +38,7 @@ rule, grounded), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrat
   [§FS-rules.8](FS-rules.md#8-command-surfaces)'s.
 - `--only <code>` — retain only diagnostics whose exact finding code is in the selected set ([§FS-check.1.4](FS-check.md#14-selecting-diagnostics-with---only-and---ignore)).
 - `--ignore <code>` — remove diagnostics whose exact finding code is in the selected set ([§FS-check.1.4](FS-check.md#14-selecting-diagnostics-with---only-and---ignore)).
-- `--full` — walk the whole config root past `[scan] include`, reporting unresolved references on their own tier ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full), [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)) plus the scanner-invariant `section-outside-declaration` error ([§FS-check.3.23](FS-check.md#323-section-outside-a-declaration)). It only ever *adds* findings; the in-scope report is unchanged.
+- `--full` — walk the whole config root past `[scan] include`, reporting unresolved references on their own tier ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full), [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)) plus the scanner-invariant `section-outside-declaration` error ([§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration)). It only ever *adds* findings; the in-scope report is unchanged.
 - `--format text|json` — output shape, per [§FS-errors.5](FS-errors.md#5-json-format). The global flags `--version` and `--help` are handled before any scan ([§FS-cli](FS-cli.md#fs-cli-grunds-command-line-surface-conventions)).
 
 ### 1.1 Recognized citations
@@ -51,7 +51,7 @@ Citations may appear in markdown prose, in source-file line/block comments, and 
 
 #### 1.1.1 Off-grammar citations
 
-An off-grammar citation that a catalog declaration backs ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) participates in section and dangling checks, inbound counts, grounding, citation directions, `refs`, formatting, and editor navigation exactly like a conforming citation. The declaration's mismatch is reported at its heading ([§FS-check.4.6](FS-check.md#46-declaration-near-miss)), not at every citation.
+An off-grammar citation that a catalog declaration backs ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) participates in section and dangling checks, inbound counts, grounding, citation directions, `refs`, formatting, and editor navigation exactly like a conforming citation. The declaration's mismatch is reported at its heading ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), not at every citation.
 
 #### 1.1.2 Named-section candidates
 
@@ -153,11 +153,11 @@ The same shape is accepted as a **CLI ID argument** — `grund FS-042`, `grund F
 
 #### 1.3.2 The wider walk reads a superset, each file once
 
-Every root the plain walk starts from — each `[scan] include` entry and every kind home it walks ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)) — is walked under `--full` too, whether or not `exclude`, an ignore file, or the hidden-directory rule would otherwise prune it: those three rules prune *descendants*, never the directory a walk starts at, so a gitignored, excluded, or hidden root is read by the plain run and must be read here. Without that, `--full` could read *fewer* files than `grund check` and hide a finding instead of adding one. A hidden **file** is the exception, read by neither run even as a root ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)); additivity survives it because the file is missing from both walks, not from one. Overlapping roots — an `include` entry inside another, or inside the config root the flag adds — name one file once; a file read twice would be a declaration duplicated with itself ([§FS-check.3.3](FS-check.md#33-duplicate-declaration)). "Once" is per *file*, not per path: an `include` root that is a symlink to a directory inside the config root, or a case alias of one on a case-insensitive filesystem, reaches its files under a spelling the config-root walk never produces, so a byte-identical compare cannot see the reread. The walk therefore starts at those roots *before* the config root and keeps the first spelling of each file — the one `grund check` prints without the flag. Every in-scope line is the plain run's, character for character; outside reference errors add the `outside [scan] include:` tier prefix, while [§FS-check.3.23](FS-check.md#323-section-outside-a-declaration)'s scanner invariant keeps its ordinary code and message.
+Every root the plain walk starts from — each `[scan] include` entry and every kind home it walks ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)) — is walked under `--full` too, whether or not `exclude`, an ignore file, or the hidden-directory rule would otherwise prune it: those three rules prune *descendants*, never the directory a walk starts at, so a gitignored, excluded, or hidden root is read by the plain run and must be read here. Without that, `--full` could read *fewer* files than `grund check` and hide a finding instead of adding one. A hidden **file** is the exception, read by neither run even as a root ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)); additivity survives it because the file is missing from both walks, not from one. Overlapping roots — an `include` entry inside another, or inside the config root the flag adds — name one file once; a file read twice would be a declaration duplicated with itself ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)). "Once" is per *file*, not per path: an `include` root that is a symlink to a directory inside the config root, or a case alias of one on a case-insensitive filesystem, reaches its files under a spelling the config-root walk never produces, so a byte-identical compare cannot see the reread. The walk therefore starts at those roots *before* the config root and keeps the first spelling of each file — the one `grund check` prints without the flag. Every in-scope line is the plain run's, character for character; outside reference errors add the `outside [scan] include:` tier prefix, while [§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration)'s scanner invariant keeps its ordinary code and message.
 
 #### 1.3.3 Two scopes, two rule sets
 
-Inside the default scope, the report is the ordinary one. Outside it, [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)'s reference-resolution errors and [§FS-check.3.23](FS-check.md#323-section-outside-a-declaration)'s single scanner-invariant exception are reported. No style, grounding, placement, direction, duplicate, unused, or other rule is applied there. A `--full` that failed on conventions in directories that never opted into them would be run once and never again.
+Inside the default scope, the report is the ordinary one. Outside it, [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)'s reference-resolution errors and [§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration)'s single scanner-invariant exception are reported. No style, grounding, placement, direction, duplicate, unused, or other rule is applied there. A `--full` that failed on conventions in directories that never opted into them would be run once and never again.
 
 #### 1.3.4 Purely additive
 
@@ -197,7 +197,7 @@ A `--full` run whose *default* scope read no files gets the [§FS-check.2.2](FS-
 
 Both flags repeat: repeated values form a union, duplicate values are harmless, and each occurrence takes exactly one code — comma-separated values are not split into a selector language. An absent `--only` set retains every code. The two compose: a diagnostic is retained when its code is in `--only` (or no `--only` was given) and is not in `--ignore`, so ignore wins when both sets name the same code.
 
-Codes are the documented lowercase kebab-case vocabulary in [§FS-errors.5](FS-errors.md#5-json-format), not categories or message fragments. Selecting an opt-in code such as `oversized-lead` is valid even when its config key is absent, but selection never activates the finding ([§FS-check.4.13](FS-check.md#413-oversized-lead-opt-in)).
+Codes are the documented lowercase kebab-case vocabulary in [§FS-errors.5](FS-errors.md#5-json-format), not categories or message fragments. Selecting an opt-in code such as `oversized-lead` is valid even when its config key is absent, but selection never activates the finding ([§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
 
 Selector values are validated before config discovery or scanning. Lowercase kebab-case means `[a-z0-9]+(?:-[a-z0-9]+)*`: no uppercase, underscore, comma, empty segment, or leading/trailing hyphen. A missing or empty value is rejected as `error: --only requires a finding code` or `error: --ignore requires a finding code`; a value outside that grammar is rejected as `error: invalid finding code "<value>" (expected lowercase kebab-case)`; and a well-formed value outside the public catalog is rejected as ``error: unknown check finding code "<value>"; run `grund check --help` for supported codes``. These are CLI failures: stdout is empty and the exit is `2` ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)). Validation is independent of flag spelling: both `--only value` / `--ignore value` and `--only=value` / `--ignore=value` have the same behavior.
 
@@ -225,7 +225,7 @@ Findings are written to **stdout**, one per line, in the form:
 
 Every retained located text diagnostic carries its lowercase channel after that jump-friendly prefix: `error:` for [§FS-check.3](FS-check.md#3-errors-detected), `warning:` for [§FS-check.4](FS-check.md#4-warnings), and `suggestion:` for an enabled [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) advisory. The marker is report structure rather than part of the diagnostic message; `<message>` retains its ordinary bytes. Text reports follow the grouped order [§FS-errors.4](FS-errors.md#4-determinism) fixes. Every retained diagnostic remains present and unabridged.
 
-When a finding inherently spans multiple sites (e.g., duplicate declarations, [§FS-check.3.3](FS-check.md#33-duplicate-declaration)), the message is anchored at the lexicographically-first site (sort by `path`, then `line`) and the other sites are listed parenthetically inside the message.
+When a finding inherently spans multiple sites (e.g., duplicate declarations, [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)), the message is anchored at the lexicographically-first site (sort by `path`, then `line`) and the other sites are listed parenthetically inside the message.
 
 Selection happens before the fixed per-format sort, render, and exit decision ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)). An otherwise empty selected report makes the default text form write exactly `success` plus a trailing newline ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)); with `--format=json`, the retained findings are emitted as NDJSON on stdout instead ([§FS-check.2.1.4](FS-check.md#214-json)).
 
@@ -399,13 +399,11 @@ For a value binding the explicit numeric component must resolve here before comp
 
 ### 3.3 Duplicate declaration
 
-The same ID declared more than once: any two declarations that are not stubs ([§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub)), whether headings or inline doc-comment declarations and whether in one file or several. Reported per [§FS-check.2.1](FS-check.md#21-report-format): one error anchored at the lexicographically-first site, with the remaining sites listed in the message.
-
-Duplicate JSON keys, cross-file JSON IDs, Markdown/JSON collisions, and overlapping opted-in ownership feed this same ambiguity rule even when their components agree. A duplicate target cannot be value-compared ([§FS-values.2.3](FS-values.md#23-duplicates-and-ownership)).
+Moved to [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration). This address is kept so citations written before the move still resolve.
 
 ### 3.4 Broken inline-spec stub
 
-A `docs/` file whose H1 has the stub shape `# <ID>: [<text>](<path>)` where either the path does not exist, or the file at that path contains no inline declaration of the same ID. Relative stub links resolve as normal Markdown links first — relative to the stub file's directory — so `lychee` and rendered docs see the same target. If that path does not exist, `grund` falls back to resolving the path relative to the config root for compatibility with older stubs that wrote repo-root paths.
+Moved to [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub). This address is kept so citations written before the move still resolve.
 
 ### 3.5 Invalid agent entrypoint init block
 
@@ -463,7 +461,7 @@ There are two ranks, and they are read by indentation rather than by syntax ([§
 
 ##### 3.6.2.3 The inline-declaration escape
 
-The inline-declaration escape of [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) applies per unit: a doc-comment block that declares an ID is grounded by that declaration, and so is the file it sits in. It has no effect inside a non-citable home, where a declaration is a misplaced declaration to begin with ([§FS-check.3.7](FS-check.md#37-misplaced-declaration-configured-kind-home)) — there the only way to ground a unit is to cite one.
+The inline-declaration escape of [§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in) applies per unit: a doc-comment block that declares an ID is grounded by that declaration, and so is the file it sits in. It has no effect inside a non-citable home, where a declaration is a misplaced declaration to begin with ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)) — there the only way to ground a unit is to cite one.
 
 #### 3.6.3 Findings
 
@@ -488,35 +486,7 @@ The rule is a pure function of `(tree, config)` like every other `check` rule ([
 
 ### 3.7 Misplaced declaration (configured kind home)
 
-A declaration that sits where a configured kind home does not allow it is a misplaced-declaration error, anchored at the declaration line. Three placements are refused: a single-file kind's declaration outside its file ([§FS-check.3.7.1](FS-check.md#371-a-single-file-kind)), a declaration inside another kind's home ([§FS-check.3.7.2](FS-check.md#372-another-kinds-home)), and any declaration in a non-citable home ([§FS-check.3.7.3](FS-check.md#373-a-non-citable-home)). The home rules ([§FS-check.3.7.2](FS-check.md#372-another-kinds-home), [§FS-check.3.7.3](FS-check.md#373-a-non-citable-home)) apply to declaration lines and stub lines, not citations or prose mentions. A file that belongs to no configured home, or that matches several because configured homes overlap or nest, is not checked by them, because its expected kind is ambiguous.
-
-#### 3.7.1 A single-file kind
-
-A kind configured with `file = "<path>"` in [[kinds]] ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)) is a *single-file kind*: every declaration of that kind must live in that exact document, and one whose H1/H2 is found in any other scanned file is reported:
-
-```
-docs/notes.md:42: GOAL-foo must be declared in docs/goals.md (single-file kind)
-```
-
-Stubs (`# <ID>: [<text>](<path>)`) are exempt from this exact-file requirement: a stub points from a kind's home folder to an inline declaration elsewhere, a multi-file-kind feature, and a single-file kind has no folder to redirect from. This rule is the canonical mechanism that keeps `GRUND`, `GOAL`, and `RM` declarations in their documents, and what makes "one file, all goals inline" a checked invariant rather than a convention.
-
-#### 3.7.2 Another kind's home
-
-Every configured `file` and `folder` is also a declaration-home boundary: a declaration line in a file that belongs to exactly one configured kind home must declare that home's kind. A `file` home matches only that exact path; a `folder` home matches files below that directory. The error names the declared kind, the expected home kind, and the configured home:
-
-```
-docs/functional-spec/FS-lsp.md:42: AR-router declares kind AR inside FS home docs/functional-spec
-```
-
-#### 3.7.3 A non-citable home
-
-A **non-citable home** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) admits no declaration of any kind. It has no kind an author could have declared instead, so the message names the place and says why rather than pointing at a kind that does not exist:
-
-```
-skills/review/SKILL.md:1: FS-review must not be declared in skills/ (not a citable home)
-```
-
-That is the rule working as designed, not a gap in it: `citable = false` says the directory is a place, and a place with a declaration in it is one of the two facts in conflict.
+Moved to [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home). This address is kept so citations written before the move still resolve.
 
 ### 3.8 Cross-project citation failure
 
@@ -564,7 +534,7 @@ unknown project alias <path>; the <scope> project and its descendants are in sco
 
 ### 3.9 Section heading level mismatch
 
-`[id] section_heading_levels` ([§FS-config.3.3.2](FS-config.md#332-section_heading_levels--heading-depth-against-path-depth)) sets how a citable section heading's Markdown depth must match its dotted path ([AR-scanner.2.2](../architecture/AR-scanner.md#22-section-detection)), and whether a mismatch is an error, a warning, or not reported. A mismatch the mode reports is anchored at the heading line. This point judges the depth of headings that already carry coordinates; the project-wide in-body Markdown ATX rule for a heading that carries none is [§FS-check.4.14](FS-check.md#414-unmarked-markdown-heading), independent of this mode. Bold labels are not headings and remain unchecked.
+Moved to [§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch). This address is kept so citations written before the move still resolve.
 
 ### 3.10 Inline citation style violation
 
@@ -661,7 +631,7 @@ docs/notes.md:6: shorthand citation §FS-999 matches no declaration
 docs/notes.md:7: shorthand citation §FS-042 is ambiguous: FS-042-user-login, FS-042-user-logout
 ```
 
-The candidate list in the ambiguous form is sorted and complete — `grund` names every match and resolves none, because choosing one would be a guess and `check` reports facts about the tree ([§FS-check.5](FS-check.md#5-what-grund-does-not-check), [§GOAL-agent-grounding.3](../goals.md#3-what-this-rules-out), [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). Duplicate *numbers* are not otherwise an error: [§FS-check.3.3](FS-check.md#33-duplicate-declaration) catches duplicate full IDs, and a repo may legitimately hold `FS-042-user-login` alongside `FS-042-user-logout` as long as nothing abbreviates them. The marker rendered in the message is the configured one ([§FS-config.3.1](FS-config.md#31-reference--citation-form)), and the qualified form names its namespace (`<§>api/FS-042`, escaped here because this repo has no `api` member) so the replacement can be pasted as written.
+The candidate list in the ambiguous form is sorted and complete — `grund` names every match and resolves none, because choosing one would be a guess and `check` reports facts about the tree ([§FS-check.5](FS-check.md#5-what-grund-does-not-check), [§GOAL-agent-grounding.3](../goals.md#3-what-this-rules-out), [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). Duplicate *numbers* are not otherwise an error: [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) catches duplicate full IDs, and a repo may legitimately hold `FS-042-user-login` alongside `FS-042-user-logout` as long as nothing abbreviates them. The marker rendered in the message is the configured one ([§FS-config.3.1](FS-config.md#31-reference--citation-form)), and the qualified form names its namespace (`<§>api/FS-042`, escaped here because this repo has no `api` member) so the replacement can be pasted as written.
 
 ### 3.14 Out-of-scope unresolvable citation *(`--full` only)*
 
@@ -678,7 +648,7 @@ It moves the exit code to `1` like every other reference failure. A warning woul
 
 #### 3.14.2 Only resolution, plus one scanner invariant, is judged
 
-The style, placement, grounding, direction, duplicate, and unused rules say how a project organizes the files it has chosen to govern, and `[scan] include` is exactly that choice; a directory nobody configured has agreed to none of them ([§FS-check.1.3.3](FS-check.md#133-two-scopes-two-rule-sets)). The sole exception is [§FS-check.3.23](FS-check.md#323-section-outside-a-declaration): a numeric or enabled named heading outside every declaration body is invalid scanner structure before any project convention applies, so it retains the untiered `section-outside-declaration` code and its ordinary message outside scope too.
+The style, placement, grounding, direction, duplicate, and unused rules say how a project organizes the files it has chosen to govern, and `[scan] include` is exactly that choice; a directory nobody configured has agreed to none of them ([§FS-check.1.3.3](FS-check.md#133-two-scopes-two-rule-sets)). The sole exception is [§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration): a numeric or enabled named heading outside every declaration body is invalid scanner structure before any project convention applies, so it retains the untiered `section-outside-declaration` code and its ordinary message outside scope too.
 
 #### 3.14.3 Resolution sees the whole walk
 
@@ -732,29 +702,7 @@ Under `--full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)) the
 
 ### 3.16 Duplicate section path
 
-Two or more citable section headings inside one declaration claiming the same dotted path ([AR-scanner.2.2](../architecture/AR-scanner.md#22-section-detection)) — either two `## 1. …` headings or two `## goals: …` headings under one `# FS-001-login`. Reported per [§FS-check.2.1](FS-check.md#21-report-format) in [§FS-check.3.3](FS-check.md#33-duplicate-declaration)'s shape: one error anchored at the first heading in file order, with every other heading line named in the message. Named and numeric coordinates use the same `duplicate-section` code ([§FS-errors.5](FS-errors.md#5-json-format)), the same multi-site `sites` record [§FS-check.3.3](FS-check.md#33-duplicate-declaration) carries, and the same no-ranking rule.
-
-```
-docs/functional-spec/FS-001-login.md:5: duplicate section FS-001-login.1 (also declared at docs/functional-spec/FS-001-login.md:9)
-```
-
-This is [§FS-check.3.3](FS-check.md#33-duplicate-declaration) one level down. A section path is a citation target, so two headings claiming it give `§FS-001-login.1` two destinations, and picking one silently is the guess [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) forbids by name. Decided in [§DF-duplicate-section-path](../decisions/functional/DF-duplicate-section-path.md#df-duplicate-section-path-a-section-coordinate-names-one-heading-or-the-run-says-so). The collision is scoped to one declaration ([§FS-check.3.16.1](FS-check.md#3161-scoped-to-one-declaration)) and its body ([§FS-check.3.16.2](FS-check.md#3162-scoped-to-that-declarations-body)), independent of the heading-level mode ([§FS-check.3.16.3](FS-check.md#3163-independent-of-id-section_heading_levels)), and read from the record `show` reads ([§FS-check.3.16.4](FS-check.md#3164-the-same-record-show-reads)).
-
-#### 3.16.1 Scoped to one declaration
-
-Section paths are addressed as `<ID>.<path>`, so the same `1.` under two different declarations is two distinct coordinates and not a finding. Only headings sharing a declaration collide.
-
-#### 3.16.2 Scoped to that declaration's body
-
-The headings judged are the ones inside the body [§FS-show.2.1](FS-show.md#21-whole-declaration-default) and [§FS-show.2.3.1](FS-show.md#231-what-counts-as-the-comment-block) delimit — in Markdown down to the next same-or-shallower heading, in a source file to the end of the comment block the declaration line opens. A `## 1.` further down the file — in the *next* item's doc-comment, or under a later unrelated heading — is not one of this declaration's sections: `grund <ID>.1` never reaches it, and reporting it would ask for a renumbering that changes what nothing points at. A stub ([§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub)) is one link line whose tail is a path rather than a body, so it declares no sections at all and is never reported here; the headings that count are the inline home's, which is also the file `grund <ID>.<path>` reads.
-
-#### 3.16.3 Independent of `[id] section_heading_levels`
-
-The mode ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth)) governs how deep a heading must sit for the path it writes, which is a different fact; `## 1.` and `### 1.` under an H1 declaration both claim path `1` and are a duplicate in every mode, `"loose"` included. [§FS-check.3.9](FS-check.md#39-section-heading-level-mismatch) judges only the first heading, the one the path resolves to; a later claimant is no section target and is not additionally judged for depth, so it yields this finding alone ([§DF-duplicate-section-path.2.4](../decisions/functional/DF-duplicate-section-path.md#24-the-heading-level-rule-judges-only-the-heading-the-path-resolves-to)).
-
-#### 3.16.4 The same record `show` reads
-
-This rule and [§FS-show.2.2.2](FS-show.md#222-ambiguous-section) answer from one recorded section set, so `grund <ID>.<path>` refuses exactly when this rule reports `<ID>.<path>` and returns a body exactly when it does not. Two readers that each decided for themselves would disagree — a fenced example, a heading past the end of the body — and a coordinate `check` calls clean but `show` will not resolve is [§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess) failing quietly in the other direction.
+Moved to [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path). This address is kept so citations written before the move still resolve.
 
 ### 3.17 Index entry is not a link
 
@@ -819,7 +767,7 @@ Folder kinds that declare IDs. A `citable = false` kind ([§FS-config.3.4.1](FS-
 
 #### 3.18.2 Which declarations are covered
 
-Every ID of that kind with at least one declaration site anywhere under `folder` — the whole subtree, not its top level, because a kind's folder routinely holds a directory per topic or per year (`DISC`'s proposals all live in `docs/discussions/proposals/`). A stub-and-inline pair collapses the way [§FS-list.2](FS-list.md#2-behaviour) collapses it: the stub under `folder` is what puts the ID in the folder, and **one** entry for the ID satisfies the rule — pointing at wherever the body lives, which for an inline home is the source file. A declaration of some *other* kind sitting inside the folder is a misplaced declaration ([§FS-check.3.7](FS-check.md#37-misplaced-declaration-configured-kind-home)) and is not additionally demanded here.
+Every ID of that kind with at least one declaration site anywhere under `folder` — the whole subtree, not its top level, because a kind's folder routinely holds a directory per topic or per year (`DISC`'s proposals all live in `docs/discussions/proposals/`). A stub-and-inline pair collapses the way [§FS-list.2](FS-list.md#2-behaviour) collapses it: the stub under `folder` is what puts the ID in the folder, and **one** entry for the ID satisfies the rule — pointing at wherever the body lives, which for an inline home is the source file. A declaration of some *other* kind sitting inside the folder is a misplaced declaration ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)) and is not additionally demanded here.
 
 #### 3.18.3 An external inline declaration enrolls by its canonical link
 
@@ -855,13 +803,11 @@ The deadline clause is spent: a release still ahead is a date a reader can act o
 
 ### 3.19 Orphan name-bearing section path
 
-With `[id] named_sections = true`, every proper prefix of a name-bearing section path must be recorded in the same declaration before the descendant can be addressed. `### goals.performance: Performance` therefore requires a recorded `goals`; `### missing.performance: Performance` is one error at that heading's line even when another Markdown heading visually contains it. The check uses the complete recorded path set and is independent of heading-depth validation, so a heading with both a missing prefix and a wrong level produces both findings. Purely numeric paths are unchanged and are never judged by this rule.
-
-The message names the orphan coordinate and its first absent prefix. Its code is `orphan-section`. This is a declaration-side structural error, not a missing-citation error: it is reported even when nobody cites the orphan, and a citation to it may independently be present and resolve to the recorded coordinate.
+Moved to [§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path). This address is kept so citations written before the move still resolve.
 
 ### 3.20 Invalid value declaration
 
-In a kind opted into whole values, a readable Markdown or JSON declaration that violates [§FS-values.2](FS-values.md#2-value-declarations) is an error at the exact invalid heading, key, or element. An exact embedded marker in an invalid location or a marked root with an invalid shape is the same error, located at the marker for the root/authority failures and at the offending line for content/shape failures ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)). Inside a declared value chapter the same error covers content the chapter may not hold and a root whose run is invalid, located at the offending line, or at the root heading for a root-level failure a chapter root has no marker to carry ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)). The code is `invalid-value-declaration`. Duplicate declarations retain [§FS-check.3.3](FS-check.md#33-duplicate-declaration) instead; a duplicate section may independently carry this finding, and home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete retains exit `2` ([§FS-check.2](FS-check.md#2-outputs)).
+In a kind opted into whole values, a readable Markdown or JSON declaration that violates [§FS-values.2](FS-values.md#2-value-declarations) is an error at the exact invalid heading, key, or element. An exact embedded marker in an invalid location or a marked root with an invalid shape is the same error, located at the marker for the root/authority failures and at the offending line for content/shape failures ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)). Inside a declared value chapter the same error covers content the chapter may not hold and a root whose run is invalid, located at the offending line, or at the root heading for a root-level failure a chapter root has no marker to carry ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)). The code is `invalid-value-declaration`. Duplicate declarations retain [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) instead; a duplicate section may independently carry this finding, and home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete retains exit `2` ([§FS-check.2](FS-check.md#2-outputs)).
 
 ### 3.21 Invalid value binding
 
@@ -873,19 +819,7 @@ After ordinary citation and section resolution succeeds uniquely, a binding whos
 
 ### 3.23 Section outside a declaration
 
-When the scanner encounters a numeric section heading, or an enabled named section heading, that is deeper than its stale declaration context but whose line lies inside no declaration body, `check` emits one located error at the heading. A numeric heading's exact message is `numbered section outside any declaration`; an enabled named heading's is `named section outside any declaration`. Both use the public code `section-outside-declaration`. Ownership is the declaration's body span ([§FS-check.3.23.1](FS-check.md#3231-ownership-is-the-body-span)), the rejected heading leaves the section map every consumer reads ([§FS-check.3.23.2](FS-check.md#3232-the-rejected-heading-leaves-the-section-map)), and the finding is reported like any other hard error ([§FS-check.3.23.3](FS-check.md#3233-an-ordinary-hard-finding)).
-
-#### 3.23.1 Ownership is the body span
-
-Ownership is the body span already used for extraction and citing-side classification, not a second section-only approximation. In Markdown, a same-or-higher heading ends a declaration body even when that boundary heading is plain; a later deeper section-like heading is outside. In source, the end of a doc-comment or docstring ends ownership. A later declaration in the same comment block ends the earlier body and begins its own. An inline-spec stub owns only its single heading line, so numbered prose below the stub belongs to no stubbed declaration. A deeper section-like heading before any of those boundaries stays valid. A heading inside a Markdown fence is content and emits nothing ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)). Legal unmarked or plain headings are not errors under this point; adopting a general unmarked-heading policy is a separate change ([§FS-check.4.14](FS-check.md#414-unmarked-markdown-heading)).
-
-#### 3.23.2 The rejected heading leaves the section map
-
-The rejected heading is excluded from the shared body-local section map before any consumer runs ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)). It cannot resolve a citation or query, enter completion or list/size output, become an embedded-value root, participate in duplicate-section detection, or acquire an LSP navigation target. `show` and other failed queries retain their ordinary missing-section semantics rather than printing this check-only message.
-
-#### 3.23.3 An ordinary hard finding
-
-This is an ordinary hard finding under §[§FS-check.2](FS-check.md#2-outputs)–3. Text uses the located `<path>:<line>: error: <message>` form. JSON emits `{"severity":"error","path":<path>,"line":<line>,"code":"section-outside-declaration","message":<message>,"sites":null}`. `--only section-outside-declaration` retains it and `--ignore section-outside-declaration` removes it; a retained finding contributes exit `1`, while selecting it away restores the ordinary selected-report result. Parallel and workspace scans merge the record once under the workspace-relative path, never once per stale declaration. A narrowed scan judges the complete selected file, and `--full` applies the same code and message to otherwise out-of-scope files it adds. The LSP transports the same error severity, code, message, and heading range through its shared snapshot ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+Moved to [§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration). This address is kept so citations written before the move still resolve.
 
 ### 3.24 Declaration-local section citation
 
@@ -1073,7 +1007,7 @@ Off by default because a layout is a house style rather than a correctness prope
 
 ### 4.5 Nothing recognized
 
-A walk that read at least one file and recognized **nothing in it** — no declaration and no citation — is [§FS-check.2.2](FS-check.md#22-empty-scan)'s empty scan one step further in: the scope was right and the files were read, and the grammar matched none of their content. `check` then emits one CLI-level `warning:` line ([§FS-check.2.1.1](FS-check.md#211-cli-level-messages)) on **stderr**, whose text is [§FS-check.4.5.2](FS-check.md#452-the-message). It has two usual causes ([§FS-check.4.5.1](FS-check.md#451-the-usual-causes)), is asked per project ([§FS-check.4.5.3](FS-check.md#453-asked-per-project)) and only of a run over that project's root ([§FS-check.4.5.4](FS-check.md#454-asked-only-of-the-whole-project)), and is withheld beside any other finding about the scope ([§FS-check.4.5.5](FS-check.md#455-a-warning-withheld-beside-any-other-finding-about-the-scope)); the per-heading half is [§FS-check.4.6](FS-check.md#46-declaration-near-miss)'s ([§FS-check.4.5.6](FS-check.md#456-the-per-heading-half)). Decided in [§DF-nothing-recognized](../decisions/functional/DF-nothing-recognized.md#df-nothing-recognized-a-run-that-recognized-nothing-says-so-and-says-it-as-a-warning).
+A walk that read at least one file and recognized **nothing in it** — no declaration and no citation — is [§FS-check.2.2](FS-check.md#22-empty-scan)'s empty scan one step further in: the scope was right and the files were read, and the grammar matched none of their content. `check` then emits one CLI-level `warning:` line ([§FS-check.2.1.1](FS-check.md#211-cli-level-messages)) on **stderr**, whose text is [§FS-check.4.5.2](FS-check.md#452-the-message). It has two usual causes ([§FS-check.4.5.1](FS-check.md#451-the-usual-causes)), is asked per project ([§FS-check.4.5.3](FS-check.md#453-asked-per-project)) and only of a run over that project's root ([§FS-check.4.5.4](FS-check.md#454-asked-only-of-the-whole-project)), and is withheld beside any other finding about the scope ([§FS-check.4.5.5](FS-check.md#455-a-warning-withheld-beside-any-other-finding-about-the-scope)); the per-heading half is [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)'s ([§FS-check.4.5.6](FS-check.md#456-the-per-heading-half)). Decided in [§DF-nothing-recognized](../decisions/functional/DF-nothing-recognized.md#df-nothing-recognized-a-run-that-recognized-nothing-says-so-and-says-it-as-a-warning).
 
 - **Code:** `nothing-recognized` ([§FS-errors.5](FS-errors.md#5-json-format)), with `path` and `line` null like every CLI-level diagnostic.
 
@@ -1105,43 +1039,11 @@ Like [§FS-check.2.2](FS-check.md#22-empty-scan) it is a warning, and like [§FS
 
 #### 4.5.6 The per-heading half
 
-The per-heading half — naming each heading that looks like a declaration and does not match — is [§FS-check.4.6](FS-check.md#46-declaration-near-miss), a different rule asking a different question: this one is arithmetic over what the scan recorded, that one is about what a single line came close to being. Where both could speak, [§FS-check.4.6](FS-check.md#46-declaration-near-miss) does and this one is withheld under the rule above, because "these two headings, at these lines" is the same fact said usefully.
+The per-heading half — naming each heading that looks like a declaration and does not match — is [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss), a different rule asking a different question: this one is arithmetic over what the scan recorded, that one is about what a single line came close to being. Where both could speak, [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss) does and this one is withheld under the rule above, because "these two headings, at these lines" is the same fact said usefully.
 
 ### 4.6 Declaration near miss
 
-A heading that opens the way a declaration does and does not match its effective ID format remains a declaration for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). The classic stumble is `# FS-login: …` under the default `{kind}-{number}-{slug}` — the `-NNN-` left out. Before grund 0.15.0, `check` emits one **warning** per such declaration, at the line a contributor has to edit:
-
-```
-docs/spec.md:1: `FS-login` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this warning becomes an error in grund 0.15.0
-```
-
-What counts is [§FS-check.4.6.1](FS-check.md#461-what-counts): the declaration colon is its discriminator ([§FS-check.4.6.2](FS-check.md#462-the-declaration-colon-is-the-discriminator)), and inline code, prose and fenced blocks never count ([§FS-check.4.6.3](FS-check.md#463-never-in-inline-code-prose-or-a-fenced-block)). The message states facts rather than a guessed rename ([§FS-check.4.6.4](FS-check.md#464-facts-not-a-guessed-rename)), the warning becomes an error in 0.15.0 ([§FS-check.4.6.5](FS-check.md#465-a-warning-before-0150-an-error-in-it)), and there is no opt-out ([§FS-check.4.6.6](FS-check.md#466-no-opt-out-no-rewrite)).
-
-- **Code:** `declaration-near-miss` ([§FS-errors.5](FS-errors.md#5-json-format)).
-
-#### 4.6.1 What counts
-
-A line in declaration position — a Markdown heading, or a comment-prefixed line in a source file under the rules of [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — whose first token unambiguously begins with a configured citable kind ([§FS-config.3.4](FS-config.md#34-kinds--recognized-kinds)), which the effective ID grammar rejects, and which is **followed by the declaration colon**. This also covers a per-kind format whose first literal after `{kind}` differs from the persisted token.
-
-#### 4.6.2 The declaration colon is the discriminator
-
-A line opening with an ID-shaped token and no colon is prose far more often than it is a declaration attempt — a comment wrapped across lines whose continuation begins with one is the case that proved it, in this repository's own source. So the rule reads exactly the shape a declaration attempt has, `<KIND>-…: <title>`, and says nothing about the rest. A near miss written without a title is not reported; that is the cost, and it buys a rule that stays quiet on prose.
-
-#### 4.6.3 Never in inline code, prose, or a fenced block
-
-The token stops at a backtick, so an inline-code mention is not a near miss. The position rules are the declaration rules exactly, so a near miss is only ever read where a declaration would have been: a bare `FS-login: …` in Markdown prose is not one ([§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix)), and neither is anything inside a fenced block.
-
-#### 4.6.4 Facts, not a guessed rename
-
-The message names the token as written and the effective template, states that lookup remains compatible, and offers the two real migration choices: rename the declaration and its citations, or change the effective format. It does **not** propose a corrected ID; assembling one from component patterns would guess what the author meant.
-
-#### 4.6.5 A warning before 0.15.0, an error in it
-
-Before 0.15.0 it is a warning, so like every warning it leaves the exit code alone ([§FS-check.2](FS-check.md#2-outputs)): a run with no errors exits successfully but prints the located warning and no `success` marker ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)). The declaration still appears in `list` and resolves through every reader; severity never changes recognition. In grund 0.15.0 the same code and location become an error, the deadline clause becomes the past-tense release report required by [§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name), and `check` exits `1`. The release guard and [§RM-off-grammar-declaration-error](../roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0150) prevent shipping the warning at or beyond that version.
-
-#### 4.6.6 No opt-out, no rewrite
-
-There is no line-oriented opt-out or automatic rewrite: the position and colon rules bound recognition, and migration remains the repository author's choice.
+Moved to [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss). This address is kept so citations written before the move still resolve.
 
 ### 4.7 A workspace member swallows the block's own scan
 
@@ -1347,72 +1249,11 @@ In a workspace, the ID and remedy use the complete alias-qualified spelling whil
 
 ### 4.13 Oversized lead *(opt-in)*
 
-When the effective project config contains the opt-in key from [§FS-config.3.1](FS-config.md#31-reference--citation-form):
-
-```toml
-[reference]
-lead_size_warning = { max = <N>, unit = "<unit>" }
-```
-
-`check` measures each declaration and citable section lead in that project by [§FS-list.3.4](FS-list.md#34---size--per-point-lead-and-full-body-measurements). A lead whose selected measurement is strictly greater than `max` produces one warning at that site's heading line. Equality passes. A broken stub has no measurable lead and produces no size warning; duplicate declaration homes and duplicate section claimants are judged separately from their own site-local slices.
-
-The message is [§FS-check.4.13.1](FS-check.md#4131-the-message) and its exit and rendering [§FS-check.4.13.2](FS-check.md#4132-exit-code-and-rendering). Only the key activates it ([§FS-check.4.13.3](FS-check.md#4133-only-the-key-activates-it)), and which sites it judges is [§FS-check.4.13.4](FS-check.md#4134-which-sites-it-judges).
-
-#### 4.13.1 The message
-
-The fixed code is `oversized-lead`, severity is `warning`, and the exact text after `<path>:<line>: ` is:
-
-```text
-<coordinate> lead is <actual> <unit>, over the configured maximum of <max>; move detail into citable child sections, or promote a child section to its own ID after running grund refs <coordinate> --summary
-```
-
-The coordinate is local for a member-local check and workspace-qualified for a workspace-root check. The two remedies preserve grounding and citation stability; the message never suggests shortening or deleting it.
-
-#### 4.13.2 Exit code and rendering
-
-A warning-only run exits `0` and replaces the text `success` marker; JSON uses the ordinary located diagnostic object ([§FS-errors.5](FS-errors.md#5-json-format)). The LSP publishes the same message, line, code, and warning severity as the CLI ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). Any simultaneous error, including `duplicate` or `duplicate-section`, still decides exit `1`; the warning neither suppresses it nor changes its priority.
-
-#### 4.13.3 Only the key activates it
-
-The absent key activates no measurement or finding and leaves the existing text and JSON check output byte-identical. `--only oversized-lead` and `--ignore oversized-lead` select the finding after the complete check and never activate it.
-
-#### 4.13.4 Which sites it judges
-
-An explicit-path check judges only declaration and section sites scanned at that path. `--full` adds its existing out-of-scope reference findings but does not extend this repository policy beyond declarations in the configured scan scope. In a workspace, each member's effective key governs only that member's sites; a member without the key remains silent even when another member opts in.
+Moved to [§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in). This address is kept so citations written before the move still resolve.
 
 ### 4.14 Unmarked Markdown heading
 
-Before grund 0.15.0, a Markdown ATX heading that is deeper than a declaration heading and whose line is still inside that declaration's body is a fixed warning when it is neither another declaration nor a recognized numeric or enabled named section. The containing declaration is the nearest enclosing body, so a plain heading beneath a deeper child declaration names that child, not an overlapping ancestor. This is a project-wide rule with no configuration, severity selector, or permanent opt-out ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
-
-Which headings participate is [§FS-check.4.14.1](FS-check.md#4141-which-headings-participate). The message is [§FS-check.4.14.2](FS-check.md#4142-the-message) and its suggested coordinate [§FS-check.4.14.3](FS-check.md#4143-the-suggested-coordinate); its rendering is [§FS-check.4.14.4](FS-check.md#4144-rendering-exit-and-selection), its flip to an error [§FS-check.4.14.5](FS-check.md#4145-an-error-in-grund-0150), and what it leaves unchanged [§FS-check.4.14.6](FS-check.md#4146-no-command-numbers-the-heading).
-
-#### 4.14.1 Which headings participate
-
-Only ATX headings in scanned Markdown files participate. A heading inside a backtick or tilde fence is content. A file title before the first declaration, a same-or-shallower heading that closes a declaration body, source doc-comment text, setext text, and a bold label are outside the rule. A deeper declaration and a valid numeric or enabled named section already participate in the graph and are not unmarked. `--full` keeps this convention-scoped warning narrowed to the configured scan scope, as it does other convention findings ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)).
-
-#### 4.14.2 The message
-
-The warning is anchored at the heading line, uses code `unmarked-heading`, and has this text:
-
-```text
-unmarked heading inside <ID>; number it (<suggested heading>) as <ID>.<path>, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0
-```
-
-#### 4.14.3 The suggested coordinate
-
-The suggested coordinate is guidance, not a rewrite. Its path depth follows the written ATX depth relative to the containing declaration. At each depth, grund uses the nearest preceding citable or already-suggested parent and appends one above the largest existing or earlier-suggested numeric sibling; it never fills a hole or reuses a coordinate. With no parent it starts one above the largest root numeric coordinate, or at `1` when none exists. If the authored heading skips a depth, missing parents are filled with `.1`. A named parent may therefore receive a numeric child such as `goals.1`. The suggested heading preserves the authored `#` depth and title and inserts the complete coordinate in that valid numeric or mixed form. A titleless ATX heading has no authored title to preserve, so its otherwise-identical suggestion uses the literal title `Untitled`; applying that complete suggested heading produces a recognized section and clears the warning.
-
-#### 4.14.4 Rendering, exit, and selection
-
-Text output uses the `<path>:<line>: warning: <message>` form. A warning leaves the exit at `0` but stands in place of the `success` marker ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)). JSON emits the same path, line, code, and message with `"severity":"warning"` and `"sites":null`. `--only unmarked-heading` retains it and `--ignore unmarked-heading` removes it through the ordinary exact-code selection rules. The LSP carries the same core finding with warning severity and the complete ATX heading as its range ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
-
-#### 4.14.5 An error in grund 0.15.0
-
-In grund 0.15.0 the same site, code, suggestion, and all non-severity bytes stay stable except that the deadline clause becomes `this became an error in grund 0.15.0`; severity becomes error and a retained finding contributes exit `1`. [§RM-unmarked-heading-error](../roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0150) owns that scheduled flip. Until then the warning window serves [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
-
-#### 4.14.6 No command numbers the heading
-
-No command numbers the heading: `grund fmt` remains unchanged. `show`, `list`, `refs`, `cover`, formatting, section resolution, and source scanning otherwise keep their current behavior, including the body boundary and rejected section behavior of [§FS-check.3.23](FS-check.md#323-section-outside-a-declaration). `grund_config_version` stays `1`; the managed agent block is the existing mechanical repair surface and moves to v10 under `grund init` ([§FS-init.2.3.4.5](FS-init.md#2345-declaration-forms)).
+Moved to [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading). This address is kept so citations written before the move still resolve.
 
 ## 5. What grund does not check
 
@@ -1420,7 +1261,7 @@ See [§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-n
 
 ### 5.1 The near misses are no longer here
 
-The declaration-side near miss is **no longer** in this section: a heading shaped like `# <KIND>-…: <title>` whose ID does not match the configured `[id] format` is reported per heading by [§FS-check.4.6](FS-check.md#46-declaration-near-miss), and a tree in which every heading misses that way says so twice over — once per line, and once as the run that recognized nothing ([§FS-check.4.5](FS-check.md#45-nothing-recognized)). Neither guesses the corrected ID. The citation-side near miss — a `§`-marked token in the shorthand shape — left this section earlier, when [§FS-check.1.2](FS-check.md#12-the-number-only-shorthand) and [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) began recognizing and reporting it.
+The declaration-side near miss is **no longer** in this section: a heading shaped like `# <KIND>-…: <title>` whose ID does not match the configured `[id] format` is reported per heading by [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss), and a tree in which every heading misses that way says so twice over — once per line, and once as the run that recognized nothing ([§FS-check.4.5](FS-check.md#45-nothing-recognized)). Neither guesses the corrected ID. The citation-side near miss — a `§`-marked token in the shorthand shape — left this section earlier, when [§FS-check.1.2](FS-check.md#12-the-number-only-shorthand) and [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) began recognizing and reporting it.
 
 ## 6. Watch mode (`--watch`)
 

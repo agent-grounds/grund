@@ -1,6 +1,6 @@
 //! Test module: section coordinates stay inside the declaration body that owns
 //! them, and headings left behind by stale scanner context become the hard
-//! finding specified by §FS-check.3.23 and the shared-map contract in
+//! finding specified by §FS-declarations.checks.section-outside-declaration and the shared-map contract in
 //! §FS-show.2.1.2.1.
 
 use crate::checker::check_findings;
@@ -29,7 +29,7 @@ fn section_paths(findings: &Findings, id: &Id, file_suffix: &str) -> Vec<String>
         .collect()
 }
 
-/// §FS-check.3.23.1, the Markdown half: ownership is the declaration's body
+/// §FS-declarations.checks.section-outside-declaration.1, the Markdown half: ownership is the declaration's body
 /// span, and a same-or-higher plain heading ends that body even though it
 /// carries no coordinate. The ticket shape, plus its two controls: deeper
 /// headings before the body-closing plain chapter remain coordinates, while a
@@ -102,7 +102,7 @@ fn markdown_section_map_stops_at_the_declaration_body() {
     assert_eq!(format!("{error:#}"), "section not found: FS-001-alpha.1");
 }
 
-/// §FS-check.3.23.1, the source half: the end of a doc-comment or docstring
+/// §FS-declarations.checks.section-outside-declaration.1, the source half: the end of a doc-comment or docstring
 /// ends ownership, a stub owns only its single heading line, and a later
 /// declaration in the same comment block ends the earlier body and begins its
 /// own. Source block ends, docstring ends, stub bodies, and a next declaration

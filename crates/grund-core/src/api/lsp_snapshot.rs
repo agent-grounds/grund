@@ -108,8 +108,8 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
                     }
                 }),
         );
-        // §FS-check.4.14.4 / §FS-lsp.1.1: warnings select the complete authored
-        // ATX heading without promoting it into the navigation catalog.
+        // §FS-declarations.checks.unmarked-heading.4 / §FS-lsp.1.1: warnings select the complete
+        // authored ATX heading without promoting it into the navigation catalog.
         finding_ranges.extend(project.findings.unmarked_headings.iter().map(|heading| {
             LspFindingRange {
                 code: "unmarked-heading",

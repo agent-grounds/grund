@@ -90,7 +90,7 @@ pub(super) fn scan_file(
 /// later costs a whole extra pass over every file for a list most runs find empty.
 ///
 /// Section paths first land in the primary or duplicate map, then the body-span
-/// post-pass narrows both maps and records rejected headings for §FS-check.3.23.
+/// post-pass narrows both maps and records rejected headings for §FS-declarations.checks.section-outside-declaration.
 ///
 /// `claimed_markers` is what keeps the shorthand pattern from running at all on a
 /// line whose markers are already accounted for.
@@ -132,9 +132,9 @@ pub(super) fn scan_file_text(
     // §AR-scanner.2.4.1: every Markdown heading (line, level) outside a fence — a
     // declaration body runs until the next heading at the same or higher level.
     let mut md_headings: Vec<(usize, usize)> = Vec::new();
-    // §AR-scanner.2.2.7 / §FS-check.4.14.1: declaration and section recognition
-    // happen in this same fence-aware pass. Plain ATX headings wait until body
-    // spans are known before becoming reportable candidates.
+    // §AR-scanner.2.2.7 / §FS-declarations.checks.unmarked-heading.1: declaration and section
+    // recognition happen in this same fence-aware pass. Plain ATX headings wait until body spans
+    // are known before becoming reportable candidates.
     let mut unmarked_heading_candidates = Vec::new();
     let mut total_lines = 0usize;
 
@@ -231,9 +231,9 @@ pub(super) fn scan_file_text(
             continue;
         }
 
-        // §FS-check.4.6.1: the line was not a declaration. Ask the near-miss pattern
-        // whether it looked like one, here rather than in a second read of the tree —
-        // the scan has the line, the position rules and the fence/docstring state.
+        // §FS-declarations.checks.declaration-near-miss.1: the line was not a declaration. Ask the
+        // near-miss pattern whether it looked like one, here rather than in a second read of the
+        // tree — the scan has the line, the position rules and the fence/docstring state.
         if let Some((text, format, kind)) =
             near_miss_heading(&config.grammar, scan_line, scan.in_py_docstring, is_md)
         {

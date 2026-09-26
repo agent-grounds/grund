@@ -291,7 +291,7 @@ The block teaches that declarations are heading lines in markdown or supported l
 
 ###### 2.3.4.5.1 Unmarked headings
 
-In managed block v10 the block teaches that every non-declaration ATX heading inside a Markdown declaration body must carry a numbered or enabled named section path; file titles, body-closing headings, fenced examples, non-ATX text, and source doc-comments remain exempt, while bold labels remain the non-citable alternative ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth), [§FS-check.4.14](FS-check.md#414-unmarked-markdown-heading)). Existing v9 blocks use the ordinary `grund init` in-place repair path ([§FS-init.2.3.10](FS-init.md#2310-writing-the-block)); `grund_config_version` remains 1 because no configuration meaning changes.
+In managed block v10 the block teaches that every non-declaration ATX heading inside a Markdown declaration body must carry a numbered or enabled named section path; file titles, body-closing headings, fenced examples, non-ATX text, and source doc-comments remain exempt, while bold labels remain the non-citable alternative ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth), [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)). Existing v9 blocks use the ordinary `grund init` in-place repair path ([§FS-init.2.3.10](FS-init.md#2310-writing-the-block)); `grund_config_version` remains 1 because no configuration meaning changes.
 
 ##### 2.3.4.6 Spec First
 
@@ -449,7 +449,7 @@ The grounding sentence is generated from each row's effective `require_grounding
 
 ###### 2.3.5.7.1 Citing, not declaring
 
-The sentence distinguishes citing from declaring: `Every source file must cite a declared ID or declare one inline`, extended with `; every file under skills/ and tests/e2e/ must cite one` for the walked non-citable homes whose rows have it on, because a declaration in such a home is misplaced ([§FS-check.3.7](FS-check.md#37-misplaced-declaration-configured-kind-home)) and those files can therefore only cite. An unwalked home ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-walked)) is left out: nothing in it is scanned, so the rule never reaches it.
+The sentence distinguishes citing from declaring: `Every source file must cite a declared ID or declare one inline`, extended with `; every file under skills/ and tests/e2e/ must cite one` for the walked non-citable homes whose rows have it on, because a declaration in such a home is misplaced ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)) and those files can therefore only cite. An unwalked home ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-walked)) is left out: nothing in it is scanned, so the rule never reaches it.
 
 ##### 2.3.5.8 The drift check
 

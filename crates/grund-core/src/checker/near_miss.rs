@@ -1,4 +1,4 @@
-//! The declaration near-miss rule (§FS-check.4.6), in a file of its own beside
+//! The declaration near-miss rule (§FS-declarations.checks.declaration-near-miss), in a file of its own beside
 //! the other rule families (§AR-core-module-layout.1): a heading that opens like
 //! a declaration and does not parse as one, reported per heading at the line a
 //! contributor has to edit.
@@ -10,7 +10,7 @@
 
 use crate::model::{CheckReport, Diagnostic, Findings};
 
-/// §FS-check.4.6: one warning per heading that came close. Sorted with the rest
+/// §FS-declarations.checks.declaration-near-miss: one warning per heading that came close. Sorted with the rest
 /// of the report by the shared comparator, so a run over one tree prints them in
 /// the same order every time (§FS-errors.4.1).
 pub(super) fn check_declaration_near_misses(findings: &Findings, report: &mut CheckReport) {
@@ -23,9 +23,9 @@ pub(super) fn check_declaration_near_misses(findings: &Findings, report: &mut Ch
             message: near_miss_message(&heading.format, &heading.text),
             sites: Vec::new(),
         };
-        // §FS-check.4.6.5 / §RM-off-grammar-declaration-error: the scheduled
-        // severity transition is release-derived and never changes catalog
-        // recognition or citation promotion.
+        // §FS-declarations.checks.declaration-near-miss.5 / §RM-off-grammar-declaration-error: the
+        // scheduled severity transition is release-derived and never changes catalog recognition or
+        // citation promotion.
         if declaration_near_miss_is_error() {
             report.errors.push(diagnostic);
         } else {

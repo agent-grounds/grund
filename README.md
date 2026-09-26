@@ -107,7 +107,7 @@ Repositories can opt into a warning at their own measured boundary:
 lead_size_warning = { max = 600, unit = "words" }
 ```
 
-An over-budget lead should keep its grounding: move detail into numbered child sections, or promote a child section to its own ID after checking its callers with `grund refs <ID> --summary`. See the [point-size guide](docs/user-facing/point-sizes.md) for counting rules, output fields, duplicate handling, and workspace scope ([§FS-list.3.4](docs/functional-spec/FS-list.md#34---size--per-point-lead-and-full-body-measurements), [§FS-check.4.13](docs/functional-spec/FS-check.md#413-oversized-lead-opt-in)).
+An over-budget lead should keep its grounding: move detail into numbered child sections, or promote a child section to its own ID after checking its callers with `grund refs <ID> --summary`. See the [point-size guide](docs/user-facing/point-sizes.md) for counting rules, output fields, duplicate handling, and workspace scope ([§FS-list.3.4](docs/functional-spec/FS-list.md#34---size--per-point-lead-and-full-body-measurements), [§FS-declarations.checks.oversized-lead](docs/functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
 
 For scripts, exit `0` is a completed `refs` answer even when it is empty. From
 grund 0.15.0, exit `1` means the selected repository grammar rejected the ID or
@@ -460,7 +460,7 @@ than only repos that ship an editor config.
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/lsp/hover-preview.png">
     <source media="(prefers-color-scheme: light)" srcset="docs/assets/lsp/hover-preview-light.png">
-    <img src="docs/assets/lsp/hover-preview-light.png" width="96%" alt="Hover preview of [§FS-check.3.7](docs/functional-spec/FS-check.md#37-misplaced-declaration-configured-kind-home) shown directly above the grund code that implements the misplaced-declaration check">
+    <img src="docs/assets/lsp/hover-preview-light.png" width="96%" alt="Hover preview of [§FS-declarations.checks.misplaced-declaration](docs/functional-spec/FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) shown directly above the grund code that implements the misplaced-declaration check">
   </picture>
   <br><sub><strong>Hover previews</strong> — the spec and the code that satisfies it, in one frame.</sub>
 </p>

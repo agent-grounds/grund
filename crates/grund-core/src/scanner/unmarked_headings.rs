@@ -4,7 +4,7 @@ use crate::model::{Declaration, Findings, UnmarkedHeading, UnmarkedHeadingCandid
 
 /// Retain only Markdown headings owned by a declaration body, choose the
 /// nearest nested owner, and assign deterministic unused section paths
-/// (§AR-scanner.2.2.7, §AR-scanner.2.4.1, §FS-check.4.14).
+/// (§AR-scanner.2.2.7, §AR-scanner.2.4.1, §FS-declarations.checks.unmarked-heading).
 pub(super) fn assign_unmarked_heading_owners(
     findings: &mut Findings,
     mut candidates: Vec<UnmarkedHeadingCandidate>,
@@ -129,9 +129,9 @@ pub(super) fn assign_unmarked_heading_owners(
             .unwrap_or_else(|| "1".to_string())
     }
 
-    // Section coordinates accept an unbounded digit run. Compare and increment
-    // those runs as decimal text so repair guidance stays above every authored
-    // sibling without imposing an integer-width ceiling (§FS-check.4.14.3).
+    // Section coordinates accept an unbounded digit run. Compare and increment those runs as
+    // decimal text so repair guidance stays above every authored sibling without imposing an
+    // integer-width ceiling (§FS-declarations.checks.unmarked-heading.3).
     fn compare_decimal(left: &str, right: &str) -> std::cmp::Ordering {
         let left = normalize_decimal(left);
         let right = normalize_decimal(right);
@@ -164,7 +164,7 @@ pub(super) fn assign_unmarked_heading_owners(
 
 /// Compute an unmarked-heading ownership boundary without publishing it on the
 /// declaration model. Read-only `show` and `list --size` scans intentionally
-/// keep their lazy whole-declaration slicing (§FS-check.4.14.6, §FS-show.2.1.3).
+/// keep their lazy whole-declaration slicing (§FS-declarations.checks.unmarked-heading.6, §FS-show.2.1.3).
 pub(super) fn markdown_declaration_body_end(
     decl: &Declaration,
     md_headings: &[(usize, usize)],
