@@ -154,7 +154,7 @@ pub struct Grammar {
     /// The compiled grammar remembers the gate so every token consumer can
     /// enforce the same whole-token suppression rule (§AR-scanner.2.3.4).
     pub(crate) named_sections: bool,
-    /// The per-kind near-miss patterns (§FS-check.4.6.1): a heading that opens
+    /// The per-kind near-miss patterns (§FS-declarations.checks.declaration-near-miss.1): a heading that opens
     /// with a configured kind and the literal its effective ID format puts
     /// after it, without parsing as an ID. Absent for a kind whose format puts
     /// no literal there — then "looks like a declaration" cannot be told from

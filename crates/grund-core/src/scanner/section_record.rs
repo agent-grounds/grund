@@ -58,9 +58,9 @@ pub(super) fn record_section_heading(
                 origin,
             }),
     };
-    // §AR-scanner.2.2.3: a path is recorded once, by the first heading that
-    // claims it; later claimants go to `duplicate_sections` so §FS-check.3.16
-    // can name every colliding line.
+    // §AR-scanner.2.2.3: a path is recorded once, by the first heading that claims it; later
+    // claimants go to `duplicate_sections` so §FS-declarations.checks.duplicate-section can name
+    // every colliding line.
     match decl.sections.entry(section_path.clone()) {
         std::collections::btree_map::Entry::Vacant(slot) => {
             slot.insert(info);

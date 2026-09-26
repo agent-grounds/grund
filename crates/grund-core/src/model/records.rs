@@ -48,7 +48,7 @@ impl Id {
 /// Markdown file or an inline declaration in a code doc-comment
 /// (§AR-scanner.2.1, §AR-scanner.4), with its section body map
 /// (§AR-scanner.2.2) and, for stub headings, the inline-home path it points at
-/// (§FS-show.2.3, §FS-check.3.4).
+/// (§FS-show.2.3, §FS-declarations.checks.broken-stub).
 #[derive(Debug, Clone)]
 pub struct Declaration {
     pub id: Id,
@@ -61,8 +61,8 @@ pub struct Declaration {
     /// span (§AR-scanner.2.2.3).
     ///
     /// Nothing *resolves* through it: a `§<ID>.<path>` citation, the completion
-    /// candidates, and §FS-check.3.9 all read the map. It exists for the two
-    /// commands that have to say the coordinate is ambiguous — §FS-check.3.16
+    /// candidates, and §FS-declarations.checks.section-heading-level all read the map. It exists for the two
+    /// commands that have to say the coordinate is ambiguous — §FS-declarations.checks.duplicate-section
     /// names each colliding line, and §FS-show.2.2.2 refuses a query for a path
     /// it holds. `--toc` reads neither: it re-scans the source, which is what
     /// §FS-show.2.2.2.3 exempts it for.
@@ -102,7 +102,7 @@ pub struct Declaration {
 /// One numeric or explicitly named subsection heading recorded inside a
 /// declaration (§AR-scanner.2.2): the heading text used for anchors, plus the
 /// source line and Markdown heading level used by the section-depth checker
-/// (§FS-check.3.9).
+/// (§FS-declarations.checks.section-heading-level).
 #[derive(Debug, Clone)]
 pub struct SectionInfo {
     pub title: String,
@@ -265,7 +265,7 @@ pub struct InlineCitationSite {
 pub(crate) type TextOverlays = BTreeMap<PathBuf, String>;
 
 /// Everything the scanner found in one tree walk — declarations grouped by ID
-/// (so duplicates surface, §FS-check.3.3) and citations in encounter order. This
+/// (so duplicates surface, §FS-declarations.checks.duplicate) and citations in encounter order. This
 /// is the scanner's whole output; the checker (§AR-checker) consumes it without
 /// re-reading files.
 #[derive(Default)]
@@ -274,10 +274,10 @@ pub struct Findings {
     pub citations: Vec<Citation>,
     /// Numeric and enabled named section headings that the line scan attached
     /// to a stale declaration context, then the body-span post-pass proved the
-    /// declaration does not own (§FS-check.3.23).
+    /// declaration does not own (§FS-declarations.checks.section-outside-declaration).
     pub section_headings_outside_declarations: Vec<SectionHeadingOutsideDeclaration>,
     /// Markdown ATX headings owned by declaration bodies but carrying neither a
-    /// declaration ID nor a section coordinate (§FS-check.4.14,
+    /// declaration ID nor a section coordinate (§FS-declarations.checks.unmarked-heading,
     /// §AR-scanner.2.2.7). The scanner assigns the owner and a collision-free
     /// suggested coordinate before any checker consumes this list.
     pub unmarked_headings: Vec<UnmarkedHeading>,
@@ -308,7 +308,7 @@ pub struct Findings {
     /// than an intended illustration (§FS-check.2.3.1, §AR-checker.2.11).
     pub escaped_citations: Vec<Citation>,
     /// Headings that open like a declaration and do not parse as one
-    /// (§FS-check.4.6) — recorded where the scan already decided the line was
+    /// (§FS-declarations.checks.declaration-near-miss) — recorded where the scan already decided the line was
     /// not a declaration, so the rule costs one regex on heading-shaped lines
     /// rather than a second read of the tree.
     pub near_miss_headings: Vec<NearMissHeading>,

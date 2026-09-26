@@ -208,7 +208,7 @@ fn show_json_value(
 /// body is read.
 ///
 /// The claimants are the ones the *scan* recorded (§AR-scanner.2.2.4) — the same
-/// record §FS-check.3.16.4 reports from — so `show` refuses exactly the
+/// record §FS-declarations.checks.duplicate-section.4 reports from — so `show` refuses exactly the
 /// coordinates `check` names and no others. Re-detecting them while extracting
 /// the body would be a second, weaker reader: it would have to redo the fence
 /// tracking, the heading-level gate, and the body bounds, and any of the three
@@ -216,7 +216,7 @@ fn show_json_value(
 /// other will not resolve.
 ///
 /// For a stub the sections belong to the **inline home**, which is the file the
-/// body comes out of; a stub's own prose declares none (§FS-check.3.16.2). Paths
+/// body comes out of; a stub's own prose declares none (§FS-declarations.checks.duplicate-section.2). Paths
 /// in the message use `path_config`, the report-path config named on
 /// `show_declaration_with_overlays`.
 fn ambiguous_section_refusal(

@@ -4,7 +4,7 @@
 //!
 //! Tiny helpers over `Path` and nothing else, which is why they are model's:
 //! the scanner keys its walk and its value spans by them (§AR-scanner.1), the
-//! checker matches `[[kinds]]` homes with them (§FS-check.3.7), and `show` and
+//! checker matches `[[kinds]]` homes with them (§FS-declarations.checks.misplaced-declaration), and `show` and
 //! the api compare a requested file to a recorded one. They sat in
 //! `checker/homes.rs` while the checker was a file-name category, which had the
 //! scanner reading a path helper out of the component above it
@@ -57,7 +57,7 @@ pub(crate) fn is_hidden(path: &Path) -> bool {
 
 /// Whether two paths name one file. Canonicalized where the filesystem can say
 /// so, which is what makes a declaration reached through a symlinked directory
-/// the same home as the one reached directly (§FS-check.3.4).
+/// the same home as the one reached directly (§FS-declarations.checks.broken-stub).
 pub(crate) fn paths_same_location(left: &Path, right: &Path) -> bool {
     physical_path_key(left) == physical_path_key(right)
 }
@@ -84,7 +84,7 @@ pub(crate) fn configured_home_path_key(home: &str) -> PathBuf {
 /// `path` relative to the config root, under whichever spelling of that root
 /// reaches it — the physical one for a path the walk canonicalized, the
 /// configured one for a path recorded as written — and `None` when neither does,
-/// which is a file outside the project (§FS-check.3.7).
+/// which is a file outside the project (§FS-declarations.checks.misplaced-declaration).
 pub(crate) fn scanned_decl_relative_path<'a>(
     path: &'a Path,
     configured_root: &Path,

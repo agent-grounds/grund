@@ -99,9 +99,9 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
 /// §FS-check.3.6 enforces, and it distinguishes *cite* from *declare*: a source
 /// file grounds by citing a declared ID **or** by declaring one inline, while a
 /// file in a non-citable home can only cite, because a declaration there is
-/// misplaced (§FS-check.3.7.3). An unwalked home (§FS-config.3.4.7.4) is left out —
-/// nothing in it is scanned, so the rule never reaches it. Per-row grounding
-/// levels (§FS-config.3.4.8) are not this sentence's.
+/// misplaced (§FS-declarations.checks.misplaced-declaration.3). An unwalked home
+/// (§FS-config.3.4.7.4) is left out — nothing in it is scanned, so the rule never
+/// reaches it. Per-row grounding levels (§FS-config.3.4.8) are not this sentence's.
 fn citation_grounding_sentence(config: &Config) -> Option<String> {
     if !config.require_grounding {
         return None;

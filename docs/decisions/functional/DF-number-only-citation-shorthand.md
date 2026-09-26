@@ -104,7 +104,7 @@ The boundary is drawn to match the *full* form exactly, because any gap between 
 
 ### 2.7 Ambiguity is reported, never guessed
 
-Nothing forbids two declarations sharing a kind and number — `grund check` catches duplicate *full* IDs ([§FS-check.3.3](../../functional-spec/FS-check.md#33-duplicate-declaration)), not duplicate numbers. When a shorthand matches more than one declaration, `grund` names every candidate and resolves nothing; when it matches none, it says so. Picking one would be a guess, and `check` reports facts about the tree ([§GOAL-agent-grounding.3](../../goals.md#3-what-this-rules-out)).
+Nothing forbids two declarations sharing a kind and number — `grund check` catches duplicate *full* IDs ([§FS-declarations.checks.duplicate](../../functional-spec/FS-declarations.md#checksduplicate-duplicate-declaration)), not duplicate numbers. When a shorthand matches more than one declaration, `grund` names every candidate and resolves nothing; when it matches none, it says so. Picking one would be a guess, and `check` reports facts about the tree ([§GOAL-agent-grounding.3](../../goals.md#3-what-this-rules-out)).
 
 ### 2.8 A resolved shorthand is a real edge
 

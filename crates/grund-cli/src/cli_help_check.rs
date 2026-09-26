@@ -24,8 +24,8 @@ fn print_check_help() {
     println!(
         "                       grouped errors, warnings, then enabled suggestions; json emits NDJSON."
     );
-    // §FS-check.3.23.3: this is the one non-reference hard finding the widened
-    // scan carries with its ordinary code and message.
+    // §FS-declarations.checks.section-outside-declaration.3: this is the one non-reference hard
+    // finding the widened scan carries with its ordinary code and message.
     println!(
         "  --full               also walk past [scan] include and report unresolved references or section headings outside declaration bodies there."
     );

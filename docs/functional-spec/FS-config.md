@@ -209,7 +209,7 @@ bump `grund_config_version` ([§FS-config.5](FS-config.md#5-schema-versioning)).
 #### 3.1.2 `lead_size_warning` — the oversized-lead opt-in
 
 `lead_size_warning` opts this project into the lead-only warning defined by
-[§FS-check.4.13](FS-check.md#413-oversized-lead-opt-in). Its inline table has
+[§FS-declarations.checks.oversized-lead](FS-declarations.md#checksoversized-lead-oversized-lead-opt-in). Its inline table has
 exactly two required fields: `max`, a non-negative integer, and `unit`, one of
 the case-sensitive closed set `lines`, `words`, or `bytes`. Missing, extra, or
 duplicate fields and any other unit — including `tokens` — are load-time config
@@ -320,7 +320,7 @@ declaration colon, and carries no `/` ([§FS-config.3.2.3](FS-config.md#323-no-i
 even when the token does not match the kind's effective format. Its exact
 written spelling, body,
 sections, and location remain available to readers, and it earns the
-`declaration-near-miss` finding ([§FS-check.4.6](FS-check.md#46-declaration-near-miss)). Exact marker-prefixed candidates
+`declaration-near-miss` finding ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)). Exact marker-prefixed candidates
 that normal grammar rejects become citations only when that same project's
 catalog contains an exact declaration spelling; an unmarked candidate or a
 marked candidate with no exact declaration gains no compatibility meaning.
@@ -371,13 +371,13 @@ Named components may occur at every depth, so all-name paths such as `goals.perf
 
 #### 3.3.2 `section_heading_levels` — heading depth against path depth
 
-`section_heading_levels` controls how the Markdown heading depth must line up with the dotted section path. The default, `"strict"`, requires the heading level to equal the declaration heading level plus the number of path components, named or numeric, so under an H1 declaration `## 1.1 …` and `## goals.performance: …` are `section heading level mismatch` errors in `grund check` ([§FS-check.3.9](FS-check.md#39-section-heading-level-mismatch)). `"warn"` reports the same mismatch as a warning, so CI can stay green while a repo migrates. `"loose"` preserves the historical depth behavior: any deeper heading can declare a syntactically legal complete path. Unknown values are invalid config.
+`section_heading_levels` controls how the Markdown heading depth must line up with the dotted section path. The default, `"strict"`, requires the heading level to equal the declaration heading level plus the number of path components, named or numeric, so under an H1 declaration `## 1.1 …` and `## goals.performance: …` are `section heading level mismatch` errors in `grund check` ([§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)). `"warn"` reports the same mismatch as a warning, so CI can stay green while a repo migrates. `"loose"` preserves the historical depth behavior: any deeper heading can declare a syntactically legal complete path. Unknown values are invalid config.
 
-The mode does not govern an ATX heading with no coordinate: inside a Markdown declaration body, every deeper ATX heading must instead be a declaration or a recognized numeric or enabled named section. [§FS-check.4.14](FS-check.md#414-unmarked-markdown-heading) reports one that is neither and names the headings the rule leaves alone; there is no severity or opt-out key for this project-wide rule ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
+The mode does not govern an ATX heading with no coordinate: inside a Markdown declaration body, every deeper ATX heading must instead be a declaration or a recognized numeric or enabled named section. [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) reports one that is neither and names the headings the rule leaves alone; there is no severity or opt-out key for this project-wide rule ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
 
 #### 3.3.3 Every prefix of a name-bearing path is recorded
 
-Every proper prefix of a name-bearing path must itself be recorded in the same declaration. Thus `### goals.performance: …` requires `goals`, while `### missing.performance: …` is an orphan even if its Markdown placement looks nested under some other heading ([§FS-check.3.19](FS-check.md#319-orphan-name-bearing-section-path)). The invariant applies to name-bearing paths only; purely numeric paths preserve their historical behavior.
+Every proper prefix of a name-bearing path must itself be recorded in the same declaration. Thus `### goals.performance: …` requires `goals`, while `### missing.performance: …` is an orphan even if its Markdown placement looks nested under some other heading ([§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path)). The invariant applies to name-bearing paths only; purely numeric paths preserve their historical behavior.
 
 #### 3.3.4 The outer section separator
 
@@ -421,7 +421,7 @@ Some directories hold agent-facing content rather than specification — skills,
 ##### 3.4.1.2 What it loses
 
 - **The ID grammar.** Its name is not a recognized prefix, so `<name>-<slug>` is not an ID and never tokenizes as a citation. It is left out of the `KIND ∈ {…}` vocabulary line, out of `grund list --kind`, and out of `grund id` — both selectors refuse it by name, saying that it declares no IDs rather than that it is unknown ([§FS-list.1](FS-list.md#1-inputs), [§FS-id.1](FS-id.md#1-inputs)).
-- **Declarations.** Its home admits none: a declaration inside it, where it is the file's only home, is a misplaced declaration ([§FS-check.3.7](FS-check.md#37-misplaced-declaration-configured-kind-home)).
+- **Declarations.** Its home admits none: a declaration inside it, where it is the file's only home, is a misplaced declaration ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)).
 - **An index.** `index` lists a folder's declarations ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) and this kind has none, so setting both keys is a config error rather than a no-op — a statement about a set that can never be non-empty.
 - **Being cited.** A `[citations.<kind>]` rule may not *name it as a target*; there is no ID to point at ([§FS-config.3.9.5](FS-config.md#395-validation)).
 
@@ -738,9 +738,9 @@ TOML loads back to the same effective values.
 
 #### 3.4.11 What a home is used for
 
-`folder` is used by `grund id` ([§FS-id.2.2](FS-id.md#22---format-json) emits it as the `folder` field; a kind with no configured home prints none) and by editor "create new declaration" / "go to home folder" actions. A home is also a declaration-home boundary: a declaration inside exactly one configured `folder` home must declare that folder's kind ([§FS-check.3.7](FS-check.md#37-misplaced-declaration-configured-kind-home)). `file` is stricter: declarations of a single-file kind found outside the configured path are reported under [§FS-check.3.7](FS-check.md#37-misplaced-declaration-configured-kind-home), and a different-kind declaration inside that exact file is likewise a misplaced declaration.
+`folder` is used by `grund id` ([§FS-id.2.2](FS-id.md#22---format-json) emits it as the `folder` field; a kind with no configured home prints none) and by editor "create new declaration" / "go to home folder" actions. A home is also a declaration-home boundary: a declaration inside exactly one configured `folder` home must declare that folder's kind ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)). `file` is stricter: declarations of a single-file kind found outside the configured path are reported under [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home), and a different-kind declaration inside that exact file is likewise a misplaced declaration.
 
-Declarations are still recognized outside configured homes — including inline source declarations — and declarations in files covered by zero or multiple configured homes are not rejected by the home-kind rule because there is no single expected kind. So a kind with no configured home meets [§FS-check.3.7](FS-check.md#37-misplaced-declaration-configured-kind-home) only when one of its declarations sits inside some other kind's unique configured home.
+Declarations are still recognized outside configured homes — including inline source declarations — and declarations in files covered by zero or multiple configured homes are not rejected by the home-kind rule because there is no single expected kind. So a kind with no configured home meets [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) only when one of its declarations sits inside some other kind's unique configured home.
 
 #### 3.4.12 `rules` — rule declaration kinds
 

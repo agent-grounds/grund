@@ -71,7 +71,7 @@ goldens by copying the text order ([§FS-errors.4](../../docs/functional-spec/FS
   prior suggestions, named parents and skipped depths, nearest nested-declaration
   ownership, and silence for titles, body closure, fences, setext text, bold
   labels, numeric/named sections, and source doc-comments
-  ([§FS-check.4.14](../../docs/functional-spec/FS-check.md#414-unmarked-markdown-heading))
+  ([§FS-declarations.checks.unmarked-heading](../../docs/functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading))
 - two headings claiming one dotted section path: `check` naming both lines, `show` refusing the coordinate rather than merging the two bodies, and `--toc` over the whole declaration still mapping both while `--toc` on the ambiguous coordinate itself refuses
 - the same two headings written inside a fenced Markdown example: `check` silent and `show` returning the section whole, fence included — the shape every document in this repository is made of
 - the ambiguous-section refusal in JSON, under its own `ambiguous-section` code rather than the ambiguous-ID `ambiguous`
@@ -149,7 +149,7 @@ goldens by copying the text order ([§FS-errors.4](../../docs/functional-spec/FS
 - `grund help <unknown>` failure
 - nested-workspace shell completions: the alias-path candidates a nested tree offers with no prefix, a mid-path prefix offering the grouping node's own ID beside its members' deeper paths, and one more Tab reaching a leaf's IDs — the typed prefix never re-offered
 - `list` ID catalog (text), comma and repeated multi-kind `--kind`, `--unused`, `--summary`, summary composition with `--kind` / `--unused`, `--format json`
-- point-size catalog and warning boundaries ([§FS-list.3.4](../../docs/functional-spec/FS-list.md#34---size--per-point-lead-and-full-body-measurements), [§FS-check.4.13](../../docs/functional-spec/FS-check.md#413-oversized-lead-opt-in)): exact size/top grammar and errors; text and NDJSON fields; show-identical lead/full slices and byte-defined `lines`, `words`, and `bytes`; all declaration forms; ordinary, top, filter, unused, and workspace ordering; site-local duplicates and broken stubs; absent/configured threshold behavior, selectors, narrowed/full/workspace scope, fixed warning text and LSP parity; and generated v10 guidance with v8 migration
+- point-size catalog and warning boundaries ([§FS-list.3.4](../../docs/functional-spec/FS-list.md#34---size--per-point-lead-and-full-body-measurements), [§FS-declarations.checks.oversized-lead](../../docs/functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)): exact size/top grammar and errors; text and NDJSON fields; show-identical lead/full slices and byte-defined `lines`, `words`, and `bytes`; all declaration forms; ordinary, top, filter, unused, and workspace ordering; site-local duplicates and broken stubs; absent/configured threshold behavior, selectors, narrowed/full/workspace scope, fixed warning text and LSP parity; and generated v10 guidance with v8 migration
 - JSON report output
 - `fmt --check` trigger-to-marker report
 - `fmt` custom trigger and marker from config

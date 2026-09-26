@@ -13,7 +13,7 @@ use crate::model::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
 use crate::workspace::WorkspaceCitationTarget;
 
 /// Narrow the shared coordinate catalog to each declaration's body and retain
-/// every rejected heading as one check site (§FS-show.2.1.2.1, §FS-check.3.23).
+/// every rejected heading as one check site (§FS-show.2.1.2.1, §FS-declarations.checks.section-outside-declaration).
 ///
 /// The line scan's current declaration runs farther than the body in Markdown,
 /// source comments, docstrings, and stubs. Applying the already-computed span
@@ -62,7 +62,7 @@ pub(crate) fn section_path_is_numeric(path: &str) -> bool {
 }
 
 /// The level of a Markdown ATX heading line (`#` count), or `None` when the line
-/// is not a heading (§FS-check.4.14.1). ATX syntax permits at most three leading
+/// is not a heading (§FS-declarations.checks.unmarked-heading.1). ATX syntax permits at most three leading
 /// ASCII spaces and one through six `#`s followed by an ASCII space/tab or EOL.
 pub(crate) fn markdown_heading_level(line: &str) -> Option<usize> {
     let indentation = line.bytes().take_while(|byte| *byte == b' ').count();

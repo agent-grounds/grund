@@ -6,7 +6,7 @@ use crate::model::{
 };
 use crate::resolver::{PointBodyCache, point_body_pair};
 
-/// Opt-in point-lead budget checking (§FS-check.4.13).
+/// Opt-in point-lead budget checking (§FS-declarations.checks.oversized-lead).
 ///
 /// The scanner owns the site set and `resolver/point_body.rs` owns the slicing. This
 /// pass only applies the configured strict threshold and constructs the fixed
@@ -67,7 +67,7 @@ pub(super) fn check_oversized_leads(
 }
 
 /// Judge and, when needed, report one declaration or section site using the
-/// exact fixed warning contract (§FS-check.4.13.1).
+/// exact fixed warning contract (§FS-declarations.checks.oversized-lead.1).
 #[allow(clippy::too_many_arguments)]
 fn check_oversized_lead_site(
     cache: &mut PointBodyCache<'_>,

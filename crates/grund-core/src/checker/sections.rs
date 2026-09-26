@@ -1,13 +1,13 @@
 //! The section-shape rule family: what `grund check` says about a declaration's
 //! own citable headings, rather than about a citation of one.
 //!
-//! - **Heading level** (§FS-check.3.9) — the Markdown depth a heading writes must
+//! - **Heading level** (§FS-declarations.checks.section-heading-level) — the Markdown depth a heading writes must
 //!   mirror the dotted path it claims, as strictly as `[id] section_heading_levels`
 //!   asks (§FS-config.3.3.2).
-//! - **Duplicate path** (§FS-check.3.16) — two headings claiming one path give a
-//!   section citation two destinations, which is §FS-check.3.3's ambiguity one
+//! - **Duplicate path** (§FS-declarations.checks.duplicate-section) — two headings claiming one path give a
+//!   section citation two destinations, which is §FS-declarations.checks.duplicate's ambiguity one
 //!   level down, and is reported rather than ranked (§DF-duplicate-section-path).
-//! - **Outside declaration** (§FS-check.3.23) — a section-like heading rejected
+//! - **Outside declaration** (§FS-declarations.checks.section-outside-declaration) — a section-like heading rejected
 //!   by the scanner's body-span post-pass is a located hard finding.
 //!
 //! They sit beside `report.rs` as one family because they read the same two
@@ -56,8 +56,8 @@ pub(super) fn check_section_headings(
             .map(section_outside_declaration_diagnostic),
     );
 
-    // §FS-check.4.14 / §AR-checker.2.20: scanner-owned Markdown candidates are
-    // fixed warnings throughout the compatibility window, independent of the
+    // §FS-declarations.checks.unmarked-heading / §AR-checker.2.20: scanner-owned Markdown
+    // candidates are fixed warnings throughout the compatibility window, independent of the
     // marked-section heading-level mode.
     report.warnings.extend(findings.unmarked_headings.iter().map(|heading| {
         let rendered_owner = render_id(&config.grammar, &heading.owner);
@@ -95,8 +95,8 @@ pub(super) fn check_section_headings(
         }
     }));
 
-    // §FS-check.3.9 / §FS-config.3.3.2: in strict mode, the Markdown heading level
-    // must mirror the dotted section depth so `## 1`, `### 1.1`, ...
+    // §FS-declarations.checks.section-heading-level / §FS-config.3.3.2: in strict mode, the
+    // Markdown heading level must mirror the dotted section depth so `## 1`, `### 1.1`, ...
     // communicate the same tree that `§ID.1.1` addresses.
     if matches!(config.section_heading_levels.as_str(), "strict" | "warn") {
         let target = if config.section_heading_levels == "strict" {
@@ -131,8 +131,8 @@ pub(super) fn check_section_headings(
             }
         }
     }
-    // §FS-check.3.19 / §AR-checker.2.17: every name-bearing path is addressable
-    // only when each proper prefix exists in the same scanner-recorded map.
+    // §FS-declarations.checks.orphan-section / §AR-checker.2.17: every name-bearing path is
+    // addressable only when each proper prefix exists in the same scanner-recorded map.
     if config.named_sections {
         for (id, decls) in &findings.declarations {
             for decl in decls {
@@ -169,9 +169,9 @@ pub(super) fn check_section_headings(
             }
         }
     }
-    // §FS-check.3.16: two headings inside one declaration claiming one dotted section
-    // path give `§<ID>.<path>` two destinations — §FS-check.3.3's ambiguity one level
-    // down, reported in that shape rather than ranked (§DF-duplicate-section-path.2.1).
+    // §FS-declarations.checks.duplicate-section: two headings in one declaration claiming one
+    // dotted path give `§<ID>.<path>` two destinations — §FS-declarations.checks.duplicate one
+    // level down, reported in its shape (§DF-duplicate-section-path.2.1).
     for (id, decls) in &findings.declarations {
         for decl in decls {
             let mut colliding: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
@@ -236,14 +236,14 @@ pub(super) fn retain_heading_findings_in_scope(findings: &mut Findings, scope: &
     findings
         .section_headings_outside_declarations
         .retain(|heading| scope.contains(&heading.file));
-    // §FS-check.4.14: `--full` widens only the reference tier; this Markdown
-    // convention remains restricted to configured scan scope.
+    // §FS-declarations.checks.unmarked-heading: `--full` widens only the reference tier; this
+    // Markdown convention remains restricted to configured scan scope.
     findings
         .unmarked_headings
         .retain(|heading| scope.contains(&heading.file));
 }
 
-/// §FS-check.3.23.3: unlike the reference tier, an outside-declaration heading
+/// §FS-declarations.checks.section-outside-declaration.3: unlike the reference tier, an outside-declaration heading
 /// keeps the same public code and message when `--full` discovers it beyond
 /// `[scan] include`.
 pub(crate) fn out_of_scope_section_headings(

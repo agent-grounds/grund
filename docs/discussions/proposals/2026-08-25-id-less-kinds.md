@@ -81,7 +81,7 @@ One entry feeds six consumers:
 4. `grund list` grouping, `grund id`, and hover titles ([§FS-list](../../functional-spec/FS-list.md#fs-list-grund-lists-every-declared-id), [§FS-id](../../functional-spec/FS-id.md#fs-id-grund-proposes-ids-for-new-declarations))
 5. `[citations.<KIND>]` direction rules ([§FS-config.3.9](../../functional-spec/FS-config.md#39-citations--citation-direction-rules)) and the prefix-collision
    rule (`config.rs:416`)
-6. the declaration-home boundary of [§FS-check.3.7](../../functional-spec/FS-check.md#37-misplaced-declaration-configured-kind-home) (`KindHomeIndex`, `checker.rs:1238`)
+6. the declaration-home boundary of [§FS-declarations.checks.misplaced-declaration](../../functional-spec/FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) (`KindHomeIndex`, `checker.rs:1238`)
 
 Only #3 is wanted here. On a first reading the other five go dead or go wrong;
 on a second, #5 turns out to be the hinge, and the next section says why. It
@@ -139,7 +139,7 @@ should = ["FS"]
 `ids = false` drops the entry from `{KINDS_SET}` exactly as `code` is dropped,
 keeps it in the Project map, keeps it addressable in `[citations.*]`, and claims
 `skills/` as a declaration home in which **nothing may be declared** — which is
-[§FS-check.3.7](../../functional-spec/FS-check.md#37-misplaced-declaration-configured-kind-home) working as designed rather than a gap in it.
+[§FS-declarations.checks.misplaced-declaration](../../functional-spec/FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) working as designed rather than a gap in it.
 
 The name stays mandatory. `[citations.*]` and `grund list --kind` key on it, so
 the existing "every `[[kinds]]` entry must declare a `prefix`" error
@@ -450,7 +450,7 @@ through the closed key allow-list (`config.rs:357`).
   and the outcome of the collision-rule question.
 - [§FS-config.3.9](../../functional-spec/FS-config.md#39-citations--citation-direction-rules) — that `[citations.<KIND>]` keys on a name, of which `code` and
   ID-less kinds are instances.
-- [§FS-check.3.7](../../functional-spec/FS-check.md#37-misplaced-declaration-configured-kind-home) — a home whose kind declares no IDs admits no declaration of any
+- [§FS-declarations.checks.misplaced-declaration](../../functional-spec/FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) — a home whose kind declares no IDs admits no declaration of any
   kind, and the message shape for it.
 - [§FS-check.3.11](../../functional-spec/FS-check.md#311-missing-required-citation) — the per-file obligation unit for ID-less kinds.
 - [§FS-init.2.3](../../functional-spec/FS-init.md#23-generated-agent-entrypoints) — the Project map gains ID-less rows and the `code` row; managed

@@ -1,5 +1,5 @@
 //! Focused scanner boundaries for unmarked Markdown ATX headings
-//! (§FS-check.4.14.1).
+//! (§FS-declarations.checks.unmarked-heading.1).
 
 use super::*;
 

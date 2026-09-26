@@ -27,7 +27,7 @@ pub struct CheckOpts {
     pub include_suggestions: bool,
     /// Walk the whole config root past `[scan] include`, adding the out-of-scope
     /// reference tier and scanner-invariant outside-section findings
-    /// (§FS-check.1.3, §FS-check.3.14, §FS-check.3.23) — the `grund check --full`
+    /// (§FS-check.1.3, §FS-check.3.14, §FS-declarations.checks.section-outside-declaration) — the `grund check --full`
     /// flag at the library level. Purely additive: the findings inside the
     /// configured scope are unchanged by it.
     pub full: bool,
