@@ -1,4 +1,4 @@
-//! Real-server parity for the body-owned Markdown warning (§FS-check.4.14,
+//! Real-server parity for the body-owned Markdown warning (§FS-declarations.checks.unmarked-heading,
 //! §FS-lsp.1.1).
 
 mod support;

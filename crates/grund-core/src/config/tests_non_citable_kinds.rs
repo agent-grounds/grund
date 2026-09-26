@@ -61,7 +61,7 @@ fn a_kind_home_outside_include_is_still_walked() {
     );
 }
 
-/// §FS-check.3.7.3: the home admits no declaration, and the finding names the
+/// §FS-declarations.checks.misplaced-declaration.3: the home admits no declaration, and the finding names the
 /// place rather than a kind the author could have written instead.
 #[test]
 fn a_declaration_in_a_non_citable_home_is_misplaced() {

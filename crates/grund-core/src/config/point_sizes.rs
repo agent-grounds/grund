@@ -37,7 +37,7 @@ impl PointSizeUnit {
 /// Byte-defined size counting with no locale or Unicode-table input
 /// (§FS-list.3.4.2). It sits beside the unit rather than beside either caller: it
 /// is what `PointSizeUnit` *means*, and the query that slices a lead
-/// (§AR-system.2.7) and the budget rule that judges one (§FS-check.4.13) must
+/// (§AR-system.2.7) and the budget rule that judges one (§FS-declarations.checks.oversized-lead) must
 /// count the same bytes.
 pub(crate) fn measure_point_text(text: &str, unit: PointSizeUnit) -> usize {
     let ascii_space = |byte: &u8| matches!(*byte, b'\t'..=b'\r' | b' ');

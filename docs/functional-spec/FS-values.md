@@ -48,7 +48,7 @@ The reader preserves member order, duplicate keys, raw number and string spellin
 
 ### 2.3 Duplicates and ownership
 
-A JSON key repeated in one object, the same ID declared across JSON files, a Markdown/JSON collision, or the same JSON path claimed by two opted-in homes is an ambiguous duplicate declaration even when the components agree. The existing duplicate rule wins; neither source nor kind takes precedence ([§FS-check.3.3](FS-check.md#33-duplicate-declaration)).
+A JSON key repeated in one object, the same ID declared across JSON files, a Markdown/JSON collision, or the same JSON path claimed by two opted-in homes is an ambiguous duplicate declaration even when the components agree. The existing duplicate rule wins; neither source nor kind takes precedence ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)).
 
 ### 2.4 Embedded section value roots
 
@@ -64,7 +64,7 @@ The marker is removed only from semantic heading content. The section title, der
 
 #### 2.4.3 The component run
 
-A valid marked root owns exactly one nonempty, physical-order run of immediate numeric children, with relative coordinates `.1` through `.N` contiguous and in order. Each child is written exactly one heading level below the root and satisfies [§FS-values.2.1](FS-values.md#21-markdown-declarations)'s one-line component-title grammar; its existing section record and exact value span are the component. Blank lines and the outer delimiters of a source block comment are harmless. Every other nonblank line within the root is invalid: root lead prose, a component body, a named or plain child heading, a grandchild, and a child with invalid component text are reported at that line. Zero components is reported at the root marker, or, for a chapter root, at the root heading, which is the only location a rootless-by-schema failure has. A gap or out-of-order coordinate is reported at each heading that differs from the next expected index. A duplicate retains [§FS-check.3.3](FS-check.md#33-duplicate-declaration) or the ordinary duplicate-section finding and also receives `invalid-value-declaration` at its duplicate heading.
+A valid marked root owns exactly one nonempty, physical-order run of immediate numeric children, with relative coordinates `.1` through `.N` contiguous and in order. Each child is written exactly one heading level below the root and satisfies [§FS-values.2.1](FS-values.md#21-markdown-declarations)'s one-line component-title grammar; its existing section record and exact value span are the component. Blank lines and the outer delimiters of a source block comment are harmless. Every other nonblank line within the root is invalid: root lead prose, a component body, a named or plain child heading, a grandchild, and a child with invalid component text are reported at that line. Zero components is reported at the root marker, or, for a chapter root, at the root heading, which is the only location a rootless-by-schema failure has. A gap or out-of-order coordinate is reported at each heading that differs from the next expected index. A duplicate retains [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) or the ordinary duplicate-section finding and also receives `invalid-value-declaration` at its duplicate heading.
 
 #### 2.4.4 Misplaced and overlapping marks
 

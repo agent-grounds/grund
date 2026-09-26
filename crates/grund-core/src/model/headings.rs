@@ -12,7 +12,7 @@ pub struct SectionHeadingOutsideDeclaration {
 
 /// One body-owned Markdown ATX heading that does not participate in the
 /// knowledge graph, together with the scanner's deterministic repair guidance
-/// (§FS-check.4.14, §AR-scanner.2.2.7).
+/// (§FS-declarations.checks.unmarked-heading, §AR-scanner.2.2.7).
 pub struct UnmarkedHeading {
     pub file: PathBuf,
     pub line: usize,
@@ -39,7 +39,7 @@ pub(crate) struct UnmarkedHeadingCandidate {
 }
 
 /// One heading that opens with a configured kind and the literal an ID puts
-/// after it, without parsing as an ID (§FS-check.4.6.1). `text` is the token as
+/// after it, without parsing as an ID (§FS-declarations.checks.declaration-near-miss.1). `text` is the token as
 /// written, so the finding can quote it back beside `format`, the candidate
 /// kind's effective template that it missed.
 pub struct NearMissHeading {

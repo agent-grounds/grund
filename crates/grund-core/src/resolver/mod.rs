@@ -31,7 +31,7 @@
 //!   pair of borrows it answers with, neither of which is a rule.
 //! - `body.rs` with `point_body.rs` and `e2e_body.rs` out of `queries/`, the
 //!   slicing of a declaration's body by recorded span, which the checker's
-//!   lead-budget rule read upward out of a sibling's answer (§FS-check.4.13).
+//!   lead-budget rule read upward out of a sibling's answer (§FS-declarations.checks.oversized-lead).
 //! - `link_targets.rs` out of `writers/fmt_link_targets.rs`, the link a
 //!   declaration's ID resolves to, which the checker's index-entry rule read the
 //!   same way (§FS-check.3.18.5).

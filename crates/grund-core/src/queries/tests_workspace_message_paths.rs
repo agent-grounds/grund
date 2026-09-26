@@ -66,7 +66,7 @@ const TWO_HOMES: [(&str, &str); 2] = [
     ),
 ];
 
-/// §FS-check.3.3: the duplicate-declaration finding anchors at the first site
+/// §FS-declarations.checks.duplicate: the duplicate-declaration finding anchors at the first site
 /// and names the rest in its message. Both halves belong to one report, so
 /// both are spelled from the root that report is rendered against.
 #[test]

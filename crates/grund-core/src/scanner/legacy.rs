@@ -1,4 +1,4 @@
-//! Persisted off-grammar compatibility (§FS-config.3.2, §FS-check.4.6): a
+//! Persisted off-grammar compatibility (§FS-config.3.2, §FS-declarations.checks.declaration-near-miss): a
 //! declaration or citation whose exact spelling predates the configured
 //! `[id] format`, reconciled against the catalog the same tree scan produced.
 //!

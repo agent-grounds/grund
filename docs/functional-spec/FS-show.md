@@ -146,7 +146,7 @@ an inline source doc-comment or docstring, the next declaration in a shared
 comment block, and a stub's single declaration line each end ownership. A
 deeper numeric or enabled named heading before that boundary remains a section;
 one after it is absent from the map and is reported by
-[§FS-check.3.23](FS-check.md#323-section-outside-a-declaration). Fenced Markdown
+[§FS-declarations.checks.section-outside-declaration](FS-declarations.md#checkssection-outside-declaration-section-outside-a-declaration). Fenced Markdown
 pseudo-headings remain content under [§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example). This boundary does not make an
 otherwise legal plain heading inside a body an error; that separate policy is
 outside this contract.
@@ -186,7 +186,7 @@ The selected section heading is printed verbatim in all four modes — `text` st
 
 #### 2.2.1 Ambiguous ID
 
-If an ID has more than one home — the duplicate-declaration error from [§FS-check.3.3](FS-check.md#33-duplicate-declaration) — `show` does not pick one. A stub paired with the inline declaration it points at is *one* home, not two; ambiguity means two or more independent declarations remain after that pairing collapses. When ambiguous, `show` exits 1 with a single bare stderr line — no `<path>:<line>:` prefix ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)):
+If an ID has more than one home — the duplicate-declaration error from [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) — `show` does not pick one. A stub paired with the inline declaration it points at is *one* home, not two; ambiguity means two or more independent declarations remain after that pairing collapses. When ambiguous, `show` exits 1 with a single bare stderr line — no `<path>:<line>:` prefix ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)):
 
 ```
 ambiguous ID: <ID> (declared at <path>:<line>, <path>:<line>[, ...])
@@ -208,7 +208,7 @@ Candidates are listed in ID order, and the repo needs no fixing: the caller does
 
 #### 2.2.2 Ambiguous section
 
-The same refusal one level down. If two citable headings inside the selected declaration claim the requested dotted path — numeric or named, under the duplicate-section error of [§FS-check.3.16](FS-check.md#316-duplicate-section-path) — `show` does not pick one either:
+The same refusal one level down. If two citable headings inside the selected declaration claim the requested dotted path — numeric or named, under the duplicate-section error of [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path) — `show` does not pick one either:
 
 ```
 ambiguous section: FS-001-login.1 (declared at docs/functional-spec/FS-001-login.md:5, docs/functional-spec/FS-001-login.md:9)
@@ -222,11 +222,11 @@ The failure has its own code ([§FS-show.2.2.2.1](FS-show.md#2221-its-own-code-a
 
 ##### 2.2.2.1 Its own code, `ambiguous-section`
 
-The code is `ambiguous-section`, not [§FS-show.2.2.1](FS-show.md#221-ambiguous-id)'s `ambiguous` ([§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)). The two failures need different edits — one ID with two homes is fixed in whichever file should not have declared it, one declaration with two `1.` headings is fixed by renumbering inside it — and the check side already spells that difference `duplicate` versus `duplicate-section` ([§FS-check.3.16](FS-check.md#316-duplicate-section-path)). Reusing one code would leave a JSON consumer parsing the message prose to tell them apart, the cost [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) refused to pay for its own four rules. Nothing regresses by adding it: before this rule the query returned a body and exit `0`, so no consumer ever saw `ambiguous` here to filter on.
+The code is `ambiguous-section`, not [§FS-show.2.2.1](FS-show.md#221-ambiguous-id)'s `ambiguous` ([§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)). The two failures need different edits — one ID with two homes is fixed in whichever file should not have declared it, one declaration with two `1.` headings is fixed by renumbering inside it — and the check side already spells that difference `duplicate` versus `duplicate-section` ([§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)). Reusing one code would leave a JSON consumer parsing the message prose to tell them apart, the cost [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) refused to pay for its own four rules. Nothing regresses by adding it: before this rule the query returned a body and exit `0`, so no consumer ever saw `ambiguous` here to filter on.
 
 ##### 2.2.2.2 The headings `check` counts
 
-Which headings count is [§FS-check.3.16](FS-check.md#316-duplicate-section-path)'s question, answered once: `show` refuses exactly the coordinates that rule reports, from the same recorded section set, so no coordinate is clean in `check` and unresolvable in `show`. For a stub ([§FS-show.2.3.4](FS-show.md#234-broken-stub)) that set is the **inline home's** — the file the query reads — never the stub's own prose.
+Which headings count is [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)'s question, answered once: `show` refuses exactly the coordinates that rule reports, from the same recorded section set, so no coordinate is clean in `check` and unresolvable in `show`. For a stub ([§FS-show.2.3.4](FS-show.md#234-broken-stub)) that set is the **inline home's** — the file the query reads — never the stub's own prose.
 
 ##### 2.2.2.3 The whole-declaration map still lists both
 
@@ -250,7 +250,7 @@ located `check` finding for query semantics.
 
 ### 2.3 Inline declarations in code and doc-comments
 
-When the ID's home is in code — whether discovered directly, enrolled by its kind's canonical index link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), or paired with a [§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub) stub — `show` extracts the comment block surrounding the inline declaration, strips comment markers, and prints the resulting prose. Index enrollment creates no declaration and therefore changes no query resolution. The same section logic applies — and so do the `--brief` / (default) / `--toc` / `--full` slices, computed over the stripped block exactly as over a `.md` body (the lead is what precedes the first citable heading inside the comment; the section map is the citable headings recorded within it, per [§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)).
+When the ID's home is in code — whether discovered directly, enrolled by its kind's canonical index link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), or paired with a [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) stub — `show` extracts the comment block surrounding the inline declaration, strips comment markers, and prints the resulting prose. Index enrollment creates no declaration and therefore changes no query resolution. The same section logic applies — and so do the `--brief` / (default) / `--toc` / `--full` slices, computed over the stripped block exactly as over a `.md` body (the lead is what precedes the first citable heading inside the comment; the section map is the citable headings recorded within it, per [§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)).
 
 A code-resident declaration is written as `<comment-marker> <ID>: <title>` (or bare `<ID>: <title>` inside a Python docstring), with no markdown `#` prefix. Decided in [§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix).
 
@@ -300,7 +300,7 @@ Section selection (`AR-<event-bus>.2`) works the same way inside a doc-comment a
 
 #### 2.3.4 Broken stub
 
-If the ID's only home is a stub (`# <ID>: [<text>](<path>)`) whose link is broken — the `<path>` does not exist, or the file at `<path>` contains no inline declaration of `<ID>` (the [§FS-check.3.4](FS-check.md#34-broken-inline-spec-stub) error) — `show` has no body to extract. It exits `1` with a bare query-failure line ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)), not a `path:line:` finding:
+If the ID's only home is a stub (`# <ID>: [<text>](<path>)`) whose link is broken — the `<path>` does not exist, or the file at `<path>` contains no inline declaration of `<ID>` (the [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) error) — `show` has no body to extract. It exits `1` with a bare query-failure line ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)), not a `path:line:` finding:
 
 ```
 broken stub: <ID> (stub at <path>:<line> points at <target>, which does not exist)

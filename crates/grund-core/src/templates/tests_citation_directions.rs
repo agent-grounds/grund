@@ -412,8 +412,8 @@ fn the_closing_line_reports_the_global_default() {
 /// §FS-init.2.3.5.1: the opening paragraph is the legend plus the grounding
 /// sentence. §FS-init.2.3.5.7.1: the sentence distinguishes citing from
 /// declaring (§FS-check.3.6) and extends with the walked non-citable homes,
-/// whose files can only cite (§FS-check.3.7.3); an unwalked home is left out
-/// because nothing in it is scanned.
+/// whose files can only cite (§FS-declarations.checks.misplaced-declaration.3); an
+/// unwalked home is left out because nothing in it is scanned.
 #[test]
 fn the_legend_and_the_grounding_sentence_open_the_section() {
     let section = render_shared(

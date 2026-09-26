@@ -10,7 +10,7 @@
 //!
 //! It sat in `queries/body.rs` while the queries were the only component that
 //! asked, which had the checker's lead-budget rule reading the point-body pair
-//! upward out of a sibling's answer (§FS-check.4.13, §AR-system.4). The three
+//! upward out of a sibling's answer (§FS-declarations.checks.oversized-lead, §AR-system.4). The three
 //! text helpers below came with it out of `queries/show.rs`: this is now their
 //! only reader.
 
@@ -95,7 +95,7 @@ pub(super) struct PointBodySite {
 
 /// Per-operation source cache shared by list and check point measurements. It
 /// owns no parsing rules: the cached bytes still flow through the exact show
-/// slicer below (§FS-list.3.4.1, §FS-check.4.13).
+/// slicer below (§FS-list.3.4.1, §FS-declarations.checks.oversized-lead).
 pub(crate) struct PointBodyCache<'a> {
     overlays: &'a TextOverlays,
     text: BTreeMap<PathBuf, String>,

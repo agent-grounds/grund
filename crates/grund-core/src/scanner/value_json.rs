@@ -66,7 +66,7 @@ pub(super) fn scan_value_json_sources(
         if owners.len() > 1 {
             // A source owned by two homes is ambiguous even after one read;
             // duplicate each site so the ordinary duplicate rule stays the
-            // single winner (§FS-values.2.3, §FS-check.3.3).
+            // single winner (§FS-values.2.3, §FS-declarations.checks.duplicate).
             let duplicated = findings
                 .declarations
                 .iter()

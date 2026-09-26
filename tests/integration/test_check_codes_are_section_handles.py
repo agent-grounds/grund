@@ -6,14 +6,12 @@ that spec's `checks` chapter, and carries a row in the code catalog of
 migration of agent-grounds/grund#260 runs one concept spec at a time, and each
 slice strikes its codes off that list as it lands.
 
-The first test is decorated `@unittest.expectedFailure` on purpose. It is the
-pin for #260 and it fails today on all ten codes, because the spec the ten move
-to does not exist yet and the catalog is still a flat fenced list rather than a
-table. The pre-commit hook runs this suite, so a plainly failing test could not
-be committed without `--no-verify`, which this repository forbids; and an
-`expectedFailure` that starts passing is an unexpected success, which turns the
-suite red. The decorator therefore cannot outlive the migration: the change that
-lands the ten sections removes it in the same commit."""
+The first test landed under `@unittest.expectedFailure`, one commit before the
+migration, because the pre-commit hook runs this suite and a plainly failing test
+could not be committed without `--no-verify`, which this repository forbids. The
+`FS-declarations` slice has landed, so the decorator is gone and the assertion is
+plain: it passes on the ten codes of that slice and fails the moment one of them
+loses its section or its catalog row."""
 
 import re
 import unittest
@@ -139,12 +137,10 @@ def _all_check_sections():
 class CheckCodeSectionTests(unittest.TestCase):
     maxDiff = None  # the failure is the list of what is not migrated yet; print all of it
 
-    @unittest.expectedFailure
     def test_migrated_codes_are_section_handles(self):
-        """The pin for agent-grounds/grund#260: see the module docstring for why
-        this is expected to fail, and when the decorator must come off. Every
-        code is reported in one failure, because ten names read better than the
-        first one that happens to sort first."""
+        """The pin for agent-grounds/grund#260. Every code is reported in one
+        failure, because ten names read better than the first one that happens to
+        sort first."""
         rows = _catalog_rows()
         missing = []
         for spec, codes in sorted(MIGRATED.items()):

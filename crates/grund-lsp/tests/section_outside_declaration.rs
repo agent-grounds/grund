@@ -1,5 +1,5 @@
 //! Real-server regression for rejected section headings: diagnostics retain the
-//! complete title range without making the heading navigable (§FS-check.3.23.2,
+//! complete title range without making the heading navigable (§FS-declarations.checks.section-outside-declaration.2,
 //! §FS-lsp.1.1.1).
 
 mod support;

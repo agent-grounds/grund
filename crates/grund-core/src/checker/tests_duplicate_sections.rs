@@ -1,4 +1,4 @@
-//! Test module: two headings claiming one dotted section path (§FS-check.3.16,
+//! Test module: two headings claiming one dotted section path (§FS-declarations.checks.duplicate-section,
 //! §FS-show.2.2.2, §DF-duplicate-section-path). The scanner half is
 //! first-wins recording, the checker half is the error, the `show` half is the
 //! refusal that replaced a body assembled out of both headings.
@@ -63,11 +63,11 @@ fn scanner_records_the_first_heading_and_keeps_the_rest_beside_it() {
             .map(|(path, info)| (path.as_str(), info.line))
             .collect::<Vec<_>>(),
         vec![("1", 9)],
-        "the later claimant is kept so §FS-check.3.16 can name its line"
+        "the later claimant is kept so §FS-declarations.checks.duplicate-section can name its line"
     );
 }
 
-/// §FS-check.3.16: one error, anchored at the first heading, naming the rest.
+/// §FS-declarations.checks.duplicate-section: one error, anchored at the first heading, naming the rest.
 #[test]
 fn check_reports_the_collision_anchored_at_the_first_heading() {
     let (root, config) = duplicated_repo("duplicate_sections_check_reports", "");
@@ -144,7 +144,7 @@ fn a_third_heading_joins_the_same_finding() {
     );
 }
 
-/// §DF-duplicate-section-path.2.2 / §FS-check.3.16.1: a section path is
+/// §DF-duplicate-section-path.2.2 / §FS-declarations.checks.duplicate-section.1: a section path is
 /// addressed as `<ID>.<path>`, so the same number under two declarations is two
 /// distinct coordinates and never collided.
 #[test]
@@ -172,7 +172,7 @@ fn the_same_path_under_two_declarations_is_not_a_collision() {
     );
 }
 
-/// §DF-duplicate-section-path.2.2 / §FS-check.3.16.3: the collision is a
+/// §DF-duplicate-section-path.2.2 / §FS-declarations.checks.duplicate-section.3: the collision is a
 /// collision in every `[id] section_heading_levels` mode — `"loose"`, where
 /// `## 1.` and `### 1.` both claim path `1`, most of all.
 #[test]
@@ -202,7 +202,7 @@ fn loose_heading_levels_do_not_excuse_the_collision() {
     );
 }
 
-/// §DF-duplicate-section-path.2.4: §FS-check.3.9 judges the heading the path
+/// §DF-duplicate-section-path.2.4: §FS-declarations.checks.section-heading-level judges the heading the path
 /// resolves to — the first — and does not additionally measure the duplicate,
 /// which nothing resolves to and the run has already said should not exist.
 #[test]
