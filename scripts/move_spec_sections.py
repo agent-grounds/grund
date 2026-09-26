@@ -32,9 +32,13 @@ What it refuses to touch, and why each refusal is load-bearing:
 - a file git does not track. The write set is exactly the tracked set, because
   `git diff` is how a person reviews a pass this size and an untracked file is
   invisible to it. So an untracked, non-ignored file holding a moved coordinate
-  is not rewritten silently: the run names it at the end, says `git add -N
-  <path>`, and exits non-zero, because the old coordinate it kept still resolves
-  through the pointer the move left behind and no gate below this one will say so.
+  is not rewritten silently: the run looks for one *before* it writes anything
+  and, finding one, names it, says `git add -N <path>`, writes nothing and exits
+  non-zero, because the old coordinate it kept still resolves through the pointer
+  the move left behind and no gate below this one will say so. The refusal comes
+  first so that each exit code means one thing: non-zero and the tree is
+  untouched, so there is nothing for `fmt` to follow; zero and every tracked site
+  moved, so the `fmt` after the `&&` below is the other half of the pass.
 
     scripts/move_spec_sections.py --dry-run
     scripts/move_spec_sections.py && grund fmt --write
@@ -154,6 +158,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true", help="report the files that would change")
     arguments = parser.parse_args(argv)
 
+    # An untracked file is invisible to `git diff`, so a coordinate it keeps survives the
+    # migration through the pointer left behind (§REQ-spec-section-names.permanence); the
+    # refusal precedes the write loop to keep `this && grund fmt --write` whole.
+    stranded = [path for path in untracked_files() if repointed(path) is not None]
+    if stranded:
+        print(f"{len(stranded)} untracked file(s) hold a moved coordinate; nothing was rewritten:")
+        for path in stranded:
+            relative = path.relative_to(REPO_ROOT)
+            print(f"  {relative} — `git add -N {relative}`, then run this pass again")
+        return 1
+
     changed = 0
     sites = 0
     for path in tracked_files():
@@ -173,21 +188,10 @@ def main(argv: list[str] | None = None) -> int:
             path.write_text(after, encoding="utf-8")
     verb = "would change" if arguments.dry_run else "changed"
     print(f"{verb} {sites} line(s) in {changed} file(s)")
-    if not arguments.dry_run:
+    # The hint is an instruction to a person, so a pass that wrote nothing does not give it.
+    if changed and not arguments.dry_run:
         print("now run `grund fmt --write` so every link target and anchor follows")
-
-    # An untracked file is outside the write set and invisible to `git diff`, so the
-    # coordinate it keeps would survive the migration unreported: the old address still
-    # resolves through the pointer the move leaves behind (§REQ-spec-section-names.permanence).
-    stranded = [path for path in untracked_files() if repointed(path) is not None]
-    if not stranded:
-        return 0
-    print()
-    print(f"{len(stranded)} untracked file(s) hold a moved coordinate and were NOT rewritten:")
-    for path in stranded:
-        relative = path.relative_to(REPO_ROOT)
-        print(f"  {relative} — `git add -N {relative}`, then run this pass again")
-    return 1
+    return 0
 
 
 if __name__ == "__main__":
