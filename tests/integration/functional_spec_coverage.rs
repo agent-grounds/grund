@@ -174,7 +174,6 @@ const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-non-goals.6", reason: "explicit non-goal" },
     Exception { id: "FS-non-goals.7", reason: "explicit non-goal" },
     Exception { id: "FS-non-goals.8", reason: "explicit non-goal" },
-    Exception { id: "FS-non-goals.9", reason: "explicit non-goal" },
     Exception { id: "FS-non-goals.10", reason: "explicit non-goal" },
     Exception { id: "FS-non-goals.11", reason: "explicit non-goal" },
     Exception { id: "FS-non-goals.12.1", reason: "explicit non-goal" },
