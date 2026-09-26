@@ -160,12 +160,26 @@ Every key [§FS-config.3](functional-spec/FS-config.md#3-schema) declares. The s
 
 ### 2. What is NOT configurable
 
-Install-local choices must not change verdicts: severity, exit codes, report ordering,
-and other facts have to agree for two installs reading the same project and the
-same configuration. A committed project policy may choose among explicitly
-specified citation forms — including whether a uniquely resolving number-only
-shorthand may persist ([§FS-config.3.1](functional-spec/FS-config.md#31-reference--citation-form)) —
-because that policy is shared input, not machine-local state.
+Three things are frozen for every project and every install alike: the **set**
+of severity levels (`error` and `warning`, and no third), the **mapping** from a
+report to an exit code ([§FS-cli.5](functional-spec/FS-cli.md#5-exit-code-mapping-is-fixed)),
+and the **ordering of the report**. No `grund.toml` and no machine may move any
+of the three ([§FS-config.6](functional-spec/FS-config.md#6-what-is-not-configured-here)).
+
+What a project's committed configuration does choose is which of the specified
+rules are in force over its own tree — including whether a uniquely resolving
+number-only shorthand may persist ([§FS-config.3.1](functional-spec/FS-config.md#31-reference--citation-form)) —
+and, where a rule's own specification fixes the complete set of channels its
+finding may speak through, which of those channels it speaks through there.
+Neither is a choice about the three frozen things: a project that holds one rule
+at advisory standing has configured that rule, not the severity set
+([§DF-verdict-vocabulary-freeze](decisions/functional/DF-verdict-vocabulary-freeze.md#df-verdict-vocabulary-freeze-the-freeze-is-on-the-verdict-vocabulary-not-on-which-rules-a-project-holds-in-force)).
+
+Separately, and about a different axis: install-local state may change no
+verdict — that is the bright line
+([§FS-non-goals.13](functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
+The procedure an author of a new key follows to stay on the right side of it is
+[§FS-config.principle.install-local](functional-spec/FS-config.md#principleinstall-local-the-relation-governs-committed-repository-state-only)'s.
 
 ### 3. Measurable
 

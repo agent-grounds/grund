@@ -51,8 +51,11 @@ An opting project knowingly gives up both properties: grep by the canonical
 slug misses short sites, the short citation is opaque at the point of reading,
 and the two spellings may drift with no normalization target while `accepted`
 remains enabled. Because the setting is committed, two installs reading the
-same version and tree still agree; this is a project-owned exception, not an
-install-local verdict switch ([§GOAL-configurable.2](../../goals.md#2-what-is-not-configurable)).
+same version and tree still agree, and no install-local value is involved at
+all. It is not an exception to anything: choosing which of the specified rules
+is in force over a project's own tree is ordinary committed project policy, and
+the citation form is one of the things a project chooses
+([§GOAL-configurable.2](../../goals.md#2-what-is-not-configurable)).
 
 ### 2.2 Where the shorthand is accepted, and where it is an error
 

@@ -38,11 +38,17 @@ ATX structure governed by this rule. A nested declaration owns headings in its
 own overlapping body because the nearest enclosing declaration is the fact an
 author is editing.
 
-Severity remains fixed under [§GOAL-configurable.2](../../goals.md#2-what-is-not-configurable):
-there is no `allow | warn | error` selector and no permanent opt-out. The
-warning window follows
+Severity is fixed for this rule, for its own reason: there is no
+`allow | warn | error` selector and no permanent opt-out because grund ships no
+command that can choose an author's intended hierarchy, so there is no standing
+an advisory mode could report from — a project holding this finding at advisory
+standing would be holding it there forever. That is a judgement about this rule
+rather than about the verdict vocabulary, which freezes the severity *set* and
+not which rules a project holds in force
+([§DF-verdict-vocabulary-freeze.2.4](DF-verdict-vocabulary-freeze.md#24-what-the-test-refuses)).
+The warning window follows
 [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)
-because grund ships no command that can choose an author's intended hierarchy.
+for the same reason.
 
 ## 3. Rejected alternatives
 
