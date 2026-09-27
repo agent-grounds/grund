@@ -1049,6 +1049,15 @@ result. This is what makes `refs` a blast-radius answer: an author about to
 delete `api`'s `FS-login` learns about both `api`'s own files and every other
 project that wrote `<§>api/FS-login`.
 
+`grund refs <alias>/<ID>.<section> --descendants` ([§FS-refs.1](FS-refs.md#1-inputs)) widens the
+section filter inside the target project's coordinate space, and only there:
+*which* citations belong to the qualified declaration is the membership rule
+above — the cross-project `<§><alias>/<ID>` form and the member's own local
+`<§><ID>` together — so the flag decides which sections count and never which
+projects do. Text output, `--summary`, `--format json` and the
+neither-declared-nor-cited note are [§FS-workspace.8.2.1](FS-workspace.md#821-text-output) to [§FS-workspace.8.2.5](FS-workspace.md#825-the-neither-declared-nor-cited-note)
+unchanged.
+
 Text output is [§FS-workspace.8.2.1](FS-workspace.md#821-text-output), an unqualified query at the workspace root [§FS-workspace.8.2.2](FS-workspace.md#822-an-unqualified-query-at-the-workspace-root),
 `--summary` [§FS-workspace.8.2.3](FS-workspace.md#823---summary), `--format json` [§FS-workspace.8.2.4](FS-workspace.md#824---format-json), and the note for an ID neither
 declared nor cited [§FS-workspace.8.2.5](FS-workspace.md#825-the-neither-declared-nor-cited-note).

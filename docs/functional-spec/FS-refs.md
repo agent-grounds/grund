@@ -12,12 +12,13 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 ## 1. Inputs
 
 ```
-grund refs <ID> [<path>] [--section <s>] [--summary] [--format text|json]
+grund refs <ID> [<path>] [--section <s>] [--descendants] [--summary] [--format text|json]
 ```
 
 - `<ID>` — the ID to look up, without the marker. It may carry an inline section in the configured `[id] section_separator` (`FS-check.3.1`, or `FS-plan.goals.performance` when named sections are enabled), or pass it as `--section 3.1` / `--section goals.performance`. Parsing uses the named kind's effective format and the selected project's shared catalog ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): an exact off-grammar declaration is a valid read query and keeps its raw spelling, while an off-grammar argument with no exact declaration keeps the ordinary invalid-ID hint. The number-only shorthand is accepted where the effective format has one — `grund refs FS-042` lists the citations of `FS-042-user-login`, including those written in the shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) — and shorthand, duplicate, and section ambiguities are rejected with their candidates rather than resolved to a guess.
 - `<path>` — directory or file whose tree is scanned, default `.`, discovered as by every other subcommand ([§FS-config.1](FS-config.md#1-file-location-and-discovery)).
 - `--section <s>` — list only citations of exactly that numeric or named section path; without it, every citation of `<ID>` is listed, bare-ID ones included. Mutually exclusive with the dotted inline form. The filter reads the scanner's shared citation record, so it cannot disagree with `check`, `show`, completion, or the LSP about a named coordinate.
+- `--descendants` — widen the section filter from the exact coordinate to that coordinate **and every section beneath it** ([§FS-refs.2](FS-refs.md#2-behaviour)), whichever way the section was spelled: it widens `--section` and the dotted inline form alike, and says nothing about which of the two may be written. It is the CLI spelling of the set a declaration-side section title already returns in an editor ([§FS-lsp.1.3.1](FS-lsp.md#131-references-from-declarations)), so the two transports ask one question. A query that carries no section has nothing to widen, and there the flag changes nothing ([§FS-refs.4](FS-refs.md#4-exit-codes)).
 - `--summary` — one line per citing **file** instead of one per site ([§FS-refs.3.3](FS-refs.md#33---summary)).
 - `--format text|json` — output shape ([§FS-refs.3](FS-refs.md#3-outputs)). Default `text`.
 
@@ -28,6 +29,14 @@ grund refs <ID> [<path>] [--section <s>] [--summary] [--format text|json]
 `refs` runs the same scan as `check` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)) and lists, for the requested `<ID>`, every recognised citation site — the set `check` would validate, so it honours `[reference] strict` (bare tokens are listed only in non-strict mode), the source-string exclusions ([§FS-check.1.1.3](FS-check.md#113-string-literals-in-source-files)), and citations inside doc-comments. In particular, a real Python module, function, or method docstring after assigned triple-quoted data remains in the set, while the assigned-data span itself is absent ([§FS-check.1.1.3.1](FS-check.md#1131-assigned-python-triple-quoted-data)). It does **not** list the *declaration* of `<ID>` — that is `grund <ID> --format=json` (the README documents that one-liner). An ID with no declaration still lists its citations, exactly the ones `check` flags as dangling, so `refs` is also the "what would break if I never create this ID" tool.
 
 An owned declaration-local numeric citation ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) is in that same set under its resolved full ID and exact section. Whole-ID and `--section` queries include it, while text and JSON retain the authored local token. Ownerless and unsupported local candidates have no guessed target and therefore appear in no target's result.
+
+With `--descendants` ([§FS-refs.1](FS-refs.md#1-inputs)) the section filter keeps a citation whose section coordinate *is* the requested path or lies beneath it — the set [§FS-lsp.1.3.1](FS-lsp.md#131-references-from-declarations) already returns on that section's heading, one relation read by both transports ([§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli)). Three clauses fix what *beneath* means, and they are written here rather than left implicit in a comparison because a lookup that two rules could satisfy must say which one picks ([§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)):
+
+- **Descendant is a relation on dotted path components, never a string prefix** ([§FS-config.3.3.4](FS-config.md#334-the-outer-section-separator)). `3.16` reaches `3.16.1` and every depth below it and never the sibling `3.160`; `checks.duplicate` reaches `checks.duplicate.1` and never the sibling `checks.duplicate-section`. The components stay `.`-separated whatever the outer `section_separator` is, so the relation is the same one at every depth.
+- **A dangling descendant counts.** A cited `<§>FS-refs.2.9` that no heading declares is in the set, because it is exactly the citation a move of `FS-refs.2` breaks. This is the existing rule of this point — `refs` lists the citations `check` flags — applied one level down.
+- **An owned declaration-local numeric citation counts under its resolved section**, as it already does for a bare `--section`.
+
+Nothing else widens with it: the scan, the sort, the rendering, the `note:` of [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) and the exit policy of [§FS-refs.4](FS-refs.md#4-exit-codes) are the ones a bare `--section` query gets.
 
 Output is sorted by `(path, line, column)` ([§FS-errors.4](FS-errors.md#4-determinism)). The list is the command's *result*, so it goes to **stdout** — text lines and `--format json` NDJSON alike, as for `grund list` and `grund cover` ([§FS-errors.1](FS-errors.md#1-streams)). A text line has the `<path>:<line>: <message>` located-finding shape ([§FS-errors.2.1](FS-errors.md#21-located-finding)) so an editor can jump to it, but it is an *answer*, not a diagnostic; stderr is left for errors and the typo note of [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations).
 
@@ -84,7 +93,7 @@ crates/grund-core/src/scanner/file_pass.rs: 1 (line 142)
 docs/functional-spec/FS-show.md: 3 (lines 11, 142, 200)
 ```
 
-The shape is `<path>: <count> (lines <l1>, <l2>, …)`. The count is the number of sites from exactly the citation set [§FS-refs.3.1](FS-refs.md#31---format-text-default) lists, so `--summary` honours `[reference] strict`, the string-literal carve-out, and doc-comment citations the same way; the line list is the sorted, de-duplicated set of source lines holding them, so two citations on line 10 read `path: 2 (line 10)`. `grund refs <ID> --summary | wc -l` is then the number of files that lean on `<ID>`, while the line list still points an editor at every line with a site. With `--section`, the aggregate is over that section's citations only. No citations prints nothing, with exit `0` and the [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) `note:` unaffected. With `--format json`: NDJSON, one object per file, `{"path":<path>,"count":<n>,"lines":[<unique l1>,<unique l2>,…]}`, in the same order; without `--summary` it is the per-citation form of [§FS-refs.3.2](FS-refs.md#32---format-json). Summary objects omit `kind_title`, including for a titled target kind. Exit codes ([§FS-refs.4](FS-refs.md#4-exit-codes)) are unchanged — `--summary` renders the same scan result, not a different query.
+The shape is `<path>: <count> (lines <l1>, <l2>, …)`. The count is the number of sites from exactly the citation set [§FS-refs.3.1](FS-refs.md#31---format-text-default) lists, so `--summary` honours `[reference] strict`, the string-literal carve-out, and doc-comment citations the same way; the line list is the sorted, de-duplicated set of source lines holding them, so two citations on line 10 read `path: 2 (line 10)`. `grund refs <ID> --summary | wc -l` is then the number of files that lean on `<ID>`, while the line list still points an editor at every line with a site. With `--section`, the aggregate is over that section's citations only; with `--descendants` ([§FS-refs.1](FS-refs.md#1-inputs)) it is over the subtree, because `--summary` folds over whatever set [§FS-refs.3.1](FS-refs.md#31---format-text-default) lists rather than over a set of its own. A file carrying citations of three different sections beneath the requested one is therefore **one** line, with the count of all its sites and one de-duplicated line list — there is no grouping by section and no per-section breakdown. No citations prints nothing, with exit `0` and the [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) `note:` unaffected. With `--format json`: NDJSON, one object per file, `{"path":<path>,"count":<n>,"lines":[<unique l1>,<unique l2>,…]}`, in the same order; without `--summary` it is the per-citation form of [§FS-refs.3.2](FS-refs.md#32---format-json). Summary objects omit `kind_title`, including for a titled target kind. Exit codes ([§FS-refs.4](FS-refs.md#4-exit-codes)) are unchanged — `--summary` renders the same scan result, not a different query.
 
 ## 4. Exit codes
 
@@ -117,10 +126,17 @@ line in both modes:
 warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.15.0
 ```
 
-The warning and the `error:` prefix retire together at 0.15.0. `--summary` and
-`--section` do not introduce another classification: after context and grammar
-selection they inherit the same operand result. This staged boundary is the
-decision in [§DF-refs-resolver-rejection](../decisions/functional/DF-refs-resolver-rejection.md#df-refs-resolver-rejection-an-id-rejected-by-a-selected-grammar-is-a-failed-query).
+The warning and the `error:` prefix retire together at 0.15.0. `--summary`,
+`--section` and `--descendants` do not introduce another classification: after
+context and grammar selection they inherit the same operand result. This staged
+boundary is the decision in [§DF-refs-resolver-rejection](../decisions/functional/DF-refs-resolver-rejection.md#df-refs-resolver-rejection-an-id-rejected-by-a-selected-grammar-is-a-failed-query).
+
+`--descendants` adds no case of its own to the list above. On a query that
+carries no section there is nothing to widen, so it is a silent no-op — stdout,
+stderr and exit status are what the same invocation without the flag produces —
+and not the usage error exit `2` of [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location), so a caller holding an
+operand it did not build may pass the flag without first learning whether that
+operand carries a section.
 
 ## 5. Why this exists
 
