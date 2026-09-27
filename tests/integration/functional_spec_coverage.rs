@@ -350,14 +350,20 @@ struct Fixture {
 /// The name a fixture gives its root (§AR-ci.10.1). `clock` is the wall-clock
 /// reading the name is allowed to see, taken as an argument rather than read
 /// here so that a test can hold two names to one reading without a clock shim:
-/// what the identity may not do is rest on it.
+/// what the identity may not do is rest on it. The process-wide serial is what
+/// carries the identity, as the `crates/grund-cli/tests` fixtures do: `libtest`
+/// runs this binary's cases as threads of one process, so the process id
+/// distinguishes nothing inside it and the reading only records when the tree
+/// was written.
 fn fixture_root_name(clock: SystemTime) -> String {
+    static NEXT_ROOT: AtomicUsize = AtomicUsize::new(0);
+    let serial = NEXT_ROOT.fetch_add(1, Ordering::Relaxed);
     let nonce = clock
         .duration_since(UNIX_EPOCH)
         .expect("clock after epoch")
         .as_nanos();
     format!(
-        "grund-functional-spec-coverage-{}-{nonce}",
+        "grund-functional-spec-coverage-{}-{nonce}-{serial}",
         std::process::id()
     )
 }
@@ -371,8 +377,11 @@ impl Fixture {
     /// Take `root` for this fixture's exclusive use and write the synthetic
     /// repository into it (§AR-ci.10.2). A root that already exists is some
     /// other fixture's, so the error is reported rather than the tree shared.
+    /// `create_dir` on the root is the claim: it fails with `AlreadyExists`
+    /// instead of adopting a tree, and nothing is cleared in order to take it.
     fn claim(root: PathBuf) -> io::Result<Self> {
-        fs::create_dir_all(root.join("docs"))?;
+        fs::create_dir(&root)?;
+        fs::create_dir(root.join("docs"))?;
         fs::write(
             root.join("grund.toml"),
             r#"grund_config_version = 1
@@ -421,6 +430,9 @@ extensions = ["md", "rs"]
     }
 }
 
+/// A fixture removes only the tree it created (§AR-ci.10.2): the claim above is
+/// what makes that true here, because a `Fixture` exists only where `create_dir`
+/// on this root succeeded.
 impl Drop for Fixture {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.root);
