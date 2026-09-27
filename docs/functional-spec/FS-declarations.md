@@ -200,7 +200,7 @@ When the effective project config contains the opt-in key from [§FS-config.3.1]
 lead_size_warning = { max = <N>, unit = "<unit>" }
 ```
 
-`check` measures each declaration and citable section lead in that project by [§FS-list.3.4](FS-list.md#34---size--per-point-lead-and-full-body-measurements). A lead whose selected measurement is strictly greater than `max` produces one warning at that site's heading line. Equality passes. A broken stub has no measurable lead and produces no size warning; duplicate declaration homes and duplicate section claimants are judged separately from their own site-local slices.
+`check` measures each declaration and citable section lead in that project by [§FS-list.3.4](FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements). A lead whose selected measurement is strictly greater than `max` produces one warning at that site's heading line. Equality passes. A broken stub has no measurable lead and produces no size warning; duplicate declaration homes and duplicate section claimants are judged separately from their own site-local slices.
 
 The message is [§FS-declarations.checks.oversized-lead.1](FS-declarations.md#checksoversized-lead1-the-message) and its exit and rendering [§FS-declarations.checks.oversized-lead.2](FS-declarations.md#checksoversized-lead2-exit-code-and-rendering). Only the key activates it ([§FS-declarations.checks.oversized-lead.3](FS-declarations.md#checksoversized-lead3-only-the-key-activates-it)), and which sites it judges is [§FS-declarations.checks.oversized-lead.4](FS-declarations.md#checksoversized-lead4-which-sites-it-judges).
 
