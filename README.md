@@ -107,7 +107,7 @@ Repositories can opt into a warning at their own measured boundary:
 lead_size_warning = { max = 600, unit = "words" }
 ```
 
-An over-budget lead should keep its grounding: move detail into numbered child sections, or promote a child section to its own ID after checking its callers with `grund refs <ID> --summary`. See the [point-size guide](docs/user-facing/point-sizes.md) for counting rules, output fields, duplicate handling, and workspace scope ([§FS-list.3.4](docs/functional-spec/FS-list.md#34---size--per-point-lead-and-full-body-measurements), [§FS-declarations.checks.oversized-lead](docs/functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
+An over-budget lead should keep its grounding: move detail into numbered child sections, or promote a child section to its own ID after checking its callers with `grund refs <ID> --summary`. See the [coordinate-size guide](docs/user-facing/point-sizes.md) for counting rules, output fields, duplicate handling, and workspace scope ([§FS-list.3.4](docs/functional-spec/FS-list.md#34---size--per-point-lead-and-full-body-measurements), [§FS-declarations.checks.oversized-lead](docs/functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
 
 For scripts, exit `0` is a completed `refs` answer even when it is empty. From
 grund 0.15.0, exit `1` means the selected repository grammar rejected the ID or
@@ -534,7 +534,7 @@ That rule plus a clean `grund check` is the whole contract: every reference reso
 
 - [`docs/user-facing/clickable-citations.md`](docs/user-facing/clickable-citations.md) — make citations clickable in your terminal
 - [`docs/user-facing/external-facts.md`](docs/user-facing/external-facts.md) — materialize external tickets as committed offline snapshots
-- [`docs/user-facing/point-sizes.md`](docs/user-facing/point-sizes.md) — measure point leads and opt into oversized-lead warnings
+- [`docs/user-facing/point-sizes.md`](docs/user-facing/point-sizes.md) — measure coordinate leads and opt into oversized-lead warnings
 - [`docs/user-facing/rules.md`](docs/user-facing/rules.md) — write checked chapter and citation rules in controlled English
 - [`docs/user-facing/values.md`](docs/user-facing/values.md) — declare and check shared values in Markdown, JSON, prose, and code comments
 - [`docs/grund.md`](docs/grund.md) — why this exists

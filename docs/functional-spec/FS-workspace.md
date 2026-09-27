@@ -1131,7 +1131,7 @@ configuration, and workspace-root-relative paths. Each size row begins with
 the containing project's alias as `project` in JSON, while its `id` is the
 qualified coordinate rendered by the ordinary workspace list. `--top` is
 applied after project filtering and uses the workspace list order as its
-final tie-break ([§FS-list.3.4](FS-list.md#34---size--per-point-lead-and-full-body-measurements)).
+final tie-break ([§FS-list.3.4](FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements)).
 
 #### 8.3.4 `--summary`
 

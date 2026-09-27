@@ -1,9 +1,9 @@
-# Point sizes
+# Coordinate sizes
 
 `grund list --size` measures the text an agent can fetch through each declaration
 and section coordinate. It reports both the lead returned by a default read and
 the full body returned by `--full`, using the same body slicing as `grund show`
-([§FS-list.3.4](../functional-spec/FS-list.md#34---size--per-point-lead-and-full-body-measurements)).
+([§FS-list.3.4](../functional-spec/FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements)).
 
 ```console
 $ grund list --size=words --top 3
@@ -37,8 +37,8 @@ limit), but they do not add lines; wrappers in ordinary prose remain flattened.
 
 ## Opt into a warning
 
-Add one closed inline table to the project whose point leads you want checked
-([§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)):
+Add one closed inline table to the project whose coordinate leads you want
+checked ([§FS-config.3.1](../functional-spec/FS-config.md#31-reference--citation-form)):
 
 ```toml
 [reference]
