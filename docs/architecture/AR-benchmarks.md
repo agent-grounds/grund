@@ -12,6 +12,12 @@ generated fixture, base-branch baseline ─► [ benchmarks ] ─► instruction
 
 Not a component: a meter on the pipeline ([§AR-system.1](README.md#1-the-system)), taken through the CLI frontend so that it counts what a user's invocation counts ([§AR-system.3](README.md#3-frontends), [§AR-system.5](README.md#5-what-holds-the-shape)). It takes a generated fixture and a baseline saved from the base branch ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)) and gives one instruction count per hot command, recorded by the CI job of [§AR-ci.5](AR-ci.md#5-benchmark-job). It knows nothing of the engine's internals: each benchmark runs the built `grund` binary as a subprocess (section 1).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, body, section, lead),
+[§FS-terms.terms.2](../functional-spec/FS-terms.md#terms2-citations) (citation), [§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan), [§FS-terms.terms.6](../functional-spec/FS-terms.md#terms6-rules-and-directions)
+(direction), and [§FS-terms.terms.8](../functional-spec/FS-terms.md#terms8-the-architectures-own-words) (meter).
+
 ## 1. What is benched
 
 A `cargo bench` harness at `crates/grund-cli/benches/instructions.rs`, gated behind the `grund` package's `bench` Cargo feature so a plain `cargo test --all-targets` compiles only a no-op bench target and never tries to run the Callgrind body (it needs Valgrind). Each benchmark runs the **freshly built `grund` binary** as a subprocess under Callgrind — not a library call — because the figure we care about is the cost of an invocation an agent or a CI step actually makes, including process start-up, argument parsing, the walk, and output formatting.
