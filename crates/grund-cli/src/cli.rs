@@ -151,12 +151,14 @@ pub fn main_entry() -> ExitCode {
     }
     match first {
         None => {
-            // The window §REQ-backwards-compatibility.2 asks a deprecation to name, in
-            // the one clause §FS-distribution.4.2.3 admits for a removal not yet made.
+            // §FS-cli.4: no arguments at all is a CLI-level error naming both
+            // explicit forms, because the caller meant one of them.
             eprintln!(
-                "warning: bare `grund` still runs `grund check .`; use `grund check` explicitly. This fallback is removed in grund 0.16.0."
+                "error: no command given; the bare `grund` fallback that ran `grund check .` was removed in grund 0.16.0"
             );
-            command_check(&[])
+            eprintln!("hint: run `grund check` to validate this repository");
+            eprintln!("hint: run `grund --help` for the list of subcommands");
+            ExitCode::from(2)
         }
         Some("check") => command_check(&args[1..]),
         Some("show") => command_show(&args[1..]),
