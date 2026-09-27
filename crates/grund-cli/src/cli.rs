@@ -101,11 +101,12 @@ fn restore_default_sigpipe() {}
 
 /// The CLI entry point: parse `argv`, dispatch to the matching `command_*`, and
 /// return its `ExitCode` (§FS-cli). `grund <ID>` is the default ID query
-/// (§FS-cli.1); `grund` with no arguments keeps the historical `check .`
-/// behavior with a deprecation warning; `--version`/`--help` short-circuits to
-/// stdout, exit 0 (§FS-cli.2); help on an unknown command exits 2 and lists the
-/// known ones rather than hiding a typo behind generic help (§FS-cli.4). The
-/// exit-code mapping (0/1/2) is fixed (§FS-cli.5).
+/// (§FS-cli.1); `grund` with no arguments is a CLI-level error naming the
+/// removal of the `check .` fallback — empty stdout, exit 2 (§FS-cli.4);
+/// `--version`/`--help` short-circuits to stdout, exit 0 (§FS-cli.2); help on an
+/// unknown command exits 2 and lists the known ones rather than hiding a typo
+/// behind generic help (§FS-cli.4). The exit-code mapping (0/1/2) is fixed
+/// (§FS-cli.5).
 pub fn main_entry() -> ExitCode {
     restore_default_sigpipe();
     let args = std::env::args().skip(1).collect::<Vec<_>>();
