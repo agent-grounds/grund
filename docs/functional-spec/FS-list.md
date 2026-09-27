@@ -9,6 +9,9 @@ lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (citat
 [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member, alias), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (rule), and
 [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, fetcher, snapshot).
 
+- **coordinate-size** — One measured row of `--size`: the lead and full-body
+  measurement of one declaration or citable section.
+
 ## 1. Inputs
 
 ```
