@@ -21,7 +21,7 @@ grund list [<path>] [--selector <selector>] [--kind <KIND>[,<KIND>…]]… [--pr
 
 `<path>` is the directory or file whose tree is scanned, `.` by default. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). `--format text|json` picks the output shape ([§FS-list.3](FS-list.md#3-outputs)), `text` by default.
 
-`--kind` selects configured citable kinds and refuses an unknown one, or a non-citable one with the two-line message giving its reason ([§FS-list.1.1](FS-list.md#11---kind)). `--project` narrows a workspace catalog to the named projects ([§FS-list.1.2](FS-list.md#12---project)). `--unused` keeps only uncited declarations, discounting a kind's index entries and leaving out `E2E` cases unless `--kind` selects them ([§FS-list.1.3](FS-list.md#13---unused)). `--summary` prints one count per kind under those same filters ([§FS-list.1.4](FS-list.md#14---summary)). `--size` and `--top` switch to measured point-size rows over a closed unit set ([§FS-list.1.5](FS-list.md#15---size), [§FS-list.1.6](FS-list.md#16---top)); their syntax and combination errors are launch errors, decided before config discovery or scanning ([§FS-list.1.7](FS-list.md#17-size-selector-errors)).
+`--kind` selects configured citable kinds and refuses an unknown one, or a non-citable one with the two-line message giving its reason ([§FS-list.1.1](FS-list.md#11---kind)). `--project` narrows a workspace catalog to the named projects ([§FS-list.1.2](FS-list.md#12---project)). `--unused` keeps only uncited declarations, discounting a kind's index entries and leaving out `E2E` cases unless `--kind` selects them ([§FS-list.1.3](FS-list.md#13---unused)). `--summary` prints one count per kind under those same filters ([§FS-list.1.4](FS-list.md#14---summary)). `--size` and `--top` switch to measured coordinate-size rows over a closed unit set ([§FS-list.1.5](FS-list.md#15---size), [§FS-list.1.6](FS-list.md#16---top)); their syntax and combination errors are launch errors, decided before config discovery or scanning ([§FS-list.1.7](FS-list.md#17-size-selector-errors)).
 
 `list` is a query, like `show` and `refs` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
 
@@ -60,7 +60,7 @@ A citation that is a kind's own index entry ([§FS-check.3.18](FS-check.md#318-d
 
 ### 1.5 `--size`
 
-`--size[=<unit>[,<unit>…]]` switches from declaration rows to the point-size rows in [§FS-list.3.4](FS-list.md#34---size--per-point-lead-and-full-body-measurements). The optional value is accepted only in the same argument with `=`; a following bare word remains the existing `<path>` positional. Bare `--size` selects `lines,words,bytes`, in that order. An explicit list is case-sensitive, preserves caller order, and collapses repeated units to their first occurrence. The closed unit set is `lines`, `words`, and `bytes`: an empty item or any other value, including `tokens`, is a CLI-level error, and there is no recognized or reserved token-counting spelling. The flag may appear once and cannot be combined with `--summary`.
+`--size[=<unit>[,<unit>…]]` switches from declaration rows to the coordinate-size rows in [§FS-list.3.4](FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements). The optional value is accepted only in the same argument with `=`; a following bare word remains the existing `<path>` positional. Bare `--size` selects `lines,words,bytes`, in that order. An explicit list is case-sensitive, preserves caller order, and collapses repeated units to their first occurrence. The closed unit set is `lines`, `words`, and `bytes`: an empty item or any other value, including `tokens`, is a CLI-level error, and there is no recognized or reserved token-counting spelling. The flag may appear once and cannot be combined with `--summary`.
 
 ### 1.6 `--top`
 
@@ -168,7 +168,7 @@ Columns: the kind prefix, the count of declarations of that kind the scan found 
 
 With `--kind FS,AR --summary` only those rows appear; with `--unused --summary` the counts are of uncited declarations — the same set the per-declaration `--unused` lists, under [§FS-list.1.3](FS-list.md#13---unused)'s `E2E` rule.
 
-### 3.4 `--size` — per-point lead and full-body measurements
+### 3.4 `--size` — per-coordinate lead and full-body measurements
 
 Size mode emits one row for each declaration site and each citable section site. A healthy stub collapses onto its inline home as in [§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical). A broken stub remains a row at the stub site, with no measurement. Independent duplicate declaration homes and duplicate section claimants remain separate, marked site-local rows ([§FS-list.2.6](FS-list.md#26-duplicate-declarations), [§FS-list.2.7](FS-list.md#27-duplicate-sections)).
 

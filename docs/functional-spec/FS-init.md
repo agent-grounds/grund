@@ -457,7 +457,7 @@ Because the section's content derives from config rather than the template alone
 
 ##### 2.3.5.9 The block versions this section moved
 
-The managed-block version was bumped to carry this config-derived content under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), and bumped again to **v8** when the rendering of [§FS-init.2.3.5.1](FS-init.md#2351-layout) to [§FS-init.2.3.5.7](FS-init.md#2357-the-grounding-sentence) replaced the flat one this section used to specify — which stated no unit, grouped no conjunction, rendered no grounding sentence, and leaked `*/AR` into prose ([§DF-directions-render](../decisions/functional/DF-directions-render.md#df-directions-render-the-citation-directions-wording-is-chosen-once-against-a-canonical-config)). The later v9 bump is solely the point-size sweep in [§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding); it changes no citation-direction rendering.
+The managed-block version was bumped to carry this config-derived content under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), and bumped again to **v8** when the rendering of [§FS-init.2.3.5.1](FS-init.md#2351-layout) to [§FS-init.2.3.5.7](FS-init.md#2357-the-grounding-sentence) replaced the flat one this section used to specify — which stated no unit, grouped no conjunction, rendered no grounding sentence, and leaked `*/AR` into prose ([§DF-directions-render](../decisions/functional/DF-directions-render.md#df-directions-render-the-citation-directions-wording-is-chosen-once-against-a-canonical-config)). The later v9 bump is solely the coordinate-size sweep in [§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding); it changes no citation-direction rendering.
 
 ##### 2.3.5.10 Chapter rules
 
@@ -494,8 +494,8 @@ the in-body Markdown heading policy in [§FS-init.2.3.4.5.1](FS-init.md#23451-un
 the supported predecessor, repaired by the same one-command `grund init`
 re-render ([§FS-init.2.3.10.1](FS-init.md#23101-re-rendering-an-existing-block)). A rule-enabled repository uses **v11** because [§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules)
 adds byte-compared content. Removing the opt-in returns to byte-identical v10
-output rather than making v11 universal. The v9 history remains the point-size
-sweep added in [§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding), with v8 as its predecessor.
+output rather than making v11 universal. The v9 history remains the
+coordinate-size sweep added in [§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding), with v8 as its predecessor.
 
 
 ##### 2.3.7.2 What `check` compares
