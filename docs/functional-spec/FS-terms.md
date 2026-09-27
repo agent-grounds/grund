@@ -1,10 +1,11 @@
-# FS-terms: the shared vocabulary of the functional spec
+# FS-terms: the shared vocabulary of the functional spec and the architecture
 
-The words the functional spec shares are settled here, once, and every spec leans on
-the groups below instead of defining them again. A slice read on its own only answers
-on its own if its words mean one thing, which is what the escalation ladder of
+The words the functional spec and the architecture share are settled here, once, and
+every spec and every architecture page leans on the groups below instead of defining
+them again. A slice read on its own only answers on its own if its words mean one
+thing, which is what the escalation ladder of
 [§GOAL-token-economy.1](../goals.md#1-what-this-requires) assumes: the cheap read stops being cheap the moment a reader has
-to open twenty-three other files to learn which sense of *declaration*, *coordinate* or
+to open thirty-seven other files to learn which sense of *declaration*, *coordinate* or
 *finding* is meant. A group here is a coordinate and a term is a **bold label**, so the
 vocabulary joins that ladder at the group and no individual word becomes a citation
 target.
@@ -12,26 +13,28 @@ target.
 ## terms: Terms
 
 **One definition per word.** A word defined here is not defined again elsewhere. A
-spec's Terms section may narrow a shared word only in this form:
-`- **<term> (narrowed)** — §FS-terms.terms.<N>. In this spec, within <scope>, <what this spec adds>; elsewhere the shared definition applies.`
+document's Terms section may narrow a shared word only in this form:
+`- **<term> (narrowed)** — §FS-terms.terms.<N>. In this document, within <scope>, <what this document adds>; elsewhere the shared definition applies.`
 The entry states only what it adds and neither restates nor contradicts the shared
 definition.
 
 Every declaration the functional-spec index lists carries exactly one
-`## terms: Terms` chapter, placed immediately after its lead, and that chapter opens
-with a **lean line**: a citation of each group below that the spec takes a word from,
-naming those words in parentheses.
+`## terms: Terms` chapter, placed immediately after its lead. Every page the
+architecture index links carries the same chapter, placed immediately after its
+`placement` chapter, the index page itself excepted. That chapter opens with a **lean
+line**: a citation of each group below that the document takes a word from, naming
+those words in parentheses.
 
 ```text
 Leans on §FS-terms.terms.1 (declaration, ID, section, coordinate),
 §FS-terms.terms.2 (marker, citation), and §FS-terms.terms.5 (finding, severity).
 ```
 
-The line is exhaustive over the shared words the spec uses in the shared sense: groups
-in ascending order, the words inside a group's parentheses in the order of their rows,
-and a group the spec takes no word from omitted entirely. After the lean line the
-chapter carries only the words that spec introduces or narrows, as bold labels in a
-list with no child headings. A chapter holding nothing but a lean line is correct
+The line is exhaustive over the shared words the document uses in the shared sense:
+groups in ascending order, the words inside a group's parentheses in the order of their
+rows, and a group the document takes no word from omitted entirely. After the lean line
+the chapter carries only the words that document introduces or narrows, as bold labels
+in a list with no child headings. A chapter holding nothing but a lean line is correct
 rather than incomplete — the chapter's presence is what is required, and inventing a
 word to fill it is the drift this file exists to close.
 
@@ -45,25 +48,25 @@ own.
 [§GRUND-consistency](../grund.md#grund-consistency-the-structure-stays-consistent) promises that every cited ID and section coordinate resolves. A term
 here is a bold label, not a coordinate, so `grund check` holds the sections that contain
 the vocabulary and the citations that reach those sections — not the labels, the names
-in a lean line's parentheses, their uniqueness or their meaning, or whether a spec's
+in a lean line's parentheses, their uniqueness or their meaning, or whether a document's
 lean line is complete. Three failures therefore pass the gate: a label renamed here
-while other specs still use the word; one word defined under two groups, or in a spec's
-own Terms section, with two meanings; and a lean line that names a group the spec no
-longer leans on, or omits one it does.
+while other documents still use the word; one word defined under two groups, or in a
+document's own Terms section, with two meanings; and a lean line that names a group the
+document no longer leans on, or omits one it does.
 
 Those failures are what this file asks a reviewer to verify by hand. For a change that
 touches shared-term prose, this file, or a Terms section: before adding a label, search
 every Terms section for a second definition; before renaming or removing one, search
-functional-spec prose for the old word and reconcile the results with
+functional-spec and architecture prose for the old word and reconcile the results with
 `grund refs FS-terms.terms.N`; check every narrowing against the one-definition rule
-above; and add to that spec's lean line, under its group, every shared word the change
-newly gives the spec in the shared sense. The review accounts for that and for any
-pre-existing omission it is shown; certifying the completeness of unchanged prose beyond
-that is not part of it.
+above; and add to that document's lean line, under its group, every shared word the
+change newly gives the document in the shared sense. The review accounts for that and
+for any pre-existing omission it is shown; certifying the completeness of unchanged
+prose beyond that is not part of it.
 
-The comparison is over senses, not tokens. A spec that writes `note:` for a stderr hint
-line, or "CLI-level error", is not leaning on *note* or on *level*, a word used only
-in the sense its own row retires is not a lean either, and a token occurring only
+The comparison is over senses, not tokens. A document that writes `note:` for a stderr
+hint line, or "CLI-level error", is not leaning on *note* or on *level*, a word used
+only in the sense its own row retires is not a lean either, and a token occurring only
 inside a link target, a heading anchor or a frozen code name is a name, not a use.
 
 ### terms.1: Declarations and coordinates
@@ -122,3 +125,8 @@ inside a link target, a heading anchor or a frozen code name is a name, not a us
 
 - **value, component, binding** — An opted-in declaration, one of its child headings, and the comment form that cites one component. Displaces *value field*.
 - **fetcher, snapshot** — The configured fetch executable and the file it writes. *Integration* stays for rendering-layer clients only.
+
+### terms.8: The architecture's own words
+
+- **box** — A component's place in the system diagram: what feeds it, what it feeds. The diagram sense only; *out of the box* and *black-box* are idioms, not this word.
+- **meter** — What measures a goal or a requirement from outside it, and is therefore not a component.

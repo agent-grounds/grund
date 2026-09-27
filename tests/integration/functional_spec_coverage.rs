@@ -217,6 +217,7 @@ const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-terms.terms.5", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-terms.terms.6", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-terms.terms.7", reason: "vocabulary, not a behavioral requirement" },
+    Exception { id: "FS-terms.terms.8", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-check.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-cli.terms", reason: "vocabulary, not a behavioral requirement" },
     Exception { id: "FS-completions.terms", reason: "vocabulary, not a behavioral requirement" },
