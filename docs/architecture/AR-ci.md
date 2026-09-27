@@ -147,3 +147,19 @@ Neither of those rules is visible to `fissile`, which validates the sizes but no
 ### 9.10 Remote enforcement
 
 Per [§AR-ci.1](AR-ci.md#1-pre-commit-is-the-source-of-truth) the hook is in `.pre-commit-config.yaml` rather than a developer-local hook, so CI installs `lychee` beside `pre-commit` on the one leg that runs it, and `pre-commit run --all-files` enforces the same budgets remotely. The `fissile` binary is installed on every leg instead, ahead of the Python tests, because the ownership regression of [§AR-core-module-layout.1.5](AR-core-module-layout.md#15-split-ownership) measures with it. The hook takes its file list from pre-commit, so a commit measures what it touches while the CI run measures the whole tree; `[scan].exclude` applies either way, keeping generated asset mirrors and the e2e fixture trees out of both.
+
+## 10. A test fixture owns the tree it scans
+
+A test that writes a temporary repository and scans it must be the only thing writing, reading and removing that tree. Where two tests can name one root, the suite fails on a file it wrote itself, on one platform, and passes on the rerun — and a check that goes green on a rerun teaches everyone to rerun, which is how a genuine platform-specific regression gets waved through. That is [§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) failing at the gate instead of at a release, and the gate cannot tell the two apart from the outside, so the rule is on the fixture: its root is unique by construction, and it holds that root exclusively.
+
+### 10.1 Identity, not the clock
+
+A fixture root's name is derived from what distinguishes the fixture — the process id together with the thread that builds it, or a process-wide atomic serial — and never rests on a reading of the wall clock. `libtest` runs a test binary's cases as threads of one process, so inside a binary the process id distinguishes nothing and a timestamp is the whole of such an identity; two cases whose readings land in one tick of the platform's clock resolution then name one directory. That resolution is the platform's to choose — macOS reports `clock_getres(CLOCK_REALTIME)` as 1000ns where Linux reports 1ns — so a clock-derived name is unique on a maintainer's machine and not on the runner's, which is the asymmetry [§AR-ci.2](AR-ci.md#2-platform-scope) leaves to the build-and-test jobs and the one no one is positioned to debug.
+
+Stated so a test can hold a fixture to it, with no control over the clock: **two roots named from one clock reading still differ.** A thread id alone does not satisfy that, because two fixtures built on one thread share it; the process-wide atomic serial of the four `crates/grund-cli/tests` fixtures does, and so does a thread id carrying one. `crates/grund-core/src/testing.rs` (`test_root`) takes a caller-supplied name beside its thread id for the same reason.
+
+### 10.2 The root is claimed, not adopted
+
+A fixture creates its root exclusively — `create_dir` on the root itself, so a name already taken is an `AlreadyExists` the suite reports — rather than `create_dir_all` over whatever is already there. This is the half that closes the class rather than one instance of it: a unique name makes today's collision impossible, while an exclusive claim makes any later one a named failure at the moment it happens instead of a file vanishing mid-scan in an unrelated case.
+
+Two things follow. A fixture removes only a tree it created, because a `Drop` that removes the root by name whether or not this fixture created it is what turns sharing into a deleted tree. And a refused claim leaves what it found untouched: clearing a root in order to take it moves the deletion earlier rather than removing it, so pre-clearing is not a substitute for refusing, however reasonable it looks as leftover hygiene.
