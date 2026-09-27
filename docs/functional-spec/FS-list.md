@@ -9,8 +9,9 @@ lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (citat
 [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member, alias), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (rule), and
 [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, fetcher, snapshot).
 
-- **coordinate-size** — One measured row of `--size`: the lead and full-body
-  measurement of one declaration or citable section.
+- **coordinate-size** — One row of `--size`, for one declaration or citable
+  section: its lead and full-body measurement, or the site alone where there
+  is nothing to measure.
 
 ## 1. Inputs
 
@@ -21,7 +22,7 @@ grund list [<path>] [--selector <selector>] [--kind <KIND>[,<KIND>…]]… [--pr
 
 `<path>` is the directory or file whose tree is scanned, `.` by default. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). `--format text|json` picks the output shape ([§FS-list.3](FS-list.md#3-outputs)), `text` by default.
 
-`--kind` selects configured citable kinds and refuses an unknown one, or a non-citable one with the two-line message giving its reason ([§FS-list.1.1](FS-list.md#11---kind)). `--project` narrows a workspace catalog to the named projects ([§FS-list.1.2](FS-list.md#12---project)). `--unused` keeps only uncited declarations, discounting a kind's index entries and leaving out `E2E` cases unless `--kind` selects them ([§FS-list.1.3](FS-list.md#13---unused)). `--summary` prints one count per kind under those same filters ([§FS-list.1.4](FS-list.md#14---summary)). `--size` and `--top` switch to measured coordinate-size rows over a closed unit set ([§FS-list.1.5](FS-list.md#15---size), [§FS-list.1.6](FS-list.md#16---top)); their syntax and combination errors are launch errors, decided before config discovery or scanning ([§FS-list.1.7](FS-list.md#17-size-selector-errors)).
+`--kind` selects configured citable kinds and refuses an unknown one, or a non-citable one with the two-line message giving its reason ([§FS-list.1.1](FS-list.md#11---kind)). `--project` narrows a workspace catalog to the named projects ([§FS-list.1.2](FS-list.md#12---project)). `--unused` keeps only uncited declarations, discounting a kind's index entries and leaving out `E2E` cases unless `--kind` selects them ([§FS-list.1.3](FS-list.md#13---unused)). `--summary` prints one count per kind under those same filters ([§FS-list.1.4](FS-list.md#14---summary)). `--size` and `--top` switch to coordinate-size rows over a closed unit set ([§FS-list.1.5](FS-list.md#15---size), [§FS-list.1.6](FS-list.md#16---top)); their syntax and combination errors are launch errors, decided before config discovery or scanning ([§FS-list.1.7](FS-list.md#17-size-selector-errors)).
 
 `list` is a query, like `show` and `refs` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)).
 
