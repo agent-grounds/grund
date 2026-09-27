@@ -1,0 +1,1 @@
+docs/architecture/AR-001-thing.md:1: error: AR-001-thing appears in docs/architecture/README.md but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an error in grund 0.13.0

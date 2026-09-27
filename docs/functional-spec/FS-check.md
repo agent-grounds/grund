@@ -783,9 +783,21 @@ For an ID covered by a declaration under `folder`, one recognized citation ([§F
 
 Between them sits a third case, and it lands here: a citation `grund fmt --write` would not wrap ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)) is not an entry at all, so an index that mentions the ID only that way is reported *here*, where the fix is to write an entry, and never under [§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link), where the command the message names would decline to act ([§FS-check.3.17.5](FS-check.md#3175-anything-else-is-not-an-entry)).
 
+So is a mention the scan never recorded as a citation at all — a markerless link or a bare file name under `strict = true`, where no citation exists to be discarded. The two reach this rule by different routes and are reported in the same words: where the index mentions the ID and holds no entry for it, the finding says the ID **appears** in the index but not as an entry, and names the form an entry takes. One sentence rather than two, because the remedy is the same either way and the look of [§FS-check.3.18.5.1](FS-check.md#31851-what-appears-means) sees both. What counts as a mention is that point.
+
+##### 3.18.5.1 What "appears" means
+
+The look is at text rather than at citations, and it is deliberately narrow. The index **mentions** the ID when some line of the index file carries either the ID as `grund` renders it — with or without the marker, with or without a section suffix, as an ID-shaped token on its own boundaries, so a longer ID containing this one is not a mention of it — or the file name of the declaration the finding is anchored at, as a whole name, so `overview.md` is not mentioned by `my-overview.md` and not by `overview.markdown`.
+
+Two kinds of line are not looked at. A line inside a Markdown fenced code block, by the one fence reader every surface shares ([§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code)), because an index that illustrates the form in an example has listed nothing. And a declaration heading: a citation riding on one is not an entry either ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)), and a line that declares an ID is not a page mentioning it.
+
+Inline code is **not** excluded. An index that shows the ID in an inline span has mentioned it, which is what makes one sentence true both of a citation the scan recorded and discarded ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)) and of a markerless mention it never recorded at all.
+
+A mention is never itself a finding and never satisfies the rule ([§FS-check.3.18.6](FS-check.md#3186-and-nothing-more)): it chooses the words of a finding this rule has already raised. Where the index file could not be read there is no text to look at, so [§FS-check.3.18.7](FS-check.md#3187-a-missing-index-file)'s parenthesis stands alone and the two clauses never appear on one line.
+
 #### 3.18.6 And nothing more
 
-Layout is free: table or list, grouped or flat, in any order, with any prose around it. `docs/functional-spec/README.md` groups its entries under six curated headings, and a rule that dictated a table would break the best index in the tree. One link per ID is enough — every other occurrence of the ID in the index is untouched and is never a finding ([§DF-index-entry-form.2.3](../decisions/functional/DF-index-entry-form.md#23-one-link-per-id-not-every-mention)).
+Layout is free: table or list, grouped or flat, in any order, with any prose around it. `docs/functional-spec/README.md` groups its entries under six curated headings, and a rule that dictated a table would break the best index in the tree. One link per ID is enough — every other occurrence of the ID in the index is untouched and is never a finding ([§DF-index-entry-form.2.3](../decisions/functional/DF-index-entry-form.md#23-one-link-per-id-not-every-mention)) — and the mention [§FS-check.3.18.5.1](FS-check.md#31851-what-appears-means) looks for is not an exception to that: it changes the words of a finding this rule already raises, and raises none.
 
 #### 3.18.7 A missing index file
 
