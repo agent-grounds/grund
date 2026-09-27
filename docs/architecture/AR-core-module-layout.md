@@ -10,6 +10,14 @@ components (AR-system.2) ─► [ file layout rule ] ─► one owner per file �
 
 Not a component: the rule for how the engine's files are named, owned and sized, whichever component they implement. It takes the component list of [§AR-system.2](README.md#2-components) and gives each file exactly one owner among the categories below, which is what a reader and `fissile` need to find and bound a file ([§AR-system.5](README.md#5-what-holds-the-shape)). It says nothing about what a component may know; that is [§AR-system.4](README.md#4-dependency-direction).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (section), [§FS-terms.terms.2](../functional-spec/FS-terms.md#terms2-citations) (citation),
+[§FS-terms.terms.3](../functional-spec/FS-terms.md#terms3-source-forms) (note), and [§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, alias).
+
+- **module directory** — One directory under `crates/grund-core/src/`, named after the
+  component it holds, whose `mod.rs` is its whole boundary.
+
 ## 1. Module categories
 
 `crates/grund-core/src/lib.rs` stays the engine crate entrypoint and public Rust

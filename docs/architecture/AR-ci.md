@@ -12,6 +12,12 @@ pre-commit hook list ─► [ CI ] ─► one verdict per push or pull request
 
 Not a component: CI is the remote form of the local gate over the whole tree, and it measures the system rather than sits in it ([§AR-system.5](README.md#5-what-holds-the-shape)). It takes the pre-commit hook list and gives one verdict per push or pull request. The only `grund` it runs is the one the tree builds, through `cargo run`, so the gate never depends on a released binary; it knows nothing of the pipeline ([§AR-system.1](README.md#1-the-system)) beyond the commands the hooks spell (section 1).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (ID, home, citable, section, lead),
+[§FS-terms.terms.2](../functional-spec/FS-terms.md#terms2-citations) (citation, citation site), [§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan),
+[§FS-terms.terms.5](../functional-spec/FS-terms.md#terms5-findings) (verdict), and [§FS-terms.terms.8](../functional-spec/FS-terms.md#terms8-the-architectures-own-words) (meter).
+
 ## 1. Pre-commit is the source of truth
 
 The hook list lives in `.pre-commit-config.yaml`. CI must invoke that list directly with `pre-commit run --all-files`, rather than hand-copying each hook into separate workflow steps. The workflow may install hook prerequisites first, but the set of checks is defined by the pre-commit config.

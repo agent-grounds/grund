@@ -11,6 +11,13 @@ goals, requirements ─► [ meters ] ─► one row each ─┬─► functiona
 
 Not a component: the map from every goal and requirement to the spec, fixture or gate that measures it ([§AR-system.5](README.md#5-what-holds-the-shape)). It takes the goal and requirement pages and gives one meter row each. The rows point outward — at behavior specs, e2e cases, [§AR-ci](AR-ci.md#ar-ci-ci-mirrors-the-local-pre-commit-gate) and [§AR-benchmarks](AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) — and never into a component's design, so this page knows nothing of the pipeline ([§AR-system.1](README.md#1-the-system)) beyond which measurement sits on which surface.
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, home, section, lead, catalog),
+[§FS-terms.terms.2](../functional-spec/FS-terms.md#terms2-citations) (citation), [§FS-terms.terms.3](../functional-spec/FS-terms.md#terms3-source-forms) (doc-comment),
+[§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan, scope), [§FS-terms.terms.7](../functional-spec/FS-terms.md#terms7-values-and-integrations) (snapshot), and
+[§FS-terms.terms.8](../functional-spec/FS-terms.md#terms8-the-architectures-own-words) (meter).
+
 ## 1. Rule
 
 - `docs/goals.md` owns intent and ordering principles.

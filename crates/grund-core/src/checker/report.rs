@@ -46,6 +46,16 @@ use crate::scanner::is_scannable;
 /// evaluation, and semantic deduplication stay in §AR-rules; this component
 /// only sequences them and merges their diagnostics.
 ///
+/// ## terms: Terms
+///
+/// Leans on §FS-terms.terms.1 (declaration, ID, kind, home, citable, body,
+/// section, coordinate, index), §FS-terms.terms.2 (marker, citation, shorthand,
+/// canonical form, citation site), §FS-terms.terms.3 (stub, doc-comment, note),
+/// §FS-terms.terms.4 (scan, scope, config root, workspace, member),
+/// §FS-terms.terms.5 (finding, suggestion, verdict), §FS-terms.terms.6 (direction,
+/// rule), §FS-terms.terms.7 (value, component, binding), and §FS-terms.terms.8
+/// (box).
+///
 /// ## 1. Inputs and outputs
 ///
 /// - Input: loaded `Findings` from the resolver, chapter-rule `Diagnostic`s

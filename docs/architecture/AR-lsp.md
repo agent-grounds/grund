@@ -12,6 +12,17 @@ editor ◄── LSP over stdio ──► [ grund-lsp ] ──► api ──┬�
 
 A frontend ([§AR-system.3](README.md#3-frontends)) depending on `grund-core` and on nothing of `grund-cli`. It takes LSP requests over stdio and gives back what the api's editor queries return ([§AR-system.2.7](README.md#27-queries), [§AR-system.2.9](README.md#29-api)) — the snapshot, the hover body, the on-type edits — and the check report as diagnostics. It has no scanner, checker, `show` extraction or `fmt` planning of its own, no filesystem walk outside `grund_core::scan` and no second config loader: batch rendering asks `grund-core` for upward discovery and effective scan extensions, and a focused integration module owns only deterministic rendering and conflict-safe materialization. The JSON-RPC loop and protocol types live only here — `grund-core` references no `lsp-server` or `lsp-types`, and `grund-cli` pulls none in ([§AR-bindings.3](AR-bindings.md#3-cratesgrund-cli-the-cli-binary)) — which is what keeps the server optional ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary), [§AR-system.4](README.md#4-dependency-direction)).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, body, section),
+[§FS-terms.terms.2](../functional-spec/FS-terms.md#terms2-citations) (marker, citation), [§FS-terms.terms.3](../functional-spec/FS-terms.md#terms3-source-forms) (stub),
+[§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, member), [§FS-terms.terms.5](../functional-spec/FS-terms.md#terms5-findings) (finding,
+severity, verdict), and [§FS-terms.terms.7](../functional-spec/FS-terms.md#terms7-values-and-integrations) (value, component, binding, snapshot).
+
+- **snapshot (narrowed)** — [§FS-terms.terms.7](../functional-spec/FS-terms.md#terms7-values-and-integrations). In this document, within the server's own
+  state, it also names the immutable scan result one request is answered from; elsewhere
+  the shared definition applies.
+
 ## 1. Crate boundary
 
 `grund-lsp` is a binary crate with one product boundary: the optional server and the editor-client configuration that launches it. Its no-argument path speaks LSP over stdio and translates each request into a `grund-core` call; a thin pre-transport batch path lists, renders, or materializes the embedded integration artifacts of [§FS-lsp.2.4](../functional-spec/FS-lsp.md#24-installed-editor-integrations). What it does not contain is its placement chapter; its dependency cost stays in `grund-lsp`, and a user installing only the `grund` CLI pays none of it ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary)).

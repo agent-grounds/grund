@@ -48,6 +48,14 @@ command one ordered list of `Diagnostic`s to carry on whatever it returns — it
 renders none of them ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate),
 [§DA-engine-renders-nothing](../decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires)).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section, coordinate,
+catalog), [§FS-terms.terms.2](../functional-spec/FS-terms.md#terms2-citations) (citation, qualified citation, shorthand, canonical
+form, citation site), [§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member, alias),
+[§FS-terms.terms.5](../functional-spec/FS-terms.md#terms5-findings) (finding, verdict), [§FS-terms.terms.6](../functional-spec/FS-terms.md#terms6-rules-and-directions) (rule), and
+[§FS-terms.terms.8](../functional-spec/FS-terms.md#terms8-the-architectures-own-words) (box).
+
 ## 1. The resolver: one function
 
 `target_for_citation(cite, local, local_config, workspace)` in

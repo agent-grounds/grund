@@ -13,6 +13,19 @@ grammar ───┘                            ├─► queries
 
 The fifth box of the pipeline ([§AR-system.2.5](README.md#25-scanner)). It takes the scope from workspace and config ([§AR-system.2.4](README.md#24-workspace), [§AR-system.2.3](README.md#23-config)) and the lexical facts from grammar ([§AR-system.2.1](README.md#21-grammar)), and gives one `Findings` (section 3) to the checker, the queries and the writers ([§AR-system.2.6](README.md#26-checker), [§AR-system.2.7](README.md#27-queries), [§AR-system.2.8](README.md#28-writers)). It knows no rule and no frontend, and never asks whether it is in a workspace: the resolver above it answers that ([§AR-workspace.3.2](AR-workspace.md#32-the-scanner-never-branches-on-workspace)).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section,
+coordinate, catalog), [§FS-terms.terms.2](../functional-spec/FS-terms.md#terms2-citations) (marker, citation, qualified citation,
+shorthand, canonical form, citation site), [§FS-terms.terms.3](../functional-spec/FS-terms.md#terms3-source-forms) (stub, doc-comment,
+note), [§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, workspace, member, alias),
+[§FS-terms.terms.5](../functional-spec/FS-terms.md#terms5-findings) (finding, suggestion, caution, verdict, anchor),
+[§FS-terms.terms.6](../functional-spec/FS-terms.md#terms6-rules-and-directions) (direction), [§FS-terms.terms.7](../functional-spec/FS-terms.md#terms7-values-and-integrations) (value, component, binding), and
+[§FS-terms.terms.8](../functional-spec/FS-terms.md#terms8-the-architectures-own-words) (box).
+
+- **body span** — The byte extent of a declaration's body, assigned once by the scan and
+  reused by every coordinate decision.
+
 ## 1. Tree walk
 
 A recursive walk from the scan roots ([§AR-scanner.1.6](AR-scanner.md#16-the-roots-the-walk-starts-from)) using the `ignore` crate, the same walker that powers `ripgrep`, chosen because it gives `.gitignore` support for free ([§AR-scanner.1.1](AR-scanner.md#11-respecting-gitignore-and-friends)). It hands the per-file scan one sorted list holding each physical file once ([§AR-scanner.1.8](AR-scanner.md#18-one-physical-file-is-read-once), [§AR-scanner.1.12](AR-scanner.md#112-the-extension-filter-and-the-scan-order)), beside the directories it descended into ([§AR-scanner.1.10](AR-scanner.md#110-the-walk-carries-out-the-directories-it-descended-into)).

@@ -31,6 +31,13 @@ The fourth box of the pipeline ([§AR-system.2.4](README.md#24-workspace)). It t
 
 Everything here is answered from config text alone. Anything that needs a walk, or the `Findings` a walk produced, is the resolver's — which is why the walk-level facts this layer once reached up for are `config/scope_roots.rs` and `model/paths.rs` now, and why the [§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread) probe is *posed* here and *answered* there ([§AR-resolver.placement](AR-resolver.md#placement-where-the-resolver-sits)).
 
+## terms: Terms
+
+Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, section, catalog),
+[§FS-terms.terms.2](../functional-spec/FS-terms.md#terms2-citations) (marker, citation, qualified citation, citation site),
+[§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, workspace, member, alias),
+[§FS-terms.terms.5](../functional-spec/FS-terms.md#terms5-findings) (finding, verdict), and [§FS-terms.terms.8](../functional-spec/FS-terms.md#terms8-the-architectures-own-words) (box).
+
 ## 1. Layering
 
 The single-project pipeline ([§AR-system.1](README.md#1-the-system)) gains one dimension and no new layer. Read top down: the core's shared loader, `load_workspace_context` / `run_check` ([§AR-resolver.3](AR-resolver.md#3-downstream-commands-compose-not-duplicate)), decides workspace versus single-project run and assembles the project map and current alias; the checker calls the resolver and asks neither "is this a workspace?" nor "what alias am I?"; the resolver is the one function that knows what "qualified" means at runtime ([§AR-resolver.1](AR-resolver.md#1-the-resolver-one-function)); the scanner emits `Citation { namespace, … }` from one regex ([§AR-workspace.2](AR-workspace.md#2-single-citation-grammar)) and obeys the workspace boundary roots in one walk, never asking "am I in a workspace?" ([§AR-workspace.3.2](AR-workspace.md#32-the-scanner-never-branches-on-workspace)). The CLI never reaches into a regex, and no layer reads a layer above it ([§AR-system.4](README.md#4-dependency-direction)).
