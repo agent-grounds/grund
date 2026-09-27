@@ -41,9 +41,11 @@ word to fill it is the drift this file exists to close.
 The *Displaces* sentences below bind prose. They do not reach a shipped surface or a
 frozen text: the `value_chapter` config key, the `unknown reference` message, the
 `namespace` bytes `grund init` writes from `templates/`, the ID `DF-chapter-rules`, and
-the accepted GOAL, REQ and decision-record texts keep the words they have, and a
-retired word is rewritten as prose is written or rewritten rather than in a pass of its
-own.
+the accepted GOAL, REQ and decision-record texts keep the words they have. The debt
+they create is never a precondition: a retired word is rewritten as prose is written or
+rewritten, so no change owes a pass of its own and none is held for one. A pass
+commissioned on purpose is the other way to pay it and is permitted; it answers for the
+words it names and for nothing else.
 
 [§GRUND-consistency](../grund.md#grund-consistency-the-structure-stays-consistent) promises that every cited ID and section coordinate resolves. A term
 here is a bold label, not a coordinate, so `grund check` holds the sections that contain
@@ -86,7 +88,7 @@ inside a link target, a heading anchor or a frozen code name is a name, not a us
 ### terms.2: Citations
 
 - **marker** — The `§` character and nothing else. Every other *marker* becomes a delimiter (the managed block), a tag (a value), or a noun of its own.
-- **citation** — Marker plus coordinate, wherever it appears. A bare citation only exists under `strict = false`. Displaces *reference*, *ref* and *cross-reference* in prose; the `[reference]` config table keeps its name.
+- **citation** — Marker plus coordinate, wherever it appears. A bare citation only exists under `strict = false`. Displaces *reference*, *ref* and *cross-reference* in prose; the `[reference]` config table and the `--cross-refs` pass keep their names, and *cross-reference* stands where it means the markup wrapper rather than the citation inside it.
 - **qualified citation** — A citation carrying an alias: `<§>alias/ID`. Displaces *cross-project reference* and *namespaced citation*.
 - **shorthand** — The number-only citation form.
 - **canonical form** — The persisted ID form `fmt` rewrites toward.
