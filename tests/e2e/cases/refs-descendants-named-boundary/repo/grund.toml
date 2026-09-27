@@ -1,0 +1,18 @@
+grund_config_version = 1
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+index = false
+
+[scan]
+include = ["docs"]
+extensions = ["md"]
