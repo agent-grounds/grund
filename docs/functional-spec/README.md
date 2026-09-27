@@ -50,7 +50,7 @@ Behavior every subcommand inherits.
 
 The words the specs share, settled once so a slice read alone still reads alone.
 
-- [§FS-terms](FS-terms.md#fs-terms-the-shared-vocabulary-of-the-functional-spec) — the shared vocabulary of the functional spec
+- [§FS-terms](FS-terms.md#fs-terms-the-shared-vocabulary-of-the-functional-spec-and-the-architecture) — the shared vocabulary of the functional spec and the architecture
 
 ## Verbose fixtures
 
