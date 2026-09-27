@@ -5,7 +5,9 @@
 use grund_core::{Findings, scan};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Eq, PartialEq)]
@@ -345,17 +347,32 @@ struct Fixture {
     root: PathBuf,
 }
 
+/// The name a fixture gives its root (§AR-ci.10.1). `clock` is the wall-clock
+/// reading the name is allowed to see, taken as an argument rather than read
+/// here so that a test can hold two names to one reading without a clock shim:
+/// what the identity may not do is rest on it.
+fn fixture_root_name(clock: SystemTime) -> String {
+    let nonce = clock
+        .duration_since(UNIX_EPOCH)
+        .expect("clock after epoch")
+        .as_nanos();
+    format!(
+        "grund-functional-spec-coverage-{}-{nonce}",
+        std::process::id()
+    )
+}
+
 impl Fixture {
     fn new() -> Self {
-        let nonce = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("clock after epoch")
-            .as_nanos();
-        let root = std::env::temp_dir().join(format!(
-            "grund-functional-spec-coverage-{}-{nonce}",
-            std::process::id()
-        ));
-        fs::create_dir_all(root.join("docs")).expect("create fixture docs");
+        let root = std::env::temp_dir().join(fixture_root_name(SystemTime::now()));
+        Self::claim(root).expect("claim fixture root")
+    }
+
+    /// Take `root` for this fixture's exclusive use and write the synthetic
+    /// repository into it (§AR-ci.10.2). A root that already exists is some
+    /// other fixture's, so the error is reported rather than the tree shared.
+    fn claim(root: PathBuf) -> io::Result<Self> {
+        fs::create_dir_all(root.join("docs"))?;
         fs::write(
             root.join("grund.toml"),
             r#"grund_config_version = 1
@@ -380,8 +397,7 @@ title = "Behavior"
 [scan]
 extensions = ["md", "rs"]
 "#,
-        )
-        .expect("write fixture config");
+        )?;
         fs::write(
             root.join("docs/spec.md"),
             concat!(
@@ -396,9 +412,8 @@ extensions = ["md", "rs"]
                 "# FS-second: Second declaration\n\n",
                 "## 1. Its own section\n",
             ),
-        )
-        .expect("write fixture spec");
-        Self { root }
+        )?;
+        Ok(Self { root })
     }
 
     fn scan(&self) -> Findings {
@@ -596,5 +611,101 @@ fn repository_evidence_counts_sources_and_excludes_its_own_synthetic_proofs() {
             .map(str::to_string)
         ),
         "only exact manifests and live citations in the approved sources count"
+    );
+}
+
+/// A root for the cases below, which have to know a path before a fixture takes
+/// it. Named the way §AR-ci.10.1 asks — a serial beside the thread — so the
+/// cases that pin the fixture's identity cannot be bitten by the defect they
+/// pin.
+fn held_root(case: &str) -> PathBuf {
+    static NEXT: AtomicUsize = AtomicUsize::new(0);
+    std::env::temp_dir().join(format!(
+        "grund-functional-spec-coverage-held-{}-{:?}-{}-{case}",
+        std::process::id(),
+        std::thread::current().id(),
+        NEXT.fetch_add(1, Ordering::Relaxed)
+    ))
+}
+
+/// Two fixtures whose clock readings land in one tick still name two
+/// directories (§AR-ci.10.1). Freezing the reading is what makes this a test
+/// rather than a race: on a platform whose `CLOCK_REALTIME` resolution is
+/// 1000ns this is the ordinary case, not a contrived one.
+#[test]
+fn two_fixture_roots_named_from_one_clock_reading_differ() {
+    let tick = SystemTime::now();
+    assert_ne!(
+        fixture_root_name(tick),
+        fixture_root_name(tick),
+        "two fixtures that read the clock inside one tick name the same \
+         directory, so the first to finish removes the tree the second is \
+         still scanning"
+    );
+}
+
+/// The same reading taken from two threads (§AR-ci.10.1). This is the shape the
+/// gate actually fails in: `libtest` runs this binary's six fixtures as threads
+/// of one process, so the process id is shared and the reading is the whole of
+/// what is left to tell them apart.
+#[test]
+fn two_threads_naming_a_root_from_one_clock_reading_differ() {
+    let tick = SystemTime::now();
+    let here = fixture_root_name(tick);
+    let there = std::thread::spawn(move || fixture_root_name(tick))
+        .join()
+        .expect("name a fixture root on another thread");
+    assert_ne!(
+        here, there,
+        "two test threads that read the clock inside one tick name the same \
+         directory, which is the collision the macOS leg of the matrix fails on"
+    );
+}
+
+/// A root a fixture did not create is not its root (§AR-ci.10.2). `create_dir`
+/// on the root makes a name already taken an `AlreadyExists` the case reports,
+/// where `create_dir_all` accepts the existing tree and two fixtures share one.
+#[test]
+fn a_fixture_refuses_a_root_that_already_exists() {
+    let held = held_root("refuses-an-existing-root");
+    fs::create_dir_all(held.join("docs")).expect("pre-create the root a colliding fixture takes");
+
+    let outcome = Fixture::claim(held.clone());
+    let refused = outcome.as_ref().err().map(io::Error::kind);
+    drop(outcome);
+    let _ = fs::remove_dir_all(&held);
+
+    assert_eq!(
+        refused,
+        Some(io::ErrorKind::AlreadyExists),
+        "claiming a root that already exists succeeded, so two fixtures naming \
+         one directory share a tree and the first Drop removes it under the \
+         other's scan"
+    );
+}
+
+/// A refused claim leaves what it found alone (§AR-ci.10.2). Clearing a root in
+/// order to take it moves the deletion earlier rather than removing it, and
+/// leftover hygiene is what makes that look reasonable, so it is worth pinning
+/// beside the refusal rather than inside it.
+#[test]
+fn a_refused_claim_does_not_touch_the_tree_it_found() {
+    let held = held_root("leaves-the-tree-it-found");
+    fs::create_dir_all(held.join("docs")).expect("pre-create the held root");
+    let holders = held.join("docs/spec.md");
+    let written = "written by the fixture that holds this root\n";
+    fs::write(&holders, written).expect("write the holder's file");
+
+    let outcome = Fixture::claim(held.clone());
+    let survived = fs::read_to_string(&holders).ok();
+    drop(outcome);
+    let _ = fs::remove_dir_all(&held);
+
+    assert_eq!(
+        survived.as_deref(),
+        Some(written),
+        "a fixture that took a root it did not create overwrote the holder's \
+         file, so the collision destroys the other fixture's tree before any \
+         Drop runs"
     );
 }
