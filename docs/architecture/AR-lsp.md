@@ -17,7 +17,7 @@ A frontend ([§AR-system.3](README.md#3-frontends)) depending on `grund-core` an
 Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, body, section),
 [§FS-terms.terms.2](../functional-spec/FS-terms.md#terms2-citations) (marker, citation), [§FS-terms.terms.3](../functional-spec/FS-terms.md#terms3-source-forms) (stub),
 [§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, member), [§FS-terms.terms.5](../functional-spec/FS-terms.md#terms5-findings) (finding,
-severity, verdict), and [§FS-terms.terms.7](../functional-spec/FS-terms.md#terms7-values-and-integrations) (value, component, binding, snapshot).
+severity, verdict), and [§FS-terms.terms.7](../functional-spec/FS-terms.md#terms7-values-and-integrations) (value, component, binding).
 
 - **snapshot (narrowed)** — [§FS-terms.terms.7](../functional-spec/FS-terms.md#terms7-values-and-integrations). In this document, within the server's own
   state, it also names the immutable scan result one request is answered from; elsewhere

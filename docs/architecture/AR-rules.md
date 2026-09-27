@@ -25,8 +25,8 @@ know this component at all ([§AR-system.4](README.md#4-dependency-direction)).
 
 Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind), [§FS-terms.terms.2](../functional-spec/FS-terms.md#terms2-citations) (citation,
 citation site), [§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace), [§FS-terms.terms.5](../functional-spec/FS-terms.md#terms5-findings)
-(finding, suggestion), [§FS-terms.terms.6](../functional-spec/FS-terms.md#terms6-rules-and-directions) (rule), and [§FS-terms.terms.7](../functional-spec/FS-terms.md#terms7-values-and-integrations)
-(snapshot).
+(finding, suggestion), and [§FS-terms.terms.6](../functional-spec/FS-terms.md#terms6-rules-and-directions)
+(rule).
 
 - **snapshot (narrowed)** — [§FS-terms.terms.7](../functional-spec/FS-terms.md#terms7-values-and-integrations). In this document, within the rules
   component, it also names the immutable `RuleFacts` value one evaluation reads;
