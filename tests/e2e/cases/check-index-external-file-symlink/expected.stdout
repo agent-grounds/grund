@@ -1,1 +1,1 @@
-docs/fs/FS-001-login.md:1: error: FS-001-login is not listed in docs/fs/README.md — became an error in grund 0.13.0
+docs/fs/FS-001-login.md:1: error: FS-001-login appears in docs/fs/README.md but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an error in grund 0.13.0

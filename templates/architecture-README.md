@@ -4,7 +4,7 @@ Internals — *how* this project is built. One file per spec; each H1 declares a
 
 An architectural spec may live inline in the class- or module-level doc-comment of the file it describes. Link its bare ID canonically from this index to enroll it here without a stub; `grund fmt --cross-refs --write` derives that link. A one-line stub whose H1 is `# {AR_ID_SHAPE}: [<path>](<path>)` remains valid when a separate Markdown pointer is useful. `grund <ID>` resolves the source declaration either way.
 
-By convention every declaration under this directory is linked from this README, and `grund check` verifies it: each ID appears here once, as a full Markdown link that `grund fmt --write` writes and keeps current. A canonical bare-ID link to an inline source declaration outside this directory additionally enrolls that declaration here, with no stub file. Extra prose, recommended reading order, and conceptual groupings are welcome around the link set.
+By convention every declaration under this directory is linked from this README, and `grund check` verifies it: each ID appears here once, as a `§`-marked Markdown link — write the row with the marker and `grund fmt --write` keeps the link and its anchor current; a row without the marker is prose, and `grund check` will say so. A canonical bare-ID link to an inline source declaration outside this directory additionally enrolls that declaration here, with no stub file. Extra prose, recommended reading order, and conceptual groupings are welcome around the link set.
 
 | ID | Subject |
 |---|---|

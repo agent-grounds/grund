@@ -1,2 +1,2 @@
-docs/functional-spec/FS-001-login.md:1: error: FS-001-login is not listed in docs/functional-spec/README.md — became an error in grund 0.13.0
+docs/functional-spec/FS-001-login.md:1: error: FS-001-login appears in docs/functional-spec/README.md but not as an entry: an entry is a `§`-marked Markdown link to the declaration — became an error in grund 0.13.0
 docs/functional-spec/FS-001-login.md:1: warning: declared but never cited: FS-001-login
