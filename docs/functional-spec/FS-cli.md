@@ -10,13 +10,13 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 
 ## 1. The default subcommand
 
-- `grund` with no arguments keeps the historical `check .` behavior until grund 0.16.0: it prints `warning: bare \`grund\` still runs \`grund check .\`; use \`grund check\` explicitly. This fallback is removed in grund 0.16.0.` on stderr, then runs the same validation as `grund check .` with the same stdout and exit code.
+- `grund` with no arguments is a CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)): the fallback that ran `grund check .` was removed in grund 0.16.0, and the message names the explicit forms to write instead.
 - `grund <ID>[.<section>] …` (where the first non-flag word is not a known subcommand) is the ID-read query specified by [§FS-show.1](FS-show.md#1-inputs), byte-for-byte equivalent to the explicit `show` subcommand, including show flags written before the ID: `grund --toc FS-check` reads the same body as `grund FS-check --toc`. With no path, both resolve from `.`.
 - `grund <subcommand> …` dispatches to that subcommand: `check`, `show`, `list`, `refs`, `cover`, `fmt`, `fetch`, `id`, `init`, `config`, `agent-setup-instructions`, `completions`, `integrations`. The hidden `complete` subcommand is reserved for generated shell scripts ([§FS-completions.2](FS-completions.md#2-internal-dynamic-helper)); `fetch` is the explicit one-ID writer specified by [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot).
 
 ### 1.1 Why these defaults
 
-Bare `grund` keeps running `check .` so that old CI scripts do not turn into a successful no-op while the default interactive form moves to `grund <ID>` ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)). The ID shorthand exists because resolving a cited fact is the overwhelmingly common interactive invocation; new scripts spell validation `grund check [path]`. Why the `show` subcommand is kept alongside the bare-ID default is recorded in [§DF-show-keep-explicit-form](../decisions/functional/DF-show-keep-explicit-form.md#df-show-keep-explicit-form-grund-keeps-show-as-a-subcommand-alongside-the-bare-id-default).
+Bare `grund` kept running `check .` so that old CI scripts did not turn into a successful no-op ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)), and that same reason is what the removal lands on: the top-level help page would be stdout and exit `0` ([§FS-cli.2.2](FS-cli.md#22-the-top-level-help-page)), which is the successful no-op the window was bought to prevent, so the landing is the CLI-level error of [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location) and a CI step still spelled `grund` goes red naming what to write instead ([§DF-bare-grund-lands-on-an-error](../decisions/functional/DF-bare-grund-lands-on-an-error.md#df-bare-grund-lands-on-an-error-bare-grund-lands-on-a-cli-level-error-not-the-top-level-help-page)). The ID shorthand exists because resolving a cited fact is the overwhelmingly common interactive invocation; new scripts spell validation `grund check [path]`. Why the `show` subcommand is kept alongside the bare-ID default is recorded in [§DF-show-keep-explicit-form](../decisions/functional/DF-show-keep-explicit-form.md#df-show-keep-explicit-form-grund-keeps-show-as-a-subcommand-alongside-the-bare-id-default).
 
 ### 1.2 A first word that is not an ID
 
@@ -86,7 +86,15 @@ It documents the third selector on the same footing: that `--only-rule` narrows 
 
 ## 4. Errors with no source location
 
-An unknown subcommand in help dispatch (`grund help <unknown>`), an unknown or malformed flag, or mutually-exclusive flags are CLI-level errors: `error: <message>` on stderr, empty stdout, exit `2` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages)). A bare-word first argument that is neither a known subcommand nor a valid ID is not a CLI-level error but the failed default-`show` query of [§FS-cli.1.2](FS-cli.md#12-a-first-word-that-is-not-an-id), exit `1`.
+An unknown subcommand in help dispatch (`grund help <unknown>`), an unknown or malformed flag, mutually-exclusive flags, or no arguments at all are CLI-level errors: `error: <message>` on stderr, empty stdout, exit `2` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages)). A bare-word first argument that is neither a known subcommand nor a valid ID is not a CLI-level error but the failed default-`show` query of [§FS-cli.1.2](FS-cli.md#12-a-first-word-that-is-not-an-id), exit `1`.
+
+`grund` with no arguments names both explicit forms, because the fallback that ran `grund check .` was removed in grund 0.16.0 and a caller who wrote the bare form meant one of them:
+
+```
+error: no command given; the bare `grund` fallback that ran `grund check .` was removed in grund 0.16.0
+hint: run `grund check` to validate this repository
+hint: run `grund --help` for the list of subcommands
+```
 
 `check` selector errors use the exact forms in [§FS-check.1](FS-check.md#1-inputs). Missing, empty, malformed, and unknown values are rejected before config discovery or scanning, regardless of `--format`; they therefore always leave stdout empty, remain raw text on stderr, and exit `2`.
 

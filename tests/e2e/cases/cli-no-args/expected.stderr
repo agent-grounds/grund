@@ -1,1 +1,3 @@
-warning: bare `grund` still runs `grund check .`; use `grund check` explicitly. This fallback is removed in grund 0.16.0.
+error: no command given; the bare `grund` fallback that ran `grund check .` was removed in grund 0.16.0
+hint: run `grund check` to validate this repository
+hint: run `grund --help` for the list of subcommands
