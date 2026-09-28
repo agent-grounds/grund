@@ -50,6 +50,14 @@ PATTERNS = tuple(
     (re.compile(re.escape(clause) + r"\s+(?:grund\s+)?\*{0,2}(\d+\.\d+\.\d+)"), clause, direction)
     for clause, direction in CLAUSES
 ) + (
+    # §FS-distribution.4.2.3.1: the landed half of an attribution pair is the bare
+    # clause, and it is a substring of both named-error tenses — so it is read only
+    # where it opens a clause, never where a word stands in front of it.
+    (
+        re.compile(r"(?:^|[,;:])\s*an error in\s+(?:grund\s+)?\*{0,2}(\d+\.\d+\.\d+)"),
+        "an error in",
+        LANDED,
+    ),
     # §FS-distribution.4.2.4: scalar migrations say what a command "will exit"
     # before the final `in grund <release>` deadline rather than putting the
     # release directly after the verb phrase.
