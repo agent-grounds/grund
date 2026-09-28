@@ -13,7 +13,7 @@ const BULLET: &str = "- The operations chapter of each SEG must cite at least on
 
 /// The fixture the aged-block e2e case carries: a two-member workspace whose
 /// `member` holds a rule pinned at `workshop`, and whose managed block a grund
-/// upgrade has aged from v11 to v1.
+/// upgrade has aged from v13 to v1.
 fn aged_workspace(name: &str) -> std::path::PathBuf {
     scratch_from(&case_repo("init-workspace-pinned-rule-member"), name)
 }
@@ -63,7 +63,7 @@ fn a_member_writes_the_block_the_workspace_root_then_accepts() {
     let agents = fs::read_to_string(member.join("AGENTS.md")).expect("managed block");
     assert_eq!(
         version_marker(&agents),
-        "## Grounding with grund (v11)",
+        "## Grounding with grund (v13)",
         "the write is what stops being withheld, so the aged block is rewritten"
     );
     assert!(
