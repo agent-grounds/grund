@@ -83,7 +83,7 @@ is conjunctive (one of each); `"GOAL|GRUND"` inside one entry is the disjunction
 `grund check`'s default run reports **only** `must` / `must-not` violations. The
 `should` levels never appear in check's standing output, for a structural reason:
 RFC-2119 "should" means *may be ignored with good reason*, grund has no per-site
-suppression mechanism, and [§FS-check](../../functional-spec/FS-check.md#fs-check-grund-validates-every-reference-in-a-repo)'s output design makes warnings replace the
+suppression mechanism, and [§FS-check](../../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo)'s output design makes warnings replace the
 `success` marker — so one consciously-accepted deviation would mean the repo never
 prints `success` again. Permanently-ignorable findings are category-incompatible
 with a gate's standing output. This is the same reasoning that keeps the empty-scan

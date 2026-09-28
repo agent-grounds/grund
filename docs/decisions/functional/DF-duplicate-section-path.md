@@ -93,7 +93,7 @@ No `grund_config_version` bump and no `AGENTS.md` block bump: the rule adds no k
 
 ## 3. Rejected alternative: specify first-wins and leave it legal
 
-Write "the first heading claiming a path wins" into [§FS-check](../../functional-spec/FS-check.md#fs-check-grund-validates-every-reference-in-a-repo) and [AR-scanner.2.2](../../architecture/AR-scanner.md#22-section-detection), fix `show` to stop merging, and report nothing.
+Write "the first heading claiming a path wins" into [§FS-check](../../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo) and [AR-scanner.2.2](../../architecture/AR-scanner.md#22-section-detection), fix `show` to stop merging, and report nothing.
 
 It is cheaper, it satisfies the letter of [§REQ-no-wrong-citation.1](../../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) — the rule that picks would be written down — and it was rejected for what it makes permanent. A repository could then carry two "section 1"s indefinitely, legally, with `§<ID>.1` pointing at whichever the author wrote first. The hazard is not that the first read is wrong; it is that **moving a paragraph** between the two sections, or reordering them, changes what every existing citation to that coordinate means, with nothing reported in the run that did it. That is [§GOAL-no-silent-breakage](../../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path) arriving inside a single repository's own edit history, and no amount of specification makes it visible at the moment it happens.
 

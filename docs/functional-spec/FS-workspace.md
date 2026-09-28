@@ -1354,7 +1354,7 @@ All six surfaces above keep the exit codes they had:
 - `cover` — `0` always when the scan succeeds; `2` on a scan error in **any**
   loaded project, for the reason [§FS-cover.4](FS-cover.md#4-exit-codes) gives.
 - Completion helper — quiet failures, exit `0`, unchanged from [§FS-completions.2](FS-completions.md#2-internal-dynamic-helper).
-- `fmt --cross-refs` — unchanged from [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-references-in-bulk).
+- `fmt --cross-refs` — unchanged from [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-citations-in-bulk).
 
 The base every path is spelled from, a scan failure's line included, is [§FS-workspace.8.7.3](FS-workspace.md#873-paths).
 

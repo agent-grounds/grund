@@ -6,12 +6,12 @@ This is the external behavior of `grund` — *what* it does, not how it's built.
 
 The subcommands a user runs on the command line.
 
-- [§FS-check](FS-check.md#fs-check-grund-validates-every-reference-in-a-repo) — grund validates every reference in a repo
+- [§FS-check](FS-check.md#fs-check-grund-validates-every-citation-in-a-repo) — grund validates every citation in a repo
 - [§FS-show](FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id) — grund reads a single declaration body by ID
 - [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id) — grund lists every declared ID
 - [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id) — grund lists every citation of an ID
 - [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) — grund groups citations by scanned file
-- [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-references-in-bulk) — grund normalizes references in bulk
+- [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-citations-in-bulk) — grund normalizes citations in bulk
 - [§FS-init](FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo) — grund bootstraps a new grund-conformant repo
 - [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations) — grund proposes IDs for new declarations
 - [§FS-completions](FS-completions.md#fs-completions-grund-completes-declared-ids-in-shells) — grund completes declared IDs in shells
