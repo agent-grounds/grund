@@ -836,21 +836,73 @@ Moved to [§FS-declarations.checks.section-outside-declaration](FS-declarations.
 ### 3.24 Declaration-local section citation
 
 Every candidate from [§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates) receives one whole-token form verdict with code
-`local-section-citation`:
+`local-section-citation`, and every one of them ends by naming the two releases its verdict moved
+between ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)):
 
 - An owned numeric path is an error `local section citation <token>; write
-  <marker><owner><separator><path>`. It remains a real edge for every graph consumer. A missing
+  <marker><owner><separator><path> — unchecked in grund 0.13.1, an error in 0.14.0`, which gains a
+  further `` ; run `grund fmt --write` `` exactly where the next formatter pass would write
+  that site ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)). It remains a real edge for every graph consumer. A missing
   target section independently receives [§FS-check.3.2](FS-check.md#32-missing-section).
 - An ownerless or genuinely ambiguous site is an error that says no enclosing declaration can be
-  chosen and instructs the author to write a full citation or escape the illustration. It has no
-  guessed ID or navigation target.
+  chosen and instructs the author to write a full citation or escape the illustration, and then
+  names the two releases. It has no guessed ID or navigation target, and never the command clause.
 - A digit-starting mixed, named, or glued tail is an error naming the complete unsupported token
-  and giving the same full-citation-or-escape guidance. No numeric prefix becomes an edge.
+  and giving the same full-citation-or-escape guidance, and then the same two releases. No numeric
+  prefix becomes an edge, and the command clause is not its either.
 
 The finding covers the complete authored token for CLI and LSP ranges. An owned citation in a
 location protected from automatic writing still names its manual full replacement; formatter
-eligibility changes what can be rewritten, not whether persisted local form is canonical. The
+eligibility changes what can be rewritten, not whether persisted local form is canonical — it
+changes only whether the message offers the command ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)). The
 same rule applies under configured markers and both strict modes.
+
+#### 3.24.1 The release attribution, and where the command clause is withheld
+
+Every form of the finding ends `— unchecked in grund 0.13.1, an error in 0.14.0`: `0.14.0` is the
+release the verdict moved in, and `0.13.1` the last release cut before it. That clause is the only
+record of the flip a reader meets without opening the changelog, and it is what lets one line of
+output separate *this tree predates the binary running over it* from *this citation is wrong* — the
+same work [§FS-check.3.18.9](FS-check.md#3189-an-error-because-the-deadline-the-warning-named-has-arrived) states for the neighbouring rule, written in the past-tense half of
+the closed release vocabulary [§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name) defines, so the release path can refuse a version
+the clause would contradict. The flip itself keeps the licence it was taken under, [§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise);
+what this clause adds is what [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations) asks a verdict-flipping finding to
+say, and [§FS-check.3.17.3](FS-check.md#3173-an-error-on-arrival) already says.
+
+`` ; run `grund fmt --write` `` follows the pair at an **owned** site whose text permits the
+rewrite, inside the configured scope — and nowhere else, because a finding may name a command
+that repairs it and never one that would answer `rewrote 0 lines` ([§FS-check.3.17.5](FS-check.md#3175-anything-else-is-not-an-entry)). Three cases withhold
+it, and a fourth deliberately does not:
+
+- an ownerless, ambiguous, or digit-starting unsupported token, which [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical) leaves
+  byte-identical because there is no owner to expand it against;
+- an owned site inside inline code, a Markdown link destination, or a source string literal — the
+  three contexts [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) forbids the rewrite in. The error itself still fires here, unlike
+  [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite)'s exemption, because the manual full replacement is a fix the author can
+  make; only the offer of the command goes;
+- the out-of-scope tier of a `--full` run, where `fmt` does not reach at all, for the reason
+  [§FS-check.3.14.4](FS-check.md#3144-the-mechanical-shorthand-rewrite-is-withheld) withholds the sibling's. The tier still leads the message and the attribution
+  still trails it ([§FS-check.3.14.6](FS-check.md#3146-the-tier-leads-the-message));
+- and nothing else. A `[fmt] exclude` file ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)), a `grund:fmt off` region, and an index
+  or document reached as an external file-symlink target ([§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)) **keep** the clause,
+  though `fmt` writes nothing there either. That is [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite)'s boundary, held to a second
+  rule so the two do not disagree: what the *text* forbids earns the withholding, what the
+  *repository* asked for does not, because there the author can lift the suppression.
+
+#### 3.24.2 An append, not a wording change
+
+The clauses are **appended**: the text this rule shipped with survives as a verbatim contiguous
+prefix, at the same offsets, on every one of the three shapes. That is why the change needs no
+deprecation path of its own under [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) — the stable phrasing a tool
+greps on is still there to grep, and a consumer matching a prefix, or matching
+`code == "local-section-citation"`, reads exactly what it read before ([§FS-errors.3](FS-errors.md#3-message-text)). No verdict
+moves with it: the same sites earn the finding, with the same code, severity, `sites`, count,
+ordering, and exit code.
+
+One consumer is affected, the one comparing a whole line for equality, and its migration is the
+one [§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages) already named for this project — the stable `code`. It is owed a window only
+when a second wording change is coming, and none is: what ships is the final form, which is why
+these clauses carry no `wording changes in <release>` deadline and schedule no removal release.
 
 ### 3.25 Invalid rule
 
