@@ -467,7 +467,7 @@ Level `L` makes a unit of the whole file and of every heading subtree whose leve
 
 ##### 3.6.2.2 In a source file
 
-There are two ranks, and they are read by indentation rather than by syntax ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): at level `2` every **unindented** doc-comment block is a unit — a parse-free stand-in for a top-level item, which holds across Rust, Python, Java, Go, and Kotlin — and at any higher level every doc-comment block is. What counts as a doc comment is the per-language rule of [§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites), already read once per file by the scanner. The file is a unit at every level, as in Markdown.
+There are two ranks, and they are read by indentation rather than by syntax ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): at level `2` every **unindented** doc-comment block is a unit — a parse-free stand-in for a top-level item, which holds across Rust, Python, Java, Go, and Kotlin — and at any higher level every doc-comment block is. What counts as a doc-comment is the per-language rule of [§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites), already read once per file by the scanner. The file is a unit at every level, as in Markdown.
 
 ##### 3.6.2.3 The inline-declaration escape
 
@@ -475,7 +475,7 @@ The inline-declaration escape of [§FS-check.3.6](FS-check.md#36-ungrounded-unit
 
 #### 3.6.3 Findings
 
-A finding is anchored at its unit — line 1 for a file, the heading line for a section, the block's first line for a doc comment — and names the unit and, when the unit sits in a non-citable home, the home:
+A finding is anchored at its unit — line 1 for a file, the heading line for a section, the block's first line for a doc-comment — and names the unit and, when the unit sits in a non-citable home, the home:
 
 ```
 src/foo.rs:1: ungrounded source file: no § citation to a declared ID

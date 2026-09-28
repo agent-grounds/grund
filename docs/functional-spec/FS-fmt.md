@@ -193,7 +193,7 @@ The key is optional and additive ([§FS-config.3.10.2](FS-config.md#3102-optiona
 
 #### 2.5.2 `grund:fmt off` / `grund:fmt on` — a region at a time
 
-A comment line whose entire content is `grund:fmt off` suppresses every rewrite from the **next** line onward; one whose content is `grund:fmt on` resumes it. In Markdown the comment is an HTML comment — `<!-- grund:fmt off -->` — and in a source file it is a comment line under the configured `[scan] comment_prefixes` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)): `// grund:fmt off`, `# grund:fmt on`, `/* grund:fmt off */`, or a line of a Python docstring, which is read for its content like any other doc comment ([§FS-fmt.2.3.1.1](FS-fmt.md#2311-a-python-docstring-is-walked-for-its-content)).
+A comment line whose entire content is `grund:fmt off` suppresses every rewrite from the **next** line onward; one whose content is `grund:fmt on` resumes it. In Markdown the comment is an HTML comment — `<!-- grund:fmt off -->` — and in a source file it is a comment line under the configured `[scan] comment_prefixes` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)): `// grund:fmt off`, `# grund:fmt on`, `/* grund:fmt off */`, or a line of a Python docstring, which is read for its content like any other doc-comment ([§FS-fmt.2.3.1.1](FS-fmt.md#2311-a-python-docstring-is-walked-for-its-content)).
 
 The region form is chosen over a rule keyed by declaration section (`AR-topology.2` → do not wrap) because it sits beside the thing it protects and survives the sections around it being renumbered ([§DF-fmt-suppression.2.2](../decisions/functional/DF-fmt-suppression.md#22-an-in-text-region-not-a-rule-keyed-by-declaration-section)).
 
@@ -205,7 +205,7 @@ The region form is chosen over a rule keyed by declaration section (`AR-topology
 
 ##### 2.5.2.2 What is not a directive
 
-- **In Markdown**, a directive inside a fenced code block is an illustration and toggles nothing, the same reading that makes a citation there dead ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)). A directive is inert exactly where a citation is, which is what scopes this to Markdown: a fence is dead text there and `fmt` carries the state to know it, while a fence drawn inside a source file's doc comment is live text — a citation written in one resolves, is found by `grund refs`, and grounds its file ([§FS-check.1.1](FS-check.md#11-recognized-citations)) — so a source-file directive is judged by its comment content alone and a `grund:fmt off` illustrated in a doc comment opens a region like any other. Tracking fences in source files instead would make the citation and the directive disagree about the same three backticks, which is a larger change than this feature and a worse reading of it.
+- **In Markdown**, a directive inside a fenced code block is an illustration and toggles nothing, the same reading that makes a citation there dead ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)). A directive is inert exactly where a citation is, which is what scopes this to Markdown: a fence is dead text there and `fmt` carries the state to know it, while a fence drawn inside a source file's doc-comment is live text — a citation written in one resolves, is found by `grund refs`, and grounds its file ([§FS-check.1.1](FS-check.md#11-recognized-citations)) — so a source-file directive is judged by its comment content alone and a `grund:fmt off` illustrated in a doc-comment opens a region like any other. Tracking fences in source files instead would make the citation and the directive disagree about the same three backticks, which is a larger change than this feature and a worse reading of it.
 - An inline code span holds a directive without using one, in either kind of file — `` `<!-- grund:fmt off -->` `` and `` // `grund:fmt off` `` are not exact content matches — which is how this document names them above, and how a source file names one it does not want to fire.
 - Only an exact content match is a directive: `<!-- grund:fmt off please -->` and `// grund:fmt-off` are ordinary comments, and the text is fixed rather than configured so that a reader meeting one in an unfamiliar repository knows what it is.
 
@@ -429,7 +429,7 @@ E2E fixtures pin the pass ([§FS-fmt.6.8.1](FS-fmt.md#681-wrapping-parity-and-sk
 - a directive inside a fenced block toggling nothing in Markdown
 - an `off` with no `on` running to the end of the file
 - a stray `on` changing nothing
-- the source-file comment form (`fmt-directive-in-source-comment`), where the same directive illustrated inside a doc comment's own fence does open a region ([§FS-fmt.2.5.2.2](FS-fmt.md#2522-what-is-not-a-directive))
+- the source-file comment form (`fmt-directive-in-source-comment`), where the same directive illustrated inside a doc-comment's own fence does open a region ([§FS-fmt.2.5.2.2](FS-fmt.md#2522-what-is-not-a-directive))
 - idempotency on a second pass
 - a kind's index entries still wrapped under both scopes ([§FS-fmt.2.5.3](FS-fmt.md#253-a-kinds-index-is-still-linkified))
 
