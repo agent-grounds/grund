@@ -9,9 +9,10 @@ use std::path::{Path, PathBuf};
 use super::*;
 use crate::testing::{test_root, write};
 
-/// A tree whose `FS-001-alpha` is cited at `1`, `1.1`, `1.1.1`, the sibling
-/// `1.10`, `2`, and bare. The `1.10` site is what tells a string prefix from a
-/// component relation (§FS-refs.2).
+/// A tree whose `FS-001-alpha` is cited at `1`, `1.1`, `1.1.1`, `1.10`, `2`,
+/// and bare. `1.10` is the components `1` then `10`: a sibling of `1.1` and an
+/// ordinary child of `1`. It is the site that tells a string prefix from a
+/// component relation, and it does so under `--section 1.1` (§FS-refs.2).
 fn refs_descendants_repo(name: &str) -> PathBuf {
     let root = test_root(name);
     write(
@@ -54,8 +55,11 @@ fn the_default_options_do_not_widen() {
 }
 
 /// §FS-refs.2: set, the filter keeps the requested coordinate and everything
-/// beneath it at any depth — and not the sibling `1.10`, which a string prefix
-/// would have swallowed.
+/// beneath it at any depth. The two assertions pin different halves of that.
+/// `--section 1` pins the depth, and that a two-digit component is an ordinary
+/// child — `starts_with("1")` agrees with the component relation on this tree,
+/// so this is not the boundary proof. `--section 1.1` is: a string prefix would
+/// swallow the sibling `1.10`, and the component relation does not.
 #[test]
 fn descendants_widens_the_section_filter_to_the_subtree() {
     let root = refs_descendants_repo("refs_descendants_widens_to_the_subtree");
@@ -64,7 +68,8 @@ fn descendants_widens_the_section_filter_to_the_subtree() {
         vec![
             Some("1".to_string()),
             Some("1.1".to_string()),
-            Some("1.1.1".to_string())
+            Some("1.1.1".to_string()),
+            Some("1.10".to_string())
         ]
     );
     assert_eq!(
