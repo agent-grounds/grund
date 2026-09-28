@@ -161,12 +161,19 @@ The release path asks directly: the release guard, `scripts/check_release_ramps.
 | `is removed in <release>` | a named removal has not been made yet | must be **below** that release |
 | `stopped loading in <release>` | the change has been made | must be **at or above** it |
 | `unchecked in <release>` | the change has been made | must be **at or above** it |
+| `an error in <release>` | the change has been made | must be **at or above** it |
 | `will exit <status> ... in <release>` | a scalar exit-status change has not been made yet | must be **below** that release |
 | `wording changes in <release>` | the message wording has not changed yet | must be **below** that release |
 
 #### 4.2.3 The vocabulary is closed
 
 The vocabulary is closed on purpose: it is the wording the warnings and errors already use, so a ramp written in it is seen and a ramp written outside it names no release the release guard can read. It asks the general question rather than naming any one ramp, so a ramp that lands later is covered the day its message is written. `is removed in <release>` is the pending half of `was removed in <release>` — the clause a deprecation names its removal release with, where the two named-error clauses name a verdict's — and it is written in that spelling rather than "will be removed in" so the pending and landed halves of one removal read as the same claim in two tenses.
+
+##### 4.2.3.1 The landed half of an attribution pair is read where it opens a clause
+
+A verdict that moved names both of its releases in one message: the rules that carry an attribution pair print `unchecked in grund <prior>, an error in <release>`, so the same line says when the finding went unchecked and when it became an error. Both halves are claims, and the landed one is the bare `an error in <release>` — which is why the vocabulary carries that clause and not only the two it is a substring of.
+
+Being a substring is what gives it its left boundary. `becomes an error in <release>` and `became an error in <release>` both contain it, so the bare clause is read only where it **opens a clause** — at the start of a line, or after a comma, semicolon or colon — and never where a word stands in front of it. A tense therefore keeps the direction it spells rather than also yielding a bare landed claim, and a tense the vocabulary does not carry, such as the infinitive `become an error in <release>` of a promise not yet made, is not read as landed. The boundary enumerates no tenses, so a tense added to a message later cannot silently change what the guard reads.
 
 #### 4.2.4 The scalar clause is the `refs` warning's
 

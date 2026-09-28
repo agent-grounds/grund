@@ -88,6 +88,58 @@ class ClauseReadingTests(unittest.TestCase):
         self.assertEqual([(c.line, c.release) for c in found], [(1, "0.13.0"), (3, "0.14.0")])
 
 
+    def test_an_attribution_pair_yields_both_of_its_claims(self):
+        """§FS-distribution.4.2.3.1 — a verdict that moved names both of its
+        releases on one line, so the line makes two claims and the bare
+        `an error in <release>` is the landed one. These are the bytes two
+        shipped rules print: the `local-section-citation` attribution
+        (§FS-check.3.24.1) and the index rule's."""
+        for text, prior, landed in (
+            (
+                "docs/FS-a.md:3: error: local section citation \u00a72; write \u00a7FS-a.2 "
+                "— unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
+                "0.13.1",
+                "0.14.0",
+            ),
+            (
+                "docs/fs/README.md:3: error: index entry \u00a7FS-001-login is not a link; "
+                "unchecked in grund 0.11.0, an error in 0.12.0 — run `grund fmt --write`",
+                "0.11.0",
+                "0.12.0",
+            ),
+        ):
+            with self.subTest(landed=landed):
+                found = claims(text)
+                self.assertEqual(
+                    [(c.clause, c.release, c.direction) for c in found],
+                    [
+                        ("unchecked in", prior, ramps.LANDED),
+                        ("an error in", landed, ramps.LANDED),
+                    ],
+                )
+
+    def test_a_verb_in_front_of_the_phrase_keeps_the_tense_it_spells(self):
+        """§FS-distribution.4.2.3.1 — the bare clause is a substring of the two
+        named-error tenses, so it is read only where it opens a clause. A verb
+        in front of it must still yield exactly one claim in the direction that
+        verb spells, and a tense the vocabulary does not carry must not be read
+        as landed on the strength of the phrase it contains."""
+        for text, direction in (
+            ("… becomes an error in grund 0.14.0", ramps.PENDING),
+            ("… became an error in grund 0.14.0", ramps.LANDED),
+        ):
+            with self.subTest(text=text):
+                (claim,) = claims(text)
+                self.assertEqual((claim.release, claim.direction), ("0.14.0", direction))
+        for text in (
+            "the absorbed-scan warning would become an error in 0.15.0. Land it first",
+            "the unmarked-heading warning will become an error in grund 0.16.0",
+        ):
+            with self.subTest(text=text):
+                landed = [c for c in claims(text) if c.direction == ramps.LANDED]
+                self.assertEqual(landed, [], "a promise not yet made was read as landed")
+
+
 class VerdictTests(unittest.TestCase):
     LANDED = '"`prefix` was removed in grund 0.13.0"'
     PENDING = '"an index entry becomes an error in grund 0.13.0"'
@@ -160,6 +212,47 @@ class VerdictTests(unittest.TestCase):
         self.assertEqual(ramps.main(["0.12.4-dev"]), 2)
 
 
+    PAIR = (
+        '"docs/FS-a.md:3: error: local section citation \u00a72; write \u00a7FS-a.2 '
+        '— unchecked in grund 0.13.1, an error in 0.14.0"'
+    )
+    INDEX_PAIR = (
+        '"docs/fs/README.md:3: error: index entry \u00a7FS-001-login is not a link; '
+        'unchecked in grund 0.11.0, an error in 0.12.0 — run `grund fmt --write`"'
+    )
+
+    def test_an_attribution_pair_may_not_ship_below_the_release_it_landed_in(self):
+        """§FS-distribution.4.2.3.1 — the floor is the later half of the pair.
+        A tree carrying this line says the verdict moved in 0.14.0, so cutting
+        0.13.5 would ship a binary whose own diagnostics deny its version."""
+        report = refused(self.PAIR, "0.13.5")
+        self.assertTrue(report, "the `an error in 0.14.0` half set no floor")
+        self.assertIn("cannot be released as 0.13.5", report[0])
+        self.assertTrue(any("an error in 0.14.0" in line for line in report))
+
+    def test_the_index_rules_attribution_pair_sets_the_floor_too(self):
+        """§FS-distribution.4.2.3.1 — not one rule's wording: the index rule
+        prints the same shape, and has since 0.12.0."""
+        report = refused(self.INDEX_PAIR, "0.11.1")
+        self.assertTrue(report, "the `an error in 0.12.0` half set no floor")
+        self.assertTrue(any("an error in 0.12.0" in line for line in report))
+
+    def test_the_same_claim_in_the_landed_tense_is_refused_as_well(self):
+        """The control: written `became an error in 0.14.0`, the identical claim
+        is refused by a clause the vocabulary already carried. That is what
+        makes the two tests above a gap in the vocabulary rather than a fixture
+        that never reached the guard."""
+        report = refused('"… became an error in 0.14.0"', "0.13.5")
+        self.assertTrue(report)
+        self.assertIn("cannot be released as 0.13.5", report[0])
+
+    def test_an_attribution_pair_ships_at_the_release_it_landed_in(self):
+        """§FS-distribution.4.2.2 — the later half is a floor, not a ban: at it
+        and above it the version and the message agree."""
+        self.assertEqual(refused(self.PAIR, "0.14.0"), [])
+        self.assertEqual(refused(self.PAIR, "0.15.0"), [])
+
+
 class ThisRepositoryTests(unittest.TestCase):
     """The gate is only worth its step if it still sees this tree's own ramps."""
 
@@ -214,6 +307,26 @@ class ThisRepositoryTests(unittest.TestCase):
             any("config/kind_table.rs" in line for line in report),
             "the `prefix` removal is still read as a landed clause of this tree",
         )
+
+
+    def test_the_attribution_pairs_this_tree_ships_are_read(self):
+        """§FS-distribution.4.2.3.1 — two shipped rules print the pair, and two
+        checked goldens pin those bytes, so the guard must see the landed half
+        in both homes it scans. A clause wired to text nobody writes passes in
+        silence."""
+        bare = [claim for claim in self.claims if claim.clause == "an error in"]
+        self.assertTrue(bare, "this tree carries no bare `an error in` claim to read")
+        self.assertEqual({claim.direction for claim in bare}, {ramps.LANDED})
+        homes = {claim.path.split("/")[0] for claim in bare}
+        self.assertIn("crates", homes)
+        self.assertIn("tests", homes)
+
+    def test_reading_the_landed_half_leaves_this_trees_window_where_it_was(self):
+        """§FS-distribution.4.2.5 — the invariant across this change. The pairs
+        this tree ships name 0.12.0 and 0.14.0, both below the 0.15.0 floor its
+        own landed flip already sets, so reading them moves neither bound. A
+        window that moves here has caught something other than this defect."""
+        self.assertEqual(ramps.release_window(self.claims), ("0.15.0", "0.15.0"))
 
 
 if __name__ == "__main__":
