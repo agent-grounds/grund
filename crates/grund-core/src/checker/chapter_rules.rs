@@ -12,6 +12,7 @@ use crate::rules::engine::{
 };
 use crate::rules::markdown::{adapt_markdown, adapt_workspace};
 use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
+use crate::workspace::expand_workspace_tree;
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
@@ -66,27 +67,108 @@ fn add_workspace_targets(
     vocabulary: &mut RuleVocabulary,
     projects: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) {
+    add_namespaces(
+        vocabulary,
+        projects
+            .iter()
+            .map(|(alias, project)| (alias.clone(), project.config)),
+    );
+}
+
+/// One namespace per project the run loaded. Holding any at all is what
+/// separates a scope that judged an alias and said no from one that could not
+/// judge it (§FS-rules.4.1.1).
+fn add_namespaces<'a>(
+    vocabulary: &mut RuleVocabulary,
+    namespaces: impl IntoIterator<Item = (String, &'a Config)>,
+) {
     vocabulary
         .target_namespaces
-        .extend(projects.iter().map(|(alias, project)| {
-            let kinds = project
-                .config
+        .extend(namespaces.into_iter().map(|(alias, config)| {
+            let kinds = config
                 .kinds
                 .iter()
                 .filter(|kind| kind.citable)
                 .map(|kind| kind.kind.clone())
                 .collect();
-            (alias.clone(), kinds)
+            (alias, kinds)
         }));
 }
 
-/// Validate configured declarations for `init` and return their exact authored
-/// sentences in qualified-rule-ID order (§FS-rules.4, §FS-rules.9).
+/// The vocabulary a run that already loaded its workspace resolves rule objects
+/// against (§FS-rules.4.1). An empty project map is no workspace at all, so it
+/// yields the plain single-project vocabulary and every namespaced object kind
+/// in it is unverifiable here.
+pub(crate) fn workspace_vocabulary(
+    config: &Config,
+    projects: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
+) -> RuleVocabulary {
+    let mut vocab = vocabulary(config);
+    if !projects.is_empty() {
+        add_workspace_targets(&mut vocab, projects);
+    }
+    vocab
+}
+
+/// The vocabulary for a command that resolves rules without loading a workspace
+/// of its own — `init` (§FS-rules.4.1).
+///
+/// Read from the workspace this config *declares*, never one climbed to from
+/// above: `init` does climb to render `### Workspace members`, but that is
+/// teaching and this is judging, and judging off a climbed tree would make the
+/// same bytes valid or invalid depending on what happens to sit on disk beside
+/// the checkout. A member cloned alone would then get a different verdict from
+/// the same rule (§FS-workspace.5.1, §DF-unverifiable-rule-scope).
+///
+/// Only stage 1 of the workspace load, because the aliases are all that is
+/// wanted and stages 2 and 3 scan every member's whole tree. Expanding is what
+/// makes the alias set `check`'s by construction. Best-effort like every other
+/// workspace read `init` does: an expansion that fails yields no namespace, so
+/// the rule is unverifiable here and the block is still written.
+pub(crate) fn declared_workspace_vocabulary(config: &Config) -> RuleVocabulary {
+    let mut vocab = vocabulary(config);
+    if !config.workspace_declared {
+        return vocab;
+    }
+    let mut root_config = config.clone();
+    let Ok(entries) = expand_workspace_tree(&mut root_config) else {
+        return vocab;
+    };
+    add_namespaces(
+        &mut vocab,
+        entries
+            .iter()
+            .map(|entry| (entry.alias.clone(), &entry.config)),
+    );
+    vocab
+}
+
+/// What one validation of a project's configured rules yields: the bullets to
+/// render, and the rules this scope could not verify (§FS-rules.4.1.2).
+pub(crate) struct ConfiguredRules {
+    /// `(qualified rule ID, authored sentence)` in qualified-rule-ID order, one
+    /// per rendered rule — every valid rule and every rule unverifiable here
+    /// (§FS-rules.9).
+    pub(crate) rows: Vec<(String, String)>,
+    /// One located `invalid-rule` per rule this scope cannot verify. `init`
+    /// reports these and writes anyway; `check` leaves them to
+    /// `check_chapter_rules`, which reports them at the rule's own site.
+    pub(crate) unverifiable: Vec<Diagnostic>,
+}
+
+/// Validate configured declarations against `vocab` and return their exact
+/// authored sentences in qualified-rule-ID order (§FS-rules.4, §FS-rules.9).
+///
+/// `Err` is the genuinely invalid rule and nothing else: the caller withholds
+/// the managed-block write for it and for no other failure (§FS-rules.4.1.2).
+/// A rule that is only unverifiable here still earns its row, because the
+/// bullet is the authored sentence and one tree must render one block
+/// (§FS-rules.9.1).
 pub(crate) fn configured_rule_sentences(
     findings: &Findings,
     config: &Config,
-) -> Result<Vec<(String, String)>, Diagnostic> {
-    let vocab = vocabulary(config);
+    vocab: &RuleVocabulary,
+) -> Result<ConfiguredRules, Diagnostic> {
     let facts = adapt_markdown(findings, config, true);
     let rule_kinds = config
         .kinds
@@ -95,6 +177,7 @@ pub(crate) fn configured_rule_sentences(
         .map(|kind| kind.kind.as_str())
         .collect::<BTreeSet<_>>();
     let mut rows = Vec::new();
+    let mut unverifiable = Vec::new();
     for (id, declarations) in &findings.declarations {
         if !rule_kinds.contains(id.kind.as_str()) {
             continue;
@@ -126,19 +209,37 @@ pub(crate) fn configured_rule_sentences(
                     line: declaration.line,
                     column: None,
                 },
-                &vocab,
-            )
-            .map_err(|error| {
-                invalid_rule(&origin, path.as_ref(), declaration.line, &error.message)
-            })?;
-            if let Some(diagnostic) = unresolved_subject_diagnostic(&parsed, &facts) {
-                return Err(diagnostic);
+                vocab,
+            );
+            match parsed {
+                Ok(parsed) => {
+                    if let Some(diagnostic) = unresolved_subject_diagnostic(&parsed, &facts) {
+                        return Err(diagnostic);
+                    }
+                }
+                // §FS-rules.4.1.2: reported, rendered, and not a reason to
+                // withhold the write. No parsed rule, so no subject verdict: a
+                // scope that cannot judge the object judges no part of it.
+                Err(error) if error.unverifiable_here => unverifiable.push(invalid_rule(
+                    &origin,
+                    path.as_ref(),
+                    declaration.line,
+                    &error.message,
+                )),
+                Err(error) => {
+                    return Err(invalid_rule(
+                        &origin,
+                        path.as_ref(),
+                        declaration.line,
+                        &error.message,
+                    ));
+                }
             }
             rows.push((origin, title.to_string()));
         }
     }
     rows.sort_by(|a, b| a.0.cmp(&b.0));
-    Ok(rows)
+    Ok(ConfiguredRules { rows, unverifiable })
 }
 
 /// Append configured and optional ad-hoc rule results to the shared report.

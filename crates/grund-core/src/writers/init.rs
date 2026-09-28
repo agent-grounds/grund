@@ -10,7 +10,7 @@ use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entryp
 use super::init_plan::{InitAgentEntrypointSelection, selected_init_agent_entrypoints};
 use super::init_render::{agents_workspace_members_section, init_pending_effective_config};
 use super::init_target::{refuse_init_global_instruction_paths, refuse_init_target};
-use crate::checker::configured_rule_sentences;
+use crate::checker::{configured_rule_sentences, declared_workspace_vocabulary};
 use crate::config::{Config, config_file_in, display_path};
 use crate::model::{Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{
@@ -264,14 +264,28 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     // §FS-rules.4 / §FS-init.2.3.5: validate scanned rule declarations before
     // any entrypoint write, then reuse their exact titles in managed guidance.
     let rule_kind_enabled = init_config.kinds.iter().any(|kind| kind.rules);
-    let rule_rows = if rule_kind_enabled {
+    let (rule_rows, rule_errors) = if rule_kind_enabled {
         let (findings, errors) = scan_tree(&init_config, Some(&target), true)
             .map_err(|err| InitError::new(err.to_string()))?;
         if let Some((path, message)) = errors.first() {
             return Err(InitError::new(format!("{}: {message}", path.display())));
         }
-        match configured_rule_sentences(&findings, &init_config) {
-            Ok(rows) => rows,
+        // §FS-rules.4.1: the workspace this project's own config declares, which
+        // is the one `check` in this same directory resolves against — never the
+        // one climbed to above, which is teaching rather than judging.
+        let vocab = declared_workspace_vocabulary(&init_config);
+        match configured_rule_sentences(&findings, &init_config, &vocab) {
+            Ok(rules) => (
+                rules.rows,
+                rules
+                    .unverifiable
+                    .into_iter()
+                    .map(|diagnostic| init_finding(&init_config, diagnostic))
+                    .collect::<Vec<_>>(),
+            ),
+            // §FS-rules.4: an invalid rule, and only an invalid rule, withholds
+            // the write — the managed block stays byte-for-byte untouched and
+            // the run exits nonzero.
             Err(diagnostic) => {
                 return Ok(InitOutput {
                     errors: vec![init_finding(&init_config, diagnostic)],
@@ -280,7 +294,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
             }
         }
     } else {
-        Vec::new()
+        (Vec::new(), Vec::new())
     };
 
     let agent_entrypoints = match selected_init_agent_entrypoints(&target, &agent_selection, reach)
@@ -535,7 +549,9 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     }
     Ok(InitOutput {
         events,
-        errors: Vec::new(),
+        // §FS-rules.4.1.2: it is the write that is not withheld, not the failure
+        // that is forgiven — these errors still carry the run to exit 1.
+        errors: rule_errors,
         notes,
         next,
         warnings: run_warnings,

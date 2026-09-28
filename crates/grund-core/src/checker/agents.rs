@@ -6,10 +6,12 @@ use crate::grammar::{
     AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
 };
 use crate::model::{CheckReport, Diagnostic, Findings};
+use crate::resolver::WorkspaceCheckTarget;
 use crate::scanner::companion_agent_entrypoints;
 use crate::templates::{
     ConversationSurface, citation_directions_section, clickable_citations_section,
 };
+use std::collections::BTreeMap;
 
 const AGENTS_INIT_COMPATIBILITY_TAIL: &str =
     " — repo maintenance; citation checks still ran; wording changes in grund 0.15.0";
@@ -25,17 +27,33 @@ fn agents_init_compatibility_message(legacy: String) -> String {
 /// binary — an older `vN` is "run `grund init`" (§FS-init.2.3.7), a newer one is
 /// fatal. `AGENTS.md` is canonical; known companion entrypoints are checked when
 /// present and not symlinked to `AGENTS.md`.
+///
+/// §FS-check.3.5.4: the `### Chapter rules` section is re-rendered and compared
+/// whether or not every configured rule resolved. A rule this scope cannot
+/// verify still earns its bullet (§FS-rules.4.1.2), so the comparison is dropped
+/// only for a genuinely invalid rule — the one case that already carries its own
+/// located error at the rule's heading. The diagnostics are not re-emitted here:
+/// `check_chapter_rules` reports them at that site.
+///
+/// `workspace` is the project map the run loaded, which is what lets a run at the
+/// workspace root resolve a member's cross-boundary rule and so catch a member
+/// block missing its bullet (§FS-rules.9.1).
 pub(super) fn check_agents_block_version(
     findings: &Findings,
     config: &Config,
+    workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     report: &mut CheckReport,
 ) {
     let rule_rows = config
         .kinds
         .iter()
         .any(|kind| kind.rules)
-        .then(|| super::configured_rule_sentences(findings, config).ok())
-        .flatten();
+        .then(|| {
+            let vocab = super::workspace_vocabulary(config, workspace);
+            super::configured_rule_sentences(findings, config, &vocab).ok()
+        })
+        .flatten()
+        .map(|rules| rules.rows);
     let root = &config.root;
     let canonical = root.join("AGENTS.md");
     let canonical_exists = canonical.exists();
