@@ -28,9 +28,9 @@ The declaration ID is a normal full local ID of that kind. Its slug carries stab
 
 ### 2.1 Markdown declarations
 
-A whole-declaration Markdown value is an ordinary declaration in its opted-in kind home. Its value fields are the declaration's immediate citable child headings and must be one nonempty contiguous run `.1` through `.N`, where `N >= 1`. Each heading uses the configured strict depth for that coordinate; gaps, zero or leading-zero coordinates, nested or named citable sections, and duplicate fields make the declaration invalid. A marked root ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) is a separate form; its descendants do not weaken this declaration-rooted grammar.
+A whole-declaration Markdown value is an ordinary declaration in its opted-in kind home. Its components are the declaration's immediate citable child headings and must be one nonempty contiguous run `.1` through `.N`, where `N >= 1`. Each heading uses the configured strict depth for that coordinate; gaps, zero or leading-zero coordinates, nested or named citable sections, and duplicate components make the declaration invalid. A marked root ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) is a separate form; its descendants do not weaken this declaration-rooted grammar.
 
-A value field's text is the entire heading title after the numeric coordinate. It must fit on that physical line, be nonempty, and have no leading or trailing whitespace, backtick, or control character. Lead prose, bodies below value-field headings, and plain non-citable headings carry no value. A value field is numeric only when its complete text matches JSON number grammar; otherwise it is a string.
+A component's text is the entire heading title after the numeric coordinate. It must fit on that physical line, be nonempty, and have no leading or trailing whitespace, backtick, or control character. Lead prose, bodies below component headings, and plain non-citable headings carry no value. A component is numeric only when its complete text matches JSON number grammar; otherwise it is a string.
 
 ### 2.2 JSON declarations from the kind home
 
