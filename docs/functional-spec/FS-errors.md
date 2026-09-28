@@ -170,7 +170,7 @@ The shape is structural; the text is human-readable. Style rules apply to every 
 - **Quoted user input** appears in double quotes when the input could be confused with surrounding prose: `"<original title>"`, not `<original title>`.
 - **One base for every path in the line** — [§FS-errors.3.1](FS-errors.md#31-one-base-for-every-path-in-the-line).
 
-[§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape) to [§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages) pin particular messages: the unknown-project recovery shape and its wording migration, `check`'s channel marker, a missing fetch-backed declaration, and `agents-init`.
+[§FS-errors.3.2](FS-errors.md#32-the-unknown-project-recovery-shape) to [§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-wording-migration) pin particular messages: the unknown-project recovery shape and its wording migration, `check`'s channel marker, a missing fetch-backed declaration, `agents-init`, and the rule-site unknown alias.
 
 ### 3.1 One base for every path in the line
 
@@ -228,6 +228,44 @@ repo maintenance: missing grund init block v<current> — run `grund init` to in
 
 These are message classifications only: `repo maintenance` is not a finding
 category or selector value ([§FS-check.1](FS-check.md#1-inputs)).
+
+### 3.7 The rule-site unknown-alias wording migration
+
+A rule object kind the run holds no workspace vocabulary to resolve is reported
+at the rule's own heading as `invalid-rule` ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)). Until the correcting
+release its reason named the kind as the defect — `unknown kind "<KIND>" in
+namespace "<ALIAS>"` for a pinned object, `unknown kind "<KIND>" in any
+workspace namespace` for `*/<KIND>` — in a scope that cannot know whether that
+kind exists anywhere. What such a run actually cannot reach is the workspace.
+Those are bytes a consumer may match, so the correction takes the three-release
+route of [§FS-errors.3.3](FS-errors.md#33-the-narrowed-run-unknown-project-wording-migration) and [§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages) rather than changing outright
+([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered), [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
+
+Through `0.14.x` each complete legacy reason stays a verbatim contiguous prefix
+and gains the true clause after it, in the shape a narrowed run already uses for
+a citation it cannot place — say what cannot be resolved here, offer no
+candidate, send the reader to the workspace root ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)):
+
+```text
+unknown kind "<KIND>" in namespace "<ALIAS>"; accepted form: <rewrite> — unknown project alias <ALIAS>; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this wording changes in grund 0.15.0
+unknown kind "<KIND>" in any workspace namespace; accepted form: <rewrite> — no workspace is in scope here, so no namespace can be searched for <KIND> — check from the workspace root; this wording changes in grund 0.15.0
+```
+
+Exact-line consumers must migrate during this window to the stable
+`code == "invalid-rule"`; the code, the error severity, the selectors, and the
+exit verdict do not change, and `--only invalid-rule` keeps selecting the
+finding. A namespace the run *can* judge and rejects keeps its legacy reason
+unchanged and unsuffixed, because there the kind really is what failed.
+
+#### 3.7.1 The final templates
+
+In `0.15.0`, the compatibility prefixes are removed and the two reasons are
+exactly:
+
+```text
+unknown project alias <ALIAS>; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root
+no workspace is in scope here, so no namespace can be searched for <KIND> — check from the workspace root
+```
 
 ## 4. Determinism
 

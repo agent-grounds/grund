@@ -35,6 +35,12 @@ pub fn assert_run(output: &Output, exit: i32, stdout: &str, stderr: &str) {
 }
 
 pub fn scratch(name: &str) -> PathBuf {
+    scratch_from(&fixture(), name)
+}
+
+/// A writable copy of any fixture tree in this repository, so a contract about
+/// more than one project can use a workspace fixture without a second harness.
+pub fn scratch_from(source: &Path, name: &str) -> PathBuf {
     let serial = NEXT.fetch_add(1, Ordering::Relaxed);
     let root = repo_root()
         .join("target/rules-contract-work")
@@ -42,8 +48,14 @@ pub fn scratch(name: &str) -> PathBuf {
     if root.exists() {
         fs::remove_dir_all(&root).expect("remove stale test repository");
     }
-    copy_tree(&fixture(), &root);
+    copy_tree(source, &root);
     root
+}
+
+/// The `repo/` tree of an e2e case, which is where this repository keeps the
+/// fixtures a case and a contract test share.
+pub fn case_repo(case: &str) -> PathBuf {
+    repo_root().join("tests/e2e/cases").join(case).join("repo")
 }
 
 pub fn write(root: &Path, relative: &str, contents: &str) {

@@ -463,13 +463,20 @@ The managed-block version was bumped to carry this config-derived content under 
 
 When at least one kind enables `rules = true`, the block renders a
 `### Chapter rules` section immediately after `### Citation directions`, with
-the existing `must`/`should` legend and one bullet per valid rule in qualified
-rule-ID order. Each bullet contains the exact authored sentence followed by its
-live rule citation. The section and its refusal/no-write lifecycle are
-[§FS-rules.4](FS-rules.md#4-validation-lifecycle) and
+the existing `must`/`should` legend and one bullet per rendered rule in
+qualified rule-ID order. Each bullet contains the exact authored sentence
+followed by its live rule citation. The section and its refusal/no-write
+lifecycle are [§FS-rules.4](FS-rules.md#4-validation-lifecycle) and
 [§FS-rules.9](FS-rules.md#9-managed-guidance-and-editor-parity)'s. `check`
 re-renders and byte-compares it as config-derived content; a mismatch is
 `agents-init`.
+
+A rule the run cannot verify from the scope it was given
+([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)) is rendered here as authored and the block is written, so the
+validation `init` performs before writing withholds the write for a genuinely
+invalid rule and for nothing else. That is what keeps the bytes a member-scoped
+run writes equal to the bytes a run holding the whole workspace would write for
+the same file ([§FS-rules.9.1](FS-rules.md#91-one-tree-renders-one-block)).
 
 #### 2.3.6 Clickable citations
 
