@@ -36,7 +36,7 @@ No marked, bare, or namespace-qualified citation and no declaration, section, va
 site inside the span enters the shared model. `check`, `refs`, `cover`, body resolution, formatting,
 and editor consumers therefore see the same absence. The raw bytes remain available to writers
 only as a protected span, while source after the close and later real docstrings resume their
-existing treatment ([§FS-fmt.2.3.1.1](../../functional-spec/FS-fmt.md#2311-a-python-docstring-is-walked-for-its-content),
+existing treatment ([§FS-fmt.2.3.1.1](../../functional-spec/FS-fmt.md#2311-a-python-docstring-is-scanned-for-its-content),
 [§FS-refs.2](../../functional-spec/FS-refs.md#2-behaviour)).
 
 ### 2.3 The existing gate owns the distinction

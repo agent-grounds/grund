@@ -66,7 +66,7 @@ Four corners are known and accepted rather than repaired ([§DF-doc-comments-are
 The block forms say where a block begins and ends. They are the scanner's existing normalization, not a verdict on which blocks are sites:
 
 - `//` / `///` / `//!` line comments: a run of adjacent lines whose first non-whitespace token is the same line-comment marker.
-- `#`, `;`, `--` line comments: same rule per marker (see [§FS-config.3.5](FS-config.md#35-scan--what-gets-walked) for the full prefix set).
+- `#`, `;`, `--` line comments: same rule per marker (see [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned) for the full prefix set).
 - `/* … */` block comments, `/**`- and `/*!`-opened alike: from opener to closer.
 - Python triple-quoted docstrings (`""" … """` / `''' … '''`): from the opening triple-quote to the matching close.
 

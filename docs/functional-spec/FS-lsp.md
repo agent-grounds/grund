@@ -226,7 +226,7 @@ Entries that discover the same project root share one scan. Entries that discove
 
 #### 2.2.2 One project answers each document
 
-Each document is answered by at most one of those projects. A project whose root contains the document claims it — the deepest such root when project trees nest, so a member opened as its own folder answers for its own files. A project that merely *scans* the document claims it when no root contains it: `[scan] include` is a scan scope, not a fence ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)), so a parent-relative include root may reach outside the project directory, and a document there is checked by the CLI and must stay answerable in the editor.
+Each document is answered by at most one of those projects. A project whose root contains the document claims it — the deepest such root when project trees nest, so a member opened as its own folder answers for its own files. A project that merely *scans* the document claims it when no root contains it: `[scan] include` is a scan scope, not a fence ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)), so a parent-relative include root may reach outside the project directory, and a document there is checked by the CLI and must stay answerable in the editor.
 
 One owner per document is also what keeps diagnostics honest: where nested projects both read a file, the containing owner's verdict is published alone rather than merged with the other's, so a file cannot collect the same finding twice or two projects' disagreeing readings of one citation side by side.
 
@@ -268,7 +268,7 @@ A pre-existing root with a missing, extra, or byte-different entry is a conflict
 
 #### 2.4.2 Language mappings
 
-Generation starts at the process current working directory, uses the same upward configuration discovery as [§FS-lsp.3](FS-lsp.md#3-configuration), and reads the resulting effective `[scan].extensions` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)). With no config it therefore uses the canonical default extensions. Each extension becomes one `*.ext` file pattern. Conventional language IDs are used for known extensions — including `md` → `markdown`, `rs` → `rust`, `ts` → `typescript`, and every canonical default — while an unknown extension uses the extension itself as its non-empty language ID. Mappings are a deterministic snapshot of the effective config at generation time; a later config change requires regeneration.
+Generation starts at the process current working directory, uses the same upward configuration discovery as [§FS-lsp.3](FS-lsp.md#3-configuration), and reads the resulting effective `[scan].extensions` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)). With no config it therefore uses the canonical default extensions. Each extension becomes one `*.ext` file pattern. Conventional language IDs are used for known extensions — including `md` → `markdown`, `rs` → `rust`, `ts` → `typescript`, and every canonical default — while an unknown extension uses the extension itself as its non-empty language ID. Mappings are a deterministic snapshot of the effective config at generation time; a later config change requires regeneration.
 
 #### 2.4.3 The launch command
 

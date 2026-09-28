@@ -93,7 +93,7 @@ The `<path>:<line>:` *prefix* a located finding wears ([§FS-errors.2.1](FS-erro
 here — a line beginning with that prefix is the signal of a per-site finding
 on stdout, whether a `check` channel marker or the message follows it. The
 message *text* may still carry a location: a `grund.toml` schema error is
-reported `error: <path>:<line>: <message>` ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)) — the leading `error:` marks it CLI-level (stderr, non-zero exit), and the `<path>:<line>:` inside the text is the breadcrumb to the bad line, since a config file has one where a bad flag does not. Other CLI-level messages carry a location in the text the same way when they have one — a config line (`warning: b/grund.toml:3: …`, which is what [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) still prints on the five walking surfaces that have no error channel — `check` reports the same fact as a located error on stdout, with this prefix and without the location in the text) or a whole file (`error: <path>: <reason>`, [§FS-check.2](FS-check.md#2-outputs)) — or name the file in prose (e.g. `error: read grund.toml: Permission denied (os error 13)`).
+reported `error: <path>:<line>: <message>` ([§FS-config.4.3](FS-config.md#43-invalid-config-behavior)) — the leading `error:` marks it CLI-level (stderr, non-zero exit), and the `<path>:<line>:` inside the text is the breadcrumb to the bad line, since a config file has one where a bad flag does not. Other CLI-level messages carry a location in the text the same way when they have one — a config line (`warning: b/grund.toml:3: …`, which is what [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) still prints on the five scanning surfaces that have no error channel — `check` reports the same fact as a located error on stdout, with this prefix and without the location in the text) or a whole file (`error: <path>: <reason>`, [§FS-check.2](FS-check.md#2-outputs)) — or name the file in prose (e.g. `error: read grund.toml: Permission denied (os error 13)`).
 
 #### 2.2.2 Exit codes
 
@@ -117,11 +117,11 @@ collision and the other failed ID queries, so it takes the bare shape of
 
 #### 2.2.3 Who uses it
 
-Used by [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location) (unknown subcommand / bad flag), [§FS-id.6](FS-id.md#6-exit-codes) (unknown kind, unknown `--format`, scan / I/O error), [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) (config validation), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages) (a malformed config or a per-file read failure mid-walk), [§FS-check.2.2](FS-check.md#22-empty-scan) (the empty-scan `warning:`), [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) (the empty citation-obligation `warning:`), and any subcommand reporting a launch-time failure.
+Used by [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location) (unknown subcommand / bad flag), [§FS-id.6](FS-id.md#6-exit-codes) (unknown kind, unknown `--format`, scan / I/O error), [§FS-config.4.3](FS-config.md#43-invalid-config-behavior) (config validation), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages) (a malformed config or a per-file read failure mid-scan), [§FS-check.2.2](FS-check.md#22-empty-scan) (the empty-scan `warning:`), [§FS-check.2.2.1](FS-check.md#221-citation-direction-obligation-applies-to-nothing) (the empty citation-obligation `warning:`), and any subcommand reporting a launch-time failure.
 
 #### 2.2.4 Under `--format=json`
 
-A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed as raw text and is never JSON-ified; a *mid-walk* per-file failure collected by `grund check` is one of the report's diagnostics and is rendered in `--format=json` like the others ([§FS-errors.5.2.3](FS-errors.md#523-run-level-diagnostics-in-checks-report)), still on stderr because it is not a finding about the spec graph.
+A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed as raw text and is never JSON-ified; a *mid-scan* per-file failure collected by `grund check` is one of the report's diagnostics and is rendered in `--format=json` like the others ([§FS-errors.5.2.3](FS-errors.md#523-run-level-diagnostics-in-checks-report)), still on stderr because it is not a finding about the spec graph.
 
 ### 2.3 Bare query failure
 
@@ -346,7 +346,7 @@ A *launch-time* CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-m
 
 #### 5.2.3 Run-level diagnostics in `check`'s report
 
-A run-level diagnostic in `grund check`'s report — about the run, not a finding about the graph, such as the empty-scan `warning:` ([§FS-check.2.2](FS-check.md#22-empty-scan)), the nothing-recognized `warning:` ([§FS-check.4.5](FS-check.md#45-nothing-recognized)), or a per-file read failure collected mid-walk (a `line`-less diagnostic) — is likewise on stderr in both forms; under JSON a run-level warning carries `path`, `line`, and `sites` all `null`, any location being in its message text ([§FS-check.4.5](FS-check.md#45-nothing-recognized)).
+A run-level diagnostic in `grund check`'s report — about the run, not a finding about the graph, such as the empty-scan `warning:` ([§FS-check.2.2](FS-check.md#22-empty-scan)), the nothing-recognized `warning:` ([§FS-check.4.5](FS-check.md#45-nothing-recognized)), or a per-file read failure collected mid-scan (a `line`-less diagnostic) — is likewise on stderr in both forms; under JSON a run-level warning carries `path`, `line`, and `sites` all `null`, any location being in its message text ([§FS-check.4.5](FS-check.md#45-nothing-recognized)).
 
 ### 5.3 `show --batch`
 

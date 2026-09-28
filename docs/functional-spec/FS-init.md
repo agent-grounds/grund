@@ -231,7 +231,7 @@ Under `--dry-run` a note is written in the conditional, like every other line of
 
 After the notes, stderr prints a short `next:` block — a blank line, then numbered first steps, then `see <entrypoint> for the full workflow.` — so the user is not left at a bare list of paths wondering what to do. `<entrypoint>` is the first agent entrypoint `init` wrote, updated, or found already current. The steps are: run `grund check` (a fresh tree is clean); allocate an ID with `ID=$(grund id FS "…")` and add it to the effective FS home (`requirements.md` with the `## <ID>: …` H2 for generated defaults, or under the configured FS folder with `# <ID>: …` when compatibility or explicit config makes FS a folder); cite it as `§<ID>` from the docs and e2e tests that depend on it.
 
-When `--docs` was *not* passed, a re-run advice is inserted as step 1, the following steps move down, the allocation step drops its second line — the one naming the `## <ID>: …` H2 or `# <ID>: …` H1, which prints only under `--docs` — and the citation step is omitted. That advice always points at re-running with `--docs` (or creating the effective FS home, `docs/`, and `tests/` by hand). It appends the clause `until then \`grund check\` has nothing to scan` only when the effective scanner would read no file — exactly the scan decision in [§FS-config.3.5](FS-config.md#35-scan--what-gets-walked): configured extensions, ignore and exclude rules, hidden-file and symlink handling, workspace boundaries, configured include paths, walked kind homes, and `scan = false` all retain their scanner meanings. Path existence or a non-empty directory alone does not make the clause false.
+When `--docs` was *not* passed, a re-run advice is inserted as step 1, the following steps move down, the allocation step drops its second line — the one naming the `## <ID>: …` H2 or `# <ID>: …` H1, which prints only under `--docs` — and the citation step is omitted. That advice always points at re-running with `--docs` (or creating the effective FS home, `docs/`, and `tests/` by hand). It appends the clause `until then \`grund check\` has nothing to scan` only when the effective scanner would read no file — exactly the scan decision in [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned): configured extensions, ignore and exclude rules, hidden-file and symlink handling, workspace boundaries, configured include paths, scanned kind homes, and `scan = false` all retain their scanner meanings. Path existence or a non-empty directory alone does not make the clause false.
 
 The `next:` block is suppressed entirely when every reported path is `exists ` (or, under `--dry-run`, every reported path is `exists ` and no `would-…` lines were emitted) — the user already has a complete, current grund setup, so there is no next step to teach. When it is printed, it is guidance, not a finding: part of the success output, with no effect on the exit code.
 
@@ -283,7 +283,7 @@ The scan scope (`[scan].include` / `[scan].exclude`) is *not* surfaced here — 
 
 ###### 2.3.4.4.1 Rows for places
 
-A **non-citable kind** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is named by its **place** rather than its name — `- [skills/](skills): Agent review and automation skills` — because its name is a config handle an agent can never write in a citation, while the directory is something it can go and read. An unwalked kind ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-walked)) is rendered the same way; the row is the point of configuring it. The **homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — has no place and therefore no row.
+A **non-citable kind** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is named by its **place** rather than its name — `- [skills/](skills): Agent review and automation skills` — because its name is a config handle an agent can never write in a citation, while the directory is something it can go and read. An unscanned kind ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) is rendered the same way; the row is the point of configuring it. The **homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — has no place and therefore no row.
 
 ##### 2.3.4.5 Declaration Forms
 
@@ -409,7 +409,7 @@ The section is what an agent reads *instead of* `grund.toml`, so it states rules
 
 ##### 2.3.5.1 Layout
 
-The section opens with one paragraph — the fixed legend ``must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).``, followed by the grounding sentence (§FS-init.2.3.5.7) where any row's effective `require_grounding` is on — then one bullet per citing kind that has any rule, in `[[kinds]]` order with the homeless kind (§FS-config.3.9.2) last, then one closing line (§FS-init.2.3.5.6). An unwalked kind (§FS-config.3.4.7) has no bullet at all: it can carry no `[citations.<kind>]` rule.
+The section opens with one paragraph — the fixed legend ``must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).``, followed by the grounding sentence (§FS-init.2.3.5.7) where any row's effective `require_grounding` is on — then one bullet per citing kind that has any rule, in `[[kinds]]` order with the homeless kind (§FS-config.3.9.2) last, then one closing line (§FS-init.2.3.5.6). An unscanned kind (§FS-config.3.4.7) has no bullet at all: it can carry no `[citations.<kind>]` rule.
 
 ##### 2.3.5.2 The subject names its unit
 
@@ -449,7 +449,7 @@ The grounding sentence is generated from each row's effective `require_grounding
 
 ###### 2.3.5.7.1 Citing, not declaring
 
-The sentence distinguishes citing from declaring: `Every source file must cite a declared ID or declare one inline`, extended with `; every file under skills/ and tests/e2e/ must cite one` for the walked non-citable homes whose rows have it on, because a declaration in such a home is misplaced ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)) and those files can therefore only cite. An unwalked home ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-walked)) is left out: nothing in it is scanned, so the rule never reaches it.
+The sentence distinguishes citing from declaring: `Every source file must cite a declared ID or declare one inline`, extended with `; every file under skills/ and tests/e2e/ must cite one` for the scanned non-citable homes whose rows have it on, because a declaration in such a home is misplaced ([§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home)) and those files can therefore only cite. An unscanned home ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) is left out: nothing in it is scanned, so the rule never reaches it.
 
 ##### 2.3.5.8 The drift check
 

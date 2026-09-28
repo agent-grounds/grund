@@ -91,7 +91,7 @@ title produces empty slug after normalization: "<original title>"
 
 ## 4. Next-number derivation
 
-`id` scans exactly what `check` walks ([§FS-check.1](FS-check.md#1-inputs), [§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)) and collects every declaration of the requested `<KIND>`. The proposed number is `max(existing numbers) + 1`, or `1` if the kind has none.
+`id` scans exactly what `check` scans ([§FS-check.1](FS-check.md#1-inputs), [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)) and collects every declaration of the requested `<KIND>`. The proposed number is `max(existing numbers) + 1`, or `1` if the kind has none.
 
 Holes below the maximum are **not** filled: with `FS-001`, `FS-002` and `FS-004` declared, `FS-003` is never issued. Numbers are issued strictly above the maximum, because an ID once removed may still be cited from outside the tree — PRs, chat, mirrored repos — and filling its hole would silently change what those citations point at. This is [§FS-non-goals.4](FS-non-goals.md#4-cross-workspace-id-renaming) (no rename) applied to allocation.
 

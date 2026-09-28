@@ -50,8 +50,8 @@ grund init {repo_copy} --agents-md
 ```
 
 Precondition: `{repo_copy}` has no `AGENTS.md`; its existing `grund.toml`
-configures populated `[scan] include` paths and walked kind homes, so the
-effective scanner would read at least one file ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)).
+configures populated `[scan] include` paths and scanned kind homes, so the
+effective scanner would read at least one file ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)).
 
 Exit `0`, stdout empty, stderr:
 

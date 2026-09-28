@@ -132,14 +132,14 @@ can run, so the finding is a warning, not an error ([§FS-workspace.2.1.4](FS-wo
 
 #### 2.1.1 The warning
 
-Take the block's **default scope** — the roots `[scan] include` and the walked
-`[[kinds]]` homes give it ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)), which is the
+Take the block's **default scope** — the roots `[scan] include` and the scanned
+`[[kinds]]` homes give it ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)), which is the
 set [§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)'s boundary prunes — and keep the ones that exist on disk, since a root
 that is not there is read by nobody and rescues nothing. When at least one such
 root remains and **every** one of them is at or inside an expanded member root,
 the block earns one warning at its `members` line, naming each covered root and
 the member entry it is inside ([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)). Roots and member entries are
-compared as canonical paths, the way the walk's own prune compares them, so a
+compared as canonical paths, the way the scan's own prune compares them, so a
 member reached through a symlink or a glob covers what it actually lands on.
 
 #### 2.1.2 Shapes that are not this finding
@@ -170,13 +170,13 @@ file nobody reads.
 config root as a scan root, but the member boundary still prunes, so the absorbed
 tree is no more readable with it than without. The question is therefore asked
 of the default scope whatever the flag says: this is a property of the
-configuration, not of one walk.
+configuration, not of one scan.
 
 #### 2.1.3 An absent `[scan] include` key
 
 A block that omits `[scan] include` is not exempt. The key carries a
 materialized default — `requirements.md`, `docs`, `e2e`, `src`
-([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)) — so a block that omits it has *those* roots rather than
+([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)) — so a block that omits it has *those* roots rather than
 only the block root, and [§FS-workspace.2.1.1](FS-workspace.md#211-the-warning) is asked of them as it is of any other
 block's: when the ones that exist on disk are all inside members, that block
 reads nothing and is told so. The remedy the warning names is still the one to take, since adding
@@ -654,7 +654,7 @@ checked — not even under `--full`
 project's scope and has no project to widen here. The run says so: a block
 whose own tree holds a file a scan would have read earns one warning naming it
 ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)),
-on every command that walks, permanently and without moving the exit code —
+on every command that scans, permanently and without moving the exit code —
 opting out is a legitimate choice, and the finding turns on what is in the tree
 rather than on the key alone. Where the tree holds nothing a scan would read the
 run stays silent, and `grund check` stays green over content nothing reads,
@@ -734,7 +734,7 @@ does, which is
 **A path is read from the outermost block that claims a directory:** a
 multi-segment `members` entry (`grp/inner`) hops a directory that may itself
 declare `[workspace]` and list the same child, and the outer claim is the one the
-walk down from the outermost root follows — ordinary nesting has one claim per
+scan down from the outermost root follows — ordinary nesting has one claim per
 directory, where the two agree.
 
 #### 6.1.7 A claiming block that cannot answer fails the run
@@ -772,7 +772,7 @@ The claim rule is about the scopes that *do* read a path, which are the blocks.
 The chain is still *asked* about such a run, by a second, **quiet** climb that
 reads no path out of it: [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)'s
 rule walks these same ancestors, with this same entry-text read ([§FS-workspace.6.1.7.4](FS-workspace.md#6174-the-claim-is-read-from-members-entries-alone)),
-about a `[workspace]` block the run's own walk met rather than about the run's
+about a `[workspace]` block the run's own scan met rather than about the run's
 own name — so what an ancestor lists decides whether that block is reported.
 That question carries none of the obligations of [§FS-workspace.6.1.7](FS-workspace.md#617-a-claiming-block-that-cannot-answer-fails-the-run), because it spells
 nothing: it fails no run, and an ancestor it cannot read leaves the claim
@@ -813,7 +813,7 @@ leaves the block it was asking about unreported.
 
 The warning of [§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable) travels the way its three `[workspace]` siblings do
 ([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)):
-one of the run's warnings, carried on whatever the walking command returns and
+one of the run's warnings, carried on whatever the scanning command returns and
 rendered by each frontend rather than written to a stream from inside the
 engine, so an editor publishes it too ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
 It is located at the config it could not read — that file and no line, because
@@ -826,7 +826,7 @@ obtained — and the bytes the CLI prints are unchanged.
 the outer scope it is ignored, so its tree belongs to the enclosing project's
 namespace when that project's scan reaches it and to nobody when it does not,
 while a run started **at** it names every path from itself — a run started at a
-block *below* it that the chain does list is back inside the guarantee. A run whose own tree walk meets such a block reports it, naming the
+block *below* it that the chain does list is back inside the guarantee. A run whose own tree scan meets such a block reports it, naming the
 block's `[workspace]` line and saying that the projects under it are absorbed
 into the enclosing namespace instead of named under their own alias path
 ([§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)). Two shapes stay
@@ -834,7 +834,7 @@ unreported ([§FS-workspace.6.1.8.1](FS-workspace.md#6181-two-shapes-stay-unrepo
 
 ##### 6.1.8.1 Two shapes stay unreported
 
-Two shapes stay unreported, for different reasons. A block the walk never
+Two shapes stay unreported, for different reasons. A block the scan never
 reaches — behind `[scan] exclude`, an ignore file, a member boundary, or a
 narrowed scope — is the known limitation, because a run that cannot see
 something does not judge it. A block an enclosing config *names* and then cannot
@@ -852,7 +852,7 @@ symlink can, and a symlink is followed
 ([§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed)).
 So the directory a link resolves to is asked which project owns it — the
 innermost project root that contains it — and a directory owned by another
-project is not descended into, whichever project's walk met it and under
+project is not descended into, whichever project's scan met it and under
 whatever name. This loaded-workspace ownership rule is stronger than the
 physical-root rule: it also separates another project whose root lies inside the
 current project's root. The harm is the same in every direction:
@@ -1284,7 +1284,7 @@ per-file object and to each nested citation object, in the shape
 
 #### 8.6.1 A narrower `<path>` is one narrowed scan
 
-`cover` is the one command in this section whose `<path>` bounds a **walk**
+`cover` is the one command in this section whose `<path>` bounds a **scan**
 rather than choosing which config answers ([§FS-cover.1](FS-cover.md#1-inputs)), so it draws the
 aggregate/narrow line where `grund check` draws it and not where `list` does: a
 scope narrower than the config root is one narrowed scan of the enclosing
@@ -1399,7 +1399,7 @@ explicit `<path>` argument (e.g. `grund list apps/api`,
 `grund refs FS-x apps/api`, `grund complete ids --path apps/api`) behaves as if
 the command were invoked from that path: a `<path>` inside a member is member-scoped, not
 workspace-aggregate, even when a workspace exists above it. `cover`, whose
-`<path>` bounds a walk, runs one narrowed scan below the config root instead
+`<path>` bounds a scan, runs one narrowed scan below the config root instead
 ([§FS-workspace.8.6.1](FS-workspace.md#861-a-narrower-path-is-one-narrowed-scan)).
 
 ### 8.9 The current project

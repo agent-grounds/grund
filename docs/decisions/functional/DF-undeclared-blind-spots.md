@@ -65,7 +65,7 @@ file below it is scanned" is one clause, not two: what is pruned is a directory 
 that immediately follows it says so — "this is a boundary on link traversal, not on scan
 paths generally: a non-symlink parent-relative `include` may still name external
 content" — and
-[§FS-config.3.5.7](../../functional-spec/FS-config.md#357-include-is-walked-from-the-config-root)
+[§FS-config.3.5.7](../../functional-spec/FS-config.md#357-include-is-scanned-from-the-config-root)
 says it again about the entry that names a root: "a plain parent-relative entry such as
 `../shared` intentionally names external content and is still walked".
 

@@ -433,7 +433,7 @@ through the closed key allow-list (`config.rs:357`).
 5. **A kind home outside the scan scope is silent today.** Independent of this
    proposal: a configured `folder` / `file` outside `[scan] include` is never
    walked, its declarations do not exist, and its citations are *invisible*
-   rather than dangling ([§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-walked)). Nothing warns. A `check` warning
+   rather than dangling ([§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-scanned)). Nothing warns. A `check` warning
    ("configured home `skills` is outside the scan scope") would remove the trap
    for ordinary kinds and make question 4 moot. Possibly its own proposal.
 6. **Should an ID-less home be groundable?** There is no way to require that a

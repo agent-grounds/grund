@@ -26,7 +26,7 @@ Fields:
 - `message` is the same lowercase text used in text mode: no terminal period on a single-clause message, while a run-level caution of more than one clause keeps its sentences' periods ([§FS-errors.3](FS-errors.md#3-message-text)).
 - `sites` is `null` for single-site diagnostics, or a sorted array of `{ "path": <path>, "line": <line> }` for multi-site diagnostics.
 
-`check --format=json` splits these objects across streams as [§FS-errors.5](FS-errors.md#5-json-format) specifies: graph findings as NDJSON on stdout, run-level warnings such as empty scans and line-less mid-walk read failures on stderr. Launch-time CLI failures stay raw `error:` text on stderr even when `--format=json` was requested.
+`check --format=json` splits these objects across streams as [§FS-errors.5](FS-errors.md#5-json-format) specifies: graph findings as NDJSON on stdout, run-level warnings such as empty scans and line-less mid-scan read failures on stderr. Launch-time CLI failures stay raw `error:` text on stderr even when `--format=json` was requested.
 
 ### 1.1 Value mismatch
 
