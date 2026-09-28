@@ -1,7 +1,7 @@
 //! Test module: the declaration-side title hover — usage counts and the exact
 //! body bytes an editor shows (§FS-lsp.1.2)
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use super::*;
@@ -55,12 +55,11 @@ fn refs_counts(root: &Path, id: &str, section: Option<&str>) -> (usize, usize) {
         descendants: false,
     })
     .expect("public refs api");
-    let files = output
-        .hits
-        .iter()
-        .map(|hit| hit.path.clone())
-        .collect::<BTreeSet<String>>();
-    (output.hits.len(), files.len())
+    // The shipped fold `grund refs --total` prints from (§FS-refs.3.4), never a
+    // copy of it: a second fold written anywhere fails the parity below, so it
+    // is held by construction rather than by a test agreeing with itself.
+    let usage = usage_over_paths(output.hits.iter().map(|hit| hit.path.as_str()));
+    (usage.sites, usage.files)
 }
 
 fn plural_fixture(root: &Path) {
@@ -87,6 +86,58 @@ fn plural_fixture(root: &Path) {
         &root.join("src/second.rs"),
         "//! §FS-001-alpha.1.1\n/// §FS-002-beta\npub fn second() {}\n",
     );
+}
+
+/// §FS-refs.3.4 / §FS-lsp.1.2.5: the fold both transports count with counts
+/// every member as a site and every distinct path once as a file, and answers
+/// an empty set with zeroes rather than with nothing.
+#[test]
+fn the_shared_fold_counts_sites_and_distinct_files() {
+    assert_eq!(
+        usage_over_paths(["src/first.rs", "src/first.rs"]),
+        LspUsage { sites: 2, files: 1 },
+        "two sites on one path are two sites in one file"
+    );
+    assert_eq!(
+        usage_over_paths(["src/first.rs", "src/second.rs", "src/first.rs"]),
+        LspUsage { sites: 3, files: 2 },
+        "distinct paths are counted once however the sites interleave"
+    );
+    assert_eq!(
+        usage_over_paths(Vec::<&str>::new()),
+        LspUsage { sites: 0, files: 0 },
+        "an empty set is a pair of zeroes"
+    );
+}
+
+/// §FS-lsp.1.2.4 / §FS-refs.3.4: the clause both transports print inflects its
+/// two nouns and nothing else — `across` at every count, and `not cited` where
+/// `cited at 0 sites across 0 files` would pretend to be a count.
+#[test]
+fn the_usage_clause_inflects_only_its_two_nouns() {
+    assert_eq!(usage_clause(LspUsage { sites: 0, files: 0 }), "not cited");
+    assert_eq!(
+        usage_clause(LspUsage { sites: 1, files: 1 }),
+        "cited at 1 site across 1 file"
+    );
+    assert_eq!(
+        usage_clause(LspUsage { sites: 3, files: 2 }),
+        "cited at 3 sites across 2 files"
+    );
+    assert_eq!(
+        usage_clause(LspUsage { sites: 2, files: 1 }),
+        "cited at 2 sites across 1 file",
+        "the two nouns inflect independently"
+    );
+    for usage in [
+        LspUsage { sites: 1, files: 1 },
+        LspUsage { sites: 3, files: 2 },
+    ] {
+        assert!(
+            usage_clause(usage).contains(" across "),
+            "the preposition never inflects"
+        );
+    }
 }
 
 /// §FS-lsp.1.3.1: a declaration-side title claims its own ID and its

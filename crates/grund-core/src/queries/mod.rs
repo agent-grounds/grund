@@ -55,7 +55,8 @@ mod sizes;
 
 pub use batch::{BatchShowFailure, BatchShowQuery, BatchShowRecord, show_batch_with_scope};
 pub use editor_hover::{
-    LspUsage, citation_under_title, lsp_hover_with_kind_title, lsp_title_hover_body,
+    LspUsage, citation_under_title, lsp_hover_with_kind_title, lsp_title_hover_body, usage_clause,
+    usage_over_paths,
 };
 pub use editor_on_type::{DeclaredId, LineEdit, can_replace_trigger_at, on_type_line_edits};
 pub use editor_snapshot::{

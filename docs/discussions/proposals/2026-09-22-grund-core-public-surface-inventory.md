@@ -2,7 +2,7 @@
 
 The evidence [§DISC-grund-core-public-surface](2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) argues from. It classifies nothing on its own authority: the counting convention is [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name), the columns are [§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries), and `tests/integration/test_public_surface_inventory.py` holds the first column equal to the crate root's export list ([§DISC-grund-core-public-surface.5](2026-09-22-grund-core-public-surface.md#5-what-is-checked)).
 
-Read on the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. **182 rows, one per public root name.** If the audit is re-taken on a later commit, that table and every row below move together.
+Read on the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. **184 rows, one per public root name.** If the audit is re-taken on a later commit, that table and every row below move together.
 
 ## How a cell reads
 
@@ -24,18 +24,18 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 182 |
-| Rustdoc-visible | 169 |
+| Public root names | 184 |
+| Rustdoc-visible | 171 |
 | `#[doc(hidden)]` | 13 |
 | Named, a related API, or a data type of one | 104 |
-| Outside that closure | 78 |
-| Named by a frontend or its tests | 111 |
+| Outside that closure | 80 |
+| Named by a frontend or its tests | 113 |
 | Reached structurally only | 33 |
 | No repository consumer of either kind | 38 |
-| Disposition keep | 106 |
+| Disposition keep | 110 |
 | Disposition keep, hidden | 13 |
 | Disposition keep, name in the spec | 16 |
-| Disposition hide | 12 |
+| Disposition hide | 10 |
 | Disposition retire with the ramp | 1 |
 | Disposition facade, then retire | 34 |
 
@@ -162,7 +162,7 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `lsp_hover_with_kind_title` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
 | `lsp_snapshot` | api | visible | related API | none found | none found | keep |
 | `lsp_snapshot_with_metadata` | api | visible | related API | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `lsp_title_hover_body` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
+| `lsp_title_hover_body` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspCitation` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspDeclaration` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspFindingRange` | queries | visible | data type of `lsp_snapshot` | none found | via LspSnapshot → LspFindingRange `grund-lsp/src/lib.rs:4` | keep |
@@ -170,7 +170,7 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `LspSnapshotOpts` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspSnapshotWithMetadata` | queries | visible | data type of `lsp_snapshot_with_metadata` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspStub` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `LspUsage` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
+| `LspUsage` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13`, grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `merge_outcomes` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `names_member_id_candidate` | resolver | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | hide |
 | `NamespaceMatch` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
@@ -214,6 +214,8 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `ShowQueryError` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `ShowSection` | model | visible | data type of `show` | none found | via show_with_scope → ShowOutput → ShowSection `grund-cli/src/cli_show.rs:166` | keep |
 | `UnmarkedHeading` | model | visible | data type of `Findings` | none found | none found | keep |
+| `usage_clause` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | via lsp_title_hover_body → usage_clause `grund-lsp/src/lib.rs:4` | keep |
+| `usage_over_paths` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | via title_usage → usage_over_paths `grund-lsp/src/lib.rs:4` | keep |
 | `USER_CONFIG_TARGET` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `user_grund_config_path` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `UserConfigScan` | writers | visible | no | none found | via scan_user_config → UserConfigScan `grund-cli/src/cli_integrations_write.rs:230` | facade, then retire |
