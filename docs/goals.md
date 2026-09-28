@@ -136,7 +136,7 @@ Return the smallest deterministic slice that answers the grounding question; mak
 
 ### 1. What this requires
 
-Bare `grund <ID>` is the cheap lead read; `--brief`, `--toc`, section reads, `--full`, `refs --summary`, and narrowed `list` form the escalation ladder.
+Bare `grund <ID>` is the cheap lead read; `--brief`, `--toc`, section reads, `--full`, `refs --total`, `refs --summary`, and narrowed `list` form the escalation ladder. `refs --total` is the ladder's cheapest rung on the back-reference side — the blast radius as two numbers, before the per-file rows are worth reading ([§FS-refs.3.4](functional-spec/FS-refs.md#34---total)).
 
 ### 2. What this rules out
 

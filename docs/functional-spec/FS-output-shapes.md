@@ -184,6 +184,8 @@ Fields:
 
 `count` is the number of citation sites in the file; `lines` is the sorted, de-duplicated set of 1-indexed source lines containing those sites.
 
+With `--total` it emits exactly one object instead, at every count: `{"sites":140,"files":50}`. `sites` is the number of citation sites in the set the invocation listed, `files` the number of distinct files they live in; neither `project` nor `kind_title` appears on it ([§FS-refs.3.4](FS-refs.md#34---total)).
+
 ### 5.2 `list --size --format=json`
 
 `list --size --format=json` emits one object per declaration and citable section site, in the size-row order defined by [§FS-list.3.4](FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements):
@@ -255,9 +257,14 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | `refs` resolver rejection, 0.14.0 text or JSON | empty | raw `error:`, optional invalid-format hint, then exact migration warning | `2` |
 | `refs` resolver rejection, 0.15.0 text | empty | bare failure; invalid format alone adds a hint | `1` |
 | `refs` resolver rejection, 0.15.0 JSON | empty | one `invalid-id` or `ambiguous` diagnostic object; no hint | `1` |
+| `refs --total` text, cited | one `cited at <n> site(s) across <m> file(s)` line | empty | `0` |
+| `refs --total` text, uncited | one `not cited` line | empty, or the [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) `note:` for an ID neither declared nor cited | `0` |
+| `refs --total --format=json`, any count | exactly one `{"sites":<n>,"files":<m>}` object | as the text rows | `0` |
 | bad flag / malformed CLI | empty | raw `error:` text | `2` |
 | invalid config during `config validate` | empty | raw `error: <path>:<line>:` text | `1` |
 | invalid config blocking another command | empty | raw `error: <path>:<line>:` text | `2` |
 | semantic value finding, text | located finding lines | empty | `1` |
 | semantic value finding, JSON | diagnostic NDJSON with declaration `sites` | empty | `1` |
 | home JSON that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete | partial findings if any | incomplete-scan diagnostic | `2` |
+
+The three `--total` rows are the whole difference the flag makes to this table: the `refs` resolver-rejection rows above and the incomplete-scan row apply to a `--total` invocation unchanged, because it renders the same scan result rather than running a different query ([§FS-refs.3.4](FS-refs.md#34---total)).

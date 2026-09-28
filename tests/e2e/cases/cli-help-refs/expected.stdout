@@ -1,16 +1,19 @@
 grund refs — list every citation of an ID, as `path:line`, so you can see who
 depends on a declaration before you change it.
 
-Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--descendants] [--summary] [--format text|json]
+Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--descendants]
+                   [--summary] [--total] [--format text|json]
 
 PATH defaults to `.`. With a `.<section>` (or --section), only citations of that
 exact section are listed; --descendants widens that to the section and every
-section beneath it. An ID with no citations prints nothing and exits 0.
+section beneath it. An ID with no citations prints nothing and exits 0, or the
+line `not cited` under --total.
 
 Options:
   --section S          list only citations of that section path   e.g. grund refs FS-login --section 3
   --descendants        also list citations of sections beneath it e.g. grund refs FS-login.3 --descendants
   --summary            group citations by citing file             e.g. grund refs FS-login --summary
+  --total              the set's size instead of its members      e.g. grund refs FS-login --total
   --format text|json   text (default) prints `path:line: <citation>`; json emits NDJSON.
 
 The citation list is the result, so it goes to stdout (text and json alike) —
@@ -22,4 +25,5 @@ Exit:  0 scan succeeded (with or without hits) · 1 ID rejected after context ·
 Examples:
   grund refs FS-login             # every citation of FS-login
   grund refs FS-login --summary   # one row per citing file
+  grund refs FS-login --total     # how many sites, in how many files
   grund refs FS-login.3           # only citations of section 3
