@@ -2,6 +2,7 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use super::editor_snapshot::{LspCitation, LspSnapshot};
+use crate::grammar::path_at_or_under;
 
 /// How much of the tree leans on one declaration-side title: citation sites and
 /// the distinct files those sites live in (§FS-lsp.1.2.5).
@@ -44,10 +45,7 @@ pub fn citation_under_title(
     } else {
         section_separator
     };
-    citation_query_id == title_query_id
-        || citation_query_id
-            .strip_prefix(title_query_id)
-            .is_some_and(|tail| tail.starts_with(descendant_separator))
+    path_at_or_under(citation_query_id, title_query_id, descendant_separator)
 }
 
 impl LspSnapshot {
