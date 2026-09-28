@@ -257,6 +257,13 @@ exit verdict do not change, and `--only invalid-rule` keeps selecting the
 finding. A namespace the run *can* judge and rejects keeps its legacy reason
 unchanged and unsuffixed, because there the kind really is what failed.
 
+The reason belongs to the vocabulary check rather than to the finding, so the
+same two forms also reach `check --rule`'s pre-scan refusal
+([§FS-rules.4](FS-rules.md#4-validation-lifecycle)), where there is no rule heading to report at and therefore no
+`code` to migrate to: that surface prints `error: <reason>` on stderr, writes
+nothing to stdout, and exits 2. A consumer of it keys on the exit code, which
+this migration does not move, and on the sentence it passed in.
+
 #### 3.7.1 The final templates
 
 In `0.15.0`, the compatibility prefixes are removed and the two reasons are

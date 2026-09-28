@@ -50,7 +50,7 @@ fn parse_ad_hoc_with_vocabulary(
     sentence: &str,
     vocabulary: RuleVocabulary,
 ) -> anyhow::Result<ParsedRule> {
-    parse_rule(
+    let parsed = parse_rule(
         sentence,
         "--rule".into(),
         RuleAnchor {
@@ -60,7 +60,14 @@ fn parse_ad_hoc_with_vocabulary(
         },
         &vocabulary,
     )
-    .map_err(|error| anyhow::anyhow!(error.message))
+    .map_err(|error| anyhow::anyhow!(error.message))?;
+    // §FS-errors.3.7: `--rule` has no rule heading to report at, so a sentence
+    // this scope cannot verify is refused before the scan like any other the
+    // vocabulary check turns down.
+    match parsed {
+        (_, Some(message)) => Err(anyhow::anyhow!(message)),
+        (rule, None) => Ok(rule),
+    }
 }
 
 fn add_workspace_targets(
@@ -123,17 +130,29 @@ pub(crate) fn workspace_vocabulary(
 /// Only stage 1 of the workspace load, because the aliases are all that is
 /// wanted and stages 2 and 3 scan every member's whole tree. Expanding is what
 /// makes the alias set `check`'s by construction. Best-effort like every other
-/// workspace read `init` does: an expansion that fails yields no namespace, so
-/// the rule is unverifiable here and the block is still written.
+/// workspace read `init` does: an expansion that fails raises nothing and costs
+/// the run only the members it could not reach.
+///
+/// It does not cost the run the workspace itself. A config that declares
+/// `[workspace]` holds at least its own project's namespace, whatever its member
+/// list expands to — the entry an empty `members` already yields, recovered here
+/// by expanding the same tree with the member list emptied. So a run standing at
+/// a workspace root is never told that no workspace is in scope and sent to the
+/// workspace root, one directory reaches one verdict whether a member is absent
+/// or unlisted, and the rule an unreachable member's alias names is an invalid
+/// one rather than a bullet written out of a broken tree (§FS-rules.4.1.1).
 pub(crate) fn declared_workspace_vocabulary(config: &Config) -> RuleVocabulary {
     let mut vocab = vocabulary(config);
     if !config.workspace_declared {
         return vocab;
     }
     let mut root_config = config.clone();
-    let Ok(entries) = expand_workspace_tree(&mut root_config) else {
-        return vocab;
-    };
+    let entries = expand_workspace_tree(&mut root_config).unwrap_or_else(|_| {
+        let mut alone = config.clone();
+        alone.workspace_members.clear();
+        alone.workspace_optional_members.clear();
+        expand_workspace_tree(&mut alone).unwrap_or_default()
+    });
     add_namespaces(
         &mut vocab,
         entries
@@ -201,7 +220,7 @@ pub(crate) fn configured_rule_sentences(
                     "rule rationale is empty",
                 ));
             }
-            let parsed = parse_rule(
+            let (parsed, unverifiable_here) = parse_rule(
                 title,
                 origin.clone(),
                 RuleAnchor {
@@ -210,30 +229,24 @@ pub(crate) fn configured_rule_sentences(
                     column: None,
                 },
                 vocab,
-            );
-            match parsed {
-                Ok(parsed) => {
-                    if let Some(diagnostic) = unresolved_subject_diagnostic(&parsed, &facts) {
-                        return Err(diagnostic);
-                    }
-                }
-                // §FS-rules.4.1.2: reported, rendered, and not a reason to
-                // withhold the write. No parsed rule, so no subject verdict: a
-                // scope that cannot judge the object judges no part of it.
-                Err(error) if error.unverifiable_here => unverifiable.push(invalid_rule(
+            )
+            .map_err(|error| {
+                invalid_rule(&origin, path.as_ref(), declaration.line, &error.message)
+            })?;
+            // §FS-rules.4.1: the object's namespace is the whole of what is
+            // unverifiable, so every other question is put either way.
+            if let Some(diagnostic) = unresolved_subject_diagnostic(&parsed, &facts) {
+                return Err(diagnostic);
+            }
+            // §FS-rules.4.1.2: reported, rendered, and not a reason to withhold
+            // the write.
+            if let Some(message) = unverifiable_here {
+                unverifiable.push(invalid_rule(
                     &origin,
                     path.as_ref(),
                     declaration.line,
-                    &error.message,
-                )),
-                Err(error) => {
-                    return Err(invalid_rule(
-                        &origin,
-                        path.as_ref(),
-                        declaration.line,
-                        &error.message,
-                    ));
-                }
+                    &message,
+                ));
             }
             rows.push((origin, title.to_string()));
         }
@@ -259,6 +272,10 @@ pub(crate) fn check_chapter_rules(
     if let Some((_, projects)) = workspace {
         add_workspace_targets(&mut vocab, projects);
     }
+    let facts = match workspace {
+        Some((selected, projects)) => adapt_workspace(selected, projects, complete),
+        None => adapt_markdown(findings, config, complete),
+    };
     let mut rules = Vec::new();
     let rule_kinds = config
         .kinds
@@ -284,17 +301,27 @@ pub(crate) fn check_chapter_rules(
                 .and_then(|title| {
                     parse_rule(title, origin.clone(), anchor, &vocab).map_err(|error| error.message)
                 });
+            let path = declaration.file.to_string_lossy();
             match parsed {
-                Ok(rule) if rule_has_rationale(declaration) => rules.push(rule),
-                Ok(_) => report.errors.push(invalid_rule(
+                Ok(_) if !rule_has_rationale(declaration) => report.errors.push(invalid_rule(
                     &origin,
-                    declaration.file.to_string_lossy().as_ref(),
+                    path.as_ref(),
                     declaration.line,
                     "rule rationale is empty",
                 )),
+                Ok((rule, None)) => rules.push(rule),
+                // §FS-rules.4.1: reported rather than evaluated — but the
+                // subject is asked here, so one directory reaches one verdict.
+                Ok((rule, Some(message))) => {
+                    report.errors.push(
+                        unresolved_subject_diagnostic(&rule, &facts).unwrap_or_else(|| {
+                            invalid_rule(&origin, path.as_ref(), declaration.line, &message)
+                        }),
+                    );
+                }
                 Err(message) => report.errors.push(invalid_rule(
                     &origin,
-                    declaration.file.to_string_lossy().as_ref(),
+                    path.as_ref(),
                     declaration.line,
                     &message,
                 )),
@@ -304,10 +331,6 @@ pub(crate) fn check_chapter_rules(
     if let Some(rule) = ad_hoc {
         rules.push(rule);
     }
-    let facts = match workspace {
-        Some((selected, projects)) => adapt_workspace(selected, projects, complete),
-        None => adapt_markdown(findings, config, complete),
-    };
     let precedence = citation_precedence(config);
     report.errors.extend(evaluate(&rules, &precedence, &facts));
     report

@@ -233,6 +233,14 @@ a sentence is **unverifiable here** rather than invalid. It is reported at the
 rule's own heading, keeps the code `invalid-rule`, takes the wording
 [§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-wording-migration) fixes, and the run still exits nonzero.
 
+Unverifiability is a verdict about the object kind's namespace and about nothing
+else. Every other part of the sentence is judged against the facts the scope
+already holds, exactly as it is when the object kind is local — the grammar, the
+rationale, and a literal subject that has to resolve. A rule that fails for any
+of those reasons is an invalid rule with [§FS-rules.4](FS-rules.md#4-validation-lifecycle)'s consequences in full,
+whichever namespace its object names, and the run reports the fact it can act on
+rather than the one it cannot.
+
 #### 4.1.1 The distinction is mechanical
 
 What makes a sentence unverifiable is the absence of every workspace namespace,
@@ -247,6 +255,12 @@ which the run knows without judging anything:
 | `*/OP`, `OP` not local | holds no namespace at all | unverifiable here |
 | `*/OP`, `OP` not local | holds namespaces, none declaring `OP` | invalid rule |
 | `*/OP`, `OP` declared locally | either | resolves |
+
+A config that declares `[workspace]` holds at least its own project's namespace,
+whatever its member list expands to — only a config that declares none holds
+nothing at all. So an empty member list and one naming a member the run cannot
+reach come to the same verdict about the same rule, and no run standing at a
+workspace root is told that no workspace is in scope where it stands.
 
 The exception is therefore never a relaxation of resolution. Where the scope
 could judge the alias and the answer was no, the sentence stays invalid and

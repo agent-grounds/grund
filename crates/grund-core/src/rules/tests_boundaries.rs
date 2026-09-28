@@ -88,6 +88,9 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
         },
     )
     .expect("released sentence");
+    // A local object kind the vocabulary holds: nothing unverifiable here.
+    let (parsed, unverifiable) = parsed;
+    assert_eq!(unverifiable, None);
     assert_eq!(parsed.origin, "RULE-one");
     assert_eq!(parsed.anchor, anchor("docs/rules.md", 7));
     assert_eq!(

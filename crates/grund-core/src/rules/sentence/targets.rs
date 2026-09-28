@@ -2,10 +2,20 @@
 //! §FS-config.3.9.3.1). Sentence parsing owns this vocabulary check; it reads no
 //! facts and performs no evaluation.
 
-use super::{RuleParseError, RuleTargets, RuleVocabulary, TargetMode, error, unverifiable_here};
+use super::{RuleParseError, RuleTargets, RuleVocabulary, TargetMode, error};
 use crate::config::{NamespaceMatch, parse_citation_target_entry, render_citation_target};
 
-fn known_target(target: &str, vocab: &RuleVocabulary) -> Result<String, RuleParseError> {
+/// Recognize one object target. An unresolved namespaced kind in a scope that
+/// holds no workspace vocabulary is not a refusal: its reason is recorded in
+/// `unverifiable` and the target renders as authored, so the sentence still
+/// parses and every other check the scope can make is still made
+/// (§FS-rules.4.1). The first such reason is the one kept, which is the target
+/// whose refusal the reader used to see.
+fn known_target(
+    target: &str,
+    vocab: &RuleVocabulary,
+    unverifiable: &mut Option<String>,
+) -> Result<String, RuleParseError> {
     let parsed = parse_citation_target_entry(target).map_err(|message| {
         error(format!(
             "{message}; accepted form: Each FS must cite at least one GOAL."
@@ -28,7 +38,7 @@ fn known_target(target: &str, vocab: &RuleVocabulary) -> Result<String, RulePars
     if known {
         return Ok(render_citation_target(&parsed));
     }
-    let kind = parsed.kind;
+    let kind = parsed.kind.clone();
     let qualifier = match &parsed.namespace {
         NamespaceMatch::Alias(alias) => format!(" in namespace \"{alias}\""),
         NamespaceMatch::Any => " in any workspace namespace".to_string(),
@@ -42,9 +52,12 @@ fn known_target(target: &str, vocab: &RuleVocabulary) -> Result<String, RulePars
     match unverifiable_reason(&parsed.namespace, &kind, vocab) {
         // §FS-errors.3.7: the legacy reason stays a verbatim contiguous prefix
         // for the two compatibility releases, with the true clause after it.
-        Some(reason) => Err(unverifiable_here(format!(
-            "{legacy} \u{2014} {reason} \u{2014} check from the workspace root{RULE_ALIAS_RAMP_TAIL}"
-        ))),
+        Some(reason) => {
+            unverifiable.get_or_insert(format!(
+                "{legacy} \u{2014} {reason} \u{2014} check from the workspace root{RULE_ALIAS_RAMP_TAIL}"
+            ));
+            Ok(render_citation_target(&parsed))
+        }
         None => Err(error(legacy)),
     }
 }
@@ -80,10 +93,11 @@ pub(super) fn kind_targets(
     text: &str,
     mode: TargetMode,
     vocab: &RuleVocabulary,
+    unverifiable: &mut Option<String>,
 ) -> Result<RuleTargets, RuleParseError> {
     let mut values = text
         .split(" or ")
-        .map(|target| known_target(target, vocab))
+        .map(|target| known_target(target, vocab, unverifiable))
         .collect::<Result<Vec<_>, _>>()?;
     values.sort();
     values.dedup();
