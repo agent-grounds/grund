@@ -313,7 +313,7 @@ A hidden file whose extension is *also* unlisted keeps [§FS-check.2.2.2.2](FS-c
 
 ##### 2.2.2.4 No project in scope
 
-When a `[workspace]` block put no project in scope at all — `include_root = false`, and every member it has is an optional one this checkout does not have ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)) — the message says exactly that. The messages of [§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root) and [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path) would both be false here, because the walk never looked under `[scan] include` and the tree `grund init --docs` scaffolds is not what is missing. This one names no remedy either, for the reason [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent)'s announcement names none: nothing is misconfigured, and the only thing that changes the answer is a fuller checkout.
+When a `[workspace]` block put no project in scope at all — `include_root = false`, and every member it has is an optional one this checkout does not have ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)) — the message says exactly that. The messages of [§FS-check.2.2.2.1](FS-check.md#2221-the-repo-root) and [§FS-check.2.2.2.2](FS-check.md#2222-an-explicit-path) would both be false here, because the walk never looked under `[scan] include` and the tree `grund init --docs` scaffolds is not what is missing. This one names no remedy either, for the reason [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent)'s finding names none: nothing is misconfigured, and the only thing that changes the answer is a fuller checkout.
 
 #### 2.2.3 Exit code, JSON, and what suppresses it
 
@@ -323,7 +323,7 @@ This is a warning, not an error: the exit code stays `0` (a genuinely empty tree
 
 - The redundant-config pair ([§FS-check.4.3](FS-check.md#43-redundant-config-pair)) is about which file the run read rather than what it walked, so a repository mid-migration keeps the scope diagnostic beside its config pair.
 - The out-of-scope tier ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)) is about the tree *outside* the scope, and is the case the caution is worth most ([§FS-check.1.3.9](FS-check.md#139-an-empty-default-scope-is-still-reported)).
-- The absent-member announcement ([§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent)) is about the namespaces the run skipped rather than the scope it walked: the block whose last project went missing is exactly the run that has nothing to read, and it must not lose the line saying so to the line saying why.
+- The absent-member finding ([§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent)) is about the namespaces the run skipped rather than the scope it walked: the block whose last project went missing is exactly the run that has nothing to read, and it must not lose the line saying so to the line saying why.
 
 ### 2.3 Suggestions channel *(opt-in)*
 

@@ -252,7 +252,7 @@ on disk, and grund would be guessing which it had. And it would put the boundary
 of the blind spot somewhere a reader cannot see: `optional_members = ["hardware"]`
 would mean "skipped" or "checked and found empty" depending on a fact no line of
 the repository records. The simple rule is the one an author can plan around, and
-the announcement is what keeps even its odd cases honest — a stray file where a
+the finding is what keeps even its odd cases honest — a stray file where a
 member was expected is skipped, but it is never skipped quietly. Whether the
 empty-directory case deserves an answer of its own is a separate question, and
 it is not decided here.
@@ -343,7 +343,7 @@ member rather than the one that was meant ([§DF-optional-workspace-members](../
 
 `optional_members` costs a blind spot, and [§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded) is what
 makes that affordable rather than free. The declaration is this key, the
-announcement is [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent), and the bound is that nothing else
+finding is [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent), and the bound is that nothing else
 moves — an alias that is not an optional member is unknown exactly as before, and
 a namespace that *is* present is checked to the letter.
 
