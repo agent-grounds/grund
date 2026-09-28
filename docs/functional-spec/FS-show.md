@@ -186,7 +186,7 @@ The selected section heading is printed verbatim in all four modes — `text` st
 
 #### 2.2.1 Ambiguous ID
 
-If an ID has more than one home — the duplicate-declaration error from [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) — `show` does not pick one. A stub paired with the inline declaration it points at is *one* home, not two; ambiguity means two or more independent declarations remain after that pairing collapses. When ambiguous, `show` exits 1 with a single bare stderr line — no `<path>:<line>:` prefix ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)):
+If an ID has more than one home — the duplicate-declaration error from [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) — `show` does not pick one. A stub paired with the source declaration it points at is *one* home, not two; ambiguity means two or more independent declarations remain after that pairing collapses. When ambiguous, `show` exits 1 with a single bare stderr line — no `<path>:<line>:` prefix ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)):
 
 ```
 ambiguous ID: <ID> (declared at <path>:<line>, <path>:<line>[, ...])
@@ -248,9 +248,9 @@ query for its coordinate has the ordinary `section not found` result and hint
 from [§FS-show.3](FS-show.md#3-outputs), emits none of the outside heading's body, and never substitutes the
 located `check` finding for query semantics.
 
-### 2.3 Inline declarations in code and doc-comments
+### 2.3 Source declarations in code and doc-comments
 
-When the ID's home is in code — whether discovered directly, enrolled by its kind's canonical index link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), or paired with a [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) stub — `show` extracts the comment block surrounding the inline declaration, strips comment markers, and prints the resulting prose. Index enrollment creates no declaration and therefore changes no query resolution. The same section logic applies — and so do the `--brief` / (default) / `--toc` / `--full` slices, computed over the stripped block exactly as over a `.md` body (the lead is what precedes the first citable heading inside the comment; the section map is the citable headings recorded within it, per [§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)).
+When the ID's home is in code — whether discovered directly, enrolled by its kind's canonical index link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), or paired with a [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) stub — `show` extracts the comment block surrounding the source declaration, strips comment markers, and prints the resulting prose. Index enrollment creates no declaration and therefore changes no query resolution. The same section logic applies — and so do the `--brief` / (default) / `--toc` / `--full` slices, computed over the stripped block exactly as over a `.md` body (the lead is what precedes the first citable heading inside the comment; the section map is the citable headings recorded within it, per [§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)).
 
 A code-resident declaration is written as `<comment-marker> <ID>: <title>` (or bare `<ID>: <title>` inside a Python docstring), with no markdown `#` prefix. Decided in [§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix).
 
@@ -280,7 +280,7 @@ Walk **forwards** from the declaration line by the symmetric rules:
 
 ##### 2.3.1.3 Terminate early on another declaration
 
-Walking in **either direction**, if another declaration line of any ID is encountered, the block ends at the line before it. This is what allows two adjacent inline declarations to live in the same comment without bleeding into each other — backward termination keeps a later declaration's block from absorbing the previous declaration's tail; forward termination keeps the previous declaration's block from absorbing the next declaration's head.
+Walking in **either direction**, if another declaration line of any ID is encountered, the block ends at the line before it. This is what allows two adjacent source declarations to live in the same comment without bleeding into each other — backward termination keeps a later declaration's block from absorbing the previous declaration's tail; forward termination keeps the previous declaration's block from absorbing the next declaration's head.
 
 #### 2.3.2 Stripping comment markers
 
@@ -292,7 +292,7 @@ After the block is selected, comment markers are removed line-by-line so the out
 - Trailing comment-close markers (`*/`) on their own line are dropped entirely.
 - Blank lines inside the block are preserved.
 
-The result is the markdown that the declaration's author wrote, identical to what would have lived in a `.md` file had the spec been doc-resident instead of inline. This is the property that makes [§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments) round-trip-stable across the in-docs and in-code homes.
+The result is the markdown that the declaration's author wrote, identical to what would have lived in a `.md` file had the spec been doc-resident instead of inline. This is the property that makes [§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments) round-trip-stable across the in-docs and in-code homes.
 
 #### 2.3.3 Section selection inside a doc-comment
 
@@ -300,7 +300,7 @@ Section selection (`AR-<event-bus>.2`) works the same way inside a doc-comment a
 
 #### 2.3.4 Broken stub
 
-If the ID's only home is a stub (`# <ID>: [<text>](<path>)`) whose link is broken — the `<path>` does not exist, or the file at `<path>` contains no inline declaration of `<ID>` (the [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) error) — `show` has no body to extract. It exits `1` with a bare query-failure line ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)), not a `path:line:` finding:
+If the ID's only home is a stub (`# <ID>: [<text>](<path>)`) whose link is broken — the `<path>` does not exist, or the file at `<path>` contains no source declaration of `<ID>` (the [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) error) — `show` has no body to extract. It exits `1` with a bare query-failure line ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)), not a `path:line:` finding:
 
 ```
 broken stub: <ID> (stub at <path>:<line> points at <target>, which does not exist)
@@ -366,7 +366,7 @@ In a Markdown body, a line inside a fenced block (```` ``` ````, `~~~`) is conte
 
 This is the carve-out [§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code) already makes for citations, applied to headings and post-slice flattening for the same reason and for one more: the scan bounds a declaration's sections by exactly this rule, so a slice that disagreed would cut a body where the recorded section map says no section starts. The shared grammar recognizes both backtick and tilde fences, their close/resume rules, and an unclosed fence through end of body; a short or wrong-character would-be closer leaves the fence open. A spec whose [§FS-show.1](FS-show.md#1-inputs) opens with a fenced `# FS-001-login: …` example — the shape these documents are written in — would otherwise print three lines and stop.
 
-The rule is Markdown's. Inside a code or docstring comment block ([§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments)) a fence is not tracked, on either side: the scan does not track it there either, so the two still agree.
+The rule is Markdown's. Inside a code or docstring comment block ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)) a fence is not tracked, on either side: the scan does not track it there either, so the two still agree.
 
 ### 2.6 Batch resolution
 

@@ -4,10 +4,10 @@ An inline citation in a code comment can carry a short rationale next to the `§
 
 ## terms: Terms
 
-Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker,
-citation, shorthand, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub, doc-comment, note),
-[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity), and
-[§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction).
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section), [§FS-terms.terms.2](FS-terms.md#terms2-citations)
+(marker, citation, shorthand, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (source declaration, stub,
+doc-comment, note), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding,
+severity), and [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction).
 
 - **comment block** — The contiguous run of comment lines a site is measured over. A blank line
   ends one; an empty comment line does not.
@@ -158,7 +158,7 @@ Inside the content, whitespace and punctuation deviations are deviations. A spac
 
 #### 3.3.5 Recognized tokens only
 
-"Citation token" means exactly what the scanner already recognizes on that line ([§FS-check.1.1](FS-check.md#11-recognized-citations)). Under `strict = false` a bare `// FS-x: note` line is claimed by the *declaration* recognizer before it reaches this rule ([AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection)) — an inline declaration heading is not a note at all ([§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site)) — which is precisely the ambiguity the canonical form removes: with the marker written, `// <§>FS-x: note` reads as a citation carrying a rationale and can never be mistaken for a declaration of the same ID.
+"Citation token" means exactly what the scanner already recognizes on that line ([§FS-check.1.1](FS-check.md#11-recognized-citations)). Under `strict = false` a bare `// FS-x: note` line is claimed by the *declaration* recognizer before it reaches this rule ([AR-scanner.2.1](../architecture/AR-scanner.md#21-declaration-detection)) — a source declaration heading is not a note at all ([§FS-inline-citation-style.1.3](FS-inline-citation-style.md#13-what-is-not-a-site)) — which is precisely the ambiguity the canonical form removes: with the marker written, `// <§>FS-x: note` reads as a citation carrying a rationale and can never be mistaken for a declaration of the same ID.
 
 #### 3.3.6 Same scope as the rest of this spec
 

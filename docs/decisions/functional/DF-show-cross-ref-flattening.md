@@ -27,7 +27,7 @@ The boundary is narrow:
 - an ordinary Markdown link in the prose (`[the spec](https://example.com)`) — its bracket text is not a marker-prefixed citation, so it is left alone;
 - a citation that was never wrapped (a bare `§FS-check.1` in running text, or a `.md` that has not been run through `grund fmt --cross-refs`) — already in the target form, nothing to do;
 - a `--format md` body — kept exactly as written;
-- a body extracted from a source-code doc-comment ([§FS-show.2.3](../../functional-spec/FS-show.md#23-inline-declarations-in-code-and-doc-comments)) — `--cross-refs` never runs on source files ([§FS-fmt.6.1](../../functional-spec/FS-fmt.md#61-scope)), so generated input has nothing of this shape. A manually authored wrapper remains subject to the textual inverse there, and fence-looking source lines do not suppress it, because only Markdown bodies carry fence context.
+- a body extracted from a source-code doc-comment ([§FS-show.2.3](../../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments)) — `--cross-refs` never runs on source files ([§FS-fmt.6.1](../../functional-spec/FS-fmt.md#61-scope)), so generated input has nothing of this shape. A manually authored wrapper remains subject to the textual inverse there, and fence-looking source lines do not suppress it, because only Markdown bodies carry fence context.
 
 ### 2.2 Purely textual — no resolution
 

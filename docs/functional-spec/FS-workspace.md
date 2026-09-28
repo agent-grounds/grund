@@ -905,7 +905,7 @@ with a diagnostic that names the offending segment ([§FS-workspace.8.11](FS-wor
 body is rendered exactly as `grund <ID>` renders it for a local declaration
 ([§FS-show.2](FS-show.md#2-behavior)) — same slice rules (`--brief`, default, `--toc`, `--full`), same
 `text` vs `md` heading behavior, same section selection, same inline-code
-extraction ([§FS-show.2.3](FS-show.md#23-inline-declarations-in-code-and-doc-comments)). The alias prefix is a routing instruction; it
+extraction ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)). The alias prefix is a routing instruction; it
 changes which tree is scanned, not what is printed.
 
 - `grund api/FS-login` — print the lead of `api`'s `FS-login`.

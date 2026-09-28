@@ -6,9 +6,9 @@ The `fmt` subcommand rewrites the citations in a tree in four passes: trigger se
 
 Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section, index, catalog),
 [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, qualified citation, shorthand, canonical form),
-[§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, workspace,
-member, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, anchor), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, binding,
-fetcher, snapshot).
+[§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (source declaration, stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope,
+config root, workspace, member, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, anchor), and
+[§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, binding, fetcher, snapshot).
 
 - **never-rewrite zone** — A span whose bytes every pass preserves exactly — a string literal, a
   fenced block, a link target — because a rewrite there would change what the file means.
@@ -296,7 +296,7 @@ The index file a `[[kinds]]` entry names, or the `README.md` it defaults to ([§
 
 Reached this way — that is, only where `enabled = false` would otherwise have skipped the file — the pass wraps the citations the index owes an entry for ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)) and leaves every other citation in the file alone: a mention of a foreign ID in the prose around the list is an ordinary citation in an ordinary file, and a repository that turned generated links off asked for it to stay bare.
 
-An external inline declaration enters this owed set only while its canonical enrollment link already exists; the carve-out therefore preserves that form but does not infer membership from an ordinary external citation or repair a link whose noncanonical destination makes it ordinary.
+An external source declaration enters this owed set only while its canonical enrollment link already exists; the carve-out therefore preserves that form but does not infer membership from an ordinary external citation or repair a link whose noncanonical destination makes it ordinary.
 
 Under the default `enabled = true` nothing is scoped, because the pass was already running on that file for its own reasons; a marker-prefixed bare-ID citation that the ordinary pass wraps canonically acquires the enrollment meaning of its stored form.
 
