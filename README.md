@@ -400,6 +400,8 @@ docs/decisions/functional/DF-require-grounding.md: 1 (line 8)
 docs/requirements/REQ-no-wrong-citation.md: 1 (line 7)
 ```
 
+A section's children break when it moves, so before a move, rename or delete ask the same question of the whole subtree: `grund refs FS-check.3.2 --descendants --summary` folds that section *and every section beneath it* into the same one-line-per-file shape, which is the blast radius of the change rather than of the coordinate.
+
 Before reviewing a diff, group the citation graph by file so you can join changed files to the specs they touch:
 
 ```bash
