@@ -32,7 +32,7 @@ The two are never mixed: `grund check 2>/dev/null` shows you the findings and on
 
 - a query result — the body printed by `grund <ID>`, the catalog from `grund list`, the citations from `grund refs`, the file graph from `grund cover`, the ID from `grund id`, the config from `grund config show`;
 - a checker report — every located finding from `grund check` ([§FS-check.2.1](FS-check.md#21-report-format)), the text-mode `success` marker from a clean `grund check`, and the would-change / did-change report from `grund fmt` ([§FS-fmt.3](FS-fmt.md#3-outputs)).
-- `grund check --format=json` is diagnostics-only: on success with nothing to report, stdout is empty.
+- `grund check --format=json` is findings-only: on success with nothing to report, stdout is empty.
 
 ### 1.2 What stderr carries
 
@@ -48,7 +48,7 @@ The two are never mixed: `grund check 2>/dev/null` shows you the findings and on
 
 ### 2.1 Located finding
 
-A diagnostic that points at a specific source site:
+A finding that points at a specific source site:
 
 ```
 <path>:<line>: <message>
@@ -121,7 +121,7 @@ Used by [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location) (unknown subcom
 
 #### 2.2.4 Under `--format=json`
 
-A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed as raw text and is never JSON-ified; a *mid-scan* per-file failure collected by `grund check` is one of the report's diagnostics and is rendered in `--format=json` like the others ([§FS-errors.5.2.3](FS-errors.md#523-run-level-diagnostics-in-checks-report)), still on stderr because it is not a finding about the spec graph.
+A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed as raw text and is never JSON-ified; a *mid-scan* per-file failure collected by `grund check` is one of the report's findings and is rendered in `--format=json` like the others ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)), still on stderr because it is not a finding about the spec graph.
 
 ### 2.3 Bare query failure
 
@@ -157,7 +157,7 @@ A text-mode `grund check` run with zero retained errors and zero retained warnin
 success
 ```
 
-One trailing newline follows the line. The marker is on **stdout** because it is the command's output ([§FS-errors.1.1](FS-errors.md#11-what-stdout-carries)), exits `0`, and appears only when the selected report is otherwise empty: it says that report is empty, not that the repository has no findings ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)). It is not emitted in `--format=json`, where stdout remains diagnostics-only.
+One trailing newline follows the line. The marker is on **stdout** because it is the command's output ([§FS-errors.1.1](FS-errors.md#11-what-stdout-carries)), exits `0`, and appears only when the selected report is otherwise empty: it says that report is empty, not that the repository has no findings ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)). It is not emitted in `--format=json`, where stdout remains findings-only.
 
 ## 3. Message text
 
@@ -185,7 +185,7 @@ The unknown-project recovery shape in [§FS-check.3.8](FS-check.md#38-cross-proj
 The narrowed-run scope-only unknown-project message has a three-release wording
 migration, whose `0.13.2` compatibility form and `0.15.0` final template are
 fixed in [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure). The `0.13.2` suffix is part of the existing error
-message, not a second warning diagnostic. Exact-line consumers must migrate
+message, not a second warning finding. Exact-line consumers must migrate
 during this window to the stable `code == "unknown-project"`; the code, error
 severity, sites, selectors, and exit verdict do not change. Workspace-root
 candidate messages and bare unknown-project messages remain unchanged
@@ -194,7 +194,7 @@ throughout this migration.
 ### 3.4 The `check` channel marker
 
 For `grund check`, the fixed rule supplies the channel and every located text
-line makes it explicit after the location prefix: [§FS-check.3](FS-check.md#3-errors-detected) is `error:`, [§FS-check.4](FS-check.md#4-warnings) is `warning:`, and enabled [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) advisories are `suggestion:`. That structural marker does not change the diagnostic's message bytes. JSON continues to carry the same distinction in its existing `severity` or `channel` field ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)); `fmt`, `refs`, run-level messages, and LSP retain their existing shapes.
+line makes it explicit after the location prefix: [§FS-check.3](FS-check.md#3-errors-detected) is `error:`, [§FS-check.4](FS-check.md#4-warnings) is `warning:`, and enabled [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) advisories are `suggestion:`. That structural marker does not change the finding's message bytes. JSON continues to carry the same distinction in its existing `severity` or `channel` field ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)); `fmt`, `refs`, run-level messages, and LSP retain their existing shapes.
 
 ### 3.5 A missing fetch-backed declaration
 
@@ -286,7 +286,7 @@ Two runs of the same subcommand on the same input must produce byte-identical st
 - Non-deterministic ordering — the order each report keeps is [§FS-errors.4.1](FS-errors.md#41-ordering).
 - Platform-native path separators in repo-relative output. Any path that appears in a report, JSON field, e2e case manifest, duplicate-site list, stub-link note, or formatter summary is rendered with `/`, so Windows and Unix runs over the same tree compare byte-for-byte.
 
-How `check --only` and `--ignore` keep the contract is [§FS-errors.4.2](FS-errors.md#42-diagnostic-selection).
+How `check --only` and `--ignore` keep the contract is [§FS-errors.4.2](FS-errors.md#42-finding-selection).
 
 ### 4.1 Ordering
 
@@ -305,10 +305,10 @@ after `<subject> cites ` and before its count, so bytewise message ordering also
 orders shared-prefix target IDs bytewise
 ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)).
 
-### 4.2 Diagnostic selection
+### 4.2 Finding selection
 
 `grund check --only` and `--ignore` preserve [§FS-errors.4](FS-errors.md#4-determinism)'s contract: selection precedes
-the format-specific sort and rendering, retained diagnostics keep their
+the format-specific sort and rendering, retained findings keep their
 locations, messages, codes, sites, and channels, and reordering or duplicating
 selector flags cannot alter the result ([§FS-check.2.1](FS-check.md#21-report-format)).
 
@@ -316,11 +316,11 @@ selector flags cannot alter the result ([§FS-check.2.1](FS-check.md#21-report-f
 
 The subcommands with a machine-readable result or finding surface accept `--format=json`: `check`, `show`, `list`, `refs`, `cover`, `id`, and `integrations` ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements), [§FS-cli.3](FS-cli.md#3-cross-subcommand-flags), [§FS-integrations.5](FS-integrations.md#5-json-format)). Operational commands whose output is human text or generated files (`fmt`, `fetch`, `init`, `config`, `agent-setup-instructions`, `completions`) do not accept `--format` unless their own spec adds a JSON surface later. JSON follows the same stream split as the text form ([§FS-errors.1](FS-errors.md#1-streams)): what goes to stdout is [§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output), what goes to stderr is [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output), and `show --batch` is the query-stream exception of [§FS-errors.5.3](FS-errors.md#53-show---batch).
 
-So `grund check --format=json | jq …`, `grund <ID> --format=json | jq …`, `grund list --format=json | jq …` all work with no stream juggling, and `grund <missing> --format=json | jq …` does not choke because the diagnostic is on stderr where the pipe does not see it.
+So `grund check --format=json | jq …`, `grund <ID> --format=json | jq …`, `grund list --format=json | jq …` all work with no stream juggling, and `grund <missing> --format=json | jq …` does not choke because the finding is on stderr where the pipe does not see it.
 
 The text-form messages defined above remain the default. JSON is opt-in.
 
-Value diagnostics are [§FS-errors.5.4](FS-errors.md#54-value-diagnostics); the `code` catalog `check` selects on is [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog).
+Value findings are [§FS-errors.5.4](FS-errors.md#54-value-findings); the `code` catalog `check` selects on is [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog).
 
 ### 5.1 On stdout — the command's output
 
@@ -332,9 +332,9 @@ Query subcommands emit their result on stdout too: one JSON object for a single-
 
 ### 5.2 On stderr — what is not output
 
-A *failed ID query* (`ID not found` / `ambiguous` / `broken stub` / `section not found` / `invalid ID`, exit `1`) emits its one diagnostic object on stderr in the same `{ severity, path, line, code, message, sites }` shape, with `path` and `line` `null` — there is no single site, and there is no result, so nothing goes to stdout. This includes `refs`' invalid-ID and ambiguous-number-only rejections from 0.15.0; their codes are respectively `invalid-id` and `ambiguous`, both carry `sites:null`, and neither carries the text-mode hint.
+A *failed ID query* (`ID not found` / `ambiguous` / `broken stub` / `section not found` / `invalid ID`, exit `1`) emits its one finding object on stderr in the same `{ severity, path, line, code, message, sites }` shape, with `path` and `line` `null` — there is no single site, and there is no result, so nothing goes to stdout. This includes `refs`' invalid-ID and ambiguous-number-only rejections from 0.15.0; their codes are respectively `invalid-id` and `ambiguous`, both carry `sites:null`, and neither carries the text-mode hint.
 
-Which ambiguity refusals carry `sites` is [§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal); the messages that stay raw text under any `--format` are [§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text); run-level diagnostics in `check`'s report are [§FS-errors.5.2.3](FS-errors.md#523-run-level-diagnostics-in-checks-report).
+Which ambiguity refusals carry `sites` is [§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal); the messages that stay raw text under any `--format` are [§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text); run-level findings in `check`'s report are [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report).
 
 #### 5.2.1 `sites` on an ambiguity refusal
 
@@ -342,11 +342,11 @@ Which ambiguity refusals carry `sites` is [§FS-errors.5.2.1](FS-errors.md#521-s
 
 #### 5.2.2 Launch-time messages stay text
 
-A *launch-time* CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) — an error such as a bad flag, unknown kind, unknown project alias, or unreadable config or path (exit `2`), or a warning carried in the run's warning channel, such as [§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)'s, [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)'s and [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)'s — stays as its `error:` / `warning:` text line on stderr regardless of `--format`. What decides is which channel carries the fact: a warning settled from the loaded config but carried as one of `check`'s report warnings, such as [§FS-check.4.3](FS-check.md#43-redundant-config-pair)'s and [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)'s, is data, and renders as a JSON diagnostic ([§FS-errors.5.2.3](FS-errors.md#523-run-level-diagnostics-in-checks-report)). During 0.14.0 only, the two `refs` resolver rejections of [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output) retain that raw error and hint policy under JSON and append the raw warning fixed by [§FS-refs.4](FS-refs.md#4-exit-codes).
+A *launch-time* CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) — an error such as a bad flag, unknown kind, unknown project alias, or unreadable config or path (exit `2`), or a warning carried in the run's warning channel, such as [§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)'s, [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)'s and [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)'s — stays as its `error:` / `warning:` text line on stderr regardless of `--format`. What decides is which channel carries the fact: a warning settled from the loaded config but carried as one of `check`'s report warnings, such as [§FS-check.4.3](FS-check.md#43-redundant-config-pair)'s and [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)'s, is data, and renders as a JSON finding ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)). During 0.14.0 only, the two `refs` resolver rejections of [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output) retain that raw error and hint policy under JSON and append the raw warning fixed by [§FS-refs.4](FS-refs.md#4-exit-codes).
 
-#### 5.2.3 Run-level diagnostics in `check`'s report
+#### 5.2.3 Run-level findings in `check`'s report
 
-A run-level diagnostic in `grund check`'s report — about the run, not a finding about the graph, such as the empty-scan `warning:` ([§FS-check.2.2](FS-check.md#22-empty-scan)), the nothing-recognized `warning:` ([§FS-check.4.5](FS-check.md#45-nothing-recognized)), or a per-file read failure collected mid-scan (a `line`-less diagnostic) — is likewise on stderr in both forms; under JSON a run-level warning carries `path`, `line`, and `sites` all `null`, any location being in its message text ([§FS-check.4.5](FS-check.md#45-nothing-recognized)).
+A run-level finding in `grund check`'s report — about the run, not a finding about the graph, such as the empty-scan `warning:` ([§FS-check.2.2](FS-check.md#22-empty-scan)), the nothing-recognized `warning:` ([§FS-check.4.5](FS-check.md#45-nothing-recognized)), or a per-file read failure collected mid-scan (a `line`-less finding) — is likewise on stderr in both forms; under JSON a run-level warning carries `path`, `line`, and `sites` all `null`, any location being in its message text ([§FS-check.4.5](FS-check.md#45-nothing-recognized)).
 
 ### 5.3 `show --batch`
 
@@ -359,9 +359,9 @@ abort the run. A batch-input error uses raw
 began. The entire stream is validated before scanning, so this error leaves
 stdout empty and produces no partial records.
 
-### 5.4 Value diagnostics
+### 5.4 Value findings
 
-Value diagnostics use the same object and streams. `invalid-value-declaration`, `invalid-value-binding`, and `value-mismatch` are fixed error codes; a mismatch's `sites` is the sorted declaration-site array, and its `message` is byte-identical to the text message after the primary `path:line:` prefix and its channel marker ([§FS-errors.2.1](FS-errors.md#21-located-finding), [§FS-values.5](FS-values.md#5-resolution-diagnostics-and-exit-status)). Home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete remains a run-level incomplete-scan failure at exit `2` rather than a semantic value diagnostic.
+Value findings use the same object and streams. `invalid-value-declaration`, `invalid-value-binding`, and `value-mismatch` are fixed error codes; a mismatch's `sites` is the sorted declaration-site array, and its `message` is byte-identical to the text message after the primary `path:line:` prefix and its channel marker ([§FS-errors.2.1](FS-errors.md#21-located-finding), [§FS-values.5](FS-values.md#5-resolution-findings-and-exit-status)). Home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete remains a run-level incomplete-scan failure at exit `2` rather than a semantic value finding.
 
 ### 5.5 The `check` code catalog
 
@@ -429,10 +429,10 @@ The chapter-rule codes `chapter-cardinality`, `citation-cardinality`,
 `invalid-rule`, and `uncited-unit` are selectable on the same surfaces as every
 other code ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)).
 
-Every future check diagnostic code enters this catalog in the release that
+Every future check finding code enters this catalog in the release that
 introduces it; renaming or removing one requires compatibility treatment. The
 catalog changes neither the NDJSON object nor the library/LSP report. `io` is a
-recognized code but an incomplete-scan safety diagnostic remains retained and
+recognized code but an incomplete-scan safety finding remains retained and
 exit `2` even when `--ignore io` or an excluding `--only` set is present
 ([§FS-check.2](FS-check.md#2-outputs)).
 

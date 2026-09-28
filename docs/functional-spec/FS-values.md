@@ -52,7 +52,7 @@ A JSON key repeated in one object, the same ID declared across JSON files, a Mar
 
 ### 2.4 Embedded section value roots
 
-An author makes one existing citable numeric section a marked root by ending its heading content with one ASCII space and the byte-exact lowercase suffix `<!-- grund:value -->`, followed only by optional trailing whitespace. The section may occur at any numeric depth inside any scanned Markdown declaration or supported source doc-comment, independently of the enclosing kind's `values` setting and configured home. Its canonical identity remains the declaration ID plus its existing dotted section path: a marked root at `FS-pricing.2.3` owns components `FS-pricing.2.3.1` through `.N`. No synthetic declaration, ID, section, or resolver is created. A misspelling, different case, missing or extra space inside the suffix, incomplete suffix, or other lookalike is opaque prose and grants no value authority or value diagnostic. The mark is one of two ways a section becomes a value root; the other is [§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots), which carries no marker.
+An author makes one existing citable numeric section a marked root by ending its heading content with one ASCII space and the byte-exact lowercase suffix `<!-- grund:value -->`, followed only by optional trailing whitespace. The section may occur at any numeric depth inside any scanned Markdown declaration or supported source doc-comment, independently of the enclosing kind's `values` setting and configured home. Its canonical identity remains the declaration ID plus its existing dotted section path: a marked root at `FS-pricing.2.3` owns components `FS-pricing.2.3.1` through `.N`. No synthetic declaration, ID, section, or resolver is created. A misspelling, different case, missing or extra space inside the suffix, incomplete suffix, or other lookalike is opaque prose and grants no value authority or value finding. The mark is one of two ways a section becomes a value root; the other is [§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots), which carries no marker.
 
 #### 2.4.1 Recognition in source doc-comments
 
@@ -60,7 +60,7 @@ For source declarations the scanner recognizes the marker after removing the sam
 
 #### 2.4.2 Semantic content and raw bytes
 
-The marker is removed only from semantic heading content. The section title, derived Markdown anchor, LSP title and hover token, and semantic title range exclude the separating space and marker. Raw source spans remain unchanged: `show` includes the authored marker on a verbatim root heading, formatter input and output retain it byte for byte, and diagnostics may select the marker or offending source line.
+The marker is removed only from semantic heading content. The section title, derived Markdown anchor, LSP title and hover token, and semantic title range exclude the separating space and marker. Raw source spans remain unchanged: `show` includes the authored marker on a verbatim root heading, formatter input and output retain it byte for byte, and findings may select the marker or offending source line.
 
 #### 2.4.3 The component run
 
@@ -104,7 +104,7 @@ When both the authored and declared components completely match JSON number gram
 
 Otherwise both components must be strings and their decoded Unicode scalar sequences must be exactly equal. Comparison is case-sensitive and performs no trimming, Unicode or locale normalization, separator stripping, unit conversion, or numeric/string coercion. Thus `1,200`, `+1200`, and `1_200` are strings. Ranges and units are merely successive components by convention; they have no schema, algebra, ordering, or conversion semantics.
 
-## 5. Resolution, diagnostics, and exit status
+## 5. Resolution, findings, and exit status
 
 ### 5.1 Resolve before comparison
 
@@ -128,7 +128,7 @@ docs/offer.md:7: error: value mismatch for CONST-field-price.1: bound `1250`, de
 
 Invalid config stops before scanning. A missing, unreadable, malformed-UTF-8, or syntactically incomplete home JSON source preserves the existing incomplete-scan exit `2`; readable semantic JSON errors use exit `1`. For readable input, declaration and citation-resolution findings precede comparison as [§FS-values.5.1](FS-values.md#51-resolve-before-comparison) specifies.
 
-Text and NDJSON use the existing streams, schema, and deterministic ordering ([§FS-output-shapes.1](FS-output-shapes.md#1-diagnostic-object), [§FS-output-shapes.3](FS-output-shapes.md#3-text-report-ordering)). The NDJSON `code`, message, primary location, and declaration `sites` describe the same finding as text. A clean text check prints `success`; a clean JSON check remains empty.
+Text and NDJSON use the existing streams, schema, and deterministic ordering ([§FS-output-shapes.1](FS-output-shapes.md#1-finding-object), [§FS-output-shapes.3](FS-output-shapes.md#3-text-report-ordering)). The NDJSON `code`, message, primary location, and declaration `sites` describe the same finding as text. A clean text check prints `success`; a clean JSON check remains empty.
 
 ## 6. Shared catalog consumers
 
@@ -146,7 +146,7 @@ For a JSON declaration, `show` returns the exact source member slice for an ID a
 
 ## 7. Workspaces and editor consumers
 
-An unqualified binding resolves in its local project. The qualified form `<§>alias/CONST-field-price.1` resolves under the target project's grammar, authority, declaration, and equality rules through the same workspace resolver — including the target project's own `value_chapter`, which a member may set where the root project does not; member-local unknown aliases retain their existing diagnostic. Core value records and exact spans feed the public report and LSP: diagnostics equal the CLI finding, binding hover uses the same exact `show --toc` slice, and go-to-definition lands on the existing Markdown/source component heading or JSON key/element. A declaration-side root hover remains the ordinary section title and usage count, excluding invisible marker bytes from its title range; raw previews include the marker. References, highlights, and document links use the written dotted citation, with no badge, rendered substitution, or value-specific LSP completion ([§FS-lsp.1](FS-lsp.md#1-capabilities)).
+An unqualified binding resolves in its local project. The qualified form `<§>alias/CONST-field-price.1` resolves under the target project's grammar, authority, declaration, and equality rules through the same workspace resolver — including the target project's own `value_chapter`, which a member may set where the root project does not; member-local unknown aliases retain their existing finding. Core value records and exact spans feed the public report and LSP: editor diagnostics equal the CLI finding, binding hover uses the same exact `show --toc` slice, and go-to-definition lands on the existing Markdown/source component heading or JSON key/element. A declaration-side root hover remains the ordinary section title and usage count, excluding invisible marker bytes from its title range; raw previews include the marker. References, highlights, and document links use the written dotted citation, with no badge, rendered substitution, or value-specific LSP completion ([§FS-lsp.1](FS-lsp.md#1-capabilities)).
 
 ## 8. Formatting stability
 
@@ -154,7 +154,7 @@ An unqualified binding resolves in its local project. The qualified form `<§>al
 
 ## 9. Compatibility and explicit exclusions
 
-Without `values = true`, whole-declaration and JSON discovery retain their prior absence. Without `value_chapter`, no chapter root, binding record, value diagnostic, output field, or extra read occurs, and a project that sets neither key reads, reports, and exits byte-identically to one built before the key existed, with the single exception [§FS-values.9.1](FS-values.md#91-the-one-marked-root-formatting-behavior-that-moved) names. Without the exact [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) marker, no marked root, binding record, value diagnostic, output field, or extra read occurs; unmarked sections, malformed lookalikes, citations, and prose retain byte-identical behavior and never gain authority by inference ([§FS-non-goals.2](FS-non-goals.md#2-spelling-grammar-prose-quality)). The exact previously inert marker now has the explicit meaning [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) assigns it. Applications may reuse opted-in JSON by reading that source directly. `grund` neither generates nor freshness-checks language modules.
+Without `values = true`, whole-declaration and JSON discovery retain their prior absence. Without `value_chapter`, no chapter root, binding record, value finding, output field, or extra read occurs, and a project that sets neither key reads, reports, and exits byte-identically to one built before the key existed, with the single exception [§FS-values.9.1](FS-values.md#91-the-one-marked-root-formatting-behavior-that-moved) names. Without the exact [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) marker, no marked root, binding record, value finding, output field, or extra read occurs; unmarked sections, malformed lookalikes, citations, and prose retain byte-identical behavior and never gain authority by inference ([§FS-non-goals.2](FS-non-goals.md#2-spelling-grammar-prose-quality)). The exact previously inert marker now has the explicit meaning [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) assigns it. Applications may reuse opted-in JSON by reading that source directly. `grund` neither generates nor freshness-checks language modules.
 
 The feature adds no rendering or interpolation, inferred adjacent-value or bare-literal lint, range/unit semantics, derived arithmetic, generated artifact, target fingerprint, history, `reconcile` or `stale` command, excluded-path hint, value-aware search, generated-file policy, embedded JSON root, nested marked root, or orphan relief. Named-section authority now exists, but only through the schema and only inside a configured chapter: no named heading is authoritative by its own text, by an inline mark, or by inference ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)). Beyond that boundary the feature does not change `[reference] strict`, scan scope or filters, custom citation markers or separators, whole-value Markdown/JSON behavior, or the history, AST, documentation-generation, offline, and deterministic-install non-goals ([§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do)).
 

@@ -32,7 +32,7 @@ For the three crates.io names — `grund-core`, `grund`, and `grund-lsp` — an 
 
 #### 1.1.2 Unproven crates.io ownership stops the release
 
-A crates.io name that exists and is not proven this project's fails the release, and the diagnostic says which of four things went wrong, because the operator's next move differs in each. An owner record that is well-formed but carries no trusted user — an empty owner set, or only untrusted ones — reports `error: crates.io/<name> is already taken without trusted owner vjovanov` and names the owner endpoint. Owner data that is missing, malformed or the wrong shape reports that the owner evidence could not be read. An owner endpoint that answers `404`, or any other non-`200`, reports that ownership could not be determined and names the status. A request that never completes reports the transport failure rather than falling through as an unexplained non-zero exit. Each of the four exits non-zero, each is distinguishable from the other three, and each names the owner endpoint it asked. None of them falls back to the package's declared metadata: that fallback is what both the move deadlock and the copied-URL acceptance are made of, and ownership decided from unauthoritative data is not decided at all.
+A crates.io name that exists and is not proven this project's fails the release, and the message says which of four things went wrong, because the operator's next move differs in each. An owner record that is well-formed but carries no trusted user — an empty owner set, or only untrusted ones — reports `error: crates.io/<name> is already taken without trusted owner vjovanov` and names the owner endpoint. Owner data that is missing, malformed or the wrong shape reports that the owner evidence could not be read. An owner endpoint that answers `404`, or any other non-`200`, reports that ownership could not be determined and names the status. A request that never completes reports the transport failure rather than falling through as an unexplained non-zero exit. Each of the four exits non-zero, each is distinguishable from the other three, and each names the owner endpoint it asked. None of them falls back to the package's declared metadata: that fallback is what both the move deadlock and the copied-URL acceptance are made of, and ownership decided from unauthoritative data is not decided at all.
 
 ### 1.2 Support packages point at the CLI
 
@@ -76,7 +76,7 @@ Finding {
                            // report or a failed ID query (FS-errors.5.2, FS-errors.5.2.3)
   line:     u32?           // 1-indexed; null for a file-level finding with no line (e.g. an unreadable file, FS-check.2)
   message:  string         // the human-readable text
-  sites:    [{ path, line }]?  // null for a single-site diagnostic; a list naming every site for a multi-site
+  sites:    [{ path, line }]?  // null for a single-site finding; a list naming every site for a multi-site
                                // finding (a duplicate declaration) or an ambiguous-ID / ambiguous-section
                                // query failure that names sites; null for the number-only shorthand's
                                // `ambiguous` refusal, which names candidates instead (FS-errors.5.2.1)
@@ -177,7 +177,7 @@ Being a substring is what gives it its left boundary. `becomes an error in <rele
 
 #### 4.2.4 The scalar clause is the `refs` warning's
 
-The scalar clause matches the exact `refs` warning in [§FS-refs.4](FS-refs.md#4-exit-codes): its replacement diagnostics must remain the ordinary failed-query bytes, so they do not gain a historical release suffix. A version-gated contract test then owns the landed phase; at 0.15.0 it expects exit `1` and the warning's absence.
+The scalar clause matches the exact `refs` warning in [§FS-refs.4](FS-refs.md#4-exit-codes): its replacement findings must remain the ordinary failed-query bytes, so they do not gain a historical release suffix. A version-gated contract test then owns the landed phase; at 0.15.0 it expects exit `1` and the warning's absence.
 
 #### 4.2.5 The refusal names the window left
 

@@ -21,11 +21,11 @@ lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marke
 ## checks: Checks
 
 Each section below is one check `grund check` enforces about a declaration, and its name
-is the diagnostic code verbatim — the token `--only` and `--ignore` take, as
+is the finding code verbatim — the token `--only` and `--ignore` take, as
 [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog) publishes it and [§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code) requires. Severity is not part of
 the address: each code's row in that catalog carries it, so a promotion edits a cell and
 moves no coordinate. How a finding is rendered, selected and exited on is the command's
-business, in [§FS-check.2](FS-check.md#2-outputs) and [§FS-check.1.4](FS-check.md#14-selecting-diagnostics-with---only-and---ignore).
+business, in [§FS-check.2](FS-check.md#2-outputs) and [§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore).
 
 ### checks.duplicate: Duplicate declaration
 
@@ -216,7 +216,7 @@ The coordinate is local for a member-local check and workspace-qualified for a w
 
 #### checks.oversized-lead.2: Exit code and rendering
 
-A warning-only run exits `0` and replaces the text `success` marker; JSON uses the ordinary located diagnostic object ([§FS-errors.5](FS-errors.md#5-json-format)). The LSP publishes the same message, line, code, and warning severity as the CLI ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). Any simultaneous error, including `duplicate` or `duplicate-section`, still decides exit `1`; the warning neither suppresses it nor changes its priority.
+A warning-only run exits `0` and replaces the text `success` marker; JSON uses the ordinary located finding object ([§FS-errors.5](FS-errors.md#5-json-format)). The LSP publishes the same message, line, code, and warning severity as the CLI ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). Any simultaneous error, including `duplicate` or `duplicate-section`, still decides exit `1`; the warning neither suppresses it nor changes its priority.
 
 #### checks.oversized-lead.3: Only the key activates it
 
