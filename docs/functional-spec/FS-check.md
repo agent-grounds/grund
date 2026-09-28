@@ -229,7 +229,7 @@ Findings are written to **stdout**, one per line, in the form:
 
 Every retained located text diagnostic carries its lowercase channel after that jump-friendly prefix: `error:` for [§FS-check.3](FS-check.md#3-errors-detected), `warning:` for [§FS-check.4](FS-check.md#4-warnings), and `suggestion:` for an enabled [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) advisory. The marker is report structure rather than part of the diagnostic message; `<message>` retains its ordinary bytes. Text reports follow the grouped order [§FS-errors.4](FS-errors.md#4-determinism) fixes. Every retained diagnostic remains present and unabridged.
 
-When a finding inherently spans multiple sites (e.g., duplicate declarations, [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)), the message is anchored at the lexicographically-first site (sort by `path`, then `line`) and the other sites are listed parenthetically inside the message.
+When a finding inherently spans multiple sites (e.g., duplicate declarations, [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)), the message is located at the lexicographically-first site (sort by `path`, then `line`) and the other sites are listed parenthetically inside the message.
 
 Selection happens before the fixed per-format sort, render, and exit decision ([§FS-check.2.1.2](FS-check.md#212-selection-filters-the-complete-report)). An otherwise empty selected report makes the default text form write exactly `success` plus a trailing newline ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)); with `--format=json`, the retained findings are emitted as NDJSON on stdout instead ([§FS-check.2.1.4](FS-check.md#214-json)).
 
@@ -421,7 +421,7 @@ If `AGENTS.md` does not exist, existing companion agent files without a managed 
 
 #### 3.5.2 Legacy and malformed blocks
 
-A legacy H2-bounded block from v3 or earlier ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) is still recognized and reported as an *older block version* — `` run `grund init` `` is its transition path to the delimited form, so existing repositories are told how to migrate rather than treated as malformed. Broken delimiters are a distinct error: a file whose delimiters [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) defines as **malformed** is reported as a malformed managed block, anchored at the offending delimiter line and naming the defect; `check` never rewrites the file, and `grund init` refuses to splice against broken delimiters for the same reason.
+A legacy H2-bounded block from v3 or earlier ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) is still recognized and reported as an *older block version* — `` run `grund init` `` is its transition path to the delimited form, so existing repositories are told how to migrate rather than treated as malformed. Broken delimiters are a distinct error: a file whose delimiters [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints) defines as **malformed** is reported as a malformed managed block, located at the offending delimiter line and naming the defect; `check` never rewrites the file, and `grund init` refuses to splice against broken delimiters for the same reason.
 
 #### 3.5.3 Code and message
 
@@ -475,7 +475,7 @@ The inline-declaration escape of [§FS-check.3.6](FS-check.md#36-ungrounded-unit
 
 #### 3.6.3 Findings
 
-A finding is anchored at its unit — line 1 for a file, the heading line for a section, the block's first line for a doc-comment — and names the unit and, when the unit sits in a non-citable home, the home:
+A finding is located at its unit — line 1 for a file, the heading line for a section, the block's first line for a doc-comment — and names the unit and, when the unit sits in a non-citable home, the home:
 
 ```
 src/foo.rs:1: ungrounded source file: no § citation to a declared ID
@@ -552,11 +552,11 @@ A citation site in a code comment that violates the configured inline citation s
 
 #### 3.10.1 Layout deviation
 
-With `[reference] inline_note_layout` set to a layout and `inline_note_layout_check = "error"`, each line that [§FS-inline-citation-style.3.3.1](FS-inline-citation-style.md#331-per-line-not-per-site--and-only-where-a-note-opens) judges, in a citation site that carries a note ([§FS-inline-citation-style.3.3.2](FS-inline-citation-style.md#332-only-sites-that-carry-a-note)), and that does not match the configured form is an error anchored at that line ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit), [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)). The same deviation is a warning under `inline_note_layout_check = "warn"` ([§FS-check.4.4](FS-check.md#44-inline-note-layout-deviation-opt-in)) and silent at the default `off`. It is the one member of this rule that anchors per line rather than at the site's first line, because a layout deviation is a property of the line an author has to edit.
+With `[reference] inline_note_layout` set to a layout and `inline_note_layout_check = "error"`, each line that [§FS-inline-citation-style.3.3.1](FS-inline-citation-style.md#331-per-line-not-per-site--and-only-where-a-note-opens) judges, in a citation site that carries a note ([§FS-inline-citation-style.3.3.2](FS-inline-citation-style.md#332-only-sites-that-carry-a-note)), and that does not match the configured form is an error located at that line ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit), [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)). The same deviation is a warning under `inline_note_layout_check = "warn"` ([§FS-check.4.4](FS-check.md#44-inline-note-layout-deviation-opt-in)) and silent at the default `off`. It is the one member of this rule that anchors per line rather than at the site's first line, because a layout deviation is a property of the line an author has to edit.
 
 ### 3.11 Missing required citation
 
-When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) sets a `must` obligation for a citing kind, every top-level declaration of that kind must carry at least one citation satisfying each `must` entry, anywhere in its body. A declaration that does not is an error anchored at the declaration line, naming the unmet target:
+When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) sets a `must` obligation for a citing kind, every top-level declaration of that kind must carry at least one citation satisfying each `must` entry, anywhere in its body. A declaration that does not is an error located at the declaration line, naming the unmet target:
 
 ```
 docs/architecture/AR-router.md:1: AR-router must cite FS or GOAL (citation direction)
@@ -572,7 +572,7 @@ participates, this section's existing message stays byte-for-byte unchanged.
 
 #### 3.11.1 The homeless kind
 
-A **homeless-kind** obligation ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — is per file rather than per declaration: a source file that contains at least one citation but none satisfying the obligation is the error, anchored at line 1.
+A **homeless-kind** obligation ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — is per file rather than per declaration: a source file that contains at least one citation but none satisfying the obligation is the error, located at line 1.
 
 #### 3.11.2 A non-citable kind
 
@@ -600,7 +600,7 @@ An `E2E`-kind obligation ([§FS-config.3.9.1](FS-config.md#391-levels)) is per c
 
 ### 3.12 Forbidden citation
 
-When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) sets a `must-not` prohibition for a citing kind, every citation site of that kind to a prohibited target is an error anchored at the citation site:
+When `[citations]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) sets a `must-not` prohibition for a citing kind, every citation site of that kind to a prohibited target is an error located at the citation site:
 
 ```
 docs/functional-spec/FS-login.md:42: FS must not cite AR (citation direction) — re-point the citation or downgrade it to a plain Markdown link
@@ -757,11 +757,11 @@ The condition runs one way only: an entry that already *is* a link satisfies [§
 
 #### 3.17.6 One finding per ID
 
-Only an ID the index already cites in a form `fmt` would wrap ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)) reaches this rule; an ID with neither that nor an entry is [§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)'s, and one cause never yields both findings. Where several citations of one ID sit in the index and none is a link, the finding anchors at the first of them in file order.
+Only an ID the index already cites in a form `fmt` would wrap ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)) reaches this rule; an ID with neither that nor an entry is [§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)'s, and one cause never yields both findings. Where several citations of one ID sit in the index and none is a link, the finding is located at the first of them in file order.
 
 ### 3.18 Declaration missing from its kind's index
 
-A kind configured with a `folder` and an index file — `README.md` unless `index` names another or opts out ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)) — promises that the index lists that folder's declarations; nothing verified it before. Every covered declaration the index does not name is one error, anchored at the **declaration's heading** and naming the index file:
+A kind configured with a `folder` and an index file — `README.md` unless `index` names another or opts out ([§FS-config.3.4.2](FS-config.md#342-index--the-kinds-index-file)) — promises that the index lists that folder's declarations; nothing verified it before. Every covered declaration the index does not name is one error, located at the **declaration's heading** and naming the index file:
 
 ```
 docs/decisions/functional/DF-md-link-emission.md:1: DF-md-link-emission is not listed in docs/decisions/functional/README.md — became an error in grund 0.13.0
@@ -797,7 +797,7 @@ So is a mention the scan never recorded as a citation at all — a markerless li
 
 ##### 3.18.5.1 What "appears" means
 
-The look is at text rather than at citations, and it is deliberately narrow. The index **mentions** the ID when some line of the index file carries either the ID as `grund` renders it — with or without the marker, with or without a section suffix, as an ID-shaped token on its own boundaries, so a longer ID containing this one is not a mention of it — or the file name of the declaration the finding is anchored at, as a whole name, so `overview.md` is not mentioned by `my-overview.md` and not by `overview.markdown`.
+The look is at text rather than at citations, and it is deliberately narrow. The index **mentions** the ID when some line of the index file carries either the ID as `grund` renders it — with or without the marker, with or without a section suffix, as an ID-shaped token on its own boundaries, so a longer ID containing this one is not a mention of it — or the file name of the declaration the finding is located at, as a whole name, so `overview.md` is not mentioned by `my-overview.md` and not by `overview.markdown`.
 
 Two kinds of line are not looked at. A line inside a Markdown fenced code block, by the one fence reader every surface shares ([§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code)), because an index that illustrates the form in an example has listed nothing. And a declaration heading: a citation riding on one is not an entry either ([§FS-fmt.6.4](FS-fmt.md#64-what-is-never-wrapped)), and a line that declares an ID is not a page mentioning it.
 
@@ -811,7 +811,7 @@ Layout is free: table or list, grouped or flat, in any order, with any prose aro
 
 #### 3.18.7 A missing index file
 
-A missing index file is this same finding class, once per declaration in the folder: a folder whose index nobody wrote is the strongest form of the same fact, not a different one. It is also why the finding is anchored at the declaration and not at the index — an index file that does not exist has no line to point at, and every declaration has one. The message says which way it failed, in a parenthesis after the file name: `(the index file does not exist)`, `(the index file is a directory)` for a path that is one, and `(the index file could not be read)` for a file that is there and would not open. Three phrasings rather than one because "does not exist", said about a directory that plainly does, is a diagnosis the reader has to argue with before they can act on it.
+A missing index file is this same finding class, once per declaration in the folder: a folder whose index nobody wrote is the strongest form of the same fact, not a different one. It is also why the finding is located at the declaration and not at the index — an index file that does not exist has no line to point at, and every declaration has one. The message says which way it failed, in a parenthesis after the file name: `(the index file does not exist)`, `(the index file is a directory)` for a path that is one, and `(the index file could not be read)` for a file that is there and would not open. Three phrasings rather than one because "does not exist", said about a directory that plainly does, is a diagnosis the reader has to argue with before they can act on it.
 
 #### 3.18.8 A run that cannot see the index does not judge it
 
@@ -949,7 +949,7 @@ at the subject declaration or named-chapter title. Its count and message are
 
 A directory that declares `[workspace]` and that **no enclosing `[workspace]` block lists among its `members`** is claimed by nobody: the enclosing project's scan absorbs its subtree when it reaches it, while a run started *at* it names every project from itself ([§FS-workspace.6.1.8](FS-workspace.md#618-a-block-no-enclosing-block-lists-is-outside-the-chain)). The two scopes then spell the same projects differently — `c/FS-c` inside the block, `root/FS-c` at the repository root — so a citation passes the inner check and fails the run CI does, which is [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) failing in the one place the alias-path model exists to hold it. Every run whose tree walk meets such a block says so. In `check` it is an **error**: it reaches exit `1` and prints on **stdout** behind the `<path>:<line>: error:` prefix of [§FS-check.2.1](FS-check.md#21-report-format), located at the block's `[workspace]` line ([§FS-check.3.29.13](FS-check.md#32913-in-check-one-of-the-reports-errors)) — the deprecation ramp the warning announced, landing on the release it named ([§FS-check.3.29.14](FS-check.md#32914-an-error-because-the-deadline-the-warning-named-has-arrived)). On the five other walking surfaces, which have no error channel for a fact about the run, it stays one CLI-level `warning:` on **stderr** ([§FS-check.2.1.1](FS-check.md#211-cli-level-messages), [§FS-errors.2.2](FS-errors.md#22-cli-level-message)). Decided in [§DF-unlisted-workspace-block](../decisions/functional/DF-unlisted-workspace-block.md#df-unlisted-workspace-block-an-unlisted-workspace-block-is-reported-by-the-walk-that-meets-it).
 
-What counts is [§FS-check.3.29.1](FS-check.md#3291-what-counts), and its edges are [§FS-check.3.29.2](FS-check.md#3292-an-unanswered-claim-is-not-reported-and-is-asked-quietly) to [§FS-check.3.29.5](FS-check.md#3295-include_root--false-changes-nothing). The message is [§FS-check.3.29.6](FS-check.md#3296-the-message) to [§FS-check.3.29.8](FS-check.md#3298-the-second-remedy-is-an-outcome-not-a-key); which commands report it, over what walk, is [§FS-check.3.29.9](FS-check.md#3299-every-command-that-walks-reports-it-not-check-alone) to [§FS-check.3.29.12](FS-check.md#32912-an-unlisted-block-outside-the-walk-is-unreported); its severity and rendering are [§FS-check.3.29.13](FS-check.md#32913-in-check-one-of-the-reports-errors) to [§FS-check.3.29.15](FS-check.md#32915-every-frontend-renders-it-anchored-at-the-blocks-workspace-line).
+What counts is [§FS-check.3.29.1](FS-check.md#3291-what-counts), and its edges are [§FS-check.3.29.2](FS-check.md#3292-an-unanswered-claim-is-not-reported-and-is-asked-quietly) to [§FS-check.3.29.5](FS-check.md#3295-include_root--false-changes-nothing). The message is [§FS-check.3.29.6](FS-check.md#3296-the-message) to [§FS-check.3.29.8](FS-check.md#3298-the-second-remedy-is-an-outcome-not-a-key); which commands report it, over what walk, is [§FS-check.3.29.9](FS-check.md#3299-every-command-that-walks-reports-it-not-check-alone) to [§FS-check.3.29.12](FS-check.md#32912-an-unlisted-block-outside-the-walk-is-unreported); its severity and rendering are [§FS-check.3.29.13](FS-check.md#32913-in-check-one-of-the-reports-errors) to [§FS-check.3.29.15](FS-check.md#32915-every-frontend-renders-it-located-at-the-blocks-workspace-line).
 
 - **Code:** `unlisted-workspace-block` ([§FS-errors.5](FS-errors.md#5-json-format)).
 
@@ -1023,7 +1023,7 @@ No `grund` command writes either remedy — both are config edits and a judgemen
 
 The deadline clause is spent: a release still ahead is a date a reader can act on, and one that has arrived is not. What replaces it reports rather than promises, `— an unlisted [workspace] became an error in grund 0.15.0`, which is the past-tense half of the closed vocabulary [§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name) defines. It stays on both texts of [§FS-check.3.29.6](FS-check.md#3296-the-message) — the error's and the five surfaces' warning — because that clause is the only record of the flip a reader meets without the changelog, and it is what lets the release path refuse a version this finding would contradict. The ramp constant that held the named release ahead of the running version goes with the promise, and so does the unit test that read it: a test can hold only the pending half ([§FS-distribution.4.2.1](FS-distribution.md#421-a-test-can-hold-only-the-pending-half)), so what holds the landed half is an assertion on the clause's own bytes.
 
-#### 3.29.15 Every frontend renders it, anchored at the block's `[workspace]` line
+#### 3.29.15 Every frontend renders it, located at the block's `[workspace]` line
 
 In `check` it is a located report error ([§FS-check.3.29.13](FS-check.md#32913-in-check-one-of-the-reports-errors)), and the location is the finding's own field: `path` is the block's config, `line` is its `[workspace]` line. **The anchor is the one thing the flip did not move** — it is the same `<path>:<line>` the warning named, and it is still carried as a field rather than left to be read back out of message text. What moved is which channel carries it.
 
@@ -1075,7 +1075,7 @@ The same warning is emitted by `grund config validate` and `grund config show` (
 
 ### 4.4 Inline note layout deviation *(opt-in)*
 
-Off by default. When `[reference] inline_note_layout` names a layout and `[reference] inline_note_layout_check = "warn"` ([§FS-config.3.1](FS-config.md#31-reference--citation-form)), every line of a note that [§FS-inline-citation-style.3.3.1](FS-inline-citation-style.md#331-per-line-not-per-site--and-only-where-a-note-opens) judges and that does not match the configured form is reported as a warning, anchored at that line. Setting the key to `"error"` reports the identical message as an error instead ([§FS-check.3.10](FS-check.md#310-inline-citation-style-violation)); `"off"`, or a `inline_note_layout` left at `any`, reports nothing. The form itself, the per-line rule, and the exemption for sites that carry no note live in [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit), and the channel table in [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations).
+Off by default. When `[reference] inline_note_layout` names a layout and `[reference] inline_note_layout_check = "warn"` ([§FS-config.3.1](FS-config.md#31-reference--citation-form)), every line of a note that [§FS-inline-citation-style.3.3.1](FS-inline-citation-style.md#331-per-line-not-per-site--and-only-where-a-note-opens) judges and that does not match the configured form is reported as a warning, located at that line. Setting the key to `"error"` reports the identical message as an error instead ([§FS-check.3.10](FS-check.md#310-inline-citation-style-violation)); `"off"`, or a `inline_note_layout` left at `any`, reports nothing. The form itself, the per-line rule, and the exemption for sites that carry no note live in [§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit), and the channel table in [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations).
 
 Off by default because a layout is a house style rather than a correctness property, and the two levels exist so a repository can migrate on `warn` before it gates on `error` — the same ladder [§FS-check.4.2](FS-check.md#42-inline-note-soft-cap-overrun-opt-in) gives the soft cap.
 
@@ -1155,7 +1155,7 @@ It is a launch-time message carried in the run's warning channel ([§FS-check.4.
 
 #### 4.7.7 One of the run's warnings, rendered by every frontend
 
-The fact is settled during workspace expansion, before any report exists, but what the engine hands back is still a diagnostic in the run's warning channel — carried on whatever the walking command returns, and rendered by whichever frontend asked for it, exactly as [§FS-check.2.2](FS-check.md#22-empty-scan)'s empty-scan caution already is ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)). It **anchors at the block's `members` line**: the `grund.toml:<line>` breadcrumb of [§FS-check.4.7.1](FS-check.md#471-the-message) is the finding's own location too, so a frontend places it without parsing the message, while [§FS-check.2.1](FS-check.md#21-report-format)'s `<path>:<line>:` prefix stays off it, because a fact about the run's configuration is not a finding at a site in the citation graph. No byte a reader has today moves: the CLI prints the line of [§FS-check.4.7.1](FS-check.md#471-the-message) on stderr in [§FS-check.2.1.1](FS-check.md#211-cli-level-messages)'s shape, `--format json` keeps that same text ([§FS-check.4.7.6](FS-check.md#476-a-launch-time-message-keeps-its-text-under---format-json)), and a run that earns it still prints no `success`. What changes is who else hears it — an editor publishes it on that `grund.toml` line, where before it published nothing at all ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+The fact is settled during workspace expansion, before any report exists, but what the engine hands back is still a diagnostic in the run's warning channel — carried on whatever the walking command returns, and rendered by whichever frontend asked for it, exactly as [§FS-check.2.2](FS-check.md#22-empty-scan)'s empty-scan caution already is ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)). It **is located at the block's `members` line**: the `grund.toml:<line>` breadcrumb of [§FS-check.4.7.1](FS-check.md#471-the-message) is the finding's own location too, so a frontend places it without parsing the message, while [§FS-check.2.1](FS-check.md#21-report-format)'s `<path>:<line>:` prefix stays off it, because a fact about the run's configuration is not a finding at a site in the citation graph. No byte a reader has today moves: the CLI prints the line of [§FS-check.4.7.1](FS-check.md#471-the-message) on stderr in [§FS-check.2.1.1](FS-check.md#211-cli-level-messages)'s shape, `--format json` keeps that same text ([§FS-check.4.7.6](FS-check.md#476-a-launch-time-message-keeps-its-text-under---format-json)), and a run that earns it still prints no `success`. What changes is who else hears it — an editor publishes it on that `grund.toml` line, where before it published nothing at all ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
 
 #### 4.7.8 A warning in this release, an error in the next
 
@@ -1175,7 +1175,7 @@ It is one located warning per absent entry ([§FS-check.4.9.1](FS-check.md#491-o
 
 #### 4.9.1 One warning per absent entry
 
-One warning per absent entry, in the report's ordinary sort ([§FS-errors.4](FS-errors.md#4-determinism)) — by entry name, since all of them share one path and line — anchored at the `optional_members` line of the block that holds it:
+One warning per absent entry, in the report's ordinary sort ([§FS-errors.4](FS-errors.md#4-determinism)) — by entry name, since all of them share one path and line — located at the `optional_members` line of the block that holds it:
 
 ```
 grund.toml:5: optional workspace member `vendored` is absent — citations into namespace `vendored` were not checked, so this run does not cover it
@@ -1259,7 +1259,7 @@ It is a launch-time message, so it keeps its text under `--format json` ([§FS-e
 
 #### 4.10.11 One of the run's warnings, rendered by every frontend
 
-Like [§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan), and for the same reason ([§FS-check.4.7.7](FS-check.md#477-one-of-the-runs-warnings-rendered-by-every-frontend)): the fact is settled before any report exists, but what the engine hands back is a diagnostic in the run's warning channel — carried on whatever the walking command returns and rendered by whichever frontend asked ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)) — rather than a line the engine wrote to a stream. It **anchors at the block's `include_root` line**, falling back to its `[workspace]` line exactly as the breadcrumb of [§FS-check.4.10.5](FS-check.md#4105-the-message) does, and carries that anchor as the finding's own location so a frontend never parses the message for one. Every byte is the byte it is today, on stderr and under `--format json` alike, and the `success` marker it stands in place of is unaffected. The editor is the surface that gains a reader: it publishes the warning on that `include_root` line ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)), which is where the one edit that clears it is written.
+Like [§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan), and for the same reason ([§FS-check.4.7.7](FS-check.md#477-one-of-the-runs-warnings-rendered-by-every-frontend)): the fact is settled before any report exists, but what the engine hands back is a diagnostic in the run's warning channel — carried on whatever the walking command returns and rendered by whichever frontend asked ([§FS-distribution.3.1](FS-distribution.md#31-rust-grund-core-crate)) — rather than a line the engine wrote to a stream. It **is located at the block's `include_root` line**, falling back to its `[workspace]` line exactly as the breadcrumb of [§FS-check.4.10.5](FS-check.md#4105-the-message) does, and carries that anchor as the finding's own location so a frontend never parses the message for one. Every byte is the byte it is today, on stderr and under `--format json` alike, and the `success` marker it stands in place of is unaffected. The editor is the surface that gains a reader: it publishes the warning on that `include_root` line ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)), which is where the one edit that clears it is written.
 
 #### 4.10.12 A warning permanently, with no release it becomes an error in
 

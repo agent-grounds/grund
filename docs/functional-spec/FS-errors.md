@@ -174,7 +174,7 @@ The shape is structural; the text is human-readable. Style rules apply to every 
 
 ### 3.1 One base for every path in the line
 
-A path written *inside* the message text — a duplicate declaration's other homes, an ambiguous ID's competing sites, the stub a broken-stub refusal names — is a report path like the `<path>` the shape anchors at, and is rendered against the same base ([§FS-config.3.6](FS-config.md#36-output--report-format)). In a workspace that base is the root the run reports from, never the member the finding came out of ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)): a line whose two halves are relative to two different roots sends the reader — and an editor following it — to a file that is not there. The path the message quotes back from the user's own text, such as a stub's link target, is not a resolved path and stays verbatim.
+A path written *inside* the message text — a duplicate declaration's other homes, an ambiguous ID's competing sites, the stub a broken-stub refusal names — is a report path like the `<path>` the shape is located at, and is rendered against the same base ([§FS-config.3.6](FS-config.md#36-output--report-format)). In a workspace that base is the root the run reports from, never the member the finding came out of ([§FS-workspace.8.1](FS-workspace.md#81-grund-aliasid)): a line whose two halves are relative to two different roots sends the reader — and an editor following it — to a file that is not there. The path the message quotes back from the user's own text, such as a stub's link target, is not a resolved path and stays verbatim.
 
 ### 3.2 The unknown-project recovery shape
 
@@ -294,7 +294,7 @@ Text `check` findings are grouped as errors,
 warnings, then enabled suggestions and sort bytewise by `(path, line,
 message)` within each group. JSON `check` findings retain their global
 bytewise `(path, line, message)` order across channels. Other reports retain
-their existing documented order; multi-site findings anchor at the
+their existing documented order; multi-site findings are located at the
 lexicographically-first site ([§FS-check.2.1](FS-check.md#21-report-format)).
 
 A message that would otherwise be non-deterministic (e.g. the order of duplicate-declaration sites) is sorted before printing.
