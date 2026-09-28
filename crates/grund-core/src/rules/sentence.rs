@@ -96,9 +96,24 @@ pub(crate) struct RuleVocabulary {
     pub(crate) section_separators: Vec<String>,
 }
 
+impl RuleVocabulary {
+    /// §FS-rules.4.1.1: whether the run holds a workspace vocabulary at all.
+    /// False wherever the effective config declares no `[workspace]`, and that
+    /// absence is what makes a namespaced object kind unverifiable here rather
+    /// than invalid — a scope holding namespaces judged the alias and said no.
+    pub(crate) fn workspace_in_scope(&self) -> bool {
+        !self.target_namespaces.is_empty()
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct RuleParseError {
     pub(crate) message: String,
+    /// §FS-rules.4.1: the sentence is well-formed and only unverifiable from the
+    /// scope the command ran in. A caller may render it and still report it
+    /// (§FS-rules.4.1.2); every other parse failure leaves this false, and stays
+    /// the invalid rule §FS-rules.4 refuses to write around.
+    pub(crate) unverifiable_here: bool,
 }
 
 impl std::fmt::Display for RuleParseError {
@@ -111,6 +126,16 @@ impl std::error::Error for RuleParseError {}
 fn error(message: impl Into<String>) -> RuleParseError {
     RuleParseError {
         message: message.into(),
+        unverifiable_here: false,
+    }
+}
+
+/// §FS-rules.4.1: the one failure that is not an invalid rule — the scope holds
+/// no workspace vocabulary, so it can say neither yes nor no about the alias.
+fn unverifiable_here(message: impl Into<String>) -> RuleParseError {
+    RuleParseError {
+        message: message.into(),
+        unverifiable_here: true,
     }
 }
 

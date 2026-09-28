@@ -58,7 +58,8 @@ pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use chapter_rules::{
-    check_chapter_rules, configured_rule_sentences, parse_ad_hoc, parse_ad_hoc_with_workspace,
+    check_chapter_rules, configured_rule_sentences, declared_workspace_vocabulary, parse_ad_hoc,
+    parse_ad_hoc_with_workspace, workspace_vocabulary,
 };
 pub(crate) use homes::file_declares_inline_home;
 pub(crate) use index::KindIndexFiles;
@@ -120,5 +121,7 @@ mod tests_managed_block_drift;
 mod tests_nothing_recognized;
 #[cfg(test)]
 mod tests_shorthand;
+#[cfg(test)]
+mod tests_unverifiable_rule_scope;
 #[cfg(test)]
 mod tests_value_json_duplicates;
