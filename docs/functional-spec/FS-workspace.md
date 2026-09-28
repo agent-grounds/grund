@@ -117,7 +117,7 @@ members choose independently, so a workspace may mix the two forms.
 
 A member root may sit anywhere strictly inside the block that lists it, and that
 includes on top of the paths the block itself scans. When it covers **all** of
-them the block's own project reads nothing: every one of its walk roots lies
+them the block's own project reads nothing: every one of its scan roots lies
 under a member boundary ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)), so its declarations reach no catalog and its
 dangling citations pass the check, which is [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) failing. That is the same consequence
 [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces) gives as the reason a member root may not be an *ancestor* of its own
@@ -167,7 +167,7 @@ file nobody reads.
 ##### 2.1.2.3 `--full` does not silence it
 
 `--full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)) adds the
-config root as a walk root, but the member boundary still prunes, so the absorbed
+config root as a scan root, but the member boundary still prunes, so the absorbed
 tree is no more readable with it than without. The question is therefore asked
 of the default scope whatever the flag says: this is a property of the
 configuration, not of one walk.
@@ -596,7 +596,7 @@ inside a member. The member is scanned separately under its own config and alias
 
 This prevents a child project declaration from accidentally becoming a duplicate
 or dependency of the root namespace. It also has a limit: a `members` list that
-prunes *every* one of the block's own walk roots leaves that block reading
+prunes *every* one of the block's own scan roots leaves that block reading
 nothing at all, which is a misconfiguration rather than a boundary, and [§FS-workspace.2.1](FS-workspace.md#21-a-member-that-swallows-the-blocks-own-scan) is
 where the run says so.
 
