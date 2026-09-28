@@ -19,6 +19,11 @@ pub struct RefsOpts {
     pub path_provided: bool,
     pub id: String,
     pub section: Option<String>,
+    /// Widen the section filter from the exact coordinate to that coordinate
+    /// and every section beneath it (§FS-refs.1). With no section in play
+    /// there is nothing to widen and the field changes nothing (§FS-refs.4),
+    /// so a caller holding an operand it did not build may set it either way.
+    pub descendants: bool,
 }
 
 impl Default for RefsOpts {
@@ -28,6 +33,7 @@ impl Default for RefsOpts {
             path_provided: false,
             id: String::new(),
             section: None,
+            descendants: false,
         }
     }
 }

@@ -15,11 +15,22 @@ use std::path::Path;
 use super::refs::{RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsWithMetadata};
 use super::report::context_run_warnings;
 use crate::config::display_path;
-use crate::grammar::render_id;
+use crate::grammar::{path_at_or_under, render_id};
 use crate::model::{Citation, sort_path_key};
 use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::scanner::{api_scan_error, resolve_id_arg};
 use crate::workspace::split_qualified_id_arg;
+
+/// Whether one citation's own section coordinate is inside the requested
+/// scope: the exact path, or — under `--descendants` — that path and every
+/// section beneath it (§FS-refs.2). A bare-ID citation carries no coordinate
+/// and is in neither scope, as it already was not in an exact one.
+fn section_in_scope(cited: Option<&str>, requested: &str, descendants: bool) -> bool {
+    match cited {
+        Some(cited) if descendants => path_at_or_under(cited, requested, "."),
+        cited => cited == Some(requested),
+    }
+}
 
 pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
@@ -118,8 +129,11 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
             if !(local_match || qualified_match) || citation.id != id {
                 continue;
             }
+            // §FS-refs.2: `--descendants` widens the exact coordinate to its
+            // subtree, on `.` components — a recorded section path is dotted at
+            // every depth whatever the outer separator is (§FS-config.3.3.4).
             if let Some(expected) = section.as_deref()
-                && citation.section.as_deref() != Some(expected)
+                && !section_in_scope(citation.section.as_deref(), expected, opts.descendants)
             {
                 continue;
             }

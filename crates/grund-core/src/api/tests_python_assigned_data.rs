@@ -206,6 +206,7 @@ fn check_refs_cover_and_lsp_share_the_assigned_data_boundary() {
         path_provided: true,
         id: "FS-042-user-login".into(),
         section: None,
+        descendants: false,
     })
     .expect("refs")
     .hits
