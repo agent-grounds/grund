@@ -18,7 +18,7 @@ Every maintained example must map to at least one canonical `grund` use-case. Th
 
 - choosing between supported ID schemes;
 - setting up a conformant repository;
-- declaring specs in Markdown or source doc-comments;
+- writing declarations in Markdown or source doc-comments;
 - citing specs from prose, code, or executable tests;
 - resolving a citation with `grund <ID>`;
 - finding a declaration's blast radius with `grund refs`;
