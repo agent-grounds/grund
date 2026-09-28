@@ -105,6 +105,8 @@ mod tests_init_guidance;
 #[cfg(test)]
 mod tests_python_assigned_data;
 #[cfg(test)]
+mod tests_refs_descendants;
+#[cfg(test)]
 mod tests_refs_query_failures;
 #[cfg(test)]
 mod tests_rule_overlays;

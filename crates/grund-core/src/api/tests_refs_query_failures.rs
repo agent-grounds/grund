@@ -40,6 +40,7 @@ fn query(root: &Path, id: &str) -> Result<RefsOutcome> {
         path_provided: true,
         id: id.to_string(),
         section: None,
+        descendants: false,
     })
 }
 
@@ -90,6 +91,7 @@ fn successful_and_setup_outcomes_do_not_receive_the_query_failure_carrier() {
         path_provided: true,
         id: "FS-bar".to_string(),
         section: None,
+        descendants: false,
     })
     .expect_err("the established refs API keeps resolver rejection as Err");
     assert_eq!(

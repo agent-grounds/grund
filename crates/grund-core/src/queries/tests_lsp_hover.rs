@@ -52,6 +52,7 @@ fn refs_counts(root: &Path, id: &str, section: Option<&str>) -> (usize, usize) {
         path_provided: true,
         id: id.to_string(),
         section: section.map(str::to_string),
+        descendants: false,
     })
     .expect("public refs api");
     let files = output

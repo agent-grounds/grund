@@ -152,19 +152,25 @@ fn print_subcommand_help(cmd: &str) {
             println!("depends on a declaration before you change it.");
             println!();
             println!(
-                "Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--summary] [--format text|json]"
+                "Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--descendants] [--summary] [--format text|json]"
             );
             println!();
             println!(
                 "PATH defaults to `.`. With a `.<section>` (or --section), only citations of that"
             );
             println!(
-                "exact section are listed. An ID with no citations prints nothing and exits 0."
+                "exact section are listed; --descendants widens that to the section and every"
+            );
+            println!(
+                "section beneath it. An ID with no citations prints nothing and exits 0."
             );
             println!();
             println!("Options:");
             println!(
                 "  --section S          list only citations of that section path   e.g. grund refs FS-login --section 3"
+            );
+            println!(
+                "  --descendants        also list citations of sections beneath it e.g. grund refs FS-login.3 --descendants"
             );
             println!(
                 "  --summary            group citations by citing file             e.g. grund refs FS-login --summary"

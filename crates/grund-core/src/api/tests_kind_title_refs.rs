@@ -25,6 +25,7 @@ fn kind_title_refs_preserve_existing_public_records_and_undeclared_queries() {
             path_provided: true,
             id: "FS-authored".into(),
             section: None,
+            descendants: false,
         };
         // Exhaustive literals deliberately have no metadata fields.
         let expected = RefsOutcome {
@@ -62,6 +63,7 @@ fn kind_title_refs_preserve_existing_public_records_and_undeclared_queries() {
         path_provided: true,
         id: "FS-authored".into(),
         section: None,
+        descendants: false,
     })
     .unwrap();
     assert_eq!(
@@ -92,6 +94,7 @@ fn kind_title_refs_target_differs_from_caller_and_citers() {
         path_provided: true,
         id: "target/FS-authored".into(),
         section: None,
+        descendants: false,
     })
     .unwrap();
     assert_eq!(result.kind_title.as_deref(), Some("Target title"));

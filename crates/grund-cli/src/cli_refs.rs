@@ -1,6 +1,9 @@
-/// `grund refs <ID> [--summary] [--format text|json]`: every citation of one
-/// ID, rendered as `path:line`, with resolver rejection following the staged
-/// query-failure contract (§FS-refs.3, §FS-refs.4).
+/// `grund refs <ID> [--descendants] [--summary] [--format text|json]`: every
+/// citation of one ID, rendered as `path:line`, with resolver rejection
+/// following the staged query-failure contract (§FS-refs.3, §FS-refs.4).
+/// `--descendants` widens the section filter to the subtree (§FS-refs.1) and
+/// adds no classification of its own, so it is resolved here before rendering
+/// exactly as `--section` and `--summary` are (§FS-refs.4).
 fn command_refs(args: &[String]) -> ExitCode {
     if args.is_empty() {
         eprintln!("error: refs requires an ID");
@@ -10,12 +13,14 @@ fn command_refs(args: &[String]) -> ExitCode {
     let mut path = PathBuf::from(".");
     let mut path_provided = false;
     let mut section_override: Option<String> = None;
+    let mut descendants = false;
     let mut format_override: Option<String> = None;
     let mut summary = false;
     let mut idx = 0;
     while idx < args.len() {
         match args[idx].as_str() {
             "--summary" => summary = true,
+            "--descendants" => descendants = true,
             "--section" => {
                 idx += 1;
                 if idx >= args.len() {
@@ -60,6 +65,7 @@ fn command_refs(args: &[String]) -> ExitCode {
         path_provided,
         id: id_arg,
         section: section_override,
+        descendants,
     }) {
         Ok(output) => output,
         Err(err) => {
