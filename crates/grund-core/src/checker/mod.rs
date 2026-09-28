@@ -39,6 +39,7 @@ mod grounding;
 mod homes;
 mod index;
 mod index_entries;
+mod index_mention;
 mod inline_style;
 mod near_miss;
 mod reference_scope;

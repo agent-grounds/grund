@@ -12,6 +12,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::index_entries::KindIndexEntries;
+use super::index_mention::index_mentions;
 use crate::config::{Config, display_path};
 use crate::grammar::{
     declaration_id_on_line, is_inside_inline_code, never_rewrite_context, render_id,
@@ -386,6 +387,21 @@ pub(super) fn check_kind_indexes(
                 .record(form, citation.line, citation.column);
         }
 
+        // §FS-check.3.18.5.1: one look at the index text, only where a finding is
+        // owed. An unreadable file leaves `lines` empty, so nothing appears in it
+        // and §FS-check.3.18.7's parenthesis stands alone.
+        let mut unentered: Vec<(&Id, &Declaration)> = Vec::new();
+        for (id, decl) in &covered {
+            if !entries.contains_key(id) {
+                unentered.push((*id, *decl));
+            }
+        }
+        let mentioned = if unentered.is_empty() {
+            BTreeSet::new()
+        } else {
+            index_mentions(config, &lines, &unentered)
+        };
+
         for (id, decl) in covered {
             match entries.get(id) {
                 // §FS-check.3.17: an entry that exists and is not a link, at the
@@ -413,18 +429,26 @@ pub(super) fn check_kind_indexes(
                 // own heading — the one line that exists whether or not the
                 // index file does (§DF-index-entry-form.2.6).
                 None => {
+                    // §FS-check.3.18.5.1: "is not listed", said about a line the
+                    // reader is looking at, is a diagnosis the reader argues with.
+                    // Both forms keep §FS-distribution.4.2.3's past-tense release.
+                    let rendered = render_id(&config.grammar, id);
+                    let message = if mentioned.contains(id) {
+                        format!(
+                            "{rendered} appears in {index_display} but not as an entry: an entry is a `{}`-marked Markdown link to the declaration — became an error in grund 0.13.0",
+                            config.marker
+                        )
+                    } else {
+                        format!(
+                            "{rendered} is not listed in {index_display}{absent} — became an error in grund 0.13.0"
+                        )
+                    };
                     report.errors.push(Diagnostic {
                         code: "missing-index-entry",
                         path: Some(decl.file.clone()),
                         line: Some(decl.line),
                         column: None,
-                        // §FS-distribution.4.2.3: the deadline clause is spent, and
-                        // what replaces it reports the release the flip landed in
-                        // — the past-tense form the gate reads.
-                        message: format!(
-                            "{} is not listed in {index_display}{absent} — became an error in grund 0.13.0",
-                            render_id(&config.grammar, id)
-                        ),
+                        message,
                         sites: Vec::new(),
                     });
                 }
