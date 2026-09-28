@@ -87,4 +87,4 @@ The token-cheap read modes — the default `grund <ID>` lead slice ([§FS-show.2
 
 ### 14.1 Token-saving inside `check`
 
-The token economy applies only to the read/query surface: `grund check` diagnostics are never abridged — every dangling reference, every warning, in full located form ([§FS-errors.2.1](FS-errors.md#21-located-finding)) — because a check that hides findings to save tokens would defeat the point. A quiet checker is worse than a verbose one.
+The token economy applies only to the read/query surface: `grund check` findings are never abridged — every dangling reference, every warning, in full located form ([§FS-errors.2.1](FS-errors.md#21-located-finding)) — because a check that hides findings to save tokens would defeat the point. A quiet checker is worse than a verbose one.

@@ -327,7 +327,7 @@ The rules tell agents that behavior is proven by executable tests or cases, and 
 
 ##### 2.3.4.14 Final Check
 
-The rules tell agents to run `grund check` before committing, because dangling references are stop-the-line bugs whose diagnostics name the file and line.
+The rules tell agents to run `grund check` before committing, because dangling references are stop-the-line bugs whose findings name the file and line.
 
 ##### 2.3.4.15 Workspace Members
 

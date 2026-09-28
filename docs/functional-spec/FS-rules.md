@@ -214,7 +214,7 @@ unverifiable from where the command ran is not an invalid one: that is
 
 If any scan or fact producer is incomplete, every closed-world rule conclusion
 about absence or count is suppressed. Already-known positive site findings may
-remain, all ordinary scan diagnostics are retained, and the run keeps exit 2:
+remain, all ordinary scan findings are retained, and the run keeps exit 2:
 no incomplete tree is presented as a complete rule verdict.
 
 ### 4.1 A rule this scope cannot verify
@@ -307,7 +307,7 @@ contains a citation, so citations never define the quantified universe. Every
 physical citation has a distinct site key, preserving multiplicity. `cites`
 uses the immediate enclosing declaration or chapter as `from`; `site_in`
 relates the site to every rule unit that contains it. Unresolved or ambiguous
-citations retain their ordinary diagnostics and contribute no `cites` fact.
+citations retain their ordinary findings and contribute no `cites` fact.
 
 ### 5.2 Family clauses
 
@@ -343,7 +343,7 @@ an existing `[citations]` entry and a rule express the same local bare citing
 kind, declaration-wide unit, modality/level, `cite` relation, normalized target
 entry, and cardinality. If config participates, its existing
 `missing-citation`, `suggested-citation`, `forbidden-citation`, or
-`discouraged-citation` diagnostic wins byte-for-byte: no rule ID is appended
+`discouraged-citation` finding wins byte-for-byte: no rule ID is appended
 and JSON gains no source-list field. `[citations]` remains authored, rendered,
 and interpreted as before.
 
@@ -529,7 +529,7 @@ Fact producers return only complete, immutable, versioned `RuleFacts` as [§FS-r
 defines. The Markdown producer is phase 1's only producer, but the scanner is
 rule-blind and contributes structural records rather than evaluating a rule.
 The logic engine evaluates only `ParsedRule` over `RuleFacts`, deduplicates
-semantic constraints, and emits located diagnostics through the shared report
+semantic constraints, and emits located findings through the shared report
 boundary. It may not know sentence text, Markdown, scanner records, or file
 layout beyond fact anchors. Architecture ground and dependency/replacement
 tests specify the component placement separately.

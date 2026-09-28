@@ -39,7 +39,7 @@ With `--descendants` ([§FS-refs.1](FS-refs.md#1-inputs)) the section filter kee
 
 Nothing else widens with it: the scan, the sort, the rendering, the `note:` of [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) and the exit policy of [§FS-refs.4](FS-refs.md#4-exit-codes) are the ones a bare `--section` query gets.
 
-Output is sorted by `(path, line, column)` ([§FS-errors.4](FS-errors.md#4-determinism)). The list is the command's *result*, so it goes to **stdout** — text lines and `--format json` NDJSON alike, as for `grund list` and `grund cover` ([§FS-errors.1](FS-errors.md#1-streams)). A text line has the `<path>:<line>: <message>` located-finding shape ([§FS-errors.2.1](FS-errors.md#21-located-finding)) so an editor can jump to it, but it is an *answer*, not a diagnostic; stderr is left for errors and the typo note of [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations).
+Output is sorted by `(path, line, column)` ([§FS-errors.4](FS-errors.md#4-determinism)). The list is the command's *result*, so it goes to **stdout** — text lines and `--format json` NDJSON alike, as for `grund list` and `grund cover` ([§FS-errors.1](FS-errors.md#1-streams)). A text line has the `<path>:<line>: <message>` located-finding shape ([§FS-errors.2.1](FS-errors.md#21-located-finding)) so an editor can jump to it, but it is an *answer*, not a finding; stderr is left for errors and the typo note of [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations).
 
 ### 2.1 An ID with no citations
 
@@ -125,7 +125,7 @@ Exit codes are unchanged ([§FS-refs.4](FS-refs.md#4-exit-codes)). `--total` ren
   JSON leave stdout empty. Text uses the bare query-failure shape
   ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)); only invalid format
   keeps the configured-format `hint:`. JSON emits exactly one failed-query
-  diagnostic object on stderr, with `code` `invalid-id` or `ambiguous` and
+  finding object on stderr, with `code` `invalid-id` or `ambiguous` and
   `sites:null`, and emits no hint ([§FS-errors.5](FS-errors.md#5-json-format)).
   It is also exit `1` when the ID has more than one home or its section path
   is claimed by more than one heading: `refs` refuses both as `show` does
@@ -138,7 +138,7 @@ Exit codes are unchanged ([§FS-refs.4](FS-refs.md#4-exit-codes)). `--total` ren
   any other setup or CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
 
 Grund 0.14.0 is the compatibility release. For the two resolver rejections it
-keeps the former exit `2`, the existing `error:` diagnostic, and the same text
+keeps the former exit `2`, the existing `error:` message, and the same text
 hint policy in text and JSON invocations, then appends exactly this raw stderr
 line in both modes:
 

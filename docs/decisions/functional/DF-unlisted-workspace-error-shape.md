@@ -45,7 +45,7 @@ There is no alias to carry. A JSON diagnostic has no second spelling, and emitti
 
 ## 3. Consequences
 
-`check`'s report gains a finding class it did not carry, and no type changes: `CheckOutput.report.errors` holds it where `report.warnings` did, and the code is unchanged, so exhaustive matching over codes is unaffected. `--ignore unlisted-workspace-block` still suppresses the finding, and now suppresses the exit code with it ([§FS-check.1.4](../../functional-spec/FS-check.md#14-selecting-diagnostics-with---only-and---ignore)).
+`check`'s report gains a finding class it did not carry, and no type changes: `CheckOutput.report.errors` holds it where `report.warnings` did, and the code is unchanged, so exhaustive matching over codes is unaffected. `--ignore unlisted-workspace-block` still suppresses the finding, and now suppresses the exit code with it ([§FS-check.1.4](../../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore)).
 
 The editor takes it from the report, which means the parity sweep compares it as an ordinary located finding on both surfaces rather than holding it against a stderr golden ([§FS-lsp.4.1](../../functional-spec/FS-lsp.md#41-how-parity-is-held)). That is the assertion that would catch the two surfaces drifting, and it is worth naming because this is the one finding whose location has two places it could come from.
 

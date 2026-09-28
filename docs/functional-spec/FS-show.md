@@ -192,7 +192,7 @@ If an ID has more than one home — the duplicate-declaration error from [§FS-d
 ambiguous ID: <ID> (declared at <path>:<line>, <path>:<line>[, ...])
 ```
 
-Sites are listed in lexicographic `path:line` order so the message is stable across runs. The repo must be fixed (run `grund check` first) before `show` will return a body. With `--format=json`, those same sites travel in the diagnostic's `sites` field, `[{ path, line }]` in the same order ([§FS-errors.5](FS-errors.md#5-json-format)).
+Sites are listed in lexicographic `path:line` order so the message is stable across runs. The repo must be fixed (run `grund check` first) before `show` will return a body. With `--format=json`, those same sites travel in the finding's `sites` field, `[{ path, line }]` in the same order ([§FS-errors.5](FS-errors.md#5-json-format)).
 
 This shape matches the bare-message form used for `ID not found` and `section not found` ([§FS-show.3](FS-show.md#3-outputs)): all three are queries that found something other than exactly one body. An ambiguous number-only shorthand fails the same way but names candidates rather than sites ([§FS-show.2.2.1.1](FS-show.md#2211-an-ambiguous-shorthand-names-its-candidates)).
 
@@ -214,7 +214,7 @@ The same refusal one level down. If two citable headings inside the selected dec
 ambiguous section: FS-001-login.1 (declared at docs/functional-spec/FS-001-login.md:5, docs/functional-spec/FS-001-login.md:9)
 ```
 
-Sites are in `path:line` order, as in [§FS-show.2.2.1](FS-show.md#221-ambiguous-id), and the exit is `1` with the bare stderr line of [§FS-errors.2.3](FS-errors.md#23-bare-query-failure). The repo must be fixed before `show` will return a body. With `--format=json`, the same sites travel in the diagnostic's `sites` field too ([§FS-errors.5](FS-errors.md#5-json-format)).
+Sites are in `path:line` order, as in [§FS-show.2.2.1](FS-show.md#221-ambiguous-id), and the exit is `1` with the bare stderr line of [§FS-errors.2.3](FS-errors.md#23-bare-query-failure). The repo must be fixed before `show` will return a body. With `--format=json`, the same sites travel in the finding's `sites` field too ([§FS-errors.5](FS-errors.md#5-json-format)).
 
 What this replaces is worse than a pick: the reader used to get *both* headings and both bodies concatenated into one slice, a body no heading in the file spans ([§DF-duplicate-section-path.1](../decisions/functional/DF-duplicate-section-path.md#1-context)).
 
@@ -463,7 +463,7 @@ batch rules do not change any single-coordinate byte, stream, or exit behavior.
 
 ### 3.4 What a failed query prints
 
-A failed query (`1`) prints the bare result line and, where the next step is obvious, one extra `hint:` line on stderr below it — never on stdout. With `--format=json`, stderr instead carries one diagnostic JSON object per [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output), with `path` and `line` set to `null` because the failure has no single source location. The hint each failure gets is [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
+A failed query (`1`) prints the bare result line and, where the next step is obvious, one extra `hint:` line on stderr below it — never on stdout. With `--format=json`, stderr instead carries one finding JSON object per [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output), with `path` and `line` set to `null` because the failure has no single source location. The hint each failure gets is [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
 
 `ambiguous ID`, `ambiguous section` and `broken stub` get no hint: the fix (run `grund check`, then edit the duplicate, renumber one of the two headings, or repair the stub) is already stated in [§FS-show.2.2.1](FS-show.md#221-ambiguous-id) / [§FS-show.2.2.2](FS-show.md#222-ambiguous-section) / [§FS-show.2.3.4](FS-show.md#234-broken-stub) and the message names the sites.
 

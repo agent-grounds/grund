@@ -113,7 +113,7 @@ Size mode likewise prints one row per site that claims a duplicated section coor
 
 ### 3.1 `--format text` (default)
 
-One line per catalog entry on **stdout** (this is a result a caller consumes and pipes, like `grund <ID>` / `grund id` / `grund config show`, not diagnostic output):
+One line per catalog entry on **stdout** (this is a result a caller consumes and pipes, like `grund <ID>` / `grund id` / `grund config show`, not report output):
 
 ```
 $ grund list

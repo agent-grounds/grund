@@ -9,9 +9,9 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 declaration, stub), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding,
 severity, suggestion, caution), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, binding).
 
-## 1. Diagnostic object
+## 1. Finding object
 
-Diagnostics use this shape:
+Findings use this shape:
 
 ```json
 {"severity":"error","path":"docs/functional-spec/FS-001-alpha.md","line":3,"code":"dangling","message":"unknown reference FS-999-missing","sites":null}
@@ -22,9 +22,9 @@ Fields:
 - `severity` is `error` or `warning`. A suggestion, emitted only under `check --suggestions`, carries `"channel": "suggestion"` in place of a `severity` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)).
 - `path` is a relative path string, or `null` when there is no single source location.
 - `line` is 1-indexed, or `null` when `path` is `null`.
-- `code` is a stable kebab-case diagnostic code.
+- `code` is a stable kebab-case finding code.
 - `message` is the same lowercase text used in text mode: no terminal period on a single-clause message, while a run-level caution of more than one clause keeps its sentences' periods ([§FS-errors.3](FS-errors.md#3-message-text)).
-- `sites` is `null` for single-site diagnostics, or a sorted array of `{ "path": <path>, "line": <line> }` for multi-site diagnostics.
+- `sites` is `null` for single-site findings, or a sorted array of `{ "path": <path>, "line": <line> }` for multi-site findings.
 
 `check --format=json` splits these objects across streams as [§FS-errors.5](FS-errors.md#5-json-format) specifies: graph findings as NDJSON on stdout, run-level warnings such as empty scans and line-less mid-scan read failures on stderr. Launch-time CLI failures stay raw `error:` text on stderr even when `--format=json` was requested.
 
@@ -50,7 +50,7 @@ A clean non-empty JSON check emits nothing on stdout and nothing on stderr. Ther
 
 ## 3. Text report ordering
 
-Text diagnostics are grouped by channel as
+Text findings are grouped by channel as
 [§FS-errors.4](FS-errors.md#4-determinism) fixes: every error, then every
 warning, then opt-in suggestions, each group sorted bytewise by `(path, line,
 message)`. Each located line keeps its jump-friendly location prefix and places
@@ -109,7 +109,7 @@ lead/full/brief/toc and JSON values place it before their terminal location pair
 E2E manifests keep their distinct `id`, `kind`, `path` prefix and append it last. It
 never changes `body`, authored section `title`, locations or workspace provenance.
 
-Failed queries emit one diagnostic object on stderr and leave stdout empty; launch-time errors stay raw `error:` text.
+Failed queries emit one finding object on stderr and leave stdout empty; launch-time errors stay raw `error:` text.
 
 ### 4.1 `show --batch --format=json`
 
@@ -126,12 +126,12 @@ generated local-or-qualified spelling for `--all`; `query.section` is the
 explicit or generated section string, or `null`. A success places the unchanged
 current single-show JSON object in `result`, including optional `kind_title` before
 the declaration/section object's terminal `path`, `line` pair, and sets `error` to `null`. A failed
-query sets `result` to `null` and places the unchanged current diagnostic object
+query sets `result` to `null` and places the unchanged current finding object
 in `error`. Every envelope is on stdout in explicit-input or exhaustive order;
 stderr is empty for per-query failures. Run-level failures emit no envelopes
 ([§FS-errors.5](FS-errors.md#5-json-format)).
 
-The batch-only diagnostic for an unknown alias uses code `unknown-project`, the
+The batch-only finding for an unknown alias uses code `unknown-project`, the
 same stable code as citation resolution, and the single-show message without its
 CLI `error:` prefix (including the `known aliases:` or standalone `note:` line).
 
@@ -249,14 +249,14 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 |------|--------|--------|------|
 | clean `check` text | `success\n` | empty | `0` |
 | clean `check --format=json` | empty | empty | `0` |
-| empty scan JSON | empty | one warning diagnostic object | `0` |
-| graph findings text | located finding lines | empty unless run-level diagnostics exist | `1` |
-| graph findings JSON | diagnostic NDJSON | line-less run diagnostics only | `1` |
+| empty scan JSON | empty | one warning finding object | `0` |
+| graph findings text | located finding lines | empty unless run-level findings exist | `1` |
+| graph findings JSON | finding NDJSON | line-less run findings only | `1` |
 | successful `show --format=json` | one result object | empty | `0` |
-| failed `show --format=json` query | empty | one diagnostic object | `1` |
+| failed `show --format=json` query | empty | one finding object | `1` |
 | `refs` resolver rejection, 0.14.0 text or JSON | empty | raw `error:`, optional invalid-format hint, then exact migration warning | `2` |
 | `refs` resolver rejection, 0.15.0 text | empty | bare failure; invalid format alone adds a hint | `1` |
-| `refs` resolver rejection, 0.15.0 JSON | empty | one `invalid-id` or `ambiguous` diagnostic object; no hint | `1` |
+| `refs` resolver rejection, 0.15.0 JSON | empty | one `invalid-id` or `ambiguous` finding object; no hint | `1` |
 | `refs --total` text, cited | one `cited at <n> site(s) across <m> file(s)` line | empty | `0` |
 | `refs --total` text, uncited | one `not cited` line | empty, or the [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) `note:` for an ID neither declared nor cited | `0` |
 | `refs --total --format=json`, any count | exactly one `{"sites":<n>,"files":<m>}` object | as the text rows | `0` |
@@ -264,7 +264,7 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | invalid config during `config validate` | empty | raw `error: <path>:<line>:` text | `1` |
 | invalid config blocking another command | empty | raw `error: <path>:<line>:` text | `2` |
 | semantic value finding, text | located finding lines | empty | `1` |
-| semantic value finding, JSON | diagnostic NDJSON with declaration `sites` | empty | `1` |
-| home JSON that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete | partial findings if any | incomplete-scan diagnostic | `2` |
+| semantic value finding, JSON | finding NDJSON with declaration `sites` | empty | `1` |
+| home JSON that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete | partial findings if any | incomplete-scan finding | `2` |
 
 The three `--total` rows are the whole difference the flag makes to this table: the `refs` resolver-rejection rows above and the incomplete-scan row apply to a `--total` invocation unchanged, because it renders the same scan result rather than running a different query ([§FS-refs.3.4](FS-refs.md#34---total)).

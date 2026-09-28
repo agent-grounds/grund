@@ -121,7 +121,7 @@ The bare `grund.toml` wins, and the `.agents/grund.toml` beside it is read by no
 
 #### 1.1.1 The pair earns one warning
 
-Because a config `grund` ignores is still a config a user edits, `grund check` reports the pair as a warning naming both files ([§FS-check.4.3](FS-check.md#43-redundant-config-pair)), so the losing file is never silently ignored and a config quietly replaced is reported at the first `check` — which is what makes this order safe to state ([§DF-config-file-location.2.2](../decisions/functional/DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair)). It is a warning and not an error because the pair is the ordinary transient state of a move in either direction: warnings never affect the exit code ([§FS-check.2](FS-check.md#2-outputs)), so a repository mid-migration stays green while the diagnostic stays visible. It is the *only* warning the pair earns: the run read the bare `grund.toml`, the location [§FS-config.1.2](FS-config.md#12-the-agents-location-is-deprecated) deprecates the other one in favour of, so nothing about the config in force is left to deprecate.
+Because a config `grund` ignores is still a config a user edits, `grund check` reports the pair as a warning naming both files ([§FS-check.4.3](FS-check.md#43-redundant-config-pair)), so the losing file is never silently ignored and a config quietly replaced is reported at the first `check` — which is what makes this order safe to state ([§DF-config-file-location.2.2](../decisions/functional/DF-config-file-location.md#22-the-bare-grundtoml-wins-a-tie-and-check-warns-about-the-pair)). It is a warning and not an error because the pair is the ordinary transient state of a move in either direction: warnings never affect the exit code ([§FS-check.2](FS-check.md#2-outputs)), so a repository mid-migration stays green while the finding stays visible. It is the *only* warning the pair earns: the run read the bare `grund.toml`, the location [§FS-config.1.2](FS-config.md#12-the-agents-location-is-deprecated) deprecates the other one in favour of, so nothing about the config in force is left to deprecate.
 
 ### 1.2 The `.agents/` location is deprecated
 
@@ -1028,7 +1028,7 @@ Rule entries reuse the citation grammar of [§FS-workspace.1](FS-workspace.md#1-
 
 ##### 3.9.3.1 A malformed qualifier is rejected
 
-A malformed qualifier is rejected with a citation-target diagnostic that names the target's kind and the first invalid qualifier segment; an empty qualifier or segment is named explicitly. A `*` segment is invalid unless it is the whole qualifier, and the diagnostic says so.
+A malformed qualifier is rejected with a citation-target finding that names the target's kind and the first invalid qualifier segment; an empty qualifier or segment is named explicitly. A `*` segment is invalid unless it is the whole qualifier, and the finding says so.
 
 #### 3.9.4 Defaults and precedence
 

@@ -45,7 +45,7 @@ The diagnostic position is the start column of the citation the finding concerns
 
 #### 1.1.2 Findings the core report shapes
 
-The shared core report includes all three value errors for whole declarations and marked roots with the same primary and declaration/component spans as CLI text/NDJSON, so editor diagnostics neither rescan nor reinterpret bindings ([§FS-values.5](FS-values.md#5-resolution-diagnostics-and-exit-status)).
+The shared core report includes all three value errors for whole declarations and marked roots with the same primary and declaration/component spans as CLI text/NDJSON, so editor diagnostics neither rescan nor reinterpret bindings ([§FS-values.5](FS-values.md#5-resolution-findings-and-exit-status)).
 
 Named-section diagnostics are not a parallel editor rule. In an opted-in repository, missing named coordinates, duplicate named coordinates, orphan name-bearing paths, and named heading-depth mismatches are transported from the core report with the same message, severity, line, and range as the CLI. A citation-side finding selects the complete written citation token; an orphan or depth finding selects the complete named heading title. Independent core findings remain independent diagnostics.
 
@@ -166,7 +166,7 @@ For a named coordinate, definition navigates from the whole citation token to th
 
 `textDocument/onTypeFormatting` watches the configured trigger sequence (default `$$`, per [§DF-reference-marker.2.2](../decisions/functional/DF-reference-marker.md#22-trigger)) and replaces it with the marker (default `§`) the moment the trigger is followed by a token matching its kind's effective format ([§FS-config.3.2](FS-config.md#32-id--id-grammar) — `FS-007` under a numbered format, `FS-login` under the slug-only form). This is the live counterpart to `grund fmt`'s bulk trigger pass ([§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker)) and is what makes the marker practical to type without leaving the keyboard.
 
-Where the typed token is a number-only shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) that resolves to exactly one declaration, the server also **expands it**, under either `[reference] shorthand` policy: typing `$$FS-042` leaves `§FS-042-user-login` behind, not a `§FS-042` followed — under the default `canonical` policy — by a diagnostic telling the author to finish the job ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)). This is the live counterpart to [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical), and the authoring surface is where the shorthand, as authoring sugar, pays ([§DF-number-only-citation-shorthand.2.2](../decisions/functional/DF-number-only-citation-shorthand.md#22-where-the-shorthand-is-accepted-and-where-it-is-an-error)).
+Where the typed token is a number-only shorthand ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) that resolves to exactly one declaration, the server also **expands it**, under either `[reference] shorthand` policy: typing `$$FS-042` leaves `§FS-042-user-login` behind, not a `§FS-042` followed — under the default `canonical` policy — by a finding telling the author to finish the job ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)). This is the live counterpart to [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical), and the authoring surface is where the shorthand, as authoring sugar, pays ([§DF-number-only-citation-shorthand.2.2](../decisions/functional/DF-number-only-citation-shorthand.md#22-where-the-shorthand-is-accepted-and-where-it-is-an-error)).
 
 #### 1.4.1 When each rewrite fires
 
@@ -174,7 +174,7 @@ The two rewrites fire on **different keystrokes**, and that separation is what m
 
 #### 1.4.2 What the expansion resolves against
 
-The expansion reads the declaration set from the scan the server already holds for the document's owner ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)), never a fresh scan, so the per-keystroke path stays within [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible). In a workspace that scan holds every member's declarations, and only the edited file's own project is consulted: `§FS-042` typed in one member means that member's `FS-042-…` and never a sibling's ([§FS-workspace.4](FS-workspace.md#4-resolution)). A shorthand that matches no declaration, or more than one, converts the trigger and nothing more: typing never stalls, and the resulting `§FS-042` earns the [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) diagnostic that names the problem. The same is true of a token the author never terminates — `grund check` and `grund fmt` are the backstop, and they agree with the editor about what resolves — except under `[reference] shorthand = "accepted"`, where one that resolves to exactly one declaration is a valid persisted shorthand that neither reports nor rewrites ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation), [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)).
+The expansion reads the declaration set from the scan the server already holds for the document's owner ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)), never a fresh scan, so the per-keystroke path stays within [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible). In a workspace that scan holds every member's declarations, and only the edited file's own project is consulted: `§FS-042` typed in one member means that member's `FS-042-…` and never a sibling's ([§FS-workspace.4](FS-workspace.md#4-resolution)). A shorthand that matches no declaration, or more than one, converts the trigger and nothing more: typing never stalls, and the resulting `§FS-042` earns the [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) finding that names the problem. The same is true of a token the author never terminates — `grund check` and `grund fmt` are the backstop, and they agree with the editor about what resolves — except under `[reference] shorthand = "accepted"`, where one that resolves to exactly one declaration is a valid persisted shorthand that neither reports nor rewrites ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation), [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)).
 
 #### 1.4.3 Where the expansion refuses
 
@@ -264,7 +264,7 @@ Adding a new editor's snippet to the user-facing guide is a small contribution; 
 
 `grund-lsp integrations lsp4ij` is a read-only preview. It prints the complete generated `template.json` object followed by the exact explicit IntelliJ import steps from [§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor) on stdout, writes no file or directory, leaves stderr empty, and exits `0`. `grund-lsp integrations lsp4ij --write <directory>` treats `<directory>` as the LSP4IJ import root and creates exactly `template.json` and `README.md`; success prints `created <directory>` and the import steps on stdout and exits `0`; the written README contains the same explicit import steps as preview. Repeating the write against those two byte-identical files is an idempotent success that prints `unchanged <directory>` and the same steps.
 
-A pre-existing root with a missing, extra, or byte-different entry is a conflict: every existing byte remains untouched, stdout is empty, and one `error:` diagnostic on stderr tells the user to move or remove the root before retrying ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)). There is no force option.
+A pre-existing root with a missing, extra, or byte-different entry is a conflict: every existing byte remains untouched, stdout is empty, and one `error:` message on stderr tells the user to move or remove the root before retrying ([§REQ-no-data-loss.2](../requirements/REQ-no-data-loss.md#2-writers-touch-only-what-they-own)). There is no force option.
 
 #### 2.4.2 Language mappings
 
@@ -276,7 +276,7 @@ The embedded LSP4IJ template contains both `programArgs.default` and `programArg
 
 #### 2.4.4 Help, failures, and the protocol boundary
 
-The generator does not install LSP4IJ, edit JetBrains-owned files, or add editor-specific protocol behavior ([§FS-lsp.5](FS-lsp.md#5-out-of-scope)). Top-level help and `integrations` help explain this boundary, show list, preview, and write forms, and document exits `0` and `2`. `--version` retains its existing output. An unknown template, malformed arguments, invalid discovered config, render failure, path failure, or write conflict leaves stdout empty, prints one `error:` diagnostic on stderr, and exits `2`. Any argument is handled or rejected as batch input and never enters the protocol loop; exactly no arguments retains the stdio lifecycle of [§FS-lsp.2.2](FS-lsp.md#22-lifecycle) with protocol stdout pristine.
+The generator does not install LSP4IJ, edit JetBrains-owned files, or add editor-specific protocol behavior ([§FS-lsp.5](FS-lsp.md#5-out-of-scope)). Top-level help and `integrations` help explain this boundary, show list, preview, and write forms, and document exits `0` and `2`. `--version` retains its existing output. An unknown template, malformed arguments, invalid discovered config, render failure, path failure, or write conflict leaves stdout empty, prints one `error:` message on stderr, and exits `2`. Any argument is handled or rejected as batch input and never enters the protocol loop; exactly no arguments retains the stdio lifecycle of [§FS-lsp.2.2](FS-lsp.md#22-lifecycle) with protocol stdout pristine.
 
 ## 3. Configuration
 
@@ -301,7 +301,7 @@ and contains no parallel rule implementation
 
 ### 4.2 Embedded values
 
-For an embedded value, this parity covers the CLI's marked-root shape and comparison diagnostics, raw `show --toc` hover slice, marker-free semantic title range, component definition target, and existing dotted-token references, highlights, and document links. Shell completion remains the core catalog's ordinary section completion and LSP completion remains reserved; neither surface adds a value-specific candidate.
+For an embedded value, this parity covers the CLI's marked-root shape and comparison findings, raw `show --toc` hover slice, marker-free semantic title range, component definition target, and existing dotted-token references, highlights, and document links. Shell completion remains the core catalog's ordinary section completion and LSP completion remains reserved; neither surface adds a value-specific candidate.
 
 ### 4.3 Off-grammar declarations
 

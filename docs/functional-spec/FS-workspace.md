@@ -390,7 +390,7 @@ A nested block's
 `optional_members` are paths under *that* block's config root, expanded and
 validated by the rules of [§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent) exactly as its `members` are ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)), and its absent
 entries are announced at its own `optional_members` line, rendered against the
-root this run was launched at like every other diagnostic from a block the run
+root this run was launched at like every other finding from a block the run
 did not start in ([§FS-errors.3](FS-errors.md#3-message-text)). There is no outermost-block privilege in either
 direction: a nested block may declare an optional member whose parent block knows
 nothing about it, and an absent one below the run's root costs the same one line
@@ -491,9 +491,9 @@ During `grund check`:
 - an alias path that names, or descends into, an **absent optional member**
   ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)) is neither: the citation is *unverified*, and nothing is reported at
   its site ([§FS-workspace.4.3](FS-workspace.md#43-unverified-is-reported-once-per-namespace)).
-- diagnostics for a known alias render the `<ID>` and section separator with the
+- findings for a known alias render the `<ID>` and section separator with the
   target project's `[id]` config, not the citing project's config. The literal
-  source token remains the scanner's evidence, but the diagnostic names the same
+  source token remains the scanner's evidence, but the finding names the same
   target that resolution attempted.
 
 Qualified citations are deliberately never resolved by path syntax such as
@@ -544,7 +544,7 @@ Value bindings use this resolver without a parallel lookup path. An unqualified 
 ## 5. Command scope
 
 `grund check` run at a workspace root checks the root project (unless
-`include_root = false`, [§FS-workspace.2](FS-workspace.md#2-workspace-configuration)) and all configured members, aggregates diagnostics, and prints the same explicit-channel
+`include_root = false`, [§FS-workspace.2](FS-workspace.md#2-workspace-configuration)) and all configured members, aggregates findings, and prints the same explicit-channel
 `<path>:<line>: <channel>: <message>` shape as a normal check
 ([§FS-check.2.1](FS-check.md#21-report-format)). Paths are rendered relative
 to the workspace root when `[output] relative_paths = true`. `grund check <dir>`
@@ -671,7 +671,7 @@ hold many blocks and the error has to say which one is empty. An explicitly
 empty `members = []` is the same no-members case. A non-empty list whose glob
 entries all match no directories is different: at the `members` line it says
 “the glob `packages/*` matched no directories”, naming the first unmatched glob
-in list order when there is more than one. This diagnostic belongs to the empty
+in list order when there is more than one. This finding belongs to the empty
 block, not to each empty glob independently: an included root or another member
 that does put a project in scope keeps the block valid.
 
@@ -721,7 +721,7 @@ disagreement [§FS-workspace.6.1.8](FS-workspace.md#618-a-block-no-enclosing-blo
 
 Inside `hardware/`, `<§>hardware/sprayer/<ID>` still names what it names at the
 repository root and `<§>final/<ID>` is simply unknown — unknown *here*, which is
-what the narrowed run's diagnostic says instead of proposing a project it does
+what the narrowed run's finding says instead of proposing a project it does
 hold ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)). The
 alternative — naming a subtree's projects from the subtree — would make the
 disagreement of [§FS-workspace.6.1.5.1](FS-workspace.md#6151-the-guarantee-is-quantified-over-the-scope) the rule at *every* scope rather than the recorded
@@ -897,7 +897,7 @@ Four shared rules apply to every command in this section: discovery follows
 the same walk-up rule as `grund check` ([§FS-workspace.8.8](FS-workspace.md#88-discovery-follows-grund-checks-walk-up)), an unqualified ID resolves
 against the current project ([§FS-workspace.8.9](FS-workspace.md#89-the-current-project)), `include_root = false` leaves the root
 alias unknown ([§FS-workspace.8.10](FS-workspace.md#810-include_root--false-leaves-the-root-alias-unknown)), and a malformed alias path is rejected before the scan
-with a diagnostic that names the offending segment ([§FS-workspace.8.11](FS-workspace.md#811-a-malformed-alias-path-names-the-offending-segment)).
+with a finding that names the offending segment ([§FS-workspace.8.11](FS-workspace.md#811-a-malformed-alias-path-names-the-offending-segment)).
 
 ### 8.1 `grund <alias>/<ID>`
 
@@ -952,7 +952,7 @@ the same fact in one step *and* the spelling that resolves.
 ##### 8.1.1.2 The candidate is appended
 
 The candidate comes after the ID, so the line still opens
-`ID not found: <ID>`. That prefix is the diagnostic's identity — it is what
+`ID not found: <ID>`. That prefix is the finding's identity — it is what
 selects the `not-found` code ([§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)) — so a candidate written
 ahead of it would trade that class away for a few characters of prominence.
 
@@ -995,7 +995,7 @@ the hint prints exactly as before.
 
 ##### 8.1.1.8 `--format json` keeps its shape
 
-The diagnostic still carries
+The finding still carries
 `"code":"not-found"`, with the candidate inside `message` ([§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)). The
 hint line has no JSON form under either branch.
 
@@ -1424,12 +1424,12 @@ all agree on this.
 
 ### 8.11 A malformed alias path names the offending segment
 
-A malformed alias path is rejected before the scan, and the diagnostic names
+A malformed alias path is rejected before the scan, and the finding names
 the offending segment — `Sprayer` for `grund hardware/Sprayer/FS-x`, not the
 whole `hardware/Sprayer`. The path is one slug per level ([§FS-workspace.1.1](FS-workspace.md#11-the-alias-path)), so the mistake
 is always in a segment; naming the path against a pattern that forbids `/`
 would read as "a namespace may not contain `/`", which is the opposite of the
 rule. An empty segment (`hardware//FS-x`) has nothing to quote, so the
-diagnostic says a segment is empty; a leading `/` (`/FS-x`) says the path is
+finding says a segment is empty; a leading `/` (`/FS-x`) says the path is
 empty — never empty backticks. An alias path that is *well formed* but names no
 project is the unknown-alias error of [§FS-workspace.8.1.3](FS-workspace.md#813-an-unknown-alias-outside-a-workspace-context), not this one.
