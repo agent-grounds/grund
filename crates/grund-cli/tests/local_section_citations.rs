@@ -72,17 +72,17 @@ fn check_text_reports_owned_missing_unsupported_and_ownerless_local_forms() {
     assert_eq!(
         stdout(&output),
         concat!(
-            "docs/FS-a.md:3: error: local section citation \u{a7}2; write \u{a7}FS-a.2\n",
-            "docs/FS-a.md:4: error: local section citation \u{a7}2.1; write \u{a7}FS-a.2.1\n",
-            "docs/FS-a.md:5: error: local section citation \u{a7}9.9; write \u{a7}FS-a.9.9\n",
+            "docs/FS-a.md:3: error: local section citation \u{a7}2; write \u{a7}FS-a.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`\n",
+            "docs/FS-a.md:4: error: local section citation \u{a7}2.1; write \u{a7}FS-a.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`\n",
+            "docs/FS-a.md:5: error: local section citation \u{a7}9.9; write \u{a7}FS-a.9.9 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`\n",
             "docs/FS-a.md:5: error: missing section FS-a.9.9\n",
-            "docs/FS-a.md:6: error: unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it\n",
-            "docs/FS-a.md:7: error: unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it\n",
-            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it\n",
-            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it\n",
-            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it\n",
+            "docs/FS-a.md:6: error: unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
+            "docs/FS-a.md:7: error: unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
+            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
+            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
+            "docs/FS-a.md:8: error: unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
             "docs/FS-a.md:10: error: missing section FS-a.9\n",
-            "docs/outside.md:3: error: local section citation \u{a7}2 has no enclosing declaration; write a full citation or <§>2 to show the shape without citing it\n",
+            "docs/outside.md:3: error: local section citation \u{a7}2 has no enclosing declaration; write a full citation or <§>2 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
         )
     );
     assert_eq!(stderr(&output), "");
@@ -101,7 +101,7 @@ fn check_json_reports_the_same_local_verdicts() {
     assert_eq!(rows[0]["code"], "local-section-citation");
     assert_eq!(
         rows[0]["message"],
-        "local section citation \u{a7}2; write \u{a7}FS-a.2"
+        "local section citation \u{a7}2; write \u{a7}FS-a.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`"
     );
     assert_eq!(rows[2]["code"], "local-section-citation");
     assert_eq!(rows[3]["code"], "missing-section");

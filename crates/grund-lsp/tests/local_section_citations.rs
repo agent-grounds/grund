@@ -92,14 +92,14 @@ fn local_section_diagnostics_keep_cli_messages_and_exact_token_ranges() {
     let expected = [
         (
             "local-section-citation",
-            "local section citation \u{a7}2; write \u{a7}FS-a.2",
+            "local section citation \u{a7}2; write \u{a7}FS-a.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
             2,
             6,
             8,
         ),
         (
             "local-section-citation",
-            "local section citation \u{a7}9.9; write \u{a7}FS-a.9.9",
+            "local section citation \u{a7}9.9; write \u{a7}FS-a.9.9 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
             3,
             8,
             12,
@@ -107,35 +107,35 @@ fn local_section_diagnostics_keep_cli_messages_and_exact_token_ranges() {
         ("missing-section", "missing section FS-a.9.9", 3, 8, 12),
         (
             "local-section-citation",
-            "unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it",
+            "unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
             4,
             12,
             20,
         ),
         (
             "local-section-citation",
-            "unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it",
+            "unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
             4,
             25,
             30,
         ),
         (
             "local-section-citation",
-            "unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it",
+            "unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
             5,
             10,
             15,
         ),
         (
             "local-section-citation",
-            "unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it",
+            "unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
             5,
             20,
             25,
         ),
         (
             "local-section-citation",
-            "unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it",
+            "unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
             5,
             30,
             39,
@@ -184,7 +184,7 @@ fn ownerless_local_section_is_diagnosed_without_a_navigation_target() {
     assert_eq!(
         diagnostic["message"],
         json!(
-            "local section citation \u{a7}2 has no enclosing declaration; write a full citation or <§>2 to show the shape without citing it"
+            "local section citation \u{a7}2 has no enclosing declaration; write a full citation or <§>2 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0"
         )
     );
     assert_eq!(

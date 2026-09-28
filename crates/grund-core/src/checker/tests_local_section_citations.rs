@@ -1,10 +1,12 @@
 //! Independent form, ownership, syntax, and target-existence findings for local
-//! numeric section citations (§FS-check.3.2, §FS-check.3.24, §AR-checker).
+//! numeric section citations (§FS-check.3.2, §FS-check.3.24, §AR-checker), and the
+//! release pair every one of them names (§FS-check.3.24.1, §FS-check.3.24.2).
 
+use super::references::{LOCAL_SECTION_RULE_PRIOR_RELEASE, LOCAL_SECTION_RULE_RELEASE};
 use super::*;
 use crate::config::load_config;
 use crate::scanner::scan_tree;
-use crate::testing::{numbered_config, test_root, write};
+use crate::testing::{check_run, located_diagnostics, numbered_config, test_root, write};
 
 #[test]
 fn local_section_findings_are_actionable_and_missing_is_independent() {
@@ -37,36 +39,36 @@ fn local_section_findings_are_actionable_and_missing_is_independent() {
     let mut expected = vec![
         (
             "local-section-citation",
-            "local section citation \u{a7}2; write \u{a7}FS-001-alpha.2",
+            "local section citation \u{a7}2; write \u{a7}FS-001-alpha.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
         ),
         (
             "local-section-citation",
-            "local section citation \u{a7}9.9; write \u{a7}FS-001-alpha.9.9",
+            "local section citation \u{a7}9.9; write \u{a7}FS-001-alpha.9.9 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
         ),
         ("missing-section", "missing section FS-001-alpha.9.9"),
         (
             "local-section-citation",
-            "unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it",
+            "unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
         ),
         (
             "local-section-citation",
-            "unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it",
+            "unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
         ),
         (
             "local-section-citation",
-            "unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it",
+            "unsupported local section citation \u{a7}2..1; write a full citation or <§>2..1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
         ),
         (
             "local-section-citation",
-            "unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it",
+            "unsupported local section citation \u{a7}2...; write a full citation or <§>2... to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
         ),
         (
             "local-section-citation",
-            "unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it",
+            "unsupported local section citation \u{a7}2..goals; write a full citation or <§>2..goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
         ),
         (
             "local-section-citation",
-            "local section citation \u{a7}2 has no enclosing declaration; write a full citation or <§>2 to show the shape without citing it",
+            "local section citation \u{a7}2 has no enclosing declaration; write a full citation or <§>2 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
         ),
     ];
     expected.sort_unstable_by_key(|(_, message)| *message);
@@ -127,5 +129,98 @@ fn owned_local_edges_feed_grounding_unused_and_citation_direction_checks() {
             .all(|message| !message.contains("ungrounded")
                 && !message.contains("declared but never cited")),
         "the same edge grounds and counts as use: {messages:?}"
+    );
+}
+
+/// Ordering only, so the `-dev` suffix is dropped rather than modelled — the
+/// same reading `index_rule_releases_are_ordered_and_behind_us` takes of the
+/// pair it holds.
+fn version(text: &str) -> (u64, u64, u64) {
+    let mut parts = text.split('.').map(|part| {
+        part.split(|ch: char| !ch.is_ascii_digit())
+            .next()
+            .unwrap_or("0")
+            .parse::<u64>()
+            .unwrap_or_else(|_| panic!("not a version: {text}"))
+    });
+    (
+        parts.next().unwrap_or(0),
+        parts.next().unwrap_or(0),
+        parts.next().unwrap_or(0),
+    )
+}
+
+/// §FS-check.3.24.1: both halves of the pair are claims about releases that
+/// happened — a verdict this rule *moved between* — written in the past-tense
+/// half of the vocabulary §FS-distribution.4.2 closes, so a tree that printed
+/// either as a version still ahead would be promising rather than reporting.
+/// The same shape `index_rule_releases_are_ordered_and_behind_us` holds the
+/// neighbouring rule's pair to.
+#[test]
+fn local_section_rule_releases_are_ordered_and_behind_us() {
+    let current = version(env!("CARGO_PKG_VERSION"));
+    let prior = version(LOCAL_SECTION_RULE_PRIOR_RELEASE);
+    let arrival = version(LOCAL_SECTION_RULE_RELEASE);
+    assert!(
+        prior < arrival,
+        "{LOCAL_SECTION_RULE_PRIOR_RELEASE} < {LOCAL_SECTION_RULE_RELEASE}"
+    );
+    assert!(
+        prior <= current,
+        "§FS-check.3.24.1 says the form was unchecked in {LOCAL_SECTION_RULE_PRIOR_RELEASE}, which has to be a release that happened (this tree is {})",
+        env!("CARGO_PKG_VERSION")
+    );
+    assert!(
+        arrival <= current,
+        "§FS-check.3.24.1 says the verdict moved in {LOCAL_SECTION_RULE_RELEASE}, which has to be a release that happened rather than one still ahead (this tree is {})",
+        env!("CARGO_PKG_VERSION")
+    );
+}
+
+/// §FS-check.3.24.1's third withholding case: out past `[scan] include`, `fmt`
+/// does not reach the site either, so the command offer goes for the reason
+/// §FS-check.3.14.4 withholds the sibling's — while the tier still leads the
+/// message and the attribution still trails it (§FS-check.3.14.6). The fixture
+/// writes the *same* owned construct twice, once under `include` and once past
+/// it, so the one difference the tier makes is the whole of the diff.
+#[test]
+fn the_out_of_scope_tier_withholds_the_command_but_keeps_the_attribution() {
+    let root = test_root("the_out_of_scope_tier_withholds_the_command_but_keeps_the_attribution");
+    write(
+        &root.join("grund.toml"),
+        concat!(
+            "grund_config_version = 1\n\n",
+            "[reference]\nstrict = true\nrequire_grounding = false\n\n",
+            "[id]\nformat = \"{kind}-{slug}\"\n\n",
+            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs/in\"\nindex = false\n\n",
+            "[scan]\ninclude = [\"docs/in\"]\nextensions = [\"md\"]\n",
+        ),
+    );
+    write(
+        &root.join("docs/in/FS-in.md"),
+        "# FS-in: Under include\n\nOwned \u{a7}2.\n\n## 2. Target\n",
+    );
+    // Out past `include` *and* past the kind home, because §FS-config.3.5.8 makes
+    // every home a configured-scope root: a second file under `docs` would be in
+    // scope however narrow `include` is.
+    write(
+        &root.join("sim/FS-out.md"),
+        "# FS-out: Past include\n\nOwned \u{a7}2.\n\n## 2. Target\n",
+    );
+
+    let full = check_run(&root, true);
+    let local = full
+        .report
+        .errors
+        .iter()
+        .filter(|error| error.code.ends_with("local-section-citation"))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        located_diagnostics(&full.config, local),
+        vec![
+            "docs/in/FS-in.md:3: local section citation \u{a7}2; write \u{a7}FS-in.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
+            "sim/FS-out.md:3: outside [scan] include: local section citation \u{a7}2; write \u{a7}FS-out.2 — unchecked in grund 0.13.1, an error in 0.14.0",
+        ],
+        "§FS-check.3.24.1: the same site keeps the attribution and loses only the command once it is out of the configured scope"
     );
 }

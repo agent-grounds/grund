@@ -33,6 +33,27 @@ pub(crate) enum ReferenceTier {
     OutOfScope,
 }
 
+/// The last release cut before the declaration-local section form became an
+/// error — the "from" half of the pair §FS-check.3.24.1 requires every shape of
+/// the finding to name, in the past tense §FS-distribution.4.2 closes the
+/// vocabulary on. `local_section_rule_releases_are_ordered_and_behind_us` holds
+/// both halves to releases that actually happened, the way
+/// `INDEX_RULE_PRIOR_RELEASE` is held.
+pub(super) const LOCAL_SECTION_RULE_PRIOR_RELEASE: &str = "0.13.1";
+
+/// The release the declaration-local section verdict moved in — the "to" half of
+/// that pair (§FS-check.3.24.1).
+pub(super) const LOCAL_SECTION_RULE_RELEASE: &str = "0.14.0";
+
+/// §FS-check.3.24.1: the clause every shape of the finding ends with. Appended,
+/// never woven in, so the text the rule shipped with survives as a verbatim
+/// contiguous prefix (§FS-check.3.24.2).
+fn local_section_release_attribution() -> String {
+    format!(
+        " — unchecked in grund {LOCAL_SECTION_RULE_PRIOR_RELEASE}, an error in {LOCAL_SECTION_RULE_RELEASE}"
+    )
+}
+
 /// §AR-checker.2.3, §AR-checker.2.4, §AR-checker.2.12: resolve every citation and
 /// report the ones that resolve to nothing. `outside`, when set, restricts the
 /// pass to sites *outside* that scope — the out-of-scope tier's one difference in
@@ -60,18 +81,27 @@ pub(super) fn check_citation_resolution(
             continue;
         }
         let section = cite.section.as_deref().unwrap_or_default();
+        // §FS-check.3.24.1: offered exactly where the next formatter pass would
+        // write this site — the test §FS-check.3.14.4 makes for the sibling rule,
+        // so no finding names a command that would answer `rewrote 0 lines`.
+        let command = if cite.shorthand_rewritable && tier == ReferenceTier::Configured {
+            "; run `grund fmt --write`"
+        } else {
+            ""
+        };
         report.errors.push(Diagnostic {
             code: "local-section-citation",
             path: Some(cite.file.clone()),
             line: Some(cite.line),
             column: Some(cite.column),
             message: format!(
-                "local section citation {}; write {}{}{}{}",
+                "local section citation {}; write {}{}{}{}{}{command}",
                 cite.text.trim(),
                 config.marker,
                 render_qualified_id(&config.grammar, None, &cite.id),
                 config.section_separator,
                 section,
+                local_section_release_attribution(),
             ),
             sites: Vec::new(),
         });
@@ -82,7 +112,7 @@ pub(super) fn check_citation_resolution(
         }
         let written = candidate.text.trim();
         let tail = written.strip_prefix(&config.marker).unwrap_or(written);
-        let message = if candidate.section.is_none() {
+        let mut message = if candidate.section.is_none() {
             format!(
                 "unsupported local section citation {written}; write a full citation or <{}>{tail} to show the shape without citing it",
                 config.marker,
@@ -93,6 +123,10 @@ pub(super) fn check_citation_resolution(
                 config.marker,
             )
         };
+        // §FS-check.3.24.1: both candidate shapes name the releases and neither
+        // ever names the command — §FS-fmt.2.4 leaves them byte-identical
+        // because there is no owner to expand them against.
+        message.push_str(&local_section_release_attribution());
         report.errors.push(Diagnostic {
             code: "local-section-citation",
             path: Some(candidate.file.clone()),
