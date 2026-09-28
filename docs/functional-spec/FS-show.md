@@ -101,9 +101,9 @@ scanning.
 `--batch --all` reads no stdin and discovers its query set from the selected
 scope ([§FS-show.2.6.2](FS-show.md#262-exhaustive-generation)). `--all` requires `--batch`; stdin supplied with `--all` is not a
 query source. Both batch forms use one invocation-level slice mode. `--section`
-is rejected in batch mode because each explicit record owns its section and the
-exhaustive form generates sections. `<path>` and `--path` retain their existing
-equivalence and mutual exclusion.
+is rejected in a batch query because each explicit record owns its section and
+the exhaustive form generates sections. `<path>` and `--path` retain their
+existing equivalence and mutual exclusion.
 
 ## 2. Behavior
 
@@ -418,7 +418,7 @@ query is attempted. In particular, malformed explicit input is diagnosed as
 
 Stdout carries the body (or, with `--format=json`, the result object — one JSON object, never NDJSON, per [§FS-errors.5.1.1](FS-errors.md#511-query-results)). Stderr carries errors. Stdout is empty on error.
 
-Format variants are [§FS-show.3.1](FS-show.md#31-format-variants), link flattening [§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json), batch mode [§FS-show.3.3](FS-show.md#33-batch-mode), what a failed query prints [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints), and each failure's hint [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
+Format variants are [§FS-show.3.1](FS-show.md#31-format-variants), link flattening [§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json), batch queries [§FS-show.3.3](FS-show.md#33-batch-query), what a failed query prints [§FS-show.3.4](FS-show.md#34-what-a-failed-query-prints), and each failure's hint [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
 
 ### 3.1 Format variants
 
@@ -450,9 +450,9 @@ A `[` immediately before a marker-prefixed citation token and `](…)` immediate
 
 Nothing else changes: an ordinary Markdown link in the prose, a citation that is not wrapped, a complete wrapper on a Markdown fence delimiter or within its fenced contents, and a `grund <ID> --format md` body (the self-contained markdown fragment, [§FS-show.3.1.2](FS-show.md#312-md)) are all left exactly as written. Fence-looking lines in a source doc-comment, a JSON value slice, or an E2E manifest do not acquire Markdown fence semantics: those source forms keep their existing interpretation. In particular, a manually authored complete wrapper in a source doc-comment is still flattened even between fence-looking lines, although `fmt --cross-refs` never writes that shape to source ([§FS-fmt.6.1](FS-fmt.md#61-scope)). The flattening is purely textual — it does not resolve the citation, so a dangling wrapper in ordinary prose is flattened just the same and `grund check` still reports it.
 
-### 3.3 Batch mode
+### 3.3 Batch query
 
-Batch mode is the explicit exception to the single-coordinate stream shape. It
+A batch query is the explicit exception to the single-coordinate stream shape. It
 emits one NDJSON envelope on stdout for every well-formed query, in query order;
 query failures move inside their envelope so they cannot hide later outcomes.
 Stderr is empty for all per-query successes and failures. The aggregate exits `0`
