@@ -61,10 +61,14 @@ See §2.1.
 When section 2.1 exists, the citation remains navigable, but `grund check` reports:
 
 ```text
-local section citation §2.1; write §FS-check.2.1
+local section citation §2.1; write §FS-check.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
 ```
 
-`grund fmt --write` expands safe owned sites; protected sites need manual replacement.
+Every form of the finding ends by naming the two releases its verdict moved between, and
+an owned site the formatter would actually write also names the command that clears it
+([§FS-check.3.24.1](docs/functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)) — so one line separates *this tree predates the binary running over
+it* from *this citation is wrong*. `grund fmt --write` expands safe owned sites;
+protected sites need manual replacement and are not offered the command.
 A missing local section also gets the ordinary missing-section error. A site outside
 a declaration is diagnosed without a guessed target and needs a full citation or an
 escape: `<§>2.1` is an inert illustration, with no citation diagnostic or navigation.

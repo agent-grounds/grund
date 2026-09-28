@@ -228,8 +228,8 @@ Both live local citations receive canonical-form errors naming their full
 replacements, alongside the independent missing-section diagnostic:
 
 ```text
-local section citation §2.1; write §FS-check.2.1
-local section citation §9.9; write §FS-check.9.9
+local section citation §2.1; write §FS-check.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
+local section citation §9.9; write §FS-check.9.9 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
 missing section FS-check.9.9
 ```
 
@@ -237,7 +237,9 @@ Definition, references, and highlights follow the existing section
 2.1 edge. The section 9.9 citation also receives an independent missing-section
 diagnostic and has no navigation target. A local path
 outside a declaration is diagnosed without a navigation target, because the
-server never guesses an owner. Run `grund fmt --write` for safe owned sites and
+server never guesses an owner. Both forms end by naming the two releases the verdict
+moved between, and only a site the formatter would write is offered the command
+([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)). Run `grund fmt --write` for safe owned sites and
 review protected or unresolved sites manually. Escaping either token as `<§>2.1`
 or `<§>9.9` makes it an inert illustration with no citation diagnostic or navigation
 ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics), [§FS-lsp.1.3](../functional-spec/FS-lsp.md#13-go-to-definition)).
