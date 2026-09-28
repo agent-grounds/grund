@@ -73,7 +73,8 @@ The complete accepted sentence forms, with representative findings, are:
 Counts are positive decimal integers. Spell one as `one` where shown; numeric
 counts other than one use plural `chapters` or `times`. Object kinds may be local
 (`REQ`), pinned to a workspace member (`api/REQ`), or any member (`*/REQ`), and
-`or` forms one normalized target set.
+`or` forms one normalized target set. A namespaced object kind needs the workspace
+in scope: a run without one says so at the rule's heading and still writes the block.
 
 <!-- BEGIN chapter-rules-refused -->
 Common refusals are intentional and name the exact accepted rewrite:
@@ -117,6 +118,18 @@ collapse semantically and name sorted authorities, for example
 `(RULE-a, RULE-b)`. If an existing `[citations]` entry says the same bare-kind
 rule, the existing config finding wins byte-for-byte and no rule tail is added.
 <!-- END chapter-rules -->
+
+A namespaced object kind — `api/REQ` or `*/REQ` — is resolved against the
+workspace the run's own `grund.toml` declares, so it resolves at the workspace
+root and in any run that loaded that workspace. A run rooted inside a member
+declares no `[workspace]` of its own and holds no namespace at all, so it cannot
+judge the alias either way: `grund check` and `grund init` report it at the
+rule's own heading as `invalid-rule`, the run exits nonzero, and `grund init`
+writes the managed block anyway with the rule's bullet rendered exactly as
+authored. That last part is what lets a member complete a `grund` upgrade: the
+block it writes is byte-for-byte what a run holding the whole workspace would
+write for it. One genuinely invalid rule beside it and nothing is written at
+all, which is the ordinary refusal.
 
 The runnable [`examples/rules/`](../../examples/rules/) repository includes a
 passing and violated instance of all five families, shared-prefix coverage

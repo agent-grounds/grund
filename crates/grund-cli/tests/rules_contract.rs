@@ -12,3 +12,5 @@ mod regressions;
 mod support;
 #[path = "rules_contract/surfaces.rs"]
 mod surfaces;
+#[path = "rules_contract/workspace_scope.rs"]
+mod workspace_scope;

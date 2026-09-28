@@ -1,0 +1,17 @@
+grund_config_version = 1
+project_name = "workshop"
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+
+[[kinds]]
+kind = "OP"
+folder = "docs/ops"
+index = false
+
+[scan]
+include = ["docs"]

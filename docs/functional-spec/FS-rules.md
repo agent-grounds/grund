@@ -22,6 +22,9 @@ level, rule, grounded).
   the declaration's whole body. The rule grammar's subject-unit word.
 - **family** — One accepted rule grammar. A sentence outside every family is refused rather than
   reinterpreted.
+- **unverifiable here** — A rule sentence every component of which is well-formed, whose
+  object namespace the scope the command ran in holds no vocabulary for at all. Not an
+  invalid rule ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)).
 - **facts** — The `RuleFacts` an evaluator reads: the versioned, immutable record of the units,
   chapters and counts one scan produced.
 
@@ -205,12 +208,63 @@ unresolved literal requires the catalog, so after scanning it yields an
 `init` parses and resolves configured rules before writing. Any `invalid-rule`
 is printed in its located form, the existing managed block remains byte-for-
 byte untouched, and the command exits nonzero. It never renders an invalid
-sentence and never silently skips one.
+sentence and never silently skips one. A sentence that is well-formed and only
+unverifiable from where the command ran is not an invalid one: that is
+[§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)'s case, and only that case.
 
 If any scan or fact producer is incomplete, every closed-world rule conclusion
 about absence or count is suppressed. Already-known positive site findings may
 remain, all ordinary scan diagnostics are retained, and the run keeps exit 2:
 no incomplete tree is presented as a complete rule verdict.
+
+### 4.1 A rule this scope cannot verify
+
+An object kind pinned at a namespace (`workshop/OP`) or matched across every
+namespace (`*/OP`) resolves wherever the run holds the workspace that namespace
+belongs to, and that is the workspace the run's own effective config declares —
+never one climbed to from above. `check` and `init` read one vocabulary there,
+so no two commands in one directory disagree about one sentence.
+
+A run whose effective config declares no `[workspace]` holds no namespace at
+all. A member-scoped run is the ordinary case: its effective config is the
+member's own `grund.toml` ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration), [§FS-workspace.5.1](FS-workspace.md#51-a-member-run)), so a pinned or
+any-member object kind names something the scope cannot judge either way. Such
+a sentence is **unverifiable here** rather than invalid. It is reported at the
+rule's own heading, keeps the code `invalid-rule`, takes the wording
+[§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-wording-migration) fixes, and the run still exits nonzero.
+
+#### 4.1.1 The distinction is mechanical
+
+What makes a sentence unverifiable is the absence of every workspace namespace,
+which the run knows without judging anything:
+
+| written object kind | the run's workspace vocabulary | verdict |
+|---|---|---|
+| `workshop/OP` | holds no namespace at all | unverifiable here |
+| `workshop/OP` | holds `workshop`, which declares `OP` | resolves |
+| `workshop/NOPE` | holds `workshop` | invalid rule |
+| `typo/OP` | holds namespaces, none named `typo` | invalid rule |
+| `*/OP`, `OP` not local | holds no namespace at all | unverifiable here |
+| `*/OP`, `OP` not local | holds namespaces, none declaring `OP` | invalid rule |
+| `*/OP`, `OP` declared locally | either | resolves |
+
+The exception is therefore never a relaxation of resolution. Where the scope
+could judge the alias and the answer was no, the sentence stays invalid and
+keeps every consequence the paragraph above gives it.
+
+#### 4.1.2 What `init` writes anyway
+
+`init` withholds the managed-block write for an invalid rule and for nothing
+else. A run whose every unresolved rule is unverifiable here writes the block,
+renders each unverifiable sentence as authored ([§FS-rules.9.1](FS-rules.md#91-one-tree-renders-one-block)), reports each one,
+and exits nonzero: it is the write that is not withheld, not the failure that is
+forgiven. One genuinely invalid rule beside an unverifiable one puts the whole
+run back under [§FS-rules.4](FS-rules.md#4-validation-lifecycle) — nothing written, exit nonzero.
+
+Withholding the write is what made [§REQ-agents-md.2](../requirements/REQ-agents-md.md#2-the-managed-block-stays-current) unsatisfiable from inside a
+member holding such a rule. `check` there reports the managed block out of date
+and names `grund init` as the remedy; a refusal to write leaves no exit from
+that loop, and no edit inside the member opens one.
 
 ## 5. Relational meaning
 
@@ -389,16 +443,30 @@ scan path.
 
 With at least one rule kind, `grund init` renders `### Chapter rules`
 immediately after `### Citation directions`. It repeats the existing
-`must`/`should` legend and emits one bullet per valid rule in qualified rule-ID
-order: the exact authored sentence followed by its live rule citation. A
-rule-enabled block uses v11 on the v10 base. With no rule kind, `init` retains
-the v10 block byte-for-byte. `grund check` re-renders and byte-compares this
-config-derived section; drift is `agents-init`.
+`must`/`should` legend and emits one bullet per rendered rule in qualified
+rule-ID order — every valid rule, and every rule unverifiable here
+([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)) — each bullet the exact authored sentence followed by its live
+rule citation. A rule-enabled block uses v11 on the v10 base. With no rule kind,
+`init` retains the v10 block byte-for-byte. `grund check` re-renders and
+byte-compares this config-derived section whether or not every rule resolved;
+drift is `agents-init`, and the comparison is never skipped in silence
+([§FS-check.3.5.4](FS-check.md#354-no-config-derived-section-is-exempt-from-the-comparison)).
 
 Hard rule findings and `invalid-rule` travel through the same core report to
 the LSP with the same message, code, title/citation range, and severity as CLI
 JSON. The LSP adds no rule parser or evaluator. Suggestions remain CLI-only and
 opt-in.
+
+### 9.1 One tree renders one block
+
+The rendered section is a function of the authored sentences and nothing else,
+so the bullet an unverifiable rule earns is the sentence exactly as its heading
+spells it. A member-scoped `init` therefore writes the bytes a run that held the
+whole workspace would write for that same file, and a `check` from either scope
+compares against the same render ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)). Omitting the
+bullet where the alias could not be judged would make the two scopes disagree
+about one file: the member would write a block its own workspace root then
+reports as drifted.
 
 ## 10. Documentation and executable examples
 
