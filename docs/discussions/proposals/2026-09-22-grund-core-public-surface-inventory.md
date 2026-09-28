@@ -32,14 +32,14 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 | Named by a frontend or its tests | 113 |
 | Reached structurally only | 33 |
 | No repository consumer of either kind | 38 |
-| Disposition keep | 110 |
+| Disposition keep | 109 |
 | Disposition keep, hidden | 13 |
 | Disposition keep, name in the spec | 16 |
-| Disposition hide | 10 |
+| Disposition hide | 11 |
 | Disposition retire with the ramp | 1 |
 | Disposition facade, then retire | 34 |
 
-The two count columns do not line up, and they are not meant to: 38 names have no repository consumer while 78 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 38 names have no repository consumer while 80 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
@@ -162,7 +162,7 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `lsp_hover_with_kind_title` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
 | `lsp_snapshot` | api | visible | related API | none found | none found | keep |
 | `lsp_snapshot_with_metadata` | api | visible | related API | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `lsp_title_hover_body` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
+| `lsp_title_hover_body` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
 | `LspCitation` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspDeclaration` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspFindingRange` | queries | visible | data type of `lsp_snapshot` | none found | via LspSnapshot → LspFindingRange `grund-lsp/src/lib.rs:4` | keep |
@@ -170,7 +170,7 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `LspSnapshotOpts` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspSnapshotWithMetadata` | queries | visible | data type of `lsp_snapshot_with_metadata` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
 | `LspStub` | queries | visible | data type of `lsp_snapshot` | grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `LspUsage` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13`, grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
+| `LspUsage` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | via usage_over_paths → LspUsage `grund-cli/src/cli_refs.rs:150` | keep |
 | `merge_outcomes` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `names_member_id_candidate` | resolver | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | hide |
 | `NamespaceMatch` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
