@@ -224,7 +224,7 @@ The absent key activates no measurement or finding and leaves the existing text 
 
 #### checks.oversized-lead.4: Which sites it judges
 
-An explicit-path check judges only declaration and section sites scanned at that path. `--full` adds its existing out-of-scope reference findings but does not extend this repository policy beyond declarations in the configured scan scope. In a workspace, each member's effective key governs only that member's sites; a member without the key remains silent even when another member opts in.
+An explicit-path check judges only declaration and section sites scanned at that path. `--full` adds its existing out-of-scope citation findings but does not extend this repository policy beyond declarations in the configured scan scope. In a workspace, each member's effective key governs only that member's sites; a member without the key remains silent even when another member opts in.
 
 ## why: Why this exists
 

@@ -33,7 +33,7 @@ grund init [<path>] [--name <name>] [--description <text>] [--docs] [--force] [-
 - `<path>` — directory in which to scaffold; defaults to `.`. Applies to every form of `init`, `--docs` included, and prefixes every emitted path in [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place). Must exist: `init` does not create the target directory, because a missing target is a user error, not something to silently paper over.
 - `--name <name>` — human-readable project name baked into the generated `AGENTS.md` heading when canonical `AGENTS.md` is selected, and into the `grund.toml` `project_name` key when that config is freshly written. An explicit value wins; otherwise `init` uses `project_name` from a config at either supported location in the target, and only when the target has no configured name does it fall back to the basename of `<path>` resolved to an absolute path. An ancestor's config never supplies this default, and an existing target config is never rewritten ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)).
 - `--description <text>` — one-line project description baked into the generated `grund.toml` `project_description` key ([§FS-config.3](FS-config.md#3-schema)), replacing the commented teaching line [§FS-init.2.4](FS-init.md#24-generated-grundtoml) writes by default. No default: `init` never invents a description. A `<text>` containing a line break is a CLI error, mirroring the config-side single-line rule. Like `--name`, the value only lands in a freshly written config — an existing `grund.toml` is never modified ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)).
-- `--docs` — also scaffold the docs the effective config references: [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place) lists the default set, and [§FS-init.1.3](FS-init.md#13---docs-and-the-effective-config) says why each is there and how the config changes it. Off by default — most adopters already have a `docs/` of some shape and want only the entry point and config.
+- `--docs` — also scaffold the docs the effective config names: [§FS-init.2.1](FS-init.md#21-files-written-updated-or-left-in-place) lists the default set, and [§FS-init.1.3](FS-init.md#13---docs-and-the-effective-config) says why each is there and how the config changes it. Off by default — most adopters already have a `docs/` of some shape and want only the entry point and config.
 - `--force` — overwrite a selected canonical `AGENTS.md` and the `--docs` scaffold files where they already exist, never the config ([§FS-init.3.4](FS-init.md#34-with---force), [§FS-init.3.5](FS-init.md#35-what---force-does-not-replace)). Off by default. Existing entrypoints are appended to or updated without it ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)), so it is only needed to reset a generated `AGENTS.md` or a `--docs` scaffold to its canonical bytes.
 - `--dry-run` — preview the run without writing or modifying any file: each `wrote `, `appended `, or `updated ` line of the report ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) is emitted as `would-write `, `would-append `, or `would-update `, while `exists ` lines and the `next:` block are unchanged. Composes with every other flag, including `--force`. Off by default.
 - `--check` — the same preview, taken as a verdict: nothing is written, the report is the one `--dry-run` prints for this tree ([§FS-init.2.2](FS-init.md#22-stdout--stderr)), and the run exits `1` when any line of that report is a `would-…` ([§FS-init.4](FS-init.md#4-exit-codes)). It is what a pre-commit hook or a CI job runs; [§FS-init.1.4](FS-init.md#14-why---check-exists) says why it exists. Composes with every other flag exactly as `--dry-run` does, `--force` included; passing both is redundant, not an error, since both say *write nothing*. Off by default — bare `grund init` still writes.
@@ -267,13 +267,13 @@ The generated managed block is not a literal transcript in this spec ([§FS-init
 
 The block identifies itself as the entrypoint for agents working in the project and instructs them to read it.
 
-##### 2.3.4.2 Reference Scheme
+##### 2.3.4.2 Citation Scheme
 
-The block teaches the configured reference scheme: IDs have the configured shape, citations use the configured marker and optional section path, `grund check` validates citations, `grund list` discovers IDs, `grund <ID>` reads cited declarations or sections, and `grund refs` reports what leans on a declaration.
+The block teaches the configured citation scheme: IDs have the configured shape, citations use the configured marker and optional section path, `grund check` validates citations, `grund list` discovers IDs, `grund <ID>` reads cited declarations or sections, and `grund refs` reports what leans on a declaration.
 
 ##### 2.3.4.3 Cheap Grounding
 
-The block teaches the cheap grounding ladder: use `grund <ID>` as the first read for a bare citation, `grund <ID> --brief` when the heading and first paragraph are enough, `grund <ID> --toc` when section navigation is needed, `grund <ID>.<section>` for section citations, `grund <ID> --full` only when a narrower read is insufficient, `grund list --kind FS,AR` for scoped discovery, and `grund refs <ID> --summary` before a full back-reference listing. Beside that ladder it teaches `grund list --size=words --top 10` as the sweep to run when a specification feels heavy, so the agent can move detail into citable child points before paying for an oversized lead.
+The block teaches the cheap grounding ladder: use `grund <ID>` as the first read for a bare citation, `grund <ID> --brief` when the heading and first paragraph are enough, `grund <ID> --toc` when section navigation is needed, `grund <ID>.<section>` for section citations, `grund <ID> --full` only when a narrower read is insufficient, `grund list --kind FS,AR` for scoped discovery, and `grund refs <ID> --summary` before a full citation listing. Beside that ladder it teaches `grund list --size=words --top 10` as the sweep to run when a specification feels heavy, so the agent can move detail into citable child points before paying for an oversized lead.
 
 ##### 2.3.4.4 Project Map
 
@@ -299,7 +299,7 @@ The rules tell agents to write or update the most-specific functional or archite
 
 ##### 2.3.4.7 Most-Specific Citations
 
-The code back-reference guidance tells agents to cite the most-specific spec point the code or prose realizes: whole behavior on the function, class, or block doc-comment; narrower clauses or decisions inline where they are enforced.
+The code citation guidance tells agents to cite the most-specific spec point the code or prose realizes: whole behavior on the function, class, or block doc-comment; narrower clauses or decisions inline where they are enforced.
 
 ##### 2.3.4.8 Refresh Before Editing
 
@@ -327,7 +327,7 @@ The rules tell agents that behavior is proven by executable tests or cases, and 
 
 ##### 2.3.4.14 Final Check
 
-The rules tell agents to run `grund check` before committing, because dangling references are stop-the-line bugs whose findings name the file and line.
+The rules tell agents to run `grund check` before committing, because dangling citations are stop-the-line bugs whose findings name the file and line.
 
 ##### 2.3.4.15 Workspace Members
 
@@ -377,7 +377,7 @@ When the effective `grund.toml` sets `[reference] conversation = "link"` ([§FS-
 
 ###### 2.3.4.17.1 The marker
 
-Every `§` shown in this section's sentences is the repository's configured `[reference] marker` ([§FS-config.3.1](FS-config.md#31-reference--citation-form)), rendered like the marker anywhere else in the block ([§FS-init.2.3.4.2](FS-init.md#2342-reference-scheme)) — the wording is fixed, the marker is not. A section that hardcoded `§` in a repository configured with another marker would instruct agents to write a token that repository does not treat as a citation at all: `grund check` ignores it under `strict`, so the claim it grounds is silently never verified, while the surrounding block correctly teaches the real marker.
+Every `§` shown in this section's sentences is the repository's configured `[reference] marker` ([§FS-config.3.1](FS-config.md#31-reference--citation-form)), rendered like the marker anywhere else in the block ([§FS-init.2.3.4.2](FS-init.md#2342-citation-scheme)) — the wording is fixed, the marker is not. A section that hardcoded `§` in a repository configured with another marker would instruct agents to write a token that repository does not treat as a citation at all: `grund check` ignores it under `strict`, so the claim it grounds is silently never verified, while the surrounding block correctly teaches the real marker.
 
 ###### 2.3.4.17.2 The form per agent
 
@@ -524,7 +524,7 @@ From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>
 
 ##### 2.3.8.2 The worked example is escaped
 
-The worked example citation is written in the escaped illustration form — `<§>` around the configured marker, per [§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves) — never as a live citation: the example ID is deliberately not a real declaration in the host repo, so a live marker would make the freshly generated block fail the host repo's own `grund check` ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) as a dangling reference wherever the entrypoint falls inside the scan scope.
+The worked example citation is written in the escaped illustration form — `<§>` around the configured marker, per [§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves) — never as a live citation: the example ID is deliberately not a real declaration in the host repo, so a live marker would make the freshly generated block fail the host repo's own `grund check` ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)) as a dangling citation wherever the entrypoint falls inside the scan scope.
 
 ##### 2.3.8.3 A config that fails to load
 

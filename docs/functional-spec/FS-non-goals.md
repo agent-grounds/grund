@@ -24,7 +24,7 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 
 ## 4. Cross-workspace ID renaming
 
-`grund` does not provide a "rename ID" refactoring. The reference scheme says IDs are forever; renaming an ID is a deliberate edit (`Supersedes:` chain), not an automated operation. The optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) intentionally omits this affordance, and no first-party editor wrapper would add it ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)).
+`grund` does not provide a "rename ID" refactoring. The citation scheme says IDs are forever; renaming an ID is a deliberate edit (`Supersedes:` chain), not an automated operation. The optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)) intentionally omits this affordance, and no first-party editor wrapper would add it ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)).
 
 ## 5. Documentation generation
 
@@ -40,12 +40,12 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 
 ## 8. Generalization beyond the ID scheme
 
-`grund` does not validate reference syntaxes outside configured `[[kinds]]` and
+`grund` does not validate citation syntaxes outside configured `[[kinds]]` and
 the ordinary marked citation scheme. A project may model an RFC, ticket, or
 incident as a committed declaration and explicitly materialize it with
 [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot),
 but there is no URL-only external resolver, markerless ticket recognition,
-remote lookup during resolution, or second external-reference catalog.
+remote lookup during resolution, or second external-citation catalog.
 
 The permitted form stays inside the ID scheme: a per-kind grammar parses the
 ID, a local Markdown declaration grounds it, and every reader uses the ordinary
@@ -87,4 +87,4 @@ The token-cheap read modes — the default `grund <ID>` lead slice ([§FS-show.2
 
 ### 14.1 Token-saving inside `check`
 
-The token economy applies only to the read/query surface: `grund check` findings are never abridged — every dangling reference, every warning, in full located form ([§FS-errors.2.1](FS-errors.md#21-located-finding)) — because a check that hides findings to save tokens would defeat the point. A quiet checker is worse than a verbose one.
+The token economy applies only to the read/query surface: `grund check` findings are never abridged — every dangling citation, every warning, in full located form ([§FS-errors.2.1](FS-errors.md#21-located-finding)) — because a check that hides findings to save tokens would defeat the point. A quiet checker is worse than a verbose one.

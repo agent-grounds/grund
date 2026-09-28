@@ -591,7 +591,7 @@ title = "Init scaffold templates: what grund init writes, verbatim"
 
 ##### 3.4.7.1 What it is for
 
-The case it exists for is content that ships verbatim somewhere else: scaffold templates, embedded assets, example configs. Such files cannot be grounded — a `§` citation in one lands in every tree it is copied into as a dangling reference to a declaration that tree does not have — and leaving the kind unconfigured would leave the directory out of the map. [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)'s rule that a home is a scan root `exclude` cannot prune is about a config that says both "this directory matters" and "skip its descendants"; this key is the config saying one thing: listed, not scanned.
+The case it exists for is content that ships verbatim somewhere else: scaffold templates, embedded assets, example configs. Such files cannot be grounded — a `§` citation in one lands in every tree it is copied into as a dangling citation to a declaration that tree does not have — and leaving the kind unconfigured would leave the directory out of the map. [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)'s rule that a home is a scan root `exclude` cannot prune is about a config that says both "this directory matters" and "skip its descendants"; this key is the config saying one thing: listed, not scanned.
 
 ##### 3.4.7.2 Not scanned, however the scan arrives
 

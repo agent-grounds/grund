@@ -241,7 +241,7 @@ A duplicate elsewhere in the declaration is not this error: only a collision on 
 Every coordinate-bearing surface reads the same body-local map ([§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span)):
 direct and batch `show`, exhaustive batch generation, citation and value
 resolution, `refs`, completion, list/size output, duplicate detection, and LSP
-navigation, references, highlights, and hover counts. A heading rejected by
+navigation, citation lookups, highlights, and hover counts. A heading rejected by
 [§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span) can therefore neither resolve nor be suggested, listed, measured, navigated to,
 validated as an embedded-value root, or treated as a duplicate claimant. A
 query for its coordinate has the ordinary `section not found` result and hint

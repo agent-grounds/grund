@@ -1,4 +1,4 @@
-# FS-fmt: grund normalizes references in bulk
+# FS-fmt: grund normalizes citations in bulk
 
 The `fmt` subcommand rewrites the citations in a tree in four passes: trigger sequences become markers, (optionally) bare citations become marker-prefixed, a number-only shorthand is expanded to its full ID where its `shorthand` policy asks ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)), and citations in Markdown are wrapped as links ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)). It is the batch counterpart to the optional LSP server's live trigger transform ([§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform)) and the always-available path: every install of `grund` ships `fmt`, while the LSP server is opt-in. Implements [§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger).
 

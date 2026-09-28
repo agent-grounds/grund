@@ -87,7 +87,7 @@ Per-kind formats ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetc
 
 ### 2.3 Off-grammar declarations
 
-An exact off-grammar declaration retained under [§FS-config.3.2](FS-config.md#32-id--id-grammar) is a normal catalog row, rendered exactly as written with its body-independent metadata, sections, reference count, duplicate flag, and stable sort position. Text and JSON keep their existing schemas. The row cannot disappear merely because `check` also reports its conformance mismatch ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)).
+An exact off-grammar declaration retained under [§FS-config.3.2](FS-config.md#32-id--id-grammar) is a normal catalog row, rendered exactly as written with its body-independent metadata, sections, citation count, duplicate flag, and stable sort position. Text and JSON keep their existing schemas. The row cannot disappear merely because `check` also reports its conformance mismatch ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)).
 
 ### 2.4 Order
 
@@ -118,7 +118,7 @@ One line per catalog entry on **stdout** (this is a result a caller consumes and
 ```
 $ grund list
 AR-event-bus    src/bus.rs:14                 In-process event broadcaster
-FS-check        docs/functional-spec/FS-check.md:1    grund validates every reference in a repo
+FS-check        docs/functional-spec/FS-check.md:1    grund validates every citation in a repo
 FS-login        docs/functional-spec/FS-login.md:1    A player can log in with email
 G-no-dangling-refs  docs/goals.md:7     every cited ID resolves to a declaration
 ```

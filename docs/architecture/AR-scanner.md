@@ -1,6 +1,6 @@
 # AR-scanner: how grund discovers declarations and citations
 
-The scanner is the single tree-walk that produces grund's input data, the `Findings` of section 3, and it holds the one probe over the tree that is no part of that walk: which agent entrypoint files a repository has ([§AR-system.2.5](README.md#25-scanner)). Every check in [§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-reference-in-a-repo) and every retrieval in [§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id) derives from what the scanner finds. Speed ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)) is set here.
+The scanner is the single tree-walk that produces grund's input data, the `Findings` of section 3, and it holds the one probe over the tree that is no part of that walk: which agent entrypoint files a repository has ([§AR-system.2.5](README.md#25-scanner)). Every check in [§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo) and every retrieval in [§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id) derives from what the scanner finds. Speed ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)) is set here.
 
 ## placement: Where the scanner sits
 
