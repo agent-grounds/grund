@@ -54,6 +54,13 @@
 //! first copy upward (§FS-check.3.5). Both copies are here now, so all three
 //! callers read one module downward; what differs between them is in that file's
 //! own doc comment.
+//!
+//! `section_paths.rs` is the newest, and came here for the same reason: whether
+//! one section coordinate lies beneath another is a fact about the section
+//! grammar and its component boundary (§FS-config.3.3.4), and both readers of
+//! it sit above — `grund refs --descendants` in the api (§FS-refs.2) and the
+//! declaration-side title in the editor queries (§FS-lsp.1.3.1). Written twice
+//! it would be written wrong once, so it is written here.
 
 mod anchors;
 mod comment_block;
@@ -69,6 +76,7 @@ mod inline_note_layout;
 mod managed_block;
 mod near_miss;
 mod never_rewrite;
+mod section_paths;
 mod settings;
 mod shorthand;
 mod source_line;
@@ -118,6 +126,7 @@ pub(crate) use never_rewrite::{
     is_inside_inline_code, is_inside_markdown_link_destination, never_rewrite_context,
     never_rewrite_context_in, qualified_suppressed_in_source, string_literal_in,
 };
+pub(crate) use section_paths::path_at_or_under;
 pub(crate) use settings::{AliasGrammar, GrammarKind, LexicalSettings};
 pub(crate) use shorthand::{
     IdArgError, ParsedId, ShorthandIndex, parse_id_arg_with_shorthand, resolve_shorthand_citations,
@@ -141,3 +150,5 @@ mod tests_comment_block_position;
 mod tests_fmt_suppression;
 #[cfg(test)]
 mod tests_inline_note_layout;
+#[cfg(test)]
+mod tests_section_paths;
