@@ -358,7 +358,7 @@ structural code on that channel.
 
 ### 7.1 Invalid rule
 
-`invalid-rule` anchors at the rule heading. A configured parse failure is:
+`invalid-rule` is located at the rule heading. A configured parse failure is:
 
 ```text
 <RULE-ID> is not a valid rule: <reason>; accepted form: <canonical template>
@@ -374,7 +374,7 @@ For an ad-hoc rule, `<RULE-ID>` is `--rule`.
 
 ### 7.2 Chapter cardinality
 
-`chapter-cardinality` anchors at the subject declaration title and includes
+`chapter-cardinality` is located at the subject declaration title and includes
 zero and surplus chapters:
 
 ```text
@@ -391,7 +391,7 @@ An ordinary hard `at least one` rule with zero matches reuses
 ```
 
 Other ordinary counts and every per-target `cite each` miss use
-`citation-cardinality`, anchored at the subject declaration or chapter title:
+`citation-cardinality`, located at the subject declaration or chapter title:
 
 ```text
 <subject> cites <target-set> <actual> times; <RULE-ID> requires <count>
@@ -402,7 +402,7 @@ is emitted per off-count target.
 
 ### 7.4 Inbound citation cardinality
 
-`uncited-unit` anchors at the subject declaration or chapter title:
+`uncited-unit` is located at the subject declaration or chapter title:
 
 ```text
 <subject> is cited by <source-set> <actual> times; <RULE-ID> requires <count>

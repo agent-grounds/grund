@@ -39,7 +39,7 @@ fn check_anchors(root: &Path) -> Vec<(Option<String>, Option<usize>)> {
     .collect()
 }
 
-/// §FS-check.4.7.7: "It **anchors at the block's `members` line**." The fixture is
+/// §FS-check.4.7.7: "It **is located at the block's `members` line**." The fixture is
 /// the shape of the `workspace-member-absorbs-scan-check` case — a block whose
 /// one scan root is also its one member — with the `members` key put on a line
 /// no other key could be mistaken for.
@@ -64,7 +64,7 @@ fn an_absorbed_scan_anchors_at_the_blocks_members_line() {
     );
 }
 
-/// §FS-check.4.10.11: "It **anchors at the block's `include_root` line**" — the key
+/// §FS-check.4.10.11: "It **is located at the block's `include_root` line**" — the key
 /// that took the block's files out of every scan is the line to open, which
 /// neither the `members` line above it nor the `[workspace]` header is.
 #[test]

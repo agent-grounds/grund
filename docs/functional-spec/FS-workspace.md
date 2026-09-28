@@ -816,8 +816,8 @@ The warning of [§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-mem
 one of the run's warnings, carried on whatever the walking command returns and
 rendered by each frontend rather than written to a stream from inside the
 engine, so an editor publishes it too ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
-It anchors at the config it could not read — that file and no line, because the
-`members` value whose line would be the anchor is exactly what could not be
+It is located at the config it could not read — that file and no line, because
+the `members` value whose line would be the anchor is exactly what could not be
 obtained — and the bytes the CLI prints are unchanged.
 
 #### 6.1.8 A block no enclosing block lists is outside the chain
