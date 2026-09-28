@@ -35,7 +35,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 use std::time::{Duration, Instant};
-use support::{send_message, start_server, wait_for_exit};
+use support::{file_uri, hover_result, send_message, start_server, test_root, wait_for_exit};
 
 /// Fewer compared cases than this is a broken sweep, not a smaller corpus: the
 /// corpus compares well over a hundred, and no rewrite of a handful of cases
@@ -316,4 +316,108 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
         "only {compared} case(s) compared; the sweep expects at least {MIN_COMPARED_CASES} \
          (refused: {refused:?}; no config: {no_config:?})"
     );
+}
+
+/// The declaration-side title hover's clause and the bytes
+/// `grund refs <ID> --total` prints, over one tree, at the three count shapes
+/// §FS-lsp.1.2.4 words differently (§FS-refs.3.4).
+///
+/// §FS-lsp.1.2.5 says the hover clause carries "the CLI's numbers rendered in
+/// an editor, not a second tally kept beside them", and §FS-lsp.4 promises the
+/// same engine behind a different transport. Until `--total` existed there was
+/// no terminal spelling to hold that against, so the promise was untestable at
+/// the transport level and only the in-crate fold comparison held it. This is
+/// the test that catches the day the two sentences diverge, and it belongs in
+/// the file whose whole subject is that they may not (§AR-lsp.5).
+///
+/// Held on the rendered bytes rather than on the numbers: re-wording the CLI's
+/// clause in a second place is exactly the failure §FS-refs.3.4 forbids, and a
+/// comparison of two integers would not see it.
+#[test]
+fn title_hover_clause_is_what_refs_total_prints() {
+    let grund = binaries::grund();
+    let _ = support::SERVER_BINARY.set(binaries::grund_lsp());
+    let root = test_root("title-hover-clause-is-refs-total");
+    let specs = root.join("docs/functional-spec");
+    fs::create_dir_all(&specs).expect("create functional-spec dir");
+    // Plural: three sites across two files. Singular: one site in one file.
+    // Zero: declared, cited nowhere — the `not cited` shape.
+    fs::write(
+        specs.join("FS-001-alpha.md"),
+        "# FS-001-alpha: Alpha\n\nLead.\n",
+    )
+    .expect("write alpha");
+    fs::write(
+        specs.join("FS-002-beta.md"),
+        "# FS-002-beta: Beta\n\nTwice: \u{a7}FS-001-alpha and \u{a7}FS-001-alpha.\n",
+    )
+    .expect("write beta");
+    fs::write(
+        specs.join("FS-003-gamma.md"),
+        "# FS-003-gamma: Gamma\n\nLead.\n",
+    )
+    .expect("write gamma");
+    fs::write(
+        root.join("docs/notes.md"),
+        "A note on \u{a7}FS-001-alpha and on \u{a7}FS-002-beta.\n",
+    )
+    .expect("write notes");
+
+    let (mut child, mut stdin, receiver) = start_server(&root);
+    let mut compared = 0;
+    for (request_id, id) in [
+        (2i64, "FS-001-alpha"),
+        (3, "FS-002-beta"),
+        (4, "FS-003-gamma"),
+    ] {
+        let path = specs.join(format!("{id}.md"));
+        let hover = hover_result(
+            &mut stdin,
+            &receiver,
+            &mut child,
+            request_id,
+            &file_uri(&path),
+            0,
+            5,
+        );
+        let body = hover["contents"]["value"]
+            .as_str()
+            .unwrap_or_else(|| panic!("hover body for {id} in {hover:?}"));
+        // The title-and-usage line is the first; §FS-lsp.1.2.8's kind metadata
+        // follows a blank line. The title is a code span, so splitting from the
+        // right for the clause cannot cut inside it.
+        let title_line = body.lines().next().expect("title line");
+        let (_, clause) = title_line
+            .rsplit_once(" \u{2014} ")
+            .unwrap_or_else(|| panic!("no usage clause in {title_line:?}"));
+
+        let total = Command::new(&grund)
+            .args(["refs", id])
+            .arg(&root)
+            .arg("--total")
+            .output()
+            .unwrap_or_else(|err| panic!("run grund refs {id} --total: {err}"));
+        assert!(
+            total.status.success(),
+            "`grund refs {id} --total` failed: {}",
+            String::from_utf8_lossy(&total.stderr)
+        );
+        assert_eq!(
+            String::from_utf8_lossy(&total.stdout),
+            format!("{clause}\n"),
+            "§FS-lsp.1.2.5: the hover clause and `grund refs {id} --total` are one sentence"
+        );
+        compared += 1;
+    }
+    send_message(
+        &mut stdin,
+        json!({ "jsonrpc": "2.0", "id": 9, "method": "shutdown", "params": null }),
+    );
+    send_message(
+        &mut stdin,
+        json!({ "jsonrpc": "2.0", "method": "exit", "params": null }),
+    );
+    wait_for_exit(&mut child);
+    // A loop that hovered nothing would hold §FS-lsp.4 vacuously.
+    assert_eq!(compared, 3, "every count shape must be compared");
 }
