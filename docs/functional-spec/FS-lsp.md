@@ -222,7 +222,7 @@ Users do not run `grund-lsp` directly. The editor's LSP client spawns it as a ch
 
 The folders in an LSP `initialize` request are config-discovery starts, not scan boundaries. For every `workspaceFolders` entry, the server walks upward with the same discovery rules as the CLI ([§FS-lsp.3](FS-lsp.md#3-configuration)); when it finds a Grund config, it scans that config's project root so configured `[scan] include` paths and sibling source trees remain visible even when the editor opened only a nested directory. If `workspaceFolders` is absent or empty, the deprecated `rootUri` is the discovery start, then the server process's current directory as the final fallback. With no discovered config under either name, the discovery start itself remains the zero-config scan root, with the canonical defaults ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)).
 
-Entries that discover the same project root share one scan. Entries that discover different roots each get their own scan, and independent projects are never merged: identical local IDs in two editor folders are unrelated namespaces, and a lookup answered from the wrong one would be a wrong citation ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
+Entries that discover the same project root share one scan. Entries that discover different roots each get their own scan, and independent projects are never merged: identical local IDs in two editor folders belong to unrelated projects, and a lookup answered from the wrong one would be a wrong citation ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
 
 #### 2.2.2 One project answers each document
 
@@ -232,7 +232,7 @@ One owner per document is also what keeps diagnostics honest: where nested proje
 
 #### 2.2.3 A document no project answers
 
-A document reachable only below a directory symlink whose canonical target is outside the project root is pruned by [§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed), so that project publishes no diagnostics for it and hover and navigation return no result. If multiple projects only reach the same external document through their scans, none owns it: choosing by folder order or root shape would guess between independent namespaces, so requests return no result and neither project's diagnostics are published for that file ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
+A document reachable only below a directory symlink whose canonical target is outside the project root is pruned by [§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed), so that project publishes no diagnostics for it and hover and navigation return no result. If multiple projects only reach the same external document through their scans, none owns it: choosing by folder order or root shape would guess between independent projects, so requests return no result and neither project's diagnostics are published for that file ([§REQ-no-wrong-citation](../requirements/REQ-no-wrong-citation.md#req-no-wrong-citation-a-citation-never-resolves-to-a-guess)).
 
 #### 2.2.4 An unusable folder is skipped
 

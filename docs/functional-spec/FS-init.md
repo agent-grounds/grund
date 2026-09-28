@@ -277,7 +277,7 @@ The block teaches the cheap grounding ladder: use `grund <ID>` as the first read
 
 ##### 2.3.4.4 Project Map
 
-The block describes the configured kind homes from the effective `grund.toml` as a raw-readable Markdown link list (`- [KIND](home): Title`), so the generated instructions name and link the host repo's actual artifact layout instead of hard-coding the default layout or relying on table rendering. A kind that is a place rather than an ID namespace gets the row [§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places) gives it, or none.
+The block describes the configured kind homes from the effective `grund.toml` as a raw-readable Markdown link list (`- [KIND](home): Title`), so the generated instructions name and link the host repo's actual artifact layout instead of hard-coding the default layout or relying on table rendering. A kind that is a place rather than an ID space gets the row [§FS-init.2.3.4.4.1](FS-init.md#23441-rows-for-places) gives it, or none.
 
 The scan scope (`[scan].include` / `[scan].exclude`) is *not* surfaced here — it is configuration an agent never needs to read inline, since `grund <ID>`, `grund list`, and `grund refs` apply it transparently. Where the init target lies in a workspace, whether or not its own config declares `[workspace]`, the sibling [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) block names the workspace projects; the Project Map itself describes the *current* project's declaration homes only and is unchanged in workspace mode.
 
@@ -365,7 +365,7 @@ When a foreign project's `AGENTS.md` exists on disk at the time `init` runs, the
 
 `init` does **not** prompt for, infer, or configure workspace topology. It does not add a `[workspace]` block to a config that lacks one. It does not write or modify any file under a member directory other than the member it was invoked in — even when invoked at the workspace root, the Workspace members section is the only artifact `init` produces about sibling members; bootstrapping a member's own `AGENTS.md` remains a separate `init` invocation inside that member. Out of scope for v1: a reciprocal member→root pointer, and any collapse-to-alias-only rendering for very large workspaces.
 
-##### 2.3.4.16 Project Namespaces
+##### 2.3.4.16 Project Boundaries
 
 The block always emits a `### Project namespaces` section that teaches agents the workspace namespace concept before they start creating or citing declarations. It distinguishes project namespaces from documentation folders; names the current project as the local namespace; tells agents to create or use a separate namespace only for independently checked apps, packages, services, or subprojects; and gives the operational steps for that split: create the member's `grund.toml`, add it to the workspace root's `[workspace] members`, run `grund init` in the member, and set a stable `project_name`. It also teaches the cross-namespace citation form `<marker>alias/<ID>`, one alias segment per workspace level, and says full cross-namespace validation runs from the workspace root with `grund check` ([§FS-workspace.1](FS-workspace.md#1-citation-syntax), [§FS-workspace.2](FS-workspace.md#2-workspace-configuration), [§FS-workspace.5](FS-workspace.md#5-command-scope)).
 
@@ -433,7 +433,7 @@ The clauses follow the subject, joined by `; ` in the order `must`, `should`, `m
 
 ##### 2.3.5.4 Targets
 
-Targets render as prose, never as rule grammar. Alternatives inside one entry join with "or", taking the Oxford comma from three on (`FS, AR, or RM`); conjunctive entries join with "and", and where there is more than one entry an entry that has alternatives of its own is parenthesised — `must = ["FS|GOAL", "AR"]` renders `(FS or GOAL) and AR`, which has one reading. A pinned alias renders exactly as spelled (`api/AR`), because that is how the citation is written; `*/AR`, which is rule grammar and never a citation ([§FS-config.3.9.3](FS-config.md#393-namespace-matching)), renders as `AR in any project`.
+Targets render as prose, never as rule grammar. Alternatives inside one entry join with "or", taking the Oxford comma from three on (`FS, AR, or RM`); conjunctive entries join with "and", and where there is more than one entry an entry that has alternatives of its own is parenthesised — `must = ["FS|GOAL", "AR"]` renders `(FS or GOAL) and AR`, which has one reading. A pinned alias renders exactly as spelled (`api/AR`), because that is how the citation is written; `*/AR`, which is rule grammar and never a citation ([§FS-config.3.9.3](FS-config.md#393-alias-matching)), renders as `AR in any project`.
 
 ##### 2.3.5.5 Defaults
 
