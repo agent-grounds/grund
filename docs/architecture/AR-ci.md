@@ -56,7 +56,7 @@ failures of the local or network check. This makes a durable default-branch URL
 checkable on the branch that first adds its target without accepting a 404 or
 pinning a shipped address to that branch.
 
-`--full` ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)) is here because a citation in a file outside `grund`'s own `[scan] include` and every kind home ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-walked)) is invisible to the plain run rather than merely unchecked — the drift this repository asks its users to guard against is one it can suffer too. The flag is purely additive, so the gate still asserts everything it asserted before.
+`--full` ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)) is here because a citation in a file outside `grund`'s own `[scan] include` and every kind home ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)) is invisible to the plain run rather than merely unchecked — the drift this repository asks its users to guard against is one it can suffer too. The flag is purely additive, so the gate still asserts everything it asserted before.
 
 ### 3.2 The managed block's text
 

@@ -12,4 +12,4 @@ Code excerpts are verbatim from this repository, with elisions marked. Command o
 
 ## 3. The README's citations are checked
 
-`README.md` is named in `[scan] include` ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-walked)), so every `§`-marked citation in its prose resolves under `grund check` like any other scanned file's. Illustrations that must not resolve stay inside fenced code blocks, which the scanner ignores.
+`README.md` is named in `[scan] include` ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)), so every `§`-marked citation in its prose resolves under `grund check` like any other scanned file's. Illustrations that must not resolve stay inside fenced code blocks, which the scanner ignores.

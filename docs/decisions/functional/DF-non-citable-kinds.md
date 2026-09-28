@@ -62,7 +62,7 @@ Units are built from citations, so a file with none produces no unit and `must` 
 
 ### 2.6 A configured home is in the scan scope by construction
 
-`include` was the single answer to what gets walked, and a `folder` outside it was never read: its declarations did not exist and its citations were **invisible rather than dangling** ([§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-walked)). That trap predates this decision and applies to every kind, but a kind whose entire content is "this directory matters" would have hit it on its first line of config, so it is closed here rather than filed as a separate rule nobody would reach for. `include` keeps its job: the extra roots.
+`include` was the single answer to what gets walked, and a `folder` outside it was never read: its declarations did not exist and its citations were **invisible rather than dangling** ([§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-scanned)). That trap predates this decision and applies to every kind, but a kind whose entire content is "this directory matters" would have hit it on its first line of config, so it is closed here rather than filed as a separate rule nobody would reach for. `include` keeps its job: the extra roots.
 
 ## 3. Consequences
 

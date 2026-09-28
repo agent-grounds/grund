@@ -15,7 +15,7 @@ binding, snapshot).
 grund cover [<path>] [--format text|json]
 ```
 
-- `<path>` — directory or file whose tree is scanned. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). It bounds the **walk**, exactly as it does for `grund check`, and that is what decides the scope: every project at a workspace root, that member alone inside a member, that subtree alone below a config root ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
+- `<path>` — directory or file whose tree is scanned. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). It bounds the **scan**, exactly as it does for `grund check`, and that is what decides the scope: every project at a workspace root, that member alone inside a member, that subtree alone below a config root ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
 - `--format text|json` — output shape ([§FS-cover.3](FS-cover.md#3-outputs)). Default `text`. An unsupported value is answered before anything is loaded ([§FS-cover.1.1](FS-cover.md#11-an-unsupported---format-is-answered-before-the-load)).
 
 `cover` is a query, like `list` and `refs` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). It reads no git history ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)) and parses no AST ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).

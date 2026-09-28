@@ -264,15 +264,15 @@ A declaration is found on a "declaration line" — a line that matches the decla
 
 ##### 2.3.1.1 Find the open boundary
 
-Walk **backwards** from the declaration line over consecutive lines that are part of the same comment construct:
+Scan **backwards** from the declaration line over consecutive lines that are part of the same comment construct:
 
 - For line-style comments (`//`, `///`, `//!`, `#`, `;`, `--`): consecutive lines whose first non-whitespace character matches the same comment prefix family. A blank line ends the block. A line whose first non-whitespace character is not a comment marker ends the block.
-- For block-style comments (`/* … */`, `/** … */`): walk backward until the opener is found (`/*` or `/**`). The opener line itself is part of the block.
-- For Python triple-quoted docstrings: walk backward until the opening `"""` (or `'''`). The opener line is part of the block.
+- For block-style comments (`/* … */`, `/** … */`): scan backward until the opener is found (`/*` or `/**`). The opener line itself is part of the block.
+- For Python triple-quoted docstrings: scan backward until the opening `"""` (or `'''`). The opener line is part of the block.
 
 ##### 2.3.1.2 Find the close boundary
 
-Walk **forwards** from the declaration line by the symmetric rules:
+Scan **forwards** from the declaration line by the symmetric rules:
 
 - Line-style: until a blank line or a non-comment line.
 - Block-style: until the closing `*/`. The closer line is part of the block.
@@ -280,7 +280,7 @@ Walk **forwards** from the declaration line by the symmetric rules:
 
 ##### 2.3.1.3 Terminate early on another declaration
 
-Walking in **either direction**, if another declaration line of any ID is encountered, the block ends at the line before it. This is what allows two adjacent source declarations to live in the same comment without bleeding into each other — backward termination keeps a later declaration's block from absorbing the previous declaration's tail; forward termination keeps the previous declaration's block from absorbing the next declaration's head.
+Scanning in **either direction**, if another declaration line of any ID is encountered, the block ends at the line before it. This is what allows two adjacent source declarations to live in the same comment without bleeding into each other — backward termination keeps a later declaration's block from absorbing the previous declaration's tail; forward termination keeps the previous declaration's block from absorbing the next declaration's head.
 
 #### 2.3.2 Stripping comment markers
 

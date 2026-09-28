@@ -64,19 +64,19 @@ This list is the ownership boundary for the one writer that rewrites text anywhe
 
 The string-literal exclusion is deterministic, not heuristic. For every candidate transform site on a source-file line:
 
-1. Walk the line left-to-right from column 0 up to the candidate's start column.
+1. Scan the line left-to-right from column 0 up to the candidate's start column.
 2. Track an open-quote state per `'`, `"`, and `` ` ``. Toggling rules: an unescaped (no immediately preceding `\`) quote of a given kind toggles its state, but only when no other kind is currently open.
 3. If any quote state is open at the candidate's start column, the candidate is inside a string literal and is **not** rewritten.
 
-Markdown files (`.md`) are not subject to this rule — they have no string literals. The rule applies only to files matched by the `extensions` list excluding `md`. In a Python docstring the walk runs over the docstring's content rather than the raw line ([§FS-fmt.2.3.1.1](FS-fmt.md#2311-a-python-docstring-is-walked-for-its-content)).
+Markdown files (`.md`) are not subject to this rule — they have no string literals. The rule applies only to files matched by the `extensions` list excluding `md`. In a Python docstring the scan runs over the docstring's content rather than the raw line ([§FS-fmt.2.3.1.1](FS-fmt.md#2311-a-python-docstring-is-scanned-for-its-content)).
 
 This gives two correctly-configured installs identical output on identical input ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 
-##### 2.3.1.1 A Python docstring is walked for its content
+##### 2.3.1.1 A Python docstring is scanned for its content
 
-In a `.py` file scanned with `[scan] docstring_python` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)), a `"""` / `'''` delimiter is doc-comment syntax rather than a quote — the same reading that makes a docstring a place a citation, or a whole declaration, may live ([§FS-check.1.1](FS-check.md#11-recognized-citations)). So the line this walk reads is the docstring's **content**, the delimiters stripped and the candidate's start column measured from there. A citation on the opening line, in a one-line docstring, or on the closing line is then judged exactly like one on an interior line, and exactly like one in a `#` comment: a quote written *inside* the content still opens and closes as it does anywhere else, and the delimiter never does.
+In a `.py` file scanned with `[scan] docstring_python` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)), a `"""` / `'''` delimiter is doc-comment syntax rather than a quote — the same reading that makes a docstring a place a citation, or a whole declaration, may live ([§FS-check.1.1](FS-check.md#11-recognized-citations)). So the line this scan reads is the docstring's **content**, the delimiters stripped and the candidate's start column measured from there. A citation on the opening line, in a one-line docstring, or on the closing line is then judged exactly like one on an interior line, and exactly like one in a `#` comment: a quote written *inside* the content still opens and closes as it does anywhere else, and the delimiter never does.
 
-A qualifying top-level assigned triple-quoted string is data, not that docstring syntax ([§FS-check.1.1.3.1](FS-check.md#1131-assigned-python-triple-quoted-data)). Every formatter pass treats its complete raw-column span as never-rewrite data and preserves those bytes exactly, including triggers, shorthand, markers, headings, value syntax, delimiters, and escapes. A same-line tail is again ordinary source text after the closing delimiter, and later real docstrings are walked for their content as usual. The LSP on-type transform uses the same spans, so neither editor nor bulk formatting can rewrite assigned data while the other refuses it.
+A qualifying top-level assigned triple-quoted string is data, not that docstring syntax ([§FS-check.1.1.3.1](FS-check.md#1131-assigned-python-triple-quoted-data)). Every formatter pass treats its complete raw-column span as never-rewrite data and preserves those bytes exactly, including triggers, shorthand, markers, headings, value syntax, delimiters, and escapes. A same-line tail is again ordinary source text after the closing delimiter, and later real docstrings are scanned for their content as usual. The LSP on-type transform uses the same spans, so neither editor nor bulk formatting can rewrite assigned data while the other refuses it.
 
 Without this one docstring gets three verdicts by line — the delimiter opens a literal on the opening line, closes nothing on an interior one, and precedes or follows the citation on the closing one — and the reason for the exclusion, that rewriting would change runtime behavior ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten)), describes none of them. A docstring is documentation, which is what [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical) exists to canonicalize.
 
@@ -84,11 +84,11 @@ Everything else keeps the raw-line rule, unchanged: an ordinary string literal o
 
 #### 2.3.2 A link that leaves the config root is not written through
 
-`--write` does not rewrite an external **file-symlink** target: the walk still
+`--write` does not rewrite an external **file-symlink** target: the scan still
 reads that file and checks its citations, exactly as
 [§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed)
 says, but the write stops at the boundary. Files below an external directory
-symlink never reach `fmt`, because the shared tree walk prunes that directory;
+symlink never reach `fmt`, because the shared tree scan prunes that directory;
 they produce neither a rewrite nor a refusal warning. Putting this project's
 rewrites into a file the project does not own is the one thing a writer free
 to rewrite anywhere in the files it scans must not do on its own initiative
@@ -172,11 +172,11 @@ The qualified form is matched and resolved with the **aliased project's** gramma
 
 #### 2.4.5 The declaration set is scanned on first use
 
-The pass needs the declaration set, and getting one costs a tree scan that `fmt --check` otherwise never performs. So it is not scheduled up front: the walk starts without declarations and scans the first time it actually meets a shorthand, then redoes that one file. A project that writes none — including every project in which no kind's effective format carries both `{number}` and `{slug}`, and which therefore has no shorthand at all ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) — pays nothing. The scan covers the whole project even under a narrowed path scope, because the declaration a shorthand names routinely lives outside the files being rewritten.
+The pass needs the declaration set, and getting one costs a tree scan that `fmt --check` otherwise never performs. So it is not scheduled up front: the run starts without declarations and scans the first time it actually meets a shorthand, then redoes that one file. A project that writes none — including every project in which no kind's effective format carries both `{number}` and `{slug}`, and which therefore has no shorthand at all ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) — pays nothing. The scan covers the whole project even under a narrowed path scope, because the declaration a shorthand names routinely lives outside the files being rewritten.
 
 ### 2.5 Suppressed scopes
 
-A repository may take a file, or a region inside one, out of `fmt`'s reach without taking its citations out of grund's. Both scopes suppress **every** rewrite this command performs — trigger-to-marker ([§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker)), bare-to-marker ([§FS-fmt.2.2](FS-fmt.md#22-bare-to-marker-with---marker)), shorthand-to-canonical ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)), and cross-reference wrapping ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)) — and neither changes anything else. The file is still walked, its citations still resolve, still dangle, still count as edges, and still ground the file they sit in, so `grund check`, `grund refs`, `grund show`, and `grund cover` report exactly what they reported before. Only the edit stops. Decided in [§DF-fmt-suppression](../decisions/functional/DF-fmt-suppression.md#df-fmt-suppression-fmt-suppression-is-per-file-and-per-region-and-the-index-carve-out-outranks-both).
+A repository may take a file, or a region inside one, out of `fmt`'s reach without taking its citations out of grund's. Both scopes suppress **every** rewrite this command performs — trigger-to-marker ([§FS-fmt.2.1](FS-fmt.md#21-trigger-to-marker)), bare-to-marker ([§FS-fmt.2.2](FS-fmt.md#22-bare-to-marker-with---marker)), shorthand-to-canonical ([§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)), and cross-reference wrapping ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)) — and neither changes anything else. The file is still scanned, its citations still resolve, still dangle, still count as edges, and still ground the file they sit in, so `grund check`, `grund refs`, `grund show`, and `grund cover` report exactly what they reported before. Only the edit stops. Decided in [§DF-fmt-suppression](../decisions/functional/DF-fmt-suppression.md#df-fmt-suppression-fmt-suppression-is-per-file-and-per-region-and-the-index-carve-out-outranks-both).
 
 A dry run reports nothing for a suppressed scope and `--write` leaves its bytes byte-for-byte identical, so the two agree as [§FS-fmt.3](FS-fmt.md#3-outputs) requires. Both scopes are idempotent by construction: a run that writes nothing has nothing left to write on the next pass.
 
@@ -187,13 +187,13 @@ A dry run reports nothing for a suppressed scope and `--write` leaves its bytes 
 exclude = ["docs/architecture/AR-topology.md", "docs/diagrams"]
 ```
 
-Which files an entry names, and what a malformed one does, is [§FS-config.3.10.1](FS-config.md#3101-entries-are-gitignore-style-globs). A file the list matches is walked, read, and checked exactly as before, and no rewrite is performed in it.
+Which files an entry names, and what a malformed one does, is [§FS-config.3.10.1](FS-config.md#3101-entries-are-gitignore-style-globs). A file the list matches is scanned, read, and checked exactly as before, and no rewrite is performed in it.
 
 The key is optional and additive ([§FS-config.3.10.2](FS-config.md#3102-optional-empty-by-default-and-additive)). In a workspace every project is rewritten under its own config, so the list is read from the project that owns the file and a member's entries never reach its siblings ([§FS-workspace.8.5](FS-workspace.md#85-grund-fmt---cross-refs)).
 
 #### 2.5.2 `grund:fmt off` / `grund:fmt on` — a region at a time
 
-A comment line whose entire content is `grund:fmt off` suppresses every rewrite from the **next** line onward; one whose content is `grund:fmt on` resumes it. In Markdown the comment is an HTML comment — `<!-- grund:fmt off -->` — and in a source file it is a comment line under the configured `[scan] comment_prefixes` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-walked)): `// grund:fmt off`, `# grund:fmt on`, `/* grund:fmt off */`, or a line of a Python docstring, which is read for its content like any other doc-comment ([§FS-fmt.2.3.1.1](FS-fmt.md#2311-a-python-docstring-is-walked-for-its-content)).
+A comment line whose entire content is `grund:fmt off` suppresses every rewrite from the **next** line onward; one whose content is `grund:fmt on` resumes it. In Markdown the comment is an HTML comment — `<!-- grund:fmt off -->` — and in a source file it is a comment line under the configured `[scan] comment_prefixes` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)): `// grund:fmt off`, `# grund:fmt on`, `/* grund:fmt off */`, or a line of a Python docstring, which is read for its content like any other doc-comment ([§FS-fmt.2.3.1.1](FS-fmt.md#2311-a-python-docstring-is-scanned-for-its-content)).
 
 The region form is chosen over a rule keyed by declaration section (`AR-topology.2` → do not wrap) because it sits beside the thing it protects and survives the sections around it being renumbered ([§DF-fmt-suppression.2.2](../decisions/functional/DF-fmt-suppression.md#22-an-in-text-region-not-a-rule-keyed-by-declaration-section)).
 
@@ -225,13 +225,13 @@ The never-rewrite zones of [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) 
 
 - `0` — no changes needed, **or** `--write` succeeded (regardless of whether changes were made — they were the requested operation, not a failure).
 - `1` — `--check` found at least one line that `--write` would change. Never returned by `--write`.
-- `2` — I/O error, or a path in the walked tree that could not be read — a broken symlink or a symlink loop the walk would otherwise have read through ([§FS-config.3.5.5](FS-config.md#355-a-link-the-walk-cannot-resolve-is-reported-and-not-walked-into), [§FS-config.3.5.6](FS-config.md#356-which-unresolvable-links-are-owed-a-report)), an unreadable directory. Each such path is named on stderr. A run that did not need the whole declaration set still rewrote every file it could read ([§FS-fmt.3.1](FS-fmt.md#31-an-unreadable-path-is-named-and-a-partial-run-still-rewrites)); one that did rewrote nothing ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)); their lines say which ([§FS-fmt.3.4](FS-fmt.md#34-a-refusal-says-that-nothing-was-rewritten)).
+- `2` — I/O error, or a path in the scanned tree that could not be read — a broken symlink or a symlink loop the scan would otherwise have read through ([§FS-config.3.5.5](FS-config.md#355-a-link-the-scan-cannot-resolve-is-reported-and-not-scanned-into), [§FS-config.3.5.6](FS-config.md#356-which-unresolvable-links-are-owed-a-report)), an unreadable directory. Each such path is named on stderr. A run that did not need the whole declaration set still rewrote every file it could read ([§FS-fmt.3.1](FS-fmt.md#31-an-unreadable-path-is-named-and-a-partial-run-still-rewrites)); one that did rewrote nothing ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)); their lines say which ([§FS-fmt.3.4](FS-fmt.md#34-a-refusal-says-that-nothing-was-rewritten)).
 
 The report goes to **stdout** — it is `fmt`'s output ([§FS-errors.1](FS-errors.md#1-streams)), the same stream `grund check`'s findings use, so `grund fmt --check | …` and `grund fmt --check > pending.txt` work the way they do for `grund check`. (CLI-level `error:` lines — a bad flag, an I/O failure — go to stderr as everywhere, [§FS-errors.2.2](FS-errors.md#22-cli-level-message).) The dry run lists the lines it would change ([§FS-fmt.3.5](FS-fmt.md#35-the-dry-run-report)), and `--write` the files it changed ([§FS-fmt.3.7](FS-fmt.md#37-the---write-report)).
 
 ### 3.1 An unreadable path is named, and a partial run still rewrites
 
-`fmt` walks the tree `grund check` walks and says the same thing about the parts of it that could not be read: one `error: <path>: <reason>` line on stderr per unreadable path ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)), in the shape and stream and with the exit `2` of [§FS-check.2](FS-check.md#2-outputs); `fmt` prints these after its report. The rewrite still ran on every file that *could* be read — with `--write` those changes are on disk and in the report — and the `2` says the view of the tree was incomplete, not that nothing happened. Staying silent here would mean the one writer that rewrites text anywhere in the files it scans is also the one that will not say which files it never saw.
+`fmt` scans the tree `grund check` scans and says the same thing about the parts of it that could not be read: one `error: <path>: <reason>` line on stderr per unreadable path ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)), in the shape and stream and with the exit `2` of [§FS-check.2](FS-check.md#2-outputs); `fmt` prints these after its report. The rewrite still ran on every file that *could* be read — with `--write` those changes are on disk and in the report — and the `2` says the view of the tree was incomplete, not that nothing happened. Staying silent here would mean the one writer that rewrites text anywhere in the files it scans is also the one that will not say which files it never saw.
 
 ### 3.2 A run that needs the whole declaration set rewrites nothing
 
@@ -274,7 +274,7 @@ Three reasons:
 Marker, trigger, the recognized `KIND` set, and each kind's effective ID format
 are read from `grund.toml` per [§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable). The defaults are `§` and `$$` as decided in [§DF-reference-marker](../decisions/functional/DF-reference-marker.md#df-reference-marker-use--as-the-reference-marker-with--as-the-typing-trigger). Trigger, marker, shorthand, and cross-reference passes all select the kind before applying its grammar. Formatting a missing or committed external snapshot never executes its configured fetcher.
 
-Which *files* the command may rewrite is configurable too: `[fmt] exclude` takes a file out of every rewrite while leaving it walked and checked ([§FS-fmt.2.5.1](FS-fmt.md#251-fmt-exclude--a-file-at-a-time)). The per-region counterpart is written in the file rather than in the config ([§FS-fmt.2.5.2](FS-fmt.md#252-grundfmt-off--grundfmt-on--a-region-at-a-time)).
+Which *files* the command may rewrite is configurable too: `[fmt] exclude` takes a file out of every rewrite while leaving it scanned and checked ([§FS-fmt.2.5.1](FS-fmt.md#251-fmt-exclude--a-file-at-a-time)). The per-region counterpart is written in the file rather than in the config ([§FS-fmt.2.5.2](FS-fmt.md#252-grundfmt-off--grundfmt-on--a-region-at-a-time)).
 
 ## 6. Cross-reference emission
 
@@ -447,7 +447,7 @@ How a caller reached a scope is not part of the scope. In particular, a run that
 
 ### 7.2 Reader-equivalence
 
-On any tree, the unreadable paths `fmt` reports are the ones `check` reports on the same scope: the same paths, spelled against the same config, with the same reasons, in the same deterministic order. This holds in every form the command has — plain, refused ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)), scoped, and workspace — because they are all the same walk.
+On any tree, the unreadable paths `fmt` reports are the ones `check` reports on the same scope: the same paths, spelled against the same config, with the same reasons, in the same deterministic order. This holds in every form the command has — plain, refused ([§FS-fmt.3.2](FS-fmt.md#32-a-run-that-needs-the-whole-declaration-set-rewrites-nothing)), scoped, and workspace — because they are all the same scan.
 
 Equality is of the **(path, reason)** pairs, not of the bytes of the line. The one licensed difference is the `nothing was rewritten:` prefix [§FS-fmt.3.4](FS-fmt.md#34-a-refusal-says-that-nothing-was-rewritten) requires on a refused run's lines, because the two exit `2`s mean opposite things. Everything else a line can differ by is a disagreement between two readers of one tree: a member's path spelled from the member root rather than from where the run was launched, a reason one command invented for itself, a path named by one command and not the other, or a set one command truncates at the first entry while the other lists them all.
 
@@ -485,6 +485,6 @@ This is not new behavior. Each rule of [§FS-fmt.7.1](FS-fmt.md#71-scope-equival
 
 ### 7.7 The rule has a direction
 
-Equivalence binds `fmt` to `check`'s **model** — the same walk, the same token grammar, the same account of what could not be read. It does not bind `check`'s **findings** to what `fmt` is able to rewrite. The second coupling is a different rule wearing the same words, and this specification admits exactly one instance of it, as a ruled exception: [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite) withholds [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)'s error in the never-rewrite zones [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical) names, so that the checker never reports there what the formatter cannot fix. Its price is accepted: the shorthand form of a citation inside a string literal, where it resolves to exactly one declaration, is unflaggable by any command — a true fact about the tree that no report may state, because one consumer of the model cannot act on it.
+Equivalence binds `fmt` to `check`'s **model** — the same scan, the same token grammar, the same account of what could not be read. It does not bind `check`'s **findings** to what `fmt` is able to rewrite. The second coupling is a different rule wearing the same words, and this specification admits exactly one instance of it, as a ruled exception: [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite) withholds [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)'s error in the never-rewrite zones [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical) names, so that the checker never reports there what the formatter cannot fix. Its price is accepted: the shorthand form of a citation inside a string literal, where it resolves to exactly one declaration, is unflaggable by any command — a true fact about the tree that no report may state, because one consumer of the model cannot act on it.
 
 A reader is owed every true finding about the tree; a writer is owed only the findings it can safely act on. [§FS-fmt.7](FS-fmt.md#7-one-model-and-a-write-step) establishes the first direction; the exception above is closed, and [§FS-fmt.7](FS-fmt.md#7-one-model-and-a-write-step) licenses no second one.

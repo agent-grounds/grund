@@ -23,7 +23,7 @@ Three reasons, and the first is the one that decides it. **An error that does no
 
 `list`, `refs`, `cover`, `fmt` and the ID read of [§FS-show](../../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id) keep the `warning:` line on stderr they print today, with the location inside its text and one word of tense changed ([§FS-check.3.29.6](../../functional-spec/FS-check.md#3296-the-message)).
 
-They have no error channel for a fact about the run, and [§FS-cli.5](../../functional-spec/FS-cli.md#5-exit-code-mapping-is-fixed) freezes their exit codes. Flipping them too would mean giving five read commands a new way to fail, which is a much larger change than the one the ramp promised — and the guarantee this finding protects is gated in `check`, which is the run CI does ([§FS-check.3.29.9](../../functional-spec/FS-check.md#3299-every-command-that-walks-reports-it-not-check-alone)).
+They have no error channel for a fact about the run, and [§FS-cli.5](../../functional-spec/FS-cli.md#5-exit-code-mapping-is-fixed) freezes their exit codes. Flipping them too would mean giving five read commands a new way to fail, which is a much larger change than the one the ramp promised — and the guarantee this finding protects is gated in `check`, which is the run CI does ([§FS-check.3.29.9](../../functional-spec/FS-check.md#3299-every-command-that-scans-reports-it-not-check-alone)).
 
 ### 2.3 [§DF-unlisted-workspace-block.2.4](DF-unlisted-workspace-block.md#24-one-shape-on-every-surface) is superseded for those two surfaces and stands for the other five
 

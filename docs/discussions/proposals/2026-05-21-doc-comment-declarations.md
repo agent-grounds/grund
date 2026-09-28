@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-Proposed. Roadmapped as [§RM-doc-comment-declarations](../../roadmap.md#rm-doc-comment-declarations-declarations-only-in-classmethod-doc-comments). If accepted, folds into [§AR-scanner.4](../../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) (the recognizer), [§DF-code-declarations-drop-hash](../../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix) (the form table), and [§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-walked) (the new `[scan]` switch).
+Proposed. Roadmapped as [§RM-doc-comment-declarations](../../roadmap.md#rm-doc-comment-declarations-declarations-only-in-classmethod-doc-comments). If accepted, folds into [§AR-scanner.4](../../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) (the recognizer), [§DF-code-declarations-drop-hash](../../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix) (the form table), and [§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-scanned) (the new `[scan]` switch).
 
 ## 2. Context
 
@@ -61,7 +61,7 @@ Python docstrings are already special-cased by [§AR-scanner.4](../../architectu
 | SQL | `sql` | `--` immediately above a `CREATE` | `--`, `/* */` elsewhere | position |
 | Lisp / Clojure / Elisp | `clj` `el` `lisp` | docstring forms / `#` block above a `defn`/`def` | `;` | position |
 
-The table documents *conventions*; the gate stays config-driven ([§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-walked)), exactly as [§AR-scanner.4](../../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) already says the existing prefix list — not the table — is the real gate. A language not listed still works: marker-style if its doc marker is in the doc-comment set, position-style if its regular comment marker is, falling back to "any comment declares" when the switch is off.
+The table documents *conventions*; the gate stays config-driven ([§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-scanned)), exactly as [§AR-scanner.4](../../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) already says the existing prefix list — not the table — is the real gate. A language not listed still works: marker-style if its doc marker is in the doc-comment set, position-style if its regular comment marker is, falling back to "any comment declares" when the switch is off.
 
 ### 3.3. The disable switch
 
@@ -72,7 +72,7 @@ A new `[scan]` key, default on:
 declarations_in_doc_comments = true   # default
 ```
 
-When `false`, the legacy recognizer is restored verbatim — any `comment_prefixes` marker hosts a declaration, i.e. exactly the [§AR-scanner.4](../../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) behavior shipping today. It lives in `[scan]` beside `comment_prefixes` ([§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-walked)). It is a *recognizer* toggle, not a severity or exit-code knob ([§FS-non-goals.9](../../functional-spec/FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)), and both installs read the same toml and agree on the same result ([§FS-non-goals.13](../../functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)), so the "two installs agree" contract is untouched.
+When `false`, the legacy recognizer is restored verbatim — any `comment_prefixes` marker hosts a declaration, i.e. exactly the [§AR-scanner.4](../../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) behavior shipping today. It lives in `[scan]` beside `comment_prefixes` ([§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-scanned)). It is a *recognizer* toggle, not a severity or exit-code knob ([§FS-non-goals.9](../../functional-spec/FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)), and both installs read the same toml and agree on the same result ([§FS-non-goals.13](../../functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)), so the "two installs agree" contract is untouched.
 
 ### 3.4. How to build it
 
