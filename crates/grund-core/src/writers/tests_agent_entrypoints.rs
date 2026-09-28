@@ -264,7 +264,7 @@ fn check_validates_zed_workspace_rules_when_canonical_exists() {
     assert!(
         report.errors.iter().any(|error| error.code == "agents-init"
             && error.path.as_deref() == Some(expected_path.as_path())
-            && error.message.contains("missing grund init block v10")),
+            && error.message.contains("missing grund init block v12")),
         "Zed workspace .rules should be required to carry the managed block: {:?}",
         report
             .errors

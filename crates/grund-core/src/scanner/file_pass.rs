@@ -384,6 +384,14 @@ pub(super) fn scan_file_text(
             {
                 continue;
             }
+            // §FS-check.1.1.9 / §AR-scanner.2.3.1: the never-rewrite zones are asked
+            // before the unmarked-`alias/ID` rule and the strict gate, so the escape
+            // is what exempts `<§>ID` and `<§>alias/ID` alike, in both modes.
+            let bare_zone = !has_marker
+                && bare_token_in_never_rewrite_zone(scan_line, is_md, full.start(), &config.marker);
+            if bare_zone {
+                continue;
+            }
             // In workspace mode, the qualified branch is parsed below with the
             // target's grammar — let that pass own every `§<alias>/...` hit so
             // we never emit one with the citing project's grammar.
@@ -406,9 +414,6 @@ pub(super) fn scan_file_text(
                     .grammar
                     .is_named_section(caps.name("sec").map(|sec| sec.as_str()))
             {
-                continue;
-            }
-            if !has_marker && bare_token_in_never_rewrite_zone(scan_line, is_md, full.start()) {
                 continue;
             }
             let Some(id) = parse_id(&caps, &config.grammar) else {

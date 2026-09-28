@@ -122,8 +122,8 @@ pub(crate) use managed_block::{
 pub use managed_block::INTEGRATIONS_BLOCK_VERSION;
 pub(crate) use near_miss::{declaration_captures, declaration_id_on_line, near_miss_heading};
 pub(crate) use never_rewrite::{
-    DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, is_escaped,
-    is_inside_inline_code, is_inside_markdown_link_destination, never_rewrite_context,
+    DocstringContent, DocstringCursor, bare_token_in_never_rewrite_zone, in_escape_position,
+    is_escaped, is_inside_inline_code, is_inside_markdown_link_destination, never_rewrite_context,
     never_rewrite_context_in, qualified_suppressed_in_source, string_literal_in,
 };
 pub(crate) use section_paths::path_at_or_under;
@@ -150,5 +150,7 @@ mod tests_comment_block_position;
 mod tests_fmt_suppression;
 #[cfg(test)]
 mod tests_inline_note_layout;
+#[cfg(test)]
+mod tests_never_rewrite;
 #[cfg(test)]
 mod tests_section_paths;

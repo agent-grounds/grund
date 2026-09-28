@@ -272,18 +272,18 @@ fn agents_init_compatibility_messages_cover_all_five_variants() {
     let cases = [
         (
             "malformed",
-            "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v10)\n",
+            "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v12)\n",
             "malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->`",
         ),
         (
             "outdated",
             "## Grounding with grund (v3)\n\nlegacy body\n",
-            "outdated grund init block v3 (run `grund init` to update to v10)",
+            "outdated grund init block v3 (run `grund init` to update to v12)",
         ),
         (
             "unsupported",
             "## Grounding with grund (v99)\n\nfuture body\n",
-            "unsupported grund init block v99 (this grund supports v10)",
+            "unsupported grund init block v99 (this grund supports v12)",
         ),
         (
             "stale",
@@ -293,7 +293,7 @@ fn agents_init_compatibility_messages_cover_all_five_variants() {
         (
             "missing",
             "# Project instructions\n",
-            "missing grund init block v10",
+            "missing grund init block v12",
         ),
     ];
 

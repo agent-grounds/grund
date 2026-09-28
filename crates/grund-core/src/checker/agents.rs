@@ -138,9 +138,9 @@ fn check_agent_block_path_with_rules(
         AgentsBlockLookup::Absent => None,
     };
     let expected_version = if config.kinds.iter().any(|kind| kind.rules) {
-        11
+        13
     } else {
-        10
+        12
     };
     if let Some(block) = block {
         let line = line_for_byte_index(&text, block.start);

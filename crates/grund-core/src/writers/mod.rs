@@ -153,6 +153,8 @@ pub(crate) use integrations_clients::{ITERM2_SNIPPET, KITTY_SNIPPET, WEZTERM_SNI
 #[cfg(test)]
 mod tests_agent_entrypoints;
 #[cfg(test)]
+mod tests_fmt_rewrite;
+#[cfg(test)]
 mod tests_id;
 #[cfg(test)]
 mod tests_init_agents;
