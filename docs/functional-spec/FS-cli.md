@@ -4,8 +4,9 @@ The behaviour that is not owned by any one subcommand — how `grund` is invoked
 
 ## terms: Terms
 
-Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan,
-workspace), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, verdict), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (snapshot).
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section, coordinate),
+[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, verdict), and
+[§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (snapshot).
 
 ## 1. The default subcommand
 
@@ -28,7 +29,7 @@ hint: run `grund check bogus` to validate a path
 hint: run `grund --help` for the list of subcommands
 ```
 
-The final `grund --help` hint is emitted only when the first word contains none of `-` / `/` / `.` — the three separators an ID, a workspace-qualified ID, or a section reference would carry — because a token without any of them cannot match the default `{kind}-{number}-{slug}` shape and is overwhelmingly a botched subcommand. The full known-command list stays in `grund --help` rather than being repeated on every query failure.
+The final `grund --help` hint is emitted only when the first word contains none of `-` / `/` / `.` — the three separators an ID, a workspace-qualified ID, or a coordinate would carry — because a token without any of them cannot match the default `{kind}-{number}-{slug}` shape and is overwhelmingly a botched subcommand. The full known-command list stays in `grund --help` rather than being repeated on every query failure.
 
 Stdout is empty and the exit is `1`: the default ID lookup is a failed query, not a CLI launch failure.
 
