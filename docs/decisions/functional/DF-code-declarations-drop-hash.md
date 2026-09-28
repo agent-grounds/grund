@@ -68,15 +68,15 @@ This is **not** landing with the initial change because it would update every ex
 
 Landing now:
 
-- [§FS-show.2.3](../../functional-spec/FS-show.md#23-inline-declarations-in-code-and-doc-comments) describes the inline declaration forms and their section behavior.
-- [§FS-show.2.3](../../functional-spec/FS-show.md#23-inline-declarations-in-code-and-doc-comments) documents the multi-declaration-per-comment shape with a Rust example, surfacing a capability the scanner already had.
+- [§FS-show.2.3](../../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments) describes the inline declaration forms and their section behavior.
+- [§FS-show.2.3](../../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments) documents the multi-declaration-per-comment shape with a Rust example, surfacing a capability the scanner already had.
 - E2E fixtures cover (a) a single declaration in code, (b) two declarations in one doc-comment, and (c) the supported polyglot doc-comment forms.
 - The project's own [crates/grund-core/src/checker/report.rs](../../../crates/grund-core/src/checker/report.rs) declaration is migrated to the new form as the first dogfood.
 
 Follow-ups (each tracked above as *(follow-up)*):
 
 - [§DF-code-declarations-drop-hash.2.2](DF-code-declarations-drop-hash.md#22-grund-show-preserves-the-comment-marker-in-text-follow-up): `grund show` text-format marker preservation on the heading line.
-- A worked example of code-form declarations in the [§FS-config.3.2](../../functional-spec/FS-config.md#32-id--id-grammar) prose, if the spec needs to surface the grammar branch separately from [§FS-show.2.3](../../functional-spec/FS-show.md#23-inline-declarations-in-code-and-doc-comments).
+- A worked example of code-form declarations in the [§FS-config.3.2](../../functional-spec/FS-config.md#32-id--id-grammar) prose, if the spec needs to surface the grammar branch separately from [§FS-show.2.3](../../functional-spec/FS-show.md#23-source-declarations-in-code-and-doc-comments).
 
 ## 5. Alternatives considered
 

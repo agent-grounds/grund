@@ -5,9 +5,9 @@ This file is the verbose output-shape companion to [§FS-errors](FS-errors.md#fs
 ## terms: Terms
 
 Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section, lead),
-[§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation, shorthand, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub),
-[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, suggestion,
-caution), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, binding).
+[§FS-terms.terms.2](FS-terms.md#terms2-citations) (citation, shorthand, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (source
+declaration, stub), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, workspace, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding,
+severity, suggestion, caution), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, binding).
 
 ## 1. Diagnostic object
 
@@ -159,7 +159,7 @@ For a JSON value declaration, every read mode's `body` is the exact available me
 Fields:
 
 - `id`, `kind`, `path`, `line`, and `title` identify the declaration.
-- `stub` is true only for a broken stub: a healthy docs stub collapses into its inline declaration and gets no row of its own ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)).
+- `stub` is true only for a broken stub: a healthy docs stub collapses into its source declaration and gets no row of its own ([§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical)).
 - `defines` is the target path for a stub, otherwise `null`.
 - `refs` is the number of citations that resolve to this ID.
 - `duplicate` is true when this ID has more than one independent declaration home.

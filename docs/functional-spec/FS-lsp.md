@@ -8,9 +8,10 @@
 
 Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, body, section, coordinate, catalog),
 [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, qualified citation, shorthand, citation site),
-[§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member,
-alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, suggestion), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction, rule),
-and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, component, binding, fetcher, snapshot).
+[§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (source declaration, stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope,
+workspace, member, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, suggestion),
+[§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction, rule), and [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, component, binding,
+fetcher, snapshot).
 
 - **diagnostic** — The LSP protocol object a finding is published as. The word names the
   protocol object here and nothing else.
@@ -127,7 +128,7 @@ link, hover target, or highlights. This adds no `$$2` on-type expansion and no q
 [§FS-lsp.1.4](FS-lsp.md#14-live-trigger-transform) continues to transform only the existing
 trigger and number-only ID shorthand forms.
 
-`textDocument/definition` on a citation jumps to the declaration's `path:line`. For a stub-and-inline-source pair ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)), the server follows the stub's link and lands on the inline declaration line directly — the user does not stop at the stub — and the same is true anywhere on the stub heading's ID or title text, which is one navigable title span. A normal Markdown declaration heading uses the same whole-title span for declaration-side requests: definition-as-usages and references return the citations of that ID. A numbered section heading inside a declaration body — `## 1. …`, addressable as `<ID>.<section>` — is itself a declaration-side title with the same behaviour, scoped to the section: definition and references on it return the citations of that section (`§<ID>.<section>` and any deeper subsection) rather than of the whole ID.
+`textDocument/definition` on a citation jumps to the declaration's `path:line`. For a stub-and-inline-source pair ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)), the server follows the stub's link and lands on the source declaration line directly — the user does not stop at the stub — and the same is true anywhere on the stub heading's ID or title text, which is one navigable title span. A normal Markdown declaration heading uses the same whole-title span for declaration-side requests: definition-as-usages and references return the citations of that ID. A numbered section heading inside a declaration body — `## 1. …`, addressable as `<ID>.<section>` — is itself a declaration-side title with the same behaviour, scoped to the section: definition and references on it return the citations of that section (`§<ID>.<section>` and any deeper subsection) rather than of the whole ID.
 
 The result's shape is [§FS-lsp.1.3.4](FS-lsp.md#134-origin-span-and-result-shape); how values and named sections navigate is [§FS-lsp.1.3.5](FS-lsp.md#135-values-and-named-sections).
 
