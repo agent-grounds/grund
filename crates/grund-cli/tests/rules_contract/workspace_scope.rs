@@ -187,3 +187,46 @@ fn an_invalid_rule_beside_an_unverifiable_one_still_withholds_the_write() {
     );
     assert_eq!(init_verdict(&root, "member"), (1, false));
 }
+
+/// §FS-rules.4.1, §FS-rules.4.1.2: one rule, invalid in its subject and
+/// unverifiable in its object, reaches the same verdict as the same rule with a
+/// local object — because unverifiability is about the object's namespace and
+/// nothing else. The guard above pairs an invalid rule with a *separate*
+/// unverifiable one; this is the case that hid inside a single sentence, where a
+/// sibling-pinned object used to suppress the subject verdict the same scope
+/// makes on its own and the block was written around a rule it called invalid.
+#[test]
+fn a_bogus_subject_is_judged_whether_or_not_the_object_resolves_here() {
+    let mut verdicts = Vec::new();
+    for object in ["workshop/OP", "GOAL"] {
+        let root = aged_workspace("subject-under-each-object");
+        rule(
+            &root,
+            "member",
+            &format!("SEG-nonexistent must cite at least one {object}."),
+        );
+        let member = root.join("member");
+        let member_arg = member.to_string_lossy().into_owned();
+        let output = run(&root, &["init", &member_arg, "--no-vcs"]);
+        let block = version_marker(&fs::read_to_string(member.join("AGENTS.md")).expect("block"));
+        verdicts.push((output.status.code(), block, text(&output.stdout)));
+    }
+
+    let (pinned, local) = (&verdicts[0], &verdicts[1]);
+    assert_eq!(
+        pinned, local,
+        "the object kind does not move the verdict on the subject"
+    );
+    assert_eq!(pinned.0, Some(1), "an invalid rule still exits nonzero");
+    assert_eq!(
+        pinned.1, "## Grounding with grund (v1)",
+        "and still withholds the write, so the aged block survives"
+    );
+    assert!(
+        pinned
+            .2
+            .contains("literal subject SEG-nonexistent does not resolve"),
+        "the run names the fact it can act on: {}",
+        pinned.2
+    );
+}

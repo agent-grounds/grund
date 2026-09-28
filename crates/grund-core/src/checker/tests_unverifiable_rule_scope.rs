@@ -77,11 +77,12 @@ fn workshop(root: &Path) {
     );
 }
 
-/// Whether `sentence` parses, and when it does not, whether the failure is
-/// §FS-rules.4.1's unverifiable case or an invalid rule.
+/// Whether `sentence` resolves, and when it does not, whether it is
+/// §FS-rules.4.1's unverifiable case (`Err(true)`) or an invalid rule
+/// (`Err(false)`).
 fn verdict(config: &Config, sentence: &str) -> Result<(), bool> {
     let vocab = declared_workspace_vocabulary(config);
-    parse_rule(
+    match parse_rule(
         sentence,
         "RULE-ops".into(),
         RuleAnchor {
@@ -90,9 +91,11 @@ fn verdict(config: &Config, sentence: &str) -> Result<(), bool> {
             column: None,
         },
         &vocab,
-    )
-    .map(|_| ())
-    .map_err(|error| error.unverifiable_here)
+    ) {
+        Ok((_, Some(_))) => Err(true),
+        Ok((_, None)) => Ok(()),
+        Err(_) => Err(false),
+    }
 }
 
 /// §FS-rules.4.1.1: all seven rows. The absence of every workspace namespace is
@@ -247,12 +250,13 @@ fn the_declared_vocabulary_holds_the_aliases_the_workspace_load_yields() {
     );
 }
 
-/// §FS-rules.4.1: the workspace read is best-effort. An expansion that fails
-/// leaves the vocabulary empty rather than raising, so the rule becomes
-/// unverifiable here and `init` still writes the managed block — the failure
-/// mode §FS-init.2.3.5 already wants, rather than a second way to refuse.
+/// §FS-rules.4.1.1: the workspace read is best-effort — an expansion that fails
+/// raises nothing — but a config that declares `[workspace]` still holds its own
+/// project's namespace, so the run is never one that no workspace is in scope
+/// for. The reader is standing at the workspace root; sending them to check from
+/// the workspace root would be the one direction that cannot help.
 #[test]
-fn an_expansion_that_fails_yields_no_namespace_rather_than_an_error() {
+fn a_declared_workspace_holds_its_own_namespace_even_when_the_members_do_not_expand() {
     let root = project(
         "rule-scope-broken-workspace",
         "[workspace]\nmembers = [\"workshop\", \"absent\"]\n",
@@ -267,9 +271,13 @@ fn an_expansion_that_fails_yields_no_namespace_rather_than_an_error() {
 
     let vocab = declared_workspace_vocabulary(&config);
     assert!(
-        vocab.target_namespaces.is_empty() && !vocab.workspace_in_scope(),
-        "a failed expansion holds no namespace: {:?}",
-        vocab.target_namespaces
+        vocab.workspace_in_scope(),
+        "a declared workspace is in scope whatever became of its members"
+    );
+    assert_eq!(
+        vocab.target_namespaces.keys().cloned().collect::<Vec<_>>(),
+        vec!["root".to_string()],
+        "and what it holds is its own namespace, the entry an empty member list yields"
     );
     assert_eq!(
         vocab.target_kinds,
@@ -278,7 +286,17 @@ fn an_expansion_that_fails_yields_no_namespace_rather_than_an_error() {
     );
     assert_eq!(
         verdict(&config, PINNED),
-        Err(true),
-        "so the pinned object is unverifiable here, not invalid"
+        Err(false),
+        "so the unreachable member's alias is an invalid rule, not an unverifiable one"
     );
+
+    // And `members = []` reaches that same verdict, which is the disagreement
+    // between two spellings of one broken tree that the fallback removes.
+    let empty = load_config(&project(
+        "rule-scope-empty-workspace",
+        "[workspace]\nmembers = []\n",
+        PINNED,
+    ))
+    .expect("load empty-workspace config");
+    assert_eq!(verdict(&empty, PINNED), verdict(&config, PINNED));
 }

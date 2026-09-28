@@ -109,11 +109,6 @@ impl RuleVocabulary {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct RuleParseError {
     pub(crate) message: String,
-    /// §FS-rules.4.1: the sentence is well-formed and only unverifiable from the
-    /// scope the command ran in. A caller may render it and still report it
-    /// (§FS-rules.4.1.2); every other parse failure leaves this false, and stays
-    /// the invalid rule §FS-rules.4 refuses to write around.
-    pub(crate) unverifiable_here: bool,
 }
 
 impl std::fmt::Display for RuleParseError {
@@ -126,27 +121,25 @@ impl std::error::Error for RuleParseError {}
 fn error(message: impl Into<String>) -> RuleParseError {
     RuleParseError {
         message: message.into(),
-        unverifiable_here: false,
-    }
-}
-
-/// §FS-rules.4.1: the one failure that is not an invalid rule — the scope holds
-/// no workspace vocabulary, so it can say neither yes nor no about the alias.
-fn unverifiable_here(message: impl Into<String>) -> RuleParseError {
-    RuleParseError {
-        message: message.into(),
-        unverifiable_here: true,
     }
 }
 
 /// Parse exactly the five released families (§FS-rules.3). Near misses receive
 /// their fixed accepted rewrite before generic production parsing.
+///
+/// `Err` is the invalid rule and nothing else. The second half of `Ok` is
+/// §FS-rules.4.1's *unverifiable here*: the reason this scope could say neither
+/// yes nor no about the object kind's namespace, which is a verdict about that
+/// namespace alone. It rides with a parsed rule rather than replacing one, so
+/// every other part of the sentence is judged exactly as it is when the object
+/// is local, and a caller that learns to ask a new question asks it of both
+/// (§FS-rules.4.1.1).
 pub(crate) fn parse_rule(
     title: &str,
     origin: String,
     anchor: RuleAnchor,
     vocabulary: &RuleVocabulary,
-) -> Result<ParsedRule, RuleParseError> {
+) -> Result<(ParsedRule, Option<String>), RuleParseError> {
     match title {
         "Each FS may not cite any AR." => {
             return Err(error(
@@ -216,7 +209,9 @@ pub(crate) fn parse_rule(
         ));
     };
     let subject = parse_subject(subject_text, vocabulary)?;
-    let (relation, targets, cardinality) = parse_predicate(predicate, polarity, vocabulary)?;
+    let mut unverifiable = None;
+    let (relation, targets, cardinality) =
+        parse_predicate(predicate, polarity, vocabulary, &mut unverifiable)?;
     if relation == RuleRelation::HaveChapter
         && matches!(
             subject,
@@ -227,22 +222,26 @@ pub(crate) fn parse_rule(
             "chapter subjects cannot have chapters; accepted form: Each FS must have exactly one requirements chapter.",
         ));
     }
-    Ok(ParsedRule {
-        origin,
-        anchor,
-        subject,
-        level,
-        polarity,
-        relation,
-        targets,
-        cardinality,
-    })
+    Ok((
+        ParsedRule {
+            origin,
+            anchor,
+            subject,
+            level,
+            polarity,
+            relation,
+            targets,
+            cardinality,
+        },
+        unverifiable,
+    ))
 }
 
 fn parse_predicate(
     text: &str,
     polarity: RulePolarity,
     vocab: &RuleVocabulary,
+    unverifiable: &mut Option<String>,
 ) -> Result<(RuleRelation, RuleTargets, Cardinality), RuleParseError> {
     if polarity == RulePolarity::Prohibiting {
         let rest = text.strip_prefix("cite any ").ok_or_else(|| {
@@ -252,7 +251,7 @@ fn parse_predicate(
         })?;
         return Ok((
             RuleRelation::Cite,
-            kind_targets(rest, TargetMode::Aggregate, vocab)?,
+            kind_targets(rest, TargetMode::Aggregate, vocab, unverifiable)?,
             Cardinality::NONE,
         ));
     }
@@ -303,14 +302,14 @@ fn parse_predicate(
         if let Some(kind) = rest.strip_suffix(" at least once") {
             return Ok((
                 RuleRelation::Cite,
-                kind_targets(kind, TargetMode::PerTarget, vocab)?,
+                kind_targets(kind, TargetMode::PerTarget, vocab, unverifiable)?,
                 Cardinality::AT_LEAST_ONE,
             ));
         }
         if let Some(kind) = rest.strip_suffix(" exactly once") {
             return Ok((
                 RuleRelation::Cite,
-                kind_targets(kind, TargetMode::PerTarget, vocab)?,
+                kind_targets(kind, TargetMode::PerTarget, vocab, unverifiable)?,
                 Cardinality {
                     minimum: Some(1),
                     maximum: Some(1),
@@ -341,7 +340,7 @@ fn parse_predicate(
                 };
                 return Ok((
                     RuleRelation::Cite,
-                    kind_targets(kind, TargetMode::PerTarget, vocab)?,
+                    kind_targets(kind, TargetMode::PerTarget, vocab, unverifiable)?,
                     card,
                 ));
             }
@@ -361,7 +360,7 @@ fn parse_predicate(
         let (card, kinds, _) = count_prefix(rest)?;
         return Ok((
             RuleRelation::Cite,
-            kind_targets(kinds, TargetMode::Aggregate, vocab)?,
+            kind_targets(kinds, TargetMode::Aggregate, vocab, unverifiable)?,
             card,
         ));
     }
@@ -369,7 +368,7 @@ fn parse_predicate(
         let (card, kinds, _) = count_prefix(rest)?;
         return Ok((
             RuleRelation::BeCitedBy,
-            kind_targets(kinds, TargetMode::Aggregate, vocab)?,
+            kind_targets(kinds, TargetMode::Aggregate, vocab, unverifiable)?,
             card,
         ));
     }
