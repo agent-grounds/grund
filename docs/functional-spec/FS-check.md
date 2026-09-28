@@ -165,7 +165,7 @@ Inside the default scope, the report is the ordinary one. Outside it, [§FS-chec
 
 #### 1.3.4 Purely additive
 
-The findings inside the configured scope are exactly the ones `grund check` reports on the same tree, so `--full` can only ever turn a green run red, never the reverse. It is the ordinary check plus unresolved references and section-like headings that violate declaration-body ownership in the wider walk.
+The findings inside the default scope are exactly the ones `grund check` reports on the same tree, so `--full` can only ever turn a green run red, never the reverse. It is the ordinary check plus unresolved references and section-like headings that violate declaration-body ownership in the wider walk.
 
 #### 1.3.5 The unused-declaration warning is unchanged out there
 
@@ -187,7 +187,7 @@ Silently accepting the flag is the failure this mode exists to end in miniature:
 
 #### 1.3.8 Workspaces widen per project
 
-Run at a workspace root, `--full` applies to the root project and to every member ([§FS-workspace.5](FS-workspace.md#5-command-scope)): each walks its own tree past its own `[scan] include` and tiers its findings against its own configured scope, because `include` is a per-project statement. It widens the projects a run already has and never invents one, so under `[workspace] include_root = false` ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)) a file at the workspace root outside every member is read by nothing, with or without the flag — there is no root project whose `include` there would be to cancel.
+Run at a workspace root, `--full` applies to the root project and to every member ([§FS-workspace.5](FS-workspace.md#5-command-scope)): each walks its own tree past its own `[scan] include` and tiers its findings against its own default scope, because `include` is a per-project statement. It widens the projects a run already has and never invents one, so under `[workspace] include_root = false` ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)) a file at the workspace root outside every member is read by nothing, with or without the flag — there is no root project whose `include` there would be to cancel.
 
 #### 1.3.9 An empty default scope is still reported
 
@@ -317,7 +317,7 @@ When a `[workspace]` block put no project in scope at all — `include_root = fa
 
 #### 2.2.3 Exit code, JSON, and what suppresses it
 
-This is a warning, not an error: the exit code stays `0` (a genuinely empty tree is not a failure), and `--format=json` emits the warning as one diagnostic JSON object on stderr, the stream of the text `warning:` line rather than of the findings on stdout. A repo that *does* have a stale `AGENTS.md` block or any other finding **about the configured scope** gets that finding (on stdout) and **no** empty-scan notice. Three findings are not about that scope and do not suppress it ([§FS-check.2.2.3.1](FS-check.md#2231-findings-that-do-not-suppress-it)).
+This is a warning, not an error: the exit code stays `0` (a genuinely empty tree is not a failure), and `--format=json` emits the warning as one diagnostic JSON object on stderr, the stream of the text `warning:` line rather than of the findings on stdout. A repo that *does* have a stale `AGENTS.md` block or any other finding **about the default scope** gets that finding (on stdout) and **no** empty-scan notice. Three findings are not about that scope and do not suppress it ([§FS-check.2.2.3.1](FS-check.md#2231-findings-that-do-not-suppress-it)).
 
 ##### 2.2.3.1 Findings that do not suppress it
 
@@ -645,7 +645,7 @@ The candidate list in the ambiguous form is sorted and complete — `grund` name
 
 ### 3.14 Out-of-scope unresolvable citation *(`--full` only)*
 
-Under `--full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)), a citation in a file outside the configured scope whose reference resolves to nothing — the ID is declared nowhere ([§FS-check.3.1](FS-check.md#31-dangling-citation)), the declaration exists but the cited section does not ([§FS-check.3.2](FS-check.md#32-missing-section)), the namespace alias is unknown ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)), or a number-only shorthand matches zero or several declarations ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)) — is an error ([§FS-check.3.14.1](FS-check.md#3141-an-error-not-a-warning)) judged on resolution alone ([§FS-check.3.14.2](FS-check.md#3142-only-resolution-plus-one-scanner-invariant-is-judged)). The site is reported in the ordinary located-finding shape, with the tier named first and the rule's own message after it:
+Under `--full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)), a citation in a file outside the default scope whose reference resolves to nothing — the ID is declared nowhere ([§FS-check.3.1](FS-check.md#31-dangling-citation)), the declaration exists but the cited section does not ([§FS-check.3.2](FS-check.md#32-missing-section)), the namespace alias is unknown ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)), or a number-only shorthand matches zero or several declarations ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)) — is an error ([§FS-check.3.14.1](FS-check.md#3141-an-error-not-a-warning)) judged on resolution alone ([§FS-check.3.14.2](FS-check.md#3142-only-resolution-plus-one-scanner-invariant-is-judged)). The site is reported in the ordinary located-finding shape, with the tier named first and the rule's own message after it:
 
 ```
 sim/world.py:12: outside [scan] include: unknown reference RES-061-world-arable-basin-screen
@@ -662,7 +662,7 @@ The style, placement, grounding, direction, duplicate, and unused rules say how 
 
 #### 3.14.3 Resolution sees the whole walk
 
-An out-of-scope citation whose declaration is also out of scope resolves normally. The tier reports references that point at *nothing*, not references that point outside the configured scope.
+An out-of-scope citation whose declaration is also out of scope resolves normally. The tier reports references that point at *nothing*, not references that point outside the default scope.
 
 #### 3.14.4 The mechanical shorthand rewrite is withheld
 
@@ -678,7 +678,7 @@ A finding here carries `out-of-scope-` followed by the code its in-scope equival
 
 #### 3.14.7 A wider walk can fail wider
 
-The flag also puts files the configured scope never touched into the walk, so one that cannot be read or decoded out there is reported as the `error: <path>: <reason>` of [§FS-check.2.4](FS-check.md#24-an-incomplete-run) on stderr and the run exits `2` — "I could not read this" is a fact about the run, not about the tier, and it holds for a file in either scope. A tree whose plain `check` exits `0` can therefore exit `2` under `--full`; that is the wider walk reporting what it found, not a regression.
+The flag also puts files the default scope never touched into the walk, so one that cannot be read or decoded out there is reported as the `error: <path>: <reason>` of [§FS-check.2.4](FS-check.md#24-an-incomplete-run) on stderr and the run exits `2` — "I could not read this" is a fact about the run, not about the tier, and it holds for a file in either scope. A tree whose plain `check` exits `0` can therefore exit `2` under `--full`; that is the wider walk reporting what it found, not a regression.
 
 ### 3.15 Shorthand citation in a numeric run
 
@@ -880,7 +880,7 @@ what this clause adds is what [§REQ-backwards-compatibility.3](../requirements/
 say, and [§FS-check.3.17.3](FS-check.md#3173-an-error-on-arrival) already says.
 
 `` ; run `grund fmt --write` `` follows the pair at an **owned** site whose text permits the
-rewrite, inside the configured scope — and nowhere else, because a finding may name a command
+rewrite, inside the default scope — and nowhere else, because a finding may name a command
 that repairs it and never one that would answer `rewrote 0 lines` ([§FS-check.3.17.5](FS-check.md#3175-anything-else-is-not-an-entry)). Three cases withhold
 it, and a fourth deliberately does not:
 
@@ -1109,7 +1109,7 @@ It is asked only of a run whose scope **is** that project's root (no path argume
 
 #### 4.5.5 A warning, withheld beside any other finding about the scope
 
-Like [§FS-check.2.2](FS-check.md#22-empty-scan) it is a warning, and like [§FS-check.2.2](FS-check.md#22-empty-scan) it is withheld from a run that has any other finding about the configured scope: the exit code stays `0` (a tree with nothing in it yet is the ordinary first day of a repository), and a report that already says something about that scope is not the silent verdict this rule exists to break. It inherits every exception [§FS-check.2.2.3.1](FS-check.md#2231-findings-that-do-not-suppress-it) lists unchanged, and for the same reasons. A redundant-config pair ([§FS-check.4.3](FS-check.md#43-redundant-config-pair)) is a fact about which file was read — and a repository mid-migration between the two config names is exactly where a mismatched `[id] format` hides, in the file that is no longer read. The out-of-scope tier ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)) is a fact about the tree beyond the scope, and a `--full` run that reports every citation out there while the configured scope holds nothing is the strongest form of this diagnosis, not a reason to withhold half of it. What it buys is the `success` marker — a warning stands in its place ([§FS-check.2.1](FS-check.md#21-report-format)), so the run that recognized nothing stops printing the same word as the run that checked everything.
+Like [§FS-check.2.2](FS-check.md#22-empty-scan) it is a warning, and like [§FS-check.2.2](FS-check.md#22-empty-scan) it is withheld from a run that has any other finding about the default scope: the exit code stays `0` (a tree with nothing in it yet is the ordinary first day of a repository), and a report that already says something about that scope is not the silent verdict this rule exists to break. It inherits every exception [§FS-check.2.2.3.1](FS-check.md#2231-findings-that-do-not-suppress-it) lists unchanged, and for the same reasons. A redundant-config pair ([§FS-check.4.3](FS-check.md#43-redundant-config-pair)) is a fact about which file was read — and a repository mid-migration between the two config names is exactly where a mismatched `[id] format` hides, in the file that is no longer read. The out-of-scope tier ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)) is a fact about the tree beyond the scope, and a `--full` run that reports every citation out there while the default scope holds nothing is the strongest form of this diagnosis, not a reason to withhold half of it. What it buys is the `success` marker — a warning stands in its place ([§FS-check.2.1](FS-check.md#21-report-format)), so the run that recognized nothing stops printing the same word as the run that checked everything.
 
 #### 4.5.6 The per-heading half
 

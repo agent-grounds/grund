@@ -607,7 +607,7 @@ What an unwalked kind keeps: its home, its title, and its Project map row. What 
 
 ##### 3.4.7.5 Under `--full`
 
-Under `grund check --full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)) the whole config root is walked and its files are reached like any directory nobody configured: resolution failures only, never a convention it did not adopt. They are reached from *outside* the configured scope even when a scan root encloses them ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)), because the scope is what a run without the flag reads, and that run does not read them.
+Under `grund check --full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)) the whole config root is walked and its files are reached like any directory nobody configured: resolution failures only, never a convention it did not adopt. They are reached from *outside* the default scope even when a scan root encloses them ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)), because the scope is what a run without the flag reads, and that run does not read them.
 
 ##### 3.4.7.6 Three config errors
 
@@ -881,7 +881,7 @@ Walking every home closes a trap that had nothing to do with non-citable kinds a
 
 #### 3.5.11 `include` is a scan scope, not a fence
 
-A citation in a file that neither `include` nor a kind home brings into the walk is invisible rather than merely unchecked ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)), so `grund check --full` walks the whole config root past this key. The flag cancels `include` and, with it, the `scan = false` prune of [§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-walked), and nothing else: every other rule of this table applies to that walk unchanged ([§FS-check.1.3.1](FS-check.md#131-the-walk-covers-the-whole-config-root)), and what it reports outside the configured scope is [§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)'s to say.
+A citation in a file that neither `include` nor a kind home brings into the walk is invisible rather than merely unchecked ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)), so `grund check --full` walks the whole config root past this key. The flag cancels `include` and, with it, the `scan = false` prune of [§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-walked), and nothing else: every other rule of this table applies to that walk unchanged ([§FS-check.1.3.1](FS-check.md#131-the-walk-covers-the-whole-config-root)), and what it reports outside the default scope is [§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)'s to say.
 
 #### 3.5.12 A hidden file is not read, and the rule is not about descent
 
