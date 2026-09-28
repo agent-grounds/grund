@@ -8,7 +8,7 @@ use std::process::{Command, Output};
 
 const MAINTENANCE_TAIL: &str =
     " — repo maintenance; citation checks still ran; wording changes in grund 0.15.0";
-const OUTDATED: &str = "outdated grund init block v3 (run `grund init` to update to v10)";
+const OUTDATED: &str = "outdated grund init block v3 (run `grund init` to update to v12)";
 
 fn fixture_root(name: &str) -> PathBuf {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

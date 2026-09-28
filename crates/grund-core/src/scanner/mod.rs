@@ -122,6 +122,8 @@ mod tests_embedded_value_boundaries;
 #[cfg(test)]
 mod tests_embedded_values;
 #[cfg(test)]
+mod tests_escape_position;
+#[cfg(test)]
 mod tests_file_pass;
 #[cfg(test)]
 mod tests_inline_site;

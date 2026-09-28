@@ -22,8 +22,8 @@ use super::fmt_local_sections::{expand_local_section_citations, local_section_la
 use crate::config::Config;
 use crate::grammar::{
     DocstringContent, DocstringCursor, FmtDirectives, declaration_id_on_line, id_token_end_at,
-    is_inside_inline_code, is_inside_markdown_link_destination, markdown_fence_delimiter,
-    string_literal_in,
+    in_escape_position, is_inside_inline_code, is_inside_markdown_link_destination,
+    markdown_fence_delimiter, string_literal_in,
 };
 use crate::model::{Findings, Id};
 use crate::resolver::{
@@ -404,7 +404,7 @@ fn replace_trigger(
 /// Prefix `§` onto bare ID-shaped tokens that lack it — the `--marker` upgrade
 /// (§FS-fmt.2.2) — skipping tokens already marked, Markdown inline-code examples,
 /// Markdown link destinations, and source-code string literals (§FS-fmt.2.3).
-fn add_markers(
+pub(super) fn add_markers(
     line: &str,
     docstring: DocstringContent<'_>,
     config: &Config,
@@ -422,6 +422,12 @@ fn add_markers(
             continue;
         }
         if line[..found.start()].ends_with(&config.marker) {
+            continue;
+        }
+        // §FS-fmt.2.3 / §FS-check.1.1.9: a marker spliced inside the escape brackets
+        // would turn the illustration into a live citation, and every later pass —
+        // the cross-reference wrap included — follows the marker.
+        if in_escape_position(line, found.start(), &config.marker) {
             continue;
         }
         // §FS-fmt.2.3 / §FS-check.1.1.2: an unmarked named coordinate is one

@@ -489,13 +489,18 @@ The canonical text for a given block version `vN` is embedded in the `grund` bin
 
 ##### 2.3.7.1 The current version
 
-The current schema for a repository without a rule kind is **v10**; v10 adds
-the in-body Markdown heading policy in [§FS-init.2.3.4.5.1](FS-init.md#23451-unmarked-headings), and an existing v9 block is
-the supported predecessor, repaired by the same one-command `grund init`
-re-render ([§FS-init.2.3.10.1](FS-init.md#23101-re-rendering-an-existing-block)). A rule-enabled repository uses **v11** because [§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules)
-adds byte-compared content. Removing the opt-in returns to byte-identical v10
-output rather than making v11 universal. The v9 history remains the
-coordinate-size sweep added in [§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding), with v8 as its predecessor.
+The current schema for a repository without a rule kind is **v12**; v12 stops
+writing a bare ID-shaped illustration into the block's own prose — the escaped
+example teaches the shape once and the two declaration lines use the `<ID>`
+placeholder — so the scaffold lands clean under `[reference] strict = false`
+too ([§FS-check.1.1.9](FS-check.md#119-an-id-in-an-escape-position)), and every earlier block is repaired by the same
+one-command `grund init` re-render ([§FS-init.2.3.10.1](FS-init.md#23101-re-rendering-an-existing-block)). A rule-enabled repository
+uses **v13** because [§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules) adds byte-compared content. Removing the
+opt-in returns to byte-identical v12 output rather than making v13 universal —
+rule-enabled stays base plus one. The v11 history is that same chapter-rules
+section over a v10 base, v10 the in-body Markdown heading policy of
+[§FS-init.2.3.4.5.1](FS-init.md#23451-unmarked-headings), and v9 the coordinate-size sweep added in
+[§FS-init.2.3.4.3](FS-init.md#2343-cheap-grounding).
 
 
 ##### 2.3.7.2 What `check` compares

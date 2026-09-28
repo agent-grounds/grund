@@ -79,7 +79,7 @@ fn agents_init_messages() -> Vec<String> {
     for (name, agents) in [
         (
             "malformed",
-            "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v10)\n\ncurrent managed block\n",
+            "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v12)\n\ncurrent managed block\n",
         ),
         ("outdated", "## Grounding with grund (v3)\n\nlegacy block\n"),
         (

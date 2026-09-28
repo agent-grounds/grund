@@ -147,7 +147,7 @@ impl std::fmt::Display for InitError {
 
 impl std::error::Error for InitError {}
 
-/// Add v11's conditional chapter-rule section while leaving the v10 bytes
+/// Add the conditional chapter-rule section while leaving the base bytes
 /// untouched for every project without a rule kind (§FS-rules.9).
 fn render_chapter_rules(
     mut block: String,
@@ -158,8 +158,8 @@ fn render_chapter_rules(
         return block;
     }
     block = block.replacen(
-        "Grounding with grund (v10)",
-        "Grounding with grund (v11)",
+        "Grounding with grund (v12)",
+        "Grounding with grund (v13)",
         1,
     );
     let mut section = String::from(

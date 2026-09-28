@@ -168,12 +168,48 @@ impl DocstringCursor {
 /// are prose formatting rather than a rewrite hazard, so a bare token there stays
 /// a citation off strict mode — this predicate is narrower than
 /// `never_rewrite_context`, which also withholds the marked case from code.
-pub(crate) fn bare_token_in_never_rewrite_zone(line: &str, is_md: bool, pos: usize) -> bool {
+///
+/// §AR-scanner.2.3.1: the third zone, the escape position of §FS-check.1.1.9, is
+/// the one that depends on neither the strict mode nor the host language, so it is
+/// asked of Markdown and source alike rather than in either branch.
+pub(crate) fn bare_token_in_never_rewrite_zone(
+    line: &str,
+    is_md: bool,
+    pos: usize,
+    marker: &str,
+) -> bool {
+    if in_escape_position(line, pos, marker) {
+        return true;
+    }
     if is_md {
         is_inside_markdown_link_destination(line, pos)
     } else {
         is_inside_string_literal(line, pos)
     }
+}
+
+/// §FS-check.1.1.9: whether the token starting at `pos` sits in an **escape
+/// position** — the bytes immediately before it are the configured `marker`
+/// wrapped in `<` and `>`. `<§>FS-user-login` illustrates a citation's shape, so
+/// no pass may read it as one: `check` would demand the edit the file already
+/// carries, and `fmt --marker` would splice a marker inside the brackets and turn
+/// the illustration into a live citation (§FS-fmt.2.3).
+///
+/// The escape is spelled with the *configured* marker, which is why this asks for
+/// the marker rather than for a literal `<§>`: where the marker is `@`, `<@>ID` is
+/// the escape and `<§>ID` an ordinary bare token. Asked of the token's own start
+/// column, so `<§> ID` with a space between is not an escape of anything.
+pub(crate) fn in_escape_position(line: &str, pos: usize, marker: &str) -> bool {
+    if marker.is_empty() {
+        return false;
+    }
+    let Some(before) = line.get(..pos) else {
+        return false;
+    };
+    before
+        .strip_suffix('>')
+        .and_then(|before| before.strip_suffix(marker))
+        .is_some_and(|before| before.ends_with('<'))
 }
 
 /// Whether byte offset `pos` falls inside a `'…'`, `"…"`, or `` `…` `` literal on
