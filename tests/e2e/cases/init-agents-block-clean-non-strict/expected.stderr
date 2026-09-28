@@ -1,0 +1,1 @@
+warning: nothing recognized — grund read 1 file and found no declaration and no citation in them. A declaration heading reads `# <KIND>-<NNN>-<slug>: <title>` and a citation `§<KIND>-<NNN>-<slug>`, under [id] format = "{kind}-{number}-{slug}" with <KIND> one of {FS}. Either nothing is declared yet, or the headings are written to a different shape than that.

@@ -1,0 +1,17 @@
+grund_config_version = 1
+project_name = "g9fs"
+
+[reference]
+marker = "§"
+strict = false
+
+[id]
+format = "{kind}-{number}-{slug}"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+title = "Functional specs"
+
+[scan]
+include = ["AGENTS.md", "docs"]

@@ -19,6 +19,7 @@ How a citation is written, and what counts as one.
 - [§DF-doc-comments-are-not-notes](DF-doc-comments-are-not-notes.md#df-doc-comments-are-not-notes-a-doc-comment-is-documentation-not-a-note-and-is-never-an-inline-citation-site) — a doc comment is documentation, not a note, and is never an inline citation site
 - [§DF-python-assigned-triple-quoted-data](DF-python-assigned-triple-quoted-data.md#df-python-assigned-triple-quoted-data-module-level-assigned-triple-quoted-strings-are-data-not-docstrings) — module-level assigned triple-quoted strings are data, not docstrings
 - [§DF-unmarked-markdown-headings](DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph) — in-body Markdown ATX headings participate in the knowledge graph
+- [§DF-escape-position-is-not-a-citation](DF-escape-position-is-not-a-citation.md#df-escape-position-is-not-a-citation-an-escape-position-is-not-a-citation-in-either-strict-mode) — an escape position is not a citation, in either strict mode
 
 ## Cross-reference links
 

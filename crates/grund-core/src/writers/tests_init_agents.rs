@@ -398,3 +398,63 @@ fn rendered_block_citation_example_is_escaped() {
         "worked example must not be a live citation: {block}"
     );
 }
+
+/// §FS-check.1.1.9 and §FS-init.2.3.8.2 read together: the managed block
+/// `grund init` writes must carry no *recognized* citation, so the scaffold
+/// lands clean in a repository running the compatibility mode
+/// `[reference] strict = false` (§FS-check.1.1) as well as in a strict one.
+/// A byte golden over the template cannot say that — it pins the wording the
+/// block happens to have. This scans the rendered block with the non-strict
+/// scanner and asks the question the host repository asks, so a future
+/// rewording that reintroduces a bare ID-shaped token fails here rather than
+/// in a stranger's first `grund check`.
+#[test]
+fn rendered_block_holds_no_citation_under_non_strict_scanning() {
+    for (name, format) in [
+        ("numbered", "{kind}-{number}-{slug}"),
+        ("slug_only", "{kind}-{slug}"),
+    ] {
+        let root = test_root(&format!("rendered_block_non_strict_{name}"));
+        write(
+            &root.join("grund.toml"),
+            &format!(
+                "grund_config_version = 1\nproject_name = \"demo\"\n\n\
+                 [reference]\nmarker = \"§\"\nstrict = false\n\n\
+                 [id]\nformat = \"{format}\"\n\n\
+                 [scan]\ninclude = [\"AGENTS.md\", \"docs\"]\n"
+            ),
+        );
+        let config = load_config(&root).expect("load the non-strict fixture config");
+        write(
+            &root.join("AGENTS.md"),
+            &render_agents_md("demo", &config, &root, true),
+        );
+
+        let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan root");
+        let sites = findings
+            .citations
+            .iter()
+            .map(|citation| {
+                format!(
+                    "{}:{}: {}",
+                    citation.file.display(),
+                    citation.line,
+                    citation.id.slug.as_deref().unwrap_or("<no slug>")
+                )
+            })
+            .collect::<Vec<_>>();
+        assert!(
+            sites.is_empty(),
+            "the rendered block must hold no recognized citation under \
+             [reference] strict = false with [id] format = {format:?}, \
+             so `grund init` followed by `grund check` is clean in a \
+             compatibility-mode repository (§FS-check.1.1.9); found: {sites:?}"
+        );
+        assert!(
+            !findings.escaped_citations.is_empty(),
+            "the block must still teach the escape by using it \
+             (§FS-init.2.3.8.2), so the scan must record at least one \
+             escaped illustration"
+        );
+    }
+}
