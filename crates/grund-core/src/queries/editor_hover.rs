@@ -1,5 +1,5 @@
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::editor_snapshot::{LspCitation, LspSnapshot};
 use crate::grammar::path_at_or_under;
@@ -68,14 +68,30 @@ impl LspSnapshot {
     /// (§AR-lsp.5.2).
     pub fn title_usage(&self, query_id: &str, section_separator: &str) -> LspUsage {
         let sites = self.title_citations(query_id, section_separator);
-        LspUsage {
-            sites: sites.len(),
-            files: sites
-                .iter()
-                .map(|citation| citation.path.as_path())
-                .collect::<BTreeSet<&Path>>()
-                .len(),
-        }
+        usage_over_paths(sites.iter().map(|citation| citation.path.as_path()))
+    }
+}
+
+/// The pair both transports report over one citation set: its members are the
+/// sites, the distinct paths among them the files (§FS-refs.3.4,
+/// §FS-lsp.1.2.5). One fold, called by the hover's `title_usage` and by
+/// `grund refs --total`, so the terminal and the editor can never disagree
+/// about a number (§FS-lsp.4).
+///
+/// The paths are taken generically because the two callers hold different
+/// types for the same thing — a `RefHit::path` is a `String` and an
+/// `LspCitation::path` a `PathBuf` — and the fold is over the set, not over
+/// either representation of it.
+pub fn usage_over_paths<P: AsRef<Path>>(paths: impl IntoIterator<Item = P>) -> LspUsage {
+    let mut sites = 0usize;
+    let mut files: BTreeSet<PathBuf> = BTreeSet::new();
+    for path in paths {
+        sites += 1;
+        files.insert(path.as_ref().to_path_buf());
+    }
+    LspUsage {
+        sites,
+        files: files.len(),
     }
 }
 
@@ -122,7 +138,11 @@ fn markdown_code_span(text: &str) -> String {
 /// `cited at <n> site(s) across <m> file(s)`, or `not cited` at zero
 /// (§FS-lsp.1.2.4). Only the two nouns inflect: the preposition is `across` at
 /// every count, so a skimmed hover changes only in its digits.
-fn usage_clause(usage: LspUsage) -> String {
+///
+/// Public because `grund refs --total` prints this clause and no other
+/// (§FS-refs.3.4): the wording lives here once, so a terminal and an editor
+/// render one sentence rather than two that drift (§FS-lsp.1.2.5).
+pub fn usage_clause(usage: LspUsage) -> String {
     if usage.sites == 0 {
         return "not cited".to_string();
     }

@@ -152,8 +152,9 @@ fn print_subcommand_help(cmd: &str) {
             println!("depends on a declaration before you change it.");
             println!();
             println!(
-                "Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--descendants] [--summary] [--format text|json]"
+                "Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--descendants]"
             );
+            println!("                   [--summary] [--total] [--format text|json]");
             println!();
             println!(
                 "PATH defaults to `.`. With a `.<section>` (or --section), only citations of that"
@@ -162,8 +163,9 @@ fn print_subcommand_help(cmd: &str) {
                 "exact section are listed; --descendants widens that to the section and every"
             );
             println!(
-                "section beneath it. An ID with no citations prints nothing and exits 0."
+                "section beneath it. An ID with no citations prints nothing and exits 0, or the"
             );
+            println!("line `not cited` under --total.");
             println!();
             println!("Options:");
             println!(
@@ -174,6 +176,9 @@ fn print_subcommand_help(cmd: &str) {
             );
             println!(
                 "  --summary            group citations by citing file             e.g. grund refs FS-login --summary"
+            );
+            println!(
+                "  --total              the set's size instead of its members      e.g. grund refs FS-login --total"
             );
             println!(
                 "  --format text|json   text (default) prints `path:line: <citation>`; json emits NDJSON."
@@ -196,6 +201,7 @@ fn print_subcommand_help(cmd: &str) {
             println!("Examples:");
             println!("  grund refs FS-login             # every citation of FS-login");
             println!("  grund refs FS-login --summary   # one row per citing file");
+            println!("  grund refs FS-login --total     # how many sites, in how many files");
             println!("  grund refs FS-login.3           # only citations of section 3");
         }
         "cover" => {

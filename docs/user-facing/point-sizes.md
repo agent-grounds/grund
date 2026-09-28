@@ -52,6 +52,7 @@ status ([§FS-declarations.checks.oversized-lead](../functional-spec/FS-declarat
 
 The remedy is structural, not deletion: move detailed prose into citable child
 sections, which keeps the parent coordinate stable, or promote a child section
-to its own declaration after running `grund refs <ID> --summary`. Each workspace
+to its own declaration after running `grund refs <ID> --total` for its size, or
+`--summary` for the files behind it. Each workspace
 member uses its own config. Explicit-path checks judge only sites in that path,
 and `--full` does not widen this project policy beyond its configured scan scope.

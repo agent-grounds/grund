@@ -22,7 +22,7 @@ use grund_core::{
     fetch_snapshot_with_run_warnings, format_references, init, list_sizes, list_with_run_warnings,
     names_member_id_candidate, propose_id_with_run_warnings, refs_query_failure_is_exit_one,
     refs_with_metadata, render_finding_sites_json, show_batch_with_scope, show_with_scope,
-    validate_config,
+    usage_clause, usage_over_paths, validate_config,
 };
 use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
 

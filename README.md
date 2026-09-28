@@ -102,7 +102,7 @@ printf '%s\n' '{"id":"FS-check"}' '{"id":"FS-check","section":"3.2"}' \
 grund show --batch --all --format=json
 ```
 
-`grund refs <ID> --summary` gives the blast radius one file per line before a full citation dump, and `grund list --kind FS,AR` keeps discovery scoped. When a specification feels heavy, `grund list --size=words --top 10` finds the largest leads before you read them in full. That's the "cheap grounding" half of the workflow: every agent fetches the same bytes for the same ID, every time.
+`grund refs <ID> --total` sizes the blast radius in one line — `cited at 140 sites across 50 files` — and `grund refs <ID> --summary` breaks that down one file per line before a full citation dump, while `grund list --kind FS,AR` keeps discovery scoped. When a specification feels heavy, `grund list --size=words --top 10` finds the largest leads before you read them in full. That's the "cheap grounding" half of the workflow: every agent fetches the same bytes for the same ID, every time.
 
 Repositories can opt into a warning at their own measured boundary:
 
@@ -404,7 +404,7 @@ docs/decisions/functional/DF-require-grounding.md: 1 (line 8)
 docs/requirements/REQ-no-wrong-citation.md: 1 (line 7)
 ```
 
-A section's children break when it moves, so before a move, rename or delete ask the same question of the whole subtree: `grund refs FS-check.3.2 --descendants --summary` folds that section *and every section beneath it* into the same one-line-per-file shape, which is the blast radius of the change rather than of the coordinate.
+A section's children break when it moves, so before a move, rename or delete ask the same question of the whole subtree: `grund refs FS-check.3.2 --descendants --summary` folds that section *and every section beneath it* into the same one-line-per-file shape, which is the blast radius of the change rather than of the coordinate. Swap `--summary` for `--total` and the same subtree folds one rung further, to the pair `cited at <n> sites across <m> files` — the size of the move, without the rows ([§FS-refs.3.4](docs/functional-spec/FS-refs.md#34---total)).
 
 Before reviewing a diff, group the citation graph by file so you can join changed files to the specs they touch:
 

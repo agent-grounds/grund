@@ -105,7 +105,7 @@ pub use queries::{
     LspFindingRange, LspSnapshot, LspSnapshotOpts, LspSnapshotWithMetadata, LspStub, LspUsage,
     ShowFormat, ShowMode, ShowOpts, ShowQueryError, can_replace_trigger_at, citation_under_title,
     list_sizes, lsp_hover_with_kind_title, lsp_title_hover_body, on_type_line_edits,
-    show_batch_with_scope,
+    show_batch_with_scope, usage_clause, usage_over_paths,
 };
 
 // §AR-system.2.11 templates: the setup skill a command prints byte-for-byte and
