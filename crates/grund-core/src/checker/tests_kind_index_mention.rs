@@ -5,7 +5,9 @@
 //! §FS-check.3.18.7's missing index file and §FS-check.3.17's repairable bare
 //! entry.
 
-use crate::testing::{check_run, codes, findings, kind_index_repo, only, test_root, write};
+use crate::testing::{
+    check_run, codes, findings, kind_index_repo, kind_index_repo_loose, only, test_root, write,
+};
 
 /// The clause §FS-check.3.18.5.1 puts on the finding where the index mentions
 /// the ID. The cases below assert the clause rather than the whole line, so each
@@ -13,6 +15,12 @@ use crate::testing::{check_run, codes, findings, kind_index_repo, only, test_roo
 /// ramp clause `scripts/check_release_ramps.py` reads (§FS-distribution.4.2).
 const MENTION_CLAUSE: &str =
     "but not as an entry: an entry is a `§`-marked Markdown link to the declaration";
+
+/// The same clause off strict mode, where a bare token is a citation
+/// (§FS-config.3.1) and a hand-written link around one is already a correct entry
+/// (§FS-check.3.17.5) — so the finding may not name the marked form as *the* one.
+const LOOSE_MENTION_CLAUSE: &str =
+    "but not as an entry: an entry is a Markdown link to the declaration whose text is the ID";
 
 /// §FS-check.3.18.5.1: the file-name half of the look. A declaration whose file
 /// is not named after its ID is mentioned by that file name, which is the half
@@ -174,5 +182,34 @@ fn a_repairable_bare_entry_never_earns_the_mention_clause() {
             .all(|diagnostic| !diagnostic.message.contains(MENTION_CLAUSE)),
         "§FS-check.3.18.5.1 belongs to the rule this case does not reach: {:?}",
         findings(&run)
+    );
+}
+
+/// §FS-check.3.18.5: the form the finding names follows `[reference] strict`. Off
+/// strict mode an unmarked link is an entry, so a clause demanding the marker
+/// would be false about the page it is printed on — which is the defect this
+/// wording exists to remove, pointed one mode over.
+#[test]
+fn off_strict_the_clause_names_the_form_that_mode_requires() {
+    let root = kind_index_repo_loose("off_strict_the_clause_names_the_form_that_mode_requires");
+    write(
+        &root.join("docs/specs/README.md"),
+        "# Specs\n\n- FS-001-login\n",
+    );
+
+    let run = check_run(&root, false);
+    let finding = only(&run, "missing-index-entry");
+    assert!(
+        finding.message.contains(LOOSE_MENTION_CLAUSE)
+            && finding.message.contains("with or without the `§` marker"),
+        "§FS-check.3.18.5: off strict the named form is a link whose text is the ID, \
+         with the marker optional: {}",
+        finding.message
+    );
+    assert!(
+        !finding.message.contains(MENTION_CLAUSE),
+        "§FS-check.3.17.5: an unmarked link is a correct entry here, so the marked \
+         form is not the form this run requires: {}",
+        finding.message
     );
 }
