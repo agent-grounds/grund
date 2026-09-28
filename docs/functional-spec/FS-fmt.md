@@ -56,7 +56,7 @@ This list is the ownership boundary for the one writer that rewrites text anywhe
 - Citations inside Markdown inline code spans (where rewriting would change a literal command, path, or example).
 - ID-shaped text inside Markdown link destinations, except a destination `fmt` itself maintains ([§FS-fmt.2.3.4](FS-fmt.md#234-a-link-destination-is-the-url)).
 - ID-shaped text in an escape position ([§FS-check.1.1.9](FS-check.md#119-an-id-in-an-escape-position)). `--marker` would splice a marker inside the escape brackets and turn an illustration into a live citation; every later pass, the cross-reference wrap included, follows the marker and stops with it.
-- Files outside the configured scan set.
+- Files outside the default scope.
 - External file-symlink targets, which `--write` reads and does not write through; files below an external directory symlink never reach `fmt` ([§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)).
 - Everything in a **suppressed scope**: a file the `[fmt] exclude` list names, and a region between a `grund:fmt off` directive and the `grund:fmt on` that closes it ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)). Unlike every other entry in this list, these two are asked for by the repository rather than forced by the text, and they are the only ones an index carve-out outranks ([§FS-fmt.2.5.3](FS-fmt.md#253-a-kinds-index-is-still-linkified)).
 
@@ -284,7 +284,7 @@ A "cross-reference" is whatever construct the surrounding markup uses to point a
 
 ### 6.1 Scope
 
-`--cross-refs` runs **only on files with the `.md` extension** in the configured scan set. Source files are never touched: their host languages do not render Markdown, and rewriting a comment in `src/bus.rs` to inject `[…](…)` syntax is at best noise and at worst a parse error. The polyglot citation grammar (`§GOAL-polyglot-citation`) is the universal form; cross-reference emission is the rendered view of it — Markdown today, with room for other markup families later ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)).
+`--cross-refs` runs **only on files with the `.md` extension** in the default scope. Source files are never touched: their host languages do not render Markdown, and rewriting a comment in `src/bus.rs` to inject `[…](…)` syntax is at best noise and at worst a parse error. The polyglot citation grammar (`§GOAL-polyglot-citation`) is the universal form; cross-reference emission is the rendered view of it — Markdown today, with room for other markup families later ([§FS-fmt.6](FS-fmt.md#6-cross-reference-emission)).
 
 A kind's index entries are linkified even under `[fmt.cross_refs] enabled = false` ([§FS-fmt.6.1.1](FS-fmt.md#611-a-kinds-index-entries-are-always-linkified)) — only the entries ([§FS-fmt.6.1.2](FS-fmt.md#612-the-carve-out-is-scoped-to-the-entries-not-the-page)), and in both modes ([§FS-fmt.6.1.3](FS-fmt.md#613-the-carve-out-follows-the-passs-own-gate)). Decided in [§DF-index-always-linkified](../decisions/functional/DF-index-always-linkified.md#df-index-always-linkified-the-cross-reference-pass-always-runs-on-a-kinds-index-file).
 
