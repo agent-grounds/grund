@@ -66,7 +66,6 @@ fn agents_template_substitutions(
         ("{NAME}", name.to_string()),
         ("{ID_SHAPE_SEC}", format!("{id_shape}[{sep}<section>]")),
         ("{ID_SHAPE}", id_shape),
-        ("{ID_EXAMPLE}", id_example),
         ("{CITE_EXAMPLE}", cite_example),
         ("{KINDS_SET}", kinds_set),
         ("{BARE_TOKEN_NOTE}", bare_note),

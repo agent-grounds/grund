@@ -513,7 +513,7 @@ Several things in the generated entrypoint are *substituted in* rather than fixe
 
 ##### 2.3.8.1 What the config fills in
 
-From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>-<slug>`, …, derived from `[id].format`), one worked example ID and citation, the `[id].section_separator`, the marker and `$$`-trigger from `[reference]`, the `KIND ∈ {…}` set from `[[kinds]]`, a raw-readable link list of each kind's configured declaration home and title ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), a sentence on whether bare ID-shaped tokens count as citations (driven by `[reference].strict`), and the inline citation style sentences defined by [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering).
+From that config the block fills in the ID shape (`<KIND>-<NNN>-<slug>`, `<KIND>-<slug>`, …, derived from `[id].format`), one worked example citation, the `[id].section_separator`, the marker and `$$`-trigger from `[reference]`, the `KIND ∈ {…}` set from `[[kinds]]`, a raw-readable link list of each kind's configured declaration home and title ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)), a sentence on whether bare ID-shaped tokens count as citations (driven by `[reference].strict`), and the inline citation style sentences defined by [§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering).
 
 ##### 2.3.8.2 The worked example is escaped
 
