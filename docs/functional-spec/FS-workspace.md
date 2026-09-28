@@ -1,6 +1,6 @@
 # FS-workspace: grund validates cross-project citations in a workspace
 
-`grund` can treat a repository as a workspace of independent project namespaces.
+`grund` can treat a repository as a workspace of independent member projects.
 Local citations stay unchanged, while cross-project citations name a stable alias
 before the local ID. This keeps the zero-config single-project path intact
 ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)) and gives larger repos an explicit resolver for sub-projects
@@ -24,7 +24,7 @@ member, alias), [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, caut
   citation resolves against.
 - **absent** — Of an optional member: declared and not on disk. The block loads without it and
   the run continues.
-- **unverified** — Of a citation into an absent member's namespace: neither resolved nor
+- **unverified** — Of a citation into an absent member: neither resolved nor
   reported, a third outcome beside valid and dangling.
 
 ## 1. Citation syntax
@@ -60,8 +60,8 @@ The alias path is [§FS-workspace.1.1](FS-workspace.md#11-the-alias-path) and th
 Each `alias` is a lowercase slug: it starts with a letter and then uses lowercase
 letters, digits, or `-`. The alias path carries **one segment per workspace
 level** ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)); in a workspace with no nesting it is always a single segment, so
-the common form is `<§>alias/<ID>`. The slashes are part of the citation
-namespace, not part of the ID — and since an ID never contains `/` (the ID
+the common form is `<§>alias/<ID>`. The slashes are part of the alias
+path, not part of the ID — and since an ID never contains `/` (the ID
 grammar rejects one on load, [§FS-config.3.2](FS-config.md#32-id--id-grammar)),
 the last slash in the token is always the boundary between the two.
 
@@ -107,7 +107,7 @@ to the config root; what an entry may name is [§FS-workspace.2.3](FS-workspace.
 [§FS-workspace.2.4](FS-workspace.md#24-trailing-globs). `include_root` defaults to `true`; when false, a workspace-root
 `grund check` checks only member projects.
 
-Each member is a separate project namespace. If a member has its own config —
+Each member is a separate project with its own IDs. If a member has its own config —
 either discovery form, `.agents/grund.toml` or a bare `grund.toml`
 ([§FS-config.1](FS-config.md#1-file-location-and-discovery)) — that file configures the member. If it has neither, the
 canonical defaults apply with the member directory as the config root. Root and
@@ -208,7 +208,7 @@ An entry there is a member the repository has declared **may be legitimately
 absent**. Present, it is an ordinary member: every rule in [§FS-workspace.2](FS-workspace.md#2-workspace-configuration) applies to it
 unchanged, and it is scanned under its own config and citable at its own alias
 like any other. Absent ([§FS-workspace.2.2.1](FS-workspace.md#221-what-absent-means)), the block loads without it and the run
-continues; the namespace it would have contributed is **unverified**, a third
+continues; the alias it would have contributed is **unverified**, a third
 state beside resolved and unknown ([§FS-workspace.4](FS-workspace.md#4-resolution)), and the run names it
 ([§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent)).
 Its alias is the entry's last path segment ([§FS-workspace.2.2.2](FS-workspace.md#222-the-alias-of-an-optional-member)).
@@ -238,7 +238,7 @@ the gitlink) has a member that exists: it loads under the canonical defaults
 ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration)), contributes zero declarations, and turns citations into it into
 `unknown reference` errors ([§FS-check.3.1](FS-check.md#31-dangling-citation)) rather than `unknown project alias` ones. That is a
 different symptom from the one [§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent) fixes, and the repository meeting it
-has the ordinary repair — name the namespaces under the submodule rather than the
+has the ordinary repair — name the members under the submodule rather than the
 submodule directory, `optional_members = ["hardware/sprayer"]`, which *is* absent
 when the submodule is not initialized.
 
@@ -267,9 +267,9 @@ text. So **the alias of an optional member is the entry's last path segment**:
 whether the member is present or not, so a `project_name` that disagrees with it
 is a config error ([§FS-workspace.2.2.2.1](FS-workspace.md#2221-a-project_name-that-disagrees-with-the-segment)), and so is a segment that is not a valid alias
 ([§FS-workspace.2.2.2.2](FS-workspace.md#2222-a-last-segment-that-is-not-a-valid-alias)). An absent optional member absorbs every alias path that begins with
-its segment, since it may itself have declared `[workspace]` ([§FS-workspace.2.2.2.3](FS-workspace.md#2223-an-absent-namespace-absorbs-the-alias-paths-beneath-it)), and a
+its segment, since it may itself have declared `[workspace]` ([§FS-workspace.2.2.2.3](FS-workspace.md#2223-an-absent-member-absorbs-the-alias-paths-beneath-it)), and a
 citation into it is recognized by [§FS-workspace.5](FS-workspace.md#5-command-scope)'s fixed `KIND[-NUM]-SLUG` fallback shape
-([§FS-workspace.2.2.2.4](FS-workspace.md#2224-recognizing-a-citation-into-an-absent-namespace)).
+([§FS-workspace.2.2.2.4](FS-workspace.md#2224-recognizing-a-citation-into-an-absent-member)).
 
 ##### 2.2.2.1 A `project_name` that disagrees with the segment
 
@@ -288,11 +288,11 @@ the directory or by setting `project_name` to match.
 ##### 2.2.2.2 A last segment that is not a valid alias
 
 The segment has to be a valid alias in its own right ([§FS-workspace.3](FS-workspace.md#3-aliases)): an entry whose last
-segment is not a lowercase slug can never name a namespace in either checkout, so
+segment is not a lowercase slug can never name a member in either checkout, so
 it is the same config error at the same line, said before any directory is looked
 for.
 
-##### 2.2.2.3 An absent namespace absorbs the alias paths beneath it
+##### 2.2.2.3 An absent member absorbs the alias paths beneath it
 
 A member may itself declare `[workspace]` ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)), and an absent one may have declared
 anything; the run cannot know how many levels it had or what they were called. So
@@ -300,12 +300,12 @@ a citation whose alias path *begins* with an absent optional member's segment, a
 that member's level, is unverified whatever follows it — `<§>hardware/AR-bus` and
 `<§>hardware/sprayer/FS-nozzle` alike when `hardware` is the absent entry. That is
 what lets one entry stand for a submodule contributing a whole subtree of
-namespaces, and it is why listing one entry per namespace (the shape [§FS-workspace.2.2.6](FS-workspace.md#226-a-trailing--glob-may-not-be-optional)
+members, and it is why listing one entry per member (the shape [§FS-workspace.2.2.6](FS-workspace.md#226-a-trailing--glob-may-not-be-optional)
 asks for) is a choice rather than an obligation: name the subtree's
-root when the submodule directory is itself a member, name the namespaces when it
+root when the submodule directory is itself a member, name the members when it
 is not.
 
-##### 2.2.2.4 Recognizing a citation into an absent namespace
+##### 2.2.2.4 Recognizing a citation into an absent member
 
 Recognizing such a citation uses the fixed `KIND[-NUM]-SLUG` fallback shape of
 [§FS-workspace.5](FS-workspace.md#5-command-scope), not the target's `[id] format`, for exactly the reason [§FS-workspace.5](FS-workspace.md#5-command-scope) gives: the target's
@@ -323,9 +323,9 @@ checkout cannot keep.
 
 It is the wrong answer for a member the repository knows may be missing: such a
 repository had no run at all. Leaving the entry in `members` is the config error
-above; taking it out unregisters the alias, so every citation into that namespace
+above; taking it out unregisters the alias, so every citation into that member
 becomes an unknown-alias error at its own site ([§FS-workspace.4](FS-workspace.md#4-resolution), [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)) — thousands of lines in a tree that cites the
-namespace widely. One path refuses to start and the other calls the whole tree
+member widely. One path refuses to start and the other calls the whole tree
 broken, and neither is a run. `optional_members` is the third path.
 
 #### 2.2.4 An opt-out, not a softer default
@@ -345,17 +345,17 @@ member rather than the one that was meant ([§DF-optional-workspace-members](../
 makes that affordable rather than free. The declaration is this key, the
 finding is [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent), and the bound is that nothing else
 moves — an alias that is not an optional member is unknown exactly as before, and
-a namespace that *is* present is checked to the letter.
+a member that *is* present is checked to the letter.
 
 #### 2.2.6 A trailing `/*` glob may not be optional
 
-A glob names namespaces by reading
+A glob names members by reading
 its parent directory, so an absent parent names none: `hardware/*` in a checkout
 without the submodule expands to nothing, contributes no alias, and leaves every
 `§hardware/…` citation as unknown as deleting the entry would: the key would
 appear to work and do nothing, which is worse than refusing it. An entry ending
 in `/*` is therefore a config error at the `optional_members` line, and the
-message names the shape to write instead — one concrete entry per namespace,
+message names the shape to write instead — one concrete entry per member,
 `hardware/sprayer` and `hardware/pod` rather than `hardware/*` — because a user
 who has just been refused needs the form that works, not only the form that does
 not. That is the whole cost of the rule: a tree that spells its members with a
@@ -378,7 +378,7 @@ compares members as canonical paths and makes two entries of one list that
 resolve to one root the same member — deduped rather than rejected — and an
 absent entry is deduped by that same comparison, taken from the entry text before
 anything is announced. A repeat is redundant rather than ambiguous: it names one
-directory, one alias, and one namespace, and there is nothing for grund to
+directory, one alias, and one project, and there is nothing for grund to
 discard by folding it. Refusing it only in the checkout that lacks the directory
 would be worse than either answer, because the same config would then be rejected
 by CI and accepted by the developer holding the member — the checkout-dependent
@@ -490,7 +490,7 @@ During `grund check`:
 - a known alias with no matching declaration is an error at the citation site;
 - an alias path that names, or descends into, an **absent optional member**
   ([§FS-workspace.2.2](FS-workspace.md#22-a-member-that-may-be-legitimately-absent)) is neither: the citation is *unverified*, and nothing is reported at
-  its site ([§FS-workspace.4.3](FS-workspace.md#43-unverified-is-reported-once-per-namespace)).
+  its site ([§FS-workspace.4.3](FS-workspace.md#43-unverified-is-reported-once-per-member)).
 - findings for a known alias render the `<ID>` and section separator with the
   target project's `[id]` config, not the citing project's config. The literal
   source token remains the scanner's evidence, but the finding names the same
@@ -502,8 +502,8 @@ Qualified citations are deliberately never resolved by path syntax such as
 Each lookup uses only the selected project's catalog, shorthand policy, and kind
 formats, so an exact spelling is never borrowed from a sibling catalog ([§FS-workspace.4.1](FS-workspace.md#41-each-lookup-stays-in-its-project)).
 The target project's shorthand policy governs a qualified number-only shorthand
-in both `check` and `fmt` ([§FS-workspace.4.2](FS-workspace.md#42-qualified-shorthand-follows-the-targets-policy)). Unverified is reported once per namespace, never per
-site ([§FS-workspace.4.3](FS-workspace.md#43-unverified-is-reported-once-per-namespace)), and value bindings use this resolver without a parallel lookup path
+in both `check` and `fmt` ([§FS-workspace.4.2](FS-workspace.md#42-qualified-shorthand-follows-the-targets-policy)). Unverified is reported once per member, never per
+site ([§FS-workspace.4.3](FS-workspace.md#43-unverified-is-reported-once-per-member)), and value bindings use this resolver without a parallel lookup path
 ([§FS-workspace.4.4](FS-workspace.md#44-value-bindings)).
 
 ### 4.1 Each lookup stays in its project
@@ -526,13 +526,13 @@ input continue to resolve or expand canonically
 ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation),
 [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)).
 
-### 4.3 Unverified is reported once per namespace
+### 4.3 Unverified is reported once per member
 
-Unverified is the third state, and it is reported once per namespace rather than
-once per site. The run names the namespace at the `optional_members` entry that
+Unverified is the third state, and it is reported once per member rather than
+once per site. The run names the member at the `optional_members` entry that
 made the skip legal ([§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent)) and says nothing where the citations are,
 because there is nothing true to say there: the citation may be perfect and the
-checkout merely partial, and a tree that cites an absent namespace widely would
+checkout merely partial, and a tree that cites an absent member widely would
 pay thousands of lines to be told one fact it can be told once. What must not
 happen is the third possibility — that the run says nothing anywhere. That is the
 trade [§REQ-no-missed-citation.2](../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded) licenses and [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) is the price of.
@@ -589,13 +589,13 @@ project's grammar, is the one place that checks the tail itself.
 
 ## 6. Nested project boundary
 
-Workspace members are namespace boundaries. When the root project is checked as
+Workspace members are project boundaries. When the root project is checked as
 part of a workspace, the root scan does not scan member project directories or
 their descendants, even if the root project's `[scan] include` names a path
 inside a member. The member is scanned separately under its own config and alias.
 
 This prevents a child project declaration from accidentally becoming a duplicate
-or dependency of the root namespace. It also has a limit: a `members` list that
+or dependency of the root project. It also has a limit: a `members` list that
 prunes *every* one of the block's own scan roots leaves that block reading
 nothing at all, which is a misconfiguration rather than a boundary, and [§FS-workspace.2.1](FS-workspace.md#21-a-member-that-swallows-the-blocks-own-scan) is
 where the run says so.
@@ -746,7 +746,7 @@ does not load at all — fails the run with *its own error*, from its own
 launched at, so a block above that root renders with `..` (`../grund.toml:16`)
 and the reader lands on the file that holds the line rather than on a same-named
 one inside the subtree ([§FS-errors.3](FS-errors.md#3-message-text)); dropping
-its segment would let the subtree invent a namespace, and
+its segment would let the subtree invent an alias, and
 [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) would then hint
 the one spelling that fails at the root.
 
@@ -823,12 +823,12 @@ obtained — and the bytes the CLI prints are unchanged.
 #### 6.1.8 A block no enclosing block lists is outside the chain
 
 **A `[workspace]` block that no enclosing block lists is outside the chain:** at
-the outer scope it is ignored, so its tree belongs to the enclosing project's
-namespace when that project's scan reaches it and to nobody when it does not,
+the outer scope it is ignored, so its tree belongs to the enclosing project
+when that project's scan reaches it and to nobody when it does not,
 while a run started **at** it names every path from itself — a run started at a
 block *below* it that the chain does list is back inside the guarantee. A run whose own tree scan meets such a block reports it, naming the
 block's `[workspace]` line and saying that the projects under it are absorbed
-into the enclosing namespace instead of named under their own alias path
+into the enclosing project instead of named under their own alias path
 ([§FS-check.3.29](FS-check.md#329-unlisted-workspace-block)). Two shapes stay
 unreported ([§FS-workspace.6.1.8.1](FS-workspace.md#6181-two-shapes-stay-unreported)).
 
@@ -856,7 +856,7 @@ project is not descended into, whichever project's scan met it and under
 whatever name. This loaded-workspace ownership rule is stronger than the
 physical-root rule: it also separates another project whose root lies inside the
 current project's root. The harm is the same in every direction:
-`packages/a/docs/b -> ../../b` files `b`'s declarations under `a`'s namespace
+`packages/a/docs/b -> ../../b` files `b`'s declarations under `a`
 and reports them as duplicates of themselves, which is what [§FS-workspace.6](FS-workspace.md#6-nested-project-boundary) forbids of the
 root scan.
 
@@ -868,7 +868,7 @@ project root fences directory-link traversal
 ([§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed)), so a
 link into a sibling or the workspace root is pruned as an outward directory
 link. The independently checked member therefore cannot absorb another
-project's declarations into its own namespace. An ordinary parent-relative
+project's declarations into its own catalog. An ordinary parent-relative
 scan include is not a link traversal and retains the intentional external scope
 [§FS-config.3.5.1](FS-config.md#351-a-symlink-in-the-tree-is-followed) gives it.
 
@@ -943,7 +943,7 @@ what becomes of the `grund list` hint ([§FS-workspace.8.1.1.7](FS-workspace.md#
 ##### 8.1.1.1 Why it still refuses
 
 The unqualified form is not resolved into the member, because [§FS-workspace.4](FS-workspace.md#4-resolution) is what `grund check` enforces
-and an unqualified cross-namespace citation is an error at its site — a query
+and an unqualified cross-project citation is an error at its site — a query
 command that printed the body would teach the reader to write a citation CI
 rejects, and one resolver across `check` and the query commands is the direction
 [§DF-subproject-namespaces.3.7](../decisions/functional/DF-subproject-namespaces.md#37-check-comes-first-query-commands-follow) states. Naming the qualified form gets the reader
@@ -960,7 +960,7 @@ ahead of it would trade that class away for a few characters of prominence.
 
 Two projects declaring one ID
 is not an `ambiguous ID` error — [§FS-workspace.8.1.4](FS-workspace.md#814-one-id-in-two-projects-is-not-ambiguous): they are two declarations in two
-namespaces — and picking one would be a guess
+projects — and picking one would be a guess
 ([§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution)). They are deduplicated, sorted, limited and joined as
 [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) treats its own — `did you mean left/FS-shipping or right/FS-shipping?`.
 
@@ -1022,7 +1022,7 @@ note: workspace aliases are defined in the root grund.toml under [workspace]
 
 Ambiguity within a project is unchanged ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)). An ID that exists in
 two *different* projects is not ambiguous — they are two declarations in two
-namespaces, and the alias picks one.
+projects, and the alias picks one.
 
 #### 8.1.5 `show --batch`
 
@@ -1032,7 +1032,7 @@ an unknown alias is a per-query failure envelope so the ordered stream continues
 spells the current project's IDs unqualified and every other project's IDs with
 its alias; when `include_root = false` leaves no current project, all generated
 IDs are qualified. The spelling is stable input to the same resolver, not a
-second namespace rule.
+second resolution rule.
 
 ### 8.2 `grund refs`
 
@@ -1428,7 +1428,7 @@ A malformed alias path is rejected before the scan, and the finding names
 the offending segment — `Sprayer` for `grund hardware/Sprayer/FS-x`, not the
 whole `hardware/Sprayer`. The path is one slug per level ([§FS-workspace.1.1](FS-workspace.md#11-the-alias-path)), so the mistake
 is always in a segment; naming the path against a pattern that forbids `/`
-would read as "a namespace may not contain `/`", which is the opposite of the
+would read as "an alias may not contain `/`", which is the opposite of the
 rule. An empty segment (`hardware//FS-x`) has nothing to quote, so the
 finding says a segment is empty; a leading `/` (`/FS-x`) says the path is
 empty — never empty backticks. An alias path that is *well formed* but names no

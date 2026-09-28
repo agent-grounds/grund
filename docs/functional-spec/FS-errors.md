@@ -254,7 +254,7 @@ unknown kind "<KIND>" in any workspace namespace; accepted form: <rewrite> — n
 Exact-line consumers must migrate during this window to the stable
 `code == "invalid-rule"`; the code, the error severity, the selectors, and the
 exit verdict do not change, and `--only invalid-rule` keeps selecting the
-finding. A namespace the run *can* judge and rejects keeps its legacy reason
+finding. An alias the run *can* judge and rejects keeps its legacy reason
 unchanged and unsuffixed, because there the kind really is what failed.
 
 The reason belongs to the vocabulary check rather than to the finding, so the

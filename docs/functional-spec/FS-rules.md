@@ -23,7 +23,7 @@ level, rule, grounded).
 - **family** — One accepted rule grammar. A sentence outside every family is refused rather than
   reinterpreted.
 - **unverifiable here** — A rule sentence every component of which is well-formed, whose
-  object namespace the scope the command ran in holds no vocabulary for at all. Not an
+  object alias the scope the command ran in holds no vocabulary for at all. Not an
   invalid rule ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)).
 - **facts** — The `RuleFacts` an evaluator reads: the versioned, immutable record of the units,
   chapters and counts one scan produced.
@@ -78,14 +78,14 @@ unit; zero matches or ambiguity produces `invalid-rule` ([§FS-rules.7.1](FS-rul
 kind or chapter subject matching no declarations is valid, vacuously true, and
 silent. Kind-level existence is not expressible in phase 1.
 
-Subject-side namespaces, including aliases and `*/`, component wildcards,
+Subject-side aliases, including `*/`, component wildcards,
 numbered chapter literals, `Each chapter of each KIND`, and file, directory, or
 path subjects are refused ([§FS-rules.3.5](FS-rules.md#35-strict-refusals)). The future component wildcard, if admitted,
 will consume exactly one accepted section component; phase 1 accepts no such
 token.
 
 Object kind targets use the existing target-entry grammar of
-[§FS-config.3.9.3](FS-config.md#393-namespace-matching) unchanged, including a
+[§FS-config.3.9.3](FS-config.md#393-alias-matching) unchanged, including a
 pinned `alias/KIND` and `*/KIND`. Alternatives joined with `or` are one target
 set. Repeated or differently ordered kinds normalize to the same byte-sorted
 set for meaning and deduplication.
@@ -219,13 +219,13 @@ no incomplete tree is presented as a complete rule verdict.
 
 ### 4.1 A rule this scope cannot verify
 
-An object kind pinned at a namespace (`workshop/OP`) or matched across every
-namespace (`*/OP`) resolves wherever the run holds the workspace that namespace
+An object kind pinned at an alias (`workshop/OP`) or matched across every
+alias (`*/OP`) resolves wherever the run holds the workspace that alias
 belongs to, and that is the workspace the run's own effective config declares —
 never one climbed to from above. `check` and `init` read one vocabulary there,
 so no two commands in one directory disagree about one sentence.
 
-A run whose effective config declares no `[workspace]` holds no namespace at
+A run whose effective config declares no `[workspace]` holds no alias at
 all. A member-scoped run is the ordinary case: its effective config is the
 member's own `grund.toml` ([§FS-workspace.2](FS-workspace.md#2-workspace-configuration), [§FS-workspace.5.1](FS-workspace.md#51-a-member-run)), so a pinned or
 any-member object kind names something the scope cannot judge either way. Such
@@ -233,30 +233,30 @@ a sentence is **unverifiable here** rather than invalid. It is reported at the
 rule's own heading, keeps the code `invalid-rule`, takes the wording
 [§FS-errors.3.7](FS-errors.md#37-the-rule-site-unknown-alias-wording-migration) fixes, and the run still exits nonzero.
 
-Unverifiability is a verdict about the object kind's namespace and about nothing
+Unverifiability is a verdict about the object kind's alias and about nothing
 else. Every other part of the sentence is judged against the facts the scope
 already holds, exactly as it is when the object kind is local — the grammar, the
 rationale, and a literal subject that has to resolve. A rule that fails for any
 of those reasons is an invalid rule with [§FS-rules.4](FS-rules.md#4-validation-lifecycle)'s consequences in full,
-whichever namespace its object names, and the run reports the fact it can act on
+whichever alias its object names, and the run reports the fact it can act on
 rather than the one it cannot.
 
 #### 4.1.1 The distinction is mechanical
 
-What makes a sentence unverifiable is the absence of every workspace namespace,
+What makes a sentence unverifiable is the absence of every workspace alias,
 which the run knows without judging anything:
 
 | written object kind | the run's workspace vocabulary | verdict |
 |---|---|---|
-| `workshop/OP` | holds no namespace at all | unverifiable here |
+| `workshop/OP` | holds no alias at all | unverifiable here |
 | `workshop/OP` | holds `workshop`, which declares `OP` | resolves |
 | `workshop/NOPE` | holds `workshop` | invalid rule |
-| `typo/OP` | holds namespaces, none named `typo` | invalid rule |
-| `*/OP`, `OP` not local | holds no namespace at all | unverifiable here |
-| `*/OP`, `OP` not local | holds namespaces, none declaring `OP` | invalid rule |
+| `typo/OP` | holds aliases, none named `typo` | invalid rule |
+| `*/OP`, `OP` not local | holds no alias at all | unverifiable here |
+| `*/OP`, `OP` not local | holds aliases, none declaring `OP` | invalid rule |
 | `*/OP`, `OP` declared locally | either | resolves |
 
-A config that declares `[workspace]` holds at least its own project's namespace,
+A config that declares `[workspace]` holds at least its own project's alias,
 whatever its member list expands to — only a config that declares none holds
 nothing at all. So an empty member list and one naming a member the run cannot
 reach come to the same verdict about the same rule, and no run standing at a
@@ -538,7 +538,7 @@ tests specify the component placement separately.
 
 There is no `[settings]`, `config show --at`, path/folder/file subject,
 exception phrase, `grund:allow` marker, definition, derived term, component
-wildcard, wildcard subject namespace, new command verb, suppression mechanism,
+wildcard, wildcard subject alias, new command verb, suppression mechanism,
 SCIP/LSIF ingestion, symbol vocabulary, on-disk fact format, or Datalog
 runtime. Settings must reuse this selector parser and independently answer
 [§DF-fmt-suppression.2.2](../decisions/functional/DF-fmt-suppression.md#22-an-in-text-region-not-a-rule-keyed-by-declaration-section). A future adjacent-site exception may rely on rule prohibitions retaining their exact citation-site anchors. A future program producer inherits opaque identities, versioned immutable complete snapshots, repository-relative anchors, committed offline input, and evaluator independence, but no exchange format is chosen here.
