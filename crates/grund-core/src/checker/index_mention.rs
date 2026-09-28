@@ -13,8 +13,8 @@ use crate::model::{Declaration, Id};
 /// Whether `line` names `file_name` as a **whole** file name
 /// (§FS-check.3.18.5.1). The character on either side must be one that cannot
 /// continue a file name, so `overview.md` is named by neither `my-overview.md`
-/// nor `overview.markdown`; a `/` before it may, because a path ending in the
-/// name still names that file.
+/// nor `overview.markdown`, while a path ending in the name still names that
+/// file, because `/` cannot continue one either.
 fn line_names_file(line: &str, file_name: &str) -> bool {
     if file_name.is_empty() {
         return false;
@@ -30,7 +30,7 @@ fn line_names_file(line: &str, file_name: &str) -> bool {
         let start = cursor + relative;
         let end = start + file_name.len();
         cursor = end;
-        let opens = start == 0 || bytes[start - 1] == b'/' || !continues(bytes[start - 1]);
+        let opens = start == 0 || !continues(bytes[start - 1]);
         let closes = end == bytes.len() || !continues(bytes[end]);
         if opens && closes {
             return true;

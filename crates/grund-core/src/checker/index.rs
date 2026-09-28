@@ -434,9 +434,21 @@ pub(super) fn check_kind_indexes(
                     // Both forms keep §FS-distribution.4.2.3's past-tense release.
                     let rendered = render_id(&config.grammar, id);
                     let message = if mentioned.contains(id) {
+                        // §FS-check.3.18.5: the form named follows `[reference]
+                        // strict`, so it is true of the index it is said about.
+                        let form = if config.strict {
+                            format!(
+                                "an entry is a `{}`-marked Markdown link to the declaration",
+                                config.marker
+                            )
+                        } else {
+                            format!(
+                                "an entry is a Markdown link to the declaration whose text is the ID, with or without the `{}` marker",
+                                config.marker
+                            )
+                        };
                         format!(
-                            "{rendered} appears in {index_display} but not as an entry: an entry is a `{}`-marked Markdown link to the declaration — became an error in grund 0.13.0",
-                            config.marker
+                            "{rendered} appears in {index_display} but not as an entry: {form} — became an error in grund 0.13.0"
                         )
                     } else {
                         format!(
