@@ -496,7 +496,7 @@ During `grund check`:
   source token remains the scanner's evidence, but the diagnostic names the same
   target that resolution attempted.
 
-Cross-project references are deliberately never resolved by path syntax such as
+Qualified citations are deliberately never resolved by path syntax such as
 `../FS-login` or `packages/api/FS-login`; aliases are the stable handles.
 
 Each lookup uses only the selected project's catalog, shorthand policy, and kind
@@ -562,7 +562,7 @@ does runs its own subtree ([§FS-workspace.6.1](FS-workspace.md#61-nested-worksp
 resolved without the workspace context; each such citation produces an
 `unknown project alias <path>` error at the citation site
 ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)). This matches [§DF-subproject-namespaces](../decisions/functional/DF-subproject-namespaces.md#df-subproject-namespaces-alias-namespace-model-for-sub-projects-and-external-repos) [§DF-subproject-namespaces.3.6](../decisions/functional/DF-subproject-namespaces.md#36-standalone-members-fail-loud-not-silent) — silent skipping
-would let a passing member check ship a cross-project reference that no longer
+would let a passing member check ship a qualified citation that no longer
 resolves at the workspace root, which violates [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration). Run
 `grund check` at the workspace root to validate cross-project citations.
 
