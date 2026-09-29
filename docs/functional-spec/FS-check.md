@@ -1311,7 +1311,7 @@ A recognized citation has no declaration and targets a fetch-enabled kind whose 
 <path>:<line>: no snapshot for <qualified-ID> in <home> — run grund fetch <qualified-ID>
 ```
 
-The em-dash remedy tail is exactly `— run grund fetch <qualified-ID>`, with no inner backticks. The JSON code is `missing-snapshot`, severity is `warning`, and the message field is the text after `<path>:<line>: `. A warning-only run exits 0 and prints no `success` marker. Every site gets one finding, remains in the citation and coverage indexes, and may resolve after an explicit [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot). The hints that take the fetch tail's place are [§FS-check.4.12.1](FS-check.md#4121-a-hint-takes-the-fetch-tails-place), and its workspace spelling is [§FS-check.4.12.2](FS-check.md#4122-in-a-workspace).
+The em-dash remedy tail is exactly `— run grund fetch <qualified-ID>`, with no inner backticks. The JSON code is `missing-snapshot`, severity is `warning`, and the message field is the text after `<path>:<line>: `. A warning-only run exits 0 and prints no `success` marker. Every site gets one finding, remains in what `refs` and `cover` report, and may resolve after an explicit [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot). The hints that take the fetch tail's place are [§FS-check.4.12.1](FS-check.md#4121-a-hint-takes-the-fetch-tails-place), and its workspace spelling is [§FS-check.4.12.2](FS-check.md#4122-in-a-workspace).
 
 #### 4.12.1 A hint takes the fetch tail's place
 

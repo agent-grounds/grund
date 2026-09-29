@@ -47,7 +47,7 @@ An ID with zero citations produces empty output and exit `0` — or, under `--to
 
 ### 2.2 Value bindings
 
-A citation inside a recognized value binding, local or alias-qualified, is an ordinary citation in this index; JSON declaration sources themselves never contribute citations ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)).
+A citation inside a recognized value binding, local or alias-qualified, is an ordinary citation in this set; JSON declaration sources themselves never contribute citations ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)).
 
 ### 2.3 Fetch-backed snapshots
 

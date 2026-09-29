@@ -202,7 +202,7 @@ In both helpers, "the version bump" includes:
 - the Cargo manifests and the lockfile;
 - any checked fixture whose expected output embeds `grund --version`;
 - every **ramp constant** whose window is stated as a version in message text — a deprecation deadline is a promise about a release, and a bump is the only moment it can come due ([§DF-index-compatibility-ramp.2.3](../decisions/functional/DF-index-compatibility-ramp.md#23-both-findings-name-their-versions-and-a-test-keeps-the-names-honest) states the rule). Both ramps that rule was written for have since landed; the live ones are the absorbed-scan warning, the narrowed-alias scope suffix, and the `agents-init` compatibility tail, and the absorbed-scan ramp has a unit test that fails the bump which reaches its deadline rather than letting it pass silently ([§FS-distribution.4.2.1](FS-distribution.md#421-a-test-can-hold-only-the-pending-half));
-- the deterministic changelog rotation performed by `scripts/prepare_changelog_release.py`: the curated `## Unreleased` bullets become the new inline release section, the former inline latest release is archived under `docs/changelog/<version>.md`, and the older-release index gains the archive link.
+- the deterministic changelog rotation performed by `scripts/prepare_changelog_release.py`: the curated `## Unreleased` bullets become the new inline release section, the former inline latest release is archived under `docs/changelog/<version>.md`, and the older-release section gains the archive link.
 
 The helper fails rather than inventing release notes when `## Unreleased` has no bullet entries, so the release candidate is already e2e-clean and changelog-clean before `release.yml` runs.
 
