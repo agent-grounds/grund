@@ -36,21 +36,23 @@ def check_changelog_pr_entry(
     changelog: Path, base: str | None, head: str, pr_number: int | None, pre_push: bool
 ) -> None:
     """R1 and R2 of §FS-distribution.4.6, against one base and one head."""
-    lines = _read_lines(changelog)
-    merge_base = _merge_base(base, head) if base is not None else None
+    repository_path = _repository_path(changelog)
+    head_commit = _resolve_commit(head)
+    lines = _lines_at(head_commit, repository_path, changelog)
+    merge_base = _merge_base(base, head_commit) if base is not None else None
 
     if merge_base is None:
         # No base ref resolves — a shallow clone, or a `main` never fetched. Ask
         # for less rather than for a fetch the contributor did not make.
         print(
-            f"warning: no base ref resolves; requiring at least one bullet under `## Unreleased` of {changelog}",
+            f"warning: no base ref resolves; requiring at least one bullet under `## Unreleased` of {changelog.as_posix()}",
             file=sys.stderr,
         )
         if not changelog_bullets.has_bullet(changelog_bullets.unreleased_body(lines)):
             raise ChangelogPrError(_refusal(changelog, "in this clone", pre_push))
         return
 
-    base_keys = {bullet.key for bullet in _bullets_at(merge_base, changelog)}
+    base_keys = {bullet.key for bullet in _bullets_at(merge_base, repository_path)}
     added = [bullet for bullet in changelog_bullets.bullets(lines) if bullet.key not in base_keys]
     if not added:
         raise ChangelogPrError(_refusal(changelog, _label(base, merge_base), pre_push))
@@ -69,7 +71,7 @@ def check_changelog_pr_entry(
 
 def _refusal(changelog: Path, base_label: str, pre_push: bool) -> str:
     message = (
-        f"{changelog} `## Unreleased` has no new or changed bullet against {base_label}.\n"
+        f"{changelog.as_posix()} `## Unreleased` has no new or changed bullet against {base_label}.\n"
         "  Add one. A number is optional: write `(PR #TBD)` and the release fills it in."
     )
     if pre_push:
@@ -98,12 +100,17 @@ def base_ref_for_pre_push() -> str | None:
     return None
 
 
-def head_ref_for_pre_push() -> str:
-    """The local ref `pre-commit` hands the `pre-push` stage, else the checkout."""
+def head_ref_for_pre_push() -> str | None:
+    """The local ref `pre-commit` hands the `pre-push` stage, else the checkout.
+
+    `None` where the push deletes the ref: `pre-commit` hands the all-zero sha,
+    there is no head to read a changelog from, and a deletion adds no line to
+    require a bullet for (§FS-distribution.4.6).
+    """
     to_ref = os.environ.get("PRE_COMMIT_TO_REF", "").strip()
-    if not to_ref or ZERO_SHA_RE.match(to_ref):
-        return "HEAD"
-    return to_ref
+    if ZERO_SHA_RE.match(to_ref):
+        return None
+    return to_ref or "HEAD"
 
 
 def pr_number_from_event(event_path: Path) -> int | None:
@@ -139,16 +146,23 @@ def _pull_request_from_event(event_path: Path) -> dict | None:
     return pull_request if isinstance(pull_request, dict) else None
 
 
-def _read_lines(changelog: Path) -> list[str]:
-    try:
-        return changelog.read_text(encoding="utf-8").splitlines()
-    except FileNotFoundError as exc:
-        raise ChangelogPrError(f"missing changelog: {changelog}") from exc
+def _lines_at(commit: str, repository_path: str, changelog: Path) -> list[str]:
+    """The changelog as `commit` holds it. §FS-distribution.4.6
+
+    The head side of the comparison is read here and not from the checkout, so
+    the merge `actions/checkout` leaves in the tree on a `pull_request` event —
+    the head merged with the *current* base tip — cannot lend this branch a
+    bullet the base gained after the branch point.
+    """
+    blob = _blob_at(commit, repository_path)
+    if blob is None:
+        raise ChangelogPrError(f"missing changelog: {changelog.as_posix()} is not in {commit[:12]}")
+    return blob.splitlines()
 
 
-def _bullets_at(commit: str, changelog: Path) -> list[changelog_bullets.Bullet]:
+def _bullets_at(commit: str, repository_path: str) -> list[changelog_bullets.Bullet]:
     """The bullets `## Unreleased` held at `commit`; none if the file was not there."""
-    blob = _git(["show", f"{commit}:{_repository_path(changelog)}"])
+    blob = _blob_at(commit, repository_path)
     if blob is None:
         return []
     try:
@@ -157,9 +171,38 @@ def _bullets_at(commit: str, changelog: Path) -> list[changelog_bullets.Bullet]:
         return []
 
 
+def _blob_at(commit: str, repository_path: str) -> str | None:
+    """The file's bytes at `commit`, or `None` where the commit did not hold it.
+
+    `repository_path` has already been resolved against the repository root, and
+    `commit` against the object store, so a `git show` that fails here means the
+    file was absent at that commit and nothing else.
+    """
+    return _git_output(["show", f"{commit}:{repository_path}"])
+
+
 def _repository_path(changelog: Path) -> str:
-    prefix = _git(["rev-parse", "--show-prefix"]) or ""
-    return f"{prefix}{changelog.as_posix()}" if not changelog.is_absolute() else changelog.as_posix()
+    """`changelog` as git names it, from the repository root down.
+
+    Resolved rather than prefixed: an absolute `--changelog` used to reach
+    `git show <commit>:/abs/path`, which git refuses, and a refusal read as
+    "the file was not there" makes every bullet count as added.
+    """
+    toplevel = _git(["rev-parse", "--show-toplevel"])
+    if toplevel is None:
+        raise ChangelogPrError("not inside a git repository; the changelog gate reads local git alone")
+    try:
+        return changelog.resolve().relative_to(Path(toplevel).resolve()).as_posix()
+    except ValueError as exc:
+        raise ChangelogPrError(f"{changelog.as_posix()} is outside the repository at {toplevel}") from exc
+
+
+def _resolve_commit(revision: str) -> str:
+    """`revision` as a commit sha, so an absent file cannot read as an absent commit."""
+    sha = _git(["rev-parse", "--verify", "--quiet", f"{revision}^{{commit}}"])
+    if sha is None:
+        raise ChangelogPrError(f"no commit resolves for {revision}")
+    return sha
 
 
 def _merge_base(base: str, head: str) -> str | None:
@@ -167,14 +210,28 @@ def _merge_base(base: str, head: str) -> str | None:
 
 
 def _git(arguments: Sequence[str]) -> str | None:
-    """`git` output, or `None` where git says no — an unresolvable ref included."""
+    """`git` output stripped, or `None` where git says no — an unresolvable ref included."""
+    output = _git_output(arguments)
+    return None if output is None else output.strip()
+
+
+def _git_output(arguments: Sequence[str]) -> str | None:
+    """git's stdout verbatim, decoded as UTF-8 whatever the platform's locale is.
+
+    Both sides of the comparison come through here, so a section marker or an
+    em dash cannot decode two ways the way a Windows clone's locale decoding
+    made them (§AR-ci.1.1) — and a byte the changelog should not hold replaces
+    itself identically on both sides rather than raising.
+    """
     try:
-        result = subprocess.run(["git", *arguments], check=False, capture_output=True, text=True)
+        result = subprocess.run(
+            ["git", *arguments], check=False, capture_output=True, encoding="utf-8", errors="replace"
+        )
     except FileNotFoundError as exc:
         raise ChangelogPrError("git is not on PATH; the changelog gate reads local git alone") from exc
     if result.returncode != 0:
         return None
-    return result.stdout.strip()
+    return result.stdout
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -208,6 +265,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.pre_push:
             base = args.base_sha or base_ref_for_pre_push()
             head = args.head_sha or head_ref_for_pre_push()
+            if head is None:
+                print("the push deletes a ref and adds nothing; skipping the changelog bullet check")
+                return 0
         else:
             base = args.base_sha
             if base is None and event_path is not None:

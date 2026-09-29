@@ -87,9 +87,14 @@ class ChangelogEventTests(unittest.TestCase):
         with patch.dict(os.environ, {"PRE_COMMIT_TO_REF": "deadbeef"}, clear=False):
             self.assertEqual(check_changelog_pr_entry.head_ref_for_pre_push(), "deadbeef")
 
-    def test_a_branch_deletion_falls_back_to_the_checkout(self) -> None:
-        # pre-commit hands the all-zero sha when the push deletes the ref.
+    def test_a_branch_deletion_has_no_head_and_nothing_to_require(self) -> None:
+        # pre-commit hands the all-zero sha when the push deletes the ref: there
+        # is no head to read a changelog from, and nothing is being added.
         with patch.dict(os.environ, {"PRE_COMMIT_TO_REF": "0" * 40}, clear=False):
+            self.assertIsNone(check_changelog_pr_entry.head_ref_for_pre_push())
+
+    def test_an_unset_pushed_ref_falls_back_to_the_checkout(self) -> None:
+        with patch.dict(os.environ, {"PRE_COMMIT_TO_REF": ""}, clear=False):
             self.assertEqual(check_changelog_pr_entry.head_ref_for_pre_push(), "HEAD")
 
 
@@ -199,6 +204,20 @@ class GitFixture:
         head = self._commit(repo, "The change under test")
         return repo, base, head
 
+    def _merge_checkout(self, root: Path, theirs: str, mine: str) -> tuple[Path, str, str]:
+        """The tree `actions/checkout` leaves on a `pull_request` event: `refs/pull/N/merge`,
+        the head merged with a base tip that moved after the branch point."""
+        repo, branch_point, head = self._fixture(root, f"{EARLIER_BULLET}\n{mine}")
+        changelog = repo / "docs" / "changelog.md"
+        self._git(repo, "checkout", "-q", "-B", "their-main", branch_point)
+        changelog.write_text(CHANGELOG.format(bullets=f"{EARLIER_BULLET}\n{theirs}"), encoding="utf-8")
+        base = self._commit(repo, "Their change, merged after the branch point")
+        self._git(repo, "update-ref", "refs/remotes/origin/main", base)
+        self._git(repo, "merge", "--no-commit", "--no-ff", "-s", "ours", head)
+        changelog.write_text(CHANGELOG.format(bullets=f"{EARLIER_BULLET}\n{theirs}\n{mine}"), encoding="utf-8")
+        self._commit(repo, "Merge the head into the base tip")
+        return repo, base, head
+
     def _no_pull_request_yet(self, root: Path) -> Path:
         """A `gh` that answers the way it answers on a branch with no pull
         request, so the local half meets the condition without the network."""
@@ -291,6 +310,80 @@ class ChangelogGateRulesTests(GitFixture, unittest.TestCase):
         self.assertEqual(1, result.returncode, self._output(result))
         self.assertIn("no new or changed bullet", self._output(result))
         self.assertNotIn("305", self._output(result))
+
+    def test_a_bullet_the_base_gained_after_the_branch_point_is_not_this_branchs(self) -> None:
+        # Driven as `ci.yml` drives it, on the merge tree the event leaves. Read
+        # the changelog from the checkout rather than from the head commit and
+        # every bullet the base gained since the branch point counts as this
+        # branch's, so R2 refuses on a number nobody here could have written.
+        theirs = "- Somebody else's freshly merged bullet. (PR #340)"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, base, head = self._merge_checkout(root, theirs, NEW_BULLET)
+            result = subprocess.run(
+                _argv(
+                    _ci_run(),
+                    {
+                        "github.event.pull_request.number": str(FIXTURE_PR),
+                        "github.event.pull_request.base.sha": base,
+                        "github.event.pull_request.head.sha": head,
+                        "github.event.pull_request.base.ref": "main",
+                    },
+                ),
+                cwd=repo,
+                capture_output=True,
+                text=True,
+                env=_environment({}),
+            )
+        self.assertEqual(0, result.returncode, self._output(result))
+        self.assertNotIn("340", self._output(result))
+
+    def test_an_absolute_changelog_path_reaches_the_same_verdict_as_a_relative_one(self) -> None:
+        # `git show <commit>:/abs/path` is refused, and reading that refusal as
+        # "the file was not there" made every bullet count as added.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, base, head = self._fixture(root, EARLIER_BULLET)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_PATH),
+                    "--base-sha",
+                    base,
+                    "--head-sha",
+                    head,
+                    "--pr-number",
+                    str(FIXTURE_PR),
+                    "--changelog",
+                    str(repo / "docs" / "changelog.md"),
+                ],
+                cwd=repo,
+                capture_output=True,
+                text=True,
+                env=_environment({}),
+            )
+        self.assertEqual(1, result.returncode, self._output(result))
+        self.assertIn("no new or changed bullet", self._output(result))
+        self.assertNotIn("PR #1", self._output(result))
+
+    def test_an_uncommitted_bullet_is_not_a_pushed_one(self) -> None:
+        # A push carries commits: the head side is read from the head commit, so
+        # an edit still in the working tree is not what this branch adds.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, base, head = self._fixture(root, EARLIER_BULLET)
+            (repo / "docs" / "changelog.md").write_text(
+                CHANGELOG.format(bullets=f"{EARLIER_BULLET}\n{NEW_BULLET}"), encoding="utf-8"
+            )
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT_PATH), "--base-sha", base, "--head-sha", head],
+                cwd=repo,
+                capture_output=True,
+                text=True,
+                env=_environment({}),
+            )
+        self.assertEqual(1, result.returncode, self._output(result))
+        self.assertIn("no new or changed bullet", self._output(result))
 
     def test_appending_your_number_to_somebody_elses_bullet_is_not_a_change(self) -> None:
         result = self._ci(f"{EARLIER_BULLET} (PR #{FIXTURE_PR})")

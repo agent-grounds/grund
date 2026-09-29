@@ -227,6 +227,32 @@ class StampTests(unittest.TestCase):
         self.assertIn("- A bullet whose author left nothing. (PR #12)", stamped)
         self.assertNotIn("PR #TBD", stamped)
 
+    def test_a_placeholder_on_a_bullets_first_line_is_replaced_there(self) -> None:
+        # An author who wraps a bullet leaves `PR #TBD` on its first line as often
+        # as on its last; writing only into the last line appends the number to a
+        # continuation and ships the placeholder into the archive.
+        changelog = self.changelog(
+            STAMPABLE.replace(
+                "- A bullet whose author left a placeholder. (PR #TBD)",
+                "- A bullet whose author left a placeholder. (PR #TBD)\n  and a continuation line saying more.",
+            )
+        )
+        stamped = self.stamp(changelog, lambda start, end: ["a" * 40], lambda _commit: {412})
+        self.assertIn("- A bullet whose author left a placeholder. (PR #412)\n", stamped)
+        self.assertIn("  and a continuation line saying more.\n", stamped)
+        self.assertNotIn("PR #TBD", stamped)
+
+    def test_a_run_that_stamps_nothing_leaves_the_file_byte_identical(self) -> None:
+        # `stamp` runs on every release whether or not it resolves anything, and a
+        # release in which nothing resolves is exactly today's release.
+        path = self.root / "docs" / "changelog.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        before = STAMPABLE.replace("\n", "\r\n").encode("utf-8")
+        path.write_bytes(before)
+        with patch("sys.stderr"):
+            self.stamp(path, lambda start, end: ["a" * 40, "b" * 40], lambda commit: {12} if commit[0] == "a" else {13})
+        self.assertEqual(before, path.read_bytes())
+
     def test_a_released_section_is_never_touched(self) -> None:
         changelog = self.changelog()
         stamped = self.stamp(changelog, lambda start, end: ["a" * 40], lambda _commit: {12})
