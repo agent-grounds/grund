@@ -178,7 +178,7 @@ A path written *inside* the message text — a duplicate declaration's other hom
 
 ### 3.2 The unknown-project recovery shape
 
-The unknown-project recovery shape in [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) freezes the base `unknown project alias <written>` and, when its first non-empty candidate tier supplies alternatives, appends `; did you mean <a>?`, `; did you mean <a> or <b>?`, or `; did you mean <a>, <b> or <c>?`. The base begins lowercase and has no period; the recovery clause has one terminal question mark. Text output carries the whole message, and JSON retains `code: "unknown-project"` while carrying the same bytes in `message` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)).
+The unknown-project recovery shape in [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) freezes the base `unknown project alias <written>` and, when its first non-empty candidate band supplies alternatives, appends `; did you mean <a>?`, `; did you mean <a> or <b>?`, or `; did you mean <a>, <b> or <c>?`. The base begins lowercase and has no period; the recovery clause has one terminal question mark. Text output carries the whole message, and JSON retains `code: "unknown-project"` while carrying the same bytes in `message` ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output)).
 
 ### 3.3 The narrowed-run unknown-project wording migration
 

@@ -599,7 +599,7 @@ The home is left out of the scan roots of [§FS-config.3.5](FS-config.md#35-scan
 
 ##### 3.4.7.3 An explicit path argument still reads it
 
-An explicit path argument still reads it — `grund check docs/templates` scans the directory it names, the same way it reads past `[scan] include` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)). The key describes the *default* scope, which is what a run with no argument reads and what [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) tiers against; a path a user typed is that user narrowing the run to a directory they are asking about.
+An explicit path argument still reads it — `grund check docs/templates` scans the directory it names, the same way it reads past `[scan] include` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)). The key describes the *default* scope, which is what a run with no argument reads and what [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) reports against; a path a user typed is that user narrowing the run to a directory they are asking about.
 
 ##### 3.4.7.4 What an unscanned kind keeps and loses
 
