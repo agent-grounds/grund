@@ -9,7 +9,7 @@ existing checker. The product decision is
 
 ## terms: Terms
 
-Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, citable, body, section, catalog),
+Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, citable, body, section, coordinate, catalog),
 [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, shorthand, citation site), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, alias),
 [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, suggestion, verdict), and [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction,
 level, rule, grounded).
@@ -68,7 +68,7 @@ The four accepted subject spellings are:
 | `Each KIND` | every local declaration of that configured citable kind |
 | `ID` | the one local declaration with that full ID |
 | `The NAME chapter of each KIND` | that named chapter of every local declaration of the kind |
-| `ID.NAME[.NAME…]` | the one exact local named-chapter handle |
+| `ID.NAME[.NAME…]` | the one local named chapter with that exact coordinate |
 
 A token exactly equal to a configured citable kind name is the quantified kind
 selector; any longer token must parse as a full ID under that kind's effective
@@ -397,7 +397,7 @@ Other ordinary counts and every per-target `cite each` miss use
 <subject> cites <target-set> <actual> times; <RULE-ID> requires <count>
 ```
 
-For `cite each`, `<target-set>` is the one canonical target handle and one row
+For `cite each`, `<target-set>` is the one canonical target ID and one row
 is emitted per off-count target.
 
 ### 7.4 Inbound citation cardinality
@@ -425,7 +425,7 @@ change.
 `citation-cardinality`, and `uncited-unit` like every other public code.
 Rule-derived JSON adds no source-list field. Every rule-derived message names
 its rule authority; a chapter subject is rendered as its canonical qualified
-handle.
+coordinate.
 
 The existing bytewise `(path, line, message)` ordering is the sole ordering
 authority. A `cite each` message places its target ID immediately after the
@@ -443,7 +443,7 @@ an identical one. Its validation and exit behavior are [§FS-rules.4](FS-rules.m
 `grund list --selector "<selector>" [<path>]` filters the shared catalog to
 matched declaration and chapter units and composes by intersection with the
 existing path, kind, project, unused, summary, size, top, and format selectors
-where their output modes admit unit rows. Text prints the canonical handle,
+where their output modes admit unit rows. Text prints the canonical coordinate,
 two spaces, location, two spaces, and title. A chapter JSON row uses the list
 object's existing fields in their existing order, adds `"section"` immediately
 after `"id"`, and puts the declaration ID in `id` and exact component path in

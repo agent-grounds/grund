@@ -497,7 +497,7 @@ During `grund check`:
   target that resolution attempted.
 
 Qualified citations are deliberately never resolved by path syntax such as
-`../FS-login` or `packages/api/FS-login`; aliases are the stable handles.
+`../FS-login` or `packages/api/FS-login`; aliases are the stable names.
 
 Each lookup uses only the selected project's catalog, shorthand policy, and kind
 formats, so an exact spelling is never borrowed from a sibling catalog ([§FS-workspace.4.1](FS-workspace.md#41-each-lookup-stays-in-its-project)).
@@ -1410,7 +1410,7 @@ tree. When `include_root = false` and the command is invoked at the workspace
 root, there is no current project; commands that accept a single ID reject an
 unqualified `<ID>` and require `<alias>/<ID>` instead. Cross-project lookups
 always require the `<alias>/<ID>` form. There is no `--all-projects` flag; the
-alias *is* the scope handle.
+alias *is* how the scope is named.
 
 ### 8.10 `include_root = false` leaves the root alias unknown
 

@@ -340,9 +340,9 @@ duplicate/ambiguity behavior and sorted sites. None of these read rules changes
 `grund id`, `init`, `fetch`, config validation, `fmt --marker`, JSON schemas, or
 the forms those authoring surfaces create.
 
-#### 3.2.7 `named_sections` — the gate for section handles
+#### 3.2.7 `named_sections` — the gate for explicit section names
 
-`named_sections` is an absent-by-default Boolean gate for explicit section handles. When absent or `false`, section scanning, citation recognition, queries, formatting, completion, LSP behavior, and operational output remain the numeric-only behavior of earlier configurations. When `true`, a named component has the fixed, configuration-independent grammar `[a-z][a-z0-9-]*`; it is not derived from `slug_pattern` or from the displayed heading title. `grund init` writes the teaching default `named_sections = false` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). Unknown values are invalid config.
+`named_sections` is an absent-by-default Boolean gate for explicit section names. When absent or `false`, section scanning, citation recognition, queries, formatting, completion, LSP behavior, and operational output remain the numeric-only behavior of earlier configurations. When `true`, a named component has the fixed, configuration-independent grammar `[a-z][a-z0-9-]*`; it is not derived from `slug_pattern` or from the displayed heading title. `grund init` writes the teaching default `named_sections = false` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). Unknown values are invalid config.
 
 ### 3.3 Section paths — arbitrary nesting depth
 
@@ -359,7 +359,7 @@ Section depth in the citation must match a heading at that depth in the declarat
 
 #### 3.3.1 Named components
 
-With `named_sections = true` ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-section-handles)), any path containing a named component uses the explicit colon form `<complete-path>: <title>`. The path is written in full at every depth; the title declares nothing and may change without changing the coordinate:
+With `named_sections = true` ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names)), any path containing a named component uses the explicit colon form `<complete-path>: <title>`. The path is written in full at every depth; the title declares nothing and may change without changing the coordinate:
 
 ```markdown
 ## goals: Goals
@@ -367,7 +367,7 @@ With `named_sections = true` ([§FS-config.3.2.7](FS-config.md#327-named_section
 ### goals.3: Third ordered goal
 ```
 
-Named components may occur at every depth, so all-name paths such as `goals.performance.latency` are legal. A numeric component may follow a named prefix (`goals.3`), knowingly retaining positional behavior beneath that stable handle. A named component may not follow a numeric component: `1.goals` is reserved and is neither a named heading nor an alias for section `1`. Purely numeric headings keep their existing optional trailing period and title syntax; the colon form is mandatory whenever any component is named. There is no inferred title slug, dual numeric/name address, rename map, or automatic migration.
+Named components may occur at every depth, so all-name paths such as `goals.performance.latency` are legal. A numeric component may follow a named prefix (`goals.3`), knowingly retaining positional behavior beneath that stable name. A named component may not follow a numeric component: `1.goals` is reserved and is neither a named heading nor an alias for section `1`. Purely numeric headings keep their existing optional trailing period and title syntax; the colon form is mandatory whenever any component is named. There is no inferred title slug, dual numeric/name address, rename map, or automatic migration.
 
 #### 3.3.2 `section_heading_levels` — heading depth against path depth
 
@@ -385,7 +385,7 @@ The default `section_separator` is `.`. Projects that prefer `:` (`<§>FS-check:
 
 ### 3.4 `[[kinds]]` — recognized kinds
 
-One `[[kinds]]` table per kind. `kind` is its name — mandatory, and the handle everything else keys on: `[citations.<kind>]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)), `grund list --kind`, and, for a kind that declares IDs, the literal prefix of every ID in it.
+One `[[kinds]]` table per kind. `kind` is its name — mandatory, and what everything else keys on: `[citations.<kind>]` ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)), `grund list --kind`, and, for a kind that declares IDs, the literal prefix of every ID in it.
 
 A kind is either *multi-file* (`folder = "<dir>"`) — each declaration is the H1 of its own file under `<dir>` — or *single-file* (`file = "<path>"`) — every declaration of the kind is a heading inside that one document — an H2 by convention, and the H1 where the file holds the kind's single declaration ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)). Setting both `folder` and `file` on the same kind is invalid; setting neither leaves the kind with no configured home. What a home means to `grund id` and to the checker is [§FS-config.3.4.11](FS-config.md#3411-what-a-home-is-used-for).
 
@@ -414,7 +414,7 @@ Some directories hold agent-facing content rather than specification — skills,
 ##### 3.4.1.1 What a non-citable kind keeps
 
 - **A home** — `folder` or `file` — wherever the kind is a *place*. Leaving both out is not an omission but a different thing: the entry becomes the **homeless kind**, the complement of every home, whose default name is `code` ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)). Everything below is written about a non-citable kind with a home; [§FS-config.3.9.2](FS-config.md#392-the-homeless-kind) says where the homeless one differs.
-- **A row in the generated Project map and in the generated citation directions** ([§FS-init.2.3.4.4](FS-init.md#2344-project-map), [§FS-init.2.3.5](FS-init.md#235-citation-directions)) — rendered by **place**, never by name, because the name is a config handle and the place is the thing a reader can open.
+- **A row in the generated Project map and in the generated citation directions** ([§FS-init.2.3.4.4](FS-init.md#2344-project-map), [§FS-init.2.3.5](FS-init.md#235-citation-directions)) — rendered by **place**, never by name, because the name is a config key and the place is the thing a reader can open.
 - **Citation-direction rules.** The citing-side classification already reaches it: a citation inside a kind's home, when exactly one home contains its file, is classified as that kind even where no declaration encloses it ([AR-scanner.2.4](../architecture/AR-scanner.md#24-citing-side-classification)). Obligations attach per file rather than per declaration ([§FS-check.3.11](FS-check.md#311-missing-required-citation)), since there is no declaration to attach them to.
 - **Grounding**, over every scanned file in its home, `.md` included ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)) — asked of this home alone with `require_grounding` on the row, or of every place at once with the `[reference]` default the row inherits ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)).
 
@@ -773,8 +773,8 @@ folder = "docs/architecture"
 value_chapter = "values"
 ```
 
-The value is a section handle: a string matching the fixed named-component
-grammar `[a-z][a-z0-9-]*` of [§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-section-handles), never a displayed heading title
+The value is a section name: a string matching the fixed named-component
+grammar `[a-z][a-z0-9-]*` of [§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names), never a displayed heading title
 and never a `slug_pattern` match. The key is absent by default, absent and set
 to nothing mean the same, and `grund config show` prints it only on a row that
 sets it. It is optional and additive, so `grund_config_version` remains 1 ([§FS-config.5](FS-config.md#5-schema-versioning)),
@@ -794,7 +794,7 @@ twice on one row is an error, as `values` and `rules` already are.
 `[id] named_sections = true` is a prerequisite of the key rather than a
 consequence of it: a project that sets `value_chapter` while `named_sections` is
 absent or false is a located config error naming the missing gate, not a silent
-no-op, and the `named_sections` default does not change ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-section-handles)). Each
+no-op, and the `named_sections` default does not change ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names)). Each
 violation above is a located config error. Validation checks these structural
 relationships without parsing declaration content; a chapter that a declaration
 fills wrongly is scanned data and is reported later as a located finding ([§FS-check.3.20](FS-check.md#320-invalid-value-declaration)).

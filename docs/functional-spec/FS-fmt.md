@@ -50,7 +50,7 @@ This list is the ownership boundary for the one writer that rewrites text anywhe
 
 - Declaration headings (the line that names the ID). The marker is for *citations*, not declarations.
 - The exact `<!-- grund:value -->` suffix on a numbered section heading. It is authored authority rather than formatter syntax: no pass inserts, canonicalizes, moves, removes, or rewrites it or its trailing whitespace, and `--check` and `--write` preserve its bytes ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)).
-- Explicit named section handles. Formatting may wrap citations to them and re-derive link anchors, but it never infers a handle from a title, renames a handle, or rewrites a named heading path. An unmarked letter-tail token suppressed by [§FS-check.1.1](FS-check.md#11-recognized-citations) is not a shorter citation and is left byte-identical.
+- Explicit section names. Formatting may wrap citations to them and re-derive link anchors, but it never infers a name from a title, renames one, or rewrites a named heading path. An unmarked letter-tail token suppressed by [§FS-check.1.1](FS-check.md#11-recognized-citations) is not a shorter citation and is left byte-identical.
 - Citations inside string literals on a source line, where rewriting would change runtime behavior ([§FS-fmt.2.3.1](FS-fmt.md#231-string-literal-exclusion-rule)).
 - Citations inside a Markdown **fenced code block**, in every pass ([§FS-fmt.2.3.3](FS-fmt.md#233-a-fenced-code-block-is-an-illustration)).
 - Citations inside Markdown inline code spans (where rewriting would change a literal command, path, or example).
@@ -329,9 +329,9 @@ The anchor is the heading's **rendered text** slugified per the configured rende
 
 The `github` (and `gitlab`) profile reproduces `github-slugger` byte-for-byte: disallowed characters are deleted in place and each remaining space becomes one `-`, with no run-collapsing and no trailing-`-` trim — `## A — B` → `#a--b`, `` ## 6. Watch mode (`--watch`) `` → `#6-watch-mode---watch` ([§DF-github-anchor-fidelity](../decisions/functional/DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly)).
 
-#### 6.2.4 A named heading's anchor carries its handle
+#### 6.2.4 A named heading's anchor carries its name
 
-For an explicit named heading, the rendered text includes the handle and colon. Thus `## goals: Scope` produces `#goals-scope` under the GitHub profile. Retitling it to `## goals: Intent` refreshes an existing wrapper to `#goals-intent` on the next pass while the stored handle and citation text remain `goals`.
+For an explicit named heading, the rendered text includes the name and colon. Thus `## goals: Scope` produces `#goals-scope` under the GitHub profile. Retitling it to `## goals: Intent` refreshes an existing wrapper to `#goals-intent` on the next pass while the stored name and citation text remain `goals`.
 
 ### 6.3 Idempotency and re-derive
 
@@ -415,7 +415,7 @@ E2E fixtures pin the pass ([§FS-fmt.6.8.1](FS-fmt.md#681-wrapping-parity-and-sk
 
 #### 6.8.2 Anchors
 
-- named-heading anchor derivation (`## goals: Scope` → `#goals-scope`), retitle refresh, and byte-identical handle preservation
+- named-heading anchor derivation (`## goals: Scope` → `#goals-scope`), retitle refresh, and byte-identical name preservation
 - a bare-ID citation linking to the declaration's own heading anchor ([§DF-declaration-anchor](../decisions/functional/DF-declaration-anchor.md#df-declaration-anchor-a-bare-id-markdown-link-points-at-the-declarations-heading-anchor))
 - source-file declaration link with no anchor
 - `anchor_format = "none"` produces file-only links
