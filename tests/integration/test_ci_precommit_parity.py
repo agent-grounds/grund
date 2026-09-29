@@ -1,10 +1,16 @@
 """§AR-ci.1 — CI is the remote form of the local pre-commit gate: the workflow
 runs the hook list itself rather than a hand-copy of it, installs every binary a
-hook needs before that step, gives each `commit-msg` hook the explicit
-counterpart the stage's input demands (§AR-ci.8), and the Rust hooks spell the
-commands the workflow's own steps spell, warnings denied on both sides
-(§AR-ci.3). Both files are read as text: the CI Python has no YAML parser, and
-the shapes asserted here are line-shaped."""
+hook needs before that step, gives every hook bound only to a stage without a
+file list the explicit counterpart that stage's input demands (§AR-ci.1.1,
+§AR-ci.8), and the Rust hooks spell the commands the workflow's own steps spell,
+warnings denied on both sides (§AR-ci.3). Both files are read as text: the CI
+Python has no YAML parser, and the shapes asserted here are line-shaped.
+
+§AR-ci.1.2 divides the work: this test holds the *existence* of a counterpart,
+because that is the half a line-shaped read can see. The other half — that the
+counterpart reaches the same verdict on the same tree — is held by each gate's
+own test, `tests/integration/test_check_changelog_pr_entry.py` for the changelog
+gate."""
 
 import re
 import unittest
@@ -15,6 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 PRE_COMMIT = REPO_ROOT / ".pre-commit-config.yaml"
 CI = REPO_ROOT / ".github" / "workflows" / "ci.yml"
 RUST_HOOKS = ("cargo-fmt-check", "cargo-build", "cargo-test")
+FILE_LIST_STAGES = ("pre-commit", "manual")
 ENV_PREFIX = "env RUSTFLAGS=-Dwarnings "
 
 
@@ -102,6 +109,22 @@ class CiPreCommitParityTests(unittest.TestCase):
                     f"no CI step feeds {script} a commit range",
                 )
         self.assertGreaterEqual(counterparts, 1)
+
+    def test_every_hook_without_a_file_list_stage_has_a_ci_step_naming_its_script(self):
+        counterparts = 0
+        for hook in self.hooks:
+            stages = {item.strip() for item in hook["stages"].strip("[]").split(",")}
+            if stages & set(FILE_LIST_STAGES):
+                continue
+            counterparts += 1
+            script = next(token for token in hook["entry"].split() if token.startswith("scripts/"))
+            with self.subTest(hook=hook["id"]):
+                self.assertTrue(
+                    any(script in line for line in self.ci_runs),
+                    f"{hook['id']} runs at no stage `pre-commit run --all-files` reproduces "
+                    f"and no CI step runs {script}",
+                )
+        self.assertGreaterEqual(counterparts, 2)
 
     def test_python_tests_are_discovered_from_this_home_on_both_sides(self):
         home = Path(__file__).resolve().parent.relative_to(REPO_ROOT).as_posix()
