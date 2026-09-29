@@ -346,7 +346,7 @@ the forms those authoring surfaces create.
 
 ### 3.3 Section paths — arbitrary nesting depth
 
-Section coordinates are **dotted paths of arbitrary depth**. There is no maximum nesting level. Purely numeric paths retain their existing heading form and behavior:
+Section coordinates are **dotted paths of arbitrary depth**. There is no maximum nesting depth. Purely numeric paths retain their existing heading form and behavior:
 
 ```
 §FS-check.3
@@ -371,7 +371,7 @@ Named components may occur at every depth, so all-name paths such as `goals.perf
 
 #### 3.3.2 `section_heading_levels` — heading depth against path depth
 
-`section_heading_levels` controls how the Markdown heading depth must line up with the dotted section path. The default, `"strict"`, requires the heading level to equal the declaration heading level plus the number of path components, named or numeric, so under an H1 declaration `## 1.1 …` and `## goals.performance: …` are `section heading level mismatch` errors in `grund check` ([§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)). `"warn"` reports the same mismatch as a warning, so CI can stay green while a repo migrates. `"loose"` preserves the historical depth behavior: any deeper heading can declare a syntactically legal complete path. Unknown values are invalid config.
+`section_heading_levels` controls how the Markdown heading depth must line up with the dotted section path. The default, `"strict"`, requires the heading depth to equal the declaration heading depth plus the number of path components, named or numeric, so under an H1 declaration `## 1.1 …` and `## goals.performance: …` are `section heading level mismatch` errors in `grund check` ([§FS-declarations.checks.section-heading-level](FS-declarations.md#checkssection-heading-level-section-heading-level-mismatch)). `"warn"` reports the same mismatch as a warning, so CI can stay green while a repo migrates. `"loose"` preserves the historical depth behavior: any deeper heading can declare a syntactically legal complete path. Unknown values are invalid config.
 
 The mode does not govern an ATX heading with no coordinate: inside a Markdown declaration body, every deeper ATX heading must instead be a declaration or a recognized numeric or enabled named section. [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) reports one that is neither and names the headings the rule leaves alone; there is no severity or opt-out key for this project-wide rule ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
 
@@ -1116,7 +1116,7 @@ In the backward direction the gate is what [§REQ-backwards-compatibility.1](../
 
 Per [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out), the following are deliberately **not** configurable, to avoid the trap of every grund repo behaving differently in surprising ways:
 
-- The set of severity levels (only `error` and `warning` exist); a suggestion is not a third one ([§FS-config.6.1](FS-config.md#61-suggestions-are-not-a-third-severity)).
+- The set of severities (only `error` and `warning` exist); a suggestion is not a third one ([§FS-config.6.1](FS-config.md#61-suggestions-are-not-a-third-severity)).
 - The exit code mapping (`0`/`1`/`2` per [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)).
 - The ordering of the report (always deterministic).
 - Anything that would let two correctly-configured grund installs disagree on whether a given repo is well-formed ([§GOAL-configurable.2](../goals.md#2-what-is-not-configurable)).

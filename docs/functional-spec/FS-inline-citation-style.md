@@ -207,11 +207,11 @@ Nonconforming:
 
 #### 3.3.10 Why `any` is the default
 
-The default is `any` because a layout is a house style, not a correctness property: two projects may reasonably disagree, and a tree that adopts `grund` mid-life should not be told its comments are wrong on the day it upgrades ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)). Choosing a value, and why the enforcement level is a second key, is decided in [§DF-inline-note-layout](../decisions/functional/DF-inline-note-layout.md#df-inline-note-layout-inline-note-layout-is-a-configured-house-style-checked-per-line-and-never-normalized).
+The default is `any` because a layout is a house style, not a correctness property: two projects may reasonably disagree, and a tree that adopts `grund` mid-life should not be told its comments are wrong on the day it upgrades ([§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path)). Choosing a value, and why the enforcement severity is a second key, is decided in [§DF-inline-note-layout](../decisions/functional/DF-inline-note-layout.md#df-inline-note-layout-inline-note-layout-is-a-configured-house-style-checked-per-line-and-never-normalized).
 
 ## 4. Enforcement (`grund check`)
 
-Findings are reported using the located-finding shape of [§FS-errors.2.1](FS-errors.md#21-located-finding), located at the **first line** of the offending note (so a multi-line block with a budget violation lands one finding at its opener, not at every constituent line). The one exception is the layout rule of [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations), which judges a single line and is therefore located at it ([§FS-inline-citation-style.4.4.1](FS-inline-citation-style.md#441-one-finding-per-nonconforming-line)). The rule is a pure transformation of `Findings` ([AR-checker.4](../../crates/grund-core/src/checker/report.rs)) — the checker does **not** re-read files. The scanner annotates each recorded citation with its enclosing note's span, max-column width, note presence, and — when a layout and a check level ask for them ([§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)) — that block's lines that fail the configured layout ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit); [§FS-inline-citation-style.7.1](FS-inline-citation-style.md#71-scanner)), so the rule, the per-line anchor of [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations) included, operates from `Findings` alone.
+Findings are reported using the located-finding shape of [§FS-errors.2.1](FS-errors.md#21-located-finding), located at the **first line** of the offending note (so a multi-line block with a budget violation lands one finding at its opener, not at every constituent line). The one exception is the layout rule of [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations), which judges a single line and is therefore located at it ([§FS-inline-citation-style.4.4.1](FS-inline-citation-style.md#441-one-finding-per-nonconforming-line)). The rule is a pure transformation of `Findings` ([AR-checker.4](../../crates/grund-core/src/checker/report.rs)) — the checker does **not** re-read files. The scanner annotates each recorded citation with its enclosing note's span, max-column width, note presence, and — when a layout and a check severity ask for them ([§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations)) — that block's lines that fail the configured layout ([§FS-inline-citation-style.3.3](FS-inline-citation-style.md#33-inline_note_layout--where-the-citations-sit); [§FS-inline-citation-style.7.1](FS-inline-citation-style.md#71-scanner)), so the rule, the per-line anchor of [§FS-inline-citation-style.4.4](FS-inline-citation-style.md#44-warnings-and-errors--opt-in-layout-deviations) included, operates from `Findings` alone.
 
 ### 4.1 Errors — hard caps
 
@@ -261,23 +261,23 @@ With `inline_note_layout = "citation-first-colon"`:
 | `warn`                     | one **warning** per nonconforming line; the exit code is untouched ([§FS-inline-citation-style.4.2](FS-inline-citation-style.md#42-warnings--opt-in-soft-cap))   |
 | `error`                    | one **error** per nonconforming line; the exit code becomes 1               |
 
-Three properties are fixed at both levels ([§FS-inline-citation-style.4.4.1](FS-inline-citation-style.md#441-one-finding-per-nonconforming-line)–[§FS-inline-citation-style.4.4.3](FS-inline-citation-style.md#443-report-order)); [§FS-inline-citation-style.4.4.4](FS-inline-citation-style.md#444-why-two-levels) says why there are two.
+Three properties are fixed at both severities ([§FS-inline-citation-style.4.4.1](FS-inline-citation-style.md#441-one-finding-per-nonconforming-line)–[§FS-inline-citation-style.4.4.3](FS-inline-citation-style.md#443-report-order)); [§FS-inline-citation-style.4.4.4](FS-inline-citation-style.md#444-why-two-severities) says why there are two.
 
 #### 4.4.1 One finding per nonconforming line
 
 Each finding is located at its nonconforming line, not at the note's opener. A layout deviation is a property of the line the author has to edit, and a five-line comment with two bad lines is two edits. This is the exception [§FS-inline-citation-style.4](FS-inline-citation-style.md#4-enforcement-grund-check) names: the budgets measure the note as a whole and keep their opener anchor.
 
-#### 4.4.2 One message at both levels
+#### 4.4.2 One message at both severities
 
 The message is the same at `warn` and at `error`, so moving a project from `warn` to `error` changes the exit code and nothing a reader has to re-learn. It names the canonical shape with the configured marker, e.g. ``inline note must open with its citations and a colon (§<ID>: note)``.
 
 #### 4.4.3 Report order
 
-Report order is the existing deterministic order ([§FS-errors.4](FS-errors.md#4-determinism)) — the level chooses the channel, and in a text report the channel chooses the group, errors ahead of warnings; the JSON order ignores the channel.
+Report order is the existing deterministic order ([§FS-errors.4](FS-errors.md#4-determinism)) — the severity chooses the channel, and in a text report the channel chooses the group, errors ahead of warnings; the JSON order ignores the channel.
 
-#### 4.4.4 Why two levels
+#### 4.4.4 Why two severities
 
-The two levels exist so a repository can adopt the style in the order adoption actually happens: turn on `warn`, migrate the tree with the report as the worklist, then turn on `error` to keep it migrated. That is the same ladder [§DF-require-grounding.2.4](../decisions/functional/DF-require-grounding.md#24-off-by-default) describes for the grounding floor. Choosing which channel a rule speaks through is a per-project configuration choice, not a redefinition of what a warning or an error *means* — those stay fixed by [§FS-check.2](FS-check.md#2-outputs).
+The two severities exist so a repository can adopt the style in the order adoption actually happens: turn on `warn`, migrate the tree with the report as the worklist, then turn on `error` to keep it migrated. That is the same ladder [§DF-require-grounding.2.4](../decisions/functional/DF-require-grounding.md#24-off-by-default) describes for the grounding floor. Choosing which channel a rule speaks through is a per-project configuration choice, not a redefinition of what a warning or an error *means* — those stay fixed by [§FS-check.2](FS-check.md#2-outputs).
 
 ## 5. Agent-facing rendering
 
@@ -305,7 +305,7 @@ Under `citation-with-note` only, when `inline_note_layout = "citation-first-colo
 
 The sentence names a house style for the comments an agent writes, and it is deliberately wider than the gate: `check` judges *notes*, so neither a doc-comment ([§FS-inline-citation-style.1.1](FS-inline-citation-style.md#11-doc-comments-are-not-sites)) nor a doc-comment that declares an ID ([§FS-inline-citation-style.3.3.6](FS-inline-citation-style.md#336-same-scope-as-the-rest-of-this-spec)) is measured against the form at all. Both readings are the intended ones — an agent should lay out every note it writes the same way, and documentation, whether it is a declaration body or the Javadoc next to it, is text whose shape this spec does not govern. The practical consequence belongs to whoever migrates a tree: under `warn`, the worklist covers the citing inline comments and never the doc-comments, so "the report is empty" means the notes are clean, not that every `§<ID>` line in the repository is citation-first.
 
-#### 5.3.2 The same at every check level
+#### 5.3.2 The same at every check setting
 
 `inline_note_layout_check` does **not** change the sentence. The house style is what the agent is asked to write; whether `check` reports a deviation as a warning, as an error, or not at all is a fact about the project's gate, not about the form. An agent told the form and then told it is only advisory would have been given a reason to ignore it.
 

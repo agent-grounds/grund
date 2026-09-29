@@ -44,7 +44,7 @@ requested local ID, with no sibling declaration:
 - a `folder` home accepts one H1 declaration (`# TICKET-1234: Title`).
 
 The declaration may contain ordinary prose, fenced blocks, and subsections exactly one
-level deeper than its native declaration depth. Its title must be non-empty. A malformed
+heading depth below its native declaration depth. Its title must be non-empty. A malformed
 heading, wrong ID or kind, wrong native depth, duplicate declaration, sibling
 declaration, invalid subsection depth, invalid UTF-8, or trailing content outside the
 one declaration is refused on stderr with exit 2.
