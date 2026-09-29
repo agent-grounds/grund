@@ -169,20 +169,24 @@ def stamp_release_numbers(
     """Write each `## Unreleased` bullet's own pull request number into it. §FS-distribution.4.5
 
     Every line of a bullet is blamed to the commit that wrote it and each commit
-    to its pull request; a bullet whose lines all name one and the same pull
-    request gains `PR #N`, replacing a `PR #TBD` placeholder in place where the
-    author left one. Anything else is warned about once and left as it stands,
-    and nothing here ever raises: a release in which nothing resolves is exactly
-    today's release.
+    to its pull request; a bullet whose lines, taken together, resolve to exactly
+    one pull request gains `PR #N`, replacing a `PR #TBD` placeholder wherever in
+    the bullet the author left one. Anything else is warned about once and left
+    as it stands, and nothing here ever raises: a release in which nothing
+    resolves is exactly today's release — and one in which nothing resolves does
+    not rewrite the file at all.
     """
     resolve = resolve or pull_requests_for_commit
     blame = blame or _blame_commits
     lines = _read_lines(changelog)
+    stamped = False
     for bullet in reversed(changelog_bullets.bullets(lines)):
         number = _number_for(changelog, bullet, resolve, blame)
         if number is not None:
-            lines[bullet.end - 1] = _write_number(lines[bullet.end - 1], bullet, number)
-    _write_lines(changelog, lines)
+            _write_number(lines, bullet, number)
+            stamped = True
+    if stamped:
+        _write_lines(changelog, lines)
 
 
 def _number_for(changelog, bullet, resolve, blame) -> int | None:
@@ -212,11 +216,20 @@ def _unstamped(bullet: changelog_bullets.Bullet, reason: str) -> None:
     return None
 
 
-def _write_number(line: str, bullet: changelog_bullets.Bullet, number: int) -> str:
-    body, ending = _split_ending(line)
-    if PLACEHOLDER_RE.search(body):
-        return PLACEHOLDER_RE.sub(f"PR #{number}", body, count=1) + ending
-    return f"{body.rstrip()} (PR #{number}){ending}"
+def _write_number(lines: list[str], bullet: changelog_bullets.Bullet, number: int) -> None:
+    """Replace the placeholder wherever in the bullet it sits, else append. §FS-distribution.4.5
+
+    An author who wraps a bullet leaves `PR #TBD` on its first line as often as
+    on its last; writing only into the last line appends the number to a
+    continuation and leaves the placeholder to ship into the archive.
+    """
+    for index in range(bullet.start - 1, bullet.end):
+        body, ending = _split_ending(lines[index])
+        if PLACEHOLDER_RE.search(body):
+            lines[index] = PLACEHOLDER_RE.sub(f"PR #{number}", body, count=1) + ending
+            return
+    body, ending = _split_ending(lines[bullet.end - 1])
+    lines[bullet.end - 1] = f"{body.rstrip()} (PR #{number}){ending}"
 
 
 def _split_ending(line: str) -> tuple[str, str]:
@@ -231,7 +244,10 @@ def _blame_commits(changelog: Path, start: int, end: int) -> list[str]:
         ["git", "-C", str(path.parent), "blame", "--line-porcelain", "-L", f"{start},{end}", "--", str(path)],
         check=False,
         capture_output=True,
-        text=True,
+        # UTF-8 rather than the platform's locale: `--line-porcelain` carries the
+        # changelog's own lines, section markers and em dashes included (§AR-ci.1.1).
+        encoding="utf-8",
+        errors="replace",
     )
     if result.returncode != 0:
         raise ChangelogError(f"git blame failed: {result.stderr.strip()}")
@@ -255,7 +271,8 @@ def pull_requests_for_commit(commit: str) -> set[int]:
         ["gh", "api", f"/repos/{{owner}}/{{repo}}/commits/{commit}/pulls", "--jq", ".[].number"],
         check=False,
         capture_output=True,
-        text=True,
+        encoding="utf-8",
+        errors="replace",
     )
     if result.returncode != 0:
         detail = result.stderr.strip().splitlines()

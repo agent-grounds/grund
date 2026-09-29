@@ -7,6 +7,7 @@ the defect this module exists to close was two halves of one gate answering one
 question two ways, so both scripts must reach these answers through *this*
 module and carry no copy of their own."""
 
+import ast
 import importlib.util
 import unittest
 from pathlib import Path
@@ -14,6 +15,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = REPO_ROOT / "scripts"
+ANSWERS = ("unreleased_range", "unreleased_body", "bullets", "has_bullet", "normalise", "pr_numbers")
 
 
 def _load(name: str):
@@ -145,12 +147,33 @@ class OneCodePathTests(unittest.TestCase):
         stamper = _load("prepare_changelog_release")
         self.assertIs(gate.changelog_bullets, stamper.changelog_bullets)
 
-    def test_neither_script_carries_its_own_answer(self) -> None:
+    def test_each_script_reaches_the_answers_only_through_the_shared_module(self) -> None:
+        # The positive property, not the absence of two spellings a copy can
+        # evade: every route either script has to one of these answers is a call
+        # on `changelog_bullets`, and neither defines one of its own.
         for name in ("check_changelog_pr_entry", "prepare_changelog_release"):
             with self.subTest(script=name):
-                source = (SCRIPTS / f"{name}.py").read_text(encoding="utf-8")
-                self.assertNotIn("## Unreleased\\s", source, "it matches the section heading itself")
-                self.assertNotIn('startswith("- ")', source, "it decides what a bullet is itself")
+                tree = ast.parse((SCRIPTS / f"{name}.py").read_text(encoding="utf-8"))
+                defined = {
+                    node.name
+                    for node in ast.walk(tree)
+                    if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and node.name in ANSWERS
+                }
+                self.assertEqual(set(), defined, "it answers one of the shared questions itself")
+                through_the_module = 0
+                for node in ast.walk(tree):
+                    if not isinstance(node, ast.Call):
+                        continue
+                    if isinstance(node.func, ast.Name) and node.func.id in ANSWERS:
+                        self.fail(f"`{node.func.id}` is called as a bare name rather than on the shared module")
+                    if isinstance(node.func, ast.Attribute) and node.func.attr in ANSWERS:
+                        self.assertEqual(
+                            "changelog_bullets",
+                            getattr(node.func.value, "id", None),
+                            f"`{node.func.attr}` is reached through something other than the shared module",
+                        )
+                        through_the_module += 1
+                self.assertTrue(through_the_module, "it asks the shared module nothing, so this proves nothing")
 
 
 if __name__ == "__main__":
