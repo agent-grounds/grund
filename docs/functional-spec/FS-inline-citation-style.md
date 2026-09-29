@@ -350,7 +350,7 @@ No auto-rewrite of a note and no normalization of layout, in `--check` or in `--
 ### 6.4 No per-project reshaping of the rule
 
 - No per-kind or per-file overrides. The style is repo-wide, matching [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree) — two correctly-configured `grund` installs must agree on whether a tree is well-formed.
-- No "warning for hard-cap miss." A hard-cap miss is always an error; if a project wants the soft tier to nag, it sets `warn_on_suggested = true`.
+- No "warning for hard-cap miss." A hard-cap miss is always an error; if a project wants the soft cap to nag, it sets `warn_on_suggested = true`.
 - No per-rule severity remap. `inline_note_layout_check` selects which channel *this* rule speaks through, from a fixed set; it does not let a project re-level any other rule, and it does not change what an error or a warning means ([§FS-non-goals.9](FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization), [§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 - No configuration of the language table. The recognizers and the extensions they claim are built in ([§FS-inline-citation-style.1.1.1](FS-inline-citation-style.md#111-recognizers), [§FS-inline-citation-style.1.1.2](FS-inline-citation-style.md#112-languages)): what a note *is* must not differ between two installs ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)). The table is widenable later without a `grund_config_version` bump ([§FS-config.5](FS-config.md#5-schema-versioning)).
 
