@@ -19,7 +19,7 @@ Every maintained example must map to at least one canonical `grund` use-case. Th
 - choosing between supported ID schemes;
 - setting up a conformant repository;
 - writing declarations in Markdown or source doc-comments;
-- citing specs from prose, code, or executable tests;
+- citing declarations from prose, code, or executable tests;
 - resolving a citation with `grund <ID>`;
 - finding a declaration's blast radius with `grund refs`;
 - grouping citations by file with `grund cover`;
@@ -45,7 +45,7 @@ The examples include an optional first-class-values repository showing `values =
 
 Each maintained example must include a detailed explanation for users. At minimum it names the scenario, the intended audience, the files worth opening first, the commands to run from the repository root, the expected exit code and stream behavior, and the lesson the user should take from the output. If the example demonstrates a tradeoff, such as an ID scheme choice, the README must describe both the benefit and the cost in practical terms.
 
-The explanation must be self-contained: a user should not need to inspect `tests/` or implementation code to understand why the example exists or how to run it. Links back to the relevant spec are allowed, but they supplement the explanation rather than replacing it.
+The explanation must be self-contained: a user should not need to inspect `tests/` or implementation code to understand why the example exists or how to run it. Links back to the relevant declaration are allowed, but they supplement the explanation rather than replacing it.
 
 ## 4. Maintenance contract
 
