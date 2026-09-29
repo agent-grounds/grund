@@ -185,8 +185,8 @@ Each scaffolded markdown file is a minimal starter — enough structure to teach
 - `requirements.md` — the H1 plus a one-line note on how `FS-` requirements/spec IDs are declared inline as H2 headings in that file.
 - `roadmap.md`, `changelog.md` — the H1 plus a single `<!-- placeholder - replace with real content -->` line.
 - `architecture/README.md` — the H1, the navigational note about how `AR-` IDs declare into the directory and the rule that the index lists every architecture declaration as a full link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), and an empty `| ID | Subject |` table to fill in.
-- `decisions/architectural/README.md`, `decisions/functional/README.md` — the same shape for the two decision folders: the H1, the note on how `DA-`/`DF-` IDs declare into the directory and on citing a decision from the spec point it settles, the index rule, and an empty `| ID | Subject |` table. Every citable `folder` kind whose `index` the generated config leaves at its default gets one, which under those defaults is `AR`, `DF`, and `DA` — the two test kinds are non-citable and have no index at all ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)).
-- `tests/e2e/README.md` — the H1 (`# e2e`) plus a note that every behaviour described in the effective FS home has at least one case, and that each case cites the spec point it proves. It is a layout note, not an index: `e2e` is a non-citable kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) and has no declarations to list. `tests/integration/` gets the `.gitkeep` instead of a README of its own, so the second configured test home survives a `git add` without a second near-identical note.
+- `decisions/architectural/README.md`, `decisions/functional/README.md` — the same shape for the two decision folders: the H1, the note on how `DA-`/`DF-` IDs declare into the directory and on citing a decision from the declaration it settles, the index rule, and an empty `| ID | Subject |` table. Every citable `folder` kind whose `index` the generated config leaves at its default gets one, which under those defaults is `AR`, `DF`, and `DA` — the two test kinds are non-citable and have no index at all ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)).
+- `tests/e2e/README.md` — the H1 (`# e2e`) plus a note that every behaviour described in the effective FS home has at least one case, and that each case cites the declaration it proves. It is a layout note, not an index: `e2e` is a non-citable kind ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) and has no declarations to list. `tests/integration/` gets the `.gitkeep` instead of a README of its own, so the second configured test home survives a `git add` without a second near-identical note.
 
 Every scaffold-owned ID-shape example uses the effective format of the kind it
 illustrates: that kind's `[[kinds]].format` when present, otherwise the
@@ -237,7 +237,7 @@ The `next:` block is suppressed entirely when every reported path is `exists ` (
 
 ### 2.3 Generated agent entrypoints
 
-The emitted agent guidance is a canonical managed block: it teaches the session-start workflow and rules listed in [§FS-init.2.3.4](FS-init.md#234-managed-block-content-points), rendered against the target repo's effective configuration ([§FS-init.2.3.8](FS-init.md#238-substituted-content)). The block stays concise under [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file): it teaches only the rules an agent needs before work begins, leaving detail to cited specs and `grund <ID>` output.
+The emitted agent guidance is a canonical managed block: it teaches the session-start workflow and rules listed in [§FS-init.2.3.4](FS-init.md#234-managed-block-content-sections), rendered against the target repo's effective configuration ([§FS-init.2.3.8](FS-init.md#238-substituted-content)). The block stays concise under [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file): it teaches only the rules an agent needs before work begins, leaving detail to cited specs and `grund <ID>` output.
 
 The contract this spec makes is the *determinism and versioning*, not a literal transcript: two `grund init` runs at the same `grund` version against trees with the same `--name` and the same effective config produce byte-identical managed blocks ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)), and the block's fixed text is versioned ([§FS-init.2.3.7](FS-init.md#237-the-block-version)). Generated `init` output must pass `grund check` unmodified — the generator and the checker are never allowed to disagree about the block's own contents. The block is bounded by delimiters ([§FS-init.2.3.9](FS-init.md#239-delimiters)), written into an entrypoint by the rules of [§FS-init.2.3.10](FS-init.md#2310-writing-the-block) unless it is malformed ([§FS-init.2.3.11](FS-init.md#2311-malformed-delimiters)), and carried by the entrypoints [§FS-init.2.3.12](FS-init.md#2312-supported-agents-and-their-entrypoints) names.
 
@@ -259,9 +259,9 @@ The managed block teaches a single citation form — `§<ID>`, bare, with an opt
 
 The generated `grund.toml` ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)) sets `[scan] include = ["requirements.md", "docs", "e2e", "src"]`, naming `requirements.md` so the generated single-file FS home is scanned.
 
-#### 2.3.4 Managed-block content points
+#### 2.3.4 Managed-block content sections
 
-The generated managed block is not a literal transcript in this spec ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)), but its canonical template must preserve the following separately citable content points. Each point is phrased compactly in the template, because the entrypoint is read at session start and serves [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file).
+The generated managed block is not a literal transcript in this spec ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)), but its canonical template must preserve the following separately citable content sections. Each section is phrased compactly in the template, because the entrypoint is read at session start and serves [§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file).
 
 ##### 2.3.4.1 Entrypoint
 
@@ -273,7 +273,7 @@ The block teaches the configured citation scheme: IDs have the configured shape,
 
 ##### 2.3.4.3 Cheap Grounding
 
-The block teaches the cheap grounding ladder: use `grund <ID>` as the first read for a bare citation, `grund <ID> --brief` when the heading and first paragraph are enough, `grund <ID> --toc` when section navigation is needed, `grund <ID>.<section>` for section citations, `grund <ID> --full` only when a narrower read is insufficient, `grund list --kind FS,AR` for scoped discovery, and `grund refs <ID> --summary` before a full citation listing. Beside that ladder it teaches `grund list --size=words --top 10` as the sweep to run when a specification feels heavy, so the agent can move detail into citable child points before paying for an oversized lead.
+The block teaches the cheap grounding ladder: use `grund <ID>` as the first read for a bare citation, `grund <ID> --brief` when the heading and first paragraph are enough, `grund <ID> --toc` when section navigation is needed, `grund <ID>.<section>` for section citations, `grund <ID> --full` only when a narrower read is insufficient, `grund list --kind FS,AR` for scoped discovery, and `grund refs <ID> --summary` before a full citation listing. Beside that ladder it teaches `grund list --size=words --top 10` as the sweep to run when a specification feels heavy, so the agent can move detail into citable child sections before paying for an oversized lead.
 
 ##### 2.3.4.4 Project Map
 
@@ -295,11 +295,11 @@ In managed block v10 the block teaches that every non-declaration ATX heading in
 
 ##### 2.3.4.6 Spec First
 
-The rules tell agents to write or update the most-specific functional or architectural spec point before writing behavior or design code that implements it.
+The rules tell agents to write or update the most-specific functional or architectural declaration before writing behavior or design code that implements it.
 
 ##### 2.3.4.7 Most-Specific Citations
 
-The code citation guidance tells agents to cite the most-specific spec point the code or prose realizes: whole behavior on the function, class, or block doc-comment; narrower clauses or decisions inline where they are enforced.
+The code citation guidance tells agents to cite the most-specific declaration the code or prose realizes: whole behavior on the function, class, or block doc-comment; narrower clauses or decisions inline where they are enforced.
 
 ##### 2.3.4.8 Refresh Before Editing
 
@@ -315,7 +315,7 @@ The rules teach the expected citation direction: specs cite goals, architecture 
 
 ##### 2.3.4.11 Decisions
 
-The rules tell agents that decisions must be cited from the spec or architecture point they shaped, and that decision history is append-only: reversals are new decisions that supersede older ones rather than rewrites.
+The rules tell agents that decisions must be cited from the spec or architecture declaration they shaped, and that decision history is append-only: reversals are new decisions that supersede older ones rather than rewrites.
 
 ##### 2.3.4.12 Cross-Linking
 
@@ -480,7 +480,7 @@ the same file ([§FS-rules.9.1](FS-rules.md#91-one-tree-renders-one-block)).
 
 #### 2.3.6 Clickable citations
 
-The managed block renders a `### Clickable citations` section carrying the content points in [§FS-init.2.3.4.17](FS-init.md#23417-clickable-citations): the fixed repository-web sentence always, plus the local-conversation sentence when `[reference] conversation = "link"` is set. The section is deterministic from the effective config and the entrypoint's own agent ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)): byte-identical in every project with the same key state, for the same entrypoint file. The per-agent split of [§FS-init.2.3.4.17.2](FS-init.md#234172-the-form-per-agent) is the one axis on which two entrypoints in the *same* repository differ, and it is a pure function of the target path, so it is as reproducible as the rest.
+The managed block renders a `### Clickable citations` section carrying the content sections in [§FS-init.2.3.4.17](FS-init.md#23417-clickable-citations): the fixed repository-web sentence always, plus the local-conversation sentence when `[reference] conversation = "link"` is set. The section is deterministic from the effective config and the entrypoint's own agent ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)): byte-identical in every project with the same key state, for the same entrypoint file. The per-agent split of [§FS-init.2.3.4.17.2](FS-init.md#234172-the-form-per-agent) is the one axis on which two entrypoints in the *same* repository differ, and it is a pure function of the target path, so it is as reproducible as the rest.
 
 ##### 2.3.6.1 The drift check
 

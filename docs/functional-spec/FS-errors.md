@@ -97,7 +97,7 @@ reported `error: <path>:<line>: <message>` ([§FS-config.4.3](FS-config.md#43-in
 
 #### 2.2.2 Exit codes
 
-`error:` always accompanies a non-zero exit — exit `2` unless a point names
+`error:` always accompanies a non-zero exit — exit `2` unless a section names
 otherwise — for a failure that means the run could not do its job: a
 launch-time, setup, or I/O failure that leaves no query context or
 trustworthy scan, or an operational command's own failure, such as `fetch`'s
@@ -200,7 +200,7 @@ line makes it explicit after the location prefix: [§FS-check.3](FS-check.md#3-e
 
 A missing fetch-backed declaration has two frozen identities, `dangling` /
 `error` ([§FS-check.3.1](FS-check.md#31-dangling-citation)) and
-`missing-snapshot` / `warning` ([§FS-check.4.12](FS-check.md#412-missing-snapshot)); those points own the exact
+`missing-snapshot` / `warning` ([§FS-check.4.12](FS-check.md#412-missing-snapshot)); those sections own the exact
 message bytes, the bare-text fetch remedy, and the precedence of an existing
 near-ID or illustration hint over the fetch-action tail.
 
@@ -369,7 +369,7 @@ For `grund check`, `code` is also the exact public selector vocabulary for
 [§FS-check.1](FS-check.md#1-inputs). The catalog is sorted by code, and one row is the whole of what the
 catalog says about a code: the severity it carries, the release a ramp still
 ahead of it changes that severity in, what has to be configured or passed for it
-to fire at all, and the specification point that specifies it. Severity lives
+to fire at all, and the specification section that specifies it. Severity lives
 here rather than in the section that specifies the check, so promoting a warning
 to an error edits this cell and moves no coordinate
 ([§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). A code whose row names `—` under *Enabled by* fires on every
