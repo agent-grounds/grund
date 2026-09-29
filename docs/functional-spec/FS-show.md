@@ -296,7 +296,7 @@ The result is the markdown that the declaration's author wrote, identical to wha
 
 #### 2.3.3 Section selection inside a doc-comment
 
-Section selection (`AR-<event-bus>.2`) works the same way inside a doc-comment as inside a markdown file: the scanner records the numbered subsection headings declared within the doc-comment block and `show` slices to the requested section. Section depth is measured relative to the declaration's heading level exactly as in markdown ([AR-scanner.2.2](../architecture/AR-scanner.md#22-section-detection)) — an `AR-<event-bus>:` declaration inside a `///` block is "level 1", so `## 1.` is a depth-1 section. The comment-stripping pass leaves these headings intact.
+Section selection (`AR-<event-bus>.2`) works the same way inside a doc-comment as inside a markdown file: the scanner records the numbered subsection headings declared within the doc-comment block and `show` slices to the requested section. Section depth is measured relative to the declaration's heading depth exactly as in markdown ([AR-scanner.2.2](../architecture/AR-scanner.md#22-section-detection)) — an `AR-<event-bus>:` declaration inside a `///` block is "depth 1", so `## 1.` is a depth-1 section. The comment-stripping pass leaves these headings intact.
 
 #### 2.3.4 Broken stub
 
