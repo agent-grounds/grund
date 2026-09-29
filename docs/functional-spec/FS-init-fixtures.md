@@ -200,7 +200,7 @@ Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 - [`ui`](packages/ui/) *(not yet initialized)*
 ```
 
-The list is sorted lexicographically by alias. `api` is initialized, so its bullet links to its `AGENTS.md`; `core` and `ui`, expanded from the glob `packages/*`, have none yet, so they link to the member root and carry the trailing `*(not yet initialized)*` marker. The root's own row is absent even though `include_root` defaults to `true`: [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) omits the project whose entrypoint is being rendered.
+The list is sorted lexicographically by alias. `api` is initialized, so its bullet links to its `AGENTS.md`; `core` and `ui`, expanded from the glob `packages/*`, have none yet, so they link to the member root and carry the trailing `*(not yet initialized)*` suffix. The root's own row is absent even though `include_root` defaults to `true`: [§FS-init.2.3.4.15](FS-init.md#23415-workspace-members) omits the project whose entrypoint is being rendered.
 
 ### 6.2 Workspace member init
 
@@ -258,4 +258,4 @@ Cross-project citations use §alias/<ID>, one alias segment per workspace level.
 - [`ui`](packages/ui/) *(not yet initialized)*
 ```
 
-Each described foreign project appends `: <description>` after its link; `core` shows the description rendering *before* the trailing `*(not yet initialized)*` marker; `ui` has no config, therefore no description, and its bullet is byte-identical to the [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init) form. The root's configured description is absent with its omitted self row, but remains available when the root is foreign in a member entrypoint.
+Each described foreign project appends `: <description>` after its link; `core` shows the description rendering *before* the trailing `*(not yet initialized)*` suffix; `ui` has no config, therefore no description, and its bullet is byte-identical to the [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init) form. The root's configured description is absent with its omitted self row, but remains available when the root is foreign in a member entrypoint.

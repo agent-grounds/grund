@@ -112,7 +112,7 @@ inside a link target, a heading anchor or a frozen code name is a name, not a us
 
 - **finding** — one item of a report, or the single item a failed ID query emits on stderr: a `code`, a `message`, and nullable `path`, `line` and `sites`, where `sites` names every location only when one item has several. On the errors and warnings channels it carries `severity` `error` or `warning`; on the suggestions channel it carries no severity and `"channel":"suggestion"` stands in its place. Displaces *diagnostic* in prose except where FS-lsp names the protocol object; the internal `Diagnostic` type is unchanged.
 - **severity** — the `error`-or-`warning` classification a finding carries on the errors or warnings channel; a suggestion carries none. The set is frozen at exactly those two, so a consumer filtering on `severity` never sees a suggestion. Displaces *level* for this sense.
-- **suggestion** — a finding on the suggestions channel, emitted only under `grund check --suggestions`, carrying `"channel":"suggestion"` in place of a severity; it never changes exit status or replaces the `success` marker. A channel, not a third severity.
+- **suggestion** — a finding on the suggestions channel, emitted only under `grund check --suggestions`, carrying `"channel":"suggestion"` in place of a severity; it never changes exit status or replaces the `success` line. A channel, not a third severity.
 - **caution** — a run-level message with no location. Displaces *CLI-level warning* and *announcement*.
 - **verdict** — whether a run passes.
 - **anchor** — a Markdown heading fragment only. Findings are located: replace *anchors at* / *anchored at* with *is located at* / *located at*; rule facts are keyed.

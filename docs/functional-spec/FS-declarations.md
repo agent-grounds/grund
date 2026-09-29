@@ -63,7 +63,7 @@ The message names the token as written and the effective template, states that l
 
 #### checks.declaration-near-miss.5: A warning before 0.15.0, an error in it
 
-Before 0.15.0 it is a warning, so like every warning it leaves the exit code alone ([§FS-check.2](FS-check.md#2-outputs)): a run with no errors exits successfully but prints the located warning and no `success` marker ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)). The declaration still appears in `list` and resolves through every reader; severity never changes recognition. In grund 0.15.0 the same code and location become an error, the deadline clause becomes the past-tense release report required by [§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name), and `check` exits `1`. The release guard and [§RM-off-grammar-declaration-error](../roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0150) prevent shipping the warning at or beyond that version.
+Before 0.15.0 it is a warning, so like every warning it leaves the exit code alone ([§FS-check.2](FS-check.md#2-outputs)): a run with no errors exits successfully but prints the located warning and no `success` line ([§FS-check.2.1.3](FS-check.md#213-the-success-line)). The declaration still appears in `list` and resolves through every reader; severity never changes recognition. In grund 0.15.0 the same code and location become an error, the deadline clause becomes the past-tense release report required by [§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name), and `check` exits `1`. The release guard and [§RM-off-grammar-declaration-error](../roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0150) prevent shipping the warning at or beyond that version.
 
 #### checks.declaration-near-miss.6: No opt-out, no rewrite
 
@@ -181,7 +181,7 @@ The suggested coordinate is guidance, not a rewrite. Its path depth follows the 
 
 #### checks.unmarked-heading.4: Rendering, exit, and selection
 
-Text output uses the `<path>:<line>: warning: <message>` form. A warning leaves the exit at `0` but stands in place of the `success` marker ([§FS-check.2.1.3](FS-check.md#213-the-success-marker)). JSON emits the same path, line, code, and message with `"severity":"warning"` and `"sites":null`. `--only unmarked-heading` retains it and `--ignore unmarked-heading` removes it through the ordinary exact-code selection rules. The LSP carries the same core finding with warning severity and the complete ATX heading as its range ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
+Text output uses the `<path>:<line>: warning: <message>` form. A warning leaves the exit at `0` but stands in place of the `success` line ([§FS-check.2.1.3](FS-check.md#213-the-success-line)). JSON emits the same path, line, code, and message with `"severity":"warning"` and `"sites":null`. `--only unmarked-heading` retains it and `--ignore unmarked-heading` removes it through the ordinary exact-code selection rules. The LSP carries the same core finding with warning severity and the complete ATX heading as its range ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
 
 #### checks.unmarked-heading.5: An error in grund 0.15.0
 
@@ -216,7 +216,7 @@ The coordinate is local for a member-local check and workspace-qualified for a w
 
 #### checks.oversized-lead.2: Exit code and rendering
 
-A warning-only run exits `0` and replaces the text `success` marker; JSON uses the ordinary located finding object ([§FS-errors.5](FS-errors.md#5-json-format)). The LSP publishes the same message, line, code, and warning severity as the CLI ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). Any simultaneous error, including `duplicate` or `duplicate-section`, still decides exit `1`; the warning neither suppresses it nor changes its priority.
+A warning-only run exits `0` and replaces the text `success` line; JSON uses the ordinary located finding object ([§FS-errors.5](FS-errors.md#5-json-format)). The LSP publishes the same message, line, code, and warning severity as the CLI ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)). Any simultaneous error, including `duplicate` or `duplicate-section`, still decides exit `1`; the warning neither suppresses it nor changes its priority.
 
 #### checks.oversized-lead.3: Only the key activates it
 

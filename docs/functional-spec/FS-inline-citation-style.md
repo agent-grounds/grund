@@ -30,8 +30,8 @@ This generalizes the exemption a doc-comment that *declares* an ID already has (
 
 Which kind a block is, is read from the file's extension and one test on the block itself — never by parsing the host language ([§FS-inline-citation-style.6](FS-inline-citation-style.md#6-non-goals)). Two recognizers and a default:
 
-1. **Marker languages** spell a doc-comment with a marker of their own, so the marker *is* the language's own answer. The block is a doc-comment when its line-comment marker — or, for a block comment, its opening line — is the doc form.
-2. **Position languages** spell a doc-comment exactly like every other comment (Go `//`, Ruby `#`, shell `#`, SQL `--`), so position answers instead. The block is a doc-comment when the line immediately below it, with no blank line between, is a **definition-starter** for that language, or when the block is the file's **leading comment**: every line above it is blank, or is line 1 and a `#!` shebang. A leading comment is how these languages spell a module doc — a header at the top of a Go, Ruby, shell, or SQL file documents the file, the way `//!` and a module docstring do where a marker exists.
+1. **Prefix languages** spell a doc-comment with a comment prefix of their own, so the prefix *is* the language's own answer. The block is a doc-comment when its line-comment prefix — or, for a block comment, its opening line — is the doc form.
+2. **Position languages** spell a doc-comment exactly like every other comment (Go `//`, Ruby `#`, shell `#`, SQL `--`), so position answers instead. The block is a doc-comment when the line immediately below it, with no blank line between, is a **definition-starter** for that language, or when the block is the file's **leading comment**: every line above it is blank, or is line 1 and a `#!` shebang. A leading comment is how these languages spell a module doc — a header at the top of a Go, Ruby, shell, or SQL file documents the file, the way `//!` and a module docstring do where a doc prefix exists.
 3. **Any other extension** has no doc-comment notion, so every comment block in it is inline. That is the behavior of every release before this rule, so nothing a conformant tree already passes changes on its account.
 
 #### 1.1.2 Languages
@@ -40,11 +40,11 @@ Each extension belongs to one recognizer of [§FS-inline-citation-style.1.1.1](F
 
 | extensions | recognizer | doc-comment when |
 |---|---|---|
-| `rs` `c` `h` `cpp` `cc` `cxx` `hpp` `hh` `hxx` `m` `mm` `java` `cs` `kt` `kts` `scala` `swift` `js` `jsx` `mjs` `cjs` `ts` `tsx` `php` `dart` | marker (C family) | a line run whose marker is exactly `///` (`////` is a rule line, not a doc-comment; JDK 23 Markdown documentation comments are `///` too) or `//!`; a block comment opening `/**` — not the empty `/**/` — or `/*!`. A plain `//`, `/* … */`, or PHP `#` block is inline wherever it sits, a `//` block directly above a `fn` included: by the language's own rules that is not documentation. |
-| `py` | marker (docstring) | a `"""` or `'''` docstring block. A `#` block is inline, including one directly above a `def` — by PEP 257 only a docstring is documentation. |
-| `lua` | marker (LDoc) | a `--` run whose first line starts with `---`, exactly three dashes; `----` is a rule line. Continuation lines are plain `--` lines and already belong to the same block. |
-| `hs` `lhs` | marker (Haddock) | a `--` run whose first line's content after the `--` starts, after optional spaces, with `\|` or `^`. |
-| `r` `R` | marker (roxygen2) | a `#` run whose first line starts with `#'`. |
+| `rs` `c` `h` `cpp` `cc` `cxx` `hpp` `hh` `hxx` `m` `mm` `java` `cs` `kt` `kts` `scala` `swift` `js` `jsx` `mjs` `cjs` `ts` `tsx` `php` `dart` | prefix (C family) | a line run whose prefix is exactly `///` (`////` is a rule line, not a doc-comment; JDK 23 Markdown documentation comments are `///` too) or `//!`; a block comment opening `/**` — not the empty `/**/` — or `/*!`. A plain `//`, `/* … */`, or PHP `#` block is inline wherever it sits, a `//` block directly above a `fn` included: by the language's own rules that is not documentation. |
+| `py` | prefix (docstring) | a `"""` or `'''` docstring block. A `#` block is inline, including one directly above a `def` — by PEP 257 only a docstring is documentation. |
+| `lua` | prefix (LDoc) | a `--` run whose first line starts with `---`, exactly three dashes; `----` is a rule line. Continuation lines are plain `--` lines and already belong to the same block. |
+| `hs` `lhs` | prefix (Haddock) | a `--` run whose first line's content after the `--` starts, after optional spaces, with `\|` or `^`. |
+| `r` `R` | prefix (roxygen2) | a `#` run whose first line starts with `#'`. |
 | `go` | position | definition-starters `func`, `type`, `var`, `const`, `package`. |
 | `rb` | position | definition-starters `class`, `module`, `def`. |
 | `sh` `bash` `zsh` | position | `function <name>`, or `<name>()` / `<name> ()`, with `<name>` matching `[A-Za-z_][A-Za-z0-9_]*`. |
@@ -56,7 +56,7 @@ A **definition-starter** matches when the next line, with leading whitespace rem
 
 Four corners are known and accepted rather than repaired ([§DF-doc-comments-are-not-notes.2.6](../decisions/functional/DF-doc-comments-are-not-notes.md#26-the-corners-it-accepts)):
 
-- A **dangling doc-comment** — a `/** … */` or `///` inside a method body, which `javac`'s `-Xlint:dangling-doc-comments` and `rustc`'s `unused_doc_comments` already warn about — is a doc-comment by its marker and is not measured. The language's own lint is the tool for a doc-comment in the wrong place.
+- A **dangling doc-comment** — a `/** … */` or `///` inside a method body, which `javac`'s `-Xlint:dangling-doc-comments` and `rustc`'s `unused_doc_comments` already warn about — is a doc-comment by its prefix and is not measured. The language's own lint is the tool for a doc-comment in the wrong place.
 - **Position recognition is recognition, not parsing.** A Go `var` inside a function body and a Ruby `private def` are classified by the same one-line test: the first reads as a doc-comment, the second does not. A miss in either direction only changes whether a block is *measured*; it never changes what a citation resolves to, or whether it resolves at all. The starter sets can widen later without a `grund_config_version` bump ([§FS-config.5](FS-config.md#5-schema-versioning)).
 - A comment **trailing code** on the same line (`foo(); // §<ID>: note`) is what it already was: not a site ([§FS-inline-citation-style.3.3.6](FS-inline-citation-style.md#336-same-scope-as-the-rest-of-this-spec)).
 - **Blank-line adjacency is adjacency.** A `#` block, a blank line, then a `def` is an inline comment — the blank line broke the block off the definition, the same way it breaks one block into two ([§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)).
@@ -65,12 +65,12 @@ Four corners are known and accepted rather than repaired ([§DF-doc-comments-are
 
 The block forms say where a block begins and ends. They are the scanner's existing normalization, not a verdict on which blocks are sites:
 
-- `//` / `///` / `//!` line comments: a run of adjacent lines whose first non-whitespace token is the same line-comment marker.
-- `#`, `;`, `--` line comments: same rule per marker (see [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned) for the full prefix set).
+- `//` / `///` / `//!` line comments: a run of adjacent lines whose first non-whitespace token is the same line-comment prefix.
+- `#`, `;`, `--` line comments: same rule per prefix (see [§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned) for the full prefix set).
 - `/* … */` block comments, `/**`- and `/*!`-opened alike: from opener to closer.
 - Python triple-quoted docstrings (`""" … """` / `''' … '''`): from the opening triple-quote to the matching close.
 
-Adjacency is broken by any line that is not part of the same block: a code line, a blank line, or a different comment style. An empty comment line — the marker alone, such as `//` or `#`, with nothing after it — stays inside the run: it carries the marker, so only a line without one breaks it.
+Adjacency is broken by any line that is not part of the same block: a code line, a blank line, or a different comment style. An empty comment line — the prefix alone, such as `//` or `#`, with nothing after it — stays inside the run: it carries the prefix, so only a line without one breaks it.
 
 ### 1.3 What is not a site
 
@@ -340,7 +340,7 @@ No auto-rewrite of a note and no normalization of layout, in `--check` or in `--
 ### 6.2 No scope beyond notes
 
 - No scope growth. Spec text in Markdown bodies is not capped, and layout is judged on notes only — never in Markdown bodies, never on a comment trailing code, never on the code line below the comment ([§FS-inline-citation-style.3.3.6](FS-inline-citation-style.md#336-same-scope-as-the-rest-of-this-spec)).
-- No host-language parsing to find definitions. Whether a block is a doc-comment is one marker test or one next-line test ([§FS-inline-citation-style.1.1.1](FS-inline-citation-style.md#111-recognizers)). A miss in a position language is never fixed by acquiring a parser ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): a false negative, such as a Ruby `private def`, is fixed by widening a starter set, and a false positive, such as a Go `var` in a function body, is accepted ([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)).
+- No host-language parsing to find definitions. Whether a block is a doc-comment is one prefix test or one next-line test ([§FS-inline-citation-style.1.1.1](FS-inline-citation-style.md#111-recognizers)). A miss in a position language is never fixed by acquiring a parser ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)): a false negative, such as a Ruby `private def`, is fixed by widening a starter set, and a false positive, such as a Go `var` in a function body, is accepted ([§FS-inline-citation-style.1.1.3](FS-inline-citation-style.md#113-accepted-corners)).
 
 ### 6.3 No second column measure
 

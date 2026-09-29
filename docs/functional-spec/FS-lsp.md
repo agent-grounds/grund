@@ -63,7 +63,7 @@ A committed fetched snapshot is an ordinary declaration on this path: hover, def
 
 #### 1.2.1 Citation preview
 
-`textDocument/hover` on a citation returns the body `grund <ID> --toc` would print ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), or the `--toc` body of the requested section if the citation includes one ([§FS-show.2.2](FS-show.md#22-section)); a named citation previews the exact named section slice that `grund <ID>.<path> --toc` returns. When the declaration's home is in source code (a stub points at `src/bus.rs`), the hover body is the comment-stripped prose per [§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers) — the same content the CLI returns. Hovering a Markdown, source-comment, or JSON value binding likewise uses the exact `show --toc` slice; no rendered or interpolated value surface is invented ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)). The unadorned preview and the `show --toc` query produce the same bytes before editor linkification; the full hover may also carry the separate kind-metadata paragraph ([§FS-lsp.1.2.8](FS-lsp.md#128-target-kind-metadata)).
+`textDocument/hover` on a citation returns the body `grund <ID> --toc` would print ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)), or the `--toc` body of the requested section if the citation includes one ([§FS-show.2.2](FS-show.md#22-section)); a named citation previews the exact named section slice that `grund <ID>.<path> --toc` returns. When the declaration's home is in source code (a stub points at `src/bus.rs`), the hover body is the comment-stripped prose per [§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes) — the same content the CLI returns. Hovering a Markdown, source-comment, or JSON value binding likewise uses the exact `show --toc` slice; no rendered or interpolated value surface is invented ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)). The unadorned preview and the `show --toc` query produce the same bytes before editor linkification; the full hover may also carry the separate kind-metadata paragraph ([§FS-lsp.1.2.8](FS-lsp.md#128-target-kind-metadata)).
 
 The citation hover content is Markdown. Any resolving `§<ID>` citation inside it is emitted as a normal link to its declaration target, so users can keep following the grounding graph without closing the hover.
 
@@ -75,7 +75,7 @@ If a citation has a diagnostic instead (for example an unknown reference with a 
 
 On a declaration-side title, hover returns the title token and its usage count, with the hover range set to the whole title span. The cursor is already inside the declaration body, so a body preview would only repeat what is on screen; the *usage* is the one fact about a declaration that is visible nowhere on that screen. The whole-title range also gives editors such as Codium the hover affordance. The citation sites themselves are reached on demand through go-to-definition ([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)) and citations ([§FS-lsp.1.3.1](FS-lsp.md#131-citations-from-declarations)): the hover is the count, not the list.
 
-An explicit named heading is a declaration-side title just like a numbered heading: its hover range covers the complete rendered heading title, including the name and colon, and its usage count covers citations of that path and its descendants. A declaration-side marked root retains the ordinary section-title hover and usage count: its semantic title and UTF-16 hover range exclude the separating space and marker, while a raw preview of that section includes the marker on its heading ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
+An explicit named heading is a declaration-side title just like a numbered heading: its hover range covers the complete rendered heading title, including the name and colon, and its usage count covers citations of that path and its descendants. A declaration-side marked root retains the ordinary section-title hover and usage count: its semantic title and UTF-16 hover range exclude the separating space and tag, while a raw preview of that section includes the tag on its heading ([§FS-values.6](FS-values.md#6-shared-catalog-consumers)).
 
 #### 1.2.4 The title hover's text
 
@@ -301,7 +301,7 @@ and contains no parallel rule implementation
 
 ### 4.2 Embedded values
 
-For an embedded value, this parity covers the CLI's marked-root shape and comparison findings, raw `show --toc` hover slice, marker-free semantic title range, component definition target, and existing dotted-token citation lookups, highlights, and document links. Shell completion remains the core catalog's ordinary section completion and LSP completion remains reserved; neither surface adds a value-specific candidate.
+For an embedded value, this parity covers the CLI's marked-root shape and comparison findings, raw `show --toc` hover slice, tag-free semantic title range, component definition target, and existing dotted-token citation lookups, highlights, and document links. Shell completion remains the core catalog's ordinary section completion and LSP completion remains reserved; neither surface adds a value-specific candidate.
 
 ### 4.3 Off-grammar declarations
 
