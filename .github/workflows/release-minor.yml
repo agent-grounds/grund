@@ -12,6 +12,7 @@ on:
 permissions:
   contents: write
   actions: write   # gh workflow run needs actions:write to dispatch
+  pull-requests: read   # `prepare_changelog_release.py stamp` asks which PR wrote each bullet
 
 env:
   CARGO_TERM_COLOR: always
@@ -105,6 +106,10 @@ jobs:
           cargo set-version --workspace "${{ steps.versions.outputs.next }}"
           cargo update --workspace
           printf 'grund %s\n' "${{ steps.versions.outputs.next }}" > tests/e2e/cases/cli-version/expected.stdout
+          # Blame each `## Unreleased` bullet to its pull request and write the
+          # number in before the rotation reads the section (§FS-distribution.4.5).
+          # It warns about what it cannot resolve and never fails the release.
+          python3 scripts/prepare_changelog_release.py stamp
           python3 scripts/prepare_changelog_release.py prepare "${{ steps.versions.outputs.next }}"
 
       - name: Commit and push release candidate

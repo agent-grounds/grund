@@ -1,7 +1,7 @@
-"""§AR-ci.7 — the pull-request changelog gate, exercised the way CI runs it: a
-pull request must be named in the `## Unreleased` section of `docs/changelog.md`
-(§FS-distribution.4.6), and the script reads the PR number the way the event
-supplies it.
+"""§AR-ci.7 — the changelog gate, exercised the way its two halves run it: a
+branch must add a bullet to the `## Unreleased` section of `docs/changelog.md`
+and may not put another pull request's number on it (§FS-distribution.4.6), and
+the script reads the number and the base the way the event supplies them.
 
 The end-to-end class at the bottom is the gate's own parity proof, and the only
 place §AR-ci.1.1's "the same verdict on the same tree" is actually checked: it
@@ -11,13 +11,10 @@ repository, and asserts they agree. It reads the two invocations rather than
 spelling them so that it measures the arrangement this repository ships rather
 than the one it happened to have when the test was written.
 
-Its two cases land under `@unittest.expectedFailure`, one commit before the fix,
-because the pre-commit hook runs this suite and a plainly failing test could not
-be committed without `--no-verify`, which this repository forbids. They fail
-today for the reason agent-grounds/grund#345 reports: on one tree the pre-push
-invocation exits 0 and pull-request CI exits 1. The decorator comes off in the
-same change that makes them pass, and until then an unexpected success fails the
-suite, so neither case can rot into a silent pass."""
+`ChangelogGateRulesTests` above it drives one half at a time over the same
+fixture shape, so R1 (a bullet the merge base does not hold) and R2 (a counted
+bullet may not carry another pull request's number) each have a case of their
+own, including the two conditions that skip the check."""
 
 import importlib.util
 import json
@@ -55,71 +52,45 @@ CHANGELOG = (
 )
 
 
-class CheckChangelogPrEntryTests(unittest.TestCase):
-    def write_changelog(self, root: Path, unreleased: str) -> Path:
-        changelog = root / "docs" / "changelog.md"
-        changelog.parent.mkdir(parents=True)
-        changelog.write_text(
-            f"# Changelog\n\n## Unreleased\n\n{unreleased}\n\n"
-            "## 2. [0.3.0] — 2026-05-18\n\nPrevious release.\n",
-            encoding="utf-8",
-        )
-        return changelog
+class ChangelogEventTests(unittest.TestCase):
+    """What the `pull_request` event supplies: the number R2 judges against, and
+    the base commit R1 takes its merge base from."""
 
-    def test_accepts_pr_number_in_unreleased_entry(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            changelog = self.write_changelog(
-                Path(tmp),
-                "### Changed\n\n- §FS-distribution.4.6: add the changelog PR gate. PR #15",
-            )
-            check_changelog_pr_entry.check_changelog_pr_entry(changelog, 15)
+    def write_event(self, payload: dict) -> Path:
+        event_path = Path(self.tempdir.name) / "event.json"
+        event_path.write_text(json.dumps(payload), encoding="utf-8")
+        return event_path
 
-    def test_accepts_pull_url_in_unreleased_entry(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            changelog = self.write_changelog(
-                Path(tmp),
-                "### Fixed\n\n- §FS-distribution.4.6: fix release notes (https://github.com/agent-grounds/grund/pull/15).",
-            )
-            check_changelog_pr_entry.check_changelog_pr_entry(changelog, 15)
-
-    def test_rejects_missing_pr_number(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            changelog = self.write_changelog(
-                Path(tmp),
-                "### Changed\n\n- §FS-distribution.4.6: add the changelog PR gate.",
-            )
-            with self.assertRaisesRegex(check_changelog_pr_entry.ChangelogPrError, "PR #15"):
-                check_changelog_pr_entry.check_changelog_pr_entry(changelog, 15)
+    def setUp(self) -> None:
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tempdir.cleanup)
 
     def test_reads_pull_request_number_from_event_file(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            event_path = root / "event.json"
-            event_path.write_text(json.dumps({"pull_request": {"number": 15}}), encoding="utf-8")
-            self.assertEqual(check_changelog_pr_entry.pr_number_from_event(event_path), 15)
+        event_path = self.write_event({"pull_request": {"number": 15, "base": {"sha": "abc123"}}})
+        self.assertEqual(check_changelog_pr_entry.pr_number_from_event(event_path), 15)
 
-    def test_non_pull_request_event_skips(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            event_path = root / "event.json"
-            event_path.write_text(json.dumps({"ref": "refs/heads/main"}), encoding="utf-8")
-            self.assertIsNone(check_changelog_pr_entry.pr_number_from_event(event_path))
+    def test_reads_base_sha_from_event_file(self) -> None:
+        event_path = self.write_event({"pull_request": {"number": 15, "base": {"sha": "abc123"}}})
+        self.assertEqual(check_changelog_pr_entry.base_sha_from_event(event_path), "abc123")
 
-    def test_reads_pull_request_number_from_gh_current_branch(self) -> None:
-        with patch.object(
-            check_changelog_pr_entry.subprocess,
-            "run",
-            return_value=CompletedProcess(args=[], returncode=0, stdout="18\n", stderr=""),
-        ):
-            self.assertEqual(check_changelog_pr_entry.pr_number_from_current_branch(), 18)
+    def test_non_pull_request_event_supplies_neither(self) -> None:
+        event_path = self.write_event({"ref": "refs/heads/main"})
+        self.assertIsNone(check_changelog_pr_entry.pr_number_from_event(event_path))
+        self.assertIsNone(check_changelog_pr_entry.base_sha_from_event(event_path))
 
-    def test_missing_gh_current_branch_pr_skips(self) -> None:
-        with patch.object(
-            check_changelog_pr_entry.subprocess,
-            "run",
-            return_value=CompletedProcess(args=[], returncode=1, stdout="", stderr="no pull requests found"),
-        ):
-            self.assertIsNone(check_changelog_pr_entry.pr_number_from_current_branch())
+    def test_rejects_an_invalid_number_in_the_event(self) -> None:
+        event_path = self.write_event({"pull_request": {"number": "fifteen"}})
+        with self.assertRaises(check_changelog_pr_entry.ChangelogPrError):
+            check_changelog_pr_entry.pr_number_from_event(event_path)
+
+    def test_pushed_ref_is_the_head_the_stage_names(self) -> None:
+        with patch.dict(os.environ, {"PRE_COMMIT_TO_REF": "deadbeef"}, clear=False):
+            self.assertEqual(check_changelog_pr_entry.head_ref_for_pre_push(), "deadbeef")
+
+    def test_a_branch_deletion_falls_back_to_the_checkout(self) -> None:
+        # pre-commit hands the all-zero sha when the push deletes the ref.
+        with patch.dict(os.environ, {"PRE_COMMIT_TO_REF": "0" * 40}, clear=False):
+            self.assertEqual(check_changelog_pr_entry.head_ref_for_pre_push(), "HEAD")
 
 
 def _hook_entry() -> str:
@@ -181,8 +152,10 @@ def _environment(extra: dict[str, str], path_prefix: Path | None = None) -> dict
     return environment
 
 
-class ChangelogGateParityTests(unittest.TestCase):
-    """Both halves of one gate, on one tree, from the repository's own configuration."""
+class GitFixture:
+    """A throwaway repository: a base commit carrying one earlier bullet, one head
+    commit on top of it, and `origin/main` pointing at the base. No network, no
+    `gh`, no remote — the gate reads local git alone (§AR-ci.7)."""
 
     def _git(self, repo: Path, *arguments: str) -> str:
         result = subprocess.run(
@@ -210,14 +183,14 @@ class ChangelogGateParityTests(unittest.TestCase):
         )
         return self._git(repo, "rev-parse", "HEAD")
 
-    def _fixture(self, root: Path, head_bullets: str) -> tuple[Path, str, str]:
+    def _fixture(self, root: Path, head_bullets: str, base_bullets: str = EARLIER_BULLET) -> tuple[Path, str, str]:
         """A repository whose base carries one earlier bullet and whose head is
         one commit on top of it, with `origin/main` pointing at the base."""
         repo = root / "repo"
         (repo / "docs").mkdir(parents=True)
         self._git(root, "init", "-b", "main", str(repo))
         changelog = repo / "docs" / "changelog.md"
-        changelog.write_text(CHANGELOG.format(bullets=EARLIER_BULLET), encoding="utf-8")
+        changelog.write_text(CHANGELOG.format(bullets=base_bullets), encoding="utf-8")
         (repo / "README.md").write_text("The base.\n", encoding="utf-8")
         base = self._commit(repo, "The base commit")
         self._git(repo, "update-ref", "refs/remotes/origin/main", base)
@@ -236,6 +209,132 @@ class ChangelogGateParityTests(unittest.TestCase):
         shell.chmod(0o755)
         (binaries / "gh.bat").write_text("@echo no pull requests found 1>&2\r\n@exit /b 1\r\n", encoding="utf-8")
         return binaries
+
+class ChangelogGateRulesTests(GitFixture, unittest.TestCase):
+    """R1 and R2 of §FS-distribution.4.6, one half at a time: what counts as a new
+    or changed bullet, what a number in one may be, and the two skips."""
+
+    def _recording_gh(self, root: Path) -> tuple[Path, Path]:
+        """A `gh` that records being run: the gate may not need it on either side."""
+        binaries = root / "bin"
+        binaries.mkdir()
+        marker = root / "gh-was-run"
+        (binaries / "gh").write_text(f'#!/bin/sh\ntouch "{marker}"\nexit 1\n', encoding="utf-8")
+        (binaries / "gh").chmod(0o755)
+        (binaries / "gh.bat").write_text(f'@type nul > "{marker}"\r\n@exit /b 1\r\n', encoding="utf-8")
+        return binaries, marker
+
+    def _pre_push(self, head_bullets: str, base_bullets: str = EARLIER_BULLET) -> CompletedProcess:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, base, head = self._fixture(root, head_bullets, base_bullets)
+            binaries, self.gh_marker = self._recording_gh(root)
+            self.gh_ran = lambda: self.gh_marker.exists()
+            return subprocess.run(
+                [sys.executable, str(SCRIPT_PATH), "--pre-push"],
+                cwd=repo,
+                capture_output=True,
+                text=True,
+                env=_environment(
+                    {
+                        "PRE_COMMIT_REMOTE_NAME": "origin",
+                        "PRE_COMMIT_LOCAL_BRANCH": "fix/the-change",
+                        "PRE_COMMIT_FROM_REF": base,
+                        "PRE_COMMIT_TO_REF": head,
+                    },
+                    path_prefix=binaries,
+                ),
+            )
+
+    def _ci(self, head_bullets: str, base_bullets: str = EARLIER_BULLET, base: str | None = None) -> CompletedProcess:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, fixture_base, head = self._fixture(root, head_bullets, base_bullets)
+            return subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_PATH),
+                    "--base-sha",
+                    base or fixture_base,
+                    "--head-sha",
+                    head,
+                    "--pr-number",
+                    str(FIXTURE_PR),
+                ],
+                cwd=repo,
+                capture_output=True,
+                text=True,
+                env=_environment({}),
+            )
+
+    def _output(self, result: CompletedProcess) -> str:
+        return result.stdout + result.stderr
+
+    # R1 — a bullet the merge base does not already hold, and no number needed.
+    def test_a_new_bullet_needs_no_number_and_no_pull_request(self) -> None:
+        result = self._pre_push(f"{EARLIER_BULLET}\n{NEW_BULLET}")
+        self.assertEqual(0, result.returncode, self._output(result))
+        self.assertFalse(self.gh_ran(), "the gate ran `gh`; both halves read local git alone")
+
+    def test_a_rewrap_is_not_a_change(self) -> None:
+        rewrapped = "- An earlier pull request's\n  bullet. (PR #1)"
+        result = self._pre_push(rewrapped)
+        self.assertEqual(1, result.returncode, self._output(result))
+        self.assertIn("SKIP=changelog-pr-entry git push", self._output(result))
+
+    def test_a_formatter_anchor_rewrite_is_neither_a_change_nor_an_r2_trip(self) -> None:
+        # `grund fmt --write` moves the anchor inside somebody else's bullet when
+        # a heading is renamed. Reading that as this branch's edit would refuse a
+        # push for a change the formatter made — and its `PR #305` is not ours.
+        theirs = "- [§AR-ci.7](architecture/AR-ci.md#7-{anchor}): their change. (PR #305)"
+        result = self._ci(theirs.format(anchor="the-new-title"), base_bullets=theirs.format(anchor="old-title"))
+        self.assertEqual(1, result.returncode, self._output(result))
+        self.assertIn("no new or changed bullet", self._output(result))
+        self.assertNotIn("305", self._output(result))
+
+    def test_appending_your_number_to_somebody_elses_bullet_is_not_a_change(self) -> None:
+        result = self._ci(f"{EARLIER_BULLET} (PR #{FIXTURE_PR})")
+        self.assertEqual(1, result.returncode, self._output(result))
+        self.assertIn("no new or changed bullet", self._output(result))
+
+    # R2 — a counted bullet may not carry some other pull request's number.
+    def test_a_counted_bullet_carrying_another_pull_requests_number_is_refused(self) -> None:
+        result = self._ci(f"{EARLIER_BULLET}\n{NEW_BULLET[:-1]} (PR #305)")
+        self.assertEqual(1, result.returncode, self._output(result))
+        self.assertIn("PR #305", self._output(result))
+        self.assertIn(f"PR #{FIXTURE_PR}", self._output(result))
+
+    def test_a_tbd_placeholder_is_not_a_number(self) -> None:
+        result = self._ci(f"{EARLIER_BULLET}\n{NEW_BULLET[:-1]} (PR #TBD)")
+        self.assertEqual(0, result.returncode, self._output(result))
+
+    # The two skips, both by condition.
+    def test_a_head_the_base_already_contains_skips(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, base, _head = self._fixture(root, EARLIER_BULLET)
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT_PATH), "--base-sha", base, "--head-sha", base],
+                cwd=repo,
+                capture_output=True,
+                text=True,
+                env=_environment({}),
+            )
+        self.assertEqual(0, result.returncode, self._output(result))
+        self.assertIn("already contains this head", self._output(result))
+
+    def test_an_unresolvable_base_degrades_to_one_bullet_and_warns(self) -> None:
+        result = self._ci(EARLIER_BULLET, base="0" * 40)
+        self.assertEqual(0, result.returncode, self._output(result))
+        self.assertIn("no base ref resolves", self._output(result))
+
+    def test_an_unresolvable_base_still_refuses_an_empty_unreleased(self) -> None:
+        result = self._ci("*Nothing yet.*", base="0" * 40)
+        self.assertEqual(1, result.returncode, self._output(result))
+
+
+class ChangelogGateParityTests(GitFixture, unittest.TestCase):
+    """Both halves of one gate, on one tree, from the repository's own configuration."""
 
     def _both_halves(self, head_bullets: str) -> tuple[CompletedProcess, CompletedProcess]:
         with tempfile.TemporaryDirectory() as tmp:
@@ -285,7 +384,6 @@ class ChangelogGateParityTests(unittest.TestCase):
             f"{self._report('pre-push', local)}\n{self._report('pull-request CI', remote)}",
         )
 
-    @unittest.expectedFailure
     def test_both_halves_refuse_a_branch_that_added_no_bullet(self) -> None:
         local, remote = self._both_halves(EARLIER_BULLET)
         self._verdicts(local, remote)
@@ -297,7 +395,6 @@ class ChangelogGateParityTests(unittest.TestCase):
                 self.assertIn("## Unreleased", refusal)
         self.assertIn("SKIP=changelog-pr-entry", local.stdout + local.stderr)
 
-    @unittest.expectedFailure
     def test_both_halves_accept_a_new_bullet_that_names_no_number(self) -> None:
         local, remote = self._both_halves(f"{EARLIER_BULLET}\n{NEW_BULLET}")
         self._verdicts(local, remote)

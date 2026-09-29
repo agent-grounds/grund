@@ -81,7 +81,7 @@ On repository web surfaces, link `§<ID>` to the PR branch in PR bodies, the rev
 
 ## Repository workflow
 
-- Every PR for this repository needs a `docs/changelog.md` `## Unreleased` bullet that mentions its PR number (`PR #N`); the pre-push hook checks this once the branch has a PR ([§FS-distribution.4](docs/functional-spec/FS-distribution.md#4-release-process)).
+- Every PR for this repository needs a new or changed `docs/changelog.md` `## Unreleased` bullet. The number is optional: write `(PR #TBD)` or nothing and the release stamps it in, and a number you do write must be your own pull request's. The pre-push hook checks this on every push rather than only once a pull request exists, and `SKIP=changelog-pr-entry git push` is the documented escape for a branch that is not becoming one ([§FS-distribution.4.6](docs/functional-spec/FS-distribution.md#46-the-changelog-gate-keeps-the-release-section-mappable-to-its-pull-requests)).
 - Edit `AGENTS.md`, never the `CLAUDE.md` symlink ([§REQ-agents-md.1](docs/requirements/REQ-agents-md.md#1-one-source-symlinked-companions)); this entrypoint's contract is [§REQ-agents-md](docs/requirements/REQ-agents-md.md#req-agents-md-the-agent-entrypoint-stays-managed-and-grounded), the README's is [§REQ-readme](docs/requirements/REQ-readme.md#req-readme-the-readme-is-the-grounded-shop-window).
 
 <!-- BEGIN FISSILE MANAGED BLOCK -->

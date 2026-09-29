@@ -52,10 +52,6 @@ jobs:
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
 
-      - name: changelog PR entry
-        if: github.event_name == 'pull_request'
-        run: python scripts/check_changelog_pr_entry.py --pr-number "${{ github.event.pull_request.number }}"
-
       # The file-size ownership regression asks `fissile measure` for each split owner
       # (§AR-core-module-layout.1.5), so the binary is on PATH for the python tests on
       # every leg, not only the one that runs the hooks.
@@ -130,6 +126,27 @@ jobs:
       # `cargo test` runs the full e2e suite plus the core and CLI unit tests.
       - name: cargo test
         run: cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count
+
+  # The remote half of the changelog gate (§AR-ci.7), a job of its own for the
+  # reason §AR-ci.8.1 gives for the gate below: a merge base needs both endpoints
+  # in the object store, which the `test` matrix deliberately does not fetch.
+  changelog:
+    name: changelog PR entry
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # The merge base needs both endpoints present; a shallow clone has neither.
+          fetch-depth: 0
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: changelog PR entry
+        run: python scripts/check_changelog_pr_entry.py --base-sha "${{ github.event.pull_request.base.sha }}" --head-sha "${{ github.event.pull_request.head.sha }}" --pr-number "${{ github.event.pull_request.number }}"
 
   # `pre-commit run --all-files` cannot reproduce the `commit-msg` stage — it takes a
   # message file, not a file list — so a trailer that lives only in a commit message
