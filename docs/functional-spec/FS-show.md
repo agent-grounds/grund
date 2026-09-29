@@ -75,7 +75,7 @@ In a kind whose effective format carries both `{number}` and `{slug}`, the numbe
 `--brief`, `--toc`, and `--full` are mutually exclusive — each picks one rung on the "how much" ladder: title + 1 paragraph → lead prose → lead + section map → full body. The rungs' bodies are strictly nested (each contains the previous), so escalating is always one more flag; in `text` only `--brief` keeps the whole-declaration H1 ([§FS-show.2.1.1](FS-show.md#211-brief---brief), [§FS-show.3.1](FS-show.md#31-format-variants)), so for a one-paragraph lead it is longer than the default and not contained in it.
 
 - `--brief` — the cheapest "what is this about" view, a hover-preview slice ([§FS-show.2.1.1](FS-show.md#211-brief---brief)).
-- (no flag, the default) — the lead, cut at the first *citable* point, so an agent landing on a bare `§<ID>` reads enough to know whether to fetch a deeper section ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)).
+- (no flag, the default) — the lead, cut at the first *citable* section, so an agent landing on a bare `§<ID>` reads enough to know whether to fetch a deeper section ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)).
 - `--toc` — the move when the next step is `grund <ID>.<sec>` and the section number needs to be chosen ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)).
 - `--full` — print the entire body: heading down to the end of its body span ([§FS-show.2.1.2.1](FS-show.md#2121-the-map-is-the-declarations-body-span)), all subsections recursively included. The escalation when narrower slices are not enough ([§FS-show.2.1.3](FS-show.md#213-full-body---full)).
 
@@ -115,7 +115,7 @@ Opted-in JSON value declarations are members of the same catalog. For one, `show
 
 ### 2.1 Whole declaration (default)
 
-`grund FS-check` prints the *lead* — the prose between the declaration heading and the first child citable section heading (`## 1. ...`, or `## goals: ...` when named sections are enabled). The opening heading is omitted in `text` format and included in `md`. A named heading is a citable point and cuts its parent's lead exactly as a numbered heading does; a plain heading remains prose and does not cut it. This is the new default: a 1–2 paragraph slice that names what the declaration is about, without paying for the whole body. Decided in [§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in).
+`grund FS-check` prints the *lead* — the prose between the declaration heading and the first child citable section heading (`## 1. ...`, or `## goals: ...` when named sections are enabled). The opening heading is omitted in `text` format and included in `md`. A named heading is a citable section and cuts its parent's lead exactly as a numbered heading does; a plain heading remains prose and does not cut it. This is the new default: a 1–2 paragraph slice that names what the declaration is about, without paying for the whole body. Decided in [§DF-show-default-token-cheap](../decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in).
 
 A declaration with no lead prints nothing ([§FS-show.2.1.4](FS-show.md#214-a-declaration-with-no-lead-prints-nothing)); a selected section gets the same cut one level down ([§FS-show.2.1.5](FS-show.md#215-a-sections-lead)).
 
