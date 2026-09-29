@@ -292,7 +292,7 @@ After the block is selected, comment markers are removed line-by-line so the out
 - Trailing comment-close markers (`*/`) on their own line are dropped entirely.
 - Blank lines inside the block are preserved.
 
-The result is the markdown that the declaration's author wrote, identical to what would have lived in a `.md` file had the spec been doc-resident instead of inline. This is the property that makes [§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments) round-trip-stable across the in-docs and in-code homes.
+The result is the markdown that the declaration's author wrote, identical to what would have lived in a `.md` file had the declaration been doc-resident instead of inline. This is the property that makes [§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments) round-trip-stable across the in-docs and in-code homes.
 
 #### 2.3.3 Section selection inside a doc-comment
 
@@ -311,7 +311,7 @@ This is the same "found something other than exactly one body" family as `ID not
 
 #### 2.3.5 The doc-comment forms
 
-The scanner recognizes the same doc-comment forms enumerated in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc-comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architectural spec can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the comment-stripped Javadoc lead ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers)); the optional LSP server's hover shows the `--toc` slice of the same prose, the lead plus its section map ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
+The scanner recognizes the same doc-comment forms enumerated in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc-comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architecture declaration can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the comment-stripped Javadoc lead ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers)); the optional LSP server's hover shows the `--toc` slice of the same prose, the lead plus its section map ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
 
 #### 2.3.6 Several declarations in one doc-comment
 
@@ -364,7 +364,7 @@ The first line is the invocation (`grund check` when the case has no `command.ar
 
 In a Markdown body, a line inside a fenced block (```` ``` ````, `~~~`) is content, never structure. It does not end a lead (§FS-show.2.1), does not bound a section (§FS-show.2.2), does not appear in a `--toc` map (§FS-show.2.1.2), and does not open or close a declaration — the fence delimiters and everything between them are printed verbatim as part of whatever slice contains them. Verbatim includes the final text/JSON cross-reference pass: a complete citation wrapper inside the fence stays byte-for-byte as authored rather than being flattened (§FS-show.3.2), while wrapper flattening resumes after a valid closer.
 
-This is the carve-out [§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code) already makes for citations, applied to headings and post-slice flattening for the same reason and for one more: the scan bounds a declaration's sections by exactly this rule, so a slice that disagreed would cut a body where the recorded section map says no section starts. The shared grammar recognizes both backtick and tilde fences, their close/resume rules, and an unclosed fence through end of body; a short or wrong-character would-be closer leaves the fence open. A spec whose [§FS-show.1](FS-show.md#1-inputs) opens with a fenced `# FS-001-login: …` example — the shape these documents are written in — would otherwise print three lines and stop.
+This is the carve-out [§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code) already makes for citations, applied to headings and post-slice flattening for the same reason and for one more: the scan bounds a declaration's sections by exactly this rule, so a slice that disagreed would cut a body where the recorded section map says no section starts. The shared grammar recognizes both backtick and tilde fences, their close/resume rules, and an unclosed fence through end of body; a short or wrong-character would-be closer leaves the fence open. A declaration whose [§FS-show.1](FS-show.md#1-inputs) opens with a fenced `# FS-001-login: …` example — the shape these documents are written in — would otherwise print three lines and stop.
 
 The rule is Markdown's. Inside a code or docstring comment block ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)) a fence is not tracked, on either side: the scan does not track it there either, so the two still agree.
 
@@ -480,7 +480,7 @@ A `<ID>` argument that does not match its kind's effective format ([§FS-config.
 
 ## 4. Why this matters
 
-Without `show`, an agent retrieving a spec section either loads the whole file (token-expensive) or reimplements the parser. With `show`, the canonical way to pull `§FS-check.3.1` into a prompt is exactly:
+Without `show`, an agent retrieving a declaration's section either loads the whole file (token-expensive) or reimplements the parser. With `show`, the canonical way to pull `§FS-check.3.1` into a prompt is exactly:
 
 ```
 grund FS-check.3.1

@@ -68,4 +68,4 @@ Concrete fixtures that keep the command specs readable while pinning exact examp
 
 ---
 
-This index is navigational only. Citations should target the spec ID directly, never this file.
+This index is navigational only. Citations should target the declaration ID directly, never this file.
