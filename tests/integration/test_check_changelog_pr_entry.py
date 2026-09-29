@@ -213,7 +213,7 @@ class GitFixture:
         changelog.write_text(CHANGELOG.format(bullets=f"{EARLIER_BULLET}\n{theirs}"), encoding="utf-8")
         base = self._commit(repo, "Their change, merged after the branch point")
         self._git(repo, "update-ref", "refs/remotes/origin/main", base)
-        self._git(repo, "merge", "--no-commit", "--no-ff", "-s", "ours", head)
+        self._git(repo, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "merge", "--no-commit", "--no-ff", "-s", "ours", head)
         changelog.write_text(CHANGELOG.format(bullets=f"{EARLIER_BULLET}\n{theirs}\n{mine}"), encoding="utf-8")
         self._commit(repo, "Merge the head into the base tip")
         return repo, base, head
@@ -420,6 +420,27 @@ class ChangelogGateRulesTests(GitFixture, unittest.TestCase):
         result = self._ci(EARLIER_BULLET, base="0" * 40)
         self.assertEqual(0, result.returncode, self._output(result))
         self.assertIn("no base ref resolves", self._output(result))
+
+    def test_a_base_that_resolves_but_shares_no_history_says_so(self) -> None:
+        # The same skip, reached the other way: a shallow clone's grafted base
+        # resolves and still has no merge base, and telling the contributor no
+        # ref resolves would send them to fetch a ref they already have.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo, _base, head = self._fixture(root, EARLIER_BULLET)
+            self._git(repo, "checkout", "-q", "--orphan", "another-history")
+            (repo / "README.md").write_text("Another history.\n", encoding="utf-8")
+            stranger = self._commit(repo, "The root of an unrelated history")
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT_PATH), "--base-sha", stranger, "--head-sha", head],
+                cwd=repo,
+                capture_output=True,
+                text=True,
+                env=_environment({}),
+            )
+        self.assertEqual(0, result.returncode, self._output(result))
+        self.assertIn("share no history", self._output(result))
+        self.assertNotIn("no base ref resolves", self._output(result))
 
     def test_an_unresolvable_base_still_refuses_an_empty_unreleased(self) -> None:
         result = self._ci("*Nothing yet.*", base="0" * 40)

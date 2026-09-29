@@ -242,6 +242,21 @@ class StampTests(unittest.TestCase):
         self.assertIn("  and a continuation line saying more.\n", stamped)
         self.assertNotIn("PR #TBD", stamped)
 
+    def test_every_placeholder_in_one_bullet_is_replaced(self) -> None:
+        # Stopping at the first leaves the second to ship into the archive: the
+        # bullet now names a number, so no later run looks at it again.
+        changelog = self.changelog(
+            STAMPABLE.replace(
+                "- A bullet whose author left a placeholder. (PR #TBD)",
+                "- A bullet whose author left the placeholder twice (PR #TBD)\n"
+                "  because they wrapped it and repeated themselves. (PR #TBD)",
+            )
+        )
+        stamped = self.stamp(changelog, lambda start, end: ["a" * 40], lambda _commit: {412})
+        self.assertIn("- A bullet whose author left the placeholder twice (PR #412)\n", stamped)
+        self.assertIn("  because they wrapped it and repeated themselves. (PR #412)\n", stamped)
+        self.assertNotIn("PR #TBD", stamped)
+
     def test_a_run_that_stamps_nothing_leaves_the_file_byte_identical(self) -> None:
         # `stamp` runs on every release whether or not it resolves anything, and a
         # release in which nothing resolves is exactly today's release.
