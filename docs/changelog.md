@@ -16,7 +16,7 @@ Any change to `grund_config_version` or the `AGENTS.md` block version goes under
 
 ### 1.3 Entry style
 
-One bullet per change, present tense, leading with the affected ID. Example: `§FS-show: add --head mode for truncated output`.
+One bullet per change, present tense, leading with the affected ID. Example: `§FS-show: add --head mode for truncated output`. A bullet ends with the pull request that wrote it, `(PR #N)` — but the number is optional while the pull request is open, because the first push cannot know it: write `(PR #TBD)` or nothing at all and `scripts/prepare_changelog_release.py stamp` fills it in at release time. A number you do write must be your own pull request's ([§FS-distribution.4.6](functional-spec/FS-distribution.md#46-the-changelog-gate-keeps-the-release-section-mappable-to-its-pull-requests)).
 
 ### 1.4 Progressive discovery
 

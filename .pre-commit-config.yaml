@@ -41,9 +41,11 @@ repos:
       #   - `cargo test --workspace --all-targets --locked` matches the CI
       #     `cargo test` step and also runs at pre-push so broken tests block
       #     both commit-time and push-time workflows.
-      #   - `scripts/check_changelog_pr_entry.py --local-pr` mirrors the CI
-      #     PR-number changelog gate (§AR-ci.7) for follow-up pushes once a
-      #     branch has an open GitHub pull request.
+      #   - `scripts/check_changelog_pr_entry.py --pre-push` is the local half
+      #     of the changelog gate (§AR-ci.7): it asks local git for a
+      #     `## Unreleased` bullet the remote's `main` does not already have, on
+      #     every push rather than only once a pull request exists, and the
+      #     `changelog` job asks the same question of the same tree in CI.
       - id: cargo-fmt-check
         name: cargo fmt --check
         entry: cargo fmt --all -- --check
@@ -67,7 +69,7 @@ repos:
         stages: [pre-commit, pre-push]
       - id: changelog-pr-entry
         name: changelog PR entry
-        entry: python scripts/check_changelog_pr_entry.py --local-pr
+        entry: python scripts/check_changelog_pr_entry.py --pre-push
         language: system
         pass_filenames: false
         always_run: true
