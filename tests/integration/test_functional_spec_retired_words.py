@@ -52,7 +52,7 @@ SWEPT_WORDS = (
         # ID in link text, or git's own `ref`. The one compound where *ref* stands
         # for a citation is what is pinned here, and each anchor earns its place.
         # The leading guard keeps the `GOAL-no-dangling-refs` ID out, which the
-        # `FS-check` lean line carries unbackticked. The trailing one keeps
+        # `FS-check` lead carries unbackticked. The trailing one keeps
         # *dangling reference* out: *reference* is swept on its own and this row
         # claims nothing about it. And the compound is what lets the row that
         # retires the word survive its own sweep - `FS-terms.terms.2` has to name
