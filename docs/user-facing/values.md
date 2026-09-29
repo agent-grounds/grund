@@ -146,7 +146,7 @@ Four things decide what the key does and do not bend:
 - **`[id] named_sections = true` is a prerequisite**, not a consequence. Setting
   `value_chapter` without it is a located config error rather than a quiet
   no-op, because without named sections the handle the key names is not a
-  section at all ([§FS-config.3.2.7](../functional-spec/FS-config.md#327-named_sections--the-gate-for-section-handles)).
+  section at all ([§FS-config.3.2.7](../functional-spec/FS-config.md#327-named_sections--the-gate-for-explicit-section-names)).
 - **The chapter is the declaration's own direct chapter**, matched on the
   handle and never on the displayed title. A same-named chapter nested deeper —
   `subsystems.pump.values` — is ordinary prose and gains nothing.

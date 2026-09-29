@@ -283,7 +283,7 @@ The scan scope (`[scan].include` / `[scan].exclude`) is *not* surfaced here — 
 
 ###### 2.3.4.4.1 Rows for places
 
-A **non-citable kind** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is named by its **place** rather than its name — `- [skills/](skills): Agent review and automation skills` — because its name is a config handle an agent can never write in a citation, while the directory is something it can go and read. An unscanned kind ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) is rendered the same way; the row is the point of configuring it. The **homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — has no place and therefore no row.
+A **non-citable kind** ([§FS-config.3.4.1](FS-config.md#341-citable--kinds-that-declare-no-ids)) is named by its **place** rather than its name — `- [skills/](skills): Agent review and automation skills` — because its name is a config key an agent can never write in a citation, while the directory is something it can go and read. An unscanned kind ([§FS-config.3.4.7](FS-config.md#347-scan--a-place-that-is-listed-not-scanned)) is rendered the same way; the row is the point of configuring it. The **homeless kind** ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — has no place and therefore no row.
 
 ##### 2.3.4.5 Declaration Forms
 
