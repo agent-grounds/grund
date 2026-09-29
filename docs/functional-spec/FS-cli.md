@@ -72,7 +72,7 @@ The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard
 
 ### 3.1 The `--format json` streams
 
-The stream split is the same as the text form ([§FS-errors.1](FS-errors.md#1-streams), [§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)): the command's output — `grund check`'s findings as NDJSON when there are any, a query result as one object (or NDJSON for a list command) — goes to stdout, while a failed ID query's finding and any CLI-level `error:` go to stderr, except that `show --batch --format=json` keeps a failed query inside its stdout envelope ([§FS-errors.5](FS-errors.md#5-json-format)). `grund check --format=json` stays findings-only and does not emit the text-mode `success` marker.
+The stream split is the same as the text form ([§FS-errors.1](FS-errors.md#1-streams), [§FS-distribution.3.0](FS-distribution.md#30-language-neutral-data-shapes)): the command's output — `grund check`'s findings as NDJSON when there are any, a query result as one object (or NDJSON for a list command) — goes to stdout, while a failed ID query's finding and any CLI-level `error:` go to stderr, except that `show --batch --format=json` keeps a failed query inside its stdout envelope ([§FS-errors.5](FS-errors.md#5-json-format)). `grund check --format=json` stays findings-only and does not emit the text-mode `success` line.
 
 ### 3.2 At most one path
 

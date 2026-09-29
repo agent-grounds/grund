@@ -22,7 +22,7 @@ declaration, stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scannin
   outside it is preserved, including line endings.
 - **delimiter** — The comment line that opens a managed block and the one that closes it.
 - **legacy block** — A block at v3 or earlier, written before the delimiters: its H2 heading is
-  the begin marker and the next H1 or H2 ends it.
+  the begin delimiter and the next H1 or H2 ends it.
 
 ## 1. Inputs
 
@@ -37,7 +37,7 @@ grund init [<path>] [--name <name>] [--description <text>] [--docs] [--force] [-
 - `--force` — overwrite a selected canonical `AGENTS.md` and the `--docs` scaffold files where they already exist, never the config ([§FS-init.3.4](FS-init.md#34-with---force), [§FS-init.3.5](FS-init.md#35-what---force-does-not-replace)). Off by default. Existing entrypoints are appended to or updated without it ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)), so it is only needed to reset a generated `AGENTS.md` or a `--docs` scaffold to its canonical bytes.
 - `--dry-run` — preview the run without writing or modifying any file: each `wrote `, `appended `, or `updated ` line of the report ([§FS-init.2.2](FS-init.md#22-stdout--stderr)) is emitted as `would-write `, `would-append `, or `would-update `, while `exists ` lines and the `next:` block are unchanged. Composes with every other flag, including `--force`. Off by default.
 - `--check` — the same preview, taken as a verdict: nothing is written, the report is the one `--dry-run` prints for this tree ([§FS-init.2.2](FS-init.md#22-stdout--stderr)), and the run exits `1` when any line of that report is a `would-…` ([§FS-init.4](FS-init.md#4-exit-codes)). It is what a pre-commit hook or a CI job runs; [§FS-init.1.4](FS-init.md#14-why---check-exists) says why it exists. Composes with every other flag exactly as `--dry-run` does, `--force` included; passing both is redundant, not an error, since both say *write nothing*. Off by default — bare `grund init` still writes.
-- `--no-vcs` — scaffold into a target that no version-control marker covers, which is otherwise refused ([§FS-init.1.2](FS-init.md#12-refused-targets)). Off by default. It says only *this really is where I want a project*: it does not lift the unconditional refusals of [§FS-init.1.2](FS-init.md#12-refused-targets), and it is not `--force` (which decides whether files `init` owns get overwritten, [§FS-init.3](FS-init.md#3-non-intrusive-guarantees)) — the two answer different questions, and a run may need either, both, or neither.
+- `--no-vcs` — scaffold into a target outside any version-controlled tree, which is otherwise refused ([§FS-init.1.2](FS-init.md#12-refused-targets)). Off by default. It says only *this really is where I want a project*: it does not lift the unconditional refusals of [§FS-init.1.2](FS-init.md#12-refused-targets), and it is not `--force` (which decides whether files `init` owns get overwritten, [§FS-init.3](FS-init.md#3-non-intrusive-guarantees)) — the two answer different questions, and a run may need either, both, or neither.
 - `--agents-md`, `--claude`, `--gemini`, `--pi`, `--copilot`, `--cursor`, `--windsurf`, `--zed` — explicitly create or update that agent's entrypoint ([§FS-init.1.5](FS-init.md#15-agent-entrypoint-flags)); with none of them, `init` runs in automatic mode.
 
 Per [§FS-non-goals.10](FS-non-goals.md#10-interactive-mode), `init` is non-interactive: it never prompts. Every choice is a flag.
@@ -81,7 +81,7 @@ The division is the one [§FS-integrations.4.3](FS-integrations.md#43-user-prefe
 
 #### 1.2.3 Version control
 
-Presence is tested, not type: a linked worktree and a submodule both write `.git` as a file. This is not `grund` reading history — nothing is parsed, no command is run, and [§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking) is untouched; the marker's existence is a fact about the tree in exactly the way a `grund.toml`'s is. Unlike the two rules above this one has a legitimate other side — scaffolding a directory before `git init`, or a project under no VCS at all — so it is a default, not a law, and `--no-vcs` lifts this rule only ([§FS-init.1](FS-init.md#1-inputs)).
+Presence is tested, not type: a linked worktree and a submodule both write `.git` as a file. This is not `grund` reading history — nothing is parsed, no command is run, and [§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking) is untouched; the entry's existence is a fact about the tree in exactly the way a `grund.toml`'s is. Unlike the two rules above this one has a legitimate other side — scaffolding a directory before `git init`, or a project under no VCS at all — so it is a default, not a law, and `--no-vcs` lifts this rule only ([§FS-init.1](FS-init.md#1-inputs)).
 
 #### 1.2.4 Which refusal is reported first
 
@@ -250,7 +250,7 @@ The managed block's **position within an existing agent entrypoint is preserved 
 `init` does not normalize line endings. When updating or reading an existing agent entrypoint:
 
 - The bytes outside the managed region ([§FS-init.2.3.9](FS-init.md#239-delimiters), delimited or legacy) are preserved byte-for-byte, including CRLF (`\r\n`) and lone-CR endings.
-- The delimiter and H2 marker matching tolerates an optional trailing `\r` before the line end, so a CRLF-encoded file is detected correctly.
+- The delimiter and H2 heading matching tolerates an optional trailing `\r` before the line end, so a CRLF-encoded file is detected correctly.
 - The freshly-written block uses LF endings (the bytes embedded in the binary). On a CRLF-encoded host file the result is mixed line endings inside the managed region and CRLF outside; this is intentional. Normalizing the rest of the file would violate the "leave content alone" guarantee.
 
 #### 2.3.3 Citation form
@@ -355,11 +355,11 @@ The project whose entrypoint is being rendered is omitted: self is the resolved 
 
 ###### 2.3.4.15.5 The bullet
 
-Each foreign bullet renders the backticked alias as the *label* of a Markdown link, so the destination path appears exactly once — `` - [`api`](apps/api/AGENTS.md) `` — the same raw-readable `- [x](y): …` list grammar the Project Map ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)) uses; a raw-bytes reader still sees the path in the link destination, and token cost stays minimal ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)). When the foreign project has a `project_description` in its own config ([§FS-config.3](FS-config.md#3-schema), [§FS-workspace.3](FS-workspace.md#3-aliases)), the bullet appends `: <description>` (colon, space) after the link, before any trailing marker; a project without one keeps the link-only bullet byte-identical, and `init` never derives a description it was not given ([§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists)).
+Each foreign bullet renders the backticked alias as the *label* of a Markdown link, so the destination path appears exactly once — `` - [`api`](apps/api/AGENTS.md) `` — the same raw-readable `- [x](y): …` list grammar the Project Map ([§FS-init.2.3.4.4](FS-init.md#2344-project-map)) uses; a raw-bytes reader still sees the path in the link destination, and token cost stays minimal ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)). When the foreign project has a `project_description` in its own config ([§FS-config.3](FS-config.md#3-schema), [§FS-workspace.3](FS-workspace.md#3-aliases)), the bullet appends `: <description>` (colon, space) after the link, before any trailing suffix; a project without one keeps the link-only bullet byte-identical, and `init` never derives a description it was not given ([§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists)).
 
 ###### 2.3.4.15.6 The link target
 
-When a foreign project's `AGENTS.md` exists on disk at the time `init` runs, the link target is `<member-root>/AGENTS.md`. When it does not, the link target is the member root directory (with a trailing `/`) and the bullet ends with the literal trailing marker `*(not yet initialized)*` — so an agent reading the block never follows a 404 link, and the missing entrypoint is surfaced as actionable information (running `grund init` inside that directory is the next step). Any foreign uninitialized project — including the workspace root when listed from a member and its `AGENTS.md` is missing — keeps the marker. Existence is checked after path canonicalization; symlinks count. Paths in link targets are emitted relative to the directory where the entrypoint being written lives, so a workspace-root `AGENTS.md` points at `apps/api/AGENTS.md` while the same foreign project emitted inside another member's `AGENTS.md` points at `../../apps/api/AGENTS.md`.
+When a foreign project's `AGENTS.md` exists on disk at the time `init` runs, the link target is `<member-root>/AGENTS.md`. When it does not, the link target is the member root directory (with a trailing `/`) and the bullet ends with the literal trailing suffix `*(not yet initialized)*` — so an agent reading the block never follows a 404 link, and the missing entrypoint is surfaced as actionable information (running `grund init` inside that directory is the next step). Any foreign uninitialized project — including the workspace root when listed from a member and its `AGENTS.md` is missing — keeps the suffix. Existence is checked after path canonicalization; symlinks count. Paths in link targets are emitted relative to the directory where the entrypoint being written lives, so a workspace-root `AGENTS.md` points at `apps/api/AGENTS.md` while the same foreign project emitted inside another member's `AGENTS.md` points at `../../apps/api/AGENTS.md`.
 
 ###### 2.3.4.15.7 What `init` does not do
 
@@ -453,7 +453,7 @@ The sentence distinguishes citing from declaring: `Every source file must cite a
 
 ##### 2.3.5.8 The drift check
 
-Because the section's content derives from config rather than the template alone, the version marker ([§FS-init.2.3.7](FS-init.md#237-the-block-version)) is no longer sufficient to detect staleness: editing `[citations]` without re-running `grund init` would leave guidance that disagrees with the live rules under a current version number. `grund check` therefore re-renders the section from the live config and byte-compares it against the section in the block; a mismatch is an `agents-init` finding ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) telling the author to re-run `grund init`. Rendering determinism is what makes the comparison sound — the render *is* the hash.
+Because the section's content derives from config rather than the template alone, the block version ([§FS-init.2.3.7](FS-init.md#237-the-block-version)) is no longer sufficient to detect staleness: editing `[citations]` without re-running `grund init` would leave guidance that disagrees with the live rules under a current version number. `grund check` therefore re-renders the section from the live config and byte-compares it against the section in the block; a mismatch is an `agents-init` finding ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) telling the author to re-run `grund init`. Rendering determinism is what makes the comparison sound — the render *is* the hash.
 
 ##### 2.3.5.9 The block versions this section moved
 
@@ -492,7 +492,7 @@ Adding the fixed sentence bumped the managed-block version to **v4**; adding the
 
 #### 2.3.7 The block version
 
-The canonical text for a given block version `vN` is embedded in the `grund` binary; the reference copy lives at `templates/AGENTS.md` in the `grund` source tree. The `vN` marker ([§FS-init.2.3.9](FS-init.md#239-delimiters)) is what versions it under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), so changing the block's fixed canonical text is itself a block-version bump, carried by that mechanism, not a silent rewrite. What `vN` versions is that fixed text, not the lines substituted in ([§FS-init.2.3.8](FS-init.md#238-substituted-content)): the inline citation style sentences among them ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)) move no version, because they are rendered, not live ([§FS-inline-citation-style.5.6](FS-inline-citation-style.md#56-no-managed-block-version)).
+The canonical text for a given block version `vN` is embedded in the `grund` binary; the reference copy lives at `templates/AGENTS.md` in the `grund` source tree. The `vN` in the delimiter lines ([§FS-init.2.3.9](FS-init.md#239-delimiters)) is what versions it under [§REQ-backwards-compatibility.3](../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations), so changing the block's fixed canonical text is itself a block-version bump, carried by that mechanism, not a silent rewrite. What `vN` versions is that fixed text, not the lines substituted in ([§FS-init.2.3.8](FS-init.md#238-substituted-content)): the inline citation style sentences among them ([§FS-inline-citation-style.5](FS-inline-citation-style.md#5-agent-facing-rendering)) move no version, because they are rendered, not live ([§FS-inline-citation-style.5.6](FS-inline-citation-style.md#56-no-managed-block-version)).
 
 ##### 2.3.7.1 The current version
 
@@ -512,7 +512,7 @@ section over a v10 base, v10 the in-body Markdown heading policy of
 
 ##### 2.3.7.2 What `check` compares
 
-`grund check`'s agent-entrypoint validation ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) checks the marker line and the version, not a byte-diff against the canonical text — save for the config-derived `### Citation directions` and `### Clickable citations` sections, which it re-renders from the live config and byte-compares ([§FS-init.2.3.5.8](FS-init.md#2358-the-drift-check), [§FS-init.2.3.6.1](FS-init.md#2361-the-drift-check)).
+`grund check`'s agent-entrypoint validation ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) checks the delimiter line and the version, not a byte-diff against the canonical text — save for the config-derived `### Citation directions` and `### Clickable citations` sections, which it re-renders from the live config and byte-compares ([§FS-init.2.3.5.8](FS-init.md#2358-the-drift-check), [§FS-init.2.3.6.1](FS-init.md#2361-the-drift-check)).
 
 #### 2.3.8 Substituted content
 
@@ -541,7 +541,7 @@ The managed block is bounded by explicit standard `BEGIN` / `END` HTML-comment d
 <!-- END GRUND MANAGED BLOCK -->
 ```
 
-The integer after `v` is the managed-block version. The `<!-- BEGIN GRUND MANAGED BLOCK -->` line is the block's begin marker and `<!-- END GRUND MANAGED BLOCK -->` is its end marker; both delimiter lines belong to the managed region, so everything between them — delimiters included — is `init`'s to rewrite and nothing outside them is.
+The integer after `v` is the managed-block version. The `<!-- BEGIN GRUND MANAGED BLOCK -->` line is the block's begin delimiter and `<!-- END GRUND MANAGED BLOCK -->` is its end delimiter; both delimiter lines belong to the managed region, so everything between them — delimiters included — is `init`'s to rewrite and nothing outside them is.
 
 ##### 2.3.9.1 Why the conventional shape
 
@@ -549,7 +549,7 @@ The delimiters are deliberately the conventional managed-region shape rather tha
 
 ##### 2.3.9.2 Legacy blocks
 
-Blocks at v3 and earlier predate the delimiters (**legacy blocks**): there the H2 heading itself is the begin marker and the block runs until the next H1 or H2 heading, or end of file. Both `init` and `check` continue to recognize the legacy form; on its next write `init` migrates a recognized legacy block to the delimited form in place (reported `updated `), preserving the block's position and every byte outside the block.
+Blocks at v3 and earlier predate the delimiters (**legacy blocks**): there the H2 heading itself is the begin delimiter and the block runs until the next H1 or H2 heading, or end of file. Both `init` and `check` continue to recognize the legacy form; on its next write `init` migrates a recognized legacy block to the delimited form in place (reported `updated `), preserving the block's position and every byte outside the block.
 
 #### 2.3.10 Writing the block
 

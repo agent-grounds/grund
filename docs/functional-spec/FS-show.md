@@ -250,9 +250,9 @@ located `check` finding for query semantics.
 
 ### 2.3 Source declarations in code and doc-comments
 
-When the ID's home is in code — whether discovered directly, enrolled by its kind's canonical index link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), or paired with a [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) stub — `show` extracts the comment block surrounding the source declaration, strips comment markers, and prints the resulting prose. Index enrollment creates no declaration and therefore changes no query resolution. The same section logic applies — and so do the `--brief` / (default) / `--toc` / `--full` slices, computed over the stripped block exactly as over a `.md` body (the lead is what precedes the first citable heading inside the comment; the section map is the citable headings recorded within it, per [§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)).
+When the ID's home is in code — whether discovered directly, enrolled by its kind's canonical index link ([§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index)), or paired with a [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) stub — `show` extracts the comment block surrounding the source declaration, strips comment prefixes, and prints the resulting prose. Index enrollment creates no declaration and therefore changes no query resolution. The same section logic applies — and so do the `--brief` / (default) / `--toc` / `--full` slices, computed over the stripped block exactly as over a `.md` body (the lead is what precedes the first citable heading inside the comment; the section map is the citable headings recorded within it, per [§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)).
 
-A source declaration is written as `<comment-marker> <ID>: <title>` (or bare `<ID>: <title>` inside a Python docstring), with no markdown `#` prefix. Decided in [§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix).
+A source declaration is written as `<comment-prefix> <ID>: <title>` (or bare `<ID>: <title>` inside a Python docstring), with no markdown `#` prefix. Decided in [§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix).
 
 The doc-comment forms are [§FS-show.2.3.5](FS-show.md#235-the-doc-comment-forms), and one doc-comment may hold several declarations ([§FS-show.2.3.6](FS-show.md#236-several-declarations-in-one-doc-comment)).
 
@@ -266,7 +266,7 @@ A declaration is found on a "declaration line" — a line that matches the decla
 
 Scan **backwards** from the declaration line over consecutive lines that are part of the same comment construct:
 
-- For line-style comments (`//`, `///`, `//!`, `#`, `;`, `--`): consecutive lines whose first non-whitespace character matches the same comment prefix family. A blank line ends the block. A line whose first non-whitespace character is not a comment marker ends the block.
+- For line-style comments (`//`, `///`, `//!`, `#`, `;`, `--`): consecutive lines whose first non-whitespace character matches the same comment prefix family. A blank line ends the block. A line whose first non-whitespace character is not a comment prefix ends the block.
 - For block-style comments (`/* … */`, `/** … */`): scan backward until the opener is found (`/*` or `/**`). The opener line itself is part of the block.
 - For Python triple-quoted docstrings: scan backward until the opening `"""` (or `'''`). The opener line is part of the block.
 
@@ -282,14 +282,14 @@ Scan **forwards** from the declaration line by the symmetric rules:
 
 Scanning in **either direction**, if another declaration line of any ID is encountered, the block ends at the line before it. This is what allows two adjacent source declarations to live in the same comment without bleeding into each other — backward termination keeps a later declaration's block from absorbing the previous declaration's tail; forward termination keeps the previous declaration's block from absorbing the next declaration's head.
 
-#### 2.3.2 Stripping comment markers
+#### 2.3.2 Stripping comment prefixes
 
-After the block is selected, comment markers are removed line-by-line so the output is plain prose:
+After the block is selected, comment prefixes are removed line-by-line so the output is plain prose:
 
-- Leading whitespace is preserved up to the comment marker, then the marker is dropped, then a single space following the marker is dropped if present. The remainder of the line is kept verbatim.
+- Leading whitespace is preserved up to the comment prefix, then the prefix is dropped, then a single space following the prefix is dropped if present. The remainder of the line is kept verbatim.
 - For block-style continuation lines, a leading ` * ` (with surrounding spaces) is removed if present. Lines that do not have it are kept as-is.
-- For Python docstrings, no marker is stripped — docstring content is plain text already; only the surrounding `"""` lines are skipped.
-- Trailing comment-close markers (`*/`) on their own line are dropped entirely.
+- For Python docstrings, no prefix is stripped — docstring content is plain text already; only the surrounding `"""` lines are skipped.
+- Trailing comment-close tokens (`*/`) on their own line are dropped entirely.
 - Blank lines inside the block are preserved.
 
 The result is the markdown that the declaration's author wrote, identical to what would have lived in a `.md` file had the declaration been doc-resident instead of inline. This is the property that makes [§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments) round-trip-stable across the in-docs and in-code homes.
@@ -311,7 +311,7 @@ This is the same "found something other than exactly one body" family as `ID not
 
 #### 2.3.5 The doc-comment forms
 
-The scanner recognizes the same doc-comment forms enumerated in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc-comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architecture declaration can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the comment-stripped Javadoc lead ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers)); the optional LSP server's hover shows the `--toc` slice of the same prose, the lead plus its section map ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
+The scanner recognizes the same doc-comment forms enumerated in [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments) — Javadoc, JSDoc/TSDoc, Doxygen, KDoc, Scaladoc, PHPDoc, Rustdoc (`///`, `//!`, `/** … */`), C# XML doc-comments, Go's `// …` doc blocks, Ruby `#` comments, and Python `""" … """` docstrings. This means an architecture declaration can live directly in the class-level Javadoc, and `grund AR-<event-bus>` returns the comment-stripped Javadoc lead ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes)); the optional LSP server's hover shows the `--toc` slice of the same prose, the lead plus its section map ([§FS-lsp.1.2.1](FS-lsp.md#121-citation-preview)). The stub at `docs/architecture/AR-<event-bus>.md` is a single-line H1 — `# AR-<event-bus>: [<path>](<path>)` — pointing at the file.
 
 #### 2.3.6 Several declarations in one doc-comment
 
@@ -426,11 +426,11 @@ Format variants are [§FS-show.3.1](FS-show.md#31-format-variants), link flatten
 
 #### 3.1.1 `text`
 
-The body only. The whole-declaration H1 (`# FS-<x>: …`) is omitted; section headings inside the slice are kept verbatim, including explicit section names. Mode-by-mode: the default prints the lead prose ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)); `--brief` prints the heading line and the first paragraph ([§FS-show.2.1.1](FS-show.md#211-brief---brief)) — the one mode that includes the H1 in `text`, since the slice would otherwise be unlabeled; `--toc` prints the lead plus the citable heading lines ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)); `--full` prints the full body ([§FS-show.2.1.3](FS-show.md#213-full-body---full)); a selected section is printed with its own section heading in every mode ([§FS-show.2.2](FS-show.md#22-section)). For an inline-source declaration the body is the comment-stripped prose ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-markers)); for an E2E case it is the manifest ([§FS-show.2.4](FS-show.md#24-e2e-cases)). A `grund fmt --cross-refs` link wrapper around a citation (`[§FS-<x>.goals](FS-<x>.md#goals-scope)`) is flattened back to the bare citation — [§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json).
+The body only. The whole-declaration H1 (`# FS-<x>: …`) is omitted; section headings inside the slice are kept verbatim, including explicit section names. Mode-by-mode: the default prints the lead prose ([§FS-show.2.1](FS-show.md#21-whole-declaration-default)); `--brief` prints the heading line and the first paragraph ([§FS-show.2.1.1](FS-show.md#211-brief---brief)) — the one mode that includes the H1 in `text`, since the slice would otherwise be unlabeled; `--toc` prints the lead plus the citable heading lines ([§FS-show.2.1.2](FS-show.md#212-section-map---toc)); `--full` prints the full body ([§FS-show.2.1.3](FS-show.md#213-full-body---full)); a selected section is printed with its own section heading in every mode ([§FS-show.2.2](FS-show.md#22-section)). For an inline-source declaration the body is the comment-stripped prose ([§FS-show.2.3.2](FS-show.md#232-stripping-comment-prefixes)); for an E2E case it is the manifest ([§FS-show.2.4](FS-show.md#24-e2e-cases)). A `grund fmt --cross-refs` link wrapper around a citation (`[§FS-<x>.goals](FS-<x>.md#goals-scope)`) is flattened back to the bare citation — [§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json).
 
 #### 3.1.2 `md`
 
-Same as `text` but the opening declaration heading line is **included** verbatim, and `--cross-refs` link wrappers are kept as written — that is the renderable form ([§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)). For the default and `--toc`, the heading is prefixed; for `--brief` it is already included in `text` and stays as written in `md`; for `--full`, the heading is prefixed. The kind's `[[kinds]] title` ([§FS-config.3.4.3](FS-config.md#343-title)) is *not* injected — it is metadata that no `show` format carries, exposed in JSON only by `grund list --summary --format json` ([§FS-list.3.3](FS-list.md#33---summary)). For an inline-source declaration the included heading is the one written in the doc-comment (`AR-<event-bus>: In-process event broadcaster`), comment-markers stripped.
+Same as `text` but the opening declaration heading line is **included** verbatim, and `--cross-refs` link wrappers are kept as written — that is the renderable form ([§FS-show.3.2](FS-show.md#32-cross-reference-links-are-flattened-in-text-and-json)). For the default and `--toc`, the heading is prefixed; for `--brief` it is already included in `text` and stays as written in `md`; for `--full`, the heading is prefixed. The kind's `[[kinds]] title` ([§FS-config.3.4.3](FS-config.md#343-title)) is *not* injected — it is metadata that no `show` format carries, exposed in JSON only by `grund list --summary --format json` ([§FS-list.3.3](FS-list.md#33---summary)). For an inline-source declaration the included heading is the one written in the doc-comment (`AR-<event-bus>: In-process event broadcaster`), comment-prefixes stripped.
 
 #### 3.1.3 `json`
 

@@ -537,7 +537,7 @@ tests specify the component placement separately.
 ## 12. Deliberate phase-1 absences
 
 There is no `[settings]`, `config show --at`, path/folder/file subject,
-exception phrase, `grund:allow` marker, definition, derived term, component
+exception phrase, `grund:allow` comment, definition, derived term, component
 wildcard, wildcard subject alias, new command verb, suppression mechanism,
 SCIP/LSIF ingestion, symbol vocabulary, on-disk fact format, or Datalog
 runtime. Settings must reuse this selector parser and independently answer

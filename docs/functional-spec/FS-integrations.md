@@ -48,7 +48,7 @@ With no `<client>`, grund inspects the environment to decide which integrations 
 - `WEZTERM_EXECUTABLE` → `wezterm`
 - `KITTY_WINDOW_ID` → `kitty`
 - `TERM_PROGRAM` — value `WezTerm` → `wezterm`, `iTerm.app` → `iterm2`, `tmux` → `tmux`, `vscode` → `vscode`
-- `VSCODE_PID` or any `VSCODE_*` marker → `vscode`; additionally → `codium` when any of those values names VSCodium's application directory
+- `VSCODE_PID` or any `VSCODE_*` variable → `vscode`; additionally → `codium` when any of those values names VSCodium's application directory
 - `TMUX` (non-empty) → `tmux`
 
 Zero, one, or several clients may match at once. Matches are reported in the frozen client order `codium, iterm2, kitty, tmux, vscode, wezterm`, deduplicated, never in environment-probe order, so a given environment always prints the same text. When nothing matches, grund prints the full catalog of clients with their one-line installs and a note that none was detected — a discoverable menu rather than an error. Detection succeeds with exit `0` in every case.
@@ -188,7 +188,7 @@ WezTerm's peek needs one indirection, deliberate though it looks accidental: Lua
 
 ### 3.4 Manual client: `iterm2`
 
-iTerm2 stores its configuration in a binary property list, not a text file. There is no comment syntax to carry markers and no safe place to put them, so the managed-block contract ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)) simply does not apply — and rewriting a live profile blob under the user is not a trade grund makes for a convenience. `iterm2` is therefore the one **manual** client.
+iTerm2 stores its configuration in a binary property list, not a text file. There is no comment syntax to carry delimiters and no safe place to put them, so the managed-block contract ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)) simply does not apply — and rewriting a live profile blob under the user is not a trade grund makes for a convenience. `iterm2` is therefore the one **manual** client.
 
 #### 3.4.1 The Smart Selection rule
 
@@ -228,11 +228,11 @@ For `kitty`, `tmux`, and `wezterm`, `--write` splices a comment-delimited manage
 
 #### 4.1.1 The host file's comment token
 
-The marker's comment token is the one the **host file's own language** uses, not a fixed `#`: `#` for `kitty.conf` and `.tmux.conf`, `--` for `wezterm.lua`. A marker in the wrong dialect is not an inert stray line — in Lua `#` is the length operator, so a `#` marker is a syntax error that costs the user their entire WezTerm configuration, not just the grund block. Block lookup is scoped to the client's dialect for the same reason: a block found under the wrong comment token would be spliced with the wrong markers on the next write.
+The delimiter's comment token is the one the **host file's own language** uses, not a fixed `#`: `#` for `kitty.conf` and `.tmux.conf`, `--` for `wezterm.lua`. A delimiter in the wrong dialect is not an inert stray line — in Lua `#` is the length operator, so a `#` delimiter is a syntax error that costs the user their entire WezTerm configuration, not just the grund block. Block lookup is scoped to the client's dialect for the same reason: a block found under the wrong comment token would be spliced with the wrong delimiters on the next write.
 
 #### 4.1.2 The starter scaffold
 
-When `--write` creates the config file from scratch, a client whose configuration is a *program* rather than a list of settings also receives a starter scaffold below the block, so a fresh install is usable without hand-editing. WezTerm is the case that needs it: it applies hyperlink rules only from the config object the file returns, so a file containing the block alone parses and registers nothing. The scaffold is unmanaged — it sits outside the markers, later writes rewrite only the block, and the user owns it from then on. An existing config never receives a scaffold; there, calling `grund_apply_hyperlink_rule(config)` on the config being returned is the user's one wiring step ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)).
+When `--write` creates the config file from scratch, a client whose configuration is a *program* rather than a list of settings also receives a starter scaffold below the block, so a fresh install is usable without hand-editing. WezTerm is the case that needs it: it applies hyperlink rules only from the config object the file returns, so a file containing the block alone parses and registers nothing. The scaffold is unmanaged — it sits outside the delimiters, later writes rewrite only the block, and the user owns it from then on. An existing config never receives a scaffold; there, calling `grund_apply_hyperlink_rule(config)` on the config being returned is the user's one wiring step ([§FS-integrations.3.1](FS-integrations.md#31-terminal-clients-wezterm-kitty-tmux-iterm2)).
 
 #### 4.1.3 The unwired-config note
 
@@ -240,7 +240,7 @@ That wiring step is **reported**, because nothing else in the run distinguishes 
 
 #### 4.1.4 Replacing the block
 
-The begin and end markers carry a block version. On write grund finds one existing block at any supported version and replaces its complete marker-line span, preserving everything outside byte-for-byte; a file with no block gets the block appended after a blank-line separator. Indented marker lines are accepted and consumed as complete lines. A missing matching marker, multiple blocks, or a block whose version is newer than the binary understands is a hard error (`exit 2`), the same guard `init` applies to a newer AGENTS block ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
+The begin and end delimiters carry a block version. On write grund finds one existing block at any supported version and replaces its complete delimiter-line span, preserving everything outside byte-for-byte; a file with no block gets the block appended after a blank-line separator. Indented delimiter lines are accepted and consumed as complete lines. A missing matching delimiter, multiple blocks, or a block whose version is newer than the binary understands is a hard error (`exit 2`), the same guard `init` applies to a newer AGENTS block ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
 
 #### 4.1.5 The resolver script
 
@@ -256,7 +256,7 @@ The install-target hints ([§FS-integrations.1](FS-integrations.md#1-user-facing
 
 ### 4.2 The VS Code extension
 
-`vscode --write` writes the unpacked extension directory (its `package.json`, the provider script, and a marker file recording the embedded version) into the editor extensions directory. A present, byte-current same-version extension is left untouched (`exists`); a different, missing, or damaged grund-owned file is repaired. grund writes only files it owns inside its own extension directory; it never edits the user's `settings.json`.
+`vscode --write` writes the unpacked extension directory (its `package.json`, the provider script, and a stamp file recording the embedded version) into the editor extensions directory. A present, byte-current same-version extension is left untouched (`exists`); a different, missing, or damaged grund-owned file is repaired. grund writes only files it owns inside its own extension directory; it never edits the user's `settings.json`.
 
 ### 4.3 User preference and global agent instructions
 
@@ -341,11 +341,11 @@ The `link` block carries one sentence, differing only in how the location is add
 
 #### 4.3.13 Block versions
 
-Adopting these self-scoping texts was an agent-guidance block version bump (v1 → v2) under the marked-block contract of [§FS-integrations.4.3.14](FS-integrations.md#4314-markers-and-failures); replacing the `link` text with the target-addressed family bumps it again (v2 → v3), and naming both discovery locations in the self-scoping gate — a repository configured by a bare root `grund.toml` is a grund repository the old gate did not describe ([§FS-config.1](FS-config.md#1-file-location-and-discovery), [§DF-config-file-location](../decisions/functional/DF-config-file-location.md#df-config-file-location-grundtoml-is-discovered-at-two-names-per-directory-and-init-writes-the-bare-one)) — bumps it once more (v3 → v4).
+Adopting these self-scoping texts was an agent-guidance block version bump (v1 → v2) under the marked-block contract of [§FS-integrations.4.3.14](FS-integrations.md#4314-delimiters-and-failures); replacing the `link` text with the target-addressed family bumps it again (v2 → v3), and naming both discovery locations in the self-scoping gate — a repository configured by a bare root `grund.toml` is a grund repository the old gate did not describe ([§FS-config.1](FS-config.md#1-file-location-and-discovery), [§DF-config-file-location](../decisions/functional/DF-config-file-location.md#df-config-file-location-grundtoml-is-discovered-at-two-names-per-directory-and-init-writes-the-bare-one)) — bumps it once more (v3 → v4).
 
-#### 4.3.14 Markers and failures
+#### 4.3.14 Delimiters and failures
 
-The global instruction block uses versioned HTML-comment begin/end markers. The replacement, append, newer-version refusal, malformed/multiple-block rejection, preservation, idempotence, and stderr outcome rules are the same as the dotfile block's ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)). For a selected target ([§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use)), missing parent directories and the file itself are created because `--write` is the explicit installation action.
+The global instruction block uses versioned HTML-comment begin/end delimiters. The replacement, append, newer-version refusal, malformed/multiple-block rejection, preservation, idempotence, and stderr outcome rules are the same as the dotfile block's ([§FS-integrations.4.1](FS-integrations.md#41-marked-blocks-in-dotfiles)). For a selected target ([§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use)), missing parent directories and the file itself are created because `--write` is the explicit installation action.
 
 A failure to update the preference or any instruction file is an error. The preference file is validated first, before any client artifact is written, so the one failure [§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error) leaves — a preference file grund cannot reach ([§FS-integrations.4.3.7](FS-integrations.md#437-read-once-before-any-install)) — costs nothing and changes nothing; a block failure discovered later may leave an integration artifact already written, and re-running after correction safely completes the installation.
 
@@ -410,4 +410,4 @@ With an explicit `<client>`, output is a pure function of the binary version and
 
 ### 6.2 Exit codes
 
-Exit codes follow the frozen mapping ([§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)): `0` printed, written, or already current; `2` an unknown client, bare `--write` with neither a client nor a conversation flag, `--conversation` or `--conversation-target` without `--write`, `--agent` without `--write` or without `--conversation-target`, an unknown agent name, an unknown flag, a managed block [§FS-integrations.4.1.4](FS-integrations.md#414-replacing-the-block) refuses (a missing matching marker, multiple blocks, or a version newer than this binary understands), or an I/O failure ([§FS-integrations.4.1.5](FS-integrations.md#415-the-resolver-script), [§FS-integrations.4.3.7](FS-integrations.md#437-read-once-before-any-install), [§FS-integrations.4.3.14](FS-integrations.md#4314-markers-and-failures)). There is no `1` outcome — `integrations` has no findings surface. Nothing in the user preference file is an exit code: its unused keys, uninterpretable values, and duplicates are warnings ([§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error)), as are `skipped` targets ([§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use)). An invalid `--conversation` or `--conversation-target` *argument* remains an error, because that is a value the caller typed on this command line rather than a stale line in a file.
+Exit codes follow the frozen mapping ([§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)): `0` printed, written, or already current; `2` an unknown client, bare `--write` with neither a client nor a conversation flag, `--conversation` or `--conversation-target` without `--write`, `--agent` without `--write` or without `--conversation-target`, an unknown agent name, an unknown flag, a managed block [§FS-integrations.4.1.4](FS-integrations.md#414-replacing-the-block) refuses (a missing matching delimiter, multiple blocks, or a version newer than this binary understands), or an I/O failure ([§FS-integrations.4.1.5](FS-integrations.md#415-the-resolver-script), [§FS-integrations.4.3.7](FS-integrations.md#437-read-once-before-any-install), [§FS-integrations.4.3.14](FS-integrations.md#4314-delimiters-and-failures)). There is no `1` outcome — `integrations` has no findings surface. Nothing in the user preference file is an exit code: its unused keys, uninterpretable values, and duplicates are warnings ([§FS-integrations.4.3.5](FS-integrations.md#435-nothing-in-the-file-is-an-error)), as are `skipped` targets ([§FS-integrations.4.3.9](FS-integrations.md#439-only-agents-in-use)). An invalid `--conversation` or `--conversation-target` *argument* remains an error, because that is a value the caller typed on this command line rather than a stale line in a file.
