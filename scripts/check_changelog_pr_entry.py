@@ -26,6 +26,7 @@ import changelog_bullets  # noqa: E402  (the shared definitions live beside this
 
 ZERO_SHA_RE = re.compile(r"^0{4,40}$")
 SKIP_LINE = "      SKIP=changelog-pr-entry git push"
+NO_BASE_REF = "no base ref resolves"
 
 
 class ChangelogPrError(Exception):
@@ -39,13 +40,14 @@ def check_changelog_pr_entry(
     repository_path = _repository_path(changelog)
     head_commit = _resolve_commit(head)
     lines = _lines_at(head_commit, repository_path, changelog)
-    merge_base = _merge_base(base, head_commit) if base is not None else None
+    merge_base, why_not = _merge_base(base, head_commit) if base is not None else (None, NO_BASE_REF)
 
     if merge_base is None:
-        # No base ref resolves — a shallow clone, or a `main` never fetched. Ask
-        # for less rather than for a fetch the contributor did not make.
+        # No merge base can be taken — a shallow clone, or a `main` never
+        # fetched. Ask for less rather than for a fetch the contributor did not
+        # make (§FS-distribution.4.6).
         print(
-            f"warning: no base ref resolves; requiring at least one bullet under `## Unreleased` of {changelog.as_posix()}",
+            f"warning: {why_not}; requiring at least one bullet under `## Unreleased` of {changelog.as_posix()}",
             file=sys.stderr,
         )
         if not changelog_bullets.has_bullet(changelog_bullets.unreleased_body(lines)):
@@ -205,8 +207,23 @@ def _resolve_commit(revision: str) -> str:
     return sha
 
 
-def _merge_base(base: str, head: str) -> str | None:
-    return _git(["merge-base", base, head])
+def _merge_base(base: str, head: str) -> tuple[str | None, str]:
+    """The merge base, or `None` and why none can be taken. §FS-distribution.4.6
+
+    `git merge-base` fails alike for a base no ref resolves and for one that
+    resolves but shares no history with the head, and both degrade the same way
+    — but a contributor whose base is a shallow clone's grafted commit would
+    read "no base ref resolves" and go fetch a ref they already have, so the two
+    are told apart here rather than at the call site. The base is deliberately
+    not put through `_resolve_commit`: failing to resolve is a documented skip
+    for the base, where for the head it is an error.
+    """
+    if _git(["rev-parse", "--verify", "--quiet", f"{base}^{{commit}}"]) is None:
+        return None, NO_BASE_REF
+    merge_base = _git(["merge-base", base, head])
+    if merge_base is None:
+        return None, f"the base {base} and this head share no history"
+    return merge_base, ""
 
 
 def _git(arguments: Sequence[str]) -> str | None:

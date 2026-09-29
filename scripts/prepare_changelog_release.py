@@ -217,17 +217,22 @@ def _unstamped(bullet: changelog_bullets.Bullet, reason: str) -> None:
 
 
 def _write_number(lines: list[str], bullet: changelog_bullets.Bullet, number: int) -> None:
-    """Replace the placeholder wherever in the bullet it sits, else append. §FS-distribution.4.5
+    """Replace every placeholder in the bullet, else append one. §FS-distribution.4.5
 
     An author who wraps a bullet leaves `PR #TBD` on its first line as often as
-    on its last; writing only into the last line appends the number to a
-    continuation and leaves the placeholder to ship into the archive.
+    on its last, and may leave it twice; writing only into the last line appends
+    the number to a continuation, and stopping at the first leaves a second to
+    ship into the archive — the bullet now names a number, so no later run
+    looks at it again.
     """
+    written = False
     for index in range(bullet.start - 1, bullet.end):
         body, ending = _split_ending(lines[index])
         if PLACEHOLDER_RE.search(body):
-            lines[index] = PLACEHOLDER_RE.sub(f"PR #{number}", body, count=1) + ending
-            return
+            lines[index] = PLACEHOLDER_RE.sub(f"PR #{number}", body) + ending
+            written = True
+    if written:
+        return
     body, ending = _split_ending(lines[bullet.end - 1])
     lines[bullet.end - 1] = f"{body.rstrip()} (PR #{number}){ending}"
 
