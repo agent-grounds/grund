@@ -73,17 +73,17 @@ inside a link target, a heading anchor or a frozen code name is a name, not a us
 
 ### terms.1: Declarations and coordinates
 
-- **declaration** — A heading or doc-comment line that introduces an ID. Its body is the fact. Displaces *spec*, *fact* and *declaring spec*.
+- **declaration** — A heading or doc-comment line that introduces an ID. Its body is the fact. Displaces *spec* and *declaring spec*.
 - **ID** — The stable name: kind and slug, with a number where the format has one. Displaces *handle*.
-- **kind** — One `[[kinds]]` row: a class of declarations with a home, citable or not. Displaces *prefix*, and *namespace* as a name for an ID space.
+- **kind** — One `[[kinds]]` row: a class of declarations with a home, citable or not. Displaces *prefix* as a name for a class of declarations, and *namespace* as a name for an ID space; *prefix* stays for the literal letters an ID starts with (`MEFS-`), a path prefix, and any other string prefix.
 - **home** — The file or folder a kind's declarations live in. Never where one ID is declared: say *declaring file* for that.
 - **citable** — Can be the target of a citation.
 - **body** — The declaration heading through the heading that closes it.
-- **section** — A numbered or named heading inside a body. Its section path is the dotted tail. Displaces *chapter* and *point* in prose; *chapter* remains the rule grammar's subject-unit word.
+- **section** — A numbered or named heading inside a body. Its section path is the dotted tail. Displaces *chapter* and *point* in prose: a heading inside a body is a section, a whole declaration is a *declaration*, and a measurement taken per declaration or per section site is *per-coordinate*. *chapter* remains the rule grammar's subject-unit word, and stays for a named second-level section that a chapter rule or an obligation requires by name — the Terms chapter, the `placement` chapter; a numbered heading is a section.
 - **coordinate** — An ID with an optional section path: the complete target of a citation. Displaces *section reference*.
 - **lead** — The prose of a declaration or section, cut at its first child section.
 - **index** — A kind's index file, and its entries. Every other *index* becomes a table, a map or a cache.
-- **catalog** — The scan's shared set of declarations and their citable sections, which query commands select or render. The ID-catalog sense only: FS-errors keeps *code catalog* as a compound of its own.
+- **catalog** — The scan's shared set of declarations and their citable sections, which query commands select or render. Bare *catalog* is that ID catalog; a compound whose qualifying noun names what it catalogs — the code catalog, a finding catalog, a rule catalog — is a term of its own.
 
 ### terms.2: Citations
 
@@ -119,8 +119,8 @@ inside a link target, a heading anchor or a frozen code name is a name, not a us
 
 ### terms.6: Rules and directions
 
-- **direction, level** — A `[citations]` rule that one kind cites, or never cites, another, and its must / should / avoid / never strength. Displaces *rule* for these; *level* carries this sense alone, and heading depth and severity take their own words.
-- **rule** — A chapter rule only: a declaration whose title is one sentence. Checker behavior is a *check*.
+- **direction, level** — The two parts of a `[citations]` rule: that one kind cites, or never cites, another, and its must / should / avoid / never strength. *rule* names the entry as a whole. *level* carries this sense alone, and heading depth and severity take their own words.
+- **rule** — One rule the checker applies, as the config and the rule grammar name it: a `[citations]` entry as a whole, a `[[kinds]]` rule, or a chapter rule — a declaration whose title is one sentence. Checker behavior is a *check*.
 - **grounded** — A grounding unit that cites at least one declaration.
 
 ### terms.7: Values and integrations
