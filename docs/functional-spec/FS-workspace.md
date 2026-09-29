@@ -1268,12 +1268,12 @@ with the per-member config rule ([AR-workspace.5](../architecture/AR-workspace.m
 ### 8.6 `grund cover`
 
 `grund cover` invoked at a workspace root — no `<path>`, or the config root
-itself — indexes **every project the workspace covers** — root plus members,
+itself — spans **every project the workspace covers** — root plus members,
 subject to `include_root` per [§FS-workspace.8.10](FS-workspace.md#810-include_root--false-leaves-the-root-alias-unknown) — with one entry per scanned file, exactly
 as [§FS-workspace.8.3](FS-workspace.md#83-grund-list) defines the catalog for `list`. A member-local invocation (or a `<path>`
-that resolves member-local) indexes that member alone, unchanged from a
+that resolves member-local) covers that member alone, unchanged from a
 standalone run. A `<path>` narrower than the config root is one narrowed scan
-([§FS-workspace.8.6.1](FS-workspace.md#861-a-narrower-path-is-one-narrowed-scan)); why the index spans every project is [§FS-workspace.8.6.2](FS-workspace.md#862-why-the-index-spans-every-project).
+([§FS-workspace.8.6.1](FS-workspace.md#861-a-narrower-path-is-one-narrowed-scan)); why the grouping spans every project is [§FS-workspace.8.6.2](FS-workspace.md#862-why-the-grouping-spans-every-project).
 
 Qualified citations count toward the citing file ([§FS-workspace.8.6.3](FS-workspace.md#863-qualified-citations-count-toward-the-citing-file)), the rendered `id`
 says what the token says ([§FS-workspace.8.6.4](FS-workspace.md#864-the-rendered-id-says-what-the-token-says)), paths render from the workspace root
@@ -1294,12 +1294,12 @@ project would answer a question the caller did not ask, and an explicit path
 deliberately bypasses `[scan] include`, so the narrowing is the only thing that
 put those files in scope at all.
 
-#### 8.6.2 Why the index spans every project
+#### 8.6.2 Why the grouping spans every project
 
 `cover`'s question is "which IDs does this file lean on?" ([§FS-cover.5](FS-cover.md#5-why-this-exists)), and the
 answer for a file is the same fact whichever scope the run was launched at. A
-per-project index would make the co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)) read a
-changed member file as uncovered, and a coverage index that omits whole
+per-project grouping would make the co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)) read a
+changed member file as uncovered, and coverage that omits whole
 projects while exiting `0` is the silent skip [§REQ-no-missed-citation.1](../requirements/REQ-no-missed-citation.md#1-no-silent-skips) forbids.
 Rationale and the discarded project-local alternative: [§DF-cover-workspace-scope](../decisions/functional/DF-cover-workspace-scope.md#df-cover-workspace-scope-cover-indexes-the-whole-run-and-counts-cross-project-citations).
 
@@ -1334,7 +1334,7 @@ against whichever base the rows did.
 
 #### 8.6.6 `include_root = false`
 
-`include_root = false` removes the root project's files from the index
+`include_root = false` removes the root project's files from the grouping
 along with its catalog entry, per [§FS-workspace.8.10](FS-workspace.md#810-include_root--false-leaves-the-root-alias-unknown). Nothing else scans them
 ([§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)), which is the hole that rule already documents.
 
