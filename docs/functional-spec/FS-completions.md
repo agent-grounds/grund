@@ -50,7 +50,7 @@ The shared declaration catalog ([§FS-completions.3](FS-completions.md#3-determi
 
 It also includes exact off-grammar declarations retained for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)), so their raw IDs and section candidates are offered exactly as written. Completion does not promote an unmatched candidate or mint a nonconforming form; authoring remains governed by the effective format.
 
-The helper never invokes a configured fetcher, even when its prefix names a fetch-enabled kind ([§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)).
+The helper never invokes a configured fetcher, even when a candidate's kind is fetch-enabled ([§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)).
 
 ## 3. Determinism
 
