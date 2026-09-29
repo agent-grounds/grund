@@ -1091,7 +1091,7 @@ The usual causes are a tree nobody has declared in yet and a docs tree whose hea
 
 #### 4.5.2 The message
 
-The line names how many files were read, the shape a declaration heading and a citation take under the configured format, and the configured `[[kinds]]` prefixes:
+The line names how many files were read, the shape a declaration heading and a citation take under the configured format, and the configured kinds:
 
 ```
 warning: nothing recognized — grund read 3 files and found no declaration and no citation in them. A declaration heading reads `# <KIND>-<NNN>-<slug>: <title>` and a citation `<marker><KIND>-<NNN>-<slug>`, under [id] format = "{kind}-{number}-{slug}" with <KIND> one of {AR, FS}. Either nothing is declared yet, or the headings are written to a different shape than that.
