@@ -83,6 +83,6 @@ regression in the verdict it relies on.
 
 ### 5.2 The external-ticket example runs offline
 
-The external-ticket example uses a deterministic local stub integration. It
+The external-ticket example uses a deterministic local fake integration. It
 must run without network access and its final-repository golden must contain
 the exact snapshot declaration the fetcher printed.

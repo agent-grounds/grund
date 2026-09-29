@@ -101,7 +101,7 @@ These are refusals, not prompts: `init` still never asks a question ([§FS-non-g
 
 ### 1.3 `--docs` and the effective config
 
-The root-level `requirements.md` stub is scaffolded because the generated `FS` kind uses it as the default requirements/spec home ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). An existing config that omits `[[kinds]]` instead keeps the compatibility FS home from [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home), so `--docs` scaffolds `docs/functional-spec/README.md` and points next-step guidance at `docs/functional-spec`. `roadmap.md` and `changelog.md` are scaffolded because the generated managed block's `docs/` table links to them ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
+The root-level `requirements.md` starter file is scaffolded because the generated `FS` kind uses it as the default requirements/spec home ([§FS-init.2.4](FS-init.md#24-generated-grundtoml)). An existing config that omits `[[kinds]]` instead keeps the compatibility FS home from [§FS-config.3.4.4.4](FS-config.md#3444-a-config-that-omits-kinds-keeps-the-older-fs-home), so `--docs` scaffolds `docs/functional-spec/README.md` and points next-step guidance at `docs/functional-spec`. `roadmap.md` and `changelog.md` are scaffolded because the generated managed block's `docs/` table links to them ([§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints)).
 
 ### 1.4 Why `--check` exists
 
@@ -133,7 +133,7 @@ In the default form (no `--docs`):
 - Agent entrypoints — see [§FS-init.2.3](FS-init.md#23-generated-agent-entrypoints). In automatic mode ([§FS-init.1.5](FS-init.md#15-agent-entrypoint-flags)), existing known entrypoints are appended or updated in place: `<path>/AGENTS.md`, `<path>/AGENTS.override.md`, `<path>/CLAUDE.md`, `<path>/.claude/CLAUDE.md`, `<path>/GEMINI.md`, `<path>/.pi/AGENTS.md`, `<path>/.github/copilot-instructions.md`, `<path>/.cursor/rules/grund.mdc`, `<path>/.cursorrules`, and `<path>/.windsurfrules`, excluding companion symlinks to `AGENTS.md`. If none exist, a missing companion is created for each agent whose agent directory already exists, one per agent ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)); if there are still no entrypoints to update or create, canonical `AGENTS.md` is written. [§FS-init.2.1.2](FS-init.md#212-automatic-entrypoint-selection) gives the rules of each step. Explicit flags (`--agents-md`, `--claude`, `--gemini`, `--pi`, `--copilot`, `--cursor`, `--windsurf`, `--zed`) create or update their requested entrypoints regardless of automatic detection, under the same one-per-agent rule ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)).
 - `<path>/grund.toml` — see [§FS-init.2.4](FS-init.md#24-generated-grundtoml). Written only when the target carries no config in either discovery form ([§FS-config.1](FS-config.md#1-file-location-and-discovery)); a target that already has one is reported with `exists ` at the name it was found under (`exists .agents/grund.toml` for a repo on that form) and gets no second config.
 
-With `--docs`, additionally — each a minimal starter ([§FS-init.2.1.3](FS-init.md#213-the---docs-stubs)):
+With `--docs`, additionally — each a minimal starter ([§FS-init.2.1.3](FS-init.md#213-the---docs-starter-files)):
 
 - `<path>/requirements.md`
 - `<path>/docs/grund.md`
@@ -176,7 +176,7 @@ A companion symlink to `AGENTS.md` selects the canonical `AGENTS.md` target inst
 
 `AGENTS.override.md`, `.github/copilot-instructions.md`, `.cursorrules`, and `.windsurfrules` are automatic existing-file-only — `AGENTS.override.md` is an override channel; `.github/` is generic GitHub metadata; `.cursorrules` is Cursor's legacy single-file form (the modern `.cursor/rules/` directory is preferred when creating new); and `.windsurfrules` is a root file with no companion directory to key off, so creating one requires the explicit `--windsurf` flag. `.rules` is never detected by file existence alone, because the filename is too generic to attribute to Zed by itself: an existing `.rules` is Zed's entrypoint only where `.zed/` exists or a managed block from a previous run is already in it ([§FS-init.2.1.1](FS-init.md#211-one-entrypoint-per-agent)).
 
-#### 2.1.3 The `--docs` stubs
+#### 2.1.3 The `--docs` starter files
 
 Each scaffolded markdown file is a minimal starter — enough structure to teach the layout, no real content:
 
@@ -589,7 +589,7 @@ Both discovery locations of [§FS-config.1](FS-config.md#1-file-location-and-dis
 
 #### 2.4.2 An existing config is never overwritten
 
-An existing config is the repo's configuration — the one surface a project customizes ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable)) — and `init` never overwrites it, not even with `--force`: an existing config is reported as `exists` and left byte-for-byte unchanged ([§FS-init.3](FS-init.md#3-non-intrusive-guarantees)). `--force` resets the things `init` owns end to end — the canonical `AGENTS.md` and the `--docs` scaffold stubs — not the user's settings; a customized config that `init --force` clobbered would be a footgun.
+An existing config is the repo's configuration — the one surface a project customizes ([§GOAL-configurable](../goals.md#goal-configurable-every-default-is-overridable)) — and `init` never overwrites it, not even with `--force`: an existing config is reported as `exists` and left byte-for-byte unchanged ([§FS-init.3](FS-init.md#3-non-intrusive-guarantees)). `--force` resets the things `init` owns end to end — the canonical `AGENTS.md` and the `--docs` starter files — not the user's settings; a customized config that `init --force` clobbered would be a footgun.
 
 #### 2.4.3 Every written key is the default
 
@@ -656,7 +656,7 @@ This makes repeated `grund init` runs idempotent and safe for existing repos. Th
 
 ### 3.4 With `--force`
 
-With `--force`, a selected canonical `AGENTS.md` and the `--docs` scaffold files are overwritten in place; their previous contents are not preserved (the user has git for that, per [§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking) — `grund` does not maintain its own history). The `--docs` files are stubs `init` owns, and a repository that has filled `docs/goals.md` or `docs/grund.md` with real content loses it, which is why the flag exists and why nothing else in `init` reaches these files ([§REQ-no-data-loss.3](../requirements/REQ-no-data-loss.md#3-destructive-is-opt-in-and-never-a-side-effect)).
+With `--force`, a selected canonical `AGENTS.md` and the `--docs` scaffold files are overwritten in place; their previous contents are not preserved (the user has git for that, per [§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking) — `grund` does not maintain its own history). The `--docs` files are starter files `init` owns, and a repository that has filled `docs/goals.md` or `docs/grund.md` with real content loses it, which is why the flag exists and why nothing else in `init` reaches these files ([§REQ-no-data-loss.3](../requirements/REQ-no-data-loss.md#3-destructive-is-opt-in-and-never-a-side-effect)).
 
 ### 3.5 What `--force` does not replace
 
