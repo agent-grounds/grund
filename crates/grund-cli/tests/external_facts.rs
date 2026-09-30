@@ -127,7 +127,7 @@ fn external_facts_missing_snapshot_text_and_json_have_fixed_identities() {
         assert_eq!(
             stdout(&json),
             format!(
-                "{{\"severity\":\"{severity}\",\"path\":\"docs/guide.md\",\"line\":3,\"code\":\"{code}\",\"message\":\"{text}\",\"sites\":null}}\n"
+                "{{\"severity\":\"{severity}\",\"path\":\"docs/guide.md\",\"line\":3,\"code\":\"{code}\",\"message\":\"{text}\",\"sites\":null,\"authority\":null}}\n"
             )
         );
     }
@@ -187,7 +187,7 @@ fn external_facts_should_snapshot_is_a_full_scope_error_in_text_json_and_workspa
         assert_eq!(
             stdout(&json),
             format!(
-                "{{\"severity\":\"error\",\"path\":\"{path}\",\"line\":1,\"code\":\"out-of-scope-dangling\",\"message\":\"{message}\",\"sites\":null}}\n"
+                "{{\"severity\":\"error\",\"path\":\"{path}\",\"line\":1,\"code\":\"out-of-scope-dangling\",\"message\":\"{message}\",\"sites\":null,\"authority\":null}}\n"
             )
         );
     }

@@ -57,6 +57,7 @@ pub(crate) fn run_warning_findings(config: &Config, warnings: Vec<Diagnostic>) -
             column: None,
             message: warning.message,
             sites: Vec::new(),
+            authority: Vec::new(),
         })
         .collect()
 }

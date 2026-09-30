@@ -91,6 +91,9 @@ fn public_finding(
                 line: site.line,
             })
             .collect(),
+        // §FS-errors.5.1: the authority is already the bytewise-sorted set the
+        // engine joined its message tail from, so publishing it needs no config.
+        authority: diagnostic.authority,
     }
 }
 

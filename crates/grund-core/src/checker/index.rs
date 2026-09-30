@@ -422,7 +422,7 @@ pub(super) fn check_kind_indexes(
                             render_id(&config.grammar, id)
                         ),
                         sites: Vec::new(),
-                    });
+                    authority: Vec::new(),});
                 }
                 Some(_) => {}
                 // §FS-check.3.18.7: no entry at all, anchored at the declaration's
@@ -462,6 +462,7 @@ pub(super) fn check_kind_indexes(
                         column: None,
                         message,
                         sites: Vec::new(),
+                        authority: Vec::new(),
                     });
                 }
             }

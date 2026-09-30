@@ -98,6 +98,7 @@ pub(super) fn check_inline_citation_style(
                         column: None,
                         message: "inline citation must carry no prose".to_string(),
                         sites: Vec::new(),
+                        authority: Vec::new(),
                     });
                 }
             }
@@ -118,7 +119,7 @@ pub(super) fn check_inline_citation_style(
                             site_clause(site.first_line, site.last_line, citations),
                         ),
                         sites: Vec::new(),
-                    });
+                    authority: Vec::new(),});
                 }
                 if site.max_columns > config.inline_note_max_columns {
                     report.errors.push(Diagnostic {
@@ -136,6 +137,7 @@ pub(super) fn check_inline_citation_style(
                             site_clause(site.first_line, site.last_line, citations),
                         ),
                         sites: Vec::new(),
+                        authority: Vec::new(),
                     });
                 }
                 if config.warn_on_suggested
@@ -156,7 +158,7 @@ pub(super) fn check_inline_citation_style(
                             site_clause(site.first_line, site.last_line, citations),
                         ),
                         sites: Vec::new(),
-                    });
+                    authority: Vec::new(),});
                 }
                 report_layout_deviations(cite, site, config, &layout_message, report);
             }
@@ -189,6 +191,7 @@ fn report_layout_deviations(
             column: None,
             message: message.to_string(),
             sites: Vec::new(),
+            authority: Vec::new(),
         });
     }
 }

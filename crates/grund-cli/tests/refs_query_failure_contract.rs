@@ -127,7 +127,7 @@ fn expected_refs_json(message: &str, code: &str, hint: bool) -> (i32, String) {
         (
             1,
             format!(
-                "{{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"{code}\",\"message\":\"{message}\",\"sites\":null}}\n"
+                "{{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"{code}\",\"message\":\"{message}\",\"sites\":null,\"authority\":null}}\n"
             ),
         )
     } else {
@@ -192,7 +192,7 @@ fn show_bytes_and_status_do_not_move_with_refs() {
         &invalid_json,
         1,
         &format!(
-            "{{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"invalid-id\",\"message\":\"{INVALID}\",\"sites\":null}}\n"
+            "{{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"invalid-id\",\"message\":\"{INVALID}\",\"sites\":null,\"authority\":null}}\n"
         ),
     );
 }

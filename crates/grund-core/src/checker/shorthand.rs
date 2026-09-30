@@ -86,6 +86,7 @@ fn shorthand_diagnostic(
                             .unwrap_or(written),
                     ),
                     sites: Vec::new(),
+                    authority: Vec::new(),
                 });
             }
             // §FS-check.3.13 / §FS-workspace.4.2: only the unique persisted-form
@@ -111,6 +112,7 @@ fn shorthand_diagnostic(
         column: Some(cite.column),
         message,
         sites: Vec::new(),
+        authority: Vec::new(),
     })
 }
 

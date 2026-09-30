@@ -27,4 +27,6 @@ pub(crate) use sentence::{
 };
 
 #[cfg(test)]
+mod tests_authority;
+#[cfg(test)]
 mod tests_boundaries;

@@ -8,7 +8,8 @@ use crate::model::{CheckReport, Declaration, Diagnostic, Findings};
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{
-    citation_precedence, evaluate, evaluate_suggestions, unresolved_subject_diagnostic,
+    citation_precedence, evaluate, evaluate_suggestions, one_rules_authority,
+    unresolved_subject_diagnostic,
 };
 use crate::rules::markdown::{adapt_markdown, adapt_workspace};
 use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
@@ -345,6 +346,10 @@ pub(crate) fn rule_has_rationale(declaration: &Declaration) -> bool {
     declaration.body_has_content
 }
 
+/// §FS-rules.7.6: a diagnostic *about* a rule rather than an evaluation *by*
+/// one, so it never reaches the engine's group join — and it names its one rule
+/// as its authority anyway, which is what keeps an unusable sentence inside a
+/// scoped report instead of letting it read as `success`.
 fn invalid_rule(origin: &str, path: &str, line: usize, message: &str) -> Diagnostic {
     Diagnostic {
         code: "invalid-rule",
@@ -353,5 +358,6 @@ fn invalid_rule(origin: &str, path: &str, line: usize, message: &str) -> Diagnos
         column: None,
         message: format!("{origin} is not a valid rule: {message}"),
         sites: Vec::new(),
+        authority: one_rules_authority(origin),
     }
 }

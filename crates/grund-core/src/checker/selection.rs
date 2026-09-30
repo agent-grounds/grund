@@ -56,7 +56,12 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "value-mismatch",
 ];
 
-/// Repeatable exact-code selection for the two CLI check adapters. The
+/// The origin a `check --rule` trial sentence carries, and so the authority
+/// `--only-rule` asks for (§FS-rules.8, §AR-rules.2).
+const TRIAL_RULE_ORIGIN: &str = "--rule";
+
+/// Repeatable exact-code selection for the two CLI check adapters, plus the
+/// rule-authority axis `--only-rule` adds beside it (§FS-check.1.4). The
 /// structured Rust API deliberately does not carry this presentation query, so
 /// API and LSP callers continue to receive the complete report (§FS-check.1.4).
 #[doc(hidden)]
@@ -64,6 +69,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
 pub struct CheckFindingSelection {
     only: BTreeSet<String>,
     ignore: BTreeSet<String>,
+    only_rule: bool,
 }
 
 impl CheckFindingSelection {
@@ -83,12 +89,37 @@ impl CheckFindingSelection {
         Ok(())
     }
 
+    /// Narrow the report to what the `--rule` trial sentence authored
+    /// (§FS-rules.8). A boolean with no value to validate, and repeating it is
+    /// the same request twice (§FS-check.1.4).
+    pub fn scope_to_trial_rule(&mut self) {
+        self.only_rule = true;
+    }
+
+    /// Whether `--only-rule` was asked for, which the CLI reads to refuse the
+    /// flag without a `--rule` sentence before any config discovery
+    /// (§FS-rules.8, §FS-check.1.4).
+    pub fn scopes_to_trial_rule(&self) -> bool {
+        self.only_rule
+    }
+
     /// Decide whether a completed check's diagnostic enters the selected
-    /// report. Ignore wins over only, while `io` cannot be hidden because it
-    /// marks an incomplete scan (§FS-check.2.4).
-    pub fn retains(&self, code: &str) -> bool {
+    /// report. The two axes intersect — a finding passes when its code passes
+    /// *and* its authority does — while `--ignore` wins over both and `io`
+    /// cannot be hidden at all, because it marks an incomplete scan
+    /// (§FS-check.1.4, §FS-check.2.4).
+    pub fn retains(&self, code: &str, authority: &[String]) -> bool {
         code == "io"
-            || (self.only.is_empty() || self.only.contains(code)) && !self.ignore.contains(code)
+            || (self.only.is_empty() || self.only.contains(code))
+                && self.authority_axis_retains(authority)
+                && !self.ignore.contains(code)
+    }
+
+    /// §FS-rules.8: the authority axis keeps a finding the trial sentence
+    /// authored, whether it authored it alone or jointly with a declared rule
+    /// that reached the same meaning (§FS-rules.6).
+    fn authority_axis_retains(&self, authority: &[String]) -> bool {
+        !self.only_rule || authority.iter().any(|origin| origin == TRIAL_RULE_ORIGIN)
     }
 }
 

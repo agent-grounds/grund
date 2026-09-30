@@ -476,6 +476,7 @@ fn append_lsp_scan_errors(
             column: None,
             message,
             sites: Vec::new(),
+            authority: Vec::new(),
         });
     }
 }

@@ -22,7 +22,10 @@ pub(crate) struct Site {
 /// `column` is the 1-based start column of the offending token when the finding
 /// concerns a specific citation, so a consumer can anchor on that token rather
 /// than the first one on the line (§FS-lsp.1.1.1); it is `None` for line-anchored
-/// findings.
+/// findings. `authority` is the bytewise-sorted set of rule origins that authored
+/// the finding and is empty where no chapter rule did (§FS-rules.7.6) — the set
+/// the message tail is joined from, so text and JSON cannot disagree about who
+/// said it (§FS-rules.6).
 #[derive(Clone)]
 pub(crate) struct Diagnostic {
     pub(crate) code: &'static str,
@@ -31,6 +34,7 @@ pub(crate) struct Diagnostic {
     pub(crate) column: Option<usize>,
     pub(crate) message: String,
     pub(crate) sites: Vec<Site>,
+    pub(crate) authority: Vec<String>,
 }
 
 /// The outcome of `check`: errors and warnings, kept apart so the exit code keys
@@ -72,6 +76,13 @@ pub struct Finding {
     pub column: Option<usize>,
     pub message: String,
     pub sites: Vec<FindingSite>,
+    /// The rule origins that authored this finding, bytewise sorted, empty where
+    /// no chapter rule did — rendered as JSON's last key, `null` when empty
+    /// (§FS-errors.5.1, §FS-output-shapes.1). A declared rule's ID, `"--rule"`
+    /// for a `check --rule` trial sentence, or both where they reached the same
+    /// meaning (§FS-rules.6). It is the field `check --only-rule` queries
+    /// (§FS-rules.8).
+    pub authority: Vec<String>,
 }
 
 /// The published outcome of `check` — the twin of [`CheckReport`], kept in the

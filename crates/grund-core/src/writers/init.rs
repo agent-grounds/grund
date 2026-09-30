@@ -574,6 +574,7 @@ fn init_finding(config: &Config, diagnostic: Diagnostic) -> Finding {
                 line: site.line,
             })
             .collect(),
+        authority: Vec::new(),
     }
 }
 

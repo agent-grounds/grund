@@ -104,6 +104,7 @@ pub(super) fn check_citation_resolution(
                 local_section_release_attribution(),
             ),
             sites: Vec::new(),
+            authority: Vec::new(),
         });
     }
     for candidate in &findings.local_section_citation_candidates {
@@ -134,6 +135,7 @@ pub(super) fn check_citation_resolution(
             column: Some(candidate.column),
             message,
             sites: Vec::new(),
+            authority: Vec::new(),
         });
     }
     let mut shorthand_indexes = ShorthandIndexes::default();
@@ -166,6 +168,7 @@ pub(super) fn check_citation_resolution(
                     &config.workspace_scope_path,
                 ),
                 sites: Vec::new(),
+                authority: Vec::new(),
             });
             continue;
         };
@@ -242,6 +245,7 @@ pub(super) fn check_citation_resolution(
                 column: Some(cite.column),
                 message,
                 sites: Vec::new(),
+                authority: Vec::new(),
             };
             if warning {
                 // §FS-check.4.12: `should` is a distinct fixed warning and
@@ -285,6 +289,7 @@ pub(super) fn check_citation_resolution(
                     column: Some(cite.column),
                     message,
                     sites: Vec::new(),
+                    authority: Vec::new(),
                 });
             }
         }
