@@ -113,7 +113,7 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         }
         accepted_count += 1;
     }
-    assert_eq!(accepted_count, 18, "accepted guide-row inventory drifted");
+    assert_eq!(accepted_count, 22, "accepted guide-row inventory drifted");
 
     let refused = marked(
         guide.as_bytes(),
@@ -158,7 +158,7 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         assert_eq!(text(&output.stderr), format!("error: {reason}\n"));
         refused_count += 1;
     }
-    assert_eq!(refused_count, 14, "refused guide-row inventory drifted");
+    assert_eq!(refused_count, 16, "refused guide-row inventory drifted");
 }
 
 /// The guide may not teach the emptiness rule in words the specification does
@@ -294,6 +294,7 @@ fn rules_example_inventory_covers_every_ruled_behavior() {
     for clause in [
         "must have",
         "must cite at least one",
+        "must cite at least 2",
         "must cite each",
         "be cited by",
         "must not cite any",

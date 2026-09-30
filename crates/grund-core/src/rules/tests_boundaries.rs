@@ -299,3 +299,42 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
     assert_eq!(reported.len(), 1);
     assert_eq!(reported[0].code, "unreached-declaration");
 }
+
+/// §FS-rules.3.2, §AR-rules.2: a floor above one is `{minimum, maximum: None}`
+/// in the normalized representation, and the representation already words and
+/// tests it - which is why the widening of §FS-rules.3 is a sentence change and
+/// the engine does not move.
+#[test]
+fn a_floor_above_one_is_already_worded_and_tested_by_the_representation() {
+    let floor = Cardinality {
+        minimum: Some(2),
+        maximum: None,
+    };
+    assert_eq!(floor.wording(), "at least 2");
+    assert_eq!(floor.times_wording(), "at least 2");
+    assert!(!floor.contains(0));
+    assert!(!floor.contains(1));
+    assert!(floor.contains(2));
+    assert!(floor.contains(3));
+}
+
+/// §FS-rules.3.2: `missing-citation` is the ordinary `at least one` failure at
+/// zero and nothing else, so a floor above one reports `citation-cardinality`
+/// even when the count is zero.
+#[test]
+fn zero_citations_under_a_floor_above_one_is_a_cardinality_finding() {
+    let floor = ParsedRule {
+        cardinality: Cardinality {
+            minimum: Some(2),
+            maximum: None,
+        },
+        ..rule()
+    };
+    let diagnostics = evaluate(&[floor], &[], &facts(Completeness::Complete));
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].code, "citation-cardinality");
+    assert_eq!(
+        diagnostics[0].message,
+        "FS-demo cites GOAL 0 times; RULE-fs requires at least 2"
+    );
+}

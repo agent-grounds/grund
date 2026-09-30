@@ -3,6 +3,7 @@ docs/ar/AR-overview.md:3: error: AR-overview.system-overview cites AR-one-more 0
 docs/fs/FS-demo.md:1: error: FS-demo has 0 security chapters; RULE-security requires exactly one
 docs/fs/FS-demo.md:1: error: FS-demo must cite GOAL (citation direction)
 docs/fs/FS-demo.md:6: error: FS-demo.requirements cites REQ 0 times; RULE-requirements-count requires exactly 2
+docs/fs/FS-demo.md:6: error: FS-demo.requirements cites REQ 0 times; RULE-requirements-floor requires at least 2
 docs/fs/FS-demo.md:6: error: FS-demo.requirements is cited by AR 0 times; RULE-inbound, RULE-inbound-copy requires at least one
 docs/fs/FS-demo.md:6: error: FS-demo.requirements must cite REQ (RULE-requirements)
 docs/fs/FS-demo.md:8: error: FS must not cite AR (RULE-prohibition) — re-point the citation or downgrade it to a plain Markdown link

@@ -11,9 +11,11 @@ echo $?    # 1: hard violations remain even though suggestions do not gate
 
 `RULE-requirements` demonstrates **must cite at least one**: a citation in the
 `goals` chapter does not satisfy the rule for the `requirements` chapter.
-`RULE-overview` demonstrates **must cite each** with an exact count: one AR is
-cited twice and another zero times. Their three deterministic findings are the
-checked `expected.stdout` below.
+`RULE-requirements-floor` demonstrates **must cite at least N**, a floor above
+one: the same chapter falls short of two, and reports `citation-cardinality`
+rather than `missing-citation` even at zero. `RULE-overview` demonstrates **must
+cite each** with an exact count: one AR is cited twice and another zero times.
+Their four deterministic findings are the checked `expected.stdout` below.
 
 `FS-unreached` has no `requirements` chapter at all, so the two chapter-scoped
 citation rules over `FS` cannot reach it, and each says so at its title line
@@ -52,18 +54,22 @@ fixed words:
 
 ```text
 Each FS must have at least one requirements chapter.
+Each FS must have at least 2 requirements chapters.
 FS-demo should have at most 2 requirements chapters.
 Each FS must have exactly one requirements chapter.
 Each FS should have exactly 2 requirements chapters.
 Each FS must cite at least one GOAL or REQ.
 Each FS should cite at least one GOAL.
+FS-demo.requirements must cite at least 2 REQ.
 The requirements chapter of each FS should cite at most 2 REQ.
 FS-demo.requirements must cite exactly one REQ.
 AR-overview.system-overview must cite each AR at least once.
+AR-overview.system-overview must cite each AR at least 2 times.
 AR-overview.system-overview should cite each AR at most 2 times.
 AR-overview.system-overview must cite each AR exactly once.
 AR-overview.system-overview should cite each AR exactly 2 times.
 Each FS must be cited by at least one AR.
+Each FS must be cited by at least 2 AR.
 FS-demo.requirements should be cited by at most 2 AR or GOAL.
 Each FS must be cited by exactly one AR.
 Each FS must not cite any AR.
@@ -87,6 +93,8 @@ rewrite grund reports:
 - `Each FS may not cite any AR.` → `Each FS must not cite any AR.`
 - `Each FS must cite no AR.` → `Each FS must not cite any AR.`
 - `Each FS must cite a GOAL.` → `Each FS must cite at least one GOAL.` or `Each FS must cite exactly one GOAL.`
+- `Each FS must cite at least 1 GOAL.` → spell one as the word: `Each FS must cite at least one GOAL.`
+- `Each FS must cite exactly 1 GOAL.` → spell one as the word: `Each FS must cite exactly one GOAL.`
 - `Each FS must cite at least one GOAL and must not cite any AR.` → split it into `Each FS must cite at least one GOAL.` and `Each FS must not cite any AR.`
 - `Each FS must cite at least one GOAL` → add the terminal `.`.
 - `each FS must cite at least one GOAL.` → `Each FS must cite at least one GOAL.`
