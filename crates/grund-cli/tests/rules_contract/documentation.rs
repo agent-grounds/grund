@@ -1,5 +1,6 @@
-//! The four synchronized documentation pins required by §FS-rules.10: runnable
-//! example goldens, executable guide rows, skill bytes, and managed rendering.
+//! The five synchronized documentation pins required by §FS-rules.10: runnable
+//! example goldens, executable guide rows, skill bytes, managed rendering, and
+//! the quoted `invalid-rule` message.
 
 use super::support::{assert_run, fixture, repo_root, run, scratch, text};
 use std::fs;
@@ -193,7 +194,7 @@ fn the_documented_emptiness_rule_is_the_specifications() {
 #[test]
 fn a_chapter_rule_is_silent_about_a_declaration_without_the_chapter() {
     let sentence = "The requirements chapter of each FS must cite at least one REQ.";
-    let args = [
+    let filtered = [
         "check",
         ".",
         "--rule",
@@ -206,7 +207,7 @@ fn a_chapter_rule_is_silent_about_a_declaration_without_the_chapter() {
 
     let present = unconfigured_rules("documented-present-chapter");
     assert_run(
-        &run(&present, &args),
+        &run(&present, &filtered),
         1,
         "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":6,\
          \"code\":\"missing-citation\",\
@@ -214,15 +215,72 @@ fn a_chapter_rule_is_silent_about_a_declaration_without_the_chapter() {
         "",
     );
 
-    let absent = unconfigured_rules("documented-absent-chapter");
-    let declaration = absent.join("docs/fs/FS-demo.md");
+    // `--only` selects after the scan and drops the exit code with the findings
+    // it filters, so the silence half runs unfiltered: nothing on either
+    // channel under any code, which is what "says nothing at all" means.
+    let unfiltered = ["check", ".", "--rule", sentence, "--format", "json"];
+    let absent = absent_chapter("documented-absent-chapter");
+    assert_run(&run(&absent, &unfiltered), 0, "", "");
+}
+
+/// The section quotes the `invalid-rule` message an exact chapter subject
+/// produces once its chapter is gone, and ships that quote into every
+/// consuming repository, so the binary's own wording pins it (§FS-rules.10).
+/// The guide names the illustration `FS-login` where a run names the fixture's
+/// `FS-demo`, so the quote is compared with the ID substituted.
+#[test]
+fn the_documented_invalid_rule_quote_is_the_binarys() {
+    let guide = fs::read(repo_root().join("docs/user-facing/rules.md")).expect("rules guide");
+    let region = std::str::from_utf8(marked(
+        &guide,
+        b"<!-- BEGIN chapter-rules-emptiness -->\n",
+        b"<!-- END chapter-rules-emptiness -->",
+    ))
+    .expect("emptiness region");
+    let quoted = "literal subject FS-login.requirements does not resolve";
+    assert!(
+        collapsed(region).contains(quoted),
+        "the emptiness region no longer quotes the invalid-rule message"
+    );
+
+    let absent = absent_chapter("documented-quoted-invalid-rule");
+    let output = run(
+        &absent,
+        &[
+            "check",
+            ".",
+            "--rule",
+            "FS-demo.requirements must cite at least one REQ.",
+            "--format",
+            "json",
+        ],
+    );
+    assert_run(
+        &output,
+        1,
+        "{\"severity\":\"error\",\"path\":null,\"line\":1,\
+         \"code\":\"invalid-rule\",\"message\":\"--rule is not a valid rule: \
+         literal subject FS-demo.requirements does not resolve\",\"sites\":null}\n",
+        "",
+    );
+    assert!(
+        text(&output.stdout).contains(&quoted.replace("FS-login", "FS-demo")),
+        "the binary no longer produces the message the guide quotes"
+    );
+}
+
+/// A scratch fixture whose `FS-demo` has lost its `requirements` chapter, so a
+/// chapter-scoped subject over it selects nothing.
+fn absent_chapter(name: &str) -> std::path::PathBuf {
+    let root = unconfigured_rules(name);
+    let declaration = root.join("docs/fs/FS-demo.md");
     let body = fs::read_to_string(&declaration).expect("fixture declaration");
     let chapter = body
         .find("## requirements: Requirements")
         .expect("fixture requirements chapter");
     fs::write(&declaration, format!("{}\n", body[..chapter].trim_end()))
         .expect("delete the requirements chapter");
-    assert_run(&run(&absent, &args), 0, "", "");
+    root
 }
 
 /// A scratch fixture whose configured rules are off, so a `--rule` run reports
