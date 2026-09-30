@@ -70,6 +70,7 @@ These names mean one thing wherever they appear, and a check may not take one of
 | `exit` | how a command exits |
 | `principle` | the invariant the declaration turns on, as [§FS-config.principle](../functional-spec/FS-config.md#principle-a-setting-written-at-a-narrower-scope-wins) is |
 | `requirements` | what the declaration holds itself to, citing the requirements it serves, as [§FS-config.requirements](../functional-spec/FS-config.md#requirements-what-the-config-contract-holds-to) is |
+| `concerns` | the kinds of thing the declaration's subject divides into, and the test that tells them apart, as [§FS-config.concerns](../functional-spec/FS-config.md#concerns-every-key-belongs-to-exactly-one-concern) is |
 
 Two names are forbidden as chapter names outright. `rules` is the chapter-rule
 vocabulary's word — [§FS-terms.terms.6](../functional-spec/FS-terms.md#terms6-rules-and-directions) gives *rule* to a chapter rule alone and gives

@@ -232,7 +232,7 @@ The generated `AGENTS.md` contains no `### Workspace members` section anywhere. 
 
 ### 6.4 Workspace member descriptions
 
-Same shape as [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init), but the root and two members carry `project_description` metadata ([§FS-config.3](FS-config.md#3-schema), [§FS-workspace.3](FS-workspace.md#3-aliases), [§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists)). Precondition: `{repo_copy}` exists with `grund.toml`:
+Same shape as [§FS-init-fixtures.6.1](FS-init-fixtures.md#61-workspace-root-init), but the root and two members carry `project_description` metadata ([§FS-config.3](FS-config.md#3-keys), [§FS-workspace.3](FS-workspace.md#3-aliases), [§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists)). Precondition: `{repo_copy}` exists with `grund.toml`:
 
 ```toml
 project_name = "root"

@@ -21,7 +21,7 @@ editor with zero setup.
 ## 2. Decision
 
 A repository may commit a conversation-rendering opinion, and `link` is the only opinion it may
-commit. The optional key `[reference] conversation = "link"` in `.agents/grund.toml` ([§FS-config.3](../../functional-spec/FS-config.md#3-schema))
+commit. The optional key `[reference] conversation = "link"` in `.agents/grund.toml` ([§FS-config.3](../../functional-spec/FS-config.md#3-keys))
 makes the generated agent entrypoint ([§FS-init.2.3](../../functional-spec/FS-init.md#23-generated-agent-entrypoints)) teach linked local-conversation citations;
 absence of the key keeps today's behavior. The user-scoped mechanism of [§FS-integrations.4.3](../../functional-spec/FS-integrations.md#43-user-preference-and-global-agent-instructions) is
 unchanged, and its canonical block texts become self-scoping — inert outside grund repositories.
