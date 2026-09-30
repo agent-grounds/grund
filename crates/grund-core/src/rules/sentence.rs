@@ -274,12 +274,14 @@ fn parse_predicate(
         let expects_plural = match spelling {
             CountSpelling::AtLeastOne | CountSpelling::ExactlyOne => false,
             CountSpelling::AtMost(n) => n != 1,
-            CountSpelling::Exactly(_) => true,
+            // §FS-rules.3.1: a numeric floor is never one, so it is always plural.
+            CountSpelling::AtLeast(_) | CountSpelling::Exactly(_) => true,
         };
         if plural != expects_plural {
             let count = match spelling {
                 CountSpelling::AtLeastOne => "at least one".to_string(),
                 CountSpelling::ExactlyOne => "exactly one".to_string(),
+                CountSpelling::AtLeast(n) => format!("at least {n}"),
                 CountSpelling::AtMost(n) => format!("at most {n}"),
                 CountSpelling::Exactly(n) => format!("exactly {n}"),
             };
@@ -316,27 +318,37 @@ fn parse_predicate(
                 },
             ));
         }
-        for marker in [" at most ", " exactly "] {
+        for marker in [" at least ", " at most ", " exactly "] {
             if let Some((kind, raw)) = rest.split_once(marker) {
                 let n = positive(
                     raw.strip_suffix(" times")
                         .ok_or_else(|| error("per-target counts must end in \"times\"; accepted form: AR-overview.system-overview must cite each AR exactly 2 times."))?,
                 )?;
-                if marker.contains("exactly") && n == 1 {
-                    return Err(error(
-                        "numeric \"exactly 1 times\" is not canonical; accepted form: AR-overview.system-overview must cite each AR exactly once.",
-                    ));
-                }
-                let card = if marker.contains("at most") {
-                    Cardinality {
+                // §FS-rules.3: a floor and an exact count of one are spelled
+                // `once`, so the numeral is refused for both.
+                let card = match marker {
+                    " at least " if n == 1 => {
+                        return Err(error(
+                            "numeric \"at least 1 times\" is not canonical; accepted form: AR-overview.system-overview must cite each AR at least once.",
+                        ));
+                    }
+                    " exactly " if n == 1 => {
+                        return Err(error(
+                            "numeric \"exactly 1 times\" is not canonical; accepted form: AR-overview.system-overview must cite each AR exactly once.",
+                        ));
+                    }
+                    " at least " => Cardinality {
+                        minimum: Some(n),
+                        maximum: None,
+                    },
+                    " at most " => Cardinality {
                         minimum: None,
                         maximum: Some(n),
-                    }
-                } else {
-                    Cardinality {
+                    },
+                    _ => Cardinality {
                         minimum: Some(n),
                         maximum: Some(n),
-                    }
+                    },
                 };
                 return Ok((
                     RuleRelation::Cite,
