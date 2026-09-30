@@ -96,8 +96,11 @@ fn command_show_batch(path: PathBuf, path_provided: bool, mode: ShowMode, all: b
             ),
             Err(error) => {
                 failed = true;
+                // §FS-output-shapes.4.1: `error` is the unchanged finding object
+                // of §FS-output-shapes.1, so `authority` closes it here too —
+                // present and `null`, no query failure being a rule's.
                 println!(
-                    "{{\"query\":{query},\"ok\":false,\"result\":null,\"error\":{{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"{}\",\"message\":\"{}\",\"sites\":{}}}}}",
+                    "{{\"query\":{query},\"ok\":false,\"result\":null,\"error\":{{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"{}\",\"message\":\"{}\",\"sites\":{},\"authority\":null}}}}",
                     error.code,
                     json_escape(&error.message),
                     render_finding_sites_json(&error.sites)

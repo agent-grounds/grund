@@ -119,7 +119,7 @@ fixed order shown here:
 
 ```json
 {"query":{"id":"FS-login","section":"1"},"ok":true,"result":{"id":"FS-login","section":"1","body":"## 1. Login\n","path":"docs/functional-spec/FS-login.md","line":5},"error":null}
-{"query":{"id":"FS-missing","section":null},"ok":false,"result":null,"error":{"severity":"error","path":null,"line":null,"code":"not-found","message":"ID not found: FS-missing","sites":null}}
+{"query":{"id":"FS-missing","section":null},"ok":false,"result":null,"error":{"severity":"error","path":null,"line":null,"code":"not-found","message":"ID not found: FS-missing","sites":null,"authority":null}}
 ```
 
 `query.id` preserves the caller's spelling for explicit input and carries the
@@ -128,7 +128,8 @@ explicit or generated section string, or `null`. A success places the unchanged
 current single-show JSON object in `result`, including optional `kind_title` before
 the declaration/section object's terminal `path`, `line` pair, and sets `error` to `null`. A failed
 query sets `result` to `null` and places the unchanged current finding object
-in `error`. Every envelope is on stdout in explicit-input or exhaustive order;
+in `error`, its terminal `authority` included and always `null` there, no query
+failure being a chapter rule's ([§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output)). Every envelope is on stdout in explicit-input or exhaustive order;
 stderr is empty for per-query failures. Run-level failures emit no envelopes
 ([§FS-errors.5](FS-errors.md#5-json-format)).
 
