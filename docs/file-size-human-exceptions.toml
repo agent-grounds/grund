@@ -72,3 +72,13 @@ until = "extract the pure rendering layer so it can be tested"
 reason = """
 Measurement, aggregation, and report rendering in one script. Rendering is the only part with no I/O and the only part worth testing, and it is currently unreachable from a test. Extracting it makes the script testable, which is the real argument here; the line count is only the symptom.
 """
+[[exceptions]]
+path = "skills/grund-init/SKILL.md"
+match = "exact"
+rules = ["entrypoints"]
+kind = "structural"
+max_accepted = { value = 522, unit = "lines" }
+until = "indefinite"
+reason = """
+This file cannot be split. It is a shipped artifact, not source: templates/assets.rs embeds it verbatim via include_str! as AGENT_SETUP_INSTRUCTIONS, `grund agent-setup-instructions` prints exactly those bytes, and a test asserts it is byte-identical to the mirror under crates/grund-core/assets/ (§FS-init.5). Any split either changes the emitted document or makes the command reassemble it at runtime, which moves document structure into code. Its length is the length of the instructions grund promises to emit; the only honest way to shrink it is to promise less. The ceiling therefore moves with what grund promises to say: 387 -> 394 when `[[kinds]]` gained non-citable kinds (§FS-config.3.4.1) and the setup interview had to learn to ask about the directories that are places rather than ID namespaces, and 394 -> 522 when the `chapter-rules` writing block learned to say that a quantified chapter subject selects only the chapters that exist (§FS-rules.2) — which is also when the entry moved here, because 500 was no longer a ceiling this file could stay under.
+"""

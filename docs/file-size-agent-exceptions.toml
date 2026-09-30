@@ -113,16 +113,6 @@ reason = """
 A manual smoke script a human reads top to bottom while testing terminals by hand; its linearity is the feature, and functions would hide the sequence being followed. It is also run unattended now — `tests/integration/integrations_resolve.rs` drives its headless `resolve` mode as a gate — and that does not change the shape: the script stays one linear file by decision, so the entry is structural rather than deferred. The ceiling follows the file when a fix grows it, as the two `set -e` fixes of 2026-08-26 did.
 """
 [[exceptions]]
-path = "skills/grund-init/SKILL.md"
-match = "exact"
-rules = ["entrypoints"]
-kind = "structural"
-max_accepted = { value = 394, unit = "lines" }
-until = "indefinite"
-reason = """
-This file cannot be split. It is a shipped artifact, not source: templates/assets.rs embeds it verbatim via include_str! as AGENT_SETUP_INSTRUCTIONS, `grund agent-setup-instructions` prints exactly those bytes, and a test asserts it is byte-identical to the mirror under crates/grund-core/assets/ (§FS-init.5). Any split either changes the emitted document or makes the command reassemble it at runtime, which moves document structure into code. Its length is the length of the instructions grund promises to emit; the only honest way to shrink it is to promise less. The ceiling therefore moves with what grund promises to say: 387 -> 394 when `[[kinds]]` gained non-citable kinds (§FS-config.3.4.1) and the setup interview had to learn to ask about the directories that are places rather than ID namespaces.
-"""
-[[exceptions]]
 path = "crates/grund-core/src/checker/tests_shorthand.rs"
 match = "exact"
 rules = ["tests"]
