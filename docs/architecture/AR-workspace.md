@@ -147,7 +147,7 @@ must hold for *every* shape of config the loader can return:
   member scan also carries a bespoke boundary table. Rejecting overlap keeps
   workspace expansion simple, makes namespace boundaries explicit, and reports
   at the `members` line that introduced the conflicting roots.
-- `project_name` is *not* universal. [§FS-config.3](../functional-spec/FS-config.md#3-schema) makes it free-form metadata
+- `project_name` is *not* universal. [§FS-config.3](../functional-spec/FS-config.md#3-keys) makes it free-form metadata
   when the project is standalone, and only an alias when it participates in a
   workspace. The slug check therefore lives in `derive_alias`
   ([§AR-workspace.5.3](AR-workspace.md#53-alias-derivation-has-one-canonical-source)) — the one place that already needs to know "this is being used as

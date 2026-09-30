@@ -80,6 +80,7 @@ inside a link target, a heading anchor or a frozen code name is a name, not a us
 - **citable** — Can be the target of a citation.
 - **body** — The declaration heading through the heading that closes it.
 - **section** — A numbered or named heading inside a body. Its section path is the dotted tail. Displaces *chapter* and *point* in prose: a heading inside a body is a section, a whole declaration is a *declaration*, and a measurement taken per declaration or per section site is *per-coordinate*. *chapter* remains the rule grammar's subject-unit word, and stays for a named second-level section that a chapter rule or an obligation requires by name — the Terms chapter, the `placement` chapter; a numbered heading is a section.
+- **field** — A kind's requirement that every declaration in it carry a given named section, as a `[[kinds]]` row or a chapter rule writes it. The section itself is a *chapter*; the field is the requirement on it. Does not displace the JSON output *field*, which is always qualified by the object it is on.
 - **coordinate** — An ID with an optional section path: the complete target of a citation. Displaces *section reference*.
 - **lead** — The prose of a declaration or section, cut at its first child section.
 - **index** — A kind's index file, and its entries. Every other *index* becomes a table, a map or a cache.
@@ -106,6 +107,9 @@ inside a link target, a heading anchor or a frozen code name is a name, not a us
 - **scan** — What a run does to its scope. A scan root is where it starts. Displaces *walk* and *walk root*.
 - **scope** — The files a run reads. Default scope, full scope. Displaces *scan set*, *configured scope* and *tier*.
 - **config root** — The directory holding `grund.toml`.
+- **place** — A kind's home, or the complement of every home: one of the regions of a tree a `[[kinds]]` row governs. A per-place key written on a row says what one place does; written at the top of the file it says what every place does.
+- **complement place** — The place that is every scanned file no home claims. v1 spells it the *homeless kind* and names it `code` by default.
+- **language** — The class a file's syntax puts it in, and therefore how a declaration, a citation and a note are recognized in it. The class, never the keys that spell it; *host language* stays for the language a source declaration is embedded in.
 - **workspace, member, alias** — The cross-project tree, one project in it, and the name a citation uses to reach it. *alias* displaces *namespace* in that sense.
 
 ### terms.5: Findings
@@ -121,6 +125,7 @@ inside a link target, a heading anchor or a frozen code name is a name, not a us
 
 - **direction, level** — The two parts of a `[citations]` rule: that one kind cites, or never cites, another, and its must / should / avoid / never strength. *rule* names the entry as a whole. *level* carries this sense alone, and heading depth and severity take their own words.
 - **rule** — One rule the checker applies, as the config and the rule grammar name it: a `[citations]` entry as a whole, a `[[kinds]]` rule, or a chapter rule — a declaration whose title is one sentence. Checker behavior is a *check*.
+- **unit** — What a rule is applied once per: the node its subject selects, so that a finding names that node. The compound *grounding unit* is the same word at `require_grounding`'s scale and keeps its own name, and a measurement's `unit` key names what is counted rather than what a rule is applied to.
 - **grounded** — A grounding unit that cites at least one declaration.
 
 ### terms.7: Values and integrations
@@ -132,3 +137,10 @@ inside a link target, a heading anchor or a frozen code name is a name, not a us
 
 - **box** — A component's place in the system diagram: what feeds it, what it feeds. The diagram sense only; *out of the box* and *black-box* are idioms, not this word.
 - **meter** — What measures a goal or a requirement from outside it, and is therefore not a component.
+
+### terms.9: The configuration's concerns
+
+- **schema** — The concern a config key belongs to when it says what exists and what a well-formed one looks like: a finding from a schema key is about one node on its own. The concern, never the whole key set — that list is [§FS-config.3](FS-config.md#3-keys).
+- **rules** — The concern a config key belongs to when it says how nodes relate: a finding from a rules key needs at least two. Always plural and always the concern; one *rule* is [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions)'s word, and a rules key is what makes one.
+- **presentation** — The concern a config key belongs to when it decides bytes `grund` writes or shows: it produces no finding except where a written byte has drifted from what the config now renders. *rendering* stays the integrations' word for their own layer.
+- **envelope** — The config keys outside the three concerns: the file's version and identity, and the workspace membership that says which projects there are. Read before any concern and constraining no node, so not a fourth one.

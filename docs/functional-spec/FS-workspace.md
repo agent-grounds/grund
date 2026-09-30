@@ -470,7 +470,7 @@ rule as the alias, but it is presentation metadata only ([§FS-workspace.3.1](FS
 
 ### 3.1 Project descriptions
 
-A project's optional one-line `project_description` ([§FS-config.3](FS-config.md#3-schema)) follows the
+A project's optional one-line `project_description` ([§FS-config.3](FS-config.md#3-keys)) follows the
 same residency rule as the alias: a member's description comes from the
 member's own config, the root row's from the root config, and a member without
 its own config has none ([§DF-workspace-member-descriptions](../decisions/functional/DF-workspace-member-descriptions.md#df-workspace-member-descriptions-member-side-project_description-for-workspace-member-lists)).

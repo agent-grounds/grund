@@ -55,7 +55,7 @@ generated `grund.toml` teaches the key with a commented line ([§DF-config-file-
 `grund init --description <text>` sets it at bootstrap time. Self omission
 keeps that pending description out of the local list; it appears when another
 entrypoint renders the project as foreign. The contract lives in
-[§FS-config.3](../../functional-spec/FS-config.md#3-schema), [§FS-workspace.3](../../functional-spec/FS-workspace.md#3-aliases), and [§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members).
+[§FS-config.3](../../functional-spec/FS-config.md#3-keys), [§FS-workspace.3](../../functional-spec/FS-workspace.md#3-aliases), and [§FS-init.2.3.4.15](../../functional-spec/FS-init.md#23415-workspace-members).
 
 ## 3. Why this shape
 
