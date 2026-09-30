@@ -147,6 +147,25 @@ collapse semantically and name sorted authorities, for example
 rule, the existing config finding wins byte-for-byte and no rule tail is added.
 <!-- END chapter-rules -->
 
+A namespaced object kind — `api/REQ` or `*/REQ` — is resolved against the
+workspace the run's own `grund.toml` declares, so it resolves at the workspace
+root and in any run that loaded that workspace. A run rooted inside a member
+declares no `[workspace]` of its own and holds no namespace at all, so it cannot
+judge the alias either way: `grund check` and `grund init` report it at the
+rule's own heading as `invalid-rule`, the run exits nonzero, and `grund init`
+writes the managed block anyway with the rule's bullet rendered exactly as
+authored. That last part is what lets a member complete a `grund` upgrade: the
+block it writes is byte-for-byte what a run holding the whole workspace would
+write for it. One genuinely invalid rule beside it and nothing is written at
+all, which is the ordinary refusal.
+
+The runnable [`examples/rules/`](../../examples/rules/) repository includes a
+passing and violated instance of all five families, shared-prefix coverage
+targets, both deduplication directions, both channels, and the strict refusal
+inventory. `grund init` repeats valid configured sentences under a v11
+`### Chapter rules` managed section; without a rule kind, v10 bytes are
+unchanged. [§FS-rules.6](../functional-spec/FS-rules.md#6-semantic-deduplication) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits) [§FS-rules.9](../functional-spec/FS-rules.md#9-managed-guidance-and-editor-parity)
+
 ### Asking only what one sentence found
 
 `--rule` adds the sentence to every configured rule rather than replacing them,
@@ -175,22 +194,3 @@ last field — `null` where no rule authored it, `["--rule"]` for the trial
 sentence, `["--rule","RULE-security"]` where both reached the same meaning — so
 a caller can ask which rule said this without matching message text.
 [§FS-rules.8](../functional-spec/FS-rules.md#8-command-surfaces) [§FS-check.1.4](../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore) [§FS-errors.5.1](../functional-spec/FS-errors.md#51-on-stdout--the-commands-output)
-
-A namespaced object kind — `api/REQ` or `*/REQ` — is resolved against the
-workspace the run's own `grund.toml` declares, so it resolves at the workspace
-root and in any run that loaded that workspace. A run rooted inside a member
-declares no `[workspace]` of its own and holds no namespace at all, so it cannot
-judge the alias either way: `grund check` and `grund init` report it at the
-rule's own heading as `invalid-rule`, the run exits nonzero, and `grund init`
-writes the managed block anyway with the rule's bullet rendered exactly as
-authored. That last part is what lets a member complete a `grund` upgrade: the
-block it writes is byte-for-byte what a run holding the whole workspace would
-write for it. One genuinely invalid rule beside it and nothing is written at
-all, which is the ordinary refusal.
-
-The runnable [`examples/rules/`](../../examples/rules/) repository includes a
-passing and violated instance of all five families, shared-prefix coverage
-targets, both deduplication directions, both channels, and the strict refusal
-inventory. `grund init` repeats valid configured sentences under a v11
-`### Chapter rules` managed section; without a rule kind, v10 bytes are
-unchanged. [§FS-rules.6](../functional-spec/FS-rules.md#6-semantic-deduplication) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits) [§FS-rules.9](../functional-spec/FS-rules.md#9-managed-guidance-and-editor-parity)
