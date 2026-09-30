@@ -211,7 +211,8 @@ fn a_chapter_rule_is_silent_about_a_declaration_without_the_chapter() {
         1,
         "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":6,\
          \"code\":\"missing-citation\",\
-         \"message\":\"FS-demo.requirements must cite REQ (--rule)\",\"sites\":null}\n",
+         \"message\":\"FS-demo.requirements must cite REQ (--rule)\",\"sites\":null,\
+         \"authority\":[\"--rule\"]}\n",
         "",
     );
 
@@ -260,7 +261,8 @@ fn the_documented_invalid_rule_quote_is_the_binarys() {
         1,
         "{\"severity\":\"error\",\"path\":null,\"line\":1,\
          \"code\":\"invalid-rule\",\"message\":\"--rule is not a valid rule: \
-         literal subject FS-demo.requirements does not resolve\",\"sites\":null}\n",
+         literal subject FS-demo.requirements does not resolve\",\"sites\":null,\
+         \"authority\":[\"--rule\"]}\n",
         "",
     );
     assert!(
