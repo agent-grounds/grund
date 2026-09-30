@@ -19,7 +19,7 @@ This document is the revision of a draft that was argued over in a local cross-f
 So the evidence here is what is public and dated rather than what is at hand:
 
 - The **outcome of the agora** is evidenced by the *What the agora settled* and *What was ruled* chapters of `agent-grounds/grund#347` — the owner's own restatement, in their words, of the entries and the four rulings. [§DISC-core-concerns.6](2026-09-30-core-concerns.md#6-what-the-agora-settled) below is written against that restatement and keeps the verdict's ids, so an entry can be argued about by name.
-- The **four points ruled in conversation on 2026-09-30**, and the one amendment to an agreed entry, are evidenced by the owner's comment of [2026-09-30T09:05:23Z](https://github.com/agent-grounds/grund/issues/347#issuecomment-5907898693). A comment on the issue is dated, attributed and immutable, which is every property a ruling file has.
+- The **four points ruled in conversation on 2026-09-30**, and the one amendment to an agreed entry, are evidenced by the owner's comment of [2026-09-30T09:05:23Z](https://github.com/agent-grounds/grund/issues/347). A comment on the issue is dated, attributed and immutable, which is every property a ruling file has.
 
 **Rejected: a sibling evidence file.** This repository already has the shape — `2026-09-22-grund-core-public-surface-inventory.md` is carried beside its proposal, declares no ID and states no status, and `docs/discussions/README.md` describes the arrangement. It is the better form on the merits, and it is rejected here for one reason that is not about form: it would publish the agora. What is lost is that a reader cannot re-read the argument behind an entry, only its outcome; what is kept is that every claim below has a public address.
 
@@ -332,7 +332,7 @@ Four entries were disputed and the repository owner ruled them on 2026-09-30.
 
 ### 6.4 Amended after the verdict: V-A08 and V-A14
 
-V-A08 reads *the kind row keeps `file`, `folder` (two keys, mutually exclusive)*. That clause is **amended**, not confirmed. On [2026-09-30T09:05:23Z](https://github.com/agent-grounds/grund/issues/347#issuecomment-5907898693) the repository owner ruled that any kind, citable or not, takes several places, and that the v2 keys are therefore `folders` and `files` — lists, either or both admitted on one row. One home is a one-element list.
+V-A08 reads *the kind row keeps `file`, `folder` (two keys, mutually exclusive)*. That clause is **amended**, not confirmed. On [2026-09-30T09:05:23Z](https://github.com/agent-grounds/grund/issues/347) the repository owner ruled that any kind, citable or not, takes several places, and that the v2 keys are therefore `folders` and `files` — lists, either or both admitted on one row. One home is a one-element list.
 
 The rest of V-A08 stands: `citable` and `scan` are not derivable, `id_format` is the row's ID template, and one `form` key replaces two booleans. **v1 keeps `file` and `folder` as the singular, mutually exclusive keys under their own meaning**, which [§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning) makes permanent — so this is a v2 spelling replacing a v1 spelling, not a v1 key changing sense.
 
