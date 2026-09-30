@@ -515,8 +515,9 @@ chapter-presence rule with the chapter-scoped citation rule it makes hold for
 the whole kind ([§FS-rules.2](FS-rules.md#2-subject-selectors)). Its leading
 sentence on that pairing is the specification's word for word, differing at most
 in where it wraps, so neither can be reworded without the other. The section
-also quotes the exact `invalid-rule` message an exact chapter subject produces
-once its chapter is gone, and that quote is the binary's own wording.
+also quotes the reason clause of the `invalid-rule` message an exact chapter
+subject produces once its chapter is gone, and that quote is the binary's own
+wording.
 
 The runnable example contains at least one passing and one violated instance of
 all five families. Its guide quotes every violated instance's exact finding and
@@ -538,8 +539,8 @@ Five independent pins prevent drift:
 4. The managed block's existing re-render byte comparison checks generated
    guidance.
 5. A quoted-message test runs the exact chapter subject over a declaration
-   whose chapter is gone and asserts the section's quoted `invalid-rule`
-   message is the one the binary emits.
+   whose chapter is gone and asserts the section's quoted reason clause is
+   part of the `invalid-rule` message the binary emits.
 
 ## 11. Functional architecture constraint
 
