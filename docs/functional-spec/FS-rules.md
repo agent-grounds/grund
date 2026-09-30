@@ -566,7 +566,7 @@ The release includes one guide at `docs/user-facing/rules.md`, one runnable
 golden example at `examples/rules/`, links from the root README and
 `examples/README.md`, and no second skill. The guide teaches opt-in and rationale
 bodies, every subject and family, counts and modalities, every finding and both
-channels, ordering, both deduplication directions, both command flags,
+channels, ordering, both deduplication directions, every command flag,
 validation lifecycle, every explicit phase-1 absence, what a quantified subject
 does not select, and the presence rule a chapter-scoped citation rule needs
 beside it.
