@@ -147,6 +147,35 @@ collapse semantically and name sorted authorities, for example
 rule, the existing config finding wins byte-for-byte and no rule tail is added.
 <!-- END chapter-rules -->
 
+### Asking only what one sentence found
+
+`--rule` adds the sentence to every configured rule rather than replacing them,
+so without help its findings arrive sorted into the whole tree's report and only
+the authority in the message tail tells them apart. `--only-rule` narrows the
+report to what the sentence authored, which is what makes trying a sentence cost
+its own findings:
+
+```bash
+grund check --rule "FS-login.requirements must cite exactly 3 REQ." --only-rule
+grund check --rule "Each FS should have exactly one security chapter." --only-rule --suggestions
+```
+
+It requires `--rule` — alone it is `error: --only-rule requires --rule` and exit
+2, rather than a report scoped to nothing — and it narrows by authority where
+`--only` narrows by code, so the two intersect and `--ignore` wins over both. A
+`should`-level sentence lands in the suggestions channel the default run
+withholds, so the second form needs `--suggestions` as well or the scoped run
+prints `success`. A finding the sentence authored jointly with a declared rule
+that means the same is in a scoped report, with its tail unchanged; a sentence
+duplicating a `[citations]` direction authors nothing, so its scoped report is
+empty and the run says `success` while the tree's own findings still stand.
+
+Under `--format json` every finding record carries the same authority as its
+last field — `null` where no rule authored it, `["--rule"]` for the trial
+sentence, `["--rule","RULE-security"]` where both reached the same meaning — so
+a caller can ask which rule said this without matching message text.
+[§FS-rules.8](../functional-spec/FS-rules.md#8-command-surfaces) [§FS-check.1.4](../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore) [§FS-errors.5.1](../functional-spec/FS-errors.md#51-on-stdout--the-commands-output)
+
 A namespaced object kind — `api/REQ` or `*/REQ` — is resolved against the
 workspace the run's own `grund.toml` declares, so it resolves at the workspace
 root and in any run that loaded that workspace. A run rooted inside a member

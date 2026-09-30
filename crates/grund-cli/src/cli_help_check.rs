@@ -4,7 +4,7 @@ fn print_check_help() {
     println!("grund check — validate every ID citation across the repo.");
     println!();
     println!(
-        "Usage:  grund check [PATH] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--format text|json]"
+        "Usage:  grund check [PATH] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--only-rule] [--format text|json]"
     );
     println!();
     println!(
@@ -44,6 +44,11 @@ fn print_check_help() {
     println!(
         "  --ignore <code>      remove one exact finding code; repeat for a union; ignore wins over only (`--ignore=<code>` also works)."
     );
+    // §FS-cli.3.3: the third selector on the same footing as the code axis —
+    // what it narrows by, and that it refuses to stand alone (§FS-rules.8).
+    println!(
+        "  --only-rule          retain only what the --rule sentence found; requires --rule."
+    );
     println!();
     println!(
         "Findings go to stdout (the linter convention) — `grund check | …` and `grund check"
@@ -55,6 +60,16 @@ fn print_check_help() {
     println!("Selection happens after the complete check. It filters errors, warnings, and enabled");
     println!("suggestions by exact code; operational failures remain visible and exit 2. Exit 0 means");
     println!("the selected report has no errors, not that the unselected repository is clean.");
+    println!();
+    // §FS-cli.3.3, §FS-rules.8: a trial sentence emits the codes the declared
+    // rules emit, so only the authority axis answers what it found — and its
+    // `should`-level empty report is the one most likely to be misread.
+    println!("--only-rule narrows that same report by rule authority instead of by code: only what");
+    println!("the --rule sentence authored, whether it authored a finding alone or jointly with a");
+    println!("declared rule that means the same. The two axes intersect and --ignore wins over both.");
+    println!("Without --rule it is `error: --only-rule requires --rule`, exit 2. A `should`-level");
+    println!("sentence lands in the suggestions channel, so it needs --suggestions too or the scoped");
+    println!("run prints `success`.");
     println!();
     println!("Supported check finding codes:");
     for code in CHECK_FINDING_CODES {
@@ -74,6 +89,9 @@ fn print_check_help() {
     );
     println!(
         "  grund check --ignore agents-init # ask whether the selected content report has errors"
+    );
+    println!(
+        "  grund check --rule \"Each FS must have exactly one security chapter.\" --only-rule # what does this sentence find?"
     );
     println!("  grund check --format json | jq # machine-readable diagnostics for CI");
 }
