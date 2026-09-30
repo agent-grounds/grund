@@ -54,6 +54,10 @@ fn mismatch_summary(label: &str, outcomes: &[CaseOutcome]) -> Option<String> {
 /// refusing it. That is the shape the old bare `return` hid: an unrelated
 /// `TMPDIR` property deleted the member-containment coverage on Linux and macOS
 /// and still printed `4 passed`.
+///
+/// A refresh pass accounts for itself here too, and for the same reason: it owes
+/// the surfaces it covered and every golden it moved, because its `ok` is
+/// otherwise the only thing it said (§AR-workspace.9.5).
 pub fn assert_every_case_passed(label: &str, outcomes: &[CaseOutcome]) {
     let skipped = outcomes
         .iter()
@@ -79,6 +83,13 @@ pub fn assert_every_case_passed(label: &str, outcomes: &[CaseOutcome]) {
         );
     }
 
+    // Before the skip accounting and before any early return, because a refresh
+    // pass has no skip summary to carry it: the bare `return` below is the path
+    // every green refresh takes (§AR-workspace.9.5).
+    if let Some(refresh_summary) = refresh_summary(label, outcomes) {
+        report_to_stderr(&refresh_summary);
+    }
+
     let Some(skip_summary) = skip_summary else {
         return;
     };
@@ -87,7 +98,10 @@ pub fn assert_every_case_passed(label: &str, outcomes: &[CaseOutcome]) {
         "{skip_summary}\nthis platform can create a directory symlink, so a skipped case is lost \
          coverage rather than an unsupported feature"
     );
-    eprintln!("{skip_summary}");
+    // Through the same writer as the accounting above: `eprintln!` is held by
+    // libtest's capture, so this summary was invisible on a passing pass too
+    // (§AR-workspace.9.5).
+    report_to_stderr(&skip_summary);
 }
 
 /// The `repo` surface: whether `command.args` runs against `{repo_copy}` is a
