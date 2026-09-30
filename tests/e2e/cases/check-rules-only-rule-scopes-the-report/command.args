@@ -1,0 +1,1 @@
+check --rule "FS-demo.requirements must cite exactly 3 REQ." --only-rule {repo}

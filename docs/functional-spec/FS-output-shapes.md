@@ -14,7 +14,7 @@ severity, suggestion, caution), and [§FS-terms.terms.7](FS-terms.md#terms7-valu
 Findings use this shape:
 
 ```json
-{"severity":"error","path":"docs/functional-spec/FS-001-alpha.md","line":3,"code":"dangling","message":"unknown reference FS-999-missing","sites":null}
+{"severity":"error","path":"docs/functional-spec/FS-001-alpha.md","line":3,"code":"dangling","message":"unknown reference FS-999-missing","sites":null,"authority":null}
 ```
 
 Fields:
@@ -25,6 +25,7 @@ Fields:
 - `code` is a stable kebab-case finding code.
 - `message` is the same lowercase text used in text mode: no terminal period on a single-clause message, while a run-level caution of more than one clause keeps its sentences' periods ([§FS-errors.3](FS-errors.md#3-message-text)).
 - `sites` is `null` for single-site findings, or a sorted array of `{ "path": <path>, "line": <line> }` for multi-site findings.
+- `authority` is the last key: `null` for a finding no chapter rule authored, or a bytewise-sorted array of the rule origins that did — a declared rule's ID, `"--rule"` for a `check --rule` trial sentence, or both where they reached the same meaning ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits), [§FS-rules.6](FS-rules.md#6-semantic-deduplication)). It answers *which rule said this* without matching `message`, and `check --only-rule` is the same query flag-side ([§FS-rules.8](FS-rules.md#8-command-surfaces)).
 
 `check --format=json` splits these objects across streams as [§FS-errors.5](FS-errors.md#5-json-format) specifies: graph findings as NDJSON on stdout, run-level warnings such as empty scans and line-less mid-scan read failures on stderr. Launch-time CLI failures stay raw `error:` text on stderr even when `--format=json` was requested.
 
