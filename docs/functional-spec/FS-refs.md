@@ -72,17 +72,35 @@ docs/functional-spec/FS-show.md:11: §FS-check.1
 NDJSON on stdout — one object per citation, matching the `Citation` shape ([AR-scanner.3](../architecture/AR-scanner.md#3-output)) plus the verbatim token and optional target-kind metadata. These examples select a kind without an effective title:
 
 ```json
-{"path":"crates/grund-core/src/scanner/file_pass.rs","line":142,"column":12,"id":"FS-check","section":"1","marker":false,"text":"FS-check.1"}
-{"path":"docs/functional-spec/FS-show.md","line":11,"column":42,"id":"FS-check","section":"1","marker":true,"text":"§FS-check.1"}
+{"path":"crates/grund-core/src/scanner/file_pass.rs","line":142,"column":12,"id":"FS-check","section":"1","marker":false,"text":"FS-check.1","enclosing_declaration":null,"enclosing_section":null}
+{"path":"docs/functional-spec/FS-show.md","line":11,"column":42,"id":"FS-check","section":"1","marker":true,"text":"§FS-check.1","enclosing_declaration":"FS-show","enclosing_section":"terms"}
 ```
 
 `section` is `null` for a bare-ID citation with no section coordinate.
-`kind_title` is appended after `text` when the resolved queried kind has an
-effective title ([§FS-config.3.4.3](FS-config.md#343-title)); absent titles omit
+`enclosing_declaration` and `enclosing_section` follow `text` and name the unit
+the citing site sits in, always present and each `string | null`, in the shape
+[§FS-cover.3.2](FS-cover.md#32---format-json) specifies for both commands.
+`kind_title` is the record's **final** field, after that pair, and appears when
+the resolved queried kind has an effective title
+([§FS-config.3.4.3](FS-config.md#343-title)); absent titles omit
 it, while a configured empty string is retained. A workspace record's existing
 `project` still names the citing project, whereas `kind_title` belongs to the
 selected target project, even when the queried ID is undeclared but valid.
-All existing fields retain their values and relative order.
+All existing fields retain their values and their order relative to one another.
+
+#### 3.2.1 Why `kind_title` stays last
+
+The sentence this replaces said `kind_title` was appended *after* `text`, which
+fixed where it sat when nothing followed it — a statement about one past append
+rather than a promise to a caller. What a caller could have relied on is that
+`kind_title` is the last key, and that still holds: the pair goes between `text`
+and it, so every existing field keeps its value, its type and its position
+relative to every other existing field
+([§REQ-backwards-compatibility.4](../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise)).
+Placing the pair after `kind_title` instead would move `kind_title` off the end
+for no gain, and would break the field-order parity `cover` holds with this
+record, which is stated where that parity lives and is not restated here
+([§FS-cover.3.2](FS-cover.md#32---format-json)).
 
 ### 3.3 `--summary`
 

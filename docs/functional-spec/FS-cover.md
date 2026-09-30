@@ -74,16 +74,20 @@ src/untouched.rs:
 NDJSON on stdout — one object per scanned file:
 
 ```json
-{"path":"src/login.rs","citations":[{"path":"src/login.rs","line":14,"column":5,"id":"FS-login","section":"2","marker":true,"text":"§FS-login.2"},{"path":"src/login.rs","line":28,"column":9,"id":"DF-password-policy","section":null,"marker":true,"text":"§DF-password-policy"}]}
+{"path":"src/login.rs","citations":[{"path":"src/login.rs","line":14,"column":5,"id":"FS-login","section":"2","marker":true,"text":"§FS-login.2","enclosing_declaration":"AR-login-flow","enclosing_section":"2"},{"path":"src/login.rs","line":28,"column":9,"id":"DF-password-policy","section":null,"marker":true,"text":"§DF-password-policy","enclosing_declaration":null,"enclosing_section":null}]}
 {"path":"src/untouched.rs","citations":[]}
 ```
 
 The nested citation objects intentionally carry `path` too, matching `refs` JSON byte shape so a caller can compare `cover` and `refs` without a field mapping layer. The parity is of **fields** — same names, same order, same types — not of every value: `refs` renders `id` for the target its query named, so an `<§>api/FS-login` site reads `"id":"FS-login"` there and `"id":"api/FS-login"` here. `refs` was handed the alias in the argument; `cover` was not, and dropping it would leave the row unable to say what it points at, since `project` names the *citing* project.
 
+`enclosing_declaration` and `enclosing_section` name the unit the **citing** site sits in, and they sit after `text`. They are the citing-side counterpart of `id` and `section`, which name the target: `enclosing_declaration` is the nearest preceding declaration whose body range contains the site, and `enclosing_section` the nearest accepted section path containing it ([AR-scanner.2.4.3](../architecture/AR-scanner.md#243-the-enclosing-declaration), [AR-scanner.2.4.4](../architecture/AR-scanner.md#244-the-enclosing-accepted-chapter)) — numbered and named alike, `"1"` under `## 1. Inputs` and `"terms"` under `## terms: Terms`. Both are `string | null` and both are always present: `enclosing_declaration` is `null` where the site sits in no declaration body, and `enclosing_section` is `null` where no accepted section contains it, which includes every site in a declaration's lead above its first section. A duplicate or rejected section path is not an accepted section and owns no site, so it never appears here. `enclosing_declaration` renders bare, under the **citing** project's `[id]` config — the declaration it names sits in the citing file, and `project` already says which project that is ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
+
+Together they are the `from` half of the `cites` edge ([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)): a caller reads "`FS-cover`'s `terms` section cites `FS-terms`" out of the same scan that checked it, instead of re-parsing the tree to recover a unit the scan already held — the reconstruction [§FS-cover.5](FS-cover.md#5-why-this-exists) exists to remove. `cover` and `refs` pay the citing-side classification pass for them; the other read-only queries still skip it ([AR-scanner.2.4.2](../architecture/AR-scanner.md#242-citation-source-kind)).
+
 In workspace mode both the per-file object and each nested citation object gain a leading `"project":"<alias>"` — the project that contains the file, which is also the citing project — exactly as `refs` does ([§FS-workspace.8.2](FS-workspace.md#82-grund-refs), [§FS-workspace.8.6](FS-workspace.md#86-grund-cover)). Outside workspace mode the field is absent and the bytes above are unchanged:
 
 ```json
-{"project":"api","path":"apps/api/src/login.rs","citations":[{"project":"api","path":"apps/api/src/login.rs","line":14,"column":5,"id":"FS-login","section":"2","marker":true,"text":"§FS-login.2"}]}
+{"project":"api","path":"apps/api/src/login.rs","citations":[{"project":"api","path":"apps/api/src/login.rs","line":14,"column":5,"id":"FS-login","section":"2","marker":true,"text":"§FS-login.2","enclosing_declaration":"AR-login-flow","enclosing_section":"2"}]}
 ```
 
 ## 4. Exit codes
