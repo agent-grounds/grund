@@ -19,5 +19,6 @@ Discussion notes use the project-local `DISC` kind declared in `grund.toml`. Pro
 - [§DISC-external-facts](proposals/2026-09-07-external-facts.md#disc-external-facts-external-facts-are-committed-declarations-materialized-explicitly) — *(concluded)* External facts are committed declarations materialized explicitly — realized by [§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)
 - [§DISC-grund-core-public-surface](proposals/2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) — What `grund_core`'s public root surface is, and what it should be
   - [The `grund-core` public root surface, name by name](proposals/2026-09-22-grund-core-public-surface-inventory.md) — the evidence it argues from: one classified row per public root name
+- [§DISC-core-concerns](proposals/2026-09-30-core-concerns.md#disc-core-concerns-three-concerns-over-two-trees--how-the-configuration-the-core-spec-and-the-engine-are-organized) — Three concerns over two trees: how the configuration, the core spec and the engine are organized
 
 This index is navigational — citations should target the proposal ID directly, never this file.
