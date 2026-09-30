@@ -41,6 +41,10 @@ fn kind_title_refs_preserve_existing_public_records_and_undeclared_queries() {
                     section: None,
                     marker: true,
                     text: "\u{a7}FS-authored".into(),
+                    // The citing file declares no ID, so §FS-refs.3.2's pair is
+                    // `null` on both halves.
+                    enclosing_declaration: None,
+                    enclosing_section: None,
                 }],
                 note: None,
                 scan_errors: vec![],
@@ -110,7 +114,9 @@ fn kind_title_refs_target_differs_from_caller_and_citers() {
                 id: "FS-authored".into(),
                 section: None,
                 marker: true,
-                text: "§target/FS-authored".into()
+                text: "§target/FS-authored".into(),
+                enclosing_declaration: None,
+                enclosing_section: None
             },
             RefHit {
                 project: Some("root".into()),
@@ -120,7 +126,9 @@ fn kind_title_refs_target_differs_from_caller_and_citers() {
                 id: "FS-authored".into(),
                 section: None,
                 marker: true,
-                text: "§target/FS-authored".into()
+                text: "§target/FS-authored".into(),
+                enclosing_declaration: None,
+                enclosing_section: None
             },
             RefHit {
                 project: Some("target".into()),
@@ -130,7 +138,9 @@ fn kind_title_refs_target_differs_from_caller_and_citers() {
                 id: "FS-authored".into(),
                 section: None,
                 marker: true,
-                text: "\u{a7}FS-authored".into()
+                text: "\u{a7}FS-authored".into(),
+                enclosing_declaration: None,
+                enclosing_section: None
             },
         ]
     );

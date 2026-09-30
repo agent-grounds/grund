@@ -48,6 +48,18 @@ pub struct RefHit {
     pub section: Option<String>,
     pub marker: bool,
     pub text: String,
+    /// The nearest declaration whose body contains this **citing** site, or
+    /// `None` where the site sits in no declaration body (§FS-refs.3.2). Bare —
+    /// rendered under the *citing* project's `[id]` config, never
+    /// alias-qualified, because the declaration it names sits in the citing file
+    /// and `project` already says which project that is (§FS-workspace.8.2.4).
+    /// Unlike `id`, which renders under the **target** project's config.
+    pub enclosing_declaration: Option<String>,
+    /// The nearest accepted section path containing this **citing** site,
+    /// numbered and named alike, or `None` where no accepted section contains it
+    /// (§FS-refs.3.2, §AR-scanner.2.4.4). The citing-side counterpart of
+    /// `section`, which is the coordinate of the *cited* ID.
+    pub enclosing_section: Option<String>,
 }
 
 /// The two ways a selected project's resolver can reject a `refs` operand

@@ -135,6 +135,22 @@ pub(crate) fn load_workspace_context(path: &Path, path_provided: bool) -> Result
     load_workspace_context_with_overlays(path, path_provided, &TextOverlays::new(), false)
 }
 
+/// The same load for a query that **publishes** citing-side attribution rather
+/// than only resolving targets — today `grund refs` alone (§FS-refs.3.2).
+///
+/// Separate from [`load_workspace_context`] on purpose, not folded into it:
+/// that wrapper is shared by `list`, `fmt`, `complete_ids`, `sizes` and `batch`,
+/// none of which emits `enclosing_declaration` or `enclosing_section`, and
+/// turning the post-pass on there would make five queries pay for a fact they
+/// never print (§AR-scanner.2.4.2, §GOAL-fast-feedback).
+pub(crate) fn load_classifying_workspace_context(
+    path: &Path,
+    path_provided: bool,
+) -> Result<WorkspaceContext> {
+    record_test_workspace_load();
+    load_workspace_context_with_overlays(path, path_provided, &TextOverlays::new(), true)
+}
+
 /// Test-only observation seam for §AR-resolver.3: an opted-in black-box test
 /// can count public CLI loader entries without changing the loader's result.
 #[cfg(feature = "test-workspace-load-count")]
@@ -176,10 +192,14 @@ pub(crate) fn load_workspace_context_with_overlays(
 /// caller that had to resolve the config to make a routing decision must not pay
 /// for it twice (§GOAL-fast-feedback).
 ///
-/// Who asks for citing-side classification: the LSP snapshot passes `true` so
-/// `grund check`'s citation-direction errors (`missing-citation` /
+/// Who asks for citing-side classification (§AR-scanner.2.4.2): the LSP snapshot
+/// passes `true` so `grund check`'s citation-direction errors (`missing-citation` /
 /// `forbidden-citation`, §FS-lsp.1.1) surface in the editor; `grund check` itself
-/// uses `load_workspace_projects` directly and keeps the default (on).
+/// uses `load_workspace_projects` directly and keeps the default (on); and
+/// `cover` and `refs` pass `true` because their JSON records publish the
+/// enclosing declaration and section of the citing site (§FS-cover.3.2,
+/// §FS-refs.3.2). `list`, `show`, `fmt`, ID completion, `sizes` and `batch` read
+/// none of the three fields the pass fills and pass `false`.
 ///
 /// Why `workspace_declared` is the canonical "is this a workspace run?": a path that
 /// resolves member-local has already been rewritten by `config_for_member_scope` to
@@ -193,9 +213,8 @@ pub(crate) fn load_resolved_workspace_context(
     overlays: &TextOverlays,
     classify_citation_sources: bool,
 ) -> Result<WorkspaceContext> {
-    // §AR-scanner.2.4.2 / §AR-benchmarks: the read-only commands (`list`, `show`,
-    // `refs`, `fmt`) never read citing-side classification, so they pass `false` to
-    // skip the scan post-pass. Workspace members inherit this below.
+    // §AR-scanner.2.4.2 / §AR-benchmarks: who passes what is on the doc comment
+    // above; workspace members inherit the answer below.
     config.classify_citation_sources = classify_citation_sources;
     // §FS-workspace.5 / §AR-workspace.6: workspace mode applies whenever the
     // discovered config carries `[workspace]` after member-scope rewriting, so this
@@ -288,8 +307,14 @@ fn single_project_context(
 /// widening it back to every project would both answer a question the caller did
 /// not ask and lose the files the narrowing was for.
 ///
-/// `list`, `refs`, `show`, completions, and `fmt` keep [`load_workspace_context`]:
-/// their `<path>` selects a project, it does not bound a walk (§FS-workspace.8.8).
+/// `list`, `show`, completions, and `fmt` keep [`load_workspace_context`], and
+/// `refs` [`load_classifying_workspace_context`]: their `<path>` selects a
+/// project, it does not bound a walk (§FS-workspace.8.8).
+///
+/// Both branches ask for the citing-side classification post-pass, because
+/// `cover --format json` publishes the enclosing declaration and section of every
+/// site it lists (§FS-cover.3.2, §AR-scanner.2.4.2). This function has one
+/// caller, so that is a statement about `cover` alone.
 pub(crate) fn load_narrowable_workspace_context(
     path: &Path,
     path_provided: bool,
@@ -304,12 +329,12 @@ pub(crate) fn load_narrowable_workspace_context(
             path,
             path_provided,
             &TextOverlays::new(),
-            false,
+            true,
         );
     }
-    // §AR-scanner.2.4.2: the caller is a read-only query — skip the classification
-    // post-pass, exactly as `load_workspace_context` does (§AR-benchmarks).
-    config.classify_citation_sources = false;
+    // §AR-scanner.2.4.2: the narrowed scan performs the pass too, so one command
+    // does not answer two ways depending on where it was invoked (§FS-cover.3.2).
+    config.classify_citation_sources = true;
     single_project_context(config, path, path_provided, &TextOverlays::new())
 }
 

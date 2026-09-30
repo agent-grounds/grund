@@ -44,6 +44,16 @@ pub struct CoverCitation {
     pub section: Option<String>,
     pub marker: bool,
     pub text: String,
+    /// The nearest declaration whose body contains this **citing** site, or
+    /// `None` where the site sits in no declaration body (§FS-cover.3.2). Bare —
+    /// rendered under the *citing* project's `[id]` config and never
+    /// alias-qualified, because the declaration it names sits in the citing file
+    /// and `project` already says which project that is (§FS-workspace.8.6).
+    pub enclosing_declaration: Option<String>,
+    /// The nearest accepted section path containing this **citing** site,
+    /// numbered and named alike, or `None` where no accepted section contains it
+    /// (§FS-cover.3.2, §AR-scanner.2.4.4).
+    pub enclosing_section: Option<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -127,6 +137,11 @@ struct CoverCitationRow<'a> {
     /// when the alias names no loaded project — `cover` reports the graph and
     /// leaves the unknown-alias verdict to `check` (§FS-workspace.8.1).
     target_config: &'a Config,
+    /// The config `enclosing_declaration` renders under: the **citing**
+    /// project's, because the declaration it names sits in the citing file
+    /// (§FS-workspace.8.6). The two differ only where a qualified citation
+    /// crosses into a project whose `[id]` grammar spells IDs another way.
+    citing_config: &'a Config,
 }
 
 impl CoverCitationRow<'_> {
@@ -139,6 +154,15 @@ impl CoverCitationRow<'_> {
             Some(alias) => format!("{alias}/{id}"),
             None => id,
         }
+    }
+
+    /// The citing site's enclosing declaration, bare and rendered under the
+    /// citing project's grammar (§FS-cover.3.2, §FS-workspace.8.6).
+    fn rendered_enclosing_declaration(&self) -> Option<String> {
+        self.citation
+            .enclosing_declaration
+            .as_ref()
+            .map(|id| render_id(&self.citing_config.grammar, id))
     }
 }
 
@@ -170,6 +194,7 @@ fn cover_rows(context: &WorkspaceContext) -> Vec<CoverRow<'_>> {
                 .push(CoverCitationRow {
                     citation,
                     target_config,
+                    citing_config: &project.config,
                 });
         }
     }
@@ -204,8 +229,9 @@ fn cover_rows(context: &WorkspaceContext) -> Vec<CoverRow<'_>> {
 /// (§FS-cover.1), so a scope inside the workspace root stays one narrowed scan
 /// the way `grund check <dir>` does.
 ///
-/// §AR-scanner.2.4: `cover` groups citations by file and never reads
-/// citing-side classification — skip the scan post-pass (§AR-benchmarks).
+/// §AR-scanner.2.4.2: `cover` publishes each site's enclosing declaration and
+/// section (§FS-cover.3.2), so it performs the citing-side post-pass — one of the
+/// four runs that do, and the reason the narrowable loader asks for it.
 fn cover_context(opts: &CoverOpts) -> Result<WorkspaceContext> {
     load_narrowable_workspace_context(&opts.path, opts.path_provided)
 }
@@ -261,6 +287,10 @@ pub fn cover(opts: CoverOpts) -> Result<CoverOutput> {
                     section: citation_row.citation.section.clone(),
                     marker: citation_row.citation.has_marker,
                     text: citation_row.citation.text.clone(),
+                    // §FS-cover.3.2: the citing-side counterpart of `id` and
+                    // `section`, after `text`.
+                    enclosing_declaration: citation_row.rendered_enclosing_declaration(),
+                    enclosing_section: citation_row.citation.enclosing_section.clone(),
                 })
                 .collect(),
             path: row.path,

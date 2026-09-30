@@ -77,9 +77,9 @@ pub use id_candidates::names_member_id_candidate;
 pub(crate) use body::{PointBodyCache, extract_declaration_body};
 pub(crate) use citation_target::{WorkspaceCheckTarget, citation_resolves, target_for_citation};
 pub(crate) use context::{
-    WorkspaceContext, WorkspaceProject, load_narrowable_workspace_context,
-    load_resolved_workspace_context, load_workspace_context, load_workspace_context_with_overlays,
-    load_workspace_projects,
+    WorkspaceContext, WorkspaceProject, load_classifying_workspace_context,
+    load_narrowable_workspace_context, load_resolved_workspace_context, load_workspace_context,
+    load_workspace_context_with_overlays, load_workspace_projects,
 };
 pub(crate) use e2e_body::show_e2e_case;
 pub(crate) use id_candidates::{join_alternatives, with_member_id_candidates};

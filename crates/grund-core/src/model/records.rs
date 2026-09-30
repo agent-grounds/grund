@@ -178,11 +178,21 @@ pub struct Citation {
     /// The nearest preceding declaration whose body range contains this site
     /// (§AR-scanner.2.4.3), or `None` when the site sits in no declaration body.
     /// Lets the obligation pass ask "does this declaration cite the target?" as
-    /// a lookup rather than a re-scan.
+    /// a lookup rather than a re-scan, and is the `from` half of the `cites` edge
+    /// `cover` and `refs` publish (§FS-cover.3.2).
+    ///
+    /// Only a run that performs the citing-side post-pass fills this and
+    /// [`Citation::enclosing_section`]: `check`, the LSP snapshot, `cover` and
+    /// `refs` do; `list`, `show`, `fmt`, completions, `sizes` and `batch` skip it
+    /// and leave both `None` (§AR-scanner.2.4.2).
     pub enclosing_declaration: Option<Id>,
-    /// The nearest accepted named chapter containing this physical site,
-    /// recorded by the scanner without knowing any rule vocabulary
-    /// (§AR-scanner.2.4.4, §FS-rules.5.1).
+    /// The nearest **accepted** section path containing this physical site,
+    /// numbered and named alike — `"1"` under `## 1. Inputs`, `"terms"` under
+    /// `## terms: Terms` — recorded by the scanner without knowing any rule
+    /// vocabulary (§AR-scanner.2.4.4, §FS-rules.5.1). `None` where no accepted
+    /// section contains the site, which includes a declaration's lead above its
+    /// first section; a duplicate or rejected path owns no site
+    /// (§FS-cover.3.2).
     pub enclosing_section: Option<String>,
 }
 

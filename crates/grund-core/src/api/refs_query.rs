@@ -17,7 +17,7 @@ use super::report::context_run_warnings;
 use crate::config::display_path;
 use crate::grammar::{path_at_or_under, render_id};
 use crate::model::{Citation, sort_path_key};
-use crate::resolver::{WorkspaceProject, load_workspace_context};
+use crate::resolver::{WorkspaceProject, load_classifying_workspace_context};
 use crate::scanner::{api_scan_error, resolve_id_arg};
 use crate::workspace::split_qualified_id_arg;
 
@@ -33,7 +33,10 @@ fn section_in_scope(cited: Option<&str>, requested: &str, descendants: bool) -> 
 }
 
 pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
-    let context = load_workspace_context(&opts.path, opts.path_provided)?;
+    // §AR-scanner.2.4.2: the classifying loader, not the plain one — `refs`
+    // publishes each hit's enclosing declaration and section (§FS-refs.3.2), and
+    // the plain wrapper is shared by the five queries that do not.
+    let context = load_classifying_workspace_context(&opts.path, opts.path_provided)?;
     let current_config = context
         .current_project()
         .map(|project| &project.config)
@@ -170,6 +173,15 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
             section: hit.citation.section.clone(),
             marker: hit.citation.has_marker,
             text: hit.citation.text.clone(),
+            // §FS-refs.3.2: the citing site's own unit, after `text` and before
+            // `kind_title`. §FS-workspace.8.2.4: bare, under the **citing**
+            // project's grammar — `id` above renders under the target's.
+            enclosing_declaration: hit
+                .citation
+                .enclosing_declaration
+                .as_ref()
+                .map(|id| render_id(&hit.project.config.grammar, id)),
+            enclosing_section: hit.citation.enclosing_section.clone(),
         })
         .collect::<Vec<_>>();
     let note = if public_hits.is_empty() && !target_project.findings.declarations.contains_key(&id)
