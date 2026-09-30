@@ -68,7 +68,7 @@ The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard
 
 - `--format text|json` — accepted by the subcommands with a machine-readable result or finding surface ([§FS-errors.5](FS-errors.md#5-json-format) lists them, [§FS-integrations.5](FS-integrations.md#5-json-format)). `text` is the default; `json` opts into the stable machine shapes, on the streams of [§FS-cli.3.1](FS-cli.md#31-the---format-json-streams). It is not a global flag: the operational commands [§FS-errors.5](FS-errors.md#5-json-format) lists, whose output is human text or generated files, reject `--format`.
 - A path argument, when a subcommand takes one, defaults to `.` and is resolved the same way everywhere (config discovery walks up from it — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). Every path-taking subcommand accepts at most one ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)).
-- `--only <code>` and `--ignore <code>` are `check`-only finding-query flags ([§FS-check.1](FS-check.md#1-inputs)); other subcommands reject them. The `check` help page documents them ([§FS-cli.3.3](FS-cli.md#33-the-check-selector-help)).
+- `--only <code>`, `--ignore <code>`, and the boolean `--only-rule` are `check`-only finding-query flags ([§FS-check.1](FS-check.md#1-inputs)); other subcommands reject them. The `check` help page documents them ([§FS-cli.3.3](FS-cli.md#33-the-check-selector-help)).
 
 ### 3.1 The `--format json` streams
 
@@ -81,6 +81,8 @@ A second positional — `grund check a b`, `grund <ID> a b`, `grund refs ID a b`
 ### 3.3 The `check` selector help
 
 The `check` help page documents both `--flag value` and `--flag=value`, repetition and composition, the fact that operational failures remain visible with exit `2`, selected-report exit semantics, one `--ignore agents-init` example, and the complete supported-code catalog in sorted order. The catalog is the discovery path for callers that know a message but not its code.
+
+It documents the third selector on the same footing: that `--only-rule` narrows the report to what the `--rule` sentence authored rather than by code, that the axes intersect, that it refuses with `error: --only-rule requires --rule` when no trial sentence was given, and that a `should`-level sentence also needs `--suggestions` to be seen ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A selector reachable only from the specification is not discoverable at a terminal, which is where a sentence gets tried.
 
 ## 4. Errors with no source location
 

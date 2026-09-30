@@ -374,9 +374,10 @@ fn command_args(manifest_dir: &Path, case: &Path, name: &str) -> Vec<String> {
         create_case_symlinks(case, &repo_copy, name);
     }
 
-    command
-        .split_whitespace()
+    split_command(&command)
+        .into_iter()
         .map(|arg| {
+            let arg = arg.as_str();
             if let Some(suffix) = arg.strip_prefix("{repo}/") {
                 PathBuf::from(&repo_arg)
                     .join(suffix)
@@ -396,6 +397,65 @@ fn command_args(manifest_dir: &Path, case: &Path, name: &str) -> Vec<String> {
             }
         })
         .collect()
+}
+
+/// Whitespace-separated arguments, except that a double-quoted run is one
+/// argument with its quotes removed. `check --rule "Each FS must have exactly
+/// one security chapter." {repo}` is the case this exists for: a `--rule`
+/// sentence (§FS-rules.8) is several words by grammar, so a manifest that
+/// splits on whitespace alone cannot express one at all. Quoting is honored
+/// only inside an argument's own bytes — no escapes and no single quotes, since
+/// nothing in the corpus needs them and a fuller shell grammar here would be a
+/// second thing to get right.
+fn split_command(command: &str) -> Vec<String> {
+    let mut args = Vec::new();
+    let mut current = String::new();
+    let mut open = false;
+    let mut started = false;
+    for character in command.chars() {
+        match character {
+            '"' => {
+                open = !open;
+                started = true;
+            }
+            c if c.is_whitespace() && !open => {
+                if started {
+                    args.push(std::mem::take(&mut current));
+                    started = false;
+                }
+            }
+            c => {
+                current.push(c);
+                started = true;
+            }
+        }
+    }
+    assert!(!open, "unbalanced quote in command: {command:?}");
+    if started {
+        args.push(current);
+    }
+    args
+}
+
+#[cfg(test)]
+mod split_command_tests {
+    use super::split_command;
+
+    #[test]
+    fn a_quoted_run_is_one_argument_and_plain_words_are_unchanged() {
+        assert_eq!(split_command("check {repo}"), ["check", "{repo}"]);
+        assert_eq!(
+            split_command("check --rule \"Each FS must have one chapter.\" {repo}\n"),
+            [
+                "check",
+                "--rule",
+                "Each FS must have one chapter.",
+                "{repo}"
+            ]
+        );
+        assert_eq!(split_command("id skill \"Review\" {repo}").len(), 4);
+        assert!(split_command("  \n ").is_empty());
+    }
 }
 
 fn copy_dir(from: &Path, to: &Path) {

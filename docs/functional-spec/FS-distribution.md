@@ -80,6 +80,11 @@ Finding {
                                // finding (a duplicate declaration) or an ambiguous-ID / ambiguous-section
                                // query failure that names sites; null for the number-only shorthand's
                                // `ambiguous` refusal, which names candidates instead (FS-errors.5.2.1)
+  authority: [string]?         // last key; the bytewise-sorted rule origins that authored this finding
+                               // (FS-rules.7.6) — a declared rule's ID, or "--rule" for a `check --rule`
+                               // trial sentence, or both where they reached the same meaning (FS-rules.6);
+                               // null for a finding no rule authored, and always null on a failed ID query
+                               // and a run-level warning (FS-errors.5.2, FS-errors.5.2.3)
 }
 ```
 

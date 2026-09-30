@@ -350,15 +350,25 @@ authored spelling beyond what appears in a finding.
 Rules-only duplicates produce one finding per failing unit or site. The tail
 contains every contributing rule ID in bytewise order, for example
 `(RULE-a, RULE-b)`; an ad-hoc `--rule` origin participates in the same way.
+The collapsed group's contributing origins are also the finding's `authority`
+([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)), in that
+same bytewise order, so the tail and the field are one fact rendered twice and
+cannot disagree. A jointly authored finding therefore names `--rule` in its
+`authority` beside every declared rule that reached the same meaning, and its
+tail is unchanged by that: there is no marker, no reordering, and no second
+line.
 
 Config-to-rule deduplication is intentionally narrower. It applies only where
 an existing `[citations]` entry and a rule express the same local bare citing
 kind, declaration-wide unit, modality/level, `cite` relation, normalized target
 entry, and cardinality. If config participates, its existing
 `missing-citation`, `suggested-citation`, `forbidden-citation`, or
-`discouraged-citation` finding wins byte-for-byte: no rule ID is appended
-and JSON gains no source-list field. `[citations]` remains authored, rendered,
-and interpreted as before.
+`discouraged-citation` finding wins byte-for-byte: no rule ID is appended, its
+`authority` stays empty, and JSON gains no `sites` list. `[citations]` remains
+authored, rendered, and interpreted as before. A rule that loses to config this
+way authored nothing, so a trial sentence duplicating a `[citations]` direction
+is invisible to a report scoped by `authority`
+([§FS-rules.8](FS-rules.md#8-command-surfaces)).
 
 ## 7. Findings and channels
 
@@ -435,10 +445,24 @@ change.
 ### 7.6 Selection, JSON, ordering, and exits
 
 `--only` and `--ignore` accept `invalid-rule`, `chapter-cardinality`,
-`citation-cardinality`, and `uncited-unit` like every other public code.
-Rule-derived JSON adds no source-list field. Every rule-derived message names
-its rule authority; a chapter subject is rendered as its canonical qualified
-coordinate.
+`citation-cardinality`, and `uncited-unit` like every other public code; their
+value grammar takes codes only and never a rule identity
+([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
+Rule-derived JSON adds no `sites` list — a rule finding names one site, so the
+multi-site field stays `null` on every one of them. It does carry the rule
+authority as a field: every rule-derived message names its rule authority, and
+the same origins are the record's `authority`, a bytewise-sorted list of rule
+origins ([§FS-errors.5.1](FS-errors.md#51-on-stdout--the-commands-output),
+[§FS-output-shapes.1](FS-output-shapes.md#1-finding-object)). A chapter subject
+is rendered as its canonical qualified coordinate.
+
+A rule-derived *diagnostic* carries the authority of the one rule that produced
+it rather than a group's: an `invalid-rule`
+([§FS-rules.7.1](FS-rules.md#71-invalid-rule)) names that rule, so a trial
+sentence whose literal subject does not resolve is attributed to `--rule` and is
+retained by a report scoped to it. A finding no rule authored — a citation
+direction, a dangling or duplicate declaration, a run-level warning — carries an
+empty `authority`.
 
 The existing bytewise `(path, line, message)` ordering is the sole ordering
 authority. A `cite each` message places its target ID immediately after the
@@ -452,6 +476,47 @@ exit, invocation/config failures exit 2, and incomplete scans stay 2.
 `grund check --rule "<sentence>" [<path>]` adds exactly one ad-hoc rule to all
 configured rules. It never disables configured rules and deduplicates against
 an identical one. Its validation and exit behavior are [§FS-rules.4](FS-rules.md#4-validation-lifecycle)'s.
+
+`grund check --only-rule` narrows that run's report to what the trial sentence
+authored: a finding is retained when its `authority`
+([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)) contains the
+`--rule` origin. It is a boolean with no `=value` form, repeats harmlessly, and
+is `check`-only ([§FS-cli.3](FS-cli.md#3-cross-subcommand-flags)). It requires
+`--rule`: given alone it is an invocation error — `error: --only-rule requires
+--rule`, empty stdout, exit `2`, decided where the other selector values are
+decided, before config discovery or scanning
+([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)) —
+because a run that scoped to no sentence would print `success` and exit `0`,
+which reads as a verdict rather than as the mistake it is. It composes with
+`--only` and `--ignore` by intersection, and `--ignore` still wins
+([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
+Bare `--rule` is unchanged: a run that passes no selector prints the same bytes
+and exits the same way it does today.
+
+Three consequences of scoping follow from what `authority` is rather than from
+the flag, and each is behavior a caller should be able to rely on.
+
+A finding the trial sentence and a declared rule authored jointly — one finding,
+one tail naming both origins
+([§FS-rules.6](FS-rules.md#6-semantic-deduplication)) — **is** retained, with its
+authority and its message bytes exactly as an unscoped run renders them. The
+sentence did author it, and scoping is not the place to relitigate the merge.
+
+A trial sentence duplicating a `[citations]` direction yields an **empty** scoped
+report. The config finding wins byte-for-byte and the rule authored nothing
+([§FS-rules.6](FS-rules.md#6-semantic-deduplication)), so there is nothing for
+`authority` to name, and the run prints `success` and exits `0`
+([§FS-check.2.1.3](FS-check.md#213-the-success-line)) while the tree's own
+findings still stand. This is known behavior, recorded here so it cannot change
+by accident; making such a sentence visible is a separate question this point
+does not answer.
+
+A `should`-level trial sentence produces findings only in the suggestions
+channel, which the default run withholds
+([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)), so `--only-rule`
+alone prints `success` and `--suggestions` is needed to see it. Nothing is
+special here — `--only` behaves the same — but it is the one combination whose
+empty report reads like a sentence that found nothing.
 
 `grund list --selector "<selector>" [<path>]` filters the shared catalog to
 matched declaration and chapter units and composes by intersection with the
