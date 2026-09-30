@@ -59,6 +59,10 @@ include!("case_report.rs");
 // The golden-form half, in a file of its own (§AR-core-module-layout.3).
 include!("case_golden_form.rs");
 
+// The refresh-mode contract, pinned in a file of its own
+// (§AR-core-module-layout.3).
+include!("case_refresh_tests.rs");
+
 pub fn discover_e2e_cases(manifest_dir: &Path) -> Vec<PathBuf> {
     let cases_dir = manifest_dir.join("tests/e2e/cases");
     let cases = discover_case_dirs(&cases_dir, |_| true);

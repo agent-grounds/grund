@@ -341,8 +341,9 @@ outlive what it cites.
 
 These are the contracts a future change must keep green: a change that cannot
 keep one of them green is breaking the layering, not the test. How a golden is
-spelled on disk is [§AR-workspace.9.1](AR-workspace.md#91-a-golden-has-one-on-disk-spelling), which platforms run the symlink cases [§AR-workspace.9.2](AR-workspace.md#92-which-platforms-actually-run-the-symlink-cases), and how a
-pass decides [§AR-workspace.9.3](AR-workspace.md#93-a-mismatch-is-data-not-a-panic).
+spelled on disk is [§AR-workspace.9.1](AR-workspace.md#91-a-golden-has-one-on-disk-spelling), which platforms run the symlink cases [§AR-workspace.9.2](AR-workspace.md#92-which-platforms-actually-run-the-symlink-cases), how a
+pass decides [§AR-workspace.9.3](AR-workspace.md#93-a-mismatch-is-data-not-a-panic), and what a refresh pass says about
+itself [§AR-workspace.9.5](AR-workspace.md#95-a-refresh-pass-says-what-it-covered).
 
 ### 9.1 A golden has one on-disk spelling
 
@@ -357,11 +358,16 @@ has exactly one canonical form:
   output with every `\r\n` folded to `\n`; empty output is a single `\n`, never
   zero bytes;
 - an **exit golden** (`expected.exit`) holds the decimal exit code followed by
-  exactly one `\n`.
+  exactly one `\n`;
+- a **tree golden** (`expected.repo`) holds the bytes the run produced, exactly
+  as it produced them — no fold, no newline substitution, no encoding
+  assumption ([§AR-workspace.9.1.5](AR-workspace.md#915-a-tree-golden-holds-the-produced-bytes-unfolded)).
 
 The invariant the canonical form exists for is [§AR-workspace.9.1.4](AR-workspace.md#914-a-refresh-over-an-unchanged-tree-writes-the-bytes-already-there): a refresh over an
 unchanged tree writes the bytes that are already there. Why the newline and not
-zero bytes, what that costs, and how the form is checked are [§AR-workspace.9.1.1](AR-workspace.md#911-why-the-newline-and-not-zero-bytes) to [§AR-workspace.9.1.3](AR-workspace.md#913-checked-not-remembered).
+zero bytes, what that costs, and how the form is checked are [§AR-workspace.9.1.1](AR-workspace.md#911-why-the-newline-and-not-zero-bytes) to [§AR-workspace.9.1.3](AR-workspace.md#913-checked-not-remembered); why the
+tree golden is the one surface that folds nothing is
+[§AR-workspace.9.1.5](AR-workspace.md#915-a-tree-golden-holds-the-produced-bytes-unfolded).
 
 #### 9.1.1 Why the newline and not zero bytes
 
@@ -400,7 +406,32 @@ must produce the same bytes as the first.
 `git status --porcelain` empty, and refreshing one case leaves every other
 case's goldens byte-identical, so the diff of a golden update is the change and
 nothing else. It holds for `examples/` exactly as for `tests/e2e/cases/` — one
-harness writes both.
+harness writes both — and it holds for every golden surface, the 74
+`expected.repo` trees across those two roots included, not only the output and
+exit goldens. That is what makes each surface compare-then-write: a golden is
+read before it is written and rewritten only where the bytes differ, so a
+refresh that changed nothing leaves even the mtimes alone.
+
+#### 9.1.5 A tree golden holds the produced bytes, unfolded
+
+A tree golden (`expected.repo`) is the one surface whose canonical form is not a
+spelling the writer picks: it is whatever the run produced, written
+byte-for-byte. Its reader is the reason. An output golden is read through a fold
+— `\r\n` to `\n`, a lone `\n` back as empty — so the writer must emit that same
+fold or the next compare pass would disagree with itself. A tree file is read as
+raw bytes and need not be UTF-8 at all, so a tree write that canonicalised
+anything would make the very next compare pass report `bytes differ` on a file
+it had just written — [§AR-workspace.9.1.4](AR-workspace.md#914-a-refresh-over-an-unchanged-tree-writes-the-bytes-already-there) broken in the opposite
+direction. The write therefore carries the produced file's bytes and the
+produced file's mode, and the golden's file set is made equal to the produced
+tree's: a golden file the run no longer produces is removed, because the file
+list is compared before the bytes are and a write that left it behind would fail
+the next compare pass. A directory left empty by such a removal goes with it,
+upward until a non-empty directory stops the walk — git tracks no empty
+directory, so one left behind is untracked cruft nothing will clean. The
+`expected.repo` root itself is kept even when it ends up empty: removing it
+would silently opt the case out of the final-tree surface, and opting in or out
+is the case author's deliberate act.
 
 ### 9.2 Which platforms actually run the symlink cases
 
@@ -485,3 +516,35 @@ selection
 | `[[workspace]]` array-table form rejected        | `tests/e2e/cases/workspace-section-as-array-table` |
 | Unknown key under `[workspace]` rejected         | `tests/e2e/cases/workspace-unknown-key` |
 | Member missing on disk fails workspace expansion | `tests/e2e/cases/workspace-member-missing-on-disk` |
+| `UPDATE_EXPECTED=1` refreshes the final tree: a stale golden file is written forward, one the run no longer produces is removed with the directory it emptied, and the next compare pass passes | `refresh_writes_a_stale_tree_golden_and_removes_what_the_run_no_longer_produces`, `refresh_over_an_unchanged_tree_writes_no_bytes` (`crates/grund-cli/tests/support/case_refresh_tests.rs`) |
+| A refresh pass names the surfaces it covered and every golden it moved, where a passing test's output can still be read | `refresh_says_what_it_covered_where_a_passing_test_can_be_read` (`crates/grund-cli/tests/support/case_refresh_tests.rs`) |
+
+### 9.5 A refresh pass says what it covered
+
+A refresh pass is the counterpart of [§AR-workspace.9.3](AR-workspace.md#93-a-mismatch-is-data-not-a-panic) and owes the
+same accounting. Where a compare pass names every case and surface that
+mismatched, a refresh pass names every surface it covered and everything it
+moved — because a refresh returns the same verdict for a case whose goldens it
+rewrote and for one it declined to touch, so its `ok` is the one thing that
+carries no information at all. A pass that refreshed goldens therefore writes,
+beside its verdict:
+
+- one line naming the surfaces it covered and the count of cases it covered them
+  over: the exit, stdout and stderr goldens of every case it ran, and the final
+  tree of each case that carries one;
+- then `N file(s) written, M removed`, and under that one line per golden file it
+  wrote or removed, naming the case and the file, in discovery order;
+- and, having changed nothing, `0 file(s) written, 0 removed` in as many words
+  rather than silence.
+
+It writes this where a passing test's output can still be read. libtest's
+capture is installed on the `print!` and `eprintln!` macro path and discards a
+passing test's output unless `--nocapture` is passed, so the accounting goes
+straight to the `std::io::stderr()` handle, which the capture does not hold. An
+accounting the harness swallows is this point's own defect in a new spelling:
+the pass's `ok` must never be the only thing a refresh said.
+
+Only a pass that actually ran cases in refresh mode prints one. The determinism
+passes never consult `UPDATE_EXPECTED`, and the synthetic verdict corpus is a
+comparison run whatever its caller selected
+([§FS-examples.5.1](../functional-spec/FS-examples.md#51-synthetic-verdict-probes-always-compare)), so neither accounts for a refresh it did not do.
