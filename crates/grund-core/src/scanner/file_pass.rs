@@ -125,9 +125,9 @@ pub(super) fn scan_file_text(
     let has_binding_candidate = text.contains('`') && text.contains(&config.marker);
     let value_line_contexts = ((scan_values || has_binding_candidate) && !is_md)
         .then(|| recognized_source_value_contexts(&text, is_py, config));
-    // §AR-scanner.2.4.2: citing-side classification is consumed by citation-direction
-    // checks and chapter rules, so it is computed whenever the caller asks for it.
-    // Read-only commands still pass `false`; check and LSP pass `true`.
+    // §AR-scanner.2.4.2: citing-side classification feeds citation-direction and chapter
+    // rules, so the caller asks for it: `check`, the LSP, `cover` and `refs` pass `true`;
+    // `list`, `show`, `fmt`, ID completion, `sizes` and `batch` pass `false`.
     let classify = config.classify_citation_sources;
     // §AR-scanner.2.4.1: every Markdown heading (line, level) outside a fence — a
     // declaration body runs until the next heading at the same or higher level.

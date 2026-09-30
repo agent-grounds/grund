@@ -244,8 +244,9 @@ Every citation site of a run that performs the citing-side post-pass
 ([§AR-scanner.2.4.2](AR-scanner.md#242-citation-source-kind)) also records its immediate enclosing accepted chapter, if
 one exists. The scanner answers this while it holds the heading stack: the
 nearest preceding accepted section whose subtree contains the site wins, and a
-same-or-shallower heading closes it. A duplicate or rejected section path is
-not an accepted chapter and cannot own a site. This is structural attribution,
+same-or-shallower heading closes it. A duplicate occurrence of a section
+path, and a rejected path, cannot own a site; the primary occurrence of a
+duplicated path still can. This is structural attribution,
 not rule evaluation ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)).
 
 The scanner neither imports the rules component nor constructs `RuleFacts`.

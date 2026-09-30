@@ -413,7 +413,7 @@ Before reviewing a diff, group the citation graph by file so you can join change
 
 ```bash
 $ grund cover --format json | jq -c 'select(.path == "crates/grund-core/src/checker/references.rs") | .citations |= map(select(.id == "FS-check" and .section == "3.2"))'
-{"path":"crates/grund-core/src/checker/references.rs","citations":[{"path":"crates/grund-core/src/checker/references.rs","line":2,"column":23,"id":"FS-check","section":"3.2","marker":true,"text":"§FS-check.3.2","enclosing_declaration":null,"enclosing_section":null},{"path":"crates/grund-core/src/checker/references.rs","line":378,"column":12,"id":"FS-check","section":"3.2","marker":true,"text":"§FS-check.3.2","enclosing_declaration":null,"enclosing_section":null}]}
+{"path":"crates/grund-core/src/checker/references.rs","citations":[{"path":"crates/grund-core/src/checker/references.rs","line":2,"column":23,"id":"FS-check","section":"3.2","marker":true,"text":"§FS-check.3.2","enclosing_declaration":null,"enclosing_section":null},{"path":"crates/grund-core/src/checker/references.rs","line":255,"column":12,"id":"FS-check","section":"3.2","marker":true,"text":"§FS-check.3.2","enclosing_declaration":null,"enclosing_section":null}]}
 ```
 
 `id` and `section` name what each site points *at*; `enclosing_declaration` and `enclosing_section` name the unit it sits *in*, so the record carries both ends of the `cites` edge and a report over those relations needs no second read of the tree. Both are `null` above because this file declares no ID of its own — in a spec file they read `"enclosing_declaration":"FS-cover","enclosing_section":"terms"` ([§FS-cover.3.2](docs/functional-spec/FS-cover.md#32---format-json)).
