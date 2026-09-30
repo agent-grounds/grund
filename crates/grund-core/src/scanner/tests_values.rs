@@ -160,3 +160,46 @@ fn malformed_delimiters_are_errors_but_unbackticked_adjacency_is_prose() {
         "unbackticked adjacency remains ordinary prose"
     );
 }
+
+fn mismatch_messages(root: &PathBuf) -> Vec<String> {
+    check_run(root, false)
+        .report
+        .errors
+        .into_iter()
+        .filter(|error| error.code == "value-mismatch")
+        .map(|error| error.message)
+        .collect()
+}
+
+/// Two components of different kinds can print the same bytes, so the finding
+/// names each side's kind after the canonical text (§FS-values.5.2.1).
+#[test]
+fn a_mixed_kind_mismatch_names_each_sides_kind() {
+    assert_eq!(
+        mismatch_messages(&value_repo(
+            "value_mismatch_mixed_kind",
+            "`1,200` (§CONST-field-price.1)\n",
+        )),
+        vec![
+            "value mismatch for CONST-field-price.1: bound `1,200`, declared `1200` \
+             at values/field-price.md:2 \u{2014} bound is a string, declared is a number; \
+             a number and a string are never equal"
+        ]
+    );
+}
+
+/// A same-kind mismatch keeps the canonical text to the byte, so widening the
+/// mixed-kind clause fails here rather than in every golden (§FS-values.5.2.1).
+#[test]
+fn a_same_kind_mismatch_keeps_the_canonical_text() {
+    assert_eq!(
+        mismatch_messages(&value_repo(
+            "value_mismatch_same_kind",
+            "`1250` (§CONST-field-price.1)\n",
+        )),
+        vec![
+            "value mismatch for CONST-field-price.1: bound `1250`, declared `1200` \
+             at values/field-price.md:2"
+        ]
+    );
+}
