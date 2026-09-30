@@ -124,6 +124,18 @@ They are errors regardless of `strict` or `--suggestions` and are never suggesti
 docs/offer.md:7: error: value mismatch for CONST-field-price.1: bound `1250`, declared `1200` at values/field-price.md:2
 ```
 
+#### 5.2.1 A mixed-kind mismatch names each side's kind
+
+When the two components are of different kinds under [§FS-values.4](FS-values.md#4-exact-equality) — one completely matches JSON number grammar and the other does not — the identical-looking sides are the whole of the inequality, so the canonical text is followed by ` — bound is a <kind>, declared is a <kind>; a number and a string are never equal`, where each `<kind>` is `number` or `string` and the order follows the sides the line already named:
+
+```text
+docs/record.md:5: error: value mismatch for QTY-mach-001-year.1: bound `2022`, declared `2022` at values/machines.json:2 — bound is a number, declared is a string; a number and a string are never equal
+```
+
+Neither component gains quotes its own source does not carry: the backticks keep showing the bytes as written, which is what a reader greps the two named files for. The clause names no side to change, because both are editable and which one is wrong is the author's intent rather than a fact of the tree. There is also no single edit to name: a JSON declaration's kind comes from its JSON type, so quotes are the lever there, while a Markdown, embedded, or chapter-declared component takes its kind from JSON number grammar over its own text, where `## 1. 1,200` is a string with no quotes to remove.
+
+A mismatch whose two components are the same kind prints the canonical text above unchanged, to the byte; naming `number` twice tells a reader nothing the two values do not already show. The clause is appended after a complete, unchanged message, so it ships in one release under [§FS-errors.3](FS-errors.md#3-message-text) and no [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) window is owed: the affected consumer is one matching a mixed-kind `value-mismatch` line whole, and its migration is the stable `code`.
+
 ### 5.3 Incomplete input and deterministic output
 
 Invalid config stops before scanning. A missing, unreadable, malformed-UTF-8, or syntactically incomplete home JSON source preserves the existing incomplete-scan exit `2`; readable semantic JSON errors use exit `1`. For readable input, declaration and citation-resolution findings precede comparison as [§FS-values.5.1](FS-values.md#51-resolve-before-comparison) specifies.
