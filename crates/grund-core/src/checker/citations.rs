@@ -190,6 +190,7 @@ fn empty_citation_obligation_warning(
         column: None,
         message,
         sites: Vec::new(),
+        authority: Vec::new(),
     })
 }
 
@@ -357,6 +358,7 @@ fn obligation_diagnostic(
             render_target_phrase(entry)
         ),
         sites: Vec::new(),
+        authority: Vec::new(),
     }
 }
 
@@ -418,6 +420,7 @@ fn prohibition_diagnostic(
             render_citation_target(&target)
         ),
         sites: Vec::new(),
+        authority: Vec::new(),
     }
 }
 

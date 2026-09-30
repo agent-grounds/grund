@@ -321,6 +321,7 @@ fn append_scan_errors(
             column: None,
             message,
             sites: Vec::new(),
+            authority: Vec::new(),
         });
     }
     had_scan_errors

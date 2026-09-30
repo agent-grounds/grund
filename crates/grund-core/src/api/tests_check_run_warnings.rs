@@ -26,6 +26,7 @@ fn warning(code: &'static str, line: usize, message: &str) -> Finding {
         column: None,
         message: message.to_string(),
         sites: Vec::new(),
+        authority: Vec::new(),
     }
 }
 

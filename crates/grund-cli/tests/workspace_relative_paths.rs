@@ -157,7 +157,7 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
                 "\"code\":\"full-scope-ignored\",",
                 "\"message\":\"--full has no effect with an explicit PATH — it cancels ",
                 "[scan] include, and external-link.md already bypasses it\",",
-                "\"sites\":null}\n",
+                "\"sites\":null,\"authority\":null}\n",
             )
         );
 

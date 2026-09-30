@@ -22,6 +22,7 @@ pub(super) fn check_declaration_near_misses(findings: &Findings, report: &mut Ch
             column: None,
             message: near_miss_message(&heading.format, &heading.text),
             sites: Vec::new(),
+            authority: Vec::new(),
         };
         // §FS-declarations.checks.declaration-near-miss.5 / §RM-off-grammar-declaration-error: the
         // scheduled severity transition is release-derived and never changes catalog recognition or

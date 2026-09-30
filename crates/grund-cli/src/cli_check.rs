@@ -85,6 +85,9 @@ fn command_check(args: &[String]) -> ExitCode {
                     return ExitCode::from(2);
                 }
             }
+            // §FS-rules.8: a boolean, so there is no value to validate and
+            // repeating it asks the same thing twice.
+            "--only-rule" => selection.scope_to_trial_rule(),
             // §FS-check.1.3: widen the walk past `[scan] include` for this run.
             "--full" => full = true,
             other if other.starts_with('-') => {
@@ -106,6 +109,13 @@ fn command_check(args: &[String]) -> ExitCode {
         && !matches!(format.as_str(), "text" | "json")
     {
         eprintln!("error: unsupported check format `{format}`");
+        return ExitCode::from(2);
+    }
+    // §FS-rules.8, §FS-check.1.4: scoping to no sentence would print `success`
+    // and exit 0, reading as a verdict rather than as the mistake it is — so it
+    // refuses here, with the other selector values, before any scan.
+    if selection.scopes_to_trial_rule() && rule.is_none() {
+        eprintln!("error: --only-rule requires --rule");
         return ExitCode::from(2);
     }
     let (run_warnings, output) = check_with_run_warnings(CheckOpts {
@@ -137,15 +147,15 @@ fn command_check(args: &[String]) -> ExitCode {
     output
         .report
         .errors
-        .retain(|finding| selection.retains(finding.code));
+        .retain(|finding| selection.retains(finding.code, &finding.authority));
     output
         .report
         .warnings
-        .retain(|finding| selection.retains(finding.code));
+        .retain(|finding| selection.retains(finding.code, &finding.authority));
     output
         .report
         .suggestions
-        .retain(|finding| selection.retains(finding.code));
+        .retain(|finding| selection.retains(finding.code, &finding.authority));
     if format == "json" {
         render_check_json(&output.report);
     } else {
@@ -266,6 +276,21 @@ fn render_check_json(report: &Report) {
     }
 }
 
+/// §FS-errors.5.1: the record's last value — `null` where no rule authored the
+/// finding, else its origins in the bytewise order the engine already sorted
+/// them into, which is the order the message tail joins (§FS-rules.6).
+fn authority_json(authority: &[String]) -> String {
+    if authority.is_empty() {
+        return "null".to_string();
+    }
+    let origins = authority
+        .iter()
+        .map(|origin| format!("\"{}\"", json_escape(origin)))
+        .collect::<Vec<_>>()
+        .join(",");
+    format!("[{origins}]")
+}
+
 fn render_finding_json(severity: &str, finding: &Finding) -> String {
     let path = finding
         .path
@@ -301,12 +326,13 @@ fn render_finding_json(severity: &str, finding: &Finding) -> String {
         format!("\"severity\":\"{severity}\"")
     };
     format!(
-        "{{{},\"path\":{},\"line\":{},\"code\":\"{}\",\"message\":\"{}\",\"sites\":{}}}",
+        "{{{},\"path\":{},\"line\":{},\"code\":\"{}\",\"message\":\"{}\",\"sites\":{},\"authority\":{}}}",
         tag,
         path,
         line,
         finding.code,
         json_escape(&finding.message),
-        sites
+        sites,
+        authority_json(&finding.authority)
     )
 }

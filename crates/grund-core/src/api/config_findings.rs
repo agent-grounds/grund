@@ -29,6 +29,7 @@ fn redundant_config_warning(config: &Config) -> Option<Diagnostic> {
             format_path(winner)
         ),
         sites: Vec::new(),
+        authority: Vec::new(),
     })
 }
 
@@ -56,6 +57,7 @@ fn deprecated_config_location_warning(config: &Config) -> Option<Diagnostic> {
             format_path(&home)
         ),
         sites: Vec::new(),
+        authority: Vec::new(),
     })
 }
 

@@ -1,5 +1,6 @@
 //! Relational chapter-rule evaluation (§FS-rules.5–7, §AR-rules.4–5).
 
+mod authority;
 mod precedence;
 
 use super::facts::{Completeness, NodeKey, RuleFacts, SiteKey};
@@ -10,6 +11,8 @@ use super::{
 use crate::model::{CITATION_DIRECTION_REPAIR, Diagnostic};
 use std::collections::{BTreeMap, BTreeSet};
 
+use authority::Authority;
+pub(crate) use authority::one_rules_authority;
 pub(crate) use precedence::citation_precedence;
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -75,8 +78,7 @@ fn evaluate_level(
         if precedence.contains(&rule) {
             continue;
         }
-        let authority = origins.into_iter().collect::<Vec<_>>().join(", ");
-        evaluate_one(&rule, &authority, facts, &mut out);
+        evaluate_one(&rule, &Authority::new(origins), facts, &mut out);
     }
     out
 }
@@ -137,12 +139,13 @@ pub(crate) fn unresolved_subject_diagnostic(
             rule.origin
         ),
         sites: Vec::new(),
+        authority: one_rules_authority(&rule.origin),
     })
 }
 
 fn evaluate_one(
     rule: &SemanticRule,
-    authority: &str,
+    authority: &Authority,
     facts: &RuleFacts,
     out: &mut Vec<Diagnostic>,
 ) {
@@ -181,6 +184,7 @@ fn evaluate_one(
                             label(facts, &subject),
                             rule.cardinality.wording()
                         ),
+                        authority,
                     );
                 }
             }
@@ -216,6 +220,7 @@ fn evaluate_one(
                                 },
                                 target_wording(&rule.targets)
                             ),
+                            authority,
                         );
                     }
                 }
@@ -246,6 +251,7 @@ fn evaluate_one(
                             target_wording(&rule.targets),
                             rule.cardinality.wording()
                         ),
+                        authority,
                     );
                 }
             }
@@ -255,7 +261,7 @@ fn evaluate_one(
 
 fn evaluate_cites(
     rule: &SemanticRule,
-    authority: &str,
+    authority: &Authority,
     facts: &RuleFacts,
     subjects: &[NodeKey],
     out: &mut Vec<Diagnostic>,
@@ -287,6 +293,7 @@ fn evaluate_cites(
                             label(facts, target),
                             rule.cardinality.times_wording()
                         ),
+                        authority,
                     );
                 }
             }
@@ -329,7 +336,7 @@ fn evaluate_cites(
                         rule.cardinality.wording()
                     )
                 };
-                push_node(out, facts, subject, code, message);
+                push_node(out, facts, subject, code, message, authority);
             }
         }
     }
@@ -473,6 +480,7 @@ fn push_node(
     node: &NodeKey,
     code: &'static str,
     message: String,
+    authority: &Authority,
 ) {
     let Some(meta) = facts.nodes.get(node) else {
         return;
@@ -484,6 +492,7 @@ fn push_node(
         column: meta.anchor.column,
         message,
         sites: Vec::new(),
+        authority: authority.origins.clone(),
     });
 }
 fn push_site(
@@ -492,6 +501,7 @@ fn push_site(
     site: &SiteKey,
     code: &'static str,
     message: String,
+    authority: &Authority,
 ) {
     let Some(meta) = facts.sites.get(site) else {
         return;
@@ -503,5 +513,6 @@ fn push_site(
         column: meta.anchor.column,
         message,
         sites: Vec::new(),
+        authority: authority.origins.clone(),
     });
 }

@@ -247,6 +247,7 @@ pub(crate) fn absent_optional_member_warnings(config: &Config) -> Vec<Diagnostic
             column: None,
             message: absent_optional_member_message(&absent.written, &absent.alias_path),
             sites: Vec::new(),
+            authority: Vec::new(),
         })
         .collect()
 }
@@ -289,6 +290,7 @@ pub(crate) fn absent_only_workspace_caution(
                   what changes it."
             .to_string(),
         sites: Vec::new(),
+        authority: Vec::new(),
     })
 }
 

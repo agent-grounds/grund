@@ -162,6 +162,7 @@ fn block_diagnostics(
             ),
             // §FS-check.3.29.13: one block, one site, so `sites` stays null.
             sites: Vec::new(),
+            authority: Vec::new(),
         });
     }
     diagnostics

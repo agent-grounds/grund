@@ -139,6 +139,7 @@ fn empty_scan_warning(config: &Config, path: &Path, path_provided: bool) -> Diag
         column: None,
         message,
         sites: Vec::new(),
+        authority: Vec::new(),
     }
 }
 
@@ -178,6 +179,7 @@ fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnost
             kinds = kind_prefixes(&config.kinds).join(", "),
         ),
         sites: Vec::new(),
+        authority: Vec::new(),
     }
 }
 
@@ -219,6 +221,7 @@ pub(super) fn full_scope_ignored_warning(
             display_lexical_scope(config, &lexical_scope)
         ),
         sites: Vec::new(),
+        authority: Vec::new(),
     })
 }
 

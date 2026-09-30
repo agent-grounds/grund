@@ -34,8 +34,8 @@ fn assert_expected_errors_are_concise(case: &Path, name: &str, args: &[String], 
 /// (§FS-check.4.7.1). Only a line that opens a JSON object is parsed and
 /// judged by its `message` field instead of its serialized length — the
 /// scaffolding around it (§FS-distribution.3.0.1's `severity`, `path`,
-/// `line`, `code`, `sites`) is fixed cost the conciseness policy was never
-/// about.
+/// `line`, `code`, `sites`, `authority`) is fixed cost the conciseness policy
+/// was never about.
 fn assert_stderr_is_concise(name: &str, json_case: bool, stderr: &str) {
     assert!(
         !stderr.contains("error(s)") && !stderr.contains("warning(s)"),
@@ -67,7 +67,17 @@ fn assert_json_diagnostic_is_concise(name: &str, line: &str) {
 
     let mut actual_keys: Vec<&str> = object.keys().map(String::as_str).collect();
     actual_keys.sort_unstable();
-    let mut expected_keys = ["severity", "path", "line", "code", "message", "sites"];
+    // §FS-errors.5.2: `authority` is present on every record of this shape and
+    // always null here, so the key set is one set rather than a conditional.
+    let mut expected_keys = [
+        "severity",
+        "path",
+        "line",
+        "code",
+        "message",
+        "sites",
+        "authority",
+    ];
     expected_keys.sort_unstable();
     assert_eq!(
         actual_keys, expected_keys,
@@ -110,6 +120,30 @@ fn assert_json_diagnostic_is_concise(name: &str, line: &str) {
         "{name}: stderr JSON `line` must be null or a number: {line}"
     );
     assert_json_sites_are_well_formed(name, line, object.get("sites"));
+    assert_json_authority_is_well_formed(name, line, object.get("authority"));
+}
+
+/// §FS-errors.5.2: `authority` names the rules that authored a finding, and no
+/// query failure or run-level line is a rule's — so on stderr it is `null`, and
+/// the shape it takes elsewhere (a list of origin strings) is asserted here too,
+/// so one renderer cannot start emitting a shape the other never would.
+fn assert_json_authority_is_well_formed(
+    name: &str,
+    line: &str,
+    authority: Option<&serde_json::Value>,
+) {
+    match authority {
+        Some(serde_json::Value::Null) => {}
+        Some(serde_json::Value::Array(entries)) => {
+            for origin in entries {
+                assert!(
+                    matches!(origin, serde_json::Value::String(origin) if !origin.is_empty()),
+                    "{name}: stderr JSON `authority` entry must be a non-empty string: {line}"
+                );
+            }
+        }
+        _ => panic!("{name}: stderr JSON `authority` must be null or an array: {line}"),
+    }
 }
 
 /// `sites` is `null`, or a list of `{ path, line }` locating every site of a
@@ -172,7 +206,8 @@ mod stderr_concise_tests {
         assert!(message.len() <= 180, "fixture message grew past the cap");
         let line = format!(
             "{{\"severity\":\"error\",\"path\":null,\"line\":null,\
-              \"code\":\"ambiguous-section\",\"message\":\"{message}\",\"sites\":null}}"
+              \"code\":\"ambiguous-section\",\"message\":\"{message}\",\"sites\":null,\
+              \"authority\":null}}"
         );
         assert!(line.len() > 180, "fixture line no longer exceeds the cap");
         assert_stderr_is_concise("case", true, &line);
@@ -183,7 +218,7 @@ mod stderr_concise_tests {
         let message = "x".repeat(181);
         let line = format!(
             "{{\"severity\":\"error\",\"path\":null,\"line\":null,\
-              \"code\":\"c\",\"message\":\"{message}\",\"sites\":null}}"
+              \"code\":\"c\",\"message\":\"{message}\",\"sites\":null,\"authority\":null}}"
         );
         let panic_message = rejects(true, &line);
         assert!(panic_message.contains("message"), "{panic_message}");
@@ -192,7 +227,7 @@ mod stderr_concise_tests {
     #[test]
     fn json_case_rejects_a_line_with_an_extra_key() {
         let line = "{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"c\",\
-                     \"message\":\"m\",\"sites\":null,\"extra\":1}";
+                     \"message\":\"m\",\"sites\":null,\"authority\":null,\"extra\":1}";
         let panic_message = rejects(true, line);
         assert!(panic_message.contains("key set"), "{panic_message}");
     }
@@ -200,7 +235,7 @@ mod stderr_concise_tests {
     #[test]
     fn json_case_rejects_a_line_with_a_missing_key() {
         let line = "{\"severity\":\"error\",\"path\":null,\"code\":\"c\",\
-                     \"message\":\"m\",\"sites\":null}";
+                     \"message\":\"m\",\"sites\":null,\"authority\":null}";
         let panic_message = rejects(true, line);
         assert!(panic_message.contains("key set"), "{panic_message}");
     }

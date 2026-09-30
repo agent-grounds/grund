@@ -62,10 +62,10 @@ fn narrowed_text() -> String {
 fn narrowed_json() -> String {
     format!(
         concat!(
-            "{{\"severity\":\"error\",\"path\":\"docs/FS-group.md\",\"line\":3,\"code\":\"unknown-project\",\"message\":\"unknown project alias group/alph; did you mean group/alpha?\",\"sites\":null}}\n",
-            "{{\"severity\":\"error\",\"path\":\"docs/FS-group.md\",\"line\":4,\"code\":\"unknown-project\",\"message\":\"{}\",\"sites\":null}}\n",
-            "{{\"severity\":\"error\",\"path\":\"docs/FS-group.md\",\"line\":6,\"code\":\"unknown-project\",\"message\":\"{}\",\"sites\":null}}\n",
-            "{{\"severity\":\"error\",\"path\":\"docs/FS-group.md\",\"line\":7,\"code\":\"unknown-project\",\"message\":\"{}\",\"sites\":null}}\n",
+            "{{\"severity\":\"error\",\"path\":\"docs/FS-group.md\",\"line\":3,\"code\":\"unknown-project\",\"message\":\"unknown project alias group/alph; did you mean group/alpha?\",\"sites\":null,\"authority\":null}}\n",
+            "{{\"severity\":\"error\",\"path\":\"docs/FS-group.md\",\"line\":4,\"code\":\"unknown-project\",\"message\":\"{}\",\"sites\":null,\"authority\":null}}\n",
+            "{{\"severity\":\"error\",\"path\":\"docs/FS-group.md\",\"line\":6,\"code\":\"unknown-project\",\"message\":\"{}\",\"sites\":null,\"authority\":null}}\n",
+            "{{\"severity\":\"error\",\"path\":\"docs/FS-group.md\",\"line\":7,\"code\":\"unknown-project\",\"message\":\"{}\",\"sites\":null,\"authority\":null}}\n",
         ),
         scope_only("alpha", "group"),
         scope_only("outside/alpha", "group"),

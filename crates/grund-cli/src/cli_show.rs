@@ -256,9 +256,12 @@ fn render_show_error(
     ExitCode::FAILURE
 }
 
+/// §FS-errors.5.2: the refusal is rendered in the one finding shape, so
+/// `authority` is present and always `null` here — no query failure is a chapter
+/// rule's, and one key set beats a conditional every consumer has to branch on.
 fn print_bare_query_json(code: &'static str, message: &str, sites: &[FindingSite]) {
     eprintln!(
-        "{{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"{}\",\"message\":\"{}\",\"sites\":{}}}",
+        "{{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"{}\",\"message\":\"{}\",\"sites\":{},\"authority\":null}}",
         code,
         json_escape(message),
         render_finding_sites_json(sites)

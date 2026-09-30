@@ -29,13 +29,15 @@ fn rule_findings_have_exact_ndjson_codes_and_bytes() {
     let expected = concat!(
         "{\"severity\":\"error\",\"path\":\"docs/ar/AR-overview.md\",\"line\":3,",
         "\"code\":\"citation-cardinality\",\"message\":\"AR-overview.system-overview cites ",
-        "AR-one 2 times; RULE-overview requires exactly once\",\"sites\":null}\n",
+        "AR-one 2 times; RULE-overview requires exactly once\",\"sites\":null,",
+        "\"authority\":[\"RULE-overview\"]}\n",
         "{\"severity\":\"error\",\"path\":\"docs/ar/AR-overview.md\",\"line\":3,",
         "\"code\":\"citation-cardinality\",\"message\":\"AR-overview.system-overview cites ",
-        "AR-one-more 0 times; RULE-overview requires exactly once\",\"sites\":null}\n",
+        "AR-one-more 0 times; RULE-overview requires exactly once\",\"sites\":null,",
+        "\"authority\":[\"RULE-overview\"]}\n",
         "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":6,",
         "\"code\":\"missing-citation\",\"message\":\"FS-demo.requirements must cite REQ ",
-        "(RULE-requirements)\",\"sites\":null}\n",
+        "(RULE-requirements)\",\"sites\":null,\"authority\":[\"RULE-requirements\"]}\n",
     );
     assert_run(&output, 1, expected, "");
 }
@@ -131,7 +133,7 @@ fn unresolved_literal_is_a_post_scan_finding() {
     assert_run(
         &output,
         1,
-        "{\"severity\":\"error\",\"path\":null,\"line\":1,\"code\":\"invalid-rule\",\"message\":\"--rule is not a valid rule: literal subject FS-missing does not resolve\",\"sites\":null}\n",
+        "{\"severity\":\"error\",\"path\":null,\"line\":1,\"code\":\"invalid-rule\",\"message\":\"--rule is not a valid rule: literal subject FS-missing does not resolve\",\"sites\":null,\"authority\":[\"--rule\"]}\n",
         "",
     );
 }

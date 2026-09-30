@@ -92,7 +92,7 @@ pub(super) fn check_section_headings(
                 path = heading.suggested_path,
             ),
             sites: Vec::new(),
-        }
+        authority: Vec::new(),}
     }));
 
     // §FS-declarations.checks.section-heading-level / §FS-config.3.3.2: in strict mode, the
@@ -125,7 +125,7 @@ pub(super) fn check_section_headings(
                                 section.heading_level
                             ),
                             sites: Vec::new(),
-                        });
+                        authority: Vec::new(),});
                     }
                 }
             }
@@ -163,6 +163,7 @@ pub(super) fn check_section_headings(
                                 prefix
                             ),
                             sites: Vec::new(),
+                            authority: Vec::new(),
                         });
                     }
                 }
@@ -208,6 +209,7 @@ pub(super) fn check_section_headings(
                         path
                     ),
                     sites,
+                    authority: Vec::new(),
                 });
             }
         }
@@ -229,6 +231,7 @@ fn section_outside_declaration_diagnostic(
         }
         .to_string(),
         sites: Vec::new(),
+        authority: Vec::new(),
     }
 }
 

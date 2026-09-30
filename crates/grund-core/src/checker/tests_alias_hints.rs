@@ -199,6 +199,7 @@ fn proper_prefix_hint_preserves_scope_decorations() {
         column: None,
         message: unknown_project_message("group", known.into_iter(), ""),
         sites: Vec::new(),
+        authority: Vec::new(),
     };
     let diagnostic = tag_out_of_scope(diagnostic);
     assert_eq!(diagnostic.code, "out-of-scope-unknown-project");

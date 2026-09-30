@@ -80,6 +80,7 @@ pub(super) fn check_agents_block_version(
                 column: None,
                 message,
                 sites: Vec::new(),
+                authority: Vec::new(),
             });
         }
     }
@@ -132,6 +133,7 @@ fn check_agent_block_path_with_rules(
             column: None,
             message: format!("cannot read {file_name}"),
             sites: Vec::new(),
+            authority: Vec::new(),
         });
         return;
     };
@@ -149,6 +151,7 @@ fn check_agent_block_path_with_rules(
                     "malformed grund managed block: {message}"
                 )),
                 sites: Vec::new(),
+                authority: Vec::new(),
             });
             return;
         }
@@ -173,6 +176,7 @@ fn check_agent_block_path_with_rules(
                     block.version, expected_version
                 )),
                 sites: Vec::new(),
+                authority: Vec::new(),
             });
         } else if block.version > AGENTS_BLOCK_VERSION || block.version > expected_version {
             report.errors.push(Diagnostic {
@@ -185,6 +189,7 @@ fn check_agent_block_path_with_rules(
                     block.version, expected_version
                 )),
                 sites: Vec::new(),
+                authority: Vec::new(),
             });
         } else {
             // §FS-check.3.5 / §FS-init.2.3.5.8: citation directions are generated
@@ -224,7 +229,7 @@ fn check_agent_block_path_with_rules(
                             "stale grund init block: {noun} differ from grund.toml (run `grund init` to refresh)"
                         )),
                         sites: Vec::new(),
-                    });
+                    authority: Vec::new(),});
                 }
             }
         }
@@ -243,6 +248,7 @@ fn check_agent_block_path_with_rules(
             expected_version
         )),
         sites: Vec::new(),
+        authority: Vec::new(),
     });
 }
 

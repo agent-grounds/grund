@@ -100,6 +100,8 @@ mod tests_declaration_near_miss;
 #[cfg(test)]
 mod tests_duplicate_sections;
 #[cfg(test)]
+mod tests_finding_selection;
+#[cfg(test)]
 mod tests_grounding_per_place;
 #[cfg(test)]
 mod tests_grounding_style;

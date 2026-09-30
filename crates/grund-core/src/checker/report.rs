@@ -453,6 +453,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                     render_id(&config.grammar, id)
                 ),
                 sites,
+                authority: Vec::new(),
             });
         }
     }
@@ -477,6 +478,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                         expected.path
                     ),
                     sites: Vec::new(),
+                    authority: Vec::new(),
                 });
                 continue;
             }
@@ -510,6 +512,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                     column: None,
                     message,
                     sites: Vec::new(),
+                    authority: Vec::new(),
                 });
             }
         }
@@ -548,7 +551,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                     render_qualified_id(&config.grammar, esc.namespace.as_deref(), &esc.id)
                 ),
                 sites: Vec::new(),
-            });
+            authority: Vec::new(),});
         }
     }
 
@@ -586,6 +589,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                     column: None,
                     message: format!("stub link target missing: {}", format_path(target)),
                     sites: Vec::new(),
+                    authority: Vec::new(),
                 });
                 continue;
             }
@@ -606,6 +610,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                         format_path(target)
                     ),
                     sites: Vec::new(),
+                    authority: Vec::new(),
                 });
             }
         }
@@ -658,6 +663,7 @@ pub(crate) fn check_with_workspace_and_overlays(
                     render_id(&config.grammar, id)
                 ),
                 sites: Vec::new(),
+                authority: Vec::new(),
             });
         }
     }

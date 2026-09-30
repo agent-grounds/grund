@@ -267,6 +267,7 @@ pub(crate) fn undecidable_ancestor_claim_diagnostic(
         column: None,
         message: undecidable_ancestor_claim_warning(config_path, report_base, reason),
         sites: Vec::new(),
+        authority: Vec::new(),
     }
 }
 
@@ -290,5 +291,6 @@ fn config_location_diagnostic(
         column: None,
         message: config_location_message(source, message),
         sites: Vec::new(),
+        authority: Vec::new(),
     }
 }

@@ -43,6 +43,7 @@ pub(super) fn check_values(
                 None => format!("invalid value declaration: {}", site.message),
             },
             sites: Vec::new(),
+            authority: Vec::new(),
         });
     }
     for site in &findings.invalid_value_bindings {
@@ -72,6 +73,7 @@ pub(super) fn check_values(
             column: site.column,
             message: format!("invalid value binding: {}", site.message),
             sites: Vec::new(),
+            authority: Vec::new(),
         });
     }
     for binding in &findings.value_bindings {
@@ -166,6 +168,7 @@ pub(super) fn check_values(
                 path: declaration.file.clone(),
                 line: section.line,
             }],
+            authority: Vec::new(),
         });
     }
 }
@@ -313,7 +316,7 @@ fn invalid_binding_diagnostic(binding: &ValueBinding) -> Diagnostic {
         column: Some(binding.column),
         message: "invalid value binding: value binding must be exactly `literal` (marker-prefixed full value ID with one positive numeric field)".to_string(),
         sites: Vec::new(),
-    }
+    authority: Vec::new(),}
 }
 
 fn value_homes<'a>(decls: &'a [Declaration], root: &Path) -> Vec<&'a Declaration> {

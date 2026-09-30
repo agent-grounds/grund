@@ -174,7 +174,7 @@ fn issue_49_retained_json_is_the_ordinary_ndjson_object() {
         concat!(
             "{\"severity\":\"error\",\"path\":\"docs/notes.md\",\"line\":1,",
             "\"code\":\"dangling\",\"message\":\"unknown reference FS-missing\",",
-            "\"sites\":null}\n",
+            "\"sites\":null,\"authority\":null}\n",
         ),
         "",
     );

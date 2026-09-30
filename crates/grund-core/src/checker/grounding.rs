@@ -123,6 +123,7 @@ pub(super) fn check_grounding(
                     config.marker
                 ),
                 sites: Vec::new(),
+                authority: Vec::new(),
             });
         }
     }
