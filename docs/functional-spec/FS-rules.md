@@ -513,8 +513,10 @@ The section includes every accepted family, every [§FS-rules.3.5](FS-rules.md#3
 rewrite, the finding each example produces, and the worked pairing of a
 chapter-presence rule with the chapter-scoped citation rule it makes hold for
 the whole kind ([§FS-rules.2](FS-rules.md#2-subject-selectors)). Its leading
-sentence on that pairing is byte-identical to the specification's, so neither
-can be reworded without the other.
+sentence on that pairing is the specification's word for word, differing at most
+in where it wraps, so neither can be reworded without the other. The section
+also quotes the exact `invalid-rule` message an exact chapter subject produces
+once its chapter is gone, and that quote is the binary's own wording.
 
 The runnable example contains at least one passing and one violated instance of
 all five families. Its guide quotes every violated instance's exact finding and
@@ -525,7 +527,7 @@ its goldens cover `invalid-rule`, `chapter-cardinality`, rule-derived
 neutral exit behavior; two same-anchor off-count targets with shared-prefix
 IDs; config-to-rule and rule-to-rule deduplication; and the refusal set.
 
-Four independent pins prevent drift:
+Five independent pins prevent drift:
 
 1. `examples/rules/expected.*` run through the shared e2e runner.
 2. A marked-row extraction test submits every accepted/refused guide row to the
@@ -535,6 +537,9 @@ Four independent pins prevent drift:
    repository skill to the embedded copy.
 4. The managed block's existing re-render byte comparison checks generated
    guidance.
+5. A quoted-message test runs the exact chapter subject over a declaration
+   whose chapter is gone and asserts the section's quoted `invalid-rule`
+   message is the one the binary emits.
 
 ## 11. Functional architecture constraint
 
