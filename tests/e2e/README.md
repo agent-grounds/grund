@@ -34,7 +34,7 @@ An optional `symlinks` file adds links the fixture cannot carry in git — git o
 
 A case that does not run is **not** a case that passed. The harness probes the directory it actually creates the links in (`target/e2e-work/`, not the system temp directory), and at the end of each pass it prints every case it skipped with the reason and the count. On a platform that can create a directory symlink a skip is a hard failure, because there it means the harness lost the coverage rather than the platform refusing it. The same goes for a mismatch: every runnable case is compared on every golden before the pass decides anything, so one mismatched case or surface never hides another — the pass fails once, at the end, naming every mismatched case and surface together.
 
-`expected.exit` contains `0`, `1`, or `2`, followed by exactly one newline. `expected.stdout` and `expected.stderr` are compared byte-for-byte, except that a file containing only one newline is treated as empty so empty golden files can be represented cleanly in patches — and that is also how an empty golden is written: one newline, never zero bytes. One spelling per golden is a contract, not a habit: `UPDATE_EXPECTED=1 cargo test --test e2e` over a tree whose behavior has not changed must rewrite no bytes at all, so refreshing the case you are working on never churns another case's goldens. `goldens_are_in_canonical_form` fails and names every golden that departs from that form.
+`expected.exit` contains `0`, `1`, or `2`, followed by exactly one newline. `expected.stdout` and `expected.stderr` are compared byte-for-byte, except that a file containing only one newline is treated as empty so empty golden files can be represented cleanly in patches — and that is also how an empty golden is written: one newline, never zero bytes. One spelling per golden is a contract, not a habit: `UPDATE_EXPECTED=1 cargo test --test e2e` over a tree whose behavior has not changed must rewrite no bytes at all, so refreshing the case you are working on never churns another case's goldens. `goldens_are_in_canonical_form` fails and names every golden that departs from that form. What a refresh covers, writes, and deletes is [Refreshing the goldens](#refreshing-the-goldens) below.
 
 Most cases run `grund check <repo>`. A case may override the command with `command.args`; use `{repo}` for the fixture repo path. For write-mode tests, use `{repo_copy}` so the harness copies the fixture under `target/e2e-work/` before running the command.
 
@@ -43,6 +43,9 @@ may add `command.cwd` containing exactly `{repo}` or `{repo_copy}`. The latter
 also selects mutable-repository handling and may be paired with `expected.repo`.
 This keeps commands such as `grund fetch <ID>` in their documented form while
 the shared harness still runs them inside the isolated fixture ([§FS-examples.5](../../docs/functional-spec/FS-examples.md#5-e2e-reuse-without-duplication)).
+A paired `expected.repo` is a golden like any other: the refresh command writes
+it byte-for-byte and prunes what the run no longer produces
+([Refreshing the goldens](#refreshing-the-goldens)).
 
 Error output is part of the contract. Located text `check` findings in
 `expected.stdout` keep `<path>:<line>:` first, carry their `error:`, `warning:`,
@@ -50,6 +53,44 @@ or opt-in `suggestion:` channel next, and group errors before warnings before
 suggestions; compare bytewise `(path, line, message)` inside each group. JSON
 cases deliberately retain global location order, so never regenerate their
 goldens by copying the text order ([§FS-errors.4](../../docs/functional-spec/FS-errors.md#4-determinism)). Non-zero cases should keep `expected.stderr` concise: one actionable diagnostic per line, no aggregate footer, and no long explanatory prose that makes editor and agent consumption harder. For a case whose command selects `--format json`, a stderr line that opens a JSON object is one complete diagnostic in the [§FS-errors.5](../../docs/functional-spec/FS-errors.md#5-json-format) / [§FS-distribution.3.0](../../docs/functional-spec/FS-distribution.md#30-language-neutral-data-shapes) shape, and the conciseness cap applies to its `message` field rather than to the serialized line — the surrounding `severity`, `path`, `line`, `code`, and `sites` are fixed scaffolding the cap was never about. A text error or hint on the same case's stderr keeps the plain cap. A launch-time text warning carried beside a later refusal keeps the existing bytes its own specification fixes ([§FS-check.4.7](../../docs/functional-spec/FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)); the refusal does not rewrite an already earned warning to satisfy the error-line policy.
+
+### Refreshing the goldens
+
+`UPDATE_EXPECTED=1 cargo test --test e2e` is the refresh command, and it covers
+all four golden surfaces: `expected.exit`, `expected.stdout`, `expected.stderr`,
+and the final tree under `expected.repo`. Every one of them is
+compare-then-write — a golden is read before it is written and rewritten only
+where the bytes differ — so a refresh over a tree whose behavior has not changed
+rewrites no bytes and moves not even a modification time, and refreshing the case
+you are working on never churns another case's goldens.
+
+The tree golden is the one surface written **byte-for-byte**: the bytes the run
+produced, exactly as it produced them, carrying the produced file's mode, with no
+fold and no encoding assumption. That is where it differs from the output
+goldens, and its reader is the reason. An output golden is read through a fold
+(`\r\n` to `\n`, a lone `\n` back as empty), so its writer must emit that same
+fold or the next compare pass would disagree with itself; a tree file is compared
+as raw bytes and need not be text at all, so canonicalizing one would make the
+next compare pass report `bytes differ` on a file the refresh had just written.
+
+Which makes the refresh **destructive**, under this plain command and with no
+second opt-in. The golden's file set is made equal to the produced tree's: a
+golden file the run no longer produces is removed, and a directory that removal
+empties goes with it, upward until a non-empty directory stops the walk. So the
+diff of a refresh is the thing to review — that is the contract. Nothing here is
+unrecoverable: every golden is tracked, the refresh runs in a working tree, and
+`git checkout -- tests/e2e examples` reverts one whole.
+
+A refresh pass also says what it covered, because it returns the same verdict for
+a case whose goldens it rewrote and for one it declined to touch — its `ok` is
+otherwise the one thing that carries no information. Beside the verdict it writes
+one line naming the surfaces it covered and the count of cases, then
+`N file(s) written, M removed` with one line per golden file, naming the case and
+the file; having changed nothing it says `0 file(s) written, 0 removed` in as
+many words rather than going quiet. It writes that to the stderr handle rather
+than through `eprintln!`, which libtest's capture holds: a passing test's output
+is discarded without `--nocapture`, and an accounting only a `--nocapture` run
+can read is the same silence in a new spelling.
 
 ## Current coverage
 

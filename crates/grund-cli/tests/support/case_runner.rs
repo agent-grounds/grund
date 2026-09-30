@@ -30,6 +30,17 @@ impl CaseKind {
 pub enum CaseOutcome {
     /// The case ran and its goldens were compared.
     Ran,
+    /// The case ran in refresh mode, so nothing was compared: `changes` lists
+    /// every golden file the pass wrote or removed, per surface, and is empty
+    /// where the case's goldens were already current. `tree` says whether the
+    /// case carries an `expected.repo` at all. A refresh that reported `Ran` for
+    /// every case was reporting "nothing was checked", which is the whole of the
+    /// information its `ok` carried (§AR-workspace.9.5).
+    Refreshed {
+        case: String,
+        tree: bool,
+        changes: Vec<GoldenChange>,
+    },
     /// This pass does not apply to the case — a mutating case has no
     /// deterministic-rerun contract, because the second run would see the tree the
     /// first one wrote.
@@ -58,6 +69,10 @@ include!("case_report.rs");
 
 // The golden-form half, in a file of its own (§AR-core-module-layout.3).
 include!("case_golden_form.rs");
+
+// The refresh half — the writer of every golden surface and the accounting a
+// refresh pass owes — in a file of its own (§AR-core-module-layout.3).
+include!("case_refresh.rs");
 
 // The refresh-mode contract, pinned in a file of its own
 // (§AR-core-module-layout.3).
@@ -213,11 +228,18 @@ pub fn run_case(manifest_dir: &Path, case: &Path, kind: CaseKind) -> CaseOutcome
     let actual_stderr = String::from_utf8(output.stderr)
         .unwrap_or_else(|err| panic!("{name}: stderr was not UTF-8: {err}"));
 
+    // Refresh writes every surface and compares none; compare compares every
+    // surface and writes none. The final tree joins that split rather than
+    // getting a third behaviour of its own (§AR-workspace.9.1.5).
     if should_update_expected(manifest_dir) {
-        write_expected(&case.join("expected.exit"), &format!("{actual_exit}\n"));
-        write_expected(&case.join("expected.stdout"), &actual_stdout);
-        write_expected(&case.join("expected.stderr"), &actual_stderr);
-        return CaseOutcome::Ran;
+        return refresh_case(
+            manifest_dir,
+            case,
+            name,
+            actual_exit,
+            &actual_stdout,
+            &actual_stderr,
+        );
     }
 
     let expected_exit = read_to_string(case.join("expected.exit"));
@@ -523,7 +545,13 @@ fn has_canonical_kind_prefix(reference: &str) -> bool {
 /// an unchanged tree rewrite nothing — a writer that emitted the run's own line
 /// endings would rewrite every golden in the tree on a platform that produces
 /// CRLF, none of them the case the refresh was about.
-fn write_expected(path: &Path, content: &str) {
+///
+/// Compare-then-write, and it compares the bytes it *would* write rather than
+/// the run's raw output (§AR-workspace.9.1.4): the fold above is what makes a
+/// golden canonical, so diffing the unfolded output would rewrite every golden
+/// whose canonical form folded something, on every pass. Returns whether the
+/// bytes on disk moved, which is what the refresh accounting reports.
+fn write_expected(path: &Path, content: &str) -> bool {
     let is_exit = path.extension().and_then(|s| s.to_str()) == Some("exit");
     let folded = content.replace("\r\n", "\n");
     let body = if folded.is_empty() && !is_exit {
@@ -531,7 +559,11 @@ fn write_expected(path: &Path, content: &str) {
     } else {
         folded
     };
+    if fs::read(path).is_ok_and(|current| current == body.as_bytes()) {
+        return false;
+    }
     fs::write(path, body).unwrap_or_else(|err| panic!("write {}: {err}", path.display()));
+    true
 }
 
 fn read_to_string(path: impl AsRef<Path>) -> String {
