@@ -49,7 +49,7 @@ citable sections, and incorrect heading depth are
 `invalid-value-declaration` errors. Lead prose, bodies, and plain non-citable
 headings are ignored.
 
-A Markdown component that completely matches JSON number grammar is numeric.
+A Markdown component that completely matches JSON number grammar is a number.
 Every other valid component is a string.
 
 ## Mark a value inside any declaration
@@ -261,6 +261,14 @@ Otherwise both components must be strings and decoded Unicode scalar sequences
 must match exactly. Comparison does not trim, normalize case or Unicode, strip
 separators, convert units, or coerce JSON strings to numbers. Consequently
 `1,200`, `+1200`, and `1_200` are strings.
+
+A number and a string are never equal, and the two can print the same bytes, so
+a mismatch of different kinds names each side's kind after its canonical text
+([§FS-values.5.2.1](../functional-spec/FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind)):
+
+```text
+docs/record.md:5: error: value mismatch for QTY-mach-001-year.1: bound `2022`, declared `2022` at values/machines.json:2 — bound is a number, declared is a string; a number and a string are never equal
+```
 
 A mismatch is an exit-`1` `value-mismatch` at the binding and names the
 declaration site. Text and NDJSON carry the same message and declaration site.

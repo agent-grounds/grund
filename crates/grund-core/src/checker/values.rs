@@ -5,7 +5,7 @@ use crate::config::{Config, display_path, kind_uses_values, kind_value_chapter};
 use crate::grammar::{render_id, render_qualified_id};
 use crate::model::{
     CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Findings, Id, Site, ValueBinding,
-    is_stub_for_inline_decl, value_components_equal,
+    ValueComponentKind, is_stub_for_inline_decl, value_components_equal,
 };
 use crate::resolver::WorkspaceCheckTarget;
 
@@ -150,13 +150,16 @@ pub(super) fn check_values(
             display_path(path_config, &declaration.file),
             section.line
         );
+        // The two sides can print the same bytes, so the kinds follow the
+        // canonical text (§FS-values.5.2.1).
+        let kinds = mixed_kind_clause(binding.authored.kind, declared.kind);
         report.errors.push(Diagnostic {
             code: "value-mismatch",
             path: Some(binding.file.clone()),
             line: Some(binding.line),
             column: Some(binding.column),
             message: format!(
-                "value mismatch for {coordinate}: bound `{}`, declared `{}` at {declared_site}",
+                "value mismatch for {coordinate}: bound `{}`, declared `{}` at {declared_site}{kinds}",
                 binding.authored.decoded, declared.decoded
             ),
             sites: vec![Site {
@@ -164,6 +167,29 @@ pub(super) fn check_values(
                 line: section.line,
             }],
         });
+    }
+}
+
+/// What a mismatch of two different kinds appends to the canonical text
+/// (§FS-values.5.2.1). Identical-looking sides are the whole of the inequality
+/// there, so the kinds are named in the order the line already named its sides;
+/// a same-kind mismatch appends nothing and keeps that text to the byte.
+fn mixed_kind_clause(bound: ValueComponentKind, declared: ValueComponentKind) -> String {
+    if bound == declared {
+        return String::new();
+    }
+    format!(
+        " \u{2014} bound is a {}, declared is a {}; a number and a string are never equal",
+        kind_word(bound),
+        kind_word(declared)
+    )
+}
+
+/// The one word a message uses for a component kind (§FS-values.5.2.1).
+fn kind_word(kind: ValueComponentKind) -> &'static str {
+    match kind {
+        ValueComponentKind::Number => "number",
+        ValueComponentKind::String => "string",
     }
 }
 
