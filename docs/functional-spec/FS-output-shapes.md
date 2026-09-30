@@ -177,8 +177,14 @@ Fields:
 
 ### 5.1 `refs --format=json`
 
-`refs --format=json` emits one citation object per line, with the optional final
-`kind_title` from the queried target kind as specified by [§FS-refs.3.2](FS-refs.md#32---format-json). With `--summary`, it emits one file summary object per line instead, without `kind_title`:
+`refs --format=json` emits one citation object per line: `path`, `line`,
+`column`, `id`, `section`, `marker`, `text`, then the citing site's
+`enclosing_declaration` and `enclosing_section`, then the optional final
+`kind_title` from the queried target kind, all as specified by
+[§FS-refs.3.2](FS-refs.md#32---format-json). With `--summary`, it emits one file summary object per line instead, without `kind_title` and without the
+enclosing pair — a file summary is a fold over many sites and has no one
+enclosing unit to name, as a run total has none either
+([§FS-refs.3.4](FS-refs.md#34---total)):
 
 ```json
 {"path":"docs/functional-spec/FS-002-beta.md","count":3,"lines":[3,5]}
@@ -186,7 +192,7 @@ Fields:
 
 `count` is the number of citation sites in the file; `lines` is the sorted, de-duplicated set of 1-indexed source lines containing those sites.
 
-With `--total` it emits exactly one object instead, at every count: `{"sites":140,"files":50}`. `sites` is the number of citation sites in the set the invocation listed, `files` the number of distinct files they live in; neither `project` nor `kind_title` appears on it ([§FS-refs.3.4](FS-refs.md#34---total)).
+With `--total` it emits exactly one object instead, at every count: `{"sites":140,"files":50}`. `sites` is the number of citation sites in the set the invocation listed, `files` the number of distinct files they live in; neither `project`, nor `kind_title`, nor the enclosing pair appears on it ([§FS-refs.3.4](FS-refs.md#34---total)).
 
 ### 5.2 `list --size --format=json`
 

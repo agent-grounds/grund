@@ -216,15 +216,32 @@ Every `Declaration` records the line span of its body. In a Markdown file the bo
 
 Every `Citation` records the citing kind, resolved by three-step fallback with the bounds of [§AR-scanner.2.4.1](AR-scanner.md#241-declaration-body-range): (1) the kind of the **enclosing declaration** — the nearest preceding declaration whose body range contains the site; else (2) the **kind home of the file** — the reverse lookup from `[[kinds]]` `folder` / `file` ([§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds)), used only when exactly one home contains the file; else (3) the **homeless kind** — the complement of every home, named `code` unless the project declared it under another name ([§FS-config.3.9.2](../functional-spec/FS-config.md#392-the-homeless-kind)). Step 2 asks nothing about declarations, which is what makes a **non-citable** kind ([§FS-config.3.4.1](../functional-spec/FS-config.md#341-citable--kinds-that-declare-no-ids)) work through this code unchanged: its files classify as that kind because of where they are, and `[citations.<kind>]` then governs them. A citation later in the file than a declaration's body does **not** inherit that declaration's kind — it falls through to step 2 or 3.
 
+The three fields this step and the two below it fill — `source_kind`,
+`enclosing_declaration` and `enclosing_section` — are written by one post-pass
+over the file's declaration body ranges and heading stack, and **not every run
+performs it**. `grund check` does, because its citation-direction and obligation
+checks read them; the LSP snapshot does, so an editor reports what `check`
+reports ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)); and
+`grund cover` and `grund refs` do, because their JSON records publish the last
+two ([§FS-cover.3.2](../functional-spec/FS-cover.md#32---format-json),
+[§FS-refs.3.2](../functional-spec/FS-refs.md#32---format-json)). `list`, `show`,
+`fmt`, ID completion, `sizes` and `batch` skip it: they read none of the three,
+and paying for it would cost them milliseconds for nothing
+([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)).
+So "every `Citation` records" here and below means every citation of a run that
+performs the pass; on a run that skips it the three fields are unset, and a
+caller that reads one must be on the list above.
+
 #### 2.4.3 The enclosing declaration
 
-The enclosing declaration is also recorded on the citation, so the obligation pass ([§AR-checker.2.9](../../crates/grund-core/src/checker/report.rs)) can ask "does this declaration's body cite the target?" as a lookup rather than a re-scan.
+The enclosing declaration is also recorded on the citation — on every run that performs the post-pass ([§AR-scanner.2.4.2](AR-scanner.md#242-citation-source-kind)) — so the obligation pass ([§AR-checker.2.9](../../crates/grund-core/src/checker/report.rs)) can ask "does this declaration's body cite the target?" as a lookup rather than a re-scan.
 
 Unmarked Markdown candidates ([§AR-scanner.2.2.7](AR-scanner.md#227-unmarked-markdown-headings)) use the same body ranges and nearest-enclosing lookup. That shared ownership is why a candidate under a nested declaration names the nested ID, while a pre-declaration title or a same-or-shallower ATX heading that closed the body has no owner and remains legal ([§FS-declarations.checks.unmarked-heading](../functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)).
 
 #### 2.4.4 The enclosing accepted chapter
 
-Every citation site also records its immediate enclosing accepted chapter, if
+Every citation site of a run that performs the citing-side post-pass
+([§AR-scanner.2.4.2](AR-scanner.md#242-citation-source-kind)) also records its immediate enclosing accepted chapter, if
 one exists. The scanner answers this while it holds the heading stack: the
 nearest preceding accepted section whose subtree contains the site wins, and a
 same-or-shallower heading closes it. A duplicate or rejected section path is

@@ -1091,7 +1091,10 @@ unqualified lookup. It is not repeated per row; per-row redundancy would
 balloon the wire size of a wide blast-radius scan without adding information
 the caller did not just hand to `refs`. The object's `"id"` field is rendered
 with that target project's `[id]` config; the `"text"` field remains the
-verbatim source citation.
+verbatim source citation. `"enclosing_declaration"` is **bare** — rendered with
+the *citing* project's `[id]` config and never alias-qualified, because the
+declaration it names sits in the citing file and `"project"` already names that
+project ([§FS-cover.3.2](FS-cover.md#32---format-json)).
 
 #### 8.2.5 The "neither declared nor cited" note
 
@@ -1281,6 +1284,10 @@ says what the token says ([§FS-workspace.8.6.4](FS-workspace.md#864-the-rendere
 workspace mode is loaded, `--format json` adds `"project": "<alias>"` to the
 per-file object and to each nested citation object, in the shape
 [§FS-cover.3.2](FS-cover.md#32---format-json) specifies; outside workspace mode no field is added.
+`enclosing_declaration` stays **bare** there, never alias-qualified: it names a
+declaration in the citing file, and `project` on the same object already says
+which project that is, so qualifying it would repeat one fact and invite the
+reader to mistake it for the target's project.
 
 #### 8.6.1 A narrower `<path>` is one narrowed scan
 
