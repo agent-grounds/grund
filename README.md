@@ -166,7 +166,10 @@ should use `--format=json`, whose bytes, object shape, and order are unchanged.
 When you need a narrower answer without weakening the repository's default check,
 select its stable finding codes: `grund check --ignore agents-init` asks whether
 the remaining content report has errors, while repeatable `--only <code>` and
-`--ignore <code>` compose as sets ([§FS-check.1](docs/functional-spec/FS-check.md#1-inputs)).
+`--ignore <code>` compose as sets, and `--only-rule` narrows the same report by
+rule authority instead — only what a `--rule` trial sentence authored, which is
+what lets you try a sentence out for the cost of its own findings
+([§FS-check.1](docs/functional-spec/FS-check.md#1-inputs), [§FS-rules.8](docs/functional-spec/FS-rules.md#8-command-surfaces)).
 Selection happens only after the complete scan, and operational failures remain
 visible; selected `success` describes only that view, not an all-findings
 repository verdict ([§FS-check.2](docs/functional-spec/FS-check.md#2-outputs)).

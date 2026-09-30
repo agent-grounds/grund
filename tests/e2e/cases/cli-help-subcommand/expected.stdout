@@ -1,6 +1,6 @@
 grund check — validate every ID citation across the repo.
 
-Usage:  grund check [PATH] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--format text|json]
+Usage:  grund check [PATH] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--only-rule] [--format text|json]
 
 PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback.
 With no config, grund scans `docs/`, `e2e/`, and `src/`; set `[scan] include` to widen it.
@@ -16,6 +16,7 @@ Options:
   --rule <sentence>    add one controlled-English chapter/citation rule to configured rules.
   --only <code>        retain one exact finding code; repeat for a union (`--only=<code>` also works).
   --ignore <code>      remove one exact finding code; repeat for a union; ignore wins over only (`--ignore=<code>` also works).
+  --only-rule          retain only what the --rule sentence found; requires --rule.
 
 Findings go to stdout (the linter convention) — `grund check | …` and `grund check
 --format json | jq` need no redirect. Only run-level `error:` / `warning:` lines
@@ -24,6 +25,13 @@ Findings go to stdout (the linter convention) — `grund check | …` and `grund
 Selection happens after the complete check. It filters errors, warnings, and enabled
 suggestions by exact code; operational failures remain visible and exit 2. Exit 0 means
 the selected report has no errors, not that the unselected repository is clean.
+
+--only-rule narrows that same report by rule authority instead of by code: only what
+the --rule sentence authored, whether it authored a finding alone or jointly with a
+declared rule that means the same. The two axes intersect and --ignore wins over both.
+Without --rule it is `error: --only-rule requires --rule`, exit 2. A `should`-level
+sentence lands in the suggestions channel, so it needs --suggestions too or the scoped
+run prints `success`.
 
 Supported check finding codes:
   agents-init
@@ -84,4 +92,5 @@ Examples:
   grund check --full       # plus unresolved references and outside sections beyond include
   grund check --rule "Each FS should have exactly one requirements chapter." --suggestions
   grund check --ignore agents-init # ask whether the selected content report has errors
+  grund check --rule "Each FS must have exactly one security chapter." --only-rule # what does this sentence find?
   grund check --format json | jq # machine-readable diagnostics for CI
