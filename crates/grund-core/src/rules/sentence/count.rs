@@ -37,6 +37,8 @@ impl Cardinality {
 pub(super) enum CountSpelling {
     AtLeastOne,
     ExactlyOne,
+    /// §FS-rules.3.1: a floor spelled as a numeral, so `n` is never one.
+    AtLeast(usize),
     AtMost(usize),
     Exactly(usize),
 }
@@ -57,38 +59,52 @@ pub(super) fn count_prefix(
             CountSpelling::ExactlyOne,
         ));
     }
-    for prefix in ["at most ", "exactly "] {
+    for prefix in ["at least ", "at most ", "exactly "] {
         if let Some(rest) = text.strip_prefix(prefix) {
             let (raw, object) = rest
                 .split_once(' ')
                 .ok_or_else(|| error("count has no object"))?;
             let n = positive(raw)?;
-            if prefix == "exactly " && n == 1 {
-                return Err(error(
-                    "numeric \"exactly 1\" is not canonical; accepted form: Each FS must cite exactly one GOAL.",
-                ));
-            }
-            let card = if prefix == "at most " {
-                Cardinality {
-                    minimum: None,
-                    maximum: Some(n),
+            // §FS-rules.3: a floor and an exact count spell one as the word
+            // `one`; only a ceiling spells it as the numeral.
+            let (card, spelling) = match prefix {
+                "at least " if n == 1 => {
+                    return Err(error(
+                        "numeric \"at least 1\" is not canonical; accepted form: Each FS must cite at least one GOAL.",
+                    ));
                 }
-            } else {
-                Cardinality {
-                    minimum: Some(n),
-                    maximum: Some(n),
+                "exactly " if n == 1 => {
+                    return Err(error(
+                        "numeric \"exactly 1\" is not canonical; accepted form: Each FS must cite exactly one GOAL.",
+                    ));
                 }
-            };
-            let spelling = if prefix == "at most " {
-                CountSpelling::AtMost(n)
-            } else {
-                CountSpelling::Exactly(n)
+                "at least " => (
+                    Cardinality {
+                        minimum: Some(n),
+                        maximum: None,
+                    },
+                    CountSpelling::AtLeast(n),
+                ),
+                "at most " => (
+                    Cardinality {
+                        minimum: None,
+                        maximum: Some(n),
+                    },
+                    CountSpelling::AtMost(n),
+                ),
+                _ => (
+                    Cardinality {
+                        minimum: Some(n),
+                        maximum: Some(n),
+                    },
+                    CountSpelling::Exactly(n),
+                ),
             };
             return Ok((card, object, spelling));
         }
     }
     Err(error(
-        "count is not accepted; accepted form: Each FS must cite at least one GOAL.",
+        "count is not accepted; the canonical counts are \"at least one\", \"at least N\", \"at most N\", \"exactly one\" and \"exactly N\" for a base-10 N; accepted form: Each FS must cite at least one GOAL.",
     ))
 }
 

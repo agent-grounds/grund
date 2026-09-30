@@ -217,3 +217,21 @@ fn a_chapter_floor_above_one_takes_the_plural_noun() {
         "error: chapter count has the wrong singular/plural spelling; accepted form: Each FS must have at least 2 requirements chapters.\n",
     );
 }
+
+/// §FS-rules.3, §FS-errors.3: the catch-all a sentence reaches when its count is
+/// spelled some other way now names the five canonical counts, appended after
+/// the clause it already printed - so `count is not accepted;` stays a verbatim
+/// contiguous prefix and no shipped bytes are rewritten.
+#[test]
+fn the_catch_all_count_refusal_names_every_canonical_count() {
+    let output = run(
+        &fixture(),
+        &["check", ".", "--rule", "Each FS must cite some GOAL."],
+    );
+    assert_run(
+        &output,
+        2,
+        "",
+        "error: count is not accepted; the canonical counts are \"at least one\", \"at least N\", \"at most N\", \"exactly one\" and \"exactly N\" for a base-10 N; accepted form: Each FS must cite at least one GOAL.\n",
+    );
+}
