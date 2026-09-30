@@ -344,9 +344,10 @@ fn a_failed_id_query_carries_a_null_authority() {
     assert_run(&output, 1, "", expected);
 }
 
-/// §FS-errors.5.2.3, §FS-check.2.1.2: a run-level finding is about the run
-/// rather than about a unit, so it carries a null authority — and selection has
-/// no power over it in either direction.
+/// §FS-errors.5.2.3: a run-level finding is about the run rather than about a
+/// unit, so no rule authored it and it carries a null authority. What selection
+/// then does with it is
+/// `a_scoped_run_drops_a_run_level_warning_as_the_code_axis_does`.
 #[test]
 fn a_run_level_warning_carries_a_null_authority() {
     let root = scratch("run-level-authority");
@@ -379,4 +380,34 @@ fn an_incomplete_run_survives_the_authority_axis() {
         "",
         "error: docs/fs/FS-gone.md: broken symlink: the target does not exist\n",
     );
+}
+
+/// §FS-errors.5.2.3, §FS-check.2.1.3: what a scoped run costs an author whose
+/// tree scanned nothing. No rule authored the empty-scan warning, so the
+/// authority axis drops it and the run prints `success` at exit 0 — the code
+/// axis drops it the same way, which is why this is selection working rather
+/// than `--only-rule` diverging. The half that passes before this case existed
+/// is the premise: the plain run does print the warning.
+#[test]
+fn a_scoped_run_drops_a_run_level_warning_as_the_code_axis_does() {
+    const FAMILY: &str = "Each FS must have exactly one security chapter.";
+
+    let root = scratch("run-level-scoped");
+    fs::remove_dir_all(root.join("docs")).expect("empty the scan");
+    fs::create_dir_all(root.join("docs")).expect("recreate the scanned folder");
+
+    let plain = run(&root, &["check", ".", "--rule", FAMILY]);
+    assert_eq!(plain.status.code(), Some(0), "a warning does not move the exit");
+    assert_eq!(text(&plain.stdout), "", "a warning is not stdout's");
+    assert!(
+        text(&plain.stderr).starts_with("warning: nothing to scan"),
+        "the premise does not hold — the plain run says no such warning:\n{}",
+        text(&plain.stderr)
+    );
+
+    let scoped = run(&root, &["check", ".", "--rule", FAMILY, "--only-rule"]);
+    assert_run(&scoped, 0, "success\n", "");
+
+    let by_code = run(&root, &["check", ".", "--only", "missing-citation"]);
+    assert_run(&by_code, 0, "success\n", "");
 }
