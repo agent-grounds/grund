@@ -397,7 +397,11 @@ fn a_scoped_run_drops_a_run_level_warning_as_the_code_axis_does() {
     fs::create_dir_all(root.join("docs")).expect("recreate the scanned folder");
 
     let plain = run(&root, &["check", ".", "--rule", FAMILY]);
-    assert_eq!(plain.status.code(), Some(0), "a warning does not move the exit");
+    assert_eq!(
+        plain.status.code(),
+        Some(0),
+        "a warning does not move the exit"
+    );
     assert_eq!(text(&plain.stdout), "", "a warning is not stdout's");
     assert!(
         text(&plain.stderr).starts_with("warning: nothing to scan"),
