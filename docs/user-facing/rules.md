@@ -93,19 +93,23 @@ subject that selects nothing at all prints nothing and exits 0.
 The complete accepted sentence forms, with representative findings, are:
 
 - `Each FS must have at least one requirements chapter.` → `chapter-cardinality`.
+- `Each FS must have at least 2 requirements chapters.` → `chapter-cardinality`.
 - `FS-login should have at most 2 goals chapters.` → suggestion `chapter-cardinality`.
 - `Each FS must have exactly one requirements chapter.` → `chapter-cardinality`.
 - `Each FS should have exactly 2 review chapters.` → suggestion `chapter-cardinality`.
 - `Each FS must cite at least one GOAL or REQ.` → zero matches reuse `missing-citation`.
 - `The requirements chapter of each FS must cite at least one REQ.` → zero matches reuse `missing-citation`; a declaration with no such chapter, `unreached-declaration`.
 - `Each FS should cite at least one GOAL.` → suggestion `suggested-citation`.
+- `Each FS must cite at least 2 REQ.` → `citation-cardinality`, including at zero, because the floor is above one.
 - `FS-login.requirements should cite at most 2 REQ.` → suggestion `citation-cardinality`.
 - `FS-login.requirements must cite exactly one REQ.` → `citation-cardinality`.
 - `AR-overview.system-overview must cite each AR at least once.` → one `citation-cardinality` per missed AR.
+- `AR-overview.system-overview must cite each AR at least 2 times.` → one `citation-cardinality` per short-counted AR.
 - `AR-overview.system-overview should cite each AR at most 2 times.` → suggestion `citation-cardinality`.
 - `AR-overview.system-overview must cite each AR exactly once.` → one `citation-cardinality` per off-count AR.
 - `AR-overview.system-overview should cite each AR exactly 2 times.` → suggestion `citation-cardinality`.
 - `Each FS must be cited by at least one AR.` → `uncited-unit`.
+- `Each FS must be cited by at least 2 AR.` → `uncited-unit`.
 - `FS-login.requirements should be cited by at most 2 AR or GOAL.` → suggestion `uncited-unit`.
 - `Each FS must be cited by exactly one AR.` → `uncited-unit`.
 - `Each FS must not cite any AR.` → one site-anchored `forbidden-citation` per citation.
@@ -124,6 +128,8 @@ Common refusals are intentional and name the exact accepted rewrite:
 - `Each FS may not cite any AR.` → `modality "may not" is not accepted; accepted form: Each FS must not cite any AR.`
 - `Each FS must cite no AR.` → `"cite no" is not accepted; accepted form: Each FS must not cite any AR.`
 - `Each FS must cite a GOAL.` → `quantifier "a" is ambiguous; accepted forms: "Each FS must cite at least one GOAL." or "Each FS must cite exactly one GOAL."`
+- `Each FS must cite at least 1 GOAL.` → `numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one GOAL.`
+- `Each FS must cite exactly 1 GOAL.` → `numeric "exactly 1" is not canonical; accepted form: Each FS must cite exactly one GOAL.`
 - `Each FS must cite at least one GOAL and must not cite any AR.` → `conjunctions are not accepted; accepted forms: "Each FS must cite at least one GOAL." and "Each FS must not cite any AR."`
 - `Each FS must have exactly one  chapter.` → `chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter.`
 - `Each FS must cite at least one GOAL` → `rule must end with "."; accepted form: Each FS must cite at least one GOAL.`

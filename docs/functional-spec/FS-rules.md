@@ -114,12 +114,16 @@ The normative language is the following closed controlled-English grammar.
 Fixed words and kind names are case-sensitive, every rule ends with exactly one
 terminal `.`, and one sentence contains exactly one semantic verb. `N` is a
 positive base-10 integer. `one` takes singular `chapter`; every numeric `N`
-other than one takes `chapters`. The only accepted families are the following.
+other than one takes `chapters`. A lower bound and an exact count spell one as
+the word `one` and refuse the numeral, so `at least 1` and `exactly 1` are not
+sentences; an upper bound spells it as the numeral, so `at most 1` is the only
+spelling of a ceiling of one. The only accepted families are the following.
 
 ### 3.1 Chapter presence
 
 ```text
 <subject> must|should have at least one <NAME> chapter.
+<subject> must|should have at least N <NAME> chapters.
 <subject> must|should have at most N <NAME> chapter|chapters.
 <subject> must|should have exactly one <NAME> chapter.
 <subject> must|should have exactly N <NAME> chapters.
@@ -139,6 +143,7 @@ fail a run rather than warn in it.
 
 ```text
 <subject> must|should cite at least one <KIND> [or <KIND> ...].
+<subject> must|should cite at least N <KIND> [or <KIND> ...].
 <subject> must|should cite at most N <KIND> [or <KIND> ...].
 <subject> must|should cite exactly N <KIND> [or <KIND> ...].
 ```
@@ -152,6 +157,7 @@ zero reuses `missing-citation`; every other count failure uses
 
 ```text
 <subject> must|should cite each <KIND> at least once.
+<subject> must|should cite each <KIND> at least N times.
 <subject> must|should cite each <KIND> at most N times.
 <subject> must|should cite each <KIND> exactly once.
 <subject> must|should cite each <KIND> exactly N times.
@@ -169,6 +175,7 @@ Inbound counts use the same canonical counts as ordinary outbound citations:
 
 ```text
 <subject> must|should be cited by at least one <KIND> [or <KIND> ...].
+<subject> must|should be cited by at least N <KIND> [or <KIND> ...].
 <subject> must|should be cited by at most N <KIND> [or <KIND> ...].
 <subject> must|should be cited by exactly N <KIND> [or <KIND> ...].
 ```
@@ -197,6 +204,8 @@ least these exact rows:
 | `Each FS may not cite any AR.` | `modality "may not" is not accepted; accepted form: Each FS must not cite any AR.` |
 | `Each FS must cite no AR.` | `"cite no" is not accepted; accepted form: Each FS must not cite any AR.` |
 | `Each FS must cite a GOAL.` | `quantifier "a" is ambiguous; accepted forms: "Each FS must cite at least one GOAL." or "Each FS must cite exactly one GOAL."` |
+| `Each FS must cite at least 1 GOAL.` | `numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one GOAL.` |
+| `Each FS must cite exactly 1 GOAL.` | `numeric "exactly 1" is not canonical; accepted form: Each FS must cite exactly one GOAL.` |
 | `Each FS must cite at least one GOAL and must not cite any AR.` | `conjunctions are not accepted; accepted forms: "Each FS must cite at least one GOAL." and "Each FS must not cite any AR."` |
 | `Each FS must cite at least one GOAL` | `rule must end with "."; accepted form: Each FS must cite at least one GOAL.` |
 | `each FS must cite at least one GOAL.` | `fixed word "Each" is case-sensitive; accepted form: Each FS must cite at least one GOAL.` |
