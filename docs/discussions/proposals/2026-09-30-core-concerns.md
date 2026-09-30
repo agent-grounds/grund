@@ -305,7 +305,7 @@ Each entry below is a correction to the draft this document replaces, or a confi
 
 ### 6.1 Confirmed
 
-Three concerns, no `style` concern and none merged (V-A01). The strength vocabulary `must | warn | should | may`, with `warn` distinct from `should` (V-C02). `section_separator` stays (V-A12). Scalar fields as `## status: Accepted`, and no bold-label syntax in v2 (V-A07). `citable` and `scan` are not derivable, and one `form` key replaces two booleans (V-A08, as amended in [§DISC-core-concerns.6.4](2026-09-30-core-concerns.md#64-amended-after-the-verdict-v-a08)). Kind-scope budgets deferred (V-A16). `[output]` to run flags (V-A22). `grounding` stays a key, and grounding counts an inline declaration (V-C11, V-A19).
+Three concerns, no `style` concern and none merged (V-A01). The strength vocabulary `must | warn | should | may`, with `warn` distinct from `should` (V-C02). `section_separator` stays (V-A12). Scalar fields as `## status: Accepted`, and no bold-label syntax in v2 (V-A07). `citable` and `scan` are not derivable, and one `form` key replaces two booleans (V-A08, as amended in [§DISC-core-concerns.6.4](2026-09-30-core-concerns.md#64-amended-after-the-verdict-v-a08-and-v-a14)). Kind-scope budgets deferred (V-A16). `[output]` to run flags (V-A22). `grounding` stays a key, and grounding counts an inline declaration (V-C11, V-A19).
 
 ### 6.2 Corrected
 
@@ -330,11 +330,13 @@ Four entries were disputed and the repository owner ruled them on 2026-09-30.
 | V-D03 | An omitted scan set is the config root, bounded by `respect_gitignore`, `exclude` and the admitted languages. Over-inclusion fails loudly and one `exclude` line fixes it; a bounded list fails silently on a source root nobody named, which is the blind spot [§REQ-no-missed-citation](../../requirements/REQ-no-missed-citation.md#req-no-missed-citation-every-citation-the-run-reads-is-checked) exists to close. |
 | V-D04 | The language table is `[schema.sources.definitions.<name>]`. |
 
-### 6.4 Amended after the verdict: V-A08
+### 6.4 Amended after the verdict: V-A08 and V-A14
 
 V-A08 reads *the kind row keeps `file`, `folder` (two keys, mutually exclusive)*. That clause is **amended**, not confirmed. On [2026-09-30T09:05:23Z](https://github.com/agent-grounds/grund/issues/347#issuecomment-5907898693) the repository owner ruled that any kind, citable or not, takes several places, and that the v2 keys are therefore `folders` and `files` — lists, either or both admitted on one row. One home is a one-element list.
 
 The rest of V-A08 stands: `citable` and `scan` are not derivable, `id_format` is the row's ID template, and one `form` key replaces two booleans. **v1 keeps `file` and `folder` as the singular, mutually exclusive keys under their own meaning**, which [§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning) makes permanent — so this is a v2 spelling replacing a v1 spelling, not a v1 key changing sense.
+
+**V-A14's `include` clause is amended too.** V-A14 reads *`[schema.sources]` keeps `include`, `exclude`, `respect_gitignore`, `languages` and the `extensions` map*, and argues in plain words that `include` cannot be derived. The same comment rules that **`include` has no v2 spelling**: the scan set is the union of every row's places, which is what [§DISC-core-concerns.7.2](2026-09-30-core-concerns.md#72-places-on-the-rows-and-what-the-lists-make-necessary), [§DISC-core-concerns.7.4](2026-09-30-core-concerns.md#74-what-the-format-leaves-out) and [§DISC-core-concerns.8.4](2026-09-30-core-concerns.md#84-dropping-include-widens-no-scan) act on. That clause is **amended**, not confirmed; the rest of V-A14 stands, including the `languages` default fixed at the v2 epoch that [§DISC-core-concerns.6.2](2026-09-30-core-concerns.md#62-corrected) records. V-D03 of [§DISC-core-concerns.6.3](2026-09-30-core-concerns.md#63-ruled) is read under the amendment: it is an omitted scan set that defaults to the config root, because there is no longer a key to omit.
 
 Three further points were ruled in the same comment and are recorded here beside the four of [§DISC-core-concerns.6.3](2026-09-30-core-concerns.md#63-ruled), because they carry the same authority and the same date:
 
@@ -392,6 +394,7 @@ warn = 600
 
 [schema.kinds.FS]                             # keyed rows: a field always names its owner
 folders = ["docs/spec/core", "docs/spec/plugins"]
+index = "README.md"                           # a rules key, left on the schema row (V-A10)
 [schema.kinds.FS.fields.terms]
 title = "Terms"
 presence = "must"

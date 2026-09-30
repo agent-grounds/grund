@@ -58,7 +58,7 @@ One row per key of the format in force, in the order [§FS-config.3](../../funct
 | `[reference] require_grounding` | rules | Whether a file must cite something: the finding names a file and the citations it does not have. |
 | `[reference] shorthand` | schema | Whether a persisted number-only citation is well formed. One citation site. |
 | `[reference] strict` | schema | Whether an unmarked ID-shaped token is a citation. It decides what exists. |
-| `[reference] trigger` | presentation | The characters an editor turns into the marker. Nothing persists it and nothing checks it. |
+| `[reference] trigger` | presentation | The characters an editor turns into the marker. What it decides is what an editor types, which no check judges. |
 | `[reference] warn_on_suggested` | schema | The severity of the suggested-lines budget, which is still about one note. |
 | `[id] format` | schema | The shape a well-formed ID has. |
 | `[id] named_sections` | schema | Whether a heading may carry a name rather than a number. |
@@ -92,7 +92,6 @@ One row per key of the format in force, in the order [§FS-config.3](../../funct
 | `[output] relative_paths` | presentation | Which base a reported path is printed against. |
 | `[fmt.cross_refs] anchor_format` | presentation | Which anchor dialect a written link uses. |
 | `[fmt.cross_refs] enabled` | presentation | Whether `fmt` writes the link beside a citation. |
-| `[fmt] exclude` | presentation | Which files `grund fmt --write` may rewrite. |
 | `[workspace] include_root` | envelope | Whether the root is one of the projects. |
 | `[workspace] members` | envelope | Which projects there are. |
 | `[workspace] optional_members` | envelope | The same, for a member that may be absent. |
@@ -103,6 +102,7 @@ One row per key of the format in force, in the order [§FS-config.3](../../funct
 | `[citations.<KIND>] must-not` | rules | A prohibition between the same two. |
 | `[citations.<KIND>] should` | rules | The suggestion form of the obligation. |
 | `[citations.<KIND>] should-not` | rules | The suggestion form of the prohibition. |
+| `[fmt] exclude` | presentation | Which files `grund fmt --write` may rewrite. |
 
 That is 33 schema, 13 rules, 10 presentation and 5 envelope.
 
