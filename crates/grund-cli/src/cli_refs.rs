@@ -213,18 +213,19 @@ fn render_ref_hit_json(hit: &RefHit, workspace: bool, kind_title: Option<&str>) 
         .map(|title| format!(",\"kind_title\":\"{}\"", json_escape(title)))
         .unwrap_or_default();
     format!(
-        "{{{}\"path\":\"{}\",\"line\":{},\"column\":{},\"id\":\"{}\",\"section\":{},\"marker\":{},\"text\":\"{}\"{}}}",
+        "{{{}\"path\":\"{}\",\"line\":{},\"column\":{},\"id\":\"{}\",\"section\":{},\"marker\":{},\"text\":\"{}\",\"enclosing_declaration\":{},\"enclosing_section\":{}{}}}",
         project_field,
         json_escape(&hit.path),
         hit.line,
         hit.column,
         json_escape(&hit.id),
-        hit.section
-            .as_deref()
-            .map(|section| format!("\"{}\"", json_escape(section)))
-            .unwrap_or_else(|| "null".to_string()),
+        json_string_or_null(hit.section.as_deref()),
         hit.marker,
         json_escape(&hit.text),
+        // §FS-refs.3.2: the citing site's unit between `text` and `kind_title`,
+        // which stays the record's final field (§FS-refs.3.2.1).
+        json_string_or_null(hit.enclosing_declaration.as_deref()),
+        json_string_or_null(hit.enclosing_section.as_deref()),
         metadata
     )
 }

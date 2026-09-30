@@ -68,6 +68,15 @@ fn json_escape(raw: &str) -> String {
     escaped
 }
 
+/// §FS-cover.3.2, §FS-refs.3.2: a `string | null` JSON field, always present so
+/// a caller reads the key rather than testing for it. One definition, so the
+/// `cover` and `refs` citation records cannot render a `null` two ways.
+fn json_string_or_null(value: Option<&str>) -> String {
+    value
+        .map(|value| format!("\"{}\"", json_escape(value)))
+        .unwrap_or_else(|| "null".to_string())
+}
+
 /// Restore the default `SIGPIPE` disposition (Unix only).
 ///
 /// Rust ignores `SIGPIPE` at startup, which turns a closed downstream pipe

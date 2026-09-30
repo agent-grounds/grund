@@ -118,18 +118,18 @@ fn render_cover_text(entries: &[grund_core::CoverEntry]) {
 
 fn render_cover_citation_json(citation: &CoverCitation) -> String {
     format!(
-        "{{{}\"path\":\"{}\",\"line\":{},\"column\":{},\"id\":\"{}\",\"section\":{},\"marker\":{},\"text\":\"{}\"}}",
+        "{{{}\"path\":\"{}\",\"line\":{},\"column\":{},\"id\":\"{}\",\"section\":{},\"marker\":{},\"text\":\"{}\",\"enclosing_declaration\":{},\"enclosing_section\":{}}}",
         cover_project_field(citation.project.as_deref()),
         json_escape(&citation.path),
         citation.line,
         citation.column,
         json_escape(&citation.id),
-        citation
-            .section
-            .as_deref()
-            .map(|section| format!("\"{}\"", json_escape(section)))
-            .unwrap_or_else(|| "null".to_string()),
+        json_string_or_null(citation.section.as_deref()),
         citation.marker,
-        json_escape(&citation.text)
+        json_escape(&citation.text),
+        // §FS-cover.3.2: the citing site's unit, after `text`; the field-order
+        // parity with `refs` is of the fields the two share.
+        json_string_or_null(citation.enclosing_declaration.as_deref()),
+        json_string_or_null(citation.enclosing_section.as_deref())
     )
 }

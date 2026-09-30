@@ -97,7 +97,11 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
             "{\"project\":\"root\",\"path\":\"FS-root.md\",\"citations\":[",
             "{\"project\":\"root\",\"path\":\"FS-root.md\",\"line\":3,\"column\":16,",
             "\"id\":\"hw/FS-nozzle\",\"section\":null,\"marker\":true,",
-            "\"text\":\"§hw/FS-nozzle\"}]}\n",
+            // §FS-cover.3.2: the citing site sits in `FS-root`'s body, above
+            // every section, and `enclosing_declaration` stays bare in a
+            // workspace (§FS-workspace.8.6).
+            "\"text\":\"§hw/FS-nozzle\",",
+            "\"enclosing_declaration\":\"FS-root\",\"enclosing_section\":null}]}\n",
         )
     );
 
@@ -172,7 +176,10 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
                 "{\"path\":\"external-link.md\",\"citations\":[",
                 "{\"path\":\"external-link.md\",\"line\":3,\"column\":12,",
                 "\"id\":\"FS-missing\",\"section\":null,\"marker\":true,",
-                "\"text\":\"\u{a7}FS-missing\"}]}\n",
+                // §FS-cover.3.2: a narrowed scan performs the citing-side pass
+                // too, so this record answers as the aggregate one does.
+                "\"text\":\"\u{a7}FS-missing\",",
+                "\"enclosing_declaration\":\"FS-external\",\"enclosing_section\":null}]}\n",
             )
         );
         let physical = external.to_string_lossy();
