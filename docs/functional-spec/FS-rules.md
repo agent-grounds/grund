@@ -67,7 +67,7 @@ The four accepted subject spellings are:
 |---|---|
 | `Each KIND` | every local declaration of that configured citable kind |
 | `ID` | the one local declaration with that full ID |
-| `The NAME chapter of each KIND` | that named chapter of every local declaration of the kind |
+| `The NAME chapter of each KIND` | that named chapter of every local declaration of the kind that has one |
 | `ID.NAME[.NAME…]` | the one local named chapter with that exact coordinate |
 
 A token exactly equal to a configured citable kind name is the quantified kind
@@ -75,8 +75,18 @@ selector; any longer token must parse as a full ID under that kind's effective
 grammar. Named components require `[id] named_sections = true` and obey the
 configured named-section grammar. An exact literal subject must resolve to one
 unit; zero matches or ambiguity produces `invalid-rule` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)). A quantified
-kind or chapter subject matching no declarations is valid, vacuously true, and
-silent. Kind-level existence is not expressible in phase 1.
+subject selects only the units that exist: a chapter subject selects the named
+chapter of every local declaration of the kind that has one, so a declaration
+without it contributes no unit rather than a failing one, and over an empty
+selection a rule is valid, vacuously true, and silent. The two spellings
+therefore part on the same absence — deleting the `requirements` chapter makes
+`FS-login.requirements must cite at least one REQ.` an `invalid-rule` and makes
+`The requirements chapter of each FS must cite at least one REQ.` silent about
+`FS-login`. A quantified chapter subject selects only the chapters that exist,
+so a chapter-scoped citation rule holds for every declaration of the kind only
+when a chapter-presence rule stands beside it. That family is
+[§FS-rules.3.1](FS-rules.md#31-chapter-presence). Kind-level existence is not
+expressible in phase 1.
 
 Subject-side aliases, including `*/`, component wildcards,
 numbered chapter literals, `Each chapter of each KIND`, and file, directory, or
@@ -110,6 +120,9 @@ other than one takes `chapters`. The only accepted families are the following.
 The subject may be a kind or exact declaration, not a chapter. The rule counts
 the subject declaration's accepted direct chapters whose display name is
 `NAME`. A count outside the stated interval produces `chapter-cardinality`.
+This family is also what makes a chapter-scoped citation rule hold for a whole
+kind: without a presence rule beside it, such a rule says nothing at all about
+a declaration that has no such chapter ([§FS-rules.2](FS-rules.md#2-subject-selectors)).
 
 ### 3.2 Outbound citation count
 
@@ -489,13 +502,19 @@ golden example at `examples/rules/`, links from the root README and
 `examples/README.md`, and no second skill. The guide teaches opt-in and rationale
 bodies, every subject and family, counts and modalities, every finding and both
 channels, ordering, both deduplication directions, both command flags,
-validation lifecycle, and every explicit phase-1 absence.
+validation lifecycle, every explicit phase-1 absence, what a quantified subject
+does not select, and the presence rule a chapter-scoped citation rule needs
+beside it.
 
 The guide has a marked `### Chapter rules` writing section. Both repository and
 binary-embedded copies of `skills/grund-init/SKILL.md` contain a marked byte-
 identical copy of that section and remain wholly byte-identical to one another.
 The section includes every accepted family, every [§FS-rules.3.5](FS-rules.md#35-strict-refusals) refusal with its exact
-rewrite, and the finding each example produces.
+rewrite, the finding each example produces, and the worked pairing of a
+chapter-presence rule with the chapter-scoped citation rule it makes hold for
+the whole kind ([§FS-rules.2](FS-rules.md#2-subject-selectors)). Its leading
+sentence on that pairing is byte-identical to the specification's, so neither
+can be reworded without the other.
 
 The runnable example contains at least one passing and one violated instance of
 all five families. Its guide quotes every violated instance's exact finding and

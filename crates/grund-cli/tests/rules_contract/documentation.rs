@@ -1,7 +1,7 @@
 //! The four synchronized documentation pins required by §FS-rules.10: runnable
 //! example goldens, executable guide rows, skill bytes, and managed rendering.
 
-use super::support::{fixture, repo_root, run, scratch, text};
+use super::support::{assert_run, fixture, repo_root, run, scratch, text};
 use std::fs;
 
 fn marked<'a>(bytes: &'a [u8], begin: &[u8], end: &[u8]) -> &'a [u8] {
@@ -16,6 +16,10 @@ fn marked<'a>(bytes: &'a [u8], begin: &[u8], end: &[u8]) -> &'a [u8] {
         .expect("end marker")
         + start;
     &bytes[start..finish]
+}
+
+fn collapsed(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 #[test]
@@ -106,7 +110,7 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         }
         accepted_count += 1;
     }
-    assert_eq!(accepted_count, 17, "accepted guide-row inventory drifted");
+    assert_eq!(accepted_count, 18, "accepted guide-row inventory drifted");
 
     let refused = marked(
         guide.as_bytes(),
@@ -152,6 +156,86 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         refused_count += 1;
     }
     assert_eq!(refused_count, 14, "refused guide-row inventory drifted");
+}
+
+/// The guide may not teach the emptiness rule in words the specification does
+/// not use: the pairing sentence is one string in both places, so neither can
+/// be reworded, and neither dropped, without the other (§FS-rules.10).
+#[test]
+fn the_documented_emptiness_rule_is_the_specifications() {
+    let root = repo_root();
+    let guide = fs::read(root.join("docs/user-facing/rules.md")).expect("rules guide");
+    let begin = b"<!-- BEGIN chapter-rules-emptiness -->\n";
+    let end = b"<!-- END chapter-rules-emptiness -->";
+    assert!(
+        guide.windows(begin.len()).any(|window| window == begin),
+        "the rules guide has no chapter-rules-emptiness region"
+    );
+    let region = std::str::from_utf8(marked(&guide, begin, end)).expect("emptiness region");
+    let lead = collapsed(
+        region
+            .split("\n\n")
+            .find(|paragraph| !paragraph.trim().is_empty())
+            .expect("emptiness region lead paragraph"),
+    );
+    let spec =
+        fs::read_to_string(root.join("docs/functional-spec/FS-rules.md")).expect("rules spec");
+    assert!(
+        collapsed(&spec).contains(&lead),
+        "the guide's emptiness rule is not the specification's: {lead}"
+    );
+}
+
+/// The behaviour the new documentation asserts, either way round: the rule
+/// reports the chapter that cites nothing and says nothing at all about the
+/// declaration that has no such chapter (§FS-rules.2). Without the second
+/// half the accepted guide row above passes vacuously.
+#[test]
+fn a_chapter_rule_is_silent_about_a_declaration_without_the_chapter() {
+    let sentence = "The requirements chapter of each FS must cite at least one REQ.";
+    let args = [
+        "check",
+        ".",
+        "--rule",
+        sentence,
+        "--only",
+        "missing-citation",
+        "--format",
+        "json",
+    ];
+
+    let present = unconfigured_rules("documented-present-chapter");
+    assert_run(
+        &run(&present, &args),
+        1,
+        "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":6,\
+         \"code\":\"missing-citation\",\
+         \"message\":\"FS-demo.requirements must cite REQ (--rule)\",\"sites\":null}\n",
+        "",
+    );
+
+    let absent = unconfigured_rules("documented-absent-chapter");
+    let declaration = absent.join("docs/fs/FS-demo.md");
+    let body = fs::read_to_string(&declaration).expect("fixture declaration");
+    let chapter = body
+        .find("## requirements: Requirements")
+        .expect("fixture requirements chapter");
+    fs::write(&declaration, format!("{}\n", body[..chapter].trim_end()))
+        .expect("delete the requirements chapter");
+    assert_run(&run(&absent, &args), 0, "", "");
+}
+
+/// A scratch fixture whose configured rules are off, so a `--rule` run reports
+/// that sentence and nothing else.
+fn unconfigured_rules(name: &str) -> std::path::PathBuf {
+    let root = scratch(name);
+    let config = fs::read_to_string(root.join("grund.toml")).expect("fixture config");
+    fs::write(
+        root.join("grund.toml"),
+        config.replace("rules = true\n", ""),
+    )
+    .expect("disable configured rules");
+    root
 }
 
 #[test]
