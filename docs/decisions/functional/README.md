@@ -56,6 +56,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 
 - [§DF-config-file-location](DF-config-file-location.md#df-config-file-location-grundtoml-is-discovered-at-two-names-per-directory-and-init-writes-the-bare-one) — grund.toml is discovered at two names per directory, and init writes the bare one
 - [§DF-config-scope-override](DF-config-scope-override.md#df-config-scope-override-the-committed-scopes-are-one-relation-stated-once) — the committed scopes are one relation, stated once
+- [§DF-config-concerns](DF-config-concerns.md#df-config-concerns-a-keys-concern-is-derived-from-what-a-finding-from-it-can-be-about) — a key's concern is derived from what a finding from it can be about
 - [§DF-verdict-vocabulary-freeze](DF-verdict-vocabulary-freeze.md#df-verdict-vocabulary-freeze-the-freeze-is-on-the-verdict-vocabulary-not-on-which-rules-a-project-holds-in-force) — the freeze is on the verdict vocabulary, not on which rules a project holds in force
 - [§DF-non-citable-kinds](DF-non-citable-kinds.md#df-non-citable-kinds-a-kind-may-declare-no-ids-and-stays-one-kinds-table-when-it-does) — a kind may declare no IDs, and stays one `[[kinds]]` table when it does
 - [§DF-unwalked-kind-home](DF-unwalked-kind-home.md#df-unwalked-kind-home-a-kind-may-be-a-place-that-is-listed-but-not-walked) — a kind may be a place that is listed but not walked
