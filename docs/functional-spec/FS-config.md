@@ -7,7 +7,7 @@
 Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (declaration, ID, kind, home, citable, body, section, coordinate,
 lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, qualified citation, shorthand,
 citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms) (source declaration, stub, doc-comment, note),
-[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, place, workspace, member, alias),
+[§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, config root, place, complement place, workspace, member, alias),
 [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, suggestion), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (direction, level,
 rule, unit, grounded), [§FS-terms.terms.7](FS-terms.md#terms7-values-and-integrations) (value, snapshot), and
 [§FS-terms.terms.9](FS-terms.md#terms9-the-configurations-concerns) (schema, rules, presentation, envelope).
