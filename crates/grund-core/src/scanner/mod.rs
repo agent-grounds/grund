@@ -68,6 +68,7 @@ mod section_record;
 mod tree;
 mod units;
 mod unmarked_headings;
+mod value_binding_attempts;
 mod value_context;
 mod value_json;
 mod value_json_enrollment;

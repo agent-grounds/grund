@@ -65,6 +65,8 @@ pub(crate) use records::{
 pub(crate) use report::{CheckReport, Diagnostic, Site};
 pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};
 pub(crate) use values::{
-    JSON_NUMBER_RE, authored_component, component_text_is_valid, named_section_component,
-    value_binding_section_shape_is_valid, value_components_equal,
+    JSON_NUMBER_RE, authored_component, component_text_is_valid, first_unequal_component,
+    joined_value_components, named_section_component, root_literal_parts,
+    value_binding_section_ends_in_coordinate, value_binding_section_shape_is_valid,
+    value_components_equal,
 };

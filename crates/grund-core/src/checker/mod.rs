@@ -50,6 +50,8 @@ mod selection;
 mod shorthand;
 mod sizes;
 mod support;
+mod value_mismatch;
+mod value_roots;
 mod values;
 
 pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
@@ -128,3 +130,5 @@ mod tests_shorthand;
 mod tests_unverifiable_rule_scope;
 #[cfg(test)]
 mod tests_value_json_duplicates;
+#[cfg(test)]
+mod tests_value_roots;
