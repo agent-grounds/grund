@@ -36,6 +36,10 @@ MODULE_NAME = THIS_FILE.stem
 # read and committed before the thing it describes exists. `unittest discover` runs
 # `test_*.py` only, so naming it this way keeps it out of collection.
 VOCABULARY_MODULE = "terms_vocabulary"
+# The sense filter that parse and `test_functional_spec_retired_words.py` both read
+# prose through. It lives beside this file under the same naming rule, so the two
+# modules are held together rather than one of them by reasoning about the other.
+PROSE_MODULE = "terms_prose"
 GATE_CLASS = "FunctionalSpecTermsInvariantTests"
 
 # The marker stays out of every literal a scan would read as a citation of a group:
@@ -356,11 +360,13 @@ class AdvisoryIsAskedForTests(FixtureHomeMixin):
 
 
 class ContractShapeTests(unittest.TestCase):
-    """What holds while the module itself is still missing."""
+    """What holds of the modules beside this file, whatever they come to contain."""
 
     def test_the_analysis_module_is_not_collected_as_a_test(self):
-        self.assertFalse(VOCABULARY_MODULE.startswith("test_"))
-        self.assertFalse((INTEGRATION / f"test_{VOCABULARY_MODULE}.py").exists())
+        for module in (VOCABULARY_MODULE, PROSE_MODULE):
+            with self.subTest(module=module):
+                self.assertFalse(module.startswith("test_"))
+                self.assertFalse((INTEGRATION / f"test_{module}.py").exists())
 
     def test_the_fixture_home_names_two_documents_and_a_vocabulary(self):
         with tempfile.TemporaryDirectory() as directory:
