@@ -229,7 +229,7 @@ replacements, alongside the independent missing-section diagnostic:
 
 ```text
 local section citation §2.1; write §FS-check.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
-local section citation §9.9; write §FS-check.9.9 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
+local section citation §9.9; write §FS-check.9.9 — unchecked in grund 0.13.1, an error in 0.14.0
 missing section FS-check.9.9
 ```
 
