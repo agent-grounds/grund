@@ -193,7 +193,7 @@ pub(crate) fn workspace_out_of_scope_references(
 /// The code is the in-scope one under an `out-of-scope-` prefix, so a
 /// `--format=json` consumer filters the tier by prefix and the rule by exact
 /// match on the `code` field the report shape already carries (§FS-errors.5.1) —
-/// one code for all four would leave the rule readable only in the prose.
+/// one code for all five would leave the rule readable only in the prose.
 ///
 /// The tier leads the message rather than trailing it: out here the fix is
 /// usually to widen `[scan] include`, so a rule's own fix-it hint ("did you

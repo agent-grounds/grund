@@ -67,8 +67,8 @@ fn an_unwalked_home_is_neither_grounded_nor_checked() {
 }
 
 /// §FS-config.3.4.7.5 / §FS-check.1.3.3: `--full` walks the whole root and
-/// reports resolution failures only — the dangling citation surfaces, the
-/// citation-free file earns no grounding finding.
+/// reports only the tier §FS-check.3.14.2 admits — the dangling citation
+/// surfaces, the citation-free file earns no grounding finding.
 #[test]
 fn full_reaches_an_unwalked_home_as_out_of_scope_territory() {
     let run = check_run(

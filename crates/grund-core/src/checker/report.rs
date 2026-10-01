@@ -218,8 +218,8 @@ use crate::scanner::is_scannable;
 /// outside it is invisible rather than merely unchecked. `grund check --full`
 /// widens the walk to the whole config root and the run then has two scopes.
 /// `references.rs` owns both halves of that: the tier is read off the
-/// *whole* walk first — resolution failures only, so a directory nobody
-/// configured is never judged against conventions it never adopted — and the
+/// *whole* walk first — only the tier §FS-check.3.14.2 admits, so a directory
+/// nobody configured is never judged against conventions it never adopted — and the
 /// findings are then narrowed in place to the configured scope, so every rule
 /// above sees exactly the tree a run without the flag sees. That ordering is
 /// what makes `--full` purely additive: it can only add findings, never withdraw

@@ -618,7 +618,7 @@ What an unscanned kind keeps: its home, its title, and its Project map row. What
 
 ##### 3.4.7.5 Under `--full`
 
-Under `grund check --full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)) the whole config root is scanned and its files are reached like any directory nobody configured: resolution failures only, never a convention it did not adopt. They are reached from *outside* the default scope even when a scan root encloses them ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)), because the scope is what a run without the flag reads, and that run does not read them.
+Under `grund check --full` ([§FS-check.1.3](FS-check.md#13-the-full-tree-scope---full)) the whole config root is scanned and its files are reached like any directory nobody configured: the five-finding tier of [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only), admitted by the test of [§FS-check.3.14.2](FS-check.md#3142-what-is-judged-outside-the-configured-scope), never a convention it did not adopt. They are reached from *outside* the default scope even when a scan root encloses them ([§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only)), because the scope is what a run without the flag reads, and that run does not read them.
 
 ##### 3.4.7.6 Three config errors
 

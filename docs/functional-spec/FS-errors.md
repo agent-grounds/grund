@@ -397,6 +397,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `invalid-value-binding` | error | — | `values = true` on a kind | [§FS-check.3.21](FS-check.md#321-invalid-value-binding) |
 | `invalid-value-declaration` | error | — | `values = true` on a kind | [§FS-check.3.20](FS-check.md#320-invalid-value-declaration) |
 | `io` | error | — | — | [§FS-check.2.4](FS-check.md#24-an-incomplete-run) |
+| `local-section-citation` | error | — | — | [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) |
 | `misplaced-declaration` | error | — | a configured kind home | [§FS-declarations.checks.misplaced-declaration](FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) |
 | `missing-citation` | error | — | a `must` entry | [§FS-check.3.11](FS-check.md#311-missing-required-citation) |
 | `missing-index-entry` | error | — | — | [§FS-check.3.18](FS-check.md#318-declaration-missing-from-its-kinds-index) |
@@ -406,6 +407,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `optional-member-absent` | warning | — | `optional = true` on a member | [§FS-check.4.9](FS-check.md#49-a-workspace-member-declared-optional-is-absent) |
 | `orphan-section` | error | — | `[id] named_sections` | [§FS-declarations.checks.orphan-section](FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path) |
 | `out-of-scope-dangling` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
+| `out-of-scope-local-section-citation` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
 | `out-of-scope-missing-section` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
 | `out-of-scope-shorthand-citation` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
 | `out-of-scope-unknown-project` | error | — | `--full` | [§FS-check.3.14](FS-check.md#314-out-of-scope-unresolvable-citation---full-only) |
