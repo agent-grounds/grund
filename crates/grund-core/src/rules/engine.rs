@@ -2,6 +2,8 @@
 
 mod authority;
 mod precedence;
+mod selectors;
+mod unreached;
 
 use super::facts::{Completeness, NodeKey, RuleFacts, SiteKey};
 use super::{
@@ -14,6 +16,23 @@ use std::collections::{BTreeMap, BTreeSet};
 use authority::Authority;
 pub(crate) use authority::one_rules_authority;
 pub(crate) use precedence::citation_precedence;
+use selectors::{
+    citation_matches_targets, declaration_kind, label, owning_declaration, select_subjects,
+    site_is_in, target_kind_matches, target_nodes, target_wording,
+};
+use unreached::report_unreached;
+
+/// One level of evaluation: the channel a rule finding has always had at that
+/// level, and the ramp's warnings beside it.
+///
+/// `unreached-declaration` is the one required-level rule finding carried on
+/// the warnings channel rather than the errors channel, for the length of its
+/// ramp and no longer (§FS-rules.7.7). It is a pair rather than a type so that
+/// the engine/checker crossing stays `Diagnostic` and nothing else
+/// (§AR-rules.5): when the ramp closes at `0.16.0` the second half goes away
+/// and the return collapses back to one `Vec`, leaving no clause that promises
+/// authors a soft `must`.
+type LevelFindings = (Vec<Diagnostic>, Vec<Diagnostic>);
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 struct SemanticRule {
@@ -31,7 +50,7 @@ pub(crate) fn evaluate(
     rules: &[ParsedRule],
     precedence: &[ParsedRule],
     facts: &RuleFacts,
-) -> Vec<Diagnostic> {
+) -> LevelFindings {
     evaluate_level(rules, precedence, facts, RuleLevel::Required, true)
 }
 
@@ -43,7 +62,9 @@ pub(crate) fn evaluate_suggestions(
     precedence: &[ParsedRule],
     facts: &RuleFacts,
 ) -> Vec<Diagnostic> {
-    evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false)
+    // §FS-rules.7.7: the recommended level has one channel of its own, so the
+    // absence is an ordinary suggestion there and the ramp field stays empty.
+    evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false).0
 }
 
 fn evaluate_level(
@@ -52,13 +73,14 @@ fn evaluate_level(
     facts: &RuleFacts,
     level: RuleLevel,
     include_invalid: bool,
-) -> Vec<Diagnostic> {
+) -> LevelFindings {
     let mut groups: BTreeMap<SemanticRule, BTreeSet<String>> = BTreeMap::new();
     let precedence = precedence
         .iter()
         .map(SemanticRule::from)
         .collect::<BTreeSet<_>>();
     let mut out = Vec::new();
+    let mut ramp = Vec::new();
     for rule in rules {
         if let Some(diagnostic) = unresolved_subject_diagnostic(rule, facts) {
             if include_invalid {
@@ -78,9 +100,9 @@ fn evaluate_level(
         if precedence.contains(&rule) {
             continue;
         }
-        evaluate_one(&rule, &Authority::new(origins), facts, &mut out);
+        evaluate_one(&rule, &Authority::new(origins), facts, &mut out, &mut ramp);
     }
-    out
+    (out, ramp)
 }
 
 impl From<&ParsedRule> for SemanticRule {
@@ -148,14 +170,29 @@ fn evaluate_one(
     authority: &Authority,
     facts: &RuleFacts,
     out: &mut Vec<Diagnostic>,
+    ramp: &mut Vec<Diagnostic>,
 ) {
     let subjects = select_subjects(&rule.subject, facts);
-    // §FS-rules.4: every positive cardinality conclusion is closed-world.
+    // §FS-rules.4: every positive cardinality conclusion is closed-world, and
+    // the absence of §FS-rules.5.2's second premise is one of them.
     if facts.header.completeness == Completeness::Incomplete
         && rule.polarity == RulePolarity::Positive
     {
         return;
     }
+    // §FS-rules.7.7: the required level's absence is a warning for the length
+    // of its ramp; the recommended level's is an ordinary suggestion.
+    report_unreached(
+        rule,
+        authority,
+        facts,
+        &subjects,
+        if rule.level == RuleLevel::Required {
+            &mut *ramp
+        } else {
+            &mut *out
+        },
+    );
     match rule.relation {
         RuleRelation::HaveChapter => {
             let RuleTargets::Chapter(name) = &rule.targets else {
@@ -340,138 +377,6 @@ fn evaluate_cites(
             }
         }
     }
-}
-
-fn select_subjects(subject: &RuleSubject, facts: &RuleFacts) -> Vec<NodeKey> {
-    match subject {
-        RuleSubject::Kind(kind) => facts
-            .decl
-            .iter()
-            .filter(|(_, k)| k == kind)
-            .map(|(n, _)| n.clone())
-            .collect(),
-        RuleSubject::ExactDeclaration(wanted) => facts
-            .nodes
-            .iter()
-            .filter(|(_, m)| &m.label == wanted)
-            .map(|(n, _)| n.clone())
-            .collect(),
-        RuleSubject::ChapterOfKind { kind, name } => facts
-            .chapter
-            .iter()
-            .filter(|(chapter, path, _)| {
-                path.rsplit('.').next() == Some(name)
-                    && facts.contains.iter().any(|(parent, child)| {
-                        child == chapter
-                            && facts
-                                .decl
-                                .iter()
-                                .any(|(node, k)| node == parent && k == kind)
-                    })
-            })
-            .map(|(n, _, _)| n.clone())
-            .collect(),
-        RuleSubject::ExactChapter {
-            declaration, path, ..
-        } => facts
-            .chapter
-            .iter()
-            .filter(|(node, section, _)| {
-                section == path
-                    && owning_declaration(facts, node).is_some_and(|owner| {
-                        facts
-                            .nodes
-                            .get(&owner)
-                            .is_some_and(|meta| &meta.label == declaration)
-                    })
-            })
-            .map(|(n, _, _)| n.clone())
-            .collect(),
-    }
-}
-
-fn target_nodes(targets: &RuleTargets, facts: &RuleFacts) -> BTreeSet<NodeKey> {
-    facts
-        .decl
-        .iter()
-        .filter(|(_, kind)| target_kind_matches(targets, kind, facts))
-        .map(|(n, _)| n.clone())
-        .collect()
-}
-fn target_kind_matches(targets: &RuleTargets, kind: &str, facts: &RuleFacts) -> bool {
-    let RuleTargets::Kinds { values, .. } = targets else {
-        return false;
-    };
-    values.iter().any(|target| match target.split_once('/') {
-        None => target == kind,
-        Some(("*", target_kind)) => {
-            kind == target_kind || kind.ends_with(&format!("/{target_kind}"))
-        }
-        Some((project, target_kind)) => {
-            kind == format!("{project}/{target_kind}")
-                || (project == facts.header.project && kind == target_kind)
-        }
-    })
-}
-fn target_wording(targets: &RuleTargets) -> String {
-    match targets {
-        RuleTargets::Kinds { values, .. } => values.join(" or "),
-        RuleTargets::Chapter(name) => name.clone(),
-    }
-}
-fn site_is_in(site: &SiteKey, node: &NodeKey, facts: &RuleFacts) -> bool {
-    facts.site_in.iter().any(|(s, n)| s == site && n == node)
-}
-fn owning_declaration(facts: &RuleFacts, node: &NodeKey) -> Option<NodeKey> {
-    if facts.decl.iter().any(|(candidate, _)| candidate == node) {
-        return Some(node.clone());
-    }
-    let mut current = node;
-    while let Some((parent, _)) = facts.contains.iter().find(|(_, child)| child == current) {
-        if facts.decl.iter().any(|(candidate, _)| candidate == parent) {
-            return Some(parent.clone());
-        }
-        current = parent;
-    }
-    None
-}
-fn citation_matches_targets(
-    cited: &NodeKey,
-    targets: &BTreeSet<NodeKey>,
-    facts: &RuleFacts,
-) -> bool {
-    targets.contains(cited)
-        || owning_declaration(facts, cited).is_some_and(|owner| targets.contains(&owner))
-}
-fn declaration_kind(facts: &RuleFacts, node: &NodeKey) -> Option<String> {
-    if let Some(kind) = facts
-        .decl
-        .iter()
-        .find(|(n, _)| n == node)
-        .map(|(_, k)| k.clone())
-    {
-        return Some(kind);
-    }
-    let mut current = node;
-    while let Some((parent, _)) = facts.contains.iter().find(|(_, child)| child == current) {
-        if let Some(kind) = facts
-            .decl
-            .iter()
-            .find(|(candidate, _)| candidate == parent)
-            .map(|(_, kind)| kind.clone())
-        {
-            return Some(kind);
-        }
-        current = parent;
-    }
-    None
-}
-fn label(facts: &RuleFacts, node: &NodeKey) -> String {
-    facts
-        .nodes
-        .get(node)
-        .map(|m| m.label.clone())
-        .unwrap_or_else(|| node.0.clone())
 }
 
 fn push_node(

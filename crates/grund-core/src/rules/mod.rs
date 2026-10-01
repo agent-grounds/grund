@@ -30,3 +30,5 @@ pub(crate) use sentence::{
 mod tests_authority;
 #[cfg(test)]
 mod tests_boundaries;
+#[cfg(test)]
+mod tests_unreached;

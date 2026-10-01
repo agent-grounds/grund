@@ -16,6 +16,8 @@ use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
 use crate::workspace::expand_workspace_tree;
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::support::sort_diagnostics;
+
 pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
     let kinds = config
         .kinds
@@ -333,7 +335,15 @@ pub(crate) fn check_chapter_rules(
         rules.push(rule);
     }
     let precedence = citation_precedence(config);
-    report.errors.extend(evaluate(&rules, &precedence, &facts));
+    let (errors, ramp_warnings) = evaluate(&rules, &precedence, &facts);
+    report.errors.extend(errors);
+    // §FS-rules.7.7: the ramp's one required-level finding is a warning, so it
+    // joins the channel this pass has already ordered and is re-sorted into it
+    // rather than appended behind it (§FS-errors.4.1).
+    if !ramp_warnings.is_empty() {
+        report.warnings.extend(ramp_warnings);
+        sort_diagnostics(&mut report.warnings);
+    }
     report
         .suggestions
         .extend(evaluate_suggestions(&rules, &precedence, &facts));

@@ -52,6 +52,7 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "unlinked-index-entry",
     "unlisted-workspace-block",
     "unmarked-heading",
+    "unreached-declaration",
     "unused",
     "value-mismatch",
 ];
