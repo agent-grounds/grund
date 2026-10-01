@@ -43,7 +43,11 @@ fn nothing_recognized(findings: &Findings) -> bool {
 /// The out-of-scope tier (§FS-check.3.14) is deliberately not part of it: those
 /// are findings about the tree *outside* the scope, and a run that finds the
 /// citations out there is exactly the one where saying the configured scope is
-/// empty helps most.
+/// empty helps most. The §FS-check.1.3.6.3 unread-source caution is out for the
+/// same reason and is appended after this call (§FS-check.2.2.3.1): it names a
+/// file the *resolution* scope could not read, so letting it answer the question
+/// would delete the caution of the run that needs it most — a mistyped path in a
+/// tree that happens to hold one unreadable file elsewhere.
 ///
 /// §FS-check.1.3.6.1: `report_scope` is why the emptiness question is asked of it
 /// rather than of the walk. A path-scoped run reads the whole project, so a path

@@ -200,9 +200,51 @@ fn an_empty_path_still_earns_its_caution_however_much_the_walk_read() {
     );
 }
 
+/// §FS-check.2.2.3.1: the unread-source caution of §FS-check.1.3.6.3 is about a
+/// file the *resolution* scope could not read, so it is not a finding about the
+/// report scope and must not suppress that scope's own caution. Guards against
+/// the change: a caution appended before the emptiness question is asked makes
+/// one unreadable file anywhere delete the empty-scan line, which is the
+/// mistyped-path case — `grund check src/typo` would stop saying nothing
+/// matched and talk about a file elsewhere instead.
+#[test]
+fn an_unread_file_outside_the_path_does_not_suppress_the_empty_scan_caution() {
+    let root =
+        widget_repo("an_unread_file_outside_the_path_does_not_suppress_the_empty_scan_caution");
+    write(
+        &root.join("src/empty/notes.txt"),
+        "Not a scanned extension.\n",
+    );
+    std::fs::write(
+        root.join("docs/functional-spec/undecodable.md"),
+        [0xff, 0xfe],
+    )
+    .expect("write an undecodable declaration source");
+
+    let run = check_run(&root.join("src/empty"), false);
+    assert!(
+        run.report
+            .warnings
+            .iter()
+            .any(|diagnostic| diagnostic.code == "empty-scan"),
+        "§FS-check.2.2.3.1: the unread file outside the path does not suppress \
+         the empty-scan caution, got {:?}",
+        codes(&run)
+    );
+    assert!(
+        run.report
+            .warnings
+            .iter()
+            .any(|diagnostic| diagnostic.code == "io"
+                && diagnostic.message.contains("outside the report scope")),
+        "§FS-check.1.3.6.3: and the unread file still earns its own caution, got {:?}",
+        codes(&run)
+    );
+}
+
 /// §FS-check.1.3.6.1: the agent-entrypoint check is a probe over the project
-/// root rather than a finding about a scanned file, and it is the one
-/// path-anchored diagnostic the report filter exempts. Guards against the
+/// root rather than a finding about a scanned file, and its finding is exempted
+/// by its code rather than by its path. Guards against the
 /// change: a blanket filter on the path would drop it, because `AGENTS.md`
 /// lies outside every path but the root.
 #[test]
