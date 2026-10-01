@@ -29,7 +29,7 @@ severity, verdict), and [§FS-terms.terms.7](../functional-spec/FS-terms.md#term
 
 ## 2. State
 
-The server holds one in-memory `LspSnapshot` per discovered Grund project, built by `grund-core` from the scan/check data [§AR-scanner.3](AR-scanner.md#3-output) produces, plus the resolved declaration, section-heading, stub, citation, and link ranges editor requests need and the set of files the scan read. The snapshots are the cache for everything else: hover, definition, references, document links, and diagnostics all answer from the snapshot of the document's owner ([§AR-lsp.2.2](AR-lsp.md#22-which-snapshot-answers)), and independent projects are never merged ([§FS-lsp.2.2](../functional-spec/FS-lsp.md#22-lifecycle)). An edit rebuilds only the projects that can see the edited file ([§AR-lsp.2.1](AR-lsp.md#21-what-rebuilds-a-snapshot)).
+The server holds one in-memory `LspSnapshot` per discovered Grund project, built by `grund-core` from the scan/check data [§AR-scanner.3](AR-scanner.md#3-output) produces, plus the resolved declaration, section-heading, stub, citation, and link ranges editor requests need and the set of files the scan read. The snapshots are the cache for everything else: hover, definition, references, document links, and diagnostics all answer from the snapshot of the document's owner ([§AR-lsp.2.2](AR-lsp.md#22-which-snapshot-answers)), and independent projects are never merged ([§FS-lsp.2.2](../functional-spec/FS-lsp.md#22-lifecycle)). An edit rebuilds only the projects that can see the edited file ([§AR-lsp.2.1](AR-lsp.md#21-what-rebuilds-a-snapshot)), and each rebuild re-derives the per-file index the answers look through ([§AR-lsp.2.3](AR-lsp.md#23-what-is-derived-beside-a-snapshot)).
 
 ### 2.1 What rebuilds a snapshot
 
@@ -44,6 +44,14 @@ The server holds one in-memory `LspSnapshot` per discovered Grund project, built
 ### 2.2 Which snapshot answers
 
 Requests and diagnostics alike take their snapshot from one resolution of the document's owner under the rule of [§FS-lsp.2.2](../functional-spec/FS-lsp.md#22-lifecycle), so an editor cannot navigate against one project's view while reading another's errors, and a finding reaching two snapshots is published once, by the owner. That rule falls back from a containing root to a project whose scan reached the document, which is why `LspSnapshot` carries the set of files its scan read: a plain parent-relative include path may reach beyond the root, while a document reachable only through an outward directory symlink is absent from that set.
+
+### 2.3 What is derived beside a snapshot
+
+Each snapshot is held with a per-file index derived from it in the same step that builds it, so the two cannot disagree: for each of the five record collections — citations, finding ranges, declarations, section headings, stubs — the positions of its records, grouped by the file they lie in and, inside that, by line. Every lookup an answer performs is about one file, and most about one line of it ([§FS-lsp.1.1.1](../functional-spec/FS-lsp.md#111-where-a-diagnostic-anchors), [§FS-lsp.1.3](../functional-spec/FS-lsp.md#13-go-to-definition)), so the index is what makes publishing a diagnostic set cost the findings rather than the findings times the records ([§FS-lsp.responsiveness.1](../functional-spec/FS-lsp.md#responsiveness1-publishing-a-diagnostic-set-is-linear-in-the-findings)). It keeps each collection's own order, so a lookup answers with the record the linear scan it replaced would have found first, and nothing the server publishes moves ([§FS-lsp.4](../functional-spec/FS-lsp.md#4-determinism-and-parity-with-the-cli)).
+
+It is keyed by the path spelling the records already carry, which is the one `grund-core` resolved when it built the snapshot. An answer resolves the request's own path once, on the way in, and every comparison after that is an equality on that resolved value ([§FS-lsp.responsiveness.2](../functional-spec/FS-lsp.md#responsiveness2-a-path-is-resolved-once-per-answer-never-once-per-comparison)). Resolving a path reads the filesystem once per component, so a resolution performed *inside* a comparison is the whole of the quadratic cost; discovery still resolves a folder and a project root directly, because that happens once per folder at startup rather than once per answer.
+
+The index holds positions into the snapshot's vectors rather than borrows of them, and lives in `grund-lsp` beside the snapshot rather than inside `grund_core::LspSnapshot`: it is transport-side derived state with no engine meaning, and the crate boundary of [§AR-lsp.1](AR-lsp.md#1-crate-boundary) keeps it off the public surface the CLI-only user pays for.
 
 ## 3. Scan strategy
 
