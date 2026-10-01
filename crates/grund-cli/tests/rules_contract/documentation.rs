@@ -223,18 +223,18 @@ fn a_chapter_rule_reports_the_declaration_without_the_chapter() {
     // it filters, so the reporting half runs unfiltered: the absence is the
     // whole of what the run says.
 
-    // It is a warning at the declaration and does not move the exit
-    // (§FS-rules.7.7).
+    // It is an error at the declaration and fails the run, with the landed
+    // clause in its own bytes (§FS-rules.7, §FS-errors.5.5).
     let unfiltered = ["check", ".", "--rule", sentence, "--format", "json"];
     let absent = absent_chapter("documented-absent-chapter");
     assert_run(
         &run(&absent, &unfiltered),
-        0,
-        "{\"severity\":\"warning\",\"path\":\"docs/fs/FS-demo.md\",\"line\":1,\
+        1,
+        "{\"severity\":\"error\",\"path\":\"docs/fs/FS-demo.md\",\"line\":1,\
          \"code\":\"unreached-declaration\",\
          \"message\":\"FS-demo has no requirements chapter, so --rule cannot reach it; \
          add the chapter, or narrow the rule to the declarations that have one; \
-         this warning becomes an error in grund 0.16.0\",\"sites\":null,\
+         this became an error in grund 0.16.0\",\"sites\":null,\
          \"authority\":[\"--rule\"]}\n",
         "",
     );

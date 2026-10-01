@@ -135,9 +135,11 @@ the subject declaration's accepted direct chapters whose display name is
 This family is how a repository states the *count* of a chapter — `exactly
 one`, `at most N` — which no citation rule checks. A chapter-scoped citation
 rule reaches a declaration that has no such chapter on its own
-([§FS-rules.2](FS-rules.md#2-subject-selectors)); until the ramp of
-[§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) closes, a presence rule beside it is what makes that absence
-fail a run rather than warn in it.
+([§FS-rules.2](FS-rules.md#2-subject-selectors)) and reports it as `unreached-declaration`; a presence rule beside
+it reports the same absence as `chapter-cardinality`, naming its own rule and
+suppressing nothing ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)). The two families
+differ in the code they raise and in the counts they can state, not in whether
+the absence is seen.
 
 ### 3.2 Outbound citation count
 
@@ -431,9 +433,8 @@ All rule findings use the ordinary text and NDJSON schemas of
 `must` and `must not` are errors. `should` and `should not` are suggestions:
 they appear only with `--suggestions`, carry `"channel":"suggestion"` in JSON,
 and never affect exit status. Structural recommendations retain their
-structural code on that channel. One required-level finding is a warning
-instead, for the length of its ramp and no longer
-([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)).
+structural code on that channel. No rule finding is a warning: the one that was
+is an error from 0.16.0, and the channel went with it ([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)).
 
 ### 7.1 Invalid rule
 
@@ -539,20 +540,12 @@ exit, invocation/config failures exit 2, and incomplete scans stay 2.
 
 ### 7.7 One required-level finding is a warning until 0.16.0
 
-`unreached-declaration` ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)) is the one
-required-level rule finding carried on the warnings channel rather than the
-errors channel. A `must` chapter-scoped citation rule whose subject declaration
-has no such chapter warns, and the warning leaves the exit status where the
-rest of the run put it. The message says so in its own bytes, naming `grund
-0.16.0` in the pending clause of [§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed vocabulary, so
-the release guard reads the promise out of the shipped text.
-
-At `0.16.0` the finding becomes an error on the ordinary `must` channel and this
-subsection is deleted with the ramp it describes. Nothing else about the three
-families moves, and no other rule finding gains a warning level in the
-meantime: the channel exists for this one ramp and expires with it. At the
-recommended level the finding is an ordinary suggestion and owes no ramp,
-because a suggestion never moves the exit status at any release.
+The ramp this heading names is spent: it closed in grund 0.16.0, where
+`unreached-declaration` became an error on the ordinary `must` channel and the
+rules report stopped having a warnings channel. What the check does is
+specified at the section its code names,
+[§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration). This address, heading text included, is
+kept only so citations written before the promotion still resolve.
 
 ## 8. Command surfaces
 
@@ -659,8 +652,8 @@ binary-embedded copies of `skills/grund-init/SKILL.md` contain a marked byte-
 identical copy of that section and remain wholly byte-identical to one another.
 The section includes every accepted family, every [§FS-rules.3.5](FS-rules.md#35-strict-refusals) refusal with its exact
 rewrite, the finding each example produces, and the exact
-`unreached-declaration` warning a chapter-scoped citation rule produces about a
-declaration that has no such chapter, with its ramp release and the two actions
+`unreached-declaration` error a chapter-scoped citation rule produces about a
+declaration that has no such chapter, and the two actions
 that answer it ([§FS-rules.2](FS-rules.md#2-subject-selectors),
 [§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)). Its leading sentence on
 that reach is the specification's word for word, differing at most in where it
@@ -758,13 +751,12 @@ title that would otherwise anchor it is the thing that is missing. At the
 required level the message is:
 
 ```text
-<declaration> has no <name> chapter, so <authority> cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this warning becomes an error in grund 0.16.0
+<declaration> has no <name> chapter, so <authority> cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this became an error in grund 0.16.0
 ```
 
-carried on the warnings channel for the length of its ramp
-([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)). At the recommended level the same row is a
-suggestion with the ramp clause dropped, so the message ends at `have one` and
-is visible only under `--suggestions`.
+carried as an error on the ordinary `must` channel ([§FS-rules.7](FS-rules.md#7-findings-and-channels)). At the
+recommended level the same row is a suggestion with the landed clause dropped,
+so the message ends at `have one` and is visible only under `--suggestions`.
 
 The two actions the message names are the only two that answer it: add the
 chapter, or narrow the rule's subject to the declarations that have one. A
@@ -777,4 +769,5 @@ lines, each naming its own rule.
 The code is selectable on the same surfaces as every other
 ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)), so
 `--ignore unreached-declaration` is the opt-out for a repository that wants the
-previous silence through the ramp window.
+absence reported by nothing, and a `should` rule is the opt-out for one that
+wants it reported without failing the run.

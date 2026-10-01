@@ -290,12 +290,16 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertIn("tests", homes)
         self.assertEqual({claim.direction for claim in wording}, {ramps.PENDING})
 
-    def test_the_bare_grund_removal_holds_the_floor_at_0_16_0(self):
-        """§FS-distribution.4.2 — the bare-`grund` fallback's removal landed, so
-        the tree reports `was removed in 0.16.0` and cannot be cut below it
-        (§FS-cli.4). The older landed clauses are still read: the
-        unlisted-`[workspace]` flip still refuses a 0.14.x release and the
-        `prefix` removal still refuses a 0.12.x one."""
+    def test_the_flips_this_tree_landed_hold_the_floor_at_0_16_0(self):
+        """§FS-distribution.4.2 — three flips have landed, and the two later ones
+        set the floor together: the bare-`grund` fallback reports `was removed
+        in 0.16.0` (§FS-cli.4) and `unreached-declaration` reports `became an
+        error in 0.16.0` (§FS-rules.checks.unreached-declaration), so the tree
+        cannot be cut below `0.16.0` and each refuses a 0.15.x release on its
+        own. The earlier unlisted-`[workspace]` flip is still read and still
+        refuses a 0.14.x release (§FS-check.3.29.14), and so are the older
+        landed clauses: a 0.12.x release is still refused by the `prefix`
+        removal."""
         floor, _ = ramps.release_window(self.claims)
         self.assertEqual(floor, "0.16.0")
         report = ramps.report(self.claims, "0.15.0")
@@ -305,12 +309,20 @@ class ThisRepositoryTests(unittest.TestCase):
                 and "was removed in 0.16.0" in line
                 for line in report
             ),
-            "the bare-`grund` removal must be what holds the floor at 0.16.0",
+            "the bare-`grund` removal must refuse a 0.15.x release",
+        )
+        self.assertTrue(
+            any("became an error in 0.16.0" in line for line in report),
+            "the unreached-declaration flip must refuse a 0.15.x release",
         )
         report = ramps.report(self.claims, "0.14.3")
         self.assertTrue(
             any("became an error in 0.15.0" in line for line in report),
             "the unlisted-[workspace] flip must be what refuses a 0.14.x release",
+        )
+        self.assertTrue(
+            any("became an error in 0.16.0" in line for line in report),
+            "the unreached-declaration flip must refuse a 0.14.x release too",
         )
         report = ramps.report(self.claims, "0.12.4")
         self.assertTrue(
@@ -334,13 +346,15 @@ class ThisRepositoryTests(unittest.TestCase):
     def test_reading_the_landed_half_leaves_this_trees_window_where_it_was(self):
         """§FS-distribution.4.2.5 — the invariant across this change. The pairs
         this tree ships name 0.12.0 and 0.14.0, both below the 0.16.0 floor its
-        own landed removal already sets, so reading them moves neither bound. A
+        own landed flips already set, so reading them moves neither bound. A
         window that moves here has caught something other than this defect.
 
         The window is empty, which is the sanctioned answer rather than a
-        defect: the bare-`grund` removal landed `0.16.0` while this tree still
-        promises `0.16.0` ramps, so nothing may be published until those land
-        (§FS-distribution.4.2.5, §FS-cli.4)."""
+        defect: the bare-`grund` removal and the `unreached-declaration`
+        promotion both landed `0.16.0` while this tree still promises `0.16.0`
+        ramps, so nothing may be published until those land
+        (§FS-distribution.4.2.5, §FS-cli.4,
+        §FS-rules.checks.unreached-declaration)."""
         self.assertEqual(ramps.release_window(self.claims), ("0.16.0", "0.16.0"))
 
 

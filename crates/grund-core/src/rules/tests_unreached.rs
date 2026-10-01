@@ -153,15 +153,22 @@ fn prohibition(origin: &str) -> ParsedRule {
     }
 }
 
+/// §FS-rules.7: the absence is an error on the ordinary `must` channel, so the
+/// rules report has no warnings channel left to carry it
+/// (§FS-rules.checks.unreached-declaration). Every test below reads the
+/// absences through here, so this one assertion is where the promotion is
+/// pinned at the unit level.
 fn absences(rules: &[ParsedRule]) -> Vec<Diagnostic> {
     let (errors, ramp_warnings) = evaluate(rules, &[], &facts());
     assert!(
-        errors
-            .iter()
-            .all(|diagnostic| diagnostic.code != "unreached-declaration"),
-        "the absence belongs on the ramp channel, never on the errors channel"
+        ramp_warnings.is_empty(),
+        "the absence belongs on the errors channel, and no rules warnings \
+         channel survives the promotion"
     );
-    ramp_warnings
+    errors
+        .into_iter()
+        .filter(|diagnostic| diagnostic.code == "unreached-declaration")
+        .collect()
 }
 
 fn one_absence(rules: &[ParsedRule]) -> Diagnostic {
@@ -176,7 +183,7 @@ fn one_absence(rules: &[ParsedRule]) -> Diagnostic {
 
 /// §FS-rules.checks.unreached-declaration: the outbound-count family reports
 /// the declaration that has no such chapter, at the declaration's own title
-/// line, with the ramp release in its own bytes (§FS-rules.7.7).
+/// line, with the landed release in its own bytes (§FS-distribution.4.2.3).
 #[test]
 fn the_outbound_count_family_reports_the_declaration_with_no_such_chapter() {
     let absence = one_absence(&[chapter_rule("RULE-outbound")]);
@@ -193,7 +200,7 @@ fn the_outbound_count_family_reports_the_declaration_with_no_such_chapter() {
         absence.message,
         "FS-silent has no requirements chapter, so RULE-outbound cannot reach it; \
          add the chapter, or narrow the rule to the declarations that have one; \
-         this warning becomes an error in grund 0.16.0"
+         this became an error in grund 0.16.0"
     );
     assert_eq!(absence.authority, vec!["RULE-outbound".to_string()]);
 }
@@ -306,9 +313,9 @@ fn two_different_rules_each_report_the_same_declaration() {
     assert!(absences.iter().all(|a| a.code == "unreached-declaration"));
 }
 
-/// §FS-rules.7.7: the recommended level reports the absence as an ordinary
-/// suggestion, immediately and with no ramp clause — a suggestion never moves
-/// the exit status at any release, so it owes no promotion.
+/// §FS-rules.checks.unreached-declaration: the recommended level reports the
+/// absence as an ordinary suggestion, with no landed clause — a suggestion
+/// never moved the exit status at any release, so it owed no promotion.
 #[test]
 fn the_recommended_level_reports_the_absence_without_a_ramp_clause() {
     let recommended = ParsedRule {

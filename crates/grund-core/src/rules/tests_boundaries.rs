@@ -292,10 +292,11 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
     assert!(withheld_warnings.is_empty());
 
     // The same facts, declared complete: the silence above is the snapshot's
-    // rather than the rule's.
+    // rather than the rule's, and the finding arrives on the errors channel the
+    // promotion put it on (§FS-rules.7).
     let mut complete = partial;
     complete.header.completeness = Completeness::Complete;
-    let reported = evaluate(&[chapter_scoped], &[], &complete).1;
+    let reported = evaluate(&[chapter_scoped], &[], &complete).0;
     assert_eq!(reported.len(), 1);
     assert_eq!(reported[0].code, "unreached-declaration");
 }
