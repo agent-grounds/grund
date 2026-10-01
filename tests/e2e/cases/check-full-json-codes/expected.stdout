@@ -1,3 +1,4 @@
+{"severity":"error","path":"sim/FS-002-terrain.md","line":3,"code":"out-of-scope-local-section-citation","message":"outside [scan] include: local section citation §2; write §FS-002-terrain.2 — unchecked in grund 0.13.1, an error in 0.14.0","sites":null,"authority":null}
 {"severity":"error","path":"sim/world.py","line":1,"code":"out-of-scope-dangling","message":"outside [scan] include: unknown reference FS-999-missing","sites":null,"authority":null}
 {"severity":"error","path":"sim/world.py","line":2,"code":"out-of-scope-missing-section","message":"outside [scan] include: missing section FS-001-login.4","sites":null,"authority":null}
 {"severity":"error","path":"sim/world.py","line":3,"code":"out-of-scope-unknown-project","message":"outside [scan] include: unknown project alias nope","sites":null,"authority":null}
