@@ -1,0 +1,1 @@
+docs/functional-spec/FS-widget.md:3: error: duplicate declaration of FS-widget (also declared at docs/functional-spec/FS-widget2.md:3)

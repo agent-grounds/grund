@@ -65,6 +65,14 @@ fn full_scope_keeps_the_empty_scan_caution() {
     assert_eq!(full.report.errors.len(), 1);
 }
 
+/// §FS-check.1.3.6: an explicit path still narrows, and has no out-of-scope
+/// tier. Both assertions below must survive the widening of
+/// §FS-check.1.3.6.1 **unchanged**, and they are the contract a careless
+/// build of it breaks: this fixture's two planted IDs are declared nowhere in
+/// the tree, so resolving against the whole project leaves the verdict
+/// identical, and a path scope must still gain no `out-of-scope-` code — a
+/// new tier would need a new finding code, which
+/// §DF-path-scope-resolves-project-wide.2.4 rules out.
 #[test]
 fn an_explicit_path_argument_is_not_widened_by_full() {
     let root = drifted_include_repo("an_explicit_path_argument_is_not_widened_by_full");
@@ -83,7 +91,7 @@ fn an_explicit_path_argument_is_not_widened_by_full() {
             .errors
             .iter()
             .all(|diagnostic| !diagnostic.code.starts_with("out-of-scope-")),
-        "an explicit scope has no out-of-scope tier"
+        "§FS-check.1.3.6: an explicit scope has no out-of-scope tier — the finding set shrinks and gains no tier (§FS-check.1.3.6.1)"
     );
 }
 
@@ -104,7 +112,7 @@ fn full_scope_warns_when_an_explicit_path_leaves_it_nothing_to_cancel() {
         .expect("§FS-check.1.3.7: the redundant flag earns a caution");
     assert_eq!(
         caution.message,
-        "--full has no effect with an explicit PATH — it cancels [scan] include, and sim already bypasses it"
+        "--full has no effect with an explicit PATH — sim already resolves against [scan] include, and the report is the path either way"
     );
     assert!(
         caution.line.is_none(),
@@ -137,7 +145,11 @@ fn full_scope_warning_keeps_a_lexical_root_alias() {
         .iter()
         .find(|diagnostic| diagnostic.code == "full-scope-ignored")
         .expect("redundant --full warning");
-    assert!(caution.message.ends_with("and sim already bypasses it"));
+    assert!(
+        caution
+            .message
+            .contains("sim already resolves against [scan] include")
+    );
     assert!(
         !caution
             .message

@@ -118,6 +118,7 @@ member tree preserves any pre-existing qualified wraps as-is and emits
 no new ones ([§FS-workspace.8.5](../functional-spec/FS-workspace.md#85-grund-fmt---cross-refs)).
 No command re-implements the resolver, the citation regex, or the alias
 derivation.
+A `<path>` argument therefore means two different things, and [§AR-resolver.3.3](AR-resolver.md#33-two-scopes-and-which-narrowness-a-narrow-scope-keeps) is which.
 The one-invocation batch loader and the unfiltered `cover` are [§AR-resolver.3.1](AR-resolver.md#31-grund-show---batch-loads-once) and [§AR-resolver.3.2](AR-resolver.md#32-grund-cover-filters-nothing).
 
 ### 3.1 `grund show --batch` loads once
@@ -149,6 +150,23 @@ the workspace-aggregate arm only when `scope_is_config_root` — the same test
 ([§FS-workspace.8.6](../functional-spec/FS-workspace.md#86-grund-cover)). Both
 arms build the single-project context from one helper, so "single project"
 cannot come to mean two things.
+
+### 3.3 Two scopes, and which narrowness a narrow scope keeps
+
+For a query command a `<path>` selects a **project** and bounds no walk. For `grund check` it is the
+**report scope** — the set of files a finding may be about — while the **resolution scope** it reads
+stays the enclosing project's ordinary scope, `[scan] include` plus every walked kind home, union the path
+([§FS-check.1.3.6.1](../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)). The run walks the resolution scope, runs every rule over the whole of it, and drops
+the diagnostics anchored outside the report scope.
+
+So "a scope narrower than the root has to stay narrow" is a statement about which **projects** a walk covers
+and which **files** are reported. It is not a statement about which declarations resolution reads: widening
+that set answers the question the caller asked rather than a wider one, because the caller asked whether their
+path is clean and not whether it is self-contained. The narrowing that must stay is `cover`'s and
+`scope_is_config_root`'s — a narrowed member run stays one project ([§FS-workspace.8.6](../functional-spec/FS-workspace.md#86-grund-cover)) — and the
+two are kept at visibly different stages so neither drifts into the other: `retain_findings_in_scope` narrows
+the scan result before any rule runs, which is what `--full` additivity needs ([§FS-check.1.3.4](../functional-spec/FS-check.md#134-purely-additive)), and the
+path filter narrows the report after every rule has run.
 
 ## 4. The shorthand a whole run's catalog resolves
 

@@ -1,0 +1,21 @@
+grund_config_version = 1
+project_name = "fixture"
+
+[reference]
+marker = "§"
+strict = true
+require_grounding = true
+
+[id]
+format = "{kind}-{slug}"
+section_separator = "."
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+title = "What: behavior"
+
+[scan]
+include = ["docs", "src"]
+extensions = ["md", "rs"]

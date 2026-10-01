@@ -174,15 +174,33 @@ A declaration inside `include` cited *only* from outside it keeps its `declared 
 
 #### 1.3.6 An explicit path still narrows
 
-`--full` cancels `include`, never a path the caller typed: `grund check <path> --full` scans exactly `<path>` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)), which is already outside `include`'s reach, and has no out-of-scope findings. A path that *resolves to the config root* is the root scope and does widen — `grund check .`, `grund check ./`, and `grund check <abs-root>` are the bare `grund check --full`, out-of-scope findings included. Any other path leaves the flag nothing to cancel.
+`--full` cancels `include`, never a path the caller typed: `grund check <path> --full` reports exactly `<path>` ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)), which `include` does not bound, and has no out-of-scope findings. A path that *resolves to the config root* is the root scope and does widen — `grund check .`, `grund check ./`, and `grund check <abs-root>` are the bare `grund check --full`, out-of-scope findings included. Any other path leaves the flag nothing to cancel. What the path narrows is the report and not the resolution ([§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)), so the finding set shrinks and gains no tier.
+
+##### 1.3.6.1 A path scope narrows the report, not the resolution
+
+A run given an explicit path reads the declarations and the citations its project's ordinary run reads, and reports findings only for the files at or under the path. Two scopes, and telling them apart is the whole rule. The **resolution scope** is the set of files the run reads so that citations resolve and citation edges count: the enclosing project's ordinary scope — `[scan] include` plus every walked kind home ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned), [§FS-config.3.5.8](FS-config.md#358-every-configured-kind-home-is-scanned)) — **union the path itself**, because a path may lie outside `include` and must still be read. The **report scope** is exactly the path. Every rule runs over the resolution scope, and a diagnostic anchored at a file outside the report scope is dropped before the report is written. Decided in [§DF-path-scope-resolves-project-wide](../decisions/functional/DF-path-scope-resolves-project-wide.md#df-path-scope-resolves-project-wide-a-path-scoped-check-resolves-against-the-whole-project-and-reports-only-the-path).
+
+So `grund check <path>` and `grund check .` never disagree about a citation they both read: an ID declared anywhere in the project resolves under either, and [§FS-check.3.1](FS-check.md#31-dangling-citation) fires under neither. Three verdicts move, and each is the whole-project run's own answer arriving where it was not asked before:
+
+- A citation whose declaration lives outside the path no longer dangles — and the `ungrounded source file` error derived from that verdict clears with it ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)).
+- A declaration cited only from outside the path is cited ([§FS-check.4.1.4](FS-check.md#414-a-citation-anywhere-in-the-resolution-scope-counts)).
+- A duplicate declaration whose twin lies outside the path is reported, so a path-scoped run that was silent exits 1 ([§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration)). That is the one direction this rule adds a finding.
+
+Two classes of diagnostic are not about a scanned file and keep exactly the behaviour they had. A run-level finding carries no path — the config findings, the scope cautions, the workspace run warnings — and the report filter never sees one. And the agent-entrypoint check ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) is a probe over the project root rather than a finding about a scanned file, and already runs when no source file is scanned at all; it is the one path-anchored diagnostic the filter exempts. The scope cautions are computed against the **report scope**, so a path that recognized nothing still earns its caution ([§FS-check.4.5](FS-check.md#45-nothing-recognized)) however much the wider walk read.
+
+In a workspace the resolution scope is the enclosing project's and never a sibling member's: `grund check <member>/src/lib.rs` resolves against that member's `include` and homes, reports that one file, and crosses no member boundary ([§FS-workspace.5](FS-workspace.md#5-command-scope)). A cross-project citation keeps today's answer, `unknown project alias` ([§FS-workspace.5.1](FS-workspace.md#51-a-member-run)), which names its own scope and so is not an instance of what this point corrects.
+
+The cost is that a path-scoped run walks what the whole-project run walks. That is what the correct answer costs, and it is the number [§DF-path-scope-resolves-project-wide](../decisions/functional/DF-path-scope-resolves-project-wide.md#df-path-scope-resolves-project-wide-a-path-scoped-check-resolves-against-the-whole-project-and-reports-only-the-path) records.
 
 #### 1.3.7 A path the flag cannot widen earns a caution, not a refusal
 
 When `--full` is passed with an explicit path that is not the config root, the run emits one CLI-level `warning:` ([§FS-check.2.1.1](FS-check.md#211-cli-level-messages)) on **stderr** and reports the same findings, on the same streams, with the same exit code as the run without the flag:
 
 ```
-warning: --full has no effect with an explicit PATH — it cancels [scan] include, and sim already bypasses it
+warning: --full has no effect with an explicit PATH — sim already resolves against [scan] include, and the report is the path either way
 ```
+
+The flag has nothing to cancel because of the two-scope rule of [§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution), and not because a path bypasses `include`: the path already resolves against `include`, so cancelling it subtracts nothing from what the run reads, and the report is the path with the flag or without it.
 
 Silently accepting the flag is the failure this mode exists to end in miniature: the caller asked for the wider search and got the ordinary run, with no signal. Rejecting it would be worse — the run is a valid one, and a script that passes `--full` uniformly would start failing on the invocation where it happens to be redundant. It is a warning like any other: the exit code is untouched, it stands in place of the `success` line on an otherwise clean run ([§FS-check.2.1](FS-check.md#21-report-format)), and under `--format json` it is one finding object on stderr, so a clean run's **stdout** stays empty either way.
 
@@ -377,6 +395,8 @@ Each of the following is an error and contributes to a non-zero exit code.
 ### 3.1 Dangling citation
 
 A recognized citation (per [§FS-check.1.1](FS-check.md#11-recognized-citations)) for which no declaration is found: `unknown reference <ID>`. A near ID ([§FS-check.3.1.1](FS-check.md#311-a-near-id)) or an inline-code context ([§FS-check.3.1.2](FS-check.md#312-an-illustration-in-inline-code)) adds a hint, and a fetch-enabled kind adds the fetch action ([§FS-check.3.1.3](FS-check.md#313-a-kind-that-fetches)).
+
+Resolution is computed over the run's **resolution scope**, which for a run given an explicit path is the whole enclosing project rather than the path ([§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)), so a path-scoped run never calls a project-resolvable ID unknown. The message and the code are the same under either scope.
 
 A number-only shorthand citation ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) is exempt from this rule and reported by [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) instead — never both, because `unknown reference FS-042` would name a token that is not a full ID under the repo's own grammar. For a value binding, this ordinary resolution finding suppresses value comparison at the same site ([§FS-values.5.1](FS-values.md#51-resolve-before-comparison)).
 
@@ -1042,7 +1062,7 @@ On the five other surfaces of [§FS-check.3.29.9](FS-check.md#3299-every-command
 
 ### 4.1 Unused declaration
 
-An ID that is declared but never cited. Reported as a warning, not an error — newly declared IDs may not yet have citations. Warnings never affect the exit code ([§FS-check.2](FS-check.md#2-outputs)). A resolving shorthand counts as a citation ([§FS-check.4.1.1](FS-check.md#411-a-resolving-shorthand-counts)), a kind's own index entry does not ([§FS-check.4.1.2](FS-check.md#412-an-index-entry-does-not-count)), and `E2E` declarations are exempt ([§FS-check.4.1.3](FS-check.md#413-e2e-declarations-are-exempt)).
+An ID that is declared but never cited. Reported as a warning, not an error — newly declared IDs may not yet have citations. Warnings never affect the exit code ([§FS-check.2](FS-check.md#2-outputs)). A resolving shorthand counts as a citation ([§FS-check.4.1.1](FS-check.md#411-a-resolving-shorthand-counts)), a kind's own index entry does not ([§FS-check.4.1.2](FS-check.md#412-an-index-entry-does-not-count)), and `E2E` declarations are exempt ([§FS-check.4.1.3](FS-check.md#413-e2e-declarations-are-exempt)). A citation counts wherever the run read it, which under an explicit path is the whole project ([§FS-check.4.1.4](FS-check.md#414-a-citation-anywhere-in-the-resolution-scope-counts)).
 
 #### 4.1.1 A resolving shorthand counts
 
@@ -1055,6 +1075,12 @@ A citation that is a kind's own **index entry** ([§FS-check.3.18.5](FS-check.md
 #### 4.1.3 `E2E` declarations are exempt
 
 `E2E` declarations ([AR-scanner.6](../architecture/AR-scanner.md#6-e2e-case-declarations)) are exempt: an end-to-end case is exercised by being run, not by being cited, so a `§E2E-<name>` that nothing cites is not a warning. Every other kind is subject to this rule, including Markdown and JSON value declarations; the citation inside a recognized value binding counts as a use ([§FS-values.3.2](FS-values.md#32-recognized-text-contexts)). `grund list --unused` ([§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id)) uses the same default signal and suppresses uncited `E2E` cases unless `E2E` is explicitly selected with `--kind` (including a multi-kind filter such as `--kind FS,E2E`).
+
+#### 4.1.4 A citation anywhere in the resolution scope counts
+
+A citation counts wherever the run read it, so a declaration cited only from a file outside an explicit path is cited and earns no warning: a path-scoped run's `declared but never cited` warnings are exactly the whole-project run's ([§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)).
+
+This is not the `--full` case of [§FS-check.1.3.5](FS-check.md#135-the-unused-declaration-warning-is-unchanged-out-there), which leaves the warning standing, and the difference is a contract rather than a preference. `--full` owes additivity ([§FS-check.1.3.4](FS-check.md#134-purely-additive)) and so may never retire an in-scope finding. A path scope owes nothing of the kind: it is a subset run by construction, and it counts an edge **exactly where `grund check .` counts it** and never anywhere else, so it cannot disagree with the run additivity protects. [§FS-check.1.3.5](FS-check.md#135-the-unused-declaration-warning-is-unchanged-out-there)'s own remedy — widen `include` so the citing file is governed, and the edge counts everywhere — is what a path scope already reads.
 
 ### 4.2 Inline note soft-cap overrun *(opt-in)*
 
