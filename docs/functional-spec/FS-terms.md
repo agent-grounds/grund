@@ -51,25 +51,30 @@ words it names and for nothing else.
 here is a bold label, not a coordinate, so `grund check` holds the sections that contain
 the vocabulary and the citations that reach those sections — not the labels, the names
 in a lean line's parentheses, their uniqueness or their meaning, or whether a document's
-lean line is complete. Three failures therefore pass the gate: a label renamed here
-while other documents still use the word; one word defined under two groups, or in a
-document's own Terms section, with two meanings; and a lean line that names a group the
-document no longer leans on, or omits one it does.
+lean line is complete.
 
-Those failures are what this file asks a reviewer to verify by hand. For a change that
-touches shared-term prose, this file, or a Terms section: before adding a label, search
-every Terms section for a second definition; before renaming or removing one, search
-functional-spec and architecture prose for the old word and reconcile the results with
-`grund refs FS-terms.terms.N`; check every narrowing against the one-definition rule
-above; and add to that document's lean line, under its group, every shared word the
-change newly gives the document in the shared sense. The review accounts for that and
-for any pre-existing omission it is shown; certifying the completeness of unchanged
-prose beyond that is not part of it.
+What holds the rest is written down home by home, so a reader knows what a green run has
+said and what it has not. In the functional spec the chapter's presence is a chapter rule
+this repository declares ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)), so a spec that drops the chapter fails
+`grund check` rather than passing it, and four fixed-syntax invariants gate beside that
+rule: a word defined under two groups, a parenthesised word the group it cites does not
+define, a word defined twice in one document's own chapter, and a shared word redefined
+without the `(narrowed)` form. Two failures are left over — a label renamed here while
+other documents still use the word, and a lean line that names a group the document no
+longer leans on or omits one it does — and both are reported rather than asserted,
+because [§FS-terms.senses](FS-terms.md#senses-what-counts-as-a-use) excludes two senses no machine recognizes and a gate over them
+would ask authors to name words they do not use. In the architecture only the chapter's
+presence is held, by a test rather than by a rule, because no rule sentence can except
+the index page: all three failures still pass the gate there.
 
-The comparison is over senses, not tokens. A document that writes `note:` for a stderr
-hint line, or "CLI-level error", is not leaning on *note* or on *level*, a word used
-only in the sense its own row retires is not a lean either, and a token occurring only
-inside a link target, a heading anchor or a frozen code name is a name, not a use.
+The two left over are what this file asks a reviewer to verify by hand, and the report of
+[§FS-terms.senses.5](FS-terms.md#senses5-what-the-advisory-reports) is what they read instead of searching. For a change that touches
+shared-term prose, this file, or a Terms chapter: run that report, reconcile what it says
+about the documents the change touches with `grund refs FS-terms.terms.N`, and add to
+each document's lean line, under its group, every shared word the change newly gives the
+document in the shared sense. The review accounts for that and for any pre-existing
+omission it is shown; certifying the completeness of unchanged prose beyond that is not
+part of it.
 
 ### terms.1: Declarations and coordinates
 
@@ -144,3 +149,67 @@ inside a link target, a heading anchor or a frozen code name is a name, not a us
 - **rules** — The concern a config key belongs to when it says how nodes relate: a finding from a rules key needs at least two. Always plural and always the concern; one *rule* is [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions)'s word, and a rules key is what makes one.
 - **presentation** — The concern a config key belongs to when it decides bytes `grund` writes or shows: it produces no finding except where a written byte has drifted from what the config now renders. *rendering* stays the integrations' word for their own layer.
 - **envelope** — The config keys outside the three concerns: the file's version and identity, and the workspace membership that says which projects there are. Read before any concern and constraining no node, so not a fourth one.
+
+## senses: What counts as a use
+
+The comparison a lean line stands or falls by is over senses, not tokens: a document
+leans on a shared word where it uses that word in the shared sense, and an occurrence
+that is not that sense is not a lean. Four exclusions say which occurrences those are.
+Two of them are mechanical and the report of [§FS-terms.senses.5](FS-terms.md#senses5-what-the-advisory-reports) applies them; two are
+judgements a reader makes, which is why that report is advice and the completeness of a
+lean line is never a gate.
+
+### senses.1: A word written in a different sense is not a lean
+
+A document that writes `note:` for a stderr hint line is not leaning on *note*, whose row
+gives the word to an inline comment block carrying a citation and its rationale. The
+exclusion is over the sense the row defines, so recognizing it means reading the sentence
+the word stands in. Not mechanical: the report names such an occurrence as a use, and the
+reader it is written for discards the line.
+
+### senses.2: A word occurring only inside a compound is not a use of that word
+
+The exclusion runs in both directions, and what spells a compound is the hyphen: a
+document that writes "CLI-level error" is not leaning on *level*, and a document that
+writes *declaration-local* is not using *declaration*. A hyphenated compound is one name,
+so the words inside it are not separately in play and a word counts only where it stands
+on its own, with no word character and no hyphen on either side of it. Mechanical, and the
+report applies it. The price is the occurrence where a compound really does carry its
+parts' sense, and that price is paid on purpose: the report never gates, and reading a
+compound as its parts would contradict the exclusion this one sits beside.
+
+### senses.3: A word used only in the sense its own row retires is not a lean
+
+A row that retires a word retires one sense of it, and prose still carrying that sense is
+a debt the vocabulary has already named rather than a lean the lean line is missing. Not
+mechanical, for the reason [§FS-terms.senses.1](FS-terms.md#senses1-a-word-written-in-a-different-sense-is-not-a-lean) gives: which sense an occurrence carries is
+read, not matched.
+
+### senses.4: A token that names rather than uses is not a lean
+
+A token occurring only inside a fenced block, a link target, a heading anchor or a frozen
+code name is a name, not a use — the `value_chapter` config key, the anchor a heading
+rename moves, the example a fence holds. Mechanical, and the report applies it. It is the
+same exclusion `tests/integration/test_functional_spec_retired_words.py` already reads
+prose through, so one implementation serves both and the exclusion has one place to drift
+from.
+
+### senses.5: What the advisory reports
+
+The report is per document and has two line forms, the first for a shared word the
+document uses without leaning on it and the second for a word it leans on without using:
+
+```text
+FS-cli: uses *catalog* in prose but does not lean on it (terms.1)
+FS-cli: leans on *kind* but the token appears nowhere in its prose
+```
+
+It reads a document's prose outside that document's own Terms chapter, applies
+[§FS-terms.senses.2](FS-terms.md#senses2-a-word-occurring-only-inside-a-compound-is-not-a-use-of-that-word) and [§FS-terms.senses.4](FS-terms.md#senses4-a-token-that-names-rather-than-uses-is-not-a-lean), and cannot apply [§FS-terms.senses.1](FS-terms.md#senses1-a-word-written-in-a-different-sense-is-not-a-lean) or
+[§FS-terms.senses.3](FS-terms.md#senses3-a-word-used-only-in-the-sense-its-own-row-retires-is-not-a-lean). Its order is fixed — every line of the first form before every line of
+the second, documents in ascending ID order, and inside one document the shared words in
+group order and then in row order — so two runs over one tree print the same bytes
+([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)). It is silent unless it is asked for, and it is never an exit
+condition: it changes no verdict, and a line it prints is a question for an author rather
+than a failure. The count it reaches is not a contract and is never asserted, because a
+frozen count is a gate wearing another name.
