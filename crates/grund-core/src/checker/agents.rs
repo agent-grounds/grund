@@ -14,7 +14,7 @@ use crate::templates::{
 use std::collections::BTreeMap;
 
 const AGENTS_INIT_COMPATIBILITY_TAIL: &str =
-    " — repo maintenance; citation checks still ran; wording changes in grund 0.15.0";
+    " — repo maintenance; citation checks still ran; wording changes in grund 0.16.0";
 
 /// Preserve the legacy diagnostic as a contiguous prefix while giving readers
 /// the maintenance classification during the two-release migration (§FS-errors.3.6).

@@ -128,7 +128,7 @@ A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed 
 When a subcommand established its query context but has no result to put on
 stdout — an ID query on a missing ID, a missing section, an invalid ID under the
 selected grammar, an ambiguous ID or section, or a broken stub; `grund refs` from
-0.15.0 when the selected resolver rejects an invalid ID or ambiguous number-only
+0.16.0 when the selected resolver rejects an invalid ID or ambiguous number-only
 shorthand; `grund id` when the title slugifies to nothing or the proposed ID
 collides with an existing declaration:
 
@@ -183,7 +183,7 @@ The unknown-project recovery shape in [§FS-check.3.8](FS-check.md#38-cross-proj
 ### 3.3 The narrowed-run unknown-project wording migration
 
 The narrowed-run scope-only unknown-project message has a three-release wording
-migration, whose `0.13.2` compatibility form and `0.15.0` final template are
+migration, whose `0.13.2` compatibility form and `0.16.0` final template are
 fixed in [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure). The `0.13.2` suffix is part of the existing error
 message, not a second warning finding. Exact-line consumers must migrate
 during this window to the stable `code == "unknown-project"`; the code, error
@@ -209,14 +209,14 @@ near-ID or illustration hint over the fetch-action tail.
 The five `agents-init` messages migrate over three releases. In the first two,
 each existing message stays as a verbatim contiguous prefix and gains exactly
 ` — repo maintenance; citation checks still ran; wording changes in grund
-0.15.0`. This compatibility form both preserves prefix consumers and tells a
+0.16.0`. This compatibility form both preserves prefix consumers and tells a
 reader that the complete citation check already ran. Exact-line consumers must
 migrate during this window to the stable `code == "agents-init"`; code, error
-severity, and the default exit verdict do not change. The final `0.15.0` templates are [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates).
+severity, and the default exit verdict do not change. The final `0.16.0` templates are [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates).
 
 #### 3.6.1 The final templates
 
-In `0.15.0`, the compatibility tail is removed and the five final templates are:
+In `0.16.0`, the compatibility tail is removed and the five final templates are:
 
 ```text
 repo maintenance: malformed grund managed block: <detail> (does not affect citation validity)
@@ -247,8 +247,8 @@ a citation it cannot place — say what cannot be resolved here, offer no
 candidate, send the reader to the workspace root ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)):
 
 ```text
-unknown kind "<KIND>" in namespace "<ALIAS>"; accepted form: <rewrite> — unknown project alias <ALIAS>; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this wording changes in grund 0.15.0
-unknown kind "<KIND>" in any workspace namespace; accepted form: <rewrite> — no workspace is in scope here, so no namespace can be searched for <KIND> — check from the workspace root; this wording changes in grund 0.15.0
+unknown kind "<KIND>" in namespace "<ALIAS>"; accepted form: <rewrite> — unknown project alias <ALIAS>; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this wording changes in grund 0.16.0
+unknown kind "<KIND>" in any workspace namespace; accepted form: <rewrite> — no workspace is in scope here, so no namespace can be searched for <KIND> — check from the workspace root; this wording changes in grund 0.16.0
 ```
 
 Exact-line consumers must migrate during this window to the stable
@@ -266,7 +266,7 @@ this migration does not move, and on the sentence it passed in.
 
 #### 3.7.1 The final templates
 
-In `0.15.0`, the compatibility prefixes are removed and the two reasons are
+In `0.16.0`, the compatibility prefixes are removed and the two reasons are
 exactly:
 
 ```text
@@ -332,7 +332,7 @@ Query subcommands emit their result on stdout too: one JSON object for a single-
 
 ### 5.2 On stderr — what is not output
 
-A *failed ID query* (`ID not found` / `ambiguous` / `broken stub` / `section not found` / `invalid ID`, exit `1`) emits its one finding object on stderr in the same `{ severity, path, line, code, message, sites, authority }` shape, with `path` and `line` `null` — there is no single site, and there is no result, so nothing goes to stdout. `authority` is present and always `null` there: no query failure is a chapter rule's, and the key set is one set across every record of this shape rather than a conditional a consumer has to branch on. This includes `refs`' invalid-ID and ambiguous-number-only rejections from 0.15.0; their codes are respectively `invalid-id` and `ambiguous`, both carry `sites:null`, and neither carries the text-mode hint.
+A *failed ID query* (`ID not found` / `ambiguous` / `broken stub` / `section not found` / `invalid ID`, exit `1`) emits its one finding object on stderr in the same `{ severity, path, line, code, message, sites, authority }` shape, with `path` and `line` `null` — there is no single site, and there is no result, so nothing goes to stdout. `authority` is present and always `null` there: no query failure is a chapter rule's, and the key set is one set across every record of this shape rather than a conditional a consumer has to branch on. This includes `refs`' invalid-ID and ambiguous-number-only rejections from 0.16.0; their codes are respectively `invalid-id` and `ambiguous`, both carry `sites:null`, and neither carries the text-mode hint.
 
 Which ambiguity refusals carry `sites` is [§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal); the messages that stay raw text under any `--format` are [§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text); run-level findings in `check`'s report are [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report).
 
@@ -382,7 +382,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `chapter-cardinality` | error | — | `rules = true` on a kind | [§FS-check.3.26](FS-check.md#326-chapter-cardinality) |
 | `citation-cardinality` | error | — | `rules = true` on a kind | [§FS-check.3.27](FS-check.md#327-citation-cardinality) |
 | `dangling` | error | — | — | [§FS-check.3.1](FS-check.md#31-dangling-citation) |
-| `declaration-near-miss` | warning | error in 0.15.0 | — | [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss) |
+| `declaration-near-miss` | warning | error in 0.16.0 | — | [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss) |
 | `deprecated-config-location` | warning | — | — | [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location) |
 | `discouraged-citation` | none — suggestion | — | `--suggestions`, on a `should-not` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
 | `duplicate` | error | — | — | [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) |
@@ -423,7 +423,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `unknown-project` | error | — | — | [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) |
 | `unlinked-index-entry` | error | — | — | [§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link) |
 | `unlisted-workspace-block` | error | — | — | [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) |
-| `unmarked-heading` | warning | error in 0.15.0 | — | [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) |
+| `unmarked-heading` | warning | error in 0.16.0 | — | [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) |
 | `unreached-declaration` | warning | error in 0.16.0 | `rules = true` on a kind | [§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration) |
 | `unused` | warning | — | — | [§FS-check.4.1](FS-check.md#41-unused-declaration) |
 | `value-mismatch` | error | — | `values = true` on a kind | [§FS-check.3.22](FS-check.md#322-value-mismatch) |

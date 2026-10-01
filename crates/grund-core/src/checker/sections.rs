@@ -87,7 +87,7 @@ pub(super) fn check_section_headings(
             line: Some(heading.line),
             column: None,
             message: format!(
-                "unmarked heading inside {rendered_owner}; number it ({suggested_heading}) as {rendered_owner}{}{path}, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0",
+                "unmarked heading inside {rendered_owner}; number it ({suggested_heading}) as {rendered_owner}{}{path}, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0",
                 config.section_separator,
                 path = heading.suggested_path,
             ),

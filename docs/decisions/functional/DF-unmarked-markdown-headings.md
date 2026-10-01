@@ -26,10 +26,10 @@ not reopen its `show --full` boundary.
 
 Every non-declaration ATX heading deeper than a Markdown declaration heading and
 still inside its body must carry a recognized numeric or enabled named section
-coordinate. Before grund 0.15.0, [§FS-declarations.checks.unmarked-heading](../../functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)
+coordinate. Before grund 0.16.0, [§FS-declarations.checks.unmarked-heading](../../functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)
 reports an unmarked heading as a fixed warning at the heading, names the nearest
 enclosing declaration, and suggests a deterministic unused coordinate. In
-0.15.0 the same project-wide finding becomes an error.
+0.16.0 the same project-wide finding becomes an error.
 
 The body span is the policy boundary. Pre-declaration titles and
 same-or-shallower headings that close a body remain legal. Fenced headings are
@@ -67,7 +67,7 @@ be a declaration or bold label is not.
 ## 4. Consequences
 
 Repositories receive one release window to number or reclassify affected
-headings before the 0.15.0 error. A warning suppresses the bare `success` line
+headings before the 0.16.0 error. A warning suppresses the bare `success` line
 but leaves exit `0`; text, JSON, selection, and LSP carry the same core finding.
 The suggestion is stable guidance and never a write path. `show`, `list`,
 `refs`, `cover`, formatting, section resolution, and source scanning keep their
@@ -79,4 +79,4 @@ block repair required by
 [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations).
 No configuration key changes meaning, so `grund_config_version` stays 1. The
 scheduled verdict change is tracked by
-[§RM-unmarked-heading-error](../../roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0150).
+[§RM-unmarked-heading-error](../../roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0160).

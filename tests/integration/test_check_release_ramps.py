@@ -324,9 +324,11 @@ class ThisRepositoryTests(unittest.TestCase):
     def test_reading_the_landed_half_leaves_this_trees_window_where_it_was(self):
         """§FS-distribution.4.2.5 — the invariant across this change. The pairs
         this tree ships name 0.12.0 and 0.14.0, both below the 0.15.0 floor its
-        own landed flip already sets, so reading them moves neither bound. A
-        window that moves here has caught something other than this defect."""
-        self.assertEqual(ramps.release_window(self.claims), ("0.15.0", "0.15.0"))
+        own landed flip already sets, so reading them moves neither bound: the
+        floor stays that flip's and the ceiling the 0.16.0 its pending ramps
+        name. A window that moves here has caught something other than this
+        defect."""
+        self.assertEqual(ramps.release_window(self.claims), ("0.15.0", "0.16.0"))
 
 
 if __name__ == "__main__":

@@ -182,7 +182,7 @@ Being a substring is what gives it its left boundary. `becomes an error in <rele
 
 #### 4.2.4 The scalar clause is the `refs` warning's
 
-The scalar clause matches the exact `refs` warning in [§FS-refs.4](FS-refs.md#4-exit-codes): its replacement findings must remain the ordinary failed-query bytes, so they do not gain a historical release suffix. A version-gated contract test then owns the landed phase; at 0.15.0 it expects exit `1` and the warning's absence.
+The scalar clause matches the exact `refs` warning in [§FS-refs.4](FS-refs.md#4-exit-codes): its replacement findings must remain the ordinary failed-query bytes, so they do not gain a historical release suffix. A version-gated contract test then owns the landed phase; at 0.16.0 it expects exit `1` and the warning's absence.
 
 #### 4.2.5 The refusal names the window left
 

@@ -39,7 +39,7 @@ across two homes, or configuration-validation failures.
 ### 2.2 A scalar gets a hold-and-warn release
 
 Grund 0.14.0 retains `refs`' exit `2` and existing diagnostic and hint bytes,
-then appends one exact warning naming the 0.15.0 exit-`1` change. Grund 0.15.0
+then appends one exact warning naming the 0.16.0 exit-`1` change. Grund 0.16.0
 removes the warning and uses the shared failed-query text and JSON shapes. This
 is the two-release path required by
 [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path), applied to a scalar for which no command can migrate a caller.
@@ -61,7 +61,7 @@ A configurable mapping was rejected because exit mappings are not policy knobs
 
 ## 4. Consequences
 
-Exact-stderr consumers see an appended warning throughout 0.14.0. At 0.15.0,
+Exact-stderr consumers see an appended warning throughout 0.14.0 and 0.15.0. At 0.16.0,
 callers repair these operands on exit `1` and reserve `2` for context, run, I/O,
 and incomplete-scan failures. JSON callers receive one failed-query diagnostic
 object instead of raw CLI text; successful and empty citation lists do not move.

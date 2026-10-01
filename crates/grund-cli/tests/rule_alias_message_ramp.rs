@@ -10,7 +10,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const RAMP_TAIL: &str = "; this wording changes in grund 0.15.0";
+const RAMP_TAIL: &str = "; this wording changes in grund 0.16.0";
 const LEGACY_OPENING: &str = "unknown kind \"";
 
 /// A single project — no `[workspace]` anywhere — with a rule kind, so every
@@ -94,7 +94,7 @@ fn release(text: &str) -> (u64, u64, u64) {
     )
 }
 
-/// §FS-errors.3.7.1: the two final reasons land in `0.15.0`, where the legacy
+/// §FS-errors.3.7.1: the two final reasons land in `0.16.0`, where the legacy
 /// prefix is removed. Below that release what there is to pin is the window —
 /// while the compatibility form is still shipping, this tree may not be at or
 /// above the release the ramp names, the legacy reason must still open the line
@@ -112,8 +112,8 @@ fn the_rule_alias_ramp_cannot_survive_the_release_it_names() {
 
     if ramped > 0 {
         assert!(
-            release(env!("CARGO_PKG_VERSION")) < release("0.15.0"),
-            "this tree reached 0.15.0; land \u{a7}FS-errors.3.7.1's final reasons instead of shipping the compatibility prefix"
+            release(env!("CARGO_PKG_VERSION")) < release("0.16.0"),
+            "this tree reached 0.16.0; land \u{a7}FS-errors.3.7.1's final reasons instead of shipping the compatibility prefix"
         );
         assert_eq!(
             ramped, 2,

@@ -2,9 +2,9 @@
 
 What `grund` plans to ship next, in priority order. Each item has a stable ID — `RM-<slug>` under this repo's `[id] format` ([§FS-config.3.2](functional-spec/FS-config.md#32-id--id-grammar)); `RM` is a configured `[[kinds]]` prefix ([§FS-config.3.4](functional-spec/FS-config.md#34-kinds--recognized-kinds)), so `grund check` validates `§RM-…` citations like any other. Items may be cited from anywhere — commits, PRs, the changelog, other specs. A shipped item is removed: its record is the changelog and the spec it landed in, and whatever cited the milestone cites that spec instead. A cancelled item stays in place with a `~~strikethrough~~` title and a one-line reason. Where an item has a GitHub issue, the item names it.
 
-The check engine, the retrieval surface (`grund <ID>`, `grund refs`, including E2E case manifests), the coverage index (`grund cover`), bulk normalization (`grund fmt`, including `--marker` and `--cross-refs`), config loading (`grund.toml` plus `grund config show` / `grund config validate`), `grund init`, `grund id`, the opt-in grounding floor ([§FS-check.3.6](functional-spec/FS-check.md#36-ungrounded-unit-opt-in)), the token-cheap read surfaces ([§DF-show-default-token-cheap](decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in)), the e2e corpus, the benchmark baseline/gate ([§AR-benchmarks](architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands)), the live registry-name guard ([§FS-distribution.4](functional-spec/FS-distribution.md#4-release-process)), the `grund-core` / `grund-cli` workspace split with data-returning core APIs ([§AR-bindings.2](architecture/AR-bindings.md#2-grund-core-the-only-place-logic-lives)), the optional Cargo LSP server ([§FS-lsp](functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)), and parallel per-file scanning ([§AR-scanner.1](architecture/AR-scanner.md#1-tree-walk)) are all shipped — see `docs/changelog.md`. Two arcs remain. The **distribution arc**: publish on npm and PyPI alongside cargo, including the npm/PyPI LSP packages, and add `grund check --watch`. And the **grounding arc** (the third layer of [§GOAL-agent-grounding.1](goals.md#1-the-three-layers), diff-gated enforcement): build on [§FS-check.3.6](functional-spec/FS-check.md#36-ungrounded-unit-opt-in) and [§FS-cover](functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) toward a diff-aware co-change gate — implementation cannot change without the spec it grounds in and without a test of it — via a pre-commit / CI recipe that consumes `grund cover` ([§RM-cochange-gate](roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)). Six standalone items sit outside both arcs: [§RM-doc-comment-declarations](roadmap.md#rm-doc-comment-declarations-declarations-only-in-classmethod-doc-comments) tightens code-declaration recognition so a declaration is only seen inside a class/method doc-comment and never a plain inline comment, [§RM-lsp-completion-tab](roadmap.md#rm-lsp-completion-tab-lsp-id-autocomplete-accepted-with-tab) adds LSP ID completion that works with editor Tab acceptance, [§RM-lsp-trigger-conversion-fix](roadmap.md#rm-lsp-trigger-conversion-fix-fix-the-lsp-trigger-conversion) fixes the LSP `$$` trigger conversion, [§RM-positioning](roadmap.md#rm-positioning-the-lychee-contrast-and-the-instruction-count-framing-in-readme-and-landing-copy) keeps the README/landing pitch paired with the benchmark story, [§RM-gap-report](roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports) inverts the [§FS-cover](functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) index into an orphan / uncovered-ID report, and [§RM-positioning-trace-tools](roadmap.md#rm-positioning-trace-tools-position-grund-against-requirements-traceability-tools-in-readme) extends the README positioning to the requirements-traceability neighbourhood (OFT, Sphinx-Needs, TRLC, Doorstop, Duvet, SARA). Five deadline items — [§RM-workspace-absorbed-scan-error](roadmap.md#rm-workspace-absorbed-scan-error-flip-the-absorbed-scan-warning-to-an-error), [§RM-unmarked-heading-error](roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0150), [§RM-off-grammar-declaration-error](roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0150), [§RM-refs-resolver-rejection-exit](roadmap.md#rm-refs-resolver-rejection-exit-make-refs-resolver-rejections-failed-queries-in-0150), and [§RM-unreached-declaration-error](roadmap.md#rm-unreached-declaration-error-make-the-unreached-declaration-warning-an-error-in-0160) — expire deprecation or compatibility ramps at the release their warnings already name. The IDed milestones below project both arcs onto reviewable units of work.
+The check engine, the retrieval surface (`grund <ID>`, `grund refs`, including E2E case manifests), the coverage index (`grund cover`), bulk normalization (`grund fmt`, including `--marker` and `--cross-refs`), config loading (`grund.toml` plus `grund config show` / `grund config validate`), `grund init`, `grund id`, the opt-in grounding floor ([§FS-check.3.6](functional-spec/FS-check.md#36-ungrounded-unit-opt-in)), the token-cheap read surfaces ([§DF-show-default-token-cheap](decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in)), the e2e corpus, the benchmark baseline/gate ([§AR-benchmarks](architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands)), the live registry-name guard ([§FS-distribution.4](functional-spec/FS-distribution.md#4-release-process)), the `grund-core` / `grund-cli` workspace split with data-returning core APIs ([§AR-bindings.2](architecture/AR-bindings.md#2-grund-core-the-only-place-logic-lives)), the optional Cargo LSP server ([§FS-lsp](functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)), and parallel per-file scanning ([§AR-scanner.1](architecture/AR-scanner.md#1-tree-walk)) are all shipped — see `docs/changelog.md`. Two arcs remain. The **distribution arc**: publish on npm and PyPI alongside cargo, including the npm/PyPI LSP packages, and add `grund check --watch`. And the **grounding arc** (the third layer of [§GOAL-agent-grounding.1](goals.md#1-the-three-layers), diff-gated enforcement): build on [§FS-check.3.6](functional-spec/FS-check.md#36-ungrounded-unit-opt-in) and [§FS-cover](functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) toward a diff-aware co-change gate — implementation cannot change without the spec it grounds in and without a test of it — via a pre-commit / CI recipe that consumes `grund cover` ([§RM-cochange-gate](roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)). Six standalone items sit outside both arcs: [§RM-doc-comment-declarations](roadmap.md#rm-doc-comment-declarations-declarations-only-in-classmethod-doc-comments) tightens code-declaration recognition so a declaration is only seen inside a class/method doc-comment and never a plain inline comment, [§RM-lsp-completion-tab](roadmap.md#rm-lsp-completion-tab-lsp-id-autocomplete-accepted-with-tab) adds LSP ID completion that works with editor Tab acceptance, [§RM-lsp-trigger-conversion-fix](roadmap.md#rm-lsp-trigger-conversion-fix-fix-the-lsp-trigger-conversion) fixes the LSP `$$` trigger conversion, [§RM-positioning](roadmap.md#rm-positioning-the-lychee-contrast-and-the-instruction-count-framing-in-readme-and-landing-copy) keeps the README/landing pitch paired with the benchmark story, [§RM-gap-report](roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports) inverts the [§FS-cover](functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) index into an orphan / uncovered-ID report, and [§RM-positioning-trace-tools](roadmap.md#rm-positioning-trace-tools-position-grund-against-requirements-traceability-tools-in-readme) extends the README positioning to the requirements-traceability neighbourhood (OFT, Sphinx-Needs, TRLC, Doorstop, Duvet, SARA). Five deadline items — [§RM-workspace-absorbed-scan-error](roadmap.md#rm-workspace-absorbed-scan-error-flip-the-absorbed-scan-warning-to-an-error), [§RM-unmarked-heading-error](roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0160), [§RM-off-grammar-declaration-error](roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0160), [§RM-refs-resolver-rejection-exit](roadmap.md#rm-refs-resolver-rejection-exit-make-refs-resolver-rejections-failed-queries-in-0160), and [§RM-unreached-declaration-error](roadmap.md#rm-unreached-declaration-error-make-the-unreached-declaration-warning-an-error-in-0160) — expire deprecation or compatibility ramps at the release their warnings already name. The IDed milestones below project both arcs onto reviewable units of work.
 
-## RM-unmarked-heading-error: make unmarked Markdown headings errors in 0.15.0
+## RM-unmarked-heading-error: make unmarked Markdown headings errors in 0.16.0
 
 Grund 0.14.0 opens the warning window decided by
 [§DF-unmarked-markdown-headings](decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph).
@@ -12,8 +12,8 @@ This milestone closes it at the release every affected heading names.
 
 ### 1. What
 
-In grund 0.15.0, change `unmarked-heading` from warning to error and replace its
-future-tense deadline with `this became an error in grund 0.15.0`. Keep its code,
+In grund 0.16.0, change `unmarked-heading` from warning to error and replace its
+future-tense deadline with `this became an error in grund 0.16.0`. Keep its code,
 location, containing declaration, deterministic coordinate suggestion, scope,
 and text/JSON/LSP transport unchanged
 ([§FS-declarations.checks.unmarked-heading](functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)).
@@ -30,12 +30,12 @@ opt-out ([§REQ-backwards-compatibility.2](requirements/REQ-backwards-compatibil
 
 ### 3. Measurable
 
-At 0.15.0, the same Markdown fixtures report the same sites and suggestions as
+At 0.16.0, the same Markdown fixtures report the same sites and suggestions as
 errors and exit `1`; JSON and LSP severity move with the core finding and the
 past-tense clause is byte-exact. Exempt headings and every non-check command stay
-unchanged. The release-ramp guard refuses 0.15.0 while the warning form remains.
+unchanged. The release-ramp guard refuses 0.16.0 while the warning form remains.
 
-## RM-off-grammar-declaration-error: make off-grammar declarations a check error in 0.15.0
+## RM-off-grammar-declaration-error: make off-grammar declarations a check error in 0.16.0
 
 Catalog-backed compatibility keeps persisted declarations readable while the
 configured format remains enforceable, serving
@@ -46,14 +46,14 @@ must end rather than becoming a permanent promise.
 
 ### 1. What
 
-In grund 0.15.0, change `declaration-near-miss` from warning to error and replace
+In grund 0.16.0, change `declaration-near-miss` from warning to error and replace
 its future-tense deadline with the past-tense report that it became an error in
-0.15.0 ([§FS-declarations.checks.declaration-near-miss](functional-spec/FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)). Keep its code, declaration location, message identity,
+0.16.0 ([§FS-declarations.checks.declaration-near-miss](functional-spec/FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)). Keep its code, declaration location, message identity,
 and the catalog-backed lookup and citation compatibility unchanged. The severity
 is one cell of the code catalog ([§FS-errors.5.5](functional-spec/FS-errors.md#55-the-check-code-catalog)), so the promotion edits that
 cell; the check keeps the section its code names and no citation of it moves
 ([§REQ-spec-section-names.code](requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). The
-release-ramp guard must reject a version at or beyond 0.15.0 while the warning
+release-ramp guard must reject a version at or beyond 0.16.0 while the warning
 form remains.
 
 ### 2. Why now
@@ -65,13 +65,13 @@ read access throughout.
 
 ### 3. Measurable
 
-At 0.15.0, the same fixture that warns and exits `0` on 0.14.x reports one
+At 0.16.0, the same fixture that warns and exits `0` on 0.14.x and 0.15.x reports one
 located error and exits `1`; `show`, `refs`, `list`, completion, `cover`,
 cross-reference formatting, and LSP navigation remain byte-for-byte compatible
 with their pre-flip result. No shipped diagnostic promises a deadline the
 running version has reached.
 
-## RM-refs-resolver-rejection-exit: make refs resolver rejections failed queries in 0.15.0
+## RM-refs-resolver-rejection-exit: make refs resolver rejections failed queries in 0.16.0
 
 Grund 0.14.0 opens the exit-status compatibility window in
 [§FS-refs.4](functional-spec/FS-refs.md#4-exit-codes). This milestone closes it
@@ -79,7 +79,7 @@ at the release every affected invocation names.
 
 ### 1. What
 
-In grund 0.15.0, change `refs`' configured-format-invalid ID and ambiguous
+In grund 0.16.0, change `refs`' configured-format-invalid ID and ambiguous
 number-only shorthand outcomes from exit `2` to exit `1`. Remove the migration
 warning and the text `error:` prefix; use the shared failed-query JSON object in
 JSON mode. Keep invalid-format's text hint, omit ambiguity and JSON hints, and
@@ -95,10 +95,10 @@ the cross-command disagreement it exists to retire
 
 ### 3. Measurable
 
-At 0.15.0, both rejection kinds exit `1` from `show` and `refs`; text and JSON
+At 0.16.0, both rejection kinds exit `1` from `show` and `refs`; text and JSON
 match the exact staged shapes, stdout is empty, and the warning is absent.
 Unknown aliases and operational failures remain `2`, and a resolved target with
-no citation remains `0`. The release-ramp guard refuses 0.15.0 while the warning
+no citation remains `0`. The release-ramp guard refuses 0.16.0 while the warning
 form remains
 ([§FS-distribution.4.2](functional-spec/FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)).
 
@@ -341,7 +341,7 @@ Raise the finding from a load-time `warning:` to the config error [§FS-config.4
 
 The two-release window is the point of the ramp, so this is not a milestone to pull forward: a repository that upgrades on the day of the flip must have had a release in which the warning told it what was coming, and told it in a run rather than in release notes.
 
-The release this lands in is `0.15.0`. It was `0.14.0` until that release was cut without it, which moved the deadline the messages name rather than letting a shipped date pass ([§DF-absorbed-scan-warning.2.3](decisions/functional/DF-absorbed-scan-warning.md#23-the-release-is-named-in-the-message-not-only-in-the-changelog)).
+The release this lands in is `0.16.0`. It was `0.14.0`, then `0.15.0`, until each was cut without it, which moved the deadline the messages name rather than letting a shipped date pass ([§DF-absorbed-scan-warning.2.3](decisions/functional/DF-absorbed-scan-warning.md#23-the-release-is-named-in-the-message-not-only-in-the-changelog)).
 
 ### 2. Why now
 

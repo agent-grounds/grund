@@ -36,7 +36,7 @@ fn unmarked_heading_is_the_same_warning_over_lsp() {
         json!(
             "unmarked heading inside FS-policy; number it (## 1. Missing coordinate) as \
              FS-policy.1, declare an ID, or use a bold label; this warning becomes an error \
-             in grund 0.15.0"
+             in grund 0.16.0"
         )
     );
     assert_eq!(

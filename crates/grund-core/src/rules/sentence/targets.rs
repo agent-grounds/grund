@@ -62,9 +62,9 @@ fn known_target(
     }
 }
 
-/// `; this wording changes in grund 0.15.0` — the ramp §FS-errors.3.7 carries
+/// `; this wording changes in grund 0.16.0` — the ramp §FS-errors.3.7 carries
 /// until §FS-errors.3.7.1's final reasons replace the compatibility prefix.
-const RULE_ALIAS_RAMP_TAIL: &str = "; this wording changes in grund 0.15.0";
+const RULE_ALIAS_RAMP_TAIL: &str = "; this wording changes in grund 0.16.0";
 
 /// Why an unresolved object kind is §FS-rules.4.1's unverifiable case rather
 /// than an invalid rule, or `None` when it is an invalid rule. The reason names

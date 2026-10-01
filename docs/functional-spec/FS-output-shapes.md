@@ -216,9 +216,9 @@ error: grund.toml:2: unknown config key `strcit`
 This config validation example exits `1` for `grund config validate` and `2`
 when the same invalid config blocks another subcommand.
 
-### 6.1 `refs` resolver rejections across 0.14.0 and 0.15.0
+### 6.1 `refs` resolver rejections across 0.14.0 and 0.16.0
 
-During grund 0.14.0, `refs` preserves the former CLI-level classification for resolver-rejected operands and warns about the 0.15.0 change ([§FS-refs.4](FS-refs.md#4-exit-codes)); at 0.15.0 the rejection becomes a failed query with exit `1`. [§FS-output-shapes.6.1.1](FS-output-shapes.md#611-in-0140) and [§FS-output-shapes.6.1.2](FS-output-shapes.md#612-from-0150) give an invalid ID's exact output at each stage; an ambiguous number-only shorthand follows the same stages, without a hint.
+During grund 0.14.0 and 0.15.0, `refs` preserves the former CLI-level classification for resolver-rejected operands and warns about the 0.16.0 change ([§FS-refs.4](FS-refs.md#4-exit-codes)); at 0.16.0 the rejection becomes a failed query with exit `1`. [§FS-output-shapes.6.1.1](FS-output-shapes.md#611-in-0140) and [§FS-output-shapes.6.1.2](FS-output-shapes.md#612-from-0160) give an invalid ID's exact output at each stage; an ambiguous number-only shorthand follows the same stages, without a hint.
 
 #### 6.1.1 In 0.14.0
 
@@ -227,12 +227,12 @@ The invalid-ID text and JSON invocations both write exactly:
 ```text
 error: invalid ID `FS-bar`
 hint: this repo's [id] format is `{kind}-{number}-{slug}` (run `grund config show`); `grund list` shows the IDs that exist
-warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.15.0
+warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.16.0
 ```
 
-The `refs` example exits `2` and leaves stdout empty in 0.14.0.
+The `refs` example exits `2` and leaves stdout empty in 0.14.0 and 0.15.0.
 
-#### 6.1.2 From 0.15.0
+#### 6.1.2 From 0.16.0
 
 The same example becomes the failed-query text shape below, exit `1`; JSON emits the one object shown and no hint, warning, or stdout:
 
@@ -245,7 +245,7 @@ hint: this repo's [id] format is `{kind}-{number}-{slug}` (run `grund config sho
 {"severity":"error","path":null,"line":null,"code":"invalid-id","message":"invalid ID `FS-bar`","sites":null}
 ```
 
-An ambiguous number-only shorthand's 0.15.0 JSON code is `ambiguous` and `sites` is `null`.
+An ambiguous number-only shorthand's 0.16.0 JSON code is `ambiguous` and `sites` is `null`.
 
 ## 7. Stream matrix
 
@@ -263,8 +263,8 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | successful `show --format=json` | one result object | empty | `0` |
 | failed `show --format=json` query | empty | one finding object | `1` |
 | `refs` resolver rejection, 0.14.0 text or JSON | empty | raw `error:`, optional invalid-format hint, then exact migration warning | `2` |
-| `refs` resolver rejection, 0.15.0 text | empty | bare failure; invalid format alone adds a hint | `1` |
-| `refs` resolver rejection, 0.15.0 JSON | empty | one `invalid-id` or `ambiguous` finding object; no hint | `1` |
+| `refs` resolver rejection, 0.16.0 text | empty | bare failure; invalid format alone adds a hint | `1` |
+| `refs` resolver rejection, 0.16.0 JSON | empty | one `invalid-id` or `ambiguous` finding object; no hint | `1` |
 | `refs --total` text, cited | one `cited at <n> site(s) across <m> file(s)` line | empty | `0` |
 | `refs --total` text, uncited | one `not cited` line | empty, or the [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) `note:` for an ID neither declared nor cited | `0` |
 | `refs --total --format=json`, any count | exactly one `{"sites":<n>,"files":<m>}` object | as the text rows | `0` |
