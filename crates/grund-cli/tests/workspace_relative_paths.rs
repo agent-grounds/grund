@@ -140,7 +140,7 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
         );
         assert_eq!(
             String::from_utf8_lossy(&full_check.stderr),
-            "warning: --full has no effect with an explicit PATH — it cancels [scan] include, and external-link.md already bypasses it\n"
+            "warning: --full has no effect with an explicit PATH — external-link.md already resolves against [scan] include, and the report is the path either way\n"
         );
 
         let full_check_json = run_grund(
@@ -159,8 +159,8 @@ fn relative_paths_false_from_subdirectory_reaches_workspace_member() {
             concat!(
                 "{\"severity\":\"warning\",\"path\":null,\"line\":null,",
                 "\"code\":\"full-scope-ignored\",",
-                "\"message\":\"--full has no effect with an explicit PATH — it cancels ",
-                "[scan] include, and external-link.md already bypasses it\",",
+                "\"message\":\"--full has no effect with an explicit PATH — external-link.md ",
+                "already resolves against [scan] include, and the report is the path either way\",",
                 "\"sites\":null,\"authority\":null}\n",
             )
         );

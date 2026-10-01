@@ -46,6 +46,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 
 - [§DF-check-full-scope](DF-check-full-scope.md#df-check-full-scope-check---full-walks-past-scan-include-and-reports-unresolved-references-plus-orphaned-section-headings-out-there) — `check --full` walks past `[scan] include` and reports unresolved references plus orphaned section headings out there
 - [§DF-require-grounding](DF-require-grounding.md#df-require-grounding-an-opt-in-check-that-every-source-file-cites-a-spec) — an opt-in check that every source file cites a spec
+- [§DF-path-scope-resolves-project-wide](DF-path-scope-resolves-project-wide.md#df-path-scope-resolves-project-wide-a-path-scoped-check-resolves-against-the-whole-project-and-reports-only-the-path) — a path-scoped `check` resolves against the whole project and reports only the path
 - [§DF-nothing-recognized](DF-nothing-recognized.md#df-nothing-recognized-a-run-that-recognized-nothing-says-so-and-says-it-as-a-warning) — a run that recognized nothing says so, and says it as a warning
 - [§DF-duplicate-section-path](DF-duplicate-section-path.md#df-duplicate-section-path-a-section-coordinate-names-one-heading-or-the-run-says-so) — a section coordinate names one heading, or the run says so
 - [§DF-citation-directions](DF-citation-directions.md#df-citation-directions-encode-citation-directions-as-checked-config-with-rfc-2119-levels) — encode citation directions as checked config with RFC-2119 levels

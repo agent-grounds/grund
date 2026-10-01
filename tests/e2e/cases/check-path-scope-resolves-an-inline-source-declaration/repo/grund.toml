@@ -1,0 +1,18 @@
+grund_config_version = 1
+project_name = "fixture"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "AR"
+folder = "docs/architecture"
+title = "How: structure"
+
+[scan]
+include = ["docs", "src"]
+extensions = ["md", "rs"]
