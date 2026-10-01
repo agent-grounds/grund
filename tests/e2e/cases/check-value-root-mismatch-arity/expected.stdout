@@ -1,0 +1,5 @@
+docs/offer.md:3: error: value mismatch for CONST-field-price: bound `1200`, declared `1200 USD` at values/field-price.md:2
+docs/offer.md:5: error: value mismatch for CONST-field-price: bound `1200  USD`, declared `1200 USD` at values/field-price.md:2
+docs/offer.md:12: error: value mismatch for DOC-offer.1: bound `45 kg`, declared `45` at docs/offer.md:8
+docs/offer.md:14: error: value mismatch for DOC-offer.1.1: bound `45 kg`, declared `45` at docs/offer.md:8 — bound is a string, declared is a number; a number and a string are never equal
+docs/offer.md:16: error: value mismatch for DOC-offer.values.aux-voltage: bound `24 V DC`, declared `24 V` at docs/offer.md:22

@@ -1,6 +1,6 @@
 # FS-values: opted-in kinds bind authored components to one declared value
 
-`grund` lets a repository make numbered components authoritative values. The feature is explicit and current-tree-only: a kind opts whole declarations in, an author marks one citable numeric section, or a kind declares the chapter whose named children are values; a use names one exact component, and `grund check` compares the authored component with that declaration. Repositories that use none of the three retain byte-identical behavior. This serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) and [§GOAL-polyglot-citation](../goals.md#goal-polyglot-citation-ids-cite-cleanly-from-anywhere-they-are-useful).
+`grund` lets a repository make numbered components authoritative values. The feature is explicit and current-tree-only: a kind opts whole declarations in, an author marks one citable numeric section, or a kind declares the chapter whose named children are values; a use names one exact component or a whole value root, and `grund check` compares what it authored with that declaration. Repositories that use none of the three retain byte-identical behavior. This serves [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) and [§GOAL-polyglot-citation](../goals.md#goal-polyglot-citation-ids-cite-cleanly-from-anywhere-they-are-useful).
 
 ## terms: Terms
 
@@ -82,17 +82,46 @@ The recognized contexts are the ones [§FS-values.2.4.1](FS-values.md#241-recogn
 
 ### 3.1 The only binding grammar
 
-The sole binding form is a nonempty single-backtick-delimited authored literal, one ASCII space, then a parenthesized marker-prefixed citation to either an opted-in whole-value ID with one positive numeric component or a valid root path — marked ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) or chapter-declared ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)) — followed by one positive numeric immediate-component coordinate, all on one physical line:
+The sole binding form is a nonempty single-backtick-delimited authored literal, one ASCII space, then a parenthesized marker-prefixed citation to a value root — an opted-in whole-value ID or a valid root path, marked ([§FS-values.2.4](FS-values.md#24-embedded-section-value-roots)) or chapter-declared ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)) — optionally followed by one positive numeric immediate-component coordinate, all on one physical line. With the coordinate the binding is component-aimed and its literal is that one component; without it the binding is root-aimed and its literal is the root's whole component run, as [§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root) joins it:
 
 ```text
 `1200` (§CONST-field-price.1)
+`1200 USD` (§CONST-field-price)
 ```
 
 The marker is mandatory even when `[reference] strict = false`. The literal may not be empty or multiline and may not have edge whitespace, a backtick, or a control character.
 
 #### 3.1.1 Invalid attempts and non-attempts
 
-Tabs or extra/missing spaces, absent parentheses, a missing marker or field, and zero, leading-zero, named, or otherwise nonnumeric component coordinates are invalid attempted bindings. A delimited form aimed at a value root itself, at the declared chapter heading, or below one of a root's components is also `invalid-value-binding`, whichever authority made the root. An unbackticked adjacent token, a bare value citation, or the same delimited shape aimed at an ordinary unmarked section, a named section outside every declared chapter, or a whole declaration whose kind lacks `values = true` remains ordinary prose and one ordinary citation; it is not inferred as an attempted binding and is not compared.
+Tabs or extra/missing spaces, absent parentheses, a missing marker, and zero, leading-zero, named, or otherwise nonnumeric component coordinates are invalid attempted bindings. A delimited form aimed at the declared chapter heading or below one of a root's components is also `invalid-value-binding`, whichever authority made the root, and so is a root-aimed form over a value whose component contains an ASCII space ([§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root)). An unbackticked adjacent token, a bare value citation, or the same delimited shape aimed at an ordinary unmarked section, a named section outside every declared chapter, or a whole declaration whose kind lacks `values = true` remains ordinary prose and one ordinary citation; it is not inferred as an attempted binding and is not compared.
+
+#### 3.1.2 A binding aimed at the root
+
+A root-aimed literal is the root's components `.1` through `.N`, in declared order, joined by one ASCII space. `grund` splits the literal at every U+0020 and compares part `i` with component `i` under [§FS-values.4](FS-values.md#4-exact-equality), each component keeping its own equality rule, so the first binding below agrees with a declared `[1200, "USD"]` exactly as `1200.0` agrees with `1200`:
+
+```text
+`1200.0 USD` (§CONST-field-price)
+`24 V` (§DOC-offer.values.aux-voltage)
+`45.0` (§DOC-offer.1)
+```
+
+Only U+0020 separates: a no-break space, an ideographic space, or any other character stays inside its part. The split keeps every part, so two adjacent spaces leave an empty part between them; no component equals it, because a component is never empty ([§FS-values.2.1](FS-values.md#21-markdown-declarations)), and [§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component) reports that literal like any other that disagrees.
+
+The join says how a literal splits only while no component contains the separator, so a value any of whose components contains an ASCII space may not be root-bound, whatever its arity. The root-aimed form over it is `invalid-value-binding` at the binding, naming the cited root, the first such component in declared order, and that component's declaration site:
+
+```text
+docs/offer.md:3: error: invalid value binding: CONST-head-office cannot be bound at its root because component 1 contains an ASCII space at values/head-office.md:2
+```
+
+The refusal belongs to the root-aimed spelling, never to the value: the declaration stays valid, and the component-aimed binding of the same component compares exactly as before. The cited root is rendered as a mismatch renders its coordinate ([§FS-values.5.2](FS-values.md#52-fixed-value-errors)), without a component.
+
+For a value of one component the two spellings are equivalent in effect wherever the root-aimed one is admitted. A literal with no ASCII space gives the same verdict and the same bytes as the `.1` spelling, because a disagreement names the first unequal component by its own coordinate ([§FS-values.5.2.2](FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)). A literal with a space gives the same verdict, but its two or more parts outnumber the one component, so the finding names the root:
+
+```text
+docs/offer.md:9: error: value mismatch for DOC-offer.1: bound `45 kg`, declared `45` at docs/offer.md:12
+```
+
+Where the one component itself contains a space, the root-aimed spelling is refused as above and the `.1` spelling is the only one.
 
 ### 3.2 Recognized text contexts
 
@@ -108,7 +137,11 @@ Otherwise both components must be strings and their decoded Unicode scalar seque
 
 ### 5.1 Resolve before comparison
 
-Every binding citation uses the existing local/workspace declaration and dotted-section resolver ([§FS-workspace.4](FS-workspace.md#4-resolution)). For a binding to a marked or chapter-declared root, its final numeric segment selects the component and its parent path must resolve uniquely to one valid root of either origin that records that immediate child; the order below is the same for both and does not change with the origin. Unknown alias, dangling or duplicate declaration, duplicate or missing section, invalid root, and noncanonical shorthand findings run first and suppress value comparison at that site. Invalid declaration or resolution also suppresses mismatch; malformed binding syntax remains independently reportable. A mismatch exists only after one unique valid authority and component resolve.
+Every binding citation uses the existing local/workspace declaration and dotted-section resolver ([§FS-workspace.4](FS-workspace.md#4-resolution)). For a binding to a marked or chapter-declared root, its final numeric segment selects the component and its parent path must resolve uniquely to one valid root of either origin that records that immediate child; the order below is the same for both and does not change with the origin. A root-aimed binding has no such segment: its whole cited path must resolve uniquely to one valid root — a whole declaration, a marked root, or a chapter root — and every component of that root takes part.
+
+The rule that picks between the two readings is written down because [§REQ-no-wrong-citation.1](../requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution) asks for it: a path that resolves to a value root is root-aimed, and a path whose parent resolves to a root and whose final numeric segment names one of that root's immediate components is component-aimed. No path reads both ways over valid authority, because every arrangement in which a root is also another root's component is already an invalid declaration ([§FS-values.2.1](FS-values.md#21-markdown-declarations), [§FS-values.2.4.4](FS-values.md#244-misplaced-and-overlapping-marks), [§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)), and invalid authority suppresses comparison as below.
+
+Unknown alias, dangling or duplicate declaration, duplicate or missing section, invalid root, and noncanonical shorthand findings run first and suppress value comparison at that site. Invalid declaration or resolution also suppresses mismatch; malformed binding syntax remains independently reportable. Invalid declaration or resolution suppresses the space refusal of [§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root) as well, since that refusal needs a valid component run to name a component of, so an invalid root bound at its own path reports its declaration error alone. The space refusal in turn precedes comparison: a root-aimed binding it refuses is never also a mismatch. A mismatch exists only after one unique valid authority and component resolve — or, for a root-aimed binding, one unique valid authority and its whole component run.
 
 ### 5.2 Fixed value errors
 
@@ -136,6 +169,22 @@ Neither component gains quotes its own source does not carry: the backticks keep
 
 A mismatch whose two components are the same kind prints the canonical text above unchanged, to the byte; naming `number` twice tells a reader nothing the two values do not already show. The clause is appended after a complete, unchanged message, so it ships in one release under [§FS-errors.3](FS-errors.md#3-message-text) and no [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) window is owed: the affected consumer is one matching a mixed-kind `value-mismatch` line whole, and its migration is the stable `code`.
 
+#### 5.2.2 A root-aimed mismatch names the first unequal component
+
+A root-aimed binding whose literal splits into as many parts as its root has components is compared part by part in declared order, and only the first unequal component is reported, by that component's own coordinate and declaration site, in the canonical text above. [§FS-values.5.2.1](FS-values.md#521-a-mixed-kind-mismatch-names-each-sides-kind)'s clause is appended exactly when that one pair differs in kind:
+
+```text
+docs/offer.md:3: error: value mismatch for CONST-field-price.2: bound `EUR`, declared `USD` at values/field-price.md:3
+```
+
+When the part count differs from the component count no component is at fault, so the finding names the root as [§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root) renders it, quotes the literal as authored, and quotes the components joined by one ASCII space, each as the canonical text prints a declared component. It keeps the canonical shape word for word, carries component 1's declaration site, which every valid root has, and appends no kind clause:
+
+```text
+docs/offer.md:3: error: value mismatch for CONST-field-price: bound `1200`, declared `1200 USD` at values/field-price.md:2
+```
+
+Either way the finding carries exactly one declaration site, so the structured `sites` keeps its one entry ([§FS-output-shapes.1.1](FS-output-shapes.md#11-value-mismatch)) and an editor its one component span ([§FS-lsp.1.1.2](FS-lsp.md#112-findings-the-core-report-shapes)).
+
 ### 5.3 Incomplete input and deterministic output
 
 Invalid config stops before scanning. A missing, unreadable, malformed-UTF-8, or syntactically incomplete home JSON source preserves the existing incomplete-scan exit `2`; readable semantic JSON errors use exit `1`. For readable input, declaration and citation-resolution findings precede comparison as [§FS-values.5.1](FS-values.md#51-resolve-before-comparison) specifies.
@@ -162,14 +211,18 @@ An unqualified binding resolves in its local project. The qualified form `<§>al
 
 ## 8. Formatting stability
 
-`fmt --cross-refs` may perform its existing trigger and safe shorthand rewrites, but it never wraps or otherwise rewrites the citation bytes inside a recognized binding, whichever authority made its root: replacing `§ID` with a Markdown link would destroy the only accepted binding form. It also leaves the citation bytes of a delimited form `check` refuses for aiming at value authority — a value root's own heading whichever authority made it, a section below one of that root's components, or the kind's declared chapter heading ([§FS-values.3.1.1](FS-values.md#311-invalid-attempts-and-non-attempts)) — because rewriting one into a link would erase the refusal its author has to read. It never inserts, canonicalizes, moves, or removes a [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) tag, and preserves its authored bytes and trailing whitespace on both `--check` and `--write` passes. Every other citation keeps the existing formatter behavior.
+`fmt --cross-refs` may perform its existing trigger and safe shorthand rewrites, but it never wraps or otherwise rewrites the citation bytes inside a recognized binding, whichever authority made its root and whether it aims at a component or at the root itself: replacing `§ID` with a Markdown link would destroy the only accepted binding form. It also leaves the citation bytes of a delimited form `check` refuses for aiming at value authority — a section below one of a root's components, the kind's declared chapter heading ([§FS-values.3.1.1](FS-values.md#311-invalid-attempts-and-non-attempts)), or a root the space rule keeps from being bound whole, a bare whole-value ID included ([§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root)) — because rewriting one into a link would erase the refusal its author has to read. It never inserts, canonicalizes, moves, or removes a [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) tag, and preserves its authored bytes and trailing whitespace on both `--check` and `--write` passes. Every other citation keeps the existing formatter behavior.
 
 ## 9. Compatibility and explicit exclusions
 
-Without `values = true`, whole-declaration and JSON discovery retain their prior absence. Without `value_chapter`, no chapter root, binding record, value finding, output field, or extra read occurs, and a project that sets neither key reads, reports, and exits byte-identically to one built before the key existed, with the single exception [§FS-values.9.1](FS-values.md#91-the-one-marked-root-formatting-behavior-that-moved) names. Without the exact [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) tag, no marked root, binding record, value finding, output field, or extra read occurs; unmarked sections, malformed lookalikes, citations, and prose retain byte-identical behavior and never gain authority by inference ([§FS-non-goals.2](FS-non-goals.md#2-spelling-grammar-prose-quality)). The exact previously inert tag now has the explicit meaning [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) assigns it. Applications may reuse opted-in JSON by reading that source directly. `grund` neither generates nor freshness-checks language modules.
+Without `values = true`, whole-declaration and JSON discovery retain their prior absence. Without `value_chapter`, no chapter root, binding record, value finding, output field, or extra read occurs, and a project that sets neither key reads, reports, and exits byte-identically to one built before the key existed, with the single exception [§FS-values.9.1](FS-values.md#91-the-one-marked-root-formatting-behavior-that-moved) names. A repository that sets `values = true` sees the root-aimed binding move one formatter behavior, which [§FS-values.9.2](FS-values.md#92-the-one-whole-value-formatting-behavior-that-moved) names. Without the exact [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) tag, no marked root, binding record, value finding, output field, or extra read occurs; unmarked sections, malformed lookalikes, citations, and prose retain byte-identical behavior and never gain authority by inference ([§FS-non-goals.2](FS-non-goals.md#2-spelling-grammar-prose-quality)). The exact previously inert tag now has the explicit meaning [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) assigns it. Applications may reuse opted-in JSON by reading that source directly. `grund` neither generates nor freshness-checks language modules.
 
 The feature adds no rendering or interpolation, inferred adjacent-value or bare-literal lint, range/unit semantics, derived arithmetic, generated artifact, target fingerprint, history, `reconcile` or `stale` command, excluded-path hint, value-aware search, generated-file policy, embedded JSON root, nested marked root, or orphan relief. Named-section authority now exists, but only through the schema and only inside a configured chapter: no named heading is authoritative by its own text, by an inline mark, or by inference ([§FS-values.2.5](FS-values.md#25-chapter-declared-value-roots)). Beyond that boundary the feature does not change `[reference] strict`, scan scope or filters, custom citation markers or separators, whole-value Markdown/JSON behavior, or the history, AST, documentation-generation, offline, and deterministic-install non-goals ([§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do)).
 
 ### 9.1 The one marked-root formatting behavior that moved
 
 A repository that sets neither key but carries a [§FS-values.2.4](FS-values.md#24-embedded-section-value-roots) tag sees one pre-existing `fmt --cross-refs` behavior change: a delimited form that aims inside a marked root without being a valid binding — a section below one of that root's components, such as `.1.0` — is now left where it stands under [§FS-values.8](FS-values.md#8-formatting-stability), where it was previously rewritten into a Markdown link and the refusal `check` reported on that line went with it. So `--check` no longer reports `markdown link` there and its exit status can fall from 1 to 0, and `--write` rewrites one line fewer. Nothing else moves: `check`, `check --format json`, and `list` stay byte-identical, no section gains or loses value authority, and no form becomes comparable that was not.
+
+### 9.2 The one whole-value formatting behavior that moved
+
+A repository that sets `values = true` and carries a delimited form aimed at a whole-value ID with no coordinate sees one `fmt --cross-refs` behavior change, in the same direction as [§FS-values.9.1](FS-values.md#91-the-one-marked-root-formatting-behavior-that-moved) and for the same reason. That form is now either a binding ([§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root)) or that section's space refusal, and [§FS-values.8](FS-values.md#8-formatting-stability) leaves its citation bytes where they stand; it was previously rewritten into a Markdown link, and the `invalid-value-binding` `check` reported on that line went with it. So `--check` no longer reports `markdown link` there and its exit status can fall from 1 to 0, and `--write` rewrites one line fewer. A marked or chapter root path aimed at the root itself moves nothing here, because [§FS-values.8](FS-values.md#8-formatting-stability) already protected it as a refusal. What `check` now reports at all of these forms is the feature itself, and [§DA-root-aimed-value-bindings](../decisions/architectural/DA-root-aimed-value-bindings.md#da-root-aimed-value-bindings-a-value-binding-may-aim-at-the-whole-root-its-components-joined-by-one-ascii-space) records it.

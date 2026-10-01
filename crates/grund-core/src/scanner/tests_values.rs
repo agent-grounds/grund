@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 use super::values::markdown_component;
 use crate::config::Config;
+use crate::model::value_binding_section_shape_is_valid;
 use crate::testing::{check_run, codes, test_root, write};
 
 #[test]
@@ -199,6 +200,68 @@ fn a_same_kind_mismatch_keeps_the_canonical_text() {
         )),
         vec![
             "value mismatch for CONST-field-price.1: bound `1250`, declared `1200` \
+             at values/field-price.md:2"
+        ]
+    );
+}
+
+/// A binding's section shape is a valid root path with an optional positive
+/// numeric coordinate, so a chapter root's named path is a shape on its own,
+/// while a zero, a leading zero, and a numeric segment before a named one stay
+/// refused (§FS-values.3.1, §FS-values.3.1.1).
+#[test]
+fn the_binding_shape_admits_a_root_path_and_keeps_its_refusals() {
+    for section in ["1", "1.1", "values.aux-voltage", "values.aux-voltage.1"] {
+        assert!(
+            value_binding_section_shape_is_valid(section),
+            "`{section}` is a binding shape"
+        );
+    }
+    for section in ["0", "01", "1.0", "2.values", "values.aux-voltage.01"] {
+        assert!(
+            !value_binding_section_shape_is_valid(section),
+            "`{section}` is not a binding shape"
+        );
+    }
+}
+
+/// A one-component value bound at its root is its `.1` spelling in effect: an
+/// agreeing literal is silent, a one-part disagreement prints the `.1`
+/// spelling's bytes, and a two-part literal names the root because its part
+/// count differs (§FS-values.3.1.2, §FS-values.5.2.2).
+#[test]
+fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling() {
+    let agrees = check_run(
+        &value_repo(
+            "value_root_one_component_agrees",
+            "`1200.0` (§CONST-field-price)\n",
+        ),
+        false,
+    );
+    assert!(
+        agrees.report.errors.is_empty(),
+        "an agreeing root binding is silent: {:?}",
+        codes(&agrees)
+    );
+
+    let at_root = mismatch_messages(&value_repo(
+        "value_root_one_component_at_root",
+        "`1250` (§CONST-field-price)\n",
+    ));
+    let at_coordinate = mismatch_messages(&value_repo(
+        "value_root_one_component_at_coordinate",
+        "`1250` (§CONST-field-price.1)\n",
+    ));
+    assert_eq!(at_root, at_coordinate);
+    assert_eq!(at_root.len(), 1);
+
+    assert_eq!(
+        mismatch_messages(&value_repo(
+            "value_root_one_component_two_parts",
+            "`1200 USD` (§CONST-field-price)\n",
+        )),
+        vec![
+            "value mismatch for CONST-field-price: bound `1200 USD`, declared `1200` \
              at values/field-price.md:2"
         ]
     );

@@ -136,7 +136,7 @@ part of it.
 
 ### terms.7: Values and integrations
 
-- **value, component, binding** — An opted-in declaration, one of its child headings, and the comment form that cites one component. Displaces *value field*.
+- **value, component, binding** — An opted-in declaration, one of its child headings, and the comment form that cites one component, or the root whose components it joins. Displaces *value field*.
 - **fetcher, snapshot** — The configured fetch executable and the file it writes. *Integration* stays for rendering-layer clients only.
 
 ### terms.8: The architecture's own words

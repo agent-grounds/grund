@@ -1,0 +1,6 @@
+docs/offer.md:3: error: invalid value binding: CONST-head-office cannot be bound at its root because component 1 contains an ASCII space at values/head-office.md:2
+docs/offer.md:5: error: invalid value binding: CONST-head-office cannot be bound at its root because component 1 contains an ASCII space at values/head-office.md:2
+docs/offer.md:7: error: invalid value binding: CONST-branch cannot be bound at its root because component 2 contains an ASCII space at values/branch.md:3
+docs/offer.md:9: error: invalid value binding: CONST-hq cannot be bound at its root because component 1 contains an ASCII space at values/runtime.json:2
+docs/offer.md:16: error: invalid value binding: DOC-offer.1 cannot be bound at its root because component 1 contains an ASCII space at docs/offer.md:12
+docs/offer.md:18: error: invalid value binding: DOC-offer.values.entrance cannot be bound at its root because component 1 contains an ASCII space at docs/offer.md:24

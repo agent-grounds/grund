@@ -185,10 +185,10 @@ fn chapter_repo(name: &str, body: &str) -> PathBuf {
     root
 }
 
-/// The binding grammar is a valid root path then one positive numeric immediate
-/// coordinate: the root itself, the chapter heading, and a zero coordinate are
-/// refused, and the component compares (§FS-values.3.1, §FS-values.3.1.1,
-/// §FS-values.5.1).
+/// The binding grammar is a valid root path then an optional positive numeric
+/// immediate coordinate: the root itself binds and agrees, the chapter heading
+/// and a zero coordinate are refused, and the component compares
+/// (§FS-values.3.1, §FS-values.3.1.1, §FS-values.3.1.2, §FS-values.5.1).
 #[test]
 fn a_chapter_binding_compares_and_its_near_misses_are_refused() {
     let root = chapter_repo(
@@ -213,7 +213,11 @@ fn a_chapter_binding_compares_and_its_near_misses_are_refused() {
         codes.contains(&(11, "value-mismatch")),
         "the exact binding compares: {codes:?}"
     );
-    for line in [13, 15, 17] {
+    assert!(
+        !codes.iter().any(|(line, _)| *line == 13),
+        "the root binds and agrees, so line 13 is silent: {codes:?}"
+    );
+    for line in [15, 17] {
         assert!(
             codes.contains(&(line, "invalid-value-binding")),
             "line {line} must be an attempted binding, not prose: {codes:?}"
