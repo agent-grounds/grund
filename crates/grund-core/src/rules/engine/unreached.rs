@@ -70,9 +70,12 @@ pub(super) fn report_unreached(
 /// own none of the chapters the subject selected.
 ///
 /// It is read as the complement of the selection rather than as a second join
-/// over `chapter`, so "contributes no unit" and "is unreached" are one set by
-/// construction (§FS-rules.2) — no declaration can both hand the relation a unit
-/// and be reported as out of the rule's reach.
+/// over `chapter`, which is what §FS-rules.5.2's `chapter_of` says as well: that
+/// clause is written over the subject selector's section-component join and not
+/// over the presence family's display-name count (§FS-rules.3.1). So
+/// "contributes no unit" and "is unreached" are one set by construction
+/// (§FS-rules.2) — no declaration can both hand the relation a unit and be
+/// reported as out of the rule's reach.
 fn unreached_declarations(kind: &str, selected: &[NodeKey], facts: &RuleFacts) -> Vec<NodeKey> {
     facts
         .decl

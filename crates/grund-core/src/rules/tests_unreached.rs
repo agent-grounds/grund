@@ -77,6 +77,30 @@ fn facts() -> RuleFacts {
     }
 }
 
+/// `facts()` plus a third FS declaration whose `requirements` chapter is
+/// *displayed* as `Needs`. The handle and the display name differ, which is the
+/// one shape that tells §FS-rules.5.2's `chapter_handle` join apart from the
+/// presence family's display-name count (§FS-rules.3.1).
+fn facts_with_displayed_chapter() -> RuleFacts {
+    let mut facts = facts();
+    let (displayed, displayed_meta) = node("FS-displayed", "docs/fs/FS-displayed.md");
+    let chapter = NodeKey("opaque-displayed-requirements".into());
+    facts.decl.push((displayed.clone(), "FS".into()));
+    facts
+        .chapter
+        .push((chapter.clone(), "requirements".into(), "Needs".into()));
+    facts.contains.push((displayed.clone(), chapter.clone()));
+    facts.nodes.insert(displayed, displayed_meta);
+    facts.nodes.insert(
+        chapter,
+        NodeMeta {
+            label: "FS-displayed.requirements".into(),
+            anchor: anchor("docs/fs/FS-displayed.md", 5),
+        },
+    );
+    facts
+}
+
 fn chapter_rule(origin: &str) -> ParsedRule {
     ParsedRule {
         origin: origin.into(),
@@ -204,6 +228,34 @@ fn the_inbound_count_family_reports_the_declaration_with_no_such_chapter() {
 #[test]
 fn a_prohibition_over_the_same_absent_chapter_stays_silent() {
     assert!(absences(&[prohibition("RULE-prohibition")]).is_empty());
+}
+
+/// §FS-rules.5.2: `chapter_handle` joins the chapter's last accepted section
+/// component, so `## requirements: Needs` is one of the units `The requirements
+/// chapter of each FS` selects and its declaration is not unreached. Joining the
+/// display name instead would report that FS-displayed has no `requirements`
+/// chapter in the same run as a finding located inside that chapter.
+#[test]
+fn a_chapter_displayed_under_another_name_is_reached_by_its_handle() {
+    let facts = facts_with_displayed_chapter();
+    let (errors, ramp_warnings) = evaluate(&[chapter_rule("RULE-outbound")], &[], &facts);
+    let absent: Vec<&str> = ramp_warnings
+        .iter()
+        .filter(|diagnostic| diagnostic.code == "unreached-declaration")
+        .map(|diagnostic| diagnostic.message.as_str())
+        .collect();
+    assert_eq!(absent.len(), 1, "only FS-silent is unreached: {absent:?}");
+    assert!(absent[0].starts_with("FS-silent has no requirements chapter,"));
+    let rendered = errors
+        .iter()
+        .map(|diagnostic| diagnostic.message.as_str())
+        .collect::<Vec<_>>();
+    assert!(
+        rendered
+            .iter()
+            .any(|message| message.starts_with("FS-displayed.requirements must cite REQ")),
+        "the displayed chapter is a unit of the rule: {rendered:?}"
+    );
 }
 
 /// §FS-rules.checks.unreached-declaration: the premise is a chapter subject's,
