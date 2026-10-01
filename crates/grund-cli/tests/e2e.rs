@@ -121,10 +121,12 @@ fn the_values_example_shows_what_it_is_the_example_of() {
     assert!(read("repo/values/field-price.md").contains("## 1. 1200"));
     assert!(read("repo/values/runtime.json").contains("\"CONST-discount\""));
 
-    // Both binding forms, and the runtime that reads the same JSON.
+    // Both binding forms, and the runtime that reads the same JSON. The prose
+    // binds the price as the one quantity it is, amount and unit together
+    // (§FS-values.3.1.2); the Python comment binds one component.
     let prose = read("repo/docs/offer.md");
     assert!(
-        prose.contains("`1200.0` (\u{a7}CONST-field-price.1)"),
+        prose.contains("`1200.0 USD` (\u{a7}CONST-field-price)"),
         "{prose}"
     );
     let code = read("repo/src/model.py");
@@ -146,7 +148,7 @@ fn the_values_example_shows_what_it_is_the_example_of() {
     assert_eq!(read("expected.stderr"), "\n");
     assert_eq!(
         read("expected.stdout"),
-        "docs/offer.md:9: error: value mismatch for CONST-discount.1: \
+        "docs/offer.md:7: error: value mismatch for CONST-discount.1: \
          bound `0.30`, declared `0.25` at values/runtime.json:2\n"
     );
 }

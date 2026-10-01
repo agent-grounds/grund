@@ -248,11 +248,12 @@ fn strict_shape_branches_report_the_offending_lines() {
     );
 }
 
-/// A marked root nested inside another marked root invalidates both, so the
-/// bindings aimed at the inner root and below its component are the ones that
-/// lose their authority (§FS-values.2.4.4).
+/// A marked root nested inside another marked root invalidates both. The
+/// bindings at the inner root's component and at the inner root itself are
+/// suppressed by that invalid authority, and only the form below the component
+/// is refused (§FS-values.2.4.4, §FS-values.3.1.2, §FS-values.5.1).
 #[test]
-fn longest_invalid_root_suppresses_its_component_binding_only() {
+fn an_invalid_nested_root_refuses_only_the_form_below_its_component() {
     let (config, findings) = scan_embedded(
         "embedded_nested_binding_ownership",
         "# FS-001-alpha: Alpha\n\n\
@@ -271,7 +272,7 @@ fn longest_invalid_root_suppresses_its_component_binding_only() {
         .filter(|error| error.code == "invalid-value-binding")
         .map(|error| error.line.unwrap())
         .collect::<Vec<_>>();
-    assert_eq!(binding_lines, vec![8, 9]);
+    assert_eq!(binding_lines, vec![9]);
 }
 
 fn write_local_format_fixture(name: &str) -> (PathBuf, PathBuf) {

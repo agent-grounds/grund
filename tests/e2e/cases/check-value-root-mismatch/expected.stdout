@@ -1,0 +1,6 @@
+docs/offer.md:1: error: value mismatch for CONST-field-price.2: bound `EUR`, declared `USD` at values/field-price.md:3
+docs/offer.md:3: error: value mismatch for CONST-field-price.1: bound `1250`, declared `1200` at values/field-price.md:2
+docs/offer.md:5: error: value mismatch for CONST-field-price.2: bound `1`, declared `USD` at values/field-price.md:3 — bound is a number, declared is a string; a number and a string are never equal
+docs/offer.md:7: error: value mismatch for CONST-discount.2: bound `pct`, declared `%` at values/runtime.json:2
+docs/offer.md:9: error: value mismatch for CONST-floor.1: bound `46`, declared `45` at values/floor.md:2
+docs/offer.md:11: error: value mismatch for CONST-floor.1: bound `46`, declared `45` at values/floor.md:2

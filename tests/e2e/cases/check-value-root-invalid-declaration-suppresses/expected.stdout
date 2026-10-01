@@ -1,0 +1,4 @@
+docs/offer.md:7: error: unknown reference CONST-missing
+docs/offer.md:10: error: invalid value declaration for DOC-offer: embedded value components must be immediate numeric headings `.1` through `.N` (expected `1.1`)
+values/field-price.md:3: error: invalid value declaration for CONST-field-price: value components must be immediate contiguous headings `.1` through `.N` (expected `.2`)
+values/head-office.md:3: error: invalid value declaration for CONST-head-office: value components must be immediate contiguous headings `.1` through `.N` (expected `.2`)

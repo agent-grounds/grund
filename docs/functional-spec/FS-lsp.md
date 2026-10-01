@@ -158,7 +158,7 @@ Definition results report the whole originating token as their origin span — t
 
 #### 1.3.5 Values and named sections
 
-A value binding navigates through the shared resolver to its existing Markdown/source component heading or exact JSON key/element span. A marked root and component keep their ordinary dotted identities; no synthetic definition or value badge is exposed ([§FS-values.7](FS-values.md#7-workspaces-and-editor-consumers)).
+A value binding navigates through the shared resolver to its existing Markdown/source component heading or exact JSON key/element span. A marked root and component keep their ordinary dotted identities; no synthetic definition or value badge is exposed ([§FS-values.7](FS-values.md#7-workspaces-and-editor-consumers)). A root-aimed binding ([§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root)) navigates to its root: the whole declaration's heading or JSON key, or the marked or chapter root's own heading.
 
 For a named coordinate, definition navigates from the whole citation token to the exact named heading, and declaration-side definition on that heading returns its section-scoped usages. Named and numeric headings use the same scanned ranges and result shapes.
 

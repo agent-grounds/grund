@@ -361,7 +361,7 @@ stdout empty and produces no partial records.
 
 ### 5.4 Value findings
 
-Value findings use the same object and streams. `invalid-value-declaration`, `invalid-value-binding`, and `value-mismatch` are fixed error codes; a mismatch's `sites` is the sorted declaration-site array, and its `message` is byte-identical to the text message after the primary `path:line:` prefix and its channel prefix ([§FS-errors.2.1](FS-errors.md#21-located-finding), [§FS-values.5](FS-values.md#5-resolution-findings-and-exit-status)). Home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete remains a run-level incomplete-scan failure at exit `2` rather than a semantic value finding.
+Value findings use the same object and streams. `invalid-value-declaration`, `invalid-value-binding`, and `value-mismatch` are fixed error codes; a mismatch's `sites` is the sorted declaration-site array, and its `message` is byte-identical to the text message after the primary `path:line:` prefix and its channel prefix ([§FS-errors.2.1](FS-errors.md#21-located-finding), [§FS-values.5](FS-values.md#5-resolution-findings-and-exit-status)). The `invalid-value-binding` that refuses a root-aimed binding for a space carries the offending component's declaration site as its one `sites` entry, the site its text names ([§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root)), so text and NDJSON name the same component. Home JSON input that [§FS-values.5.3](FS-values.md#53-incomplete-input-and-deterministic-output) counts as incomplete remains a run-level incomplete-scan failure at exit `2` rather than a semantic value finding.
 
 ### 5.5 The `check` code catalog
 

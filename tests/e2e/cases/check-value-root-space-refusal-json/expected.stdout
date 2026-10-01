@@ -1,0 +1,1 @@
+{"severity":"error","path":"docs/offer.md","line":1,"code":"invalid-value-binding","message":"invalid value binding: CONST-head-office cannot be bound at its root because component 1 contains an ASCII space at values/head-office.md:2","sites":[{"path":"values/head-office.md","line":2}],"authority":null}

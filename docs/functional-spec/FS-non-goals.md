@@ -16,7 +16,7 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 
 ## 2. Spelling, grammar, prose quality
 
-`grund` reads spec text as opaque content between IDs except for the explicitly delimited value-binding form defined by the value specification; it compares only that form's authored component with the numbered component it cites and never infers values from surrounding prose. It does not lint English. Use any general-purpose linter — `vale`, `ltex-ls`, or a thousand others — alongside `grund`. Decided in [§DA-explicit-value-bindings](../decisions/architectural/DA-explicit-value-bindings.md#da-explicit-value-bindings-compare-only-authored-delimited-value-bindings) and specified by [§FS-values.3](FS-values.md#3-explicit-value-bindings).
+`grund` reads spec text as opaque content between IDs except for the explicitly delimited value-binding form defined by the value specification; it compares only that form's authored literal with the one numbered component it cites, or with the components of the root it cites joined by one ASCII space, and never infers values from surrounding prose. It does not lint English. Use any general-purpose linter — `vale`, `ltex-ls`, or a thousand others — alongside `grund`. Decided in [§DA-explicit-value-bindings](../decisions/architectural/DA-explicit-value-bindings.md#da-explicit-value-bindings-compare-only-authored-delimited-value-bindings) and [§DA-root-aimed-value-bindings](../decisions/architectural/DA-root-aimed-value-bindings.md#da-root-aimed-value-bindings-a-value-binding-may-aim-at-the-whole-root-its-components-joined-by-one-ascii-space), and specified by [§FS-values.3](FS-values.md#3-explicit-value-bindings).
 
 ## 3. Code AST parsing
 
