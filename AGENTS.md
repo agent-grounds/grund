@@ -1,9 +1,13 @@
 # grund — agent instructions
 
+<!-- grund:fmt off -->
+<!-- The block below is generated and byte-compared, so `fmt` may not rewrite it:
+`init` renders the chapter-rule citation bare and `check` compares it bare, and a
+cross-reference wrap there is the one edit that makes the two disagree. -->
 <!-- BEGIN GRUND MANAGED BLOCK -->
-## Grounding with grund (v12)
+## Grounding with grund (v13)
 
-This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM, DISC}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `§`-prefixed citations are checked.
+This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM, DISC, RULE}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `§`-prefixed citations are checked.
 
 ### Grounding from a citation
 
@@ -30,6 +34,7 @@ A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and 
 - [tests/integration/](tests/integration): Integration tests: proof that the parts fit as designed
 - [RM](docs/roadmap.md): Planned milestones and sequencing
 - [DISC](docs/discussions): Design discussions and proposals
+- [RULE](docs/rules): Executable conventions: the rules grund check holds this repository to
 - [skills/](skills): Agent review and automation skills
 - [examples/](examples): Worked examples: user-facing walkthroughs that double as fixtures
 - [.github/workflows/](.github/workflows): CI and release workflows: the gate on GitHub, and how a release ships
@@ -68,16 +73,24 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 - Each **DA** declaration should cite AR or FS.
 - Each file in **tests/e2e/** must cite FS; avoid citing AR.
 - Each file in **tests/integration/** should cite AR.
+- Each **RULE** declaration should cite FS or GOAL.
 - Each file in **examples/** must cite FS; never cite AR.
 - Each file in **.github/workflows/** should cite FS or AR.
 - Each file in **scripts/** should cite FS or AR.
 - Each source file outside the Project map (**code**) that cites anything should cite FS or AR.
 Anything not listed above is allowed.
 
+### Chapter rules
+
+`must`/`must not` are `grund check` errors; `should`/`should not` are suggestions (`grund check --suggestions`).
+
+- Each FS must have exactly one Terms chapter. §RULE-terms
+
 ### Clickable citations
 
 On repository web surfaces, link `§<ID>` to the PR branch in PR bodies, the reviewed commit in reviews, an exact commit for permalinks, and the default branch otherwise; fall back to plain when unsure. In local conversations, follow `§<ID>` with its declaration location as plain `path:line` text; fall back to the bare citation when unsure. If a user-level grund block states a local-conversation rendering, follow that instead: that machine knows what its surface can open.
 <!-- END GRUND MANAGED BLOCK -->
+<!-- grund:fmt on -->
 
 ## Repository workflow
 

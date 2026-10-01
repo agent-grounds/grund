@@ -57,9 +57,8 @@ LEANS = re.compile(r"^\S+: leans on \*[^*]+\* but the token appears nowhere in i
 
 
 def vocabulary():
-    """The module parts (b) and (c) live in. Absent until agent-grounds/grund#290
-    implements it, which is why every assertion that calls it is an expected
-    failure today."""
+    """The module parts (b) and (c) live in, beside this file rather than in it, so
+    the contract below could be committed before the analysis it describes existed."""
     return importlib.import_module(VOCABULARY_MODULE)
 
 
@@ -183,7 +182,6 @@ class FunctionalSpecTermsInvariantTests(FixtureHomeMixin):
     """Part (b), over the tree it gates. Clean today and meant to stay clean: what
     this class buys is the next rename, not this one."""
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_the_four_invariants_hold_over_the_functional_spec(self):
         found = self.findings(FUNCTIONAL_SPEC)
         self.assertEqual(
@@ -192,13 +190,11 @@ class FunctionalSpecTermsInvariantTests(FixtureHomeMixin):
             "\n".join(line for findings in found.values() for line in findings),
         )
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_the_functional_spec_home_is_actually_read(self):
         self.assertGreaterEqual(
             len(vocabulary().documents(FUNCTIONAL_SPEC)), 20, "index entries not found"
         )
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_a_clean_fixture_home_fires_none_of_the_four(self):
         self.assertEqual({title: [] for title in INVARIANTS}, self.findings(self.home()))
 
@@ -207,7 +203,6 @@ class EachInvariantFiresTests(FixtureHomeMixin):
     """A check nobody has seen fail is not a check: one fixture per invariant, each
     breaking exactly it and nothing else."""
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_one_word_under_two_groups(self):
         twice = VOCABULARY.replace(
             "- **catalog** — The scan's shared set of declarations.",
@@ -220,7 +215,6 @@ class EachInvariantFiresTests(FixtureHomeMixin):
             r"and already under terms\.1 \(line \d+\)",
         )
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_a_leaned_word_the_cited_group_does_not_define(self):
         wrong = FIRST.replace("terms.1 (declaration)", "terms.1 (anchor)")
         self.assertOnlyFires(
@@ -230,7 +224,6 @@ class EachInvariantFiresTests(FixtureHomeMixin):
             r"which that group does not define",
         )
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_one_word_defined_twice_in_a_document(self):
         twice = FIRST.replace(
             "## 1. What it says",
@@ -244,7 +237,6 @@ class EachInvariantFiresTests(FixtureHomeMixin):
             r"\(first at line \d+\)",
         )
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_a_shared_word_redefined_without_the_narrowed_form(self):
         bare = FIRST.replace(
             "## 1. What it says",
@@ -257,7 +249,6 @@ class EachInvariantFiresTests(FixtureHomeMixin):
             r"without the `\(narrowed\)` form",
         )
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_the_narrowed_form_of_the_same_word_fires_nothing(self):
         narrowed = FIRST.replace(
             "## 1. What it says",
@@ -279,7 +270,6 @@ class AdvisoryReportTests(FixtureHomeMixin):
     def report(self):
         return list(vocabulary().advisory_report(self.home()))
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_a_different_sense_is_reported_because_no_machine_sees_it(self):
         """§FS-terms.senses.1 — `note:` before a hint line is not the word's shared
         sense, and the report cannot tell. It names the occurrence as a use, which is
@@ -287,7 +277,6 @@ class AdvisoryReportTests(FixtureHomeMixin):
         self.assertIn("FS-second: uses *note* in prose but does not lean on it (terms.1)",
                       self.report())
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_a_compound_is_not_a_use_of_the_words_in_it(self):
         """§FS-terms.senses.2 — in both directions: *level* inside "CLI-level" and
         *declaration* inside *declaration-local* are each one name. The same *level*
@@ -299,7 +288,6 @@ class AdvisoryReportTests(FixtureHomeMixin):
         self.assertEqual([], [line for line in report if line.startswith("FS-second: uses *level*")])
         self.assertEqual([], [line for line in report if "*declaration*" in line])
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_a_retired_sense_is_reported_because_no_machine_sees_it_either(self):
         """§FS-terms.senses.3 — *anchor* standing where a finding is located is the
         sense its own row retires, not a lean the lean line is missing. Mechanically
@@ -307,7 +295,6 @@ class AdvisoryReportTests(FixtureHomeMixin):
         self.assertIn("FS-second: uses *anchor* in prose but does not lean on it (terms.2)",
                       self.report())
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_a_token_that_names_rather_than_uses_is_not_a_use(self):
         """§FS-terms.senses.4 — *catalog* occurs in a link target, a heading anchor, a
         fenced block and a code span and nowhere else, so the document that leans on it
@@ -318,7 +305,6 @@ class AdvisoryReportTests(FixtureHomeMixin):
                       report)
         self.assertEqual([], [line for line in report if line.startswith("FS-first: uses *anchor*")])
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_the_report_has_two_line_forms_in_a_fixed_order(self):
         """§FS-terms.senses.5 — every line of the first form before every line of the
         second, documents ascending, and inside a document the shared words in group
@@ -345,7 +331,6 @@ class AdvisoryIsAskedForTests(FixtureHomeMixin):
     def advisory(self, home):
         return self.run_module(str(THIS_FILE), "--advisory", "--home", str(home))
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_two_runs_over_one_tree_print_the_same_bytes(self):
         """§FS-terms.senses.5 — the fixed order is what makes the report comparable
         between two runs, which is the property §REQ-deterministic-output asks of every
@@ -356,7 +341,6 @@ class AdvisoryIsAskedForTests(FixtureHomeMixin):
         self.assertEqual(first.stdout, second.stdout)
         self.assertEqual(list(REPORT), first.stdout.splitlines())
 
-    @unittest.expectedFailure  # until #290 lands tests/integration/terms_vocabulary.py
     def test_the_report_is_silent_unless_it_is_asked_for(self):
         """§FS-terms.senses.5 — the gating run prints no line of either form and its
         verdict does not turn on the report, so the hook that runs this suite on every

@@ -10,15 +10,13 @@ import re
 import unittest
 from pathlib import Path
 
+# The sense filter this file reads prose through is shared with the vocabulary's
+# own checks rather than copied: one implementation of §FS-terms.senses.4.
+from terms_prose import prose
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FUNCTIONAL_SPEC = REPO_ROOT / "docs" / "functional-spec"
-# A fence opens and closes the excluded region; a link target carries the anchor a
-# heading rename moves, and a backticked span carries the frozen code names the
-# vocabulary keeps. Blanked rather than dropped, so a column is never invented.
-FENCE = re.compile(r"^\s*(?:```|~~~)")
-LINK_TARGET = re.compile(r"\]\([^)]*\)")
-CODE_SPAN = re.compile(r"`[^`]*`")
 
 
 class RetiredWord:
@@ -66,18 +64,6 @@ def _spec_files():
     return sorted(FUNCTIONAL_SPEC.glob("*.md"))
 
 
-def _prose(path):
-    """Every (line number, line) of a spec file, the excluded senses blanked out."""
-    fenced = False
-    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if FENCE.match(line):
-            fenced = not fenced
-            continue
-        if fenced:
-            continue
-        yield number, CODE_SPAN.sub("``", LINK_TARGET.sub("]()", line))
-
-
 class FunctionalSpecRetiredWordsTests(unittest.TestCase):
     def test_the_spec_files_are_found(self):
         self.assertGreaterEqual(len(_spec_files()), 20, "spec files not found; parser broken?")
@@ -86,7 +72,7 @@ class FunctionalSpecRetiredWordsTests(unittest.TestCase):
         standing = []
         for retired in SWEPT_WORDS:
             for path in _spec_files():
-                for number, line in _prose(path):
+                for number, line in prose(path):
                     for hit in retired.pattern.finditer(line):
                         standing.append(
                             f"{path.relative_to(REPO_ROOT)}:{number}: {hit.group(0)!r} — "

@@ -54,9 +54,10 @@ in a lean line's parentheses, their uniqueness or their meaning, or whether a do
 lean line is complete.
 
 What holds the rest is written down home by home, so a reader knows what a green run has
-said and what it has not. In the functional spec the chapter's presence is a chapter rule
-this repository declares ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)), so a spec that drops the chapter fails
-`grund check` rather than passing it, and four fixed-syntax invariants gate beside that
+said and what it has not. In the functional spec the chapter's presence is
+[§RULE-terms](../rules/RULE-terms.md#rule-terms-each-fs-must-have-exactly-one-terms-chapter), a chapter rule this repository declares
+([§FS-rules.3.1](FS-rules.md#31-chapter-presence)), so a spec that drops the chapter fails `grund check` rather than
+passing it, and four fixed-syntax invariants gate beside that
 rule: a word defined under two groups, a parenthesised word the group it cites does not
 define, a word defined twice in one document's own chapter, and a shared word redefined
 without the `(narrowed)` form. Two failures are left over — a label renamed here while
