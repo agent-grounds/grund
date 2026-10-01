@@ -335,8 +335,9 @@ citations retain their ordinary findings and contribute no `cites` fact.
 
 ### 5.2 Family clauses
 
-For subject set `S`, target set `T`, physical site `P`, chapter name `N`, and
-the interval predicate `within`, the five families mean:
+For subject set `S`, target set `T`, physical site `P`, chapter name `N`, the
+subject's kind `K`, and the interval predicate `within`, the five families
+mean:
 
 ```text
 chapter_count(s, N, n) :- s in S, n = count { c : chapter(c, _, N), contains(s, c) }.
@@ -356,9 +357,21 @@ A chapter subject `The N chapter of each K` carries a second premise, taken
 over the declarations of the kind rather than over the chapters `S` selected:
 
 ```text
-chapter_of(d, N) :- chapter(c, _, N), contains(d, c).
-unreached(d, N)  :- decl(d, K), not chapter_of(d, N).
+chapter_handle(c, N) :- chapter(c, q, _), last_component(q) = N.
+chapter_of(d, N)     :- chapter_handle(c, N), decl(d, K), contains(d, c).
+unreached(d, N)      :- decl(d, K), not chapter_of(d, N).
 ```
+
+`chapter_handle` is the subject selector of [§FS-rules.2](FS-rules.md#2-subject-selectors) read as a relation. A
+subject's `N` is an accepted section component, so it joins the last component
+of the section path — `chapter`'s second position — and not the display name in
+its third, which is what the presence family's `chapter_count` counts
+([§FS-rules.3.1](FS-rules.md#31-chapter-presence)). The two clauses therefore
+join different positions of the same relation, and this one follows the
+selector rather than `chapter_count`: `chapter_of(d, N)` holds exactly when `d`
+owns one of the chapters `S` selected, so contributing no unit and being
+unreached are one set rather than two, and no declaration can both hand a
+relation a unit and be reported as out of the rule's reach.
 
 The outbound-count, per-target-coverage and inbound-count families report every
 `unreached(d, N)` beside every `not within(n, cardinality)`
