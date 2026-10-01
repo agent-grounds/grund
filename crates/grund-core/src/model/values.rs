@@ -70,28 +70,33 @@ impl EmbeddedValueRoot {
 
 /// Whether a binding's cited section path is a value-binding shape at all: a
 /// valid root path — every component numeric, or a named prefix as
-/// §FS-config.3.3.1 permits — followed by one positive numeric immediate
-/// coordinate (§FS-values.3.1). Whether that root path *is* a root is the
-/// checker's question; this is only the grammar.
+/// §FS-config.3.3.1 permits — optionally followed by one positive numeric
+/// immediate coordinate (§FS-values.3.1). A path with no coordinate is the root
+/// itself (§FS-values.3.1.2), and a bare ID has no path to check. Which of the
+/// two readings a path takes, and whether its root *is* a root, is the checker's
+/// question (§FS-values.5.1); this is only the grammar.
 pub(crate) fn value_binding_section_shape_is_valid(section: &str) -> bool {
-    let mut parts = section.split('.').collect::<Vec<_>>();
-    let Some(coordinate) = parts.pop() else {
-        return false;
-    };
-    if !positive_numeric_component(coordinate) {
-        return false;
-    }
     // §FS-config.3.3.1: a numeric component may follow a named prefix, never
     // the other way round, so `2.values` stays reserved.
     let mut seen_numeric = false;
-    for part in parts {
+    section.split('.').all(|part| {
         if positive_numeric_component(part) {
             seen_numeric = true;
-        } else if seen_numeric || !named_section_component(part) {
-            return false;
+            true
+        } else {
+            !seen_numeric && named_section_component(part)
         }
-    }
-    true
+    })
+}
+
+/// Whether a binding path's final segment can name an immediate component: a
+/// path that ends in a name has no coordinate, so it can only be a chapter root
+/// aimed at whole (§FS-values.3.1, §FS-values.5.1).
+pub(crate) fn value_binding_section_ends_in_coordinate(section: &str) -> bool {
+    section
+        .rsplit('.')
+        .next()
+        .is_some_and(positive_numeric_component)
 }
 
 fn positive_numeric_component(part: &str) -> bool {
@@ -108,12 +113,15 @@ pub(crate) fn named_section_component(part: &str) -> bool {
 }
 
 /// An exact authored binding beside the ordinary citation the scanner emits
-/// for the same token (§FS-values.3, §AR-scanner.3).
+/// for the same token (§FS-values.3, §AR-scanner.3). `section` is the cited
+/// path as written, `None` for a bare ID: whether it names a root or one of a
+/// root's components is resolved against the catalog, not read off the
+/// spelling (§FS-values.5.1).
 #[derive(Debug)]
 pub struct ValueBinding {
     pub namespace: Option<String>,
     pub id: Id,
-    pub section: String,
+    pub section: Option<String>,
     pub authored: ValueComponent,
     pub file: PathBuf,
     pub line: usize,
@@ -159,6 +167,46 @@ pub(crate) fn authored_component(text: &str, column: usize) -> ValueComponent {
         source_slice: text.to_string(),
         column,
     }
+}
+
+/// The parts a root-aimed literal splits into: at every U+0020 and nowhere else,
+/// keeping the empty part two adjacent spaces leave, each classified as an
+/// authored component of its own (§FS-values.3.1.2). Columns stay byte columns
+/// into the authored line, as the literal's own is.
+pub(crate) fn root_literal_parts(literal: &ValueComponent) -> Vec<ValueComponent> {
+    let mut offset = 0;
+    literal
+        .decoded
+        .split(' ')
+        .map(|part| {
+            let component = authored_component(part, literal.column + offset);
+            offset += part.len() + 1;
+            component
+        })
+        .collect()
+}
+
+/// A root's components `.1` through `.N` joined by one ASCII space, each as a
+/// declared component prints (§FS-values.3.1.2, §FS-values.5.2.2).
+pub(crate) fn joined_value_components(components: &[&ValueComponent]) -> String {
+    components
+        .iter()
+        .map(|component| component.decoded.as_str())
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// The index of the first part that is unequal to its component, comparing in
+/// declared order under §FS-values.4 and stopping there, so only that component
+/// is reported (§FS-values.5.2.2). The caller has already matched the counts.
+pub(crate) fn first_unequal_component(
+    parts: &[ValueComponent],
+    components: &[&ValueComponent],
+) -> Option<usize> {
+    parts
+        .iter()
+        .zip(components)
+        .position(|(part, component)| !value_components_equal(part, component))
 }
 
 pub(crate) fn value_components_equal(left: &ValueComponent, right: &ValueComponent) -> bool {

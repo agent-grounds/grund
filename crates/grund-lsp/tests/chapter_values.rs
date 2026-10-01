@@ -1,7 +1,8 @@
 //! A chapter-declared value root is an ordinary named section to the editor:
 //! the diagnostic equals the CLI finding, the root hover is the whole heading
 //! because there are no marker bytes to trim, and go-to-definition lands on the
-//! component heading (§FS-lsp.1.2.1, §FS-lsp.1.3.5, §FS-values.2.5,
+//! component heading, or on the root heading for a binding aimed at the root
+//! (§FS-lsp.1.2.1, §FS-lsp.1.3.5, §FS-values.2.5, §FS-values.3.1.2,
 //! §FS-values.7).
 
 mod support;
@@ -32,7 +33,8 @@ fn chapter_value_ranges_navigation_and_diagnostics_match_the_cli() {
              {root_heading}\n\
              #### values.aux-voltage.1: 24\n\
              ## 2. Use\n\
-             Bound: `48` (§AR-004-value-probe.values.aux-voltage.1)\n"
+             Bound: `48` (§AR-004-value-probe.values.aux-voltage.1)\n\
+             Whole: `24` (§AR-004-value-probe.values.aux-voltage)\n"
         ),
     )
     .expect("write document");
@@ -96,9 +98,31 @@ fn chapter_value_ranges_navigation_and_diagnostics_match_the_cli() {
 
     send_message(
         &mut stdin,
-        json!({ "jsonrpc": "2.0", "id": 4, "method": "shutdown", "params": null }),
+        json!({
+            "jsonrpc": "2.0",
+            "id": 4,
+            "method": "textDocument/definition",
+            "params": {
+                "textDocument": { "uri": uri },
+                "position": { "line": 7, "character": 20 }
+            }
+        }),
     );
-    recv_response_or_panic(&receiver, &mut child, 4);
+    let definition = recv_response_or_panic(&receiver, &mut child, 4);
+    let links = definition["result"].as_array().expect("definition links");
+    assert!(
+        links.iter().any(|link| {
+            link["targetUri"].as_str() == Some(file_uri(&document).as_str())
+                && link["targetSelectionRange"]["start"]["line"].as_u64() == Some(3)
+        }),
+        "a root-aimed binding must land on the root heading: {links:?}"
+    );
+
+    send_message(
+        &mut stdin,
+        json!({ "jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": null }),
+    );
+    recv_response_or_panic(&receiver, &mut child, 5);
     send_message(
         &mut stdin,
         json!({ "jsonrpc": "2.0", "method": "exit", "params": null }),

@@ -7,7 +7,10 @@ use crate::checker::{
 };
 use crate::config::Config;
 use crate::grammar::MarkdownLineCitation;
-use crate::model::{Findings, component_text_is_valid, value_binding_section_shape_is_valid};
+use crate::model::{
+    Findings, component_text_is_valid, value_binding_section_ends_in_coordinate,
+    value_binding_section_shape_is_valid,
+};
 use crate::resolver::WorkspaceContext;
 
 pub(super) fn markdown_citation_is_value_binding(
@@ -27,26 +30,31 @@ pub(super) fn markdown_citation_is_value_binding(
         }
         None => (config, findings),
     };
-    let Some(section) = citation.section.as_deref() else {
-        return false;
-    };
-    // §FS-values.8: the same shape the scanner recognizes, so a binding under
-    // either authority is protected by the test that made it one — and a form
-    // aimed at a root or a declared chapter is protected as the refusal it is.
-    let is_binding_shape = value_binding_section_shape_is_valid(section)
-        && binding_target_has_any_value_authority(
-            target_findings,
-            target_config,
-            &citation.id,
-            section,
-        );
+    let section = citation.section.as_deref();
+    // §FS-values.8: a component binding under either authority is protected by
+    // the test that made it one, and a bare whole-value ID by the authority it
+    // binds whole, whether the space rule lets it agree or refuses it
+    // (§FS-values.3.1.2, §FS-values.9.2). A path aimed at a marked or chapter
+    // root, a declared chapter, or below a component is protected by the one
+    // predicate check's refusals share.
+    let is_binding_shape = section.is_none_or(|section| {
+        value_binding_section_shape_is_valid(section)
+            && value_binding_section_ends_in_coordinate(section)
+    }) && binding_target_has_any_value_authority(
+        target_findings,
+        target_config,
+        &citation.id,
+        section,
+    );
     if !is_binding_shape
-        && !binding_aims_at_embedded_value_authority(
-            target_findings,
-            target_config,
-            &citation.id,
-            section,
-        )
+        && !section.is_some_and(|section| {
+            binding_aims_at_embedded_value_authority(
+                target_findings,
+                target_config,
+                &citation.id,
+                section,
+            )
+        })
     {
         return false;
     }

@@ -5,9 +5,9 @@
 use std::path::PathBuf;
 
 use super::values::markdown_component;
-use crate::config::Config;
+use crate::config::{Config, load_config};
 use crate::model::value_binding_section_shape_is_valid;
-use crate::testing::{check_run, codes, test_root, write};
+use crate::testing::{check_run, codes, scan_findings, test_root, write};
 
 #[test]
 fn markdown_component_excludes_the_complete_numeric_coordinate_delimiter() {
@@ -265,4 +265,31 @@ fn a_one_component_value_bound_at_its_root_is_its_coordinate_spelling() {
              at values/field-price.md:2"
         ]
     );
+}
+
+/// A bare whole-value ID is binding grammar now, recorded with no path, while a
+/// coordinate is recorded as written: which of them names a root is the
+/// checker's question, not the scanner's (§FS-values.3.1, §FS-values.5.1).
+#[test]
+fn a_bare_value_id_is_a_binding_record_with_no_path() {
+    let root = value_repo(
+        "value_binding_bare_id_record",
+        "`1200 USD` (§CONST-field-price)\n\n`1200` (§CONST-field-price.1)\n",
+    );
+    let config = load_config(&root).expect("load the value fixture config");
+    let findings = scan_findings(&config, &root);
+    assert!(
+        findings.invalid_value_bindings.is_empty(),
+        "neither form is an invalid attempt: {:?}",
+        findings.invalid_value_bindings
+    );
+    assert_eq!(
+        findings
+            .value_bindings
+            .iter()
+            .map(|binding| binding.section.as_deref())
+            .collect::<Vec<_>>(),
+        vec![None, Some("1")]
+    );
+    let _ = std::fs::remove_dir_all(root);
 }

@@ -1,6 +1,7 @@
 //! Embedded value roots keep ordinary section identity in editor ranges,
-//! navigation, raw previews, and CLI-equal diagnostics (§FS-lsp.1.2.1,
-//! §FS-lsp.1.3.5, §FS-lsp.4.2, §FS-values.7).
+//! navigation, raw previews, and CLI-equal diagnostics; a binding aimed at the
+//! root navigates to the root heading (§FS-lsp.1.2.1, §FS-lsp.1.3.5,
+//! §FS-lsp.4.2, §FS-values.3.1.2, §FS-values.7).
 
 mod support;
 
@@ -29,7 +30,8 @@ fn embedded_value_ranges_navigation_and_diagnostics_match_the_cli() {
              ### 1.1. 1200\n\
              ## 2. Use\n\
              Bound: `999` (§FS-001-pricing.1.1)\n\
-             See §FS-001-pricing.1.\n"
+             See §FS-001-pricing.1.\n\
+             Whole: `1200` (§FS-001-pricing.1)\n"
         ),
     )
     .expect("write document");
@@ -108,9 +110,31 @@ fn embedded_value_ranges_navigation_and_diagnostics_match_the_cli() {
 
     send_message(
         &mut stdin,
-        json!({ "jsonrpc": "2.0", "id": 5, "method": "shutdown", "params": null }),
+        json!({
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "textDocument/definition",
+            "params": {
+                "textDocument": { "uri": uri },
+                "position": { "line": 7, "character": 18 }
+            }
+        }),
     );
-    recv_response_or_panic(&receiver, &mut child, 5);
+    let definition = recv_response_or_panic(&receiver, &mut child, 5);
+    let links = definition["result"].as_array().expect("definition links");
+    assert!(
+        links.iter().any(|link| {
+            link["targetUri"].as_str() == Some(file_uri(&document).as_str())
+                && link["targetSelectionRange"]["start"]["line"].as_u64() == Some(2)
+        }),
+        "a root-aimed binding must land on the marked root heading: {links:?}"
+    );
+
+    send_message(
+        &mut stdin,
+        json!({ "jsonrpc": "2.0", "id": 6, "method": "shutdown", "params": null }),
+    );
+    recv_response_or_panic(&receiver, &mut child, 6);
     send_message(
         &mut stdin,
         json!({ "jsonrpc": "2.0", "method": "exit", "params": null }),

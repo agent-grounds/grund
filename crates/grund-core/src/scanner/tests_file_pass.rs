@@ -437,7 +437,7 @@ fn an_exact_value_binding_is_one_citation_and_keeps_its_marker_requirement() {
         );
         if let Some(binding) = findings.value_bindings.first() {
             assert_eq!(binding.authored.decoded, "1200");
-            assert_eq!(binding.section, "1");
+            assert_eq!(binding.section.as_deref(), Some("1"));
             assert_eq!(binding.id.slug.as_deref(), Some("field-price"));
         }
         if let Some(refused) = findings.invalid_value_bindings.first() {
