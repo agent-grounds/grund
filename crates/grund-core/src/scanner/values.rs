@@ -250,10 +250,9 @@ pub(super) fn scan_value_bindings(
             continue;
         }
         let section = citation.section.as_deref();
-        // §FS-values.3.1: a value root — a bare ID or a valid root path — then an
-        // optional positive numeric immediate-component coordinate. Which reading
-        // the path takes, and whether it *is* a root, is the checker's question
-        // (§FS-values.5.1).
+        // §FS-values.3.1: a value root (a bare ID or a valid root path), then an optional
+        // positive numeric immediate-component coordinate. Whether the path is a root,
+        // and so which reading it takes, is the checker's question (§FS-values.5.1).
         let valid_section = section.is_none_or(value_binding_section_shape_is_valid);
         if citation.shorthand {
             // The ordinary noncanonical-shorthand finding owns this site and

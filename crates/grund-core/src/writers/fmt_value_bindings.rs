@@ -13,6 +13,13 @@ use crate::model::{
 };
 use crate::resolver::WorkspaceContext;
 
+/// Whether `fmt --cross-refs` must leave this citation's bytes alone as an exact
+/// value binding (§FS-values.8). A component binding under either authority is
+/// protected by the test that made it one, and a bare whole-value ID by the
+/// authority it binds whole, whether the space rule lets it agree or refuses it
+/// (§FS-values.3.1.2, §FS-values.9.2). A path aimed at a marked or chapter root, a
+/// declared chapter, or below a component is protected by the one predicate
+/// check's refusals share.
 pub(super) fn markdown_citation_is_value_binding(
     line: &str,
     citation: &MarkdownLineCitation,
@@ -31,12 +38,6 @@ pub(super) fn markdown_citation_is_value_binding(
         None => (config, findings),
     };
     let section = citation.section.as_deref();
-    // §FS-values.8: a component binding under either authority is protected by
-    // the test that made it one, and a bare whole-value ID by the authority it
-    // binds whole, whether the space rule lets it agree or refuses it
-    // (§FS-values.3.1.2, §FS-values.9.2). A path aimed at a marked or chapter
-    // root, a declared chapter, or below a component is protected by the one
-    // predicate check's refusals share.
     let is_binding_shape = section.is_none_or(|section| {
         value_binding_section_shape_is_valid(section)
             && value_binding_section_ends_in_coordinate(section)
