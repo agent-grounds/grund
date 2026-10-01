@@ -79,3 +79,30 @@ fn copy_tree(source: &Path, target: &Path) {
         }
     }
 }
+
+/// A scratch fixture whose `FS-demo` has lost its `requirements` chapter, so a
+/// chapter-scoped subject over it selects nothing.
+pub fn absent_chapter(name: &str) -> PathBuf {
+    let root = unconfigured_rules(name);
+    let declaration = root.join("docs/fs/FS-demo.md");
+    let body = fs::read_to_string(&declaration).expect("fixture declaration");
+    let chapter = body
+        .find("## requirements: Requirements")
+        .expect("fixture requirements chapter");
+    fs::write(&declaration, format!("{}\n", body[..chapter].trim_end()))
+        .expect("delete the requirements chapter");
+    root
+}
+
+/// A scratch fixture whose configured rules are off, so a `--rule` run reports
+/// that sentence and nothing else.
+pub fn unconfigured_rules(name: &str) -> PathBuf {
+    let root = scratch(name);
+    let config = fs::read_to_string(root.join("grund.toml")).expect("fixture config");
+    fs::write(
+        root.join("grund.toml"),
+        config.replace("rules = true\n", ""),
+    )
+    .expect("disable configured rules");
+    root
+}

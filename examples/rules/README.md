@@ -15,6 +15,21 @@ echo $?    # 1: hard violations remain even though suggestions do not gate
 cited twice and another zero times. Their three deterministic findings are the
 checked `expected.stdout` below.
 
+`FS-unreached` has no `requirements` chapter at all, so the two chapter-scoped
+citation rules over `FS` cannot reach it, and each says so at its title line
+([§FS-rules.checks.unreached-declaration](../../docs/functional-spec/FS-rules.md#checksunreached-declaration-unreached-declaration)):
+
+```text
+docs/fs/FS-unreached.md:1: warning: FS-unreached has no requirements chapter, so RULE-inbound, RULE-inbound-copy cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this warning becomes an error in grund 0.16.0
+docs/fs/FS-unreached.md:1: warning: FS-unreached has no requirements chapter, so RULE-requirements cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this warning becomes an error in grund 0.16.0
+```
+
+Two lines for one absent chapter, because each semantic rule group reports its
+own: the second names the `RULE-inbound`, `RULE-inbound-copy` group the way
+every grouped authority is named. The warning does not move the exit status
+until `0.16.0` ([§FS-rules.7.7](../../docs/functional-spec/FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)), and the two actions it names are the only
+two: add the chapter, or narrow the rule's subject.
+
 The complete writing guide also demonstrates the remaining released families:
 **must have** a named chapter, **be cited by** another kind, and **must not cite
 any** prohibited kind. It shows both hard and recommendation findings, why
@@ -58,9 +73,9 @@ FS-demo.requirements should not cite any AR or GOAL.
 The deliberate violations in this repository produce, verbatim, the findings
 in [`expected.stdout`](expected.stdout): `chapter-cardinality`, rule and config
 forms of `missing-citation`, aggregate and per-target `citation-cardinality`,
-`uncited-unit`, `forbidden-citation`, `invalid-rule`, `suggested-citation`, and
-`discouraged-citation`. `FS-good` and `RULE-chapter-pass` supply passing
-instances; the two `RULE-inbound*` and two `RULE-positive*` declarations show
+`uncited-unit`, `forbidden-citation`, `invalid-rule`, `suggested-citation`,
+`discouraged-citation`, and `unreached-declaration`. `FS-good` and
+`RULE-chapter-pass` supply passing instances; the two `RULE-inbound*` and two `RULE-positive*` declarations show
 rule-to-rule deduplication, while `RULE-config-duplicate` shows config-to-rule
 precedence.
 
