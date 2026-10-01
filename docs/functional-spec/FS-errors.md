@@ -424,12 +424,14 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `unlinked-index-entry` | error | — | — | [§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link) |
 | `unlisted-workspace-block` | error | — | — | [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) |
 | `unmarked-heading` | warning | error in 0.15.0 | — | [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) |
+| `unreached-declaration` | warning | error in 0.16.0 | `rules = true` on a kind | [§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration) |
 | `unused` | warning | — | — | [§FS-check.4.1](FS-check.md#41-unused-declaration) |
 | `value-mismatch` | error | — | `values = true` on a kind | [§FS-check.3.22](FS-check.md#322-value-mismatch) |
 
 The chapter-rule codes `chapter-cardinality`, `citation-cardinality`,
-`invalid-rule`, and `uncited-unit` are selectable on the same surfaces as every
-other code ([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)).
+`invalid-rule`, `uncited-unit`, and `unreached-declaration` are selectable on
+the same surfaces as every other code
+([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)).
 
 Every future check finding code enters this catalog in the release that
 introduces it; renaming or removing one requires compatibility treatment. The

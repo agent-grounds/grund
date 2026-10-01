@@ -30,7 +30,14 @@ CODE_CELL = re.compile(r"^`?([a-z][a-z0-9-]*)`?$")
 
 # The ten codes of the `FS-declarations` slice, and the spec they move to. A
 # later slice adds its own spec here and strikes its codes off NOT_YET_MIGRATED.
+
+# `unreached-declaration` is not a slice: it was born at a `checks.<code>`
+# section and never held a positional address (§REQ-spec-section-names.code).
+
+# The four chapter-rule codes that shipped before it stay on NOT_YET_MIGRATED
+# until the `FS-rules` slice moves them.
 MIGRATED = {
+    "FS-rules": ("unreached-declaration",),
     "FS-declarations": (
         "broken-stub",
         "declaration-near-miss",

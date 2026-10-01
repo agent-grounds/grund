@@ -77,15 +77,23 @@ configured named-section grammar. An exact literal subject must resolve to one
 unit; zero matches or ambiguity produces `invalid-rule` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)). A quantified
 subject selects only the units that exist: a chapter subject selects the named
 chapter of every local declaration of the kind that has one, so a declaration
-without it contributes no unit rather than a failing one, and over an empty
-selection a rule is valid, vacuously true, and silent. The two spellings
-therefore part on the same absence — deleting the `requirements` chapter makes
-`FS-login.requirements must cite at least one REQ.` an `invalid-rule` and makes
-`The requirements chapter of each FS must cite at least one REQ.` silent about
-`FS-login`. A quantified chapter subject selects only the chapters that exist,
-so a chapter-scoped citation rule holds for every declaration of the kind only
-when a chapter-presence rule stands beside it. That family is
-[§FS-rules.3.1](FS-rules.md#31-chapter-presence). Kind-level existence is not
+without it contributes no unit rather than a failing one. Contributing no unit
+is not being outside the rule. A quantified chapter subject selects only the
+chapters that exist, and a declaration of the kind that has none is reported
+rather than passed over, so a chapter-scoped citation rule reaches every
+declaration of its kind. That finding is
+[§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration).
+
+The two spellings therefore part on the same absence, and they stay two
+different kinds of finding. Deleting the `requirements` chapter makes
+`FS-login.requirements must cite at least one REQ.` an `invalid-rule` at the
+rule heading, because an exact literal that does not resolve is a defect in the
+sentence and is reported where the sentence is written. It makes
+`The requirements chapter of each FS must cite at least one REQ.` an
+`unreached-declaration` at `FS-login`, because a quantified subject that selects
+nothing for a declaration is a gap in coverage and is reported where the
+declaration is. Neither finding displaces the other, and where both spellings
+stand over the same absent chapter both fire. Kind-level existence is not
 expressible in phase 1.
 
 Subject-side aliases, including `*/`, component wildcards,
@@ -120,9 +128,12 @@ other than one takes `chapters`. The only accepted families are the following.
 The subject may be a kind or exact declaration, not a chapter. The rule counts
 the subject declaration's accepted direct chapters whose display name is
 `NAME`. A count outside the stated interval produces `chapter-cardinality`.
-This family is also what makes a chapter-scoped citation rule hold for a whole
-kind: without a presence rule beside it, such a rule says nothing at all about
-a declaration that has no such chapter ([§FS-rules.2](FS-rules.md#2-subject-selectors)).
+This family is how a repository states the *count* of a chapter — `exactly
+one`, `at most N` — which no citation rule checks. A chapter-scoped citation
+rule reaches a declaration that has no such chapter on its own
+([§FS-rules.2](FS-rules.md#2-subject-selectors)); until the ramp of
+[§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) closes, a presence rule beside it is what makes that absence
+fail a run rather than warn in it.
 
 ### 3.2 Outbound citation count
 
@@ -341,6 +352,27 @@ Positive families report where `not within(n, cardinality)`. Prohibitions
 report every `forbidden_site`. Negation and aggregates are closed-world only
 when the snapshot is complete ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 
+A chapter subject `The N chapter of each K` carries a second premise, taken
+over the declarations of the kind rather than over the chapters `S` selected:
+
+```text
+chapter_of(d, N) :- chapter(c, _, N), contains(d, c).
+unreached(d, N)  :- decl(d, K), not chapter_of(d, N).
+```
+
+The outbound-count, per-target-coverage and inbound-count families report every
+`unreached(d, N)` beside every `not within(n, cardinality)`
+([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)). Two families do not, for two different
+reasons. Chapter presence cannot reach the premise at all: its subject is a
+kind or an exact declaration and never a chapter
+([§FS-rules.3.1](FS-rules.md#31-chapter-presence)), so `S` is already the
+declarations of the kind and nothing is absent from it. Prohibition admits a
+chapter subject and still stays silent, because `forbidden_site` ranges over
+`cites` facts and a citation site inside the chapter body is deleted along with
+that body: for `must not cite` the forbidden site genuinely no longer exists.
+That, rather than vacuity over an empty selection, is why the same argument
+does not excuse the other three families.
+
 ## 6. Semantic deduplication
 
 Before evaluation, constraints deduplicate by `(subject selector, modality,
@@ -377,7 +409,9 @@ All rule findings use the ordinary text and NDJSON schemas of
 `must` and `must not` are errors. `should` and `should not` are suggestions:
 they appear only with `--suggestions`, carry `"channel":"suggestion"` in JSON,
 and never affect exit status. Structural recommendations retain their
-structural code on that channel.
+structural code on that channel. One required-level finding is a warning
+instead, for the length of its ramp and no longer
+([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)).
 
 ### 7.1 Invalid rule
 
@@ -423,6 +457,12 @@ Other ordinary counts and every per-target `cite each` miss use
 For `cite each`, `<target-set>` is the one canonical target ID and one row
 is emitted per off-count target.
 
+A chapter subject whose declaration has no such chapter reports
+`unreached-declaration` instead, located at the declaration rather than at a
+chapter title there is none of
+([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)). It never reuses the
+`cites <target-set> 0 times` line, which would name a unit that does not exist.
+
 ### 7.4 Inbound citation cardinality
 
 `uncited-unit` is located at the subject declaration or chapter title:
@@ -431,7 +471,10 @@ is emitted per off-count target.
 <subject> is cited by <source-set> <actual> times; <RULE-ID> requires <count>
 ```
 
-The code covers zero, surplus, and other off-count inbound cardinalities.
+The code covers zero, surplus, and other off-count inbound cardinalities. A
+chapter subject whose declaration has no such chapter reports
+`unreached-declaration` at the declaration instead, on the same reading as
+[§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinality)'s.
 
 ### 7.5 Prohibition and recommendation reuse
 
@@ -445,7 +488,8 @@ change.
 ### 7.6 Selection, JSON, ordering, and exits
 
 `--only` and `--ignore` accept `invalid-rule`, `chapter-cardinality`,
-`citation-cardinality`, and `uncited-unit` like every other public code; their
+`citation-cardinality`, `uncited-unit`, and `unreached-declaration` like every
+other public code; their
 value grammar takes codes only and never a rule identity
 ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
 Rule-derived JSON adds no `sites` list — a rule finding names one site, so the
@@ -470,6 +514,23 @@ fixed `<subject> cites ` prefix, before the actual count, so same-anchor rows
 sort by target-ID bytes even when targets share a prefix. Findings affect exits
 under the ordinary mapping: hard findings exit 1, suggestions never move the
 exit, invocation/config failures exit 2, and incomplete scans stay 2.
+
+### 7.7 One required-level finding is a warning until 0.16.0
+
+`unreached-declaration` ([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)) is the one
+required-level rule finding carried on the warnings channel rather than the
+errors channel. A `must` chapter-scoped citation rule whose subject declaration
+has no such chapter warns, and the warning leaves the exit status where the
+rest of the run put it. The message says so in its own bytes, naming `grund
+0.16.0` in the pending clause of [§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed vocabulary, so
+the release guard reads the promise out of the shipped text.
+
+At `0.16.0` the finding becomes an error on the ordinary `must` channel and this
+subsection is deleted with the ramp it describes. Nothing else about the three
+families moves, and no other rule finding gains a warning level in the
+meantime: the channel exists for this one ramp and expires with it. At the
+recommended level the finding is an ordinary suggestion and owes no ramp,
+because a suggestion never moves the exit status at any release.
 
 ## 8. Command surfaces
 
@@ -568,18 +629,20 @@ golden example at `examples/rules/`, links from the root README and
 bodies, every subject and family, counts and modalities, every finding and both
 channels, ordering, both deduplication directions, every command flag,
 validation lifecycle, every explicit phase-1 absence, what a quantified subject
-does not select, and the presence rule a chapter-scoped citation rule needs
-beside it.
+does not select, and the declaration a chapter-scoped citation rule reports
+rather than passes over.
 
 The guide has a marked `### Chapter rules` writing section. Both repository and
 binary-embedded copies of `skills/grund-init/SKILL.md` contain a marked byte-
 identical copy of that section and remain wholly byte-identical to one another.
 The section includes every accepted family, every [§FS-rules.3.5](FS-rules.md#35-strict-refusals) refusal with its exact
-rewrite, the finding each example produces, and the worked pairing of a
-chapter-presence rule with the chapter-scoped citation rule it makes hold for
-the whole kind ([§FS-rules.2](FS-rules.md#2-subject-selectors)). Its leading
-sentence on that pairing is the specification's word for word, differing at most
-in where it wraps, so neither can be reworded without the other. The section
+rewrite, the finding each example produces, and the exact
+`unreached-declaration` warning a chapter-scoped citation rule produces about a
+declaration that has no such chapter, with its ramp release and the two actions
+that answer it ([§FS-rules.2](FS-rules.md#2-subject-selectors),
+[§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)). Its leading sentence on
+that reach is the specification's word for word, differing at most in where it
+wraps, so neither can be reworded without the other. The section
 also quotes the reason clause of the `invalid-rule` message an exact chapter
 subject produces once its chapter is gone, and that quote is the binary's own
 wording.
@@ -589,7 +652,8 @@ all five families. Its guide quotes every violated instance's exact finding and
 its goldens cover `invalid-rule`, `chapter-cardinality`, rule-derived
 `missing-citation`, ordinary and per-target `citation-cardinality`,
 `uncited-unit`, `forbidden-citation` with its rule tail,
-`suggested-citation`, and `discouraged-citation`; both channels and suggestion-
+`suggested-citation`, `discouraged-citation`, and `unreached-declaration` for
+both a single rule and a two-rule group; both channels and suggestion-
 neutral exit behavior; two same-anchor off-count targets with shared-prefix
 IDs; config-to-rule and rule-to-rule deduplication; and the refusal set.
 
@@ -632,3 +696,63 @@ wildcard, wildcard subject alias, new command verb, suppression mechanism,
 SCIP/LSIF ingestion, symbol vocabulary, on-disk fact format, or Datalog
 runtime. Settings must reuse this selector parser and independently answer
 [§DF-fmt-suppression.2.2](../decisions/functional/DF-fmt-suppression.md#22-an-in-text-region-not-a-rule-keyed-by-declaration-section). A future adjacent-site exception may rely on rule prohibitions retaining their exact citation-site anchors. A future program producer inherits opaque identities, versioned immutable complete snapshots, repository-relative anchors, committed offline input, and evaluator independence, but no exchange format is chosen here.
+
+## checks: Checks
+
+A check this specification raises is a section named by its diagnostic code
+([§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). The four codes the rule families reuse or raise —
+`invalid-rule`, `chapter-cardinality`, `citation-cardinality` and
+`uncited-unit` — keep the positional addresses they shipped at
+([§FS-rules.7](FS-rules.md#7-findings-and-channels)) until the migration's own
+`FS-rules` slice moves them in beside the one below.
+
+### checks.unreached-declaration: Unreached declaration
+
+A declaration of a kind that a chapter-scoped citation rule over that kind
+cannot reach. The rule's subject is `The <NAME> chapter of each <KIND>`, the
+declaration is a local declaration of `<KIND>`, and it has no accepted direct
+chapter named `<NAME>`, so it contributes no unit to the selection
+([§FS-rules.2](FS-rules.md#2-subject-selectors)) and the rule's relation says
+nothing about it.
+
+One finding per semantic rule group per unreached declaration. The group's
+contributing origins are the finding's `authority` and its message tail exactly
+as every other rule finding's are
+([§FS-rules.6](FS-rules.md#6-semantic-deduplication)), so two byte-identical
+rules yield one finding naming both, and two rules that mean different things
+yield one finding each. Nothing suppresses either.
+
+It fires for the three positive citation families — outbound count
+([§FS-rules.3.2](FS-rules.md#32-outbound-citation-count)), per-target coverage
+([§FS-rules.3.3](FS-rules.md#33-per-target-coverage)) and inbound count
+([§FS-rules.3.4](FS-rules.md#34-inbound-citation-count-and-prohibition)) — and
+for no other family, for the two reasons
+[§FS-rules.5.2](FS-rules.md#52-family-clauses) gives. Like every other
+closed-world conclusion it is withheld from an incomplete snapshot
+([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
+
+It is located at the subject declaration's title line, because the chapter
+title that would otherwise anchor it is the thing that is missing. At the
+required level the message is:
+
+```text
+<declaration> has no <name> chapter, so <authority> cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this warning becomes an error in grund 0.16.0
+```
+
+carried on the warnings channel for the length of its ramp
+([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)). At the recommended level the same row is a
+suggestion with the ramp clause dropped, so the message ends at `have one` and
+is visible only under `--suggestions`.
+
+The two actions the message names are the only two that answer it: add the
+chapter, or narrow the rule's subject to the declarations that have one. A
+chapter-presence rule standing beside the citation rule is not a third — it
+raises its own `chapter-cardinality`
+([§FS-rules.7.2](FS-rules.md#72-chapter-cardinality)) and suppresses nothing,
+so one absent chapter under a paired presence and citation rule prints both
+lines, each naming its own rule.
+
+The code is selectable on the same surfaces as every other
+([§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)), so
+`--ignore unreached-declaration` is the opt-out for a repository that wants the
+previous silence through the ramp window.

@@ -2,7 +2,9 @@
 //! example goldens, executable guide rows, skill bytes, managed rendering, and
 //! the quoted `invalid-rule` message.
 
-use super::support::{assert_run, fixture, repo_root, run, scratch, text};
+use super::support::{
+    absent_chapter, assert_run, fixture, repo_root, run, scratch, text, unconfigured_rules,
+};
 use std::fs;
 
 fn marked<'a>(bytes: &'a [u8], begin: &[u8], end: &[u8]) -> &'a [u8] {
@@ -187,12 +189,13 @@ fn the_documented_emptiness_rule_is_the_specifications() {
     );
 }
 
-/// The behaviour the new documentation asserts, either way round: the rule
-/// reports the chapter that cites nothing and says nothing at all about the
-/// declaration that has no such chapter (§FS-rules.2). Without the second
-/// half the accepted guide row above passes vacuously.
+/// The behaviour the documentation asserts, either way round: the rule reports
+/// the chapter that cites nothing, and it reports the declaration that has no
+/// such chapter rather than passing over it (§FS-rules.2,
+/// §FS-rules.checks.unreached-declaration). Without the second half the accepted
+/// guide row above passes vacuously.
 #[test]
-fn a_chapter_rule_is_silent_about_a_declaration_without_the_chapter() {
+fn a_chapter_rule_reports_the_declaration_without_the_chapter() {
     let sentence = "The requirements chapter of each FS must cite at least one REQ.";
     let filtered = [
         "check",
@@ -217,11 +220,24 @@ fn a_chapter_rule_is_silent_about_a_declaration_without_the_chapter() {
     );
 
     // `--only` selects after the scan and drops the exit code with the findings
-    // it filters, so the silence half runs unfiltered: nothing on either
-    // channel under any code, which is what "says nothing at all" means.
+    // it filters, so the reporting half runs unfiltered: the absence is the
+    // whole of what the run says.
+
+    // It is a warning at the declaration and does not move the exit
+    // (§FS-rules.7.7).
     let unfiltered = ["check", ".", "--rule", sentence, "--format", "json"];
     let absent = absent_chapter("documented-absent-chapter");
-    assert_run(&run(&absent, &unfiltered), 0, "", "");
+    assert_run(
+        &run(&absent, &unfiltered),
+        0,
+        "{\"severity\":\"warning\",\"path\":\"docs/fs/FS-demo.md\",\"line\":1,\
+         \"code\":\"unreached-declaration\",\
+         \"message\":\"FS-demo has no requirements chapter, so --rule cannot reach it; \
+         add the chapter, or narrow the rule to the declarations that have one; \
+         this warning becomes an error in grund 0.16.0\",\"sites\":null,\
+         \"authority\":[\"--rule\"]}\n",
+        "",
+    );
 }
 
 /// The section quotes the `invalid-rule` message an exact chapter subject
@@ -269,33 +285,6 @@ fn the_documented_invalid_rule_quote_is_the_binarys() {
         text(&output.stdout).contains(&quoted.replace("FS-login", "FS-demo")),
         "the binary no longer produces the message the guide quotes"
     );
-}
-
-/// A scratch fixture whose `FS-demo` has lost its `requirements` chapter, so a
-/// chapter-scoped subject over it selects nothing.
-fn absent_chapter(name: &str) -> std::path::PathBuf {
-    let root = unconfigured_rules(name);
-    let declaration = root.join("docs/fs/FS-demo.md");
-    let body = fs::read_to_string(&declaration).expect("fixture declaration");
-    let chapter = body
-        .find("## requirements: Requirements")
-        .expect("fixture requirements chapter");
-    fs::write(&declaration, format!("{}\n", body[..chapter].trim_end()))
-        .expect("delete the requirements chapter");
-    root
-}
-
-/// A scratch fixture whose configured rules are off, so a `--rule` run reports
-/// that sentence and nothing else.
-fn unconfigured_rules(name: &str) -> std::path::PathBuf {
-    let root = scratch(name);
-    let config = fs::read_to_string(root.join("grund.toml")).expect("fixture config");
-    fs::write(
-        root.join("grund.toml"),
-        config.replace("rules = true\n", ""),
-    )
-    .expect("disable configured rules");
-    root
 }
 
 #[test]
