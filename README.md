@@ -244,6 +244,7 @@ The offer uses `1200.0` (§CONST-field-price.1).
 
 The backticks, one space, parentheses, marker, and positive numeric field are intentional syntax. `grund check` accepts exact decimal
 equivalents such as `1200` and `1200.0`, and reports `value-mismatch` if the authored component drifts.
+Leave the field off to bind the whole value at once: the literal is then every component joined by one ASCII space, such as `1200.0 USD` for `[1200, "USD"]` ([§FS-values.3.1.2](docs/functional-spec/FS-values.md#312-a-binding-aimed-at-the-root)).
 A value can also live inside any ordinary scanned declaration without a
 kind opt-in: end its numeric section heading with the exact marker, then give it
 one contiguous level of numbered components ([§FS-values.2.4](docs/functional-spec/FS-values.md#24-embedded-section-value-roots)):

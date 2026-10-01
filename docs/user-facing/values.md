@@ -203,12 +203,31 @@ module or maintain a second artifact.
 ## Bind an authored component
 
 The only compared form is a nonempty single-backtick literal, one ASCII space,
-then a parenthesized, marker-prefixed citation with a positive numeric component
-path, all on one physical line:
+then a parenthesized, marker-prefixed citation of a value, all on one physical
+line. The citation names either one component, by its positive numeric
+coordinate, or the value's root, with no coordinate at all:
 
 ```markdown
 The field price is `1200.0` (§CONST-field-price.1).
+The field price is `1200.0 USD` (§CONST-field-price).
 ```
+
+A literal aimed at the root is the root's components `.1` through `.N`, in
+declared order, joined by one ASCII space ([§FS-values.3.1.2](../functional-spec/FS-values.md#312-a-binding-aimed-at-the-root)). `grund` splits
+it at every U+0020 and compares each part with its own component under that
+component's equality rule, so `1200.0 USD` agrees with a declared
+`[1200, "USD"]` exactly as `1200.0` agrees with `1200`. An amount and its unit
+are then one checked literal, rather than a bound amount beside a unit left in
+prose where it can drift. Only U+0020 separates: a no-break space stays inside
+its part, and two adjacent spaces leave an empty part that no component equals.
+
+The join says how a literal splits only while no component contains the
+separator, so a value with an ASCII space inside any component — a street
+address, say — cannot be bound at its root. That spelling is refused with
+`invalid-value-binding`; bind each component by its coordinate instead. The
+refusal belongs to the spelling, never to the value. For a value of one
+component the two spellings are equivalent: they give the same verdict, and
+the same bytes when the literal has no space.
 
 It is recognized in Markdown outside fences and wholly within scanned source
 comment or doc-comment lines:
@@ -224,13 +243,14 @@ Unknown aliases, dangling IDs, duplicates, invalid declarations, missing
 fields, and noncanonical shorthand are reported first and suppress comparison
 at that site.
 
-For an embedded value, the citation names the root path plus its one immediate
-component — `<§>FS-pricing.2.1` for a marked root,
+For an embedded value, the citation names the root path, optionally followed by
+its one immediate component — `<§>FS-pricing.2` or `<§>FS-pricing.2.1` for a
+marked root, `<§>AR-value-probe.values.aux-voltage` or
 `<§>AR-value-probe.values.aux-voltage.1` for a chapter-declared one. A binding
-aimed at a root itself, at a declared chapter heading, or below a component is
-invalid; the same delimited shape aimed at an ordinary unmarked dotted section,
-or at a named section outside every declared chapter, remains ordinary prose and
-a citation.
+aimed at a declared chapter heading or below a component is invalid; the same
+delimited shape aimed at an ordinary unmarked dotted section, at a named section
+outside every declared chapter, or at a declaration that is not a value remains
+ordinary prose and a citation.
 
 An unbackticked adjacent token and a bare citation are deliberately ordinary
 prose/citations, not binding near-misses:
@@ -270,6 +290,37 @@ a mismatch of different kinds names each side's kind after its canonical text
 docs/record.md:5: error: value mismatch for QTY-mach-001-year.1: bound `2022`, declared `2022` at values/machines.json:2 — bound is a number, declared is a string; a number and a string are never equal
 ```
 
+A binding aimed at a root is compared part by part in declared order, and only
+the first unequal component is reported, by its own coordinate and declaration
+site, in the same text; the kind clause follows exactly when that one pair
+differs in kind ([§FS-values.5.2.2](../functional-spec/FS-values.md#522-a-root-aimed-mismatch-names-the-first-unequal-component)):
+
+```text
+docs/offer.md:3: error: value mismatch for CONST-field-price.2: bound `EUR`, declared `USD` at values/field-price.md:3
+```
+
+When the literal splits into a different number of parts than the root has
+components, no component is at fault, so the finding names the root, quotes the
+literal as authored and the components joined by one ASCII space, carries
+component 1's declaration site, and appends no kind clause:
+
+```text
+docs/offer.md:3: error: value mismatch for CONST-field-price: bound `1200`, declared `1200 USD` at values/field-price.md:2
+```
+
+A root-aimed binding of a value with a space inside a component is refused at
+the binding, naming the cited root, the first such component in declared order,
+and that component's declaration site ([§FS-values.3.1.2](../functional-spec/FS-values.md#312-a-binding-aimed-at-the-root)):
+
+```text
+docs/offer.md:3: error: invalid value binding: CONST-head-office cannot be bound at its root because component 1 contains an ASCII space at values/head-office.md:2
+```
+
+An unresolved citation or an invalid declaration is reported first and
+suppresses both findings at that site, and the refusal comes before any
+comparison ([§FS-values.5.1](../functional-spec/FS-values.md#51-resolve-before-comparison)). Each finding carries exactly one declaration
+site, in text and in the NDJSON `sites` alike.
+
 A mismatch is an exit-`1` `value-mismatch` at the binding and names the
 declaration site. Text and NDJSON carry the same message and declaration site.
 The other fixed exit-`1` codes are `invalid-value-declaration` and
@@ -286,8 +337,12 @@ synthesizing Markdown.
 
 The LSP uses the same report, hover slice, and definition spans as the CLI.
 Go-to-definition lands on the Markdown component heading or exact JSON key or
-element. `fmt --cross-refs` leaves the citation bytes inside a recognized
-binding unchanged so it cannot destroy the authored form.
+element; from a binding aimed at a root it lands on the root itself — the whole
+declaration's heading or JSON key, or the marked or chapter root's own heading
+([§FS-lsp.1.3.5](../functional-spec/FS-lsp.md#135-values-and-named-sections)). `fmt --cross-refs` leaves the citation bytes inside a
+recognized binding unchanged so it cannot destroy the authored form. That now
+includes a whole-value ID with no coordinate, which earlier releases rewrote
+into a Markdown link ([§FS-values.9.2](../functional-spec/FS-values.md#92-the-one-whole-value-formatting-behavior-that-moved)).
 
 ## Deliberate v1 boundary
 
@@ -296,4 +351,6 @@ bare-literal lint, range or unit semantics, arithmetic, generated code,
 fingerprints or history, `reconcile` or `stale` verb, excluded-path hint,
 value-aware search, generated-file policy, or orphan relief. Ranges and units
 can be represented as successive components, but their meaning belongs to the
-application rather than to `grund`.
+application rather than to `grund`. The same holds for a binding aimed at a
+root: joining `1200.0 USD` compares two components and says nothing about what
+`USD` means, and the separator is one ASCII space, never configured.
