@@ -43,7 +43,10 @@ fn local_section_findings_are_actionable_and_missing_is_independent() {
         ),
         (
             "local-section-citation",
-            "local section citation \u{a7}9.9; write \u{a7}FS-001-alpha.9.9 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
+            // §FS-check.3.24.1's fourth withholding case: `FS-001-alpha` has no
+            // section 9.9, so §FS-fmt.2.4.6 leaves the token alone and the
+            // offer of the command goes with the rewrite.
+            "local section citation \u{a7}9.9; write \u{a7}FS-001-alpha.9.9 — unchecked in grund 0.13.1, an error in 0.14.0",
         ),
         ("missing-section", "missing section FS-001-alpha.9.9"),
         (
@@ -222,5 +225,62 @@ fn the_out_of_scope_tier_withholds_the_command_but_keeps_the_attribution() {
             "sim/FS-out.md:3: outside [scan] include: local section citation \u{a7}2; write \u{a7}FS-out.2 — unchecked in grund 0.13.1, an error in 0.14.0",
         ],
         "§FS-check.3.24.1: the same site keeps the attribution and loses only the command once it is out of the configured scope"
+    );
+}
+
+/// §FS-check.3.24.1's fourth withholding case, over all three shapes
+/// §FS-fmt.2.4.6 refuses: a wholly absent path, a partially resolving one, and
+/// an owner with no numbered sections at all. A resolving control sits in the
+/// same tree under the same tier, so the one difference the predicate makes is
+/// the whole of the diff — and the `missing section` error stays beside each
+/// refused site (§FS-check.3.2), because the pair is what tells a site the
+/// formatter refused from one it repaired.
+#[test]
+fn an_absent_target_section_withholds_the_command_and_keeps_both_findings() {
+    let root = test_root("an_absent_target_section_withholds_the_command_and_keeps_both_findings");
+    write(
+        &root.join("grund.toml"),
+        concat!(
+            "grund_config_version = 1\n\n",
+            "[reference]\nstrict = true\nrequire_grounding = false\n\n",
+            "[id]\nformat = \"{kind}-{slug}\"\n\n",
+            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n\n",
+            "[scan]\ninclude = [\"docs\"]\nextensions = [\"md\"]\n",
+        ),
+    );
+    write(
+        &root.join("docs/FS-nine.md"),
+        concat!(
+            "# FS-nine: The owner stops short\n\n",
+            "Resolving control \u{a7}2.1.\n",
+            "Wholly absent \u{a7}12.\n",
+            "Partly resolving \u{a7}2.7.\n\n",
+            "## 2. Target\n\n### 2.1 Child\n",
+        ),
+    );
+    write(
+        &root.join("docs/FS-bare.md"),
+        "# FS-bare: No numbered section at all\n\nNone to resolve against \u{a7}1.\n",
+    );
+
+    let run = check_run(&root, false);
+    let local = run
+        .report
+        .errors
+        .iter()
+        .filter(|error| error.code == "local-section-citation" || error.code == "missing-section")
+        .collect::<Vec<_>>();
+    assert_eq!(
+        located_diagnostics(&run.config, local),
+        vec![
+            "docs/FS-bare.md:3: local section citation \u{a7}1; write \u{a7}FS-bare.1 — unchecked in grund 0.13.1, an error in 0.14.0",
+            "docs/FS-bare.md:3: missing section FS-bare.1",
+            "docs/FS-nine.md:3: local section citation \u{a7}2.1; write \u{a7}FS-nine.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`",
+            "docs/FS-nine.md:4: local section citation \u{a7}12; write \u{a7}FS-nine.12 — unchecked in grund 0.13.1, an error in 0.14.0",
+            "docs/FS-nine.md:4: missing section FS-nine.12",
+            "docs/FS-nine.md:5: local section citation \u{a7}2.7; write \u{a7}FS-nine.2.7 — unchecked in grund 0.13.1, an error in 0.14.0",
+            "docs/FS-nine.md:5: missing section FS-nine.2.7",
+        ],
+        "§FS-fmt.2.4.6: only the control keeps the command clause, and every refused site keeps its pair"
     );
 }

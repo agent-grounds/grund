@@ -936,8 +936,8 @@ say, and [§FS-check.3.17.3](FS-check.md#3173-an-error-on-arrival) already says.
 
 `` ; run `grund fmt --write` `` follows the pair at an **owned** site whose text permits the
 rewrite, inside the default scope — and nowhere else, because a finding may name a command
-that repairs it and never one that would answer `rewrote 0 lines` ([§FS-check.3.17.5](FS-check.md#3175-anything-else-is-not-an-entry)). Three cases withhold
-it, and a fourth deliberately does not:
+that repairs it and never one that would answer `rewrote 0 lines` ([§FS-check.3.17.5](FS-check.md#3175-anything-else-is-not-an-entry)). Four cases withhold
+it, and a fifth deliberately does not:
 
 - an ownerless, ambiguous, or digit-starting unsupported token, which [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical) leaves
   byte-identical because there is no owner to expand it against;
@@ -948,11 +948,21 @@ it, and a fourth deliberately does not:
 - an out-of-scope finding of a `--full` run, where `fmt` does not reach at all, for the reason
   [§FS-check.3.14.4](FS-check.md#3144-the-mechanical-shorthand-rewrite-is-withheld) withholds the sibling's. The scope still leads the message and the attribution
   still trails it ([§FS-check.3.14.6](FS-check.md#3146-the-scope-leads-the-message));
+- an owned site whose cited section does not resolve against the owner [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)
+  picked for it, which that rewrite now leaves byte-identical
+  ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)). The error itself
+  still fires, and so does the `missing section` error beside it ([§FS-check.3.2](FS-check.md#32-missing-section)) — the
+  pair is what tells a site the formatter refused from one it repaired. Only the offer of the
+  command goes;
 - and nothing else. A `[fmt] exclude` file ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)), a `grund:fmt off` region, and an index
   or document reached as an external file-symlink target ([§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)) **keep** the clause,
   though `fmt` writes nothing there either. That is [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite)'s boundary, held to a second
-  rule so the two do not disagree: what the *text* forbids earns the withholding, what the
-  *repository* asked for does not, because there the author can lift the suppression.
+  rule so the two do not disagree: the withholding is earned where nothing short of editing the
+  citation itself would let `fmt` write the site, and not where the author's own act of
+  configuration can lift the refusal. The text forbids its three contexts outright and an absent
+  target section is further still from liftable — what is missing is not in the citation's
+  neighbourhood at all but in the owner, so even moving the token out of its context leaves the
+  rewrite wrong. A suppression the repository asked for the author can simply withdraw.
 
 #### 3.24.2 An append, not a wording change
 

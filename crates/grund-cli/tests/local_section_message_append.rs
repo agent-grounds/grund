@@ -144,3 +144,59 @@ fn a_digit_starting_unsupported_token_names_the_releases_without_the_command() {
         "no owner to expand it against, so no command is offered: {glued:?}"
     );
 }
+
+/// §FS-check.3.24.2 at its strongest: where §FS-fmt.2.4.6 refuses the rewrite,
+/// the shipped text plus the release pair is the *whole* message, so the prefix
+/// the licence rests on is the entire line. Its own fixture, because the one
+/// above is the three shapes and this is a fourth site rather than a fourth
+/// shape — the owned shape again, with a section its owner does not have.
+#[test]
+fn a_refused_site_ends_at_the_attribution_with_nothing_appended() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../target/local-section-message-append/absent-target");
+    let _ = fs::remove_dir_all(&root);
+    write(
+        root.join("grund.toml"),
+        concat!(
+            "grund_config_version = 1\nproject_name = \"local-section-absent\"\n\n",
+            "[reference]\nstrict = true\nrequire_grounding = false\n\n",
+            "[id]\nformat = \"{kind}-{slug}\"\n\n",
+            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n\n",
+            "[scan]\ninclude = [\"docs\"]\nextensions = [\"md\"]\n\n",
+            "[output]\nrelative_paths = true\n",
+        ),
+    );
+    write(
+        root.join("docs/FS-a.md"),
+        concat!(
+            "# FS-a: A thing\n\n",
+            "Owned and resolving \u{a7}2.\n",
+            "Owned and absent \u{a7}9.9.\n\n",
+            "## 2. Target\n",
+        ),
+    );
+
+    let output = Command::new(env!("CARGO_BIN_EXE_grund"))
+        .arg("check")
+        .arg(&root)
+        .args(["--only", "local-section-citation"])
+        .output()
+        .expect("run grund check");
+    let stdout = std::str::from_utf8(&output.stdout).expect("stdout is UTF-8");
+    let messages = stdout
+        .lines()
+        .filter_map(|line| line.split_once(": error: "))
+        .map(|(_, message)| message.to_string())
+        .collect::<Vec<_>>();
+    assert_eq!(messages.len(), 2, "two owned sites: {stdout:?}");
+    assert_eq!(
+        messages[0],
+        format!("{}{ATTRIBUTION}; run `grund fmt --write`", SHIPPED[0]),
+        "the resolving control keeps the command clause"
+    );
+    assert_eq!(
+        messages[1],
+        format!("local section citation \u{a7}9.9; write \u{a7}FS-a.9.9{ATTRIBUTION}"),
+        "§FS-fmt.2.4.6: the refused site's whole message is the shipped text plus the pair"
+    );
+}

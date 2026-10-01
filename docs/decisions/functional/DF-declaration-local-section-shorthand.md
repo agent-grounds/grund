@@ -56,10 +56,16 @@ form error and the ordinary missing-section error.
 
 ### 2.5 Stored citations carry their full ID
 
-The formatter expands an owned local form to its full citation only when the owner is unique and
-the existing writer rules permit that location ([§FS-fmt.2.4](../../functional-spec/FS-fmt.md#24-shorthand-to-canonical)).
+The formatter expands an owned local form to its full citation only when the owner is unique, the
+existing writer rules permit that location, and the cited section resolves against that owner
+([§FS-fmt.2.4](../../functional-spec/FS-fmt.md#24-shorthand-to-canonical)).
 Suppressed scopes, external symlink targets, fences, inline code, Markdown link destinations,
-declaration headings, and source strings keep their existing protections. The diagnostic still
+declaration headings, and source strings keep their existing protections, and so does a site whose
+owner records no heading at the cited path: expanding it would write the formatter's own guess at
+the owner over the only record that the author meant somewhere else
+([§FS-fmt.2.4.6](../../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)).
+That is a precondition of the rewrite and not of the finding — [§DF-declaration-local-section-shorthand.2.4](DF-declaration-local-section-shorthand.md#24-resolved-local-forms-are-real-edges)
+stays exactly as written, and both errors still fire at such a site. The diagnostic still
 names the manual full replacement for an owned protected site. An ownerless site is left unchanged
 and told to write a full citation or escape the illustration. No LSP quick-fix and no `$$2` typing
 expansion are added.

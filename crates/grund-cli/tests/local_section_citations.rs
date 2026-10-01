@@ -74,7 +74,10 @@ fn check_text_reports_owned_missing_unsupported_and_ownerless_local_forms() {
         concat!(
             "docs/FS-a.md:3: error: local section citation \u{a7}2; write \u{a7}FS-a.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`\n",
             "docs/FS-a.md:4: error: local section citation \u{a7}2.1; write \u{a7}FS-a.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`\n",
-            "docs/FS-a.md:5: error: local section citation \u{a7}9.9; write \u{a7}FS-a.9.9 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`\n",
+            // §FS-fmt.2.4.6 refuses this site, so §FS-check.3.24.1 withholds the
+            // command clause — and the `missing section` error below is what
+            // tells a refused site apart from a repaired one.
+            "docs/FS-a.md:5: error: local section citation \u{a7}9.9; write \u{a7}FS-a.9.9 — unchecked in grund 0.13.1, an error in 0.14.0\n",
             "docs/FS-a.md:5: error: missing section FS-a.9.9\n",
             "docs/FS-a.md:6: error: unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
             "docs/FS-a.md:7: error: unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
