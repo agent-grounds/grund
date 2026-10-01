@@ -3,21 +3,29 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::config::Config;
+use crate::config::{Config, root_scope_roots};
 use crate::grammar::{literal_after_kind_placeholder, parse_id_arg};
 use crate::model::{Declaration, DeclarationSource, E2eCase, E2eSpecRef, Findings, Id};
 use crate::model::{format_path, sort_path_key};
 
 /// §FS-config.3.5.8, §FS-check.1.3.6.1: whether the project's *ordinary* walk reads
-/// the E2E case root at all — `[scan] include` covering it, or no `include` to bound
-/// it. A path-scoped run's resolution scope is that ordinary scope union the path, so
-/// a cases root the ordinary run skips is read only when the path itself names it.
+/// the E2E case root at all. A path-scoped run's resolution scope is that ordinary
+/// scope union the path, so a cases root the ordinary run skips is read only when the
+/// path itself names it.
+///
+/// The question is asked of `root_scope_roots` rather than of `[scan] include`,
+/// because `include` is not the whole of what the ordinary walk starts from: every
+/// walked kind home is a root too (§FS-config.3.5.8), and a citable `E2E` kind's
+/// folder is one of them. Restating the predicate over `include` alone read the
+/// cases root as unwalked wherever `include` did not happen to name it, and so made
+/// a `§E2E-…` citation dangle under a path scope that `grund check .` resolves —
+/// this ticket's own defect inside the line that decides the widening.
 fn cases_root_in_ordinary_scope(config: &Config, cases_root: &Path) -> bool {
-    config.include.as_ref().is_none_or(|include| {
-        include.iter().any(|path| {
-            let root = config.root.join(path);
-            cases_root.starts_with(&root) || root.starts_with(cases_root)
-        })
+    root_scope_roots(config, false).iter().any(|root| {
+        // The caller canonicalizes the cases root (§AR-scanner.6.2), so the compare
+        // has to meet it there; a root that does not exist yet keeps its own spelling.
+        let root = fs::canonicalize(root).unwrap_or_else(|_| root.clone());
+        cases_root.starts_with(&root) || root.starts_with(cases_root)
     })
 }
 

@@ -115,13 +115,23 @@ pub(crate) fn path_report_scope(
 /// every rule has run over the wider resolution scope. A no-op for a run over the
 /// config root.
 ///
-/// Two classes are kept whatever the scope. A run-level finding carries no path —
-/// the config findings, the scope cautions, the workspace run warnings — and the
-/// filter never sees one. And the agent-entrypoint probe of §FS-check.3.5 asks
-/// about the project root rather than about a scanned file, and already reports
-/// when no source file is scanned at all; `AGENTS.md` lies outside every path but
-/// the root, so a blanket filter would delete the one diagnostic a narrow run
-/// still owes about the root.
+/// Three things survive the narrowing. A run-level finding carries no path — the
+/// config findings, the scope cautions, the workspace run warnings — and the
+/// filter never sees one. A finding that spans several sites is in scope at any of
+/// them (§FS-check.1.3.6.2), which is what reports a duplicate declaration from
+/// either twin and a value mismatch from the declaring side; the diagnostic is
+/// kept whole rather than re-anchored, because re-anchoring would print a line
+/// `grund check .` never prints. And the agent-entrypoint probe of §FS-check.3.5
+/// asks about the project root rather than about a scanned file, and already
+/// reports when no source file is scanned at all; `AGENTS.md` lies outside every
+/// path but the root, so a blanket filter would delete the one diagnostic a narrow
+/// run still owes about the root.
+///
+/// The probe is exempt as *that finding* and not as a file: the exemption tests the
+/// `code`, so an ordinary dangling, style or declaration finding about `AGENTS.md`
+/// is dropped like any other outside the path. Testing the filename instead leaked
+/// the whole rule set over the entrypoint, and an entrypoint inside `[scan] include`
+/// is the ordinary configuration — this repository's own `grund.toml` writes it.
 pub(crate) fn retain_diagnostics_in_report_scope(
     diagnostics: &mut Vec<Diagnostic>,
     config: &Config,
@@ -132,10 +142,18 @@ pub(crate) fn retain_diagnostics_in_report_scope(
     diagnostics.retain(|diagnostic| match &diagnostic.path {
         None => true,
         Some(path) => {
-            scope.contains(path) || entrypoints.iter().any(|entrypoint| entrypoint == path)
+            scope.contains(path)
+                // §FS-check.1.3.6.2: the anchor may be the site the caller did not type.
+                || diagnostic.sites.iter().any(|site| scope.contains(&site.path))
+                || (diagnostic.code == AGENTS_INIT_CODE
+                    && entrypoints.iter().any(|entrypoint| entrypoint == path))
         }
     });
 }
+
+/// The §FS-check.3.5 probe's one code (`checker/agents.rs`), which is what the
+/// report filter exempts rather than the files the probe looks at.
+const AGENTS_INIT_CODE: &str = "agents-init";
 
 /// §FS-check.1.3.6.1: whether the walk read any file the report scope owns — what
 /// the §FS-check.2.2 empty-scan caution asks, since the cautions are computed

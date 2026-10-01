@@ -74,9 +74,13 @@ pub(crate) fn run_check(
 /// rule runs, which is what `--full` additivity needs (§FS-check.1.3.4), while
 /// `retain_diagnostics_in_report_scope` narrows the report *after* every rule has
 /// run, which is what lets a path-scoped run resolve against the whole project.
-/// Three things the path filter leaves alone: a run-level finding, which carries no
-/// path; the §FS-check.3.5 agent-entrypoint probe, which asks about the project root;
-/// and the scope cautions, which are asked of the report scope rather than the walk.
+/// Four things the path filter leaves alone: a run-level finding, which carries no
+/// path; a finding that names a site inside the path whatever its anchor
+/// (§FS-check.1.3.6.2); the §FS-check.3.5 agent-entrypoint probe's own finding, which
+/// asks about the project root; and the scope cautions, which are asked of the report
+/// scope rather than the walk. What it drops it does not forget: a file the wider walk
+/// could not read leaves the errors and the exit code but earns a caution
+/// (§FS-check.1.3.6.3).
 pub(super) fn run_check_with_run_warnings(
     path: &Path,
     path_provided: bool,
@@ -135,15 +139,24 @@ pub(super) fn run_check_with_run_warnings(
     retain_findings_in_scope(&mut findings, scope.as_ref());
     // §FS-check.1.3.6.1: a file the wider walk could not read is outside the report
     // scope like anything else about it, and it is the exit code as well as a line
-    // (§FS-check.2.4) — so it is dropped before either is decided.
+    // (§FS-check.2.4) — so it leaves both here, and §FS-check.1.3.6.3 says it below.
+    let mut unread_outside_report_scope = Vec::new();
     if let Some(report_scope) = report_scope.as_ref() {
-        scan_errors.retain(|(file, _)| report_scope.contains(file));
+        let (inside, outside): (Vec<_>, Vec<_>) = std::mem::take(&mut scan_errors)
+            .into_iter()
+            .partition(|(file, _)| report_scope.contains(file));
+        scan_errors = inside;
+        unread_outside_report_scope = outside;
     }
+    // §FS-check.1.3.6.3: the chapter rules are asked whether the **resolution** scope
+    // was read in full. The narrowed list would have a run that could not read half
+    // its tree assert the absence facts anyway (§FS-rules.4.1).
+    let resolution_was_complete = scan_errors.is_empty() && unread_outside_report_scope.is_empty();
     let mut report = check_findings(&findings, &config);
     check_chapter_rules(
         &findings,
         &config,
-        scan_errors.is_empty(),
+        resolution_was_complete,
         ad_hoc,
         None,
         &mut report,
@@ -154,6 +167,12 @@ pub(super) fn run_check_with_run_warnings(
     retain_diagnostics_in_report_scope(&mut report.errors, &config, report_scope.as_ref());
     retain_diagnostics_in_report_scope(&mut report.warnings, &config, report_scope.as_ref());
     retain_diagnostics_in_report_scope(&mut report.suggestions, &config, report_scope.as_ref());
+    // §FS-check.1.3.6.3: after the filter, because this is what the filter threw away
+    // — the citation whose declaration lay there is reported as unresolved, and
+    // §REQ-no-wrong-citation.2 asks that a false alarm stay legible as one.
+    report.warnings.extend(unread_resolution_source_cautions(
+        unread_outside_report_scope,
+    ));
     // §FS-check.2.2 / §FS-check.4.5: a walk that read no files, or read them and
     // recognized nothing in them, is almost always a misconfigured scope rather
     // than a clean repo — say so on stderr instead of exiting 0 in silence.
@@ -344,6 +363,33 @@ fn run_workspace_check(
         report,
         had_scan_errors,
     })
+}
+
+/// §FS-check.1.3.6.3: one caution per file the resolution scope could not read and
+/// the report scope does not own. It carries the read failure's own reason and the
+/// `io` code the §FS-check.2.4 error carries, because it is the same knowledge on a
+/// softer channel rather than a new finding — `--only io` keeps meaning "read
+/// failures". `line` is `None`, which is what puts a CLI-level message on stderr
+/// (§FS-check.2.1.1), and the path stays the file's so the reader can go and chmod
+/// it.
+fn unread_resolution_source_cautions(
+    unread: impl IntoIterator<Item = (PathBuf, String)>,
+) -> Vec<Diagnostic> {
+    unread
+        .into_iter()
+        .map(|(file, message)| Diagnostic {
+            code: "io",
+            path: Some(file),
+            line: None,
+            column: None,
+            message: format!(
+                "{message} — outside the report scope, so a citation declared there \
+                 may be reported as unresolved"
+            ),
+            sites: Vec::new(),
+            authority: Vec::new(),
+        })
+        .collect()
 }
 
 fn append_scan_errors(
