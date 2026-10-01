@@ -109,12 +109,15 @@ the ordinary `must` channel, and its record is the changelog bullet that landed
 it together with
 [§FS-rules.checks.unreached-declaration](functional-spec/FS-rules.md#checksunreached-declaration-unreached-declaration).
 The item's own plan is removed, as a shipped item's is; this address, heading
-text included, is kept only because an `## Unreleased` changelog bullet written
-before the promotion still cites it, and that bullet may not be reworded
+text included, is kept while any `## Unreleased` changelog bullet still cites
+it — #362's, written before the promotion, and this change's own — and such a
+bullet may not be reworded
 ([§FS-distribution.4.6](functional-spec/FS-distribution.md#46-the-changelog-gate-keeps-the-release-section-mappable-to-its-pull-requests)).
-Retiring the address is a change of its own, due once the 0.15.0 cut archives
-that bullet and the repoint the lead above prescribes can be written in the
-archive. It is not a deadline item and is not counted among the four.
+Retiring the address is a change of its own: #362's bullet becomes repointable
+as soon as the 0.15.0 cut moves it out of `## Unreleased`, and the address
+itself can only go once the 0.16.0 cut does the same for this change's bullet,
+when the repoint the lead above prescribes can be written. It is not a deadline
+item and is not counted among the four.
 
 GitHub: [#368](https://github.com/agent-grounds/grund/issues/368).
 

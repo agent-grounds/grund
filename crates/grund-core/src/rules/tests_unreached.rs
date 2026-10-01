@@ -155,9 +155,10 @@ fn prohibition(origin: &str) -> ParsedRule {
 
 /// §FS-rules.7: the absence is an error on the ordinary `must` channel, so the
 /// rules report has no warnings channel left to carry it
-/// (§FS-rules.checks.unreached-declaration). Every test that reads an absence
-/// by code reads it through here, off that one channel, which is where the
-/// promotion is pinned at the unit level.
+/// (§FS-rules.checks.unreached-declaration). Reads the absences off that one
+/// channel, which is where the promotion is pinned at the unit level; the two
+/// tests that also need the run's other findings filter `evaluate` and
+/// `evaluate_suggestions` for themselves.
 fn absences(rules: &[ParsedRule]) -> Vec<Diagnostic> {
     evaluate(rules, &[], &facts())
         .into_iter()
