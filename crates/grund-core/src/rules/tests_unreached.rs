@@ -156,16 +156,10 @@ fn prohibition(origin: &str) -> ParsedRule {
 /// §FS-rules.7: the absence is an error on the ordinary `must` channel, so the
 /// rules report has no warnings channel left to carry it
 /// (§FS-rules.checks.unreached-declaration). Every test below reads the
-/// absences through here, so this one assertion is where the promotion is
-/// pinned at the unit level.
+/// absences through here, off that one channel, which is where the promotion
+/// is pinned at the unit level.
 fn absences(rules: &[ParsedRule]) -> Vec<Diagnostic> {
-    let (errors, ramp_warnings) = evaluate(rules, &[], &facts());
-    assert!(
-        ramp_warnings.is_empty(),
-        "the absence belongs on the errors channel, and no rules warnings \
-         channel survives the promotion"
-    );
-    errors
+    evaluate(rules, &[], &facts())
         .into_iter()
         .filter(|diagnostic| diagnostic.code == "unreached-declaration")
         .collect()
@@ -245,15 +239,15 @@ fn a_prohibition_over_the_same_absent_chapter_stays_silent() {
 #[test]
 fn a_chapter_displayed_under_another_name_is_reached_by_its_handle() {
     let facts = facts_with_displayed_chapter();
-    let (errors, ramp_warnings) = evaluate(&[chapter_rule("RULE-outbound")], &[], &facts);
-    let absent: Vec<&str> = ramp_warnings
+    let diagnostics = evaluate(&[chapter_rule("RULE-outbound")], &[], &facts);
+    let absent: Vec<&str> = diagnostics
         .iter()
         .filter(|diagnostic| diagnostic.code == "unreached-declaration")
         .map(|diagnostic| diagnostic.message.as_str())
         .collect();
     assert_eq!(absent.len(), 1, "only FS-silent is unreached: {absent:?}");
     assert!(absent[0].starts_with("FS-silent has no requirements chapter,"));
-    let rendered = errors
+    let rendered = diagnostics
         .iter()
         .map(|diagnostic| diagnostic.message.as_str())
         .collect::<Vec<_>>();

@@ -632,19 +632,18 @@ whose `requirements` chapter cites no REQ, and reports an FS with no
 `requirements` chapter at all — the edit the rule could not see before:
 
 ```text
-docs/fs/FS-login.md:1: warning: FS-login has no requirements chapter, so RULE-requirements cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this warning becomes an error in grund 0.16.0
+docs/fs/FS-login.md:1: error: FS-login has no requirements chapter, so RULE-requirements cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this became an error in grund 0.16.0
 ```
 
-Add the chapter or narrow the rule: those two are the whole answer. The warning
-leaves the exit status alone until `grund 0.16.0`, where it becomes an error,
-and `--ignore unreached-declaration` is the opt-out until then; a `should` rule
-reports the absence as a suggestion immediately and with no deadline.
+Add the chapter or narrow the rule: those two are the whole answer. The error
+fails the run like every other `must` finding; `--ignore unreached-declaration`
+is the opt-out for a repository that wants the absence reported by nothing, and
+a `should` rule reports it as a suggestion that never moves the exit status.
 
 A chapter-presence rule beside the citation rule is not a third answer — it
 raises its own `chapter-cardinality` and suppresses nothing, so one absent
 chapter under both prints both lines. Write the two sentences together to state
-the count as well as the citation, and to make the absence fail a run rather
-than warn in it before 0.16.0:
+the count as well as the citation:
 
 ```text
 Each FS must have at least one requirements chapter.

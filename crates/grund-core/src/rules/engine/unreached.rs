@@ -1,7 +1,7 @@
 //! The declaration a chapter-scoped citation rule cannot reach
 //! (§FS-rules.checks.unreached-declaration): the second premise §FS-rules.5.2
-//! gives a chapter subject, and the ramp that carries the finding on the
-//! warnings channel until `0.16.0` (§FS-rules.7.7).
+//! gives a chapter subject, reported as an error on the ordinary `must`
+//! channel (§FS-rules.7).
 
 use super::super::facts::{NodeKey, RuleFacts};
 use super::super::{RuleLevel, RulePolarity, RuleRelation, RuleSubject};
@@ -9,17 +9,17 @@ use super::authority::Authority;
 use super::{SemanticRule, label, push_node};
 use crate::model::Diagnostic;
 
-/// §FS-rules.7.7: the warning promises its own promotion in the pending clause
-/// of §FS-distribution.4.2.3's closed vocabulary, so the release guard reads the
-/// deadline out of this one string. It goes with the subsection it implements
-/// when the ramp closes and the finding joins the errors.
-const RAMP_CLAUSE: &str = "; this warning becomes an error in grund 0.16.0";
+/// §FS-rules.checks.unreached-declaration: the ramp the warning promised closed
+/// in `0.16.0`, so the message names that release in the landed clause of
+/// §FS-distribution.4.2.3's closed vocabulary and the release guard reads the
+/// floor out of this one string instead of the deadline.
+const LANDED_CLAUSE: &str = "; this became an error in grund 0.16.0";
 
 /// §FS-rules.checks.unreached-declaration: one finding per semantic rule group
 /// per unreached declaration, located at the declaration's title line because
 /// the chapter title that would otherwise anchor it is the thing that is
-/// missing. The caller picks the channel, which is what keeps the required
-/// level's warning a property of the ramp rather than of the finding.
+/// missing. It goes on the one channel its level already has — the required
+/// level's errors, the recommended level's suggestions (§FS-rules.7).
 ///
 /// Only the three positive citation families reach the premise. Chapter
 /// presence never takes a chapter subject at all, and a prohibition stays
@@ -42,17 +42,18 @@ pub(super) fn report_unreached(
     let RuleSubject::ChapterOfKind { kind, name } = &rule.subject else {
         return;
     };
-    // §FS-rules.7.7: the recommended level owes no ramp, because a suggestion
-    // never moves the exit status at any release.
-    let ramp = if rule.level == RuleLevel::Required {
-        RAMP_CLAUSE
+    // §FS-rules.checks.unreached-declaration: the recommended level drops the
+    // landed clause, because a suggestion never moved the exit status at any
+    // release and so owed no promotion.
+    let landed = if rule.level == RuleLevel::Required {
+        LANDED_CLAUSE
     } else {
         ""
     };
     for declaration in unreached_declarations(kind, selected, facts) {
         let message = format!(
             "{} has no {name} chapter, so {authority} cannot reach it; add the chapter, \
-             or narrow the rule to the declarations that have one{ramp}",
+             or narrow the rule to the declarations that have one{landed}",
             label(facts, &declaration)
         );
         push_node(

@@ -16,8 +16,6 @@ use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
 use crate::workspace::expand_workspace_tree;
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::support::sort_diagnostics;
-
 pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
     let kinds = config
         .kinds
@@ -335,13 +333,9 @@ pub(crate) fn check_chapter_rules(
         rules.push(rule);
     }
     let precedence = citation_precedence(config);
-    let (errors, ramp_warnings) = evaluate(&rules, &precedence, &facts);
-    report.errors.extend(errors);
-    // §FS-rules.7.7 / §FS-errors.4.1: the single-project `grund-core` arm is the one
-    // caller that does not sort warnings downstream, and the sort is idempotent over
-    // the already-ordered channel every caller hands in, so it needs no guard.
-    report.warnings.extend(ramp_warnings);
-    sort_diagnostics(&mut report.warnings);
+    // §FS-rules.7: one channel per level, so the absence arrives among the
+    // errors its level already fills and every caller's own sort orders it.
+    report.errors.extend(evaluate(&rules, &precedence, &facts));
     report
         .suggestions
         .extend(evaluate_suggestions(&rules, &precedence, &facts));
