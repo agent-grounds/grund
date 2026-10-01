@@ -11,7 +11,8 @@ use super::sections::retain_heading_findings_in_scope;
 use crate::config::{Config, unwalked_home_roots};
 use crate::model::{CheckReport, DeclarationSource, Diagnostic, Findings, sort_path_key};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject};
-use crate::scanner::scan_roots_for;
+use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, scan_roots_for};
+use crate::workspace::scope_is_config_root;
 
 /// The roots a run *without* `--full` walks: the explicit path argument, or
 /// `[scan] include` resolved against the config root (§FS-config.3.5.7). Under
@@ -30,7 +31,7 @@ pub(crate) struct ScanScope {
 }
 
 impl ScanScope {
-    pub(super) fn contains(&self, path: &Path) -> bool {
+    pub(crate) fn contains(&self, path: &Path) -> bool {
         // §FS-config.3.4.7.5: a file in a home the config lists without walking is
         // outside the configured scope even when a root above it is inside — the
         // scope is a set of roots, less the homes a run without `--full` never reads.
@@ -55,7 +56,7 @@ pub(crate) fn configured_scope(
     if !full {
         return Ok(None);
     }
-    let mut roots = scan_roots_for(config, Some(path), path_provided, false)?;
+    let mut roots = scan_roots_for(config, Some(path), path_provided, false, false)?;
     let canonical = roots
         .iter()
         .filter_map(|root| fs::canonicalize(root).ok())
@@ -74,6 +75,95 @@ pub(crate) fn configured_scope(
     unwalked.sort_by_key(|home| sort_path_key(home));
     unwalked.dedup();
     Ok(Some(ScanScope { roots, unwalked }))
+}
+
+/// §FS-check.1.3.6.1: the **report** scope of this run — the set of files a finding
+/// may be about. It is exactly the explicit path, and `None` for a run over the
+/// config root, which narrows nothing and whose report is the whole walk.
+///
+/// The twin of [`configured_scope`] and deliberately not the same thing
+/// (§AR-resolver.3.3). That one is read *before* any rule runs, so `--full` stays
+/// additive; this one is applied *after* every rule has run, which is what lets a
+/// path-scoped run resolve against the whole project and still answer about the
+/// path alone. Both spellings of each root are kept for the reason they are there,
+/// and `unwalked` is empty on purpose: the report scope is the path the caller
+/// typed, even where that path is a kind home the ordinary walk prunes
+/// (§FS-config.3.4.7.3).
+pub(crate) fn path_report_scope(
+    config: &Config,
+    path: &Path,
+    path_provided: bool,
+) -> Result<Option<ScanScope>> {
+    if scope_is_config_root(config, path, path_provided) {
+        return Ok(None);
+    }
+    let mut roots = scan_roots_for(config, Some(path), path_provided, false, false)?;
+    let canonical = roots
+        .iter()
+        .filter_map(|root| fs::canonicalize(root).ok())
+        .collect::<Vec<_>>();
+    roots.extend(canonical);
+    roots.sort_by_key(|root| sort_path_key(root));
+    roots.dedup();
+    Ok(Some(ScanScope {
+        roots,
+        unwalked: Vec::new(),
+    }))
+}
+
+/// §FS-check.1.3.6.1: narrow a channel of the report to the report scope, after
+/// every rule has run over the wider resolution scope. A no-op for a run over the
+/// config root.
+///
+/// Two classes are kept whatever the scope. A run-level finding carries no path —
+/// the config findings, the scope cautions, the workspace run warnings — and the
+/// filter never sees one. And the agent-entrypoint probe of §FS-check.3.5 asks
+/// about the project root rather than about a scanned file, and already reports
+/// when no source file is scanned at all; `AGENTS.md` lies outside every path but
+/// the root, so a blanket filter would delete the one diagnostic a narrow run
+/// still owes about the root.
+pub(crate) fn retain_diagnostics_in_report_scope(
+    diagnostics: &mut Vec<Diagnostic>,
+    config: &Config,
+    scope: Option<&ScanScope>,
+) {
+    let Some(scope) = scope else { return };
+    let entrypoints = agent_entrypoint_paths(config);
+    diagnostics.retain(|diagnostic| match &diagnostic.path {
+        None => true,
+        Some(path) => {
+            scope.contains(path) || entrypoints.iter().any(|entrypoint| entrypoint == path)
+        }
+    });
+}
+
+/// §FS-check.1.3.6.1: whether the walk read any file the report scope owns — what
+/// the §FS-check.2.2 empty-scan caution asks, since the cautions are computed
+/// against the report scope and not the resolution scope. A path holding no
+/// scannable file still earns its caution however much the wider walk read.
+pub(crate) fn scope_read_any_file(findings: &Findings, scope: Option<&ScanScope>) -> bool {
+    match scope {
+        None => !findings.scanned_files.is_empty(),
+        Some(scope) => findings
+            .scanned_files
+            .iter()
+            .any(|file| scope.contains(file)),
+    }
+}
+
+/// The files the §FS-check.3.5 probe reports about, derived from the one table that
+/// spells the supported agent set (§FS-init.2.1.1) rather than restated beside it.
+/// Names only, so this costs no walk: the question is which paths that check *may*
+/// have anchored a diagnostic at, and a file it never looked at anchors nothing.
+fn agent_entrypoint_paths(config: &Config) -> Vec<PathBuf> {
+    std::iter::once(CANONICAL_AGENT_ENTRYPOINT)
+        .chain(
+            COMPANION_AGENT_ENTRYPOINTS
+                .iter()
+                .map(|entrypoint| entrypoint.rel),
+        )
+        .map(|rel| config.root.join(rel))
+        .collect()
 }
 
 /// §FS-check.1.3.4: drop everything the wider `--full` walk read from outside the

@@ -13,7 +13,9 @@ fn print_check_help() {
     println!(
         "With no config, grund scans `docs/`, `e2e/`, and `src/`; set `[scan] include` to widen it."
     );
-    println!("Pointing grund at an explicit PATH scans exactly that file or directory.");
+    println!(
+        "Pointing grund at an explicit PATH reports exactly that file or directory; citations still resolve against the whole project."
+    );
     println!("Path validation is explicit; `grund PATH` is parsed as an ID query.");
     println!();
     println!("Options:");

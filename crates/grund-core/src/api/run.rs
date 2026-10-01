@@ -16,8 +16,9 @@ use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
 use crate::checker::{
     check_chapter_rules, check_findings, check_with_workspace, configured_scope,
     out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc,
-    parse_ad_hoc_with_workspace, retain_findings_in_scope, sort_diagnostics,
-    workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
+    parse_ad_hoc_with_workspace, path_report_scope, retain_diagnostics_in_report_scope,
+    retain_findings_in_scope, sort_diagnostics, workspace_out_of_scope_references,
+    workspace_out_of_scope_section_headings,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Diagnostic, Finding};
@@ -63,6 +64,19 @@ pub(crate) fn run_check(
 /// Run `check` while preserving the root warnings a later workspace-expansion
 /// refusal must not discard (§FS-check.4.7.9, §FS-check.4.10.8). The side channel is
 /// returned data, never rendered here (§FS-distribution.3.1).
+///
+/// §FS-check.1.3.6.1: an explicit path below the config root is this run's **report**
+/// scope and not its **resolution** scope, so the single-project arm below walks the
+/// project's ordinary roots as well as the path, runs every rule over the whole of
+/// that, and drops the diagnostics anchored outside the path before the report is
+/// written. Two narrowings, and §AR-resolver.3.3 is why they are kept at visibly
+/// different stages: `retain_findings_in_scope` narrows the scan result *before* any
+/// rule runs, which is what `--full` additivity needs (§FS-check.1.3.4), while
+/// `retain_diagnostics_in_report_scope` narrows the report *after* every rule has
+/// run, which is what lets a path-scoped run resolve against the whole project.
+/// Three things the path filter leaves alone: a run-level finding, which carries no
+/// path; the §FS-check.3.5 agent-entrypoint probe, which asks about the project root;
+/// and the scope cautions, which are asked of the report scope rather than the walk.
 pub(super) fn run_check_with_run_warnings(
     path: &Path,
     path_provided: bool,
@@ -80,6 +94,10 @@ pub(super) fn run_check_with_run_warnings(
     // §FS-check.1.3: `--full` cancels `[scan] include` for the walk. It is a
     // per-run flag, never a config key (§DF-check-full-scope.2.5).
     config.scan_full = full;
+    // §FS-check.1.3.6.1: the path is the report scope, so the walk reads the
+    // ordinary roots too. On the config for the reason `scan_full` is — the
+    // scanner asks for it four frames below the run that decided it.
+    config.scan_resolution_wide = !scope_is_config_root(&config, path, path_provided);
     // §FS-check.1: the flag and `[reference] require_grounding` are one knob, so
     // it sets the same global default — it never turns the key off, and a
     // `[[kinds]]` row that says `false` stays exempt under it (§FS-config.3.4.8.3).
@@ -97,15 +115,30 @@ pub(super) fn run_check_with_run_warnings(
         .map(|sentence| parse_ad_hoc(&config, sentence))
         .transpose()?;
 
-    let (mut findings, scan_errors) = scan_tree(&config, Some(path), path_provided)?;
+    let (mut findings, mut scan_errors) = scan_tree(&config, Some(path), path_provided)?;
+    // §FS-check.1.3.6.1: exactly the path, and `None` over the config root.
+    let report_scope = path_report_scope(&config, path, path_provided)?;
     // §FS-check.1.3 / §FS-check.3.14: read the out-of-scope tier off the whole
     // `--full` walk first, then narrow the findings back to the configured scope
     // so every other rule reports exactly what a run without the flag reports.
-    let scope = configured_scope(&config, path, path_provided, full)?;
+
+    // §FS-check.1.3.6: and a path scope has no tier of its own — the flag has
+    // nothing to cancel there, which was true by accident until §FS-check.1.3.6.1
+    // made the walk wider than the report.
+    let scope = match report_scope {
+        Some(_) => None,
+        None => configured_scope(&config, path, path_provided, full)?,
+    };
     let mut out_of_scope =
         out_of_scope_references(&findings, &config, &BTreeMap::new(), scope.as_ref());
     out_of_scope.extend(out_of_scope_section_headings(&findings, scope.as_ref()));
     retain_findings_in_scope(&mut findings, scope.as_ref());
+    // §FS-check.1.3.6.1: a file the wider walk could not read is outside the report
+    // scope like anything else about it, and it is the exit code as well as a line
+    // (§FS-check.2.4) — so it is dropped before either is decided.
+    if let Some(report_scope) = report_scope.as_ref() {
+        scan_errors.retain(|(file, _)| report_scope.contains(file));
+    }
     let mut report = check_findings(&findings, &config);
     check_chapter_rules(
         &findings,
@@ -116,6 +149,11 @@ pub(super) fn run_check_with_run_warnings(
         &mut report,
     );
     let had_scan_errors = append_scan_errors(&mut report, scan_errors);
+    // §FS-check.1.3.6.1: every rule has run over the resolution scope, so the report
+    // narrows to the path — the second stage, after the rules (§AR-resolver.3.3).
+    retain_diagnostics_in_report_scope(&mut report.errors, &config, report_scope.as_ref());
+    retain_diagnostics_in_report_scope(&mut report.warnings, &config, report_scope.as_ref());
+    retain_diagnostics_in_report_scope(&mut report.suggestions, &config, report_scope.as_ref());
     // §FS-check.2.2 / §FS-check.4.5: a walk that read no files, or read them and
     // recognized nothing in them, is almost always a misconfigured scope rather
     // than a clean repo — say so on stderr instead of exiting 0 in silence.
@@ -126,6 +164,7 @@ pub(super) fn run_check_with_run_warnings(
         path,
         path_provided,
         report_is_silent,
+        report_scope.as_ref(),
     ));
     // What the config itself carries (§FS-check.4.3, §FS-check.4.11,
     // §FS-config.4.1), outside `report_is_silent`: a repository mid-migration
@@ -143,12 +182,12 @@ pub(super) fn run_check_with_run_warnings(
     // §FS-check.3.29.13: the blocks this walk met that no enclosing one lists — one of
     // the report's *errors* since the ramp ended (§FS-check.3.29.14), and located, so it
     // reaches the exit code rather than standing in place of `success` (§FS-check.2.1.3).
-    report.errors.extend(unlisted_workspace_block_errors(
-        &config,
-        &config,
-        None,
-        &findings.walked_dirs,
-    ));
+    let mut unlisted =
+        unlisted_workspace_block_errors(&config, &config, None, &findings.walked_dirs);
+    // §FS-check.1.3.6.1: the wider walk met directories the path does not name, and
+    // a block out there is not this run's report to make.
+    retain_diagnostics_in_report_scope(&mut unlisted, &config, report_scope.as_ref());
+    report.errors.extend(unlisted);
     // §FS-check.3.14, after the scope caution above (§FS-check.2.2, §FS-check.4.5):
     // a `--full` run whose *configured* scope read or recognized nothing still earns
     // that caution — the tier says where the citations are, the config was not told.
@@ -261,6 +300,9 @@ fn run_workspace_check(
             &project.config.root,
             true,
             project.scan_errors.is_empty() && !project_has_findings,
+            // §FS-check.1.3.6.1: a workspace-wide run is the aggregate one, so no
+            // path narrowed its report and there is no second scope to ask.
+            None,
         ));
     }
     // §FS-workspace.2.2, §FS-check.4.9: the caution and the announcements — see

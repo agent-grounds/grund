@@ -303,9 +303,11 @@ fn single_project_context(
 /// `grund check` draws this line already: it takes the workspace-aggregate path
 /// only when the scope *is* the config root, and otherwise runs one narrowed scan
 /// (`scope_is_config_root`, §FS-check.1.3.6). A scope narrower than the root has to
-/// stay narrow — an explicit path bypasses `[scan] include` (§AR-scanner.1.6), so
-/// widening it back to every project would both answer a question the caller did
-/// not ask and lose the files the narrowing was for.
+/// stay narrow — and §AR-resolver.3.3 is which narrowness that is: which *projects*
+/// a walk covers and which *files* are reported, never which declarations resolution
+/// reads. Widening the projects would answer a question the caller did not ask and
+/// lose the files the narrowing was for; widening the declarations is what a path
+/// scope already does one layer down (§FS-check.1.3.6.1).
 ///
 /// `list`, `show`, completions, and `fmt` keep [`load_workspace_context`], and
 /// `refs` [`load_classifying_workspace_context`]: their `<path>` selects a

@@ -8,6 +8,19 @@ use crate::grammar::{literal_after_kind_placeholder, parse_id_arg};
 use crate::model::{Declaration, DeclarationSource, E2eCase, E2eSpecRef, Findings, Id};
 use crate::model::{format_path, sort_path_key};
 
+/// §FS-config.3.5.8, §FS-check.1.3.6.1: whether the project's *ordinary* walk reads
+/// the E2E case root at all — `[scan] include` covering it, or no `include` to bound
+/// it. A path-scoped run's resolution scope is that ordinary scope union the path, so
+/// a cases root the ordinary run skips is read only when the path itself names it.
+fn cases_root_in_ordinary_scope(config: &Config, cases_root: &Path) -> bool {
+    config.include.as_ref().is_none_or(|include| {
+        include.iter().any(|path| {
+            let root = config.root.join(path);
+            cases_root.starts_with(&root) || root.starts_with(cases_root)
+        })
+    })
+}
+
 /// Discover `e2e/cases/<name>/` directories and register each as an `E2E-<name>`
 /// declaration whose body is the case manifest (§AR-scanner.6, §FS-show.2.4) — so
 /// `grund check` sees `§E2E-…` citations resolve and `grund refs` finds e2e tests.
@@ -34,7 +47,12 @@ pub(super) fn scan_e2e_cases(
     let cases_root = fs::canonicalize(&cases_root).unwrap_or(cases_root);
     let mut scan_root = cases_root.clone();
 
-    if explicit_scope {
+    // §FS-check.1.3.6.1: a path-scoped run reads the cases the ordinary run reads —
+    // the whole root, the report filter narrowing afterwards. Only a cases root the
+    // ordinary scope misses is read through the path alone, which is the branch below.
+    let narrowed_to_path = explicit_scope
+        && !(config.scan_resolution_wide && cases_root_in_ordinary_scope(config, &cases_root));
+    if narrowed_to_path {
         let scope = scope.unwrap_or(Path::new("."));
         if scope.is_file() {
             return Ok(());
@@ -45,18 +63,10 @@ pub(super) fn scan_e2e_cases(
         } else if !cases_root.starts_with(&scope) {
             return Ok(());
         }
-    } else if !config.scan_full
-        && let Some(include) = &config.include
-    {
+    } else if !config.scan_full && !cases_root_in_ordinary_scope(config, &cases_root) {
         // §FS-check.1.3: `--full` cancels `include`, so the e2e cases are in the
         // walk whether or not `include` happens to name their folder.
-        let covered = include.iter().any(|path| {
-            let root = config.root.join(path);
-            cases_root.starts_with(&root) || root.starts_with(&cases_root)
-        });
-        if !covered {
-            return Ok(());
-        }
+        return Ok(());
     }
 
     let mut case_dirs = Vec::new();

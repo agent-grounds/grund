@@ -156,6 +156,13 @@ pub struct Config {
     /// widens `include`, and a second knob describing one scope is how two
     /// installs come to disagree (§FS-non-goals.13).
     pub scan_full: bool,
+    /// §FS-check.1.3.6.1: this run was given an explicit path below the config
+    /// root, so the walk reads the project's ordinary roots *as well as* that
+    /// path — the path sets the report scope and not the resolution one. Like
+    /// `scan_full` it is a per-run fact rather than a `grund.toml` key and is
+    /// never read from one: it describes one invocation's scope, and the
+    /// scanner asks for it four frames below the run that decided it.
+    pub scan_resolution_wide: bool,
     pub exclude: Vec<String>,
     pub extensions: Vec<String>,
     pub comment_prefixes: Vec<String>,
@@ -334,6 +341,7 @@ impl Config {
                     .collect(),
             ),
             scan_full: false,
+            scan_resolution_wide: false,
             exclude: vec![
                 "target".into(),
                 "node_modules".into(),

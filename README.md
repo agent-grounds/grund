@@ -139,7 +139,7 @@ docs/decisions/functional/DF-require-grounding.md:8: error: missing section FS-c
 docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.2
 ```
 
-`grund check <path>` scans `<path>`; with no path it scans the canonical layout (`requirements.md`, `docs/`, `e2e/`, `src/`). In the scanned tree it enforces:
+`grund check <path>` reports on `<path>` while resolving citations against the whole project; with no path it scans the canonical layout (`requirements.md`, `docs/`, `e2e/`, `src/`). In the scanned tree it enforces:
 
 1. Every cited ID resolves to a declaration. *(dangling references)*
 2. Every section coordinate (`.3.1`) resolves to a heading inside the declaration. *(missing sections)*
