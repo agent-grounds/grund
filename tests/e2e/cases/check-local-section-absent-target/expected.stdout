@@ -1,0 +1,7 @@
+docs/FS-bare.md:3: error: local section citation §1; write §FS-bare.1 — unchecked in grund 0.13.1, an error in 0.14.0
+docs/FS-bare.md:3: error: missing section FS-bare.1
+docs/FS-nine.md:3: error: local section citation §2.1; write §FS-nine.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
+docs/FS-nine.md:4: error: local section citation §12; write §FS-nine.12 — unchecked in grund 0.13.1, an error in 0.14.0
+docs/FS-nine.md:4: error: missing section FS-nine.12
+docs/FS-nine.md:5: error: local section citation §2.7; write §FS-nine.2.7 — unchecked in grund 0.13.1, an error in 0.14.0
+docs/FS-nine.md:5: error: missing section FS-nine.2.7

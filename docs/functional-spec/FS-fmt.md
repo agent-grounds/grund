@@ -125,15 +125,17 @@ An owned declaration-local numeric citation ([§FS-check.1.1.8](FS-check.md#118-
 
 A shorthand that matches no declaration, or more than one, is **left alone**: `fmt` normalizes, it does not guess, and `check` is where the ambiguity is reported. The never-rewrite zones of [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) apply unchanged — and because the ones for inline code, a Markdown link destination, and a source string literal do, [§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) withholds its canonical-policy error there, so no finding in those places asks for a rewrite this pass refuses to make.
 
-For a declaration-local candidate, automatic replacement likewise requires one owner and a site
-permitted by every existing writer rule. Ownerless, ambiguous, and unsupported tokens are left
-byte-identical. Suppression, external symlinks, fences, inline code, Markdown link destinations,
+For a declaration-local candidate, automatic replacement likewise requires one owner, a site
+permitted by every existing writer rule, and a cited section that resolves against that owner.
+Ownerless, ambiguous, and unsupported tokens are left byte-identical, and so is a candidate whose
+owner records no heading at the cited numeric path ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)).
+Suppression, external symlinks, fences, inline code, Markdown link destinations,
 declaration headings, and source strings keep their existing protections. Unlike number-only ID
 shorthand, [§FS-check.3.24](FS-check.md#324-declaration-local-section-citation) remains loud in a
 protected site and supplies the manual full replacement for an owned token, or full-citation/
 escape guidance where no target is known.
 
-The rewrite fires only on a whole token ([§FS-fmt.2.4.2](FS-fmt.md#242-only-a-whole-token-is-a-shorthand)) outside a numeric run ([§FS-fmt.2.4.1](FS-fmt.md#241-a-shorthand-in-a-numeric-run-is-not-rewritten)). A typed trigger expands under both policies ([§FS-fmt.2.4.3](FS-fmt.md#243-a-typed-trigger-expands-under-both-policies)), a qualified citation follows the aliased project ([§FS-fmt.2.4.4](FS-fmt.md#244-a-qualified-shorthand-follows-the-aliased-project)), the declaration set is scanned on first use ([§FS-fmt.2.4.5](FS-fmt.md#245-the-declaration-set-is-scanned-on-first-use)), and the report labels each expansion `shorthand → canonical` with the text it writes ([§FS-fmt.3.6](FS-fmt.md#36-an-expanded-shorthand-names-the-text-it-writes)).
+The rewrite fires only on a whole token ([§FS-fmt.2.4.2](FS-fmt.md#242-only-a-whole-token-is-a-shorthand)) outside a numeric run ([§FS-fmt.2.4.1](FS-fmt.md#241-a-shorthand-in-a-numeric-run-is-not-rewritten)). A typed trigger expands under both policies ([§FS-fmt.2.4.3](FS-fmt.md#243-a-typed-trigger-expands-under-both-policies)), a qualified citation follows the aliased project ([§FS-fmt.2.4.4](FS-fmt.md#244-a-qualified-shorthand-follows-the-aliased-project)), the declaration set is scanned on first use ([§FS-fmt.2.4.5](FS-fmt.md#245-the-declaration-set-is-scanned-on-first-use)), an absent target section withholds the declaration-local rewrite and nothing else ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the report labels each expansion `shorthand → canonical` with the text it writes ([§FS-fmt.3.6](FS-fmt.md#36-an-expanded-shorthand-names-the-text-it-writes)).
 
 #### 2.4.1 A shorthand in a numeric run is not rewritten
 
@@ -173,6 +175,36 @@ The qualified form is matched and resolved with the **aliased project's** gramma
 #### 2.4.5 The declaration set is scanned on first use
 
 The pass needs the declaration set, and getting one costs a tree scan that `fmt --check` otherwise never performs. So it is not scheduled up front: the run starts without declarations and scans the first time it actually meets a shorthand, then redoes that one file. A project that writes none — including every project in which no kind's effective format carries both `{number}` and `{slug}`, and which therefore has no shorthand at all ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)) — pays nothing. The scan covers the whole project even under a narrowed path scope, because the declaration a shorthand names routinely lives outside the files being rewritten.
+
+#### 2.4.6 An absent target section withholds this rewrite, and only this one
+
+A declaration-local candidate whose owner records no heading at the cited numeric path is left
+byte-identical, in dry-run and in write mode alike. The section map the refusal reads is the one
+[§FS-check.3.2](FS-check.md#32-missing-section) already tests to report the absence, so the two
+readings of that one fact cannot disagree: the finding naming the missing section and the rewrite
+declining the site come from the same lookup in the same model
+([§FS-fmt.7.4](FS-fmt.md#74-no-write-without-a-complete-model)).
+
+The asymmetry with number-only ID shorthand is deliberate. `§FS-042` already names its declaration,
+so expanding it to `§FS-042-user-login.99` changes only how that declaration is spelled and
+[§FS-check.3.2](FS-check.md#32-missing-section) means the same thing on both sides of the rewrite;
+nothing an author wrote is lost. The declaration-local rewrite is the one that picks an owner from
+the site's *position* in the tree, and an absent section is the evidence that pick was wrong — the
+author of a bare `<§>12` in a declaration whose sections stop at `2.1` meant some other document.
+Writing the pick in destroys the only record that they did: the token stops looking unfinished and
+becomes a full canonical citation of a section that is not there, and the target they meant is no
+longer recoverable from the text. So number-only ID shorthand keeps its behaviour
+([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation) unchanged) and this rewrite alone
+gains the precondition.
+
+Target existence is a precondition of the **rewrite**, never of the **finding**. Both findings
+still fire at a refused site — the canonical-form error and the missing-section error
+([§FS-check.3.24](FS-check.md#324-declaration-local-section-citation),
+[§DF-declaration-local-section-shorthand.2.4](../decisions/functional/DF-declaration-local-section-shorthand.md#24-resolved-local-forms-are-real-edges))
+— and the site remains an ordinary edge. What goes with the rewrite is the offer of the command
+that would have made it, for the reason
+[§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)
+gives: no finding names a command that would answer `rewrote 0 lines`.
 
 ### 2.5 Suppressed scopes
 

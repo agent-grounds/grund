@@ -1,0 +1,24 @@
+grund_config_version = 1
+project_name = "local-section-absent-e2e"
+
+[reference]
+strict = true
+require_grounding = false
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+index = false
+
+[scan]
+include = ["docs"]
+extensions = ["md"]
+
+[output]
+relative_paths = true
+
+[fmt.cross_refs]
+enabled = false
