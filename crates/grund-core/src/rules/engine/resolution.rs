@@ -1,8 +1,10 @@
 //! Post-scan resolution of a literal subject (§FS-rules.4): whether the one
 //! declaration or chapter a rule spells by name is in the snapshot, and the
 //! `invalid-rule` finding the rule earns at its own site when it is not
-//! (§FS-rules.7.1). Nothing here evaluates a family — resolution is a question
-//! about the sentence rather than about the tree it judges (§AR-rules.4).
+//! (§FS-rules.7.1). Nothing here evaluates a family: resolution is a post-scan
+//! join of the subject selector against the facts snapshot, so it sits in the
+//! engine beside the selectors rather than in the checker that calls it
+//! (§AR-rules.1).
 
 use super::super::facts::RuleFacts;
 use super::super::{ParsedRule, RuleSubject};
@@ -12,7 +14,7 @@ use crate::model::Diagnostic;
 
 /// Post-scan literal resolution belongs with selector semantics, not sentence
 /// recognition (§FS-rules.4, §AR-rules.4).
-pub(crate) fn subject_resolves(rule: &ParsedRule, facts: &RuleFacts) -> bool {
+fn subject_resolves(rule: &ParsedRule, facts: &RuleFacts) -> bool {
     match rule.subject {
         RuleSubject::ExactDeclaration(_) | RuleSubject::ExactChapter { .. } => {
             select_subjects(&rule.subject, facts).len() == 1
