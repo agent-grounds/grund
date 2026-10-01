@@ -307,6 +307,48 @@ For an embedded value, this parity covers the CLI's marked-root shape and compar
 
 This parity includes exact off-grammar declarations and their declaration-backed marked citations ([§FS-config.3.2](FS-config.md#32-id--id-grammar)): the LSP publishes the same located `declaration-near-miss` as `check`, while hover, definition, citation lookups, highlights, and document links navigate the declaration and its sections from the shared scan. No editor-only fallback recognition is permitted.
 
+## responsiveness: What an answer may cost
+
+[§FS-lsp.4](FS-lsp.md#4-determinism-and-parity-with-the-cli) fixes what the server answers. This chapter fixes what answering it may cost, because a
+correct answer nobody waits for is not a working editor integration: the server that takes minutes
+over a workspace the CLI clears in a moment shows no error and no partial result, only a window in
+which nothing arrives.
+
+The budget is [§GOAL-fast-feedback.1](../goals.md#1-performance-targets), the one the scan itself is held to. Holding it is not only a
+property of the scan: a snapshot built inside the budget and then read quadratically is outside it
+again, so the work the server does *after* a snapshot exists is bound here as well.
+
+The bound is a complexity and not a deadline. A figure in milliseconds would be a promise about one
+machine, and this project measures cost by counting work rather than by timing it; a cost that
+grows faster than its input is wrong on every machine, and one that does not is still right on a
+slow one.
+
+### responsiveness.1: Publishing a diagnostic set is linear in the findings
+
+For a project whose check reports `F` findings over a snapshot holding `E` records, publishing the
+diagnostics of [§FS-lsp.1.1](FS-lsp.md#11-diagnostics) costs on the order of `F + E`, never `F × E`. Anchoring one finding
+([§FS-lsp.1.1.1](FS-lsp.md#111-where-a-diagnostic-anchors)) does an amount of work that does not grow with how many records the snapshot
+holds, so a workspace whose findings and records both double costs twice as much to publish rather
+than four times.
+
+The shape matters most to the workspace that needs grounding most: one part-way through adoption,
+where `F` is large precisely because the tree is not conformant yet. A set of findings the CLI
+reports in well under a second is published in about that time, not minutes later.
+
+### responsiveness.2: A path is resolved once per answer, never once per comparison
+
+Resolving a path to the one spelling a scan gave it reads the filesystem once for every component
+of the path. A resolution performed inside a lookup is therefore what turns
+[§FS-lsp.responsiveness.1](FS-lsp.md#responsiveness1-publishing-a-diagnostic-set-is-linear-in-the-findings) quadratic, and it costs more the deeper the tree is.
+
+The records in a snapshot already carry their paths in that spelling. So matching a document
+against them resolves the incoming path once and compares the resolved values; no comparison
+resolves either side a second time.
+
+This binds every answer, not only a published diagnostic. A hover ([§FS-lsp.1.2](FS-lsp.md#12-hover-preview)), a definition
+([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition)), an occurrence highlight ([§FS-lsp.1.3.3](FS-lsp.md#133-occurrence-highlight)), a document link ([§FS-lsp.1.3.2](FS-lsp.md#132-document-links)) and a
+references reply each find their document by one resolution of the request's own path.
+
 ## 5. Out of scope
 
 - **Per-editor wrappers**: no first-party VSCode/IntelliJ/Vim/Emacs plugin duplicates the LSP server or is published to a marketplace ([§FS-non-goals.12.2](FS-non-goals.md#122-first-party-per-editor-plugins)). The LSP server is the executable surface; [§FS-lsp.2.4](FS-lsp.md#24-installed-editor-integrations) ships importable configuration data but the user installs the generic client and performs the import.

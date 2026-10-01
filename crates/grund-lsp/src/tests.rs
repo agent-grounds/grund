@@ -246,3 +246,6 @@ fn document_link_targets_include_line_fragment() {
 
 #[path = "tests_kind_title.rs"]
 mod kind_title;
+
+#[path = "tests_answer_cost.rs"]
+mod answer_cost;
