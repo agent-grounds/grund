@@ -69,7 +69,8 @@ an owned site the formatter would actually write also names the command that cle
 ([§FS-check.3.24.1](docs/functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)) — so one line separates *this tree predates the binary running over
 it* from *this citation is wrong*. `grund fmt --write` expands safe owned sites;
 protected sites need manual replacement and are not offered the command.
-A missing local section also gets the ordinary missing-section error. A site outside
+A missing local section also gets the ordinary missing-section error, and the formatter
+leaves that site alone and does not offer the command ([§FS-fmt.2.4.6](docs/functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)). A site outside
 a declaration is diagnosed without a guessed target and needs a full citation or an
 escape: `<§>2.1` is an inert illustration, with no citation diagnostic or navigation.
 This is intentionally newly loud compatibility behavior for a

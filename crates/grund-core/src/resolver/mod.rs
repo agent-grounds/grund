@@ -75,7 +75,9 @@ pub use id_candidates::names_member_id_candidate;
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use body::{PointBodyCache, extract_declaration_body};
-pub(crate) use citation_target::{WorkspaceCheckTarget, citation_resolves, target_for_citation};
+pub(crate) use citation_target::{
+    WorkspaceCheckTarget, citation_resolves, section_resolves, target_for_citation,
+};
 pub(crate) use context::{
     WorkspaceContext, WorkspaceProject, load_classifying_workspace_context,
     load_narrowable_workspace_context, load_resolved_workspace_context, load_workspace_context,

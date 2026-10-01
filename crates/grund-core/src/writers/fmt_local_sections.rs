@@ -5,9 +5,11 @@ use std::path::Path;
 
 use crate::config::Config;
 use crate::grammar::render_id;
-use crate::model::Findings;
+use crate::model::{Citation, Findings};
+use crate::resolver::section_resolves;
 
-/// Expand only scanner-proven, uniquely owned local section edges. The complete
+/// Expand only scanner-proven, uniquely owned local section edges whose cited
+/// section resolves against that owner (§FS-fmt.2.4.6). The complete
 /// scan is requested lazily on the first persisted marker-plus-digit candidate,
 /// exactly as for number-only shorthand; trigger-created `$$2` markers are
 /// excluded because §FS-fmt.2.4 adds no typing feature for local paths.
@@ -48,7 +50,8 @@ pub(super) fn expand_local_section_citations(
         let start = cursor + relative;
         let end = start + cite.text.len();
         output.push_str(&line[cursor..start]);
-        if cite.shorthand_rewritable {
+        // §FS-fmt.2.4.6: a refused site is copied through byte-identical.
+        if expandable(cite, findings) {
             output.push_str(&config.marker);
             output.push_str(&render_id(&config.grammar, &cite.id));
             output.push_str(&config.section_separator);
@@ -74,14 +77,18 @@ pub(super) fn local_section_labels(
     config: &Config,
     findings: Option<&Findings>,
 ) -> Vec<String> {
+    let Some(findings) = findings else {
+        return Vec::new();
+    };
     findings
-        .into_iter()
-        .flat_map(|findings| &findings.citations)
+        .citations
+        .iter()
         .filter(|cite| {
             cite.local_section
-                && cite.shorthand_rewritable
                 && cite.file == path
                 && cite.line == lineno
+                // §FS-fmt.7.3: the preview names exactly the sites the write expands.
+                && expandable(cite, findings)
         })
         .map(|cite| {
             let canonical = format!(
@@ -97,4 +104,15 @@ pub(super) fn local_section_labels(
             )
         })
         .collect()
+}
+
+/// Whether the write expands this owned local site: a text the writer rules
+/// permit, and a cited section its owner records a heading for (§FS-fmt.2.4.6).
+fn expandable(cite: &Citation, findings: &Findings) -> bool {
+    cite.shorthand_rewritable
+        && section_resolves(
+            findings,
+            &cite.id,
+            cite.section.as_deref().unwrap_or_default(),
+        )
 }
