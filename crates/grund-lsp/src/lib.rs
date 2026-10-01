@@ -985,7 +985,7 @@ impl Server {
     /// return no project rather than resolve a citation as a guess
     /// (§FS-lsp.2.2.3, §REQ-no-wrong-citation.1).
     fn project_for_path(&self, path: &Path) -> Option<&ProjectSnapshot> {
-        let path = canonical_snapshot_path(path);
+        let path = normalize_path(path);
         if let Some(project) = self
             .projects
             .iter()
@@ -1012,7 +1012,7 @@ impl Server {
     /// them.
     fn project_for_diagnostic_path(&self, path: &Path) -> Option<&ProjectSnapshot> {
         self.project_for_path(path).or_else(|| {
-            let path = canonical_snapshot_path(path);
+            let path = normalize_path(path);
             // `project_for_path` also returns `None` for an ambiguous external
             // scanned file. Do not let the unreadable-file fallback pick one of
             // those projects by root shape (§REQ-no-wrong-citation.1).
@@ -1032,7 +1032,7 @@ impl Server {
                     .chain(&project.snapshot.report.warnings)
                     .chain(&project.snapshot.run_warnings)
                     .filter_map(|finding| absolute_finding_path(&project.snapshot, finding))
-                    .any(|finding_path| canonical_snapshot_path(&finding_path) == path)
+                    .any(|finding_path| normalize_path(&finding_path) == path)
             });
             let owner = candidates.next()?;
             candidates.next().is_none().then_some(owner)
@@ -1233,11 +1233,43 @@ fn same_path(left: &Path, right: &Path) -> bool {
     normalize_path(left) == normalize_path(right)
 }
 
+/// Resolve a path to the one spelling the snapshot's records carry
+/// (§FS-lsp.responsiveness.2).
+///
+/// Every path resolution `grund-lsp` performs on its own paths goes through
+/// here, using the exact absolutization `grund-core` applied when it built the
+/// snapshot, so the two cannot drift (§AR-lsp.5) and so a test can count what
+/// one answer costs.
 fn normalize_path(path: impl AsRef<Path>) -> PathBuf {
-    // Match an incoming request URI against snapshot paths using the exact
-    // absolutization `grund-core` applied when it built the snapshot, so the
-    // two cannot drift (§AR-lsp.5).
+    record_path_resolution();
     canonical_snapshot_path(path.as_ref())
+}
+
+// Test-only observation seam for §FS-lsp.responsiveness.2: a case counts the
+// path resolutions one answer performs without changing a byte of what it
+// answers. Per thread, because the suite answers cases in parallel.
+#[cfg(test)]
+thread_local! {
+    static PATH_RESOLUTIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+#[cfg(test)]
+fn record_path_resolution() {
+    PATH_RESOLUTIONS.with(|count| count.set(count.get() + 1));
+}
+
+#[cfg(not(test))]
+fn record_path_resolution() {}
+
+/// The path resolutions this thread has performed since the last reset.
+#[cfg(test)]
+fn path_resolutions() -> usize {
+    PATH_RESOLUTIONS.with(std::cell::Cell::get)
+}
+
+#[cfg(test)]
+fn reset_path_resolutions() {
+    PATH_RESOLUTIONS.with(|count| count.set(0));
 }
 
 fn path_uri(path: &Path) -> Option<Url> {
