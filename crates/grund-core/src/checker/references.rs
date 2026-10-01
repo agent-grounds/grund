@@ -19,7 +19,9 @@ use super::support::{
 use crate::config::{Config, KindResolution, display_path};
 use crate::grammar::render_qualified_id;
 use crate::model::{CheckReport, Diagnostic, Findings};
-use crate::resolver::{WorkspaceCheckTarget, join_alternatives, target_for_citation};
+use crate::resolver::{
+    WorkspaceCheckTarget, join_alternatives, section_resolves, target_for_citation,
+};
 use crate::workspace::namespace_is_unverified;
 use std::collections::BTreeMap;
 
@@ -84,7 +86,11 @@ pub(super) fn check_citation_resolution(
         // §FS-check.3.24.1: offered exactly where the next formatter pass would
         // write this site — the test §FS-check.3.14.4 makes for the sibling rule,
         // so no finding names a command that would answer `rewrote 0 lines`.
-        let command = if cite.shorthand_rewritable && tier == ReferenceTier::Configured {
+        let command = if cite.shorthand_rewritable
+            && tier == ReferenceTier::Configured
+            // §FS-check.3.24.1: an absent target section is a site fmt declines.
+            && section_resolves(findings, &cite.id, section)
+        {
             "; run `grund fmt --write`"
         } else {
             ""
@@ -189,7 +195,7 @@ pub(super) fn check_citation_resolution(
         }
         // §FS-check.3.1 / §FS-workspace.4.1: a citation whose ID is declared
         // nowhere in its target namespace is dangling.
-        let Some(decls) = target.findings.declarations.get(&cite.id) else {
+        if !target.findings.declarations.contains_key(&cite.id) {
             let snapshot_kind = target
                 .config
                 .kinds
@@ -255,12 +261,11 @@ pub(super) fn check_citation_resolution(
                 report.errors.push(diagnostic);
             }
             continue;
-        };
+        }
         // §FS-check.3.2: the ID resolves but no declaration has a heading at the
-        // cited section path.
+        // cited section path — the lookup §FS-fmt.2.4.6 declines a local rewrite on.
         if let Some(sec) = &cite.section {
-            let any_match = decls.iter().any(|d| d.sections.contains_key(sec));
-            if !any_match {
+            if !section_resolves(target.findings, &cite.id, sec) {
                 let coordinate = format!(
                     "{}{}{}",
                     render_qualified_id(

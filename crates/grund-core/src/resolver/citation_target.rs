@@ -18,7 +18,7 @@
 use std::collections::BTreeMap;
 
 use crate::config::Config;
-use crate::model::{Citation, Findings};
+use crate::model::{Citation, Findings, Id};
 
 /// One project a citation can resolve against, as a rule needs it: the findings
 /// the ID is looked up in and the config that spells it, because a workspace may
@@ -60,4 +60,16 @@ pub(crate) fn citation_resolves(
     target_for_citation(cite, local, local_config, workspace)
         .map(|target| target.findings.declarations.contains_key(&cite.id))
         .unwrap_or(false)
+}
+
+/// Whether some declaration of `id` records a heading at section path `section`:
+/// the one lookup §FS-check.3.2 reports a missing section from and §FS-fmt.2.4.6
+/// declines a declaration-local rewrite on, so the finding and the refusal cannot
+/// disagree. An undeclared `id` has no sections, and an owner with no numbered
+/// headings, a wholly absent path and a partially resolving one all answer `false`.
+pub(crate) fn section_resolves(findings: &Findings, id: &Id, section: &str) -> bool {
+    findings
+        .declarations
+        .get(id)
+        .is_some_and(|decls| decls.iter().any(|decl| decl.sections.contains_key(section)))
 }
