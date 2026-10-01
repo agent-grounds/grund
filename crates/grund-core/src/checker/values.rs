@@ -157,12 +157,15 @@ pub(super) fn binding_aim<'a>(
     config: &Config,
     binding: &'a ValueBinding,
 ) -> BindingAim<'a> {
-    let declaration = findings
+    let homes = findings
         .declarations
         .get(&binding.id)
         .map(|decls| value_homes(decls, &config.root))
-        .filter(|homes| homes.len() == 1)
-        .map(|homes| homes[0]);
+        .unwrap_or_default();
+    let declaration = match homes[..] {
+        [home] => Some(home),
+        _ => None,
+    };
     let section = binding.section.as_deref();
     // A path that ends in a name has no coordinate, so it is a chapter root or
     // the attempt §FS-values.3.1.1 classifies, under the predicate an attempt
@@ -174,6 +177,17 @@ pub(super) fn binding_aim<'a>(
         return match root {
             Some((declaration, (root, EmbeddedBindingRelation::Root))) => {
                 root_aim(declaration, Some(section), root.valid)
+            }
+            // §FS-values.5.1: a duplicate declaration owns the site of a root it declares.
+            None if declaration.is_none()
+                && homes.iter().any(|home| {
+                    matches!(
+                        embedded_root_for_binding(home, section),
+                        Some((_, EmbeddedBindingRelation::Root))
+                    )
+                }) =>
+            {
+                BindingAim::Inert
             }
             _ if binding_target_reports_invalid_attempt(
                 findings,

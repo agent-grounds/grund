@@ -202,3 +202,42 @@ fn a_delimited_citation_of_an_ordinary_declaration_stays_prose() {
     assert_eq!(errors(&root), Vec::<String>::new());
     let _ = std::fs::remove_dir_all(root);
 }
+
+/// A duplicated declaration owns the site of every root it declares, so a chapter
+/// root, a marked root and a whole value bound whole over a duplicate report
+/// nothing at the binding: no grammar message, no comparison (§FS-values.5.1).
+#[test]
+fn a_root_bound_whole_over_a_duplicate_reports_only_the_duplicate() {
+    let root = roots_repo(
+        "value_roots_duplicate_owns_the_site",
+        "`24 V` (§DOC-dup.values.volt)\n\n\
+         `45` (§DOC-dup.1)\n\n\
+         `1200 USD` (§CONST-dupc)\n",
+    );
+    for file in ["docs/dup-a.md", "docs/dup-b.md"] {
+        write(
+            &root.join(file),
+            "# DOC-dup: Duplicate\n\n\
+             ## 1. Floor <!-- grund:value -->\n\
+             ### 1.1. 45\n\n\
+             ## values: Values\n\n\
+             ### values.volt: Volt\n\n\
+             #### values.volt.1: 24\n\
+             #### values.volt.2: V\n",
+        );
+    }
+    for file in ["values/dupc-a.md", "values/dupc-b.md"] {
+        write(
+            &root.join(file),
+            "# CONST-dupc: Price\n## 1. 1200\n## 2. USD\n",
+        );
+    }
+    assert_eq!(
+        errors(&root),
+        [
+            "duplicate: duplicate declaration of DOC-dup (also declared at docs/dup-b.md:1)",
+            "duplicate: duplicate declaration of CONST-dupc (also declared at values/dupc-b.md:1)",
+        ]
+    );
+    let _ = std::fs::remove_dir_all(root);
+}
