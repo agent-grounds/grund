@@ -330,7 +330,7 @@ fn zero_citations_under_a_floor_above_one_is_a_cardinality_finding() {
         },
         ..rule()
     };
-    let diagnostics = evaluate(&[floor], &[], &facts(Completeness::Complete));
+    let diagnostics = evaluate(&[floor], &[], &facts(Completeness::Complete)).0;
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, "citation-cardinality");
     assert_eq!(
