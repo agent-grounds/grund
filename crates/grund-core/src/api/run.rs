@@ -167,12 +167,6 @@ pub(super) fn run_check_with_run_warnings(
     retain_diagnostics_in_report_scope(&mut report.errors, &config, report_scope.as_ref());
     retain_diagnostics_in_report_scope(&mut report.warnings, &config, report_scope.as_ref());
     retain_diagnostics_in_report_scope(&mut report.suggestions, &config, report_scope.as_ref());
-    // §FS-check.1.3.6.3: after the filter, because this is what the filter threw away
-    // — the citation whose declaration lay there is reported as unresolved, and
-    // §REQ-no-wrong-citation.2 asks that a false alarm stay legible as one.
-    report.warnings.extend(unread_resolution_source_cautions(
-        unread_outside_report_scope,
-    ));
     // §FS-check.2.2 / §FS-check.4.5: a walk that read no files, or read them and
     // recognized nothing in them, is almost always a misconfigured scope rather
     // than a clean repo — say so on stderr instead of exiting 0 in silence.
@@ -184,6 +178,12 @@ pub(super) fn run_check_with_run_warnings(
         path_provided,
         report_is_silent,
         report_scope.as_ref(),
+    ));
+    // §FS-check.1.3.6.3: after the filter, which is what threw these away; and after
+    // `report_is_silent`, because a file outside the report scope must not suppress
+    // that scope's own caution (§FS-check.2.2.3.1).
+    report.warnings.extend(unread_resolution_source_cautions(
+        unread_outside_report_scope,
     ));
     // What the config itself carries (§FS-check.4.3, §FS-check.4.11,
     // §FS-config.4.1), outside `report_is_silent`: a repository mid-migration
@@ -371,7 +371,11 @@ fn run_workspace_check(
 /// softer channel rather than a new finding — `--only io` keeps meaning "read
 /// failures". `line` is `None`, which is what puts a CLI-level message on stderr
 /// (§FS-check.2.1.1), and the path stays the file's so the reader can go and chmod
-/// it.
+/// it. Silence is the thing this exists to prevent: the citation whose declaration
+/// lay in that file is reported as unresolved, and §REQ-no-wrong-citation.2 asks
+/// that a false alarm stay legible as one. The `io` code's one cost is that
+/// `--ignore` cannot turn the line off, which §FS-check.1.3.6.3 states rather than
+/// leaves to be found.
 fn unread_resolution_source_cautions(
     unread: impl IntoIterator<Item = (PathBuf, String)>,
 ) -> Vec<Diagnostic> {

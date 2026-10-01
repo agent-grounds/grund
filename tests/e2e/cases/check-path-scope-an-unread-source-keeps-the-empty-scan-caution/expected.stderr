@@ -1,0 +1,2 @@
+warning: nothing to scan — no files under `target/e2e-work/check-path-scope-an-unread-source-keeps-the-empty-scan-caution/repo/src/empty` matched grund's extensions (md, rs).
+warning: docs/functional-spec/FS-elsewhere.md: broken symlink: the target does not exist — outside the report scope, so a citation declared there may be reported as unresolved

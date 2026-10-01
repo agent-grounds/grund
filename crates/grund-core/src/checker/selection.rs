@@ -107,8 +107,10 @@ impl CheckFindingSelection {
     /// Decide whether a completed check's diagnostic enters the selected
     /// report. The two axes intersect — a finding passes when its code passes
     /// *and* its authority does — while `--ignore` wins over both and `io`
-    /// cannot be hidden at all, because it marks an incomplete scan
-    /// (§FS-check.1.4, §FS-check.2.4).
+    /// cannot be hidden at all, because it marks a read the run could not make
+    /// (§FS-check.1.4, §FS-check.2.4). Unhideable is not the same as exiting
+    /// `2`: the §FS-check.1.3.6.3 unread-source caution wears this code and is
+    /// unselectable with it, and is a warning (§FS-check.2.1.2).
     pub fn retains(&self, code: &str, authority: &[String]) -> bool {
         code == "io"
             || (self.only.is_empty() || self.only.contains(code))
