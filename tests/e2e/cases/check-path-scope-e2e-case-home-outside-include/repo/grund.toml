@@ -1,0 +1,25 @@
+grund_config_version = 1
+project_name = "fixture"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+section_separator = "."
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+title = "What: behavior"
+
+[[kinds]]
+kind = "E2E"
+folder = "e2e/cases"
+index = false
+
+[scan]
+include = ["docs", "src"]
+extensions = ["md", "rs"]
