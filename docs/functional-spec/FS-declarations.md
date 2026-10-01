@@ -35,13 +35,13 @@ Duplicate JSON keys, cross-file JSON IDs, Markdown/JSON collisions, and overlapp
 
 ### checks.declaration-near-miss: Declaration near miss
 
-A heading that opens the way a declaration does and does not match its effective ID format remains a declaration for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). The classic stumble is `# FS-login: …` under the default `{kind}-{number}-{slug}` — the `-NNN-` left out. Before grund 0.15.0, `check` emits one **warning** per such declaration, at the line a contributor has to edit:
+A heading that opens the way a declaration does and does not match its effective ID format remains a declaration for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). The classic stumble is `# FS-login: …` under the default `{kind}-{number}-{slug}` — the `-NNN-` left out. Before grund 0.16.0, `check` emits one **warning** per such declaration, at the line a contributor has to edit:
 
 ```
-docs/spec.md:1: `FS-login` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this warning becomes an error in grund 0.15.0
+docs/spec.md:1: `FS-login` resolves for compatibility but does not match [id] format = "{kind}-{number}-{slug}" — rename it or change the effective format; this warning becomes an error in grund 0.16.0
 ```
 
-What counts is [§FS-declarations.checks.declaration-near-miss.1](FS-declarations.md#checksdeclaration-near-miss1-what-counts): the declaration colon is its discriminator ([§FS-declarations.checks.declaration-near-miss.2](FS-declarations.md#checksdeclaration-near-miss2-the-declaration-colon-is-the-discriminator)), and inline code, prose and fenced blocks never count ([§FS-declarations.checks.declaration-near-miss.3](FS-declarations.md#checksdeclaration-near-miss3-never-in-inline-code-prose-or-a-fenced-block)). The message states facts rather than a guessed rename ([§FS-declarations.checks.declaration-near-miss.4](FS-declarations.md#checksdeclaration-near-miss4-facts-not-a-guessed-rename)), the warning becomes an error in 0.15.0 ([§FS-declarations.checks.declaration-near-miss.5](FS-declarations.md#checksdeclaration-near-miss5-a-warning-before-0150-an-error-in-it)), and there is no opt-out ([§FS-declarations.checks.declaration-near-miss.6](FS-declarations.md#checksdeclaration-near-miss6-no-opt-out-no-rewrite)).
+What counts is [§FS-declarations.checks.declaration-near-miss.1](FS-declarations.md#checksdeclaration-near-miss1-what-counts): the declaration colon is its discriminator ([§FS-declarations.checks.declaration-near-miss.2](FS-declarations.md#checksdeclaration-near-miss2-the-declaration-colon-is-the-discriminator)), and inline code, prose and fenced blocks never count ([§FS-declarations.checks.declaration-near-miss.3](FS-declarations.md#checksdeclaration-near-miss3-never-in-inline-code-prose-or-a-fenced-block)). The message states facts rather than a guessed rename ([§FS-declarations.checks.declaration-near-miss.4](FS-declarations.md#checksdeclaration-near-miss4-facts-not-a-guessed-rename)), the warning becomes an error in 0.16.0 ([§FS-declarations.checks.declaration-near-miss.5](FS-declarations.md#checksdeclaration-near-miss5-a-warning-before-0160-an-error-in-it)), and there is no opt-out ([§FS-declarations.checks.declaration-near-miss.6](FS-declarations.md#checksdeclaration-near-miss6-no-opt-out-no-rewrite)).
 
 - **Code:** `declaration-near-miss` ([§FS-errors.5](FS-errors.md#5-json-format)).
 
@@ -61,9 +61,9 @@ The token stops at a backtick, so an inline-code mention is not a near miss. The
 
 The message names the token as written and the effective template, states that lookup remains compatible, and offers the two real migration choices: rename the declaration and its citations, or change the effective format. It does **not** propose a corrected ID; assembling one from component patterns would guess what the author meant.
 
-#### checks.declaration-near-miss.5: A warning before 0.15.0, an error in it
+#### checks.declaration-near-miss.5: A warning before 0.16.0, an error in it
 
-Before 0.15.0 it is a warning, so like every warning it leaves the exit code alone ([§FS-check.2](FS-check.md#2-outputs)): a run with no errors exits successfully but prints the located warning and no `success` line ([§FS-check.2.1.3](FS-check.md#213-the-success-line)). The declaration still appears in `list` and resolves through every reader; severity never changes recognition. In grund 0.15.0 the same code and location become an error, the deadline clause becomes the past-tense release report required by [§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name), and `check` exits `1`. The release guard and [§RM-off-grammar-declaration-error](../roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0150) prevent shipping the warning at or beyond that version.
+Before 0.16.0 it is a warning, so like every warning it leaves the exit code alone ([§FS-check.2](FS-check.md#2-outputs)): a run with no errors exits successfully but prints the located warning and no `success` line ([§FS-check.2.1.3](FS-check.md#213-the-success-line)). The declaration still appears in `list` and resolves through every reader; severity never changes recognition. In grund 0.16.0 the same code and location become an error, the deadline clause becomes the past-tense release report required by [§FS-distribution.4.2](FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name), and `check` exits `1`. The release guard and [§RM-off-grammar-declaration-error](../roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0160) prevent shipping the warning at or beyond that version.
 
 #### checks.declaration-near-miss.6: No opt-out, no rewrite
 
@@ -159,9 +159,9 @@ This is an ordinary hard finding under §[§FS-check.2](FS-check.md#2-outputs)�
 
 ### checks.unmarked-heading: Unmarked Markdown heading
 
-Before grund 0.15.0, a Markdown ATX heading that is deeper than a declaration heading and whose line is still inside that declaration's body is a fixed warning when it is neither another declaration nor a recognized numeric or enabled named section. The containing declaration is the nearest enclosing body, so a plain heading beneath a deeper child declaration names that child, not an overlapping ancestor. This is a project-wide rule with no configuration, severity selector, or permanent opt-out ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
+Before grund 0.16.0, a Markdown ATX heading that is deeper than a declaration heading and whose line is still inside that declaration's body is a fixed warning when it is neither another declaration nor a recognized numeric or enabled named section. The containing declaration is the nearest enclosing body, so a plain heading beneath a deeper child declaration names that child, not an overlapping ancestor. This is a project-wide rule with no configuration, severity selector, or permanent opt-out ([§DF-unmarked-markdown-headings](../decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph)).
 
-Which headings participate is [§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate). The message is [§FS-declarations.checks.unmarked-heading.2](FS-declarations.md#checksunmarked-heading2-the-message) and its suggested coordinate [§FS-declarations.checks.unmarked-heading.3](FS-declarations.md#checksunmarked-heading3-the-suggested-coordinate); its rendering is [§FS-declarations.checks.unmarked-heading.4](FS-declarations.md#checksunmarked-heading4-rendering-exit-and-selection), its flip to an error [§FS-declarations.checks.unmarked-heading.5](FS-declarations.md#checksunmarked-heading5-an-error-in-grund-0150), and what it leaves unchanged [§FS-declarations.checks.unmarked-heading.6](FS-declarations.md#checksunmarked-heading6-no-command-numbers-the-heading).
+Which headings participate is [§FS-declarations.checks.unmarked-heading.1](FS-declarations.md#checksunmarked-heading1-which-headings-participate). The message is [§FS-declarations.checks.unmarked-heading.2](FS-declarations.md#checksunmarked-heading2-the-message) and its suggested coordinate [§FS-declarations.checks.unmarked-heading.3](FS-declarations.md#checksunmarked-heading3-the-suggested-coordinate); its rendering is [§FS-declarations.checks.unmarked-heading.4](FS-declarations.md#checksunmarked-heading4-rendering-exit-and-selection), its flip to an error [§FS-declarations.checks.unmarked-heading.5](FS-declarations.md#checksunmarked-heading5-an-error-in-grund-0160), and what it leaves unchanged [§FS-declarations.checks.unmarked-heading.6](FS-declarations.md#checksunmarked-heading6-no-command-numbers-the-heading).
 
 #### checks.unmarked-heading.1: Which headings participate
 
@@ -172,7 +172,7 @@ Only ATX headings in scanned Markdown files participate. A heading inside a back
 The warning is located at the heading line, uses code `unmarked-heading`, and has this text:
 
 ```text
-unmarked heading inside <ID>; number it (<suggested heading>) as <ID>.<path>, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0
+unmarked heading inside <ID>; number it (<suggested heading>) as <ID>.<path>, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0
 ```
 
 #### checks.unmarked-heading.3: The suggested coordinate
@@ -183,9 +183,9 @@ The suggested coordinate is guidance, not a rewrite. Its path depth follows the 
 
 Text output uses the `<path>:<line>: warning: <message>` form. A warning leaves the exit at `0` but stands in place of the `success` line ([§FS-check.2.1.3](FS-check.md#213-the-success-line)). JSON emits the same path, line, code, and message with `"severity":"warning"` and `"sites":null`. `--only unmarked-heading` retains it and `--ignore unmarked-heading` removes it through the ordinary exact-code selection rules. The LSP carries the same core finding with warning severity and the complete ATX heading as its range ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).
 
-#### checks.unmarked-heading.5: An error in grund 0.15.0
+#### checks.unmarked-heading.5: An error in grund 0.16.0
 
-In grund 0.15.0 the same site, code, suggestion, and all non-severity bytes stay stable except that the deadline clause becomes `this became an error in grund 0.15.0`; severity becomes error and a retained finding contributes exit `1`. [§RM-unmarked-heading-error](../roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0150) owns that scheduled flip. Until then the warning window serves [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
+In grund 0.16.0 the same site, code, suggestion, and all non-severity bytes stay stable except that the deadline clause becomes `this became an error in grund 0.16.0`; severity becomes error and a retained finding contributes exit `1`. [§RM-unmarked-heading-error](../roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0160) owns that scheduled flip. Until then the warning window serves [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path).
 
 #### checks.unmarked-heading.6: No command numbers the heading
 

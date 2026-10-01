@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-const WARNING: &str = "warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.15.0\n";
+const WARNING: &str = "warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.16.0\n";
 const FORMAT_HINT: &str = "hint: this repo's [id] format is `{kind}-{number}-{slug}` (run `grund config show`); `grund list` shows the IDs that exist\n";
 const INVALID: &str = "invalid ID `FS-bar`";
 const AMBIGUOUS: &str = "ambiguous ID: FS-042 (matches FS-042-user-login, FS-042-user-logout)";
@@ -98,7 +98,7 @@ fn version(text: &str) -> (u64, u64, u64) {
 }
 
 fn after_flip() -> bool {
-    version(env!("CARGO_PKG_VERSION")) >= version("0.15.0")
+    version(env!("CARGO_PKG_VERSION")) >= version("0.16.0")
 }
 
 fn expected_refs_text(message: &str, hint: bool) -> (i32, String) {
@@ -241,7 +241,7 @@ fn empty_answer_and_context_failures_keep_their_neighboring_statuses() {
 /// §FS-distribution.4.2.4: the version-gated contract test the scalar ramp
 /// clause leans on. The `refs` warning is the one line the `will exit … in
 /// <release>` clause is written for, so this tree may carry its golden only
-/// below the release it names; from 0.15.0 the assertions above expect the
+/// below the release it names; from 0.16.0 the assertions above expect the
 /// ordinary failed-query bytes at exit `1` and no warning at all.
 #[test]
 fn warning_phase_cannot_survive_the_release_it_names() {
@@ -249,8 +249,8 @@ fn warning_phase_cannot_survive_the_release_it_names() {
         include_str!("../../../tests/e2e/cases/refs-invalid-id-format/expected.stderr");
     if warning_golden.contains("currently exit 2") {
         assert!(
-            version(env!("CARGO_PKG_VERSION")) < version("0.15.0"),
-            "this tree reached 0.15.0; land §RM-refs-resolver-rejection-exit instead of shipping the warning-phase mapping"
+            version(env!("CARGO_PKG_VERSION")) < version("0.16.0"),
+            "this tree reached 0.16.0; land §RM-refs-resolver-rejection-exit instead of shipping the warning-phase mapping"
         );
     }
 }

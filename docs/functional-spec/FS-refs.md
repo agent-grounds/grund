@@ -43,7 +43,7 @@ Output is sorted by `(path, line, column)` ([§FS-errors.4](FS-errors.md#4-deter
 
 ### 2.1 An ID with no citations
 
-An ID with zero citations produces empty output and exit `0` — or, under `--total`, the single line `not cited` and exit `0` ([§FS-refs.3.4](FS-refs.md#34---total)): an as-yet-uncited declaration is normal, and `check` already warns about it ([§FS-check.4.1](FS-check.md#41-unused-declaration)). If the ID is *also* declared nowhere in the scanned tree, the likeliest cause is a typo, so `refs` prints one `note:` line to **stderr** — `note: <ID> is neither declared nor cited — run \`grund list\` to see every declared ID` — and still exits `0`. The note is a hint, not part of the result: it never joins stdout, which stays empty, or carries only `--total`'s own one-line answer, so machine consumers that read only stdout never see it. It mirrors the `ID not found` hint the ID query gives for the same mistake ([§FS-show.3](FS-show.md#3-outputs)) without that query's exit `1`. A resolver rejection is different: once the selected project's grammar rejects the operand there is no citation-list result, and from 0.15.0 that failed query exits `1` ([§FS-refs.4](FS-refs.md#4-exit-codes)).
+An ID with zero citations produces empty output and exit `0` — or, under `--total`, the single line `not cited` and exit `0` ([§FS-refs.3.4](FS-refs.md#34---total)): an as-yet-uncited declaration is normal, and `check` already warns about it ([§FS-check.4.1](FS-check.md#41-unused-declaration)). If the ID is *also* declared nowhere in the scanned tree, the likeliest cause is a typo, so `refs` prints one `note:` line to **stderr** — `note: <ID> is neither declared nor cited — run \`grund list\` to see every declared ID` — and still exits `0`. The note is a hint, not part of the result: it never joins stdout, which stays empty, or carries only `--total`'s own one-line answer, so machine consumers that read only stdout never see it. It mirrors the `ID not found` hint the ID query gives for the same mistake ([§FS-show.3](FS-show.md#3-outputs)) without that query's exit `1`. A resolver rejection is different: once the selected project's grammar rejects the operand there is no citation-list result, and from 0.16.0 that failed query exits `1` ([§FS-refs.4](FS-refs.md#4-exit-codes)).
 
 ### 2.2 Value bindings
 
@@ -136,7 +136,7 @@ Exit codes are unchanged ([§FS-refs.4](FS-refs.md#4-exit-codes)). `--total` ren
 ## 4. Exit codes
 
 - `0` — scan succeeded; the listed citations (possibly none) are the result.
-- `1` — from grund 0.15.0, the selected project's resolver rejected the ID
+- `1` — from grund 0.16.0, the selected project's resolver rejected the ID
   operand: it does not match the effective `[id] format`, or it is a
   number-only shorthand naming more than one declaration
   ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)). Both text and
@@ -161,10 +161,10 @@ hint policy in text and JSON invocations, then appends exactly this raw stderr
 line in both modes:
 
 ```text
-warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.15.0
+warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.16.0
 ```
 
-The warning and the `error:` prefix retire together at 0.15.0. `--summary`,
+The warning and the `error:` prefix retire together at 0.16.0. `--summary`,
 `--section`, `--descendants` and `--total` do not introduce another
 classification: after
 context and grammar selection they inherit the same operand result. This staged

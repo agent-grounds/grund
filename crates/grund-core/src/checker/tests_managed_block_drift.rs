@@ -257,12 +257,12 @@ fn citation_directions_section_extraction_is_position_independent() {
 
 /// §FS-check.3.5.3: all five agents-init variants preserve their legacy text as
 /// a contiguous prefix and append one exact maintenance-and-validity tail until
-/// §FS-errors.3.6.1's separate 0.15.0 wording migration lands. This checker
+/// §FS-errors.3.6.1's separate 0.16.0 wording migration lands. This checker
 /// contract survives removal of the deprecated process adapter.
 #[test]
 fn agents_init_compatibility_messages_cover_all_five_variants() {
     const TAIL: &str =
-        " — repo maintenance; citation checks still ran; wording changes in grund 0.15.0";
+        " — repo maintenance; citation checks still ran; wording changes in grund 0.16.0";
 
     let stale = current_block().replacen(
         "### Citation directions\n",

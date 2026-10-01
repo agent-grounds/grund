@@ -191,7 +191,7 @@ const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-fmt.6.7.4", reason: "reserved settings for a later markup family" },
     Exception { id: "FS-lsp.1.5", reason: "planned LSP capability" },
     Exception { id: "FS-lsp.2.3", reason: "reserved LSP capability" },
-    Exception { id: "FS-output-shapes.6.1.2", reason: "planned 0.15.0 failed-query shape" },
+    Exception { id: "FS-output-shapes.6.1.2", reason: "planned 0.16.0 failed-query shape" },
     Exception { id: "FS-workspace.8.4.5", reason: "permitted interim fallback, obliging the tool to nothing" },
     Exception { id: "FS-distribution.2", reason: "distribution target description" },
     Exception { id: "FS-distribution.3.2", reason: "packaging target" },

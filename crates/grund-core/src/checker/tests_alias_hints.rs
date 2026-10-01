@@ -12,7 +12,7 @@ use super::references::{nearest_project_aliases, unknown_project_message};
 use crate::model::Diagnostic;
 use crate::resolver::join_alternatives;
 
-const SCOPE_CLARIFICATION_SUFFIX: &str = " — here, the {scope} subtree means the {scope} project and its descendants; this wording changes in grund 0.15.0";
+const SCOPE_CLARIFICATION_SUFFIX: &str = " — here, the {scope} subtree means the {scope} project and its descendants; this wording changes in grund 0.16.0";
 
 fn legacy_scope_only_message(namespace: &str, scope: &str) -> String {
     format!(
@@ -105,7 +105,7 @@ fn proper_prefix_messages_use_the_exact_candidate_phrasing() {
 /// §FS-check.3.8.4 / §FS-errors.3.3: the scope-only message across two
 /// releases. In 0.13.2 the complete legacy diagnostic stays a contiguous
 /// prefix for consumers that match it, and the clarification suffix that
-/// announces the 0.15.0 wording is byte-exact.
+/// announces the 0.16.0 wording is byte-exact.
 #[test]
 fn narrowed_scope_only_message_has_the_0132_compatibility_form() {
     let actual = unknown_project_message("alpha", ["group/alpha"].into_iter(), "group");
@@ -127,7 +127,7 @@ fn narrowed_scope_only_message_has_the_0132_compatibility_form() {
     assert_eq!(actual, migrating_scope_only_message("alpha", "group"));
 }
 
-/// The scope-only message §FS-check.3.8.4 fixes for `0.15.0`, once the
+/// The scope-only message §FS-check.3.8.4 fixes for `0.16.0`, once the
 /// compatibility suffix is gone.
 fn final_scope_only_message(namespace: &str, scope: &str) -> String {
     format!(
@@ -154,15 +154,15 @@ fn release(text: &str) -> (u64, u64, u64) {
 /// §FS-check.3.8.4: the suffix names the release its own wording changes in, so
 /// it may not survive that release. `narrowed_scope_only_message_has_the_0132_compatibility_form`
 /// above pins the suffix byte-exactly but reads no version, so nothing there
-/// reddens at the bump that reaches `0.15.0`; this case is the deadline half, in
+/// reddens at the bump that reaches `0.16.0`; this case is the deadline half, in
 /// the shape `the_agents_init_tail_cannot_survive_the_release_it_names` uses for
 /// the other wording ramp this tree carries.
 ///
 /// While the compatibility form ships, this tree may not be at or above the
 /// release the suffix names, and the final wording may not have leaked in early.
-/// From `0.15.0` the other branch is the live one: no suffix, and the message is
+/// From `0.16.0` the other branch is the live one: no suffix, and the message is
 /// exactly the final form. It passes today by design — the running version has
-/// not reached `0.15.0` — and reddens at the bump that does.
+/// not reached `0.16.0` — and reddens at the bump that does.
 #[test]
 fn the_scope_clarification_suffix_cannot_survive_the_release_it_names() {
     let actual = unknown_project_message("alpha", ["group/alpha"].into_iter(), "group");
@@ -170,8 +170,8 @@ fn the_scope_clarification_suffix_cannot_survive_the_release_it_names() {
 
     if actual.ends_with(&suffix) {
         assert!(
-            release(env!("CARGO_PKG_VERSION")) < release("0.15.0"),
-            "this tree reached 0.15.0; land §FS-check.3.8.4's final scope-only wording instead of shipping the compatibility suffix"
+            release(env!("CARGO_PKG_VERSION")) < release("0.16.0"),
+            "this tree reached 0.16.0; land §FS-check.3.8.4's final scope-only wording instead of shipping the compatibility suffix"
         );
         assert!(
             !actual.contains("are in scope here"),

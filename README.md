@@ -114,11 +114,11 @@ lead_size_warning = { max = 600, unit = "words" }
 An over-budget lead should keep its grounding: move detail into numbered child sections, or promote a child section to its own ID after checking its callers with `grund refs <ID> --summary`. See the [coordinate-size guide](docs/user-facing/point-sizes.md) for counting rules, output fields, duplicate handling, and workspace scope ([§FS-list.3.4](docs/functional-spec/FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements), [§FS-declarations.checks.oversized-lead](docs/functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
 
 For scripts, exit `0` is a completed `refs` answer even when it is empty. From
-grund 0.15.0, exit `1` means the selected repository grammar rejected the ID or
+grund 0.16.0, exit `1` means the selected repository grammar rejected the ID or
 its number-only shorthand was ambiguous; route that status to ID repair, and
 reserve exit `2` for setup, configuration, I/O, or incomplete-scan failure.
-Grund 0.14.0 keeps the former exit `2` for those two operand failures and warns
-on stderr about the 0.15.0 change
+Grund 0.14.0 and 0.15.0 keep the former exit `2` for those two operand failures and warn
+on stderr about the 0.16.0 change
 ([§FS-refs.4](docs/functional-spec/FS-refs.md#4-exit-codes)).
 
 ## 3. Check for dangling pointers
@@ -144,7 +144,7 @@ docs/requirements/REQ-no-wrong-citation.md:7: error: missing section FS-check.3.
 1. Every cited ID resolves to a declaration. *(dangling references)*
 2. Every section coordinate (`.3.1`) resolves to a heading inside the declaration. *(missing sections)*
 3. No ID is declared in two places. *(duplicates)*
-4. Every deeper ATX heading inside a scanned Markdown declaration body is another declaration or carries a numeric or enabled named section coordinate. Fences, file titles, body-closing headings, source doc-comments, setext text, and bold labels are exempt. *(unmarked headings — warning until it becomes an error in grund 0.15.0)*
+4. Every deeper ATX heading inside a scanned Markdown declaration body is another declaration or carries a numeric or enabled named section coordinate. Fences, file titles, body-closing headings, source doc-comments, setext text, and bold labels are exempt. *(unmarked headings — warning until it becomes an error in grund 0.16.0)*
 5. Every stub heading `# <ID>: [<text>](<path>)` points at a file containing the inline declaration. *(broken stubs)*
 6. The `AGENTS.md` / `CLAUDE.md` entry-point block is up to date. *(stale init)*
 7. Declared-but-uncited IDs are flagged. *(unused — warning, not error; a configured `E2E` kind's cases are exempt)*
@@ -346,8 +346,8 @@ Rule of thumb: pick `{kind}-{slug}` until rename churn or ID count starts to hur
 Changing that setting does not strand declarations already committed under an
 older shape: their exact written IDs and exact marked citations remain readable
 across the CLI and editor, while `grund check` points out each mismatch so you
-can rename it or restore the matching format. The mismatch warns before 0.15.0
-and becomes an error in 0.15.0; read compatibility remains in either case
+can rename it or restore the matching format. The mismatch warns before 0.16.0
+and becomes an error in 0.16.0; read compatibility remains in either case
 ([§FS-config.3.2](docs/functional-spec/FS-config.md#32-id--id-grammar)).
 
 A citation is the marker `§`, the ID, and an optional `.<section>` — with the target project's alias in front when the repo is a workspace:

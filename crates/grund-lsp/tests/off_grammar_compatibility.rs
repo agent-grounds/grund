@@ -44,7 +44,7 @@ fn off_grammar_declaration_has_cli_parity_across_lsp_surfaces() {
         Some(diagnostic) => {
             let message = diagnostic["message"].as_str().unwrap_or_default();
             if !message.contains("resolves for compatibility")
-                || !message.contains("error in grund 0.15.0")
+                || !message.contains("error in grund 0.16.0")
             {
                 failures.push(format!("LSP diagnostic has stale message: {diagnostic:?}"));
             }

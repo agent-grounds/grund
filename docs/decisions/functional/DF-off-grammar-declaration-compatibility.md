@@ -32,7 +32,7 @@ multiple targets fail with sorted candidates or sites. A whole-token exact
 declaration wins before the token is split as an inline section.
 
 The format mismatch stays located and visible as `declaration-near-miss`. It is
-a warning through 0.14.x and becomes an error in 0.15.0 under
+a warning through 0.14.x and becomes an error in 0.16.0 under
 [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path),
 without changing lookup or citation resolution at that boundary.
 
@@ -54,4 +54,4 @@ but diagnosed just like old ones; no history database distinguishes them. The
 scanner/catalog is the compatibility boundary, so downstream commands and the
 LSP do not grow parallel parsers. Existing configuration, authoring commands,
 and JSON schemas remain unchanged. The scheduled severity change is tracked by
-[§RM-off-grammar-declaration-error](../../roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0150).
+[§RM-off-grammar-declaration-error](../../roadmap.md#rm-off-grammar-declaration-error-make-off-grammar-declarations-a-check-error-in-0160).

@@ -1,5 +1,5 @@
 //! Binary-level compatibility contract for unmarked Markdown headings, their
-//! 0.15.0 deadline, and managed-block repair (§FS-declarations.checks.unmarked-heading,
+//! 0.16.0 deadline, and managed-block repair (§FS-declarations.checks.unmarked-heading,
 //! §FS-init.2.3.4.5.1, §RM-unmarked-heading-error).
 
 use std::fs;
@@ -60,14 +60,14 @@ fn version(text: &str) -> Vec<u32> {
 }
 
 /// §FS-declarations.checks.unmarked-heading.5: the warning is scheduled to become an error in grund
-/// 0.15.0, so the deadline it prints is held ahead of the running version —
-/// the bump that reaches 0.15.0 fails here rather than shipping a message the
+/// 0.16.0, so the deadline it prints is held ahead of the running version —
+/// the bump that reaches 0.16.0 fails here rather than shipping a message the
 /// binary is already past.
 #[test]
 fn unmarked_heading_warning_deadline_is_ahead_of_the_running_version() {
     assert!(
-        version(env!("CARGO_PKG_VERSION")) < version("0.15.0"),
-        "this tree reached 0.15.0; land §RM-unmarked-heading-error instead of \
+        version(env!("CARGO_PKG_VERSION")) < version("0.16.0"),
+        "this tree reached 0.16.0; land §RM-unmarked-heading-error instead of \
          shipping the warning past its deadline"
     );
 }
@@ -155,8 +155,8 @@ fn unbounded_sibling_numbers_get_strictly_larger_unused_suggestions() {
     assert_eq!(
         stdout(&checked),
         concat!(
-            "docs/FS-overflow-larger.md:7: warning: unmarked heading inside FS-overflow-larger; number it (## 18446744073709551616. Missing sibling) as FS-overflow-larger.18446744073709551616, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0\n",
-            "docs/FS-overflow-u32.md:7: warning: unmarked heading inside FS-overflow-u32; number it (## 4294967296. Missing sibling) as FS-overflow-u32.4294967296, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0\n",
+            "docs/FS-overflow-larger.md:7: warning: unmarked heading inside FS-overflow-larger; number it (## 18446744073709551616. Missing sibling) as FS-overflow-larger.18446744073709551616, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
+            "docs/FS-overflow-u32.md:7: warning: unmarked heading inside FS-overflow-u32; number it (## 4294967296. Missing sibling) as FS-overflow-u32.4294967296, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
         )
     );
 }
@@ -180,8 +180,8 @@ fn suggested_titles_preserve_hash_text_and_only_remove_atx_closers() {
     assert_eq!(
         stdout(&checked),
         concat!(
-            "docs/FS-titles.md:5: warning: unmarked heading inside FS-titles; number it (## 1. C#) as FS-titles.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0\n",
-            "docs/FS-titles.md:7: warning: unmarked heading inside FS-titles; number it (## 2. C#) as FS-titles.2, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0\n",
+            "docs/FS-titles.md:5: warning: unmarked heading inside FS-titles; number it (## 1. C#) as FS-titles.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
+            "docs/FS-titles.md:7: warning: unmarked heading inside FS-titles; number it (## 2. C#) as FS-titles.2, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
         )
     );
 
@@ -222,7 +222,7 @@ fn titleless_heading_gets_a_self_valid_suggestion() {
     assert_eq!(checked.status.code(), Some(0), "{}", stderr(&checked));
     assert_eq!(
         stdout(&checked),
-        "docs/FS-titleless.md:5: warning: unmarked heading inside FS-titleless; number it (## 1. Untitled) as FS-titleless.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0\n"
+        "docs/FS-titleless.md:5: warning: unmarked heading inside FS-titleless; number it (## 1. Untitled) as FS-titleless.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n"
     );
 
     write_doc(
@@ -324,8 +324,8 @@ fn duplicate_declaration_bodies_allocate_suggestions_independently() {
     assert_eq!(
         stdout(&checked),
         concat!(
-            "docs/FS-duplicate-owner.md:3: warning: unmarked heading inside FS-duplicate-owner; number it (## 1. Missing in first body) as FS-duplicate-owner.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0\n",
-            "docs/FS-duplicate-owner.md:7: warning: unmarked heading inside FS-duplicate-owner; number it (## 1. Missing in second body) as FS-duplicate-owner.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.15.0\n",
+            "docs/FS-duplicate-owner.md:3: warning: unmarked heading inside FS-duplicate-owner; number it (## 1. Missing in first body) as FS-duplicate-owner.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
+            "docs/FS-duplicate-owner.md:7: warning: unmarked heading inside FS-duplicate-owner; number it (## 1. Missing in second body) as FS-duplicate-owner.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
         )
     );
 }

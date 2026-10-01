@@ -200,7 +200,7 @@ fn persisted_off_grammar_declaration_is_read_consistently_across_cli_surfaces() 
         "docs/functional-spec/FS-security-providers.md:1:",
         "resolves for compatibility",
         "[id] format = \"{kind}-{number}-{slug}\"",
-        "this warning becomes an error in grund 0.15.0",
+        "this warning becomes an error in grund 0.16.0",
     ] {
         expect_contains(&mut failures, "check text", &check_text, needle);
     }

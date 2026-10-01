@@ -1375,7 +1375,7 @@ well-formed batch record is a query failure, not a run failure ([§FS-workspace.
 #### 8.7.2 `refs`
 
 `refs` exits `0` for a completed citation-list answer, including no hits; from
-0.15.0, `1` when a known alias has selected a project and that project's
+0.16.0, `1` when a known alias has selected a project and that project's
 resolver rejects an invalid ID or ambiguous number-only shorthand; `2` when
 context or scan fails. An unknown alias remains `2`, because no project (and
 therefore no effective grammar) was selected. The 0.14.0 warning phase in

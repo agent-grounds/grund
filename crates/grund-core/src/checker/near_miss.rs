@@ -43,9 +43,9 @@ fn near_miss_message(format: &str, text: &str) -> String {
     let deadline = if declaration_near_miss_is_error() {
         // Keep the landed wording out of the release-ramp scanner's source
         // vocabulary until this branch actually ships at that release.
-        format!("this mismatch became an {}", "error in grund 0.15.0")
+        format!("this mismatch became an {}", "error in grund 0.16.0")
     } else {
-        "this warning becomes an error in grund 0.15.0".to_owned()
+        "this warning becomes an error in grund 0.16.0".to_owned()
     };
     format!(
         "`{text}` resolves for compatibility but does not match [id] format = \
@@ -58,5 +58,5 @@ fn declaration_near_miss_is_error() -> bool {
         .trim_end_matches("-dev")
         .split('.')
         .filter_map(|part| part.parse::<u32>().ok());
-    (parts.next().unwrap_or(0), parts.next().unwrap_or(0)) >= (0, 15)
+    (parts.next().unwrap_or(0), parts.next().unwrap_or(0)) >= (0, 16)
 }
