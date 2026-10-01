@@ -24,6 +24,10 @@ Only **Unreleased** and the **most recent release** are inline. When a new relea
 
 ## Unreleased
 
+### Fixed
+
+- [§AR-goal-measurement.3](architecture/AR-goal-measurement.md#3-requirement-meters), [§REQ-backwards-compatibility.5](requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids): the backward-compatibility meter reads the release that `docs/changelog.md` still keeps inline, so cutting a release no longer turns `main` red. The meter looked for each correction decision's release record in `## Unreleased` and in the archived releases under `docs/changelog/`, but a cut moves `## Unreleased` into the latest-release section, which stays inline until the next cut archives it. So the decisions a release carried lost their record on the day it shipped: v0.15.0 failed four, `DF-escape-position-is-not-a-citation`, `DF-path-scope-resolves-project-wide`, `DF-undeclared-blind-spots` and `DF-unverifiable-rule-scope`, on every platform.
+
 ## 2. [0.15.0] — 2026-10-01
 
 ### Added

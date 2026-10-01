@@ -112,14 +112,17 @@ def _verdict_route_citations(text):
 
 
 def _release_entries():
-    """Every release bullet, the unreleased ones included.
+    """Every release bullet, the latest release's and the unreleased ones included.
 
     A record lands with the change it justifies and before the release that
     carries it, so reading only the archived releases under `docs/changelog/`
     would make condition .5.3 unsatisfiable on the day the record merges. The
     `## Unreleased` section of `docs/changelog.md` becomes those release notes
     verbatim when `prepare_changelog_release.py` cuts the version, so it is the
-    same text read one release earlier. Every other condition stays conjunctive.
+    same text read one release earlier. The cut leaves that release inline in
+    `docs/changelog.md` until the next one archives it, so the inline release
+    is read too, or every record it carries would lose its release on the day
+    it ships. Every other condition stays conjunctive.
     """
     return [
         line
@@ -128,15 +131,20 @@ def _release_entries():
         if line.startswith("- ")
     ] + [
         line
-        for line in _unreleased_section().splitlines()
+        for line in _inline_sections().splitlines()
         if line.startswith("- ")
     ]
 
 
-def _unreleased_section():
+def _inline_sections():
+    """`## Unreleased` and the latest release, the two `docs/changelog.md` keeps inline."""
     text = CHANGELOG.read_text(encoding="utf-8")
-    match = re.search(r"^## Unreleased$(.*?)(?=^## \d+\.|\Z)", text, re.M | re.S)
-    return match.group(1) if match else ""
+    return "".join(
+        match.group(1)
+        for match in re.finditer(
+            r"^## (?:Unreleased|\d+\. \[[^\]]+\][^\n]*)$(.*?)(?=^## |\Z)", text, re.M | re.S
+        )
+    )
 
 
 def _correction_route_errors(text, release_entries, catalog):
