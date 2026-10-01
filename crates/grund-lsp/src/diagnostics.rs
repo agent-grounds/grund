@@ -84,7 +84,7 @@ impl Server {
         let uri = path_uri(&path)?;
         let line = finding.line.unwrap_or(1).saturating_sub(1) as u32;
         let range = self
-            .range_for_finding(snapshot, &path, &finding)
+            .range_for_finding(project, &path, &finding)
             .unwrap_or(Range {
                 start: Position { line, character: 0 },
                 end: Position { line, character: 1 },
@@ -111,32 +111,43 @@ impl Server {
     /// diagnostic belongs to that token.
     fn range_for_finding(
         &self,
-        snapshot: &LspSnapshot,
+        project: &ProjectSnapshot,
         path: &Path,
         finding: &Finding,
     ) -> Option<Range> {
         let line = finding.line?;
+        let snapshot = &project.snapshot;
+        let index = &project.index;
+        // One resolution for the whole anchoring: the index is keyed by the
+        // spelling the records already carry, so no lookup below resolves again
+        // (§FS-lsp.responsiveness.1, §FS-lsp.responsiveness.2).
+        let path = normalize_path(path);
         // When the finding carries the offending citation's column, anchor on
         // that exact token rather than the first citation on the line — a single
         // comment can carry several citations (§FS-lsp.1.1.1).
         if let Some(column) = finding.column
-            && let Some(citation) = snapshot.citations.iter().find(|citation| {
-                same_path(&citation.path, path)
-                    && citation.line == line
-                    && citation.column == column
-            })
+            && let Some(citation) = index
+                .citations
+                .on_line(&path, line)
+                .iter()
+                .map(|&position| &snapshot.citations[position])
+                .find(|citation| citation.column == column)
         {
             return Some(citation_range(citation, self));
         }
         // Rejected section headings and unresolved local-section forms retain their exact range
         // solely for diagnostics; they remain absent from every navigation collection
         // (§FS-declarations.checks.section-outside-declaration.2, §FS-lsp.1.1).
-        if let Some(range) = snapshot.finding_ranges.iter().find(|range| {
-            range.code == finding.code
-                && same_path(&range.path, path)
-                && range.line == line
-                && finding.column.is_none_or(|column| range.column == column)
-        }) {
+        if let Some(range) = index
+            .finding_ranges
+            .on_line(&path, line)
+            .iter()
+            .map(|&position| &snapshot.finding_ranges[position])
+            .find(|range| {
+                range.code == finding.code
+                    && finding.column.is_none_or(|column| range.column == column)
+            })
+        {
             return Some(token_range(
                 self,
                 &range.path,
@@ -147,24 +158,24 @@ impl Server {
         }
         // Line-anchored diagnostics must not borrow the first citation on their
         // line (§FS-lsp.1.1.1).
-        snapshot
+        index
             .declarations
-            .iter()
-            .find(|decl| same_path(&decl.path, path) && decl.line == line)
-            .map(|decl| declaration_range(decl, self))
+            .on_line(&path, line)
+            .first()
+            .map(|&position| declaration_range(&snapshot.declarations[position], self))
             .or_else(|| {
-                snapshot
+                index
                     .sections
-                    .iter()
-                    .find(|section| same_path(&section.path, path) && section.line == line)
-                    .map(|section| declaration_range(section, self))
+                    .on_line(&path, line)
+                    .first()
+                    .map(|&position| declaration_range(&snapshot.sections[position], self))
             })
             .or_else(|| {
-                snapshot
+                index
                     .stubs
-                    .iter()
-                    .find(|stub| same_path(&stub.path, path) && stub.line == line)
-                    .map(|stub| stub_range(stub, self))
+                    .on_line(&path, line)
+                    .first()
+                    .map(|&position| stub_range(&snapshot.stubs[position], self))
             })
     }
 }

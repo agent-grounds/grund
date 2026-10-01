@@ -19,6 +19,11 @@ struct ProjectSnapshot {
     /// symlinked or parent-relative `[scan] include` has no root prefix and is
     /// in no scan yet, and would otherwise look like nobody's (§FS-lsp.2.2).
     scanned_dirs: BTreeSet<PathBuf>,
+    /// Where `snapshot`'s records lie, so a lookup about one file does not scan
+    /// every record in the workspace (§FS-lsp.responsiveness.1). Derived from
+    /// the snapshot here, beside `scanned_dirs`, so it is rebuilt exactly when
+    /// the snapshot is and the two cannot disagree.
+    index: SnapshotIndex,
 }
 
 impl ProjectSnapshot {
@@ -29,11 +34,13 @@ impl ProjectSnapshot {
             .iter()
             .filter_map(|file| file.parent().map(Path::to_path_buf))
             .collect();
+        let index = SnapshotIndex::new(&snapshot);
         Self {
             root,
             snapshot,
             kind_titles: metadata.kind_titles,
             scanned_dirs,
+            index,
         }
     }
 

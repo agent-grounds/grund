@@ -172,6 +172,7 @@ fn workspace_folder_paths(folders: &[WorkspaceFolder]) -> BTreeMap<Url, PathBuf>
         .collect()
 }
 
+include!("index.rs");
 include!("workspace.rs");
 
 struct Server {
@@ -473,18 +474,13 @@ impl Server {
     /// diagnostics inside the hover popup.
     fn hover(&self, params: Value) -> Result<Option<Hover>> {
         let params: TextDocumentPositionParams = serde_json::from_value(params)?;
-        let Some((snapshot, token)) = self.token_at(&params.text_document.uri, params.position)
+        let Some((project, token)) = self.token_at(&params.text_document.uri, params.position)
         else {
             return Ok(None);
         };
+        let snapshot = &project.snapshot;
         // §FS-lsp.1.2: reuse the same snapshot's metadata; never scan for a title.
-        let kind_title = |query_id: &str| {
-            self.projects
-                .iter()
-                .find(|project| std::ptr::eq(&project.snapshot, snapshot))
-                .and_then(|project| project.kind_titles.get(query_id))
-                .map(String::as_str)
-        };
+        let kind_title = |query_id: &str| project.kind_titles.get(query_id).map(String::as_str);
         let citation = match token {
             Token::Citation(citation) => citation,
             // A declaration-side title has no body to preview — the cursor is
@@ -538,17 +534,18 @@ impl Server {
 
     fn definition(&self, params: Value) -> Result<Option<GotoDefinitionResponse>> {
         let params: TextDocumentPositionParams = serde_json::from_value(params)?;
-        let Some((snapshot, token)) = self.token_at(&params.text_document.uri, params.position)
+        let Some((project, token)) = self.token_at(&params.text_document.uri, params.position)
         else {
             return Ok(None);
         };
+        let snapshot = &project.snapshot;
         // The origin span is the whole token (citation, declaration title, or
         // stub title) under the cursor, so editors underline it as one unit
         // rather than the bare word at the click position (§FS-lsp.1.3.4).
         let origin = token.range(self);
         match token {
             Token::Citation(citation) => Ok(self
-                .citation_location(snapshot, citation)
+                .citation_location(project, citation)
                 .map(|location| self.scalar_definition(origin, location))),
             Token::Declaration(decl) => {
                 let locations = self.citation_locations_for_declaration(snapshot, decl);
@@ -559,7 +556,7 @@ impl Server {
                 }
             }
             Token::Stub(stub) => Ok(self
-                .stub_target_location(snapshot, stub)
+                .stub_target_location(project, stub)
                 .map(|location| self.scalar_definition(origin, location))),
         }
     }
@@ -593,12 +590,13 @@ impl Server {
 
     fn references(&self, params: Value) -> Result<Option<Vec<Location>>> {
         let params: ReferenceParams = serde_json::from_value(params)?;
-        let Some((snapshot, token)) = self.token_at(
+        let Some((project, token)) = self.token_at(
             &params.text_document_position.text_document.uri,
             params.text_document_position.position,
         ) else {
             return Ok(None);
         };
+        let snapshot = &project.snapshot;
         let include_decl = params.context.include_declaration;
         let mut locations = Vec::new();
         match token {
@@ -641,7 +639,7 @@ impl Server {
                 }
             }
             Token::Stub(stub) => {
-                if include_decl && let Some(location) = self.stub_target_location(snapshot, stub) {
+                if include_decl && let Some(location) = self.stub_target_location(project, stub) {
                     locations.push(location);
                 }
                 for citation in &snapshot.citations {
@@ -689,9 +687,11 @@ impl Server {
         let Some(path) = uri.to_file_path().ok().map(normalize_path) else {
             return Ok(None);
         };
-        let Some((snapshot, token)) = self.token_at(uri, params.position) else {
+        let Some((project, token)) = self.token_at(uri, params.position) else {
             return Ok(None);
         };
+        let snapshot = &project.snapshot;
+        let index = &project.index;
         // The token under the cursor is always highlighted; the sibling pass
         // below may re-add its range, which the dedup at the end collapses.
         let mut ranges = vec![token.range(self)];
@@ -701,7 +701,7 @@ impl Server {
                     return Ok(None);
                 }
                 let section = source.query_id != source.declaration_query_id;
-                for citation in &snapshot.citations {
+                for citation in citations_in(snapshot, index, &path) {
                     let same_query = citation.query_id == source.query_id
                         || !section
                             && citation_under_title(
@@ -709,38 +709,46 @@ impl Server {
                                 &citation.query_id,
                                 &source.section_separator,
                             );
-                    if same_path(&citation.path, &path) && same_query {
+                    if same_query {
                         ranges.push(citation_range(citation, self));
                     }
                 }
-                for decl in snapshot.declarations.iter().chain(&snapshot.sections) {
-                    if same_path(&decl.path, &path) && decl.query_id == source.query_id {
+                let titles = index
+                    .declarations
+                    .in_file(&path)
+                    .iter()
+                    .map(|&position| &snapshot.declarations[position])
+                    .chain(
+                        index
+                            .sections
+                            .in_file(&path)
+                            .iter()
+                            .map(|&position| &snapshot.sections[position]),
+                    );
+                for decl in titles {
+                    if decl.query_id == source.query_id {
                         ranges.push(declaration_range(decl, self));
                     }
                 }
             }
             Token::Declaration(decl) => {
-                for citation in &snapshot.citations {
-                    if same_path(&citation.path, &path)
-                        && citation_under_title(
-                            &decl.query_id,
-                            &citation.query_id,
-                            &decl.section_separator,
-                        )
-                    {
+                for citation in citations_in(snapshot, index, &path) {
+                    if citation_under_title(
+                        &decl.query_id,
+                        &citation.query_id,
+                        &decl.section_separator,
+                    ) {
                         ranges.push(citation_range(citation, self));
                     }
                 }
             }
             Token::Stub(stub) => {
-                for citation in &snapshot.citations {
-                    if same_path(&citation.path, &path)
-                        && citation_under_title(
-                            &stub.query_id,
-                            &citation.query_id,
-                            &stub.section_separator,
-                        )
-                    {
+                for citation in citations_in(snapshot, index, &path) {
+                    if citation_under_title(
+                        &stub.query_id,
+                        &citation.query_id,
+                        &stub.section_separator,
+                    ) {
                         ranges.push(citation_range(citation, self));
                     }
                 }
@@ -784,15 +792,14 @@ impl Server {
         else {
             return Ok(Some(Vec::new()));
         };
-        let Some(snapshot) = self.snapshot_for_path(&path) else {
+        let Some(project) = self.project_for_path(&path) else {
             return Ok(Some(Vec::new()));
         };
-        let mut links = snapshot
-            .citations
-            .iter()
-            .filter(|citation| normalize_path(&citation.path) == path)
+        let snapshot = &project.snapshot;
+        let index = &project.index;
+        let mut links = citations_in(snapshot, index, &path)
             .filter_map(|citation| {
-                let location = self.citation_location(snapshot, citation)?;
+                let location = self.citation_location(project, citation)?;
                 Some(DocumentLink {
                     range: citation_range(citation, self),
                     target: document_link_target(citation).or(Some(location.uri)),
@@ -804,10 +811,11 @@ impl Server {
         // Ordinary Markdown declaration titles are deliberately not document
         // links; the stub titles below still are (§FS-lsp.1.3.2).
         links.extend(
-            snapshot
+            index
                 .stubs
+                .in_file(&path)
                 .iter()
-                .filter(|stub| normalize_path(&stub.path) == path)
+                .map(|&position| &snapshot.stubs[position])
                 .map(|stub| DocumentLink {
                     range: stub_range(stub, self),
                     target: stub_document_link_target(stub),
@@ -870,55 +878,60 @@ impl Server {
             .collect()
     }
 
-    fn token_at(&self, uri: &Url, position: Position) -> Option<(&LspSnapshot, Token<'_>)> {
+    /// The token under the cursor, with the project that answers for its file.
+    ///
+    /// The request's own path is resolved once, here, and the records it is
+    /// matched against are the ones the index holds for that file — so a request
+    /// costs the tokens in the document, not the tokens in the workspace
+    /// (§FS-lsp.responsiveness.2).
+    fn token_at(&self, uri: &Url, position: Position) -> Option<(&ProjectSnapshot, Token<'_>)> {
         let path = uri.to_file_path().ok().map(normalize_path)?;
-        let snapshot = self.snapshot_for_path(&path)?;
-        let token = snapshot
+        let project = self.project_for_path(&path)?;
+        let snapshot = &project.snapshot;
+        let index = &project.index;
+        let token = index
             .citations
+            .in_file(&path)
             .iter()
-            .find(|citation| {
-                same_path(&citation.path, &path)
-                    && contains(citation_range(citation, self), position)
-            })
+            .map(|&position| &snapshot.citations[position])
+            .find(|citation| contains(citation_range(citation, self), position))
             .map(Token::Citation)
             .or_else(|| {
-                snapshot
+                index
                     .declarations
+                    .in_file(&path)
                     .iter()
-                    .find(|decl| {
-                        same_path(&decl.path, &path)
-                            && contains(declaration_range(decl, self), position)
-                    })
+                    .map(|&position| &snapshot.declarations[position])
+                    .find(|decl| contains(declaration_range(decl, self), position))
                     .map(Token::Declaration)
             })
             .or_else(|| {
                 // A citable section heading is a declaration-side title too, so
                 // definition and references resolve to its section citations
                 // (§FS-lsp.1.3.1).
-                snapshot
+                index
                     .sections
+                    .in_file(&path)
                     .iter()
-                    .find(|decl| {
-                        same_path(&decl.path, &path)
-                            && contains(declaration_range(decl, self), position)
-                    })
+                    .map(|&position| &snapshot.sections[position])
+                    .find(|decl| contains(declaration_range(decl, self), position))
                     .map(Token::Declaration)
             })
             .or_else(|| {
-                snapshot
+                index
                     .stubs
+                    .in_file(&path)
                     .iter()
-                    .find(|stub| {
-                        same_path(&stub.path, &path) && contains(stub_range(stub, self), position)
-                    })
+                    .map(|&position| &snapshot.stubs[position])
+                    .find(|stub| contains(stub_range(stub, self), position))
                     .map(Token::Stub)
             })?;
-        Some((snapshot, token))
+        Some((project, token))
     }
 
     fn citation_location(
         &self,
-        snapshot: &LspSnapshot,
+        project: &ProjectSnapshot,
         citation: &LspCitation,
     ) -> Option<Location> {
         let target_path = citation.target_path.as_ref()?;
@@ -926,7 +939,7 @@ impl Server {
         Some(Location {
             uri: path_uri(target_path)?,
             range: self.definition_target_range(
-                snapshot,
+                project,
                 target_path,
                 target_line,
                 citation.query_id.len().max(1),
@@ -941,11 +954,11 @@ impl Server {
         })
     }
 
-    fn stub_target_location(&self, snapshot: &LspSnapshot, stub: &LspStub) -> Option<Location> {
+    fn stub_target_location(&self, project: &ProjectSnapshot, stub: &LspStub) -> Option<Location> {
         Some(Location {
             uri: path_uri(&stub.target_path)?,
             range: self.definition_target_range(
-                snapshot,
+                project,
                 &stub.target_path,
                 stub.target_line,
                 stub.query_id.len().max(1),
@@ -953,24 +966,32 @@ impl Server {
         })
     }
 
+    /// The range a definition lands on. The target path is resolved once and
+    /// matched against the index, never re-resolved per record
+    /// (§FS-lsp.responsiveness.2); the fallback still reads the authored path,
+    /// so an unindexed target is spanned exactly as before.
     fn definition_target_range(
         &self,
-        snapshot: &LspSnapshot,
+        project: &ProjectSnapshot,
         path: &Path,
         line: usize,
         fallback_width: usize,
     ) -> Range {
-        snapshot
+        let snapshot = &project.snapshot;
+        let target = normalize_path(path);
+        project
+            .index
             .declarations
-            .iter()
-            .find(|decl| same_path(&decl.path, path) && decl.line == line)
-            .map(|decl| declaration_range(decl, self))
+            .on_line(&target, line)
+            .first()
+            .map(|&position| declaration_range(&snapshot.declarations[position], self))
             .or_else(|| {
-                snapshot
+                project
+                    .index
                     .sections
-                    .iter()
-                    .find(|section| same_path(&section.path, path) && section.line == line)
-                    .map(|section| declaration_range(section, self))
+                    .on_line(&target, line)
+                    .first()
+                    .map(|&position| declaration_range(&snapshot.sections[position], self))
             })
             .unwrap_or_else(|| single_line_range(path, line, 1, fallback_width))
     }
@@ -1229,6 +1250,14 @@ fn utf16_to_byte(line: &str, utf16_idx: u32) -> usize {
     line.len()
 }
 
+/// The comparison the per-file index replaced: resolve both sides, then compare.
+///
+/// No answer performs it any more — resolving inside a comparison is what
+/// §FS-lsp.responsiveness.2 forbids, and it is why one published diagnostic set
+/// cost a resolution per snapshot record per finding. It is kept as the written
+/// definition of what the index must still answer, and the guard case holds the
+/// index to it over a record of every collection.
+#[cfg(test)]
 fn same_path(left: &Path, right: &Path) -> bool {
     normalize_path(left) == normalize_path(right)
 }
