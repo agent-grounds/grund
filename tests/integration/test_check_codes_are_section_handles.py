@@ -62,6 +62,7 @@ NOT_YET_MIGRATED = (
     "invalid-value-binding",
     "invalid-value-declaration",
     "io",
+    "local-section-citation",
     "missing-citation",
     "missing-index-entry",
     "missing-section",
@@ -69,6 +70,7 @@ NOT_YET_MIGRATED = (
     "nothing-recognized",
     "optional-member-absent",
     "out-of-scope-dangling",
+    "out-of-scope-local-section-citation",
     "out-of-scope-missing-section",
     "out-of-scope-shorthand-citation",
     "out-of-scope-unknown-project",
@@ -84,11 +86,6 @@ NOT_YET_MIGRATED = (
     "unused",
     "value-mismatch",
 )
-
-# Selectable today and in no catalog, so neither migrated nor awaiting a slice.
-# The drift is its own ticket, which is why the catalog-agreement test is skipped
-# rather than widened.
-KNOWN_DRIFT = ("local-section-citation", "out-of-scope-local-section-citation")
 
 
 def _selectable_codes():
@@ -155,16 +152,11 @@ class CheckCodeSectionTests(unittest.TestCase):
                     missing.append(f"{code}: its catalog row does not cite {coordinate}")
         self.assertEqual([], missing)
 
-    @unittest.skip(
-        "the shipped selector vocabulary holds local-section-citation and "
-        "out-of-scope-local-section-citation, which are in no catalog; that "
-        "drift is its own ticket and is not widened here"
-    )
     def test_catalog_and_selector_vocabulary_agree(self):
         self.assertEqual(_selectable_codes(), set(_catalog_rows()))
 
     def test_every_selectable_code_is_migrated_or_listed(self):
-        accounted = set(NOT_YET_MIGRATED) | set(KNOWN_DRIFT)
+        accounted = set(NOT_YET_MIGRATED)
         for codes in MIGRATED.values():
             accounted |= set(codes)
         self.assertEqual(_selectable_codes(), accounted, "codes in no list of this test")
