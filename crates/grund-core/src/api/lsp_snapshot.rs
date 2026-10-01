@@ -419,6 +419,10 @@ fn check_workspace_context(
             &config.root,
             true,
             project.scan_errors.is_empty() && !project_has_findings,
+            // §FS-check.1.3.6.1: the LSP runs the check at the project root and
+            // distributes the diagnostics per file itself, so no path narrowed this
+            // report and there is no second scope to ask (§FS-lsp.4.1).
+            None,
         ));
     }
     // §FS-check.3.29.13, §FS-check.3.29.11: per project, the blocks that walk met that

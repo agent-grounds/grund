@@ -65,7 +65,8 @@ pub(crate) use homes::file_declares_inline_home;
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
 pub(crate) use reference_scope::{
-    configured_scope, out_of_scope_references, retain_findings_in_scope,
+    ScanScope, configured_scope, out_of_scope_references, path_report_scope,
+    retain_diagnostics_in_report_scope, retain_findings_in_scope, scope_read_any_file,
     workspace_out_of_scope_references,
 };
 pub(crate) use report::{check_findings, check_with_workspace, check_with_workspace_and_overlays};

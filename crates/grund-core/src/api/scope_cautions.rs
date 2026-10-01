@@ -15,6 +15,7 @@
 use std::fs;
 use std::path::Path;
 
+use crate::checker::{ScanScope, scope_read_any_file};
 use crate::config::{Config, display_path, kind_prefixes};
 use crate::grammar::id_shape;
 use crate::model::{Diagnostic, Findings, format_path, normalize_path_lexically};
@@ -43,17 +44,23 @@ fn nothing_recognized(findings: &Findings) -> bool {
 /// are findings about the tree *outside* the scope, and a run that finds the
 /// citations out there is exactly the one where saying the configured scope is
 /// empty helps most.
+///
+/// §FS-check.1.3.6.1: `report_scope` is why the emptiness question is asked of it
+/// rather than of the walk. A path-scoped run reads the whole project, so a path
+/// holding no scannable file would otherwise stop earning its caution because the
+/// wider walk read plenty — the caution is about what the caller asked about.
 pub(super) fn scan_scope_caution(
     config: &Config,
     findings: &Findings,
     path: &Path,
     path_provided: bool,
     report_is_silent: bool,
+    report_scope: Option<&ScanScope>,
 ) -> Option<Diagnostic> {
     if !report_is_silent {
         return None;
     }
-    if findings.scanned_files.is_empty() {
+    if !scope_read_any_file(findings, report_scope) {
         return Some(empty_scan_warning(config, path, path_provided));
     }
     // §FS-check.4.5.4: only a run over the whole project makes the claim. A narrowed
@@ -184,9 +191,11 @@ fn nothing_recognized_warning(config: &Config, scanned_files: usize) -> Diagnost
 }
 
 /// §FS-check.1.3.7: the caution a `--full` run earns when the caller also typed a
-/// path that is not the config root. `--full` cancels `[scan] include`, and an
-/// explicit path already bypasses that key, so the flag has nothing left to
-/// cancel and the run is the ordinary one. A warning rather than a rejection:
+/// path that is not the config root. The flag has nothing left to cancel because
+/// of the two-scope rule of §FS-check.1.3.6.1 — the path already resolves against
+/// `[scan] include`, so cancelling the key subtracts nothing from what the run
+/// reads, and the report is the path with the flag or without it. A warning rather
+/// than a rejection:
 /// the invocation is valid, and a script that passes `--full` uniformly must not
 /// fail on the one call where it is redundant. Like every warning it leaves the
 /// exit code alone and, per §FS-check.2.1.3, stands in place of the `success`
@@ -216,8 +225,8 @@ pub(super) fn full_scope_ignored_warning(
         line: None,
         column: None,
         message: format!(
-            "--full has no effect with an explicit PATH — it cancels [scan] include, and {} \
-             already bypasses it",
+            "--full has no effect with an explicit PATH — {} already resolves against \
+             [scan] include, and the report is the path either way",
             display_lexical_scope(config, &lexical_scope)
         ),
         sites: Vec::new(),

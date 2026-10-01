@@ -127,8 +127,17 @@ pub(crate) fn walk_scannable_files_reporting(
         {
             continue;
         }
+        // A root that resolves elsewhere reaches every one of its files under a
+        // spelling that is not the file's own, so all of them can alias (§FS-check.1.3.2).
+        let root_is_aliased = canonical_scan_root != scan_root;
         if scan_root.is_file() {
             if is_scannable(&scan_root, config) {
+                // §FS-check.1.3.6.1: a file handed as the path is walked beside roots
+                // that reach it under its own name, so a link's spelling has to
+                // resolve to the same one read (§FS-config.3.5.4).
+                if root_is_aliased {
+                    aliasable.insert(scan_root.clone());
+                }
                 files.push(scan_root);
             }
             continue;
@@ -149,9 +158,6 @@ pub(crate) fn walk_scannable_files_reporting(
             &link_roots,
             &looping_links,
         );
-        // A root that resolves elsewhere reaches every one of its files under a
-        // spelling that is not the file's own, so all of them can alias (§FS-check.1.3.2).
-        let root_is_aliased = canonical_scan_root != scan_root;
         let mut root_files = Vec::new();
         for entry in walker {
             let entry = match entry {
@@ -631,27 +637,43 @@ pub(super) fn is_direct_e2e_case_dir(
         .is_some()
 }
 
-/// The directories (or single file) the walk starts from: a `[path]` argument when
-/// given (narrowing the default scope), otherwise `[scan] include` resolved against
-/// the repo root, otherwise the whole root (§FS-config.3.5.7, §AR-scanner.1.6).
+/// The directories (or single file) the walk starts from: `[scan] include`
+/// resolved against the repo root, otherwise the whole root — and, for a run
+/// given a `[path]` argument below that root, the path beside them, because the
+/// path narrows the report and not the walk (§FS-config.3.5.7, §AR-scanner.1.6,
+/// §FS-check.1.3.6.1).
 pub(super) fn scan_roots(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
 ) -> Result<Vec<PathBuf>> {
-    scan_roots_for(config, scope, explicit_scope, config.scan_full)
+    scan_roots_for(
+        config,
+        scope,
+        explicit_scope,
+        config.scan_full,
+        config.scan_resolution_wide,
+    )
 }
 
 /// §FS-check.1.3.1: `full` cancels `[scan] include` for this walk and nothing else
-/// — an explicit path argument still narrows, and `exclude`, the ignore files,
-/// and `extensions` are untouched. `check --full` asks both ways: once with
+/// — an explicit path argument still narrows the report, and `exclude`, the ignore
+/// files, and `extensions` are untouched. `check --full` asks both ways: once with
 /// `true` to walk the whole root, and once with `false` to learn which of what it
 /// read was inside the configured scope (§FS-check.3.14).
+///
+/// §FS-check.1.3.6.1: `widen` is the other axis, and the walk is the one caller
+/// that passes it. It says the explicit path is this run's *report* scope, so the
+/// roots returned are the ordinary ones union the path; `full` is then irrelevant,
+/// since a path leaves the flag nothing to cancel (§FS-check.1.3.6). The two scope
+/// layers ask with `widen = false`, because each wants the path as the *bound* it
+/// is to them rather than as the walk's extra root (§AR-resolver.3.3).
 pub(crate) fn scan_roots_for(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
     full: bool,
+    widen: bool,
 ) -> Result<Vec<PathBuf>> {
     if explicit_scope {
         let scope = scope.unwrap_or(Path::new("."));
@@ -674,11 +696,16 @@ pub(crate) fn scan_roots_for(
             } else {
                 walk_root_under_config_root(config, &resolved)
             };
-        if scope.is_file() {
-            return Ok(vec![scope]);
-        }
         if resolved == canonical_config_root(config) {
             return Ok(root_scope_roots(config, full));
+        }
+        // §FS-check.1.3.6.1: the ordinary roots union the path, the path first so its
+        // spelling wins for the files it names (§FS-check.1.3.2). `full` is no part of
+        // it — an explicit path leaves the flag nothing to cancel (§FS-check.1.3.6).
+        if widen {
+            let mut roots = vec![scope];
+            roots.extend(root_scope_roots(config, false));
+            return Ok(roots);
         }
         return Ok(vec![scope]);
     }
