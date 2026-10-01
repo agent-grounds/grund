@@ -81,6 +81,7 @@ Supported check finding codes:
   unlinked-index-entry
   unlisted-workspace-block
   unmarked-heading
+  unreached-declaration
   unused
   value-mismatch
 

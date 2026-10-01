@@ -325,6 +325,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "unlinked-index-entry",
         "unlisted-workspace-block",
         "unmarked-heading",
+        "unreached-declaration",
         "unused",
         "value-mismatch",
     ];

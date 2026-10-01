@@ -49,30 +49,44 @@ paths, files, folders, wildcards, subject namespaces, numbered-chapter subjects,
 exceptions, definitions, derived terms, settings, or source-code symbols.
 
 <!-- BEGIN chapter-rules-emptiness -->
-A quantified chapter subject selects only the chapters that exist, so a
-chapter-scoped citation rule holds for every declaration of the kind only when
-a chapter-presence rule stands beside it.
+A quantified chapter subject selects only the chapters that exist, and a
+declaration of the kind that has none is reported rather than passed over, so a
+chapter-scoped citation rule reaches every declaration of its kind.
 
 `The requirements chapter of each FS must cite at least one REQ.` reports an FS
-whose `requirements` chapter cites no REQ. It reports nothing about an FS that
-has no `requirements` chapter at all: that declaration contributes no unit, and
-the rule is true over the units that remain. Deleting the chapter is the edit it
-does not see. Write the two sentences together to cover both:
+whose `requirements` chapter cites no REQ, and reports an FS with no
+`requirements` chapter at all — the edit the rule could not see before:
+
+```text
+docs/fs/FS-login.md:1: warning: FS-login has no requirements chapter, so RULE-requirements cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this warning becomes an error in grund 0.16.0
+```
+
+Add the chapter or narrow the rule: those two are the whole answer. The warning
+leaves the exit status alone until `grund 0.16.0`, where it becomes an error,
+and `--ignore unreached-declaration` is the opt-out until then; a `should` rule
+reports the absence as a suggestion immediately and with no deadline.
+
+A chapter-presence rule beside the citation rule is not a third answer — it
+raises its own `chapter-cardinality` and suppresses nothing, so one absent
+chapter under both prints both lines. Write the two sentences together to state
+the count as well as the citation, and to make the absence fail a run rather
+than warn in it before 0.16.0:
 
 ```text
 Each FS must have at least one requirements chapter.
 The requirements chapter of each FS must cite at least one REQ.
 ```
 
-The exact spelling behaves the other way round. `FS-login.requirements must cite
-at least one REQ.` names one unit, so deleting that chapter makes the rule
-itself an `invalid-rule` finding — `literal subject FS-login.requirements does
-not resolve` — rather than silent. A quantified subject goes quiet exactly where
-an exact subject fails.
+The exact spelling reports the same absence as a different kind of finding.
+`FS-login.requirements must cite at least one REQ.` names one unit, so deleting
+that chapter makes the rule itself an `invalid-rule` finding — `literal subject
+FS-login.requirements does not resolve` — located where the sentence is written
+rather than at the declaration. Where both spellings stand over the same absent
+chapter, both fire.
 
 `grund list --selector FS.requirements` prints one row per declaration that has
-the chapter, so the declarations it omits are the ones a chapter rule says
-nothing about. A subject that selects nothing at all prints nothing and exits 0.
+the chapter, so the declarations it omits are the ones the rule now reports. A
+subject that selects nothing at all prints nothing and exits 0.
 <!-- END chapter-rules-emptiness -->
 
 <!-- BEGIN chapter-rules-accepted -->
@@ -83,7 +97,7 @@ The complete accepted sentence forms, with representative findings, are:
 - `Each FS must have exactly one requirements chapter.` → `chapter-cardinality`.
 - `Each FS should have exactly 2 review chapters.` → suggestion `chapter-cardinality`.
 - `Each FS must cite at least one GOAL or REQ.` → zero matches reuse `missing-citation`.
-- `The requirements chapter of each FS must cite at least one REQ.` → zero matches reuse `missing-citation`.
+- `The requirements chapter of each FS must cite at least one REQ.` → zero matches reuse `missing-citation`; a declaration with no such chapter, `unreached-declaration`.
 - `Each FS should cite at least one GOAL.` → suggestion `suggested-citation`.
 - `FS-login.requirements should cite at most 2 REQ.` → suggestion `citation-cardinality`.
 - `FS-login.requirements must cite exactly one REQ.` → `citation-cardinality`.
