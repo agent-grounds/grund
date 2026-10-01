@@ -91,6 +91,12 @@ kind = "DISC"
 folder = "docs/discussions"
 title = "Design discussions and proposals"
 
+[[kinds]]
+kind = "RULE"
+folder = "docs/rules"
+rules = true
+title = "Executable conventions: the rules grund check holds this repository to"
+
 # A place, not an ID namespace (FS-config.3.4.1): `skills/` holds agent-facing
 # instructions, not specification, so its files declare nothing and its home is
 # named by its path everywhere it is shown. Listed, not walked (FS-config.3.4.7),
@@ -205,6 +211,9 @@ should = ["FS|GOAL"]
 
 [citations.DA]
 should = ["AR|FS"]
+
+[citations.RULE]
+should = ["FS|GOAL"]
 
 # A scenario proves the What as a user sees it; one that reads the design is not
 # black-box. `must` reaches every scanned file in the home — the README — and the
