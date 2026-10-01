@@ -22,14 +22,14 @@ citation rules over `FS` cannot reach it, and each says so at its title line
 ([§FS-rules.checks.unreached-declaration](../../docs/functional-spec/FS-rules.md#checksunreached-declaration-unreached-declaration)):
 
 ```text
-docs/fs/FS-unreached.md:1: warning: FS-unreached has no requirements chapter, so RULE-inbound, RULE-inbound-copy cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this warning becomes an error in grund 0.16.0
-docs/fs/FS-unreached.md:1: warning: FS-unreached has no requirements chapter, so RULE-requirements cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this warning becomes an error in grund 0.16.0
+docs/fs/FS-unreached.md:1: error: FS-unreached has no requirements chapter, so RULE-inbound, RULE-inbound-copy cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this became an error in grund 0.16.0
+docs/fs/FS-unreached.md:1: error: FS-unreached has no requirements chapter, so RULE-requirements cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this became an error in grund 0.16.0
 ```
 
 Two lines for one absent chapter, because each semantic rule group reports its
-own: the second names the `RULE-inbound`, `RULE-inbound-copy` group the way
-every grouped authority is named. The warning does not move the exit status
-until `0.16.0` ([§FS-rules.7.7](../../docs/functional-spec/FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)), and the two actions it names are the only
+own: the first names the `RULE-inbound`, `RULE-inbound-copy` group the way
+every grouped authority is named. Each is an error on the ordinary `must`
+channel ([§FS-rules.7](../../docs/functional-spec/FS-rules.md#7-findings-and-channels)), and the two actions it names are the only
 two: add the chapter, or narrow the rule's subject.
 
 The complete writing guide also demonstrates the remaining released families:
