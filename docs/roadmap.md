@@ -102,6 +102,22 @@ no citation remains `0`. The release-ramp guard refuses 0.16.0 while the warning
 form remains
 ([§FS-distribution.4.2](functional-spec/FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)).
 
+## RM-unreached-declaration-error: make the unreached-declaration warning an error in 0.16.0
+
+This milestone shipped in grund 0.16.0: `unreached-declaration` is an error on
+the ordinary `must` channel, and its record is the changelog bullet that landed
+it together with
+[§FS-rules.checks.unreached-declaration](functional-spec/FS-rules.md#checksunreached-declaration-unreached-declaration).
+The item's own plan is removed, as a shipped item's is; this address, heading
+text included, is kept only because an `## Unreleased` changelog bullet written
+before the promotion still cites it, and that bullet may not be reworded
+([§FS-distribution.4.6](functional-spec/FS-distribution.md#46-the-changelog-gate-keeps-the-release-section-mappable-to-its-pull-requests)).
+Retiring the address is a change of its own, due once the 0.15.0 cut archives
+that bullet and the repoint the lead above prescribes can be written in the
+archive. It is not a deadline item and is not counted among the four.
+
+GitHub: [#368](https://github.com/agent-grounds/grund/issues/368).
+
 ## RM-distribution: cargo + npm + pypi from one engine
 
 Per [§FS-distribution](functional-spec/FS-distribution.md#fs-distribution-grund-distribution-targets) and [§AR-bindings](architecture/AR-bindings.md#ar-bindings-target-shape-for-exposing-the-rust-engine-on-three-platforms). Builds on the shipped workspace split ([§AR-bindings.2](architecture/AR-bindings.md#2-grund-core-the-only-place-logic-lives)).
