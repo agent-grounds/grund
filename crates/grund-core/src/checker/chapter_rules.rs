@@ -337,13 +337,11 @@ pub(crate) fn check_chapter_rules(
     let precedence = citation_precedence(config);
     let (errors, ramp_warnings) = evaluate(&rules, &precedence, &facts);
     report.errors.extend(errors);
-    // §FS-rules.7.7: the ramp's one required-level finding is a warning, so it
-    // joins the channel this pass has already ordered and is re-sorted into it
-    // rather than appended behind it (§FS-errors.4.1).
-    if !ramp_warnings.is_empty() {
-        report.warnings.extend(ramp_warnings);
-        sort_diagnostics(&mut report.warnings);
-    }
+    // §FS-rules.7.7 / §FS-errors.4.1: the single-project `grund-core` arm is the one
+    // caller that does not sort warnings downstream, and the sort is idempotent over
+    // the already-ordered channel every caller hands in, so it needs no guard.
+    report.warnings.extend(ramp_warnings);
+    sort_diagnostics(&mut report.warnings);
     report
         .suggestions
         .extend(evaluate_suggestions(&rules, &precedence, &facts));
