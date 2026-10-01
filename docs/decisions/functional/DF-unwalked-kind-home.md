@@ -25,7 +25,7 @@ A `[citations.<kind>]` table naming an unwalked kind as the citing kind is a con
 
 ### 2.4 `--full` reaches it as territory nobody configured
 
-`grund check --full` walks the whole config root ([§FS-check.1.3](../../functional-spec/FS-check.md#13-the-full-tree-scope---full)) and reports resolution failures only, so a dangling citation inside an unwalked home is still found there — the run reads past `include` and past this key alike. What it does not do is judge the directory against conventions it never adopted: no grounding, no directions, no misplaced-declaration finding. That is the existing `--full` contract applied unchanged; the key only decides which scope the directory is in.
+`grund check --full` walks the whole config root ([§FS-check.1.3](../../functional-spec/FS-check.md#13-the-full-tree-scope---full)) and reports only the tier of [§FS-check.3.14](../../functional-spec/FS-check.md#314-out-of-scope-unresolvable-citation---full-only), admitted by the test of [§FS-check.3.14.2](../../functional-spec/FS-check.md#3142-what-is-judged-outside-the-configured-scope), so a dangling citation inside an unwalked home is still found there — the run reads past `include` and past this key alike. What it does not do is judge the directory against conventions it never adopted: no grounding, no directions, no misplaced-declaration finding. That is the existing `--full` contract applied unchanged; the key only decides which scope the directory is in.
 
 ## 3. Alternatives considered
 

@@ -82,7 +82,7 @@ fn full_scope_withholds_style_and_grounding_outside_include() {
     let full = check_run(&root, true);
     assert!(
         full.report.errors.is_empty(),
-        "§FS-check.3.14.2: only resolution is judged out of scope, not inline-note budgets — got {:?}",
+        "§FS-check.3.14.2: an inline-note budget is a role the project gave the file, so it is not judged out of scope — got {:?}",
         located_diagnostics(&full.config, &full.report.errors)
     );
     let scoped_style = check_run(&root.join("sim"), false);

@@ -5,8 +5,9 @@
 # `[scan] include` must cite a declared ID. It runs with `--full`
 # (§FS-check.1.3), so a citation in a file *outside* `[scan] include` — this
 # repository's `examples/` tree is deliberately outside it — is reported
-# rather than invisible; only reference resolution is judged out there. `[fmt.cross_refs] enabled = true`
-# makes `grund fmt --write` keep every `§…` citation in the `.md` tree wrapped in a
+# rather than invisible; only what §FS-check.3.14.2 admits is judged out
+# there. `[fmt.cross_refs] enabled = true` makes `grund fmt --write` keep
+# every `§…` citation in the `.md` tree wrapped in a
 # clickable link to its declaration (§FS-fmt.6) — idempotent, so it is a no-op
 # when nothing drifted; a heading rename or file move shows up as a one-line
 # `fmt` diff and pre-commit aborts so the change can be re-staged. `lychee
