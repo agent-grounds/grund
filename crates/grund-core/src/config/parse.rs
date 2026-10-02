@@ -198,13 +198,16 @@ pub(super) fn parse_config_file(
             ("reference", "lead_size_warning") => {
                 config.lead_size_warning = Some(parse_lead_size_warning(path, line_no, value)?);
             }
+            // §FS-config.3.1.8: closed enum; the rejection names the value and the set.
             ("reference", "inline_style") => {
                 let style = parse_string(path, line_no, value)?;
                 if !matches!(style.as_str(), "citation-with-note" | "citation-only") {
                     bail_config(
                         path,
                         line_no,
-                        "unknown [reference] inline_style".to_string(),
+                        format!(
+                            "unknown [reference] inline_style `{style}` (expected citation-with-note or citation-only)"
+                        ),
                     )?;
                 }
                 config.inline_style = style;
