@@ -40,7 +40,7 @@ CI dependency and build caches are performance optimizations only. A cache resto
 
 ## 3. Current hooks
 
-The current pre-commit gate runs the same Rust format/build/test commands that development CI runs: `cargo fmt --all -- --check`, `cargo build --workspace --all-targets --locked` with warnings denied, and `cargo test --workspace --all-targets --locked`. The test hook also runs at `pre-push`, so a contributor who commits while a test is transiently broken still gets the same local stop before sending the branch. The changelog PR-entry gate also runs at `pre-push` on every push rather than only once a pull request exists, so the first push cannot miss the `docs/changelog.md` `## Unreleased` bullet CI will require.
+The current pre-commit gate runs the same Rust format/build/test commands that development CI runs: `cargo fmt --all -- --check`, `cargo build --workspace --all-targets --locked` with warnings denied, and `cargo test --workspace --all-targets --locked`. The test hook also runs at `pre-push`, so a contributor who commits while a test is transiently broken still gets the same local stop before sending the branch. The changelog PR-entry gate also runs at `pre-push` on every push rather than only once a pull request exists, so the first push cannot miss the entry file under `docs/changelog/unreleased/` CI will require ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-changelog-gate-keeps-the-release-section-mappable-to-its-pull-requests)).
 
 ### 3.1 Citations and links
 
