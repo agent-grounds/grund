@@ -197,6 +197,8 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
     }
 }
 
+/// Render query refusals, limiting the filesystem-check migration breadcrumb
+/// to the guarded existing-path case (§FS-show.3.5.2).
 fn render_show_error(
     id_arg: &str,
     path: &Path,
@@ -220,19 +222,13 @@ fn render_show_error(
     }
     if query_error_code.is_none() {
         eprintln!("error: {message}");
-        if default_invocation {
-            eprintln!("hint: run `grund check {id_arg}` to validate a path");
-        }
         return ExitCode::from(2);
     }
     eprintln!("{message}");
     if message.starts_with("invalid ID") {
         print_id_format_hint(path);
-        if default_invocation {
-            eprintln!("hint: run `grund check {id_arg}` to validate a path");
-            if looks_like_subcommand_typo(id_arg) {
-                eprintln!("hint: run `grund --help` for the list of subcommands");
-            }
+        if default_invocation && looks_like_subcommand_typo(id_arg) {
+            eprintln!("hint: run `grund --help` for the list of subcommands");
         }
     } else if message.starts_with("ID not found:") {
         // §FS-show.3.5: the hint gives way where the line already names the
