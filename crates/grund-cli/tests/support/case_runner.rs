@@ -78,6 +78,10 @@ include!("case_refresh.rs");
 // (§AR-core-module-layout.3).
 include!("case_refresh_tests.rs");
 
+// The `command.args` contract, pinned in a file of its own
+// (§AR-core-module-layout.3).
+include!("case_args_tests.rs");
+
 pub fn discover_e2e_cases(manifest_dir: &Path) -> Vec<PathBuf> {
     let cases_dir = manifest_dir.join("tests/e2e/cases");
     let cases = discover_case_dirs(&cases_dir, |_| true);
@@ -461,27 +465,6 @@ fn split_command(command: &str) -> Vec<String> {
         args.push(current);
     }
     args
-}
-
-#[cfg(test)]
-mod split_command_tests {
-    use super::split_command;
-
-    #[test]
-    fn a_quoted_run_is_one_argument_and_plain_words_are_unchanged() {
-        assert_eq!(split_command("check {repo}"), ["check", "{repo}"]);
-        assert_eq!(
-            split_command("check --rule \"Each FS must have one chapter.\" {repo}\n"),
-            [
-                "check",
-                "--rule",
-                "Each FS must have one chapter.",
-                "{repo}"
-            ]
-        );
-        assert_eq!(split_command("id skill \"Review\" {repo}").len(), 4);
-        assert!(split_command("  \n ").is_empty());
-    }
 }
 
 fn copy_dir(from: &Path, to: &Path) {
