@@ -38,6 +38,8 @@ A case that does not run is **not** a case that passed. The harness probes the d
 
 Most cases run `grund check <repo>`. A case may override the command with `command.args`; use `{repo}` for the fixture repo path. For write-mode tests, use `{repo_copy}` so the harness copies the fixture under `target/e2e-work/` before running the command.
 
+The line is split into arguments the way a POSIX shell splits words, honouring its quotes and nothing else ([§FS-examples.5.3](../../docs/functional-spec/FS-examples.md#53-commandargs-is-read-as-shell-words-or-refused)). Whitespace separates arguments; `'…'` or `"…"` keeps a multi-word argument whole, so `id FS 'Password reset' {repo}` passes the title as one; and nothing is expanded, so `$`, `*`, `~`, `#` and every brace but the two placeholders reach `grund` as written. A backslash outside single quotes and an unclosed quote are refused before `grund` runs, by a message that names the case, `command.args` and the line — quote the argument rather than escaping it.
+
 A command whose public form discovers configuration from the current directory
 may add `command.cwd` containing exactly `{repo}` or `{repo_copy}`. The latter
 also selects mutable-repository handling and may be paired with `expected.repo`.
