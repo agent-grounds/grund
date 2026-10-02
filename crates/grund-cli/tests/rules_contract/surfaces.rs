@@ -392,9 +392,11 @@ fn valid_rules_render_exact_sentences_in_a_rule_enabled_managed_section() {
         "`must`/`must not` are `grund check` errors; `should`/`should not` are ",
         "suggestions (`grund check --suggestions`).\n\n",
         "- AR-overview.system-overview must cite each AR exactly once. ",
-        "\u{a7}RULE-overview\n",
+        "[\u{a7}RULE-overview](docs/rules/RULE-overview.md",
+        "#rule-overview-ar-overviewsystem-overview-must-cite-each-ar-exactly-once)\n",
         "- The requirements chapter of each FS must cite at least one REQ. ",
-        "\u{a7}RULE-requirements\n\n",
+        "[\u{a7}RULE-requirements](docs/rules/RULE-requirements.md",
+        "#rule-requirements-the-requirements-chapter-of-each-fs-must-cite-at-least-one-req)\n\n",
     );
     assert_eq!(&agents[rules..clickable], expected);
 
@@ -443,7 +445,7 @@ fn a_path_scoped_check_compares_the_chapter_rules_against_the_whole_tree_render(
     let agents = fs::read_to_string(root.join("AGENTS.md")).expect("rendered AGENTS.md");
     let emptied: String = agents
         .split_inclusive('\n')
-        .filter(|line| !(line.starts_with("- ") && line.contains(" \u{a7}RULE-")))
+        .filter(|line| !(line.starts_with("- ") && line.contains(" [\u{a7}RULE-")))
         .collect();
     let removed = agents.lines().count() - emptied.lines().count();
     assert_eq!(removed, 2, "the fixture must drop both rule bullets");
