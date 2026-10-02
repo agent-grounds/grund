@@ -79,9 +79,8 @@ pub(crate) fn uncovered_base(candidates: &[PathBuf]) -> Result<PathBuf, String> 
     }
     Err(format!(
         "these fixtures need a temp root no config covers, because discovery climbs from a \
-         fixture root to the filesystem root and a zero-config case would read what it finds \
-         (§AR-ci.10.3); point TMPDIR at a directory no grund.toml or .agents/grund.toml sits \
-         above ({})",
+         fixture root to the filesystem root and a zero-config case would read what it finds; \
+         point TMPDIR at a directory no grund.toml or .agents/grund.toml sits above ({})",
         refusals.join("; ")
     ))
 }
