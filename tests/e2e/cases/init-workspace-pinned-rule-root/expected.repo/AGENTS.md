@@ -57,7 +57,7 @@ Specs cite goals, architecture cites specs, code and executable tests cite the s
 
 `must`/`must not` are `grund check` errors; `should`/`should not` are suggestions (`grund check --suggestions`).
 
-- The operations chapter of each SEG must cite at least one workshop/OP. §RULE-seg-operations-workshop
+- The operations chapter of each SEG must cite at least one workshop/OP. [§RULE-seg-operations-workshop](docs/rules/RULE-seg-operations-workshop.md#rule-seg-operations-workshop-the-operations-chapter-of-each-seg-must-cite-at-least-one-workshopop)
 
 ### Clickable citations
 
