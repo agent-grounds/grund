@@ -2,7 +2,8 @@
 //! level of the upward walk, the tie-break between them, the redundant-pair
 //! warning that names the loser, and the deprecation line a run earns for having
 //! read the `.agents/` name at all (§FS-config.1, §FS-config.1.1, §FS-config.1.2,
-//! §FS-check.4.3, §FS-check.4.11, §DF-config-file-location).
+//! §FS-check.4.3, §FS-check.4.11, §DF-config-file-location). Also the guard every
+//! zero-config case here leans on: no config covers a fixture root (§AR-ci.10.3).
 
 use std::path::Path;
 
@@ -206,13 +207,45 @@ fn no_config_under_either_name_stays_zero_config() {
 
     let config = load_config(&root).expect("load defaults");
 
-    assert_eq!(config.config_file, None);
+    // §AR-ci.10.3: name the absolute path, so a config above TMPDIR reads as one.
+    let found = config
+        .config_file
+        .as_ref()
+        .map(|file| config.root.join(file));
+    assert_eq!(
+        found,
+        None,
+        "this fixture has no config, so the one found is above it; a config above \
+         TMPDIR ({}) is the usual cause",
+        std::env::temp_dir().display()
+    );
     assert_eq!(config.redundant_config_file, None);
     assert_eq!(config.marker, "§", "§FS-config.3: the built-in default");
     assert!(
         config_warnings(&config).is_empty(),
         "§FS-config.1.2: no file was read, so there is no location to deprecate"
     );
+}
+
+/// §AR-ci.10.3: discovery climbs past a fixture root (§FS-config.1), so the root
+/// `test_root` hands out must have no config under either name at or above it —
+/// otherwise every zero-config case here reads that file instead of the defaults.
+/// Probed through discovery's own `config_file_in`, from the canonical root the
+/// walk starts at.
+#[test]
+fn test_root_has_no_config_at_or_above_it() {
+    let root = canonical_test_path(&test_root("test_root_has_no_config_at_or_above_it"));
+
+    if let Some(config) = root.ancestors().find_map(config_file_in) {
+        panic!(
+            "{} covers the fixture root {}: discovery climbs to it, so a zero-config \
+             case reads it. A config above TMPDIR ({}) is the usual cause; point \
+             TMPDIR at a directory no grund.toml or .agents/grund.toml sits above",
+            config.display(),
+            root.display(),
+            std::env::temp_dir().display()
+        );
+    }
 }
 
 /// §FS-init.2.4: `init` generates the bare form, and probes both before it
