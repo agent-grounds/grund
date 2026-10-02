@@ -7,7 +7,7 @@ cross-reference wrap there is the one edit that makes the two disagree. -->
 <!-- BEGIN GRUND MANAGED BLOCK -->
 ## Grounding with grund (v13)
 
-This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM, DISC, RULE}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `§`-prefixed citations are checked.
+This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {GRUND, GOAL, FS, REQ, AR, DF, DA, RM, DISC, RULE, REL}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `§`-prefixed citations are checked.
 
 ### Grounding from a citation
 
@@ -35,6 +35,7 @@ A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and 
 - [RM](docs/roadmap.md): Planned milestones and sequencing
 - [DISC](docs/discussions): Design discussions and proposals
 - [RULE](docs/rules): Executable conventions: the rules grund check holds this repository to
+- [REL](docs/related-work): Related work: the ideas grund descends from and the tools beside it
 - [skills/](skills): Agent review and automation skills
 - [examples/](examples): Worked examples: user-facing walkthroughs that double as fixtures
 - [.github/workflows/](.github/workflows): CI and release workflows: the gate on GitHub, and how a release ships
@@ -74,6 +75,7 @@ Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment 
 - Each file in **tests/e2e/** must cite FS; avoid citing AR.
 - Each file in **tests/integration/** should cite AR.
 - Each **RULE** declaration should cite FS or GOAL.
+- Each **REL** declaration should cite GRUND or GOAL.
 - Each file in **examples/** must cite FS; never cite AR.
 - Each file in **.github/workflows/** should cite FS or AR.
 - Each file in **scripts/** should cite FS or AR.
