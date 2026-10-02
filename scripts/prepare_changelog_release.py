@@ -202,9 +202,12 @@ def stamp_release_numbers(changelog: Path, resolve: Callable[[str], set[int]] | 
     it. Where exactly one resolves, a trailing `(PR #TBD)` is replaced and
     otherwise ` (PR #N)` is appended; a `PR #TBD` in the entry's prose is left as
     it stands — writing into it is how the 0.15.0 cut turned a sentence that told
-    authors to write `PR #TBD` into one naming `PR #346`. Anything else is warned
-    about once and left, and nothing here ever raises or touches
-    `docs/changelog.md`: a release in which nothing resolves writes nothing.
+    authors to write `PR #TBD` into one naming `PR #346`. A number that would go
+    into more than one entry goes into none of them: one commit added them all,
+    which is a write-up's shape (§FS-distribution.4.6), and the number is the
+    write-up's own. Anything else is warned about once and left, and nothing here
+    ever raises or touches `docs/changelog.md`: a release in which nothing
+    resolves writes nothing.
     """
     resolve = resolve or pull_requests_for_commit
     directory = changelog_entries.entry_directory(changelog)
@@ -213,6 +216,8 @@ def stamp_release_numbers(changelog: Path, resolve: Callable[[str], set[int]] | 
         landed, unlanded = changelog_entries.landings(directory), "no commit has added it yet"
     except ChangelogError as exc:
         landed, unlanded = {}, str(exc)
+    # Each number and the entries it would go into, gathered before any is written.
+    targets: dict[int, list[tuple[Path, str]]] = {}
     for name in names:
         parsed = changelog_bullets.entry_name(name)
         if parsed is None:
@@ -229,7 +234,16 @@ def stamp_release_numbers(changelog: Path, resolve: Callable[[str], set[int]] | 
         else:
             number = _number_for(name, landed[parsed.slug].commit, resolve)
             if number is not None:
-                path.write_bytes(_numbered(text, number).encode("utf-8"))
+                targets.setdefault(number, []).append((path, text))
+    for number, entries in targets.items():
+        if len(entries) == 1:
+            path, text = entries[0]
+            path.write_bytes(_numbered(text, number).encode("utf-8"))
+            continue
+        # §FS-distribution.4.5: a number several would share is a write-up's own; none takes it.
+        shared = f"PR #{number} would go into {len(entries)} entries; write each its own (PR #N)"
+        for path, _ in entries:
+            _unstamped(path.name, shared)
 
 
 def _number_for(name: str, commit: str, resolve: Callable[[str], set[int]]) -> int | None:
