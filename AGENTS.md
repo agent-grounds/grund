@@ -1,9 +1,5 @@
 # grund — agent instructions
 
-<!-- grund:fmt off -->
-<!-- The block below is generated and byte-compared, so `fmt` may not rewrite it:
-`init` renders the chapter-rule citation bare and `check` compares it bare, and a
-cross-reference wrap there is the one edit that makes the two disagree. -->
 <!-- BEGIN GRUND MANAGED BLOCK -->
 ## Grounding with grund (v13)
 
@@ -86,13 +82,12 @@ Anything not listed above is allowed.
 
 `must`/`must not` are `grund check` errors; `should`/`should not` are suggestions (`grund check --suggestions`).
 
-- Each FS must have exactly one Terms chapter. §RULE-terms
+- Each FS must have exactly one Terms chapter. [§RULE-terms](docs/rules/RULE-terms.md#rule-terms-each-fs-must-have-exactly-one-terms-chapter)
 
 ### Clickable citations
 
 On repository web surfaces, link `§<ID>` to the PR branch in PR bodies, the reviewed commit in reviews, an exact commit for permalinks, and the default branch otherwise; fall back to plain when unsure. In local conversations, follow `§<ID>` with its declaration location as plain `path:line` text; fall back to the bare citation when unsure. If a user-level grund block states a local-conversation rendering, follow that instead: that machine knows what its surface can open.
 <!-- END GRUND MANAGED BLOCK -->
-<!-- grund:fmt on -->
 
 ## Repository workflow
 

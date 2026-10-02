@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::init_block::{
     AgentsUpdateResult, update_agents_block, write_or_update_canonical_agent_entrypoint,
@@ -10,9 +10,11 @@ use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entryp
 use super::init_plan::{InitAgentEntrypointSelection, selected_init_agent_entrypoints};
 use super::init_render::{agents_workspace_members_section, init_pending_effective_config};
 use super::init_target::{refuse_init_global_instruction_paths, refuse_init_target};
-use crate::checker::{configured_rule_sentences, declared_workspace_vocabulary};
+use crate::checker::{
+    chapter_rules_section, configured_rule_sentences, declared_workspace_vocabulary,
+};
 use crate::config::{Config, config_file_in, display_path};
-use crate::model::{Diagnostic, Finding, FindingSite, format_path};
+use crate::model::{Diagnostic, Finding, FindingSite, Findings, format_path};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
     effective_scope_reads_any_file, scan_tree,
@@ -147,27 +149,17 @@ impl std::fmt::Display for InitError {
 
 impl std::error::Error for InitError {}
 
-/// Add the conditional chapter-rule section while leaving the base bytes
-/// untouched for every project without a rule kind (§FS-rules.9).
-fn render_chapter_rules(
-    mut block: String,
-    rule_kind_enabled: bool,
-    rows: &[(String, String)],
-) -> String {
-    if !rule_kind_enabled {
+/// Insert the shared, entrypoint-relative chapter-rule section while leaving
+/// non-rule projects untouched (§FS-init.2.3.5.10).
+fn render_chapter_rules(mut block: String, section: Option<&str>) -> String {
+    let Some(section) = section else {
         return block;
-    }
+    };
     block = block.replacen(
         "Grounding with grund (v12)",
         "Grounding with grund (v13)",
         1,
     );
-    let mut section = String::from(
-        "### Chapter rules\n\n`must`/`must not` are `grund check` errors; `should`/`should not` are suggestions (`grund check --suggestions`).\n\n",
-    );
-    for (origin, sentence) in rows {
-        section.push_str(&format!("- {sentence} §{origin}\n"));
-    }
     let insertion = block
         .find("\n### Clickable citations")
         .or_else(|| block.find("\n<!-- END GRUND MANAGED BLOCK -->"));
@@ -187,15 +179,16 @@ fn render_chapter_rules(
 /// covered unless that key makes the canonical file unable to carry that
 /// agent's form.
 ///
-/// Why the managed block is rendered once and reused for both surfaces: the
+/// Why the base block is rendered once and reused for both surfaces: the
 /// workspace-members walk-up is non-trivial I/O for a large workspace and
 /// produces byte-identical output each time. The selected entrypoint plan
 /// determines whether a missing self `AGENTS.md` should be treated as
 /// about-to-exist; companion-only init must not link to a missing canonical
-/// entrypoint. Two surfaces at most: the local-conversation sentence differs
-/// between the Claude entrypoints and everything else, and nothing else in the
-/// block does. The linked variant is rendered only when a Claude entrypoint is
-/// actually selected, so the common run still walks the workspace once.
+/// entrypoint. Two base surfaces at most: the local-conversation sentence differs
+/// between the Claude entrypoints and everything else. The chapter-rule section
+/// is inserted per entrypoint so its citation destinations are relative to that
+/// file (§FS-init.2.3.5.10). The linked base is rendered only when a Claude
+/// entrypoint is actually selected, so the common run still walks the workspace once.
 ///
 /// Why the duplicate-entrypoint notes and the Claude companions are computed
 /// before the companion loop: the loop consumes the plan. `init` creates one
@@ -264,7 +257,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     // §FS-rules.4 / §FS-init.2.3.5: validate scanned rule declarations before
     // any entrypoint write, then reuse their exact titles in managed guidance.
     let rule_kind_enabled = init_config.kinds.iter().any(|kind| kind.rules);
-    let (rule_rows, rule_errors) = if rule_kind_enabled {
+    let (rule_rows, rule_errors, rule_findings) = if rule_kind_enabled {
         let (findings, errors) = scan_tree(&init_config, Some(&target), true)
             .map_err(|err| InitError::new(err.to_string()))?;
         if let Some((path, message)) = errors.first() {
@@ -282,6 +275,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
                     .into_iter()
                     .map(|diagnostic| init_finding(&init_config, diagnostic))
                     .collect::<Vec<_>>(),
+                findings,
             ),
             // §FS-rules.4: an invalid rule, and only an invalid rule, withholds
             // the write — the managed block stays byte-for-byte untouched and
@@ -294,7 +288,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
             }
         }
     } else {
-        (Vec::new(), Vec::new())
+        (Vec::new(), Vec::new(), Findings::default())
     };
 
     let agent_entrypoints = match selected_init_agent_entrypoints(&target, &agent_selection, reach)
@@ -326,12 +320,20 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         &target,
         agent_entrypoints.canonical,
     );
-    // Render the managed block once and reuse it for both surfaces: the two
-    // surfaces differ in one sentence only (§FS-init.2.3.4.17.2).
+    // Render the base once per conversation surface (§FS-init.2.3.4.17.2).
+    // §FS-init.2.3.5.10: the shared rule renderer adds destinations per file.
     let render_block = |surface| {
-        let block =
-            render_agents_append_block(&resolved_name, &init_config, &workspace_members, surface);
-        render_chapter_rules(block, rule_kind_enabled, &rule_rows)
+        render_agents_append_block(&resolved_name, &init_config, &workspace_members, surface)
+    };
+    let add_chapter_rules = |block: String, path: &Path| {
+        // §FS-init.2.3.5.10: a pending entrypoint cannot be canonicalized yet;
+        // give the resolver a path under the loaded config's root instead.
+        let path = init_config
+            .root
+            .join(path.strip_prefix(&target).unwrap_or(path));
+        let section = rule_kind_enabled
+            .then(|| chapter_rules_section(&init_config, &path, &rule_findings, &rule_rows));
+        render_chapter_rules(block, section.as_deref())
     };
     let agents_block = render_block(ConversationSurface::Plain);
     let claude_block = agent_entrypoints
@@ -341,7 +343,11 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
             ConversationSurface::for_entrypoint(entrypoint.path()) == ConversationSurface::Linked
         })
         .then(|| render_block(ConversationSurface::Linked));
-    let agents_contents = render_agents_md_from_block(&resolved_name, &agents_block);
+    let canonical_block = add_chapter_rules(
+        agents_block.clone(),
+        &target.join(CANONICAL_AGENT_ENTRYPOINT),
+    );
+    let agents_contents = render_agents_md_from_block(&resolved_name, &canonical_block);
     // §FS-init.2.1.1, §FS-init.2.3.4.17.4: both computed before the companion loop
     // consumes the plan.
     let claude_companions = agent_entrypoints.companions_of_claude(&target);
@@ -357,7 +363,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
             &target,
             CANONICAL_AGENT_ENTRYPOINT,
             &agents_contents,
-            &agents_block,
+            &canonical_block,
             force,
             dry_run,
         ) {
@@ -378,6 +384,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
             ConversationSurface::Linked => claude_block.as_deref().unwrap_or(&agents_block),
             ConversationSurface::Plain => &agents_block,
         };
+        let entrypoint_block = add_chapter_rules(entrypoint_block.to_string(), path_ref);
         let rel = path_ref
             .strip_prefix(&target)
             .unwrap_or(path_ref)
@@ -388,7 +395,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         }
         match entrypoint {
             InitCompanionAgentEntrypoint::Existing(path) => {
-                match update_agents_block(&path, entrypoint_block, &rel, dry_run) {
+                match update_agents_block(&path, &entrypoint_block, &rel, dry_run) {
                     Ok(AgentsUpdateResult::Appended) => {
                         events.push(InitEvent {
                             verb: verb_appended(dry_run),

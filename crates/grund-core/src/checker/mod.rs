@@ -59,6 +59,7 @@ pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
+pub(crate) use agents::chapter_rules_section;
 pub(crate) use chapter_rules::{
     check_chapter_rules, configured_rule_sentences, declared_workspace_vocabulary, parse_ad_hoc,
     parse_ad_hoc_with_workspace, workspace_vocabulary,
