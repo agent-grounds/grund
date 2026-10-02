@@ -4,6 +4,7 @@ A declaration is the line that introduces an ID, and it is what every citation i
 grund repository addresses. One invariant makes that address worth storing: an ID is
 declared exactly once, it is declared where its kind's home allows it, and every heading
 inside its body is either a coordinate a citation can reach or a finding `check` reports.
+Which line introduces an ID at all is [§FS-declarations.line](FS-declarations.md#line-what-a-line-in-declaration-position-declares).
 The checks below are that sentence enforced, save two that hold what an address is worth
 once it resolves: that the declaration is in the form its ID grammar gives it
 ([§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)), and that its lead, and every citable section
@@ -17,6 +18,72 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 lead, index, catalog), [§FS-terms.terms.2](FS-terms.md#terms2-citations) (marker, citation, citation site), [§FS-terms.terms.3](FS-terms.md#terms3-source-forms)
 (source declaration, stub, doc-comment), [§FS-terms.terms.4](FS-terms.md#terms4-scanning-and-project-structure) (scan, scope, workspace, member),
 [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity, caution), and [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (rule).
+
+## line: What a line in declaration position declares
+
+A line is in declaration position where a declaration could open: a Markdown heading, a
+comment-prefixed line in a source file, or a bare line inside a Python docstring
+([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)). The position is necessary and not sufficient. The token that opens the
+line has to be the shape a declaration takes, and one shape that starts out like it is
+not.
+
+### line.section-suffix: An ID with a section after it declares nothing
+
+A line in declaration position whose first token is an ID followed directly by the
+project's section separator and a section path declares nothing: not that ID, and no
+other. `FS-042-user-login.2` names section 2 of `FS-042-user-login`. That is the shape of
+a coordinate ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth)), never of a declaration, so none of these three lines
+declares `FS-042-user-login` titled `.2 …`:
+
+```python
+def login():
+    """A note about the login spec.
+
+    FS-042-user-login.2 is named here with a section suffix and no colon.
+    """
+```
+
+```rust
+fn inside_a_function_body() {
+    // FS-042-user-login.2 / a citation note whose marker was dropped
+}
+```
+
+```markdown
+# FS-042-user-login.2 and what a session must outlive
+```
+
+Each of them used to, and the false declaration stayed silent until something collided
+with it. The real declaration then failed as a duplicate, and every query of it as an
+ambiguous ID, naming a file whose author had only written *about* the point. Where
+nothing collided, an ID that no specification declares resolved, because a sentence about
+one of its sections had declared it. Such a line is prose, or a citation where it carries
+the marker ([§FS-check.1.1](FS-check.md#11-recognized-citations)). A line whose first token is an ID with nothing directly after
+it but the colon, whitespace or the end of the line is outside this point.
+
+#### line.section-suffix.1: Colon-less, it is no near miss either
+
+Without the declaration colon the line raises no `declaration-near-miss`: that rule reads
+only a token followed by the colon ([§FS-declarations.checks.declaration-near-miss.2](FS-declarations.md#checksdeclaration-near-miss2-the-declaration-colon-is-the-discriminator)), and
+this line has none. `check` reports nothing about it.
+
+#### line.section-suffix.2: With the colon, the whole token is the near miss
+
+`# FS-042-user-login.2: the session` opens the way a declaration does, and its token ends
+at the declaration colon, so the token is all of `FS-042-user-login.2`, section included.
+The ID grammar rejects that token, which makes the line the off-grammar declaration
+[§FS-config.3.2.5](FS-config.md#325-off-grammar-declarations-stay-readable) retains under its exact spelling and
+[§FS-declarations.checks.declaration-near-miss.1](FS-declarations.md#checksdeclaration-near-miss1-what-counts) reports. It is never a declaration of
+`FS-042-user-login`.
+
+#### line.section-suffix.3: The separator and the sections are the project's
+
+The separator is the configured `[id] section_separator` ([§FS-config.3.3](FS-config.md#33-section-paths--arbitrary-nesting-depth)), not a literal
+`.`. Under `section_separator = ":"`, `FS-042-user-login:2 is named here` declares
+nothing, and it is no near miss either: its `:` is the separator in front of a section,
+not a declaration colon in front of a title. The section is whatever the project's
+section grammar admits: a numbered path always, and a named path such as
+`FS-042-user-login.goals` only where `named_sections = true` ([§FS-config.3.2.7](FS-config.md#327-named_sections--the-gate-for-explicit-section-names)).
 
 ## checks: Checks
 

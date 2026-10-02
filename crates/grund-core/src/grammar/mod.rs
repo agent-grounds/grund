@@ -147,6 +147,8 @@ mod tests_comment_block;
 #[cfg(test)]
 mod tests_comment_block_position;
 #[cfg(test)]
+mod tests_declaration_line;
+#[cfg(test)]
 mod tests_fmt_suppression;
 #[cfg(test)]
 mod tests_inline_note_layout;
