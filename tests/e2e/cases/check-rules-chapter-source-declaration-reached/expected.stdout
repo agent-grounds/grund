@@ -1,0 +1,2 @@
+docs/ar/AR-markdown.md:1: error: AR-markdown has 0 Nonexistent chapters; RULE-nonexistent requires exactly one
+src/inline.rs:1: error: AR-inline has 0 Nonexistent chapters; RULE-nonexistent requires exactly one

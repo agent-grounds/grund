@@ -139,6 +139,8 @@ mod tests_section_body_scope;
 #[cfg(test)]
 mod tests_section_outside_declaration;
 #[cfg(test)]
+mod tests_source_section_titles;
+#[cfg(test)]
 mod tests_unmarked_headings;
 #[cfg(test)]
 mod tests_unwalked_kinds;

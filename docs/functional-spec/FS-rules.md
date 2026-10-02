@@ -20,6 +20,9 @@ level, rule, grounded).
   exact ID.
 - **chapter** — A rule's unit inside a declaration: one named child heading of it, as against
   the declaration's whole body. The rule grammar's subject-unit word.
+- **display name** — The label an author wrote after a chapter's coordinate: `Terms` in
+  `## terms: Terms`. What a presence rule names, whatever file the heading is in
+  ([§FS-rules.5.1.1](FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)).
 - **family** — One accepted rule grammar. A sentence outside every family is refused rather than
   reinterpreted.
 - **unverifiable here** — A rule sentence every component of which is well-formed, whose
@@ -344,6 +347,23 @@ uses the immediate enclosing declaration or chapter as `from`; `site_in`
 relates the site to every rule unit that contains it. Unresolved or ambiguous
 citations retain their ordinary findings and contribute no `cites` fact.
 
+#### 5.1.1 A chapter's display name is the label its author wrote
+
+A `chapter` fact's `display_name` is the label the author wrote after the
+chapter's coordinate: `Terms` in `## terms: Terms`. It is the same label
+whether the declaration's body lives in a Markdown file or in a source
+doc-comment. A heading in a doc-comment sits behind the comment that carries
+it — `///`, `//!`, a block comment's ` * `, a hash comment's `#`, or any other
+configured prefix
+([§FS-config.3.5.14](FS-config.md#3514-comment_prefixes-compose-with-extensions))
+— and that envelope says where the body lives, not what the chapter is called,
+so it is never part of the label. `/// ## terms: Terms` in a Rust file and
+`## terms: Terms` in a Markdown file are therefore the same fact,
+`chapter(c, terms, Terms)`, and a presence rule naming `Terms` counts either
+one ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)). The same label is the
+title of that chapter's `list --selector` row
+([§FS-rules.8](FS-rules.md#8-command-surfaces)).
+
 ### 5.2 Family clauses
 
 For subject set `S`, target set `T`, physical site `P`, chapter name `N`, the
@@ -601,7 +621,9 @@ where their output modes admit unit rows. Text prints the canonical coordinate,
 two spaces, location, two spaces, and title. A chapter JSON row uses the list
 object's existing fields in their existing order, adds `"section"` immediately
 after `"id"`, and puts the declaration ID in `id` and exact component path in
-`section`; a declaration row remains byte-for-byte the ordinary list row.
+`section`; a declaration row remains byte-for-byte the ordinary list row. In
+both forms a chapter row's title is the chapter's display name
+([§FS-rules.5.1.1](FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)).
 Invalid syntax, unknown vocabulary, disabled named sections, and ambiguous
 exact literals are exit-2 invocation errors. A valid selector with no matches
 prints nothing and exits 0. `--selector` is a flag; the positional remains the
