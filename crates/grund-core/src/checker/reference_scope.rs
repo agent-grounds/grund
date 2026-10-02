@@ -145,6 +145,7 @@ pub(crate) fn retain_diagnostics_in_report_scope(
             scope.contains(path)
                 // §FS-check.1.3.6.2: the anchor may be the site the caller did not type.
                 || diagnostic.sites.iter().any(|site| scope.contains(&site.path))
+                // §FS-rules.9.1.1: a stale block, chapter rules included, reaches a narrowed run.
                 || (diagnostic.code == AGENTS_INIT_CODE
                     && entrypoints.iter().any(|entrypoint| entrypoint == path))
         }

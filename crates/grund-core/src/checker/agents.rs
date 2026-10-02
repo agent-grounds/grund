@@ -35,6 +35,11 @@ fn agents_init_compatibility_message(legacy: String) -> String {
 /// located error at the rule's heading. The diagnostics are not re-emitted here:
 /// `check_chapter_rules` reports them at that site.
 ///
+/// `findings` is the run's resolution scope (§FS-check.1.3.6.1), never its report
+/// scope, so a path holding no rule declaration still renders every chapter-rule
+/// bullet and a narrowed run compares against the render `grund check .` compares
+/// against (§FS-rules.9.1.1).
+///
 /// `workspace` is the project map the run loaded, which is what lets a run at the
 /// workspace root resolve a member's cross-boundary rule and so catch a member
 /// block missing its bullet (§FS-rules.9.1).
