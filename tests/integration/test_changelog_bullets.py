@@ -1,6 +1,12 @@
-"""§AR-ci.7 — the one place the changelog gate and the release stamper agree about
-`docs/changelog.md`: where `## Unreleased` is, what a bullet is, and when two
-bullets are the same (§FS-distribution.4.6).
+"""§AR-ci.7 — the one place the changelog gate and the release agree about the
+changelog: what an entry under `docs/changelog/unreleased/` is, by its file name
+and its shape (§FS-distribution.4.12), and, for the move rule and the pointer,
+where `## Unreleased` is, what a bullet is, and when two bullets are the same
+(§FS-distribution.4.6).
+
+The README that states the format is held to the same answer: its category list
+is the module's, and its first part, the part another repository copies, carries
+nothing of this one's.
 
 The last class is the property the fix rests on rather than a remembered rule:
 the defect this module exists to close was two halves of one gate answering one
@@ -9,13 +15,19 @@ module and carry no copy of their own."""
 
 import ast
 import importlib.util
+import re
 import unittest
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = REPO_ROOT / "scripts"
-ANSWERS = ("unreleased_range", "unreleased_body", "bullets", "has_bullet", "normalise", "pr_numbers")
+ENTRY_README = REPO_ROOT / "docs" / "changelog" / "unreleased" / "README.md"
+ANSWERS = (
+    "unreleased_range", "unreleased_body", "bullets", "has_bullet", "normalise", "pr_numbers",
+    "entry_name", "entry_problem",
+)
+KEEP_A_CHANGELOG = ("added", "changed", "deprecated", "removed", "fixed", "security")
 
 
 def _load(name: str):
@@ -27,6 +39,14 @@ def _load(name: str):
 
 
 changelog_bullets = _load("changelog_bullets")
+
+
+def answer(name: str):
+    """One of the module's answers, failing the case that asks for one it lacks."""
+    found = getattr(changelog_bullets, name, None)
+    if found is None:
+        raise AssertionError(f"scripts/changelog_bullets.py defines no `{name}`")
+    return found
 
 SECTION = """# Changelog
 
@@ -47,6 +67,89 @@ SECTION = """# Changelog
 
 - A released bullet, which is not under Unreleased. (PR #2)
 """
+
+
+class EntryNameTests(unittest.TestCase):
+    """`<slug>.<category>.md`: the slug is lowercase letters, digits and hyphens."""
+
+    def test_a_name_is_a_slug_and_a_category(self) -> None:
+        entry_name = answer("entry_name")
+        self.assertEqual(("fix-issue-379", "changed"), tuple(entry_name("fix-issue-379.changed.md")))
+        self.assertEqual(("0-9", "fixed"), tuple(entry_name("0-9.fixed.md")))
+
+    def test_a_name_without_a_category_is_read_with_none(self) -> None:
+        self.assertEqual(("untyped-change", None), tuple(answer("entry_name")("untyped-change.md")))
+
+    def test_a_category_is_any_lowercase_word_to_the_format(self) -> None:
+        self.assertEqual(("a-note", "note"), tuple(answer("entry_name")("a-note.note.md")))
+
+    def test_what_is_not_an_entry_name(self) -> None:
+        for name in (
+            "README.md", "notes.txt", "Fix-Thing.fixed.md", "fix_thing.fixed.md",
+            "fix.thing.fixed.md", "the-change.Fixed.md", ".md", "the-change.added.markdown",
+        ):
+            with self.subTest(name=name):
+                self.assertIsNone(answer("entry_name")(name))
+
+
+class EntryShapeTests(unittest.TestCase):
+    """What `entry_problem` refuses: grund's categories, and one bullet per file."""
+
+    def test_grund_takes_the_keep_a_changelog_categories_in_their_order(self) -> None:
+        self.assertEqual(KEEP_A_CHANGELOG, tuple(answer("CATEGORIES")))
+
+    def test_every_category_grund_takes_is_an_entry(self) -> None:
+        for category in KEEP_A_CHANGELOG:
+            with self.subTest(category=category):
+                self.assertIsNone(answer("entry_problem")(f"the-change.{category}.md", "- One.\n"))
+
+    def test_a_missing_or_unknown_category_is_a_problem_naming_it(self) -> None:
+        self.assertIn("category", answer("entry_problem")("untyped-change.md", "- One.\n"))
+        self.assertIn("note", answer("entry_problem")("a-note.note.md", "- One.\n"))
+
+    def test_one_bullet_is_an_entry_however_it_is_wrapped_or_ended(self) -> None:
+        shapes = {
+            "one line": "- One.\n",
+            "wrapped": "- One that\n  goes on.\n",
+            "crlf": "- One that\r\n  goes on.\r\n",
+            "no final newline": "- One.",
+            "trailing blank lines": "- One.\n\n\n",
+        }
+        for shape, text in shapes.items():
+            with self.subTest(shape=shape):
+                self.assertIsNone(answer("entry_problem")("the-change.fixed.md", text))
+
+    def test_anything_but_one_bullet_is_a_problem(self) -> None:
+        shapes = {
+            "empty": "",
+            "prose": "Just prose, with no bullet.\n",
+            "two bullets": "- One.\n- Two.\n",
+            "a heading": "### Fixed\n\n- One.\n",
+            "indented": "  - Indented under nothing.\n",
+        }
+        for shape, text in shapes.items():
+            with self.subTest(shape=shape):
+                self.assertIsNotNone(answer("entry_problem")("the-change.fixed.md", text))
+
+    def test_a_name_that_is_not_an_entry_is_a_problem_naming_it(self) -> None:
+        self.assertIn("notes.txt", answer("entry_problem")("notes.txt", "- One.\n"))
+
+
+class EntryReadmeTests(unittest.TestCase):
+    """The README that states the format agrees with the module that reads it."""
+
+    def setUp(self) -> None:
+        text = ENTRY_README.read_text(encoding="utf-8")
+        self.part_one, _, self.part_two = text.partition("\n## Part two")
+
+    def test_the_readme_lists_the_categories_the_module_takes(self) -> None:
+        listing = next(line for line in self.part_two.splitlines() if "is one of" in line)
+        self.assertEqual(list(answer("CATEGORIES")), re.findall(r"`([a-z]+)`", listing))
+
+    def test_part_one_carries_no_rule_of_this_repository(self) -> None:
+        self.assertTrue(self.part_two, "the README has no part two")
+        self.assertNotIn("\u00a7", self.part_one)
+        self.assertNotIn("grund", self.part_one.lower())
 
 
 class UnreleasedSectionTests(unittest.TestCase):
@@ -77,14 +180,6 @@ class BulletTests(unittest.TestCase):
             ["- A second bullet that", "  wraps onto a continuation line.", "  - and carries a nested bullet of its own"],
             list(self.bullets[1].lines),
         )
-
-    def test_the_line_range_is_one_based_and_inclusive(self) -> None:
-        # `git blame -L start,end` takes exactly this, which is how the stamper
-        # finds the commits that wrote a bullet (§FS-distribution.4.5).
-        lines = SECTION.splitlines()
-        for bullet in self.bullets:
-            self.assertEqual(bullet.lines[0], lines[bullet.start - 1])
-            self.assertEqual(bullet.lines[-1], lines[bullet.end - 1])
 
     def test_a_heading_closes_a_bullet(self) -> None:
         self.assertEqual(["- A third bullet, under the next heading. (PR #7)"], list(self.bullets[2].lines))
@@ -174,6 +269,19 @@ class OneCodePathTests(unittest.TestCase):
                         )
                         through_the_module += 1
                 self.assertTrue(through_the_module, "it asks the shared module nothing, so this proves nothing")
+
+    def test_each_script_reads_entries_through_the_shared_module(self) -> None:
+        for name in ("check_changelog_pr_entry", "prepare_changelog_release"):
+            with self.subTest(script=name):
+                tree = ast.parse((SCRIPTS / f"{name}.py").read_text(encoding="utf-8"))
+                asked = {
+                    node.func.attr
+                    for node in ast.walk(tree)
+                    if isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and getattr(node.func.value, "id", None) == "changelog_bullets"
+                }
+                self.assertTrue(asked & {"entry_name", "entry_problem"}, f"it asks the module only {sorted(asked)}")
 
 
 if __name__ == "__main__":

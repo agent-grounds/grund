@@ -2,6 +2,7 @@
 verdict route is explicit, bounded, and exercised by its repository record."""
 
 import re
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -12,7 +13,6 @@ REQUIREMENTS = REPO_ROOT / "docs" / "requirements"
 DECISIONS = REPO_ROOT / "docs" / "decisions"
 COVER_DECISION = DECISIONS / "functional" / "DF-cover-workspace-scope.md"
 RELEASE = REPO_ROOT / "docs" / "changelog" / "0.10.1.md"
-RELEASES = REPO_ROOT / "docs" / "changelog"
 CHANGELOG = REPO_ROOT / "docs" / "changelog.md"
 CORRECTION_ROUTE = "§REQ-backwards-compatibility.5"
 CONFLICT_PROOF = "§REQ-no-missed-citation.1"
@@ -70,40 +70,59 @@ def _verdict_route_citations(text):
     }
 
 
-def _release_entries():
-    """Every release bullet, the latest release's and the unreleased ones included.
+def _release_entries(root=REPO_ROOT):
+    """Every release bullet: the archived releases, the latest release kept
+    inline, and the entries not yet released.
 
     A record lands with the change it justifies and before the release that
     carries it, so reading only the archived releases under `docs/changelog/`
-    would make condition .5.3 unsatisfiable on the day the record merges. The
-    `## Unreleased` section of `docs/changelog.md` becomes those release notes
-    verbatim when `prepare_changelog_release.py` cuts the version, so it is the
-    same text read one release earlier. The cut leaves that release inline in
-    `docs/changelog.md` until the next one archives it, so the inline release
-    is read too, or every record it carries would lose its release on the day
-    it ships. Every other condition stays conjunctive.
+    would make condition .5.3 unsatisfiable on the day the record merges. An
+    entry under `docs/changelog/unreleased/` is the bullet those release notes
+    publish when `prepare_changelog_release.py` cuts the version
+    (§FS-distribution.4.12), so it is the same text read one release earlier.
+    The cut leaves that release inline in `docs/changelog.md` until the next one
+    archives it, so the inline release is read too, or every record it carries
+    would lose its release on the day it ships. `## Unreleased` is only a
+    pointer and is not read. A place that is missing fails by name rather than
+    reading as one that holds no record. Every other condition stays conjunctive.
     """
+    releases = root / "docs" / "changelog"
+    pending = releases / "unreleased"
+    if not pending.is_dir():
+        raise AssertionError(
+            "docs/changelog/unreleased/ is missing: the meter reads the records not yet released there"
+        )
     return [
         line
-        for path in sorted(RELEASES.glob("*.md"))
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.startswith("- ")
-    ] + [
+        for path in sorted(releases.glob("*.md"))
+        for line in _bullet_lines(path.read_text(encoding="utf-8"))
+    ] + _bullet_lines(_inline_release(root)) + [
         line
-        for line in _inline_sections().splitlines()
-        if line.startswith("- ")
+        for path in sorted(pending.glob("*.md"))
+        if path.name != "README.md"
+        for line in _bullet_lines(path.read_text(encoding="utf-8"))
     ]
 
 
-def _inline_sections():
-    """`## Unreleased` and the latest release, the two `docs/changelog.md` keeps inline."""
-    text = CHANGELOG.read_text(encoding="utf-8")
-    return "".join(
-        match.group(1)
-        for match in re.finditer(
-            r"^## (?:Unreleased|\d+\. \[[^\]]+\][^\n]*)$(.*?)(?=^## |\Z)", text, re.M | re.S
+def _bullet_lines(text):
+    return [line for line in text.splitlines() if line.startswith("- ")]
+
+
+def _inline_release(root=REPO_ROOT):
+    """The latest release, the one `docs/changelog.md` keeps inline."""
+    text = (root / "docs" / "changelog.md").read_text(encoding="utf-8")
+    match = re.search(r"^## \d+\. \[[^\]]+\][^\n]*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    if match is None:
+        raise AssertionError(
+            "docs/changelog.md has no inline release heading `## N. [X.Y.Z] — date`: "
+            "the meter reads the latest release there"
         )
-    )
+    return match.group(1)
+
+
+def _unreleased_section(text):
+    match = re.search(r"^## Unreleased[ \t]*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    return match.group(1) if match else ""
 
 
 def _correction_route_errors(text, release_entries, catalog):
@@ -326,6 +345,58 @@ but there is no conflict proof, ordinary-route analysis, or release record.
         self.assertIn("no old form to carry beside a new one", consequences)
         self.assertIn(
             "no command the tool ships that completes the change", consequences
+        )
+
+
+class ReleaseRecordSourceTests(unittest.TestCase):
+    """Where the meter finds a release record now that pending changes are one
+    file each (§FS-distribution.4.12): never under `## Unreleased`."""
+
+    INLINE = "## 2. [0.2.0] — 2026-05-17\n\n- A shipped record.\n\n## 3. Older releases\n"
+
+    def _root(self, changelog, entries=None):
+        scratch = tempfile.TemporaryDirectory()
+        self.addCleanup(scratch.cleanup)
+        root = Path(scratch.name)
+        (root / "docs").mkdir()
+        (root / "docs" / "changelog.md").write_bytes(changelog.encode("utf-8"))
+        if entries is not None:
+            pending = root / "docs" / "changelog" / "unreleased"
+            pending.mkdir(parents=True)
+            for name, text in entries.items():
+                (pending / name).write_bytes(text.encode("utf-8"))
+        return root
+
+    def test_a_record_in_an_unreleased_entry_counts(self):
+        root = self._root(
+            f"# Changelog\n\n## Unreleased\n\nA pointer.\n\n{self.INLINE}",
+            {"README.md": "- A line of the format, not a record.\n", "a-record.fixed.md": "- A pending record.\n"},
+        )
+        entries = _release_entries(root)
+        self.assertIn("- A pending record.", entries)
+        self.assertIn("- A shipped record.", entries)
+        self.assertNotIn("- A line of the format, not a record.", entries)
+
+    def test_a_bullet_under_unreleased_is_not_a_record(self):
+        root = self._root(f"# Changelog\n\n## Unreleased\n\n- A stray bullet.\n\n{self.INLINE}", {})
+        self.assertNotIn("- A stray bullet.", _release_entries(root))
+
+    def test_a_missing_entry_directory_fails_by_name(self):
+        root = self._root(f"# Changelog\n\n## Unreleased\n\nA pointer.\n\n{self.INLINE}")
+        with self.assertRaisesRegex(AssertionError, "docs/changelog/unreleased/"):
+            _release_entries(root)
+
+    def test_a_missing_inline_release_fails_by_name(self):
+        root = self._root("# Changelog\n\n## Unreleased\n\nA pointer.\n\n## 3. Older releases\n", {})
+        with self.assertRaisesRegex(AssertionError, "inline release"):
+            _release_entries(root)
+
+    def test_the_changelog_holds_no_record_under_unreleased(self):
+        stray = _bullet_lines(_unreleased_section(CHANGELOG.read_text(encoding="utf-8")))
+        self.assertEqual(
+            [], stray,
+            "a bullet under `## Unreleased` is read by no meter and published by no release: "
+            "move it into a file under docs/changelog/unreleased/",
         )
 
 
