@@ -266,13 +266,17 @@ fn covered_candidates(root: &Path) -> [(PathBuf, PathBuf); 3] {
 
 /// §AR-ci.10.3: the base `test_root` builds under is the first candidate no
 /// config covers, so one covered under either name, or through an ancestor, is
-/// passed over for the clean one after it. The candidates sit inside a
+/// passed over for the clean one after it, and of two clean ones the earlier is
+/// kept — a clean `TMPDIR` is used before `/tmp`. The candidates sit inside a
 /// `test_root`, uncovered by construction; nothing here sets `TMPDIR`.
 #[test]
 fn uncovered_base_passes_over_a_covered_candidate() {
     let root = test_root("uncovered_base_passes_over_a_covered_candidate");
     let clean = root.join("clean");
-    std::fs::create_dir_all(&clean).expect("create clean candidate");
+    let clean_after = root.join("clean-after");
+    for candidate in [&clean, &clean_after] {
+        std::fs::create_dir_all(candidate).expect("create clean candidate");
+    }
 
     for (covered, config) in covered_candidates(&root) {
         assert_eq!(
@@ -282,6 +286,11 @@ fn uncovered_base_passes_over_a_covered_candidate() {
             config.display()
         );
     }
+    assert_eq!(
+        uncovered_base(&[clean.clone(), clean_after]),
+        Ok(clean),
+        "§AR-ci.10.3: the first uncovered candidate is the one used, not a later clean one"
+    );
 }
 
 /// §AR-ci.10.3: with no candidate clean, the refusal names `TMPDIR`, every
