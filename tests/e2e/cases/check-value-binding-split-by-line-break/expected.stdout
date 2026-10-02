@@ -1,0 +1,9 @@
+docs/split.md:1: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+docs/split.md:4: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+docs/split.md:7: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+docs/split.md:10: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+docs/split.md:13: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+docs/split.md:16: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+src/split.rs:1: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+src/split.rs:6: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+src/split.rs:11: error: invalid value binding: value binding must be on one physical line; join the literal and its citation

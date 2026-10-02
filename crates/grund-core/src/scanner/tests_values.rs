@@ -162,6 +162,78 @@ fn malformed_delimiters_are_errors_but_unbackticked_adjacency_is_prose() {
     );
 }
 
+/// A literal that closes its line onto a next-line value citation is an invalid
+/// attempted binding located at the literal's opening backtick, carrying the
+/// join-the-lines message; a blank line between leaves prose (§FS-values.3.1.1.1).
+#[test]
+fn a_binding_split_by_a_line_break_is_refused_at_its_literal() {
+    let joined = "invalid value binding: value binding must be on one physical line; \
+                  join the literal and its citation";
+    let markdown = [
+        (
+            "value_binding_split_next_line",
+            "The price is `999`\n(§CONST-field-price.1) today.\n",
+            14,
+        ),
+        (
+            "value_binding_split_trailing_whitespace",
+            "The price is `999` \t\n(§CONST-field-price.1) today.\n",
+            14,
+        ),
+        (
+            "value_binding_split_list_continuation",
+            "- The price is `999`\n  (§CONST-field-price.1) today.\n",
+            16,
+        ),
+        (
+            "value_binding_split_blockquote",
+            "> The price is `999`\n> (§CONST-field-price.1) today.\n",
+            16,
+        ),
+    ]
+    .map(|(name, binding, column)| (name, value_repo(name, binding), column));
+    let source = (
+        "value_binding_split_line_comment",
+        source_value_repo(
+            "value_binding_split_line_comment",
+            "// The price is `999`\n// (§CONST-field-price.1) today.\npub fn f() {}\n",
+        ),
+        17,
+    );
+    for (name, root, column) in markdown.into_iter().chain([source]) {
+        let refused = check_run(&root, false)
+            .report
+            .errors
+            .iter()
+            .map(|error| (error.code, error.line, error.column, error.message.clone()))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            refused,
+            vec![(
+                "invalid-value-binding",
+                Some(1),
+                Some(column),
+                joined.to_string()
+            )],
+            "{name}: the split binding is refused once, at its literal"
+        );
+    }
+
+    assert!(
+        check_run(
+            &value_repo(
+                "value_binding_split_by_a_blank_line",
+                "The price is `999`\n\n(§CONST-field-price.1) opens a paragraph.\n",
+            ),
+            false,
+        )
+        .report
+        .errors
+        .is_empty(),
+        "a blank line ends the paragraph, so the literal and the citation stay prose"
+    );
+}
+
 fn mismatch_messages(root: &PathBuf) -> Vec<String> {
     check_run(root, false)
         .report

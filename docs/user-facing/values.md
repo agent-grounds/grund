@@ -269,6 +269,18 @@ produces `invalid-value-binding`:
 `1200` (CONST-field-price.1)     # no marker
 ```
 
+A binding stays on one line. A literal that ends its line, with its citation
+opening the next line of the same paragraph or comment block, is refused rather
+than compared, and the message asks you to join the two lines ([§FS-values.3.1.1.1](../functional-spec/FS-values.md#3111-a-literal-that-closes-its-line-onto-the-citation)):
+
+```text
+`1200`
+(§CONST-field-price.1)           # split by a line break
+```
+
+A blank line between them ends the paragraph, so the literal and the citation
+are then ordinary prose and an ordinary citation.
+
 The marker remains mandatory even when `[reference] strict = false`.
 
 ## Equality and diagnostics
