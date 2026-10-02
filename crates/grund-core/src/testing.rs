@@ -4,10 +4,11 @@
 //! beside `lib.rs` and is imported as `use crate::testing::{…}`.
 
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 use crate::api::{CheckRun, run_check};
 use crate::checker::{check_findings, diagnostic_cmp};
-use crate::config::{Config, KindIndex, display_path};
+use crate::config::{Config, KindIndex, config_file_in, display_path};
 use crate::grammar::render_id;
 use crate::model::{CheckReport, Diagnostic, Findings, format_path, sort_path_key};
 use crate::scanner::{ScanError, scan_tree};
@@ -17,17 +18,72 @@ use crate::writers::render_agents_append_block_at;
 #[cfg(unix)]
 use crate::writers::GRUND_OPEN_RESOLVER;
 
+/// A fresh fixture root, under a temp directory no config covers at or above it
+/// (§AR-ci.10.3): discovery climbs past the fixture to the filesystem root, so
+/// a covered base would hand every zero-config case the config it found there.
+/// The base is chosen once per process, and when no candidate is clean every
+/// case fails here with the reason rather than inverting.
 pub(crate) fn test_root(name: &str) -> PathBuf {
+    static BASE: OnceLock<Result<PathBuf, String>> = OnceLock::new();
+    let base = match BASE.get_or_init(|| uncovered_base(&temp_candidates())) {
+        Ok(base) => base,
+        Err(reason) => panic!("{reason}"),
+    };
     let unique = format!(
         "{}-{}-{:?}",
         name,
         std::process::id(),
         std::thread::current().id()
     );
-    let dir = std::env::temp_dir().join("grund-lib-tests").join(unique);
+    let dir = base.join("grund-lib-tests").join(unique);
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("create test root");
     dir
+}
+
+/// The temp directories a fixture root may sit under, in preference order: the
+/// system one, then `/tmp` on unix where that differs (§AR-ci.10.3).
+fn temp_candidates() -> Vec<PathBuf> {
+    let system = std::env::temp_dir();
+    #[cfg(unix)]
+    let fallbacks = [PathBuf::from("/tmp")];
+    #[cfg(not(unix))]
+    let fallbacks: [PathBuf; 0] = [];
+    std::iter::once(system.clone())
+        .chain(fallbacks.into_iter().filter(|path| *path != system))
+        .collect()
+}
+
+/// The first of `candidates` no config covers, under either name, at it or at
+/// any ancestor (§AR-ci.10.3), returned as given. It asks discovery's own
+/// `config_file_in`, from the canonical path discovery would walk, so the guard
+/// reads exactly the names discovery reads; a candidate that will not
+/// canonicalize is skipped. The `Err` names `TMPDIR` and what refused each
+/// candidate — the config covering it, or why it is unusable.
+pub(crate) fn uncovered_base(candidates: &[PathBuf]) -> Result<PathBuf, String> {
+    let mut refusals = Vec::new();
+    for candidate in candidates {
+        match std::fs::canonicalize(candidate) {
+            Ok(walk) => match walk.ancestors().find_map(config_file_in) {
+                None => return Ok(candidate.clone()),
+                Some(config) => refusals.push(format!(
+                    "{} is covered by {}",
+                    candidate.display(),
+                    config.display()
+                )),
+            },
+            Err(error) => {
+                refusals.push(format!("{} is unusable: {error}", candidate.display()));
+            }
+        }
+    }
+    Err(format!(
+        "these fixtures need a temp root no config covers, because discovery climbs from a \
+         fixture root to the filesystem root and a zero-config case would read what it finds \
+         (§AR-ci.10.3); point TMPDIR at a directory no grund.toml or .agents/grund.toml sits \
+         above ({})",
+        refusals.join("; ")
+    ))
 }
 
 /// A test root as the *operating system* reports it, for fixtures whose

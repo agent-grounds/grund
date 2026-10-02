@@ -5,12 +5,12 @@
 //! §FS-check.4.3, §FS-check.4.11, §DF-config-file-location). Also the guard every
 //! zero-config case here leans on: no config covers a fixture root (§AR-ci.10.3).
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::*;
 use crate::api::config_warnings;
 use crate::scanner::scan_tree;
-use crate::testing::{canonical_test_path, test_root, write};
+use crate::testing::{canonical_test_path, test_root, uncovered_base, write};
 use crate::writers::{InitOpts, init};
 
 const MARKER_AT: &str = "[reference]\nmarker = \"@\"\n";
@@ -246,6 +246,80 @@ fn test_root_has_no_config_at_or_above_it() {
             std::env::temp_dir().display()
         );
     }
+}
+
+/// Three candidates under `root`, each covered a different way: a bare config
+/// in it, an `.agents/` one in it, and a bare config two levels above it — with
+/// the config covering each.
+fn covered_candidates(root: &Path) -> [(PathBuf, PathBuf); 3] {
+    let covered = [
+        (root.join("bare"), root.join("bare/grund.toml")),
+        (root.join("agents"), root.join("agents/.agents/grund.toml")),
+        (root.join("ancestor/a/b"), root.join("ancestor/grund.toml")),
+    ];
+    for (candidate, config) in &covered {
+        write(config, MARKER_AT);
+        std::fs::create_dir_all(candidate).expect("create candidate");
+    }
+    covered
+}
+
+/// §AR-ci.10.3: the base `test_root` builds under is the first candidate no
+/// config covers, so one covered under either name, or through an ancestor, is
+/// passed over for the clean one after it. The candidates sit inside a
+/// `test_root`, uncovered by construction; nothing here sets `TMPDIR`.
+#[test]
+fn uncovered_base_passes_over_a_covered_candidate() {
+    let root = test_root("uncovered_base_passes_over_a_covered_candidate");
+    let clean = root.join("clean");
+    std::fs::create_dir_all(&clean).expect("create clean candidate");
+
+    for (covered, config) in covered_candidates(&root) {
+        assert_eq!(
+            uncovered_base(&[covered, clean.clone()]),
+            Ok(clean.clone()),
+            "{} covers the first candidate, so the clean one is taken",
+            config.display()
+        );
+    }
+}
+
+/// §AR-ci.10.3: with no candidate clean, the refusal names `TMPDIR`, every
+/// candidate and the config covering it — or, for one that does not exist, that
+/// it is unusable — so the run says what to fix instead of inverting.
+#[test]
+fn uncovered_base_names_every_covering_config_when_none_is_clean() {
+    let root = test_root("uncovered_base_names_every_covering_config_when_none_is_clean");
+    let covered = covered_candidates(&root);
+    let missing = root.join("missing");
+    let candidates: Vec<PathBuf> = covered
+        .iter()
+        .map(|(candidate, _)| candidate.clone())
+        .chain([missing.clone()])
+        .collect();
+
+    let refusal = uncovered_base(&candidates).expect_err("no candidate is clean");
+
+    for (candidate, config) in &covered {
+        let reason = format!(
+            "{} is covered by {}",
+            candidate.display(),
+            canonical_test_path(config).display()
+        );
+        assert!(
+            refusal.contains(&reason),
+            "refusal must say `{reason}`: {refusal}"
+        );
+    }
+    let unusable = format!("{} is unusable", missing.display());
+    assert!(
+        refusal.contains(&unusable),
+        "refusal must say `{unusable}`: {refusal}"
+    );
+    assert!(
+        refusal.contains("point TMPDIR at"),
+        "refusal must name TMPDIR: {refusal}"
+    );
 }
 
 /// §FS-init.2.4: `init` generates the bare form, and probes both before it
