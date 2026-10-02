@@ -69,7 +69,8 @@ def collect(changelog: Path) -> list[Entry]:
         lines = tuple(changelog_bullets.entry_lines(text))
         found.append(Entry(path, parsed.slug, parsed.category, lines))
     if not found:
-        raise ChangelogError(f"{directory.as_posix()}/ holds no entry to release")
+        # §FS-distribution.4.5: the section is written before the release (§FS-distribution.4.6).
+        raise ChangelogError(f"{directory.as_posix()}/ holds no entry to release; write the release section first")
 
     try:
         landed = landings(directory)
