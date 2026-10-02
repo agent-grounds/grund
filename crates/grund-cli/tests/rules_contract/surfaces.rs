@@ -418,6 +418,46 @@ fn valid_rules_render_exact_sentences_in_a_rule_enabled_managed_section() {
     );
 }
 
+/// §FS-rules.9.1.1: a path-scoped `check` compares the chapter rules against the
+/// render `check .` compares against, so with the block `init` wrote every scope
+/// is clean, and with the bullets removed every scope reports the same drift —
+/// including the paths that hold no rule declaration, the issue #377 shape.
+#[test]
+fn a_path_scoped_check_compares_the_chapter_rules_against_the_whole_tree_render() {
+    // Only `docs/rules` holds the rule declarations; `.` is the whole-tree run.
+    const SCOPES: [&str; 4] = ["docs/fs", "docs/goals", "docs/rules", "."];
+    let root = scratch("path-scope-render");
+    let root_arg = root.to_string_lossy();
+    let output = run(&root, &["init", &root_arg]);
+    assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
+    let agrees = |exit: i32, stdout: &str| {
+        for scope in SCOPES {
+            let output = run(&root, &["check", scope, "--only", "agents-init"]);
+            assert_eq!(text(&output.stdout), stdout, "grund check {scope}");
+            assert_eq!(output.status.code(), Some(exit), "grund check {scope}");
+            assert_eq!(text(&output.stderr), "", "grund check {scope}");
+        }
+    };
+    agrees(0, "success\n");
+
+    let agents = fs::read_to_string(root.join("AGENTS.md")).expect("rendered AGENTS.md");
+    let emptied: String = agents
+        .split_inclusive('\n')
+        .filter(|line| !(line.starts_with("- ") && line.contains(" \u{a7}RULE-")))
+        .collect();
+    let removed = agents.lines().count() - emptied.lines().count();
+    assert_eq!(removed, 2, "the fixture must drop both rule bullets");
+    write(&root, "AGENTS.md", &emptied);
+    agrees(
+        1,
+        concat!(
+            "AGENTS.md:3: error: stale grund init block: chapter rules differ from ",
+            "grund.toml (run `grund init` to refresh) ",
+            "\u{2014} repo maintenance; citation checks still ran; wording changes in grund 0.16.0\n",
+        ),
+    );
+}
+
 /// §FS-rules.1: the rule title is a grammar island no formatter pass rewrites.
 #[test]
 fn formatter_treats_the_rule_sentence_as_a_grammar_island() {

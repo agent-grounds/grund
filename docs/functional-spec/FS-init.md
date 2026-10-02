@@ -476,7 +476,8 @@ A rule the run cannot verify from the scope it was given
 validation `init` performs before writing withholds the write for a genuinely
 invalid rule and for nothing else. That is what keeps the bytes a member-scoped
 run writes equal to the bytes a run holding the whole workspace would write for
-the same file ([§FS-rules.9.1](FS-rules.md#91-one-tree-renders-one-block)).
+the same file ([§FS-rules.9.1](FS-rules.md#91-one-tree-renders-one-block)). A path-scoped `check` likewise compares the
+section against the render a whole-tree run compares against ([§FS-rules.9.1.1](FS-rules.md#911-a-path-scoped-check-compares-against-the-same-render)).
 
 #### 2.3.6 Clickable citations
 

@@ -636,6 +636,23 @@ bullet where the alias could not be judged would make the two scopes disagree
 about one file: the member would write a block its own workspace root then
 reports as drifted.
 
+#### 9.1.1 A path-scoped check compares against the same render
+
+A path is a third scope the same sentence covers. `grund check <path>` compares
+the managed block's `### Chapter rules` against the render `grund check .`
+compares against, because the render is built from the rules the run's
+resolution scope read ([§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)) — the project's ordinary scope with its
+rule-kind homes, wherever the path points — and never from its report scope. A
+path that holds no rule declaration therefore still renders every bullet, and
+the `agents-init` finding the comparison raises reaches the narrowed report by
+its code ([§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)).
+
+So the two runs agree about `AGENTS.md` in both directions: neither calls the
+block `init` wrote stale, and both call a block missing a bullet stale, with the
+same finding. Rendering from the report scope would turn such a path into a
+bulletless section, and the narrowed run and the whole-tree run would then ask
+for opposite bytes in one file, which no `AGENTS.md` can satisfy.
+
 ## 10. Documentation and executable examples
 
 The release includes one guide at `docs/user-facing/rules.md`, one runnable
