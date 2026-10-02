@@ -71,6 +71,8 @@ harness ([§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples)).
 
 The external-ticket example runs offline; its contract is [§FS-examples.5.2](FS-examples.md#52-the-external-ticket-example-runs-offline).
 
+How a manifest's `command.args` becomes the arguments `grund` runs with is [§FS-examples.5.3](FS-examples.md#53-commandargs-is-read-as-shell-words-or-refused).
+
 ### 5.1 Synthetic verdict probes always compare
 
 The harness tests its mismatch verdict with scratch cases whose goldens are
@@ -86,3 +88,34 @@ regression in the verdict it relies on.
 The external-ticket example uses a deterministic local fake integration. It
 must run without network access and its final-repository golden must contain
 the exact snapshot declaration the fetcher printed.
+
+### 5.3 `command.args` is read as shell words, or refused
+
+The shared runner turns a case's `command.args` into the arguments it runs
+`grund` with, one way for an e2e case and an example alike. It reads the line
+as the words a POSIX shell would split it into, honouring the shell's quoting
+and nothing else:
+
+- whitespace outside quotes separates arguments, and leading or trailing
+  whitespace, the file's final newline included, adds none;
+- `'…'` and `"…"` each make what they enclose part of one argument, with the
+  quotes removed. Inside one kind of quote the other kind is an ordinary
+  character, so `'say "hi"'` and `"it's"` are one argument each;
+- quoted and unquoted parts with no whitespace between them are one argument,
+  as in a shell: `--rule="a b"` is the single argument `--rule=a b`, and `''`
+  or `""` standing alone is an empty argument;
+- a backslash is an ordinary character inside single quotes and is refused
+  anywhere else. A shell would read it as an escape, and rather than read it
+  that way the runner asks for the argument to be quoted;
+- an unclosed quote, one still open at the end of the line, is refused;
+- no other character means anything. There is no expansion, no comment and no
+  operator, so `$`, `` ` ``, `*`, `?`, `~`, `#`, `|`, `;` and every brace other
+  than the `{repo}` and `{repo_copy}` placeholders reach `grund` as written.
+
+A refusal is the runner's, not `grund`'s. It fails the case before `grund`
+runs, and its message names the case and `command.args` first, the way
+`command.cwd` and the `symlinks` manifest name theirs, then says what is wrong
+and quotes the line. So every line either becomes the arguments a shell would
+give its quoted words, or the runner says why it will not. It is never run as a
+different set of arguments, which would leave the author reading `grund`'s
+complaint about its argument count against a case written correctly.
