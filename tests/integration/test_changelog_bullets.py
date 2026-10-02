@@ -1,16 +1,15 @@
-"""§AR-ci.7 — the one place the changelog gate and the release agree about the
-changelog: what an entry under `docs/changelog/unreleased/` is, by its file name
-and its shape (§FS-distribution.4.12), and, for the move rule and the pointer,
-where `## Unreleased` is, what a bullet is, and when two bullets are the same
-(§FS-distribution.4.6).
+"""§AR-ci.7 — the one place the release's readers agree about the changelog: what
+an entry under `docs/changelog/unreleased/` is, by its file name and its shape
+(§FS-distribution.4.12), and, for the pointer, where `## Unreleased` is and what
+a bullet is (§FS-distribution.4.5).
 
 The README that states the format is held to the same answer: its category list
 is the module's, and its first part, the part another repository copies, carries
 nothing of this one's.
 
-The last class is the property the fix rests on rather than a remembered rule:
-the defect this module exists to close was two halves of one gate answering one
-question two ways, so both scripts must reach these answers through *this*
+The last class is the property the module rests on rather than a remembered
+rule: the defect it exists to close was two readers answering one question two
+ways, so both scripts that read entries must reach these answers through *this*
 module and carry no copy of their own."""
 
 import ast
@@ -24,8 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = REPO_ROOT / "scripts"
 ENTRY_README = REPO_ROOT / "docs" / "changelog" / "unreleased" / "README.md"
 ANSWERS = (
-    "unreleased_range", "unreleased_body", "bullets", "has_bullet", "normalise", "pr_numbers",
-    "entry_name", "entry_problem",
+    "unreleased_range", "unreleased_body", "bullets", "has_bullet", "entry_name", "entry_problem",
 )
 KEEP_A_CHANGELOG = ("added", "changed", "deprecated", "removed", "fixed", "security")
 
@@ -189,64 +187,20 @@ class BulletTests(unittest.TestCase):
         self.assertEqual(["- One."], list(found[0].lines))
 
 
-class SamenessTests(unittest.TestCase):
-    def same(self, left: str, right: str) -> None:
-        self.assertEqual(changelog_bullets.normalise(left), changelog_bullets.normalise(right))
-
-    def test_rewrapping_is_not_a_change(self) -> None:
-        self.same("- A bullet that says one thing. (PR #3)", "- A bullet that says\n  one thing. (PR #3)")
-
-    def test_rewording_is_a_change(self) -> None:
-        self.assertNotEqual(
-            changelog_bullets.normalise("- A bullet that says one thing."),
-            changelog_bullets.normalise("- A bullet that says another thing."),
-        )
-
-    def test_a_link_destination_is_disregarded(self) -> None:
-        # `grund fmt --write` rewrites the anchor when a heading is renamed, and
-        # it does that inside bullets nobody on this branch wrote.
-        self.same("- [§AR-ci.7](a.md#7-old-title): a change.", "- [§AR-ci.7](a.md#7-the-new-title): a change.")
-
-    def test_a_trailing_number_is_dropped_and_so_is_a_placeholder(self) -> None:
-        self.same("- A bullet. (PR #3)", "- A bullet. (PR #TBD)")
-        self.same("- A bullet. (PR #3)", "- A bullet.")
-
-    def test_appending_a_second_number_drops_both(self) -> None:
-        self.same("- Somebody else's bullet. (PR #3)", "- Somebody else's bullet. (PR #3) (PR #9)")
-
-    def test_a_number_that_is_not_trailing_is_part_of_the_text(self) -> None:
-        self.assertNotEqual(
-            changelog_bullets.normalise("- A bullet. (PR #3)"),
-            changelog_bullets.normalise("- A bullet that reverts PR #9 and says so. (PR #3)"),
-        )
-
-
-class NumberTests(unittest.TestCase):
-    def test_every_form_a_bullet_may_name_a_pull_request_in(self) -> None:
-        self.assertEqual({3}, set(changelog_bullets.pr_numbers("- A bullet. (PR #3)")))
-        self.assertEqual({3}, set(changelog_bullets.pr_numbers("- A bullet. pull request #3")))
-        self.assertEqual({3}, set(changelog_bullets.pr_numbers("- A bullet ([x](https://g/o/r/pull/3)).")))
-
-    def test_a_placeholder_is_not_a_number(self) -> None:
-        self.assertEqual(set(), set(changelog_bullets.pr_numbers("- A bullet. (PR #TBD)")))
-
-    def test_an_issue_link_is_not_a_pull_request(self) -> None:
-        self.assertEqual(set(), set(changelog_bullets.pr_numbers("- Closes [issue #9](https://g/o/r/issues/9).")))
-
-
 class OneCodePathTests(unittest.TestCase):
-    """The gate and the stamper reach these answers here, or the fix is not a fix."""
+    """The release helper and the module it reads entries through reach these
+    answers here, or the module is not the one place."""
 
     def test_both_scripts_hold_the_same_module_object(self) -> None:
-        gate = _load("check_changelog_pr_entry")
+        reader = _load("changelog_entries")
         stamper = _load("prepare_changelog_release")
-        self.assertIs(gate.changelog_bullets, stamper.changelog_bullets)
+        self.assertIs(reader.changelog_bullets, stamper.changelog_bullets)
 
     def test_each_script_reaches_the_answers_only_through_the_shared_module(self) -> None:
         # The positive property, not the absence of two spellings a copy can
         # evade: every route either script has to one of these answers is a call
         # on `changelog_bullets`, and neither defines one of its own.
-        for name in ("check_changelog_pr_entry", "prepare_changelog_release"):
+        for name in ("changelog_entries", "prepare_changelog_release"):
             with self.subTest(script=name):
                 tree = ast.parse((SCRIPTS / f"{name}.py").read_text(encoding="utf-8"))
                 defined = {
@@ -271,7 +225,7 @@ class OneCodePathTests(unittest.TestCase):
                 self.assertTrue(through_the_module, "it asks the shared module nothing, so this proves nothing")
 
     def test_each_script_reads_entries_through_the_shared_module(self) -> None:
-        for name in ("check_changelog_pr_entry", "prepare_changelog_release"):
+        for name in ("changelog_entries", "prepare_changelog_release"):
             with self.subTest(script=name):
                 tree = ast.parse((SCRIPTS / f"{name}.py").read_text(encoding="utf-8"))
                 asked = {
