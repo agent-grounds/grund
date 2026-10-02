@@ -201,6 +201,12 @@ const MALFORMED_INPUT: &str = concat!(
     "{\"id\":\"FS-alpha\",\"extra\":true}\n",
 );
 
+const MANY_QUERIES_INPUT: &str = concat!(
+    "{\"id\":\"FS-alpha\"}\n",
+    "{\"id\":\"FS-alpha\",\"section\":\"1\"}\n",
+    "{\"id\":\"member/FS-beta\"}\n",
+);
+
 fn assert_malformed_rejected(output: &Output) {
     assert_eq!(output.status.code(), Some(2));
     assert_eq!(stdout(output), "");
@@ -216,8 +222,20 @@ fn assert_empty_succeeded(output: &Output) {
     assert_eq!(stderr(output), "");
 }
 
+fn assert_many_queries_succeeded(explicit: &Output, all: &Output) {
+    for (form, output) in [("explicit", explicit), ("--all", all)] {
+        assert_eq!(
+            output.status.code(),
+            Some(0),
+            "{form} stderr:\n{}",
+            stderr(output)
+        );
+        assert_eq!(stderr(output), "", "{form}");
+    }
+}
+
 /// Malformed batch input is a run-level failure: exit `2`, empty stdout, the
-/// error on stderr, and no envelope at all (§FS-show.3.3).
+/// error on stderr, and no envelope at all (§FS-show.3.3, §AR-ci.3.3).
 #[test]
 fn show_batch_rejects_the_whole_malformed_stream() {
     let repo = Repo::new("malformed");
@@ -240,7 +258,7 @@ fn show_batch_rejects_the_whole_malformed_stream_before_scanning() {
 }
 
 /// An empty explicit stream is one of the aggregate's success cases: exit `0`
-/// with no envelopes on either stream (§FS-show.3.3).
+/// with no envelopes on either stream (§FS-show.3.3, §AR-ci.3.3).
 #[test]
 fn show_batch_empty_input_is_a_successful_noop() {
     let repo = Repo::new("empty");
@@ -262,10 +280,21 @@ fn show_batch_empty_input_is_a_successful_no_scan_noop() {
     assert_eq!(loads(&log), 0);
 }
 
+/// An explicit stream of several queries, one of them in a workspace member,
+/// and `--batch --all` both succeed: exit `0` with stderr empty
+/// (§FS-show.1.9, §FS-show.3.3, §AR-ci.3.3).
+#[test]
+fn show_batch_succeeds_for_many_queries_and_for_all() {
+    let repo = Repo::new("many");
+    let explicit = run_batch(&repo, &[], MANY_QUERIES_INPUT, None);
+    let all = run_batch(&repo, &["--all"], "", None);
+    assert_many_queries_succeeded(&explicit, &all);
+}
+
 /// `--batch --all` takes no stdin and discovers its query set from the selected
 /// scope, answering it from the same single workspace load an explicit stream
 /// gets (§FS-show.1.9). The load count is the test-only observer's, so a build
-/// without its feature ignores this test (§AR-ci.3.3).
+/// without its feature ignores this half (§AR-ci.3.3).
 #[test]
 #[cfg_attr(
     not(feature = "test-workspace-load-count"),
@@ -275,16 +304,7 @@ fn show_batch_loads_one_workspace_for_many_queries_and_for_all() {
     let repo = Repo::new("load-count");
     let explicit_log = repo.load_log("explicit");
     let all_log = repo.load_log("all");
-    let explicit = run_batch(
-        &repo,
-        &[],
-        concat!(
-            "{\"id\":\"FS-alpha\"}\n",
-            "{\"id\":\"FS-alpha\",\"section\":\"1\"}\n",
-            "{\"id\":\"member/FS-beta\"}\n",
-        ),
-        Some(&explicit_log),
-    );
+    let explicit = run_batch(&repo, &[], MANY_QUERIES_INPUT, Some(&explicit_log));
     let all = run_batch(&repo, &["--all"], "", Some(&all_log));
 
     assert_eq!(
@@ -297,6 +317,5 @@ fn show_batch_loads_one_workspace_for_many_queries_and_for_all() {
         stderr(&explicit),
         stderr(&all)
     );
-    assert_eq!(explicit.status.code(), Some(0));
-    assert_eq!(all.status.code(), Some(0));
+    assert_many_queries_succeeded(&explicit, &all);
 }
