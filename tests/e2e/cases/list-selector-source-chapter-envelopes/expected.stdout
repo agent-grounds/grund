@@ -1,0 +1,8 @@
+AR-docstring.terms  src/docstring.py:4  Terms
+AR-hash.terms       src/hash.rb:3  Terms
+AR-inner.terms      src/inner.rs:3  Terms
+AR-javadoc.terms    src/Javadoc.java:4  Terms
+AR-lisp.terms       src/lisp.lisp:3  Terms
+AR-markdown.terms   docs/ar/AR-markdown.md:3  Terms
+AR-outer.terms      src/outer.rs:3  Terms
+AR-sql.terms        src/sql.sql:3  Terms
