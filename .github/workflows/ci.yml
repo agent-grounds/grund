@@ -145,6 +145,8 @@ jobs:
         with:
           python-version: "3.x"
 
+      # The suggested slug comes from GITHUB_HEAD_REF, which the script reads from
+      # its environment rather than this line splicing a branch name into the shell.
       - name: changelog PR entry
         run: python scripts/check_changelog_pr_entry.py --base-sha "${{ github.event.pull_request.base.sha }}" --head-sha "${{ github.event.pull_request.head.sha }}" --pr-number "${{ github.event.pull_request.number }}"
 

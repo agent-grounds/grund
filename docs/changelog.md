@@ -1,6 +1,6 @@
 # Changelog
 
-Records every notable change to `grund`. Versions follow semver; the **latest release is inline** in this file, and **older releases live one-per-file under `docs/changelog/`** so a reader (human or agent) only loads the history they ask for. Each entry cites the FS/AR/G/DF IDs it touches, so the changelog is itself part of the conformant tree (`grund .` validates the citations).
+Records every notable change to `grund`. Versions follow semver; the **latest release is inline** in this file, **older releases live one-per-file under `docs/changelog/`**, and **changes not yet released live one-per-file under [`docs/changelog/unreleased/`](changelog/unreleased/README.md)**, so a reader (human or agent) only loads the history they ask for. Each entry cites the FS/AR/G/DF IDs it touches, so the changelog is itself part of the conformant tree (`grund .` validates the citations).
 
 Schema-version bumps are called out explicitly: `grund_config_version` ([§FS-config.5](functional-spec/FS-config.md#5-schema-versioning)) and the `AGENTS.md` init block version ([§FS-init.2](functional-spec/FS-init.md#2-outputs)). A bump to either is a breaking change for the consumer and must appear under **Changed** with a migration note.
 
@@ -12,15 +12,15 @@ Schema-version bumps are called out explicitly: `grund_config_version` ([§FS-co
 
 ### 1.2 Schema version callouts
 
-Any change to `grund_config_version` or the `AGENTS.md` block version goes under **Changed** with the prefix `**Schema:**` and a one-line migration pointer.
+Any change to `grund_config_version` or the `AGENTS.md` block version is a `changed` entry whose bullet begins with `**Schema:**` and carries a one-line migration pointer, so it is released under **Changed**.
 
 ### 1.3 Entry style
 
-One bullet per change, present tense, leading with the affected ID. Example: `§FS-show: add --head mode for truncated output`. A bullet ends with the pull request that wrote it, `(PR #N)` — but the number is optional while the pull request is open, because the first push cannot know it: write `(PR #TBD)` or nothing at all and `scripts/prepare_changelog_release.py stamp` fills it in at release time. A number you do write must be your own pull request's ([§FS-distribution.4.6](functional-spec/FS-distribution.md#46-the-changelog-gate-keeps-the-release-section-mappable-to-its-pull-requests)).
+One file per change under `docs/changelog/unreleased/`, holding one bullet: present tense, leading with the affected ID. Example: `- §FS-show: add --head mode for truncated output`. The file is named `<slug>.<category>.md` — the slug the branch name, lowercase letters, digits and hyphens, and the category one of `added`, `changed`, `deprecated`, `removed`, `fixed` or `security` — and its links are relative to the file; [the directory's README](changelog/unreleased/README.md) is the format and [§FS-distribution.4.12](functional-spec/FS-distribution.md#412-pending-changelog-entries-are-one-file-each) this repository's use of it. The pull request number is left to the release: end the bullet in `(PR #TBD)` or in nothing and `scripts/prepare_changelog_release.py stamp` writes the number at its end. A number you do write must be your own pull request's ([§FS-distribution.4.6](functional-spec/FS-distribution.md#46-the-changelog-gate-keeps-the-release-section-mappable-to-its-pull-requests)).
 
 ### 1.4 Progressive discovery
 
-Only **Unreleased** and the **most recent release** are inline. When a new release ships, the previous "latest" section is moved verbatim to `docs/changelog/<version>.md` and a one-line link is added under [section 3, Older releases](#3-older-releases). The most recent release stays inline so the common reader and agent path — "what changed lately?" — is one file deep.
+Only the **most recent release** is inline; pending changes are files, and **Unreleased** holds nothing but the pointer to them. When a new release ships, its entries become the new inline section and their files are deleted, the previous "latest" section is moved verbatim to `docs/changelog/<version>.md`, and a one-line link is added under [section 3, Older releases](#3-older-releases) ([§FS-distribution.4.5](functional-spec/FS-distribution.md#45-what-the-version-bump-includes)). The most recent release stays inline so the common reader and agent path — "what changed lately?" — is one file deep.
 
 ## Unreleased
 
