@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Require every pull request to add a bullet to the Unreleased changelog. §FS-distribution.4.6
+"""Require every pull request to add a changelog entry. §FS-distribution.4.6
 
-One rule in two halves that take the same input: `--pre-push` resolves the base
-from the remote's `main`, pull-request CI is handed the base the event names,
-and both then ask local git the one question `changelog_bullets` defines
-(§AR-ci.7). No half calls the GitHub API, so a fork and a restricted token reach
-the verdict an owner branch reaches.
+An entry is one file under `docs/changelog/unreleased/` (§FS-distribution.4.12),
+and the branch must add one whose slug the merge base does not hold. One rule in
+two halves that take the same input: `--pre-push` resolves the base from the
+remote's `main`, pull-request CI is handed the base the event names, and both
+then list the directory at the two commits from local git alone, asking the
+questions `changelog_bullets` answers (§AR-ci.7). No half calls the GitHub API,
+so a fork and a restricted token reach the verdict an owner branch reaches.
 """
 
 from __future__ import annotations
@@ -13,72 +15,161 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import posixpath
 import re
-import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import changelog_bullets  # noqa: E402  (the shared definitions live beside this script)
+import changelog_gate_git as gate_git  # noqa: E402  (what the gate reads of git, split out for size)
 
 
 ZERO_SHA_RE = re.compile(r"^0{4,40}$")
 SKIP_LINE = "      SKIP=changelog-pr-entry git push"
-NO_BASE_REF = "no base ref resolves"
+NO_SLUG = "<slug>"
 
 
-class ChangelogPrError(Exception):
-    pass
+ChangelogPrError = gate_git.ChangelogPrError
+EntryFile = gate_git.EntryFile
 
 
 def check_changelog_pr_entry(
-    changelog: Path, base: str | None, head: str, pr_number: int | None, pre_push: bool
+    changelog: Path,
+    base: str | None,
+    head: str,
+    pr_number: int | None,
+    pre_push: bool,
+    branch: str | None = None,
 ) -> None:
-    """R1 and R2 of §FS-distribution.4.6, against one base and one head."""
-    repository_path = _repository_path(changelog)
-    head_commit = _resolve_commit(head)
-    lines = _lines_at(head_commit, repository_path, changelog)
-    merge_base, why_not = _merge_base(base, head_commit) if base is not None else (None, NO_BASE_REF)
+    """§FS-distribution.4.6 against one base and one head."""
+    repository_path = gate_git.repository_path(changelog)
+    directory = posixpath.join(posixpath.dirname(repository_path), changelog_bullets.ENTRY_DIRECTORY)
+    head_commit = gate_git.resolve_commit(head)
+    head_files = gate_git.entries_at(head_commit, directory)
+    merge_base, why_not = (None, gate_git.NO_BASE_REF) if base is None else gate_git.merge_base(base, head_commit)
 
     if merge_base is None:
         # No merge base can be taken — a shallow clone, or a `main` never
         # fetched. Ask for less rather than for a fetch the contributor did not
         # make (§FS-distribution.4.6).
-        print(
-            f"warning: {why_not}; requiring at least one bullet under `## Unreleased` of {changelog.as_posix()}",
-            file=sys.stderr,
-        )
-        if not changelog_bullets.has_bullet(changelog_bullets.unreleased_body(lines)):
-            raise ChangelogPrError(_refusal(changelog, "in this clone", pre_push))
+        print(f"warning: {why_not}; requiring at least one entry in {directory}/", file=sys.stderr)
+        if not any(_is_entry(entry) for entry in head_files.values()):
+            raise ChangelogPrError(_refusal(directory, "in this clone", branch, pre_push))
         return
 
-    base_keys = {bullet.key for bullet in _bullets_at(merge_base, repository_path)}
-    added = [bullet for bullet in changelog_bullets.bullets(lines) if bullet.key not in base_keys]
-    if not added:
-        raise ChangelogPrError(_refusal(changelog, _label(base, merge_base), pre_push))
+    base_files = gate_git.entries_at(merge_base, directory)
+    touched = [
+        entry
+        for name, entry in sorted(head_files.items())
+        if name != changelog_bullets.ENTRY_README
+        and (name not in base_files or base_files[name].object_id != entry.object_id)
+    ]
+    _refuse_what_is_not_an_entry(directory, touched, head_files)
 
-    if pr_number is None:
-        return
-    for bullet in added:
-        others = sorted(bullet.numbers - {pr_number})
-        if others:
+    carried = _numbers_by_slug(base_files)
+    moved_from = {bullet.key for bullet in _bullets_at(merge_base, repository_path)}
+    written = []
+    for entry in touched:
+        slug = _slug(entry.name)
+        if slug not in carried and changelog_bullets.normalise(gate_git.text(entry)) in moved_from:
+            continue  # Moved out of the merge base's `## Unreleased`: not written, number unexamined.
+        if slug not in carried:
+            written.append(entry)
+        if pr_number is not None:
+            _refuse_a_foreign_number(directory, entry, carried.get(slug, frozenset()), pr_number)
+    if not written:
+        raise ChangelogPrError(_refusal(directory, f"against {_label(base, merge_base)}", branch, pre_push))
+
+
+def _refuse_what_is_not_an_entry(
+    directory: str, touched: list[EntryFile], head_files: dict[str, EntryFile]
+) -> None:
+    """Each file the branch adds or changes is an entry with a slug of its own. §FS-distribution.4.6"""
+    for entry in touched:
+        problem = changelog_bullets.entry_problem(entry.name, gate_git.text(entry))
+        if problem is not None:
+            raise ChangelogPrError(f"{directory}/{problem}")
+    slugs = {name: parsed.slug for name in head_files if (parsed := changelog_bullets.entry_name(name))}
+    holders = Counter(slugs.values())
+    for entry in touched:
+        slug = slugs[entry.name]
+        if holders[slug] > 1:
+            sharing = ", ".join(name for name, other in sorted(slugs.items()) if other == slug)
             raise ChangelogPrError(
-                f"a `## Unreleased` bullet this branch adds names PR #{others[0]}, which is not this "
-                f"pull request (PR #{pr_number}); a number is optional, but a number that is written "
-                f"must be the pull request's own:\n  {bullet.text.splitlines()[0]}"
+                f"{directory}/: the slug `{slug}` is shared by {sharing}; a slug is unique in the directory, "
+                "whatever the category"
             )
 
 
-def _refusal(changelog: Path, base_label: str, pre_push: bool) -> str:
+def _refuse_a_foreign_number(directory: str, entry: EntryFile, carried: frozenset[int], pr_number: int) -> None:
+    """A number the branch writes into an entry is the pull request's own. §FS-distribution.4.6
+
+    A number the entry's slug already carried at the merge base was not written
+    by this branch, so it is not this branch's to answer for.
+    """
+    foreign = sorted(changelog_bullets.pr_numbers(gate_git.text(entry)) - carried - {pr_number})
+    if foreign:
+        raise ChangelogPrError(
+            f"{directory}/{entry.name} names PR #{foreign[0]}, which is not this pull request "
+            f"(PR #{pr_number}); a number is optional, but a number that is written must be the "
+            f"pull request's own:\n  {gate_git.text(entry).splitlines()[0]}"
+        )
+
+
+def _numbers_by_slug(files: dict[str, EntryFile]) -> dict[str, frozenset[int]]:
+    """Each slug the directory holds, with every number its files carry."""
+    numbers: dict[str, frozenset[int]] = {}
+    for name, entry in files.items():
+        parsed = changelog_bullets.entry_name(name)
+        if parsed is not None:
+            named = changelog_bullets.pr_numbers(gate_git.text(entry))
+            numbers[parsed.slug] = numbers.get(parsed.slug, frozenset()) | named
+    return numbers
+
+
+def _slug(name: str) -> str:
+    """The slug of a file `_refuse_what_is_not_an_entry` has already let through."""
+    parsed = changelog_bullets.entry_name(name)
+    assert parsed is not None, name
+    return parsed.slug
+
+
+def _is_entry(entry: EntryFile) -> bool:
+    if entry.name == changelog_bullets.ENTRY_README:
+        return False
+    return changelog_bullets.entry_problem(entry.name, gate_git.text(entry)) is None
+
+
+def _refusal(directory: str, against: str, branch: str | None, pre_push: bool) -> str:
+    """What a branch that adds no entry reads: the file to add, by name. §FS-distribution.4.6"""
     message = (
-        f"{changelog.as_posix()} `## Unreleased` has no new or changed bullet against {base_label}.\n"
-        "  Add one. A number is optional: write `(PR #TBD)` and the release fills it in."
+        f"{directory}/ gains no entry {against}.\n"
+        "  Add one file for this change:\n"
+        f"      {directory}/{suggested_slug(branch)}.<category>.md\n"
+        f"  <category> is one of: {', '.join(changelog_bullets.CATEGORIES)}.\n"
+        "  The file holds one bullet. A number is optional: the release writes it."
     )
     if pre_push:
         message += "\n  If this branch is not becoming a pull request:\n" + SKIP_LINE
     return message
+
+
+def suggested_slug(branch: str | None) -> str:
+    """The branch name made a slug: `fix/issue-379` suggests `fix-issue-379`. §FS-distribution.4.6"""
+    name = (branch or "").removeprefix("refs/heads/")
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or NO_SLUG
+
+
+def branch_name(pre_push: bool) -> str | None:
+    """The branch each half already has (§AR-ci.7): the local ref `pre-commit`
+    hands the hook, and in CI the pull request's head branch, which the runner
+    sets in the environment rather than the workflow splicing it into a shell
+    line, where a fork's branch name would be code."""
+    return os.environ.get("PRE_COMMIT_LOCAL_BRANCH" if pre_push else "GITHUB_HEAD_REF") or None
 
 
 def _label(base: str, merge_base: str) -> str:
@@ -89,7 +180,7 @@ def head_contains_nothing_new(base: str | None, head: str) -> bool:
     """Whether the base already holds the head: there is nothing to require."""
     if base is None:
         return False
-    return _git(["merge-base", "--is-ancestor", head, base]) is not None
+    return gate_git.git(["merge-base", "--is-ancestor", head, base]) is not None
 
 
 def base_ref_for_pre_push() -> str | None:
@@ -97,7 +188,7 @@ def base_ref_for_pre_push() -> str | None:
     remote = os.environ.get("PRE_COMMIT_REMOTE_NAME")
     candidates = ([f"{remote}/main"] if remote else []) + ["origin/main", "main"]
     for candidate in candidates:
-        if _git(["rev-parse", "--verify", "--quiet", f"{candidate}^{{commit}}"]) is not None:
+        if gate_git.git(["rev-parse", "--verify", "--quiet", f"{candidate}^{{commit}}"]) is not None:
             return candidate
     return None
 
@@ -106,8 +197,8 @@ def head_ref_for_pre_push() -> str | None:
     """The local ref `pre-commit` hands the `pre-push` stage, else the checkout.
 
     `None` where the push deletes the ref: `pre-commit` hands the all-zero sha,
-    there is no head to read a changelog from, and a deletion adds no line to
-    require a bullet for (§FS-distribution.4.6).
+    there is no head to list entries from, and a deletion adds no entry to
+    require (§FS-distribution.4.6).
     """
     to_ref = os.environ.get("PRE_COMMIT_TO_REF", "").strip()
     if ZERO_SHA_RE.match(to_ref):
@@ -148,23 +239,9 @@ def _pull_request_from_event(event_path: Path) -> dict | None:
     return pull_request if isinstance(pull_request, dict) else None
 
 
-def _lines_at(commit: str, repository_path: str, changelog: Path) -> list[str]:
-    """The changelog as `commit` holds it. §FS-distribution.4.6
-
-    The head side of the comparison is read here and not from the checkout, so
-    the merge `actions/checkout` leaves in the tree on a `pull_request` event —
-    the head merged with the *current* base tip — cannot lend this branch a
-    bullet the base gained after the branch point.
-    """
-    blob = _blob_at(commit, repository_path)
-    if blob is None:
-        raise ChangelogPrError(f"missing changelog: {changelog.as_posix()} is not in {commit[:12]}")
-    return blob.splitlines()
-
-
 def _bullets_at(commit: str, repository_path: str) -> list[changelog_bullets.Bullet]:
     """The bullets `## Unreleased` held at `commit`; none if the file was not there."""
-    blob = _blob_at(commit, repository_path)
+    blob = gate_git.blob_at(commit, repository_path)
     if blob is None:
         return []
     try:
@@ -173,87 +250,9 @@ def _bullets_at(commit: str, repository_path: str) -> list[changelog_bullets.Bul
         return []
 
 
-def _blob_at(commit: str, repository_path: str) -> str | None:
-    """The file's bytes at `commit`, or `None` where the commit did not hold it.
-
-    `repository_path` has already been resolved against the repository root, and
-    `commit` against the object store, so a `git show` that fails here means the
-    file was absent at that commit and nothing else.
-    """
-    return _git_output(["show", f"{commit}:{repository_path}"])
-
-
-def _repository_path(changelog: Path) -> str:
-    """`changelog` as git names it, from the repository root down.
-
-    Resolved rather than prefixed: an absolute `--changelog` used to reach
-    `git show <commit>:/abs/path`, which git refuses, and a refusal read as
-    "the file was not there" makes every bullet count as added.
-    """
-    toplevel = _git(["rev-parse", "--show-toplevel"])
-    if toplevel is None:
-        raise ChangelogPrError("not inside a git repository; the changelog gate reads local git alone")
-    try:
-        return changelog.resolve().relative_to(Path(toplevel).resolve()).as_posix()
-    except ValueError as exc:
-        raise ChangelogPrError(f"{changelog.as_posix()} is outside the repository at {toplevel}") from exc
-
-
-def _resolve_commit(revision: str) -> str:
-    """`revision` as a commit sha, so an absent file cannot read as an absent commit."""
-    sha = _git(["rev-parse", "--verify", "--quiet", f"{revision}^{{commit}}"])
-    if sha is None:
-        raise ChangelogPrError(f"no commit resolves for {revision}")
-    return sha
-
-
-def _merge_base(base: str, head: str) -> tuple[str | None, str]:
-    """The merge base, or `None` and why none can be taken. §FS-distribution.4.6
-
-    `git merge-base` fails alike for a base no ref resolves and for one that
-    resolves but shares no history with the head, and both degrade the same way
-    — but a contributor whose base is a shallow clone's grafted commit would
-    read "no base ref resolves" and go fetch a ref they already have, so the two
-    are told apart here rather than at the call site. The base is deliberately
-    not put through `_resolve_commit`: failing to resolve is a documented skip
-    for the base, where for the head it is an error.
-    """
-    if _git(["rev-parse", "--verify", "--quiet", f"{base}^{{commit}}"]) is None:
-        return None, NO_BASE_REF
-    merge_base = _git(["merge-base", base, head])
-    if merge_base is None:
-        return None, f"the base {base} and this head share no history"
-    return merge_base, ""
-
-
-def _git(arguments: Sequence[str]) -> str | None:
-    """`git` output stripped, or `None` where git says no — an unresolvable ref included."""
-    output = _git_output(arguments)
-    return None if output is None else output.strip()
-
-
-def _git_output(arguments: Sequence[str]) -> str | None:
-    """git's stdout verbatim, decoded as UTF-8 whatever the platform's locale is.
-
-    Both sides of the comparison come through here, so a section marker or an
-    em dash cannot decode two ways the way a Windows clone's locale decoding
-    made them (§AR-ci.1.1) — and a byte the changelog should not hold replaces
-    itself identically on both sides rather than raising.
-    """
-    try:
-        result = subprocess.run(
-            ["git", *arguments], check=False, capture_output=True, encoding="utf-8", errors="replace"
-        )
-    except FileNotFoundError as exc:
-        raise ChangelogPrError("git is not on PATH; the changelog gate reads local git alone") from exc
-    if result.returncode != 0:
-        return None
-    return result.stdout
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Check that `## Unreleased` gains a bullet, and that any number in it is this PR's."
+        description="Check that the branch adds a changelog entry, and that any number in one is this PR's."
     )
     parser.add_argument("--changelog", type=Path, default=Path("docs/changelog.md"))
     parser.add_argument("--pr-number", type=int)
@@ -283,7 +282,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             base = args.base_sha or base_ref_for_pre_push()
             head = args.head_sha or head_ref_for_pre_push()
             if head is None:
-                print("the push deletes a ref and adds nothing; skipping the changelog bullet check")
+                print("the push deletes a ref and adds nothing; skipping the changelog entry check")
                 return 0
         else:
             base = args.base_sha
@@ -292,10 +291,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             head = args.head_sha or "HEAD"
 
         if head_contains_nothing_new(base, head):
-            print("the base already contains this head; skipping the changelog bullet check")
+            print("the base already contains this head; skipping the changelog entry check")
             return 0
 
-        check_changelog_pr_entry(args.changelog, base, head, pr_number, args.pre_push)
+        branch = branch_name(args.pre_push)
+        check_changelog_pr_entry(args.changelog, base, head, pr_number, args.pre_push, branch)
     except (ChangelogPrError, changelog_bullets.ChangelogFormatError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

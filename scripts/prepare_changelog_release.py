@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Prepare and read changelog release sections. §FS-distribution.4"""
+"""Prepare and read changelog release sections. §FS-distribution.4
+
+The pending changes are the entries under `docs/changelog/unreleased/`
+(§FS-distribution.4.12): `stamp` numbers them, `preview` shows the section they
+make, `prepare` writes it and deletes them (§FS-distribution.4.5), and `notes`
+reads a released section back (§FS-distribution.4.7).
+"""
 
 from __future__ import annotations
 
@@ -14,6 +20,7 @@ from typing import Callable, Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import changelog_bullets  # noqa: E402  (the shared definitions live beside this script)
+import changelog_entries  # noqa: E402  (the release's reading of the entries, split out for size)
 
 
 VERSION_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
@@ -21,26 +28,24 @@ RELEASE_RE = re.compile(
     r"^## (?P<number>[0-9]+)\. \[(?P<version>[0-9]+\.[0-9]+\.[0-9]+)\] — (?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2})\s*$"
 )
 OLDER_RE = re.compile(r"^## (?P<number>[0-9]+)\. Older releases\s*$")
-PLACEHOLDER_RE = re.compile(r"(?i)\bPR\s*#\s*TBD\b")
-BLAME_HEADER_RE = re.compile(r"^([0-9a-f]{40}) [0-9]+ [0-9]+")
-
-
-class ChangelogError(Exception):
-    pass
+# The number an entry ends in, a placeholder included; only the end is ever read or written.
+ENDING_NUMBER_RE = re.compile(r"\(\s*PR\s*#\s*(?P<number>[0-9]+|TBD)\s*\)\s*\Z", re.IGNORECASE)
+# One error for the helper and the module it reads the entries through.
+ChangelogError = changelog_entries.ChangelogError
 
 
 def prepare_release(changelog: Path, version: str, release_date: str) -> None:
+    """The rotation: the entries become the inline release and are deleted. §FS-distribution.4.5
+
+    Everything that can refuse is asked before anything is written, so a refused
+    release leaves the tree as it found it.
+    """
     _validate_version(version)
     _validate_date(release_date)
 
     lines = _read_lines(changelog)
+    unreleased, latest = _unreleased_and_latest(lines, changelog)
     sections = _find_top_level_sections(lines)
-    try:
-        # Where the section is, is the shared module's answer and not a second one.
-        unreleased = changelog_bullets.unreleased_range(lines)[0] - 1
-    except changelog_bullets.ChangelogFormatError as exc:
-        raise ChangelogError(str(exc)) from exc
-    latest = _next_section_after(sections, unreleased, "latest release")
     older = _find_section_after(lines, sections, latest, OLDER_RE, "Older releases")
 
     latest_match = RELEASE_RE.match(_line_text(lines[latest]))
@@ -50,14 +55,14 @@ def prepare_release(changelog: Path, version: str, release_date: str) -> None:
     if latest_match.group("version") == version:
         raise ChangelogError(f"docs/changelog.md already has {version} as the inline latest release")
 
-    unreleased_body = _trim_blank_lines(lines[unreleased + 1 : latest])
-    if not changelog_bullets.has_bullet(unreleased_body):
-        raise ChangelogError("## Unreleased has no bullet entries to promote")
+    entries = changelog_entries.collect(changelog)
+    pointer = _trim_blank_lines(lines[unreleased + 1 : latest])
 
     previous_version = latest_match.group("version")
     previous_date = latest_match.group("date")
     previous_body = lines[latest + 1 : older]
-    archived_body = [_rewrite_relative_links_for_archive(line) for line in previous_body]
+    archive_parts = changelog_entries.ARCHIVE_PARTS
+    archived_body = [changelog_entries.rebase_links(line, (), archive_parts) for line in previous_body]
     summary = _summary_from(previous_body)
 
     archive_path = changelog.parent / "changelog" / f"{previous_version}.md"
@@ -74,9 +79,10 @@ def prepare_release(changelog: Path, version: str, release_date: str) -> None:
     new_lines = [
         *lines[: unreleased + 1],
         "\n",
+        *([*pointer, "\n"] if pointer else []),
         f"## 2. [{version}] — {release_date}\n",
         "\n",
-        *unreleased_body,
+        *changelog_entries.release_body(entries),
         "\n",
         "## 3. Older releases\n",
         "\n",
@@ -84,6 +90,39 @@ def prepare_release(changelog: Path, version: str, release_date: str) -> None:
         *older_body,
     ]
     _write_lines(changelog, new_lines)
+    for entry in entries:
+        entry.path.unlink()
+
+
+def preview_release(changelog: Path) -> str:
+    """The body `prepare` would write under the new heading; nothing is written. §FS-distribution.4.5"""
+    _unreleased_and_latest(_read_lines(changelog), changelog)
+    return "".join(changelog_entries.release_body(changelog_entries.collect(changelog)))
+
+
+def _unreleased_and_latest(lines: Sequence[str], changelog: Path) -> tuple[int, int]:
+    """The `## Unreleased` heading and the latest release's, with nothing but the pointer between.
+
+    A bullet under the pointer is refused rather than dropped: the rotation
+    writes the entries and keeps the pointer, so a bullet left there out of the
+    old habit would be neither released nor kept (§FS-distribution.4.5).
+    """
+    try:
+        # Where the section is, is the shared module's answer and not a second one.
+        start, end = changelog_bullets.unreleased_range(lines)
+        stray = changelog_bullets.bullets(lines)
+    except changelog_bullets.ChangelogFormatError as exc:
+        raise ChangelogError(str(exc)) from exc
+    if stray:
+        directory = changelog_entries.entry_directory(changelog).as_posix()
+        raise ChangelogError(
+            f"## Unreleased holds a bullet under its pointer, at {changelog.as_posix()}:{stray[0].start}; "
+            f"a pending change is an entry under {directory}/, so move it into one rather than have "
+            f"the release drop it:\n  {stray[0].lines[0]}"
+        )
+    if end >= len(lines):
+        raise ChangelogError("missing latest release section")
+    return start - 1, end
 
 
 def extract_notes(changelog: Path, version: str, output: Path) -> None:
@@ -116,13 +155,6 @@ def _find_section_after(
         if section <= after:
             continue
         if pattern.match(_line_text(lines[section])):
-            return section
-    raise ChangelogError(f"missing {name} section")
-
-
-def _next_section_after(sections: Sequence[int], after: int, name: str) -> int:
-    for section in sections:
-        if section > after:
             return section
     raise ChangelogError(f"missing {name} section")
 
@@ -161,113 +193,66 @@ def _drop_leading_blank_lines(lines: Sequence[str]) -> list[str]:
     return trimmed
 
 
-def stamp_release_numbers(
-    changelog: Path,
-    resolve: Callable[[str], set[int]] | None = None,
-    blame: Callable[[Path, int, int], list[str]] | None = None,
-) -> None:
-    """Write each `## Unreleased` bullet's own pull request number into it. §FS-distribution.4.5
+def stamp_release_numbers(changelog: Path, resolve: Callable[[str], set[int]] | None = None) -> None:
+    """Write each entry's own pull request number at its end. §FS-distribution.4.5
 
-    Every line of a bullet is blamed to the commit that wrote it and each commit
-    to its pull request; a bullet whose lines, taken together, resolve to exactly
-    one pull request gains `PR #N`, replacing a `PR #TBD` placeholder wherever in
-    the bullet the author left one. Anything else is warned about once and left
-    as it stands, and nothing here ever raises: a release in which nothing
-    resolves is exactly today's release — and one in which nothing resolves does
-    not rewrite the file at all.
+    The pull request is the one whose commit added the entry
+    (`changelog_entries.landings`), so
+    whoever edited it since, it keeps the number of the pull request that wrote
+    it. Where exactly one resolves, a trailing `(PR #TBD)` is replaced and
+    otherwise ` (PR #N)` is appended; a `PR #TBD` in the entry's prose is left as
+    it stands — writing into it is how the 0.15.0 cut turned a sentence that told
+    authors to write `PR #TBD` into one naming `PR #346`. Anything else is warned
+    about once and left, and nothing here ever raises or touches
+    `docs/changelog.md`: a release in which nothing resolves writes nothing.
     """
     resolve = resolve or pull_requests_for_commit
-    blame = blame or _blame_commits
-    lines = _read_lines(changelog)
-    stamped = False
-    for bullet in reversed(changelog_bullets.bullets(lines)):
-        number = _number_for(changelog, bullet, resolve, blame)
-        if number is not None:
-            _write_number(lines, bullet, number)
-            stamped = True
-    if stamped:
-        _write_lines(changelog, lines)
-
-
-def _number_for(changelog, bullet, resolve, blame) -> int | None:
-    if bullet.numbers:
-        return None  # Already stamped, by an earlier run or by its author.
+    directory = changelog_entries.entry_directory(changelog)
+    names = sorted(path.name for path in directory.iterdir() if path.is_file()) if directory.is_dir() else []
     try:
-        commits = blame(changelog, bullet.start, bullet.end)
+        landed, unlanded = changelog_entries.landings(directory), "no commit has added it yet"
     except ChangelogError as exc:
-        return _unstamped(bullet, str(exc))
-    if not commits:
-        return _unstamped(bullet, "no committed line to blame")
+        landed, unlanded = {}, str(exc)
+    for name in names:
+        parsed = changelog_bullets.entry_name(name)
+        if parsed is None:
+            continue  # The README, or a file `prepare` refuses by name.
+        path = directory / name
+        text = path.read_bytes().decode("utf-8")
+        ending = ENDING_NUMBER_RE.search(text)
+        if ending is not None and ending.group("number").upper() != "TBD":
+            continue  # Already numbered, by an earlier run or by its author.
+        if changelog_bullets.entry_problem(name, text) is not None:
+            _unstamped(name, "it is not a well-formed entry")
+        elif parsed.slug not in landed:
+            _unstamped(name, unlanded)
+        else:
+            number = _number_for(name, landed[parsed.slug].commit, resolve)
+            if number is not None:
+                path.write_bytes(_numbered(text, number).encode("utf-8"))
 
-    numbers: set[int] = set()
-    for commit in commits:
-        try:
-            numbers |= resolve(commit)
-        except ChangelogError as exc:
-            return _unstamped(bullet, str(exc))
+
+def _number_for(name: str, commit: str, resolve: Callable[[str], set[int]]) -> int | None:
+    try:
+        numbers = resolve(commit)
+    except ChangelogError as exc:
+        return _unstamped(name, str(exc))
     if len(numbers) != 1:
-        return _unstamped(bullet, f"{len(numbers)} pull requests resolve for it")
+        return _unstamped(name, f"{len(numbers)} pull requests resolve for {commit[:12]}, which added it")
     return next(iter(numbers))
 
 
-def _unstamped(bullet: changelog_bullets.Bullet, reason: str) -> None:
-    first = bullet.text.splitlines()[0]
-    print(f"warning: leaving line {bullet.start} unstamped, {reason}: {first[:100]}", file=sys.stderr)
+def _unstamped(name: str, reason: str) -> None:
+    print(f"warning: leaving {name} unstamped, {reason}", file=sys.stderr)
     return None
 
 
-def _write_number(lines: list[str], bullet: changelog_bullets.Bullet, number: int) -> None:
-    """Replace every placeholder in the bullet, else append one. §FS-distribution.4.5
-
-    An author who wraps a bullet leaves `PR #TBD` on its first line as often as
-    on its last, and may leave it twice; writing only into the last line appends
-    the number to a continuation, and stopping at the first leaves a second to
-    ship into the archive — the bullet now names a number, so no later run
-    looks at it again.
-    """
-    written = False
-    for index in range(bullet.start - 1, bullet.end):
-        body, ending = _split_ending(lines[index])
-        if PLACEHOLDER_RE.search(body):
-            lines[index] = PLACEHOLDER_RE.sub(f"PR #{number}", body) + ending
-            written = True
-    if written:
-        return
-    body, ending = _split_ending(lines[bullet.end - 1])
-    lines[bullet.end - 1] = f"{body.rstrip()} (PR #{number}){ending}"
-
-
-def _split_ending(line: str) -> tuple[str, str]:
-    stripped = line.rstrip("\r\n")
-    return stripped, line[len(stripped) :]
-
-
-def _blame_commits(changelog: Path, start: int, end: int) -> list[str]:
-    """The commits that wrote lines `start`..`end`, oldest line first."""
-    path = changelog.resolve()
-    result = subprocess.run(
-        ["git", "-C", str(path.parent), "blame", "--line-porcelain", "-L", f"{start},{end}", "--", str(path)],
-        check=False,
-        capture_output=True,
-        # UTF-8 rather than the platform's locale: `--line-porcelain` carries the
-        # changelog's own lines, section markers and em dashes included (§AR-ci.1.1).
-        encoding="utf-8",
-        errors="replace",
-    )
-    if result.returncode != 0:
-        raise ChangelogError(f"git blame failed: {result.stderr.strip()}")
-
-    commits: list[str] = []
-    for line in result.stdout.splitlines():
-        match = BLAME_HEADER_RE.match(line)
-        if match is None:
-            continue
-        commit = match.group(1)
-        if set(commit) == {"0"}:
-            raise ChangelogError("a line of it is not committed yet")
-        if commit not in commits:
-            commits.append(commit)
-    return commits
+def _numbered(text: str, number: int) -> str:
+    """`text` ending in `(PR #number)`, in place of a trailing placeholder if it has one."""
+    body = text.rstrip()
+    ending = ENDING_NUMBER_RE.search(body)
+    kept = body[: ending.start()].rstrip() if ending is not None else body
+    return f"{kept} (PR #{number}){text[len(body):]}"
 
 
 def pull_requests_for_commit(commit: str) -> set[int]:
@@ -307,27 +292,6 @@ def _summary_from(lines: Sequence[str]) -> str:
     return text
 
 
-def _rewrite_relative_links_for_archive(line: str) -> str:
-    def rewrite(match: re.Match[str]) -> str:
-        destination = match.group("destination")
-        # An anchor, an absolute path, and a URL all mean the same thing one
-        # directory deeper. Every *relative* destination means one directory
-        # less, including one that already climbs: `../crates/x.rs` was written
-        # against `docs/`, so from `docs/changelog/` it needs a second `../`.
-        # Skipping it was how `docs/changelog/0.9.1.md` shipped a link that
-        # resolved to `docs/crates/...` and turned the tree's own link check red.
-        if destination.startswith(("#", "/", "http://", "https://", "mailto:")):
-            return match.group(0)
-        fragment = match.group("fragment") or ""
-        return f"{match.group('prefix')}../{destination}{fragment})"
-
-    return re.sub(
-        r"(?P<prefix>\]\()(?P<destination>[^)#][^)#]*)(?P<fragment>#[^)]*)?\)",
-        rewrite,
-        line,
-    )
-
-
 def _validate_version(version: str) -> None:
     if VERSION_RE.match(version) is None:
         raise ChangelogError(f"version must look like 0.1.0, got {version!r}")
@@ -345,11 +309,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--changelog", type=Path, default=Path("docs/changelog.md"))
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    prepare = subparsers.add_parser("prepare", help="promote Unreleased into a numbered release")
+    prepare = subparsers.add_parser("prepare", help="release the entries as a numbered release")
     prepare.add_argument("version")
     prepare.add_argument("--date", default=_datetime.date.today().isoformat())
 
-    subparsers.add_parser("stamp", help="write each Unreleased bullet's own pull request number into it")
+    subparsers.add_parser("stamp", help="write each entry's own pull request number at its end")
+    subparsers.add_parser("preview", help="print the release body prepare would write, and write nothing")
 
     notes = subparsers.add_parser("notes", help="write release notes for the inline release")
     notes.add_argument("version")
@@ -361,6 +326,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             prepare_release(args.changelog, args.version, args.date)
         elif args.command == "stamp":
             stamp_release_numbers(args.changelog)
+        elif args.command == "preview":
+            sys.stdout.write(preview_release(args.changelog))
         elif args.command == "notes":
             extract_notes(args.changelog, args.version, args.output)
         else:
