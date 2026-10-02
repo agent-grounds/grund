@@ -649,14 +649,15 @@ opt-in.
 
 ### 9.1 One tree renders one block
 
-The rendered section is a function of the authored sentences and nothing else,
-so the bullet an unverifiable rule earns is the sentence exactly as its heading
-spells it. A member-scoped `init` therefore writes the bytes a run that held the
-whole workspace would write for that same file, and a `check` from either scope
-compares against the same render ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)). Omitting the
-bullet where the alias could not be judged would make the two scopes disagree
-about one file: the member would write a block its own workspace root then
-reports as drifted.
+The rendered section is a function of the authored sentences and of how the
+entrypoint renders their citations ([§FS-init.2.3.5.10](FS-init.md#23510-chapter-rules)), never of the scope a
+run was given, so the bullet an unverifiable rule earns is the sentence exactly
+as its heading spells it. A member-scoped `init` therefore writes the bytes a
+run that held the whole workspace would write for that same file, and a `check`
+from either scope compares against the same render ([§REQ-deterministic-output](../requirements/REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes)).
+Omitting the bullet where the alias could not be judged would make the two
+scopes disagree about one file: the member would write a block its own workspace
+root then reports as drifted.
 
 #### 9.1.1 A path-scoped check compares against the same render
 
