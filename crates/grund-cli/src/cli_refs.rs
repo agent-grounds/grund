@@ -74,6 +74,28 @@ fn command_refs(args: &[String]) -> ExitCode {
     }) {
         Ok(output) => output,
         Err(err) => {
+            // §FS-refs.4: recorded ambiguities refuse now, independently of
+            // the grammar-resolver ramp, before every successful renderer.
+            if let Some(refusal) = err.downcast_ref::<ShowQueryError>()
+                && let Some(output) = err.downcast_ref::<RefsOutput>()
+            {
+                render_run_warnings(&output.warnings);
+                let format =
+                    match command_output_format("refs", &output.output_format, format_override) {
+                        Ok(format) => format,
+                        Err(code) => return code,
+                    };
+                if !output.scan_errors.is_empty() {
+                    return exit_after_scan_errors(&output.scan_errors);
+                }
+                // §FS-errors.5.2.1: use the shared typed sites, not a prose parse.
+                if format == "json" {
+                    print_bare_query_json(refusal.code, &refusal.message, &refusal.sites);
+                } else {
+                    eprintln!("{}", refusal.message);
+                }
+                return ExitCode::from(1);
+            }
             eprintln!("error: {err:#}");
             return ExitCode::from(2);
         }
@@ -100,7 +122,10 @@ fn command_refs(args: &[String]) -> ExitCode {
         render_refs_summary(&output.hits, output.workspace, &format);
     } else if format == "json" {
         for hit in &output.hits {
-            println!("{}", render_ref_hit_json(hit, output.workspace, metadata.kind_title.as_deref()));
+            println!(
+                "{}",
+                render_ref_hit_json(hit, output.workspace, metadata.kind_title.as_deref())
+            );
         }
     } else {
         for hit in &output.hits {

@@ -1,0 +1,140 @@
+//! Scanner-recorded query ambiguities shared by show and refs (§FS-refs.4,
+//! §FS-show.2.2.1, §FS-show.2.2.2). No body extraction or stub validation is
+//! needed to decide whether a recorded target has multiple claimants.
+
+use std::path::Path;
+
+use super::show_query::ShowQueryError;
+use crate::config::{Config, display_path};
+use crate::grammar::render_id;
+use crate::model::{
+    Declaration, FindingSite, Findings, Id, is_stub_for_inline_decl, paths_same_location,
+    resolve_stub_target,
+};
+
+/// Refuse only independent homes or the requested section's recorded collision
+/// (§FS-refs.4). Absent declarations and sections remain valid citation queries.
+pub(crate) fn declaration_ambiguity_refusal(
+    config: &Config,
+    path_config: &Config,
+    findings: &Findings,
+    id: &Id,
+    section: Option<&str>,
+) -> Option<ShowQueryError> {
+    let decls = findings.declarations.get(id)?;
+    if let Some(refusal) = ambiguous_id_refusal(config, path_config, decls, id) {
+        return Some(refusal);
+    }
+    let section = section?;
+    let decl = decls.iter().find(|decl| decl.is_stub).unwrap_or(&decls[0]);
+    let file = if let Some(target) = &decl.defined_in {
+        resolve_stub_target(&config.root, &decl.file, target)
+    } else {
+        decl.file.clone()
+    };
+    ambiguous_section_refusal(config, path_config, decls, decl, &file, id, section)
+}
+
+/// A valid stub/inline pair is one home; multiple independent homes refuse with
+/// all sites in show's deterministic order (§FS-show.2.2.1, §FS-refs.4).
+pub(super) fn ambiguous_id_refusal(
+    config: &Config,
+    path_config: &Config,
+    decls: &[Declaration],
+    id: &Id,
+) -> Option<ShowQueryError> {
+    let homes: Vec<&Declaration> = decls
+        .iter()
+        .filter(|decl| !is_stub_for_inline_decl(&config.root, decl, decls))
+        .collect();
+    if homes.len() <= 1 {
+        return None;
+    }
+    // §FS-errors.3.1: every site is spelled from the effective report root.
+    let mut sites: Vec<(String, String, usize)> = homes
+        .iter()
+        .map(|d| {
+            let path = display_path(path_config, &d.file);
+            (format!("{path}:{}", d.line), path, d.line)
+        })
+        .collect();
+    sites.sort_by(|a, b| a.0.cmp(&b.0));
+    let message = format!(
+        "ambiguous ID: {} (declared at {})",
+        render_id(&config.grammar, id),
+        sites
+            .iter()
+            .map(|(rendered, ..)| rendered.as_str())
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    // §FS-errors.5.2.1: JSON carries the same sites, without parsing prose.
+    Some(ShowQueryError {
+        code: "ambiguous",
+        sites: sites
+            .into_iter()
+            .map(|(_, path, line)| FindingSite { path, line })
+            .collect(),
+        message,
+    })
+}
+
+/// Refuse exactly the requested coordinate's scanner-recorded claims
+/// (§FS-show.2.2.2, §FS-refs.4), before reading a body or filtering citations.
+/// A stub's sections belong to its inline home; its own prose declares none
+/// (§FS-declarations.checks.duplicate-section.2). `path_config` owns report paths.
+pub(super) fn ambiguous_section_refusal(
+    config: &Config,
+    path_config: &Config,
+    decls: &[Declaration],
+    decl: &Declaration,
+    file: &Path,
+    id: &Id,
+    section: &str,
+) -> Option<ShowQueryError> {
+    let body_decl = if decl.is_stub {
+        decls
+            .iter()
+            .find(|other| paths_same_location(&other.file, file))
+            .unwrap_or(decl)
+    } else {
+        decl
+    };
+    let mut lines: Vec<usize> = body_decl
+        .duplicate_sections
+        .iter()
+        .filter(|(path, _)| path == section)
+        .map(|(_, info)| info.line)
+        .collect();
+    if lines.is_empty() {
+        return None;
+    }
+    // §AR-scanner.2.2.3: the map holds the first claimant, the list the rest.
+    lines.extend(body_decl.sections.get(section).map(|first| first.line));
+    lines.sort_unstable();
+    let rendered = display_path(path_config, file);
+    let sites_text = lines
+        .iter()
+        .map(|line| format!("{rendered}:{line}"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let message = format!(
+        "ambiguous section: {}{}{} (declared at {sites_text})",
+        render_id(&config.grammar, id),
+        config.section_separator,
+        section
+    );
+    // §FS-errors.5.2.1: the message and JSON carry every claimant in file order.
+    let sites = lines
+        .iter()
+        .map(|line| FindingSite {
+            path: rendered.clone(),
+            line: *line,
+        })
+        .collect();
+    Some(ShowQueryError {
+        code: "ambiguous-section",
+        message,
+        sites,
+    })
+}

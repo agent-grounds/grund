@@ -17,6 +17,7 @@ use super::report::context_run_warnings;
 use crate::config::display_path;
 use crate::grammar::{path_at_or_under, render_id};
 use crate::model::{Citation, sort_path_key};
+use crate::queries::declaration_ambiguity_refusal;
 use crate::resolver::{WorkspaceProject, load_classifying_workspace_context};
 use crate::scanner::{api_scan_error, resolve_id_arg};
 use crate::workspace::split_qualified_id_arg;
@@ -32,6 +33,8 @@ fn section_in_scope(cited: Option<&str>, requested: &str, descendants: bool) -> 
     }
 }
 
+/// Resolve and refuse recorded target ambiguities before filtering any citations
+/// (§FS-refs.4), retaining absent-target queries (§FS-refs.1).
 pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
     // §AR-scanner.2.4.2: the classifying loader, not the plain one — `refs`
     // publishes each hit's enclosing declaration and section (§FS-refs.3.2), and
@@ -114,6 +117,28 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
         ));
     }
     let section = opts.section.or(inline_section);
+
+    // §FS-refs.4: only the selected project's homes and requested coordinate
+    // can refuse; descendants, summary and total never union claimants.
+    if let Some(refusal) = declaration_ambiguity_refusal(
+        render_config,
+        context.render_config(),
+        &target_project.findings,
+        &id,
+        section.as_deref(),
+    ) {
+        // §FS-refs.4: keep format, warnings and partial-scan precedence beside
+        // the typed refusal, without changing the public result records.
+        return Err(anyhow::Error::msg(RefsOutput {
+            output_format: render_config.output_format.clone(),
+            workspace: context.workspace_loaded,
+            hits: Vec::new(),
+            note: None,
+            scan_errors,
+            warnings: context_run_warnings(&context),
+        })
+        .context(refusal));
+    }
 
     struct Hit<'a> {
         project: &'a WorkspaceProject,

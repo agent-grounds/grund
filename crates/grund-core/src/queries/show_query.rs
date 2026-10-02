@@ -66,8 +66,9 @@ pub enum ShowFormat {
 
 /// A failed ID query whose message names sites the JSON diagnostic can also
 /// carry (§FS-errors.5.2): the two-homes `ambiguous` refusal and the
-/// `ambiguous-section` refusal. Raised from `queries/show.rs` and downcast by
-/// both printers, so `sites` never needs a second parse of `message`.
+/// `ambiguous-section` refusal (§FS-refs.4). Raised from the shared ambiguity
+/// helpers for show and refs and downcast by both printers, so `sites` never
+/// needs a second parse of `message`.
 /// `Display` is `message` verbatim — the text form is unchanged by this type.
 #[derive(Clone, Debug)]
 pub struct ShowQueryError {
