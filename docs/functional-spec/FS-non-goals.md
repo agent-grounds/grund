@@ -14,6 +14,22 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 
 `grund` does **not** validate `[text](url)` links, anchor `#section` references inside markdown, or HTTP URLs. Use [`lychee`](https://github.com/lycheeverse/lychee) for those — it is fast, focused, and well-maintained. Reasoning: there is no token-cheap reason to merge two lints into one binary.
 
+### 1.1 This repository's external-link gate
+
+This repository runs lychee alongside its offline grund checks. Its link gate
+uses a bounded request timeout and retry policy to tolerate transient network
+delays only when a subsequent attempt obtains a successful response. A modestly
+slow response and recovery after four retryable failures must be tolerated;
+persistent timeouts and HTTP 404 responses must still fail the gate. No finite
+budget guarantees success through arbitrary external outages.
+
+Canonical links to this repository's default branch must first pass local
+target and fragment validation. Missing targets and bad fragments stop before
+network work; only the exact successfully checked self URLs are excluded from
+the network pass. This is the repository's own maintenance gate, not a workflow
+required of grund users, and it adds no network I/O to verification
+([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)).
+
 ## 2. Spelling, grammar, prose quality
 
 `grund` reads spec text as opaque content between IDs except for the explicitly delimited value-binding form defined by the value specification; it compares only that form's authored literal with the one numbered component it cites, or with the components of the root it cites joined by one ASCII space, and never infers values from surrounding prose. It does not lint English. Use any general-purpose linter — `vale`, `ltex-ls`, or a thousand others — alongside `grund`. Decided in [§DA-explicit-value-bindings](../decisions/architectural/DA-explicit-value-bindings.md#da-explicit-value-bindings-compare-only-authored-delimited-value-bindings) and [§DA-root-aimed-value-bindings](../decisions/architectural/DA-root-aimed-value-bindings.md#da-root-aimed-value-bindings-a-value-binding-may-aim-at-the-whole-root-its-components-joined-by-one-ascii-space), and specified by [§FS-values.3](FS-values.md#3-explicit-value-bindings).
