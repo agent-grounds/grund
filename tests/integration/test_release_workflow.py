@@ -288,7 +288,7 @@ class ChangelogHoldTests(unittest.TestCase):
         output.write_text("", encoding="utf-8")
         run = subprocess.run(
             [BASH, "--noprofile", "--norc", "-eo", "pipefail", "-c", re.sub(r"\$\{\{(.*?)\}\}", expression, script)],
-            cwd=repo, env={**isolated, "GITHUB_OUTPUT": output.as_posix()}, capture_output=True, text=True,
+            cwd=repo, env={**isolated, "GITHUB_OUTPUT": output.as_posix()}, capture_output=True, text=True, encoding="utf-8",
         )
         self.assertEqual(0, run.returncode, run.stdout + run.stderr)
         pairs = (line.partition("=") for line in output.read_text(encoding="utf-8").splitlines())
