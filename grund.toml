@@ -97,6 +97,14 @@ folder = "docs/rules"
 rules = true
 title = "Executable conventions: the rules grund check holds this repository to"
 
+# One declaration per body of related work: what it is, where grund agrees with
+# it, and where grund departs. Each is grund's own account of the work, written
+# here, not a copy of someone else's text, so it is a plain authored folder.
+[[kinds]]
+kind = "REL"
+folder = "docs/related-work"
+title = "Related work: the ideas grund descends from and the tools beside it"
+
 # A place, not an ID namespace (FS-config.3.4.1): `skills/` holds agent-facing
 # instructions, not specification, so its files declare nothing and its home is
 # named by its path everywhere it is shown. Listed, not walked (FS-config.3.4.7),
@@ -214,6 +222,12 @@ should = ["AR|FS"]
 
 [citations.RULE]
 should = ["FS|GOAL"]
+
+# Where grund comes from is part of its why, so every related-work entry names
+# the ground it bears on; an account of someone else's work that touches no
+# GRUND or GOAL point is a survey, not this project's lineage.
+[citations.REL]
+should = ["GRUND|GOAL"]
 
 # A scenario proves the What as a user sees it; one that reads the design is not
 # black-box. `must` reaches every scanned file in the home — the README — and the
