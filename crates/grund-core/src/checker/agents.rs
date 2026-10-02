@@ -3,10 +3,10 @@ use std::path::Path;
 
 use crate::config::Config;
 use crate::grammar::{
-    AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
+    AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block, parse_id_arg,
 };
 use crate::model::{CheckReport, Diagnostic, Findings};
-use crate::resolver::WorkspaceCheckTarget;
+use crate::resolver::{WorkspaceCheckTarget, markdown_link_target};
 use crate::scanner::companion_agent_entrypoints;
 use crate::templates::{
     ConversationSurface, citation_directions_section, clickable_citations_section,
@@ -60,10 +60,13 @@ pub(super) fn check_agents_block_version(
         .flatten()
         .map(|rules| rules.rows);
     let root = &config.root;
+    // §FS-init.2.3.5.10: render destinations from the same loaded declarations
+    // that supplied the validated, ordered rule sentences.
+    let rule_guidance = rule_rows.as_deref().map(|rows| (findings, rows));
     let canonical = root.join("AGENTS.md");
     let canonical_exists = canonical.exists();
     if canonical_exists {
-        check_agent_block_path_with_rules(config, &canonical, report, true, rule_rows.as_deref());
+        check_agent_block_path_with_rules(config, &canonical, report, true, rule_guidance);
     }
     match companion_agent_entrypoints(root) {
         Ok(companions) => {
@@ -73,7 +76,7 @@ pub(super) fn check_agents_block_version(
                     &companion,
                     report,
                     canonical_exists,
-                    rule_rows.as_deref(),
+                    rule_guidance,
                 );
             }
         }
@@ -121,7 +124,7 @@ fn check_agent_block_path_with_rules(
     path: &Path,
     report: &mut CheckReport,
     require_block: bool,
-    rule_rows: Option<&[(String, String)]>,
+    rule_guidance: Option<(&Findings, &[(String, String)])>,
 ) {
     if !path.exists() {
         return;
@@ -216,10 +219,10 @@ fn check_agent_block_path_with_rules(
                     "clickable citations",
                 ),
             ];
-            if let Some(rows) = rule_rows {
+            if let Some((findings, rows)) = rule_guidance {
                 generated_sections.push((
                     "### Chapter rules",
-                    chapter_rules_section(rows),
+                    chapter_rules_section(config, path, findings, rows),
                     "chapter rules",
                 ));
             }
@@ -257,15 +260,33 @@ fn check_agent_block_path_with_rules(
     });
 }
 
-/// Re-render the config-derived v11 section so `check` can byte-compare what
-/// `init` wrote (§FS-rules.9). The inputs are already parsed and ordered rule
-/// titles; this owns no sentence grammar or rule semantics.
-fn chapter_rules_section(rows: &[(String, String)]) -> String {
+/// The shared chapter-rule section for `init` and its exact drift comparison
+/// (§FS-init.2.3.5.10). Preserve ordered authored titles and use the formatter's
+/// destination/anchor resolver for live citations relative to this entrypoint.
+/// Only the citation is rendered; no formatter runs over the authored sentence.
+pub(crate) fn chapter_rules_section(
+    config: &Config,
+    path: &Path,
+    findings: &Findings,
+    rows: &[(String, String)],
+) -> String {
     let mut section = String::from(
         "### Chapter rules\n\n`must`/`must not` are `grund check` errors; `should`/`should not` are suggestions (`grund check --suggestions`).\n\n",
     );
     for (origin, sentence) in rows {
-        section.push_str(&format!("- {sentence} §{origin}\n"));
+        let citation = format!("{}{origin}", config.marker);
+        let target = config
+            .fmt_cross_refs_enabled
+            .then(|| {
+                let (id, _) = parse_id_arg(origin, &config.grammar).ok()?;
+                markdown_link_target(path, &id, None, config, findings)
+            })
+            .flatten();
+        let citation = match target {
+            Some(target) => format!("[{citation}]({target})"),
+            None => citation,
+        };
+        section.push_str(&format!("- {sentence} {citation}\n"));
     }
     section
 }
