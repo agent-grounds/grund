@@ -1,0 +1,1 @@
+- Stop recommending a filesystem check for refused bare ID and non-path alias queries; keep the migration hint for existing paths.

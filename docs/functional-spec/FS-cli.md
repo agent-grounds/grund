@@ -20,16 +20,17 @@ Bare `grund` kept running `check .` so that old CI scripts did not turn into a s
 
 ### 1.2 A first word that is not an ID
 
-Because the first non-flag word is read as a subcommand *or* an ID query, a mistyped subcommand would otherwise be reported as an invalid ID. So when `grund <word>` cannot be parsed as an ID, the message names the default ID-query reading and the explicit check form:
+Because the first non-flag word is read as a subcommand *or* an ID query, a mistyped subcommand would otherwise be reported as an invalid ID. So when `grund <word>` cannot be parsed as an ID, the message names the default ID-query reading and, for a likely mistyped subcommand, the help form:
 
 ```
 invalid ID `bogus`
 hint: this repo's [id] format is `{kind}-{slug}` (run `grund config show`); `grund list` shows the IDs that exist
-hint: run `grund check bogus` to validate a path
 hint: run `grund --help` for the list of subcommands
 ```
 
 The final `grund --help` hint is emitted only when the first word contains none of `-` / `/` / `.` — the three separators an ID, a workspace-qualified ID, or a coordinate would carry — because a token without any of them cannot match the default `{kind}-{number}-{slug}` shape and is overwhelmingly a botched subcommand. The full known-command list stays in `grund --help` rather than being repeated on every query failure.
+
+The `grund check <word>` migration breadcrumb is limited to an existing filesystem path that the bare query would otherwise refuse as an unknown project alias ([§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)). An invalid ID or coordinate and any other query failure do not acquire that advice merely from using the bare form: `check` takes a filesystem path ([§FS-check.1](FS-check.md#1-inputs)), not an ID or section coordinate.
 
 Stdout is empty and the exit is `1`: the default ID lookup is a failed query, not a CLI launch failure.
 

@@ -473,10 +473,19 @@ A failed query (`1`) prints the bare result line and, where the next step is obv
 - a missing snapshot for an ID whose parsed kind carries `fetch` in the loaded config → `hint: run grund fetch <qualified-ID>` — this remains offline and is the prescribed materialization hint ([§FS-check.4.12](FS-check.md#412-missing-snapshot), [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)). This branch is specified but not implemented today: `show` currently emits the generic `ID not found` hint.
 - `section not found: <ID>.<s>` → `hint: run \`grund <ID> --toc\` to print the lead with the section map`
 - a `<ID>` argument that does not match its kind's effective format → `invalid ID` and a format hint, [§FS-show.3.5.1](FS-show.md#351-an-id-the-grammar-rejects)
+- an existing filesystem path refused as an unknown project alias by the bare query → the migration breadcrumb of [§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)
 
 #### 3.5.1 An ID the grammar rejects
 
 A `<ID>` argument that does not match its kind's effective format ([§FS-config.3.2](FS-config.md#32-id--id-grammar)), once the scan has found no exact off-grammar declaration of that spelling, fails with `invalid ID \`<arg>\``, followed by `hint: this repo's [id] format is \`<format>\` (run \`grund config show\`); \`grund list\` shows the IDs that exist` — naming the kind's effective format instead where a `[[kinds]] format` ([§FS-config.3.4.10](FS-config.md#3410-format-resolve-and-fetch--external-snapshot-kinds)) governs it; this is the common surprise in a repo whose format differs from the `{kind}-{slug}` `grund` itself uses.
+
+This includes a coordinate whose section component the effective grammar rejects, such as `FS-widget.1.nope` when only numbered sections are enabled. Both bare and explicit `show` retain the format/list hint; a non-path operand receives no filesystem-check breadcrumb ([§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)). A parsed but absent numeric section still receives the `--toc` hint of [§FS-show.3.5](FS-show.md#35-the-hint-for-each-failure).
+
+#### 3.5.2 The filesystem-path migration breadcrumb
+
+In the bare `grund <arg>` form only, if the query failure begins with `unknown project alias` and `<arg>` exists as a filesystem path relative to the invocation's working directory, the text refusal is `invalid ID \`<arg>\``, the format/list hint, then `hint: run \`grund check <arg>\` to validate a path`, with empty stdout and exit `1`. This is recovery advice for the former bare-path check form: the command names an existing filesystem operand, as [§FS-check.1](FS-check.md#1-inputs) requires.
+
+No other refusal emits that breadcrumb: neither a grammar-rejected ID or coordinate nor a non-path alias or other error becomes a filesystem check by using the bare form. The explicit `show` form emits no migration breadcrumb. This rule changes only the recovery advice; the other failure messages, hints, streams, exit codes and structured output keep their existing contracts.
 
 ## 4. Why this matters
 
