@@ -39,9 +39,11 @@ repos:
       #     in pre-commit's argv split. Clippy is intentionally **not** part of
       #     CI (see .github/workflows/ci.yml), so it is intentionally not here
       #     either — match the CI gate, do not add a stricter one.
-      #   - `cargo test --workspace --all-targets --locked` matches the CI
-      #     `cargo test` step and also runs at pre-push so broken tests block
-      #     both commit-time and push-time workflows.
+      #   - `cargo test --workspace --all-targets --locked --features
+      #     grund/test-workspace-load-count` matches the CI `cargo test` step and
+      #     also runs at pre-push so broken tests block both commit-time and
+      #     push-time workflows. The feature compiles in the workspace-load
+      #     observer; without it the tests that read it are ignored (§AR-ci.3.3).
       #   - `scripts/check_changelog_pr_entry.py --pre-push` is the local half
       #     of the changelog gate (§AR-ci.7): it asks local git for an entry
       #     under docs/changelog/unreleased/ whose slug the remote's `main` does

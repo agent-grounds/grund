@@ -1,5 +1,10 @@
 //! Black-box contract for one-context batch declaration reads
 //! (§FS-show.1, §FS-show.2.6, §FS-output-shapes.4.1, §AR-resolver.3.1).
+//!
+//! The tests that count workspace loads read an observer only the
+//! `test-workspace-load-count` feature compiles in, so a build without it
+//! ignores them, naming the feature, and every other assertion of the same
+//! case sits in a test that runs in every build (§AR-ci.3.3).
 
 use serde_json::Value;
 use std::fs;
@@ -115,6 +120,9 @@ fn records(output: &Output) -> Vec<Value> {
         .collect()
 }
 
+/// Reads the workspace-load observer's log. Only a test ignored without
+/// `test-workspace-load-count` may call this: in a build without the feature
+/// nothing writes the log, and an unwritten log reads as zero loads (§AR-ci.3.3).
 fn loads(path: &Path) -> usize {
     fs::read_to_string(path).unwrap_or_default().lines().count()
 }
@@ -188,45 +196,81 @@ fn show_batch_all_four_modes_use_single_show_rendering() {
     }
 }
 
+const MALFORMED_INPUT: &str = concat!(
+    "{\"id\":\"FS-alpha\"}\n",
+    "{\"id\":\"FS-alpha\",\"extra\":true}\n",
+);
+
+fn assert_malformed_rejected(output: &Output) {
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(stdout(output), "");
+    assert_eq!(
+        stderr(output),
+        "error: batch input line 2: unknown field `extra`\n"
+    );
+}
+
+fn assert_empty_succeeded(output: &Output) {
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(stdout(output), "");
+    assert_eq!(stderr(output), "");
+}
+
 /// Malformed batch input is a run-level failure: exit `2`, empty stdout, the
 /// error on stderr, and no envelope at all (§FS-show.3.3).
 #[test]
-fn show_batch_rejects_the_whole_malformed_stream_before_scanning() {
+fn show_batch_rejects_the_whole_malformed_stream() {
     let repo = Repo::new("malformed");
-    let log = repo.load_log("malformed");
-    let input = concat!(
-        "{\"id\":\"FS-alpha\"}\n",
-        "{\"id\":\"FS-alpha\",\"extra\":true}\n",
-    );
-    let output = run_batch(&repo, &[], input, Some(&log));
+    assert_malformed_rejected(&run_batch(&repo, &[], MALFORMED_INPUT, None));
+}
 
-    assert_eq!(output.status.code(), Some(2));
-    assert_eq!(stdout(&output), "");
-    assert_eq!(
-        stderr(&output),
-        "error: batch input line 2: unknown field `extra`\n"
-    );
+/// The same malformed stream is rejected before any workspace is loaded; the
+/// load count is the test-only observer's, so a build without its feature
+/// ignores this half (§FS-show.3.3, §AR-ci.3.3).
+#[test]
+#[cfg_attr(
+    not(feature = "test-workspace-load-count"),
+    ignore = "reads the workspace-load observer; run with --features grund/test-workspace-load-count"
+)]
+fn show_batch_rejects_the_whole_malformed_stream_before_scanning() {
+    let repo = Repo::new("malformed-loads");
+    let log = repo.load_log("malformed");
+    assert_malformed_rejected(&run_batch(&repo, &[], MALFORMED_INPUT, Some(&log)));
     assert_eq!(loads(&log), 0, "malformed input must be rejected pre-scan");
 }
 
 /// An empty explicit stream is one of the aggregate's success cases: exit `0`
 /// with no envelopes on either stream (§FS-show.3.3).
 #[test]
-fn show_batch_empty_input_is_a_successful_no_scan_noop() {
+fn show_batch_empty_input_is_a_successful_noop() {
     let repo = Repo::new("empty");
-    let log = repo.load_log("empty");
-    let output = run_batch(&repo, &[], "", Some(&log));
+    assert_empty_succeeded(&run_batch(&repo, &[], "", None));
+}
 
-    assert_eq!(output.status.code(), Some(0));
-    assert_eq!(stdout(&output), "");
-    assert_eq!(stderr(&output), "");
+/// The same empty stream loads no workspace; the load count is the test-only
+/// observer's, so a build without its feature ignores this half
+/// (§FS-show.3.3, §AR-ci.3.3).
+#[test]
+#[cfg_attr(
+    not(feature = "test-workspace-load-count"),
+    ignore = "reads the workspace-load observer; run with --features grund/test-workspace-load-count"
+)]
+fn show_batch_empty_input_is_a_successful_no_scan_noop() {
+    let repo = Repo::new("empty-loads");
+    let log = repo.load_log("empty");
+    assert_empty_succeeded(&run_batch(&repo, &[], "", Some(&log)));
     assert_eq!(loads(&log), 0);
 }
 
 /// `--batch --all` takes no stdin and discovers its query set from the selected
 /// scope, answering it from the same single workspace load an explicit stream
-/// gets (§FS-show.1.9).
+/// gets (§FS-show.1.9). The load count is the test-only observer's, so a build
+/// without its feature ignores this test (§AR-ci.3.3).
 #[test]
+#[cfg_attr(
+    not(feature = "test-workspace-load-count"),
+    ignore = "reads the workspace-load observer; run with --features grund/test-workspace-load-count"
+)]
 fn show_batch_loads_one_workspace_for_many_queries_and_for_all() {
     let repo = Repo::new("load-count");
     let explicit_log = repo.load_log("explicit");
