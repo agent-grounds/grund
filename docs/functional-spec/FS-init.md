@@ -471,6 +471,23 @@ lifecycle are [§FS-rules.4](FS-rules.md#4-validation-lifecycle) and
 re-renders and byte-compares it as config-derived content; a mismatch is
 `agents-init`.
 
+The live citation uses the configured canonical cross-reference representation
+([§FS-fmt.6.2](FS-fmt.md#62-form)): with `[fmt.cross_refs] enabled = true`,
+it is a Markdown link whose destination is relative to the actual entrypoint
+and whose anchor follows the configured anchor profile; with cross-references
+disabled, it stays bare. `init` and `check` render that same representation from
+the loaded rule vocabulary. The exact authored sentence and qualified rule-ID
+order are preserved in either form.
+
+An `init` followed by `fmt --write` must leave one tree that both `fmt --check`
+and `init --check` accept, without formatter suppression directives. A second
+formatting pass and a repeated `init`/`fmt --write` cycle preserve the chapter-rule
+section byte-for-byte, and `check --full` reports no chapter-rule `agents-init`
+drift. This agreement does not weaken the byte comparison
+([§FS-check.3.5.4](FS-check.md#354-no-config-derived-section-is-exempt-from-the-comparison)):
+a changed authored rule sentence, citation destination, or cross-reference
+configuration still makes a section with the old bytes stale.
+
 A rule the run cannot verify from the scope it was given
 ([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)) is rendered here as authored and the block is written, so the
 validation `init` performs before writing withholds the write for a genuinely

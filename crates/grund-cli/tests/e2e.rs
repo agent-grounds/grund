@@ -4,6 +4,10 @@ use std::path::PathBuf;
 #[path = "support/case_runner.rs"]
 mod case_runner;
 
+// §FS-init.2.3.5.10: the generated chapter rules survive a whole init/fmt cycle.
+#[path = "support/chapter_rule_workflow.rs"]
+mod chapter_rule_workflow;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases, discover_examples,
