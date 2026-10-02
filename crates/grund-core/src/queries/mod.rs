@@ -4,6 +4,8 @@
 //! (§FS-cover), shell completions (§FS-completions), and the editor's hover and
 //! on-type answers (§FS-lsp). A query is the data half: it knows no rendering,
 //! because the text and JSON shapes belong to the frontends.
+//! `ambiguity.rs` shares show's scanner-recorded home and section refusals with
+//! refs (§FS-refs.4), without making a citation query read a declaration body.
 //!
 //! Three files left when §AR-system.2.10 became a component, all one fact: a
 //! declaration's body sliced by the spans a scan recorded is a function of the
@@ -44,6 +46,7 @@
 //! down into `config/point_sizes.rs` beside the `PointSizeUnit` whose meaning it
 //! is.
 
+mod ambiguity;
 mod batch;
 mod citation_counts;
 mod editor_hover;
@@ -69,6 +72,7 @@ pub use sizes::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
+pub(crate) use ambiguity::declaration_ambiguity_refusal;
 pub(crate) use citation_counts::ListCitationCounts;
 pub(crate) use show::{render_show_output_json, show_declaration_with_overlays};
 

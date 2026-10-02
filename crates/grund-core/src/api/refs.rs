@@ -150,6 +150,15 @@ pub struct RefsOutput {
     pub warnings: Vec<Finding>,
 }
 
+/// An ambiguity error retains the run metadata as downcastable context
+/// (§FS-refs.4). The outer `ShowQueryError` owns the diagnostic and its sites
+/// (§FS-errors.5.2.1); this label never replaces that query refusal's message.
+impl std::fmt::Display for RefsOutput {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("refs scan context")
+    }
+}
+
 /// The additive classified `refs` result used by process frontends during the
 /// §FS-refs.4 release ramp. Keeping the carrier outside [`RefsOutput`] preserves
 /// the exhaustively constructible embedding API required by §AR-bindings.2.
@@ -161,6 +170,8 @@ pub struct RefsOutcome {
 
 /// Programmatic `refs` with the typed resolver-rejection outcome process
 /// frontends need to apply §FS-refs.4 without parsing an error string.
+/// Recorded target ambiguities return `Err` carrying `ShowQueryError` and the
+/// run's `RefsOutput` metadata; they are outside the grammar-resolver ramp.
 pub fn refs_outcome(opts: RefsOpts) -> Result<RefsOutcome> {
     Ok(refs_with_metadata(opts)?.outcome)
 }
@@ -187,6 +198,8 @@ pub struct RefsWithMetadata {
 
 /// Read refs and target metadata from one resolved context, including queries
 /// for valid undeclared IDs (§FS-refs.3.2). File summaries ignore this metadata.
+/// Duplicate-home and requested-section refusals carry their typed sites and
+/// scan metadata in `Err` (§FS-refs.4, §FS-errors.5.2.1).
 pub fn refs_with_metadata(opts: RefsOpts) -> Result<RefsWithMetadata> {
     refs_impl(opts)
 }
