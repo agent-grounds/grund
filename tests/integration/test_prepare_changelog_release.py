@@ -189,8 +189,11 @@ class RefusalTests(ReleaseRepository, unittest.TestCase):
         self.assertEqual("", self._git(self.repo, "status", "--porcelain", "--untracked-files=all"))
 
     def test_an_empty_directory_is_refused(self) -> None:
+        # §FS-distribution.4.6: entries are written before a release, so the refusal names that fix.
         self._repository()
-        self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE), "docs/changelog/unreleased/")
+        self.assertRefusedUntouched(
+            self._script("prepare", VERSION, "--date", DATE), "docs/changelog/unreleased/", "write the release section first"
+        )
 
     def test_a_file_that_is_not_a_well_formed_entry_is_refused(self) -> None:
         for name, text in {"a-note.note.md": "- A bullet.\n", "two-bullets.fixed.md": "- One.\n- Two.\n"}.items():

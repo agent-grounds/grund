@@ -11,8 +11,11 @@ line-shaped.
 §AR-ci.1.2 divides the work: this test holds the *existence* of a counterpart,
 because that is the half a line-shaped read can see. The other half — that the
 counterpart reaches the same verdict on the same tree — is held by each gate's
-own test, `tests/integration/test_check_changelog_pr_entry.py` for the changelog
-gate."""
+own test, `tests/integration/test_check_no_claude_attribution.py` for the
+attribution gate.
+
+§FS-distribution.4.6 takes one gate away rather than adding one: no hook and no
+workflow job asks a change for a changelog entry (§AR-ci.7)."""
 
 import re
 import unittest
@@ -21,11 +24,14 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PRE_COMMIT = REPO_ROOT / ".pre-commit-config.yaml"
-CI = REPO_ROOT / ".github" / "workflows" / "ci.yml"
+WORKFLOWS = REPO_ROOT / ".github" / "workflows"
+CI = WORKFLOWS / "ci.yml"
 AR_CI = REPO_ROOT / "docs" / "architecture" / "AR-ci.md"
 RUST_HOOKS = ("cargo-fmt-check", "cargo-build", "cargo-test")
 FILE_LIST_STAGES = ("pre-commit", "manual")
 ENV_PREFIX = "env RUSTFLAGS=-Dwarnings "
+# The release helper reads the entries to release them (§FS-distribution.4.5); it gates no change.
+RELEASE_HELPER = "scripts/prepare_changelog_release.py"
 
 
 def _hooks(text):
@@ -145,7 +151,24 @@ class CiPreCommitParityTests(unittest.TestCase):
                     f"{hook['id']} runs at no stage `pre-commit run --all-files` reproduces "
                     f"and no CI step runs {script}",
                 )
-        self.assertGreaterEqual(counterparts, 2)
+        self.assertGreaterEqual(counterparts, 1)
+
+    def test_no_hook_asks_a_change_for_a_changelog_entry(self):
+        # §FS-distribution.4.6: the changelog is written before a release, so no hook, at any
+        # stage, gates a change on it.
+        hooks = [hook["id"] for hook in self.hooks if "changelog" in f"{hook['id']} {hook['entry']}".lower()]
+        self.assertEqual([], hooks, "a hook still gates a change on the changelog")
+
+    def test_no_workflow_job_asks_a_change_for_a_changelog_entry(self):
+        # §FS-distribution.4.6, §AR-ci.7: nor does a job of any workflow; the release helper only
+        # releases the entries it finds.
+        for workflow in sorted(WORKFLOWS.glob("*.yml")):
+            text = workflow.read_text(encoding="utf-8")
+            with self.subTest(workflow=workflow.name):
+                job_ids = re.findall(r"^  ([A-Za-z0-9_-]+):\s*$", text.split("\njobs:", 1)[1], re.M)
+                self.assertEqual([], [job for job in job_ids if "changelog" in job.lower()])
+                scripts = set(re.findall(r"scripts/[\w./-]*changelog[\w.-]*", text)) - {RELEASE_HELPER}
+                self.assertEqual(set(), scripts, "a workflow still runs a changelog check")
 
     def test_python_tests_are_discovered_from_this_home_on_both_sides(self):
         home = Path(__file__).resolve().parent.relative_to(REPO_ROOT).as_posix()
