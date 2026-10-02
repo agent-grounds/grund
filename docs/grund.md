@@ -14,7 +14,7 @@ This serves [§GOAL-agent-grounding](goals.md#goal-agent-grounding-agents-stay-c
 
 ## 2. Who it is for
 
-- **Codebases that adopt the specification-driven design** — to verify the spec stays intact across changes, *and across the docs/code boundary*.
+- **Codebases that adopt the specification-driven design** — to verify the spec stays intact across changes, *and across the docs/code boundary*. That design has a current wave of agent tools ([§REL-spec-driven-development](related-work/REL-spec-driven-development.md#rel-spec-driven-development-spec-driven-development-the-current-wave-of-agent-tools)) and an older line of requirements-traceability tools beside `grund` ([§REL-traceability-tools](related-work/REL-traceability-tools.md#rel-traceability-tools-requirements-traceability-tools-the-neighbours-beside-grund)).
 - **Polyglot projects** whose specs are cited from source as well as docs — the case off-the-shelf link checkers cannot serve.
 - **Agents (human and AI) working in those codebases** — to retrieve grounded spec content cheaply.
 - **CI systems** — as a fast pre-merge check.
@@ -27,7 +27,7 @@ Everything in the project — code, docs, decisions, tests — cites the point t
 
 # GRUND-structure: the project's long-term memory stays organized
 
-The project's long-term memory — its why, goals, behavior, design, decisions, and proofs — is organized into declarations, each a fact with one stable, location-independent ID: `§FS-<user-login>.3.1` keeps resolving when files move or headings reword — Markdown anchors break; grund citations don't. `grund FS-<user-login>.3.1` returns just that subsection — the lead prose for one section, cut at the first child section — so a human or LLM pulls one fact into context instead of a whole file ([§GOAL-friendliness-first.1](goals.md#1-hard-requirements)). Use `grund list --size=words` to measure how much prose a given slice contains.
+The project's long-term memory — its why, goals, behavior, design, decisions, and proofs — is organized into declarations, each a fact with one stable, location-independent ID: `§FS-<user-login>.3.1` keeps resolving when files move or headings reword — Markdown anchors break; grund citations don't. `grund FS-<user-login>.3.1` returns just that subsection — the lead prose for one section, cut at the first child section — so a human or LLM pulls one fact into context instead of a whole file ([§GOAL-friendliness-first.1](goals.md#1-hard-requirements)). Use `grund list --size=words` to measure how much prose a given slice contains. The prose around the declarations stays free: a declaration or a `§` citation formalizes one spot at a time, where it pays, which is incremental formalization ([§REL-incremental-formalization](related-work/REL-incremental-formalization.md#rel-incremental-formalization-incremental-formalization-the-idea-grund-descends-from)) over documents that are flexiformal ([§REL-flexiformality](related-work/REL-flexiformality.md#rel-flexiformality-flexiformality-documents-that-are-partly-formal)).
 
 # GRUND-consistency: the structure stays consistent
 

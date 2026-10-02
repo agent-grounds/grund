@@ -64,7 +64,9 @@ checked, and the report layer on demand (`grund check --suggestions`, [§FS-chec
 
 The severity mapping is **fixed** across both surfaces (`must`→error,
 `should`→suggestion, always), so two installs reading one config agree on what gates
-and what is suggested ([§FS-non-goals.9](../../functional-spec/FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)).
+and what is suggested ([§FS-non-goals.9](../../functional-spec/FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)). SHACL, the closest
+precedent in graph validation, lets each shape pick its own severity instead
+([§REL-graph-shapes](../../related-work/REL-graph-shapes.md#rel-graph-shapes-shapes-and-rule-based-schemas-constraints-over-a-structure)).
 
 ### 2.3 Suggestions are a third channel, not a third severity
 

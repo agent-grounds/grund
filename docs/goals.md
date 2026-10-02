@@ -148,7 +148,7 @@ See [AR-goal-measurement.2](architecture/AR-goal-measurement.md#2-goal-meters).
 
 ### 4. Research notes
 
-Evidence for the cheap default lives in [DF-show-default-token-cheap](decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in).
+Evidence for the cheap default lives in [DF-show-default-token-cheap](decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in). The unit those slices return, one labelled fact per declaration, has its precedent in information typing ([§REL-information-typing](related-work/REL-information-typing.md#rel-information-typing-information-typing-units-of-one-kind-under-one-label)).
 
 ## GOAL-configurable: every default is overridable
 
@@ -215,7 +215,7 @@ A large repo can organize specs by component without changing citation syntax or
 
 ### 3. Layout knobs live in config
 
-Scale features are opt-in `grund.toml` settings, not implicit mode switches.
+Scale features are opt-in `grund.toml` settings, not implicit mode switches. Structure is paid for where it pays, as in pay-as-you-go data management ([§REL-schema-later](related-work/REL-schema-later.md#rel-schema-later-pay-as-you-go-structure-schema-added-where-it-pays)).
 
 ### 4. Composition with [§GOAL-zero-config](goals.md#goal-zero-config-works-on-any-conformant-tree) and [§GOAL-configurable](goals.md#goal-configurable-every-default-is-overridable)
 
