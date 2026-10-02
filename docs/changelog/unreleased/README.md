@@ -1,6 +1,6 @@
 # Unreleased changelog entries
 
-Every change that has merged and is not yet released is one file in this directory. Two pull requests that each record a change add two files, so they merge in either order without touching a line in common. The release collects the files into the changelog and deletes them. This README stays.
+Each changelog entry waiting for a release is one file in this directory. No two entries share a line, so entries written apart merge in either order. The release collects the files into the changelog and deletes them. This README stays.
 
 ## Part one: the format
 
@@ -17,10 +17,32 @@ This part is shared. A repository that takes the format copies everything above 
 
 ## Part two: how this repository uses it
 
-The rules are [§FS-distribution.4.12](../../functional-spec/FS-distribution.md#412-pending-changelog-entries-are-one-file-each), and a pull request that adds no entry is refused before the push and again in CI ([§FS-distribution.4.6](../../functional-spec/FS-distribution.md#46-the-changelog-is-written-before-a-release-not-with-each-change)).
+The rules are [§FS-distribution.4.12](../../functional-spec/FS-distribution.md#412-pending-changelog-entries-are-one-file-each).
 
 - The category is required and is one of `added`, `changed`, `deprecated`, `removed`, `fixed` or `security`. Sections are released in that order.
 - A `**Schema:**` callout is a `changed` entry whose text begins with `**Schema:**`.
 - Bullets stay on one line by convention.
 
-For a branch named `fix/issue-379` that changes behavior, the entry is `docs/changelog/unreleased/fix-issue-379.changed.md`.
+A pull request adds no entry. Whoever cuts a release writes the entries first, in one pull request, the write-up ([§FS-distribution.4.6](../../functional-spec/FS-distribution.md#46-the-changelog-is-written-before-a-release-not-with-each-change)):
+
+- **The list** is every pull request merged since the latest `vX.Y.Z` tag that changed more than docs and CI. This prints it:
+
+  ```sh
+  tag="$(git describe --tags --abbrev=0 --match 'v*.*.*' origin/main)"
+  gh pr list --state merged --base main --limit 200 \
+    --search "merged:>$(git log -1 --format=%cI "$tag")" \
+    --json number,title,files \
+    --jq '.[] | select(any(.files[].path; test("^(docs/|\\.github/)|\\.md$|^(LICENSE|lychee\\.toml)$") | not)) | "#\(.number) \(.title)"'
+  ```
+
+  Each gets an entry, or is named in one. Skip any whose entry is already in this directory: it ships as written.
+- **The words** come from the issues the pull request closed, which its description names (`Closes #N`), or from its own description where it closed none.
+- **The number** is the pull request's own: every entry ends in `(PR #N)`. The release leaves such an entry as it stands, and gives no entry a number it would give several, so a forgotten number is published missing rather than wrong.
+- **The slug** is the pull request's branch name, its `/` written as `-`.
+- **A verdict correction** is the one exception: it brings its own entry, in the pull request that makes it ([§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids)).
+
+For pull request #395, merged from `fix/issue-295`, the write-up adds `docs/changelog/unreleased/fix-issue-295.fixed.md`:
+
+```markdown
+- [§FS-examples.5.3](../../functional-spec/FS-examples.md#53-commandargs-is-read-as-shell-words-or-refused): the e2e runner reads `command.args` as shell words, and refuses what it cannot honour. (PR #395)
+```
