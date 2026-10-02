@@ -4,6 +4,7 @@
 //! (§FS-values.3.1.1, §AR-scanner.3).
 
 use std::collections::BTreeSet;
+use std::path::Path;
 
 use super::citation_line::CitationLine;
 use super::value_context::binding_span_is_inside;
@@ -76,13 +77,35 @@ pub(super) fn invalid_value_binding_site(
     }
 }
 
-struct AttemptedValueTarget {
+/// The record a binding split by a line break leaves: an attempt like every
+/// other, located at the literal on the line before its citation rather than on
+/// the line being scanned, and asking for the two to be joined instead of
+/// quoting the grammar (§FS-values.3.1.1.1).
+pub(super) fn split_value_binding_site(
+    path: &Path,
+    (line, column): (usize, usize),
+    target: AttemptedValueTarget,
+) -> InvalidValueSite {
+    InvalidValueSite {
+        id: Some(target.id),
+        file: path.to_path_buf(),
+        line,
+        column: Some(column),
+        message: "value binding must be on one physical line; join the literal and its citation"
+            .to_string(),
+        source: DeclarationSource::Text,
+        binding_namespace: target.namespace,
+        binding_section: target.section,
+    }
+}
+
+pub(super) struct AttemptedValueTarget {
     namespace: Option<String>,
     id: Id,
     section: Option<String>,
 }
 
-fn attempted_value_target(
+pub(super) fn attempted_value_target(
     tail: &str,
     local: &Config,
     workspace_targets: &[WorkspaceCitationTarget],
