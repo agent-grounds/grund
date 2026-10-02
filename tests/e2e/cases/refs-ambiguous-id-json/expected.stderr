@@ -1,0 +1,1 @@
+{"severity":"error","path":null,"line":null,"code":"ambiguous","message":"ambiguous ID: FS-001-alpha (declared at docs/functional-spec/FS-001-alpha-dup.md:1, docs/functional-spec/FS-001-alpha.md:1)","sites":[{"path":"docs/functional-spec/FS-001-alpha-dup.md","line":1},{"path":"docs/functional-spec/FS-001-alpha.md","line":1}],"authority":null}

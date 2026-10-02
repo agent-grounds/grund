@@ -155,6 +155,24 @@ Exit codes are unchanged ([§FS-refs.4](FS-refs.md#4-exit-codes)). `--total` ren
   trustworthy as complete), an unsupported `--format`, an unknown alias, or
   any other setup or CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
 
+Duplicate-home and requested-section refusals apply now, independently of the
+grammar-resolver compatibility window below. They leave stdout empty before
+listing citations or rendering `--summary` or `--total`; `--descendants` inherits
+the same refusal rather than combining the claimants' children. Text uses show's
+bare ambiguity message, and JSON emits exactly one failed-query finding on
+stderr: `ambiguous` for independent ID homes, `ambiguous-section` for a colliding
+section, with every claimant's path and line in show's deterministic order.
+
+Only the selected section coordinate is checked for a section collision, whether
+selected inline or by `--section`. A different duplicated section does not
+invalidate a clean selected path, and a bare ID remains queryable when only a
+section collides ([§FS-show.2.2.2.4](FS-show.md#2224-only-the-requested-path-can-collide)).
+A valid stub paired with its inline declaration remains one home
+([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)). These ambiguity checks do not
+require a declaration or selected section to exist: `refs` still lists citations
+to absent targets ([§FS-refs.1](FS-refs.md#1-inputs)), without requiring body extraction or
+stub-target I/O.
+
 Grund 0.14.0 is the compatibility release. For the two resolver rejections it
 keeps the former exit `2`, the existing `error:` message, and the same text
 hint policy in text and JSON invocations, then appends exactly this raw stderr
