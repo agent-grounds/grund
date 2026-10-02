@@ -68,11 +68,6 @@ class Bullet(NamedTuple):
         """What makes two bullets the same bullet. §FS-distribution.4.6"""
         return normalise(self.text)
 
-    @property
-    def numbers(self) -> frozenset[int]:
-        """Every pull request number this bullet names. `PR #TBD` is not one."""
-        return pr_numbers(self.text)
-
 
 def entry_name(name: str) -> EntryName | None:
     """`<slug>.<category>.md` or `<slug>.md`, else `None`. §FS-distribution.4.12
