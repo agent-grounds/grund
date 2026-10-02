@@ -53,7 +53,7 @@ Editor-native input methods (snippets, Compose, OS Unicode entry) remain availab
 
 ### 2.4 Strict vs optional
 
-**Default: strict.** Bare `FS-<user-login>` is plain text by default. The marker-prefixed form is the citation form; tooling and editor previews use the marker form.
+**Default: strict.** Bare `FS-<user-login>` is plain text by default. The marker-prefixed form is the citation form; tooling and editor previews use the marker form. Only the marked spots are checked and the prose around them stays free, the boundary gradual typing draws between annotated and unannotated code ([§REL-gradual-typing](../../related-work/REL-gradual-typing.md#rel-gradual-typing-gradual-typing-and-gradual-verification-the-programmers-version)).
 
 **Opt-in compatibility mode.** Setting `[reference] strict = false` in `grund.toml` recognizes bare tokens as citations for repositories that still rely on the older optional-marker discipline. Repositories can migrate back to the default with `grund fmt --marker`.
 

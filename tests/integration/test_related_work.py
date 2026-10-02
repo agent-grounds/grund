@@ -182,7 +182,6 @@ class RelatedWorkTests(unittest.TestCase):
         named = tuple(match.group(1) for line in lines if (match := INDEX_CHAPTER.match(line)))
         self.assertEqual(CHAPTERS, named)
 
-    @unittest.expectedFailure
     def test_the_folder_declares_the_eight_entries(self):
         problems, declared = [], set()
         for page in sorted(FOLDER.rglob("*.md")):
@@ -196,7 +195,6 @@ class RelatedWorkTests(unittest.TestCase):
         self.assertEqual([], problems)
         self.assertEqual(sorted(f"REL-{slug}" for slug in ENTRIES), sorted(declared))
 
-    @unittest.expectedFailure
     def test_each_entry_carries_the_three_chapters_in_order(self):
         problems = []
         for slug in ENTRIES:
@@ -209,7 +207,6 @@ class RelatedWorkTests(unittest.TestCase):
                 problems.append(f"REL-{slug}: chapters {list(chapters)}")
         self.assertEqual([], problems)
 
-    @unittest.expectedFailure
     def test_each_entry_cites_the_ground_it_bears_on(self):
         problems = []
         for slug in ENTRIES:
@@ -221,13 +218,11 @@ class RelatedWorkTests(unittest.TestCase):
                 problems.append(f"REL-{slug}: cites no GRUND or GOAL point")
         self.assertEqual([], problems)
 
-    @unittest.expectedFailure
     def test_each_entry_is_cited_from_outside_its_folder(self):
         citers = _outside_citers(_config())
         uncited = [f"REL-{slug}" for slug in ENTRIES if not citers.get(f"REL-{slug}")]
         self.assertEqual([], uncited, f"cited only from {HOME}/ or the roadmap, or not at all")
 
-    @unittest.expectedFailure
     def test_the_trace_tool_matrix_moved_from_the_roadmap_to_its_entry(self):
         roadmap = ROADMAP.read_text(encoding="utf-8")
         stray = [line for line in _prose_lines(roadmap)
