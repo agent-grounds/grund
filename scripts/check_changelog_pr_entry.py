@@ -25,7 +25,7 @@ from typing import Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import changelog_bullets  # noqa: E402  (the shared definitions live beside this script)
-import changelog_gate_git as gate_git  # noqa: E402  (what the gate reads of git, split out for size)
+import changelog_gate_git as gate_git  # noqa: E402  (what the gate reads of git, split out)
 
 
 ZERO_SHA_RE = re.compile(r"^0{4,40}$")
@@ -76,7 +76,7 @@ def check_changelog_pr_entry(
     for entry in touched:
         slug = _slug(entry.name)
         if slug not in carried and changelog_bullets.normalise(gate_git.text(entry)) in moved_from:
-            continue  # Moved out of the merge base's `## Unreleased`: not written, number unexamined.
+            continue  # Moved out of the base's `## Unreleased`: not written, number unexamined.
         if slug not in carried:
             written.append(entry)
         if pr_number is not None:
