@@ -9,7 +9,7 @@ use std::fs;
 use std::path::Path;
 
 const PINNED: &str = "The operations chapter of each SEG must cite at least one workshop/OP.";
-const BULLET: &str = "- The operations chapter of each SEG must cite at least one workshop/OP. \u{a7}RULE-seg-operations-workshop\n";
+const BULLET: &str = "- The operations chapter of each SEG must cite at least one workshop/OP. [\u{a7}RULE-seg-operations-workshop](docs/rules/RULE-seg-operations-workshop.md#rule-seg-operations-workshop-the-operations-chapter-of-each-seg-must-cite-at-least-one-workshopop)\n";
 
 /// The fixture the aged-block e2e case carries: a two-member workspace whose
 /// `member` holds a rule pinned at `workshop`, and whose managed block a grund
