@@ -29,6 +29,96 @@ fn e2e_cases_match_expected_reports() {
     assert_every_case_passed("e2e cases", &outcomes);
 }
 
+/// §FS-show.3.5.2: the check breadcrumb belongs only to the existing-path
+/// migration case. Port grund.33's clean-check and resolving-ID controls before
+/// comparing the malformed coordinate and both non-path alias refusals.
+#[test]
+fn refused_queries_recommend_check_only_for_existing_paths() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let fixture = cases.join("cli-invalid-section-no-check-hint/repo");
+    let run = |args: &[&str]| {
+        std::process::Command::new(env!("CARGO_BIN_EXE_grund"))
+            .args(args)
+            .current_dir(&fixture)
+            .output()
+            .expect("spawn this checkout's grund")
+    };
+    let assert_output = |args: &[&str], code, stdout: &str, stderr: &str| {
+        let output = run(args);
+        assert_eq!(output.status.code(), Some(code), "{args:?}: {output:?}");
+        assert_eq!(String::from_utf8_lossy(&output.stdout), stdout, "{args:?}");
+        assert_eq!(String::from_utf8_lossy(&output.stderr), stderr, "{args:?}");
+    };
+    assert_output(&["check", "."], 0, "success\n", "");
+    assert_output(
+        &["FS-widget", "--brief"],
+        0,
+        "# FS-widget: The widget\n\nThe widget does a thing.\n",
+        "",
+    );
+
+    // §FS-show.3.5.1: explicit show retains its format/list advice.
+    assert_output(
+        &["show", "FS-widget.1.nope"],
+        1,
+        "",
+        concat!(
+            "invalid ID `FS-widget.1.nope`\n",
+            "hint: this repo's [id] format is `{kind}-{slug}` (run `grund config show`); ",
+            "`grund list` shows the IDs that exist\n",
+        ),
+    );
+    // §FS-show.3.5: an absent numeric section still offers a working map read.
+    assert_output(
+        &["FS-widget.99"],
+        1,
+        "",
+        concat!(
+            "section not found: FS-widget.99\n",
+            "hint: run `grund FS-widget --toc` to print the lead with the section map\n",
+        ),
+    );
+    assert_output(
+        &["FS-widget", "--toc"],
+        0,
+        "The widget does a thing.\n\n## 1. It starts\n## 2. It stops\n",
+        "",
+    );
+
+    // Follow the preserved breadcrumb's own command, using a real fixture path.
+    let path_refusal = run(&["docs/functional-spec"]);
+    assert_eq!(path_refusal.status.code(), Some(1));
+    assert!(path_refusal.stdout.is_empty());
+    let stderr = String::from_utf8(path_refusal.stderr).expect("UTF-8 stderr");
+    let command = stderr
+        .lines()
+        .find_map(|line| {
+            line.strip_prefix("hint: run `grund ")?
+                .strip_suffix("` to validate a path")
+        })
+        .expect("existing-path migration breadcrumb");
+    assert_eq!(command, "check docs/functional-spec");
+    assert_output(
+        &command.split_whitespace().collect::<Vec<_>>(),
+        0,
+        "success\n",
+        "",
+    );
+
+    let outcomes = [
+        "cli-invalid-section-no-check-hint",
+        "cli-invalid-subcommand",
+        "workspace-nested-include-root-false-root-alias",
+        "workspace-nested-invalid-alias-segment",
+        "cli-bare-path-requires-check",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &cases.join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("show failure hints", &outcomes);
+}
+
 /// Completion scripts participate in the same two independent runs as every
 /// immutable case, so their bytes are stable across invocations (§FS-completions.3).
 #[test]
