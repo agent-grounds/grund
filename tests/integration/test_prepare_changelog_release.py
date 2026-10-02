@@ -1,101 +1,229 @@
-"""§FS-distribution.4 — the release step that moves the changelog: the
-`## Unreleased` section becomes the inline latest release, the previous latest is
-archived one-per-file, and the release notes are read back from it.
+"""§FS-distribution.4.5 — the release step that moves the changelog: the entries
+under `docs/changelog/unreleased/` (§FS-distribution.4.12) become the inline
+latest release, grouped by category and oldest-landed first, and are deleted;
+the previous latest is archived one-per-file; `preview` shows the body without
+writing it; and the release notes are read back from the section
+(§FS-distribution.4.7).
 
-`StampTests` covers the step immediately before that rotation
-(§FS-distribution.4.5): every `## Unreleased` bullet is blamed to the commits
-that wrote it and each of those to its pull request, so the number the
-contributor could not have known at push time is written at release time. The
-blame half runs against a real throwaway repository rather than a stand-in,
-because the line ranges are the thing under test; the commit-to-pull-request
-half is an injected seam, so no case here reaches the network."""
+Each case runs the script the way the release workflow does, in a throwaway
+repository whose commits carry fixed dates, because which entry landed first is
+a fact of the history and not of the files. `stamp`, the step just before the
+rotation, is `test_prepare_changelog_release_stamp.py`."""
 
-import importlib.util
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from subprocess import CompletedProcess
-from unittest.mock import patch
 
+from changelog_gate_fixture import ENTRIES, ENTRY_README, POINTER, REPO_ROOT, GitFixture, environment
 
-SCRIPT_PATH = Path(__file__).resolve().parents[2] / "scripts" / "prepare_changelog_release.py"
-SPEC = importlib.util.spec_from_file_location("prepare_changelog_release", SCRIPT_PATH)
-prepare_changelog_release = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-SPEC.loader.exec_module(prepare_changelog_release)
+SCRIPT_PATH = REPO_ROOT / "scripts" / "prepare_changelog_release.py"
+VERSION, DATE = "0.3.0", "2026-10-02"
 
-
-SAMPLE_CHANGELOG = """# Changelog
-
-Intro.
-
-## Unreleased
-
-### Fixed
-
-- [§FS-distribution.4](functional-spec/FS-distribution.md#4-release-process): rotate release notes automatically.
-
-## 2. [0.2.0] — 2026-05-17
+PREVIOUS_LATEST = """## 2. [0.2.0] — 2026-05-17
 
 Workspace and agent-entrypoint release. The main user-visible change is workspace aliases.
 
 ### Added
 
-- [§FS-workspace](functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace): validate aliases.
+- [FS-workspace](functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace): validate aliases.
 
 ## 3. Older releases
 
 - [0.1.0](changelog/0.1.0.md) — 2026-05-14: first published release and baseline CLI surface.
 """
+BASE = f"# Changelog\n\nIntro.\n\n## Unreleased\n\n{POINTER}\n\n{PREVIOUS_LATEST}"
+
+# Landed in this order, one commit per row; a row of two landed in one commit.
+# `zz-kept-landing` is filed as a fix and later moved to `added`, edited in the
+# same commit: it keeps the place its first landing gave it.
+LANDINGS = (
+    {"zz-oldest.added.md": "- The oldest addition.\n"},
+    {"parser-crash.fixed.md": "- A parser crash.\n"},
+    {"zz-kept-landing.fixed.md": "- Kept its landing, filed as a fix.\n"},
+    {"mm-middle.added.md": "- The middle addition.\n", "old-flag.removed.md": "- An old flag is gone.\n"},
+    {"wording.changed.md": "- A wording change\n  that wraps onto a second line.\n"},
+    {"ab-newest-too.added.md": "- The newest addition's twin, landed in the same commit.\n", "aa-newest.added.md": "- The newest addition.\n"},
+    {"zz-kept-landing.fixed.md": None, "zz-kept-landing.added.md": "- Kept its landing: first filed as a fix, now an addition.\n"},
+)
+BODY = """### Added
+
+- The oldest addition.
+- Kept its landing: first filed as a fix, now an addition.
+- The middle addition.
+- The newest addition.
+- The newest addition's twin, landed in the same commit.
+
+### Changed
+
+- A wording change
+  that wraps onto a second line.
+
+### Removed
+
+- An old flag is gone.
+
+### Fixed
+
+- A parser crash.
+"""
+RELEASED = f"""# Changelog
+
+Intro.
+
+## Unreleased
+
+{POINTER}
+
+## 2. [{VERSION}] — {DATE}
+
+{BODY}
+## 3. Older releases
+
+- [0.2.0](changelog/0.2.0.md) — 2026-05-17: Workspace and agent-entrypoint release.
+- [0.1.0](changelog/0.1.0.md) — 2026-05-14: first published release and baseline CLI surface.
+"""
 
 
-class PrepareChangelogReleaseTests(unittest.TestCase):
-    def write_changelog(self, text: str = SAMPLE_CHANGELOG) -> Path:
-        root = Path(self.tempdir.name)
-        changelog = root / "docs" / "changelog.md"
-        changelog.parent.mkdir(parents=True)
-        changelog.write_text(text, encoding="utf-8")
-        return changelog
+class ReleaseRepository(GitFixture):
+    """A repository whose base commit holds `BASE` and the entry README, and
+    whose every later commit lands one day after the one before it."""
 
-    def setUp(self) -> None:
-        self.tempdir = tempfile.TemporaryDirectory()
+    def _repository(self, changelog: str = BASE) -> Path:
+        scratch = tempfile.TemporaryDirectory()
+        self.addCleanup(scratch.cleanup)
+        self.repo = Path(scratch.name) / "repo"
+        self._git(Path(scratch.name), "init", "-b", "main", str(self.repo))
+        self.day = 0
+        self._land({"docs/changelog.md": changelog, f"{ENTRIES}/README.md": ENTRY_README}, "The base")
+        return self.repo
 
-    def tearDown(self) -> None:
-        self.tempdir.cleanup()
+    def _land(self, files: dict[str, str | None], message: str = "Land entries", entries: bool = False) -> str:
+        """Write each file, or delete it where the text is `None`, and commit the result."""
+        for relative, text in files.items():
+            path = self.repo / (f"{ENTRIES}/{relative}" if entries else relative)
+            if text is None:
+                path.unlink()
+            else:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(text.encode("utf-8"))
+        self.day += 1
+        when = f"2026-09-{self.day:02d}T12:00:00+00:00"
+        identity = ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false")
+        dated = {"GIT_AUTHOR_DATE": when, "GIT_COMMITTER_DATE": when, "GIT_CONFIG_GLOBAL": str(self.repo / ".absent")}
+        for arguments in (("add", "-A"), (*identity, "commit", "-q", "-m", message)):
+            subprocess.run(["git", "-C", str(self.repo), *arguments], check=True, capture_output=True, env=environment(dated))
+        return self._git(self.repo, "rev-parse", "HEAD")
 
-    # §FS-distribution.4.5 — rotation moves curated `## Unreleased` bullets into
-    # the inline release section, archives the former latest under
-    # docs/changelog/<version>.md, and adds its link to the older-release index.
-    def test_prepare_promotes_unreleased_and_archives_previous_latest(self) -> None:
-        changelog = self.write_changelog()
-
-        prepare_changelog_release.prepare_release(changelog, "0.2.1", "2026-05-18")
-
-        updated = changelog.read_text(encoding="utf-8")
-        self.assertIn("## Unreleased\n\n## 2. [0.2.1] — 2026-05-18", updated)
-        self.assertIn("rotate release notes automatically.", updated)
-        self.assertIn(
-            "- [0.2.0](changelog/0.2.0.md) — 2026-05-17: Workspace and agent-entrypoint release.",
-            updated,
+    def _script(self, *arguments: str) -> CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(SCRIPT_PATH), *arguments],
+            cwd=self.repo,
+            capture_output=True,
+            encoding="utf-8",
+            errors="replace",
+            env=environment({"PYTHONUTF8": "1"}),
         )
-        self.assertIn(
-            "- [0.1.0](changelog/0.1.0.md) — 2026-05-14: first published release and baseline CLI surface.",
-            updated,
-        )
 
-        archived = changelog.parent / "changelog" / "0.2.0.md"
+    def _read(self, relative: str = "docs/changelog.md") -> str:
+        return (self.repo / relative).read_text(encoding="utf-8")
+
+    def _entries(self) -> list[str]:
+        return sorted(path.name for path in (self.repo / ENTRIES).iterdir())
+
+    def assertSucceeded(self, result: CompletedProcess) -> None:
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+
+class RotationTests(ReleaseRepository, unittest.TestCase):
+    """`prepare`, `preview` and `notes` over the same landed entries."""
+
+    def _landed(self) -> None:
+        self._repository()
+        for files in LANDINGS:
+            self._land(files, entries=True)
+
+    def test_prepare_writes_the_entries_by_category_oldest_landed_first(self) -> None:
+        self._landed()
+        self.assertSucceeded(self._script("prepare", VERSION, "--date", DATE))
+        self.assertEqual(RELEASED, self._read())
+
+    def test_prepare_deletes_the_entries_and_keeps_the_readme(self) -> None:
+        self._landed()
+        self.assertSucceeded(self._script("prepare", VERSION, "--date", DATE))
+        self.assertEqual(["README.md"], self._entries())
+        self.assertEqual(ENTRY_README, self._read(f"{ENTRIES}/README.md"))
+
+    def test_preview_prints_the_body_prepare_writes_and_writes_nothing(self) -> None:
+        self._landed()
+        preview = self._script("preview")
+        self.assertSucceeded(preview)
+        self.assertEqual("", self._git(self.repo, "status", "--porcelain"))
+        self.assertEqual(BODY.strip("\n"), preview.stdout.strip("\n"))
+
+    def test_the_release_notes_are_the_body_prepare_wrote(self) -> None:
+        self._landed()
+        self.assertSucceeded(self._script("prepare", VERSION, "--date", DATE))
+        notes = self.repo.parent / "notes.md"
+        self.assertSucceeded(self._script("notes", VERSION, "--output", str(notes)))
+        self.assertEqual(BODY.strip("\n"), notes.read_text(encoding="utf-8").strip("\n"))
+
+    def test_links_are_rebased_from_the_entry_directory_to_docs(self) -> None:
+        self._repository()
+        written = "- [FS-x](../../functional-spec/FS-x.md#a-b), [root](../../../crates/x.rs), [older](../0.15.0.md), [format](README.md), [here](#anchor), [abs](/README.md), [url](https://example.com/a).\n"
+        rebased = "- [FS-x](functional-spec/FS-x.md#a-b), [root](../crates/x.rs), [older](changelog/0.15.0.md), [format](changelog/unreleased/README.md), [here](#anchor), [abs](/README.md), [url](https://example.com/a).\n"
+        self._land({"links.changed.md": written}, entries=True)
+        self.assertSucceeded(self._script("prepare", VERSION, "--date", DATE))
+        self.assertIn(f"## 2. [{VERSION}] — {DATE}\n\n### Changed\n\n{rebased}\n## 3. Older releases", self._read())
+
+
+class RefusalTests(ReleaseRepository, unittest.TestCase):
+    """What `prepare` refuses rather than invent or drop, writing nothing."""
+
+    def assertRefusedUntouched(self, result: CompletedProcess, *needles: str) -> None:
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        for needle in needles:
+            self.assertIn(needle, result.stderr)
+        self.assertEqual("", self._git(self.repo, "status", "--porcelain", "--untracked-files=all"))
+
+    def test_an_empty_directory_is_refused(self) -> None:
+        self._repository()
+        self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE), "docs/changelog/unreleased/")
+
+    def test_a_file_that_is_not_a_well_formed_entry_is_refused(self) -> None:
+        for name, text in {"a-note.note.md": "- A bullet.\n", "two-bullets.fixed.md": "- One.\n- Two.\n"}.items():
+            with self.subTest(name=name):
+                self._repository()
+                self._land({"fine.added.md": "- A fine entry.\n", name: text}, entries=True)
+                self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE), name)
+
+    def test_a_bullet_under_the_pointer_is_refused(self) -> None:
+        stray = "- A bullet somebody wrote under the pointer."
+        self._repository(BASE.replace(f"{POINTER}\n", f"{POINTER}\n\n### Fixed\n\n{stray}\n"))
+        self._land({"fine.added.md": "- A fine entry.\n"}, entries=True)
+        self.assertRefusedUntouched(self._script("prepare", VERSION, "--date", DATE), "## Unreleased", stray)
+
+
+class ArchiveTests(ReleaseRepository, unittest.TestCase):
+    """The former latest release, archived one-per-file as before the entries moved."""
+
+    def test_prepare_archives_the_previous_latest_and_links_it(self) -> None:
+        self._repository()
+        self._land({"fine.added.md": "- A fine entry.\n"}, entries=True)
+        self.assertSucceeded(self._script("prepare", VERSION, "--date", DATE))
         self.assertEqual(
-            archived.read_text(encoding="utf-8"),
             """# 0.2.0 — 2026-05-17
 
 Workspace and agent-entrypoint release. The main user-visible change is workspace aliases.
 
 ### Added
 
-- [§FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace): validate aliases.
+- [FS-workspace](../functional-spec/FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace): validate aliases.
 
 """,
+            self._read("docs/changelog/0.2.0.md"),
         )
 
     def test_archived_links_that_climb_above_docs_gain_another_level(self) -> None:
@@ -107,32 +235,17 @@ Workspace and agent-entrypoint release. The main user-visible change is workspac
         Leaving an already-climbing link alone is how v0.10.0 shipped a link resolving
         to `docs/crates/...` and turned the tree's own link check red.
         """
-        changelog = self.write_changelog(
-            """# Changelog
-
-## Unreleased
-
-### Added
-
-- New thing.
-
-## 2. [0.2.0] — 2026-05-17
-
-Previous release.
-
-### Added
-
-- [§AR-checker.2.12](../crates/grund-core/src/checker.rs): an inline declaration.
-- [§FS-workspace](functional-spec/FS-workspace.md#fs-workspace): a sibling under docs.
-- [an anchor](#goal-x) and [an absolute one](/README.md) and [a url](https://example.com/a).
-
-## 3. Older releases
-"""
+        climbing = (
+            "## 2. [0.2.0] — 2026-05-17\n\nPrevious release.\n\n### Added\n\n"
+            "- [AR-checker.2.12](../crates/grund-core/src/checker.rs): an inline declaration.\n"
+            "- [FS-workspace](functional-spec/FS-workspace.md#fs-workspace): a sibling under docs.\n"
+            "- [an anchor](#goal-x) and [an absolute one](/README.md) and [a url](https://example.com/a).\n\n"
+            "## 3. Older releases\n"
         )
-
-        prepare_changelog_release.prepare_release(changelog, "0.3.0", "2026-05-18")
-        archived = (changelog.parent / "changelog" / "0.2.0.md").read_text(encoding="utf-8")
-
+        self._repository(BASE.replace(PREVIOUS_LATEST, climbing))
+        self._land({"fine.added.md": "- A fine entry.\n"}, entries=True)
+        self.assertSucceeded(self._script("prepare", VERSION, "--date", DATE))
+        archived = self._read("docs/changelog/0.2.0.md")
         # Climbed once against `docs/`, so it climbs twice from `docs/changelog/`.
         self.assertIn("](../../crates/grund-core/src/checker.rs)", archived)
         # A sibling under `docs/` gains exactly one level.
@@ -142,238 +255,6 @@ Previous release.
         self.assertIn("](/README.md)", archived)
         self.assertIn("](https://example.com/a)", archived)
 
-    def test_prepare_fails_when_unreleased_has_no_bullets(self) -> None:
-        changelog = self.write_changelog(
-            """# Changelog
-
-## Unreleased
-
-## 2. [0.2.0] — 2026-05-17
-
-Previous release.
-
-## 3. Older releases
-"""
-        )
-
-        with self.assertRaisesRegex(prepare_changelog_release.ChangelogError, "no bullet entries"):
-            prepare_changelog_release.prepare_release(changelog, "0.2.1", "2026-05-18")
-
-    # §FS-distribution.4.7 — the changelog is the source of the GitHub release
-    # notes: the requested vX.Y.Z section is extracted from docs/changelog.md and
-    # handed over as the release body; the older-release index is not part of it.
-    def test_extract_notes_writes_inline_release_body(self) -> None:
-        changelog = self.write_changelog()
-        output = changelog.parent / "release-notes.md"
-
-        prepare_changelog_release.extract_notes(changelog, "0.2.0", output)
-
-        notes = output.read_text(encoding="utf-8")
-        self.assertIn("Workspace and agent-entrypoint release.", notes)
-        self.assertIn("### Added", notes)
-        self.assertNotIn("Older releases", notes)
-
 
 if __name__ == "__main__":
     unittest.main()
-
-
-STAMPABLE = """# Changelog
-
-## Unreleased
-
-### Changed
-
-- A bullet whose author left a placeholder. (PR #TBD)
-- A bullet whose author left nothing.
-
-## 2. [0.2.0] — 2026-05-17
-
-### Added
-
-- A released bullet, already stamped. (PR #4)
-
-## 3. Older releases
-
-- [0.1.0](changelog/0.1.0.md) — 2026-05-14: first published release.
-"""
-
-
-class StampTests(unittest.TestCase):
-    """§FS-distribution.4.5 — `stamp` writes the numbers it can resolve, warns
-    about the rest once each, and never fails the release."""
-
-    def setUp(self) -> None:
-        self.tempdir = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tempdir.cleanup)
-        self.root = Path(self.tempdir.name)
-
-    def changelog(self, text: str = STAMPABLE) -> Path:
-        path = self.root / "docs" / "changelog.md"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
-        return path
-
-    def stamp(self, changelog: Path, commits, resolve) -> str:
-        prepare_changelog_release.stamp_release_numbers(
-            changelog, resolve=resolve, blame=lambda _path, start, end: commits(start, end)
-        )
-        return changelog.read_text(encoding="utf-8")
-
-    def test_a_placeholder_is_replaced_in_place_and_a_bare_bullet_gains_the_number(self) -> None:
-        changelog = self.changelog()
-        stamped = self.stamp(changelog, lambda start, end: ["a" * 40], lambda _commit: {12})
-        self.assertIn("- A bullet whose author left a placeholder. (PR #12)", stamped)
-        self.assertIn("- A bullet whose author left nothing. (PR #12)", stamped)
-        self.assertNotIn("PR #TBD", stamped)
-
-    def test_a_placeholder_on_a_bullets_first_line_is_replaced_there(self) -> None:
-        # An author who wraps a bullet leaves `PR #TBD` on its first line as often
-        # as on its last; writing only into the last line appends the number to a
-        # continuation and ships the placeholder into the archive.
-        changelog = self.changelog(
-            STAMPABLE.replace(
-                "- A bullet whose author left a placeholder. (PR #TBD)",
-                "- A bullet whose author left a placeholder. (PR #TBD)\n  and a continuation line saying more.",
-            )
-        )
-        stamped = self.stamp(changelog, lambda start, end: ["a" * 40], lambda _commit: {412})
-        self.assertIn("- A bullet whose author left a placeholder. (PR #412)\n", stamped)
-        self.assertIn("  and a continuation line saying more.\n", stamped)
-        self.assertNotIn("PR #TBD", stamped)
-
-    def test_every_placeholder_in_one_bullet_is_replaced(self) -> None:
-        # Stopping at the first leaves the second to ship into the archive: the
-        # bullet now names a number, so no later run looks at it again.
-        changelog = self.changelog(
-            STAMPABLE.replace(
-                "- A bullet whose author left a placeholder. (PR #TBD)",
-                "- A bullet whose author left the placeholder twice (PR #TBD)\n"
-                "  because they wrapped it and repeated themselves. (PR #TBD)",
-            )
-        )
-        stamped = self.stamp(changelog, lambda start, end: ["a" * 40], lambda _commit: {412})
-        self.assertIn("- A bullet whose author left the placeholder twice (PR #412)\n", stamped)
-        self.assertIn("  because they wrapped it and repeated themselves. (PR #412)\n", stamped)
-        self.assertNotIn("PR #TBD", stamped)
-
-    def test_a_run_that_stamps_nothing_leaves_the_file_byte_identical(self) -> None:
-        # `stamp` runs on every release whether or not it resolves anything, and a
-        # release in which nothing resolves is exactly today's release.
-        path = self.root / "docs" / "changelog.md"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        before = STAMPABLE.replace("\n", "\r\n").encode("utf-8")
-        path.write_bytes(before)
-        with patch("sys.stderr"):
-            self.stamp(path, lambda start, end: ["a" * 40, "b" * 40], lambda commit: {12} if commit[0] == "a" else {13})
-        self.assertEqual(before, path.read_bytes())
-
-    def test_a_released_section_is_never_touched(self) -> None:
-        changelog = self.changelog()
-        stamped = self.stamp(changelog, lambda start, end: ["a" * 40], lambda _commit: {12})
-        self.assertIn("- A released bullet, already stamped. (PR #4)", stamped)
-        self.assertIn("- [0.1.0](changelog/0.1.0.md) — 2026-05-14: first published release.", stamped)
-
-    def test_two_commits_that_resolve_to_one_pull_request_stamp_it(self) -> None:
-        changelog = self.changelog()
-        stamped = self.stamp(changelog, lambda start, end: ["a" * 40, "b" * 40], lambda _commit: {12})
-        self.assertIn("(PR #12)", stamped)
-
-    def test_two_pull_requests_leave_the_bullet_alone_with_one_warning(self) -> None:
-        changelog = self.changelog()
-        with patch("sys.stderr") as stderr:
-            stamped = self.stamp(
-                changelog,
-                lambda start, end: ["a" * 40, "b" * 40],
-                lambda commit: {12} if commit.startswith("a") else {13},
-            )
-        self.assertIn("- A bullet whose author left a placeholder. (PR #TBD)", stamped)
-        warnings = [call.args[0] for call in stderr.write.call_args_list if "warning:" in str(call.args[0])]
-        self.assertEqual(2, len(warnings), warnings)
-
-    def test_a_bullet_that_already_names_its_pull_request_is_left_alone(self) -> None:
-        changelog = self.changelog(STAMPABLE.replace("left nothing.", "left nothing. (PR #9)"))
-        stamped = self.stamp(changelog, lambda start, end: ["a" * 40], lambda _commit: {12})
-        self.assertIn("- A bullet whose author left nothing. (PR #9)", stamped)
-
-    def test_nothing_resolving_still_exits_zero(self) -> None:
-        changelog = self.changelog()
-        def refuse(_commit):
-            raise prepare_changelog_release.ChangelogError("gh could not resolve it")
-
-        with patch.object(prepare_changelog_release, "pull_requests_for_commit", refuse), patch.object(
-            prepare_changelog_release, "_blame_commits", lambda _path, start, end: ["a" * 40]
-        ), patch("sys.stderr"):
-            self.assertEqual(0, prepare_changelog_release.main(["--changelog", str(changelog), "stamp"]))
-        self.assertEqual(STAMPABLE, changelog.read_text(encoding="utf-8"))
-
-    def test_prepare_still_fails_on_an_empty_unreleased(self) -> None:
-        changelog = self.changelog(STAMPABLE.replace(
-            "- A bullet whose author left a placeholder. (PR #TBD)\n- A bullet whose author left nothing.",
-            "*Nothing yet.*",
-        ))
-        with self.assertRaisesRegex(prepare_changelog_release.ChangelogError, "no bullet entries"):
-            prepare_changelog_release.prepare_release(changelog, "0.2.1", "2026-05-18")
-
-    def test_the_resolver_asks_github_for_the_commit_s_pull_requests(self) -> None:
-        with patch.object(
-            prepare_changelog_release.subprocess,
-            "run",
-            return_value=CompletedProcess(args=[], returncode=0, stdout="12\n", stderr=""),
-        ) as run:
-            self.assertEqual({12}, prepare_changelog_release.pull_requests_for_commit("a" * 40))
-        self.assertEqual(
-            ["gh", "api", f"/repos/{{owner}}/{{repo}}/commits/{'a' * 40}/pulls", "--jq", ".[].number"],
-            run.call_args.args[0],
-        )
-
-
-class StampBlameTests(unittest.TestCase):
-    """The line ranges, against a real repository: a bullet is blamed where its
-    author left it, and an uncommitted line leaves its bullet alone."""
-
-    def setUp(self) -> None:
-        self.tempdir = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tempdir.cleanup)
-        self.repo = Path(self.tempdir.name) / "repo"
-        (self.repo / "docs").mkdir(parents=True)
-        self.git("init", "-b", "main", ".")
-        self.changelog = self.repo / "docs" / "changelog.md"
-
-    def git(self, *arguments: str) -> str:
-        return subprocess.run(
-            ["git", "-C", str(self.repo), *arguments], check=True, capture_output=True, text=True
-        ).stdout.strip()
-
-    def commit(self, text: str, message: str) -> str:
-        self.changelog.write_text(text, encoding="utf-8")
-        self.git("add", "-A")
-        self.git(
-            "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
-            "-c", "commit.gpgsign=false", "commit", "-m", message,
-        )
-        return self.git("rev-parse", "HEAD")
-
-    def test_each_bullet_resolves_through_the_commit_that_wrote_it(self) -> None:
-        first = self.commit(
-            STAMPABLE.replace("- A bullet whose author left nothing.\n", ""), "the first bullet"
-        )
-        second = self.commit(STAMPABLE, "the second bullet")
-        prepare_changelog_release.stamp_release_numbers(
-            self.changelog, resolve=lambda commit: {31} if commit == first else {32}
-        )
-        stamped = self.changelog.read_text(encoding="utf-8")
-        self.assertIn("- A bullet whose author left a placeholder. (PR #31)", stamped)
-        self.assertIn("- A bullet whose author left nothing. (PR #32)", stamped)
-        self.assertNotEqual(first, second)
-
-    def test_an_uncommitted_line_leaves_its_bullet_alone(self) -> None:
-        self.commit(STAMPABLE, "the bullets")
-        self.changelog.write_text(
-            STAMPABLE.replace("left nothing.", "left nothing, and has since edited it."), encoding="utf-8"
-        )
-        with patch("sys.stderr"):
-            prepare_changelog_release.stamp_release_numbers(self.changelog, resolve=lambda _commit: {31})
-        stamped = self.changelog.read_text(encoding="utf-8")
-        self.assertIn("- A bullet whose author left nothing, and has since edited it.\n", stamped)
-        self.assertIn("- A bullet whose author left a placeholder. (PR #31)", stamped)
