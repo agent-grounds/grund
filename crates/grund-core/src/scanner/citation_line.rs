@@ -4,6 +4,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
+use super::value_context::SourceValueLineContext;
 use crate::config::Config;
 use crate::grammar::DocstringContent;
 use crate::model::InlineCitationSite;
@@ -26,9 +27,10 @@ pub(super) struct CitationLine<'a> {
     pub(super) config: &'a Config,
     pub(super) is_md: bool,
     /// The bytes on this physical source line that the scanner's shared block
-    /// walk recognizes as comment content. Markdown and Python docstrings use
-    /// their already-normalized `scan_line` instead (§FS-values.3.2).
-    pub(super) value_comment_range: Option<(usize, usize)>,
+    /// walk recognizes as comment content, and the block they belong to.
+    /// Markdown and Python docstrings use their already-normalized `scan_line`
+    /// instead (§FS-values.3.2).
+    pub(super) value_comment: Option<SourceValueLineContext>,
     pub(super) inline_sites: &'a BTreeMap<usize, InlineCitationSite>,
     pub(super) inline_block_lines: &'a BTreeMap<usize, std::sync::Arc<[String]>>,
 }

@@ -200,7 +200,20 @@ fn a_binding_split_by_a_line_break_is_refused_at_its_literal() {
         ),
         17,
     );
-    for (name, root, column) in markdown.into_iter().chain([source]) {
+    // The point names a Python docstring beside the comment prefixes; the
+    // literal sits after the opening quotes, so its column counts them.
+    let python = source_value_repo("value_binding_split_python_docstring", "");
+    let config = python.join("grund.toml");
+    let scans_python = std::fs::read_to_string(&config)
+        .unwrap()
+        .replace("\"rs\"]", "\"rs\", \"py\"]");
+    write(&config, &scans_python);
+    write(
+        &python.join("src/split.py"),
+        "\"\"\"The price is `999`\n(§CONST-field-price.1) today.\n\"\"\"\n",
+    );
+    let docstring = ("value_binding_split_python_docstring", python, 17);
+    for (name, root, column) in markdown.into_iter().chain([source, docstring]) {
         let refused = check_run(&root, false)
             .report
             .errors

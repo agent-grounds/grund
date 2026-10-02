@@ -9,13 +9,16 @@ pub(super) fn value_binding_context(line: &CitationLine<'_>) -> Option<(usize, u
     if line.is_md || line.docstring.is_docstring() {
         return Some((0, line.scan_line.len()));
     }
-    line.value_comment_range
+    line.value_comment.map(|context| context.range)
 }
 
 #[derive(Clone, Copy)]
 pub(super) struct SourceValueLineContext {
     pub(super) range: (usize, usize),
     pub(super) block_comment: bool,
+    /// The first line of the comment block this line belongs to, so two lines
+    /// can be asked whether they are one block (§FS-values.3.1.1.1).
+    pub(super) block: usize,
 }
 
 impl SourceValueLineContext {
@@ -53,6 +56,7 @@ pub(super) fn recognized_source_value_contexts(
                     contexts[index] = Some(SourceValueLineContext {
                         range: (comment_start, line.len()),
                         block_comment: false,
+                        block: start,
                     });
                 }
             }
@@ -70,6 +74,7 @@ pub(super) fn recognized_source_value_contexts(
                     contexts[index] = Some(SourceValueLineContext {
                         range: (comment_start, comment_end),
                         block_comment: true,
+                        block: start,
                     });
                 }
             }

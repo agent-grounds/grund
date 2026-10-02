@@ -33,6 +33,7 @@ use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
 use super::units::{heading_text, record_file_structure};
 use super::unmarked_headings::assign_unmarked_heading_owners;
+use super::value_binding_split::scan_split_binding;
 use super::value_context::recognized_source_value_contexts;
 use super::values::{scan_value_bindings, validate_markdown_value_declarations};
 use crate::config::{Config, KindConfig, kind_uses_values, kind_value_chapter};
@@ -137,6 +138,8 @@ pub(super) fn scan_file_text(
     // are known before becoming reportable candidates.
     let mut unmarked_heading_candidates = Vec::new();
     let mut total_lines = 0usize;
+    // §FS-values.3.1.1.1: a literal that closed the line before, held for one line.
+    let mut split = None;
 
     for (idx, line) in text.lines().enumerate() {
         let lineno = idx + 1;
@@ -469,7 +472,7 @@ pub(super) fn scan_file_text(
             path,
             config,
             is_md,
-            value_comment_range: source_value_context.map(|context| context.range),
+            value_comment: source_value_context,
             inline_sites: &inline_sites,
             inline_block_lines: &inline_block_lines,
         };
@@ -504,6 +507,10 @@ pub(super) fn scan_file_text(
         // for whole or marked authority, keeping unmarked prose inert across
         // workspaces (§FS-values.3.1, §FS-values.7, §FS-values.9).
         scan_value_bindings(&citation_line, workspace_targets, citation_start, findings);
+        // §FS-values.3.1.1.1: a split binding needs both a backtick and the marker.
+        if has_binding_candidate {
+            scan_split_binding(&citation_line, workspace_targets, &mut split, findings);
+        }
     }
 
     if let Some(decl) = current.take() {
