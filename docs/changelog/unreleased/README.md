@@ -17,7 +17,7 @@ This part is shared. A repository that takes the format copies everything above 
 
 ## Part two: how this repository uses it
 
-The rules are [§FS-distribution.4.12](../../functional-spec/FS-distribution.md#412-pending-changelog-entries-are-one-file-each), and a pull request that adds no entry is refused before the push and again in CI ([§FS-distribution.4.6](../../functional-spec/FS-distribution.md#46-the-changelog-gate-keeps-the-release-section-mappable-to-its-pull-requests)).
+The rules are [§FS-distribution.4.12](../../functional-spec/FS-distribution.md#412-pending-changelog-entries-are-one-file-each), and a pull request that adds no entry is refused before the push and again in CI ([§FS-distribution.4.6](../../functional-spec/FS-distribution.md#46-the-changelog-is-written-before-a-release-not-with-each-change)).
 
 - The category is required and is one of `added`, `changed`, `deprecated`, `removed`, `fixed` or `security`. Sections are released in that order.
 - A `**Schema:**` callout is a `changed` entry whose text begins with `**Schema:**`.

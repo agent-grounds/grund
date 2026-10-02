@@ -2,7 +2,9 @@
 under `docs/changelog/unreleased/` (§FS-distribution.4.12) that does not already
 end in its number gains the number of the pull request whose commit added it, at
 its end and nowhere else; anything else is warned about once and left, and the
-release never fails for it.
+release never fails for it. A number it would write into more than one entry — the
+shape of a write-up (§FS-distribution.4.6), whose one commit added every entry — is
+written into none of them.
 
 The history half runs against a real throwaway repository, because which commit
 added an entry — through an edit, a change of category, and a slug used a second
@@ -131,6 +133,49 @@ class StampTests(GitFixture, unittest.TestCase):
         added = self._land({"the-change.added.md": "- An entry. (PR #9)\n"})
         self._stamp({added: {31}})
         self.assertEqual("- An entry. (PR #9)\n", self._entry("the-change.added.md"))
+
+    # A write-up: one commit adds every entry, so every one resolves to the write-up's own number.
+    WRITE_UP = {
+        "fix-issue-401.changed.md": "- Written from issue #401, with no number.\n",
+        "fix-issue-397.added.md": "- Names its issue, as a write-up from the issues would. (#397)\n",
+        "fix-issue-384.added.md": "- Ends in the placeholder. (PR #TBD)\n",
+        "fix-issue-375.added.md": "- Its writer looked up the change's own pull request. (PR #375)\n",
+    }
+
+    def assertWarnedOnceEach(self, warnings: list[str], names: list[str], number: str) -> None:
+        for name in names:
+            with self.subTest(warned=name):
+                named = [warning for warning in warnings if name in warning]
+                self.assertEqual(1, len(named), warnings)
+                self.assertIn(number, named[0])
+        self.assertEqual(len(names), len(warnings), warnings)
+
+    def test_a_number_that_would_go_into_several_entries_goes_into_none(self) -> None:
+        # Triage's probe on fdb5392180: all three unnumbered entries became `(PR #500)`, unwarned.
+        added = self._land(self.WRITE_UP)
+        warnings = self._warnings(self._stamp({added: {500}}))
+        for name, text in self.WRITE_UP.items():
+            with self.subTest(entry=name):
+                self.assertEqual(text, self._entry(name))
+        unnumbered = ["fix-issue-401.changed.md", "fix-issue-397.added.md", "fix-issue-384.added.md"]
+        self.assertWarnedOnceEach(warnings, unnumbered, "#500")
+
+    def test_an_entry_in_its_own_pull_request_is_stamped_beside_a_write_up(self) -> None:
+        own = self._land({"the-change.added.md": "- An entry its own pull request added.\n"})
+        write_up = self._land({"one.fixed.md": "- One.\n", "two.fixed.md": "- Two. (PR #TBD)\n"})
+        warnings = self._warnings(self._stamp({own: {31}, write_up: {500}}))
+        self.assertEqual("- An entry its own pull request added. (PR #31)\n", self._entry("the-change.added.md"))
+        self.assertEqual("- One.\n", self._entry("one.fixed.md"))
+        self.assertEqual("- Two. (PR #TBD)\n", self._entry("two.fixed.md"))
+        self.assertWarnedOnceEach(warnings, ["one.fixed.md", "two.fixed.md"], "#500")
+
+    def test_a_write_up_whose_entries_carry_their_own_numbers_is_left(self) -> None:
+        numbered = {"one.fixed.md": "- One. (PR #375)\n", "two.added.md": "- Two. (PR #380)\n"}
+        added = self._land(numbered)
+        self.assertEqual([], self._warnings(self._stamp({added: {500}})))
+        for name, text in numbered.items():
+            with self.subTest(entry=name):
+                self.assertEqual(text, self._entry(name))
 
     # What is left: warned about once each, and never a failure.
     def test_an_entry_two_pull_requests_resolve_for_is_warned_about_once_and_left(self) -> None:
