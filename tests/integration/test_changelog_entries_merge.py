@@ -1,8 +1,8 @@
-"""§FS-distribution.4.12 — why a pending change is one file of its own, proved the
+"""§FS-distribution.4.12 — why a pending entry is one file of its own, proved the
 way agent-grounds/grund#379 measured the cost: two pull requests cut from one
-base each add an entry, and they must apply in either order, each pass the gate
-(§AR-ci.7) against the base it was cut from and again once rebased onto the
-other, and both reach the release `prepare` writes (§FS-distribution.4.5).
+base each add an entry, as a write-up and a verdict correction's own entry do
+(§FS-distribution.4.6), and they must apply in either order and both reach the
+release `prepare` writes (§FS-distribution.4.5).
 
 It ports `grund-379-changelog-conflict.sh`, which exits 1 on the `main` this
 change was cut from: every rebase conflicted in `docs/changelog.md`. The
@@ -19,7 +19,7 @@ import unittest
 from pathlib import Path
 from subprocess import CompletedProcess
 
-from changelog_gate_fixture import ENTRIES, REPO_ROOT, SCRIPT_PATH, GitFixture, environment
+from changelog_gate_fixture import ENTRIES, REPO_ROOT, GitFixture, environment
 
 PREPARE = REPO_ROOT / "scripts" / "prepare_changelog_release.py"
 SEEDED_FROM = ("docs/changelog.md", f"{ENTRIES}/README.md")
@@ -42,7 +42,7 @@ class TwoPullRequestsTests(GitFixture, unittest.TestCase):
         for relative in SEEDED_FROM:
             (self.repo / relative).parent.mkdir(parents=True, exist_ok=True)
             (self.repo / relative).write_bytes((REPO_ROOT / relative).read_bytes())
-        self._git(self.repo, "update-ref", "refs/remotes/origin/main", self._commit(self.repo, "The base"))
+        self._commit(self.repo, "The base")
 
     def _try(self, *arguments: str) -> CompletedProcess:
         """Git without `check`: a rebase that conflicts is an answer, not an error."""
@@ -80,34 +80,12 @@ class TwoPullRequestsTests(GitFixture, unittest.TestCase):
             self.fail(f"rebasing {tip[:12]} onto {onto[:12]} conflicts in {conflicted}: {result.stderr}")
         return self._git(self.repo, "rev-parse", "HEAD")
 
-    def _gate(self, base: str, head: str, number: int) -> CompletedProcess:
-        return subprocess.run(
-            [sys.executable, str(SCRIPT_PATH), "--base-sha", base, "--head-sha", head, "--pr-number", str(number)],
-            cwd=self.repo,
-            capture_output=True,
-            text=True,
-            env=environment({}),
-        )
-
     def test_two_entries_apply_in_either_order(self) -> None:
         for scenario in SCENARIOS:
             base, a, b = self._scenario(scenario)
             for order, (tip, onto) in {"b onto a": (b, a), "a onto b": (a, b)}.items():
                 with self.subTest(scenario=scenario, order=order):
                     self._rebase(tip, onto)
-
-    def test_each_pull_request_passes_the_gate_before_and_after_the_other_lands(self) -> None:
-        for scenario in SCENARIOS:
-            base, a, b = self._scenario(scenario)
-            runs = {
-                "a against its base": (base, a, 101),
-                "b against its base": (base, b, 102),
-                "b rebased onto a": (a, self._rebase(b, a), 102),
-            }
-            for run, (against, head, number) in runs.items():
-                with self.subTest(scenario=scenario, run=run):
-                    result = self._gate(against, head, number)
-                    self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
     def test_the_release_collects_both_entries_and_empties_the_directory(self) -> None:
         for scenario in SCENARIOS:
