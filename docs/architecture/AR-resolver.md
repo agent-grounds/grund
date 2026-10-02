@@ -129,8 +129,11 @@ exactly once, then resolves, slices, and renders every coordinate against the
 returned context ([§FS-show.2.6](../functional-spec/FS-show.md#26-batch-resolution)).
 The exhaustive coordinate collector reads the declarations and recorded section
 maps already in that context; it performs no preliminary completion/list scan.
-The loader exposes an opt-in test-only counting observer so focused black-box
-tests count one load for many explicit queries and one for exhaustive discovery.
+The loader exposes an opt-in test-only counting observer, compiled in only by the
+`test-workspace-load-count` feature, so focused black-box tests count one load
+for many explicit queries and one for exhaustive discovery; in a build without
+the feature those tests are ignored, naming it, rather than run against a log
+nobody wrote ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)).
 
 ### 3.2 `grund cover` filters nothing
 

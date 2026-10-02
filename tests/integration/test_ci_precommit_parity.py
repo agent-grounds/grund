@@ -3,8 +3,10 @@ runs the hook list itself rather than a hand-copy of it, installs every binary a
 hook needs before that step, gives every hook bound only to a stage without a
 file list the explicit counterpart that stage's input demands (§AR-ci.1.1,
 §AR-ci.8), and the Rust hooks spell the commands the workflow's own steps spell,
-warnings denied on both sides (§AR-ci.3). Both files are read as text: the CI
-Python has no YAML parser, and the shapes asserted here are line-shaped.
+warnings denied on both sides (§AR-ci.3), and §AR-ci.3's own prose spells them
+too, so the architecture hands a reader the command the gate runs. The files are
+read as text: the CI Python has no YAML parser, and the shapes asserted here are
+line-shaped.
 
 §AR-ci.1.2 divides the work: this test holds the *existence* of a counterpart,
 because that is the half a line-shaped read can see. The other half — that the
@@ -20,6 +22,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PRE_COMMIT = REPO_ROOT / ".pre-commit-config.yaml"
 CI = REPO_ROOT / ".github" / "workflows" / "ci.yml"
+AR_CI = REPO_ROOT / "docs" / "architecture" / "AR-ci.md"
 RUST_HOOKS = ("cargo-fmt-check", "cargo-build", "cargo-test")
 FILE_LIST_STAGES = ("pre-commit", "manual")
 ENV_PREFIX = "env RUSTFLAGS=-Dwarnings "
@@ -49,6 +52,15 @@ def _lines(text):
 
 def _run_lines(lines):
     return [line[len("run:"):].strip() for line in lines if line.startswith("run:")]
+
+
+def _section_lead(text, heading):
+    """The code spans of one section's lead: the lines after `heading` up to the next heading."""
+    lines = text.splitlines()
+    start = lines.index(heading) + 1
+    end = next((i for i in range(start, len(lines)) if lines[i].startswith("#")), len(lines))
+    lead = " ".join(lines[start:end])
+    return [" ".join(span.split()) for span in re.findall(r"`([^`]+)`", lead)]
 
 
 class CiPreCommitParityTests(unittest.TestCase):
@@ -89,6 +101,15 @@ class CiPreCommitParityTests(unittest.TestCase):
             with self.subTest(hook=hook_id):
                 command = self.by_id[hook_id]["entry"].removeprefix(ENV_PREFIX)
                 self.assertIn(command, self.ci_runs, f"{hook_id} runs a command no CI step runs")
+
+    def test_ar_ci_3_spells_the_commands_the_rust_hooks_run(self):
+        # §AR-ci.3 is where a reader looks up what the gate runs; a command it
+        # spells short of the hook's is one that fails where the gate passes.
+        spans = _section_lead(AR_CI.read_text(encoding="utf-8"), "## 3. Current hooks")
+        for hook_id in RUST_HOOKS:
+            with self.subTest(hook=hook_id):
+                command = self.by_id[hook_id]["entry"].removeprefix(ENV_PREFIX)
+                self.assertIn(command, spans, f"§AR-ci.3 does not spell the command {hook_id} runs")
 
     def test_warnings_are_denied_on_both_sides(self):
         self.assertTrue(self.by_id["cargo-build"]["entry"].startswith(ENV_PREFIX))
