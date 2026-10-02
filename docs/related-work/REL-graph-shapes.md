@@ -10,10 +10,11 @@ citation graph ([§GRUND-consistency](../grund.md#grund-consistency-the-structur
 SHACL, the Shapes Constraint Language, is a W3C Recommendation of 20 July 2017
 ([w3.org/TR/shacl](https://www.w3.org/TR/shacl/)). A shapes graph validates a data graph.
 A shape selects the nodes it applies to by targets, `sh:targetClass` among them, and gives
-the results it produces one severity, `sh:Violation`, `sh:Warning` or `sh:Info`, through
-`sh:severity`; "sh:Violation is the default if sh:severity is unspecified", and "the
-specific values of sh:severity have no impact on the validation". A shape is open: a node
-may carry properties the shape does not mention, unless the shape says `sh:closed true`.
+the results it produces one severity through `sh:severity`. SHACL includes three,
+`sh:Violation`, `sh:Warning` and `sh:Info`, but "Any IRI can be used as a severity";
+"sh:Violation is the default if sh:severity is unspecified", and "the specific values of
+sh:severity have no impact on the validation". A shape is open: a node may carry
+properties the shape does not mention, unless the shape says `sh:closed true`.
 
 Schematron, standardized as ISO/IEC 19757-3, *Rule-based validation using Schematron*
 ([schematron.com](https://schematron.com/)), is "a language for making assertions about
