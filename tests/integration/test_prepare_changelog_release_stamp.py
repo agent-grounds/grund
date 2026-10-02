@@ -2,9 +2,10 @@
 under `docs/changelog/unreleased/` (§FS-distribution.4.12) that does not already
 end in its number gains the number of the pull request whose commit added it, at
 its end and nowhere else; anything else is warned about once and left, and the
-release never fails for it. A number it would write into more than one entry — the
-shape of a write-up (§FS-distribution.4.6), whose one commit added every entry — is
-written into none of them.
+release never fails for it. A number it would write into more than one entry is
+written into none of them, whichever commits added them; a write-up
+(§FS-distribution.4.6), whose unnumbered entries all resolve to its own number, is
+the usual case.
 
 The history half runs against a real throwaway repository, because which commit
 added an entry — through an edit, a change of category, and a slug used a second
