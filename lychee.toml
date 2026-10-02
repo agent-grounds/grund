@@ -1,3 +1,8 @@
+# Bounded external-link tolerance: §AR-ci.3.1.1.
+timeout = 30
+max_retries = 4
+retry_wait_time = 1
+
 exclude = [
   # Inline-spec stubs are resolved by grund from the repo root; Markdown link
   # checkers resolve them relative to the stub file.

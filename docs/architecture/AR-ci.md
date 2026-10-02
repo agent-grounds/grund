@@ -58,6 +58,36 @@ pinning a shipped address to that branch.
 
 `--full` ([§FS-check.1.3](../functional-spec/FS-check.md#13-the-full-tree-scope---full)) is here because a citation in a file outside `grund`'s own `[scan] include` and every kind home ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)) is invisible to the plain run rather than merely unchecked — the drift this repository asks its users to guard against is one it can suffer too. The flag is purely additive, so the gate still asserts everything it asserted before.
 
+#### 3.1.1 Bounded external-link tolerance
+
+The repository's `scripts/check_links.py` wrapper and `lychee.toml` serve both
+local pre-commit and Ubuntu CI, realizing
+[§FS-non-goals.1.1](../functional-spec/FS-non-goals.md#11-this-repositorys-external-link-gate).
+The existing network pass uses lychee 0.23.0 with explicit `timeout = 30`
+(seconds for the whole request), `max_retries = 4` (after the initial attempt),
+and `retry_wait_time = 1` (seconds for the exponential-backoff base).
+Five attempts have nominal waits of 1, 2, 4, and 8 seconds. A persistent
+whole-request timeout therefore consumes a nominal 165 seconds, plus overhead
+and possible host-specific pacing, before a nonzero exit. HTTP 404 responses
+remain failures, and unresolved timeouts are never accepted as successes.
+
+The pinned binary retains a separate fixed 10-second connection timeout; the
+30-second setting does not raise that ceiling. Both timeout phases enter
+lychee's shared retry loop, so the extra retry offers either phase another
+recovery opportunity. This does not identify which phase stalled at a public
+host or guarantee immunity to arbitrary outages.
+
+Real lychee tests against loopback HTTP must obtain a successful response after
+a 21-second response-header delay, and after four retryable timeout failures.
+They also retain permanent-timeout and HTTP 404 rejection, valid local
+fragments, and invalid self-links stopping before any network request. Timing
+may be scaled in supplementary fixtures only with an assertion of the exact
+production policy and evidence exercising the unscaled policy. A subprocess
+watchdog exceeds the selected finite budget; expiration is an infrastructure
+failure, not evidence that lychee rejected a persistent link. The wrapper's
+routing, exact self-link exclusions, hook invocation, checked documents, and
+lychee version stay as described above; no outer whole-tree retry is added.
+
 ### 3.2 The managed block's text
 
 Last of the `grund` hooks, and immediately after `grund fmt --write` because that hook rewrites the Markdown this one measures, comes `grund init --check` ([§FS-init.4](../functional-spec/FS-init.md#4-exit-codes)). It catches the one drift no other hook here sees: a managed agent-entrypoint block whose rendered text went stale outside its two generated sections while its `(vN)` heading stayed current, which `grund check` passes because it verifies that version rather than the bytes ([§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)). Stale text inside `### Citation directions` or `### Clickable citations` already fails the `grund check --full` hook that runs before it ([§FS-init.2.3.5](../functional-spec/FS-init.md#235-citation-directions), [§FS-init.2.3.6](../functional-spec/FS-init.md#236-clickable-citations)). The hook writes nothing and fails only on a path `init` would have written; the fix is the same `init` run without the flag. This repository runs on its own users' behalf here — [§REQ-agents-md.2](../requirements/REQ-agents-md.md#2-the-managed-block-stays-current) requires its own managed block to stay current, which `grund check` enforces by its version, and until this hook existed nothing could say when the rest of its text had gone stale under that version.
