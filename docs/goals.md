@@ -148,7 +148,7 @@ See [AR-goal-measurement.2](architecture/AR-goal-measurement.md#2-goal-meters).
 
 ### 4. Research notes
 
-Evidence for the cheap default lives in [DF-show-default-token-cheap](decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in). The unit those slices return, one labelled fact per declaration, has its precedent in information typing ([§REL-information-typing](related-work/REL-information-typing.md#rel-information-typing-information-typing-units-of-one-kind-under-one-label)).
+Evidence for the cheap default lives in [DF-show-default-token-cheap](decisions/functional/DF-show-default-token-cheap.md#df-show-default-token-cheap-grund-show-defaults-to-the-cheap-read-the-full-body-is-opt-in). The unit grund's slices return, one labelled fact per declaration, has its precedent in information typing ([§REL-information-typing](related-work/REL-information-typing.md#rel-information-typing-information-typing-units-of-one-kind-under-one-label)).
 
 ## GOAL-configurable: every default is overridable
 

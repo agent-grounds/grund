@@ -17,8 +17,8 @@ both". Michael Kohlhase's *The Flexiformalist Manifesto*, SYNASC 2012, pages 30â
 program.
 
 *Dimensions of Formality: A Case Study for MKM in Software Engineering*, by Andrea
-Kohlhase, Michael Kohlhase and Christoph Lange, MKM 2010
-([arXiv:1004.5071](https://arxiv.org/abs/1004.5071),
+Kohlhase, Michael Kohlhase and Christoph Lange, MKM 2010, pages 355â€“369, DOI
+10.1007/978-3-642-14128-7_31 ([arXiv:1004.5071](https://arxiv.org/abs/1004.5071),
 [record](https://cris.fau.de/publications/106429884/)), applies the question to the
 documents of a software engineering project. It does not use the word "flexiformal".
 

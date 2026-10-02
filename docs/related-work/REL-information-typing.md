@@ -11,11 +11,12 @@ Future?*, the speech he prepared for his ACM SIGDOC Lifetime Achievement Award i
 ([PDF](https://faculty.washington.edu/farkas/TC510-Fall2011/Horn-DocsWithFuture.pdf)), he
 describes the information block, a labelled substitute for the paragraph built on four
 principles: chunking, relevancy ("Include in one chunk only information that relates to
-one main point"), labeling and consistency. Blocks join into information maps, and the
-seven kinds of map came to name the seven information types: structure, concept,
-procedure, process, classification, principle and fact. Horn's "seven plus or minus two"
-counts chunks, not sentences: a map joins two to seven blocks for a reader's "short-term
-memory capacity of seven plus or minus two chunks of information".
+one main point"), labeling and consistency. Blocks join into information maps. Key blocks
+appear on seven kinds of map, and the seven kinds of information came to be called
+information types: structure, concept, procedure, process, classification, principle and
+fact. Horn's "seven plus or minus two" counts chunks, not sentences: a map joins two to
+seven blocks for a reader's "short-term memory capacity of seven plus or minus two chunks
+of information".
 
 DITA carries the idea into structured authoring
 ([DITA 2.0 Architecture Specification](https://dita-lang.org/2.0/dita/archspec/base/information-typing)):
@@ -39,8 +40,8 @@ released on request, so this entry does not quote it.
 
 ## departs: Where grund departs
 
-- grund fixes no set of types. Horn names seven and DITA ships a starter set; a grund
-  project declares its own kinds ([§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds)).
+- grund fixes no set of types. Horn names seven; a grund project declares its own kinds
+  ([§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds)).
 - grund lints no English ([§FS-non-goals.2](../functional-spec/FS-non-goals.md#2-spelling-grammar-prose-quality)). It caps no sentence, as ASD-STE100 does, and
   counts no blocks in a map, as Horn does. Its only length caps are on inline citation
   notes ([§FS-inline-citation-style.4.1](../functional-spec/FS-inline-citation-style.md#41-errors--hard-caps)); the size of a file is

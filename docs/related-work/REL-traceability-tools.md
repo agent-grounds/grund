@@ -1,9 +1,9 @@
 # REL-traceability-tools: requirements-traceability tools, the neighbours beside grund
 
 Requirements-traceability tools are the neighbours grund is most often compared with: they
-also keep requirements as text, give each one an ID, and link the code back to it. They
-serve the same codebases grund is for ([§GRUND-grund.2](../grund.md#2-who-it-is-for)), on a different axis: a coverage
-report rather than an agent reading one fact ([§GOAL-agent-grounding.1](../goals.md#1-the-three-layers)).
+also keep requirements as text and give each one an ID, and most link the code back to it.
+They serve the same codebases grund is for ([§GRUND-grund.2](../grund.md#2-who-it-is-for)), on a different axis: a
+coverage report rather than an agent reading one fact ([§GOAL-agent-grounding.1](../goals.md#1-the-three-layers)).
 
 ## work: What the work is
 
@@ -27,9 +27,9 @@ out of it:
 |---|---|---|---|---|---|---|---|
 | **grund** | 2026 | ✅ | ✅ | ✅ | ✅ | ⏳ [§RM-gap-report](../roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports) | ✅ |
 | [OpenFastTrace](https://github.com/itsallcode/openfasttrace) | 2015 | ✅ | ✅ | ❌ | ❌ | ✅ flagship | ❌ JVM |
-| [Sphinx-Needs](https://github.com/useblocks/sphinx-needs) | 2016 | ⚠ RST/MyST | ⚠ via refs | ❌ | ⚠ via Sphinx build | ✅ | ❌ Python+Sphinx |
+| [Sphinx-Needs](https://github.com/useblocks/sphinx-needs) | 2016 | ⚠ RST/MyST | ⚠ via sphinx-codelinks | ❌ | ⚠ via Sphinx build | ✅ | ❌ Python+Sphinx |
 | [TRLC](https://github.com/bmw-software-engineering/trlc) + [LOBSTER](https://github.com/bmw-software-engineering/lobster) | 2022 | ❌ DSL | ✅ | ❌ | ❌ | ✅ | ❌ Python |
-| [Doorstop](https://github.com/doorstop-dev/doorstop) | 2013 | ❌ YAML-per-item | ⚠ links only | ❌ | ❌ | ✅ | ❌ Python |
+| [Doorstop](https://github.com/doorstop-dev/doorstop) | 2013 | ⚠ Markdown + YAML frontmatter, opt-in per document | ⚠ links only | ❌ | ❌ | ✅ | ❌ Python |
 | [Duvet](https://github.com/awslabs/duvet) | 2021 | ⚠ specs only | ✅ | ⚠ anchors | ❌ | ✅ flagship | ✅ |
 | [SARA](https://github.com/cledouarec/sara) | 2026 | ✅ + YAML frontmatter | ❌ | ❌ | ⚠ graph queries | ✅ | ✅ |
 

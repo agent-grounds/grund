@@ -267,7 +267,7 @@ Output is sorted lexicographically by `(kind, id)` for byte-identical reproducib
 
 ### 2. Why now
 
-[§FS-cover](functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) shipped the index but not the inverted view. Every neighbour tool (OFT, Sphinx-Needs, Doorstop, Duvet) ships a "what's uncovered?" report as the centrepiece feature, and on the comparison matrix in [§RM-positioning-trace-tools](roadmap.md#rm-positioning-trace-tools-position-grund-against-requirements-traceability-tools-in-readme) this is the single line that flips `grund` from "fewer features than OFT" to "different axis from OFT, with parity on the obvious one."
+[§FS-cover](functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) shipped the index but not the inverted view. Every neighbour tool (OFT, Sphinx-Needs, Doorstop, Duvet) ships a "what's uncovered?" report as the centrepiece feature, and on the comparison matrix in [§REL-traceability-tools.work.matrix](related-work/REL-traceability-tools.md#workmatrix-the-comparison-matrix) this is the single line that flips `grund` from "fewer features than OFT" to "different axis from OFT, with parity on the obvious one."
 
 ### 3. Measurable
 
