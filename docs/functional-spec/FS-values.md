@@ -93,7 +93,31 @@ The marker is mandatory even when `[reference] strict = false`. The literal may 
 
 #### 3.1.1 Invalid attempts and non-attempts
 
-Tabs or extra/missing spaces, absent parentheses, a missing marker, and zero, leading-zero, named, or otherwise nonnumeric component coordinates are invalid attempted bindings. A delimited form aimed at the declared chapter heading or below one of a root's components is also `invalid-value-binding`, whichever authority made the root, and so is a root-aimed form over a value whose component contains an ASCII space ([§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root)). An unbackticked adjacent token, a bare value citation, or the same delimited shape aimed at an ordinary unmarked section, a named section outside every declared chapter, or a whole declaration whose kind lacks `values = true` remains ordinary prose and one ordinary citation; it is not inferred as an attempted binding and is not compared.
+Tabs or extra/missing spaces, a line break ([§FS-values.3.1.1.1](FS-values.md#3111-a-literal-that-closes-its-line-onto-the-citation)), absent parentheses, a missing marker, and zero, leading-zero, named, or otherwise nonnumeric component coordinates are invalid attempted bindings. A delimited form aimed at the declared chapter heading or below one of a root's components is also `invalid-value-binding`, whichever authority made the root, and so is a root-aimed form over a value whose component contains an ASCII space ([§FS-values.3.1.2](FS-values.md#312-a-binding-aimed-at-the-root)). An unbackticked adjacent token, a bare value citation, or the same delimited shape aimed at an ordinary unmarked section, a named section outside every declared chapter, or a whole declaration whose kind lacks `values = true` remains ordinary prose and one ordinary citation; it is not inferred as an attempted binding and is not compared. A value citation is bare only when no delimited literal precedes it, neither on its own line nor closing the line before it as [§FS-values.3.1.1.1](FS-values.md#3111-a-literal-that-closes-its-line-onto-the-citation) describes.
+
+##### 3.1.1.1 A literal that closes its line onto the citation
+
+A line break is not the one ASCII space, so a binding split across two lines is an invalid attempted binding rather than prose. The attempt is a backtick-delimited literal whose closing backtick ends its line, with nothing but whitespace after it, followed by a next line whose first text after its continuation prefix is an opening parenthesis immediately followed by a marker-prefixed citation aimed at value authority. Value authority is the same target test every other attempt in [§FS-values.3.1.1](FS-values.md#311-invalid-attempts-and-non-attempts) meets: an opted-in whole-value ID, a marked root, or a chapter-declared root, aimed at a component or at the root. The split form is never compared, whatever its literal says, because [§FS-values.3.1](FS-values.md#31-the-only-binding-grammar) keeps one physical line as the only binding grammar.
+
+The two lines must be one run of text:
+
+- In Markdown they are consecutive physical lines of one paragraph, and the literal's line is not a heading. The continuation prefix is the next line's indentation and, inside a blockquote, the same `>` markers that the literal's line carries.
+- In a scanned source file they are consecutive lines of one comment block ([§FS-inline-citation-style.1.2](FS-inline-citation-style.md#12-comment-blocks)): the same line-comment prefix, the interior of one block comment, or one Python docstring. The literal must sit in the comment content that [§FS-values.3.2](FS-values.md#32-recognized-text-contexts) recognizes. The continuation prefix is the next line's comment wrapper ([§FS-values.2.4.1](FS-values.md#241-recognition-in-source-doc-comments)) and the whitespace around it.
+
+The finding is `invalid-value-binding` at the literal: its line and the column of its opening backtick, where every attempt is located. Its message tells the author to put the two on one line, rather than restating the grammar the other attempts quote, and every other attempt keeps its message:
+
+```text
+docs/offer.md:3: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+```
+
+The citation on the next line remains one ordinary citation for resolution, `refs`, `cover`, citation directions, grounding, and unused-declaration counting, as [§FS-values.3.2](FS-values.md#32-recognized-text-contexts) has every binding citation.
+
+These shapes are not attempts. Each stays ordinary prose and one ordinary citation, and is not compared:
+
+- anything that ends the paragraph or the comment block between the two lines: a blank line, a fence, a heading, a code line, a different comment prefix, or a different blockquote depth;
+- a literal that other text follows on its own line;
+- a next line that does not open with `(` and the marker, such as a bare citation or other text first;
+- a next-line citation aimed at an ordinary unmarked section, a named section outside every declared chapter, or a whole declaration whose kind lacks `values = true`, exactly as on one line.
 
 #### 3.1.2 A binding aimed at the root
 
