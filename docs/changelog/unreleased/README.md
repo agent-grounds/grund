@@ -37,7 +37,7 @@ A pull request adds no entry. Whoever cuts a release writes the entries first, i
 
   Each gets an entry, or is named in one. Skip any whose entry is already in this directory: it ships as written.
 - **The words** come from the issues the pull request closed, which its description names (`Closes #N`), or from its own description where it closed none.
-- **The number** is the pull request's own: every entry ends in `(PR #N)`. The release leaves such an entry as it stands, and gives no entry a number it would give several, so a forgotten number is published missing rather than wrong.
+- **The number** is the pull request's own: every entry ends in `(PR #N)`. The release leaves such an entry as it stands, and cannot supply a forgotten one: a number it would give several entries goes into none of them, with a warning for each, but a lone entry without one takes the write-up's own number.
 - **The slug** is the pull request's branch name, its `/` written as `-`.
 - **A verdict correction** is the one exception: it brings its own entry, in the pull request that makes it ([§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids)).
 
