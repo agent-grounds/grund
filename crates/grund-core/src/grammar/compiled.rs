@@ -144,6 +144,10 @@ pub(crate) static QUALIFIED_CITATION_PREFIX: Lazy<Regex> =
 pub struct Grammar {
     pub(super) decl_re: Regex,
     pub(super) docstring_decl_re: Regex,
+    /// `\A`, the configured `[id] section_separator` and a section path the section
+    /// grammar admits: what follows the ID of a coordinate, read by
+    /// [`Grammar::opens_section_suffix`] (§FS-declarations.line.section-suffix.3).
+    section_suffix_re: Regex,
     pub(crate) section_re: Regex,
     /// One citation regex, capturing an optional `<namespace>/` prefix
     /// (§FS-workspace.1, §AR-workspace.3.1). The scanner decides whether to
@@ -346,6 +350,9 @@ impl Grammar {
             id = id_pat
         ))?;
         let docstring_decl_re = Regex::new(&format!(r"^\s*{id}\b", id = id_pat))?;
+        // The `\b` above also matches between an ID and the separator, so both patterns
+        // leave `.2 …` after the ID; `opens_section_suffix` refuses that (§AR-scanner.2.1.1).
+        let section_suffix_re = Regex::new(&format!(r"\A{sep_quoted}(?:{section_pattern})"))?;
         // §FS-config.3.3.1: name-bearing headings require the explicit colon form;
         // numeric headings retain optional full stops. Rust regexes lack lookahead, so
         // punctuation stays captured and `section_path` removes it (§AR-scanner.2.2).
@@ -446,6 +453,7 @@ impl Grammar {
         Ok(Self {
             decl_re,
             docstring_decl_re,
+            section_suffix_re,
             section_re,
             citation_re,
             id_input_re,
@@ -507,6 +515,17 @@ impl Grammar {
                 .strip_prefix('.')
                 .and_then(|tail| tail.as_bytes().first())
                 .is_some_and(u8::is_ascii_lowercase)
+    }
+
+    /// Whether `rest`, the text directly after an ID-shaped token in declaration
+    /// position, opens with the configured separator and a section. Such a token is a
+    /// coordinate, and the line declares nothing (§FS-declarations.line.section-suffix).
+    /// The regex crate has no lookahead, so this is the post-match half of the
+    /// declaration patterns, and the one check every reading of a declaration line
+    /// makes (§AR-scanner.2.1.1). The separator and the sections are the project's
+    /// (§FS-declarations.line.section-suffix.3).
+    pub(crate) fn opens_section_suffix(&self, rest: &str) -> bool {
+        self.section_suffix_re.is_match(rest)
     }
 
     pub(crate) fn is_section_path(&self, section: &str) -> bool {

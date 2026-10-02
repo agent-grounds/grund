@@ -99,7 +99,7 @@ impl NearMissGrammar {
         line: &'a str,
         in_py_docstring: bool,
         is_md: bool,
-    ) -> Option<&'a str> {
+    ) -> Option<regex::Match<'a>> {
         if !self.could_match(line, in_py_docstring) {
             return None;
         }
@@ -115,7 +115,7 @@ impl NearMissGrammar {
                 .captures(line)
                 .filter(|caps| is_md || caps.name("mdhashes").is_none())
         }?;
-        Some(caps.name("near")?.as_str())
+        caps.name("near")
     }
 }
 
@@ -140,21 +140,39 @@ fn first_declaration_bytes(comment_prefix: &str) -> Vec<u8> {
 }
 
 /// The heading token §FS-declarations.checks.declaration-near-miss.1 reports, or `None` when this line is not one.
-/// Asked only where [`declaration_captures`] already declined, so a hit is by
-/// construction a heading that came close and missed.
+/// Asked only where [`declaration_captures`] already declined, which it does for two
+/// kinds of line: a heading that came close and missed, and one whose ID the section
+/// separator and a section follow, which is a coordinate and no heading at all
+/// (§FS-declarations.line.section-suffix). This reading's token ends at the first `:`,
+/// so it makes the same check on what follows that token (§AR-scanner.2.1.1): where
+/// that `:` is the configured separator, `FS-042-user-login:2 …` is no near miss
+/// (§FS-declarations.line.section-suffix.3). A hit is a heading that came close and
+/// missed.
 pub(crate) fn near_miss_heading<'line, 'grammar>(
     grammar: &'grammar Grammar,
     line: &'line str,
     in_py_docstring: bool,
     is_md: bool,
 ) -> Option<(&'line str, &'grammar str, &'grammar str)> {
+    let (token, format, kind) = off_grammar_heading(grammar, line, in_py_docstring, is_md)?;
+    (!grammar.opens_section_suffix(&line[token.end()..])).then_some((token.as_str(), format, kind))
+}
+
+/// The ID-shaped token a declaration-position line opens with where the ID grammar
+/// rejects it, with its kind's format and kind, before the section-suffix check.
+fn off_grammar_heading<'line, 'grammar>(
+    grammar: &'grammar Grammar,
+    line: &'line str,
+    in_py_docstring: bool,
+    is_md: bool,
+) -> Option<(regex::Match<'line>, &'grammar str, &'grammar str)> {
     if let Some(found) = grammar.near_misses.iter().find_map(|near_miss| {
         near_miss
             .heading_text(line, in_py_docstring, is_md)
-            .and_then(|text| {
+            .and_then(|token| {
                 grammar
-                    .legacy_kind_and_format(text)
-                    .map(|(kind, _)| (text, near_miss.format.as_str(), kind))
+                    .legacy_kind_and_format(token.as_str())
+                    .map(|(kind, _)| (token, near_miss.format.as_str(), kind))
             })
     }) {
         return Some(found);
@@ -164,10 +182,10 @@ pub(crate) fn near_miss_heading<'line, 'grammar>(
     // token. Its kind's effective grammar is authoritative; the repository default cannot suppress
     // a persisted spelling rejected by an override (§FS-config.3.2).
     let caps = legacy_declaration_captures(grammar, line, in_py_docstring, is_md)?;
-    let text = caps.name("near")?.as_str();
+    let token = caps.name("near")?;
     grammar
-        .legacy_kind_and_format(text)
-        .map(|(kind, format)| (text, format, kind))
+        .legacy_kind_and_format(token.as_str())
+        .map(|(kind, format)| (token, format, kind))
 }
 
 impl Grammar {
@@ -203,6 +221,11 @@ pub(crate) fn declaration_captures<'a>(
             .captures(line)
             .filter(|caps| is_md || caps.name("mdhashes").is_none())
     }?;
+    // §FS-declarations.line.section-suffix: an ID the separator and a section follow is a
+    // coordinate, so the line declares nothing; `near_miss_heading` asks the same of its token.
+    if grammar.opens_section_suffix(&line[captures.name("id")?.end()..]) {
+        return None;
+    }
     // §FS-config.3.2.5: retain the exact token written before `:`. A narrowed
     // component pattern may match a shorter prefix (`FS-legacy` in
     // `FS-legacy-2:`); that prefix must not claim the declaration first.
