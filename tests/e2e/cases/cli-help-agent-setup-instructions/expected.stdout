@@ -7,3 +7,7 @@ embedded in the binary so installed agents can discover the setup workflow
 without access to the source tree.
 
 Exit:  0 instructions printed · 2 unexpected arguments.
+
+Examples:
+  grund agent-setup-instructions          # print the setup guide
+  grund agent-setup-instructions | less   # read it a page at a time

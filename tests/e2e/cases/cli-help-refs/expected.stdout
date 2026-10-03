@@ -1,5 +1,5 @@
-grund refs — list every citation of an ID, as `path:line`, so you can see who
-depends on a declaration before you change it.
+grund refs — list every citation site of a coordinate, as `path:line`, so you can
+see who depends on a declaration before you change it.
 
 Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--descendants]
                    [--summary] [--total] [--format text|json]

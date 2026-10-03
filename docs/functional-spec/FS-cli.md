@@ -57,13 +57,22 @@ Help is never an error: it goes to stdout, exit `0`, so `grund --help | …` wor
 
 ### 2.2 The top-level help page
 
-`grund --help` (alias `grund -h`) prints the top-level help on stdout and exits `0`. The page opens with a one-line statement of what `grund` is, then the three invocation forms (`grund <ID>`, `grund check <path>`, and `grund <command> …`), then a `Commands:` block — every subcommand on its own line with a one-line description and a sample invocation — then the cross-subcommand options. Every flag carries a one-line example.
+`grund --help` (alias `grund -h`) prints the top-level help on stdout and exits `0`. The page, top to bottom:
 
-The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)), which this spec sets at ≤ 24 lines, so each description is a single terse line: the `show` line still gestures at *why* the command exists ("Print one declaration body for agent context."), and `fetch` says that it materializes one configured external snapshot, with the full rationale on each command's own help page.
+- **A statement.** One line saying what `grund` is.
+- **A usage line.** One line naming the invocation forms `grund <ID>[.<section>]`, `grund <COMMAND> [ARGS]`, `grund <COMMAND> -h` and `grund -V`.
+- **The commands, grouped by intent.** Three groups, in this order and with a blank line between them: *Query the catalog* (`show`, `list`, `refs`, `cover`), *Check and author* (`check`, `fmt`, `id`, `fetch`) and *Set up* (`init`, `config`, `integrations`, `completions`, `agent-setup-instructions`). Each row gives the command, a one-line description in the vocabulary of [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) and [§FS-terms.terms.2](FS-terms.md#terms2-citations), and a sample call.
+- **A footer.** One line giving the public address of the user guides and their runnable examples, `https://github.com/agent-grounds/grund/tree/main/docs/user-facing`: an address a reader with only the installed binary can open, never a path in grund's own source tree.
+
+There is no options block. A flag's place is on each command's own page ([§FS-cli.2.3](FS-cli.md#23-a-subcommands-help-page)), and a flag written before the subcommand is answered by the error of [§FS-cli.4.1](FS-cli.md#41-a-flag-placed-before-the-subcommand), which names where it goes.
+
+The whole page fits one screen ([§GOAL-friendliness-first.1](../goals.md#1-hard-requirements)), which this spec sets at ≤ 24 lines of at most 100 columns, so each description is a single terse line: the `show` row still gestures at *why* the command exists ("Print a coordinate's lead for agent context (default)."), and `fetch` says that it materializes one configured external snapshot, with the full rationale on each command's own help page.
 
 ### 2.3 A subcommand's help page
 
 `grund help <subcommand>` and `grund <subcommand> --help` (and `grund <subcommand> -h`) print *that subcommand's* page on stdout, exit `0`: its usage line, its arguments, every flag with a one-line example, the exit-code meanings for that subcommand, and a one-line recovery hint where the common failure has an obvious next step (e.g. `show`'s page says how to find an ID; `id`'s page shows the `$EDITOR` follow-up). `grund help` with no argument is the top-level page; `grund help <unknown>` is the unknown-command error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
+
+Where a user guide or a runnable example covers the command, its page ends with that guide's and example's public address: `Guide:` lines, then `Example:` lines, each giving a `https://github.com/agent-grounds/grund/blob/main/<file>` or `https://github.com/agent-grounds/grund/tree/main/<directory>` address. The address names `main`, never a version tag, because a development build has no tag ([§REQ-shipped-surfaces.1](../requirements/REQ-shipped-surfaces.md#1-no-shipped-or-printed-byte-names-a-declaration-of-this-repository)). Every such address `grund` prints names a file (`blob`) or a directory (`tree`) that exists in the tree it was built from, so a printed link cannot go stale.
 
 ## 3. Cross-subcommand flags
 

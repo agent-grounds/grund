@@ -14,7 +14,7 @@ Options:
   --selector SUBJECT  only one declaration/chapter selector, e.g. FS.requirements
   --unused            only declarations nothing cites yet (skips E2E unless E2E is selected)
   --summary           one row per kind with count and home  e.g. grund list --summary
-  --size[=lines,words,bytes]  point lead/full sizes; bare selects all three units
+  --size[=lines,words,bytes]  coordinate lead/full sizes; bare selects all three units
   --top N             largest N leads by the first selected unit; requires --size
   --format text|json   text (default) is the table on stdout; json emits NDJSON (adds `refs` count).
 
@@ -25,6 +25,8 @@ Examples:
   grund list --kind FS,AR docs/   # specs and architecture IDs under docs/
   grund list --summary            # counts by kind
   grund list --selector FS.requirements # every FS requirements chapter
-  grund list --size=words --top 10 # largest point leads
+  grund list --size=words --top 10 # largest coordinate leads
   grund list --unused             # uncited declarations (specs, decisions, …) — E2E cases excluded
   grund list --unused --kind E2E  # uncited e2e cases only, for inventory
+
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/coordinate-sizes.md

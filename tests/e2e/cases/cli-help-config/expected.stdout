@@ -9,3 +9,8 @@ PATH defaults to `.`; config is discovered by walking up from it — the root `g
 There is no `--config <file>` override: it is discovered, not pointed at.
 
 Exit:  0 well-formed / printed · 1 `validate` found an error · 2 no subcommand, or `show` couldn't read the config.
+
+Examples:
+  grund config show               # the effective config, defaults filled in
+  grund config validate           # exit 1 if the discovered config has an error
+  grund config show docs/         # the config that governs docs/

@@ -1,0 +1,14 @@
+grund fetch — materialize one configured external fact snapshot.
+
+Usage:  grund fetch <ID>
+
+The selected kind's [[kinds]].fetch executable receives the local ID and returns one declaration, validated before an atomic write.
+No check, query, formatter, completion, or LSP operation runs the integration implicitly.
+
+Exit:  0 stored · 1 invalid ID · 2 missing integration, rejected output, or operational error.
+
+Examples:
+  grund fetch TICKET-1234         # store that ticket's snapshot in its kind's home
+
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/external-facts.md
+Example:  https://github.com/agent-grounds/grund/tree/main/examples/external-tickets

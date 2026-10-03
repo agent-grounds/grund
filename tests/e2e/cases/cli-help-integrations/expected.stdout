@@ -23,3 +23,5 @@ Preview and install examples:
   grund integrations --write --agent codex --conversation-target web  # that agent only
 
 Exit:  0 printed or installed · 2 invalid options, missing write target, or a newer block.
+
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/clickable-citations.md
