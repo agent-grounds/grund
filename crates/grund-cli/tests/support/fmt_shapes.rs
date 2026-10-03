@@ -9,8 +9,9 @@
 //! held and none of them was a rule (§DF-fmt-one-model.2.2), so the shapes live
 //! in one place and each suite iterates all of them.
 //!
-//! The six shapes are the forms §FS-fmt.7.2 names. `clean-markdown` rewrites and
-//! meets no error. `strict-abort` is the whole-declaration-set path refusing up
+//! The six shapes are the forms §FS-fmt.7.2 names. `clean-markdown` rewrites
+//! every class and meets no scan error, though `check` reports its absent-target
+//! line (§FS-fmt.7.5.2). `strict-abort` is the whole-declaration-set path refusing up
 //! front (§FS-fmt.3.2). `partial-source` is a source-only scope, where no rewrite
 //! needs the whole set, so the run reports its rewrites *and* names the path it
 //! could not read. `two-scopes` narrows the rewrite to one directory while the
@@ -137,10 +138,17 @@ const BOTH_SCOPES: &str = "grund_config_version = 1\n\n[scan]\ninclude = [\"docs
 const SOURCE_SCOPE: &str = "grund_config_version = 1\n\n[scan]\ninclude = [\"src\"]\n\
      extensions = [\"md\", \"rs\"]\n\n[fmt.cross_refs]\nenabled = true\n";
 
-const DECLARATION: &str = "# FS-001-alpha: Alpha\n\nAlpha is the first thing.\n";
+/// The declaration-local class, twice and each on its own line (§FS-fmt.7.5.2):
+/// `\u{a7}2.1` names a section the declaration records, so both modes rewrite it,
+/// and `\u{a7}12` names none, so both leave it byte-identical (§FS-fmt.2.4.6). The
+/// marker is spelled `\u{a7}`, since a typed trigger before `2.1` is not a
+/// declaration-local candidate (§FS-check.1.1.8).
+const DECLARATION: &str = "# FS-001-alpha: Alpha\n\nAlpha is the first thing.\n\n\
+     See \u{a7}2.1 for the detail.\n\nAnd \u{a7}12 for the rest.\n\n\
+     ### 2.1 Detail\n\nThe detail.\n";
 /// A typed trigger, a bare token `--marker` would mark, and a shorthand whose
-/// expansion needs the whole declaration set — three of the four rewrite classes
-/// on three lines, so a preview has something to be a preview of.
+/// expansion needs the whole declaration set — the other three rewrite classes
+/// on three lines, so a preview has something to be a preview of (§FS-fmt.7.5.2).
 const CITING_NOTES: &str = "# Notes\n\nSee $$FS-001-alpha for the rest.\n\n\
      Bare here: FS-001-alpha.\n\nShorthand here: $$FS-001.\n";
 const CITING_SOURCE: &str = "//! FS-001-alpha: Alpha\n//!\n//! Alpha is the first thing.\n\n\
