@@ -88,6 +88,12 @@ The LSP must produce the same diagnostics for the same workspace state as `grund
 - Diagnostics, hover, definition, references, links, and highlights translate those records only.
 - `textDocument/onTypeFormatting` calls the same configured trigger/marker and ID-grammar checks as `grund fmt`.
 
+#### 5.1.1 A path anchor narrows the report, not the resolution
+
+A snapshot asked for a path below its config root — `path_provided` with a sub-folder or a file of a configured project — is a path-scoped run, and it keeps the two scopes [§FS-check.1.3.6.1](../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution) keeps. Its **resolution scope** is the one `grund check <path>` walks: the project's ordinary roots and every walked kind home, union the path. Every rule runs over that, including the managed-block compare, so the `### Chapter rules` render is the whole project's and never the anchor's ([§FS-rules.9.1.1](../functional-spec/FS-rules.md#911-a-path-scoped-check-compares-against-the-same-render)). Its **report** is narrowed to the path after the rules ran, by the same filter and with the same exemptions the CLI's run uses — the `agents-init` finding about `AGENTS.md` reaches it by its code. So `report` holds exactly the diagnostics `grund_core::check(<path>)` reports on the same bytes, the parity [§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics) asks of the shared core report: a citation in the path that resolves to a declaration outside it does not dangle, and the block `grund init` wrote is not stale.
+
+The navigation records are not narrowed. `declarations`, `sections`, `stubs`, `citations` and `scanned_files` carry everything the resolution scope read, because a citation inside the path resolves to a declaration outside it and its `target_path` must name a declaration the snapshot holds. A path that resolves to the config root is the root scope and nothing narrows. The `grund-lsp` server already anchors every configured folder at its config root ([§FS-lsp.2.2.1](../functional-spec/FS-lsp.md#221-workspace-folders-anchor-discovery)), so this point changes nothing it publishes; it is the promise a direct caller of the public API is owed, and `tests/integration/lsp_snapshot_path_scope.rs` holds it.
+
 ### 5.2 Hover
 
 - `textDocument/hover` previews a citation's body by calling the same `show` engine as `grund <ID> --toc`, with open-document overlays applied; a declaration-side title returns the whole-title range and its usage counts ([§FS-lsp.1.2](../functional-spec/FS-lsp.md#12-hover-preview)).
