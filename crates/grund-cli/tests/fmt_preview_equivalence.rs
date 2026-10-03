@@ -17,6 +17,12 @@ mod fmt_shapes;
 
 use fmt_shapes::{changed_sites, reported_sites, run_grund, shapes, snapshot, stderr, stdout};
 
+/// The declaration-local sites §FS-fmt.7.5.2 requires the rewritable shape to
+/// hold: one whose target section exists and one whose target does not
+/// (§FS-fmt.2.4.6). Written with `\u{a7}` because `$$2.1` is not a candidate.
+const RESOLVING_LOCAL_SITE: &str = "\u{a7}2.1";
+const ABSENT_LOCAL_SITE: &str = "\u{a7}12";
+
 /// The rewrite knobs, each previewed and applied. The bare form is the one every
 /// gate runs; `--cross-refs` and `--marker` add a rewrite class each, and a
 /// preview that predicts one class and not another is the defect this rule is
@@ -127,4 +133,67 @@ fn every_shape_rewrites_exactly_where_it_claims_to() {
             stderr(&output),
         );
     }
+}
+
+#[test]
+/// §FS-fmt.7.5.2 — the declaration-local class asserted by its own lines, not by
+/// the shape: `clean-markdown` also rewrites through its notes file, so the
+/// shape-level assertions stay green if this class stops firing. The site whose
+/// target exists is previewed and written; the one whose target is absent is
+/// neither (§FS-fmt.2.4.6), each on its own line so a split cannot hide.
+fn the_declaration_local_rewrite_is_previewed_and_written_on_its_own_lines() {
+    let shape = shapes()
+        .into_iter()
+        .find(|shape| shape.name == "clean-markdown")
+        .expect("the corpus holds the clean rewritable shape");
+    let previewed = shape.materialize("preview-local-check");
+    let written = shape.materialize("preview-local-write");
+    let before = snapshot(&written);
+
+    let preview = run_grund(&["fmt", "--check"], &previewed);
+    run_grund(&["fmt", "--write"], &written);
+    let listed = reported_sites(&preview);
+    let changed = changed_sites(&before, &snapshot(&written));
+
+    let site_of = |token: &str| {
+        let sites: Vec<(String, usize)> = before
+            .iter()
+            .flat_map(|(path, lines)| {
+                lines
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, line)| {
+                        line.match_indices(token).any(|(at, _)| {
+                            !line[at + token.len()..]
+                                .starts_with(|c: char| c.is_ascii_digit() || c == '.')
+                        })
+                    })
+                    .map(move |(index, _)| (path.clone(), index + 1))
+            })
+            .collect();
+        assert_eq!(
+            sites.len(),
+            1,
+            "clean-markdown must hold `{token}` on exactly one line (§FS-fmt.7.5.2), found {sites:?}",
+        );
+        sites.into_iter().next().unwrap()
+    };
+    let resolving = site_of(RESOLVING_LOCAL_SITE);
+    let absent = site_of(ABSENT_LOCAL_SITE);
+    assert_ne!(
+        resolving, absent,
+        "the two declaration-local sites share a line"
+    );
+
+    assert!(
+        changed.contains(&resolving) && listed.contains(&resolving),
+        "{resolving:?} cites a section the declaration records, so both modes rewrite it\n  \
+         listed: {listed:?}\n  changed: {changed:?}\n  preview stdout: {}",
+        stdout(&preview),
+    );
+    assert!(
+        !changed.contains(&absent) && !listed.contains(&absent),
+        "{absent:?} cites a section the declaration does not record, so neither mode \
+         rewrites it (§FS-fmt.2.4.6)\n  listed: {listed:?}\n  changed: {changed:?}",
+    );
 }
