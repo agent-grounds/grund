@@ -18,7 +18,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use super::fmt_links::wrap_markdown_links_with_targets;
-use super::fmt_local_sections::{expand_local_section_citations, local_section_labels};
+use super::fmt_local_sections::expand_local_section_citations;
 use crate::config::Config;
 use crate::grammar::{
     DocstringContent, DocstringCursor, FmtDirectives, declaration_id_on_line, id_token_end_at,
@@ -109,17 +109,9 @@ pub(super) fn rewrite_file(
             suppressed,
             &mut saw_shorthand_candidate,
         );
+        // §FS-fmt.3.6.1: one row per changed line, however many rewrites it holds.
         if new_line != line {
-            let local_labels = local_section_labels(path, idx + 1, config, opts.findings);
-            if local_labels.is_empty() {
-                changes.push((path.to_path_buf(), idx + 1, label));
-            } else {
-                changes.extend(
-                    local_labels
-                        .into_iter()
-                        .map(|label| (path.to_path_buf(), idx + 1, label)),
-                );
-            }
+            changes.push((path.to_path_buf(), idx + 1, label));
             changed = true;
         }
         lines.push(new_line);
@@ -176,6 +168,11 @@ pub(crate) struct FmtLineOpts<'a> {
 /// three rewrites move markup around an unchanged ID token, so `grund check` can
 /// still see a mistake in them; this one writes the slug *into* the token, and a
 /// wrong one is a well-formed citation of the wrong declaration.
+///
+/// Why the declaration-local and shorthand details can be merged by offset
+/// (§FS-fmt.3.6.1): both are recorded as offsets into one line, the local pass's
+/// output, which is the shorthand pass's input. No pass reorders tokens, so order
+/// in that line is order in the source line.
 #[allow(clippy::too_many_arguments)]
 fn fmt_line_at(
     line: &str,
@@ -206,6 +203,7 @@ fn fmt_line_at(
         triggered.line
     };
     let marker_changed = opts.add_marker && marked != line && !trigger_changed;
+    let mut expansions = Vec::new();
     let local_expansion = expand_local_section_citations(
         &marked,
         path,
@@ -214,13 +212,13 @@ fn fmt_line_at(
         opts.findings,
         &trigger_marker_starts,
         saw_shorthand_candidate,
+        &mut expansions,
     );
     let local_changed = local_expansion.is_some();
     let marked = local_expansion.unwrap_or(marked);
     // Each stage below takes ownership of the previous stage's line rather than
     // cloning it: `fmt` touches every line of every scanned file, so one avoidable
     // allocation per line is a measurable share of the command (§GOAL-fast-feedback).
-    let mut expansions = Vec::new();
     let expansion = expand_shorthand_citations_with_origins(
         &marked,
         docstrings.peek(&marked),
@@ -276,11 +274,13 @@ fn fmt_line_at(
     let label = if expansions.is_empty() {
         label.to_string()
     } else {
+        // §FS-fmt.3.6.1: local and shorthand details share the row, in source order.
+        expansions.sort_by_key(|(start, _, _)| *start);
         format!(
             "{label}: {}",
             expansions
                 .iter()
-                .map(|(written, canonical)| format!("{written} \u{2192} {canonical}"))
+                .map(|(_, written, canonical)| format!("{written} \u{2192} {canonical}"))
                 .collect::<Vec<_>>()
                 .join(", ")
         )
