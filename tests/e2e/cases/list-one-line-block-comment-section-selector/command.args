@@ -1,0 +1,1 @@
+list --selector AR.terms --format=json {repo}
