@@ -400,24 +400,22 @@ fn section_title(line: &str, section: &str, markdown_heading: bool) -> String {
 
 /// Strip the comment marker (`///`, `//!`, `//`, `#`, `*`, `/*`, `*/`) off a body
 /// line when the declaration lives in a code/`"""` doc-comment — Markdown bodies
-/// pass through unchanged (§FS-show.2.3.2).
-fn clean_body_line(line: &str, is_md: bool) -> String {
+/// pass through unchanged (§FS-show.2.3.2). The whitespace in front of the marker
+/// is envelope and goes with it, so an indented `///` or a class member's ` * `
+/// shows its body at column 0; what follows the marker and its one space is kept
+/// verbatim. A line with no marker is kept as-is.
+pub(super) fn clean_body_line(line: &str, is_md: bool) -> String {
     if is_md {
         return line.to_string();
     }
 
-    let marker_start = line
-        .char_indices()
-        .find_map(|(idx, ch)| (!ch.is_whitespace()).then_some(idx))
-        .unwrap_or(line.len());
-    let (leading, body) = line.split_at(marker_start);
+    let body = line.trim_start();
     for prefix in ["///", "//!", "//", "*/", "#", "*", "/*"] {
         if let Some(rest) = body.strip_prefix(prefix) {
             if prefix == "*/" && rest.trim().is_empty() {
                 return String::new();
             }
-            let rest = rest.strip_prefix(' ').unwrap_or(rest);
-            return format!("{leading}{rest}");
+            return rest.strip_prefix(' ').unwrap_or(rest).to_string();
         }
     }
     line.to_string()
