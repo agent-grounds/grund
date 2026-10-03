@@ -1,0 +1,4 @@
+docs/FS-001-nine.md:3: shorthand → canonical: §FS-042.1 → §FS-042-user-login.1
+docs/FS-001-nine.md:4: local section → canonical: §2.1 → §FS-001-nine.2.1, §FS-042.1 → §FS-042-user-login.1
+docs/FS-001-nine.md:5: local section → canonical: §FS-042.1 → §FS-042-user-login.1, §2.1 → §FS-001-nine.2.1
+docs/FS-001-nine.md:6: local section → canonical: §2 → §FS-001-nine.2, §FS-042.1 → §FS-042-user-login.1, §2.1 → §FS-001-nine.2.1
