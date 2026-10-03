@@ -376,7 +376,7 @@ fn run_workspace_check(
 /// that a false alarm stay legible as one. The `io` code's one cost is that
 /// `--ignore` cannot turn the line off, which §FS-check.1.3.6.3 states rather than
 /// leaves to be found.
-fn unread_resolution_source_cautions(
+pub(super) fn unread_resolution_source_cautions(
     unread: impl IntoIterator<Item = (PathBuf, String)>,
 ) -> Vec<Diagnostic> {
     unread

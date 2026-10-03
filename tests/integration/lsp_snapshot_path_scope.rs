@@ -274,3 +274,64 @@ fn a_sub_folder_snapshot_carries_the_resolution_scope_records() {
             .any(|file| file.ends_with("docs/goals/GOAL-repro.md"))
     );
 }
+
+/// §FS-check.1.3.6.3: a file outside the anchor that the wider walk cannot read is
+/// not dropped with the rest of the out-of-path report — the snapshot cautions about
+/// it, as `check(docs/fs)` does.
+#[cfg(unix)]
+#[test]
+fn a_sub_folder_snapshot_cautions_about_an_unreadable_file_outside_it() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = fixture("unreadable-outside");
+    let unreadable = root.join("docs/goals/GOAL-bad.md");
+    fs::write(&unreadable, "# GOAL-bad: Unreadable\n").expect("write GOAL-bad");
+    fs::set_permissions(&unreadable, fs::Permissions::from_mode(0o000)).expect("chmod 000");
+    if fs::read(&unreadable).is_ok() {
+        eprintln!("skipped: chmod 000 does not stop this process reading a file (root?)");
+        return;
+    }
+    let scoped = diagnostics(
+        &root,
+        &check(&root.join("docs/fs")).expect("check(docs/fs)"),
+    );
+    let snapped = diagnostics(&root, &snapshot(root.join("docs/fs")).report);
+    fs::set_permissions(&unreadable, fs::Permissions::from_mode(0o644)).expect("chmod back");
+    let caution = "warning io docs/goals/GOAL-bad.md:0 ";
+    assert!(
+        has(&scoped, caution),
+        "control: check(docs/fs) cautions about the unread file: {scoped:#?}"
+    );
+    assert!(
+        has(&snapped, caution),
+        "lsp_snapshot(docs/fs) drops the unread file outside the anchor: {snapped:#?}"
+    );
+    assert_eq!(
+        snapped, scoped,
+        "lsp_snapshot(docs/fs) must report what check(docs/fs) reports"
+    );
+}
+
+/// §FS-check.2.2: an anchor holding no scannable file earns the empty-scan caution
+/// about the anchor, however much the wider walk read.
+#[test]
+fn a_sub_folder_snapshot_cautions_about_an_empty_anchor() {
+    let root = fixture("empty-anchor");
+    fs::create_dir_all(root.join("docs/empty")).expect("create docs/empty");
+    let scoped = diagnostics(
+        &root,
+        &check(&root.join("docs/empty")).expect("check(docs/empty)"),
+    );
+    let snapped = diagnostics(&root, &snapshot(root.join("docs/empty")).report);
+    assert!(
+        has(&scoped, "warning empty-scan "),
+        "control: check(docs/empty) cautions about the empty scan: {scoped:#?}"
+    );
+    assert!(
+        has(&snapped, "warning empty-scan "),
+        "lsp_snapshot(docs/empty) loses the empty-scan caution: {snapped:#?}"
+    );
+    assert_eq!(
+        snapped, scoped,
+        "lsp_snapshot(docs/empty) must report what check(docs/empty) reports"
+    );
+}

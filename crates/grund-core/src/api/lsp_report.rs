@@ -9,6 +9,7 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+use super::run::unread_resolution_source_cautions;
 use super::scope_cautions::scan_scope_caution;
 use crate::checker::{
     ScanScope, check_chapter_rules, check_with_workspace_and_overlays, path_report_scope,
@@ -46,21 +47,15 @@ pub(super) fn widen_for_path_anchor(
 
 /// §AR-lsp.5.1.1: the snapshot's report — every rule run over the resolution scope,
 /// then narrowed to the anchor by `grund check <path>`'s own filter, with its
-/// exemptions (§FS-check.1.3.6.1). A no-op narrowing for a root anchor.
+/// exemptions (§FS-check.1.3.6.1), and the two cautions that run asks of the report
+/// scope rather than the walk. A no-op narrowing for a root anchor.
 pub(super) fn editor_report(
     context: &WorkspaceContext,
     overlays: &TextOverlays,
+    anchor: &Path,
     report_scope: Option<&ScanScope>,
 ) -> CheckReport {
-    let mut report = check_workspace_context(context, false, overlays);
-    for channel in [
-        &mut report.errors,
-        &mut report.warnings,
-        &mut report.suggestions,
-    ] {
-        retain_diagnostics_in_report_scope(channel, context.render_config(), report_scope);
-    }
-    report
+    check_workspace_context(context, false, overlays, anchor, report_scope)
 }
 
 /// §FS-lsp.4.1: the report the editor shows, decided here so that an editor and a
@@ -74,10 +69,17 @@ pub(super) fn editor_report(
 /// project was the absent one — and why that config is cloned after the workspace
 /// walk (`load_resolved_workspace_context`). §FS-check.2.2: the caution for that
 /// same block rides beside it.
+///
+/// §AR-lsp.5.1.1: `report_scope` is `Some` only on the single-project arm
+/// (`widen_for_path_anchor`), where each step `run_check_with_run_warnings` takes after
+/// its rules is taken here in its order: the narrowing, then the scope caution asked
+/// of the anchor, then the files the wider walk could not read outside it.
 fn check_workspace_context(
     context: &WorkspaceContext,
     force_require_grounding: bool,
     overlays: &TextOverlays,
+    anchor: &Path,
+    report_scope: Option<&ScanScope>,
 ) -> CheckReport {
     let workspace = context
         .projects
@@ -135,36 +137,57 @@ fn check_workspace_context(
                 .then_some((project.alias.as_str(), &workspace)),
             &mut project_report,
         );
-        let project_has_findings =
-            !project_report.errors.is_empty() || !project_report.warnings.is_empty();
+        // §FS-check.1.3.6.1: a file the wider walk could not read outside the anchor
+        // leaves the errors; §FS-check.1.3.6.3 says it once the report is narrowed.
+        let (inside, unread_outside): (Vec<_>, Vec<_>) = project
+            .scan_errors
+            .iter()
+            .cloned()
+            .partition(|(file, _)| report_scope.is_none_or(|scope| scope.contains(file)));
+        append_lsp_scan_errors(&mut project_report, inside);
+        for channel in [&mut project_report.errors, &mut project_report.warnings] {
+            retain_diagnostics_in_report_scope(channel, context.render_config(), report_scope);
+        }
+        let report_is_silent =
+            project_report.errors.is_empty() && project_report.warnings.is_empty();
         report.errors.append(&mut project_report.errors);
         report.warnings.append(&mut project_report.warnings);
-        append_lsp_scan_errors(&mut report, project.scan_errors.iter().cloned());
-        // §FS-lsp.4.1: the same decision `grund check` makes, from the same
-        // function — an editor and a terminal over one tree report one set of
-        // diagnostics (§FS-check.2.2, §FS-check.4.5).
+        // §FS-lsp.4.1: `grund check`'s decision from its own function (§FS-check.2.2,
+        // §FS-check.4.5), asked of the anchor and its report scope (§AR-lsp.5.1.1).
+        let path = match report_scope {
+            Some(_) => anchor,
+            // `grund-lsp` anchors at the project root and distributes the
+            // diagnostics per file itself (§FS-lsp.4.1).
+            None => config.root.as_path(),
+        };
         report.warnings.extend(scan_scope_caution(
             &config,
             &project.findings,
-            &config.root,
+            path,
             true,
-            project.scan_errors.is_empty() && !project_has_findings,
-            // §FS-check.1.3.6.1: `grund-lsp` anchors at the project root and distributes
-            // the diagnostics per file itself (§FS-lsp.4.1); a direct caller's path
-            // anchor narrows the report afterwards, in `editor_report` (§AR-lsp.5.1.1).
-            None,
+            report_is_silent,
+            report_scope,
         ));
+        // §FS-check.1.3.6.3, §AR-lsp.5.1.1: after the silence flag, as in `grund check`
+        // (§FS-check.2.2.3.1).
+        report
+            .warnings
+            .extend(unread_resolution_source_cautions(unread_outside));
     }
     // §FS-check.3.29.13, §FS-check.3.29.11: per project, the blocks that walk met that
     // no enclosing one lists — located report errors, the decision `run_workspace_check`
     // makes, so an editor and a terminal place one diagnostic at one line (§FS-lsp.4.1).
     for project in &context.projects {
-        report.errors.extend(unlisted_workspace_block_errors(
+        let mut unlisted = unlisted_workspace_block_errors(
             &project.config,
             context.render_config(),
             context.workspace_loaded.then_some(project.alias.as_str()),
             &project.findings.walked_dirs,
-        ));
+        );
+        // §FS-check.1.3.6.1: a block the wider walk met outside the anchor is not this
+        // report's to make.
+        retain_diagnostics_in_report_scope(&mut unlisted, context.render_config(), report_scope);
+        report.errors.extend(unlisted);
     }
     // §FS-check.4.9, §FS-check.2.2: the announcements and the caution — see this
     // function's docs.
