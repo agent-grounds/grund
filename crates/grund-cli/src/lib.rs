@@ -56,6 +56,10 @@ const SUBCOMMANDS: &[&str] = &[
     "integrations",
 ];
 
+/// Dispatched by `main_entry` but kept out of help and completion: the shell
+/// completion helper (§FS-completions.2).
+const HIDDEN_SUBCOMMANDS: &[&str] = &["complete"];
+
 include!("cli_help.rs");
 include!("cli_help_check.rs");
 include!("cli_help_show.rs");

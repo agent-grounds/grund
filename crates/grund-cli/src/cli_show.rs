@@ -13,6 +13,9 @@ fn looks_like_subcommand_typo(arg: &str) -> bool {
     !arg.is_empty() && !arg.contains('-') && !arg.contains('/') && !arg.contains('.')
 }
 
+/// The `show` flags that take a value as the next word (§FS-cli.4.1).
+const SHOW_VALUE_FLAGS: &[&str] = &["--section", "--path", "--format"];
+
 /// Recognize the opt-in without treating another option's value as a flag
 /// (§FS-show.1.8).
 fn show_batch_requested(args: &[String]) -> bool {
@@ -20,7 +23,7 @@ fn show_batch_requested(args: &[String]) -> bool {
     while index < args.len() {
         match args[index].as_str() {
             "--batch" => return true,
-            "--section" | "--path" | "--format" => index += 1,
+            flag if SHOW_VALUE_FLAGS.contains(&flag) => index += 1,
             _ => {}
         }
         index += 1;

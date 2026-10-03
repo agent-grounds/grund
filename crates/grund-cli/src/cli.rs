@@ -177,7 +177,34 @@ pub fn main_entry() -> ExitCode {
         Some("integrations") => command_integrations(&args[1..]),
         Some("complete") => command_complete(&args[1..]),
         // Any first argument that is not a known subcommand is an ID query
-        // (§FS-cli.1). Check is explicit as `grund check [path]`.
-        Some(_) => command_show_default(&args),
+        // (§FS-cli.1), unless flags lead a known subcommand (§FS-cli.4.1).
+        // Check is explicit as `grund check [path]`.
+        Some(_) => match flag_before_subcommand(&args) {
+            Some(message) => {
+                eprintln!("error: {message}");
+                ExitCode::from(2)
+            }
+            None => command_show_default(&args),
+        },
     }
+}
+
+/// The §FS-cli.4.1 message when `args` opens with flags and the first word after
+/// them is a subcommand `main_entry` dispatches on: the first flag without its
+/// value, then the command with every leading argument moved after the
+/// subcommand. Values of the `show` value flags are skipped with their flag.
+fn flag_before_subcommand(args: &[String]) -> Option<String> {
+    let mut index = 0;
+    while args.get(index).is_some_and(|arg| arg.starts_with('-')) {
+        index += if SHOW_VALUE_FLAGS.contains(&args[index].as_str()) { 2 } else { 1 };
+    }
+    let sub = args.get(index)?.as_str();
+    if index == 0 || !(SUBCOMMANDS.contains(&sub) || HIDDEN_SUBCOMMANDS.contains(&sub)) {
+        return None;
+    }
+    let flag = args[0].split('=').next().unwrap_or_default();
+    let mut corrected = vec!["grund", sub];
+    corrected.extend(args[..index].iter().map(String::as_str));
+    corrected.extend(args[index + 1..].iter().map(String::as_str));
+    Some(format!("{flag} follows the subcommand: {}", corrected.join(" ")))
 }
