@@ -11,7 +11,7 @@ Leans on [§FS-terms.terms.1](FS-terms.md#terms1-declarations-and-coordinates) (
 ## 1. The default subcommand
 
 - `grund` with no arguments is a CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)): the fallback that ran `grund check .` was removed in grund 0.16.0, and the message names the explicit forms to write instead.
-- `grund <ID>[.<section>] …` (where the first non-flag word is not a known subcommand) is the ID-read query specified by [§FS-show.1](FS-show.md#1-inputs), byte-for-byte equivalent to the explicit `show` subcommand, including show flags written before the ID: `grund --toc FS-check` reads the same body as `grund FS-check --toc`. With no path, both resolve from `.`.
+- `grund <ID>[.<section>] …` (where the first non-flag word is not a known subcommand) is the ID-read query specified by [§FS-show.1](FS-show.md#1-inputs), byte-for-byte equivalent to the explicit `show` subcommand, including show flags written before the ID: `grund --toc FS-check` reads the same body as `grund FS-check --toc`. With no path, both resolve from `.`. A first non-flag word that *is* a known subcommand, after leading flags, is not this query but the misplaced-flag error of [§FS-cli.4.1](FS-cli.md#41-a-flag-placed-before-the-subcommand).
 - `grund <subcommand> …` dispatches to that subcommand: `check`, `show`, `list`, `refs`, `cover`, `fmt`, `fetch`, `id`, `init`, `config`, `agent-setup-instructions`, `completions`, `integrations`. The hidden `complete` subcommand is reserved for generated shell scripts ([§FS-completions.2](FS-completions.md#2-internal-dynamic-helper)); `fetch` is the explicit one-ID writer specified by [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot).
 
 ### 1.1 Why these defaults
@@ -32,7 +32,7 @@ The final `grund --help` hint is emitted only when the first word contains none 
 
 The `grund check <word>` migration breadcrumb is limited to an existing filesystem path that the bare query would otherwise refuse as an unknown project alias ([§FS-show.3.5.2](FS-show.md#352-the-filesystem-path-migration-breadcrumb)). An invalid ID or coordinate and any other query failure do not acquire that advice merely from using the bare form: `check` takes a filesystem path ([§FS-check.1](FS-check.md#1-inputs)), not an ID or section coordinate.
 
-Stdout is empty and the exit is `1`: the default ID lookup is a failed query, not a CLI launch failure.
+Stdout is empty and the exit is `1`: the default ID lookup is a failed query, not a CLI launch failure. A known subcommand word that only reaches this query because a flag was written before it is not such a word: it is refused earlier, by [§FS-cli.4.1](FS-cli.md#41-a-flag-placed-before-the-subcommand).
 
 ### 1.3 A help request with an unknown first word
 
@@ -87,7 +87,7 @@ It documents the third selector on the same footing: that `--only-rule` narrows 
 
 ## 4. Errors with no source location
 
-An unknown subcommand in help dispatch (`grund help <unknown>`), an unknown or malformed flag, mutually-exclusive flags, or no arguments at all are CLI-level errors: `error: <message>` on stderr, empty stdout, exit `2` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages)). A bare-word first argument that is neither a known subcommand nor a valid ID is not a CLI-level error but the failed default-`show` query of [§FS-cli.1.2](FS-cli.md#12-a-first-word-that-is-not-an-id), exit `1`.
+An unknown subcommand in help dispatch (`grund help <unknown>`), an unknown or malformed flag, mutually-exclusive flags, or no arguments at all are CLI-level errors: `error: <message>` on stderr, empty stdout, exit `2` ([§FS-errors.2.2](FS-errors.md#22-cli-level-message), [§FS-check.2.1.1](FS-check.md#211-cli-level-messages)). A bare-word first argument that is neither a known subcommand nor a valid ID is not a CLI-level error but the failed default-`show` query of [§FS-cli.1.2](FS-cli.md#12-a-first-word-that-is-not-an-id), exit `1`. A flag written before a known subcommand is a CLI-level error of its own, [§FS-cli.4.1](FS-cli.md#41-a-flag-placed-before-the-subcommand).
 
 `grund` with no arguments names both explicit forms, because the fallback that ran `grund check .` was removed in grund 0.16.0 and a caller who wrote the bare form meant one of them:
 
@@ -98,6 +98,22 @@ hint: run `grund --help` for the list of subcommands
 ```
 
 `check` selector errors use the exact forms in [§FS-check.1](FS-check.md#1-inputs). Missing, empty, malformed, and unknown values are rejected before config discovery or scanning, regardless of `--format`; they therefore always leave stdout empty, remain raw text on stderr, and exit `2`.
+
+### 4.1 A flag placed before the subcommand
+
+A subcommand's flags follow the subcommand: no flag but `--version` and `--help` ([§FS-cli.2](FS-cli.md#2-global-flags)) is global, and `--format` in particular is per-command ([§FS-cli.3](FS-cli.md#3-cross-subcommand-flags)). So when the first argument is a flag and the first non-flag word after the leading flags is a known subcommand — one of the names [§FS-cli.1](FS-cli.md#1-the-default-subcommand) dispatches on — the invocation is a CLI-level error that says where the flag goes, never a default-`show` query that reads the subcommand as the ID and the next word as a path:
+
+```
+$ grund --format json list
+error: --format follows the subcommand: grund list --format json
+$ grund --format json refs FS-cli
+error: --format follows the subcommand: grund refs --format json FS-cli
+```
+
+- **Which word is the subcommand.** The leading flags are skipped together with the values of the value-taking `show` flags (`--format`, `--section`, `--path`), written either as a separate word or as `--flag=value`; the first word left is the one tested. Any leading flag counts, not only `--format`: `grund --brief list` is refused the same way.
+- **What the message names.** The first leading flag as written, without its value, then the corrected command: `grund`, the subcommand, every leading argument in the order and spelling it was written (values included), then the arguments that followed the subcommand, joined by single spaces. The error is about placement only: the corrected command may still be refused by that subcommand's own flag rules.
+- **How it is reported.** Stderr, empty stdout, exit `2`, regardless of `--format`, before config discovery or any scan, like every other error here.
+- **What stays valid.** A leading flag before a word that is not a known subcommand is the default `show` query of [§FS-cli.1](FS-cli.md#1-the-default-subcommand), unchanged: `grund --format json FS-cli` reads `FS-cli` as JSON and exits `0`, and a word that is no ID stays the exit-`1` query failure of [§FS-cli.1.2](FS-cli.md#12-a-first-word-that-is-not-an-id). No name that collides with a subcommand could ever have resolved as an ID there, so nothing that worked before this rule stops working.
 
 ## 5. Exit-code mapping is fixed
 
