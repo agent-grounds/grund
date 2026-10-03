@@ -1,0 +1,5 @@
+AR-cline.terms      src/cline.c:5  Terms
+AR-control.terms    src/control.rs:4  Terms
+AR-docstring.terms  src/docstring.py:4  Terms */
+AR-markdown.terms   docs/ar/AR-markdown.md:3  Terms */
+AR-wide.terms       src/Wide.java:4  Terms
