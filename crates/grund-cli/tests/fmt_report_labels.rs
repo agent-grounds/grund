@@ -177,7 +177,7 @@ fn the_shorthand_point_names_the_label_each_of_its_expansions_is_reported_under(
 }
 
 #[test]
-fn a_line_with_several_rewrites_carries_the_first_label_unless_it_expands_a_local_token() {
+fn a_line_with_several_rewrites_is_one_row_under_the_first_label() {
     let root = fixture("several", SEVERAL_REWRITES_PER_LINE);
     assert_eq!(
         report(&root, "--cross-refs"),
@@ -186,11 +186,10 @@ fn a_line_with_several_rewrites_carries_the_first_label_unless_it_expands_a_loca
             // then wrapped as the shorthand; both still name what they write.
             "3: trigger \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login",
             "5: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login",
-            // §FS-fmt.3.5.2: one row per expanded local token, in source order,
-            // in place of the line's row; a withheld token (§FS-fmt.2.4.6) has none.
-            "7: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1",
-            "7: local section \u{2192} canonical: \u{a7}2 \u{2192} \u{a7}FS-004-quick-actions.2",
-            "9: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1",
+            // §FS-fmt.3.5.2: one row however many local tokens, under the local label
+            // unless an earlier rewrite fired; a withheld token (§FS-fmt.2.4.6) has no detail.
+            "7: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1, \u{a7}2 \u{2192} \u{a7}FS-004-quick-actions.2",
+            "9: trigger \u{2192} marker: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1",
             "11: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1",
             // §FS-fmt.3.5.1: wrapping never outranks an expansion.
             "13: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login",
