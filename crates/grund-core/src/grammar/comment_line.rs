@@ -211,6 +211,17 @@ pub(crate) fn comment_content_range(line: &str, prefixes: &[&str]) -> (usize, us
     (offset, offset + rest.len())
 }
 
+/// A source heading line without the block comment's closing `*/` that ends it,
+/// and the whitespace before that closer: the closer is the comment's envelope,
+/// never the chapter's label (§FS-rules.5.1.1). A line with no closer comes back
+/// unchanged. Only the C-family closer is envelope; callers apply this to source
+/// headings alone, so a Markdown or docstring heading keeps a `*/` its author wrote.
+pub(crate) fn strip_block_closer(line: &str) -> &str {
+    line.trim_end()
+        .strip_suffix("*/")
+        .map_or(line, str::trim_end)
+}
+
 pub(crate) fn comment_strip_prefixes<'a>(lexical: LexicalSettings<'a>) -> Vec<&'a str> {
     let mut prefixes = vec!["/**", "/*", "*/", "\"\"\"", "'''"];
     for prefix in lexical.comment_prefixes {

@@ -59,6 +59,7 @@
 //! no scan in them.
 
 mod body;
+mod body_lines;
 mod citation_target;
 mod comment_envelope;
 mod context;

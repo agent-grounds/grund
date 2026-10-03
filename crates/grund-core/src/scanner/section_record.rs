@@ -8,7 +8,7 @@ use std::path::Path;
 use super::embedded_value_context::push_invalid_embedded_marker;
 use super::tree::heading_level_for_line;
 use crate::config::{Config, kind_value_chapter};
-use crate::grammar::{SourceScanLine, section_anchor_text};
+use crate::grammar::{SourceScanLine, section_anchor_text, strip_block_closer};
 use crate::model::{
     Declaration, EmbeddedValueRoot, Findings, SectionInfo, ValueRootOrigin, named_section_component,
 };
@@ -42,10 +42,13 @@ pub(super) fn record_section_heading(
     // direct child of the declaration's direct chapter is a root by schema,
     // with no marker to carry; the marker route stays numeric-only.
     let chapter_root = section_is_chapter_value_root(config, &decl.id.kind, sec);
-    // §FS-rules.5.1.1: a source heading is titled from its own `#` run, so the
-    // comment around it never joins the label. Markdown and docstring lines stay as is.
+    // §FS-rules.5.1.1: a source heading is titled from its own `#` run up to any
+    // closing `*/`, so the comment around it never joins the label.
+    // Markdown and docstring lines stay as is.
     let heading = match caps.name("hashes") {
-        Some(hashes) if !(is_md || scan.in_py_docstring) => &scan_line[hashes.start()..],
+        Some(hashes) if !(is_md || scan.in_py_docstring) => {
+            strip_block_closer(&scan_line[hashes.start()..])
+        }
         _ => scan_line,
     };
     let info = SectionInfo {
