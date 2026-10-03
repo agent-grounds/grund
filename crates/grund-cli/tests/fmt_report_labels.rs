@@ -60,6 +60,7 @@ const SEVERAL_REWRITES_PER_LINE: &str = concat!(
     "Two local tokens: \u{a7}1 and \u{a7}2 here.\n\n",
     "Typed beside a local token: $$FS-042-user-login and \u{a7}1 here.\n\n",
     "Withheld: \u{a7}9 and \u{a7}1 here.\n\n",
+    "Bare beside a shorthand: FS-042-user-login and \u{a7}FS-042 here.\n\n",
     "## 1. One\n\n",
     "## 2. Two\n",
 );
@@ -156,7 +157,8 @@ fn the_shorthand_point_names_the_label_each_of_its_expansions_is_reported_under(
     for kind in [&number_only, &local] {
         assert!(
             lead.contains(&format!("`{kind}`")),
-            "\u{a7}FS-fmt.2.4 does not name `{kind}`, the label one of its expansions is reported under"
+            "\u{a7}FS-fmt.2.4 does not name `{kind}`, \
+             the label one of its expansions is reported under"
         );
     }
     assert!(
@@ -190,6 +192,17 @@ fn a_line_with_several_rewrites_carries_the_first_label_unless_it_expands_a_loca
             "7: local section \u{2192} canonical: \u{a7}2 \u{2192} \u{a7}FS-004-quick-actions.2",
             "9: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1",
             "11: local section \u{2192} canonical: \u{a7}1 \u{2192} \u{a7}FS-004-quick-actions.1",
+            // §FS-fmt.3.5.1: wrapping never outranks an expansion.
+            "13: shorthand \u{2192} canonical: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login",
         ]
+    );
+    // §FS-fmt.3.6: a bare citation marked on a line that expanded a shorthand
+    // still names what the expansion writes.
+    let marked = report(&root, "--marker");
+    assert!(
+        marked.contains(
+            &"13: bare \u{2192} marker: \u{a7}FS-042 \u{2192} \u{a7}FS-042-user-login".to_string()
+        ),
+        "fmt --check --marker rows: {marked:?}"
     );
 }
