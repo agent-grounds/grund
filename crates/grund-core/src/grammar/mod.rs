@@ -91,7 +91,7 @@ pub(crate) use comment_block::{
     CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
     doc_comment_rule, first_content_line,
 };
-pub(crate) use comment_line::comment_strip_prefixes;
+pub(crate) use comment_line::{comment_strip_prefixes, strip_block_closer};
 pub(crate) use compiled::{
     AGENTS_BLOCK_END, QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, reduce_heading_text,
     section_path,

@@ -10,9 +10,9 @@
 //!
 //! It sat in `queries/body.rs` while the queries were the only component that
 //! asked, which had the checker's lead-budget rule reading the point-body pair
-//! upward out of a sibling's answer (§FS-declarations.checks.oversized-lead, §AR-system.4). The three
-//! text helpers below came with it out of `queries/show.rs`: this is now their
-//! only reader.
+//! upward out of a sibling's answer (§FS-declarations.checks.oversized-lead, §AR-system.4). The
+//! text helpers that came with it out of `queries/show.rs` now sit in `body_lines.rs`
+//! and `comment_envelope.rs`.
 
 use anyhow::{Context, Result, anyhow};
 use std::collections::BTreeMap;
@@ -24,9 +24,13 @@ use crate::grammar::{
     PythonDocstringScanState, declaration_id_on_line, markdown_fence_delimiter, render_id,
     section_path, source_scan_line,
 };
-use crate::model::{Declaration, Id, ShowOutput, ShowRenderMode, ShowSection, TextOverlays};
+use crate::model::{Declaration, Id, ShowOutput, ShowRenderMode, TextOverlays};
+
 use crate::scanner::overlay_text;
 
+use super::body_lines::{
+    closes_comment_block, join_with_blank, push_outline_section, truncate_to_first_paragraph,
+};
 use super::comment_envelope::{clean_body_line, is_comment_body_line, is_line_style_comment_line};
 
 /// Pull the body text of a declaration out of its file: the lines under the
@@ -372,100 +376,10 @@ pub(super) fn extract_declaration_body_cached(
     })
 }
 
-fn push_outline_section(
-    lines: &mut Vec<String>,
-    sections: &mut Vec<ShowSection>,
-    line: &str,
-    section: &str,
-    depth: usize,
-    markdown_heading: bool,
-) {
-    lines.push(clean_body_line(line, markdown_heading));
-    sections.push(ShowSection {
-        path: section.to_string(),
-        title: section_title(line, section, markdown_heading),
-        depth,
-    });
-}
-
-fn section_title(line: &str, section: &str, markdown_heading: bool) -> String {
-    let clean = clean_body_line(line, markdown_heading);
-    clean
-        .trim_start()
-        .trim_start_matches('#')
-        .trim_start()
-        .trim_start_matches(section)
-        .trim_start_matches(['.', ':'])
-        .trim_start()
-        .to_string()
-}
-
-/// Whether a declaration-body line closes the declaration's own `/* … */`
-/// block, so that the body ends after it (§FS-show.2.3.1.2). Line-style
-/// comments, Python docstrings and Markdown never close on `*/`.
-fn closes_comment_block(
-    line: &str,
-    line_style_comment: bool,
-    in_py_docstring: bool,
-    is_md: bool,
-) -> bool {
-    !is_md && !line_style_comment && !in_py_docstring && line.contains("*/")
-}
-
 fn read_text_with_overlays(path: &Path, overlays: &TextOverlays) -> Result<String> {
     if let Some(text) = overlay_text(overlays, path) {
         Ok(text.to_string())
     } else {
         fs::read_to_string(path).with_context(|| format!("read {}", path.display()))
-    }
-}
-
-/// `--toc` joins the default body with the section-map body, separated by one
-/// blank line. Empty halves are dropped; if both are empty the result is empty.
-/// Each body already ends with `\n`, so `{a}\n{b}` produces `<a>\n\n<b>\n`
-/// (§FS-show.2.1.2.2).
-fn join_with_blank(default_body: &str, outline_body: &str) -> String {
-    match (default_body.is_empty(), outline_body.is_empty()) {
-        (true, true) => String::new(),
-        (true, false) => outline_body.to_string(),
-        (false, true) => default_body.to_string(),
-        (false, false) => format!("{default_body}\n{outline_body}"),
-    }
-}
-
-/// `--brief` truncates the (default-mode, heading-included) body to its first
-/// blank-line-separated paragraph (§FS-show.2.1.1). Keeps the heading line and
-/// at most one blank-line separator before the first paragraph; stops at the
-/// next blank line (or end of body).
-fn truncate_to_first_paragraph(body: &str) -> String {
-    let mut lines: Vec<&str> = body.split('\n').collect();
-    // `body` ends with `\n`, so the split produces a trailing empty element.
-    if lines.last() == Some(&"") {
-        lines.pop();
-    }
-    if lines.is_empty() {
-        return String::new();
-    }
-    let mut out: Vec<&str> = vec![lines[0]];
-    let mut i = 1;
-    let mut kept_separator = false;
-    while i < lines.len() && lines[i].trim().is_empty() {
-        if !kept_separator {
-            out.push(lines[i]);
-            kept_separator = true;
-        }
-        i += 1;
-    }
-    while i < lines.len() && !lines[i].trim().is_empty() {
-        out.push(lines[i]);
-        i += 1;
-    }
-    while out.last().is_some_and(|line| line.trim().is_empty()) {
-        out.pop();
-    }
-    if out.is_empty() {
-        String::new()
-    } else {
-        format!("{}\n", out.join("\n"))
     }
 }
