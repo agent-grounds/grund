@@ -183,6 +183,7 @@ pub(super) fn extract_declaration_body_cached(
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let mut in_decl = false;
     let mut line_style_comment = false;
+    let mut block_closed = false;
     let mut py_docstring = PythonDocstringScanState::default();
     let mut found_section = section.is_none();
     let mut target_depth = usize::MAX;
@@ -193,6 +194,10 @@ pub(super) fn extract_declaration_body_cached(
 
     for (idx, line) in text.lines().enumerate() {
         let lineno = idx + 1;
+        // §FS-show.2.3.1.2: the `*/` closing the declaration's own block ends it.
+        if in_decl && block_closed {
+            break;
+        }
         if in_decl
             && site
                 .and_then(|site| site.declaration_body_end)
@@ -228,6 +233,12 @@ pub(super) fn extract_declaration_body_cached(
             if &found == id && selected_declaration {
                 in_decl = true;
                 line_style_comment = is_line_style_comment_line(scan_line);
+                block_closed = closes_comment_block(
+                    scan_line,
+                    line_style_comment,
+                    scan.in_py_docstring,
+                    is_md,
+                );
                 output_line = lineno;
                 // `md` format keeps the heading verbatim — including for `--brief`,
                 // which then prints heading + first paragraph (§FS-show.3.1.2).
@@ -259,6 +270,8 @@ pub(super) fn extract_declaration_body_cached(
             } else if !is_comment_body_line(scan_line) {
                 break;
             }
+            block_closed =
+                closes_comment_block(scan_line, line_style_comment, scan.in_py_docstring, is_md);
         }
         if !fenced && let Some(caps) = config.grammar.section_re.captures(scan_line) {
             let sec = section_path(&caps).unwrap_or("");
@@ -429,6 +442,18 @@ fn is_line_style_comment_line(line: &str) -> bool {
         || trimmed.starts_with('#')
         || trimmed.starts_with(';')
         || trimmed.starts_with("--")
+}
+
+/// Whether a declaration-body line closes the declaration's own `/* … */`
+/// block, so that the body ends after it (§FS-show.2.3.1.2). Line-style
+/// comments, Python docstrings and Markdown never close on `*/`.
+fn closes_comment_block(
+    line: &str,
+    line_style_comment: bool,
+    in_py_docstring: bool,
+    is_md: bool,
+) -> bool {
+    !is_md && !line_style_comment && !in_py_docstring && line.contains("*/")
 }
 
 fn read_text_with_overlays(path: &Path, overlays: &TextOverlays) -> Result<String> {
