@@ -1,0 +1,28 @@
+grund_config_version = 1
+project_name = "repro-grund-41"
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+title = "What: behavior"
+
+[[kinds]]
+kind = "e2e"
+folder = "tests/e2e"
+citable = false
+title = "User scenarios"
+
+[scan]
+include = ["docs", "tests"]
+
+# The report's config change: one [[kinds]] row and one [citations.*] table.
+[[kinds]]
+kind = "RFC"
+folder = "docs/rfcs"
+title = "Proposals under discussion"
+
+[citations.e2e]
+must = ["FS"]
