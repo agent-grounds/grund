@@ -275,7 +275,7 @@ Scan **backwards** from the declaration line over consecutive lines that are par
 Scan **forwards** from the declaration line by the symmetric rules:
 
 - Line-style: until a blank line or a non-comment line.
-- Block-style: until the closing `*/`. The closer line is part of the block.
+- Block-style: until the closing `*/`. The closer line is part of the block. The closer is the one that ends the declaration's own comment, wherever it falls: a declaration written as a one-line `/* … */` closes on its own line, so its block is that line alone, and a `/* … */` comment on the next line is a separate comment outside it — not a section of the declaration, and not part of its body.
 - Python docstring: until the matching `"""` or `'''`. The closer line is part of the block.
 
 ##### 2.3.1.3 Terminate early on another declaration
