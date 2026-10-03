@@ -255,6 +255,7 @@ fn fmt_line_at(
         link_changed = wrapped != final_line;
         final_line = wrapped;
     }
+    // §FS-fmt.3.5.1: the first rewrite that fired on the line names its one row.
     let label = if trigger_changed {
         "trigger \u{2192} marker"
     } else if marker_changed {
