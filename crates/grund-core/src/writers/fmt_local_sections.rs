@@ -1,5 +1,5 @@
-//! Canonical expansion and report labels for declaration-local section
-//! citations (§FS-fmt.2.4).
+//! Canonical expansion of declaration-local section citations, and the
+//! details their report row names (§FS-fmt.2.4, §FS-fmt.3.6.1).
 
 use std::path::Path;
 
@@ -13,6 +13,13 @@ use crate::resolver::section_resolves;
 /// scan is requested lazily on the first persisted marker-plus-digit candidate,
 /// exactly as for number-only shorthand; trigger-created `$$2` markers are
 /// excluded because §FS-fmt.2.4 adds no typing feature for local paths.
+///
+/// Each expansion is recorded in `expansions` as its byte offset in the returned
+/// line, the text it replaced, and the canonical text written — the details its
+/// line's one report row names (§FS-fmt.3.6.1). Recording them as the line is
+/// built is what keeps the preview to exactly the sites the write expands
+/// (§FS-fmt.7.3).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn expand_local_section_citations(
     line: &str,
     path: &Path,
@@ -21,6 +28,7 @@ pub(super) fn expand_local_section_citations(
     findings: Option<&Findings>,
     trigger_marker_starts: &[usize],
     saw_candidate: &mut bool,
+    expansions: &mut Vec<(usize, String, String)>,
 ) -> Option<String> {
     if config.marker.is_empty() || !line.contains(&config.marker) {
         return None;
@@ -52,10 +60,16 @@ pub(super) fn expand_local_section_citations(
         output.push_str(&line[cursor..start]);
         // §FS-fmt.2.4.6: a refused site is copied through byte-identical.
         if expandable(cite, findings) {
+            let written_start = output.len();
             output.push_str(&config.marker);
             output.push_str(&render_id(&config.grammar, &cite.id));
             output.push_str(&config.section_separator);
             output.push_str(cite.section.as_deref().unwrap_or_default());
+            expansions.push((
+                written_start,
+                cite.text.clone(),
+                output[written_start..].to_string(),
+            ));
             changed = true;
         } else {
             output.push_str(&line[start..end]);
@@ -67,43 +81,6 @@ pub(super) fn expand_local_section_citations(
     }
     output.push_str(&line[cursor..]);
     Some(output)
-}
-
-/// One report row per local replacement, even when several share a line
-/// (§FS-fmt.2.4). This keeps dry-run and write reviewable at token granularity.
-pub(super) fn local_section_labels(
-    path: &Path,
-    lineno: usize,
-    config: &Config,
-    findings: Option<&Findings>,
-) -> Vec<String> {
-    let Some(findings) = findings else {
-        return Vec::new();
-    };
-    findings
-        .citations
-        .iter()
-        .filter(|cite| {
-            cite.local_section
-                && cite.file == path
-                && cite.line == lineno
-                // §FS-fmt.7.3: the preview names exactly the sites the write expands.
-                && expandable(cite, findings)
-        })
-        .map(|cite| {
-            let canonical = format!(
-                "{}{}{}{}",
-                config.marker,
-                render_id(&config.grammar, &cite.id),
-                config.section_separator,
-                cite.section.as_deref().unwrap_or_default(),
-            );
-            format!(
-                "local section \u{2192} canonical: {} \u{2192} {canonical}",
-                cite.text
-            )
-        })
-        .collect()
 }
 
 /// Whether the write expands this owned local site: a text the writer rules

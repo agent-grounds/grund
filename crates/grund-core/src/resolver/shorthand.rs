@@ -128,7 +128,8 @@ pub(crate) fn expand_shorthand_citations(
     saw_candidate: &mut bool,
     expansions: &mut Vec<(String, String)>,
 ) -> Option<String> {
-    expand_shorthand_citations_with_origins(
+    let mut placed = Vec::new();
+    let expanded = expand_shorthand_citations_with_origins(
         line,
         docstring,
         config,
@@ -136,13 +137,21 @@ pub(crate) fn expand_shorthand_citations(
         targets,
         &[],
         saw_candidate,
-        expansions,
-    )
+        &mut placed,
+    );
+    expansions.extend(
+        placed
+            .into_iter()
+            .map(|(_, written, canonical)| (written, canonical)),
+    );
+    expanded
 }
 
 /// The formatter entry point for §FS-fmt.2.4.3, carrying the byte offsets of
 /// markers produced from triggers so accepted persisted forms and authoring
-/// sugar remain distinct even when they share one line.
+/// sugar remain distinct even when they share one line. Each expansion carries
+/// its marker's byte offset in `line`, so a caller can merge it with the details
+/// of another rewrite on the same line in source order (§FS-fmt.3.6.1).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn expand_shorthand_citations_with_origins(
     line: &str,
@@ -152,7 +161,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
     targets: &ShorthandTargets<'_>,
     trigger_marker_starts: &[usize],
     saw_candidate: &mut bool,
-    expansions: &mut Vec<(String, String)>,
+    expansions: &mut Vec<(usize, String, String)>,
 ) -> Option<String> {
     // The local grammar is only one of the grammars in play: a qualified citation
     // is parsed with the *target's*, so a citing project with no shorthand of its
@@ -291,6 +300,7 @@ pub(crate) fn expand_shorthand_citations_with_origins(
             output.push_str(section.as_str());
         }
         expansions.push((
+            marker_start,
             line[marker_start..token_start + match_end].to_string(),
             format!("{}{}", config.marker, &output[written_start..]),
         ));
