@@ -1,9 +1,8 @@
 /// The single and batch show usage page (§FS-cli.2.3, §FS-show.1).
 fn print_show_help() {
-    println!(
-        "grund show — print one declaration's body by ID, so an agent pulls a single fact"
-    );
-    println!("into context without loading the whole document. `show` is the default command.");
+    // §FS-terms.terms.1: the default read is a coordinate's lead.
+    println!("grund show — print a coordinate's lead, so an agent pulls a single fact into");
+    println!("context without loading the whole document. `show` is the default command.");
     println!();
     println!(
         "Usage:  grund [show] <ID>[.<section>] [PATH] [--section S] [--brief|--toc|--full] [--format text|md|json] [--path PATH]"
