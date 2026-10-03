@@ -71,6 +71,38 @@ would read no file, step 1 retains the suffix ` — until then \`grund check\` h
 nothing to scan` byte-for-byte. The populated form changes no other guidance
 byte and does not suppress the scaffold advice.
 
+### 1.2 Refresh of a scaffolded tree
+
+Command:
+
+```text
+grund init {repo_copy}
+```
+
+Precondition: `{repo_copy}` has an `AGENTS.md` whose managed block a
+`grund.toml` change made stale — the state `grund check` reports with "run
+`grund init` to refresh" ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)) — and its effective FS home, `docs/`
+and `tests/` exist: either the file-form `requirements.md` a `grund init --docs`
+scaffold wrote, or a configured FS folder such as `docs/functional-spec`.
+
+Exit `0`, stdout empty, stderr:
+
+```text
+updated AGENTS.md
+exists grund.toml
+```
+
+No `next:` block follows: the run is a refresh of a complete setup
+([§FS-init.2.2.2.1](FS-init.md#2221-a-refresh-of-a-complete-setup-teaches-nothing)). Under `--check` the same tree reports `would-update AGENTS.md`
+and `exists grund.toml`, again with no `next:` block, and exits `1`
+([§FS-init.4](FS-init.md#4-exit-codes)).
+
+The counter-case is the same refresh in a tree whose effective FS home is
+absent: it keeps the whole block, step 1 included, as the
+`init-citation-directions-canonical` e2e case pins — `updated AGENTS.md` over a
+configured `docs/functional-spec` that does not exist. So does
+[§FS-init-fixtures.1.1](FS-init-fixtures.md#11-populated-configured-form), a first run rather than a refresh.
+
 ## 2. Docs form
 
 Command:

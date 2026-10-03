@@ -1,7 +1,7 @@
 //! Test module: init next-step and scaffold guidance (§AR-core-module-layout.1.5)
 
 use crate::testing::{test_root, write};
-use crate::writers::{InitFsHome, InitOpts, docs_scaffold, init};
+use crate::writers::{InitFsHome, InitOpts, InitOutput, docs_scaffold, init};
 
 #[test]
 fn init_next_guidance_uses_effective_legacy_fs_home() {
@@ -113,5 +113,63 @@ fn e2e_readme_scaffold_uses_effective_fs_home() {
     assert!(
         e2e_readme.contains("`specs/requirements.md`"),
         "e2e README should name the configured FS file: {e2e_readme}"
+    );
+}
+
+/// Runs `init` over a tree it first initialised, after a `grund.toml` change
+/// that made the managed block stale: the refresh `grund check` asks for.
+fn refresh_after_config_change(name: &str, fs_home_exists: bool) -> InitOutput {
+    let root = test_root(name);
+    let config = "grund_config_version = 1\n\n[[kinds]]\nkind = \"FS\"\n\
+                  folder = \"docs/functional-spec\"\ntitle = \"What\"\n";
+    write(&root.join("grund.toml"), config);
+    if fs_home_exists {
+        write(
+            &root.join("docs/functional-spec/README.md"),
+            "# Functional spec\n",
+        );
+    }
+    let opts = || InitOpts {
+        target: root.clone(),
+        // §FS-init.1.2.3: a bare temp root no VCS marker covers.
+        no_vcs: true,
+        ..InitOpts::default()
+    };
+    init(opts()).expect("first init");
+    write(
+        &root.join("grund.toml"),
+        &format!(
+            "{config}\n[[kinds]]\nkind = \"RFC\"\nfolder = \"docs/rfcs\"\ntitle = \"Proposals\"\n"
+        ),
+    );
+    let output = init(opts()).expect("refresh init");
+    let verbs: Vec<_> = output
+        .events
+        .iter()
+        .map(|e| (e.verb, e.path.as_str()))
+        .collect();
+    assert_eq!(verbs, [("updated", "AGENTS.md"), ("exists", "grund.toml")]);
+    output
+}
+
+#[test]
+fn refresh_of_a_complete_setup_has_no_next_guidance() {
+    // §FS-init.2.2.2.1: a refresh whose effective FS home exists teaches nothing.
+    let output = refresh_after_config_change("refresh_of_a_complete_setup", true);
+    assert!(
+        output.next.is_none(),
+        "a refresh of a complete setup must not print the next: block: {:?}",
+        output.next.map(|next| next.render())
+    );
+}
+
+#[test]
+fn refresh_without_the_fs_home_keeps_next_guidance() {
+    // §FS-init.2.2.2.1: the counter-case keeps the block, step 1 included.
+    let output = refresh_after_config_change("refresh_without_the_fs_home", false);
+    let rendered = output.next.expect("next guidance").render();
+    assert!(
+        rendered.contains("1. re-run with --docs to scaffold the FS home (docs/functional-spec)"),
+        "a refresh with no FS home must keep the scaffold advice: {rendered}"
     );
 }
