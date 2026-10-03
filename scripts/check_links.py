@@ -14,6 +14,7 @@ from urllib.parse import unquote, urlsplit
 
 SELF_PREFIX = "https://github.com/agent-grounds/grund/blob/main/"
 SELF_PATH_PREFIX = "/agent-grounds/grund/blob/main/"
+SELF_PATH_PREFIXES = {"blob": SELF_PATH_PREFIX, "tree": "/agent-grounds/grund/tree/main/"}
 
 
 class SelfLinkError(Exception):
@@ -24,17 +25,25 @@ def self_links(dumped: str) -> list[str]:
     return sorted({line for line in dumped.splitlines() if line.startswith(SELF_PREFIX)})
 
 
-def _local_url(url: str, repo_root: Path) -> str:
+def self_link_target(url: str, repo_root: Path) -> Path:
+    """The checkout path a `blob/main` (file) or `tree/main` (directory) self-link names.
+
+    Shared with the printed-link test, so the CLI's guide links and this gate
+    agree on what a self-link names (§FS-cli.2.3).
+    """
     parsed = urlsplit(url)
+    kind = next(
+        (k for k, prefix in SELF_PATH_PREFIXES.items() if parsed.path.startswith(prefix)), None
+    )
     if (
         parsed.scheme != "https"
         or parsed.netloc != "github.com"
-        or not parsed.path.startswith(SELF_PATH_PREFIX)
+        or kind is None
         or parsed.query
     ):
         raise SelfLinkError(f"malformed canonical self-link: {url}")
 
-    encoded = parsed.path.removeprefix(SELF_PATH_PREFIX)
+    encoded = parsed.path.removeprefix(SELF_PATH_PREFIXES[kind])
     try:
         relative = unquote(encoded, errors="strict")
     except UnicodeError as exc:
@@ -49,9 +58,17 @@ def _local_url(url: str, repo_root: Path) -> str:
         target.relative_to(root)
     except ValueError as exc:
         raise SelfLinkError(f"self-link escapes the repository: {url}") from exc
-    if not target.is_file():
+    exists = target.is_file() if kind == "blob" else target.is_dir()
+    if not exists:
         raise SelfLinkError(f"canonical self-link target is missing: {relative} ({url})")
+    return target
 
+
+def _local_url(url: str, repo_root: Path) -> str:
+    parsed = urlsplit(url)
+    if not parsed.path.startswith(SELF_PATH_PREFIX):
+        raise SelfLinkError(f"malformed canonical self-link: {url}")
+    target = self_link_target(url, repo_root)
     fragment = f"#{parsed.fragment}" if parsed.fragment else ""
     return f"{target.as_uri()}{fragment}"
 

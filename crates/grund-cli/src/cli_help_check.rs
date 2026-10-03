@@ -96,4 +96,11 @@ fn print_check_help() {
         "  grund check --rule \"Each FS must have exactly one security chapter.\" --only-rule # what does this sentence find?"
     );
     println!("  grund check --format json | jq # machine-readable diagnostics for CI");
+    print_guide_links(
+        &[
+            "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/rules.md",
+            "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md",
+        ],
+        &["https://github.com/agent-grounds/grund/tree/main/examples/rules"],
+    );
 }

@@ -1,64 +1,43 @@
-/// `grund --help` / `grund help` — the top-level usage text: the subcommand list and
-/// global flags (§FS-cli.2.2). `grund help <cmd>` defers to `print_subcommand_help`.
+/// `grund --help` / `grund help` — the top-level page: one usage line, the commands
+/// grouped by intent, and the public address of the guides (§FS-cli.2.2).
+/// `grund help <cmd>` defers to `print_subcommand_help`.
 fn print_help() {
-    println!(
-        "grund — ground your agents in the spec: §<ID>.<section> citations checked across docs and code."
-    );
+    println!("grund — ground your agents in the spec: §<ID>.<section> citations checked across docs and code.");
     println!();
-    println!("Usage:");
-    println!("  grund <ID>[.<section>] [OPTIONS]    print one declaration body");
-    println!("  grund check [PATH] [OPTIONS]        validate a repo or subtree");
-    println!(
-        "  grund <COMMAND> [ARGS] [OPTIONS]    run `grund <COMMAND> --help` for that command's options"
-    );
+    println!("Usage:  grund <ID>[.<section>]  ·  grund <COMMAND> [ARGS]  ·  grund <COMMAND> -h  ·  grund -V");
     println!();
-    println!("Commands:");
-    println!(
-        "  show     Print one declaration body for agent context (default).  e.g. grund FS-login.3"
-    );
-    println!(
-        "  check    Validate every reference in a repo.                      e.g. grund check ."
-    );
-    println!(
-        "  list     The ID catalog: every declared ID, path:line, title.     e.g. grund list --kind FS"
-    );
-    println!(
-        "  refs     List every citation of an ID, as path:line.              e.g. grund refs FS-login"
-    );
-    println!(
-        "  cover    Group the citation graph by scanned file.                e.g. grund cover --format json"
-    );
-    println!(
-        "  fmt      Rewrite `$$` triggers to `§`; --marker upgrades cites.   e.g. grund fmt --check"
-    );
-    println!(
-        "  fetch    Materialize one configured external snapshot.            e.g. grund fetch TICKET-1234"
-    );
-    println!(
-        "  id       Next conflict-free ID for a new declaration.             e.g. grund id FS \"user login\""
-    );
-    println!(
-        "  init     Scaffold agent instructions + grund.toml.                e.g. grund init --docs"
-    );
-    println!(
-        "  config   Validate or show the effective grund.toml.               e.g. grund config show"
-    );
-    println!(
-        "  agent-setup-instructions  Print AI setup guide.              e.g. grund agent-setup-instructions"
-    );
-    println!(
-        "  completions  Print shell completion scripts.                      e.g. grund completions bash"
-    );
-    println!(
-        "  integrations  Print/install clickable-citation integrations.      e.g. grund integrations wezterm"
-    );
+    println!("Query the catalog:");
+    println!("  show          Print a coordinate's lead for agent context (default).  grund FS-login.3");
+    println!("  list          Every declared ID, with path:line and title.            grund list --kind FS");
+    println!("  refs          Every citation site of a coordinate, as path:line.      grund refs FS-login");
+    println!("  cover         Every scanned file, with the citations in it.           grund cover --format json");
     println!();
-    println!(
-        "Options:  --format text|json   per-command (place after the subcommand); text is the default."
-    );
-    println!(
-        "          --version, -V  print version.  --help, -h  show this screen.  Docs: docs/functional-spec/"
-    );
+    println!("Check and author:");
+    println!("  check         Scan a repo or subtree and report findings.             grund check .");
+    println!("  fmt           Rewrite `$$` to `§`; --marker cites bare IDs.           grund fmt --check");
+    println!("  id            Next conflict-free ID for a new declaration.            grund id FS \"user login\"");
+    println!("  fetch         Materialize one configured external snapshot.           grund fetch TICKET-1234");
+    println!();
+    println!("Set up:");
+    println!("  init          Scaffold agent instructions + grund.toml.               grund init --docs");
+    println!("  config        Validate or show the effective grund.toml.              grund config show");
+    println!("  integrations  Print/install clickable-citation integrations.          grund integrations wezterm");
+    println!("  completions   Print shell completion scripts.                         grund completions bash");
+    println!("  agent-setup-instructions  Print the setup guide for AI agents.");
+    println!();
+    println!("Guides and examples:  https://github.com/agent-grounds/grund/tree/main/docs/user-facing");
+}
+
+/// The closing block of a command page: the public `blob/main` or `tree/main` address
+/// of each guide, then each runnable example, that covers the command (§FS-cli.2.3).
+fn print_guide_links(guides: &[&str], examples: &[&str]) {
+    println!();
+    for url in guides {
+        println!("Guide:    {url}");
+    }
+    for url in examples {
+        println!("Example:  {url}");
+    }
 }
 
 /// Per-subcommand `--help` / `help <subcommand>` page (§FS-cli.2.3, §FS-cli.3): what
@@ -68,19 +47,7 @@ fn print_subcommand_help(cmd: &str) {
     match cmd {
         "check" => print_check_help(),
         "show" => print_show_help(),
-        "fetch" => {
-            println!("grund fetch — materialize one configured external fact snapshot.");
-            println!("\nUsage:  grund fetch <ID>\n");
-            println!(
-                "The selected kind's [[kinds]].fetch executable receives the local ID and returns one declaration, validated before an atomic write."
-            );
-            println!(
-                "No check, query, formatter, completion, or LSP operation runs the integration implicitly."
-            );
-            println!(
-                "\nExit:  0 stored · 1 invalid ID · 2 missing integration, rejected output, or operational error."
-            );
-        }
+        "fetch" => print_fetch_help(),
         "list" => {
             println!("grund list — the ID catalog: every declared ID in the repo, with where it's");
             println!(
@@ -121,7 +88,7 @@ fn print_subcommand_help(cmd: &str) {
                 "  --summary           one row per kind with count and home  e.g. grund list --summary"
             );
             println!(
-                "  --size[=lines,words,bytes]  point lead/full sizes; bare selects all three units"
+                "  --size[=lines,words,bytes]  coordinate lead/full sizes; bare selects all three units"
             );
             println!(
                 "  --top N             largest N leads by the first selected unit; requires --size"
@@ -139,17 +106,22 @@ fn print_subcommand_help(cmd: &str) {
             println!("  grund list --kind FS,AR docs/   # specs and architecture IDs under docs/");
             println!("  grund list --summary            # counts by kind");
             println!("  grund list --selector FS.requirements # every FS requirements chapter");
-            println!("  grund list --size=words --top 10 # largest point leads");
+            println!("  grund list --size=words --top 10 # largest coordinate leads");
             println!(
                 "  grund list --unused             # uncited declarations (specs, decisions, …) — E2E cases excluded"
             );
             println!("  grund list --unused --kind E2E  # uncited e2e cases only, for inventory");
+            print_guide_links(
+                &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/coordinate-sizes.md"],
+                &[],
+            );
         }
         "refs" => {
+            // §FS-terms.terms.2: a coordinate's citation sites.
             println!(
-                "grund refs — list every citation of an ID, as `path:line`, so you can see who"
+                "grund refs — list every citation site of a coordinate, as `path:line`, so you can"
             );
-            println!("depends on a declaration before you change it.");
+            println!("see who depends on a declaration before you change it.");
             println!();
             println!(
                 "Usage:  grund refs <ID>[.<section>] [PATH] [--section S] [--descendants]"
@@ -223,47 +195,7 @@ fn print_subcommand_help(cmd: &str) {
             println!("  grund cover src/                # source files and their spec citations");
             println!("  grund cover --format json       # machine-readable coverage index");
         }
-        "fmt" => {
-            println!(
-                "grund fmt — normalize citation syntax: rewrite the `$$` trigger to the `§` marker,"
-            );
-            println!(
-                "optionally upgrade bare ID tokens, and optionally emit Markdown cross-reference links."
-            );
-            println!();
-            println!("Usage:  grund fmt [PATH] [--check | --write] [--marker] [--cross-refs]");
-            println!();
-            println!("Options:");
-            println!(
-                "  --check        report pending rewrites, exit 1 if any exist         e.g. grund fmt --check"
-            );
-            println!(
-                "  --write        apply the changes in place                           e.g. grund fmt --write"
-            );
-            println!(
-                "  --marker       also prefix bare `<ID>` tokens with the marker        e.g. grund fmt --write --marker"
-            );
-            println!(
-                "  --cross-refs   wrap citations as Markdown links to targets          e.g. grund fmt --write --cross-refs"
-            );
-            println!(
-                "                 runs by default in both modes for Markdown scopes; set [fmt.cross_refs].enabled = false to opt out"
-            );
-            println!();
-            println!(
-                "With neither --check nor --write, fmt previews every change --write would apply and exits 1 if any."
-            );
-            println!(
-                "--write prints `rewrote N lines:` then one `  <path> (count)` line per file touched."
-            );
-            println!(
-                "The report goes to stdout (like `grund check`); CLI-level `error:` lines go to stderr."
-            );
-            println!();
-            println!(
-                "Exit:  0 nothing to do, or --write succeeded · 1 changes pending (dry run / --check) · 2 unreadable tree or CLI error."
-            );
-        }
+        "fmt" => print_fmt_help(),
         "id" => {
             println!("grund id — emit the next conflict-free ID for a new declaration of a kind.");
             println!();
@@ -367,30 +299,12 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  grund init --claude --gemini        # create/update both agent entrypoints"
             );
-        }
-        "config" => {
-            println!("grund config — inspect the effective `grund.toml` discovered from a path.");
-            println!();
-            println!("Usage:  grund config <show | validate> [PATH]");
-            println!();
-            println!(
-                "  show       print the effective config as TOML (defaults filled in for keys you didn't set)."
-            );
-            println!(
-                "  validate   parse the discovered config and report the first error; exit 0 if it's well-formed."
-            );
-            println!();
-            println!(
-                "PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback."
-            );
-            // §FS-cli.6 — the rule the line states; a printed ID would name
-            // nothing in the reader's tree (§REQ-shipped-surfaces.1).
-            println!("There is no `--config <file>` override: it is discovered, not pointed at.");
-            println!();
-            println!(
-                "Exit:  0 well-formed / printed · 1 `validate` found an error · 2 no subcommand, or `show` couldn't read the config."
+            print_guide_links(
+                &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init-repo-shapes.md"],
+                &["https://github.com/agent-grounds/grund/tree/main/examples"],
             );
         }
+        "config" => print_config_help(),
         "completions" => {
             println!("grund completions — print a shell completion script for grund.");
             println!();
@@ -449,6 +363,10 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "Exit:  0 printed or installed · 2 invalid options, missing write target, or a newer block."
             );
+            print_guide_links(
+                &["https://github.com/agent-grounds/grund/blob/main/docs/user-facing/clickable-citations.md"],
+                &[],
+            );
         }
         "agent-setup-instructions" => {
             println!(
@@ -464,6 +382,10 @@ fn print_subcommand_help(cmd: &str) {
             println!("without access to the source tree.");
             println!();
             println!("Exit:  0 instructions printed · 2 unexpected arguments.");
+            println!();
+            println!("Examples:");
+            println!("  grund agent-setup-instructions          # print the setup guide");
+            println!("  grund agent-setup-instructions | less   # read it a page at a time");
         }
         _ => print_help(),
     }
