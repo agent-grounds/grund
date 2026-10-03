@@ -2,7 +2,7 @@
 //! in front of the marker, the marker and one space — and keeps the rest
 //! verbatim (§FS-show.2.3.2).
 
-use super::body::clean_body_line;
+use super::comment_envelope::clean_body_line;
 
 #[test]
 fn block_continuation_drops_whitespace_before_star() {
