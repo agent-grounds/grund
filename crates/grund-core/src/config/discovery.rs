@@ -71,6 +71,21 @@ pub(crate) fn home_form_of(config_file: &Path) -> Option<PathBuf> {
     Some(config_file.parent()?.parent()?.join(home))
 }
 
+/// The directory a path argument starts discovery from: a file's parent
+/// directory, and the working directory for a file named without a directory
+/// part, whose `parent()` is the empty path rather than `None` (§FS-config.1.4);
+/// any other path is its own start. Uncanonicalized, so each caller resolves
+/// `.` the way it resolves every other relative start.
+pub(crate) fn discovery_start_dir(path: &Path) -> &Path {
+    if !path.is_file() {
+        return path;
+    }
+    match path.parent() {
+        Some(parent) if !parent.as_os_str().is_empty() => parent,
+        _ => Path::new("."),
+    }
+}
+
 /// Discover and load the effective config: walk upward from `start` for the
 /// nearest directory carrying either config name (§FS-config.1), parse it over
 /// the defaults (§FS-config.principle.unit), or fall back to the pure defaults
@@ -80,11 +95,7 @@ pub(crate) fn home_form_of(config_file: &Path) -> Option<PathBuf> {
 /// against the repository, so `grund check src/` scopes *into* `src/` instead of
 /// looking for `src/docs`, `src/e2e`, `src/src`.
 pub(crate) fn load_config(start: &Path) -> Result<Config> {
-    let start_dir = if start.is_file() {
-        start.parent().unwrap_or(Path::new(".")).to_path_buf()
-    } else {
-        start.to_path_buf()
-    };
+    let start_dir = discovery_start_dir(start).to_path_buf();
     // Resolve to an absolute path before walking up, mirroring how `cargo` finds
     // `Cargo.toml` (§FS-config.1): a relative `.` or `subdir/` must still discover
     // a `grund.toml` in an ancestor directory.
