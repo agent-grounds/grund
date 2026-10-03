@@ -286,7 +286,7 @@ Scanning in **either direction**, if another declaration line of any ID is encou
 
 After the block is selected, comment prefixes are removed line-by-line so the output is plain prose:
 
-- Leading whitespace is preserved up to the comment prefix, then the prefix is dropped, then a single space following the prefix is dropped if present. The remainder of the line is kept verbatim.
+- The whitespace in front of the comment prefix belongs to the comment's envelope, not to the body: it is dropped together with the prefix, then a single space following the prefix is dropped if present. The remainder of the line is kept verbatim, so indentation the author wrote after the prefix (a nested list item, an indented code block) survives. This holds for an indented `///`, `//!`, `//` or `#` line, such as a doc-comment on a method inside an `impl`, exactly as for a ` * ` continuation of a class member's Javadoc: the shown body starts at the same column as the same text behind a top-level `///`.
 - For block-style continuation lines, a leading ` * ` (with surrounding spaces) is removed if present. Lines that do not have it are kept as-is.
 - For Python docstrings, no prefix is stripped — docstring content is plain text already; only the surrounding `"""` lines are skipped.
 - Trailing comment-close tokens (`*/`) on their own line are dropped entirely.
