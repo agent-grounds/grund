@@ -63,7 +63,8 @@ pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolic
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
 pub(crate) use discovery::{
-    config_file_in, home_form_of, load_config, load_config_at, load_config_at_with_report_base,
+    config_file_in, discovery_start_dir, home_form_of, load_config, load_config_at,
+    load_config_at_with_report_base,
 };
 pub(crate) use fmt_block::fmt_excluded;
 pub(crate) use grounding::grounding_level_for_kind;

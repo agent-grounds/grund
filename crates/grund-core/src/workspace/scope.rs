@@ -16,8 +16,8 @@ use super::findings::absorbed_scan_diagnostic;
 use super::members::{WorkspaceMember, canonical_workspace_path, expand_workspace_member_list};
 use crate::config::display_path;
 use crate::config::{
-    Config, ConfigLocation, RunWarning, invalid_project_alias_message, is_valid_project_alias,
-    load_config, load_config_at,
+    Config, ConfigLocation, RunWarning, discovery_start_dir, invalid_project_alias_message,
+    is_valid_project_alias, load_config, load_config_at,
 };
 use crate::model::format_path;
 
@@ -117,12 +117,10 @@ fn config_for_member_scope(mut config: Config, path: &Path) -> Result<Config> {
     Ok(config)
 }
 
+/// The canonical directory a scope starts from, the same one discovery starts
+/// from, so a bare file name is scoped from the working directory (§FS-config.1.4).
 fn config_scope_start(path: &Path) -> PathBuf {
-    let start = if path.is_file() {
-        path.parent().unwrap_or(Path::new("."))
-    } else {
-        path
-    };
+    let start = discovery_start_dir(path);
     fs::canonicalize(start).unwrap_or_else(|_| start.to_path_buf())
 }
 
