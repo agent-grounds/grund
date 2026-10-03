@@ -34,6 +34,7 @@ fn fixture(name: &str) -> std::path::PathBuf {
     root
 }
 
+/// One row per line names every safe owned local expansion, in source order (§FS-fmt.3.6.1).
 #[test]
 fn formatter_dry_run_names_only_safe_owned_local_replacements() {
     let root = fixture("formatter_dry_run_names_only_safe_owned_local_replacements");
@@ -51,18 +52,11 @@ fn formatter_dry_run_names_only_safe_owned_local_replacements() {
             .iter()
             .map(|change| (change.path.as_str(), change.line, change.label.as_str()))
             .collect::<Vec<_>>(),
-        [
-            (
-                "docs/FS-alpha.md",
-                3,
-                "local section → canonical: \u{a7}2 → \u{a7}FS-alpha.2"
-            ),
-            (
-                "docs/FS-alpha.md",
-                3,
-                "local section → canonical: \u{a7}2.1 → \u{a7}FS-alpha.2.1"
-            ),
-        ]
+        [(
+            "docs/FS-alpha.md",
+            3,
+            "local section → canonical: \u{a7}2 → \u{a7}FS-alpha.2, \u{a7}2.1 → \u{a7}FS-alpha.2.1"
+        )]
     );
 }
 
