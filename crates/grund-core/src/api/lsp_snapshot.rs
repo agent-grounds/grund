@@ -57,7 +57,7 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
     let context =
         load_resolved_workspace_context(config, &opts.path, opts.path_provided, &overlays, true)?;
     let render_config = context.render_config().clone();
-    let report = editor_report(&context, &overlays, report_scope.as_ref());
+    let report = editor_report(&context, &overlays, &opts.path, report_scope.as_ref());
     // LSP routes findings back to project snapshots by filesystem identity.
     // Preserve absolute paths here instead of reconstructing them from rendered
     // `../` paths under Windows verbatim roots (§FS-lsp.1.1, §FS-lsp.2.2.2).
