@@ -44,9 +44,19 @@ pub enum InitFsHome {
     },
 }
 
+impl InitFsHome {
+    /// The home's path relative to the target, whether file or folder.
+    pub(crate) fn path(&self) -> &str {
+        match self {
+            InitFsHome::File { path, .. } | InitFsHome::Folder { path } => path,
+        }
+    }
+}
+
 /// The trailing `next:` guidance block (§FS-init.2.2.2). Suppressed by the caller
-/// when every reported path was `exists ` — when the repo is already current
-/// there is no next step to teach.
+/// when every reported path was `exists `, or on a refresh of a complete setup
+/// (§FS-init.2.2.2.1) — when the repo is already current there is no next step
+/// to teach.
 fn render_next_block_for_home(
     docs: bool,
     entrypoint: Option<&str>,

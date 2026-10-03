@@ -355,7 +355,8 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     let mut workflow_entrypoint = None;
     // Track whether any path changed (or, under --dry-run, *would* change).
     // The `next:` block is suppressed when every reported path is `exists `,
-    // since the user already has a complete grund setup (§FS-init.2.2.2).
+    // since the user already has a complete grund setup (§FS-init.2.2.2), and
+    // on a refresh of a complete setup (§FS-init.2.2.2.1), decided below.
     let mut any_change = false;
     let mut events = Vec::new();
     if agent_entrypoints.canonical {
@@ -525,7 +526,14 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         any_change = true;
     }
 
-    let next = any_change.then(|| {
+    // §FS-init.2.2.2.1: only `exists`/`updated` lines, no `--docs`, and the
+    // effective FS home on disk — the refresh `grund check` sends people down.
+    let refresh_of_complete_setup = !docs
+        && events
+            .iter()
+            .all(|event| !event.is_change() || event.verb == verb_updated(dry_run))
+        && target.join(fs_home.path()).exists();
+    let next = (any_change && !refresh_of_complete_setup).then(|| {
         // §FS-init.2.2.2: only no-`--docs` guidance asks this question. The probe
         // uses the effective config selected above and exits on its first file.
         let scan_reads_file = !docs && effective_scope_reads_any_file(&init_config);
