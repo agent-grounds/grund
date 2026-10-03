@@ -16,25 +16,20 @@ use super::lsp_ranges::{
     absolutize_path, declaration_range_parts, heading_span_parts, lsp_query_id,
     lsp_target_for_citation, lsp_target_for_stub, section_range_parts,
 };
+use super::lsp_report::{editor_report, editor_run_warnings, widen_for_path_anchor};
 use super::report::{public_lsp_report, public_lsp_run_warnings};
-use super::scope_cautions::scan_scope_caution;
-use crate::checker::{check_chapter_rules, check_with_workspace_and_overlays, sort_diagnostics};
 use crate::config::display_path;
 use crate::grammar::render_id;
 use crate::model::{
-    CheckReport, Declaration, Diagnostic, TextOverlays, canonical_snapshot_path,
-    is_stub_for_inline_decl, sort_path_key,
+    Declaration, TextOverlays, canonical_snapshot_path, is_stub_for_inline_decl, sort_path_key,
 };
 use crate::queries::{
     LspCitation, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts,
     LspSnapshotWithMetadata, LspStub,
 };
-use crate::resolver::{WorkspaceCheckTarget, WorkspaceContext, load_resolved_workspace_context};
+use crate::resolver::load_resolved_workspace_context;
 use crate::scanner::api_scan_error;
-use crate::workspace::{
-    absent_only_workspace_caution, absent_optional_member_warnings, resolve_workspace_config,
-    unlisted_workspace_block_errors,
-};
+use crate::workspace::resolve_workspace_config;
 
 /// Programmatic snapshot for `grund-lsp`: all scanner-derived declaration and
 /// citation ranges plus their resolved navigation targets. This keeps the LSP
@@ -58,16 +53,15 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
     if opts.path_provided && opts.path.is_dir() && config.config_file.is_none() {
         config.root = canonical_snapshot_path(&opts.path);
     }
+    let report_scope = widen_for_path_anchor(&mut config, &opts.path, opts.path_provided)?;
     let context =
         load_resolved_workspace_context(config, &opts.path, opts.path_provided, &overlays, true)?;
     let render_config = context.render_config().clone();
+    let report = editor_report(&context, &overlays, report_scope.as_ref());
     // LSP routes findings back to project snapshots by filesystem identity.
     // Preserve absolute paths here instead of reconstructing them from rendered
     // `../` paths under Windows verbatim roots (§FS-lsp.1.1, §FS-lsp.2.2.2).
-    let report = public_lsp_report(
-        &render_config,
-        check_workspace_context(&context, false, &overlays),
-    );
+    let report = public_lsp_report(&render_config, report);
     let mut kind_titles = BTreeMap::new();
     let mut declarations = Vec::new();
     let mut sections = Vec::new();
@@ -331,156 +325,4 @@ pub(super) fn normalized_overlays(overlays: BTreeMap<PathBuf, String>) -> TextOv
         .into_iter()
         .map(|(path, text)| (absolutize_path(&path), text))
         .collect()
-}
-
-/// §FS-lsp.4.1: the report the editor shows, decided here so that an editor and a
-/// terminal over one tree say the same thing — this is `grund check`'s workspace
-/// arm (`run_workspace_check`) for a surface that has no CLI.
-///
-/// §FS-check.4.9.4: the announcement of every namespace the run did not read is a
-/// **located** report finding, so it is one of the diagnostics the editor must
-/// mirror. It belongs to the run rather than to a project, which is why it is read
-/// off the render config outside the loop below and survives a block whose every
-/// project was the absent one — and why that config is cloned after the workspace
-/// walk (`load_resolved_workspace_context`). §FS-check.2.2: the caution for that
-/// same block rides beside it.
-fn check_workspace_context(
-    context: &WorkspaceContext,
-    force_require_grounding: bool,
-    overlays: &TextOverlays,
-) -> CheckReport {
-    let workspace = context
-        .projects
-        .iter()
-        .map(|project| {
-            (
-                project.alias.clone(),
-                WorkspaceCheckTarget {
-                    findings: &project.findings,
-                    config: &project.config,
-                },
-            )
-        })
-        .collect::<BTreeMap<_, _>>();
-    let mut report = CheckReport::default();
-    let rules_complete = context
-        .projects
-        .iter()
-        .all(|project| project.scan_errors.is_empty());
-    for project in &context.projects {
-        let mut config = project.config.clone();
-        // §FS-check.1: the same global default the key sets, per member — an
-        // explicit `false` on a `[[kinds]]` row still wins (§FS-config.3.4.8.3).
-        if force_require_grounding {
-            config.require_grounding = true;
-        }
-        let mut project_report = if context.workspace_loaded {
-            check_with_workspace_and_overlays(
-                &project.findings,
-                &config,
-                // §FS-workspace.8.1: paths inside a message are spelled from the
-                // render root, like the anchors beside them.
-                context.render_config(),
-                Some(&project.alias),
-                &workspace,
-                overlays,
-            )
-        } else {
-            check_with_workspace_and_overlays(
-                &project.findings,
-                &config,
-                &config,
-                None,
-                &BTreeMap::new(),
-                overlays,
-            )
-        };
-        check_chapter_rules(
-            &project.findings,
-            &config,
-            rules_complete,
-            None,
-            context
-                .workspace_loaded
-                .then_some((project.alias.as_str(), &workspace)),
-            &mut project_report,
-        );
-        let project_has_findings =
-            !project_report.errors.is_empty() || !project_report.warnings.is_empty();
-        report.errors.append(&mut project_report.errors);
-        report.warnings.append(&mut project_report.warnings);
-        append_lsp_scan_errors(&mut report, project.scan_errors.iter().cloned());
-        // §FS-lsp.4.1: the same decision `grund check` makes, from the same
-        // function — an editor and a terminal over one tree report one set of
-        // diagnostics (§FS-check.2.2, §FS-check.4.5).
-        report.warnings.extend(scan_scope_caution(
-            &config,
-            &project.findings,
-            &config.root,
-            true,
-            project.scan_errors.is_empty() && !project_has_findings,
-            // §FS-check.1.3.6.1: the LSP runs the check at the project root and
-            // distributes the diagnostics per file itself, so no path narrowed this
-            // report and there is no second scope to ask (§FS-lsp.4.1).
-            None,
-        ));
-    }
-    // §FS-check.3.29.13, §FS-check.3.29.11: per project, the blocks that walk met that
-    // no enclosing one lists — located report errors, the decision `run_workspace_check`
-    // makes, so an editor and a terminal place one diagnostic at one line (§FS-lsp.4.1).
-    for project in &context.projects {
-        report.errors.extend(unlisted_workspace_block_errors(
-            &project.config,
-            context.render_config(),
-            context.workspace_loaded.then_some(project.alias.as_str()),
-            &project.findings.walked_dirs,
-        ));
-    }
-    // §FS-check.4.9, §FS-check.2.2: the announcements and the caution — see this
-    // function's docs.
-    report
-        .warnings
-        .extend(absent_optional_member_warnings(context.render_config()));
-    report.warnings.extend(absent_only_workspace_caution(
-        context.render_config(),
-        context.projects.is_empty(),
-    ));
-    sort_diagnostics(&mut report.errors);
-    sort_diagnostics(&mut report.warnings);
-    report
-}
-
-/// §FS-lsp.1.1.3, §FS-check.3.29.15: the run's warning channel as the editor sees it —
-/// the three `[workspace]` cautions the run settled, without the unlisted block.
-///
-/// The five walking surfaces that have no report of their own keep that finding on this
-/// channel, which is why the context still settles it (§FS-check.3.29.9). The editor
-/// takes it off `report` instead, located and as an error (§FS-check.3.29.13), and a copy
-/// left here would publish a second, warning-severity squiggle on the same line — the one
-/// way the flip can go wrong invisibly, so the drop is a named step rather than a filter
-/// buried in the call.
-fn editor_run_warnings(context: &WorkspaceContext) -> Vec<Diagnostic> {
-    context
-        .run_warnings
-        .iter()
-        .filter(|warning| warning.code != "unlisted-workspace-block")
-        .cloned()
-        .collect()
-}
-
-fn append_lsp_scan_errors(
-    report: &mut CheckReport,
-    scan_errors: impl IntoIterator<Item = (PathBuf, String)>,
-) {
-    for (file, message) in scan_errors {
-        report.errors.push(Diagnostic {
-            code: "io",
-            path: Some(file),
-            line: None,
-            column: None,
-            message,
-            sites: Vec::new(),
-            authority: Vec::new(),
-        });
-    }
 }

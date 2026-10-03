@@ -9,8 +9,8 @@
 //! `show`, `complete_ids`, `id`, `config`, `cover`, `fmt`, `refs`, `list` and the
 //! editor snapshot — beside the private adapters that fill them: the report
 //! conversion in `report.rs`, the `refs` walk in `refs_query.rs`, the run in
-//! `run.rs` with the warnings it folds in, and the snapshot's spans in
-//! `lsp_ranges.rs`. That is the boundary §AR-core-module-layout.2 names and the
+//! `run.rs` with the warnings it folds in, the snapshot's spans in
+//! `lsp_ranges.rs` and its report in `lsp_report.rs`. That is the boundary §AR-core-module-layout.2 names and the
 //! size register was holding a ceiling for: the contract is what a caller reads,
 //! the adapters are the machinery behind it, and no file holds both.
 //!
@@ -42,6 +42,7 @@ mod id;
 mod list;
 mod list_output;
 mod lsp_ranges;
+mod lsp_report;
 mod lsp_snapshot;
 mod refs;
 mod refs_query;
