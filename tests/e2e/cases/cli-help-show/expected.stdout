@@ -1,5 +1,5 @@
-grund show — print one declaration's body by ID, so an agent pulls a single fact
-into context without loading the whole document. `show` is the default command.
+grund show — print a coordinate's lead, so an agent pulls a single fact into
+context without loading the whole document. `show` is the default command.
 
 Usage:  grund [show] <ID>[.<section>] [PATH] [--section S] [--brief|--toc|--full] [--format text|md|json] [--path PATH]
         grund show --batch [--all] [PATH] --format=json [--brief|--toc|--full] [--path PATH]

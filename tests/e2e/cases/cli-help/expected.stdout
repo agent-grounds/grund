@@ -1,24 +1,24 @@
 grund — ground your agents in the spec: §<ID>.<section> citations checked across docs and code.
 
-Usage:
-  grund <ID>[.<section>] [OPTIONS]    print one declaration body
-  grund check [PATH] [OPTIONS]        validate a repo or subtree
-  grund <COMMAND> [ARGS] [OPTIONS]    run `grund <COMMAND> --help` for that command's options
+Usage:  grund <ID>[.<section>]  ·  grund <COMMAND> [ARGS]  ·  grund <COMMAND> -h  ·  grund -V
 
-Commands:
-  show     Print one declaration body for agent context (default).  e.g. grund FS-login.3
-  check    Validate every reference in a repo.                      e.g. grund check .
-  list     The ID catalog: every declared ID, path:line, title.     e.g. grund list --kind FS
-  refs     List every citation of an ID, as path:line.              e.g. grund refs FS-login
-  cover    Group the citation graph by scanned file.                e.g. grund cover --format json
-  fmt      Rewrite `$$` triggers to `§`; --marker upgrades cites.   e.g. grund fmt --check
-  fetch    Materialize one configured external snapshot.            e.g. grund fetch TICKET-1234
-  id       Next conflict-free ID for a new declaration.             e.g. grund id FS "user login"
-  init     Scaffold agent instructions + grund.toml.                e.g. grund init --docs
-  config   Validate or show the effective grund.toml.               e.g. grund config show
-  agent-setup-instructions  Print AI setup guide.              e.g. grund agent-setup-instructions
-  completions  Print shell completion scripts.                      e.g. grund completions bash
-  integrations  Print/install clickable-citation integrations.      e.g. grund integrations wezterm
+Query the catalog:
+  show          Print a coordinate's lead for agent context (default).  grund FS-login.3
+  list          Every declared ID, with path:line and title.            grund list --kind FS
+  refs          Every citation site of a coordinate, as path:line.      grund refs FS-login
+  cover         Every scanned file, with the citations in it.           grund cover --format json
 
-Options:  --format text|json   per-command (place after the subcommand); text is the default.
-          --version, -V  print version.  --help, -h  show this screen.  Docs: docs/functional-spec/
+Check and author:
+  check         Scan a repo or subtree and report findings.             grund check .
+  fmt           Rewrite `$$` to `§`; --marker cites bare IDs.           grund fmt --check
+  id            Next conflict-free ID for a new declaration.            grund id FS "user login"
+  fetch         Materialize one configured external snapshot.           grund fetch TICKET-1234
+
+Set up:
+  init          Scaffold agent instructions + grund.toml.               grund init --docs
+  config        Validate or show the effective grund.toml.              grund config show
+  integrations  Print/install clickable-citation integrations.          grund integrations wezterm
+  completions   Print shell completion scripts.                         grund completions bash
+  agent-setup-instructions  Print the setup guide for AI agents.
+
+Guides and examples:  https://github.com/agent-grounds/grund/tree/main/docs/user-facing

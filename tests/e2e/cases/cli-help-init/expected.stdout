@@ -28,3 +28,6 @@ Examples:
   grund init --check                 # the same preview as a gate: exit 1 if pending
   grund init --name "My Service"      # auto-detect entrypoint, else AGENTS.md
   grund init --claude --gemini        # create/update both agent entrypoints
+
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/init-repo-shapes.md
+Example:  https://github.com/agent-grounds/grund/tree/main/examples

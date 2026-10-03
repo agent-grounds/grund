@@ -15,3 +15,9 @@ With neither --check nor --write, fmt previews every change --write would apply 
 The report goes to stdout (like `grund check`); CLI-level `error:` lines go to stderr.
 
 Exit:  0 nothing to do, or --write succeeded · 1 changes pending (dry run / --check) · 2 unreadable tree or CLI error.
+
+Examples:
+  grund fmt                       # preview every rewrite --write would apply
+  grund fmt --check               # the same preview as a gate: exit 1 if pending
+  grund fmt --write               # rewrite `$$` to `§` in place
+  grund fmt --write --marker      # also mark bare ID tokens
