@@ -60,6 +60,7 @@
 
 mod body;
 mod citation_target;
+mod comment_envelope;
 mod context;
 mod e2e_body;
 mod id_candidates;
