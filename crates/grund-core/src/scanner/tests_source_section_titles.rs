@@ -153,3 +153,61 @@ fn a_heading_in_a_source_comment_records_its_markdown_title() {
         mismatched.join("\n")
     );
 }
+
+/// §FS-rules.5.1.1: a block comment's closing `*/` on the heading's own line is
+/// the envelope's closing half, so it joins the title no more than the ` * `
+/// that opens the line does — with or without whitespace before it. Markdown
+/// and a docstring keep a `*/` their author wrote: neither line is a C-family
+/// block comment's, so nothing on it is envelope.
+#[test]
+fn a_heading_on_the_line_that_closes_a_block_comment_drops_the_closer() {
+    let root = test_root("source_section_titles_block_closer");
+    write(
+        &root.join("docs/AR-001-markdown.md"),
+        "# AR-001-markdown: the Markdown control\n\n## terms: Terms\n\nThe vocabulary.\n",
+    );
+    write(
+        &root.join("docs/AR-002-literal.md"),
+        "# AR-002-literal: a Markdown label that ends in */ on purpose\n\n\
+         ## terms: Terms */\n\nKept.\n",
+    );
+    write(
+        &root.join("src/cline.c"),
+        "/**\n * AR-003-cline: a C block comment closed on its heading\n *\n\
+         \x20* The lead.\n * ## terms: Terms */\nint cline(void) { return 0; }\n",
+    );
+    write(
+        &root.join("src/Wide.java"),
+        "/**\n * AR-004-wide: closed after a run of spaces\n *\n\
+         \x20* ## terms: Terms   */\nclass Wide {}\n",
+    );
+    write(
+        &root.join("src/docstring.py"),
+        "def docstring():\n    \"\"\"AR-005-docstring: a docstring label that ends in */\n\n\
+         \x20   ## terms: Terms */\n\n    Kept.\n    \"\"\"\n",
+    );
+    let config = named_config(root.clone());
+    let (findings, errors) = scan_tree(&config, Some(&root), true).expect("scan closer fixture");
+    assert!(errors.is_empty(), "fixture should be readable: {errors:?}");
+
+    let markdown = titles(&findings, "markdown");
+    assert_eq!(
+        markdown,
+        vec![("terms".to_string(), "terms: Terms".to_string())]
+    );
+    for slug in ["cline", "wide"] {
+        assert_eq!(
+            titles(&findings, slug),
+            markdown,
+            "AR-*-{slug}: the block comment's closing `*/` is envelope, not title"
+        );
+    }
+    let kept = vec![("terms".to_string(), "terms: Terms */".to_string())];
+    for slug in ["literal", "docstring"] {
+        assert_eq!(
+            titles(&findings, slug),
+            kept,
+            "AR-*-{slug}: a `*/` outside a C-family block comment is the author's"
+        );
+    }
+}
