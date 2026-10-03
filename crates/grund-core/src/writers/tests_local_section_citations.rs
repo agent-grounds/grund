@@ -46,7 +46,7 @@ fn formatter_dry_run_names_only_safe_owned_local_replacements() {
         cross_refs: false,
     })
     .expect("format dry run");
-    // §FS-fmt.3.5.2: one `local section → canonical` row per expanded token.
+    // §FS-fmt.3.5.2: a line's local expansions share one `local section → canonical` row.
     assert_eq!(
         output
             .changes
@@ -132,7 +132,7 @@ fn the_dry_run_omits_a_local_path_its_owner_has_no_heading_for() {
         cross_refs: false,
     })
     .expect("format dry run");
-    // §FS-fmt.3.5.2: one `local section → canonical` row per expanded token.
+    // §FS-fmt.3.5.2: a line's local expansions share one `local section → canonical` row.
     assert_eq!(
         output
             .changes
