@@ -95,6 +95,8 @@ pub(crate) use unread_block::settled_run_warnings;
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
 #[cfg(test)]
+mod tests_clean_body_line;
+#[cfg(test)]
 mod tests_shorthand_numeric_run;
 #[cfg(test)]
 mod tests_shorthand_rewrite;
