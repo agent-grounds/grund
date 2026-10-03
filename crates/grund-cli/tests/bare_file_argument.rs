@@ -80,6 +80,14 @@ fn bare_file_list_inside_a_configless_member_is_rooted_at_the_member() {
     let output = assert_spellings_agree("list", "FS-thing.md", &cwd);
     assert_eq!(output.status.code(), Some(0), "{}", render(&output));
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("  docs/FS-thing.md:3"), "{}", render(&output));
-    assert!(!stdout.contains("member/docs/FS-thing.md"), "{}", render(&output));
+    assert!(
+        stdout.contains("  docs/FS-thing.md:3"),
+        "{}",
+        render(&output)
+    );
+    assert!(
+        !stdout.contains("member/docs/FS-thing.md"),
+        "{}",
+        render(&output)
+    );
 }
