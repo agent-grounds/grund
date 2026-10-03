@@ -355,8 +355,7 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     let mut workflow_entrypoint = None;
     // Track whether any path changed (or, under --dry-run, *would* change).
     // The `next:` block is suppressed when every reported path is `exists `,
-    // since the user already has a complete grund setup (§FS-init.2.2.2), and
-    // on a refresh of a complete setup (§FS-init.2.2.2.1), decided below.
+    // since the user already has a complete grund setup (§FS-init.2.2.2).
     let mut any_change = false;
     let mut events = Vec::new();
     if agent_entrypoints.canonical {
