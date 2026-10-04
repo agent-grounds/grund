@@ -1,6 +1,6 @@
-//! Binary-level contract for the rule-site unknown-alias message ramp: the two
-//! reasons §FS-errors.3.7 carries through its wording migration, and the release
-//! they reach their final templates in (§FS-errors.3.7.1).
+//! Binary-level contract for the rule-site unknown-alias reasons: the two final
+//! templates §FS-errors.3.7.1 fixes, which the wording migration of
+//! §FS-errors.3.7 ended in.
 //!
 //! Its own target for the reason `agents_init_message_ramp.rs` is one: this is
 //! about the text of one code across a release boundary, and it fails on a
@@ -9,9 +9,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-
-const RAMP_TAIL: &str = "; this wording changes in grund 0.16.0";
-const LEGACY_OPENING: &str = "unknown kind \"";
 
 /// A single project — no `[workspace]` anywhere — with a rule kind, so every
 /// namespace-qualified object kind in it is §FS-rules.4.1's unverifiable case.
@@ -79,69 +76,16 @@ fn invalid_rule_reason(name: &str, object: &str) -> String {
         .to_string()
 }
 
-fn release(text: &str) -> (u64, u64, u64) {
-    let mut parts = text.split('.').map(|part| {
-        part.split(|ch: char| !ch.is_ascii_digit())
-            .next()
-            .unwrap_or("0")
-            .parse::<u64>()
-            .unwrap_or_else(|_| panic!("not a version: {text}"))
-    });
-    (
-        parts.next().unwrap_or(0),
-        parts.next().unwrap_or(0),
-        parts.next().unwrap_or(0),
-    )
-}
-
-/// §FS-errors.3.7.1: the two final reasons land in `0.16.0`, where the legacy
-/// prefix is removed. Below that release what there is to pin is the window —
-/// while the compatibility form is still shipping, this tree may not be at or
-/// above the release the ramp names, the legacy reason must still open the line
-/// for the consumers the prefix is kept for, and the true clause must already
-/// be there, because a ramp that promises a wording change and says nothing new
-/// is a promise with no content.
+/// §FS-errors.3.7.1: the two final reasons, exactly — no legacy `unknown kind`
+/// prefix and no suffix naming the release the wording changes in.
 #[test]
-fn the_rule_alias_ramp_cannot_survive_the_release_it_names() {
-    let pinned = invalid_rule_reason("pinned", "workshop/OP");
-    let any = invalid_rule_reason("any", "*/OP");
-    let ramped = [&pinned, &any]
-        .into_iter()
-        .filter(|reason| reason.ends_with(RAMP_TAIL))
-        .count();
-
-    if ramped > 0 {
-        assert!(
-            release(env!("CARGO_PKG_VERSION")) < release("0.16.0"),
-            "this tree reached 0.16.0; land \u{a7}FS-errors.3.7.1's final reasons instead of shipping the compatibility prefix"
-        );
-        assert_eq!(
-            ramped, 2,
-            "the ramp is both reasons' or neither's: {pinned:?} {any:?}"
-        );
-        for reason in [&pinned, &any] {
-            assert!(
-                reason.starts_with(LEGACY_OPENING),
-                "the legacy reason stays a contiguous prefix: {reason}"
-            );
-        }
-        assert!(
-            pinned.contains(" \u{2014} unknown project alias workshop; no workspace is in scope here, so the alias cannot be resolved \u{2014} check from the workspace root"),
-            "{pinned}"
-        );
-        assert!(
-            any.contains(" \u{2014} no workspace is in scope here, so no namespace can be searched for OP \u{2014} check from the workspace root"),
-            "{any}"
-        );
-        return;
-    }
-
+fn the_rule_alias_reasons_are_the_two_final_templates() {
     assert_eq!(
-        pinned,
+        invalid_rule_reason("pinned", "workshop/OP"),
         "unknown project alias workshop; no workspace is in scope here, so the alias cannot be resolved \u{2014} check from the workspace root"
     );
     assert_eq!(
-        any,
+        invalid_rule_reason("any", "*/OP"),
         "no workspace is in scope here, so no namespace can be searched for OP \u{2014} check from the workspace root"
     );
 }

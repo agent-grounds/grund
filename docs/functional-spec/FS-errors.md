@@ -236,36 +236,34 @@ release its reason named the kind as the defect — `unknown kind "<KIND>" in
 namespace "<ALIAS>"` for a pinned object, `unknown kind "<KIND>" in any
 workspace namespace` for `*/<KIND>` — in a scope that cannot know whether that
 kind exists anywhere. What such a run actually cannot reach is the workspace.
-Those are bytes a consumer may match, so the correction takes the three-release
+Those are bytes a consumer may match, so the correction took the three-release
 route of [§FS-errors.3.3](FS-errors.md#33-the-narrowed-run-unknown-project-wording-migration) and [§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages) rather than changing outright
 ([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered), [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
 
-Through `0.14.x` each complete legacy reason stays a verbatim contiguous prefix
-and gains the true clause after it, in the shape a narrowed run already uses for
-a citation it cannot place — say what cannot be resolved here, offer no
-candidate, send the reader to the workspace root ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)):
+Until `0.16.0` each complete legacy reason stayed a verbatim contiguous
+prefix and gained the true clause after it, followed by a suffix
+naming `0.16.0` as the release its wording would change in. In `0.16.0` the
+prefix and the suffix went, and the reason is the true clause alone, in the
+shape a narrowed run already uses for a citation it cannot place — say what
+cannot be resolved here, offer no candidate, send the reader to the workspace
+root ([§FS-check.3.8.3](FS-check.md#383-a-narrowed-run-offers-no-candidate)). Its templates are [§FS-errors.3.7.1](FS-errors.md#371-the-final-templates).
 
-```text
-unknown kind "<KIND>" in namespace "<ALIAS>"; accepted form: <rewrite> — unknown project alias <ALIAS>; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this wording changes in grund 0.16.0
-unknown kind "<KIND>" in any workspace namespace; accepted form: <rewrite> — no workspace is in scope here, so no namespace can be searched for <KIND> — check from the workspace root; this wording changes in grund 0.16.0
-```
-
-Exact-line consumers must migrate during this window to the stable
+Exact-line consumers were asked to migrate during the window to the stable
 `code == "invalid-rule"`; the code, the error severity, the selectors, and the
-exit verdict do not change, and `--only invalid-rule` keeps selecting the
+exit verdict did not change, and `--only invalid-rule` keeps selecting the
 finding. An alias the run *can* judge and rejects keeps its legacy reason
-unchanged and unsuffixed, because there the kind really is what failed.
+unchanged, because there the kind really is what failed.
 
 The reason belongs to the vocabulary check rather than to the finding, so the
 same two forms also reach `check --rule`'s pre-scan refusal
 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)), where there is no rule heading to report at and therefore no
 `code` to migrate to: that surface prints `error: <reason>` on stderr, writes
 nothing to stdout, and exits 2. A consumer of it keys on the exit code, which
-this migration does not move, and on the sentence it passed in.
+this migration did not move, and on the sentence it passed in.
 
 #### 3.7.1 The final templates
 
-In `0.16.0`, the compatibility prefixes are removed and the two reasons are
+Since `0.16.0`, with the compatibility prefixes removed, the two reasons are
 exactly:
 
 ```text
