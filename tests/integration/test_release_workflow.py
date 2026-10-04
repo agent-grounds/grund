@@ -154,6 +154,13 @@ class NoChangelogHoldTests(unittest.TestCase):
                 self.assertNotIn(ENTRIES, text)
                 self.assertIsNone(re.search(r"prepare_changelog_release\.py\s+stamp\b", text))
 
+    def test_the_dev_advance_runs_only_after_a_release(self):
+        """§FS-distribution.4.1: the advance is the release's last act, so a quiet
+        run must not open a `-dev` version nothing was released before."""
+        text = self.text("auto-bump.yml")
+        advance = text.split("name: Advance main to the next dev version", 1)[1].split("shell:", 1)[0]
+        self.assertIn("steps.gate_substantive.outputs.ok == 'true'", advance)
+
     def test_both_helpers_still_prepare_the_release(self):
         for name in self.HELPERS:
             with self.subTest(workflow=name):

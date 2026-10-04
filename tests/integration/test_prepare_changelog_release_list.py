@@ -146,6 +146,7 @@ class EndToEndTests(ReleaseHistory, unittest.TestCase):
         self.assertEqual("", self._git(self.repo, "status", "--porcelain", "--untracked-files=all"))
 
     def test_the_release_notes_are_the_body_prepare_wrote(self) -> None:
+        """§FS-distribution.4.7: `notes` reads back the section `prepare` wrote."""
         self._history()
         self.assertSucceeded(self._script("prepare", VERSION, "--date", DATE))
         notes = self.scratch / "notes.md"
