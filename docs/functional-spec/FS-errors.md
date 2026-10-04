@@ -382,7 +382,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `chapter-cardinality` | error | — | `rules = true` on a kind | [§FS-check.3.26](FS-check.md#326-chapter-cardinality) |
 | `citation-cardinality` | error | — | `rules = true` on a kind | [§FS-check.3.27](FS-check.md#327-citation-cardinality) |
 | `dangling` | error | — | — | [§FS-check.3.1](FS-check.md#31-dangling-citation) |
-| `declaration-near-miss` | warning | error in 0.16.0 | — | [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss) |
+| `declaration-near-miss` | error | — | — | [§FS-declarations.checks.declaration-near-miss](FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss) |
 | `deprecated-config-location` | warning | — | — | [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location) |
 | `discouraged-citation` | none — suggestion | — | `--suggestions`, on a `should-not` entry | [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) |
 | `duplicate` | error | — | — | [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) |

@@ -350,8 +350,8 @@ Rule of thumb: pick `{kind}-{slug}` until rename churn or ID count starts to hur
 Changing that setting does not strand declarations already committed under an
 older shape: their exact written IDs and exact marked citations remain readable
 across the CLI and editor, while `grund check` points out each mismatch so you
-can rename it or restore the matching format. The mismatch warns before 0.16.0
-and becomes an error in 0.16.0; read compatibility remains in either case
+can rename it or restore the matching format. The mismatch is a `check`
+error; read compatibility remains
 ([§FS-config.3.2](docs/functional-spec/FS-config.md#32-id--id-grammar)).
 
 A citation is the marker `§`, the ID, and an optional `.<section>` — with the target project's alias in front when the repo is a workspace:

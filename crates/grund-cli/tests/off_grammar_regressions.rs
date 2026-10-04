@@ -92,7 +92,7 @@ fn off_grammar_narrowed_slug_pattern_retains_the_exact_written_token() {
     assert!(referenced.contains("\u{a7}FS-legacy-2"), "{referenced}");
 
     let check = run(&root, &["check"]);
-    assert_code(&check, 0, "check");
+    assert_code(&check, 1, "check");
     let checked = stdout(&check);
     assert!(
         checked.contains("`FS-legacy-2` resolves for compatibility"),
@@ -139,7 +139,8 @@ fn off_grammar_local_promotion_drives_inline_style_and_layout() {
     write(&root, "src/lib.rs", "// \u{a7}FS-security-providers\n");
 
     let pure = run(&root, &["check"]);
-    assert_code(&pure, 0, "local citation-only");
+    assert_code(&pure, 1, "local citation-only");
+    assert!(stdout(&pure).contains("resolves for compatibility"));
     assert!(!stdout(&pure).contains("inline citation must carry no prose"));
 
     write(
@@ -213,7 +214,8 @@ fn off_grammar_qualified_promotion_drives_inline_style_and_layout() {
         "// \u{a7}api/FS-security-providers\n",
     );
     let pure = run(&root, &["check"]);
-    assert_code(&pure, 0, "qualified citation-only");
+    assert_code(&pure, 1, "qualified citation-only");
+    assert!(stdout(&pure).contains("resolves for compatibility"));
     assert!(!stdout(&pure).contains("inline citation must carry no prose"));
 
     workspace_inline_fixture(

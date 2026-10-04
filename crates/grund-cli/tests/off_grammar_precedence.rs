@@ -99,7 +99,7 @@ fn off_grammar_local_configured_full_citation_keeps_precedence_and_accounting() 
         stdout(&refs)
     );
     let check = run(&root, &["check"]);
-    assert_code(&check, 0, "check");
+    assert_code(&check, 1, "check");
     let checked = stdout(&check);
     assert!(
         checked.contains("declared but never cited: FS.1"),
@@ -139,7 +139,7 @@ fn off_grammar_qualified_configured_full_citation_keeps_precedence_and_accountin
         stdout(&refs)
     );
     let check = run(&root, &["check"]);
-    assert_code(&check, 0, "workspace check");
+    assert_code(&check, 1, "workspace check");
     let checked = stdout(&check);
     assert!(
         checked.contains("declared but never cited: FS.1"),
