@@ -215,3 +215,24 @@ Discovery climbs from the path it is given to the filesystem root, probing both 
 The helper takes its base from a short candidate list, the system temp directory first and, on unix, `/tmp` where that differs, and uses the first candidate no config covers. It asks through discovery's own probe, so the guard reads exactly the names discovery reads. When every candidate is covered, the suite fails at the helper, naming `TMPDIR`, each candidate and the config that covers it, rather than handing out a covered root and letting a zero-config case invert into a failure about the fixture. This is the version-control guard `fixture_root` in `crates/grund-cli/tests/init_refused_targets.rs` already holds, applied to config files. The check belongs to the helper and not to the cases: no case sets `TMPDIR`, because the process environment is shared by every case running beside it.
 
 Stated so a test can hold `crates/grund-core/src/testing.rs` (`test_root`) to it: **no config under either name sits at or above a root the helper returns.** A zero-config case that does find one names the absolute path it found, so the failure says where the config came from.
+
+### 10.4 Git descendants stay inside the fixture lifetime
+
+Waiting for a Git command to return does not wait for its detached maintenance
+descendants. A temporary Git fixture must prevent automatic GC and maintenance
+from leaving a repository writer alive when strict cleanup starts, including
+geometric repacking on newer Git versions. This supplies the lifetime half of
+[§FS-distribution.4.5.1](../functional-spec/FS-distribution.md#451-release-helper-verification-owns-its-temporary-history-through-cleanup).
+
+The changelog suites establish `gc.auto=0` and `maintenance.auto=false` as local
+repository configuration immediately after initialization and before the first
+commit. Shared initialization applies that policy to release listing, compatibility
+notices and archive rotation; direct dated commits and rebases inherit it from the repository,
+so command wrappers cannot be the only enforcement point. Explicit synchronous
+Git work remains available to tests that need it.
+
+`TemporaryDirectory.cleanup` stays strict. Ignoring cleanup errors, retrying removal
+or sleeping until a detached writer finishes does not meet this contract. A
+regression forces a real maintenance threshold and checks both the returned-command
+boundary and strict removal; reading configuration alone is not evidence that the
+tree has no outliving writer.
