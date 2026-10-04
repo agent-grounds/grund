@@ -208,6 +208,22 @@ that means the same is in a scoped report, with its tail unchanged; a sentence
 duplicating a `[citations]` direction authors nothing, so its scoped report is
 empty and the run says `success` while the tree's own findings still stand.
 
+Narrowing by code to what rules find never hides a rule that could not run.
+Selecting any code a rule produces also selects `invalid-rule`, so a rule written
+as its heading line alone, with no rationale, fails the narrowed run instead of
+passing it:
+
+```console
+$ grund check --only chapter-cardinality
+docs/rules/RULE-terms.md:1: error: RULE-terms is not a valid rule: rule rationale is empty
+$ echo $?
+1
+```
+
+`--ignore invalid-rule` still removes those rows, for a run that means to ask
+about the valid rules alone.
+[§FS-check.1.4](../functional-spec/FS-check.md#14-selecting-findings-with---only-and---ignore) [§FS-rules.7.6](../functional-spec/FS-rules.md#76-selection-json-ordering-and-exits)
+
 Under `--format json` every finding record carries the same authority as its
 last field — `null` where no rule authored it, `["--rule"]` for the trial
 sentence, `["--rule","RULE-security"]` where both reached the same meaning — so

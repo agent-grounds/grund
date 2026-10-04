@@ -593,6 +593,7 @@ rules find keeps every `invalid-rule` row, because a skipped rule is a check tha
 run did not evaluate
 ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
 `--ignore invalid-rule` still removes them.
+
 Rule-derived JSON adds no `sites` list — a rule finding names one site, so the
 multi-site field stays `null` on every one of them. It does carry the rule
 authority as a field: every rule-derived message names its rule authority, and
