@@ -2,11 +2,11 @@
 name: Auto bump
 
 # Mondays at 09:00 UTC: if main has shipped non-doc changes since the last
-# vX.Y.Z tag, the release section has been written since the last of them, and
-# CI on that tip is green, bump the patch version, commit the bump to main, and
-# dispatch release.yml to publish crates + binaries. A GITHUB_TOKEN push does
-# not trigger other workflows, so release.yml is invoked explicitly via
-# `gh workflow run` rather than relying on the tag-push trigger.
+# vX.Y.Z tag and CI on that tip is green, bump the patch version, commit the
+# bump to main, and dispatch release.yml to publish crates + binaries. A
+# GITHUB_TOKEN push does not trigger other workflows, so release.yml is invoked
+# explicitly via `gh workflow run` rather than relying on the tag-push trigger.
+# Nothing is written for the release before it runs.
 
 on:
   schedule:
@@ -16,7 +16,7 @@ on:
 permissions:
   contents: write
   actions: write   # gh workflow run needs actions:write to dispatch
-  pull-requests: read   # `prepare_changelog_release.py stamp` asks which PR added each entry
+  pull-requests: read   # `prepare_changelog_release.py prepare` asks which PR each commit landed in
 
 env:
   CARGO_TERM_COLOR: always
@@ -96,41 +96,8 @@ jobs:
             printf '  %s\n' $substantive
           fi
 
-      # §FS-distribution.4.4: the release section is written before the release
-      # (§FS-distribution.4.6), so the run holds, green, while code merged after
-      # it was last written. Nothing below runs on a hold, the -dev advance included.
-      - name: Gate — changelog written since the last code change
-        id: gate_changelog
-        if: steps.gate_substantive.outputs.ok == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          # The last commit that changed an entry: any file there but the README.
-          # Right after a release it is the release, which deleted them all.
-          written="$(git log --first-parent -1 --format=%H HEAD -- docs/changelog/unreleased/ \
-            ':(exclude)docs/changelog/unreleased/README.md')"
-          # A history that never wrote one is behind in everything it holds.
-          since="${written:-$(git hash-object -t tree /dev/null)}"
-
-          # The tag question's filter, asked since that commit instead.
-          behind="$(git diff --name-only "$since" HEAD \
-            | grep -Ev '^(docs/|\.github/)' \
-            | grep -Ev '\.md$' \
-            | grep -Ev '^(LICENSE|lychee\.toml|AGENTS\.md|CLAUDE\.md)$' \
-            || true)"
-
-          if [ -n "$behind" ]; then
-            echo "::notice::changes merged since docs/changelog/unreleased/ was last written wait for their entries — skipping."
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-            echo "Substantive paths changed since ${written:-the root} with no entry written after them:"
-            printf '  %s\n' $behind
-          else
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-            echo "docs/changelog/unreleased/ was last written at $written; only docs/CI changed since."
-          fi
-
       - name: Gate — CI on current main tip is green
-        if: steps.gate_changelog.outputs.ok == 'true'
+        if: steps.gate_substantive.outputs.ok == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -157,37 +124,35 @@ jobs:
       # the release its own error names, and a patch bump is that direction.
       # release.yml asks again on the candidate; here nothing is pushed yet.
       - name: Gate — the tree can be released as this version
-        if: steps.gate_changelog.outputs.ok == 'true'
+        if: steps.gate_substantive.outputs.ok == 'true'
         shell: bash
         run: python3 scripts/check_release_ramps.py "${{ steps.versions.outputs.next }}"
 
       - name: Install Rust toolchain
-        if: steps.gate_changelog.outputs.ok == 'true'
+        if: steps.gate_substantive.outputs.ok == 'true'
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-edit
-        if: steps.gate_changelog.outputs.ok == 'true'
+        if: steps.gate_substantive.outputs.ok == 'true'
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-edit
 
       - name: Bump workspace version and refresh lockfile
-        if: steps.gate_changelog.outputs.ok == 'true'
+        if: steps.gate_substantive.outputs.ok == 'true'
         shell: bash
         run: |
           set -euo pipefail
           cargo set-version --workspace "${{ steps.versions.outputs.next }}"
           cargo update --workspace
           printf 'grund %s\n' "${{ steps.versions.outputs.next }}" > tests/e2e/cases/cli-version/expected.stdout
-          # Number each entry under docs/changelog/unreleased/ by the pull request whose
-          # commit added it, before the rotation collects them (§FS-distribution.4.5).
-          # It warns about what it cannot resolve and never fails the release.
-          python3 scripts/prepare_changelog_release.py stamp
+          # The release section lists the pull requests merged since the tag, read
+          # from the forge with GH_TOKEN (§FS-distribution.4.6.1); nothing is written first.
           python3 scripts/prepare_changelog_release.py prepare "${{ steps.versions.outputs.next }}"
 
       - name: Commit and push release candidate
         id: candidate
-        if: steps.gate_changelog.outputs.ok == 'true'
+        if: steps.gate_substantive.outputs.ok == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -209,7 +174,7 @@ jobs:
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
       - name: Dry-run release workflow
-        if: steps.gate_changelog.outputs.ok == 'true'
+        if: steps.gate_substantive.outputs.ok == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -243,7 +208,7 @@ jobs:
           gh run watch "$run_id" --exit-status --interval 30
 
       - name: Publish release commit and dispatch release
-        if: steps.gate_changelog.outputs.ok == 'true'
+        if: steps.gate_substantive.outputs.ok == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -273,9 +238,9 @@ jobs:
           git push origin --delete "$branch" || true
 
       # §FS-distribution.4.1: the advance is the release's last act, so a quiet
-      # or held run opens no -dev version nothing was released before.
+      # run opens no -dev version nothing was released before.
       - name: Advance main to the next dev version
-        if: steps.gate_changelog.outputs.ok == 'true'
+        if: steps.gate_substantive.outputs.ok == 'true'
         shell: bash
         run: |
           set -euo pipefail

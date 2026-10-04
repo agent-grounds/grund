@@ -12,7 +12,7 @@ on:
 permissions:
   contents: write
   actions: write   # gh workflow run needs actions:write to dispatch
-  pull-requests: read   # `prepare_changelog_release.py stamp` asks which PR added each entry
+  pull-requests: read   # `prepare_changelog_release.py prepare` asks which PR each commit landed in
 
 env:
   CARGO_TERM_COLOR: always
@@ -106,10 +106,8 @@ jobs:
           cargo set-version --workspace "${{ steps.versions.outputs.next }}"
           cargo update --workspace
           printf 'grund %s\n' "${{ steps.versions.outputs.next }}" > tests/e2e/cases/cli-version/expected.stdout
-          # Number each entry under docs/changelog/unreleased/ by the pull request whose
-          # commit added it, before the rotation collects them (§FS-distribution.4.5).
-          # It warns about what it cannot resolve and never fails the release.
-          python3 scripts/prepare_changelog_release.py stamp
+          # The release section lists the pull requests merged since the tag, read
+          # from the forge with GH_TOKEN (§FS-distribution.4.6.1); nothing is written first.
           python3 scripts/prepare_changelog_release.py prepare "${{ steps.versions.outputs.next }}"
 
       - name: Commit and push release candidate
