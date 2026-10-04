@@ -324,10 +324,9 @@ pub(crate) fn unknown_project_message<'a>(
     scope_path: &str,
 ) -> String {
     if !scope_path.is_empty() && !alias_strictly_extends_scope(namespace, scope_path) {
-        // §FS-check.3.8.1: 0.13.2 keeps the legacy diagnostic as a prefix while
-        // appending §FS-errors.3.3's fixed compatibility explanation and horizon.
+        // §FS-check.3.8.4: the final wording §FS-errors.3.3's migration reached in 0.16.0.
         return format!(
-            "unknown project alias {namespace}; only the {scope_path} subtree is in scope here — check from the workspace root for a path outside it — here, the {scope_path} subtree means the {scope_path} project and its descendants; this wording changes in grund 0.16.0"
+            "unknown project alias {namespace}; the {scope_path} project and its descendants are in scope here — check from the workspace root for a path outside that subtree"
         );
     }
     let candidates = nearest_project_aliases(namespace, known);
