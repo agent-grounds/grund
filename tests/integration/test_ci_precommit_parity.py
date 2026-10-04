@@ -30,7 +30,7 @@ AR_CI = REPO_ROOT / "docs" / "architecture" / "AR-ci.md"
 RUST_HOOKS = ("cargo-fmt-check", "cargo-build", "cargo-test")
 FILE_LIST_STAGES = ("pre-commit", "manual")
 ENV_PREFIX = "env RUSTFLAGS=-Dwarnings "
-# The release helper reads the entries to release them (§FS-distribution.4.5); it gates no change.
+# The release helper writes the release section (§FS-distribution.4.6); it gates no change.
 RELEASE_HELPER = "scripts/prepare_changelog_release.py"
 
 
