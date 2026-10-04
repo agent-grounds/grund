@@ -194,7 +194,7 @@ fn off_grammar_local_exact_legacy_and_shorthand_are_ambiguous_without_graph_edge
 
     assert_ambiguous_check(&run(&root, &["check"]), "\u{a7}FS-042");
     let query = run(&root, &["refs", "FS-042"]);
-    assert_code(&query, 2, "ambiguous refs query");
+    assert_code(&query, 1, "ambiguous refs query");
     assert!(
         stderr(&query).contains("ambiguous ID: FS-042 (matches FS-042, FS-042-canonical)"),
         "{}",
@@ -231,7 +231,7 @@ fn off_grammar_qualified_exact_legacy_and_shorthand_are_ambiguous_without_graph_
 
     assert_ambiguous_check(&run(&root, &["check"]), "\u{a7}api/FS-042");
     let query = run(&root, &["refs", "api/FS-042"]);
-    assert_code(&query, 2, "qualified ambiguous refs query");
+    assert_code(&query, 1, "qualified ambiguous refs query");
     assert!(
         stderr(&query).contains("ambiguous ID: FS-042 (matches FS-042, FS-042-canonical)"),
         "{}",
