@@ -12,19 +12,10 @@ use super::references::{nearest_project_aliases, unknown_project_message};
 use crate::model::Diagnostic;
 use crate::resolver::join_alternatives;
 
-const SCOPE_CLARIFICATION_SUFFIX: &str = " — here, the {scope} subtree means the {scope} project and its descendants; this wording changes in grund 0.16.0";
-
-fn legacy_scope_only_message(namespace: &str, scope: &str) -> String {
+/// The scope-only message §FS-check.3.8.4 fixes, since `0.16.0`.
+fn final_scope_only_message(namespace: &str, scope: &str) -> String {
     format!(
-        "unknown project alias {namespace}; only the {scope} subtree is in scope here — check from the workspace root for a path outside it"
-    )
-}
-
-fn migrating_scope_only_message(namespace: &str, scope: &str) -> String {
-    let legacy = legacy_scope_only_message(namespace, scope);
-    format!(
-        "{legacy}{}",
-        SCOPE_CLARIFICATION_SUFFIX.replace("{scope}", scope)
+        "unknown project alias {namespace}; the {scope} project and its descendants are in scope here — check from the workspace root for a path outside that subtree"
     )
 }
 
@@ -102,85 +93,18 @@ fn proper_prefix_messages_use_the_exact_candidate_phrasing() {
     );
 }
 
-/// §FS-check.3.8.4 / §FS-errors.3.3: the scope-only message across two
-/// releases. In 0.13.2 the complete legacy diagnostic stays a contiguous
-/// prefix for consumers that match it, and the clarification suffix that
-/// announces the 0.16.0 wording is byte-exact.
+/// §FS-check.3.8.4 / §FS-errors.3.3: the scope-only message is the final
+/// wording byte for byte — what the subtree holds, then where to check from —
+/// with neither the earlier `only the <scope> subtree` prefix nor a suffix
+/// naming the release its wording changes in.
 #[test]
-fn narrowed_scope_only_message_has_the_0132_compatibility_form() {
+fn narrowed_scope_only_message_is_the_final_wording() {
     let actual = unknown_project_message("alpha", ["group/alpha"].into_iter(), "group");
-    let legacy = legacy_scope_only_message("alpha", "group");
-    assert_eq!(
-        actual.get(..legacy.len()),
-        Some(legacy.as_str()),
-        "the complete legacy diagnostic must remain a contiguous prefix"
-    );
-    assert_eq!(
-        actual.get(legacy.len()..),
-        Some(
-            SCOPE_CLARIFICATION_SUFFIX
-                .replace("{scope}", "group")
-                .as_str()
-        ),
-        "the compatibility suffix must be byte-exact"
-    );
-    assert_eq!(actual, migrating_scope_only_message("alpha", "group"));
-}
-
-/// The scope-only message §FS-check.3.8.4 fixes for `0.16.0`, once the
-/// compatibility suffix is gone.
-fn final_scope_only_message(namespace: &str, scope: &str) -> String {
-    format!(
-        "unknown project alias {namespace}; the {scope} project and its descendants are in scope here — check from the workspace root for a path outside that subtree"
-    )
-}
-
-/// The `major.minor.patch` of a version string, ignoring any `-dev` tail.
-fn release(text: &str) -> (u64, u64, u64) {
-    let mut parts = text.split('.').map(|part| {
-        part.split(|ch: char| !ch.is_ascii_digit())
-            .next()
-            .unwrap_or("0")
-            .parse::<u64>()
-            .unwrap_or_else(|_| panic!("not a version: {text}"))
-    });
-    (
-        parts.next().unwrap_or(0),
-        parts.next().unwrap_or(0),
-        parts.next().unwrap_or(0),
-    )
-}
-
-/// §FS-check.3.8.4: the suffix names the release its own wording changes in, so
-/// it may not survive that release. `narrowed_scope_only_message_has_the_0132_compatibility_form`
-/// above pins the suffix byte-exactly but reads no version, so nothing there
-/// reddens at the bump that reaches `0.16.0`; this case is the deadline half, in
-/// the shape `the_agents_init_tail_cannot_survive_the_release_it_names` uses for
-/// the other wording ramp this tree carries.
-///
-/// While the compatibility form ships, this tree may not be at or above the
-/// release the suffix names, and the final wording may not have leaked in early.
-/// From `0.16.0` the other branch is the live one: no suffix, and the message is
-/// exactly the final form. It passes today by design — the running version has
-/// not reached `0.16.0` — and reddens at the bump that does.
-#[test]
-fn the_scope_clarification_suffix_cannot_survive_the_release_it_names() {
-    let actual = unknown_project_message("alpha", ["group/alpha"].into_iter(), "group");
-    let suffix = SCOPE_CLARIFICATION_SUFFIX.replace("{scope}", "group");
-
-    if actual.ends_with(&suffix) {
-        assert!(
-            release(env!("CARGO_PKG_VERSION")) < release("0.16.0"),
-            "this tree reached 0.16.0; land §FS-check.3.8.4's final scope-only wording instead of shipping the compatibility suffix"
-        );
-        assert!(
-            !actual.contains("are in scope here"),
-            "the final wording landed before its release: {actual}"
-        );
-        return;
-    }
-
     assert_eq!(actual, final_scope_only_message("alpha", "group"));
+    assert!(
+        !actual.contains("wording changes in"),
+        "the compatibility suffix outlived its release: {actual}"
+    );
 }
 
 /// §FS-check.3.8.3: narrowed runs still suppress the new tier. When `--full`
@@ -190,7 +114,7 @@ fn proper_prefix_hint_preserves_scope_decorations() {
     let known = ["group/alpha"];
     assert_eq!(
         unknown_project_message("group", known.into_iter(), "left"),
-        migrating_scope_only_message("group", "left")
+        final_scope_only_message("group", "left")
     );
     let diagnostic = Diagnostic {
         code: "unknown-project",
@@ -253,7 +177,7 @@ fn a_narrowed_alias_run_rejects_paths_that_are_not_strict_segment_extensions() {
                 ["group", "group/alpha", "group/alpha/beta"].into_iter(),
                 scope,
             ),
-            migrating_scope_only_message(namespace, scope),
+            final_scope_only_message(namespace, scope),
             "§FS-check.3.8.1: {namespace:?} must not be treated as inside {scope:?}"
         );
     }

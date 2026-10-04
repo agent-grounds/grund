@@ -180,14 +180,14 @@ The unknown-project recovery shape in [§FS-check.3.8](FS-check.md#38-cross-proj
 
 ### 3.3 The narrowed-run unknown-project wording migration
 
-The narrowed-run scope-only unknown-project message has a three-release wording
-migration, whose `0.13.2` compatibility form and `0.16.0` final template are
-fixed in [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure). The `0.13.2` suffix is part of the existing error
-message, not a second warning finding. Exact-line consumers must migrate
-during this window to the stable `code == "unknown-project"`; the code, error
-severity, sites, selectors, and exit verdict do not change. Workspace-root
-candidate messages and bare unknown-project messages remain unchanged
-throughout this migration.
+The narrowed-run scope-only unknown-project message took a three-release wording
+migration, which ended in `0.16.0`: its final template is fixed in
+[§FS-check.3.8.4](FS-check.md#384-the-scope-only-message-across-three-releases), and the `0.13.2` compatibility suffix — part of the error
+message, never a second warning finding — is gone. Exact-line consumers were
+asked to migrate during the window to the stable `code == "unknown-project"`;
+the code, error severity, sites, selectors, and exit verdict did not change.
+Workspace-root candidate messages and bare unknown-project messages were
+unchanged throughout.
 
 ### 3.4 The `check` channel prefix
 

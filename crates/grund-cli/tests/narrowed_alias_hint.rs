@@ -38,12 +38,10 @@ fn assert_failed_with(output: &Output, expected_stdout: &str, command: &str) {
     );
 }
 
-const SCOPE_SUFFIX: &str = " — here, the {scope} subtree means the {scope} project and its descendants; this wording changes in grund 0.16.0";
-
+/// §FS-check.3.8.4: the final scope-only wording.
 fn scope_only(alias: &str, scope: &str) -> String {
     format!(
-        "unknown project alias {alias}; only the {scope} subtree is in scope here — check from the workspace root for a path outside it{}",
-        SCOPE_SUFFIX.replace("{scope}", scope)
+        "unknown project alias {alias}; the {scope} project and its descendants are in scope here — check from the workspace root for a path outside that subtree"
     )
 }
 
@@ -96,7 +94,7 @@ fn narrowed_alias_hints_only_rewrite_paths_inside_the_scope() {
     assert_failed_with(&narrowed, &narrowed_text(), "(cd group && grund check)");
 }
 
-/// §FS-errors.3.3: text and JSON carry the same 0.13.2 message bytes in one
+/// §FS-errors.3.3: text and JSON carry the same final message bytes in one
 /// error diagnostic per citation; stable codes still drive `--only`/`--ignore`.
 #[test]
 fn narrowed_scope_clarification_preserves_json_fields_and_code_selection() {
