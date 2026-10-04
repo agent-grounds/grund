@@ -13,13 +13,12 @@ use crate::templates::{
 };
 use std::collections::BTreeMap;
 
-const AGENTS_INIT_COMPATIBILITY_TAIL: &str =
-    " — repo maintenance; citation checks still ran; wording changes in grund 0.16.0";
-
-/// Preserve the legacy diagnostic as a contiguous prefix while giving readers
-/// the maintenance classification during the two-release migration (§FS-errors.3.6).
-fn agents_init_compatibility_message(legacy: String) -> String {
-    format!("{legacy}{AGENTS_INIT_COMPATIBILITY_TAIL}")
+/// One of §FS-errors.3.6.1's five final templates around its `detail`: the
+/// `repo maintenance: ` classification ahead, and the reminder that the finding
+/// leaves citation validity alone behind. A message classification only, not a
+/// finding category or selector value (§FS-check.1).
+fn agents_init_message(detail: String) -> String {
+    format!("repo maintenance: {detail} (does not affect citation validity)")
 }
 
 /// Validate the managed agent-entrypoint blocks (§FS-check.3.5): the begin/end
@@ -155,9 +154,7 @@ fn check_agent_block_path_with_rules(
                 path: Some(path.to_path_buf()),
                 line: Some(line_for_byte_index(&text, at)),
                 column: None,
-                message: agents_init_compatibility_message(format!(
-                    "malformed grund managed block: {message}"
-                )),
+                message: agents_init_message(format!("malformed grund managed block: {message}")),
                 sites: Vec::new(),
                 authority: Vec::new(),
             });
@@ -179,8 +176,8 @@ fn check_agent_block_path_with_rules(
                 path: Some(path.to_path_buf()),
                 line: Some(line),
                 column: None,
-                message: agents_init_compatibility_message(format!(
-                    "outdated grund init block v{} (run `grund init` to update to v{})",
+                message: agents_init_message(format!(
+                    "outdated grund init block v{} — run `grund init` to update to v{}",
                     block.version, expected_version
                 )),
                 sites: Vec::new(),
@@ -192,8 +189,8 @@ fn check_agent_block_path_with_rules(
                 path: Some(path.to_path_buf()),
                 line: Some(line),
                 column: None,
-                message: agents_init_compatibility_message(format!(
-                    "unsupported grund init block v{} (this grund supports v{})",
+                message: agents_init_message(format!(
+                    "unsupported grund init block v{} — this grund supports v{}",
                     block.version, expected_version
                 )),
                 sites: Vec::new(),
@@ -233,8 +230,8 @@ fn check_agent_block_path_with_rules(
                         path: Some(path.to_path_buf()),
                         line: Some(line),
                         column: None,
-                        message: agents_init_compatibility_message(format!(
-                            "stale grund init block: {noun} differ from grund.toml (run `grund init` to refresh)"
+                        message: agents_init_message(format!(
+                            "stale grund init block: {noun} differ from grund.toml — run `grund init` to refresh"
                         )),
                         sites: Vec::new(),
                     authority: Vec::new(),});
@@ -251,8 +248,8 @@ fn check_agent_block_path_with_rules(
         path: Some(path.to_path_buf()),
         line: Some(1),
         column: None,
-        message: agents_init_compatibility_message(format!(
-            "missing grund init block v{}",
+        message: agents_init_message(format!(
+            "missing grund init block v{} — run `grund init` to install it",
             expected_version
         )),
         sites: Vec::new(),
