@@ -377,6 +377,10 @@ The `github` (and `gitlab`) profile reproduces `github-slugger` byte-for-byte: d
 
 For an explicit named heading, the rendered text includes the name and colon. Thus `## goals: Scope` produces `#goals-scope` under the GitHub profile. Retitling it to `## goals: Intent` refreshes an existing wrapper to `#goals-intent` on the next pass while the stored name and citation text remain `goals`.
 
+#### 6.2.5 The destination does not depend on how the file was named
+
+`<relative-path>` is computed from where the citing file and the declaring file are, never from how the file argument was spelled. A file named without a directory part is the working directory's file ([§FS-config.1.4](FS-config.md#14-a-file-argument-with-no-directory-part)), so `grund fmt NAME` and `grund fmt ./NAME` preview, check and write the same link, and `--write` reports the file by the same path.
+
 ### 6.3 Idempotency and re-derive
 
 Per [§DF-md-link-anchor-strategy.2.2](../decisions/functional/DF-md-link-anchor-strategy.md#22-re-derive-on-every-pass-supersede-fs-fmt63), every `grund fmt --cross-refs` pass recomputes the canonical URL inside each existing wrap and rewrites if it differs. This makes `fmt` a normalizer, not a preserver: a heading rename or a file move that invalidates a wrap produces a one-line `fmt` diff on the next pass, instead of a silently-broken link.
