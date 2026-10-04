@@ -31,7 +31,9 @@ use crate::scanner::overlay_text;
 use super::body_lines::{
     closes_comment_block, join_with_blank, push_outline_section, truncate_to_first_paragraph,
 };
-use super::comment_envelope::{clean_body_line, is_comment_body_line, is_line_style_comment_line};
+use super::comment_envelope::{
+    clean_envelope_line, continues_comment_body, is_line_style_comment_line, own_line_marker,
+};
 
 /// Pull the body text of a declaration out of its file: the lines under the
 /// `# <ID>: …` heading down to the next same-or-shallower heading (§FS-show.2.1),
@@ -189,6 +191,7 @@ pub(super) fn extract_declaration_body_cached(
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let mut in_decl = false;
     let mut line_style_comment = false;
+    let mut own_marker: Option<String> = None;
     let mut block_closed = false;
     let mut py_docstring = PythonDocstringScanState::default();
     let mut found_section = section.is_none();
@@ -239,6 +242,10 @@ pub(super) fn extract_declaration_body_cached(
             if &found == id && selected_declaration {
                 in_decl = true;
                 line_style_comment = is_line_style_comment_line(scan_line);
+                // §FS-show.2.3.1.1: a `--` or `;` body is read behind its own marker.
+                own_marker = (!is_md && !scan.in_py_docstring)
+                    .then(|| own_line_marker(scan_line, config.lexical()))
+                    .flatten();
                 block_closed = closes_comment_block(
                     scan_line,
                     line_style_comment,
@@ -249,7 +256,11 @@ pub(super) fn extract_declaration_body_cached(
                 // `md` format keeps the heading verbatim — including for `--brief`,
                 // which then prints heading + first paragraph (§FS-show.3.1.2).
                 if include_heading {
-                    lines.push(clean_body_line(scan_line, is_md || scan.in_py_docstring));
+                    lines.push(clean_envelope_line(
+                        scan_line,
+                        is_md || scan.in_py_docstring,
+                        own_marker.as_deref(),
+                    ));
                 }
                 if scan.closed_py_docstring {
                     break;
@@ -273,7 +284,7 @@ pub(super) fn extract_declaration_body_cached(
                 if line_style_comment {
                     break;
                 }
-            } else if !is_comment_body_line(scan_line) {
+            } else if !continues_comment_body(scan_line, own_marker.as_deref(), config.lexical()) {
                 break;
             }
             block_closed =
@@ -296,6 +307,7 @@ pub(super) fn extract_declaration_body_cached(
                             sec,
                             depth,
                             is_md || scan.in_py_docstring,
+                            own_marker.as_deref(),
                         );
                         continue;
                     }
@@ -313,7 +325,11 @@ pub(super) fn extract_declaration_body_cached(
                         target_depth = depth;
                         output_line = lineno;
                         if mode != ShowRenderMode::Outline {
-                            lines.push(clean_body_line(scan_line, is_md || scan.in_py_docstring));
+                            lines.push(clean_envelope_line(
+                                scan_line,
+                                is_md || scan.in_py_docstring,
+                                own_marker.as_deref(),
+                            ));
                         }
                         continue;
                     }
@@ -331,6 +347,7 @@ pub(super) fn extract_declaration_body_cached(
                             sec,
                             depth - target_depth,
                             is_md || scan.in_py_docstring,
+                            own_marker.as_deref(),
                         );
                         continue;
                     }
@@ -338,7 +355,11 @@ pub(super) fn extract_declaration_body_cached(
             }
         }
         if found_section && mode != ShowRenderMode::Outline {
-            lines.push(clean_body_line(scan_line, is_md || scan.in_py_docstring));
+            lines.push(clean_envelope_line(
+                scan_line,
+                is_md || scan.in_py_docstring,
+                own_marker.as_deref(),
+            ));
         }
         if in_decl && scan.closed_py_docstring {
             break;
