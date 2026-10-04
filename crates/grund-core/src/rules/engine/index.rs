@@ -8,7 +8,7 @@ use super::super::facts::{NodeKey, RuleFacts, SiteKey};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// A borrowed physical citation row, including its immediate source (§FS-rules.5.1).
-pub(super) type Citation = (SiteKey, NodeKey, NodeKey);
+pub(super) type CitationRow = (SiteKey, NodeKey, NodeKey);
 
 /// Private evaluation data, never a producer or serialized boundary (§AR-rules.3.1).
 pub(super) struct FactIndex<'a> {
@@ -16,8 +16,8 @@ pub(super) struct FactIndex<'a> {
     pub(super) labels: BTreeMap<&'a str, Vec<&'a NodeKey>>,
     chapters: BTreeMap<&'a NodeKey, Vec<usize>>,
     pub(super) paths: BTreeMap<&'a str, Vec<&'a NodeKey>>,
-    outgoing: BTreeMap<&'a NodeKey, Vec<&'a Citation>>,
-    incoming: BTreeMap<&'a NodeKey, Vec<&'a Citation>>,
+    outgoing: BTreeMap<&'a NodeKey, Vec<&'a CitationRow>>,
+    incoming: BTreeMap<&'a NodeKey, Vec<&'a CitationRow>>,
     kinds: BTreeMap<&'a NodeKey, &'a str>,
     parents: BTreeMap<&'a NodeKey, Vec<&'a NodeKey>>,
     owners: BTreeMap<&'a NodeKey, Option<&'a NodeKey>>,
@@ -137,12 +137,12 @@ impl<'a> FactIndex<'a> {
     }
 
     /// Physical citation rows contained in this unit, once per row (§FS-rules.5.1).
-    pub(super) fn citations_in(&self, node: &NodeKey) -> &[&'a Citation] {
+    pub(super) fn citations_in(&self, node: &NodeKey) -> &[&'a CitationRow] {
         self.outgoing.get(node).map(Vec::as_slice).unwrap_or(&[])
     }
 
     /// Incoming rows match the immediate target, without owner promotion (§FS-rules.3.4).
-    pub(super) fn citations_to(&self, node: &NodeKey) -> &[&'a Citation] {
+    pub(super) fn citations_to(&self, node: &NodeKey) -> &[&'a CitationRow] {
         self.incoming.get(node).map(Vec::as_slice).unwrap_or(&[])
     }
 }
