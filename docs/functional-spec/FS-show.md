@@ -83,7 +83,7 @@ hint: `show` reads one coordinate, so `<path>` is the path; read both with `prin
 
 `<ID>` is the first operand as typed, inline section included; where `--section <s>` named the section, the first object is `{"id":"<ID>","section":"<s>"}` instead. The `%s\n` is printed literally, as the shell command needs it. Appending is what [§FS-errors.3](FS-errors.md#3-message-text) permits: the existing message survives as a verbatim prefix, and the hint changes nothing else. Stdout stays empty, the exit stays `2`, and stderr stays raw text under `--format=json` ([§FS-errors.2.2.4](FS-errors.md#224-under---formatjson), [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)). The path is never re-read as a query and nothing is resolved because of the hint.
 
-No hint is appended for a missing `--path`, which was named as a path on purpose; for a missing positional operand that is not coordinate-shaped, such as `docs/nope`; or for any `--batch` run. A coordinate-shaped operand that does exist, such as a directory named `FS-cli`, is scanned as before and the run succeeds.
+No hint is appended for a missing `--path`, which was named as a path on purpose; for a missing positional operand that is not coordinate-shaped, such as `docs/nope`; or for any `--batch` run; nor when the configuration cannot be loaded, in which case the error line and exit `2` stand alone. A coordinate-shaped operand that does exist, such as a directory named `FS-cli`, is scanned as before and the run succeeds.
 
 ### 1.5 `--section <s>`
 
