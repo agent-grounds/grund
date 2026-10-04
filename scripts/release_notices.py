@@ -88,7 +88,7 @@ def _published(notice: Notice, docs_relative: str) -> list[str]:
     record = PurePosixPath(notice.path)
     within = record.relative_to(docs_relative) if docs_relative else record
     source = within.parent.parts
-    anchored = within.as_posix()
+    anchored = within.name
     published = []
     for line in lines:
         line = ANCHOR_LINK_RE.sub(lambda match: f"]({anchored}{match.group('fragment')})", line)
