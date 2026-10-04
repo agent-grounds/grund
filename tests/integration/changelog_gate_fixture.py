@@ -30,6 +30,16 @@ class GitFixture:
     """Git in a throwaway repository, isolated from the user's configuration. No
     network, no `gh`, no remote. Mixed into a `unittest.TestCase`."""
 
+    def _init_repository(self, repo: Path) -> None:
+        """Create a main-branch repository with automatic maintenance disabled.
+
+        §AR-ci.10.4: local policy also covers direct commits and rebases, keeping
+        detached repository writers from crossing strict fixture cleanup.
+        """
+        self._git(repo.parent, "init", "-b", "main", str(repo))
+        self._git(repo, "config", "--local", "gc.auto", "0")
+        self._git(repo, "config", "--local", "maintenance.auto", "false")
+
     def _git(self, repo: Path, *arguments: str) -> str:
         result = subprocess.run(
             ["git", "-C", str(repo), *arguments],

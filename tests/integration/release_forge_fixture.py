@@ -101,7 +101,7 @@ class ForgeRepository(GitFixture):
         self.addCleanup(scratch.cleanup)
         self.scratch = Path(scratch.name)
         self.repo = self.scratch / "repo"
-        self._git(self.scratch, "init", "-q", "-b", "main", str(self.repo))
+        self._init_repository(self.repo)  # §AR-ci.10.4: prevent detached cleanup writers.
         self.day = 0
         self.answers = {"repo": dict(REPOSITORY), "commits": {}, "fail": {}}
         self.base = self._land("The base", files)
