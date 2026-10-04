@@ -114,21 +114,6 @@ impl RefsQueryFailure {
     }
 }
 
-/// The compatibility warning is engine data consumed by the CLI during the
-/// §FS-refs.4 release ramp; no process policy lives in the engine
-/// (§AR-system.2.9.1).
-pub const REFS_QUERY_FAILURE_WARNING: &str = "warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.16.0";
-
-/// Whether §FS-refs.4's resolver-rejection mapping has reached its exit-`1`
-/// phase. Frontends own process exit codes, but consume this one core policy.
-pub fn refs_query_failure_is_exit_one() -> bool {
-    let mut parts = env!("CARGO_PKG_VERSION")
-        .trim_end_matches("-dev")
-        .split('.')
-        .filter_map(|part| part.parse::<u32>().ok());
-    (parts.next().unwrap_or(0), parts.next().unwrap_or(0)) >= (0, 16)
-}
-
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct RefsOutput {
     pub output_format: String,
@@ -159,8 +144,8 @@ impl std::fmt::Display for RefsOutput {
     }
 }
 
-/// The additive classified `refs` result used by process frontends during the
-/// §FS-refs.4 release ramp. Keeping the carrier outside [`RefsOutput`] preserves
+/// The additive classified `refs` result process frontends render a resolver
+/// rejection from as a failed query (§FS-refs.4). Keeping the carrier outside [`RefsOutput`] preserves
 /// the exhaustively constructible embedding API required by §AR-bindings.2.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct RefsOutcome {
@@ -171,7 +156,7 @@ pub struct RefsOutcome {
 /// Programmatic `refs` with the typed resolver-rejection outcome process
 /// frontends need to apply §FS-refs.4 without parsing an error string.
 /// Recorded target ambiguities return `Err` carrying `ShowQueryError` and the
-/// run's `RefsOutput` metadata; they are outside the grammar-resolver ramp.
+/// run's `RefsOutput` metadata.
 pub fn refs_outcome(opts: RefsOpts) -> Result<RefsOutcome> {
     Ok(refs_with_metadata(opts)?.outcome)
 }

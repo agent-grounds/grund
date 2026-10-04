@@ -2,7 +2,7 @@
 
 The evidence [§DISC-grund-core-public-surface](2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) argues from. It classifies nothing on its own authority: the counting convention is [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name), the columns are [§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries), and `tests/integration/test_public_surface_inventory.py` holds the first column equal to the crate root's export list ([§DISC-grund-core-public-surface.5](2026-09-22-grund-core-public-surface.md#5-what-is-checked)).
 
-Read on the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. **184 rows, one per public root name.** If the audit is re-taken on a later commit, that table and every row below move together.
+Read on the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. **182 rows, one per public root name.** If the audit is re-taken on a later commit, that table and every row below move together.
 
 ## How a cell reads
 
@@ -24,22 +24,22 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 184 |
-| Rustdoc-visible | 171 |
+| Public root names | 182 |
+| Rustdoc-visible | 169 |
 | `#[doc(hidden)]` | 13 |
-| Named, a related API, or a data type of one | 104 |
-| Outside that closure | 80 |
-| Named by a frontend or its tests | 113 |
+| Named, a related API, or a data type of one | 103 |
+| Outside that closure | 79 |
+| Named by a frontend or its tests | 111 |
 | Reached structurally only | 33 |
 | No repository consumer of either kind | 38 |
-| Disposition keep | 109 |
+| Disposition keep | 108 |
 | Disposition keep, hidden | 13 |
 | Disposition keep, name in the spec | 16 |
 | Disposition hide | 11 |
-| Disposition retire with the ramp | 1 |
+| Disposition retire with the ramp | 0 |
 | Disposition facade, then retire | 34 |
 
-The two count columns do not line up, and they are not meant to: 38 names have no repository consumer while 80 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 38 names have no repository consumer while 79 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
@@ -186,8 +186,6 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `RefHit` | api | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `refs` | api | visible | related API | none found | none found | keep |
 | `refs_outcome` | api | visible | related API | none found | none found | keep |
-| `refs_query_failure_is_exit_one` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `REFS_QUERY_FAILURE_WARNING` | api | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | retire with the ramp |
 | `refs_with_metadata` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `RefsOpts` | api | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `RefsOutcome` | api | visible | data type of `refs_outcome` | none found | via refs_with_metadata → RefsWithMetadata → RefsOutcome `grund-cli/src/cli_refs.rs:58` | keep |

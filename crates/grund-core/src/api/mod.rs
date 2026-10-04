@@ -68,9 +68,8 @@ pub use list::{
 };
 pub use lsp_snapshot::{lsp_snapshot, lsp_snapshot_with_metadata};
 pub use refs::{
-    REFS_QUERY_FAILURE_WARNING, RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure,
-    RefsQueryFailureKind, RefsWithMetadata, refs, refs_outcome, refs_query_failure_is_exit_one,
-    refs_with_metadata,
+    RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsQueryFailureKind,
+    RefsWithMetadata, refs, refs_outcome, refs_with_metadata,
 };
 pub use report::render_finding_sites_json;
 pub use show::{show, show_with_overlays, show_with_scope};
