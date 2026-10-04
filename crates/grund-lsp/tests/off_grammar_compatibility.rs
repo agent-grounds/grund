@@ -44,15 +44,15 @@ fn off_grammar_declaration_has_cli_parity_across_lsp_surfaces() {
         Some(diagnostic) => {
             let message = diagnostic["message"].as_str().unwrap_or_default();
             if !message.contains("resolves for compatibility")
-                || !message.contains("error in grund 0.16.0")
+                || !message.contains("this became an error in grund 0.16.0")
             {
                 failures.push(format!("LSP diagnostic has stale message: {diagnostic:?}"));
             }
-            if diagnostic["severity"].as_i64() != Some(2)
+            if diagnostic["severity"].as_i64() != Some(1)
                 || diagnostic["range"]["start"]["line"].as_i64() != Some(0)
             {
                 failures.push(format!(
-                    "LSP warning location/severity drifted: {diagnostic:?}"
+                    "LSP error location/severity drifted: {diagnostic:?}"
                 ));
             }
         }

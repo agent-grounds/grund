@@ -194,28 +194,29 @@ fn persisted_off_grammar_declaration_is_read_consistently_across_cli_surfaces() 
     }
 
     let check = run(&root, &["check"]);
-    expect_code(&mut failures, "check text", &check, 0);
+    expect_code(&mut failures, "check text", &check, 1);
     let check_text = stdout(&check);
     for needle in [
         "docs/functional-spec/FS-security-providers.md:1:",
         "resolves for compatibility",
         "[id] format = \"{kind}-{number}-{slug}\"",
-        "this warning becomes an error in grund 0.16.0",
+        ": error: ",
+        "this became an error in grund 0.16.0",
     ] {
         expect_contains(&mut failures, "check text", &check_text, needle);
     }
     if check_text.contains("success\n") {
-        failures.push("check text: a warning-bearing run printed `success`".into());
+        failures.push("check text: an error-bearing run printed `success`".into());
     }
     if check_text.contains("FS-not-declared") {
         failures.push("check text: an unbacked malformed candidate became a citation".into());
     }
 
     let check_json = run(&root, &["check", "--format", "json"]);
-    expect_code(&mut failures, "check json", &check_json, 0);
+    expect_code(&mut failures, "check json", &check_json, 1);
     let json_text = stdout(&check_json);
     for needle in [
-        "\"severity\":\"warning\"",
+        "\"severity\":\"error\"",
         "\"code\":\"declaration-near-miss\"",
         "\"path\":\"docs/functional-spec/FS-security-providers.md\"",
         "\"line\":1",
@@ -330,7 +331,7 @@ fn off_grammar_workspace_qualified_reads_use_the_target_per_kind_catalog() {
         expect_contains(&mut failures, name, &stdout(&output), needle);
     }
     let check = run(&root, &["check"]);
-    expect_code(&mut failures, "workspace check", &check, 0);
+    expect_code(&mut failures, "workspace check", &check, 1);
     let check_text = stdout(&check);
     expect_contains(
         &mut failures,

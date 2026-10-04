@@ -114,7 +114,7 @@ fn a_heading_in_a_later_doc_comment_is_not_this_declarations_section() {
     );
     write(
         &root.join("docs/goals.md"),
-        "# GOAL-x: X\n\nCites §AR-001-core.1.\n",
+        "# GOAL-001-x: X\n\nCites §AR-001-core.1.\n",
     );
     let config = legacy_fs_folder_config(root.clone());
     let findings = scan_findings(&config, &root);
@@ -215,7 +215,7 @@ fn a_stubs_own_prose_declares_no_sections() {
     );
     write(
         &root.join("docs/goals.md"),
-        "# GOAL-x: X\n\nCites §AR-001-core.1.\n",
+        "# GOAL-001-x: X\n\nCites §AR-001-core.1.\n",
     );
     let config = legacy_fs_folder_config(root.clone());
     let findings = scan_findings(&config, &root);

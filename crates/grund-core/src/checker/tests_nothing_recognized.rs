@@ -27,8 +27,8 @@ fn caution(run: &CheckRun) -> Option<&Diagnostic> {
 ///
 /// §FS-declarations.checks.declaration-near-miss now answers this tree per heading, so the caution is
 /// withheld under its own "any other finding" rule — the specific fact
-/// displaces the general one. What the test pins is unchanged: the run stops
-/// saying `success`, and the exit code is untouched either way.
+/// displaces the general one. The run stops saying `success`; since grund
+/// 0.16.0 the near misses are errors, so it also exits `1`.
 #[test]
 fn a_tree_written_for_another_id_format_stops_reporting_success() {
     let root = test_root("a_tree_written_for_another_id_format_stops_reporting_success");
@@ -50,7 +50,7 @@ fn a_tree_written_for_another_id_format_stops_reporting_success() {
     );
     let named = run
         .report
-        .warnings
+        .errors
         .iter()
         .filter(|diagnostic| diagnostic.code == "declaration-near-miss")
         .count();
@@ -60,9 +60,10 @@ fn a_tree_written_for_another_id_format_stops_reporting_success() {
         "one per heading that came close: {:?}",
         findings(&run)
     );
-    assert!(
-        run.report.errors.is_empty(),
-        "§DF-nothing-recognized.2.2: the exit code is untouched — what is taken away is the `success` marker"
+    assert_eq!(
+        run.report.errors.len(),
+        2,
+        "§FS-declarations.checks.declaration-near-miss.5: the near misses are the run's only errors"
     );
 }
 

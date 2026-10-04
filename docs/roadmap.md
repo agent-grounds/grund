@@ -16,39 +16,13 @@ text included, is kept while released changelogs still cite it.
 
 ## RM-off-grammar-declaration-error: make off-grammar declarations a check error in 0.16.0
 
-Catalog-backed compatibility keeps persisted declarations readable while the
-configured format remains enforceable, serving
-[§GOAL-no-dangling-refs](goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration).
-The warning period required by
-[§REQ-backwards-compatibility.2](requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)
-must end rather than becoming a permanent promise.
-
-### 1. What
-
-In grund 0.16.0, change `declaration-near-miss` from warning to error and replace
-its future-tense deadline with the past-tense report that it became an error in
-0.16.0 ([§FS-declarations.checks.declaration-near-miss](functional-spec/FS-declarations.md#checksdeclaration-near-miss-declaration-near-miss)). Keep its code, declaration location, message identity,
-and the catalog-backed lookup and citation compatibility unchanged. The severity
-is one cell of the code catalog ([§FS-errors.5.5](functional-spec/FS-errors.md#55-the-check-code-catalog)), so the promotion edits that
-cell; the check keeps the section its code names and no citation of it moves
-([§REQ-spec-section-names.code](requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)). The
-release-ramp guard must reject a version at or beyond 0.16.0 while the warning
-form remains.
-
-### 2. Why now
-
-The repository author must choose whether the persisted ID or configured
-format is authoritative; grund cannot safely rewrite either. A full warning
-window makes that judgment visible before CI changes verdict while preserving
-read access throughout.
-
-### 3. Measurable
-
-At 0.16.0, the same fixture that warns and exits `0` on 0.14.x and 0.15.x reports one
-located error and exits `1`; `show`, `refs`, `list`, completion, `cover`,
-cross-reference formatting, and LSP navigation remain byte-for-byte compatible
-with their pre-flip result. No shipped diagnostic promises a deadline the
-running version has reached.
+This milestone shipped in grund 0.16.0: `declaration-near-miss` is an error,
+and its record is the compatibility notice that landed it,
+[§DF-off-grammar-declaration-compatibility.release-note](decisions/functional/DF-off-grammar-declaration-compatibility.md#release-note-release-note),
+together with
+[§FS-declarations.checks.declaration-near-miss.5](functional-spec/FS-declarations.md#checksdeclaration-near-miss5-a-warning-before-0160-an-error-in-it).
+The item's own plan is removed, as a shipped item's is; this address, heading
+text included, is kept while released changelogs still cite it.
 
 ## RM-refs-resolver-rejection-exit: make refs resolver rejections failed queries in 0.16.0
 

@@ -1,4 +1,4 @@
-//! Test module: the declaration near-miss warning (§FS-declarations.checks.declaration-near-miss) — a heading
+//! Test module: the declaration near-miss error (§FS-declarations.checks.declaration-near-miss) — a heading
 //! that opens like a declaration and parses as none.
 
 use std::fs;
@@ -20,8 +20,8 @@ fn near_miss_repo(name: &str, heading: &str) -> PathBuf {
     root
 }
 
-/// §FS-declarations.checks.declaration-near-miss.5 / §RM-off-grammar-declaration-error: the classic stumble
-/// stays a warning with a named deadline before 0.16.0.
+/// §FS-declarations.checks.declaration-near-miss.5: the classic stumble is an
+/// error that names the release it became one in.
 #[test]
 fn off_grammar_heading_missing_the_number_is_reported() {
     let root = near_miss_repo(
@@ -34,20 +34,16 @@ fn off_grammar_heading_missing_the_number_is_reported() {
         finding.message,
         "`FS-login` resolves for compatibility but does not match \
              [id] format = \"{kind}-{number}-{slug}\" — rename it or change the \
-             effective format; this warning becomes an error in grund 0.16.0"
+             effective format; this became an error in grund 0.16.0"
     );
     assert_eq!(finding.line, Some(1));
-
-    let version = |text: &str| {
-        text.trim_end_matches("-dev")
-            .split('.')
-            .map(|part| part.parse::<u32>().expect("numeric version"))
-            .collect::<Vec<_>>()
-    };
     assert!(
-        version(env!("CARGO_PKG_VERSION")) < version("0.16.0"),
-        "this tree reached 0.16.0; land §RM-off-grammar-declaration-error \
-             instead of shipping the warning past its deadline"
+        run.report
+            .errors
+            .iter()
+            .any(|diagnostic| diagnostic.code == "declaration-near-miss"),
+        "the near miss is reported on the errors channel: {:?}",
+        findings(&run)
     );
 }
 
@@ -80,14 +76,15 @@ fn an_off_grammar_declaration_and_its_exact_marked_citation_remain_readable() {
     assert!(shown.body.contains("Stable."), "{}", shown.body);
 
     let report = check(&root).expect("check fixture");
-    assert!(report.errors.is_empty(), "{:?}", report.errors);
     assert_eq!(
         report
-            .warnings
+            .errors
             .iter()
-            .filter(|finding| finding.code == "declaration-near-miss")
-            .count(),
-        1
+            .map(|finding| finding.code)
+            .collect::<Vec<_>>(),
+        ["declaration-near-miss"],
+        "{:?}",
+        report.errors
     );
     assert!(
         report
@@ -149,10 +146,9 @@ fn off_grammar_kind_override_owns_its_near_miss_shape_and_message() {
     assert!(shown.body.contains("Ticket body"), "{}", shown.body);
 
     let run = check_run(&root, false);
-    assert!(run.report.errors.is_empty(), "got {:?}", findings(&run));
     let near_misses = run
         .report
-        .warnings
+        .errors
         .iter()
         .filter(|finding| finding.code == "declaration-near-miss")
         .collect::<Vec<_>>();
@@ -162,7 +158,7 @@ fn off_grammar_kind_override_owns_its_near_miss_shape_and_message() {
         near_misses[0].message,
         "`TICKET-old` resolves for compatibility but does not match \
              [id] format = \"{kind}_{number}\" — rename it or change the \
-             effective format; this warning becomes an error in grund 0.16.0"
+             effective format; this became an error in grund 0.16.0"
     );
 }
 
