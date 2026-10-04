@@ -20,6 +20,7 @@ How a citation is written, and what counts as one.
 - [§DF-python-assigned-triple-quoted-data](DF-python-assigned-triple-quoted-data.md#df-python-assigned-triple-quoted-data-module-level-assigned-triple-quoted-strings-are-data-not-docstrings) — module-level assigned triple-quoted strings are data, not docstrings
 - [§DF-unmarked-markdown-headings](DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph) — in-body Markdown ATX headings participate in the knowledge graph
 - [§DF-escape-position-is-not-a-citation](DF-escape-position-is-not-a-citation.md#df-escape-position-is-not-a-citation-an-escape-position-is-not-a-citation-in-either-strict-mode) — an escape position is not a citation, in either strict mode
+- [§DF-inline-code-span-closes-on-its-own-run](DF-inline-code-span-closes-on-its-own-run.md#df-inline-code-span-closes-on-its-own-run-an-inline-code-span-closes-on-a-run-of-its-own-length) — an inline code span closes on a run of its own length
 
 ## Cross-reference links
 

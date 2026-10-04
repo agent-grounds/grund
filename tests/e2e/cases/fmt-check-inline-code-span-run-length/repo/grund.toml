@@ -1,0 +1,18 @@
+grund_config_version = 1
+project_name = "inline-code-span"
+
+[reference]
+marker = "§"
+strict = true
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+title = "Goals"
+
+[scan]
+include = ["docs"]
+
+[fmt.cross_refs]
+enabled = true
+anchor_format = "github"
