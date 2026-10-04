@@ -580,6 +580,19 @@ change.
 other public code; their
 value grammar takes codes only and never a rule identity
 ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
+
+The **rule-produced codes** are the eight a rule finding can carry: the four
+only rules produce — `chapter-cardinality`, `citation-cardinality`,
+`uncited-unit`, and `unreached-declaration` — and the four rules share with
+citation directions ([§FS-rules.7.3](FS-rules.md#73-outbound-citation-cardinality),
+[§FS-rules.7.5](FS-rules.md#75-prohibition-and-recommendation-reuse)) —
+`missing-citation`, `forbidden-citation`, `discouraged-citation`, and
+`suggested-citation`. `invalid-rule` is selectable like every other public code,
+and is also selected whenever a code from that set is: a run narrowed to what
+rules find keeps every `invalid-rule` row, because a skipped rule is a check that
+run did not evaluate
+([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)).
+`--ignore invalid-rule` still removes them.
 Rule-derived JSON adds no `sites` list — a rule finding names one site, so the
 multi-site field stays `null` on every one of them. It does carry the rule
 authority as a field: every rule-derived message names its rule authority, and
