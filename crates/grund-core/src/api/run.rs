@@ -62,7 +62,7 @@ pub(crate) fn run_check(
 }
 
 /// Run `check` while preserving the root warnings a later workspace-expansion
-/// refusal must not discard (§FS-check.4.7.9, §FS-check.4.10.8). The side channel is
+/// refusal must not discard (§FS-check.4.10.8). The side channel is
 /// returned data, never rendered here (§FS-distribution.3.1).
 ///
 /// §FS-check.1.3.6.1: an explicit path below the config root is this run's **report**
@@ -90,7 +90,7 @@ pub(super) fn run_check_with_run_warnings(
     run_warnings: &mut Vec<Finding>,
 ) -> Result<CheckRun> {
     let mut config = resolve_workspace_config(path)?;
-    // §FS-check.4.7.9, §FS-check.4.10.8: root boundary population has answered
+    // §FS-check.4.10.8: root boundary population has answered
     // everything a failed expansion is allowed to carry. Capture it before a
     // nested member can refuse; questions below the root do not exist yet.
     *run_warnings = public_run_warnings(&config, settled_run_warnings(&config));
@@ -110,7 +110,7 @@ pub(super) fn run_check_with_run_warnings(
     }
     if config.workspace_declared && scope_is_config_root(&config, path, path_provided) {
         let run = run_workspace_check(config, force_require_grounding, full, ad_hoc_sentence)?;
-        // §FS-check.4.7.9, §FS-check.4.10.8: successful expansion may settle more
+        // §FS-check.4.10.8: successful expansion may settle more
         // blocks, so the successful side channel is the complete ordered set.
         *run_warnings = public_run_warnings(&run.config, settled_run_warnings(&run.config));
         return Ok(run);
