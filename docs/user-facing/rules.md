@@ -215,7 +215,7 @@ passing it:
 
 ```console
 $ grund check --only chapter-cardinality
-docs/rules/RULE-terms.md:1: error: RULE-terms is not a valid rule: rule rationale is empty
+docs/rules/RULE-chapters.md:1: error: RULE-chapters is not a valid rule: rule rationale is empty
 $ echo $?
 1
 ```

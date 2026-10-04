@@ -64,7 +64,7 @@ fn print_check_help() {
     println!("the selected report has no errors, not that the unselected repository is clean.");
     // §FS-check.1.4, §FS-rules.7.6: a narrowed run carries the rules it skipped.
     println!("Selecting a code a rule produces also selects invalid-rule, so a rule that could not");
-    println!("run is never a pass.");
+    println!("run is never a pass unless --ignore invalid-rule removes its error.");
     println!();
     // §FS-cli.3.3, §FS-rules.8: a trial sentence emits the codes the declared
     // rules emit, so only the authority axis answers what it found — and its
