@@ -44,27 +44,19 @@ fn known_target(
         NamespaceMatch::Any => " in any workspace namespace".to_string(),
         NamespaceMatch::Local => String::new(),
     };
-    let legacy = format!(
-        "unknown kind \"{kind}\"{qualifier}; accepted form: Each FS must cite at least one GOAL."
-    );
     // §FS-rules.4.1.1: a namespaced object kind the run holds no workspace
     // vocabulary for is one this scope cannot judge either way.
     match unverifiable_reason(&parsed.namespace, &kind, vocab) {
-        // §FS-errors.3.7: the legacy reason stays a verbatim contiguous prefix
-        // for the two compatibility releases, with the true clause after it.
+        // §FS-errors.3.7.1: the true clause alone, the final template.
         Some(reason) => {
-            unverifiable.get_or_insert(format!(
-                "{legacy} \u{2014} {reason} \u{2014} check from the workspace root{RULE_ALIAS_RAMP_TAIL}"
-            ));
+            unverifiable.get_or_insert(format!("{reason} \u{2014} check from the workspace root"));
             Ok(render_citation_target(&parsed))
         }
-        None => Err(error(legacy)),
+        None => Err(error(format!(
+            "unknown kind \"{kind}\"{qualifier}; accepted form: Each FS must cite at least one GOAL."
+        ))),
     }
 }
-
-/// `; this wording changes in grund 0.16.0` — the ramp §FS-errors.3.7 carries
-/// until §FS-errors.3.7.1's final reasons replace the compatibility prefix.
-const RULE_ALIAS_RAMP_TAIL: &str = "; this wording changes in grund 0.16.0";
 
 /// Why an unresolved object kind is §FS-rules.4.1's unverifiable case rather
 /// than an invalid rule, or `None` when it is an invalid rule. The reason names
