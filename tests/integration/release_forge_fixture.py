@@ -146,12 +146,24 @@ class ForgeRepository(GitFixture):
             directory.mkdir()
             git = shutil.which("git")
             assert git is not None, "the release tests need git"
-            os.symlink(git, directory / "git")
+            if sys.platform != "win32":  # on Windows git.exe stays where its siblings are
+                os.symlink(git, directory / "git")
             if with_gh:
                 stub = directory / "gh"
                 stub.write_text(STUB.format(python=sys.executable), encoding="utf-8")
                 stub.chmod(0o755)
+                if sys.platform == "win32":
+                    # `which` finds a .cmd through PATHEXT; a shebang means nothing here.
+                    (directory / "gh.cmd").write_text(
+                        f'@"{sys.executable}" "{stub}" %*\r\n', encoding="utf-8"
+                    )
         return directory
+
+    def _path(self, with_gh: bool) -> str:
+        directory = self._bin(with_gh)
+        if sys.platform == "win32":
+            return os.pathsep.join([str(directory), str(Path(shutil.which("git")).parent)])
+        return str(directory)
 
     def _script(self, *arguments: str, gh: bool = True, cwd: Path | None = None) -> CompletedProcess:
         table, self.log = self.scratch / "answers.json", self.scratch / "gh.log"
@@ -164,7 +176,7 @@ class ForgeRepository(GitFixture):
             errors="replace",
             env=environment(
                 {
-                    "PATH": str(self._bin(gh)),
+                    "PATH": self._path(gh),
                     "PYTHONUTF8": "1",
                     "GH_STUB_ANSWERS": str(table),
                     "GH_STUB_LOG": str(self.log),

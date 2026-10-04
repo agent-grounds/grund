@@ -144,10 +144,11 @@ def _repository_url(top: Path) -> str:
 
 def _forge(top: Path, endpoint: str, about: str) -> object:
     """`gh api <endpoint>`'s JSON, read here rather than through `--jq`; any failure refuses."""
-    if shutil.which("gh") is None:
+    gh = shutil.which("gh")
+    if gh is None:
         raise ChangelogError("gh is not on PATH; the release reads the pull requests it lists from the forge with it")
     result = subprocess.run(
-        ["gh", "api", endpoint],
+        [gh, "api", endpoint],
         cwd=top,
         check=False,
         capture_output=True,
