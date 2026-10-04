@@ -61,6 +61,7 @@ impl Grammar {
     /// Whether `raw` has the shape of an unqualified `<ID>[.<section>]` argument
     /// this grammar accepts — shape only, never resolved — so `show` can tell a
     /// second coordinate in its path slot from a mistyped path (§FS-show.1.4.1).
+    #[doc(hidden)]
     pub fn accepts_id_arg(&self, raw: &str) -> bool {
         !raw.contains('/') && parse_id_arg(raw, self).is_ok()
     }
