@@ -1,0 +1,17 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+named_sections = true
+
+[[kinds]]
+kind = "AR"
+folder = "docs/ar"
+index = false
+
+[scan]
+include = ["docs", "src"]
+extensions = ["md", "lisp"]
