@@ -93,3 +93,68 @@ fn scoping_is_a_boolean_the_cli_can_read_back() {
         once
     });
 }
+
+/// The eight codes a rule finding can carry, written out rather than read from
+/// the selector, so these units pin the set itself (§FS-rules.7.6).
+const RULE_PRODUCED_CODES: &[&str] = &[
+    "chapter-cardinality",
+    "citation-cardinality",
+    "uncited-unit",
+    "unreached-declaration",
+    "missing-citation",
+    "forbidden-citation",
+    "discouraged-citation",
+    "suggested-citation",
+];
+
+/// §FS-check.1.4, §FS-rules.7.6: selecting any rule-produced code also selects
+/// `invalid-rule`, so a rule that could not run is never a narrowed pass.
+#[test]
+fn a_rule_produced_code_carries_every_invalid_rule() {
+    // A parse failure has no family to match on, so every row is carried.
+    let rows = [origins(&["RULE-terms"]), origins(&["RULE-other"])];
+    let dropped: Vec<&str> = RULE_PRODUCED_CODES
+        .iter()
+        .copied()
+        .filter(|code| {
+            let mut selection = CheckFindingSelection::default();
+            selection.add_only(code).expect("a code");
+            !rows
+                .iter()
+                .all(|authority| selection.retains("invalid-rule", authority))
+        })
+        .collect();
+    assert!(
+        dropped.is_empty(),
+        "--only drops invalid-rule for {dropped:?}"
+    );
+}
+
+/// §FS-check.1.4: a selection that names no rule-produced code selects exactly
+/// what it names.
+#[test]
+fn a_code_no_rule_produces_does_not_carry_invalid_rule() {
+    let mut selection = CheckFindingSelection::default();
+    selection.add_only("dangling").expect("a code");
+    assert!(!selection.retains("invalid-rule", &origins(&["RULE-terms"])));
+}
+
+/// §FS-check.1.4: `--ignore invalid-rule` still wins over the carried rows.
+#[test]
+fn ignore_wins_over_the_carried_invalid_rule() {
+    let mut selection = CheckFindingSelection::default();
+    selection.add_only("chapter-cardinality").expect("a code");
+    selection.add_ignore("invalid-rule").expect("a code");
+    assert!(!selection.retains("invalid-rule", &origins(&["RULE-terms"])));
+}
+
+/// §FS-check.1.4, §FS-rules.8: the authority axis still applies to the carried
+/// rows — a declared rule's `invalid-rule` drops, the trial sentence's stays.
+#[test]
+fn the_authority_axis_applies_to_the_carried_invalid_rule() {
+    let mut selection = CheckFindingSelection::default();
+    selection.add_only("chapter-cardinality").expect("a code");
+    selection.scope_to_trial_rule();
+    assert!(!selection.retains("invalid-rule", &origins(&["RULE-terms"])));
+    assert!(selection.retains("invalid-rule", &origins(&["--rule"])));
+}

@@ -1,0 +1,1 @@
+check --only missing-citation {repo}

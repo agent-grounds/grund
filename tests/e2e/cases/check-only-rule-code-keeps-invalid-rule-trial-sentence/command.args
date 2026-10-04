@@ -1,0 +1,1 @@
+check --rule "AR-nope must have exactly one Terms chapter." --only chapter-cardinality --only-rule {repo}
