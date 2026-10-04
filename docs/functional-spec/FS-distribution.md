@@ -215,6 +215,17 @@ In both helpers, "the version bump" includes:
 
 The helper refuses rather than publish an incomplete or invented section in every case [§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was) names, before it writes anything, so the release candidate is already e2e-clean and changelog-clean before `release.yml` runs.
 
+#### 4.5.1 Release-helper verification owns its temporary history through cleanup
+
+The tests of release listing, compatibility notices and archive rotation use real
+temporary Git histories.
+Their result includes strict removal of those histories: a successful release-helper
+assertion followed by a background Git writer racing cleanup is a failed test, not
+a release-helper failure to dismiss by rerunning. Automatic repository maintenance
+must not outlive the fixture's commands or write during cleanup. The fixture keeps
+cleanup errors visible; suppressing them does not satisfy the gate that protects
+[§GOAL-no-silent-breakage](../goals.md#goal-no-silent-breakage-changes-ship-through-a-deprecation-path).
+
 ### 4.6 The release lists the pull requests merged since the previous tag
 
 No change is gated on the changelog, and nothing is written for it before a release either: no hook, no CI job and no release step asks a change, or a person, for an entry. The bump ([§FS-distribution.4.5](FS-distribution.md#45-what-the-version-bump-includes)) builds the release section from two things the repository already holds — the pull requests merged since the previous tag, each by its title ([§FS-distribution.4.6.1](FS-distribution.md#461-the-range-is-every-commit-since-the-previous-tag), [§FS-distribution.4.6.2](FS-distribution.md#462-one-line-per-pull-request-its-title-linked)), and the compatibility notices the decision records added since that tag ([§FS-distribution.4.6.4](FS-distribution.md#464-compatibility-notices-come-from-the-decisions)) — or refuses and writes nothing ([§FS-distribution.4.6.3](FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was)). So a pull request's title is its release line, and the one thing a title cannot carry, what a verdict change breaks and for whom, is written where the change is decided.
