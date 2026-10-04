@@ -255,15 +255,11 @@ fn citation_directions_section_extraction_is_position_independent() {
     );
 }
 
-/// §FS-check.3.5.3: all five agents-init variants preserve their legacy text as
-/// a contiguous prefix and append one exact maintenance-and-validity tail until
-/// §FS-errors.3.6.1's separate 0.16.0 wording migration lands. This checker
-/// contract survives removal of the deprecated process adapter.
+/// §FS-check.3.5.3: all five agents-init variants are §FS-errors.3.6.1's final
+/// templates, with no compatibility tail. This checker contract survives removal
+/// of the deprecated process adapter.
 #[test]
-fn agents_init_compatibility_messages_cover_all_five_variants() {
-    const TAIL: &str =
-        " — repo maintenance; citation checks still ran; wording changes in grund 0.16.0";
-
+fn agents_init_messages_cover_all_five_final_templates() {
     let stale = current_block().replacen(
         "### Citation directions\n",
         "### Citation directions\nstale generated guidance\n",
@@ -273,31 +269,31 @@ fn agents_init_compatibility_messages_cover_all_five_variants() {
         (
             "malformed",
             "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v12)\n",
-            "malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->`",
+            "repo maintenance: malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->` (does not affect citation validity)",
         ),
         (
             "outdated",
             "## Grounding with grund (v3)\n\nlegacy body\n",
-            "outdated grund init block v3 (run `grund init` to update to v12)",
+            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v12 (does not affect citation validity)",
         ),
         (
             "unsupported",
             "## Grounding with grund (v99)\n\nfuture body\n",
-            "unsupported grund init block v99 (this grund supports v12)",
+            "repo maintenance: unsupported grund init block v99 — this grund supports v12 (does not affect citation validity)",
         ),
         (
             "stale",
             stale.as_str(),
-            "stale grund init block: citation directions differ from grund.toml (run `grund init` to refresh)",
+            "repo maintenance: stale grund init block: citation directions differ from grund.toml — run `grund init` to refresh (does not affect citation validity)",
         ),
         (
             "missing",
             "# Project instructions\n",
-            "missing grund init block v12",
+            "repo maintenance: missing grund init block v12 — run `grund init` to install it (does not affect citation validity)",
         ),
     ];
 
-    for (name, contents, legacy) in cases {
+    for (name, contents, expected) in cases {
         let root = test_root(&format!("agents_init_{name}"));
         let path = root.join("AGENTS.md");
         write(&path, contents);
@@ -317,10 +313,6 @@ fn agents_init_compatibility_messages_cover_all_five_variants() {
                 .collect::<Vec<_>>()
         );
         assert_eq!(report.errors[0].code, "agents-init", "{name}");
-        assert_eq!(
-            report.errors[0].message,
-            format!("{legacy}{TAIL}"),
-            "{name}"
-        );
+        assert_eq!(report.errors[0].message, expected, "{name}");
     }
 }

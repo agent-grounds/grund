@@ -1,1 +1,1 @@
-CLAUDE.md:1: error: missing grund init block v12 — repo maintenance; citation checks still ran; wording changes in grund 0.16.0
+CLAUDE.md:1: error: repo maintenance: missing grund init block v12 — run `grund init` to install it (does not affect citation validity)

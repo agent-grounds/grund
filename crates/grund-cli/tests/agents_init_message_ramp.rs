@@ -1,6 +1,6 @@
-//! Binary-level contract for the `agents-init` message ramp: the five messages
-//! §FS-errors.3.6 carries through its two-release migration, and the release
-//! they reach their final templates in (§FS-errors.3.6.1).
+//! Binary-level contract for the `agents-init` messages: the five final
+//! templates §FS-errors.3.6.1 fixes, which the two-release migration of
+//! §FS-errors.3.6 ended in.
 //!
 //! Its own target rather than a group inside `check_finding_selection.rs`: that
 //! file is about *selecting* findings, and these cases are about the text of
@@ -10,9 +10,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
-
-const MAINTENANCE_TAIL: &str =
-    " — repo maintenance; citation checks still ran; wording changes in grund 0.16.0";
 
 fn fixture_root(name: &str) -> PathBuf {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -109,73 +106,20 @@ fn agents_init_messages() -> Vec<String> {
     messages
 }
 
-fn release(text: &str) -> (u64, u64, u64) {
-    let mut parts = text.split('.').map(|part| {
-        part.split(|ch: char| !ch.is_ascii_digit())
-            .next()
-            .unwrap_or("0")
-            .parse::<u64>()
-            .unwrap_or_else(|_| panic!("not a version: {text}"))
-    });
-    (
-        parts.next().unwrap_or(0),
-        parts.next().unwrap_or(0),
-        parts.next().unwrap_or(0),
-    )
-}
-
-/// §FS-errors.3.6.1: the five final templates land in `0.16.0`, where the
-/// compatibility tail is removed. Below that release there are no final
-/// templates to observe, so what this case pins is the window itself, in the
-/// shape `warning_phase_cannot_survive_the_release_it_names` uses for the other
-/// ramp this tree carries: while the tail is still shipping, this tree may not
-/// be at or above the release the tail names, and the closing clause of the
-/// final form may not have leaked in early.
-///
-/// From `0.16.0` the other branch is the live one: no tail, and every one of
-/// the five wearing §FS-errors.3.6.1's fixed frame — the `repo maintenance: `
-/// classification in front and the `(does not affect citation validity)` clause
-/// behind. The frame is asserted rather than the five filled strings because
-/// the templates interpolate the managed-block version, which is not what this
-/// ramp is about.
+/// §FS-errors.3.6.1: the five final templates, filled for these fixtures, in the
+/// order the spec lists them — no compatibility tail, the `repo maintenance: `
+/// classification in front, and the `(does not affect citation validity)` clause
+/// behind.
 #[test]
-fn the_agents_init_tail_cannot_survive_the_release_it_names() {
-    let messages = agents_init_messages();
-    assert_eq!(messages.len(), 5, "{messages:#?}");
-    let tailed = messages
-        .iter()
-        .filter(|message| message.ends_with(MAINTENANCE_TAIL))
-        .count();
-
-    if tailed > 0 {
-        assert!(
-            release(env!("CARGO_PKG_VERSION")) < release("0.16.0"),
-            "this tree reached 0.16.0; land §FS-errors.3.6.1's five final templates instead of shipping the compatibility tail"
-        );
-        assert_eq!(
-            tailed, 5,
-            "the tail is all five messages' or none's: {messages:#?}"
-        );
-        for message in &messages {
-            let legacy = message
-                .strip_suffix(MAINTENANCE_TAIL)
-                .expect("checked above");
-            assert!(
-                !legacy.is_empty() && !legacy.contains("does not affect citation validity"),
-                "the final template's closing clause landed before its release: {message}"
-            );
-        }
-        return;
-    }
-
-    for message in &messages {
-        assert!(
-            message.starts_with("repo maintenance: "),
-            "the final template opens with its classification: {message}"
-        );
-        assert!(
-            message.ends_with(" (does not affect citation validity)"),
-            "the final template closes with its reassurance: {message}"
-        );
-    }
+fn the_agents_init_messages_are_the_five_final_templates() {
+    assert_eq!(
+        agents_init_messages(),
+        vec![
+            "repo maintenance: malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->` (does not affect citation validity)",
+            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v12 (does not affect citation validity)",
+            "repo maintenance: unsupported grund init block v999 — this grund supports v12 (does not affect citation validity)",
+            "repo maintenance: stale grund init block: clickable citations differ from grund.toml — run `grund init` to refresh (does not affect citation validity)",
+            "repo maintenance: missing grund init block v12 — run `grund init` to install it (does not affect citation validity)",
+        ]
+    );
 }

@@ -6,9 +6,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
-const MAINTENANCE_TAIL: &str =
-    " — repo maintenance; citation checks still ran; wording changes in grund 0.16.0";
-const OUTDATED: &str = "outdated grund init block v3 (run `grund init` to update to v12)";
+/// §FS-errors.3.6.1: the outdated-block template, filled for this fixture.
+const OUTDATED: &str = "repo maintenance: outdated grund init block v3 — run `grund init` to update to v12 (does not affect citation validity)";
 
 fn fixture_root(name: &str) -> PathBuf {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -84,7 +83,7 @@ fn assert_run(output: &Output, exit: i32, stdout: &str, stderr: &str) {
 }
 
 fn maintenance_line() -> String {
-    format!("AGENTS.md:1: error: {OUTDATED}{MAINTENANCE_TAIL}\n")
+    format!("AGENTS.md:1: error: {OUTDATED}\n")
 }
 
 #[test]
