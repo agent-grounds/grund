@@ -54,3 +54,7 @@ grund-core = { path = "../../crates/grund-core" }
 [[test]]
 name = "lsp_snapshot_path_scope"
 path = "lsp_snapshot_path_scope.rs"
+
+[[test]]
+name = "repository_maintenance"
+path = "repository_maintenance.rs"

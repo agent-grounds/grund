@@ -254,6 +254,12 @@ The user-facing LSP setup guide ships example LSP-client snippets for the editor
 - **Sublime Text** — LSP package client configuration for Markdown and scanned source syntaxes.
 - **IntelliJ family** — generate the import directory with [§FS-lsp.2.4.1](FS-lsp.md#241-preview-and-write), then explicitly import it through LSP4IJ's **Settings | Languages & Frameworks | Language Servers**, **+ | New Language Server**, **Import from custom template...** flow.
 
+This repository keeps IntelliJ's `.idea/` settings local: no files beneath it
+are tracked, and the repository's `.gitignore` ignores the directory and its
+nested contents. The LSP4IJ installation hint remains in the user-facing setup
+guide rather than in repository-owned editor settings. This does not change
+the generated import template or editor protocol.
+
 Adding a new editor's snippet to the user-facing guide is a small contribution; it does not require a release.
 
 ### 2.4 Installed editor integrations
