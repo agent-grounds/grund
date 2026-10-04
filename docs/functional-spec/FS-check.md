@@ -583,17 +583,13 @@ In every ineligible case it names the subtree it covers — as a *subtree*, sinc
 
 #### 3.8.4 The scope-only message across three releases
 
-In `0.13.2` and `0.14.0`, the complete legacy finding remains a contiguous prefix for consumers that match it, and the exact suffix clarifies that a subtree includes the named project and its descendants while warning when the wording changes:
-
-```text
-unknown project alias <path>; only the <scope> subtree is in scope here — check from the workspace root for a path outside it — here, the <scope> subtree means the <scope> project and its descendants; this wording changes in grund 0.16.0
-```
-
-In `0.16.0`, that compatibility form must be replaced with exactly:
+A narrowed run's scope-only finding reads exactly:
 
 ```text
 unknown project alias <path>; the <scope> project and its descendants are in scope here — check from the workspace root for a path outside that subtree
 ```
+
+It says what "the subtree" holds — the named project and its descendants — before it says where to check from instead. From `0.13.2` through `0.15.x` it was a compatibility form that kept the earlier `only the <scope> subtree is in scope here` wording as a contiguous prefix and ended with a suffix naming `0.16.0` as the release its wording would change in; that form retired in `0.16.0` ([§FS-errors.3.3](FS-errors.md#33-the-narrowed-run-unknown-project-wording-migration)).
 
 ### 3.9 Section heading level mismatch
 
