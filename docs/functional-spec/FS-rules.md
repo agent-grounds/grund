@@ -429,6 +429,39 @@ that body: for `must not cite` the forbidden site genuinely no longer exists.
 That, rather than vacuity over an empty selection, is why the same argument
 does not excuse the other three families.
 
+### 5.3 Evaluation cost on independent records
+
+Rule evaluation must keep checks usable as fast feedback
+([§GOAL-fast-feedback.2](../goals.md#2-how-we-get-there)). For a fixed set of rules
+over independent declarations with bounded chapter depth, chapters and physical
+citation sites per declaration, and a fixed shared target vocabulary, evaluation
+must grow roughly with the records and their facts. Selecting a declaration's
+chapters, counting its citations, resolving owning declarations, and determining
+which declarations a chapter selector leaves unreached must not repeatedly join
+whole-snapshot relations for every subject.
+
+The regression corpus has seven active rules, 26 shared `COND` declarations,
+four shared `BOUNDARY` declarations, and records with `site`, `boundary`,
+`condition`, `establishes`, and `repro` chapters; every fourth record also has
+`requires`. Each record has nested site and repro sections and two or three
+physical citations into the shared vocabulary. On optimized builds, a doubling
+from 400 to 800 clean records must not both take more than three times as long
+and take more than two seconds at 800. Each check has a finite execution limit;
+a timeout fails the regression. No-rules controls and removing one required
+chapter establish that the measured cost is active rule evaluation. Fixture
+generation and compilation are outside the measured interval.
+
+This bound is for that fixed-shape workload, not for arbitrary subject/target
+products or a growing number of findings. Evaluation still reads the complete
+snapshot: pruning records or rules, changing verdicts, or narrowing evaluation
+to an output selection does not satisfy it. All family clauses, physical-site
+multiplicity, containment and ownership, completeness gates, semantic grouping,
+required/recommended channels, diagnostic ordering, and anchors retain their
+existing meaning ([§FS-rules.5.1](FS-rules.md#51-facts-and-identity),
+[§FS-rules.5.2](FS-rules.md#52-family-clauses),
+[§FS-rules.7.6](FS-rules.md#76-selection-json-ordering-and-exits)). No public API,
+configuration, serialized fact format, or selection workflow is added.
+
 ## 6. Semantic deduplication
 
 Before evaluation, constraints deduplicate by `(subject selector, modality,
