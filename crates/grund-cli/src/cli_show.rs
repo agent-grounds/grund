@@ -41,6 +41,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
     let mut batch_path = None;
     let mut path = PathBuf::from(".");
     let mut path_provided = false;
+    let mut path_positional = false;
     let mut all = false;
     let mut mode = ShowMode::Lead;
     let mut mode_flag: Option<&'static str> = None;
@@ -127,6 +128,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
                     }
                     path = PathBuf::from(other);
                     path_provided = true;
+                    path_positional = true;
                 }
             }
         }
@@ -166,6 +168,7 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
     // §FS-check.4.7.2, §FS-check.3.29.9, §FS-check.4.10.7, §FS-workspace.6.1.7: the ID read
     // walks like every other command, and a refused query still owes the reader
     // the cautions the workspace pass settled before it (§FS-distribution.3.1).
+    let section_flag = section_override.clone();
     let (run_warnings, result) = show_with_scope(
         &id_arg,
         ShowOpts {
@@ -195,9 +198,49 @@ fn command_show_impl(args: &[String], default_invocation: bool) -> ExitCode {
                 .downcast_ref::<ShowQueryError>()
                 .map(|carrier| carrier.sites.as_slice())
                 .unwrap_or(&[]);
+            if is_missing_positional_path(&message, path_positional) {
+                eprintln!("error: {message}");
+                print_second_coordinate_hint(&id_arg, &path, section_flag.as_deref());
+                return ExitCode::from(2);
+            }
             render_show_error(&id_arg, &path, default_invocation, &format, &message, sites)
         }
     }
+}
+
+/// The positional path that does not exist, where §FS-show.1.4.1 may append its hint.
+fn is_missing_positional_path(message: &str, path_positional: bool) -> bool {
+    path_positional && message.starts_with("path does not exist:")
+}
+
+/// §FS-show.1.4.1: a missing positional path shaped like a coordinate (under the
+/// grammar discovered from the working directory) was meant as a second read, so
+/// the refusal shows the batch form that reads both. Shape only; nothing resolves.
+fn print_second_coordinate_hint(id_arg: &str, path: &Path, section: Option<&str>) {
+    let Some(operand) = path.to_str() else {
+        return;
+    };
+    if path.exists() {
+        return;
+    }
+    let Ok(config) = effective_config(Path::new(".")) else {
+        return;
+    };
+    if !config.grammar.accepts_id_arg(operand) {
+        return;
+    }
+    let first = match section {
+        Some(section) => format!(
+            "{{\"id\":\"{}\",\"section\":\"{}\"}}",
+            json_escape(id_arg),
+            json_escape(section)
+        ),
+        None => format!("{{\"id\":\"{}\"}}", json_escape(id_arg)),
+    };
+    eprintln!(
+        "hint: `show` reads one coordinate, so `{operand}` is the path; read both with `printf '%s\\n' '{first}' '{{\"id\":\"{}\"}}' | grund show --batch --format=json`",
+        json_escape(operand)
+    );
 }
 
 /// Render query refusals, limiting the filesystem-check migration breadcrumb
