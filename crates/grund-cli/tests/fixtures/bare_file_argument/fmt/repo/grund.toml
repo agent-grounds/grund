@@ -1,0 +1,13 @@
+grund_config_version = 1
+project_name = "fixture"
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+index = false
