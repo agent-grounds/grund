@@ -166,9 +166,6 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "Exit:  0 scan succeeded (with or without hits) · 1 ID rejected after context · 2 run/scan error."
             );
-            println!(
-                "       Until 0.16.0 rejected IDs still exit 2 with a warning; they move to 1 in 0.16.0."
-            );
             println!();
             println!("Examples:");
             println!("  grund refs FS-login             # every citation of FS-login");
