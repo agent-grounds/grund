@@ -350,13 +350,12 @@ class ThisRepositoryTests(unittest.TestCase):
         own landed flips already set, so reading them moves neither bound. A
         window that moves here has caught something other than this defect.
 
-        The window is empty, which is the sanctioned answer rather than a
-        defect: the bare-`grund` removal and the `unreached-declaration`
-        promotion both landed `0.16.0` while this tree still promises `0.16.0`
-        ramps, so nothing may be published until those land
-        (§FS-distribution.4.2.5, §FS-cli.4,
+        The window opens at 0.16.0 and has no ceiling: every 0.16.0 ramp has
+        landed, from the bare-`grund` removal and the `unreached-declaration`
+        promotion to the seven that closed the empty window, and no pending
+        ramp names a later release (§FS-distribution.4.2.5, §FS-cli.4,
         §FS-rules.checks.unreached-declaration)."""
-        self.assertEqual(ramps.release_window(self.claims), ("0.16.0", "0.16.0"))
+        self.assertEqual(ramps.release_window(self.claims), ("0.16.0", None))
 
 
 if __name__ == "__main__":
