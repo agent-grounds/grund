@@ -95,7 +95,7 @@ fn command_init(args: &[String]) -> ExitCode {
 }
 
 fn render_init_output(output: &InitOutput) {
-    // §FS-check.4.7.4, §FS-check.4.10.7, §FS-workspace.6.1.7: `init` expands the
+    // §FS-check.3.30.2, §FS-check.4.10.7, §FS-workspace.6.1.7: `init` expands the
     // outermost workspace above its target, so it carries the run's warnings
     // ahead of its own report (§FS-distribution.3.1).
     render_run_warnings(&output.warnings);

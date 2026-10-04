@@ -8,9 +8,9 @@
 //! root are skipped and counted, never silently, and a floor on the number of
 //! compared cases keeps the sweep from shrinking unnoticed.
 //!
-//! The three run-level `[workspace]` warnings of §FS-lsp.1.1.3 are held the same
-//! way, against the same case's stderr golden: §FS-check.4.7.7, §FS-check.4.10.11
-//! and §FS-workspace.6.1.7 travel in the run's warning channel and are rendered by
+//! The two run-level `[workspace]` warnings of §FS-lsp.1.1.3 are held the same
+//! way, against the same case's stderr golden: §FS-check.4.10.11 and
+//! §FS-workspace.6.1.7 travel in the run's warning channel and are rendered by
 //! each frontend, so neither surface may carry one the other does not. They are
 //! compared as their own set because the two shapes differ by design — the CLI
 //! prints them as §FS-check.2.1.1 lines on stderr, while the editor publishes each
@@ -56,12 +56,13 @@ const MIN_RUN_WARNING_CASES: usize = 4;
 /// here to be.
 const CLI_LEVEL_PREFIXES: [&str; 2] = ["error: ", "warning: "];
 
-/// The three run-level `[workspace]` warnings §FS-lsp.1.1.3 names, each by a phrase
-/// of its own fixed text (§FS-errors.3): §FS-check.4.7's absorbed scan,
-/// §FS-check.4.10's unread opted-out block and §FS-workspace.6.1.7's undecidable
-/// ancestor claim.
+/// The two run-level `[workspace]` warnings §FS-lsp.1.1.3 names, each by a phrase
+/// of its own fixed text (§FS-errors.3): §FS-check.4.10's unread opted-out block
+/// and §FS-workspace.6.1.7's undecidable ancestor claim.
 ///
-/// Three, not four. §FS-check.3.29's unlisted block left this list when its ramp
+/// Two, not four. §FS-check.3.30's absorbed scan left this list when it became a
+/// config error in grund 0.16.0: its case refuses to load, so there is no run to
+/// compare. §FS-check.3.29's unlisted block left it when its ramp
 /// ended: it is a located error in `check` and a located error in the editor now
 /// (§FS-check.3.29.15), so it is compared below as an ordinary `Finding` — same
 /// path, line, `error` severity, code and message on both surfaces. That is the
@@ -71,13 +72,9 @@ const CLI_LEVEL_PREFIXES: [&str; 2] = ["error: ", "warning: "];
 ///
 /// Matched on the message rather than on a code, because that is the one thing
 /// both surfaces carry: the CLI prints these as text and never as a JSON object,
-/// so there is no `code` on its side to compare. Naming the three here is also
+/// so there is no `code` on its side to compare. Naming the two here is also
 /// what makes this sweep say which warnings it holds.
-const RUN_LEVEL_WARNINGS: [&str; 3] = [
-    "[workspace] members swallows this project's whole scan",
-    "no project scans `",
-    "cannot read [workspace] members (",
-];
+const RUN_LEVEL_WARNINGS: [&str; 2] = ["no project scans `", "cannot read [workspace] members ("];
 
 fn is_run_level_warning(message: &str) -> bool {
     RUN_LEVEL_WARNINGS

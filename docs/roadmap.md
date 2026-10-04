@@ -253,22 +253,9 @@ The README (and landing page, if any) carries a "vs. traceability tools" section
 
 ## RM-workspace-absorbed-scan-error: flip the absorbed-scan warning to an error
 
-[§FS-check.4.7](functional-spec/FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan) ships as a warning that names the release it becomes an error in, which is the deprecation path [§REQ-backwards-compatibility.2](requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) requires of a finding no command can fix ([§DF-absorbed-scan-warning.2.1](decisions/functional/DF-absorbed-scan-warning.md#21-a-warning-because-the-repair-is-a-judgement-rather-than-a-command)). The named release is half a contract until it happens: a deadline `grund` prints to every user and then lets slip is worse than one it never printed. This milestone is that release.
-
-GitHub: follows [#78](https://github.com/agent-grounds/grund/issues/78), which shipped the warning.
-
-### 1. What
-
-Raise the finding from a load-time `warning:` to the config error [§FS-config.4.3](functional-spec/FS-config.md#43-invalid-config-behavior) already defines for a bad `members` line — the same anchor, the same entry-as-written naming, exit `2` — trade the deadline clause for the past-tense report of the release the flip lands in ([§FS-distribution.4.2](functional-spec/FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)), and delete the release constant with it. [§FS-workspace.2.1](functional-spec/FS-workspace.md#21-a-member-that-swallows-the-blocks-own-scan) keeps its rule and its four exclusions unchanged; only the severity sentence at its end moves, and [§FS-check.4.7](functional-spec/FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan) moves from [§FS-check.4](functional-spec/FS-check.md#4-warnings) to [§FS-check.3](functional-spec/FS-check.md#3-errors-detected). [§DF-absorbed-scan-warning](decisions/functional/DF-absorbed-scan-warning.md#df-absorbed-scan-warning-a-scan-its-own-members-swallowed-is-a-warning-with-a-named-release-not-an-error) gains a consequence line rather than a rewrite: what it decided — which ramp applied, and why the sibling containment case was an error from the start — stays true once the ramp completes.
-
-The two-release window is the point of the ramp, so this is not a milestone to pull forward: a repository that upgrades on the day of the flip must have had a release in which the warning told it what was coming, and told it in a run rather than in release notes.
-
-The release this lands in is `0.16.0`. It was `0.14.0`, then `0.15.0`, until each was cut without it, which moved the deadline the messages name rather than letting a shipped date pass ([§DF-absorbed-scan-warning.2.3](decisions/functional/DF-absorbed-scan-warning.md#23-the-release-is-named-in-the-message-not-only-in-the-changelog)).
-
-### 2. Why now
-
-The e2e goldens carry the release as literal bytes and a unit test asserts it is still ahead of `CARGO_PKG_VERSION`, so the version bump that reaches the deadline fails CI — the same forcing function [§DF-index-compatibility-ramp.2.3](decisions/functional/DF-index-compatibility-ramp.md#23-both-findings-name-their-versions-and-a-test-keeps-the-names-honest) states, and the one that carried the `[[kinds]] prefix` removal ([§FS-config.3.4.6](functional-spec/FS-config.md#346-prefix-the-former-spelling-of-kind-removed-in-0130)) and the missing-index-entry flip ([§FS-check.3.18](functional-spec/FS-check.md#318-declaration-missing-from-its-kinds-index)) to the release each named, for the same reason: a deadline that can pass quietly is not a deadline. The release path asks the same question of every message it ships, in both directions ([§FS-distribution.4.2](functional-spec/FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)).
-
-### 3. Measurable
-
-A `[workspace]` block whose members cover every one of its walk roots fails to load with a `members`-line error and exits `2` on every walking command, no message in the tree still promises a release the running binary has reached, and `grund check --full` over this repository stays green. The e2e cases that pin the warning today (`workspace-member-absorbs-scan-list`, `workspace-member-absorbs-scan-check`, `workspace-member-absorbs-scan-full`, `workspace-member-absorbs-scan-glob-symlink`, `workspace-member-absorbs-scan-nested`) move to `expected.exit` `2`, and the four that pin its boundaries stay green untouched.
+This milestone shipped in grund 0.16.0: a `[workspace]` block whose members
+swallow its own scan is a `members`-line config error, and its record is the
+compatibility notice that landed it,
+[§DF-absorbed-scan-warning.release-note](decisions/functional/DF-absorbed-scan-warning.md#release-note-release-note), together with [§FS-check.3.30](functional-spec/FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan).
+The item's own plan is removed, as a shipped item's is; this address, heading
+text included, is kept while released changelogs still cite it.

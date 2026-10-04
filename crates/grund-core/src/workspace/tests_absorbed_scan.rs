@@ -1,14 +1,13 @@
 //! Test module: a `[workspace]` block whose members cover every one of its own
-//! walk roots (§FS-workspace.2.1), and the deprecation ramp the finding rides
-//! (§FS-check.4.7.8).
+//! walk roots (§FS-workspace.2.1), the config error it became in grund 0.16.0
+//! (§FS-check.3.30).
 //!
 //! The behaviour itself is pinned end to end, in `tests/e2e/cases/`, because the
-//! warning is a property of a whole run rather than of one function: it is
-//! emitted where a run populates a block's member boundary, so `list`, `check`,
-//! `refs`, `cover` and `fmt` each have to carry it. What is left for a unit test
-//! is the promise inside the message — the release the finding becomes an error
-//! in — which no golden can keep honest on its own, since a golden is only ever
-//! compared against the binary that produced it.
+//! error is a property of a whole run rather than of one function: it is raised
+//! where a run populates a block's member boundary, so `list`, `check`, `refs`,
+//! `cover` and `fmt` each refuse with it. What is left for a unit test is that
+//! the sentence is assembled from the covered pairs and that the spec shows the
+//! bytes the golden pins.
 
 use std::path::{Path, PathBuf};
 
@@ -53,7 +52,7 @@ fn version(text: &str) -> Vec<u32> {
         .collect()
 }
 
-/// §FS-check.4.7.8, §REQ-backwards-compatibility.2, §FS-workspace.2.1.4: the
+/// §FS-check.3.30, §REQ-backwards-compatibility.2, §FS-workspace.2.1.4: the
 /// finding arrives as a warning on a deprecation path rather than as an error,
 /// so it names the release it becomes an error in — and a named release that
 /// has already passed is a promise grund broke. Held ahead of the running version so the
@@ -74,14 +73,14 @@ fn the_absorbed_scan_error_release_is_still_ahead() {
     });
     assert!(
         version(env!("CARGO_PKG_VERSION")) < version(&release),
-        "this tree is {}, which has reached the release §FS-check.4.7.8 promised the \
+        "this tree is {}, which has reached the release §FS-check.3.30 promised the \
              absorbed-scan warning would become an error in ({release}). Land \
              §RM-workspace-absorbed-scan-error rather than moving the date.",
         env!("CARGO_PKG_VERSION")
     );
 }
 
-/// §FS-check.4.7.8, §RM-workspace-absorbed-scan-error: the one place the
+/// §FS-check.3.30, §RM-workspace-absorbed-scan-error: the one place the
 /// release is written in the source is the release the shipped message names.
 /// The guard above reads the bytes a user sees and holds them ahead of the
 /// running version; this ties those bytes to the constant, so a ramp moved in
@@ -99,7 +98,7 @@ fn the_release_constant_is_the_release_the_message_names() {
     );
 }
 
-/// §FS-check.4.7.1, §FS-workspace.2.1.1: the whole sentence, assembled from
+/// §FS-check.3.30.1, §FS-workspace.2.1.1: the whole sentence, assembled from
 /// the covered pairs the rule found — each covered root named beside the member
 /// entry it is inside — with the golden's `members`-line breadcrumb taken off
 /// the front. Held here as well as end to end because this is where a failure
@@ -111,18 +110,17 @@ fn the_message_is_assembled_from_the_covered_pairs() {
     };
     let shipped = golden.trim_end_matches('\n');
     let sentence = shipped
-        .strip_prefix("warning: grund.toml:16: ")
-        .unwrap_or_else(|| panic!("{GOLDEN} is no longer a located warning:\n{shipped}"));
+        .strip_prefix("error: grund.toml:16: ")
+        .unwrap_or_else(|| panic!("{GOLDEN} is not the `members`-line config error:\n{shipped}"));
     assert_eq!(
         super::findings::absorbed_scan_warning(&["`docs` in `docs`".to_string()]),
         sentence
     );
 }
 
-/// §FS-check.4.7.1: the message the spec shows and the message the binary
-/// prints are one string. Without this the deadline could be kept in the
-/// golden and stale in the document a reader reaches by citation — and the
-/// guard above would still pass, because it only ever reads the golden.
+/// §FS-check.3.30.1: the message the spec shows and the message the binary
+/// prints are one string. Without this the release the error landed in could be
+/// kept in the golden and stale in the document a reader reaches by citation.
 #[test]
 fn the_documented_message_is_the_shipped_message() {
     let (Some(golden), Some(spec)) = (repo_text(GOLDEN), repo_text(SPEC)) else {
@@ -131,6 +129,6 @@ fn the_documented_message_is_the_shipped_message() {
     let shipped = golden.trim_end_matches('\n');
     assert!(
         spec.lines().any(|line| line == shipped),
-        "{SPEC} does not show the warning {GOLDEN} pins:\n{shipped}"
+        "{SPEC} does not show the error {GOLDEN} pins:\n{shipped}"
     );
 }

@@ -114,6 +114,7 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-check.3.23", reason: "pointer kept so citations written before the move still resolve; the behaviour is proven at the FS-declarations section it names, and this row retires with the pointer" },
     Exception { id: "FS-check.3.29.10", reason: "rationale for where the fact becomes knowable" },
     Exception { id: "FS-check.4.6", reason: "pointer kept so citations written before the move still resolve; the behaviour is proven at the FS-declarations section it names, and this row retires with the pointer" },
+    Exception { id: "FS-check.4.7.9", reason: "pointer kept so released changelogs still resolve; the behaviour it named is retired, and the precedence that replaced it is proven at FS-check.3.30.2" },
     Exception { id: "FS-check.4.13", reason: "pointer kept so citations written before the move still resolve; the behaviour is proven at the FS-declarations section it names, and this row retires with the pointer" },
     Exception { id: "FS-check.4.14", reason: "pointer kept so citations written before the move still resolve; the behaviour is proven at the FS-declarations section it names, and this row retires with the pointer" },
     Exception { id: "FS-check.5.1", reason: "finding selection reference, not a behavioral requirement" },

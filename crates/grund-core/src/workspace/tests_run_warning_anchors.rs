@@ -1,5 +1,6 @@
-//! Test module: where each of the four run-level `[workspace]` warnings anchors
-//! (§FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11, §FS-workspace.6.1.7).
+//! Test module: where each of the three run-level `[workspace]` warnings anchors
+//! (§FS-check.3.29.15, §FS-check.4.10.11, §FS-workspace.6.1.7), and where the
+//! absorbed-scan config error that was the fourth is located (§FS-check.3.30.1).
 //!
 //! The *text* of each is pinned end to end, in `tests/e2e/cases/`, because a byte
 //! on stderr is what a repository greps. The anchor is not on stderr at all: it
@@ -39,12 +40,14 @@ fn check_anchors(root: &Path) -> Vec<(Option<String>, Option<usize>)> {
     .collect()
 }
 
-/// §FS-check.4.7.7: "It **is located at the block's `members` line**." The fixture is
-/// the shape of the `workspace-member-absorbs-scan-check` case — a block whose
-/// one scan root is also its one member — with the `members` key put on a line
-/// no other key could be mistaken for.
+/// §FS-check.3.30.1: the absorbed scan is a config error "located at the block's
+/// `members` line", so the run refuses with that line's breadcrumb rather than
+/// returning a warning. The fixture is the shape of the
+/// `workspace-member-absorbs-scan-check` case — a block whose one scan root is also
+/// its one member — with the `members` key put on a line no other key could be
+/// mistaken for.
 #[test]
-fn an_absorbed_scan_anchors_at_the_blocks_members_line() {
+fn an_absorbed_scan_is_a_config_error_at_the_blocks_members_line() {
     let root = test_root("anchor-absorbed-scan");
     write(
         &root.join("grund.toml"),
@@ -57,10 +60,16 @@ fn an_absorbed_scan_anchors_at_the_blocks_members_line() {
         &root.join("docs/FS-001-root.md"),
         "# FS-001-root: Root\n\nCited as §FS-001-root\n",
     );
-    assert_eq!(
-        check_anchors(&root),
-        vec![(Some("grund.toml".to_string()), Some(16))],
-        "the absorbed scan must anchor at the `members` line, not at the block header"
+    let err = check_with_opts(CheckOpts {
+        path: root.clone(),
+        path_provided: true,
+        ..CheckOpts::default()
+    })
+    .expect_err("an absorbed scan refuses the run");
+    let err = format!("{err:#}");
+    assert!(
+        err.starts_with("grund.toml:16: [workspace] members swallows this project's whole scan"),
+        "the absorbed scan must refuse at the `members` line, not at the block header: {err}"
     );
 }
 

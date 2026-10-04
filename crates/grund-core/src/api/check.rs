@@ -54,7 +54,7 @@ pub struct CheckOutput {
     pub report: Report,
     pub had_scan_errors: bool,
     /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
-    /// cautions this run settled before any report existed — §FS-check.4.7's
+    /// cautions this run settled before any report existed — §FS-check.3.30's
     /// absorbed scan, §FS-check.4.10's unread opted-out block and
     /// §FS-workspace.6.1.7.6's undecidable ancestor claim, each anchored at the
     /// `grund.toml` line its message names. Not report findings — the report

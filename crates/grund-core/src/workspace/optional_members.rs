@@ -221,7 +221,7 @@ pub(super) fn qualify_absent_optional(
 /// §FS-check.4.9.1: one warning per absent optional entry, in the order the list
 /// writes them, anchored at the `optional_members` line of the block that holds it.
 ///
-/// A **located** finding on stdout, where its nearest neighbour §FS-check.4.7 is a
+/// A **located** finding on stdout, where its nearest neighbour §FS-check.3.30 is a
 /// CLI-level `warning:` line on stderr — as §FS-check.3.29 still is on the five
 /// walking surfaces that have no report to put it in (§FS-check.3.29.9), though in
 /// `check` it is a located error on stdout now (§FS-check.3.29.13). Those two report a

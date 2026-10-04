@@ -122,13 +122,13 @@ under a member boundary ([§FS-workspace.6](FS-workspace.md#6-nested-project-bou
 dangling citations pass the check, which is [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) failing. That is the same consequence
 [§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces) gives as the reason a member root may not be an *ancestor* of its own
 block, one step weaker — here the root is strictly inside the block and still
-covers everything the block had to read. So `grund` warns ([§FS-workspace.2.1.1](FS-workspace.md#211-the-warning)).
+covers everything the block had to read. So `grund` refuses the configuration ([§FS-workspace.2.1.1](FS-workspace.md#211-the-warning)).
 
 A partly covered scope and an `include_root = false` block, which is not a
 project, are not this finding, and `--full` does not silence it ([§FS-workspace.2.1.2](FS-workspace.md#212-shapes-that-are-not-this-finding)). A
 block with no `[scan] include` key is not exempt: it is judged on the key's
 default roots ([§FS-workspace.2.1.3](FS-workspace.md#213-an-absent-scan-include-key)). The repair is a judgement rather than a command `grund`
-can run, so the finding is a warning, not an error ([§FS-workspace.2.1.4](FS-workspace.md#214-why-a-warning-not-an-error)).
+can run, so the finding was a warning for two releases before it became an error ([§FS-workspace.2.1.4](FS-workspace.md#214-why-a-warning-not-an-error)).
 
 #### 2.1.1 The warning
 
@@ -137,8 +137,8 @@ Take the block's **default scope** — the roots `[scan] include` and the scanne
 set [§FS-workspace.6](FS-workspace.md#6-nested-project-boundary)'s boundary prunes — and keep the ones that exist on disk, since a root
 that is not there is read by nobody and rescues nothing. When at least one such
 root remains and **every** one of them is at or inside an expanded member root,
-the block earns one warning at its `members` line, naming each covered root and
-the member entry it is inside ([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)). Roots and member entries are
+the block fails to load with one config error at its `members` line, naming
+each covered root and the member entry it is inside ([§FS-check.3.30](FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan)). Roots and member entries are
 compared as canonical paths, the way the scan's own prune compares them, so a
 member reached through a symlink or a glob covers what it actually lands on.
 
@@ -179,15 +179,17 @@ materialized default — `requirements.md`, `docs`, `e2e`, `src`
 ([§FS-config.3.5](FS-config.md#35-scan--what-gets-scanned)) — so a block that omits it has *those* roots rather than
 only the block root, and [§FS-workspace.2.1.1](FS-workspace.md#211-the-warning) is asked of them as it is of any other
 block's: when the ones that exist on disk are all inside members, that block
-reads nothing and is told so. The remedy the warning names is still the one to take, since adding
+reads nothing and is told so. The remedy the error names is still the one to take, since adding
 the key pointed somewhere that is not a member is exactly the repair.
 
 #### 2.1.4 Why a warning, not an error
 
 The repair is a judgement rather than a command `grund` can run — point `[scan]
 include` at a directory that is not also a member, or say `include_root = false`
-and mean it — which is why the finding arrives as a warning on the deprecation
-path of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather than as an error
+and mean it — which is why the finding arrived as a warning on the deprecation
+path of [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) rather than as an error, naming the release it
+would become one in. That release was grund 0.16.0, and the finding is now the
+`members`-line config error of [§FS-check.3.30](FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan), exit `2`
 ([§DF-absorbed-scan-warning](../decisions/functional/DF-absorbed-scan-warning.md#df-absorbed-scan-warning-a-scan-its-own-members-swallowed-is-a-warning-with-a-named-release-not-an-error)).
 
 ### 2.2 A member that may be legitimately absent
@@ -811,8 +813,8 @@ leaves the block it was asking about unreported.
 
 ##### 6.1.7.6 How the undecidable-claim warning travels
 
-The warning of [§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable) travels the way its three `[workspace]` siblings do
-([§FS-check.4.7](FS-check.md#47-a-workspace-member-swallows-the-blocks-own-scan)):
+The warning of [§FS-workspace.6.1.7.5](FS-workspace.md#6175-an-unobtainable-members-value-leaves-the-claim-undecidable) travels the way its `[workspace]` sibling does
+([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)):
 one of the run's warnings, carried on whatever the scanning command returns and
 rendered by each frontend rather than written to a stream from inside the
 engine, so an editor publishes it too ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)).

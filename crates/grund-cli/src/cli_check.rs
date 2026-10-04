@@ -231,8 +231,7 @@ fn sorted_json_findings(report: &Report) -> Vec<(&'static str, &Finding)> {
 }
 
 /// `run_warnings` is how many `[workspace]` cautions this run already printed on
-/// stderr, before this report existed (§FS-check.4.7.7, §FS-check.4.10.11,
-/// §FS-workspace.6.1.7). They are not report findings, so nothing in `report`
+/// stderr, before this report existed (§FS-check.4.10.11, §FS-workspace.6.1.7). They are not report findings, so nothing in `report`
 /// records them — and a run that says part of its tree is unchecked must not also
 /// say `success` (§FS-check.2.1.3).
 fn render_check_text(report: &Report, run_warnings: usize) {

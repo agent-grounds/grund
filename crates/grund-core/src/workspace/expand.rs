@@ -307,7 +307,7 @@ pub(crate) fn expand_workspace_tree_with_report_base(
         &mut entries,
         &mut absent_optional,
     )?;
-    // §FS-check.4.7: in the order the walk reached them, which is the order the
+    // §FS-check.3.30: in the order the walk reached them, which is the order the
     // reader sees them in — ahead of §FS-check.4.10's blocks below, exactly where
     // they were printed from (§FS-errors.4).
     root_config
@@ -379,7 +379,7 @@ pub(crate) fn expand_workspace_tree_with_report_base(
 /// in a partial one.
 ///
 /// Returns what this subtree earned, in the order it reached it: the
-/// §FS-check.4.7 warnings, settled here because a block's own members answer
+/// §FS-check.3.30 warnings, settled here because a block's own members answer
 /// them, and the §FS-check.4.10 blocks, for the caller to pose once it knows
 /// where the run's projects are (§FS-check.2.1).
 #[allow(clippy::too_many_arguments)]
