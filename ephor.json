@@ -1,0 +1,6 @@
+{
+  "clean": {
+    "command": "./scripts/clean.sh",
+    "cwd": "root"
+  }
+}
