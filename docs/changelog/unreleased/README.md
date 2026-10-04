@@ -23,7 +23,7 @@ The rules are [§FS-distribution.4.12](../../functional-spec/FS-distribution.md#
 - A `**Schema:**` callout is a `changed` entry whose text begins with `**Schema:**`.
 - Bullets stay on one line by convention.
 
-A pull request adds no entry. Whoever cuts a release writes the entries first, in one pull request, the write-up ([§FS-distribution.4.6](../../functional-spec/FS-distribution.md#46-the-changelog-is-written-before-a-release-not-with-each-change)):
+A pull request adds no entry. Whoever cuts a release writes the entries first, in one pull request, the write-up ([§FS-distribution.4.6](../../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)):
 
 - **The list** is every pull request merged since the latest `vX.Y.Z` tag that changed more than docs and CI. This prints it:
 
