@@ -12,7 +12,7 @@ use anyhow::{Result, anyhow};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
-use super::findings::absorbed_scan_diagnostic;
+use super::findings::reject_absorbed_scan;
 use super::members::{WorkspaceMember, canonical_workspace_path, expand_workspace_member_list};
 use crate::config::display_path;
 use crate::config::{
@@ -50,14 +50,15 @@ pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
 /// roots. The boundary is the same list that `run_workspace_check`
 /// computes; setting it on the Config makes the scanner skip those subtrees.
 ///
-/// §FS-check.3.29.9, §FS-check.4.10.7: it is also where the block a run is rooted at is
-/// asked what that boundary leaves it — anything to read, and anything it reads
-/// that nobody else will. Every command that walks resolves its config through
-/// here, so asking at this one point is what puts both warnings on `list`, `refs`,
-/// `cover` and `fmt` rather than on `check` alone — and asking them *here* rather
-/// than on the expansion below is what keeps each to once per block per run, since
-/// a workspace-wide run expands the same block a second time. A run narrowed inside
-/// a member never populates the parent block's boundary
+/// §FS-check.3.29.9, §FS-check.3.30.2, §FS-check.4.10.7: it is also where the block a
+/// run is rooted at is asked what that boundary leaves it — anything to read, and
+/// anything it reads that nobody else will. Every command that walks resolves its
+/// config through here, so asking at this one point is what puts the absorbed scan's
+/// refusal and the unread block's warning on `list`, `refs`, `cover` and `fmt` rather
+/// than on `check` alone. Asking *here*, before the expansion below, is what keeps
+/// the warning to once per block per run, since a workspace-wide run expands the same
+/// block a second time, and what makes the refusal win over a later expansion's. A
+/// run narrowed inside a member never populates the parent block's boundary
 /// (`config_for_member_scope` rewrites first), so it stays silent about a block it
 /// is not reading through.
 ///
@@ -67,7 +68,7 @@ pub(crate) fn resolve_workspace_config(path: &Path) -> Result<Config> {
 /// it is no project, so every project the run goes on to load lies inside one of
 /// the members expanded above — the block's own member boundary is already the
 /// whole prune, and a list of project roots would add nothing to it
-/// (§FS-workspace.6). Both land on the run's own config, which is the one every
+/// (§FS-workspace.6). It lands on the run's own config, which is the one every
 /// walking command still holds when it decides what to render (§FS-check.2.1,
 /// §FS-distribution.3.1).
 pub(crate) fn apply_workspace_boundary(config: &mut Config) -> Result<()> {
@@ -77,9 +78,8 @@ pub(crate) fn apply_workspace_boundary(config: &mut Config) -> Result<()> {
     // §FS-check.4.9.2: the absent optional entries are dropped here on purpose. This
     // is the boundary pass; the announcement needs the alias path each namespace is
     // spelled with, which only the expansion walk composes (`expand_workspace_tree`).
-    let absorbed = absorbed_scan_diagnostic(config, &members).map(RunWarning::Settled);
+    reject_absorbed_scan(config, &members)?;
     let unread = RunWarning::unread_block(config, Vec::new());
-    config.run_warnings.extend(absorbed);
     config.run_warnings.extend(unread);
     Ok(())
 }

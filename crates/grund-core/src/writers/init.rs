@@ -93,9 +93,10 @@ pub struct InitOutput {
     pub notes: Vec<String>,
     pub next: Option<InitNext>,
     /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
-    /// cautions the walk-up settled — §FS-check.3.30's absorbed scan,
-    /// §FS-check.4.10's unread opted-out block and §FS-workspace.6.1.7.5's
-    /// undecidable ancestor claim. `init` expands the outermost workspace above
+    /// cautions the walk-up settled — §FS-check.4.10's unread opted-out block
+    /// and §FS-workspace.6.1.7.5's undecidable ancestor claim; an absorbed scan
+    /// fails the expansion instead, which leaves the section out
+    /// (§FS-check.3.30.2). `init` expands the outermost workspace above
     /// its target to teach the alias set, so it resolves a block's member
     /// boundary like every other walking command and owes the reader the same
     /// lines (§FS-check.2.1.1).

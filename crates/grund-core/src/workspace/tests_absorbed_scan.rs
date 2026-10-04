@@ -17,9 +17,6 @@ const GOLDEN: &str = "tests/e2e/cases/workspace-member-absorbs-scan-list/expecte
 /// The spec point that documents the same message as a worked example.
 const SPEC: &str = "docs/functional-spec/FS-check.md";
 
-/// The clause §REQ-backwards-compatibility.2 requires the warning to carry.
-const DEADLINE: &str = "becomes an error in grund ";
-
 fn repo_file(relative: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
@@ -31,71 +28,6 @@ fn repo_file(relative: &str) -> PathBuf {
 /// files are always present.
 fn repo_text(relative: &str) -> Option<String> {
     std::fs::read_to_string(repo_file(relative)).ok()
-}
-
-/// The release named in a message, e.g. `0.15.0` out of `… an error in
-/// grund 0.15.0.` — read as the digits-and-dots run after the clause, with
-/// the sentence's full stop trimmed off the end.
-fn named_release(text: &str) -> Option<String> {
-    let tail = text.split(DEADLINE).nth(1)?;
-    let run: String = tail
-        .chars()
-        .take_while(|ch| ch.is_ascii_digit() || *ch == '.')
-        .collect();
-    let release = run.trim_end_matches('.');
-    (!release.is_empty()).then(|| release.to_string())
-}
-
-fn version(text: &str) -> Vec<u32> {
-    text.split('.')
-        .map(|part| part.parse::<u32>().unwrap_or(0))
-        .collect()
-}
-
-/// §FS-check.3.30, §REQ-backwards-compatibility.2, §FS-workspace.2.1.4: the
-/// finding arrives as a warning on a deprecation path rather than as an error,
-/// so it names the release it becomes an error in — and a named release that
-/// has already passed is a promise grund broke. Held ahead of the running version so the
-/// bump that reaches the deadline fails the build rather than shipping a
-/// message the binary is behind — the guard §RM-workspace-absorbed-scan-error
-/// is spent against, and the same one
-/// `the_named_error_release_is_0_15_0_and_still_ahead` keeps for the
-/// unlisted-block ramp. These two are what is left of the pending half
-/// `scripts/check_release_ramps.py` now asks of every message
-/// (§FS-distribution.4.2.1).
-#[test]
-fn the_absorbed_scan_error_release_is_still_ahead() {
-    let Some(golden) = repo_text(GOLDEN) else {
-        return;
-    };
-    let release = named_release(&golden).unwrap_or_else(|| {
-        panic!("{GOLDEN} no longer names the release the warning becomes an error in")
-    });
-    assert!(
-        version(env!("CARGO_PKG_VERSION")) < version(&release),
-        "this tree is {}, which has reached the release §FS-check.3.30 promised the \
-             absorbed-scan warning would become an error in ({release}). Land \
-             §RM-workspace-absorbed-scan-error rather than moving the date.",
-        env!("CARGO_PKG_VERSION")
-    );
-}
-
-/// §FS-check.3.30, §RM-workspace-absorbed-scan-error: the one place the
-/// release is written in the source is the release the shipped message names.
-/// The guard above reads the bytes a user sees and holds them ahead of the
-/// running version; this ties those bytes to the constant, so a ramp moved in
-/// `members::ABSORBED_SCAN_ERROR_RELEASE` alone fails here rather than shipping a
-/// message that disagrees with it.
-#[test]
-fn the_release_constant_is_the_release_the_message_names() {
-    let Some(golden) = repo_text(GOLDEN) else {
-        return;
-    };
-    assert_eq!(
-        named_release(&golden).as_deref(),
-        Some(super::findings::ABSORBED_SCAN_ERROR_RELEASE),
-        "{GOLDEN} names a different release from the constant the message is built from"
-    );
 }
 
 /// §FS-check.3.30.1, §FS-workspace.2.1.1: the whole sentence, assembled from

@@ -74,7 +74,7 @@ pub fn propose_id(kind: &str, title: &str, opts: IdOpts) -> Result<IdProposalOut
 }
 
 /// [`propose_id`] for a frontend that also renders the run's `[workspace]`
-/// warnings (§FS-check.3.30.2, §FS-check.4.10.7): `id` resolves a block's member
+/// warnings (§FS-check.4.10.7): `id` resolves a block's member
 /// boundary like every other walking command, and the outcome is an enum with
 /// nowhere to carry a caution.
 #[doc(hidden)]

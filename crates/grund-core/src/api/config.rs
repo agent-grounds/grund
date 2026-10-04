@@ -15,7 +15,7 @@ use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config};
 
 /// The run's `[workspace]` warnings off a `Config` a caller already holds
-/// (§FS-check.3.30, §FS-check.4.10, §FS-workspace.6.1.7.6): what the workspace pass
+/// (§FS-check.4.10, §FS-workspace.6.1.7.6): what the workspace pass
 /// settled on it, plus the walk §FS-check.4.10.2 needs, published as the
 /// `Finding`s a frontend renders (§FS-distribution.3.1).
 ///

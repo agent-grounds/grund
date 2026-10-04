@@ -46,7 +46,7 @@ pub fn complete_ids(opts: CompleteIdsOpts) -> Result<Vec<String>> {
 }
 
 /// [`complete_ids`] for a frontend that also renders the run's `[workspace]`
-/// warnings (§FS-check.3.30, §FS-check.4.10, §FS-workspace.6.1.7.6). The candidate
+/// warnings (§FS-check.4.10, §FS-workspace.6.1.7.6). The candidate
 /// list is a bare `Vec<String>`, so this is the only channel they have.
 #[doc(hidden)]
 pub fn complete_ids_with_run_warnings(

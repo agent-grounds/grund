@@ -1,7 +1,7 @@
 //! The run's warning channel (§AR-system.2.3): the `[workspace]` cautions a run
 //! settles while it resolves its configuration, carried on the `Config` the run
-//! was launched with until a frontend renders them (§FS-check.3.30,
-//! §FS-check.3.29, §FS-check.4.10, §FS-workspace.6.1.7, §FS-distribution.3.1).
+//! was launched with until a frontend renders them (§FS-check.3.29,
+//! §FS-check.4.10, §FS-workspace.6.1.7, §FS-distribution.3.1).
 //!
 //! It is here because the `Config` is what every one of these facts is settled
 //! from and what every walking command already holds — the same place the
@@ -24,8 +24,9 @@ use crate::model::Diagnostic;
 /// One warning the run has earned, settled or still to be answered.
 #[derive(Clone)]
 pub(crate) enum RunWarning {
-    /// A warning the run already has in full: §FS-check.3.30's absorbed scan and
-    /// §FS-workspace.6.1.7's undecidable ancestor claim.
+    /// A warning the run already has in full: §FS-workspace.6.1.7's undecidable
+    /// ancestor claim. §FS-check.3.30's absorbed scan was one until it became a
+    /// config error.
     Settled(Diagnostic),
     /// §FS-check.4.10: a block that opted out of being a project, held with the
     /// run's other project roots until a walker can be asked whether the block's

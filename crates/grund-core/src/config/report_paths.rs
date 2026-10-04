@@ -44,7 +44,7 @@ pub(crate) fn display_path(config: &Config, path: &Path) -> String {
 /// Here rather than beside the report conversion because a `Diagnostic` with no
 /// `sites` is nothing but a message and a `<config>:<line>` anchor, and every
 /// component that settles one — the walking commands' api, the `init` and `fetch`
-/// writers — needs one spelling of it (§FS-check.3.30, §FS-check.4.10,
+/// writers — needs one spelling of it (§FS-check.4.10,
 /// §FS-workspace.6.1.7).
 pub(crate) fn run_warning_findings(config: &Config, warnings: Vec<Diagnostic>) -> Vec<Finding> {
     warnings
