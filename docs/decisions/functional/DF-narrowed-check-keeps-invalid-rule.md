@@ -16,7 +16,7 @@ line alone, with no rationale:
 
 ```console
 $ grund check .
-docs/rules/RULE-terms.md:1: error: RULE-terms is not a valid rule: rule rationale is empty
+docs/rules/RULE-chapters.md:1: error: RULE-chapters is not a valid rule: rule rationale is empty
 ...
 $ grund check . --only chapter-cardinality
 success

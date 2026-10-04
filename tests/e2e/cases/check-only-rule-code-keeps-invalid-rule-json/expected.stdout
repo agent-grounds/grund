@@ -1,1 +1,1 @@
-{"severity":"error","path":"docs/rules/RULE-terms.md","line":1,"code":"invalid-rule","message":"RULE-terms is not a valid rule: rule rationale is empty","sites":null,"authority":["RULE-terms"]}
+{"severity":"error","path":"docs/rules/RULE-chapters.md","line":1,"code":"invalid-rule","message":"RULE-chapters is not a valid rule: rule rationale is empty","sites":null,"authority":["RULE-chapters"]}
