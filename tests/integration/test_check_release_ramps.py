@@ -279,16 +279,17 @@ class ThisRepositoryTests(unittest.TestCase):
         ]
         self.assertEqual([], pending, "main_entry() is still pending removal in 0.15.0")
 
-    def test_the_wording_ramps_this_tree_carries_are_read(self):
-        """§FS-distribution.4.2.2 — while the two wording constants ship, the
-        guard must see them in both homes it scans: a `crates/` source and an
-        e2e golden. A clause wired to text nobody writes passes in silence."""
-        wording = [claim for claim in self.claims if claim.clause == "wording changes in"]
-        self.assertTrue(wording, "this tree carries no `wording changes in` ramp to read")
-        homes = {claim.path.split("/")[0] for claim in wording}
-        self.assertIn("crates", homes)
-        self.assertIn("tests", homes)
-        self.assertEqual({claim.direction for claim in wording}, {ramps.PENDING})
+    def test_no_golden_still_promises_a_wording_change_in_0_16_0(self):
+        """§FS-distribution.4.2.2 — the wording ramps this tree carried all named
+        0.16.0, and their goldens hold the final wording (§FS-errors.3.3,
+        §FS-errors.3.6.1, §FS-errors.3.7.1). A golden that still promised a
+        wording change would ship a promise the release has already reached."""
+        golden = [
+            claim
+            for claim in self.claims
+            if claim.clause == "wording changes in" and claim.path.startswith("tests/")
+        ]
+        self.assertEqual([], golden)
 
     def test_the_flips_this_tree_landed_hold_the_floor_at_0_16_0(self):
         """§FS-distribution.4.2 — three flips have landed, and the two later ones

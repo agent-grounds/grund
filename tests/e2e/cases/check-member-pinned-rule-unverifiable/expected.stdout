@@ -1,4 +1,4 @@
-docs/rules/RULE-seg-operations-workshop.md:1: error: RULE-seg-operations-workshop is not a valid rule: unknown kind "OP" in namespace "workshop"; accepted form: Each FS must cite at least one GOAL. — unknown project alias workshop; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root; this wording changes in grund 0.16.0
+docs/rules/RULE-seg-operations-workshop.md:1: error: RULE-seg-operations-workshop is not a valid rule: unknown project alias workshop; no workspace is in scope here, so the alias cannot be resolved — check from the workspace root
 docs/segments/SEG-drive.md:7: error: unknown project alias workshop
 docs/rules/RULE-seg-operations-workshop.md:1: warning: declared but never cited: RULE-seg-operations-workshop
 docs/segments/SEG-drive.md:1: warning: declared but never cited: SEG-drive
