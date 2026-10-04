@@ -6,6 +6,7 @@
 use super::super::facts::{NodeKey, RuleFacts};
 use super::super::{RuleLevel, RulePolarity, RuleRelation, RuleSubject};
 use super::authority::Authority;
+use super::index::FactIndex;
 use super::{SemanticRule, label, push_node};
 use crate::model::Diagnostic;
 
@@ -31,6 +32,7 @@ pub(super) fn report_unreached(
     rule: &SemanticRule,
     authority: &Authority,
     facts: &RuleFacts,
+    index: &FactIndex<'_>,
     selected: &[NodeKey],
     out: &mut Vec<Diagnostic>,
 ) {
@@ -50,7 +52,7 @@ pub(super) fn report_unreached(
     } else {
         ""
     };
-    for declaration in unreached_declarations(kind, selected, facts) {
+    for declaration in unreached_declarations(kind, selected, facts, index) {
         let message = format!(
             "{} has no {name} chapter, so {authority} cannot reach it; add the chapter, \
              or narrow the rule to the declarations that have one{landed}",
@@ -77,20 +79,25 @@ pub(super) fn report_unreached(
 /// "contributes no unit" and "is unreached" are one set by construction
 /// (§FS-rules.2) — no declaration can both hand the relation a unit and be
 /// reported as out of the rule's reach.
-fn unreached_declarations(kind: &str, selected: &[NodeKey], facts: &RuleFacts) -> Vec<NodeKey> {
-    facts
-        .decl
+///
+/// §FS-rules.5.3: form the complement using each declaration's direct chapter
+/// bucket, sharing selector data rather than joining global relations again.
+fn unreached_declarations(
+    kind: &str,
+    selected: &[NodeKey],
+    facts: &RuleFacts,
+    index: &FactIndex<'_>,
+) -> Vec<NodeKey> {
+    let selected = selected.iter().collect::<std::collections::BTreeSet<_>>();
+    index
+        .declarations_of_kind(kind)
         .iter()
-        .filter(|(_, declared)| declared == kind)
-        .map(|(node, _)| node)
         .filter(|node| {
-            !selected.iter().any(|chapter| {
-                facts
-                    .contains
-                    .iter()
-                    .any(|(parent, child)| &parent == node && child == chapter)
-            })
+            !index
+                .chapters_of(node)
+                .iter()
+                .any(|row| selected.contains(&facts.chapter[*row].0))
         })
-        .cloned()
+        .map(|node| (*node).clone())
         .collect()
 }

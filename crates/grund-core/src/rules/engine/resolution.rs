@@ -9,15 +9,16 @@
 use super::super::facts::RuleFacts;
 use super::super::{ParsedRule, RuleSubject};
 use super::authority::one_rules_authority;
+use super::index::FactIndex;
 use super::selectors::select_subjects;
 use crate::model::Diagnostic;
 
 /// Post-scan literal resolution belongs with selector semantics, not sentence
 /// recognition (§FS-rules.4, §AR-rules.4).
-fn subject_resolves(rule: &ParsedRule, facts: &RuleFacts) -> bool {
+fn subject_resolves(rule: &ParsedRule, facts: &RuleFacts, index: &FactIndex<'_>) -> bool {
     match rule.subject {
         RuleSubject::ExactDeclaration(_) | RuleSubject::ExactChapter { .. } => {
-            select_subjects(&rule.subject, facts).len() == 1
+            select_subjects(&rule.subject, facts, index).len() == 1
         }
         _ => true,
     }
@@ -29,7 +30,23 @@ pub(crate) fn unresolved_subject_diagnostic(
     rule: &ParsedRule,
     facts: &RuleFacts,
 ) -> Option<Diagnostic> {
-    if subject_resolves(rule, facts) {
+    if !matches!(
+        rule.subject,
+        RuleSubject::ExactDeclaration(_) | RuleSubject::ExactChapter { .. }
+    ) {
+        return None;
+    }
+    unresolved_subject_diagnostic_indexed(rule, facts, &FactIndex::new(facts))
+}
+
+/// Family evaluation reuses the snapshot's selector indexes (§AR-rules.3.1,
+/// §FS-rules.5.3); standalone literal resolution keeps the same boundary.
+pub(super) fn unresolved_subject_diagnostic_indexed(
+    rule: &ParsedRule,
+    facts: &RuleFacts,
+    index: &FactIndex<'_>,
+) -> Option<Diagnostic> {
+    if subject_resolves(rule, facts, index) {
         return None;
     }
     let literal = match &rule.subject {

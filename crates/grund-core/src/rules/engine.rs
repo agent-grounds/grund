@@ -1,6 +1,7 @@
 //! Relational chapter-rule evaluation (§FS-rules.5–7, §AR-rules.4–5).
 
 mod authority;
+mod index;
 mod precedence;
 mod resolution;
 mod selectors;
@@ -16,11 +17,13 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use authority::Authority;
 pub(crate) use authority::one_rules_authority;
+use index::FactIndex;
 pub(crate) use precedence::citation_precedence;
 pub(crate) use resolution::unresolved_subject_diagnostic;
+use resolution::unresolved_subject_diagnostic_indexed;
 use selectors::{
-    citation_matches_targets, declaration_kind, label, owning_declaration, select_subjects,
-    site_is_in, target_kind_matches, target_nodes, target_wording,
+    citation_matches_targets, label, select_subjects, target_kind_matches, target_nodes,
+    target_wording,
 };
 use unreached::report_unreached;
 
@@ -55,6 +58,8 @@ pub(crate) fn evaluate_suggestions(
     evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false)
 }
 
+/// Share one immutable fact index across this level's semantic groups and
+/// literal resolution (§FS-rules.5.3, §AR-rules.3.1).
 fn evaluate_level(
     rules: &[ParsedRule],
     precedence: &[ParsedRule],
@@ -62,6 +67,7 @@ fn evaluate_level(
     level: RuleLevel,
     include_invalid: bool,
 ) -> Vec<Diagnostic> {
+    let index = FactIndex::new(facts);
     let mut groups: BTreeMap<SemanticRule, BTreeSet<String>> = BTreeMap::new();
     let precedence = precedence
         .iter()
@@ -69,7 +75,7 @@ fn evaluate_level(
         .collect::<BTreeSet<_>>();
     let mut out = Vec::new();
     for rule in rules {
-        if let Some(diagnostic) = unresolved_subject_diagnostic(rule, facts) {
+        if let Some(diagnostic) = unresolved_subject_diagnostic_indexed(rule, facts, &index) {
             if include_invalid {
                 out.push(diagnostic);
             }
@@ -87,7 +93,7 @@ fn evaluate_level(
         if precedence.contains(&rule) {
             continue;
         }
-        evaluate_one(&rule, &Authority::new(origins), facts, &mut out);
+        evaluate_one(&rule, &Authority::new(origins), facts, &index, &mut out);
     }
     out
 }
@@ -105,13 +111,16 @@ impl From<&ParsedRule> for SemanticRule {
     }
 }
 
+/// Each family reads only the selected units' indexed facts (§FS-rules.5.3),
+/// retaining the finite-snapshot clauses (§FS-rules.5.2).
 fn evaluate_one(
     rule: &SemanticRule,
     authority: &Authority,
     facts: &RuleFacts,
+    index: &FactIndex<'_>,
     out: &mut Vec<Diagnostic>,
 ) {
-    let subjects = select_subjects(&rule.subject, facts);
+    let subjects = select_subjects(&rule.subject, facts, index);
     // §FS-rules.4: every positive cardinality conclusion is closed-world, and
     // the absence of §FS-rules.5.2's second premise is one of them.
     if facts.header.completeness == Completeness::Incomplete
@@ -121,23 +130,17 @@ fn evaluate_one(
     }
     // §FS-rules.7: the absence takes the channel its level already has, like
     // every other finding the level produces.
-    report_unreached(rule, authority, facts, &subjects, out);
+    report_unreached(rule, authority, facts, index, &subjects, out);
     match rule.relation {
         RuleRelation::HaveChapter => {
             let RuleTargets::Chapter(name) = &rule.targets else {
                 return;
             };
             for subject in subjects {
-                let count = facts
-                    .chapter
+                let count = index
+                    .chapters_of(&subject)
                     .iter()
-                    .filter(|(chapter, _, display)| {
-                        display.eq_ignore_ascii_case(name)
-                            && facts
-                                .contains
-                                .iter()
-                                .any(|(parent, child)| parent == &subject && child == chapter)
-                    })
+                    .filter(|row| facts.chapter[**row].2.eq_ignore_ascii_case(name))
                     .count();
                 if !rule.cardinality.contains(count) {
                     push_node(
@@ -156,12 +159,10 @@ fn evaluate_one(
             }
         }
         RuleRelation::Cite if rule.polarity == RulePolarity::Prohibiting => {
-            let targets = target_nodes(&rule.targets, facts);
+            let targets = target_nodes(&rule.targets, facts, index);
             for subject in subjects {
-                for (site, _, target) in &facts.cites {
-                    if citation_matches_targets(target, &targets, facts)
-                        && site_is_in(site, &subject, facts)
-                    {
+                for (site, _, target) in index.citations_in(&subject) {
+                    if citation_matches_targets(target, &targets, index) {
                         // §FS-rules.7.5: the hard prohibition reuses
                         // §FS-check.3.12's wording, repair included, with
                         // `(<RULE-ID>)` for the tail; the recommendation not.
@@ -177,7 +178,9 @@ fn evaluate_one(
                             code,
                             format!(
                                 "{} {} not cite {} ({authority}){repair}",
-                                declaration_kind(facts, &subject)
+                                index
+                                    .declaration_kind(&subject)
+                                    .map(str::to_owned)
                                     .unwrap_or_else(|| label(facts, &subject)),
                                 if rule.level == RuleLevel::Required {
                                     "must"
@@ -192,17 +195,16 @@ fn evaluate_one(
                 }
             }
         }
-        RuleRelation::Cite => evaluate_cites(rule, authority, facts, &subjects, out),
+        RuleRelation::Cite => evaluate_cites(rule, authority, facts, index, &subjects, out),
         RuleRelation::BeCitedBy => {
             for subject in subjects {
-                let count = facts
-                    .cites
+                let count = index
+                    .citations_to(&subject)
                     .iter()
-                    .filter(|(_, from, target)| {
-                        target == &subject
-                            && declaration_kind(facts, from).is_some_and(|kind| {
-                                target_kind_matches(&rule.targets, &kind, facts)
-                            })
+                    .filter(|(_, from, _)| {
+                        index
+                            .declaration_kind(from)
+                            .is_some_and(|kind| target_kind_matches(&rule.targets, kind, facts))
                     })
                     .count();
                 if !rule.cardinality.contains(count) {
@@ -225,28 +227,30 @@ fn evaluate_one(
     }
 }
 
+/// Count the unit's physical rows once (§FS-rules.5.1, §FS-rules.5.3), then
+/// enumerate the declared target universe for per-target coverage (§FS-rules.5.2).
 fn evaluate_cites(
     rule: &SemanticRule,
     authority: &Authority,
     facts: &RuleFacts,
+    index: &FactIndex<'_>,
     subjects: &[NodeKey],
     out: &mut Vec<Diagnostic>,
 ) {
     let RuleTargets::Kinds { mode, .. } = &rule.targets else {
         return;
     };
-    let targets = target_nodes(&rule.targets, facts);
+    let targets = target_nodes(&rule.targets, facts, index);
     for subject in subjects {
         if *mode == TargetMode::PerTarget {
+            let mut counts = BTreeMap::new();
+            for (_, _, cited) in index.citations_in(subject) {
+                if let Some(owner) = index.owner(cited) {
+                    *counts.entry(owner).or_insert(0usize) += 1;
+                }
+            }
             for target in &targets {
-                let count = facts
-                    .cites
-                    .iter()
-                    .filter(|(site, _, cited)| {
-                        owning_declaration(facts, cited).as_ref() == Some(target)
-                            && site_is_in(site, subject, facts)
-                    })
-                    .count();
+                let count = counts.get(target).copied().unwrap_or(0);
                 if !rule.cardinality.contains(count) {
                     push_node(
                         out,
@@ -264,13 +268,10 @@ fn evaluate_cites(
                 }
             }
         } else {
-            let count = facts
-                .cites
+            let count = index
+                .citations_in(subject)
                 .iter()
-                .filter(|(site, _, target)| {
-                    citation_matches_targets(target, &targets, facts)
-                        && site_is_in(site, subject, facts)
-                })
+                .filter(|(_, _, target)| citation_matches_targets(target, &targets, index))
                 .count();
             if !rule.cardinality.contains(count) {
                 let ordinary = rule.cardinality == Cardinality::AT_LEAST_ONE && count == 0;
