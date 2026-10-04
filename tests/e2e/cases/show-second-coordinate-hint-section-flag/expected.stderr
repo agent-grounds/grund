@@ -1,0 +1,2 @@
+error: path does not exist: FS-beta
+hint: `show` reads one coordinate, so `FS-beta` is the path; read both with `printf '%s\n' '{"id":"FS-alpha","section":"1"}' '{"id":"FS-beta"}' | grund show --batch --format=json`

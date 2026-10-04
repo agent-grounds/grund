@@ -66,6 +66,25 @@ In a kind whose effective format carries both `{number}` and `{slug}`, the numbe
 
 `<path>` is the directory or file whose tree is scanned to resolve the ID. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). `--path <path>` is an accepted alias for scripts that prefer to pass it as a flag; the two forms are equivalent.
 
+#### 1.4.1 A second coordinate in the path slot
+
+`show` reads one coordinate, so in `grund FS-show FS-cli` the second operand is the path to scan ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)), and when no such path exists the run fails as any missing path does: `error: path does not exist: FS-cli` on stderr, empty stdout, exit `2`. Where that operand reads as a second coordinate, the refusal also says how to read several. It does so when all of these hold:
+
+- the path came from the positional `<path>` operand, in the bare or the explicit `show` form, not from `--path`;
+- nothing exists at it, relative to the working directory;
+- it is coordinate-shaped: an unqualified ID, optionally with an inline section, that the effective ID grammar accepts ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — the grammar of the configuration discovered from the working directory, else the default one. Only its shape is checked; it is never resolved. A spelling with a `/` is a path and never a coordinate here;
+- the run is not `--batch`.
+
+Then stderr keeps `error: path does not exist: <path>` byte for byte as its first line and appends one line, built from the invocation's own coordinates:
+
+```text
+hint: `show` reads one coordinate, so `<path>` is the path; read both with `printf '%s\n' '{"id":"<ID>"}' '{"id":"<path>"}' | grund show --batch --format=json`
+```
+
+`<ID>` is the first operand as typed, inline section included; where `--section <s>` named the section, the first object is `{"id":"<ID>","section":"<s>"}` instead. The `%s\n` is printed literally, as the shell command needs it. Appending is what [§FS-errors.3](FS-errors.md#3-message-text) permits: the existing message survives as a verbatim prefix, and the hint changes nothing else. Stdout stays empty, the exit stays `2`, and stderr stays raw text under `--format=json` ([§FS-errors.2.2.4](FS-errors.md#224-under---formatjson), [§FS-cli.5](FS-cli.md#5-exit-code-mapping-is-fixed)). The path is never re-read as a query and nothing is resolved because of the hint.
+
+No hint is appended for a missing `--path`, which was named as a path on purpose; for a missing positional operand that is not coordinate-shaped, such as `docs/nope`; or for any `--batch` run. A coordinate-shaped operand that does exist, such as a directory named `FS-cli`, is scanned as before and the run succeeds.
+
 ### 1.5 `--section <s>`
 
 `--section <s>` is an alternative way to specify a section path (`3.1`). Mutually exclusive with the dotted form. Composes with each `--brief` / `--toc` / `--full` slice exactly as the dotted form does ([§FS-show.2.2](FS-show.md#22-section)).
