@@ -237,17 +237,52 @@ pub(crate) fn is_inside_string_literal(line: &str, pos: usize) -> bool {
 /// Whether byte offset `pos` falls inside a `` `…` `` inline-code span in Markdown
 /// — citations there are illustrative, not real, so `fmt` leaves them alone
 /// (§FS-fmt.2.3, §FS-fmt.6.4).
+///
+/// Where the span begins and ends is §FS-fmt.2.3.5: it opens at a run of *n*
+/// backticks whose first backtick is not escaped, closes at the next run of
+/// exactly *n*, reads a backslash inside it as literal, and leaves the rest of
+/// the line code when it does not close. The opener's first backtick is outside
+/// the span and every later byte up to the end of the closing run is inside it.
 pub(crate) fn is_inside_inline_code(line: &str, pos: usize) -> bool {
     let bytes = line.as_bytes();
-    let mut in_code = false;
     let mut i = 0;
     while i < pos && i < bytes.len() {
-        if bytes[i] == b'`' && !is_escaped(bytes, i) {
-            in_code = !in_code;
+        if bytes[i] != b'`' || is_escaped(bytes, i) {
+            i += 1;
+            continue;
         }
-        i += 1;
+        let open = i;
+        while i < bytes.len() && bytes[i] == b'`' {
+            i += 1;
+        }
+        match closing_run_end(bytes, i, i - open) {
+            Some(end) if pos < end => return true,
+            Some(end) => i = end,
+            None => return true,
+        }
     }
-    in_code
+    false
+}
+
+/// The end of the first run of exactly `len` backticks at or after `from`, the
+/// run that closes a span opened by `len` (§FS-fmt.2.3.5). No backslash is read:
+/// inside a span it escapes nothing.
+fn closing_run_end(bytes: &[u8], from: usize, len: usize) -> Option<usize> {
+    let mut i = from;
+    while i < bytes.len() {
+        if bytes[i] != b'`' {
+            i += 1;
+            continue;
+        }
+        let run = i;
+        while i < bytes.len() && bytes[i] == b'`' {
+            i += 1;
+        }
+        if i - run == len {
+            return Some(i);
+        }
+    }
+    None
 }
 
 /// Whether byte offset `pos` falls inside the destination part of an inline
