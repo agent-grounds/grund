@@ -15,14 +15,14 @@ use grund_core::{
     CitationLevel, CitationRules, CitationTarget, CompleteIdsOpts, Config, CoverCitation,
     CoverOpts, FetchFailureKind, Finding, FindingSite, FmtOpts, FmtScanAbort, IdOpts, IdProposal,
     IdProposalOutcome, InitAgentEntrypointSelection, InitNext, InitOpts, InitOutput, ListEntry,
-    ListOpts, ListSizeEntry, ListSizeOpts, NamespaceMatch, PointSizeUnit,
-    REFS_QUERY_FAILURE_WARNING, RefHit, RefsOpts, RefsOutput, RefsQueryFailure, Report, ShowFormat,
-    ShowMode, ShowOpts, ShowQueryError, canonical_template_text, check_with_run_warnings,
-    complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover, effective_config,
+    ListOpts, ListSizeEntry, ListSizeOpts, NamespaceMatch, PointSizeUnit, RefHit, RefsOpts,
+    RefsOutput, RefsQueryFailure, Report, ShowFormat, ShowMode, ShowOpts, ShowQueryError,
+    canonical_template_text, check_with_run_warnings, complete_ids_with_run_warnings,
+    config_run_warnings, config_warnings, cover, effective_config,
     fetch_snapshot_with_run_warnings, format_references, init, list_sizes, list_with_run_warnings,
-    names_member_id_candidate, propose_id_with_run_warnings, refs_query_failure_is_exit_one,
-    refs_with_metadata, render_finding_sites_json, show_batch_with_scope, show_with_scope,
-    usage_clause, usage_over_paths, validate_config,
+    names_member_id_candidate, propose_id_with_run_warnings, refs_with_metadata,
+    render_finding_sites_json, show_batch_with_scope, show_with_scope, usage_clause,
+    usage_over_paths, validate_config,
 };
 use grund_core::{CHECK_FINDING_CODES, CheckFindingSelection};
 

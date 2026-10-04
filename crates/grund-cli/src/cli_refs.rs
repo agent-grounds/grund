@@ -1,6 +1,6 @@
 /// `grund refs <ID> [--descendants] [--summary] [--total] [--format text|json]`:
 /// every citation of one ID, rendered as `path:line`, with resolver rejection
-/// following the staged query-failure contract (§FS-refs.3, §FS-refs.4).
+/// a failed query (§FS-refs.3, §FS-refs.4).
 /// `--descendants` widens the section filter to the subtree (§FS-refs.1) and
 /// adds no classification of its own, so it is resolved here before rendering
 /// exactly as `--section` and `--summary` are (§FS-refs.4). `--total` is the
@@ -74,8 +74,8 @@ fn command_refs(args: &[String]) -> ExitCode {
     }) {
         Ok(output) => output,
         Err(err) => {
-            // §FS-refs.4: recorded ambiguities refuse now, independently of
-            // the grammar-resolver ramp, before every successful renderer.
+            // §FS-refs.4: recorded ambiguities refuse before every successful
+            // renderer.
             if let Some(refusal) = err.downcast_ref::<ShowQueryError>()
                 && let Some(output) = err.downcast_ref::<RefsOutput>()
             {
@@ -136,24 +136,18 @@ fn command_refs(args: &[String]) -> ExitCode {
     exit_after_scan_errors(&output.scan_errors)
 }
 
-/// Render the release-selected wire form of a typed resolver rejection
-/// (§FS-refs.4, §FS-errors.5.2). The format and summary/section flags are already
-/// resolved, so no renderer can reclassify the operand.
+/// Render a typed resolver rejection as the failed query `show` prints for the
+/// same operand, exit `1` (§FS-refs.4, §FS-errors.5.2). The format and
+/// summary/section/total flags are already resolved, so no renderer can
+/// reclassify the operand.
 fn render_refs_query_failure(failure: &RefsQueryFailure, format: &str) -> ExitCode {
-    if refs_query_failure_is_exit_one() {
-        if format == "json" {
-            print_bare_query_json(failure.kind.code(), &failure.message, &[]);
-        } else {
-            eprintln!("{}", failure.message);
-            print_refs_query_failure_hint(failure);
-        }
-        ExitCode::from(1)
+    if format == "json" {
+        print_bare_query_json(failure.kind.code(), &failure.message, &[]);
     } else {
-        eprintln!("error: {}", failure.message);
+        eprintln!("{}", failure.message);
         print_refs_query_failure_hint(failure);
-        eprintln!("{REFS_QUERY_FAILURE_WARNING}");
-        ExitCode::from(2)
     }
+    ExitCode::from(1)
 }
 
 fn print_refs_query_failure_hint(failure: &RefsQueryFailure) {
