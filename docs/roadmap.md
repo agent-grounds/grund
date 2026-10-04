@@ -105,20 +105,20 @@ form remains
 ## RM-unreached-declaration-error: make the unreached-declaration warning an error in 0.16.0
 
 This milestone shipped in grund 0.16.0: `unreached-declaration` is an error on
-the ordinary `must` channel, and its record is the changelog bullet that landed
-it together with
+the ordinary `must` channel, and its record is the compatibility notice that
+landed it,
+[§DF-chapter-rule-reaches-every-declaration.release-note](decisions/functional/DF-chapter-rule-reaches-every-declaration.md#release-note-release-note),
+together with
 [§FS-rules.checks.unreached-declaration](functional-spec/FS-rules.md#checksunreached-declaration-unreached-declaration).
 The item's own plan is removed, as a shipped item's is; this address, heading
-text included, is kept while the changelog still cites it — #362's bullet,
-written before the promotion, and this change's own, now the pending entry
-`docs/changelog/unreleased/fix-issue-368.changed.md`.
-Retiring the address is a change of its own: #362's bullet becomes repointable
-as soon as the 0.15.0 cut moves it out of `## Unreleased`, and this change's
-entry, which the 0.16.0 cut releases and deletes, may be reworded before that
-cut too
-([§FS-distribution.4.6](functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)),
-so the repoint the lead above prescribes need not wait for a release. It is not
-a deadline item and is not counted among the four.
+text included, is kept while the changelog and that notice still cite it —
+#362's bullet in the 0.15.0 release, written before the promotion, and the
+notice, which the 0.16.0 release publishes
+([§FS-distribution.4.6.4](functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)).
+Retiring the address is a change of its own: the notice is a section of a
+decision record and may be reworded like any other, so the repoint the lead
+above prescribes need not wait for a release. It is not a deadline item and is
+not counted among the four.
 
 GitHub: [#368](https://github.com/agent-grounds/grund/issues/368).
 

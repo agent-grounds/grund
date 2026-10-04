@@ -1,30 +1,24 @@
 # Changelog
 
-Records every notable change to `grund`. Versions follow semver; the **latest release is inline** in this file, **older releases live one-per-file under `docs/changelog/`**, and **changes not yet released live one-per-file under [`docs/changelog/unreleased/`](changelog/unreleased/README.md)**, so a reader (human or agent) only loads the history they ask for. Each entry cites the FS/AR/G/DF IDs it touches, so the changelog is itself part of the conformant tree (`grund .` validates the citations).
-
-Schema-version bumps are called out explicitly: `grund_config_version` ([§FS-config.5](functional-spec/FS-config.md#5-schema-versioning)) and the `AGENTS.md` init block version ([§FS-init.2](functional-spec/FS-init.md#2-outputs)). A bump to either is a breaking change for the consumer and must appear under **Changed** with a migration note.
+Records every notable change to `grund`. Versions follow semver; the **latest release is inline** in this file and **older releases live one-per-file under `docs/changelog/`**, so a reader (human or agent) only loads the history they ask for. Nothing is written here between releases: a release writes its own section from the pull requests merged since the previous tag and the compatibility notices the decision records gained since then ([§FS-distribution.4.6](functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)). The changelog is part of the conformant tree, so every citation a section carries is checked (`grund check` validates them).
 
 ## 1. Conventions
 
-### 1.1 Sections per release
+### 1.1 Shape of a release
 
-`Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security` — the Keep-a-Changelog set; omit any with no entries. A large entry (the first release, folding in pre-history, is the case in point) may add narrative subsection headings — e.g. `Baseline`, `Renamed`, `Implemented`, `Distribution and bindings` — for readability when the standard six would bury the structure; the semver-relevant changes still live under the standard names.
+From 0.16.0 on, a release is the list of the pull requests merged since the previous tag, newest first, one line each — `- [<title>](<url>) (PR #N)`, the pull request's own title escaped so that it is text and never a citation ([§FS-distribution.4.6.2](functional-spec/FS-distribution.md#462-one-line-per-pull-request-its-title-linked)) — followed, when the release has any, by `### Compatibility notices`. Every merged pull request is listed, docs-only ones included. Releases up to and including 0.15.0 keep the Keep-a-Changelog sections they were published with — `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`, and in the first release narrative subsections such as `Baseline` or `Distribution and bindings` — and are not rewritten.
 
-### 1.2 Schema version callouts
+### 1.2 Compatibility notices and schema versions
 
-Any change to `grund_config_version` or the `AGENTS.md` block version is a `changed` entry whose bullet begins with `**Schema:**` and carries a one-line migration pointer, so it is released under **Changed**.
+A compatibility notice says what a verdict change breaks and for whom. It is written where the change is decided, as a `## release-note: Release note` section holding one bullet on the decision record, and the release that first carries it publishes it under `### Compatibility notices` ([§FS-distribution.4.6.4](functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)). A bump of `grund_config_version` ([§FS-config.5](functional-spec/FS-config.md#5-schema-versioning)) or of the `AGENTS.md` init block version ([§FS-init.2](functional-spec/FS-init.md#2-outputs)) is a breaking change for the consumer, so it is announced the same way: a notice, with its migration, on the decision that bumps the schema. Up to 0.15.0 it was a `**Schema:**` bullet under **Changed**.
 
-### 1.3 Entry style
+### 1.3 How a section is generated
 
-Entries are written before the release, one file each under `docs/changelog/unreleased/`, each holding one bullet: present tense, leading with the affected ID. Example: `- §FS-show: add --head mode for truncated output`. The file is named `<slug>.<category>.md` — the slug by default the change's branch name, lowercase letters, digits and hyphens, and the category one of `added`, `changed`, `deprecated`, `removed`, `fixed` or `security` — and its links are relative to the file; [the directory's README](changelog/unreleased/README.md) is the format and [§FS-distribution.4.12](functional-spec/FS-distribution.md#412-pending-changelog-entries-are-one-file-each) this repository's use of it. Each entry ends in its change's `(PR #N)`, and a pull request adds no entry of its own, a verdict correction aside ([§FS-distribution.4.6](functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)).
+`scripts/prepare_changelog_release.py prepare <version>`, which both release helpers run ([§FS-distribution.4.4](functional-spec/FS-distribution.md#44-two-helper-workflows-bump-the-version-on-a-validated-candidate)), reads every commit since the previous tag, asks the forge which merged pull request each belongs to ([§FS-distribution.4.6.1](functional-spec/FS-distribution.md#461-the-range-is-every-commit-since-the-previous-tag)), and writes the section; `preview` prints the same body and writes nothing. When the range cannot be read whole it refuses and writes nothing ([§FS-distribution.4.6.3](functional-spec/FS-distribution.md#463-a-refused-release-leaves-the-tree-as-it-was)). So a pull request's title is its release line, and a pull request writes nothing here.
 
 ### 1.4 Progressive discovery
 
-Only the **most recent release** is inline; pending changes are files, and **Unreleased** holds nothing but the pointer to them. When a new release ships, its entries become the new inline section and their files are deleted, the previous "latest" section is moved verbatim to `docs/changelog/<version>.md`, and a one-line link is added under [section 3, Older releases](#3-older-releases) ([§FS-distribution.4.5](functional-spec/FS-distribution.md#45-what-the-version-bump-includes)). The most recent release stays inline so the common reader and agent path — "what changed lately?" — is one file deep.
-
-## Unreleased
-
-Pending changes are one file each under [changelog/unreleased/](changelog/unreleased/README.md).
+Only the **most recent release** is inline. When a new release ships, its generated section takes the inline place, the previous "latest" section is moved verbatim to `docs/changelog/<version>.md`, and a one-line link counting what it held is added under [section 3, Older releases](#3-older-releases) ([§FS-distribution.4.5](functional-spec/FS-distribution.md#45-what-the-version-bump-includes)). The most recent release stays inline so the common reader and agent path — "what changed lately?" — is one file deep.
 
 ## 2. [0.15.0] — 2026-10-01
 

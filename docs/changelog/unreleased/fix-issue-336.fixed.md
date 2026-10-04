@@ -1,1 +1,0 @@
-- [§FS-refs.4](../../functional-spec/FS-refs.md#4-exit-codes): `grund refs` refuses independent duplicate ID homes and duplicate requested section coordinates with exit `1`, empty stdout, and show's ambiguity sites in text and JSON, including summary, total and descendants queries. Closes [issue #336](https://github.com/agent-grounds/grund/issues/336). (PR #390)
