@@ -2,8 +2,8 @@
 
 §FS-distribution.4.5.1 — passing assertions also require strict fixture removal.
 
-Ports the #420 pack-write reproducer to unittest and exercises the three actual
-constructors and the commands that bypass GitFixture._git. Linux provides the
+Ports the #420 pack-write reproducer to unittest and exercises the three release
+suites and commands that bypass GitFixture._git. Linux provides the
 LD_PRELOAD seam and /proc process evidence; no timing sleeps hide the race.
 """
 
@@ -16,10 +16,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import test_changelog_entries_merge as merge
+import test_prepare_changelog_release_list as listing
+import test_prepare_changelog_release_notices as notices
 import test_prepare_changelog_release as release
-import test_prepare_changelog_release_stamp as stamp
 from git_fixture_lifetime_probe import exercise, seed
+from release_forge_fixture import ForgeRepository
 
 
 @unittest.skipUnless(sys.platform.startswith("linux"), "pack-write seam needs Linux")
@@ -55,46 +56,59 @@ class GitFixtureLifetimeTests(unittest.TestCase):
                     del os.environ[key]
             exercise(self, case, construct, operation, self.library, self.template, seed_initial)
 
-    def test_stamp_initialization_owns_git_until_cleanup(self):
-        case = stamp.StampTests("test_a_number_that_would_go_into_several_entries_goes_into_none")
-        self._exercise(case, case.setUp,
-                       case.test_a_number_that_would_go_into_several_entries_goes_into_none)
+    def test_list_initialization_owns_git_until_cleanup(self):
+        name = "test_prepare_writes_the_release_the_forge_and_the_tree_describe"
+        case = listing.EndToEndTests(name)
+        self._exercise(case, getattr(case, name))
 
-    def test_merge_initialization_owns_git_until_cleanup(self):
-        case = merge.TwoPullRequestsTests()
-        self._exercise(case, case.setUp)
+    def test_notice_initialization_owns_git_until_cleanup(self):
+        name = "test_a_notice_added_since_the_tag_is_published"
+        case = notices.NoticeTests(name)
+        self._exercise(case, getattr(case, name))
 
     def _release_case(self):
-        class ReleaseCase(release.ReleaseRepository, unittest.TestCase):
+        class ReleaseCase(ForgeRepository, unittest.TestCase):
             pass
         return ReleaseCase()
 
     def test_release_initialization_owns_git_until_cleanup(self):
-        case = self._release_case()
-        self._exercise(case, case._repository)
+        name = "test_prepare_archives_the_previous_latest_and_links_it"
+        case = release.ArchiveTests(name)
+        self._exercise(case, getattr(case, name))
 
     def test_direct_dated_commit_owns_git_until_cleanup(self):
         case = self._release_case()
 
         def land():
             seed(case.repo)
-            case._land({"dated.added.md": "- A dated entry.\n"}, entries=True)
+            case._land("A dated commit", {"dated.txt": "A dated change.\n"})
 
-        self._exercise(case, case._repository, land, seed_initial=False)
+        self._exercise(case, lambda: case._repository({"base.txt": "Base.\n"}),
+                       land, seed_initial=False)
 
     def test_direct_rebase_owns_git_until_cleanup(self):
-        case = merge.TwoPullRequestsTests()
+        case = self._release_case()
 
         def rebase():
-            _, a, b = case._scenario("empty")
-            case._git(case.repo, "checkout", "-q", "-B", "trial", b)
+            case._git(case.repo, "checkout", "-q", "-b", "topic")
+            case._land("Topic", {"topic.txt": "Topic.\n"})
+            case._git(case.repo, "checkout", "-q", "main")
+            case._land("Main", {"main.txt": "Main.\n"})
+            case._git(case.repo, "checkout", "-q", "topic")
             seed(case.repo)
             # The apply backend also runs automatic maintenance when it
             # finishes on older Git; merge-backend versions can omit it.
-            result = case._try("rebase", "--apply", "--quiet", a)
+            result = subprocess.run(
+                ["git", "-C", str(case.repo), "-c", "user.name=Fixture",
+                 "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false",
+                 "rebase", "--apply", "--quiet", "main"],
+                capture_output=True, text=True)
             self.assertEqual(0, result.returncode, result.stderr)
+            self.assertEqual("Topic.\n", (case.repo / "topic.txt").read_text())
+            self.assertEqual("Main.\n", (case.repo / "main.txt").read_text())
 
-        self._exercise(case, case.setUp, rebase, seed_initial=False)
+        self._exercise(case, lambda: case._repository({"base.txt": "Base.\n"}),
+                       rebase, seed_initial=False)
 
 
 if __name__ == "__main__":
