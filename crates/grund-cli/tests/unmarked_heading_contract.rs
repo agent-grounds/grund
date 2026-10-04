@@ -1,6 +1,6 @@
-//! Binary-level compatibility contract for unmarked Markdown headings, their
-//! 0.16.0 deadline, and managed-block repair (§FS-declarations.checks.unmarked-heading,
-//! §FS-init.2.3.4.5.1, §RM-unmarked-heading-error).
+//! Binary-level contract for unmarked Markdown headings, the error they became
+//! in grund 0.16.0, and managed-block repair (§FS-declarations.checks.unmarked-heading,
+//! §FS-init.2.3.4.5.1, §FS-declarations.checks.unmarked-heading.5).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -52,24 +52,32 @@ fn stderr(output: &Output) -> String {
     String::from_utf8_lossy(&output.stderr).into_owned()
 }
 
-fn version(text: &str) -> Vec<u32> {
-    text.trim_end_matches("-dev")
-        .split('.')
-        .map(|part| part.parse::<u32>().expect("numeric version"))
-        .collect()
-}
-
-/// §FS-declarations.checks.unmarked-heading.5: the warning is scheduled to become an error in grund
-/// 0.16.0, so the deadline it prints is held ahead of the running version —
-/// the bump that reaches 0.16.0 fails here rather than shipping a message the
-/// binary is already past.
+/// §FS-declarations.checks.unmarked-heading.5: the ramp landed in grund 0.16.0 —
+/// the finding is an error that exits `1`, says so in the past tense, and is
+/// still the one `--ignore unmarked-heading` clears together with the exit.
 #[test]
-fn unmarked_heading_warning_deadline_is_ahead_of_the_running_version() {
-    assert!(
-        version(env!("CARGO_PKG_VERSION")) < version("0.16.0"),
-        "this tree reached 0.16.0; land §RM-unmarked-heading-error instead of \
-         shipping the warning past its deadline"
+fn unmarked_heading_is_an_error_that_names_the_release_it_landed_in() {
+    let root = heading_project("landed-error");
+    write_doc(
+        &root,
+        "FS-landed.md",
+        concat!(
+            "# FS-landed: Landed error\n\n",
+            "The declaration cites \u{a7}FS-landed.\n\n",
+            "## Missing coordinate\n",
+        ),
     );
+
+    let checked = run(&root, &["check"]);
+    assert_eq!(checked.status.code(), Some(1), "{}", stderr(&checked));
+    assert_eq!(
+        stdout(&checked),
+        "docs/FS-landed.md:5: error: unmarked heading inside FS-landed; number it (## 1. Missing coordinate) as FS-landed.1, declare an ID, or use a bold label; this became an error in grund 0.16.0\n"
+    );
+
+    let ignored = run(&root, &["check", "--ignore", "unmarked-heading"]);
+    assert_eq!(ignored.status.code(), Some(0), "{}", stderr(&ignored));
+    assert_eq!(stdout(&ignored), "success\n");
 }
 
 /// §FS-declarations.checks.unmarked-heading.6: no command numbers the heading, and nothing else moves
@@ -151,12 +159,12 @@ fn unbounded_sibling_numbers_get_strictly_larger_unused_suggestions() {
     );
 
     let checked = run(&root, &["check", "--only", "unmarked-heading"]);
-    assert_eq!(checked.status.code(), Some(0), "{}", stderr(&checked));
+    assert_eq!(checked.status.code(), Some(1), "{}", stderr(&checked));
     assert_eq!(
         stdout(&checked),
         concat!(
-            "docs/FS-overflow-larger.md:7: warning: unmarked heading inside FS-overflow-larger; number it (## 18446744073709551616. Missing sibling) as FS-overflow-larger.18446744073709551616, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
-            "docs/FS-overflow-u32.md:7: warning: unmarked heading inside FS-overflow-u32; number it (## 4294967296. Missing sibling) as FS-overflow-u32.4294967296, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
+            "docs/FS-overflow-larger.md:7: error: unmarked heading inside FS-overflow-larger; number it (## 18446744073709551616. Missing sibling) as FS-overflow-larger.18446744073709551616, declare an ID, or use a bold label; this became an error in grund 0.16.0\n",
+            "docs/FS-overflow-u32.md:7: error: unmarked heading inside FS-overflow-u32; number it (## 4294967296. Missing sibling) as FS-overflow-u32.4294967296, declare an ID, or use a bold label; this became an error in grund 0.16.0\n",
         )
     );
 }
@@ -176,12 +184,12 @@ fn suggested_titles_preserve_hash_text_and_only_remove_atx_closers() {
     );
 
     let checked = run(&root, &["check", "--only", "unmarked-heading"]);
-    assert_eq!(checked.status.code(), Some(0), "{}", stderr(&checked));
+    assert_eq!(checked.status.code(), Some(1), "{}", stderr(&checked));
     assert_eq!(
         stdout(&checked),
         concat!(
-            "docs/FS-titles.md:5: warning: unmarked heading inside FS-titles; number it (## 1. C#) as FS-titles.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
-            "docs/FS-titles.md:7: warning: unmarked heading inside FS-titles; number it (## 2. C#) as FS-titles.2, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
+            "docs/FS-titles.md:5: error: unmarked heading inside FS-titles; number it (## 1. C#) as FS-titles.1, declare an ID, or use a bold label; this became an error in grund 0.16.0\n",
+            "docs/FS-titles.md:7: error: unmarked heading inside FS-titles; number it (## 2. C#) as FS-titles.2, declare an ID, or use a bold label; this became an error in grund 0.16.0\n",
         )
     );
 
@@ -204,7 +212,7 @@ fn suggested_titles_preserve_hash_text_and_only_remove_atx_closers() {
 /// a titleless ATX heading has no authored title to preserve — so the
 /// otherwise-identical suggestion uses the literal title `Untitled`, and
 /// applying that complete suggested heading produces a recognized section and
-/// clears the warning.
+/// clears the error.
 #[test]
 fn titleless_heading_gets_a_self_valid_suggestion() {
     let root = heading_project("titleless-suggestion");
@@ -219,10 +227,10 @@ fn titleless_heading_gets_a_self_valid_suggestion() {
     );
 
     let checked = run(&root, &["check", "--only", "unmarked-heading"]);
-    assert_eq!(checked.status.code(), Some(0), "{}", stderr(&checked));
+    assert_eq!(checked.status.code(), Some(1), "{}", stderr(&checked));
     assert_eq!(
         stdout(&checked),
-        "docs/FS-titleless.md:5: warning: unmarked heading inside FS-titleless; number it (## 1. Untitled) as FS-titleless.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n"
+        "docs/FS-titleless.md:5: error: unmarked heading inside FS-titleless; number it (## 1. Untitled) as FS-titleless.1, declare an ID, or use a bold label; this became an error in grund 0.16.0\n"
     );
 
     write_doc(
@@ -240,7 +248,7 @@ fn titleless_heading_gets_a_self_valid_suggestion() {
 }
 
 /// §FS-declarations.checks.unmarked-heading.6: `show`, `list` and the slices they cut keep their current
-/// behaviour — the warning names a heading, it never renumbers one or shortens
+/// behaviour — the error names a heading, it never renumbers one or shortens
 /// the body a reader gets.
 #[test]
 fn unmarked_heading_scan_does_not_shorten_show_or_list_slices() {
@@ -268,7 +276,7 @@ fn unmarked_heading_scan_does_not_shorten_show_or_list_slices() {
 }
 
 #[test]
-fn only_markdown_atx_headings_get_unmarked_heading_warnings() {
+fn only_markdown_atx_headings_get_unmarked_heading_errors() {
     let root = heading_project("atx-boundaries");
     write_doc(
         &root,
@@ -291,7 +299,7 @@ fn only_markdown_atx_headings_get_unmarked_heading_warnings() {
     );
 
     let checked = run(&root, &["check", "--only", "unmarked-heading"]);
-    assert_eq!(checked.status.code(), Some(0), "{}", stderr(&checked));
+    assert_eq!(checked.status.code(), Some(1), "{}", stderr(&checked));
     let output = stdout(&checked);
     let warned_lines = output
         .lines()
@@ -299,7 +307,7 @@ fn only_markdown_atx_headings_get_unmarked_heading_warnings() {
             line.strip_prefix("docs/FS-atx.md:")
                 .and_then(|tail| tail.split(':').next())
                 .and_then(|line| line.parse::<usize>().ok())
-                .unwrap_or_else(|| panic!("unexpected warning: {line}"))
+                .unwrap_or_else(|| panic!("unexpected finding: {line}"))
         })
         .collect::<Vec<_>>();
     assert_eq!(warned_lines, vec![2, 3, 4, 5, 6, 7], "{output}");
@@ -320,12 +328,12 @@ fn duplicate_declaration_bodies_allocate_suggestions_independently() {
     );
 
     let checked = run(&root, &["check", "--only", "unmarked-heading"]);
-    assert_eq!(checked.status.code(), Some(0), "{}", stderr(&checked));
+    assert_eq!(checked.status.code(), Some(1), "{}", stderr(&checked));
     assert_eq!(
         stdout(&checked),
         concat!(
-            "docs/FS-duplicate-owner.md:3: warning: unmarked heading inside FS-duplicate-owner; number it (## 1. Missing in first body) as FS-duplicate-owner.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
-            "docs/FS-duplicate-owner.md:7: warning: unmarked heading inside FS-duplicate-owner; number it (## 1. Missing in second body) as FS-duplicate-owner.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0\n",
+            "docs/FS-duplicate-owner.md:3: error: unmarked heading inside FS-duplicate-owner; number it (## 1. Missing in first body) as FS-duplicate-owner.1, declare an ID, or use a bold label; this became an error in grund 0.16.0\n",
+            "docs/FS-duplicate-owner.md:7: error: unmarked heading inside FS-duplicate-owner; number it (## 1. Missing in second body) as FS-duplicate-owner.1, declare an ID, or use a bold label; this became an error in grund 0.16.0\n",
         )
     );
 }

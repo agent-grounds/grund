@@ -6,34 +6,13 @@ The check engine, the retrieval surface (`grund <ID>`, `grund refs`, including E
 
 ## RM-unmarked-heading-error: make unmarked Markdown headings errors in 0.16.0
 
-Grund 0.14.0 opens the warning window decided by
-[§DF-unmarked-markdown-headings](decisions/functional/DF-unmarked-markdown-headings.md#df-unmarked-markdown-headings-in-body-markdown-atx-headings-participate-in-the-knowledge-graph).
-This milestone closes it at the release every affected heading names.
-
-### 1. What
-
-In grund 0.16.0, change `unmarked-heading` from warning to error and replace its
-future-tense deadline with `this became an error in grund 0.16.0`. Keep its code,
-location, containing declaration, deterministic coordinate suggestion, scope,
-and text/JSON/LSP transport unchanged
-([§FS-declarations.checks.unmarked-heading](functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)).
-The severity is one cell of the code catalog ([§FS-errors.5.5](functional-spec/FS-errors.md#55-the-check-code-catalog)), so the promotion
-edits that cell; the check keeps the section its code names and no citation of it
-moves ([§REQ-spec-section-names.code](requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code)).
-
-### 2. Why now
-
-Repositories receive a complete release window to number the heading, declare
-an ID, or use a bold label. Leaving the warning beyond its named release would
-make the deadline false and turn the graph-structure endpoint into an indefinite
-opt-out ([§REQ-backwards-compatibility.2](requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)).
-
-### 3. Measurable
-
-At 0.16.0, the same Markdown fixtures report the same sites and suggestions as
-errors and exit `1`; JSON and LSP severity move with the core finding and the
-past-tense clause is byte-exact. Exempt headings and every non-check command stay
-unchanged. The release-ramp guard refuses 0.16.0 while the warning form remains.
+This milestone shipped in grund 0.16.0: `unmarked-heading` is an error, and its
+record is the compatibility notice that landed it,
+[§DF-unmarked-markdown-headings.release-note](decisions/functional/DF-unmarked-markdown-headings.md#release-note-release-note),
+together with
+[§FS-declarations.checks.unmarked-heading.5](functional-spec/FS-declarations.md#checksunmarked-heading5-an-error-in-grund-0160).
+The item's own plan is removed, as a shipped item's is; this address, heading
+text included, is kept while released changelogs still cite it.
 
 ## RM-off-grammar-declaration-error: make off-grammar declarations a check error in 0.16.0
 

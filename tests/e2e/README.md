@@ -108,7 +108,7 @@ can read is the same silence in a new spelling.
   a body-closing plain chapter, while `check` reports that orphan once in text
   and JSON under `section-outside-declaration`; `--only` retains it and
   `--ignore` removes it without leaving a stale duplicate behind
-- unmarked Markdown ATX headings inside declaration bodies: exact fixed warning
+- unmarked Markdown ATX headings inside declaration bodies: exact error
   text and JSON, `--only`/`--ignore`, strict/warn/loose independence and `--full`
   narrowing, deterministic unused paths across gaps,
   prior suggestions, named parents and skipped depths, nearest nested-declaration

@@ -1,4 +1,4 @@
-docs/FS-skipped.md:5: warning: unmarked heading inside FS-skipped; number it (#### 1.1. Skipped depths) as FS-skipped.1.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0
-docs/FS-suggestions.md:9: warning: unmarked heading inside FS-suggestions; number it (### 1.4. First missing sibling) as FS-suggestions.1.4, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0
-docs/FS-suggestions.md:11: warning: unmarked heading inside FS-suggestions; number it (### 1.5. Second missing sibling) as FS-suggestions.1.5, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0
-docs/FS-suggestions.md:13: warning: unmarked heading inside FS-suggestions; number it (#### 1.5.1. Child of suggested sibling) as FS-suggestions.1.5.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0
+docs/FS-skipped.md:5: error: unmarked heading inside FS-skipped; number it (#### 1.1. Skipped depths) as FS-skipped.1.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/FS-suggestions.md:9: error: unmarked heading inside FS-suggestions; number it (### 1.4. First missing sibling) as FS-suggestions.1.4, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/FS-suggestions.md:11: error: unmarked heading inside FS-suggestions; number it (### 1.5. Second missing sibling) as FS-suggestions.1.5, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/FS-suggestions.md:13: error: unmarked heading inside FS-suggestions; number it (#### 1.5.1. Child of suggested sibling) as FS-suggestions.1.5.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
