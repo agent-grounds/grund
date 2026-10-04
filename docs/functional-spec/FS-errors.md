@@ -423,7 +423,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `unknown-project` | error | — | — | [§FS-check.3.8](FS-check.md#38-cross-project-citation-failure) |
 | `unlinked-index-entry` | error | — | — | [§FS-check.3.17](FS-check.md#317-index-entry-is-not-a-link) |
 | `unlisted-workspace-block` | error | — | — | [§FS-check.3.29](FS-check.md#329-unlisted-workspace-block) |
-| `unmarked-heading` | warning | error in 0.16.0 | — | [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) |
+| `unmarked-heading` | error | — | — | [§FS-declarations.checks.unmarked-heading](FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading) |
 | `unreached-declaration` | error | — | `rules = true` on a kind | [§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration) |
 | `unused` | warning | — | — | [§FS-check.4.1](FS-check.md#41-unused-declaration) |
 | `value-mismatch` | error | — | `values = true` on a kind | [§FS-check.3.22](FS-check.md#322-value-mismatch) |

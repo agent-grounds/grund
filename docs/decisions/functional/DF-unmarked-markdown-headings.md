@@ -78,5 +78,17 @@ compared, its existing v9 moves to v10 and `grund init` remains the one-command
 block repair required by
 [§REQ-backwards-compatibility.3](../../requirements/REQ-backwards-compatibility.md#3-loud-mechanical-migrations).
 No configuration key changes meaning, so `grund_config_version` stays 1. The
-scheduled verdict change is tracked by
-[§RM-unmarked-heading-error](../../roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0160).
+scheduled verdict change landed in
+[§FS-declarations.checks.unmarked-heading.5](../../functional-spec/FS-declarations.md#checksunmarked-heading5-an-error-in-grund-0160).
+
+The window closed in grund 0.16.0, on the schedule this record named:
+`unmarked-heading` is an error, a retained finding exits `1`, and the message's
+last clause reads `this became an error in grund 0.16.0`. The site, the
+containing declaration, the suggestion, and the text, JSON, and LSP transport
+did not move, and `--ignore unmarked-heading` now clears the exit with the
+finding, as it does for every other error. The reasoning above stands as
+written and is not revised.
+
+## release-note: Release note
+
+- [§FS-declarations.checks.unmarked-heading](../../functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading), [§FS-declarations.checks.unmarked-heading.5](../../functional-spec/FS-declarations.md#checksunmarked-heading5-an-error-in-grund-0160), [§FS-errors.5.5](../../functional-spec/FS-errors.md#55-the-check-code-catalog), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **an unmarked heading inside a declaration body now fails `grund check`.** The ramp every `0.14.x` and `0.15.x` binary announced in its own output lands on the release it named: `docs/FS-heading-policy.md:5: warning: unmarked heading inside FS-heading-policy; number it (### 1. Origin of the fails queues) as FS-heading-policy.1, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0` at exit `0` becomes the same line at `error:` ending `; this became an error in grund 0.16.0` at exit `1`, and JSON and the LSP report `"severity":"error"`. [§RM-unmarked-heading-error](../../roadmap.md#rm-unmarked-heading-error-make-unmarked-markdown-headings-errors-in-0160) loses its plan but keeps its address and heading text as a pointer, because released changelogs cite it. Seven e2e cases move from exit `0` to exit `1` — `check-unmarked-heading`, `-json`, `-boundaries`, `-suggestions`, `-only`, `-level-loose` and `-level-warn` — and three that already exited `1` regroup their lines. **What does not move:** the `code`, the location at the heading line, the nearest enclosing declaration, the deterministic suggested coordinate, the exempt headings, `--full`'s narrowing to the configured scan scope, `[id] section_heading_levels` (which governs only `section-heading-level` and never softened this rule), and every command other than `check` — no command numbers the heading. **Who this breaks:** a repository with an unnumbered ATX heading inside a Markdown declaration body — its `check` exits `1` where it exited `0`. The fixes are the ones the message names: number the heading as suggested, declare an ID, or use a bold label; `--ignore unmarked-heading` removes the finding and the exit together. A consumer matching the message's last clause exactly sees it change; a `code` consumer reads the same code. Closes [issue #443](https://github.com/agent-grounds/grund/issues/443).

@@ -1,4 +1,4 @@
-//! Real-server parity for the body-owned Markdown warning (§FS-declarations.checks.unmarked-heading,
+//! Real-server parity for the body-owned Markdown error (§FS-declarations.checks.unmarked-heading,
 //! §FS-lsp.1.1).
 
 mod support;
@@ -8,7 +8,7 @@ use std::fs;
 use support::*;
 
 #[test]
-fn unmarked_heading_is_the_same_warning_over_lsp() {
+fn unmarked_heading_is_the_same_error_over_lsp() {
     let root = test_root("unmarked-heading");
     fs::write(
         root.join("grund.toml"),
@@ -26,21 +26,21 @@ fn unmarked_heading_is_the_same_warning_over_lsp() {
     let (mut child, mut stdin, receiver) = start_server(&root);
 
     let diagnostics = recv_diagnostics(&receiver, &mut child, "FS-policy.md");
-    let warning = diagnostics
+    let error = diagnostics
         .iter()
         .find(|diagnostic| diagnostic["code"].as_str() == Some("unmarked-heading"))
         .unwrap_or_else(|| panic!("unmarked-heading diagnostic: {diagnostics:?}"));
-    assert_eq!(warning["severity"], json!(2));
+    assert_eq!(error["severity"], json!(1));
     assert_eq!(
-        warning["message"],
+        error["message"],
         json!(
             "unmarked heading inside FS-policy; number it (## 1. Missing coordinate) as \
-             FS-policy.1, declare an ID, or use a bold label; this warning becomes an error \
-             in grund 0.16.0"
+             FS-policy.1, declare an ID, or use a bold label; this became an error in grund \
+             0.16.0"
         )
     );
     assert_eq!(
-        warning["range"],
+        error["range"],
         json!({
             "start": { "line": 4, "character": 0 },
             "end": { "line": 4, "character": 21 }
