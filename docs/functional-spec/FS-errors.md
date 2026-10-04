@@ -204,17 +204,18 @@ near-ID or illustration hint over the fetch-action tail.
 
 ### 3.6 The `agents-init` messages
 
-The five `agents-init` messages migrate over three releases. In the first two,
-each existing message stays as a verbatim contiguous prefix and gains exactly
-` — repo maintenance; citation checks still ran; wording changes in grund
-0.16.0`. This compatibility form both preserves prefix consumers and tells a
-reader that the complete citation check already ran. Exact-line consumers must
-migrate during this window to the stable `code == "agents-init"`; code, error
-severity, and the default exit verdict do not change. The final `0.16.0` templates are [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates).
+The five `agents-init` messages took a three-release migration, which ended in
+`0.16.0`. In the first two releases each existing message stayed a verbatim
+contiguous prefix and gained a fixed tail classifying it as repo maintenance,
+saying the citation checks still ran, and naming `0.16.0` as the release its
+wording would change in. Exact-line consumers were asked to migrate during that
+window to the stable `code == "agents-init"`; code, error severity, and the
+default exit verdict did not change. The messages are now the final templates
+of [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates).
 
 #### 3.6.1 The final templates
 
-In `0.16.0`, the compatibility tail is removed and the five final templates are:
+Since `0.16.0`, with the compatibility tail removed, the five templates are:
 
 ```text
 repo maintenance: malformed grund managed block: <detail> (does not affect citation validity)

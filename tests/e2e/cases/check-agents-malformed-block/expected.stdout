@@ -1,1 +1,1 @@
-AGENTS.md:1: error: malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->` — repo maintenance; citation checks still ran; wording changes in grund 0.16.0
+AGENTS.md:1: error: repo maintenance: malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->` (does not affect citation validity)

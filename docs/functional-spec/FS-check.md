@@ -478,7 +478,7 @@ A legacy H2-bounded block from v3 or earlier ([§FS-init.2.3](FS-init.md#23-gene
 
 #### 3.5.3 Code and message
 
-Every variant remains an error with code `agents-init`, and the default run still reports it after every content pass completes. Its text follows the three-release migration in [§FS-errors.3](FS-errors.md#3-message-text): during the compatibility releases the legacy message is a verbatim contiguous prefix followed by the fixed maintenance tail; in `0.16.0` the final text explicitly classifies the work as repository maintenance and states that citation validity is unaffected. A selector may retain or remove this ordinary coded error, but never changes the checker pass that produced it.
+Every variant remains an error with code `agents-init`, and the default run still reports it after every content pass completes. Its text is the final template of [§FS-errors.3.6.1](FS-errors.md#361-the-final-templates), which classifies the work as repository maintenance and states that citation validity is unaffected; the three-release migration that led to it ended in `0.16.0` ([§FS-errors.3](FS-errors.md#3-message-text)). A selector may retain or remove this ordinary coded error, but never changes the checker pass that produced it.
 
 #### 3.5.4 No config-derived section is exempt from the comparison
 
