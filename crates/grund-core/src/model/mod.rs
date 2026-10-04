@@ -62,7 +62,7 @@ pub(crate) use records::{
     LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode, TextOverlays,
     is_stub_for_inline_decl, resolve_stub_target,
 };
-pub(crate) use report::{CheckReport, Diagnostic, Site};
+pub(crate) use report::{CheckReport, Diagnostic, LANDED_CLAUSE, Site};
 pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};
 pub(crate) use values::{
     JSON_NUMBER_RE, authored_component, component_text_is_valid, first_unequal_component,

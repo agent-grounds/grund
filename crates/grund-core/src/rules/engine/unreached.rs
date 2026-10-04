@@ -8,13 +8,7 @@ use super::super::{RuleLevel, RulePolarity, RuleRelation, RuleSubject};
 use super::authority::Authority;
 use super::index::FactIndex;
 use super::{SemanticRule, label, push_node};
-use crate::model::Diagnostic;
-
-/// §FS-rules.checks.unreached-declaration: the ramp the warning promised closed
-/// in `0.16.0`, so the message names that release in the landed clause of
-/// §FS-distribution.4.2.3's closed vocabulary and the release guard reads the
-/// floor out of this one string instead of the deadline.
-const LANDED_CLAUSE: &str = "; this became an error in grund 0.16.0";
+use crate::model::{Diagnostic, LANDED_CLAUSE};
 
 /// §FS-rules.checks.unreached-declaration: one finding per semantic rule group
 /// per unreached declaration, located at the declaration's title line because

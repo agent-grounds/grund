@@ -21,7 +21,9 @@ use super::reference_scope::ScanScope;
 use super::support::{heading_marks, section_depth};
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
-use crate::model::{CheckReport, Diagnostic, Findings, SectionHeadingOutsideDeclaration, Site};
+use crate::model::{
+    CheckReport, Diagnostic, Findings, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
+};
 use crate::resolver::WorkspaceProject;
 use crate::scanner::section_path_is_numeric;
 
@@ -56,10 +58,9 @@ pub(super) fn check_section_headings(
             .map(section_outside_declaration_diagnostic),
     );
 
-    // §FS-declarations.checks.unmarked-heading / §AR-checker.2.20: scanner-owned Markdown
-    // candidates are fixed warnings throughout the compatibility window, independent of the
-    // marked-section heading-level mode.
-    report.warnings.extend(findings.unmarked_headings.iter().map(|heading| {
+    // §FS-declarations.checks.unmarked-heading.5 / §AR-checker.2.20: scanner-owned Markdown
+    // candidates are errors since 0.16.0, independent of the marked-section heading-level mode.
+    report.errors.extend(findings.unmarked_headings.iter().map(|heading| {
         let rendered_owner = render_id(&config.grammar, &heading.owner);
         let separator = if heading
             .suggested_path
@@ -87,7 +88,7 @@ pub(super) fn check_section_headings(
             line: Some(heading.line),
             column: None,
             message: format!(
-                "unmarked heading inside {rendered_owner}; number it ({suggested_heading}) as {rendered_owner}{}{path}, declare an ID, or use a bold label; this warning becomes an error in grund 0.16.0",
+                "unmarked heading inside {rendered_owner}; number it ({suggested_heading}) as {rendered_owner}{}{path}, declare an ID, or use a bold label{LANDED_CLAUSE}",
                 config.section_separator,
                 path = heading.suggested_path,
             ),
