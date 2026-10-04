@@ -65,7 +65,7 @@ fn show_batch_run(
     // §AR-resolver.3.1: this is the batch's only loader entry. Exhaustive
     // discovery reads the returned catalog and never starts a preliminary scan.
     let context = load_workspace_context(&opts.path, path_provided)?;
-    // §FS-check.4.7.7, §FS-check.4.10.11, §FS-workspace.6.1.7: the run's `[workspace]`
+    // §FS-check.4.10.11, §FS-workspace.6.1.7: the run's `[workspace]`
     // warnings come back beside the records, because the batch refuses after the
     // workspace pass has already settled them.
     *run_warnings = run_warning_findings(context.render_config(), context.run_warnings.clone());

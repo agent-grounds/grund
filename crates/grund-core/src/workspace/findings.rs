@@ -1,6 +1,6 @@
 //! The three cautions a `[workspace]` block earns from its own member list
 //! (§AR-system.2.4): an absorbed scan, an opted-out block nobody reads, and an
-//! ancestor claim nothing could answer (§FS-check.4.7, §FS-check.4.10,
+//! ancestor claim nothing could answer (§FS-check.3.30, §FS-check.4.10,
 //! §FS-workspace.6.1).
 //!
 //! Split from `members.rs`, which expands a `members` list and enforces the
@@ -24,7 +24,7 @@ use crate::model::{Diagnostic, format_path, relative_from_base};
 
 /// The release the finding this file builds the sentence for stops being a
 /// warning and becomes an error in
-/// (§FS-check.4.7.8, §RM-workspace-absorbed-scan-error). The deprecation path
+/// (§FS-check.3.30, §RM-workspace-absorbed-scan-error). The deprecation path
 /// §REQ-backwards-compatibility.2 requires puts it one minor past the release the
 /// warning ships in; the message names it, because a warning that does not say
 /// when it bites tells a maintainer they have a problem and not that they have a
@@ -125,7 +125,7 @@ pub(crate) fn block_relative_root<'a>(config: &Config, root: &'a Path) -> &'a Pa
 
 /// The engine's own handle on the three `[workspace]` cautions this rule set
 /// produces. None of them ever renders as one of `check`'s JSON objects — each
-/// keeps its text on every surface (§FS-check.4.7.6, §FS-check.4.10.9,
+/// keeps its text on every surface (§FS-check.3.30.5, §FS-check.4.10.9,
 /// §FS-workspace.6.1.7) — so none enters the §FS-errors.5.5 selector vocabulary, and
 /// these are what an editor tags a published diagnostic with and what a test
 /// selects one by.
@@ -133,7 +133,7 @@ pub(crate) const ABSORBED_WORKSPACE_SCAN: &str = "absorbed-workspace-scan";
 pub(crate) const UNREAD_WORKSPACE_BLOCK: &str = "unread-workspace-block";
 pub(crate) const UNDECIDABLE_WORKSPACE_CLAIM: &str = "undecidable-workspace-claim";
 
-/// The sentence §FS-check.4.7.1 carries, built apart from the diagnostic that
+/// The sentence §FS-check.3.30.1 carries, built apart from the diagnostic that
 /// carries it so a test can read it: what was swallowed by what, what that costs
 /// the project, the two ways out, and the release the finding stops being a
 /// warning in.
@@ -148,7 +148,7 @@ pub(crate) fn absorbed_scan_warning(covered: &[String]) -> String {
     )
 }
 
-/// §FS-check.4.7.7: the block's absorbed scan as one of the run's warnings, or
+/// §FS-check.3.30: the block's absorbed scan as one of the run's warnings, or
 /// `None` where its members swallow nothing.
 ///
 /// It **anchors at the block's `members` line** — the `grund.toml:<line>`
@@ -272,7 +272,7 @@ pub(crate) fn undecidable_ancestor_claim_diagnostic(
 }
 
 /// One `[workspace]` caution anchored at the config key its own breadcrumb names
-/// (§FS-check.4.7.1, §FS-check.4.10.5).
+/// (§FS-check.3.30.1, §FS-check.4.10.5).
 ///
 /// The message keeps the `<config>:<line>:` breadcrumb §FS-config.4.3 gives a
 /// diagnostic about a config key, byte for byte; the anchor beside it is the

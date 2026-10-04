@@ -217,7 +217,7 @@ pub struct Config {
     pub workspace_include_root_source: Option<ConfigLocation>,
     pub workspace_boundary_roots: Vec<PathBuf>,
     /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
-    /// cautions of §FS-check.4.7, §FS-check.4.10 and §FS-workspace.6.1.7, in the
+    /// cautions of §FS-check.3.30, §FS-check.4.10 and §FS-workspace.6.1.7, in the
     /// order the run settled them. Accumulated on the config the run was
     /// launched with, by the points that populate a block's member boundary and
     /// climb the claimed chain, and handed to whichever frontend asked — which

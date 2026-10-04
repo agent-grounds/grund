@@ -47,7 +47,7 @@ pub fn show_with_overlays(
 /// The run's `[workspace]` warnings come back beside the answer rather than on it,
 /// because a refusal settled *after* the workspace pass — an unknown alias, an
 /// unresolvable ID — leaves an `Err` with nowhere to carry a caution the reader is
-/// already owed (§FS-check.4.7.2, §FS-check.4.10.7, §FS-workspace.6.1.7).
+/// already owed (§FS-check.3.30.2, §FS-check.4.10.7, §FS-workspace.6.1.7).
 #[doc(hidden)]
 pub fn show_with_scope(
     id_arg: &str,

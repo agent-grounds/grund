@@ -62,7 +62,7 @@ pub fn list(opts: ListOpts) -> Result<ListOutput> {
 }
 
 /// [`list`] for a frontend that renders the run's `[workspace]` warnings even
-/// when the query is refused (§FS-check.4.7.2, §FS-check.4.10.7, §FS-workspace.6.1.7).
+/// when the query is refused (§FS-check.3.30.2, §FS-check.4.10.7, §FS-workspace.6.1.7).
 ///
 /// A refusal `list` settles *after* the workspace pass — an unknown project alias,
 /// an unknown kind — leaves an `Err` with nowhere to carry a caution the reader is

@@ -71,8 +71,8 @@ pub struct CoverOutput {
     pub output_format: String,
     pub entries: Vec<CoverEntry>,
     pub scan_errors: Vec<ApiScanError>,
-    /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11 and
+    /// The run's warning channel (§FS-distribution.3.1): the three `[workspace]`
+    /// cautions of §FS-check.3.29.15, §FS-check.4.10.11 and
     /// §FS-workspace.6.1.7. A frontend renders each as one CLI-level `warning:`
     /// on stderr (§FS-check.2.1.1).
     ///
@@ -103,8 +103,8 @@ pub struct CoverTextOutput {
     pub output_format: String,
     pub entries: Vec<CoverTextEntry>,
     pub scan_errors: Vec<ApiScanError>,
-    /// The run's warning channel (§FS-distribution.3.1): the four `[workspace]`
-    /// cautions of §FS-check.4.7.7, §FS-check.3.29.15, §FS-check.4.10.11 and
+    /// The run's warning channel (§FS-distribution.3.1): the three `[workspace]`
+    /// cautions of §FS-check.3.29.15, §FS-check.4.10.11 and
     /// §FS-workspace.6.1.7. A frontend renders each as one CLI-level `warning:`
     /// on stderr (§FS-check.2.1.1).
     ///

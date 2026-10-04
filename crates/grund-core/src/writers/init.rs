@@ -93,7 +93,7 @@ pub struct InitOutput {
     pub notes: Vec<String>,
     pub next: Option<InitNext>,
     /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
-    /// cautions the walk-up settled — §FS-check.4.7's absorbed scan,
+    /// cautions the walk-up settled — §FS-check.3.30's absorbed scan,
     /// §FS-check.4.10's unread opted-out block and §FS-workspace.6.1.7.5's
     /// undecidable ancestor claim. `init` expands the outermost workspace above
     /// its target to teach the alias set, so it resolves a block's member

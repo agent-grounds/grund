@@ -59,7 +59,7 @@ pub(crate) fn unread_block_scope_root(
         .map(|root| format_path(block_relative_root(config, &root)))
 }
 
-/// §FS-check.4.7.7, §FS-check.4.10.11, §FS-workspace.6.1, §FS-distribution.3.1: the
+/// §FS-check.4.10.11, §FS-workspace.6.1, §FS-distribution.3.1: the
 /// run's warning channel, settled — every caution the workspace pass already had
 /// in full, and every opted-out block it could only pose, in the one order the
 /// reader sees them in.

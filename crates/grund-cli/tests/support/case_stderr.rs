@@ -27,11 +27,17 @@ fn assert_expected_errors_are_concise(case: &Path, name: &str, args: &[String], 
     assert_stderr_is_concise(name, command_selects_json(args), stderr);
 }
 
+/// The absorbed-scan config error opens with this, after its `members`-line
+/// breadcrumb. It was a carried warning for three releases before it became an
+/// error, and its sentence is the one §FS-check.3.30.1 fixes, so it keeps those
+/// bytes rather than the cap.
+const ABSORBED_SCAN_SENTENCE: &str = ": [workspace] members swallows this project's whole scan — ";
+
 /// The judgement, isolated from the filesystem. A `--format json` case's
 /// stderr is not uniformly JSON (§FS-errors.5.2.2): a launch-time `error: …`
 /// line stays text and keeps the plain 180-byte cap, while a carried text
 /// warning keeps the bytes its own specification already fixes
-/// (§FS-check.4.7.1). Only a line that opens a JSON object is parsed and
+/// (§FS-check.4.10.5), and so does the absorbed-scan error (§FS-check.3.30.1). Only a line that opens a JSON object is parsed and
 /// judged by its `message` field instead of its serialized length — the
 /// scaffolding around it (§FS-distribution.3.0.1's `severity`, `path`,
 /// `line`, `code`, `sites`, `authority`) is fixed cost the conciseness policy
@@ -42,7 +48,9 @@ fn assert_stderr_is_concise(name: &str, json_case: bool, stderr: &str) {
         "{name}: stderr should not include aggregate summaries"
     );
     for line in stderr.lines().filter(|line| !line.trim().is_empty()) {
-        if line.starts_with("warning: ") {
+        if line.starts_with("warning: ")
+            || (line.starts_with("error: ") && line.contains(ABSORBED_SCAN_SENTENCE))
+        {
             continue;
         } else if json_case && line.starts_with('{') {
             assert_json_diagnostic_is_concise(name, line);
@@ -260,6 +268,19 @@ mod stderr_concise_tests {
         let stderr = format!("{warning}\nerror: concise refusal\n");
         assert_stderr_is_concise("case", false, &stderr);
         assert_stderr_is_concise("case", true, &stderr);
+    }
+
+    #[test]
+    fn nonzero_case_preserves_the_absorbed_scan_error_and_nothing_beside_it() {
+        let error = format!(
+            "error: grund.toml:16: [workspace] members swallows this project's whole scan — {}",
+            "x".repeat(220)
+        );
+        assert_stderr_is_concise("case", false, &error);
+        assert_stderr_is_concise("case", true, &error);
+        let other = format!("error: grund.toml:16: [workspace] members {}", "x".repeat(220));
+        let panic_message = rejects(false, &other);
+        assert!(panic_message.contains("too long"), "{panic_message}");
     }
 
     #[test]

@@ -30,17 +30,12 @@ fn warning(code: &'static str, line: usize, message: &str) -> Finding {
     }
 }
 
-fn absorbed_warning() -> Finding {
-    warning(
-        "absorbed-workspace-scan",
-        16,
-        "grund.toml:16: [workspace] members swallows this project's whole scan — \
-         every scan root is inside a member: `docs` in `docs` — so its declarations \
-         are unreachable and its citations are never checked. Point [scan] include \
-         at a directory that is not a member, or set include_root = false. This \
-         becomes an error in grund 0.16.0.",
-    )
-}
+/// §FS-check.3.30.1: the absorbed scan's config error, as `{err:#}` renders it.
+const ABSORBED_ERROR: &str = "grund.toml:16: [workspace] members swallows this project's whole scan — \
+     every scan root is inside a member: `docs` in `docs` — so its declarations \
+     are unreachable and its citations are never checked. Point [scan] include \
+     at a directory that is not a member, or set include_root = false; this \
+     became an error in grund 0.16.0";
 
 fn unread_root_warning() -> Finding {
     warning(
@@ -127,22 +122,22 @@ fn check_with_opts_keeps_its_result_output_contract() {
     );
 }
 
-/// §FS-check.4.7.9: a warning settled from the root member boundary survives a
-/// later nested expansion refusal, with the original finding bytes and anchor.
+/// §FS-check.3.30.2: the absorbed scan is asked of the run's root block before
+/// its nested members expand, so when a later expansion refusal would also apply
+/// the absorbed scan is the one error reported, and no warning is left behind.
 #[test]
-fn absorbed_root_warning_survives_a_later_expansion_refusal() {
+fn absorbed_root_error_wins_over_a_later_expansion_refusal() {
     let root = absorbed_root("check-warning-absorbed-refusal", true);
 
     let (warnings, result) = check_with_run_warnings(opts(root));
 
-    assert_eq!(warnings, vec![absorbed_warning()]);
+    assert_eq!(warnings, Vec::<Finding>::new());
     assert_eq!(
         format!(
             "{:#}",
-            result.expect_err("the nested member must be refused")
+            result.expect_err("the absorbed scan must be refused")
         ),
-        "docs/grund.toml:5: invalid [workspace] member `/broken` \
-         (expected relative path or trailing /* glob)"
+        ABSORBED_ERROR
     );
 }
 
@@ -165,17 +160,22 @@ fn answerable_unread_root_warning_survives_a_later_expansion_refusal() {
     );
 }
 
-/// §FS-check.4.7.9, §FS-distribution.3.1: after successful expansion the refusal
-/// side channel and `CheckOutput::warnings` are the same ordered finding once.
+/// §FS-check.3.30, §FS-distribution.3.1: with every member valid the absorbed
+/// scan still refuses the run, on the error path and on neither warning channel.
 #[test]
-fn absorbed_root_success_returns_the_same_warning_on_both_channels() {
+fn absorbed_root_success_is_refused_with_no_warning() {
     let root = absorbed_root("check-warning-absorbed-success", false);
 
     let (warnings, result) = check_with_run_warnings(opts(root));
-    let output = result.expect("check the valid workspace");
 
-    assert_eq!(warnings, vec![absorbed_warning()]);
-    assert_eq!(warnings, output.warnings);
+    assert_eq!(warnings, Vec::<Finding>::new());
+    assert_eq!(
+        format!(
+            "{:#}",
+            result.expect_err("the absorbed scan must be refused")
+        ),
+        ABSORBED_ERROR
+    );
 }
 
 /// §FS-check.4.10.8, §FS-distribution.3.1: a successful root unread-block answer

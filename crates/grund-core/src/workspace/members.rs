@@ -9,11 +9,12 @@
 //! nested member — expands through here, so the invariants hold at every depth
 //! (§AR-workspace.5.1, §AR-workspace.6.1.8).
 //!
-//! The three findings this rule set produces are **returned**, never printed:
+//! The two warnings this rule set produces are **returned**, never printed:
 //! each is a `Diagnostic` in the run's warning channel, anchored at the
 //! `grund.toml` line its message already names, and rendered by whichever
-//! frontend asked (§FS-check.4.7.7, §FS-check.4.10.11, §FS-workspace.6.1.7,
-//! §FS-distribution.3.1). Every sentence is still built apart from the
+//! frontend asked (§FS-check.4.10.11, §FS-workspace.6.1.7, §FS-distribution.3.1).
+//! The absorbed scan, once the third, is a config error at the `members` line
+//! (§FS-check.3.30). Every sentence is still built apart from the
 //! diagnostic that carries it, which is what lets a test read it
 //! (§AR-core-module-layout.1).
 

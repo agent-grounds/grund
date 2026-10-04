@@ -55,26 +55,26 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-# The move this run performs. `FS-check`'s ten declaration checks become
-# sections of `FS-declarations`, each named by its diagnostic code
-# (§REQ-spec-section-names.code).
+# The move this run performs: the absorbed-scan warning of `FS-check.4.7` became
+# the config error of `FS-check.3.30` in grund 0.16.0. Its
+# sub-points are renumbered, and two fold into a sibling. `4.7.9` stays where it
+# is, as the pointer released changelogs cite, so it maps to itself. Run with the
+# changelogs restored afterwards (`git checkout docs/changelog.md docs/changelog/`):
+# a released record keeps the coordinate it shipped with.
 CHECK_SECTIONS = {
-    "3.3": "duplicate",
-    "3.4": "broken-stub",
-    "3.7": "misplaced-declaration",
-    "3.9": "section-heading-level",
-    "3.16": "duplicate-section",
-    "3.19": "orphan-section",
-    "3.23": "section-outside-declaration",
-    "4.6": "declaration-near-miss",
-    "4.13": "oversized-lead",
-    "4.14": "unmarked-heading",
+    "4.7": "FS-check.3.30",
+    "4.7.1": "FS-check.3.30.1",
+    "4.7.2": "FS-check.3.30.2",
+    "4.7.3": "FS-check.3.30.3",
+    "4.7.4": "FS-check.3.30.2",
+    "4.7.5": "FS-check.3.30.4",
+    "4.7.6": "FS-check.3.30.5",
+    "4.7.7": "FS-check.3.30",
+    "4.7.8": "FS-check.3.30",
+    "4.7.9": "FS-check.4.7.9",
 }
 
-MOVES = {
-    f"FS-check.{section}": f"FS-declarations.checks.{code}"
-    for section, code in CHECK_SECTIONS.items()
-}
+MOVES = {f"FS-check.{section}": target for section, target in CHECK_SECTIONS.items()}
 
 # The `spec.refs` manifests still carry the pre-slug ID this repository declared
 # before `[id] format = "{kind}-{slug}"`; both spellings name the same section.
@@ -84,11 +84,10 @@ MANIFEST_ALIASES = ("FS-check", "FS-001-check")
 EXCLUDED_DIRECTORIES = ("repo", "expected.repo")
 
 SOURCES = sorted(MOVES, key=lambda source: (-len(source), source))
-# A sub-point moves with its parent: `FS-check.4.14.3` becomes
-# `FS-declarations.checks.unmarked-heading.3`. The lookbehind is the escape
-# refusal — `<§>` is not a citation. Sources are tried longest-first and the
-# trailing guard refuses a further digit, so `3.4` never matches inside a deeper
-# coordinate while a citation that ends a sentence still does.
+# A sub-point the table does not name moves with its parent. The lookbehind is
+# the escape refusal — `<§>` is not a citation. Sources are tried longest-first
+# and the trailing guard refuses a further digit, so `4.7` never matches inside a
+# deeper coordinate while a citation that ends a sentence still does.
 MARKED = re.compile(
     r"(?<!<)§(" + "|".join(re.escape(source) for source in SOURCES) + r")((?:\.\d+)*)(?!\d)"
 )
