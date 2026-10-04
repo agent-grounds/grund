@@ -54,15 +54,16 @@ pub struct CheckOutput {
     pub report: Report,
     pub had_scan_errors: bool,
     /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
-    /// cautions this run settled before any report existed — §FS-check.3.30's
-    /// absorbed scan, §FS-check.4.10's unread opted-out block and
-    /// §FS-workspace.6.1.7.6's undecidable ancestor claim, each anchored at the
+    /// cautions this run settled before any report existed — §FS-check.4.10's
+    /// unread opted-out block and §FS-workspace.6.1.7.6's undecidable ancestor
+    /// claim, each anchored at the
     /// `grund.toml` line its message names. Not report findings — the report
     /// carries none of them, and none enters the §FS-errors.5.5 selector
     /// vocabulary — but a caller renders each as a CLI-level `warning:`
     /// (§FS-check.2.1.1) and a run that earns one prints no `success`
     /// (§FS-check.2.1.3). §FS-check.3.29 is one of the report's errors
-    /// (§FS-check.3.29.13) and is not here.
+    /// (§FS-check.3.29.13) and is not here, and §FS-check.3.30's absorbed scan
+    /// refuses the run as a config error.
     pub warnings: Vec<Finding>,
 }
 

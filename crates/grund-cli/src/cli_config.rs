@@ -40,7 +40,7 @@ fn command_config(args: &[String]) -> ExitCode {
     match action {
         "validate" => match validate_config(&path) {
             Ok(config) => {
-                // §FS-check.3.30.2, §FS-check.4.10.7, §FS-workspace.6.1.7: validation
+                // §FS-check.4.10.7, §FS-workspace.6.1.7: validation
                 // loads every member's config (§FS-config.4.1.1), so it resolves a
                 // block's member boundary and carries what that settled.
                 render_run_warnings(&config_run_warnings(&config));

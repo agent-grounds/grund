@@ -1,36 +1,27 @@
-//! The three cautions a `[workspace]` block earns from its own member list
-//! (§AR-system.2.4): an absorbed scan, an opted-out block nobody reads, and an
-//! ancestor claim nothing could answer (§FS-check.3.30, §FS-check.4.10,
-//! §FS-workspace.6.1).
+//! What a `[workspace]` block's own member list says about the block
+//! (§AR-system.2.4): the absorbed scan, a config error since 0.16.0
+//! (§FS-check.3.30), and the two cautions — an opted-out block nobody reads, and
+//! an ancestor claim nothing could answer (§FS-check.4.10, §FS-workspace.6.1).
 //!
 //! Split from `members.rs`, which expands a `members` list and enforces the
 //! invariants that list has to satisfy (§AR-core-module-layout.1). These are
-//! what a reader is told *about* an expansion that is itself legal — a different
-//! question, with a different shape: every one is a sentence built apart from the
-//! `Diagnostic` that carries it, so a test can read the sentence, and every one
+//! what a reader is told *about* an expansion the list's own syntax allows — a
+//! different question, with a different shape: every one is a sentence built
+//! apart from what carries it, so a test can read the sentence, and every one
 //! is **returned** rather than printed, because rendering is a frontend's
 //! (§DA-engine-renders-nothing, §FS-distribution.3.1).
 //!
-//! The anchor beside each sentence is the other half of that: the `grund.toml`
+//! The anchor beside each caution is the other half of that: the `grund.toml`
 //! line the message already names, carried as the finding's own location so an
 //! editor places it without parsing the text (§FS-lsp.1.1.3, §AR-bindings.2).
 
 use std::path::{Path, PathBuf};
 
 use super::members::{WorkspaceMember, canonical_workspace_path};
-use super::scope::config_location_message;
+use super::scope::{config_location_message, workspace_members_error};
 use crate::config::{Config, ConfigLocation, config_file_in, root_scope_roots};
-use crate::model::{Diagnostic, format_path, relative_from_base};
-
-/// The release the finding this file builds the sentence for stops being a
-/// warning and becomes an error in
-/// (§FS-check.3.30, §RM-workspace-absorbed-scan-error). The deprecation path
-/// §REQ-backwards-compatibility.2 requires puts it one minor past the release the
-/// warning ships in; the message names it, because a warning that does not say
-/// when it bites tells a maintainer they have a problem and not that they have a
-/// deadline, and a unit test holds it ahead of the running version so the window
-/// cannot expire unnoticed.
-pub(crate) const ABSORBED_SCAN_ERROR_RELEASE: &str = "0.16.0";
+use crate::model::{Diagnostic, LANDED_CLAUSE, format_path, relative_from_base};
+use anyhow::Result;
 
 /// §FS-workspace.2.1.1: each of the block's own walk roots that a member root
 /// covers, rendered `` `<root>` in `<member>` `` — empty unless **every** root
@@ -123,52 +114,40 @@ pub(crate) fn block_relative_root<'a>(config: &Config, root: &'a Path) -> &'a Pa
     root.strip_prefix(&config.root).unwrap_or(root)
 }
 
-/// The engine's own handle on the three `[workspace]` cautions this rule set
-/// produces. None of them ever renders as one of `check`'s JSON objects — each
-/// keeps its text on every surface (§FS-check.3.30.5, §FS-check.4.10.9,
-/// §FS-workspace.6.1.7) — so none enters the §FS-errors.5.5 selector vocabulary, and
-/// these are what an editor tags a published diagnostic with and what a test
-/// selects one by.
-pub(crate) const ABSORBED_WORKSPACE_SCAN: &str = "absorbed-workspace-scan";
+/// The engine's own handle on the two `[workspace]` cautions this rule set
+/// produces. Neither ever renders as one of `check`'s JSON objects — each keeps
+/// its text on every surface (§FS-check.4.10.9, §FS-workspace.6.1.7) — so neither
+/// enters the §FS-errors.5.5 selector vocabulary, and these are what an editor
+/// tags a published diagnostic with and what a test selects one by.
 pub(crate) const UNREAD_WORKSPACE_BLOCK: &str = "unread-workspace-block";
 pub(crate) const UNDECIDABLE_WORKSPACE_CLAIM: &str = "undecidable-workspace-claim";
 
-/// The sentence §FS-check.3.30.1 carries, built apart from the diagnostic that
+/// The sentence §FS-check.3.30.1 carries, built apart from the error that
 /// carries it so a test can read it: what was swallowed by what, what that costs
-/// the project, the two ways out, and the release the finding stops being a
-/// warning in.
+/// the project, the two ways out, and the release the warning it once was became
+/// an error in. Named for the warning it was through 0.15.x.
 pub(crate) fn absorbed_scan_warning(covered: &[String]) -> String {
     format!(
         "[workspace] members swallows this project's whole scan — every scan root \
          is inside a member: {} — so its declarations are unreachable and its \
          citations are never checked. Point [scan] include at a directory that is \
-         not a member, or set include_root = false. This becomes an error in grund \
-         {ABSORBED_SCAN_ERROR_RELEASE}.",
+         not a member, or set include_root = false{LANDED_CLAUSE}",
         covered.join(", ")
     )
 }
 
-/// §FS-check.3.30: the block's absorbed scan as one of the run's warnings, or
-/// `None` where its members swallow nothing.
-///
-/// It **anchors at the block's `members` line** — the `grund.toml:<line>`
-/// breadcrumb the message text already carries is the finding's own location
-/// too, so a frontend places it without parsing the message (§FS-lsp.1.1.3). The
-/// CLI-level shape §FS-check.2.1.1 fixes stays off the anchor: a fact about the
-/// run's configuration is not a finding at a site in the citation graph, so no
-/// frontend wears it as a `<path>:<line>:` prefix.
-pub(crate) fn absorbed_scan_diagnostic(
-    config: &Config,
-    members: &[WorkspaceMember],
-) -> Option<Diagnostic> {
+/// §FS-check.3.30: refuse a block whose members swallow its whole scan, with the
+/// config error §FS-config.4.3 gives every bad `members` line — that line's
+/// `grund.toml:<line>:` breadcrumb ahead of the sentence, first problem only.
+/// Asked wherever a run populates a block's member boundary, so every command
+/// that loads the workspace refuses with it (§FS-check.3.30.2).
+pub(crate) fn reject_absorbed_scan(config: &Config, members: &[WorkspaceMember]) -> Result<()> {
     let covered = absorbed_scan_roots(config, members);
     if covered.is_empty() {
-        return None;
+        return Ok(());
     }
-    Some(config_location_diagnostic(
-        ABSORBED_WORKSPACE_SCAN,
-        config.workspace_members_source.as_ref(),
-        &config.root,
+    Err(workspace_members_error(
+        config,
         absorbed_scan_warning(&covered),
     ))
 }
@@ -202,9 +181,10 @@ pub(crate) fn uncovered_block_scope_roots(config: &Config) -> Vec<PathBuf> {
 /// what that costs, and the two remedies the ticket itself named.
 ///
 /// Shorter than [`absorbed_scan_warning`] above, and without its "declarations are
-/// unreachable" half. That line is only ever printed on a green run, while this
-/// one stands beside an error in three cases of the corpus, so it keeps to the
-/// 180-byte cap a non-zero case's stderr is held to (§DF-unread-opted-out-block.2.4).
+/// unreachable" half. That line is a config error the 180-byte cap a non-zero
+/// case's stderr is held to names as its one exception, while this one stands
+/// beside an error in three cases of the corpus, so it keeps to the cap
+/// (§DF-unread-opted-out-block.2.4).
 /// It names no release: there is none.
 pub(crate) fn unread_block_warning(root: &str) -> String {
     format!(
@@ -272,7 +252,7 @@ pub(crate) fn undecidable_ancestor_claim_diagnostic(
 }
 
 /// One `[workspace]` caution anchored at the config key its own breadcrumb names
-/// (§FS-check.3.30.1, §FS-check.4.10.5).
+/// (§FS-check.4.10.5).
 ///
 /// The message keeps the `<config>:<line>:` breadcrumb §FS-config.4.3 gives a
 /// diagnostic about a config key, byte for byte; the anchor beside it is the
