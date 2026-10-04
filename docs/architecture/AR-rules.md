@@ -136,6 +136,23 @@ representations directly. A second test producer can therefore build an
 equivalent `RuleFacts` without a Markdown tree; equal facts and equal rules must
 produce equal diagnostics.
 
+### 3.1 Snapshot-local evaluation indexes
+
+To meet [§FS-rules.5.3](../functional-spec/FS-rules.md#53-evaluation-cost-on-independent-records),
+the engine builds private lookup structures once per evaluation from the
+immutable `RuleFacts` relations. They cover declaration kinds, direct children
+and chapter names/handles, physical citations by containing unit and inbound
+target, and node ownership through nested containment. Subject selection,
+family counts and prohibitions, and unreached-declaration checks share these
+lookups rather than repeating whole-snapshot joins.
+
+Indexes preserve opaque keys, distinct physical sites, relation semantics and
+stable diagnostic order; side metadata never changes logical equality. They belong
+to the engine, are discarded with the evaluated snapshot, and cross neither
+the producer boundary nor an on-disk boundary. Hand-built facts from another
+producer use the same engine without a Markdown tree. The checker may adjust
+sequencing to reuse evaluation data, but owns no indexing or family clause.
+
 ## 4. Completeness is an engine gate
 
 `header.completeness` is checked by the consumer, not trusted as a convention
