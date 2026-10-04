@@ -17,6 +17,15 @@ pub(crate) struct Site {
     pub(crate) line: usize,
 }
 
+/// §FS-distribution.4.2.3: the landed clause of the release guard's closed
+/// vocabulary, which every finding whose warning ramp closed in `0.16.0` ends
+/// with — `unreached-declaration` (§FS-rules.checks.unreached-declaration),
+/// `unmarked-heading` (§FS-declarations.checks.unmarked-heading.5),
+/// `declaration-near-miss` (§FS-declarations.checks.declaration-near-miss.5) and
+/// the absorbed scan (§FS-check.3.30.1). One literal, so the four end in the same
+/// bytes and the guard reads the floor out of one string.
+pub(crate) const LANDED_CLAUSE: &str = "; this became an error in grund 0.16.0";
+
 /// One finding in the located-finding shape of §FS-errors.2.1: a fixed `code`, the
 /// `path:line` it occurred at, the message text, and any cross-reference `sites`.
 /// `column` is the 1-based start column of the offending token when the finding

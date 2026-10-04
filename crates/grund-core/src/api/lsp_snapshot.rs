@@ -102,7 +102,7 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
                     }
                 }),
         );
-        // §FS-declarations.checks.unmarked-heading.4 / §FS-lsp.1.1: warnings select the complete
+        // §FS-declarations.checks.unmarked-heading.4 / §FS-lsp.1.1: the errors select the complete
         // authored ATX heading without promoting it into the navigation catalog.
         finding_ranges.extend(project.findings.unmarked_headings.iter().map(|heading| {
             LspFindingRange {
