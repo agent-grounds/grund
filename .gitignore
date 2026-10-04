@@ -1,2 +1,4 @@
 /target
 __pycache__/
+# §FS-lsp.2.3: IntelliJ settings stay local, including nested contents.
+.idea/
