@@ -9,16 +9,19 @@ use super::section_title;
 #[test]
 fn a_toc_title_drops_a_block_comment_closer_on_the_heading_line() {
     assert_eq!(
-        section_title("/// ## terms: Terms", "terms", false),
-        "Terms"
-    );
-    assert_eq!(section_title(" * ## terms: Terms", "terms", false), "Terms");
-    assert_eq!(
-        section_title(" * ## terms: Terms */", "terms", false),
+        section_title("/// ## terms: Terms", "terms", false, None),
         "Terms"
     );
     assert_eq!(
-        section_title(" * ## terms: Terms   */", "terms", false),
+        section_title(" * ## terms: Terms", "terms", false, None),
+        "Terms"
+    );
+    assert_eq!(
+        section_title(" * ## terms: Terms */", "terms", false, None),
+        "Terms"
+    );
+    assert_eq!(
+        section_title(" * ## terms: Terms   */", "terms", false, None),
         "Terms"
     );
 }
@@ -28,7 +31,21 @@ fn a_toc_title_drops_a_block_comment_closer_on_the_heading_line() {
 #[test]
 fn a_markdown_toc_title_keeps_a_trailing_closer() {
     assert_eq!(
-        section_title("## terms: Terms */", "terms", true),
+        section_title("## terms: Terms */", "terms", true, None),
         "Terms */"
+    );
+}
+
+/// §FS-show.2.3.2: a `--` or `;` heading line loses its own marker and one
+/// space, so its title is the label its author wrote.
+#[test]
+fn a_toc_title_drops_its_own_dash_dash_or_semicolon_marker() {
+    assert_eq!(
+        section_title("-- ## terms: Terms", "terms", false, Some("--")),
+        "Terms"
+    );
+    assert_eq!(
+        section_title("; ## terms: Terms", "terms", false, Some(";")),
+        "Terms"
     );
 }
