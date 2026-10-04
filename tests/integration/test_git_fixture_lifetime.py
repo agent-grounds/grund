@@ -1,5 +1,7 @@
 """§AR-ci.10.4 — real Git descendants cannot cross strict fixture cleanup.
 
+§FS-distribution.4.5.1 — passing assertions also require strict fixture removal.
+
 Ports the #420 pack-write reproducer to unittest and exercises the three actual
 constructors and the commands that bypass GitFixture._git. Linux provides the
 LD_PRELOAD seam and /proc process evidence; no timing sleeps hide the race.
