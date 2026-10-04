@@ -126,7 +126,7 @@ fn command_check(args: &[String]) -> ExitCode {
         full,
         rule,
     });
-    // §FS-check.4.7.9, §FS-check.4.10.8: render root warnings once, before the report
+    // §FS-check.4.10.8: render root warnings once, before the report
     // or later refusal. They remain data until this frontend chooses their stream
     // and shape (§FS-distribution.3.1).
     render_run_warnings(&run_warnings);

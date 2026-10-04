@@ -96,7 +96,7 @@ pub fn check_with_opts(opts: CheckOpts) -> Result<CheckOutput> {
 }
 
 /// [`check_with_opts`] with the run-root warnings preserved beside a later
-/// refusal (§FS-check.4.7.9, §FS-check.4.10.8). Frontends render the returned data;
+/// refusal (§FS-check.4.10.8). Frontends render the returned data;
 /// the engine writes no stream (§FS-distribution.3.1).
 #[doc(hidden)]
 pub fn check_with_run_warnings(opts: CheckOpts) -> (Vec<Finding>, Result<CheckOutput>) {

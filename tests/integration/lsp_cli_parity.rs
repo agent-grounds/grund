@@ -42,7 +42,7 @@ use support::{file_uri, hover_result, send_message, start_server, test_root, wai
 /// into other commands should trip it.
 const MIN_COMPARED_CASES: usize = 80;
 
-/// Fewer cases carrying one of the three run-level `[workspace]` warnings than
+/// Fewer cases carrying one of the two run-level `[workspace]` warnings than
 /// this is a sweep that has stopped holding §FS-lsp.1.1.3: the corpus has several,
 /// and a comparison that met none of them would pass on an LSP that publishes
 /// nothing.
@@ -110,7 +110,7 @@ fn cli_findings(grund: &Path, root: &Path) -> Option<(BTreeSet<Finding>, BTreeSe
             let Ok(value) = serde_json::from_str::<Value>(line) else {
                 // §FS-errors.2.2: a CLI-level message is settled before a report
                 // exists, so neither surface carries it as a *located* finding.
-                // §FS-lsp.1.1.3's four arrive here too and are held on their own.
+                // §FS-lsp.1.1.3's two arrive here too and are held on their own.
                 if let Some(message) = line.strip_prefix("warning: ")
                     && is_run_level_warning(message)
                 {
@@ -129,7 +129,7 @@ fn cli_findings(grund: &Path, root: &Path) -> Option<(BTreeSet<Finding>, BTreeSe
                 );
             };
             // §FS-check.3.29.13: a run-level warning carried in the report rather
-            // than the warning channel arrives as a nulls object — none of the three
+            // than the warning channel arrives as a nulls object — none of the two
             // does today, so this guard keeps the reduction honest if one moves back.
             if let Some(message) = value["message"].as_str()
                 && is_run_level_warning(message)
@@ -269,7 +269,7 @@ fn lsp_diagnostics_are_the_cli_findings_for_every_plain_check_case() {
                 case.name
             ));
         }
-        // §FS-lsp.1.1.3, §FS-lsp.4: the three run-level `[workspace]` warnings, held against
+        // §FS-lsp.1.1.3, §FS-lsp.4: the two run-level `[workspace]` warnings, held against
         // the same case's stderr — neither surface may carry one the other does not, and the
         // message is the CLI's byte for byte. The unlisted block is an ordinary `Finding` above.
         if !cli_run_warnings.is_empty() {

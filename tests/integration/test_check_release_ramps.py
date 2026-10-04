@@ -292,12 +292,13 @@ class ThisRepositoryTests(unittest.TestCase):
         self.assertEqual([], golden)
 
     def test_the_flips_this_tree_landed_hold_the_floor_at_0_16_0(self):
-        """§FS-distribution.4.2 — three flips have landed, and the two later ones
-        set the floor together: the bare-`grund` fallback reports `was removed
-        in 0.16.0` (§FS-cli.4) and `unreached-declaration` reports `became an
-        error in 0.16.0` (§FS-rules.checks.unreached-declaration), so the tree
-        cannot be cut below `0.16.0` and each refuses a 0.15.x release on its
-        own. The earlier unlisted-`[workspace]` flip is still read and still
+        """§FS-distribution.4.2 — every 0.16.0 flip has landed, and together
+        they set the floor: among them the bare-`grund` fallback reports `was
+        removed in 0.16.0` (§FS-cli.4) and `unreached-declaration` reports
+        `became an error in 0.16.0` (§FS-rules.checks.unreached-declaration),
+        as do unmarked headings, near-miss declarations and the absorbed
+        workspace scan, so the tree cannot be cut below `0.16.0` and each
+        refuses a 0.15.x release on its own. The earlier unlisted-`[workspace]` flip is still read and still
         refuses a 0.14.x release (§FS-check.3.29.14), and so are the older
         landed clauses: a 0.12.x release is still refused by the `prefix`
         removal."""
