@@ -103,9 +103,8 @@ harm is: a CI step or an agent gating on the exit code would still read a pass.
   **Which clause licenses the move.** [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids)
   does, and each of its conditions is met:
 
-  1. *Prior prohibition.* The old verdict broke
-     [§REQ-no-missed-citation.1](../../requirements/REQ-no-missed-citation.md#1-no-silent-skips),
-     which applied when it shipped: an incomplete run "never passes as if it
+  1. *Prior prohibition.* The old verdict violated [§REQ-no-missed-citation.1](../../requirements/REQ-no-missed-citation.md#1-no-silent-skips),
+     which already applied when that verdict shipped: an incomplete run "never passes as if it
      were" complete, and "an empty tree … must never look like a clean one". A
      narrowed run whose every selected rule was skipped is exactly that run. It
      also broke [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded):
@@ -113,8 +112,8 @@ harm is: a CI step or an agent gating on the exit code would still read a pass.
      named the skip, and nothing told the reader to drop `--only`.
      [§DF-unverifiable-rule-scope.4](DF-unverifiable-rule-scope.md#4-consequences) used the same requirement to license moving a
      silently skipped rule-driven comparison from `0` to `1`.
-  2. *Accepted proof.* This record. The [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)
-     deprecation path does not fit, because there is no old form carried beside a
+  2. *Accepted proof.* This record. The [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) deprecation path does not fit,
+     because there is no old form carried beside a
      new one to warn about first: the dropped row is the warning, and a release
      that printed it to stderr while keeping exit `0` would keep the very verdict
      the prohibition forbids for a further release. The
@@ -127,7 +126,7 @@ harm is: a CI step or an agent gating on the exit code would still read a pass.
      existing `invalid-rule` row, located at the rule's heading and naming why the
      rule was refused ([§FS-rules.7.1](../../functional-spec/FS-rules.md#71-invalid-rule)),
      which is where the edit goes.
-  5. *No new licence.* Nothing is tightened, removed or newly prohibited: the
+  5. *No new licence.* The route is not a licence for anything else. Nothing is tightened, removed or newly prohibited: the
      error already fails every unnarrowed run, and this change only stops a
      narrowed one from hiding it.
 

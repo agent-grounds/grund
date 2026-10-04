@@ -25,6 +25,8 @@ Findings go to stdout (the linter convention) — `grund check | …` and `grund
 Selection happens after the complete check. It filters errors, warnings, and enabled
 suggestions by exact code; operational failures remain visible and exit 2. Exit 0 means
 the selected report has no errors, not that the unselected repository is clean.
+Selecting a code a rule produces also selects invalid-rule, so a rule that could not
+run is never a pass.
 
 --only-rule narrows that same report by rule authority instead of by code: only what
 the --rule sentence authored, whether it authored a finding alone or jointly with a

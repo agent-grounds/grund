@@ -75,6 +75,14 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         accepted_config.replace("rules = true\n", ""),
     )
     .expect("disable configured rules");
+    // §FS-check.1.4: `--only` now carries `invalid-rule`, so a row whose literal
+    // subject does not resolve would show; declare the one the guide names.
+    fs::write(
+        accepted_root.join("docs/fs/FS-login.md"),
+        "# FS-login: A literal subject\n\n## goals: Goals\n\nGoals.\n\n\
+         ## requirements: Requirements\n\nRequirements.\n",
+    )
+    .expect("declare the guide's literal subject");
     let mut accepted_count = 0;
     for line in accepted.lines().filter(|line| line.starts_with("- `")) {
         let sentence_end = line[3..].find('`').expect("accepted sentence end") + 3;

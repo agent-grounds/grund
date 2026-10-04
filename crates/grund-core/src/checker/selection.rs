@@ -57,6 +57,20 @@ pub const CHECK_FINDING_CODES: &[&str] = &[
     "value-mismatch",
 ];
 
+/// The eight rule-produced codes: a selection naming any of them also selects
+/// `invalid-rule`, because a skipped rule is a check the run did not evaluate
+/// (§FS-rules.7.6).
+const RULE_PRODUCED_CODES: &[&str] = &[
+    "chapter-cardinality",
+    "citation-cardinality",
+    "uncited-unit",
+    "unreached-declaration",
+    "missing-citation",
+    "forbidden-citation",
+    "discouraged-citation",
+    "suggested-citation",
+];
+
 /// The origin a `check --rule` trial sentence carries, and so the authority
 /// `--only-rule` asks for (§FS-rules.8, §AR-rules.2).
 const TRIAL_RULE_ORIGIN: &str = "--rule";
@@ -113,9 +127,21 @@ impl CheckFindingSelection {
     /// unselectable with it, and is a warning (§FS-check.2.1.2).
     pub fn retains(&self, code: &str, authority: &[String]) -> bool {
         code == "io"
-            || (self.only.is_empty() || self.only.contains(code))
+            || self.code_axis_retains(code)
                 && self.authority_axis_retains(authority)
                 && !self.ignore.contains(code)
+    }
+
+    /// §FS-check.1.4: the code axis passes what `--only` names, and passes
+    /// every `invalid-rule` row as well once it names a rule-produced code, so
+    /// a narrowed run never reads a skipped rule as a pass (§FS-rules.7.6).
+    fn code_axis_retains(&self, code: &str) -> bool {
+        self.only.is_empty()
+            || self.only.contains(code)
+            || code == "invalid-rule"
+                && RULE_PRODUCED_CODES
+                    .iter()
+                    .any(|produced| self.only.contains(*produced))
     }
 
     /// §FS-rules.8: the authority axis keeps a finding the trial sentence
