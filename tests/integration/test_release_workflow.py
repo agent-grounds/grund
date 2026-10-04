@@ -2,24 +2,17 @@
 §FS-distribution.4.8, §FS-distribution.4.9, §FS-distribution.4.10 — what the
 release workflows must still do for a release to mean what the spec says it
 means: run the release guard on every publication path, publish a commit that
-already carries its version, hold the scheduled release while the changelog is
-behind the code, build on one old glibc baseline with one pinned toolchain,
+already carries its version, release without waiting for a hand-written changelog,
+build on one old glibc baseline with one pinned toolchain,
 profile-guided-optimize every distributed binary, and publish crates.io in
 dependency order with the artifacts last.
 
 Read as text, like `test_ci_precommit_parity.py`: the CI Python has no YAML
 parser. What is asserted is job and step *shape* — which step precedes which,
 what a condition names, what a budget multiplies out to — never the formatting,
-so a reflow of these files does not fail this module. The one exception is the
-hold, whose answer is a fact of a git history: its own shell is run on fixture
-histories, as the workflow would run it."""
+so a reflow of these files does not fail this module."""
 
-import os
 import re
-import shutil
-import subprocess
-import tempfile
-import textwrap
 import unittest
 from pathlib import Path
 
@@ -30,15 +23,10 @@ RELEASE = WORKFLOWS / "release.yml"
 PGO_SCRIPT = REPO_ROOT / "scripts" / "pgo-build.sh"
 BENCHES = REPO_ROOT / "crates" / "grund-cli" / "benches" / "instructions.rs"
 GUARD = "scripts/check_release_ramps.py"
-AUTO_BUMP = WORKFLOWS / "auto-bump.yml"
 ENTRIES = "docs/changelog/unreleased"
-# The hold's interface (§FS-distribution.4.4): its step id, the output every later step reads,
-# and the notice a held run ends with.
+# The retired hold's interface, which no helper may carry again (§FS-distribution.4.4).
 HOLD = "gate_changelog"
 HOLD_CONDITION = f"steps.{HOLD}.outputs.ok == 'true'"
-HOLD_NOTICE = f"::notice::changes merged since {ENTRIES}/ was last written wait for their entries — skipping."
-# Resolved rather than named, for the reason `test_distribution_packages.py` gives.
-BASH = shutil.which("bash") or "bash"
 
 
 def squash(text):
@@ -105,34 +93,6 @@ def training_invocations(script):
     return [line.strip() for line in block.splitlines() if line.strip().startswith('"$grund" ')]
 
 
-def step_id(step):
-    found = re.search(r"(?:^|\n)\s*-?\s*id:\s*(\S+)", step)
-    return found.group(1) if found else ""
-
-
-def condition(step):
-    found = re.search(r"(?:^|\n)\s*-?\s*if:\s*(.+)", step)
-    return found.group(1).strip() if found else ""
-
-
-def run_block(step):
-    """The shell a step runs, dedented, as the runner hands it to `bash`."""
-    lines = step.splitlines()
-    for index, line in enumerate(lines):
-        key = re.match(r"(\s*)run:\s*(.*)$", line)
-        if key is None:
-            continue
-        if key.group(2) not in ("|", "|-"):
-            return key.group(2)
-        body = []
-        for following in lines[index + 1:]:
-            if following.strip() and len(following) - len(following.lstrip()) <= len(key.group(1)):
-                break
-            body.append(following)
-        return textwrap.dedent("\n".join(body))
-    return ""
-
-
 def step_index(job_steps, wanted):
     """The position of the step with exactly this name, or -1.
 
@@ -169,130 +129,43 @@ class ReleaseGuardTests(unittest.TestCase):
                     self.assertIn("${{", call, f"{name} runs the guard on a hard-coded version")
 
 
-class ChangelogHoldTests(unittest.TestCase):
-    """§FS-distribution.4.4 — the scheduled helper holds while the release
-    section is behind the code (§FS-distribution.4.6): it asks the tag
-    question's filter again since the last commit that changed an entry, holds
-    green with a notice when anything passes it, and nothing after the hold
-    runs, the advance to the next `-dev` version included. The manual minor
-    helper does not hold."""
+class NoChangelogHoldTests(unittest.TestCase):
+    """§FS-distribution.4.4 — neither helper waits for anything to be written
+    first: the release section is built by `prepare` from the pull requests
+    merged since the tag (§FS-distribution.4.6), so the scheduled helper has no
+    hold, no helper numbers entries with `stamp`, and both still let `prepare`
+    read the forge."""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.steps = steps(jobs(AUTO_BUMP.read_text(encoding="utf-8"))["patch-release"])
-        cls.ids = [step_id(step) for step in cls.steps]
+    HELPERS = ("auto-bump.yml", "release-minor.yml")
 
-    def hold(self):
-        self.assertIn(HOLD, self.ids, f"auto-bump.yml has no step with `id: {HOLD}`")
-        return self.ids.index(HOLD)
+    def text(self, name):
+        return (WORKFLOWS / name).read_text(encoding="utf-8")
 
-    def test_the_hold_is_asked_straight_after_the_tag_question(self):
-        hold = self.hold()
-        self.assertEqual(self.ids.index("gate_substantive") + 1, hold)
-        self.assertIn("steps.gate_substantive.outputs.ok == 'true'", condition(self.steps[hold]))
-
-    def test_the_hold_filters_what_changed_as_the_tag_question_does(self):
-        hold = run_block(self.steps[self.hold()])
-        tag_question = run_block(self.steps[self.ids.index("gate_substantive")])
-        filters = [line.strip() for line in tag_question.splitlines() if "grep -Ev" in line]
-        self.assertGreaterEqual(len(filters), 3, tag_question)
-        for line in filters:
-            with self.subTest(filter=line):
-                self.assertIn(line, [held.strip() for held in hold.splitlines()])
-
-    def test_every_step_after_the_hold_waits_for_it(self):
-        hold = self.hold()
-        for step in self.steps[hold + 1:]:
-            with self.subTest(step=step_name(step)):
-                self.assertIn(HOLD_CONDITION, condition(step))
-
-    def test_the_dev_advance_runs_only_after_a_release(self):
-        """§FS-distribution.4.1: the advance is the release's last act, so a held
-        or quiet run must not open a `-dev` version nothing was released before."""
-        advance = self.steps[step_index(self.steps, "Advance main to the next dev version")]
-        self.assertIn(HOLD_CONDITION, condition(advance), "the advance runs whether or not a release did")
-
-    def test_the_manual_minor_release_does_not_hold(self):
-        text = (WORKFLOWS / "release-minor.yml").read_text(encoding="utf-8")
-        self.assertNotIn(HOLD, text)
+    def test_the_scheduled_helper_has_no_hold(self):
+        text = self.text("auto-bump.yml")
+        self.assertNotIn(f"id: {HOLD}", text)
+        self.assertNotIn(HOLD_CONDITION, text)
         self.assertNotIn("wait for their entries", text)
-        self.assertIn("scripts/prepare_changelog_release.py prepare", text)
 
-    # The hold's own shell, on the three histories §FS-distribution.4.4 names.
-    def test_a_write_up_after_the_last_code_change_proceeds(self):
-        outputs, stdout = self.run_hold(
-            ("Fix the parser", {"crates/core/src/parse.rs": "fn parse() {}\n"}),
-            ("Write the release section", {f"{ENTRIES}/fix-parser.fixed.md": "- The parser. (PR #2)\n"}),
-            ("Reword the guide", {"docs/guide.md": "Reworded.\n"}),
-        )
-        self.assertEqual("true", outputs.get("ok"), stdout)
-        self.assertNotIn(HOLD_NOTICE, stdout)
+    def test_no_helper_reads_a_pending_store_or_stamps(self):
+        for name in self.HELPERS:
+            with self.subTest(workflow=name):
+                text = self.text(name)
+                self.assertNotIn(ENTRIES, text)
+                self.assertIsNone(re.search(r"prepare_changelog_release\.py\s+stamp\b", text))
 
-    def test_code_merged_after_the_write_up_holds(self):
-        outputs, stdout = self.run_hold(
-            ("Write the release section", {f"{ENTRIES}/fix-parser.fixed.md": "- The parser. (PR #2)\n"}),
-            ("Fix the lexer", {"crates/core/src/lex.rs": "fn lex() {}\n"}),
-        )
-        self.assertEqual("false", outputs.get("ok"), stdout)
-        self.assertIn(HOLD_NOTICE, stdout.splitlines())
+    def test_both_helpers_still_prepare_the_release(self):
+        for name in self.HELPERS:
+            with self.subTest(workflow=name):
+                self.assertRegex(self.text(name), r"python3 scripts/prepare_changelog_release\.py prepare ")
 
-    def test_a_release_with_nothing_written_since_holds(self):
-        outputs, stdout = self.run_hold(
-            ("Fix the parser", {"crates/core/src/parse.rs": "fn parse() {}\n"}),
-            ("Write the release section", {f"{ENTRIES}/fix-parser.fixed.md": "- The parser. (PR #2)\n"}),
-            ("Release v0.1.1", {f"{ENTRIES}/fix-parser.fixed.md": None, "Cargo.toml": "version = \"0.1.1\"\n"}, "v0.1.1"),
-            ("Open 0.1.2-dev for development", {"Cargo.toml": "version = \"0.1.2-dev\"\n"}),
-        )
-        self.assertEqual("false", outputs.get("ok"), stdout)
-        self.assertIn(HOLD_NOTICE, stdout.splitlines())
-
-    def run_hold(self, *history):
-        """Run the hold's shell on a repository tagged `v0.1.0` and then given
-        `history` — (message, files, tag) commits, a `None` text deleting the file —
-        reading the step outputs back the way the runner would."""
-        script = run_block(self.steps[self.hold()])
-        scratch = Path(tempfile.mkdtemp(prefix="grund-hold-"))
-        self.addCleanup(shutil.rmtree, scratch, ignore_errors=True)
-        repo, output = scratch / "repo", scratch / "output"
-        isolated = {key: value for key, value in os.environ.items() if not key.startswith(("GITHUB_", "GIT_"))}
-        isolated.update(GIT_CONFIG_GLOBAL=str(scratch / ".gitconfig-absent"), GIT_CONFIG_NOSYSTEM="1")
-
-        def git(*arguments):
-            identity = ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false")
-            return subprocess.run(["git", *identity, *arguments], cwd=repo, env=isolated, check=True, capture_output=True, text=True)
-
-        repo.mkdir()
-        git("init", "-q", "-b", "main")
-        base = ("The base", {"Cargo.toml": "version = \"0.1.0\"\n", f"{ENTRIES}/README.md": "The format.\n"}, "v0.1.0")
-        tag = None
-        for message, files, *tagged in (base, *history):
-            for relative, text in files.items():
-                path = repo / relative
-                if text is None:
-                    path.unlink()
-                else:
-                    path.parent.mkdir(parents=True, exist_ok=True)
-                    path.write_text(text, encoding="utf-8")
-            git("add", "-A")
-            git("commit", "-q", "-m", message)
-            if tagged:
-                tag = tagged[0]
-                git("tag", tag)
-        known = {"current_tag": tag, "current": tag[1:], "next_tag": f"{tag}-next", "next": f"{tag[1:]}-next"}
-
-        def expression(match):
-            name = match.group(1).strip().removeprefix("steps.versions.outputs.")
-            self.assertIn(name, known, f"the hold reads `${{{{ {match.group(1).strip()} }}}}`, which no fixture supplies")
-            return known[name]
-
-        output.write_text("", encoding="utf-8")
-        run = subprocess.run(
-            [BASH, "--noprofile", "--norc", "-eo", "pipefail", "-c", re.sub(r"\$\{\{(.*?)\}\}", expression, script)],
-            cwd=repo, env={**isolated, "GITHUB_OUTPUT": output.as_posix()}, capture_output=True, text=True, encoding="utf-8",
-        )
-        self.assertEqual(0, run.returncode, run.stdout + run.stderr)
-        pairs = (line.partition("=") for line in output.read_text(encoding="utf-8").splitlines())
-        return {key: value for key, _, value in pairs}, run.stdout
+    def test_both_helpers_let_prepare_read_the_forge(self):
+        for name in self.HELPERS:
+            with self.subTest(workflow=name):
+                text = self.text(name)
+                permissions = text.split("permissions:", 1)[1].split("\njobs:", 1)[0]
+                self.assertRegex(permissions, r"(?m)^\s+pull-requests:\s*read\b")
+                self.assertIn("GH_TOKEN: ${{ github.token }}", text)
 
 
 class VerifyJobTests(unittest.TestCase):

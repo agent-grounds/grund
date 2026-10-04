@@ -349,54 +349,106 @@ but there is no conflict proof, ordinary-route analysis, or release record.
 
 
 class ReleaseRecordSourceTests(unittest.TestCase):
-    """Where the meter finds a release record now that pending changes are one
-    file each (§FS-distribution.4.12): never under `## Unreleased`."""
+    """Where the meter finds a release record now that no change waits in the
+    tree for a release (§FS-distribution.4.12): the released sections, archived
+    and inline, and the correction's own `release-note` section
+    (§FS-distribution.4.6.4) - never `docs/changelog/unreleased/`."""
 
     INLINE = "## 2. [0.2.0] — 2026-05-17\n\n- A shipped record.\n\n## 3. Older releases\n"
 
-    def _root(self, changelog, entries=None):
+    def _root(self, changelog, archives=None, pending=None):
         scratch = tempfile.TemporaryDirectory()
         self.addCleanup(scratch.cleanup)
         root = Path(scratch.name)
-        (root / "docs").mkdir()
+        (root / "docs" / "changelog").mkdir(parents=True)
         (root / "docs" / "changelog.md").write_bytes(changelog.encode("utf-8"))
-        if entries is not None:
-            pending = root / "docs" / "changelog" / "unreleased"
-            pending.mkdir(parents=True)
-            for name, text in entries.items():
-                (pending / name).write_bytes(text.encode("utf-8"))
+        for name, text in (archives or {}).items():
+            (root / "docs" / "changelog" / name).write_bytes(text.encode("utf-8"))
+        if pending is not None:
+            store = root / "docs" / "changelog" / "unreleased"
+            store.mkdir()
+            for name, text in pending.items():
+                (store / name).write_bytes(text.encode("utf-8"))
         return root
 
-    def test_a_record_in_an_unreleased_entry_counts(self):
+    def test_the_released_sections_are_read_without_a_pending_store(self):
         root = self._root(
-            f"# Changelog\n\n## Unreleased\n\nA pointer.\n\n{self.INLINE}",
-            {"README.md": "- A line of the format, not a record.\n", "a-record.fixed.md": "- A pending record.\n"},
+            f"# Changelog\n\n{self.INLINE}", {"0.1.0.md": "# 0.1.0 — 2026-05-14\n\n- An archived record.\n"}
         )
         entries = _release_entries(root)
-        self.assertIn("- A pending record.", entries)
         self.assertIn("- A shipped record.", entries)
-        self.assertNotIn("- A line of the format, not a record.", entries)
+        self.assertIn("- An archived record.", entries)
 
-    def test_a_bullet_under_unreleased_is_not_a_record(self):
-        root = self._root(f"# Changelog\n\n## Unreleased\n\n- A stray bullet.\n\n{self.INLINE}", {})
-        self.assertNotIn("- A stray bullet.", _release_entries(root))
-
-    def test_a_missing_entry_directory_fails_by_name(self):
-        root = self._root(f"# Changelog\n\n## Unreleased\n\nA pointer.\n\n{self.INLINE}")
-        with self.assertRaisesRegex(AssertionError, "docs/changelog/unreleased/"):
-            _release_entries(root)
+    def test_the_meter_never_reads_the_pending_store(self):
+        root = self._root(
+            f"# Changelog\n\n{self.INLINE}",
+            pending={"README.md": "- The format.\n", "a-record.fixed.md": "- A pending record.\n"},
+        )
+        entries = _release_entries(root)
+        self.assertNotIn("- A pending record.", entries)
+        self.assertNotIn("- The format.", entries)
+        self.assertIn("- A shipped record.", entries)
 
     def test_a_missing_inline_release_fails_by_name(self):
-        root = self._root("# Changelog\n\n## Unreleased\n\nA pointer.\n\n## 3. Older releases\n", {})
+        root = self._root("# Changelog\n\n## 3. Older releases\n")
         with self.assertRaisesRegex(AssertionError, "inline release"):
             _release_entries(root)
 
-    def test_the_changelog_holds_no_record_under_unreleased(self):
-        stray = _bullet_lines(_unreleased_section(CHANGELOG.read_text(encoding="utf-8")))
+
+class ReleaseNoteRecordTests(unittest.TestCase):
+    """§FS-distribution.4.6.4 — a correction's release record is its own
+    `release-note` section, read offline on the pull request that makes it; a
+    correction already released keeps its archived record."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.decision = COVER_DECISION.read_text(encoding="utf-8")
+        cls.record = _release_entry(
+            RELEASE.read_text(encoding="utf-8"), "PR #114", "§DF-cover-workspace-scope"
+        )
+        cls.catalog = _requirement_catalog()
+
+    def _with_note(self, bullet):
+        return f"{self.decision.rstrip()}\n\n## release-note: Release note\n\n{bullet}\n"
+
+    def test_a_correction_with_a_release_note_passes_with_no_released_record(self):
         self.assertEqual(
-            [], stray,
-            "a bullet under `## Unreleased` is read by no meter and published by no release: "
-            "move it into a file under docs/changelog/unreleased/",
+            [], _correction_route_errors(self._with_note(self.record), [], self.catalog)
+        )
+
+    def test_a_correction_with_no_release_note_and_no_released_record_fails(self):
+        self.assertIn(
+            "the decision must have a matching release record",
+            _correction_route_errors(self.decision, [], self.catalog),
+        )
+
+    def test_a_release_note_that_does_not_name_the_verdict_change_fails(self):
+        silent = "- §DF-cover-workspace-scope invokes §REQ-backwards-compatibility.5 for §REQ-no-missed-citation.1."
+        self.assertIn(
+            "the matching release must name the verdict change and located remedies",
+            _correction_route_errors(self._with_note(silent), [], self.catalog),
+        )
+
+    def test_a_release_note_on_another_decision_is_not_this_one_s_record(self):
+        other = self._with_note(self.record).replace(
+            "# DF-cover-workspace-scope:", "# DF-cover-workspace:", 1
+        )
+        self.assertIn(
+            "the decision must have a matching release record",
+            _correction_route_errors(other, [], self.catalog),
+        )
+
+    def test_a_past_correction_recorded_in_an_archive_passes(self):
+        scratch = tempfile.TemporaryDirectory()
+        self.addCleanup(scratch.cleanup)
+        root = Path(scratch.name)
+        (root / "docs" / "changelog").mkdir(parents=True)
+        (root / "docs" / "changelog.md").write_bytes(
+            "# Changelog\n\n## 2. [0.2.0] — 2026-05-17\n\n- Shipped.\n\n## 3. Older releases\n".encode("utf-8")
+        )
+        (root / "docs" / "changelog" / "0.10.1.md").write_bytes(RELEASE.read_bytes())
+        self.assertEqual(
+            [], _correction_route_errors(self.decision, _release_entries(root), self.catalog)
         )
 
 

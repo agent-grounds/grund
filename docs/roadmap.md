@@ -116,7 +116,7 @@ Retiring the address is a change of its own: #362's bullet becomes repointable
 as soon as the 0.15.0 cut moves it out of `## Unreleased`, and this change's
 entry, which the 0.16.0 cut releases and deletes, may be reworded before that
 cut too
-([§FS-distribution.4.6](functional-spec/FS-distribution.md#46-the-changelog-is-written-before-a-release-not-with-each-change)),
+([§FS-distribution.4.6](functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)),
 so the repoint the lead above prescribes need not wait for a release. It is not
 a deadline item and is not counted among the four.
 
