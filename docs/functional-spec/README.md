@@ -66,6 +66,10 @@ Concrete fixtures that keep the command specs readable while pinning exact examp
 - [§FS-workspace](FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace) — grund validates cross-project citations in a workspace
 - [§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do) — what grund will deliberately not do
 
+## Repository maintenance
+
+- [§FS-repository-maintenance](FS-repository-maintenance.md#fs-repository-maintenance-checkout-maintenance-stays-discoverable) — checkout maintenance stays discoverable
+
 ---
 
 This index is navigational only. Citations should target the declaration ID directly, never this file.
