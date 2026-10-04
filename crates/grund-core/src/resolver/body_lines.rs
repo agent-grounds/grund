@@ -7,7 +7,7 @@
 use crate::grammar::strip_block_closer;
 use crate::model::ShowSection;
 
-use super::comment_envelope::clean_body_line;
+use super::comment_envelope::clean_envelope_line;
 
 pub(super) fn push_outline_section(
     lines: &mut Vec<String>,
@@ -16,11 +16,12 @@ pub(super) fn push_outline_section(
     section: &str,
     depth: usize,
     markdown_heading: bool,
+    own_marker: Option<&str>,
 ) {
-    lines.push(clean_body_line(line, markdown_heading));
+    lines.push(clean_envelope_line(line, markdown_heading, own_marker));
     sections.push(ShowSection {
         path: section.to_string(),
-        title: section_title(line, section, markdown_heading),
+        title: section_title(line, section, markdown_heading, own_marker),
         depth,
     });
 }
@@ -28,8 +29,13 @@ pub(super) fn push_outline_section(
 /// A `--toc` section's title: the label its author wrote after the coordinate,
 /// with the comment envelope — a source line's closing `*/` included — left out,
 /// so it agrees with the title the scanner records (§FS-rules.5.1.1, §FS-show.3.1.3).
-fn section_title(line: &str, section: &str, markdown_heading: bool) -> String {
-    let clean = clean_body_line(line, markdown_heading);
+fn section_title(
+    line: &str,
+    section: &str,
+    markdown_heading: bool,
+    own_marker: Option<&str>,
+) -> String {
+    let clean = clean_envelope_line(line, markdown_heading, own_marker);
     let clean = if markdown_heading {
         &clean
     } else {

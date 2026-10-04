@@ -33,6 +33,21 @@ fn comment_block_kind(line: &str, lexical: LexicalSettings<'_>) -> Option<Commen
     line_comment_marker(trimmed, lexical.comment_prefixes).map(CommentBlockKind::Line)
 }
 
+/// The marker a line-style comment line opens with, exactly as the scanner keys
+/// a line block by it, or `None` for a `/* … */` opener, a blank line, or a line
+/// that is no comment at all. `show` reads a line-style body through this so a
+/// body line is one of the declaration's own comment family (§FS-show.2.3.1.1),
+/// and `list` and `show` agree on where the block runs by construction.
+pub(crate) fn line_comment_block_marker(
+    line: &str,
+    lexical: LexicalSettings<'_>,
+) -> Option<String> {
+    match comment_block_kind(line, lexical)? {
+        CommentBlockKind::Line(marker) => Some(marker),
+        CommentBlockKind::Block | CommentBlockKind::PythonDocstring => None,
+    }
+}
+
 fn line_comment_marker(trimmed: &str, comment_prefixes: &[String]) -> Option<String> {
     for marker in ["///", "//!", "//"] {
         if comment_prefixes.iter().any(|prefix| prefix == "//") && trimmed.starts_with(marker) {

@@ -89,7 +89,7 @@ pub use compiled::Grammar;
 pub(crate) use anchors::{anchor_slug, section_anchor_text, section_display_name};
 pub(crate) use comment_block::{
     CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment, comment_blocks,
-    doc_comment_rule, first_content_line,
+    doc_comment_rule, first_content_line, line_comment_block_marker,
 };
 pub(crate) use comment_line::{comment_strip_prefixes, strip_block_closer};
 pub(crate) use compiled::{
