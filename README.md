@@ -114,12 +114,10 @@ lead_size_warning = { max = 600, unit = "words" }
 
 An over-budget lead should keep its grounding: move detail into numbered child sections, or promote a child section to its own ID after checking its callers with `grund refs <ID> --summary`. See the [coordinate-size guide](docs/user-facing/coordinate-sizes.md) for counting rules, output fields, duplicate handling, and workspace scope ([§FS-list.3.4](docs/functional-spec/FS-list.md#34---size--per-coordinate-lead-and-full-body-measurements), [§FS-declarations.checks.oversized-lead](docs/functional-spec/FS-declarations.md#checksoversized-lead-oversized-lead-opt-in)).
 
-For scripts, exit `0` is a completed `refs` answer even when it is empty. From
-grund 0.16.0, exit `1` means the selected repository grammar rejected the ID or
-its number-only shorthand was ambiguous; route that status to ID repair, and
-reserve exit `2` for setup, configuration, I/O, or incomplete-scan failure.
-Grund 0.14.0 and 0.15.0 keep the former exit `2` for those two operand failures and warn
-on stderr about the 0.16.0 change
+For scripts, exit `0` is a completed `refs` answer even when it is empty. Exit
+`1` means the selected repository grammar rejected the ID or its number-only
+shorthand was ambiguous; route that status to ID repair, and reserve exit `2`
+for setup, configuration, I/O, or incomplete-scan failure
 ([§FS-refs.4](docs/functional-spec/FS-refs.md#4-exit-codes)).
 
 ## 3. Check for dangling pointers

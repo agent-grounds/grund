@@ -1,11 +1,10 @@
-// §FS-refs.4 / §FS-errors.5.2: the two resolver rejections share one staged
-// exit and wire contract across refs, show, text, JSON, and rendering flags.
+// §FS-refs.4 / §FS-errors.5.2: the two resolver rejections share one exit and
+// wire contract across refs, show, text, JSON, and rendering flags.
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-const WARNING: &str = "warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.16.0\n";
 const FORMAT_HINT: &str = "hint: this repo's [id] format is `{kind}-{number}-{slug}` (run `grund config show`); `grund list` shows the IDs that exist\n";
 const INVALID: &str = "invalid ID `FS-bar`";
 const AMBIGUOUS: &str = "ambiguous ID: FS-042 (matches FS-042-user-login, FS-042-user-logout)";
@@ -82,57 +81,26 @@ fn stderr(output: &Output) -> &str {
     std::str::from_utf8(&output.stderr).expect("stderr is UTF-8")
 }
 
-fn version(text: &str) -> (u64, u64, u64) {
-    let mut parts = text.split('.').map(|part| {
-        part.split(|ch: char| !ch.is_ascii_digit())
-            .next()
-            .unwrap_or("0")
-            .parse::<u64>()
-            .unwrap_or_else(|_| panic!("not a version: {text}"))
-    });
-    (
-        parts.next().unwrap_or(0),
-        parts.next().unwrap_or(0),
-        parts.next().unwrap_or(0),
-    )
-}
-
-fn after_flip() -> bool {
-    version(env!("CARGO_PKG_VERSION")) >= version("0.16.0")
-}
-
+/// §FS-output-shapes.6.1.2: the bare failed-query text, exit `1`; only an
+/// invalid format keeps the configured-format hint. No release suffix and no
+/// warning follow it: the landed half of the scalar clause is these ordinary
+/// bytes (§FS-distribution.4.2.4).
 fn expected_refs_text(message: &str, hint: bool) -> (i32, String) {
-    let mut rendered = String::new();
-    if after_flip() {
-        rendered.push_str(message);
-        rendered.push('\n');
-        if hint {
-            rendered.push_str(FORMAT_HINT);
-        }
-        (1, rendered)
-    } else {
-        rendered.push_str("error: ");
-        rendered.push_str(message);
-        rendered.push('\n');
-        if hint {
-            rendered.push_str(FORMAT_HINT);
-        }
-        rendered.push_str(WARNING);
-        (2, rendered)
+    let mut rendered = format!("{message}\n");
+    if hint {
+        rendered.push_str(FORMAT_HINT);
     }
+    (1, rendered)
 }
 
-fn expected_refs_json(message: &str, code: &str, hint: bool) -> (i32, String) {
-    if after_flip() {
-        (
-            1,
-            format!(
-                "{{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"{code}\",\"message\":\"{message}\",\"sites\":null,\"authority\":null}}\n"
-            ),
-        )
-    } else {
-        expected_refs_text(message, hint)
-    }
+/// §FS-output-shapes.6.1.2: the one failed-query object, exit `1`, no hint.
+fn expected_refs_json(message: &str, code: &str) -> (i32, String) {
+    (
+        1,
+        format!(
+            "{{\"severity\":\"error\",\"path\":null,\"line\":null,\"code\":\"{code}\",\"message\":\"{message}\",\"sites\":null,\"authority\":null}}\n"
+        ),
+    )
 }
 
 fn assert_run(output: &Output, expected_status: i32, expected_stderr: &str) {
@@ -147,7 +115,7 @@ fn assert_run(output: &Output, expected_status: i32, expected_stderr: &str) {
 }
 
 #[test]
-fn configured_format_rejection_obeys_both_release_phases_in_text_and_json() {
+fn configured_format_rejection_is_a_failed_query_in_text_and_json() {
     let fixture = Fixture::new("invalid-format");
     let text = run(&fixture.root, &["refs", "FS-bar"]);
     let expected_text = expected_refs_text(INVALID, true);
@@ -158,12 +126,12 @@ fn configured_format_rejection_obeys_both_release_phases_in_text_and_json() {
         &fixture.root,
         &["refs", "FS-bar", "--summary", "--format", "json"],
     );
-    let expected_json = expected_refs_json(INVALID, "invalid-id", true);
+    let expected_json = expected_refs_json(INVALID, "invalid-id");
     assert_run(&json, expected_json.0, &expected_json.1);
 }
 
 #[test]
-fn ambiguous_shorthand_obeys_both_release_phases_in_text_and_json() {
+fn ambiguous_shorthand_is_a_failed_query_in_text_and_json() {
     let fixture = Fixture::new("ambiguous-shorthand");
     // `--section` is applied only after the operand resolves.
     let text = run(&fixture.root, &["refs", "FS-042", "--section", "1"]);
@@ -171,14 +139,14 @@ fn ambiguous_shorthand_obeys_both_release_phases_in_text_and_json() {
     assert_run(&text, expected_text.0, &expected_text.1);
 
     let json = run(&fixture.root, &["refs", "FS-042", "--format", "json"]);
-    let expected_json = expected_refs_json(AMBIGUOUS, "ambiguous", false);
+    let expected_json = expected_refs_json(AMBIGUOUS, "ambiguous");
     assert_run(&json, expected_json.0, &expected_json.1);
 }
 
 /// §FS-errors.2.3.2: `show` is one of the ID queries the bare query-failure
 /// shape is for — an invalid ID and an ambiguous ID both print the message with
-/// no `error:` prefix on stderr, leave stdout empty, and exit `1`, whichever
-/// release phase `refs` is in.
+/// no `error:` prefix on stderr, leave stdout empty, and exit `1` — the bytes
+/// `refs` now matches.
 #[test]
 fn show_bytes_and_status_do_not_move_with_refs() {
     let fixture = Fixture::new("show-seam");
@@ -235,22 +203,9 @@ fn empty_answer_and_context_failures_keep_their_neighboring_statuses() {
         "scan failure remains a run-level error: {}",
         stderr(&scan_failure)
     );
-    assert!(!stderr(&scan_failure).contains(WARNING.trim_end()));
-}
-
-/// §FS-distribution.4.2.4: the version-gated contract test the scalar ramp
-/// clause leans on. The `refs` warning is the one line the `will exit … in
-/// <release>` clause is written for, so this tree may carry its golden only
-/// below the release it names; from 0.16.0 the assertions above expect the
-/// ordinary failed-query bytes at exit `1` and no warning at all.
-#[test]
-fn warning_phase_cannot_survive_the_release_it_names() {
-    let warning_golden =
-        include_str!("../../../tests/e2e/cases/refs-invalid-id-format/expected.stderr");
-    if warning_golden.contains("currently exit 2") {
-        assert!(
-            version(env!("CARGO_PKG_VERSION")) < version("0.16.0"),
-            "this tree reached 0.16.0; land §RM-refs-resolver-rejection-exit instead of shipping the warning-phase mapping"
-        );
-    }
+    assert!(
+        !stderr(&scan_failure).contains("warning:"),
+        "no migration warning follows a run-level error: {}",
+        stderr(&scan_failure)
+    );
 }

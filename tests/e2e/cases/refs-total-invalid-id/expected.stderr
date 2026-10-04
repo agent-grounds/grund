@@ -1,3 +1,2 @@
-error: invalid ID `FS-bar`
+invalid ID `FS-bar`
 hint: this repo's [id] format is `{kind}-{number}-{slug}` (run `grund config show`); `grund list` shows the IDs that exist
-warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.16.0

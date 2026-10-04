@@ -50,6 +50,12 @@ wire contract activates the new mapping and warning retirement, while the
 release gate reads the warning-phase scalar clause
 ([§FS-distribution.4.2](../../functional-spec/FS-distribution.md#42-a-release-may-not-contradict-the-releases-the-trees-own-messages-name)).
 
+The flip landed in grund 0.16.0, the release the warning named: both rejections
+now exit `1` with the bytes `show` prints, the warning and the `error:` prefix
+are gone, and the compatibility notice is [§DF-refs-resolver-rejection.release-note](DF-refs-resolver-rejection.md#release-note-release-note).
+What this section decided — a hold-and-warn release for a scalar no command
+can migrate — stays true once the window has closed.
+
 ## 3. Alternatives considered
 
 Making every malformed operand a CLI error would have moved `show` to `2` and
@@ -65,3 +71,7 @@ Exact-stderr consumers see an appended warning throughout 0.14.0 and 0.15.0. At 
 callers repair these operands on exit `1` and reserve `2` for context, run, I/O,
 and incomplete-scan failures. JSON callers receive one failed-query diagnostic
 object instead of raw CLI text; successful and empty citation lists do not move.
+
+## release-note: Release note
+
+- [§FS-refs.4](../../functional-spec/FS-refs.md#4-exit-codes), [§FS-output-shapes.6.1.2](../../functional-spec/FS-output-shapes.md#612-from-0160), [§FS-errors.2.3](../../functional-spec/FS-errors.md#23-bare-query-failure), [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **`grund refs` on an invalid ID or an ambiguous number-only shorthand now exits `1`, a failed query.** The window every `0.14.x` and `0.15.x` binary announced in its own output closes on the release it named: ``error: invalid ID `FS-bar` ``, the configured-format `hint:`, and ``warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.16.0`` at exit `2` become exactly what `grund show` prints — ``invalid ID `FS-bar` `` and the hint, or `ambiguous ID: FS-042 (matches FS-042-user-login, FS-042-user-logout)` — at exit `1`. Under `--format json` the raw text becomes the shared failed-query object, ``{"severity":"error","path":null,"line":null,"code":"invalid-id","message":"invalid ID `FS-bar`","sites":null,"authority":null}`` (code `ambiguous` for the shorthand), with no hint. `--summary`, `--section`, `--descendants` and `--total` follow the same path. Five e2e cases move from exit `2` to exit `1`: `refs-invalid-id-format`, `refs-invalid-id-format-json`, `refs-total-invalid-id`, `refs-ambiguous-shorthand` and `refs-ambiguous-shorthand-json`. **What does not move:** `grund show`'s bytes, an unknown alias and a scan or I/O failure at exit `2`, and a resolved ID with no citations at exit `0`. **Who this breaks:** a script that read exit `2` from `grund refs` as "fix the ID", or matched the `error:` prefix or the warning line — it now reads exit `1` and the bare message. Closes [issue #443](https://github.com/agent-grounds/grund/issues/443).

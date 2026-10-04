@@ -136,7 +136,7 @@ Exit codes are unchanged ([§FS-refs.4](FS-refs.md#4-exit-codes)). `--total` ren
 ## 4. Exit codes
 
 - `0` — scan succeeded; the listed citations (possibly none) are the result.
-- `1` — from grund 0.16.0, the selected project's resolver rejected the ID
+- `1` — the selected project's resolver rejected the ID
   operand: it does not match the effective `[id] format`, or it is a
   number-only shorthand naming more than one declaration
   ([§FS-check.1.2](FS-check.md#12-the-number-only-shorthand)). Both text and
@@ -155,8 +155,8 @@ Exit codes are unchanged ([§FS-refs.4](FS-refs.md#4-exit-codes)). `--total` ren
   trustworthy as complete), an unsupported `--format`, an unknown alias, or
   any other setup or CLI-level error ([§FS-cli.4](FS-cli.md#4-errors-with-no-source-location)).
 
-Duplicate-home and requested-section refusals apply now, independently of the
-grammar-resolver compatibility window below. They leave stdout empty before
+Duplicate-home and requested-section refusals are classified the same way as
+the two resolver rejections. They leave stdout empty before
 listing citations or rendering `--summary` or `--total`; `--descendants` inherits
 the same refusal rather than combining the claimants' children. Text uses show's
 bare ambiguity message, and JSON emits exactly one failed-query finding on
@@ -173,19 +173,11 @@ require a declaration or selected section to exist: `refs` still lists citations
 to absent targets ([§FS-refs.1](FS-refs.md#1-inputs)), without requiring body extraction or
 stub-target I/O.
 
-Grund 0.14.0 is the compatibility release. For the two resolver rejections it
-keeps the former exit `2`, the existing `error:` message, and the same text
-hint policy in text and JSON invocations, then appends exactly this raw stderr
-line in both modes:
-
-```text
-warning: `grund refs` invalid IDs and ambiguous number-only shorthands currently exit 2; they will exit 1 (failed query) in grund 0.16.0
-```
-
-The warning and the `error:` prefix retire together at 0.16.0. `--summary`,
-`--section`, `--descendants` and `--total` do not introduce another
-classification: after
-context and grammar selection they inherit the same operand result. This staged
+Grund 0.14.0 and 0.15.0 kept the former exit `2` and `error:` prefix for the two
+resolver rejections and warned that they would become failed queries; that
+compatibility form retired in grund 0.16.0. `--summary`, `--section`,
+`--descendants` and `--total` do not introduce another classification: after
+context and grammar selection they inherit the same operand result. This
 boundary is the decision in [§DF-refs-resolver-rejection](../decisions/functional/DF-refs-resolver-rejection.md#df-refs-resolver-rejection-an-id-rejected-by-a-selected-grammar-is-a-failed-query).
 
 `--descendants` adds no case of its own to the list above. On a query that

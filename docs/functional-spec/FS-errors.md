@@ -111,9 +111,7 @@ caution, not a failure.
 Once context has selected a project's ID grammar, a resolver-rejected operand
 is instead an exit-`1` query failure, alongside `grund id`'s empty-slug /
 collision and the other failed ID queries, so it takes the bare shape of
-[§FS-errors.2.3](FS-errors.md#23-bare-query-failure) with no `error:` prefix. Grund 0.14.0 temporarily preserves `refs`' old
-`error:` / exit-`2` shape and appends the migration warning in
-[§FS-refs.4](FS-refs.md#4-exit-codes).
+[§FS-errors.2.3](FS-errors.md#23-bare-query-failure) with no `error:` prefix.
 
 #### 2.2.3 Who uses it
 
@@ -127,8 +125,8 @@ A *launch-time* `error:` (bad flag, unreadable config, missing path) is printed 
 
 When a subcommand established its query context but has no result to put on
 stdout — an ID query on a missing ID, a missing section, an invalid ID under the
-selected grammar, an ambiguous ID or section, or a broken stub; `grund refs` from
-0.16.0 when the selected resolver rejects an invalid ID or ambiguous number-only
+selected grammar, an ambiguous ID or section, or a broken stub; `grund refs` when
+the selected resolver rejects an invalid ID or ambiguous number-only
 shorthand; `grund id` when the title slugifies to nothing or the proposed ID
 collides with an existing declaration:
 
@@ -332,7 +330,7 @@ Query subcommands emit their result on stdout too: one JSON object for a single-
 
 ### 5.2 On stderr — what is not output
 
-A *failed ID query* (`ID not found` / `ambiguous` / `broken stub` / `section not found` / `invalid ID`, exit `1`) emits its one finding object on stderr in the same `{ severity, path, line, code, message, sites, authority }` shape, with `path` and `line` `null` — there is no single site, and there is no result, so nothing goes to stdout. `authority` is present and always `null` there: no query failure is a chapter rule's, and the key set is one set across every record of this shape rather than a conditional a consumer has to branch on. This includes `refs`' invalid-ID and ambiguous-number-only rejections from 0.16.0; their codes are respectively `invalid-id` and `ambiguous`, both carry `sites:null`, and neither carries the text-mode hint.
+A *failed ID query* (`ID not found` / `ambiguous` / `broken stub` / `section not found` / `invalid ID`, exit `1`) emits its one finding object on stderr in the same `{ severity, path, line, code, message, sites, authority }` shape, with `path` and `line` `null` — there is no single site, and there is no result, so nothing goes to stdout. `authority` is present and always `null` there: no query failure is a chapter rule's, and the key set is one set across every record of this shape rather than a conditional a consumer has to branch on. This includes `refs`' invalid-ID and ambiguous-number-only rejections; their codes are respectively `invalid-id` and `ambiguous`, both carry `sites:null`, and neither carries the text-mode hint.
 
 Which ambiguity refusals carry `sites` is [§FS-errors.5.2.1](FS-errors.md#521-sites-on-an-ambiguity-refusal); the messages that stay raw text under any `--format` are [§FS-errors.5.2.2](FS-errors.md#522-launch-time-messages-stay-text); run-level findings in `check`'s report are [§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report).
 
@@ -342,7 +340,7 @@ Which ambiguity refusals carry `sites` is [§FS-errors.5.2.1](FS-errors.md#521-s
 
 #### 5.2.2 Launch-time messages stay text
 
-A *launch-time* CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) — an error such as a bad flag, unknown kind, unknown project alias, unreadable config or path, or a config the workspace refuses such as [§FS-check.3.30](FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan)'s (exit `2`), or a warning carried in the run's warning channel, such as [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)'s and [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)'s — stays as its `error:` / `warning:` text line on stderr regardless of `--format`. What decides is which channel carries the fact: a warning settled from the loaded config but carried as one of `check`'s report warnings, such as [§FS-check.4.3](FS-check.md#43-redundant-config-pair)'s and [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)'s, is data, and renders as a JSON finding ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)). During 0.14.0 only, the two `refs` resolver rejections of [§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output) retain that raw error and hint policy under JSON and append the raw warning fixed by [§FS-refs.4](FS-refs.md#4-exit-codes).
+A *launch-time* CLI-level message ([§FS-errors.2.2](FS-errors.md#22-cli-level-message)) — an error such as a bad flag, unknown kind, unknown project alias, unreadable config or path, or a config the workspace refuses such as [§FS-check.3.30](FS-check.md#330-a-workspace-member-swallows-the-blocks-own-scan)'s (exit `2`), or a warning carried in the run's warning channel, such as [§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread)'s and [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)'s — stays as its `error:` / `warning:` text line on stderr regardless of `--format`. What decides is which channel carries the fact: a warning settled from the loaded config but carried as one of `check`'s report warnings, such as [§FS-check.4.3](FS-check.md#43-redundant-config-pair)'s and [§FS-check.4.11](FS-check.md#411-config-read-from-the-deprecated-agents-location)'s, is data, and renders as a JSON finding ([§FS-errors.5.2.3](FS-errors.md#523-run-level-findings-in-checks-report)).
 
 #### 5.2.3 Run-level findings in `check`'s report
 
