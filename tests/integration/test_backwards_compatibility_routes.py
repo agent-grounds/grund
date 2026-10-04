@@ -13,7 +13,6 @@ REQUIREMENTS = REPO_ROOT / "docs" / "requirements"
 DECISIONS = REPO_ROOT / "docs" / "decisions"
 COVER_DECISION = DECISIONS / "functional" / "DF-cover-workspace-scope.md"
 RELEASE = REPO_ROOT / "docs" / "changelog" / "0.10.1.md"
-CHANGELOG = REPO_ROOT / "docs" / "changelog.md"
 CORRECTION_ROUTE = "§REQ-backwards-compatibility.5"
 CONFLICT_PROOF = "§REQ-no-missed-citation.1"
 REQUIREMENT_SECTION_RE = re.compile(r"§(REQ-[a-z0-9-]+)\.(\d+(?:\.\d+)*)")
@@ -71,37 +70,25 @@ def _verdict_route_citations(text):
 
 
 def _release_entries(root=REPO_ROOT):
-    """Every release bullet: the archived releases, the latest release kept
-    inline, and the entries not yet released.
+    """Every released bullet: the archived releases and the latest release kept
+    inline.
 
-    A record lands with the change it justifies and before the release that
-    carries it, so reading only the archived releases under `docs/changelog/`
-    would make condition .5.3 unsatisfiable on the day the record merges. An
-    entry under `docs/changelog/unreleased/` is the bullet those release notes
-    publish when `prepare_changelog_release.py` cuts the version
-    (§FS-distribution.4.12), so it is the same text read one release earlier.
-    The cut leaves that release inline in `docs/changelog.md` until the next one
-    archives it, so the inline release is read too, or every record it carries
-    would lose its release on the day it ships. `## Unreleased` is only a
-    pointer and is not read. A place that is missing fails by name rather than
-    reading as one that holds no record. Every other condition stays conjunctive.
+    No change waits in the tree for a release (§FS-distribution.4.6), so a
+    record that lands with the change it justifies is the decision's own
+    `release-note` section (§FS-distribution.4.6.4), which
+    `_correction_route_errors` reads from the decision itself. What is read here
+    is the record of a correction already released. The cut leaves that release
+    inline in `docs/changelog.md` until the next one archives it, so the inline
+    release is read too, or every record it carries would lose its release on the
+    day it ships. A place that is missing fails by name rather than reading as one
+    that holds no record. Every other condition stays conjunctive.
     """
     releases = root / "docs" / "changelog"
-    pending = releases / "unreleased"
-    if not pending.is_dir():
-        raise AssertionError(
-            "docs/changelog/unreleased/ is missing: the meter reads the records not yet released there"
-        )
     return [
         line
         for path in sorted(releases.glob("*.md"))
         for line in _bullet_lines(path.read_text(encoding="utf-8"))
-    ] + _bullet_lines(_inline_release(root)) + [
-        line
-        for path in sorted(pending.glob("*.md"))
-        if path.name != "README.md"
-        for line in _bullet_lines(path.read_text(encoding="utf-8"))
-    ]
+    ] + _bullet_lines(_inline_release(root))
 
 
 def _bullet_lines(text):
@@ -120,9 +107,13 @@ def _inline_release(root=REPO_ROOT):
     return match.group(1)
 
 
-def _unreleased_section(text):
-    match = re.search(r"^## Unreleased[ \t]*$(.*?)(?=^## |\Z)", text, re.M | re.S)
-    return match.group(1) if match else ""
+def _release_note(text):
+    """The decision's own `release-note` section as one record, its bullet's
+    continuation lines joined (§FS-distribution.4.6.4); empty when it has none."""
+    match = re.search(r"^## release-note:[^\n]*$(.*?)(?=^#{1,6} |\Z)", text, re.M | re.S)
+    if match is None:
+        return []
+    return [" ".join(line.strip() for line in match.group(1).splitlines() if line.strip())]
 
 
 def _correction_route_errors(text, release_entries, catalog):
@@ -136,7 +127,8 @@ def _correction_route_errors(text, release_entries, catalog):
     route_sections = [
         match.group(0)
         for match in re.finditer(
-            r"^## (\d+)\. .+$(.*?)(?=^## \d+\.|\Z)",
+            # Cut at any `## ` heading, so a trailing `release-note` is not read as the route.
+            r"^## (\d+)\. .+$(.*?)(?=^## |\Z)",
             text,
             re.MULTILINE | re.DOTALL,
         )
@@ -185,7 +177,7 @@ def _correction_route_errors(text, release_entries, catalog):
     decision_id = declaration.group(1)
     matching_releases = [
         entry
-        for entry in release_entries
+        for entry in [*_release_note(text), *release_entries]
         if decision_id in DECISION_CITATION_RE.findall(entry)
         and CORRECTION_ROUTE in entry
     ]

@@ -1,7 +1,7 @@
-"""The fixture the changelog release's tests share: the entry directory
-(§FS-distribution.4.12) and the pointer `## Unreleased` keeps, a child
-environment, and a throwaway repository's git, for the release that numbers,
-collects and deletes the entries (§FS-distribution.4.5).
+"""The fixture the changelog release's tests share: a child environment and a
+throwaway repository's git, for the release that lists the pull requests merged
+since the previous tag (§FS-distribution.4.6) and rotates the changelog
+(§FS-distribution.4.5).
 
 It is not named `test_*`, so `unittest discover` imports it only from the modules
 that use it and never collects it as a module of its own."""
@@ -11,10 +11,6 @@ import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-
-ENTRIES = "docs/changelog/unreleased"
-POINTER = "Pending changes are one file each under [changelog/unreleased/](changelog/unreleased/README.md)."
-ENTRY_README = "# Unreleased changelog entries\n\nThe format, which is not an entry.\n"
 
 
 def environment(extra: dict[str, str]) -> dict[str, str]:
