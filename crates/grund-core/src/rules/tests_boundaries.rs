@@ -35,6 +35,43 @@ fn rule() -> ParsedRule {
     }
 }
 
+/// §FS-rules.3.5.1, §FS-errors.3: whitespace at any position remains refused,
+/// with the entire released reason followed by actionable guidance.
+#[test]
+fn chapter_diagnostic_parser_refuses_whitespace_anywhere_in_presence_name() {
+    let vocabulary = RuleVocabulary {
+        kinds: BTreeSet::from(["FS".into()]),
+        target_kinds: BTreeSet::from(["FS".into()]),
+        target_namespaces: BTreeMap::new(),
+        named_sections: true,
+        id_grammars: Vec::new(),
+        section_separators: vec![".".into()],
+    };
+    let expected = concat!(
+        "chapter name must be a non-empty NAME with no surrounding whitespace; ",
+        "accepted form: Each FS must have exactly one requirements chapter.",
+        " NAME forbids whitespace anywhere."
+    );
+    for name in [
+        "Goal and hypothesis",
+        "Goal\tand",
+        "Goal\u{a0}and",
+        " goal",
+        "goal ",
+        "",
+    ] {
+        let sentence = format!("Each FS must have exactly one {name} chapter.");
+        let refusal = parse_rule(
+            &sentence,
+            "RULE-presence".into(),
+            anchor("docs/rules.md", 1),
+            &vocabulary,
+        )
+        .expect_err("presence NAME with whitespace or no token stays refused");
+        assert_eq!(refusal.message, expected, "presence NAME {name:?}");
+    }
+}
+
 fn facts(completeness: Completeness) -> RuleFacts {
     let fs = NodeKey("opaque-fs".into());
     let goal = NodeKey("opaque-goal".into());

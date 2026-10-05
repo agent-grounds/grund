@@ -1,0 +1,1 @@
+check {repo} --rule "Each BENCH must have exactly one Goal and hypothesis chapter." --only-rule
