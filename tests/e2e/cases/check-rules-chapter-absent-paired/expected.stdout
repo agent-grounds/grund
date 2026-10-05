@@ -1,2 +1,2 @@
-docs/fs/FS-silent.md:1: error: FS-silent has 0 requirements chapters; RULE-presence requires at least one
+docs/fs/FS-silent.md:1: error: FS-silent has 0 requirements chapters; RULE-presence requires at least one; expected display name "requirements" (case-insensitive, not section handle); observed direct chapters: none
 docs/fs/FS-silent.md:1: error: FS-silent has no requirements chapter, so RULE-requirements cannot reach it; add the chapter, or narrow the rule to the declarations that have one; this became an error in grund 0.16.0

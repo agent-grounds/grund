@@ -26,7 +26,7 @@ fn chapter_handles_and_display_names_have_distinct_meanings() {
     assert_run(
         &output,
         1,
-        "docs/fs/FS-demo.md:1: error: FS-demo has 0 requirements chapters; --rule requires exactly one\n",
+        "docs/fs/FS-demo.md:1: error: FS-demo has 0 requirements chapters; --rule requires exactly one; expected display name \"requirements\" (case-insensitive, not section handle); observed direct chapters: \"requirements: Acceptance criteria\"\n",
         "",
     );
     let output = run(&root, &["list", ".", "--selector", "FS.requirements"]);
