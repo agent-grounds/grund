@@ -63,7 +63,7 @@ fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
         ),
         (
             "Each FS must have exactly one  chapter.",
-            "chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter.",
+            "chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter. NAME forbids whitespace anywhere.",
         ),
         (
             "Each FS must cite at least one GOAL",

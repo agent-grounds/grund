@@ -216,7 +216,7 @@ fn a_should_level_sentence_needs_suggestions_to_be_seen() {
         ),
         0,
         "docs/fs/FS-demo.md:1: suggestion: FS-demo has 0 security chapters; \
-         --rule requires exactly one\n",
+         --rule requires exactly one; expected display name \"security\" (case-insensitive, not section handle); observed direct chapters: \"goals: Goals\", \"requirements: Requirements\"\n",
         "",
     );
 }

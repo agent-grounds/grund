@@ -53,7 +53,7 @@ fn ad_hoc_rule_is_additive_and_suggestions_do_not_change_the_exit() {
         &["check", ".", "--rule", sentence, "--suggestions"],
     );
     let expected = format!(
-        "{TEXT_FINDINGS}docs/fs/FS-demo.md:1: suggestion: FS-demo has 0 security chapters; --rule requires exactly one\n"
+        "{TEXT_FINDINGS}docs/fs/FS-demo.md:1: suggestion: FS-demo has 0 security chapters; --rule requires exactly one; expected display name \"security\" (case-insensitive, not section handle); observed direct chapters: \"goals: Goals\", \"requirements: Requirements\"\n"
     );
     assert_run(&output, 1, &expected, "");
 }

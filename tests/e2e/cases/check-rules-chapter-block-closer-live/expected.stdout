@@ -1,1 +1,1 @@
-docs/ar/AR-none.md:1: error: AR-none has 0 Terms chapters; RULE-ar-terms requires exactly one
+docs/ar/AR-none.md:1: error: AR-none has 0 Terms chapters; RULE-ar-terms requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none
