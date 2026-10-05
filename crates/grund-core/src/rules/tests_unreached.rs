@@ -161,6 +161,7 @@ fn prohibition(origin: &str) -> ParsedRule {
 /// `evaluate_suggestions` for themselves.
 fn absences(rules: &[ParsedRule]) -> Vec<Diagnostic> {
     evaluate(rules, &[], &facts())
+        .0
         .into_iter()
         .filter(|diagnostic| diagnostic.code == "unreached-declaration")
         .collect()
@@ -240,7 +241,7 @@ fn a_prohibition_over_the_same_absent_chapter_stays_silent() {
 #[test]
 fn a_chapter_displayed_under_another_name_is_reached_by_its_handle() {
     let facts = facts_with_displayed_chapter();
-    let diagnostics = evaluate(&[chapter_rule("RULE-outbound")], &[], &facts);
+    let diagnostics = evaluate(&[chapter_rule("RULE-outbound")], &[], &facts).0;
     let absent: Vec<&str> = diagnostics
         .iter()
         .filter(|diagnostic| diagnostic.code == "unreached-declaration")

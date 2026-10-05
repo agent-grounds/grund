@@ -3,6 +3,7 @@
 mod authority;
 mod index;
 mod precedence;
+mod ramp;
 mod resolution;
 mod selectors;
 mod unreached;
@@ -19,6 +20,7 @@ use authority::Authority;
 pub(crate) use authority::one_rules_authority;
 use index::FactIndex;
 pub(crate) use precedence::citation_precedence;
+use ramp::{count_is_ramped, newly_counted, route};
 pub(crate) use resolution::unresolved_subject_diagnostic;
 use resolution::unresolved_subject_diagnostic_indexed;
 use selectors::{
@@ -26,6 +28,17 @@ use selectors::{
     target_wording,
 };
 use unreached::report_unreached;
+
+/// One level of evaluation: the channel a rule finding has always had at that
+/// level, and the ramp's warnings beside it.
+///
+/// A finding that a newly counted numbered-section citation alone produces is
+/// carried on the warnings channel rather than the errors channel, for the
+/// length of its ramp and no longer (§FS-rules.7.8). It is a pair rather than a
+/// type so that the engine/checker crossing stays `Diagnostic` and nothing else
+/// (§AR-rules.5): when the ramp closes at `0.18.0` the second half goes away
+/// and the return collapses back to one `Vec`.
+type LevelFindings = (Vec<Diagnostic>, Vec<Diagnostic>);
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 struct SemanticRule {
@@ -43,7 +56,7 @@ pub(crate) fn evaluate(
     rules: &[ParsedRule],
     precedence: &[ParsedRule],
     facts: &RuleFacts,
-) -> Vec<Diagnostic> {
+) -> LevelFindings {
     evaluate_level(rules, precedence, facts, RuleLevel::Required, true)
 }
 
@@ -55,7 +68,8 @@ pub(crate) fn evaluate_suggestions(
     precedence: &[ParsedRule],
     facts: &RuleFacts,
 ) -> Vec<Diagnostic> {
-    evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false)
+    // §FS-rules.7.8: the recommended level owes no ramp, so its field stays empty.
+    evaluate_level(rules, precedence, facts, RuleLevel::Recommended, false).0
 }
 
 /// Share one immutable fact index across this level's semantic groups and
@@ -66,7 +80,7 @@ fn evaluate_level(
     facts: &RuleFacts,
     level: RuleLevel,
     include_invalid: bool,
-) -> Vec<Diagnostic> {
+) -> LevelFindings {
     let index = FactIndex::new(facts);
     let mut groups: BTreeMap<SemanticRule, BTreeSet<String>> = BTreeMap::new();
     let precedence = precedence
@@ -74,6 +88,7 @@ fn evaluate_level(
         .map(SemanticRule::from)
         .collect::<BTreeSet<_>>();
     let mut out = Vec::new();
+    let mut ramp = Vec::new();
     for rule in rules {
         if let Some(diagnostic) = unresolved_subject_diagnostic_indexed(rule, facts, &index) {
             if include_invalid {
@@ -93,9 +108,10 @@ fn evaluate_level(
         if precedence.contains(&rule) {
             continue;
         }
-        evaluate_one(&rule, &Authority::new(origins), facts, &index, &mut out);
+        let authority = Authority::new(origins);
+        evaluate_one(&rule, &authority, facts, &index, &mut out, &mut ramp);
     }
-    out
+    (out, ramp)
 }
 
 impl From<&ParsedRule> for SemanticRule {
@@ -119,6 +135,7 @@ fn evaluate_one(
     facts: &RuleFacts,
     index: &FactIndex<'_>,
     out: &mut Vec<Diagnostic>,
+    ramp: &mut Vec<Diagnostic>,
 ) {
     let subjects = select_subjects(&rule.subject, facts, index);
     // §FS-rules.4: every positive cardinality conclusion is closed-world, and
@@ -192,11 +209,13 @@ fn evaluate_one(
                         } else {
                             ("discouraged-citation", "")
                         };
-                        push_site(
+                        // §FS-rules.7.8: a required site counted only now warns.
+                        let ramped =
+                            rule.level == RuleLevel::Required && newly_counted(facts, site);
+                        let (sink, message) = route(
+                            ramped,
                             out,
-                            facts,
-                            site,
-                            code,
+                            ramp,
                             format!(
                                 "{} {} not cite {} ({authority}){repair}",
                                 index
@@ -210,16 +229,20 @@ fn evaluate_one(
                                 },
                                 target_wording(&rule.targets)
                             ),
-                            authority,
                         );
+                        push_site(sink, facts, site, code, message, authority);
                     }
                 }
             }
         }
-        RuleRelation::Cite => evaluate_cites(rule, authority, facts, index, &subjects, out),
+        RuleRelation::Cite => {
+            evaluate_cites(rule, authority, facts, index, &subjects, out, ramp);
+        }
         RuleRelation::BeCitedBy => {
             for subject in subjects {
-                let count = index
+                // §FS-rules.3.4: a numbered section of the subject's own body
+                // reaches it here, so its newly counted sites ramp (§FS-rules.7.8).
+                let sites = index
                     .citations_to(&subject)
                     .iter()
                     .filter(|(_, from, _)| {
@@ -227,21 +250,23 @@ fn evaluate_one(
                             .declaration_kind(from)
                             .is_some_and(|kind| target_kind_matches(&rule.targets, kind, facts))
                     })
-                    .count();
+                    .map(|(site, _, _)| site)
+                    .collect::<Vec<_>>();
+                let count = sites.len();
                 if !rule.cardinality.contains(count) {
-                    push_node(
+                    let without = sites.iter().filter(|s| !newly_counted(facts, s)).count();
+                    let (sink, message) = route(
+                        count_is_ramped(rule.level, rule.cardinality, without),
                         out,
-                        facts,
-                        &subject,
-                        "uncited-unit",
+                        ramp,
                         format!(
                             "{} is cited by {} {count} times; {authority} requires {}",
                             label(facts, &subject),
                             target_wording(&rule.targets),
                             rule.cardinality.wording()
                         ),
-                        authority,
                     );
+                    push_node(sink, facts, &subject, "uncited-unit", message, authority);
                 }
             }
         }
@@ -257,6 +282,7 @@ fn evaluate_cites(
     index: &FactIndex<'_>,
     subjects: &[NodeKey],
     out: &mut Vec<Diagnostic>,
+    ramp: &mut Vec<Diagnostic>,
 ) {
     let RuleTargets::Kinds { mode, .. } = &rule.targets else {
         return;
@@ -264,37 +290,49 @@ fn evaluate_cites(
     let targets = target_nodes(&rule.targets, facts, index);
     for subject in subjects {
         if *mode == TargetMode::PerTarget {
+            // Each owner's count with and without the newly counted sites (§FS-rules.7.8).
             let mut counts = BTreeMap::new();
-            for (_, _, cited) in index.citations_in(subject) {
+            for (site, _, cited) in index.citations_in(subject) {
                 if let Some(owner) = index.owner(cited) {
-                    *counts.entry(owner).or_insert(0usize) += 1;
+                    let (all, without) = counts.entry(owner).or_insert((0usize, 0usize));
+                    *all += 1;
+                    *without += usize::from(!newly_counted(facts, site));
                 }
             }
             for target in &targets {
-                let count = counts.get(target).copied().unwrap_or(0);
+                let (count, without) = counts.get(target).copied().unwrap_or((0, 0));
                 if !rule.cardinality.contains(count) {
-                    push_node(
+                    let (sink, message) = route(
+                        count_is_ramped(rule.level, rule.cardinality, without),
                         out,
-                        facts,
-                        subject,
-                        "citation-cardinality",
+                        ramp,
                         format!(
                             "{} cites {} {count} times; {authority} requires {}",
                             label(facts, subject),
                             label(facts, target),
                             rule.cardinality.times_wording()
                         ),
+                    );
+                    push_node(
+                        sink,
+                        facts,
+                        subject,
+                        "citation-cardinality",
+                        message,
                         authority,
                     );
                 }
             }
         } else {
-            let count = index
+            let sites = index
                 .citations_in(subject)
                 .iter()
                 .filter(|(_, _, target)| citation_matches_targets(target, &targets, index))
-                .count();
+                .map(|(site, _, _)| site)
+                .collect::<Vec<_>>();
+            let count = sites.len();
             if !rule.cardinality.contains(count) {
+                let without = sites.iter().filter(|s| !newly_counted(facts, s)).count();
                 let ordinary = rule.cardinality == Cardinality::AT_LEAST_ONE && count == 0;
                 let code = if ordinary {
                     if rule.level == RuleLevel::Required {
@@ -324,7 +362,10 @@ fn evaluate_cites(
                         rule.cardinality.wording()
                     )
                 };
-                push_node(out, facts, subject, code, message, authority);
+                // §FS-rules.7.8: a count the newly counted sites alone break warns.
+                let ramped = count_is_ramped(rule.level, rule.cardinality, without);
+                let (sink, message) = route(ramped, out, ramp, message);
+                push_node(sink, facts, subject, code, message, authority);
             }
         }
     }

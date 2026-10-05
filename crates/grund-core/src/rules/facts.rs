@@ -31,6 +31,10 @@ pub(crate) struct NodeMeta {
 pub(crate) struct SiteMeta {
     pub(crate) label: String,
     pub(crate) anchor: RuleAnchor,
+    /// The site counts only because its numbered-section target now resolves
+    /// to its nearest unit: side metadata the engine reads to ramp, never a
+    /// relation (§FS-rules.7.8). It goes with the ramp at 0.18.0.
+    pub(crate) newly_counted: bool,
 }
 
 /// Every declaration/chapter exists independently of citations and every

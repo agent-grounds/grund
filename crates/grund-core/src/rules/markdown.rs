@@ -104,10 +104,7 @@ fn adapt_projects(
                     },
                 );
                 for (section, info) in &home.sections {
-                    if section
-                        .split('.')
-                        .any(|part| part.bytes().all(|byte| byte.is_ascii_digit()))
-                    {
+                    if !is_rule_unit(section) {
                         continue;
                     }
                     let chapter = NodeKey(format!(
@@ -172,48 +169,36 @@ fn adapt_projects(
             let Some(target_homes) = target_findings.declarations.get(&citation.id) else {
                 continue;
             };
-            if target_homes
+            let mut resolved = target_homes
                 .iter()
-                .filter(|home| !is_stub_for_inline_decl(&target_config.root, home, target_homes))
-                .count()
-                != 1
-            {
+                .filter(|home| !is_stub_for_inline_decl(&target_config.root, home, target_homes));
+            let (Some(target_home), None) = (resolved.next(), resolved.next()) else {
                 // Unknown and ambiguous targets retain their ordinary resolver
                 // findings but never become logical edges (§FS-rules.5.1).
                 continue;
-            }
+            };
             let Some(target_declaration) = declarations
                 .get(&(target_alias.to_string(), citation.id.clone()))
                 .cloned()
             else {
                 continue;
             };
-            let target = match citation.section.as_ref() {
-                Some(section) => {
-                    let Some(chapter) = chapters
-                        .get(&(
-                            target_alias.to_string(),
-                            citation.id.clone(),
-                            section.clone(),
-                        ))
-                        .cloned()
-                    else {
-                        // An authored but unresolved coordinate remains an
-                        // ordinary resolver diagnostic and contributes no edge
-                        // (§FS-rules.5.1).
-                        continue;
-                    };
-                    chapter
-                }
-                None => target_declaration,
+            // §FS-rules.5.1: a resolved section that is no rule unit counts for
+            // its nearest named ancestor chapter, or else its declaration.
+            let (target, newly_counted) = match citation.section.as_ref() {
+                Some(section) if !target_home.sections.contains_key(section) => continue,
+                Some(section) => (
+                    nearest_chapter(&chapters, target_alias, &citation.id, section)
+                        .unwrap_or(target_declaration),
+                    !is_rule_unit(section),
+                ),
+                None => (target_declaration, false),
             };
+            // The source side resolves the same way, agreeing with `site_in`.
             let immediate = citation
                 .enclosing_section
-                .as_ref()
-                .and_then(|section| {
-                    chapters.get(&(alias.to_string(), source_id.clone(), section.clone()))
-                })
-                .cloned()
+                .as_deref()
+                .and_then(|section| nearest_chapter(&chapters, alias, source_id, section))
                 .unwrap_or_else(|| declaration.clone());
             let site = SiteKey(format!("{selected}:markdown:{alias}:site:{ordinal}"));
             facts.cites.push((site.clone(), immediate, target));
@@ -241,9 +226,34 @@ fn adapt_projects(
                         line: citation.line,
                         column: Some(citation.column),
                     },
+                    newly_counted,
                 },
             );
         }
     }
     facts
+}
+
+/// A section with an all-digit component is no rule unit (§FS-rules.2).
+fn is_rule_unit(section: &str) -> bool {
+    !section
+        .split('.')
+        .any(|part| part.bytes().all(|byte| byte.is_ascii_digit()))
+}
+
+/// The chapter at `path`, or at its nearest ancestor that is one: numbered
+/// sections are no rule units, so they resolve upward (§FS-rules.5.1).
+fn nearest_chapter(
+    chapters: &BTreeMap<(String, Id, String), NodeKey>,
+    alias: &str,
+    id: &Id,
+    path: &str,
+) -> Option<NodeKey> {
+    let mut path = path;
+    loop {
+        if let Some(chapter) = chapters.get(&(alias.to_string(), id.clone(), path.to_string())) {
+            return Some(chapter.clone());
+        }
+        path = path.rsplit_once('.')?.0;
+    }
 }
