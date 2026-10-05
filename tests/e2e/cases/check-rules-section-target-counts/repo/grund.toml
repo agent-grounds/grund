@@ -1,0 +1,33 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{number}-{slug}"
+named_sections = true
+
+[[kinds]]
+kind = "GOAL"
+folder = "docs/goals"
+index = false
+
+[[kinds]]
+kind = "BENCH"
+folder = "docs/evaluation"
+index = false
+
+[[kinds]]
+kind = "RULE"
+folder = "docs/rules"
+index = false
+rules = true
+
+[citations.BENCH]
+must = ["GOAL"]
+
+[citations.RULE]
+must = ["GOAL"]
+
+[scan]
+include = ["docs"]

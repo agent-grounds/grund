@@ -1,0 +1,2 @@
+docs/evaluation/BENCH-001-arrival-model-validation.md:7: warning: BENCH must not cite GOAL (RULE-022-bench-goal-free) — re-point the citation or downgrade it to a plain Markdown link; a citation to a numbered section now counts, and this warning becomes an error in grund 0.18.0
+docs/evaluation/BENCH-001-arrival-model-validation.md:9: warning: BENCH-001-arrival-model-validation.scope cites GOAL 2 times; RULE-023-bench-scope-bound requires at most 1; a citation to a numbered section now counts, and this warning becomes an error in grund 0.18.0

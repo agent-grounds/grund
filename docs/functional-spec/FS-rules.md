@@ -197,7 +197,11 @@ Inbound counts use the same canonical counts as ordinary outbound citations:
 ```
 
 Each resolved physical citation from a declaration of a source kind to the
-subject unit counts once. A violation produces `uncited-unit`.
+subject unit counts once. A violation produces `uncited-unit`. A citation to a
+numbered section in the subject unit's own body is a citation to that unit
+([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)), so `GOAL-x must be cited by at least one BENCH.` counts
+`GOAL-x.4`; a citation to a named chapter, `GOAL-x.outcome`, is a citation to
+that chapter, and counts for `GOAL-x.outcome` rather than for `GOAL-x`.
 
 Prohibition has one spelling and no count synonym:
 
@@ -370,8 +374,22 @@ Every declaration and accepted chapter has its node facts whether or not it
 contains a citation, so citations never define the quantified universe. Every
 physical citation has a distinct site key, preserving multiplicity. `cites`
 uses the immediate enclosing declaration or chapter as `from`; `site_in`
-relates the site to every rule unit that contains it. Unresolved or ambiguous
-citations retain their ordinary findings and contribute no `cites` fact.
+relates the site to every rule unit that contains it.
+
+A resolved citation whose section is not itself a rule unit — one with a
+numbered component, such as `GOAL-x.4` or `GOAL-x.outcome.2` — is a `cites` fact
+to its nearest enclosing unit: the nearest named ancestor chapter, or else the
+declaration. `GOAL-x.4` targets `GOAL-x`, and `GOAL-x.outcome.2` targets the
+`outcome` chapter. The source side resolves the same way, so a site inside a
+numbered section `goal.3` is `from` the `goal` chapter, not from the
+declaration. A citation `grund check` resolves therefore counts for every rule
+family exactly where it satisfies an ordinary `[citations.KIND]` obligation
+([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)).
+Only a citation that does not resolve — an unknown or ambiguous declaration, or
+a section its declaration does not have — retains its ordinary findings and
+contributes no `cites` fact. Counting these sites newly fails some rules on
+trees that pass without them; those findings warn for one release
+([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)).
 
 #### 5.1.1 A chapter's display name is the label its author wrote
 
@@ -524,8 +542,10 @@ All rule findings use the ordinary text and NDJSON schemas of
 `must` and `must not` are errors. `should` and `should not` are suggestions:
 they appear only with `--suggestions`, carry `"channel":"suggestion"` in JSON,
 and never affect exit status. Structural recommendations retain their
-structural code on that channel. No rule finding is a warning: the one that was
-is an error from 0.16.0, and the channel went with it ([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)).
+structural code on that channel. The one rule finding that was a warning is an
+error from 0.16.0 ([§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160)); the only rule findings that are
+warnings now are those a newly counted section citation alone produces, until
+0.18.0 ([§FS-rules.7.8](FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)).
 
 ### 7.1 Invalid rule
 
@@ -673,6 +693,35 @@ rules report stopped having a warnings channel. What the check does is
 specified at the section its code names,
 [§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration). This address, heading text included, is
 kept only so citations written before the promotion still resolve.
+
+### 7.8 A newly counted section citation warns until 0.18.0
+
+A required-level finding that exists only because [§FS-rules.5.1](FS-rules.md#51-facts-and-identity) counts a
+citation to a numbered section is carried on the warnings channel rather than
+the errors channel, for one release window. It covers every finding that
+counting more sites can newly produce: a prohibition's `forbidden-citation` at
+such a site, and the `citation-cardinality` or `uncited-unit` of an `at most N`
+or `exactly N` count — outbound, per-target, or inbound — that the same count
+without those sites satisfies. A count that fails without them is still an
+error, and a count those sites bring inside its bounds passes at once: the
+verdicts that newly pass land in the release that ships the change, and only
+the ones that newly fail are ramped.
+
+The warning is the error's message unchanged, followed by `; a citation to a
+numbered section now counts, and this warning becomes an error in grund
+0.18.0`, the pending clause of [§FS-distribution.4.2.3](FS-distribution.md#423-the-vocabulary-is-closed)'s closed vocabulary, so
+the release guard reads the promise out of the shipped text. It carries the
+code it will carry as an error, so `--only` and `--ignore` select it now as they
+will then, and it leaves the exit status where the rest of the run put it. The
+catalog rows of these codes keep `error` and no ramp
+([§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog)), because the code's
+severity does not move: only the findings this subsection names warn. At the
+recommended level such a finding is an ordinary suggestion and owes no ramp,
+because a suggestion never moves the exit status at any release.
+
+At `0.18.0` these findings become errors on the ordinary `must` channel, and
+this subsection becomes a pointer as [§FS-rules.7.7](FS-rules.md#77-one-required-level-finding-is-a-warning-until-0160) did. The decision and its
+compatibility route are [§DF-section-citation-counts-in-rules](../decisions/functional/DF-section-citation-counts-in-rules.md#df-section-citation-counts-in-rules-a-resolved-citation-to-a-numbered-section-counts-in-chapter-rules).
 
 ## 8. Command surfaces
 

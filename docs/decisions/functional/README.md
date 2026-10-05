@@ -55,6 +55,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-unverifiable-rule-scope](DF-unverifiable-rule-scope.md#df-unverifiable-rule-scope-a-rule-the-scope-cannot-judge-is-reported-rendered-and-written) — a rule the scope cannot judge is reported, rendered, and written
 - [§DF-rule-authority-is-a-field](DF-rule-authority-is-a-field.md#df-rule-authority-is-a-field-a-findings-rule-authority-is-a-record-field-and-the-trial-sentence-selector-is-a-query-over-it) — a finding's rule authority is a record field, and the trial-sentence selector is a query over it
 - [§DF-narrowed-check-keeps-invalid-rule](DF-narrowed-check-keeps-invalid-rule.md#df-narrowed-check-keeps-invalid-rule-a-check-narrowed-to-a-rules-code-keeps-the-error-that-says-the-rule-could-not-run) — a check narrowed to a rule's code keeps the error that says the rule could not run
+- [§DF-section-citation-counts-in-rules](DF-section-citation-counts-in-rules.md#df-section-citation-counts-in-rules-a-resolved-citation-to-a-numbered-section-counts-in-chapter-rules) — a resolved citation to a numbered section counts in chapter rules
 
 ## Config, discovery, and workspaces
 

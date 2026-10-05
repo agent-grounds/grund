@@ -351,12 +351,12 @@ class ThisRepositoryTests(unittest.TestCase):
         own landed flips already set, so reading them moves neither bound. A
         window that moves here has caught something other than this defect.
 
-        The window opens at 0.16.0 and has no ceiling: every 0.16.0 ramp has
-        landed, from the bare-`grund` removal and the `unreached-declaration`
-        promotion to the seven that closed the empty window, and no pending
-        ramp names a later release (§FS-distribution.4.2.5, §FS-cli.4,
-        §FS-rules.checks.unreached-declaration)."""
-        self.assertEqual(ramps.release_window(self.claims), ("0.16.0", None))
+        The window opens at 0.16.0: every 0.16.0 ramp has landed, from the
+        bare-`grund` removal and the `unreached-declaration` promotion to the
+        seven that closed the empty window. Its ceiling is 0.18.0, the release
+        the section-citation ramp names (§FS-distribution.4.2.5, §FS-cli.4,
+        §FS-rules.checks.unreached-declaration, §FS-rules.7.8)."""
+        self.assertEqual(ramps.release_window(self.claims), ("0.16.0", "0.18.0"))
 
 
 if __name__ == "__main__":
