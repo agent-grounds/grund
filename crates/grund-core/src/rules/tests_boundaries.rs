@@ -160,7 +160,7 @@ fn sentence_front_end_returns_complete_parsed_rule_without_facts_or_diagnostics(
 /// hand-built facts, with no sentence text, Markdown or scanner record.
 #[test]
 fn logic_engine_evaluates_hand_built_rule_and_facts_without_parser_or_scanner() {
-    let diagnostics = evaluate(&[rule()], &[], &facts(Completeness::Complete));
+    let diagnostics = evaluate(&[rule()], &[], &facts(Completeness::Complete)).0;
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, "missing-citation");
     assert_eq!(diagnostics[0].line, Some(2));
@@ -174,7 +174,8 @@ fn logic_engine_owns_precedence_and_existing_report_channels() {
         std::slice::from_ref(&hard),
         std::slice::from_ref(&hard),
         &facts(Completeness::Complete),
-    );
+    )
+    .0;
     assert!(suppressed.is_empty());
 
     let recommended = ParsedRule {
@@ -221,10 +222,12 @@ fn markdown_adapter_and_second_producer_drive_the_same_engine_result() {
         sites: BTreeMap::new(),
     };
     let left = evaluate(&[rule()], &[], &markdown)
+        .0
         .into_iter()
         .map(|d| (d.code, d.message))
         .collect::<Vec<_>>();
     let right = evaluate(&[rule()], &[], &second)
+        .0
         .into_iter()
         .map(|d| (d.code, d.message))
         .collect::<Vec<_>>();
@@ -236,10 +239,16 @@ fn markdown_adapter_and_second_producer_drive_the_same_engine_result() {
 #[test]
 fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
     assert_eq!(
-        evaluate(&[rule()], &[], &facts(Completeness::Complete)).len(),
+        evaluate(&[rule()], &[], &facts(Completeness::Complete))
+            .0
+            .len(),
         1
     );
-    assert!(evaluate(&[rule()], &[], &facts(Completeness::Incomplete)).is_empty());
+    assert!(
+        evaluate(&[rule()], &[], &facts(Completeness::Incomplete))
+            .0
+            .is_empty()
+    );
 
     let fs = NodeKey("partial-fs".into());
     let ar = NodeKey("partial-ar".into());
@@ -277,6 +286,7 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
             SiteMeta {
                 label: "AR-partial".into(),
                 anchor: anchor("facts/spec.graph", 7),
+                newly_counted: false,
             },
         )]),
     };
@@ -300,7 +310,7 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
         cardinality: Cardinality::NONE,
         ..rule()
     };
-    let diagnostics = evaluate(&[rule(), exact_count, prohibition], &[], &partial);
+    let diagnostics = evaluate(&[rule(), exact_count, prohibition], &[], &partial).0;
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, "forbidden-citation");
 
@@ -314,7 +324,7 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
         },
         ..rule()
     };
-    let withheld = evaluate(std::slice::from_ref(&chapter_scoped), &[], &partial);
+    let withheld = evaluate(std::slice::from_ref(&chapter_scoped), &[], &partial).0;
     assert!(withheld.is_empty());
 
     // The same facts, declared complete: the silence above is the snapshot's
@@ -322,7 +332,7 @@ fn incomplete_fact_snapshot_suppresses_absence_and_count_conclusions() {
     // promotion put it on (§FS-rules.7).
     let mut complete = partial;
     complete.header.completeness = Completeness::Complete;
-    let reported = evaluate(&[chapter_scoped], &[], &complete);
+    let reported = evaluate(&[chapter_scoped], &[], &complete).0;
     assert_eq!(reported.len(), 1);
     assert_eq!(reported[0].code, "unreached-declaration");
 }
@@ -357,7 +367,7 @@ fn zero_citations_under_a_floor_above_one_is_a_cardinality_finding() {
         },
         ..rule()
     };
-    let diagnostics = evaluate(&[floor], &[], &facts(Completeness::Complete));
+    let diagnostics = evaluate(&[floor], &[], &facts(Completeness::Complete)).0;
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, "citation-cardinality");
     assert_eq!(
