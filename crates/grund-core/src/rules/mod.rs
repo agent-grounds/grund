@@ -33,4 +33,6 @@ mod tests_boundaries;
 #[cfg(test)]
 mod tests_index_contract;
 #[cfg(test)]
+mod tests_section_targets;
+#[cfg(test)]
 mod tests_unreached;
