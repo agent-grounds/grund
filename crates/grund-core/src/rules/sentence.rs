@@ -267,8 +267,9 @@ fn parse_predicate(
             ));
         };
         if name.is_empty() || name.trim() != name || name.chars().any(char::is_whitespace) {
+            // §FS-rules.3.5.1: append whitespace guidance to the released refusal prefix.
             return Err(error(
-                "chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter.",
+                "chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter. NAME forbids whitespace anywhere.",
             ));
         }
         let expects_plural = match spelling {

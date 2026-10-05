@@ -137,19 +137,40 @@ fn evaluate_one(
                 return;
             };
             for subject in subjects {
-                let count = index
-                    .chapters_of(&subject)
+                let chapters = index.chapters_of(&subject);
+                let count = chapters
                     .iter()
                     .filter(|row| facts.chapter[**row].2.eq_ignore_ascii_case(name))
                     .count();
                 if !rule.cardinality.contains(count) {
+                    // §FS-rules.7.2.1: show accepted direct chapters in source order,
+                    // retaining the complete released prefix (§FS-errors.3).
+                    let mut observed = chapters.to_vec();
+                    observed.sort_by_key(|row| {
+                        facts
+                            .nodes
+                            .get(&facts.chapter[*row].0)
+                            .map(|meta| meta.anchor.line)
+                    });
+                    let observed = if observed.is_empty() {
+                        "none".to_string()
+                    } else {
+                        observed
+                            .iter()
+                            .map(|row| {
+                                let (_, coordinate, display_name) = &facts.chapter[*row];
+                                format!("\"{coordinate}: {display_name}\"")
+                            })
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    };
                     push_node(
                         out,
                         facts,
                         &subject,
                         "chapter-cardinality",
                         format!(
-                            "{} has {count} {name} chapters; {authority} requires {}",
+                            "{} has {count} {name} chapters; {authority} requires {}; expected display name \"{name}\" (case-insensitive, not section handle); observed direct chapters: {observed}",
                             label(facts, &subject),
                             rule.cardinality.wording()
                         ),
