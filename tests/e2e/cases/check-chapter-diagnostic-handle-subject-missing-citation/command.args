@@ -1,0 +1,1 @@
+check {repo} --rule "The goal chapter of each BENCH must cite at least one GOAL." --only-rule

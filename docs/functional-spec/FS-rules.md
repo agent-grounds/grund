@@ -73,6 +73,11 @@ The four accepted subject spellings are:
 | `The NAME chapter of each KIND` | that named chapter of every local declaration of the kind that has one |
 | `ID.NAME[.NAME…]` | the one local named chapter with that exact coordinate |
 
+In chapter subjects, `NAME` selects the section handle, not its display name.
+For `## goal: Goal and hypothesis`, `The goal chapter of each BENCH` selects
+the `goal` coordinate even though its display name is `Goal and hypothesis`.
+Presence rules compare the other field ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)).
+
 A token exactly equal to a configured citable kind name is the quantified kind
 selector; any longer token must parse as a full ID under that kind's effective
 grammar. Named components require `[id] named_sections = true` and obey the
@@ -135,6 +140,12 @@ spelling of a ceiling of one. The only accepted families are the following.
 The subject may be a kind or exact declaration, not a chapter. The rule counts
 the subject declaration's accepted direct chapters whose display name is
 `NAME`. A count outside the stated interval produces `chapter-cardinality`.
+The comparison is case-insensitive and does not match section handles: a direct
+`## goal: Goal and hypothesis` chapter contributes zero to a presence rule for
+`goal`, while `## goal: Goal` contributes one. Presence `NAME` is a non-empty
+single token with no whitespace anywhere; the multi-word display name `Goal
+and hypothesis` cannot be used as a presence `NAME`. This restriction does not
+restrict authored display titles or change chapter-subject selection.
 This family is how a repository states the *count* of a chapter — `exactly
 one`, `at most N` — which no citation rule checks. A chapter-scoped citation
 rule reaches a declaration that has no such chapter on its own
@@ -225,6 +236,21 @@ least these exact rows:
 `FS-missing must cite at least one GOAL.` is syntactically valid and therefore
 is not a pre-scan refusal. After scanning it produces the exact resolution
 message `literal subject FS-missing does not resolve` ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
+
+#### 3.5.1 Presence-name whitespace refusal
+
+A presence `NAME` containing whitespace anywhere, including internal spaces,
+tabs, and Unicode whitespace, remains refused. The whole released reason,
+including its accepted-form example, remains a verbatim contiguous prefix under
+[§FS-errors.3](FS-errors.md#3-message-text); append the explanation:
+
+```text
+chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter. NAME forbids whitespace anywhere.
+```
+
+An empty `NAME` uses the same refusal. This adds guidance without admitting any
+new grammar. An ad-hoc refusal still writes nothing to stdout and exits 2
+([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 
 ## 4. Validation lifecycle
 
@@ -525,6 +551,28 @@ zero and surplus chapters:
 ```text
 <subject> has <actual> <name> chapters; <RULE-ID> requires <count>
 ```
+
+#### 7.2.1 Display-name comparison context
+
+Keep the complete message above as a verbatim contiguous prefix
+([§FS-errors.3](FS-errors.md#3-message-text)) and append:
+
+```text
+; expected display name "<name>" (case-insensitive, not section handle); observed direct chapters: <observed>
+```
+
+`<observed>` lists every accepted direct chapter in source order, each quoted
+as `"<coordinate>: <display name>"`, separated by `, `; when there are none it
+is `none`. Named coordinates expose the handle alongside the authored display
+name, so the reported example ends in `"goal: Goal and hypothesis"` rather
+than implying that the accepted chapter was not scanned. Nested descendants
+and rejected headings do not enter this direct-chapter list or the count.
+
+Text output and JSON `message` carry the same complete explanation. The code,
+subject-title location, authority, severity/channel, other finding fields and
+exit verdict stay unchanged. The rule guide states this display-name/handle
+distinction beside its presence and chapter-subject examples and explains the
+single-token presence `NAME` restriction using `goal: Goal and hypothesis`.
 
 ### 7.3 Outbound citation cardinality
 

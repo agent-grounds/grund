@@ -1,0 +1,1 @@
+docs/bench/BENCH-001-example-benchmark.md:1: error: BENCH-001-example-benchmark has 0 goal chapters; RULE-012-bench-goal requires exactly one; expected display name "goal" (case-insensitive, not section handle); observed direct chapters: "goal: Goal and hypothesis"

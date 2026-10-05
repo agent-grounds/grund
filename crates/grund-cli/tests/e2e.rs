@@ -8,6 +8,9 @@ mod case_runner;
 #[path = "support/chapter_rule_workflow.rs"]
 mod chapter_rule_workflow;
 
+#[path = "support/chapter_diagnostics.rs"]
+mod chapter_diagnostics;
+
 use case_runner::CaseKind::{E2e, Example};
 use case_runner::{
     assert_case_is_deterministic, assert_every_case_passed, discover_e2e_cases, discover_examples,
