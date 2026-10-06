@@ -79,7 +79,7 @@ fn external_argv_preserves_literals_stdin_copy_and_final_tree() {
         "external-literals",
         r#"["python3","{repo_copy}/probe.py","a b","","$HOME",";","{other}"]"#,
     );
-    let probe = "import pathlib, sys\nprint('|'.join(sys.argv[1:]))\nprint(sys.stdin.read().strip())\npathlib.Path(__file__).with_name('result.txt').write_text('done\\n', encoding='utf-8', newline='\\n')\n";
+    let probe = "import pathlib, sys\nsys.stdout.reconfigure(encoding='utf-8', newline='\\n')\nprint('|'.join(sys.argv[1:]))\nprint(sys.stdin.read().strip())\npathlib.Path(__file__).with_name('result.txt').write_text('done\\n', encoding='utf-8', newline='\\n')\n";
     fs::write(fixture.case.join("repo/probe.py"), probe).unwrap();
     fs::write(fixture.case.join("command.stdin"), "input\n").unwrap();
     fs::write(

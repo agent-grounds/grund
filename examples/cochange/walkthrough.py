@@ -80,6 +80,8 @@ def demonstrate(template, grund):
 
 
 if __name__ == '__main__':
+    # Emit the shared golden's exact UTF-8/LF bytes (§FS-examples.4).
+    sys.stdout.reconfigure(encoding='utf-8', newline='\n')
     parser = argparse.ArgumentParser()
     parser.add_argument('--repo', type=Path, default=Path(__file__).with_name('repo'))
     parser.add_argument('--grund', required=True)
