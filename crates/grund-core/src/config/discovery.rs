@@ -113,6 +113,7 @@ pub(crate) fn load_config(start: &Path) -> Result<Config> {
     // Zero-config (§GOAL-zero-config): the "project root" is the current working
     // directory, never the path passed on the command line. Reports stay relative to
     // `cli_base` (the resolved path arg) when `relative_paths` is off (§FS-config.3.6.1).
+
     // §FS-distribution.3.3.3: embedding scopes this fallback to its supplied root.
     let root = match super::call_scope::embedding_base() {
         Some(base) => fs::canonicalize(&base).unwrap_or(base),

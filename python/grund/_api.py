@@ -28,7 +28,8 @@ def _path(value: PathInput | None) -> tuple[str, bool]:
         raise PathEncodingError("paths must contain Unicode scalar values")
     if "\0" in text:
         raise ValueError("paths must not contain NUL")
-    return os.path.normpath(os.path.join(cwd, text)), explicit
+    # §FS-distribution.3.3.3: symlink/.. must reach engine filesystem resolution.
+    return os.path.join(cwd, text), explicit
 
 
 def _str(value: Any, name: str, optional: bool = False) -> None:
