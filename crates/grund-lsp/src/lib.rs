@@ -5,7 +5,7 @@ use grund_core::{
     DeclaredId, Finding, LspCitation, LspDeclaration, LspSnapshot, LspSnapshotOpts,
     LspSnapshotWithMetadata, LspStub, LspUsage, ShowFormat, ShowMode, ShowOpts,
     canonical_snapshot_path, citation_under_title, effective_config, lsp_hover_with_kind_title,
-    lsp_snapshot_with_metadata, lsp_title_hover_body, on_type_line_edits, show_with_overlays,
+    lsp_snapshot_with_completion, lsp_title_hover_body, on_type_line_edits, show_with_overlays,
 };
 use lsp_server::{Connection, Message, Notification, Request, Response};
 use lsp_types::{
@@ -31,8 +31,15 @@ pub fn run() -> Result<()> {
     let folders = initialize_folders(&initialize_params)?;
     let definition_link_support = client_supports_definition_links(&initialize_params);
     let mut server = Server::new(connection, folders, definition_link_support)?;
+    // §FS-lsp.1.6.1: advertise all initially loaded member introducers.
+    let mut capabilities = server_capabilities(server.trigger());
+    capabilities
+        .completion_provider
+        .as_mut()
+        .unwrap()
+        .trigger_characters = Some(server.completion_trigger_characters());
     let initialize_result = json!({
-        "capabilities": server_capabilities(server.trigger()),
+        "capabilities": capabilities,
         "serverInfo": {
             "name": "grund-lsp",
             "version": env!("CARGO_PKG_VERSION"),
@@ -59,6 +66,11 @@ fn server_capabilities(trigger: &str) -> ServerCapabilities {
             },
         )),
         hover_provider: Some(lsp_types::HoverProviderCapability::Simple(true)),
+        // §FS-lsp.1.6: ordinary completion, without resolve or snippets.
+        completion_provider: Some(lsp_types::CompletionOptions {
+            resolve_provider: Some(false),
+            ..Default::default()
+        }),
         definition_provider: Some(OneOf::Left(true)),
         references_provider: Some(OneOf::Left(true)),
         document_highlight_provider: Some(OneOf::Left(true)),
@@ -174,6 +186,7 @@ fn workspace_folder_paths(folders: &[WorkspaceFolder]) -> BTreeMap<Url, PathBuf>
 
 include!("index.rs");
 include!("workspace.rs");
+include!("completion.rs");
 
 struct Server {
     connection: Connection,
@@ -334,14 +347,14 @@ impl Server {
                 projects.extend(existing);
                 continue;
             }
-            match lsp_snapshot_with_metadata(LspSnapshotOpts {
+            match lsp_snapshot_with_completion(LspSnapshotOpts {
                 path: root.clone(),
                 // A discovered project root is the whole project, so its
                 // configured include paths govern just as for a root CLI run.
                 path_provided: true,
                 open_documents: overlays.clone(),
             }) {
-                Ok(snapshot) => projects.push(ProjectSnapshot::new(root, snapshot)),
+                Ok(snapshot) => projects.push(ProjectSnapshot::with_completion(root, snapshot)),
                 Err(err) => {
                     eprintln!("grund-lsp: scan of `{}` failed: {err:#}", root.display());
                     projects.extend(existing);
@@ -359,6 +372,8 @@ impl Server {
         let method = request.method.clone();
         let outcome = match method.as_str() {
             "textDocument/hover" => self.hover(request.params).and_then(to_value),
+            // §FS-lsp.1.6: completion requests share notification ordering.
+            "textDocument/completion" => self.completion(request.params).and_then(to_value),
             "textDocument/definition" => self.definition(request.params).and_then(to_value),
             "textDocument/references" => self.references(request.params).and_then(to_value),
             "textDocument/documentHighlight" => {

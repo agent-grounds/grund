@@ -79,11 +79,11 @@ An e2e fixture starts `grund check --watch` on a clean fixture (asserts silent f
 
 ## RM-lsp-completion-tab: LSP ID autocomplete accepted with Tab
 
-Implements the reserved `textDocument/completion` capability from [§FS-lsp.1.5](functional-spec/FS-lsp.md#15-capabilities-reserved-for-later), building on the shipped LSP server [§FS-lsp](functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server). The result is the expected editor loop: type a marker or trigger prefix, narrow to the ID, accept the selected completion with the editor's normal Tab binding, and get the canonical citation inserted.
+Implemented in source under [§FS-lsp.1.6](functional-spec/FS-lsp.md#16-declared-id-completion): type a marker or trigger prefix, narrow to the ID, and accept one canonical citation with the editor's acceptance key. Core and protocol acceptance coverage is present; execution and release validation remain pending. This does not assign release membership or timing.
 
 ### 1. What
 
-`grund-lsp` returns completion items for declared IDs in the document's resolved project config. Completion triggers include the configured marker prefix (`§F` under defaults), the configured typing trigger prefix (`$$F` under defaults), and a partially typed ID immediately after either prefix. Applying a completion replaces only the active prefix/token range with the configured marker plus the chosen ID; it does not touch surrounding prose, existing markdown links, or another citation on the same line. Completion details show the declaration title and source path, and items sort by exact prefix match, then kind order, then ID for deterministic output ([§FS-errors.4](functional-spec/FS-errors.md#4-determinism)). The server cannot own each client's Tab key, so the contract is that completion items use plain text edits and ranges that work with standard Tab acceptance in Helix, Neovim, Zed, VSCode, and eglot/lsp-mode; README snippets add the client-side Tab mapping only where the editor requires it.
+`grund-lsp` returns completion items for declared IDs in the document's resolved project config. Completion triggers include the configured marker prefix (`§F` under defaults), the configured typing trigger prefix (`$$F` under defaults), and a partially typed ID immediately after either prefix. Applying a completion replaces only the active prefix/token range with the configured marker plus the chosen ID; it does not touch surrounding prose, existing markdown links, or another citation on the same line. Completion details show the declaration title and source path, and items sort by exact prefix match, then kind order, then ID for deterministic output ([§FS-lsp.1.6.2](functional-spec/FS-lsp.md#162-candidates-resolution-and-ordering)). Clients own their acceptance keys: the [setup guide](user-facing/lsp.md#write-a-citation) records default bindings and optional mappings for Helix, Neovim, Zed, VSCode, and eglot/lsp-mode. Helix cycles with Tab and accepts with Enter.
 
 ### 2. Why now
 
@@ -95,7 +95,7 @@ LSP tests open a fixture workspace, request completions after `§F`, `$$F`, and 
 
 ## RM-lsp-trigger-conversion-fix: fix the LSP trigger conversion
 
-Fixes and hardens the shipped live trigger transform [§FS-lsp.1.4](functional-spec/FS-lsp.md#14-live-trigger-transform). The existing LSP milestone is shipped ([§FS-lsp](functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)), but the `$$` authoring path needs to be reliable before completion and normal editing can depend on it.
+Completion interaction coverage is implemented alongside [§FS-lsp.1.6.4](functional-spec/FS-lsp.md#164-snapshot-and-live-transform-interaction). Baseline investigation reproduced no generic trigger defect, so the shipped live transform [§FS-lsp.1.4](functional-spec/FS-lsp.md#14-live-trigger-transform) retains its behavior. The new request-sequence tests await execution; this is not a release commitment.
 
 ### 1. What
 

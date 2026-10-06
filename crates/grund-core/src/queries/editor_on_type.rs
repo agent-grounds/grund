@@ -139,7 +139,7 @@ pub fn on_type_line_edits(
 /// same reason — and it is called only once a rewrite is already in prospect, so an
 /// ordinary keystroke pays nothing (§GOAL-fast-feedback). Every document that is
 /// not a scanned `.py` returns the empty view without walking at all.
-fn docstring_content_at<'a>(
+pub(super) fn docstring_content_at<'a>(
     config: &Config,
     text: &'a str,
     line_index: usize,
@@ -174,7 +174,7 @@ fn docstring_content_at<'a>(
 /// `rewrite_file`'s own order — the fence first, then the directive, then the
 /// heading — because two spellings of one state machine would drift and the
 /// editor would start disagreeing with the command it previews.
-fn line_is_rewritable(
+pub(super) fn line_is_rewritable(
     config: &Config,
     text: &str,
     line_index: usize,

@@ -14,6 +14,9 @@ struct ProjectSnapshot {
     root: PathBuf,
     snapshot: LspSnapshot,
     kind_titles: BTreeMap<String, String>,
+    /// Cached core authoring context (§FS-lsp.1.6.4). Optional only for the
+    /// existing transport fixtures that construct navigation snapshots.
+    completion: Option<grund_core::LspCompletionContext>,
     /// The directories `snapshot.scanned_files` lie in, so a file created since
     /// the last scan is still recognized as this project's — a new file under a
     /// symlinked or parent-relative `[scan] include` has no root prefix and is
@@ -39,9 +42,17 @@ impl ProjectSnapshot {
             root,
             snapshot,
             kind_titles: metadata.kind_titles,
+            completion: None,
             scanned_dirs,
             index,
         }
+    }
+
+    /// Install authoring and navigation from the same scan (§FS-lsp.1.6.4).
+    fn with_completion(root: PathBuf, loaded: grund_core::LspSnapshotWithCompletion) -> Self {
+        let mut project = Self::new(root, loaded.metadata);
+        project.completion = Some(loaded.completion);
+        project
     }
 
     /// Whether this project's scan may need rebuilding for `path` (already
