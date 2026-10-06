@@ -237,9 +237,13 @@ impl WatchSubscriptions {
             .cloned()
             .collect::<Vec<_>>()
         {
-            self.watcher
-                .unwatch(&path)
-                .map_err(|err| format!("retiring watch for {}: {err}", path.display()))?;
+            // §FS-check.6.1.4: native backends can retire a deleted inode before
+            // reconciliation. Its obsolete subscription is already released.
+            if let Err(err) = self.watcher.unwatch(&path) {
+                if !matches!(err.kind, notify::ErrorKind::WatchNotFound) {
+                    return Err(format!("retiring watch for {}: {err}", path.display()));
+                }
+            }
             self.handles.remove(&path);
             watch_observe!(WatchObservation::Retired(path));
         }

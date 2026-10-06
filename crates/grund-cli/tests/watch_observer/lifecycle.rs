@@ -216,3 +216,20 @@ fn watch_runtime_notification_failure_is_fatal_two() {
     h.finish(2);
     assert!(String::from_utf8_lossy(&h.control.take_output()[1]).contains("native backend failed"));
 }
+
+#[test]
+fn watch_delete_during_scan_retires_dead_subscription() {
+    let _serial = crate::support::serial();
+    let f = Fixture::new();
+    let mut h = Harness::start(&f, None, None);
+    h.completed();
+    let release = h.pause("scanned");
+    f.write("src/main.rs", BAD);
+    h.stage("scanned");
+    std::fs::remove_dir_all(f.0.join("src")).unwrap();
+    release.send(()).unwrap();
+    assert_eq!(h.completed().status, 1);
+    let absent = f.ordinary();
+    h.matches(&absent);
+    h.stop(absent.status);
+}
