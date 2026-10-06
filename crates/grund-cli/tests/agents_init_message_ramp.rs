@@ -76,7 +76,7 @@ fn agents_init_messages() -> Vec<String> {
     for (name, agents) in [
         (
             "malformed",
-            "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v12)\n\ncurrent managed block\n",
+            "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v14)\n\ncurrent managed block\n",
         ),
         ("outdated", "## Grounding with grund (v3)\n\nlegacy block\n"),
         (
@@ -116,10 +116,10 @@ fn the_agents_init_messages_are_the_five_final_templates() {
         agents_init_messages(),
         vec![
             "repo maintenance: malformed grund managed block: missing `<!-- END GRUND MANAGED BLOCK -->` (does not affect citation validity)",
-            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v12 (does not affect citation validity)",
-            "repo maintenance: unsupported grund init block v999 — this grund supports v12 (does not affect citation validity)",
+            "repo maintenance: outdated grund init block v3 — run `grund init` to update to v14 (does not affect citation validity)",
+            "repo maintenance: unsupported grund init block v999 — this grund supports v14 (does not affect citation validity)",
             "repo maintenance: stale grund init block: clickable citations differ from grund.toml — run `grund init` to refresh (does not affect citation validity)",
-            "repo maintenance: missing grund init block v12 — run `grund init` to install it (does not affect citation validity)",
+            "repo maintenance: missing grund init block v14 — run `grund init` to install it (does not affect citation validity)",
         ]
     );
 }

@@ -179,3 +179,13 @@ until = "the check specification is partitioned into recognition, reporting, fin
 reason = """
 Missing boundary: citation recognition, command reporting, the finding catalog and the watch points extended for issue 473 still share one declaration. Splitting them into separate declarations requires a mapped migration of their stable numbered section IDs and callers; that migration is outside the specification-only contracts for issues #483 and #473. This entry records that existing debt while the configured-marker recognition and watch points are pinned.
 """
+[[exceptions]]
+path = "crates/grund-core/src/testing.rs"
+match = "exact"
+rules = ["tests"]
+kind = "deferred"
+max_accepted = { value = 600, unit = "lines" }
+until = "the fixture-root helpers (test_root, uncovered_base, physical_test_root) leave for a sibling module beside testing.rs"
+reason = """
+Shared fixtures for every component's tests (§AR-core-module-layout.1.2), past the soft budget before this entry. It is edited only when a shared fixture moves with the code it mirrors — here current_marker() following the managed block's version bump (§FS-init.2.3.7.1), a one-line change no split would have avoided. Missing boundary: the fixture-root discovery of §AR-ci.10.3 (test_root, temp_candidates, uncovered_base, physical_test_root) is a self-contained concern every suite calls but none of the config or signature builders touch; it can become its own testing module, which needs testing.rs to become a directory module first.
+"""

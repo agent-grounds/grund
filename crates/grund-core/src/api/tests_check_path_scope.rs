@@ -252,7 +252,7 @@ fn the_agent_entrypoint_finding_survives_the_report_filter() {
     let root = widget_repo("the_agent_entrypoint_finding_survives_the_report_filter");
     write(
         &root.join("AGENTS.md"),
-        "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v12)\n\ncurrent managed block\n",
+        "<!-- BEGIN GRUND MANAGED BLOCK -->\n## Grounding with grund (v14)\n\ncurrent managed block\n",
     );
 
     let run = check_run(&root.join("src/lib.rs"), false);

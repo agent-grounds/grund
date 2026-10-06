@@ -379,7 +379,7 @@ fn valid_rules_render_exact_sentences_in_a_rule_enabled_managed_section() {
     let output = run(&root, &["init", &root_arg]);
     assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
     let agents = fs::read_to_string(root.join("AGENTS.md")).expect("rendered AGENTS.md");
-    assert!(agents.contains("Grounding with grund (v13)"));
+    assert!(agents.contains("Grounding with grund (v15)"));
     let directions = agents.find("### Citation directions").expect("directions");
     let rules = agents.find("### Chapter rules").expect("rules section");
     let clickable = agents[rules..]
@@ -492,7 +492,7 @@ fn a_project_without_rule_opt_in_keeps_the_old_check_bytes() {
     let output = run(&root, &["init", &root_arg]);
     assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
     let agents = fs::read_to_string(root.join("AGENTS.md")).expect("rendered AGENTS.md");
-    assert!(agents.contains("Grounding with grund (v12)"));
+    assert!(agents.contains("Grounding with grund (v14)"));
     assert!(!agents.contains("### Chapter rules"));
 
     let output = run(&root, &["check", ".", "--only", "agents-init"]);

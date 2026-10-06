@@ -330,7 +330,7 @@ fn init_emits_size_guidance_and_migrates_v8_in_one_command() {
     let stale = run(&v8_fixture, &["check", "--only=agents-init"]);
     assert_eq!(stale.status.code(), Some(1));
     assert!(stdout(&stale).contains("outdated grund init block v8"));
-    assert!(stdout(&stale).contains("run `grund init` to update to v12"));
+    assert!(stdout(&stale).contains("run `grund init` to update to v14"));
 
     let fresh = repo.path().join("fresh");
     fs::create_dir_all(&fresh).expect("create init target");
@@ -340,7 +340,7 @@ fn init_emits_size_guidance_and_migrates_v8_in_one_command() {
     );
     assert_success(&initialized);
     let agents = fs::read_to_string(fresh.join("AGENTS.md")).expect("read fresh AGENTS.md");
-    assert!(agents.contains("## Grounding with grund (v12)"));
+    assert!(agents.contains("## Grounding with grund (v14)"));
     assert!(agents.contains("grund list --size=words --top 10"));
     let config = fs::read_to_string(fresh.join("grund.toml")).expect("read fresh config");
     assert!(!config.contains("lead_size_warning"));
@@ -363,6 +363,6 @@ fn init_emits_size_guidance_and_migrates_v8_in_one_command() {
     let agents = fs::read_to_string(migrated.join("AGENTS.md")).expect("read migrated AGENTS.md");
     assert!(agents.starts_with("before\n"));
     assert!(agents.ends_with("after\n"));
-    assert!(agents.contains("## Grounding with grund (v12)"));
+    assert!(agents.contains("## Grounding with grund (v14)"));
     assert!(agents.contains("grund list --size=words --top 10"));
 }

@@ -85,9 +85,9 @@ fn unmarked_heading_is_an_error_that_names_the_release_it_landed_in() {
 /// appears, and the managed agent block is the mechanical repair surface that
 /// moves to the current schema under `grund init`.
 ///
-/// §FS-init.2.3.7.1: v12 is the current base schema and every earlier block is
+/// §FS-init.2.3.7.1: v14 is the current base schema and every earlier block is
 /// repaired by the same one-command `grund init` re-render — the fixture starts
-/// at v9 and the re-rendered block reads v12, still carrying the in-body heading
+/// at v9 and the re-rendered block reads v14, still carrying the in-body heading
 /// policy v10 is the version that added.
 #[test]
 fn unmarked_heading_guidance_moves_v9_to_the_current_block_without_a_config_bump() {
@@ -122,7 +122,7 @@ fn unmarked_heading_guidance_moves_v9_to_the_current_block_without_a_config_bump
     let agents = fs::read_to_string(root.join("AGENTS.md")).expect("read AGENTS.md");
     assert!(agents.starts_with("before\n"), "{agents}");
     assert!(agents.ends_with("after\n"), "{agents}");
-    assert!(agents.contains("## Grounding with grund (v12)"), "{agents}");
+    assert!(agents.contains("## Grounding with grund (v14)"), "{agents}");
     assert!(
         agents.contains("Every non-declaration heading inside a Markdown declaration body"),
         "{agents}"
