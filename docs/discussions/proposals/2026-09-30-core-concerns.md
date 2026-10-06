@@ -23,6 +23,25 @@ So the evidence here is what is public and dated rather than what is at hand:
 
 **Rejected: a sibling evidence file.** This repository already has the shape — `2026-09-22-grund-core-public-surface-inventory.md` is carried beside its proposal, declares no ID and states no status, and `docs/discussions/README.md` describes the arrangement. It is the better form on the merits, and it is rejected here for one reason that is not about form: it would publish the agora. What is lost is that a reader cannot re-read the argument behind an entry, only its outcome; what is kept is that every claim below has a public address.
 
+### 1.3 Where each part of the plan stands
+
+Reconciled on 2026-10-07 under `agent-grounds/grund#451`, against the releases that actually shipped ([§DISC-core-concerns.9.8](2026-09-30-core-concerns.md#98-what-shipped)). Every claim this document makes is in one of four standings, and a reader picking up one of the tickets of `agent-grounds/grund#347` should read it here before reading it below:
+
+| Standing | What | Evidence |
+|---|---|---|
+| Ruled | `folders` and `files` are lists on every row, and both may appear on one row | the owner's comment of [2026-09-30T09:05:23Z](https://github.com/agent-grounds/grund/issues/347); [§DISC-core-concerns.6.4](2026-09-30-core-concerns.md#64-amended-after-the-verdict-v-a08-and-v-a14) |
+| Ruled | v2 has no `include`: the scan set is the union of every row's places | the same comment; [§DISC-core-concerns.6.4](2026-09-30-core-concerns.md#64-amended-after-the-verdict-v-a08-and-v-a14) |
+| Ruled | a kind's rules render at the deepest directory containing all of its places | the same comment; [§DISC-core-concerns.6.4](2026-09-30-core-concerns.md#64-amended-after-the-verdict-v-a08-and-v-a14) |
+| Ruled | the four disputes V-D01 to V-D04 | [§DISC-core-concerns.6.3](2026-09-30-core-concerns.md#63-ruled) |
+| Ruled | the declaration form is spelled `form`, never `body` | the vocabulary merged in `agent-grounds/grund#359`; [§DISC-core-concerns.3.7](2026-09-30-core-concerns.md#37-fields-and-form-the-type-of-a-kind) |
+| Ruled | the envelope — version, identity, workspace — sits outside the three concerns | [§FS-config.concerns](../../functional-spec/FS-config.md#concerns-every-key-belongs-to-exactly-one-concern); [§DISC-core-concerns.6.2](2026-09-30-core-concerns.md#62-corrected) |
+| Permanent | every v1 config keeps its reader and its meaning, whatever v2 becomes | [§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning) |
+| Permanent | the intermediate v1 spellings the draft discarded (`grounding`, `values = "<chapter>"`, `links`) are not added as bridge aliases: they never shipped, so retiring them owes nothing, and any spelling admitted to v1 would be permanent | [§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning) |
+| Shipped | Phase 0, and Terms enforcement (`agent-grounds/grund#290`), in `0.15.0`; the bare-`grund` removal (`agent-grounds/grund#301`) in `0.16.0` | [§DISC-core-concerns.9.8](2026-09-30-core-concerns.md#98-what-shipped) |
+| Open | the nine choices of [§DISC-core-concerns.10.1](2026-09-30-core-concerns.md#101-the-five-decisions-the-2026-09-30-proposal-leaves-open) and [§DISC-core-concerns.10.2](2026-09-30-core-concerns.md#102-the-five-decisions-the-plan-makes-one-way) that are not settled, each with the ticket that rules on it | [§DISC-core-concerns.10](2026-09-30-core-concerns.md#10-what-this-discussion-still-has-to-settle) |
+
+What is open stays open here until its owner ticket rules, and where that ruling and this document disagree the ruling wins and this document is corrected with it. Nothing in this reconciliation releases a behaviour ticket: each of `agent-grounds/grund#453` to `agent-grounds/grund#468` keeps its own discussion gate, and the schema view proposed as `grund schema` (`agent-grounds/grund#463`) is a separate command rather than a `config show` renderer, specified nowhere here.
+
 ## 2. Context — what is not separated today
 
 ### 2.1 The spec states one axis and not the other
@@ -188,7 +207,7 @@ Three of the words were already taken, and settling them is the substance of tha
 
 - A `concerns` chapter beside `principle`, stating the cut and the unit rule, with a derived **key → concern inventory** recorded with the decision that argues it. Shipped.
 - [§FS-config.3](../../functional-spec/FS-config.md#3-keys) retitled *Schema* → *Keys*, so the word names the concern. Shipped.
-- Every key section states its concern in its first sentence. The sections are not reordered while v1 is the file's only shape; [§DISC-core-concerns.9.3](2026-09-30-core-concerns.md#93-phase-2--0160-the-v2-format) reorders them with the v2 layout.
+- Every key section states its concern in its first sentence. The sections are not reordered while v1 is the file's only shape; [§DISC-core-concerns.9.3](2026-09-30-core-concerns.md#93-phase-2-the-v2-format) reorders them with the v2 layout.
 - The language table, fields and `form`, as [§DISC-core-concerns.3.6](2026-09-30-core-concerns.md#36-language-one-model-under-every-spelling) and [§DISC-core-concerns.3.7](2026-09-30-core-concerns.md#37-fields-and-form-the-type-of-a-kind) describe them, when Phase 2 is taken.
 
 ### 4.3 One strength vocabulary
@@ -350,6 +369,8 @@ Three further points were ruled in the same comment and are recorded here beside
 
 Every case the format admits, in one file. The comments are part of the example: they say which case each row is.
 
+The example spells what is ruled ([§DISC-core-concerns.1.3](2026-09-30-core-concerns.md#13-where-each-part-of-the-plan-stands)) and what is still proposed alike. Two lines of it are proposals awaiting their owner tickets: how the `code` row is marked, and the default of `[presentation] rules`, whose comments name the decision and its owner.
+
 ```toml
 grund_config_version = 2
 project_name = "example"                      # envelope: identity and version live outside the concerns
@@ -449,6 +470,7 @@ citable = false
 folders = ["docs"]
 files = ["README.md", "AGENTS.md"]
 [schema.kinds.code]                           # the complement place; with no list, the config root
+                                              # — marked by its name pending #457 (§10.1 decision 1)
 citable = false
 folders = ["crates"]
 
@@ -479,7 +501,7 @@ TICKET = "warn"                               # must | warn; a load error withou
 description = "One line beside this project in workspace member lists"
 trigger = "$$"
 conversation = "link"
-rules = "home"                                # home | root — open, §10.1 decision 3
+rules = "home"                                # home | root — open, §10.1 decision 3, owner #460
 [presentation.kinds.FS]
 title = "What: behavior, requirements, and constraints"
 [presentation.fmt]
@@ -496,11 +518,11 @@ A row with no places, or the absence of a `code` row altogether, means the confi
 
 | Question | Proposed answer |
 |---|---|
-| A place inside another row's place (`docs/spec/core` under `page`'s `docs`) | The deepest place wins, and a `files` entry is deeper than any folder. The same path on two rows is a load error. Today nesting sends the file to the homeless kind ([§FS-config.3.9.2](../../functional-spec/FS-config.md#392-the-homeless-kind)); v1 keeps that. |
+| A place inside another row's place (`docs/spec/core` under `page`'s `docs`) | Pending `agent-grounds/grund#457` ([§DISC-core-concerns.10.1](2026-09-30-core-concerns.md#101-the-five-decisions-the-2026-09-30-proposal-leaves-open), decision 2). The deepest place wins, and a `files` entry is deeper than any folder. The same path on two rows is a load error. Today nesting sends the file to the homeless kind ([§FS-config.3.9.2](../../functional-spec/FS-config.md#392-the-homeless-kind)); v1 keeps that. |
 | Misplaced declarations | A declaration of kind `K` lives in one of `K`'s places, or in `code`. |
 | The index of a citable kind | One per folder, listing that folder's declarations. |
 | The stub for a source declaration | A stub in any one of the kind's folders. |
-| Project map | One row per kind, linking every place. `code` gains a row. |
+| Project map | One row per kind, linking every place. `code` gains a row — under the name `agent-grounds/grund#457` settles ([§DISC-core-concerns.10.1](2026-09-30-core-concerns.md#101-the-five-decisions-the-2026-09-30-proposal-leaves-open), decision 1). |
 | Subjects in the managed block | `Each file in **tests/e2e/** or **tests/integration/**`; `Each source file in **crates/**` replaces *outside the Project map*. |
 | `grund config migrate` | Sorts each v1 `include` entry into `folders` or `files` by what is on disk, drops entries that are homes, and reports entries that do not exist. |
 
@@ -571,11 +593,13 @@ A `code` row carrying `folders` and a Project map row crosses three specified po
 - [§FS-config.3.9.2.1](../../functional-spec/FS-config.md#3921-declaring-it) — that shape **is** the declaration of the homeless kind, rather than a key on it.
 - [§FS-config.3.9.2.5](../../functional-spec/FS-config.md#3925-no-project-map-row-and-the-last-directions-row) — it gets no Project map row.
 
-All three describe v1 exactly and stay true of it. In v2 the row is declared by its reserved name instead, carries places like any other, and appears in the map like any other — which is what makes what a place must cite renderable beside it.
+All three describe v1 exactly and stay true of it. In v2 the row is declared by whatever marks it — its reserved name, if `agent-grounds/grund#457` adopts [§DISC-core-concerns.8.2](2026-09-30-core-concerns.md#82-fs-config3452-is-strengthened-not-crossed) — carries places like any other, and appears in the map like any other — which is what makes what a place must cite renderable beside it.
 
 ### 8.2 [§FS-config.3.4.5.2](../../functional-spec/FS-config.md#3452-code-is-reserved-to-the-homeless-kind) is strengthened, not crossed
 
-[§FS-config.3.4.5.2](../../functional-spec/FS-config.md#3452-code-is-reserved-to-the-homeless-kind) reserves the name `code` to the homeless kind. In v2 that reservation becomes the row's identity: `code` is the row that holds source declarations and catches what no place claims, and v1's renaming of the homeless kind has no v2 spelling — `[presentation.kinds.code] title` says what it covers instead. The must-cite finding does not name the kind, so a renamed v1 complement migrates with its text intact. This is the same point read as a definition rather than as a prohibition, which is why it is listed apart from the three above.
+[§FS-config.3.4.5.2](../../functional-spec/FS-config.md#3452-code-is-reserved-to-the-homeless-kind) reserves the name `code` to the homeless kind. What marks the complement row in v2 is open, and its owner is `agent-grounds/grund#457` ([§DISC-core-concerns.10.1](2026-09-30-core-concerns.md#101-the-five-decisions-the-2026-09-30-proposal-leaves-open), decision 1). **If** it adopts the reserved name, that reservation becomes the row's identity: `code` is the row that holds source declarations and catches what no place claims, and v1's renaming of the homeless kind has no v2 spelling — `[presentation.kinds.code] title` says what it covers instead. The must-cite finding does not name the kind, so a renamed v1 complement migrates with its text intact, and this is the same point read as a definition rather than as a prohibition, which is why it is listed apart from the three above. If it chooses a key on the row instead, the point is neither strengthened nor crossed, and this section is rewritten with that ruling.
+
+Either way the v1 complement is untouched: it is recognized by its shape, non-citable with no home, and may be renamed, under its own meaning, forever ([§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)).
 
 ### 8.3 The two `exclude` keys mean opposite things
 
@@ -595,19 +619,28 @@ The `[scan] exclude` fix of [§DISC-core-concerns.8.3](2026-09-30-core-concerns.
 
 ## 9. The releases
 
-Every phase lands as one or more pull requests, spec first. `0.15.0` is the next minor and already carries four expiring ramps and the public-surface notices of `DISC-grund-core-public-surface`; the phases below are laid on top of that schedule.
+Every phase lands as one or more pull requests, spec first. The phases below were first written against `0.15.0`, `0.16.0` and `0.17.0`; `0.15.0`, `0.16.0` and `0.16.1` have since shipped, and what they carried is [§DISC-core-concerns.9.8](2026-09-30-core-concerns.md#98-what-shipped), not the phase titles. The phases are therefore named by what they carry rather than by a release, keeping their numbers so that every citation of them still resolves, and the releases each is now planned for are the ledger of [§DISC-core-concerns.9.9](2026-09-30-core-concerns.md#99-the-deprecation-ledger). A planned release is a proposal, not a deadline: no phase after Phase 0 is released for implementation by this document, and each lands only when its tickets are.
 
-### 9.1 Phase 0 — `0.15.0`: the spec, no behavior change
+### 9.1 Phase 0: the spec, no behavior change
+
+Shipped in `0.15.0`, without the `[scan] exclude` refusal ([§DISC-core-concerns.9.8](2026-09-30-core-concerns.md#98-what-shipped)).
+
 
 The vocabulary of [§DISC-core-concerns.4.1](2026-09-30-core-concerns.md#41-vocabulary), the `concerns` chapter with its derived key → concern inventory, the [§FS-config.3](../../functional-spec/FS-config.md#3-keys) retitle, the unit rule, this document, and a decision record for the concerns and one for the engine records. No key, finding or byte moves; the gate is `grund check --full` green. The `[scan] exclude` refusal of [§DISC-core-concerns.8.3](2026-09-30-core-concerns.md#83-the-two-exclude-keys-mean-opposite-things) ships separately as a bug fix, because it is the one item of the phase that changes a verdict.
 
-### 9.2 Phase 1 — `0.15.0`: the engine, no user-visible change
+### 9.2 Phase 1: the engine, no user-visible change
 
-`Project`, `Run` and `Compiled` split out of `Config`, with the v1 reader as `config/v1.rs` lowering into them; the checker split into `conform` and `judge`; the three leaks of [§DISC-core-concerns.2.7](2026-09-30-core-concerns.md#27-the-engine-already-reads-by-concern) closed by signature; `Findings` → `Catalog`, and `Row { place, kind }` with `places()` and `kinds()` over one vector. `Config` stays as a façade, and a component is finished when it no longer names it — a list that only shrinks, held the way [§AR-system.4](../../architecture/README.md#4-dependency-direction)'s upward reads are held. The public names of [§DISC-core-concerns.5.4](2026-09-30-core-concerns.md#54-the-public-surface) take the deprecation path.
+Not shipped. Planned for `0.17.0`, the notice release of [§DISC-core-concerns.9.9](2026-09-30-core-concerns.md#99-the-deprecation-ledger), as `agent-grounds/grund#453` and `agent-grounds/grund#454`.
+
+
+`Project`, `Run` and `Compiled` split out of `Config`, with the v1 reader as `config/v1.rs` lowering into them; the checker split into `conform` and `judge`; the three leaks of [§DISC-core-concerns.2.7](2026-09-30-core-concerns.md#27-the-engine-already-reads-by-concern) closed by signature; `Findings` → `Catalog`, and `Row { place, kind }` with `places()` and `kinds()` over one vector. `Config` stays as a façade, and a component is finished when it no longer names it — a list that only shrinks, held the way [§AR-system.4](../../architecture/README.md#4-dependency-direction)'s upward reads are held. The public names of [§DISC-core-concerns.5.4](2026-09-30-core-concerns.md#54-the-public-surface) take the deprecation path, their notes naming the removal [§DISC-core-concerns.9.7](2026-09-30-core-concerns.md#97-what-a-deprecation-note-may-name) allows.
 
 Gate: every existing test and e2e case byte-identical, no new upward read, and the derived concern inventory of Phase 0 regenerated from the new signatures and unchanged.
 
-### 9.3 Phase 2 — `0.16.0`: the v2 format
+### 9.3 Phase 2: the v2 format
+
+Not shipped. Planned for `0.18.0`, as `agent-grounds/grund#455` to `agent-grounds/grund#462`, beside the section-citation ramp `0.16.1` already names for that release ([§FS-rules.7.8](../../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)).
+
 
 The v2 reader (`config/v2.rs`) with keyed rows and fields, measure tables, the envelope, the language table, `[rules.resolution]`, `[presentation.kinds.<name>]`, `anchors` and `links`; the defaults epoch; fields and `form`; `grund config migrate [--to 2] [--write]`; `init` writing v2 and only what differs from a default; the run flags `--format` and `--path-base`; one caution on a v1 config naming `migrate` and no release ([§FS-config.1.2.1](../../functional-spec/FS-config.md#121-no-release-removes-the-agents-location)'s shape); and [§FS-config.3](../../functional-spec/FS-config.md#3-keys) reordered by concern with the v1 key sections under a chapter the reader keeps forever.
 
@@ -615,17 +648,22 @@ The two changes of [§DISC-core-concerns.7.2](2026-09-30-core-concerns.md#72-pla
 
 Gate: one e2e case per v2 table and one migration case per row of [§DISC-core-concerns.7.5](2026-09-30-core-concerns.md#75-what-has-no-v2-spelling-and-how-migrate-reports-it); every v1 case unchanged; `init` on an empty tree writes a v2 file that `check` passes; and this repository's own config migrates with an identical report.
 
-### 9.4 Phase 3 — `0.17.0`: adoption, and the last removals before `1.0`
+### 9.4 Phase 3: adoption, and the last removals before `1.0`
 
-This organization migrates, `grund` first; grund's own fields arrive (`FS.terms`, `AR.placement` and `AR.terms` with `after`, `status` on `DF` and `DA` at `warn` first); and the public-surface removals of the `0.15.0` notices land. Each repository's CI pin moves deliberately, which is what lets every repository move when it chooses.
+Not shipped. Adoption is planned for `0.18.x` and the removals for `0.19.0` ([§DISC-core-concerns.9.9](2026-09-30-core-concerns.md#99-the-deprecation-ledger)).
+
+This organization migrates, `grund` first (`agent-grounds/grund#464`, then `agent-grounds/grund#465`); grund's own fields arrive (`FS.terms`, `AR.placement` and `AR.terms` with `after`, and `status` on `DF` and `DA` at `warn` first if `agent-grounds/grund#464` adopts it, [§DISC-core-concerns.10.2](2026-09-30-core-concerns.md#102-the-five-decisions-the-plan-makes-one-way)); and the public-surface removals land in the minor their notes named (`agent-grounds/grund#466`). A ramp from warning to error that adoption chooses names a release no earlier than the minor after its notice. Each repository's CI pin moves deliberately, which is what lets every repository move when it chooses.
 
 ### 9.5 `1.0.0`
 
-`1.0.0` cuts on `0.17.x` with no new surface. The v2 format is the `1.0` format and changes afterwards only by the deprecation path; every v1 config keeps loading forever under its own meaning; the user-visible surface of [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered) and the embedding surface of [§FS-distribution.3.1](../../functional-spec/FS-distribution.md#31-rust-grund-core-crate) are frozen; and the pre-`1.0` licence of [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise) has expired. What `1.0` does not promise: that `grund.toml` stops accepting new keys ([§FS-config.5.1](../../functional-spec/FS-config.md#51-new-keys-are-not-a-new-version)), or that the rule language is finished.
+`1.0.0` cuts on the last minor's patch line with no new surface: planned from `0.19.x` (`agent-grounds/grund#467`). The v2 format is the `1.0` format and changes afterwards only by the deprecation path; every v1 config keeps loading forever under its own meaning; the user-visible surface of [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered) and the embedding surface of [§FS-distribution.3.1](../../functional-spec/FS-distribution.md#31-rust-grund-core-crate) are frozen; and the pre-`1.0` licence of [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise) has expired. What `1.0` does not promise: that `grund.toml` stops accepting new keys ([§FS-config.5.1](../../functional-spec/FS-config.md#51-new-keys-are-not-a-new-version)), or that the rule language is finished.
 
 `1.0` is the v2 epoch, and that is the reason the phases are ordered as they are: renaming a format after `1.0` would owe an alias for every key.
 
-### 9.6 Phase 4 — after `1.0`: the law in the graph
+### 9.6 Phase 4: after `1.0`, the law in the graph
+
+Not shipped, and placed after `1.0` pending `agent-grounds/grund#468` ([§DISC-core-concerns.10.2](2026-09-30-core-concerns.md#102-the-five-decisions-the-plan-makes-one-way), decision 4).
+
 
 Chapter rules ([§DF-chapter-rules](../../decisions/functional/DF-chapter-rules.md#df-chapter-rules-chapter-rules-are-grounded-controlled-english-declarations-over-producer-neutral-facts)) are already the grounded spelling of a rule: an ID, a sentence, a rationale that cites its goal. Once the rule grammar admits place subjects — which [§FS-rules.2](../../functional-spec/FS-rules.md#2-subject-selectors) refuses today — `[rules.citations]` and grounding can be written as rule declarations, and the tables become sugar that lowers into the same constraints, turning [§FS-rules.6](../../functional-spec/FS-rules.md#6-semantic-deduplication) from a deduplication into a definition. Additive, so it needs no version and can follow `1.0`.
 
@@ -635,33 +673,63 @@ A deprecation note is written only in the release that actually ships the replac
 
 The requirement's floor is the next minor: release `N` ships the new form beside the old, naming the release the old stops working in, and the old dies no earlier than `N+1` ([§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). Two minors is longer than that floor and never shorter, and the reason is the release guard rather than a preference. `is removed in <release>` is a pending clause in the guard's closed vocabulary ([§FS-distribution.4.2.3](../../functional-spec/FS-distribution.md#423-the-vocabulary-is-closed)), and the guard requires the version being cut to be below every release a pending removal in the tree names, on every publication path ([§FS-distribution.4.2.6](../../functional-spec/FS-distribution.md#426-every-publication-path-runs-the-release-guard)). A note naming `N+1` makes `N+1` unpublishable until every removal it names is ready, while the old names are still in internal use until adoption finishes; the arithmetic comes from the pending removals, not from how much `N+1` carries.
 
+### 9.8 What shipped
+
+Three releases have shipped since this plan was proposed, and this is what each carried of it, read from their tags and [`docs/changelog.md`](../../changelog.md), not from the phase titles:
+
+- **`0.15.0`, 2026-10-01.** Phase 0 without the bug fix: the concern vocabulary ([§FS-terms.terms.9](../../functional-spec/FS-terms.md#terms9-the-configurations-concerns)), the `concerns` chapter with its derived inventory ([§FS-config.concerns](../../functional-spec/FS-config.md#concerns-every-key-belongs-to-exactly-one-concern)), the [§FS-config.3](../../functional-spec/FS-config.md#3-keys) retitle, this document, and the two decision records. Terms enforcement shipped beside it as [§RULE-terms](../../rules/RULE-terms.md#rule-terms-each-fs-must-have-exactly-one-terms-chapter) (`agent-grounds/grund#290`). None of Phase 1 shipped, and neither did any deprecation note this plan or [§DISC-grund-core-public-surface.6.4](2026-09-22-grund-core-public-surface.md#64-the-releases) placed in `0.15.0`. Every ramp that promised a change in `0.15.0` was moved to `0.16.0` instead.
+- **`0.16.0`, 2026-10-04.** The ramps `0.15.0` moved closed, among them bare `grund` (`agent-grounds/grund#301`), which no longer runs `check .`, and the `refs` exit-code ramp, which took `REFS_QUERY_FAILURE_WARNING` out of the crate root with no notice release ([§DISC-grund-core-public-surface.6.3](2026-09-22-grund-core-public-surface.md#63-frontend-only-seams-left-public-but-hidden)). Nothing of v2 shipped.
+- **`0.16.1`, 2026-10-05.** A resolved section citation counts in chapter rules, and what it newly fails is a warning until `0.18.0` ([§FS-rules.7.8](../../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180)). It is not part of this plan, and [§DISC-core-concerns.9.9](2026-09-30-core-concerns.md#99-the-deprecation-ledger) plans around it.
+
+The `[scan] exclude` refusal of [§DISC-core-concerns.8.3](2026-09-30-core-concerns.md#83-the-two-exclude-keys-mean-opposite-things) (`agent-grounds/grund#452`) landed on `main` after `0.16.1`, so it ships in the next cut, as a bug fix outside every phase.
+
 ### 9.9 The deprecation ledger
 
 Every surface this plan deprecates has one row in the table below: the surface, the release whose note deprecates it (**Notice**), the release that removes it (**Removal**), and whether the notice has shipped (**Status**, `planned` or `shipped`). Notice and Removal are release versions; a row's removal is at least one minor after its notice ([§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)) and, by [§DISC-core-concerns.9.7](2026-09-30-core-concerns.md#97-what-a-deprecation-note-may-name), two; and a row whose notice is at or below the last shipped release is marked `shipped`, because a planned notice cannot be placed in a release that is already out.
 
+| Surface | Notice | Removal | Status |
+|---|---|---|---|
+| `Config`, `KindConfig`, `CitationRules` and `Findings` at the `grund-core` root ([§DISC-core-concerns.5.4](2026-09-30-core-concerns.md#54-the-public-surface)), beside the engine records of `agent-grounds/grund#453` | `0.17.0` | `0.19.0` | planned |
+| the integrations names [§DISC-grund-core-public-surface.6.4](2026-09-22-grund-core-public-surface.md#64-the-releases) deprecates, behind their facade, as `agent-grounds/grund#466` refreshes their membership | `0.17.0` | `0.19.0` | planned |
+
+No row is shipped yet, and no notice from this plan has appeared in any release. The releases those rows sit in, with what else each carries:
+
+| Release | What it carries |
+|---|---|
+| `0.16.x` patches | No notice from this plan. |
+| `0.17.0` — notice | The engine records (`agent-grounds/grund#453`, `agent-grounds/grund#454`) ship beside the old names, and the refreshed integrations names get their facade (`agent-grounds/grund#466`). Every old name carries a note naming `0.19.0`. |
+| `0.18.0` — v2 | The v2 reader and its semantics (`agent-grounds/grund#455` to `agent-grounds/grund#459`), guidance (`agent-grounds/grund#460`), `migrate` (`agent-grounds/grund#461`) and `init` (`agent-grounds/grund#462`). A v1 config gets a caution naming `migrate` and no release. The section-citation ramp `0.16.1` named closes here too. |
+| `0.18.x` — adoption | `grund` adopts v2 (`agent-grounds/grund#464`), then rhei, ephor and fissile move their pins (`agent-grounds/grund#465`). A status ramp adoption chooses names a release no earlier than the minor after its notice. |
+| `0.19.0` — retirement | Every surface noticed in `0.17.0` is removed (`agent-grounds/grund#466`). |
+| `1.0.0` — freeze | Cut from `0.19.x` with no new surface (`agent-grounds/grund#467`). Phase 4 (`agent-grounds/grund#468`) follows it. |
+
+Every cut from `0.17.0` through `0.18.x` stays below `0.19.0`, so no pending removal in the tree blocks one ([§FS-distribution.4.2.6](../../functional-spec/FS-distribution.md#426-every-publication-path-runs-the-release-guard)). The `is removed in 0.19.0` clauses are written by `agent-grounds/grund#453` and `agent-grounds/grund#466` in the release that ships their replacements, never by this document. If that release is not `0.17.0`, the notice, v2, retirement and freeze releases each move by the same number of minors, and this ledger moves in the same change ([§DISC-core-concerns.9.7](2026-09-30-core-concerns.md#97-what-a-deprecation-note-may-name)).
+
+Three things are deliberately not rows. `REFS_QUERY_FAILURE_WARNING` left in `0.16.0` with no notice release: it is unpaid notice debt, recorded in [§DISC-grund-core-public-surface.6.3](2026-09-22-grund-core-public-surface.md#63-frontend-only-seams-left-public-but-hidden) as a breach of [§REQ-backwards-compatibility.2](../../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) and not excused by any number written here. The deprecated `.agents/grund.toml` location keeps its caution with no release ([§FS-config.1.2.1](../../functional-spec/FS-config.md#121-no-release-removes-the-agents-location)), and every v1 config keeps loading forever ([§FS-config.5.2](../../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)), so neither is ever removed.
+
 ## 10. What this discussion still has to settle
 
-The chapters above fix the model, the format, what it crosses and the schedule. What follows is open, and [§DISC-core-concerns.1.1](2026-09-30-core-concerns.md#11-what-accepting-it-accepts) still holds over all of it.
+The chapters above fix the model, the format, what it crosses and the schedule. What follows is open, and [§DISC-core-concerns.1.1](2026-09-30-core-concerns.md#11-what-accepting-it-accepts) still holds over all of it. Each item says where it stands: `Open — owner #N` names the ticket of `agent-grounds/grund` that rules on it, and `Settled by` names what settled it. No alternative below is chosen by this document; an item is closed here only by its owner's ruling, recorded in the spec point or decision record that ruling extends.
 
 ### 10.1 The five decisions the 2026-09-30 proposal leaves open
 
 Named as open by their author in the comment that proposed them, and carried here unanswered.
 
-1. **What marks the `code` row.** v1 recognizes the homeless kind by shape: non-citable with no home. With places on it that shape is gone. Proposed: `code` is the reserved name of the row that holds source declarations and catches what no place claims ([§DISC-core-concerns.8.2](2026-09-30-core-concerns.md#82-fs-config3452-is-strengthened-not-crossed)). The alternative is a key on the row.
-2. **Deepest place wins, for every row.** [§DISC-core-concerns.7.2](2026-09-30-core-concerns.md#72-places-on-the-rows-and-what-the-lists-make-necessary) proposes it. The alternative keeps today's rule, where nested places of two ordinary kinds fall to `code`, and makes nesting under `code` the one exception.
-3. **Where a v1 config's rules render.** Proposed: a v2 key, `[presentation] rules = "home" | "root"`, default `home`; v1 renders at the root as today and `migrate` writes `root` explicitly, so a migrated config produces the files it produced. The alternative is one layout for everyone, which puts new files in every v1 repository on its next `init`.
-4. **Claude delivery.** Proposed: the symlink per directory. The alternative is path-scoped files under `.claude/rules/`, which avoids the symlinks and adds a second mechanism.
-5. **Fields in the sunk block.** Proposed: when per-kind fields ship, they render in the same block as the kind's rules, so a directory's block says both what a declaration there looks like and what it cites.
+1. **What marks the `code` row.** v1 recognizes the homeless kind by shape: non-citable with no home. With places on it that shape is gone. Proposed: `code` is the reserved name of the row that holds source declarations and catches what no place claims ([§DISC-core-concerns.8.2](2026-09-30-core-concerns.md#82-fs-config3452-is-strengthened-not-crossed)). The alternative is a key on the row. **Open — owner #457.**
+2. **Deepest place wins, for every row.** [§DISC-core-concerns.7.2](2026-09-30-core-concerns.md#72-places-on-the-rows-and-what-the-lists-make-necessary) proposes it. The alternative keeps today's rule, where nested places of two ordinary kinds fall to `code`, and makes nesting under `code` the one exception. **Open — owner #457.**
+3. **Where a v1 config's rules render.** Proposed: a v2 key, `[presentation] rules = "home" | "root"`, default `home`; v1 renders at the root as today and `migrate` writes `root` explicitly, so a migrated config produces the files it produced. The alternative is one layout for everyone, which puts new files in every v1 repository on its next `init`. **Open — owner #460**, with `agent-grounds/grund#461` for what `migrate` writes.
+4. **Claude delivery.** Proposed: the symlink per directory. The alternative is path-scoped files under `.claude/rules/`, which avoids the symlinks and adds a second mechanism. **Open — owner #460.**
+5. **Fields in the sunk block.** Proposed: when per-kind fields ship, they render in the same block as the kind's rules, so a directory's block says both what a declaration there looks like and what it cites. **Open — owner #460**, with `agent-grounds/grund#458` for the fields themselves.
 
 ### 10.2 The five decisions the plan makes one way
 
 Each is a choice `agent-grounds/grund#347` makes and has not been ruled on; saying otherwise changes the plan rather than this model.
 
-1. **#290 now or as a field.** #290 is approved and planned as a `RULE` row for the Terms chapter. Implement it as a rule now and migrate it to a field in Phase 3, or wait for fields? The plan waits.
-2. **Migrate grund's `DF` and `DA` status lines.** About a hundred decision records carry `**Status:**` prose lines. Migrating them to `## status:` headings is mechanical and is what makes `status` a checked field; leaving them makes `DF` and `DA` the two kinds without a checked shape. The plan migrates them in Phase 3.
-3. **The embedding surface at `1.0`.** [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered) covers the user-visible surface; the plan extends the `1.0` promise to the `grund-core` public root as the audit leaves it. The alternative freezes the CLI, config, JSON and LSP surfaces and leaves the Rust API at its own cadence.
-4. **Phase 4 after `1.0`.** Rules as declarations is additive and could precede `1.0`, at the cost of another minor. The plan puts it after.
-5. **The `languages` default set.** V-A14 fixes the default at the v2 epoch; *which* languages are in it is a list to sign off on before Phase 2. The plan proposes today's `extensions` default, classified.
+1. **#290 now or as a field.** #290 is approved and planned as a `RULE` row for the Terms chapter. Implement it as a rule now and migrate it to a field in Phase 3, or wait for fields? The plan waits. **Settled by** shipped work: `agent-grounds/grund#290` shipped Terms as [§RULE-terms](../../rules/RULE-terms.md#rule-terms-each-fs-must-have-exactly-one-terms-chapter) in `0.15.0` ([§DISC-core-concerns.9.8](2026-09-30-core-concerns.md#98-what-shipped)), so the plan did not wait. Whether it moves into a field is `agent-grounds/grund#464`'s.
+2. **Migrate grund's `DF` and `DA` status lines.** About a hundred decision records carry `**Status:**` prose lines. Migrating them to `## status:` headings is mechanical and is what makes `status` a checked field; leaving them makes `DF` and `DA` the two kinds without a checked shape. The plan migrates them in Phase 3. **Open — owner #464.**
+3. **The embedding surface at `1.0`.** [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered) covers the user-visible surface; the plan extends the `1.0` promise to the `grund-core` public root as the audit leaves it. The alternative freezes the CLI, config, JSON and LSP surfaces and leaves the Rust API at its own cadence. **Open — owner #466**, with the release evidence `agent-grounds/grund#467` gathers.
+4. **Phase 4 after `1.0`.** Rules as declarations is additive and could precede `1.0`, at the cost of another minor. The plan puts it after. **Open — owner #468**, with `agent-grounds/grund#467` owning where the `1.0` boundary falls.
+5. **The `languages` default set.** V-A14 fixes the default at the v2 epoch; *which* languages are in it is a list to sign off on before Phase 2. The plan proposes today's `extensions` default, classified. **Open — owner #456**, together with its own question of which release may tighten what a source file is recognized as.
 
 ### 10.3 The draft's own open questions, closed
 
