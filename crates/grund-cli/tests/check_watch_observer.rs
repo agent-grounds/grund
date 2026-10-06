@@ -11,6 +11,8 @@ mod inventory;
 mod lifecycle;
 #[path = "watch_observer/parity.rs"]
 mod parity;
+#[path = "watch_observer/probes.rs"]
+mod probes;
 #[path = "support/watch_observer.rs"]
 mod support;
 #[path = "watch_observer/terminal.rs"]

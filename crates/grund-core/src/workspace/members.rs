@@ -85,9 +85,8 @@ pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMe
                     format!("workspace member glob parent does not exist: {glob_parent}"),
                 ));
             }
-            // §FS-workspace.2.4: reading the directory is part of interpreting
-            // this config entry, so every I/O failure stays at the `members`
-            // line and names the glob as written rather than escaping bare.
+            // §FS-workspace.2.4: directory I/O failures stay at the `members`
+            // line and name the glob as written.
             // §FS-check.6.1.1: cover this effective input before its shared read.
             let entries = crate::config::input_read_dir(&parent).map_err(|err| {
                 workspace_members_error(
