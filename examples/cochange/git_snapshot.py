@@ -160,7 +160,9 @@ class Git:
                     resolved = output.resolve()
             except (RuntimeError, OSError) as exc:
                 if isinstance(exc, OSError) and exc.errno != errno.ELOOP:
-                    raise
+                    raise Refusal('unsupported-input', f'{path}: cannot resolve tracked symlink '
+                                  f'({type(exc).__name__}); use a host that supports it '
+                                  'or correct the link/access.', path)
                 raise Refusal('unsupported-input', f'{path}: symlink cycle; '
                               'replace it with a bounded non-cyclic link.', path)
             if not resolved.is_relative_to(destination):
