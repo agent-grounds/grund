@@ -149,6 +149,8 @@ mod cleanup {
     struct Fixture(PathBuf);
 
     impl Fixture {
+        /// §FS-repository-maintenance.1.4.1: copy the real script without a cargo executable.
+        /// §AR-ci.10.2: exclusively claim the disposable root before populating it.
         fn new() -> Self {
             let script = fs::read(repository_root().join("scripts/clean.sh"))
                 .expect("scripts/clean.sh must exist before testing its cleanup scope");
@@ -172,12 +174,6 @@ mod cleanup {
                 fs::Permissions::from_mode(0o755),
             )
             .unwrap();
-            fixture.write("bin/cargo", b"#!/bin/sh\nset -eu\nprintf '%s\\n' \"$PWD\" \"$@\" > cargo-call\nexit \"$CARGO_CLEAN_STATUS\"\n");
-            fs::set_permissions(
-                fixture.0.join("bin/cargo"),
-                fs::Permissions::from_mode(0o755),
-            )
-            .unwrap();
             fixture.write("Cargo.toml", b"[workspace]\n");
             for path in ["panta/build", "scripts/cache", ".git/cache"] {
                 fixture.write(&format!("{path}/CACHEDIR.TAG"), TAG.as_bytes());
@@ -195,19 +191,31 @@ mod cleanup {
             fs::write(file, contents).unwrap();
         }
 
+        /// §FS-repository-maintenance.1.4.1: portable acceptance uses controlled cargo.
         fn run(&self, cargo_status: &str) -> Output {
             self.run_with_path(cargo_status, &std::env::var_os("PATH").unwrap())
         }
 
-        fn run_with_path(&self, cargo_status: &str, fallback: &std::ffi::OsStr) -> Output {
-            let mut paths = vec![self.0.join("bin")];
-            paths.extend(std::env::split_paths(fallback));
-            Command::new(self.0.join("scripts/clean.sh"))
+        /// §FS-repository-maintenance.1.4.1: an installed shell reads the copied script
+        /// with a cargo function, avoiding both generated-executable boundaries.
+        fn run_with_path(&self, cargo_status: &str, path: &std::ffi::OsStr) -> Output {
+            Command::new("sh")
+                .arg("-c")
+                .arg(
+                    r#"cargo() {
+    printf '%s\n' "$PWD" "$@" > cargo-call
+    return "$CARGO_CLEAN_STATUS"
+}
+. "$1"
+"#,
+                )
+                .arg("cleanup-fixture")
+                .arg(self.0.join("scripts/clean.sh"))
                 .current_dir(&self.0)
-                .env("PATH", std::env::join_paths(paths).unwrap())
+                .env("PATH", path)
                 .env("CARGO_CLEAN_STATUS", cargo_status)
                 .output()
-                .expect("execute only the copied fixture script")
+                .expect("read the copied fixture script with an installed shell")
         }
     }
 
