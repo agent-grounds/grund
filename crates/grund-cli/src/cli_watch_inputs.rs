@@ -9,6 +9,7 @@ struct WatchSubscriptions {
     runtime_failure: std::sync::Arc<std::sync::Mutex<Option<String>>>,
     inputs: BTreeSet<grund_core::CheckInput>,
     desired: BTreeSet<grund_core::CheckInput>,
+    // §FS-check.6.1.3: native ownership is physical; inputs remain lexical too.
     handles: BTreeMap<PathBuf, bool>,
     failure: Option<String>,
 }
@@ -36,10 +37,16 @@ fn native_watch_backend(
         }
     }
     let closed = Closed(closed);
-    let watcher = notify::recommended_watcher(move |event: WatchNotice| {
-        let _alive = &closed;
-        watch_queue_notice(&tx, &lost, &runtime_failure, event);
-    })
+    use notify::Watcher;
+    // §FS-check.6.1.3: followed targets receive explicit physical coverage;
+    // recursive traversal must not register their lexical aliases again.
+    let watcher = notify::RecommendedWatcher::new(
+        move |event: WatchNotice| {
+            let _alive = &closed;
+            watch_queue_notice(&tx, &lost, &runtime_failure, event);
+        },
+        notify::Config::default().with_follow_symlinks(false),
+    )
     .map_err(|err| format!("setting up native watcher: {err}"))?;
     Ok(NativeWatchBackend {
         watcher: Some(watcher),
@@ -87,10 +94,6 @@ impl NativeWatchBackend {
         use notify::Watcher;
         self.watcher.as_mut().unwrap().watch(path, mode)
     }
-    fn unwatch(&mut self, path: &Path) -> notify::Result<()> {
-        use notify::Watcher;
-        self.watcher.as_mut().unwrap().unwatch(path)
-    }
 }
 impl Drop for NativeWatchBackend {
     fn drop(&mut self) {
@@ -137,6 +140,15 @@ impl WatchSubscriptions {
             }
             parent = path.parent();
         }
+        // §FS-check.6.1.3: intermediate directory links can retarget while
+        // their old physical directory remains. Keep each link's own parent.
+        for path in input.path.ancestors() {
+            if std::fs::symlink_metadata(path).is_ok_and(|m| m.file_type().is_symlink()) {
+                if let Some(anchor) = path.parent().filter(|anchor| anchor.is_dir()) {
+                    coverage.entry(anchor.to_path_buf()).or_insert(false);
+                }
+            }
+        }
         coverage
     }
 
@@ -160,10 +172,11 @@ impl WatchSubscriptions {
     }
 
     fn subscribe(&mut self, path: PathBuf, recursive: bool) -> Result<(), String> {
-        if self
-            .handles
-            .get(&path)
-            .is_some_and(|old| *old || !recursive)
+        let path = std::fs::canonicalize(&path)
+            .map_err(|err| format!("resolving watch for {}: {err}", path.display()))?;
+        if self.handles.iter().any(|(old, mode)| {
+            (*mode && path.starts_with(old)) || (old == &path && !recursive)
+        })
         {
             return Ok(());
         }
@@ -190,20 +203,41 @@ impl WatchSubscriptions {
     /// (§FS-check.6.1.4). Failure is fatal, never a stale resident loop.
     fn recover(&mut self) -> Result<(), String> {
         watch_inject_failure!("recover")?;
+        let handles = self.physical_coverage()?;
+        self.replace_coverage(handles)?;
+        watch_observe!(WatchObservation::Recovered);
+        Ok(())
+    }
+
+    /// Deduplicate aliases and subsume shallow/recursive children under a
+    /// recursive physical root (§FS-check.6.1.3). Recompute after retargeting.
+    fn physical_coverage(&self) -> Result<BTreeMap<PathBuf, bool>, String> {
+        let mut handles = BTreeMap::new();
+        for input in &self.inputs {
+            for (path, recursive) in Self::coverage(input) {
+                let physical = std::fs::canonicalize(&path)
+                    .map_err(|err| format!("resolving watch for {}: {err}", path.display()))?;
+                handles
+                    .entry(physical)
+                    .and_modify(|old| *old |= recursive)
+                    .or_insert(recursive);
+            }
+        }
+        let recursive = handles.iter().filter(|(_, mode)| **mode)
+            .map(|(path, _)| path.clone()).collect::<Vec<_>>();
+        handles.retain(|path, _| !recursive.iter().any(|root| path != root && path.starts_with(root)));
+        Ok(handles)
+    }
+
+    /// A backend can share handles even between recursive parents and children.
+    /// Install the complete retained set before releasing its old owner instead
+    /// of unwatching an alias or subtree still needed (§FS-check.6.1.1, §FS-check.6.1.4).
+    fn replace_coverage(&mut self, handles: BTreeMap<PathBuf, bool>) -> Result<(), String> {
         let mut replacement = native_watch_backend(
             self.tx.clone(),
             self.lost.clone(),
             self.runtime_failure.clone(),
         )?;
-        let mut handles = BTreeMap::new();
-        for input in &self.inputs {
-            for (path, recursive) in Self::coverage(input) {
-                handles
-                    .entry(path)
-                    .and_modify(|old| *old |= recursive)
-                    .or_insert(recursive);
-            }
-        }
         for (path, recursive) in &handles {
             let mode = if *recursive {
                 notify::RecursiveMode::Recursive
@@ -216,8 +250,10 @@ impl WatchSubscriptions {
             watch_observe!(WatchObservation::Subscribed(path.clone(), *recursive));
         }
         self.watcher = replacement;
+        for _path in self.handles.keys().filter(|path| !handles.contains_key(*path)) {
+            watch_observe!(WatchObservation::Retired(_path.clone()));
+        }
         self.handles = handles;
-        watch_observe!(WatchObservation::Recovered);
         Ok(())
     }
 
@@ -228,32 +264,9 @@ impl WatchSubscriptions {
         if usable {
             self.inputs = self.desired.clone();
         }
-        let mut wanted = BTreeMap::new();
-        for input in &self.inputs {
-            for (path, recursive) in Self::coverage(input) {
-                wanted
-                    .entry(path)
-                    .and_modify(|old| *old |= recursive)
-                    .or_insert(recursive);
-            }
-        }
-        // Observe already adds all new coverage before this retirement phase.
-        for path in self
-            .handles
-            .keys()
-            .filter(|path| !wanted.contains_key(*path))
-            .cloned()
-            .collect::<Vec<_>>()
-        {
-            // §FS-check.6.1.4: native backends can retire a deleted inode before
-            // reconciliation. Its obsolete subscription is already released.
-            if let Err(err) = self.watcher.unwatch(&path) {
-                if !matches!(err.kind, notify::ErrorKind::WatchNotFound) {
-                    return Err(format!("retiring watch for {}: {err}", path.display()));
-                }
-            }
-            self.handles.remove(&path);
-            watch_observe!(WatchObservation::Retired(path));
+        let wanted = self.physical_coverage()?;
+        if wanted != self.handles {
+            self.replace_coverage(wanted)?;
         }
         Ok(())
     }

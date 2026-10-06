@@ -91,7 +91,12 @@ fn watch_completed_run_option_matrix() {
                 } else {
                     assert!(output.lines().any(|line| {
                         let row: serde_json::Value = serde_json::from_str(line).unwrap();
-                        row["severity"] == channel && row["message"] == message
+                        let field = if channel == "suggestion" {
+                            "channel"
+                        } else {
+                            "severity"
+                        };
+                        row[field] == channel && row["message"] == message
                     }));
                 }
             }
