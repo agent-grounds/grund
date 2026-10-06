@@ -12,7 +12,6 @@ use anyhow::{Context, Result, anyhow};
 use std::path::Path;
 
 use super::citations::{parse_citation_entry, validate_citation_rules};
-use super::fmt_block::validate_fmt_exclude;
 use super::grounding::{
     check_grounding_level, parse_kind_grounding_key, validate_global_grounding,
 };
@@ -20,6 +19,7 @@ use super::kind_table::{ParsedKind, apply_parsed_kinds, parse_kinds_key};
 use super::point_sizes::parse_lead_size_warning;
 use super::record::{Config, ConfigLocation, ShorthandPolicy};
 use super::workspace_block::validate_workspace_lists;
+use super::{fmt_block::validate_fmt_exclude, scan_block::parse_scan_exclude};
 use crate::grammar::{id_grammar_key_slash_error, is_escaped};
 use crate::model::format_path;
 
@@ -303,7 +303,7 @@ pub(super) fn parse_config_file(
                 }
             }
             ("scan", "include") => config.include = Some(parse_string_list(path, line_no, value)?),
-            ("scan", "exclude") => config.exclude = parse_string_list(path, line_no, value)?,
+            ("scan", "exclude") => config.exclude = parse_scan_exclude(path, line_no, value)?,
             ("scan", "extensions") => config.extensions = parse_string_list(path, line_no, value)?,
             ("scan", "comment_prefixes") => {
                 config.comment_prefixes = parse_string_list(path, line_no, value)?;
