@@ -253,9 +253,10 @@ fn completion_exact_matches_precede_extensions() {
 }
 
 #[test]
-fn completion_section_separator_can_also_be_an_id_literal() {
+/// Legal separators stay distinct from ID literals (§FS-config.3.2.2).
+fn completion_custom_section_separator_preserves_id_literals() {
     let f = Fixture::new();
-    f.config("[id]\nformat = \"{kind}-{slug}\"\nsection_separator = \"-\"\n");
+    f.config("[id]\nformat = \"{kind}-{slug}\"\nsection_separator = \"::\"\n");
     f.put(
         "docs/functional-spec/FS-login-extra.md",
         "# FS-login-extra: Extra\n\nLead.\n",
@@ -265,6 +266,14 @@ fn completion_section_separator_can_also_be_an_id_literal() {
     let items = f.items(&snapshot, "docs/notes.md", text, 0, text.len());
     assert_eq!(ids(&items), ["FS-login-extra"]);
     assert_eq!(apply(text, &items[0]), "\u{a7}FS-login-extra");
+    let text = "$$FS-login-ejected::1 tail";
+    let items = f.items(&snapshot, "docs/notes.md", text, 0, "$$FS-login-e".len());
+    assert_eq!(apply(text, &items[0]), "\u{a7}FS-login-extra tail");
+    let text = "$$FS-login-extra::1";
+    assert!(
+        f.items(&snapshot, "docs/notes.md", text, 0, text.len())
+            .is_empty()
+    );
 }
 
 #[test]

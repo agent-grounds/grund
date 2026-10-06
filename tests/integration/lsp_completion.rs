@@ -1,6 +1,8 @@
 //! Real-server authoring acceptance for §FS-lsp.1.6.1, §FS-lsp.1.6.2,
 //! §FS-lsp.1.6.3 and §FS-lsp.1.6.4. Missing advertisement and dispatch fail
 //! independently; no future core API is required to compile these tests.
+#[path = "lsp_completion_overlap.rs"]
+mod completion_overlap;
 #[path = "lsp_completion_support.rs"]
 mod completion_support;
 #[path = "lsp_completion_workspace.rs"]
