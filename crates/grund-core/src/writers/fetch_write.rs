@@ -9,8 +9,49 @@ use crate::config::Config;
 use crate::grammar::{
     Grammar, markdown_fence_delimiter, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
 };
-use crate::model::Id;
-use crate::scanner::{markdown_heading_level, walk_scannable_files_reporting};
+use crate::model::{Id, OperationDiagnostic, format_path};
+use crate::scanner::{markdown_heading_level, walk_scannable_files_with_sources};
+
+/// `ignore::Error` owns the I/O error but does not expose it through `source()`.
+/// Retain both its original context and that original I/O cause for embedders
+/// (§FS-distribution.3.3.2), without changing the scanner's rendered reason.
+#[derive(Debug)]
+struct SnapshotWalkSource(ignore::Error);
+
+impl std::fmt::Display for SnapshotWalkSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.0, f)
+    }
+}
+
+impl std::error::Error for SnapshotWalkSource {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.0.io_error().map(|io| io as &dyn std::error::Error)
+    }
+}
+
+/// Locate the fallible walk or an admitted traversal source while preserving the
+/// existing fetch refusal text (§FS-distribution.3.3.2, §FS-fetch.7).
+fn fetch_walk_failure(
+    diagnostic: &mut Option<anyhow::Error>,
+    path: &Path,
+    error: anyhow::Error,
+    message: String,
+) -> FetchFailure {
+    let source = match error
+        .chain()
+        .find_map(|source| source.downcast_ref::<std::io::Error>())
+    {
+        Some(io) => OperationDiagnostic::filesystem(path, io, message.clone()),
+        None => {
+            let mut source = OperationDiagnostic::new("operation", "fetch", message.clone());
+            source.path = Some(format_path(path));
+            source
+        }
+    };
+    *diagnostic = Some(error.context(source));
+    fetch_operational(message)
+}
 
 #[derive(Clone)]
 struct SnapshotDeclaration {
@@ -189,18 +230,30 @@ pub(super) fn write_folder_home(
         }
         // §FS-fetch.5: discovery uses the scanner's recursive folder traversal,
         // including its ignore, exclusion, hidden-file, and symlink semantics.
-        let walked = walk_scannable_files_reporting(config, Some(folder), true).map_err(|err| {
-            fetch_operational(format!(
-                "cannot read snapshot folder {}: {err:#}",
-                folder.display()
-            ))
-        })?;
-        if let Some((path, message)) = walked.errors.first() {
-            return Err(fetch_operational(format!(
+        let mut sources = std::collections::BTreeMap::new();
+        let walked =
+            walk_scannable_files_with_sources(config, Some(folder), true, &mut |report, error| {
+                sources.entry(report.clone()).or_insert(error);
+            })
+            .map_err(|err| {
+                let message = format!("cannot read snapshot folder {}: {err:#}", folder.display());
+                fetch_walk_failure(diagnostic, folder, err, message)
+            })?;
+        if let Some(report @ (path, message)) = walked.errors.first() {
+            let message = format!(
                 "cannot read snapshot folder {} at {}: {message}",
                 folder.display(),
                 path.display()
-            )));
+            );
+            return Err(match sources.remove(report) {
+                Some(source) => fetch_walk_failure(
+                    diagnostic,
+                    path,
+                    anyhow::Error::new(SnapshotWalkSource(source)),
+                    message,
+                ),
+                None => fetch_operational(message),
+            });
         }
         for path in walked.files {
             if path.extension().and_then(|extension| extension.to_str()) != Some("md") {

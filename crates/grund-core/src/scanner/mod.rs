@@ -77,6 +77,7 @@ mod values;
 mod walk;
 mod walk_boundaries;
 mod walk_errors;
+mod walk_reporting;
 
 pub use scan_error::ApiScanError;
 
@@ -102,10 +103,11 @@ pub(crate) use scope_probe::effective_scope_reads_any_file;
 pub(crate) use tree::{
     ScanError, overlay_text, scan_tree, scan_tree_strict, scan_tree_with_workspace_overlays,
 };
-pub(crate) use walk::{
-    scan_roots_for, walk_reads_any_file, walk_scannable_files, walk_scannable_files_reporting,
-};
+pub(crate) use walk::{scan_roots_for, walk_reads_any_file};
 pub(crate) use walk_boundaries::is_scannable;
+pub(crate) use walk_reporting::{
+    walk_scannable_files, walk_scannable_files_reporting, walk_scannable_files_with_sources,
+};
 
 // What another component's tests read (§AR-core-module-layout.1.3): the
 // workspace-wide tree entry point, which the cross-project citation cases
