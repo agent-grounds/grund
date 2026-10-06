@@ -27,9 +27,20 @@ severity, verdict), and [§FS-terms.terms.7](../functional-spec/FS-terms.md#term
 
 `grund-lsp` is a binary crate with one product boundary: the optional server and the editor-client configuration that launches it. Its no-argument path speaks LSP over stdio and translates each request into a `grund-core` call; a thin pre-transport batch path lists, renders, or materializes the embedded integration artifacts of [§FS-lsp.2.4](../functional-spec/FS-lsp.md#24-installed-editor-integrations). What it does not contain is its placement chapter; its dependency cost stays in `grund-lsp`, and a user installing only the `grund` CLI pays none of it ([§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary)).
 
+Completion ([§FS-lsp.1.6.4](../functional-spec/FS-lsp.md#164-snapshot-and-live-transform-interaction)) follows the same boundary: core owns recognition,
+effective configuration, catalog selection and byte-range edits; LSP owns
+capability advertisement, protocol items and UTF-16 conversion. Its additive
+query preserves existing public struct constructors.
+
 ## 2. State
 
 The server holds one in-memory `LspSnapshot` per discovered Grund project, built by `grund-core` from the scan/check data [§AR-scanner.3](AR-scanner.md#3-output) produces, plus the resolved declaration, section-heading, stub, citation, and link ranges editor requests need and the set of files the scan read. The snapshots are the cache for everything else: hover, definition, references, document links, and diagnostics all answer from the snapshot of the document's owner ([§AR-lsp.2.2](AR-lsp.md#22-which-snapshot-answers)), and independent projects are never merged ([§FS-lsp.2.2](../functional-spec/FS-lsp.md#22-lifecycle)). An edit rebuilds only the projects that can see the edited file ([§AR-lsp.2.1](AR-lsp.md#21-what-rebuilds-a-snapshot)), and each rebuild re-derives the per-file index the answers look through ([§AR-lsp.2.3](AR-lsp.md#23-what-is-derived-beside-a-snapshot)).
+
+Completion context is derived with the snapshot and its overlays, and refreshed
+by this same lifecycle ([§FS-lsp.1.6.4](../functional-spec/FS-lsp.md#164-snapshot-and-live-transform-interaction)). Each completion reads the cached owner
+catalog or a loaded qualified target; it never calls the shell `complete_ids`
+scan per request. Semantic completion context stays in core; protocol indexing
+remains transport-side derived state.
 
 ### 2.1 What rebuilds a snapshot
 

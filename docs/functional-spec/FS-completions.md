@@ -1,6 +1,6 @@
 # FS-completions: grund completes declared IDs in shells
 
-Shell completion makes the read loop cheap: after `grund list` tells a user what exists and `grund <ID>` reads one body, the shell should complete `<ID>` without making the user copy it. This spec covers shell completion only; editor completion remains the LSP surface in [§FS-lsp.1.5](FS-lsp.md#15-capabilities-reserved-for-later).
+Shell completion makes the read loop cheap: after `grund list` tells a user what exists and `grund <ID>` reads one body, the shell should complete `<ID>` without making the user copy it. This spec covers shell completion only; editor citation completion is the cached LSP surface in [§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion), with its own eligibility and replacement contract.
 
 ## terms: Terms
 
