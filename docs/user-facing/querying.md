@@ -52,11 +52,13 @@ Each output line answers one query, in input order:
 {"query": {"id", "section"},
  "ok": true,
  "result": {"id", "section", "path", "line", "kind_title", "body",
-            "sections": [{"path", "title", "depth"}, …]}}
+            "sections": [{"path", "title", "depth"}, …]},
+ "error": null}
 ```
 
-Read `.result.sections[]`: `path` is the complete coordinate to cite or fetch
-next (`FS-config.requirements.1`), `title` its heading text, and `depth` how far
+Read `.result.sections[]`: `path` is the section path under `.result.id`
+(`requirements.1`), so cite or fetch it as `<id>.<path>`
+(`FS-config.requirements.1`); `title` is its heading text, and `depth` how far
 below the queried unit it sits. A query that does not resolve answers
 `"ok":false` with an `error` object instead of a `result`, and the batch exits 1:
 
