@@ -74,7 +74,11 @@ use super::compiled::{
 /// repository on `[reference] strict = false` gets a block its own `grund check`
 /// accepts rather than four dangling references. v13 is that same base with
 /// v11's `### Chapter rules` section, keeping rule-enabled at base plus one.
-pub(crate) const AGENTS_BLOCK_VERSION: u32 = 13;
+/// v14 (§FS-init.2.3.4.3.1, §DF-block-teaches-structural-queries): the
+/// cheap-read ladder gains the structural query — `list --selector` rows fed to
+/// `show --batch --toc --format json` — and links the Querying grund guide. v15
+/// is that base with v13's `### Chapter rules` section.
+pub(crate) const AGENTS_BLOCK_VERSION: u32 = 15;
 
 /// The byte span and `vN` version of the managed block inside an `AGENTS.md`
 /// (§FS-init.2.3) — what both `grund init`'s update and `grund check`'s validation

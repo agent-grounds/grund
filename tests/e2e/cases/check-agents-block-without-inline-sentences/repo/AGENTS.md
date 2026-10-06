@@ -1,7 +1,7 @@
 # repo — agent instructions
 
 <!-- BEGIN GRUND MANAGED BLOCK -->
-## Grounding with grund (v12)
+## Grounding with grund (v14)
 
 This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<NNN>-<slug>[.<section>]` (`KIND ∈ {G, FS, AR, DF, DA, E2E, RM}`), cited with the marker `§` — e.g. `<§>FS-042-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are also recognized as citations because `[reference] strict = false` is set in `grund.toml`; remove that compatibility override or set strict back to `true` to require the `§` marker (run `grund fmt --marker` first to upgrade existing bare citations).
 
@@ -16,6 +16,7 @@ A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and 
 - `grund refs <ID>` — every site that cites the ID; add `--summary` for one line per file. Run before renaming or moving a declaration.
 - `grund list` / `grund list --kind FS,AR` — discover IDs if you get lost
 - `grund list --size=words --top 10` — find heavy leads and move detail into citable child points before reading them in full
+- `grund list --selector "<selector>" --format json | jq -c '{id,section}' | grund show --batch --toc --format json` — select units by a rule subject (`<KIND>.<chapter>`, or a sentence such as `"The requirements chapter of each FS"`) and expand each one's subpoints from `.result.sections[]` (`path`, `title`, `depth`). More recipes: [Querying grund](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md).
 
 ### Project map
 

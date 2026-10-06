@@ -105,5 +105,6 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-directions-render](DF-directions-render.md#df-directions-render-the-citation-directions-wording-is-chosen-once-against-a-canonical-config) — the citation-directions wording is chosen once, against a canonical config
 - [§DF-chapter-rule-reaches-every-declaration](DF-chapter-rule-reaches-every-declaration.md#df-chapter-rule-reaches-every-declaration-a-chapter-scoped-citation-rule-reports-the-declaration-that-has-no-such-chapter) — a chapter-scoped citation rule reports the declaration that has no such chapter
 - [§DF-scan-exclude-component-names](DF-scan-exclude-component-names.md#df-scan-exclude-component-names-a-scan-exclude-entry-containing--is-a-config-error) — a `[scan] exclude` entry containing `/` is a config error
+- [§DF-block-teaches-structural-queries](DF-block-teaches-structural-queries.md#df-block-teaches-structural-queries-the-managed-block-teaches-the-structural-query-inline-and-links-the-query-guide) — the managed block teaches the structural query inline and links the query guide
 
 This index is navigational — citations should target the decision ID directly, never this file.
