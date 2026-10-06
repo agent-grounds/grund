@@ -1,5 +1,9 @@
 //! Grammar-owned introducer punctuation and adjacent tokens (§FS-lsp.1.6.1,
 //! §FS-lsp.1.6.3). Byte edits retain the full old suffix and its neighbors.
+//!
+//! Unqualified underscore-marked citations are not scanned because of the existing
+//! ID word boundary (tool report grund.57). Their cases verify token/edit semantics;
+//! the hyphen controls below prove scanning, resolution and replay (§FS-lsp.1.6.4).
 
 use super::tests_editor_completion::{Fixture, apply, ids};
 
@@ -54,7 +58,32 @@ fn completion_introducers_inside_ids_preserve_progressive_prefixes_and_neighbors
             }
             let text = format!("//! {introducer}FS{separator}lo");
             let items = f.items(&snapshot, "src/lib.rs", &text, 0, text.len());
-            let accepted = apply(&text, &items[0]);
+            let item = items.iter().find(|item| item.id == id).unwrap();
+            assert_eq!(apply(&text, item), format!("//! {marker}{id}"));
+        }
+    }
+}
+
+#[test]
+fn completion_hyphen_overlap_acceptance_resolves_and_formatting_replays_are_noops() {
+    for (marker, trigger) in [("\u{a7}", "-"), ("-", "$$")] {
+        let f = Fixture::new();
+        f.config(&format!("[id]\nformat = \"{{kind}}-{{slug}}\"\n[reference]\nmarker = \"{marker}\"\ntrigger = \"{trigger}\"\n[fmt.cross_refs]\nenabled = false\n"));
+        let snapshot = f.load();
+        for introducer in [marker, trigger] {
+            let before = "//! 😀 ";
+            let old = format!("{introducer}FS-lost.1");
+            let text = format!("{before}{old} tail");
+            let cursor = before.len() + format!("{introducer}FS-lo").len();
+            let items = f.items(&snapshot, "src/lib.rs", &text, 0, cursor);
+            let item = items.iter().find(|item| item.id == "FS-login").unwrap();
+            assert_eq!(
+                (item.start, item.end),
+                (before.len(), before.len() + old.len())
+            );
+            assert_eq!(item.filter_text, format!("{introducer}FS-login"));
+            let accepted = apply(&text, item);
+            assert_eq!(accepted, format!("{before}{marker}FS-login tail"));
             f.put("src/lib.rs", &accepted);
             let resolved = f.load();
             let cite = resolved
@@ -64,7 +93,24 @@ fn completion_introducers_inside_ids_preserve_progressive_prefixes_and_neighbors
                 .iter()
                 .find(|cite| cite.path.ends_with("src/lib.rs"))
                 .unwrap();
-            assert!(cite.target_path.as_ref().unwrap().ends_with("FS-login.md"));
+            assert_eq!(
+                cite.target_path.as_ref().unwrap(),
+                &f.0.join("docs/functional-spec/FS-login.md")
+            );
+            for text in [accepted.clone(), format!("{accepted} and more")] {
+                assert!(
+                    super::on_type_line_edits(&f.0.join("src/lib.rs"), &text, 0, text.len(), &[])
+                        .unwrap()
+                        .is_empty()
+                );
+            }
+            let formatted = crate::api::format_references(crate::api::FmtOpts {
+                path: f.0.join("src/lib.rs"),
+                path_provided: true,
+                ..Default::default()
+            })
+            .unwrap();
+            assert!(formatted.changes.is_empty());
         }
     }
 }
