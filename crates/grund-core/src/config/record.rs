@@ -250,6 +250,11 @@ pub struct Config {
     /// skip the post-pass entirely (§AR-benchmarks). Combined with
     /// `citations.declared`, a project without direction rules pays nothing.
     pub classify_citation_sources: bool,
+    /// The line ranges a `cover --lines` run asks the owners of, inclusive and
+    /// 1-based (§FS-cover.6.1). Empty on every other run, so no scan pays for the
+    /// lookup it does not need; non-empty, each scanned file's pass resolves them
+    /// while its heading stack is held (§AR-scanner.2.4.4).
+    pub owner_lines: Vec<(usize, usize)>,
     pub grammar: Grammar,
 }
 
@@ -389,6 +394,7 @@ impl Config {
             // On by default so `grund check` (and tests) classify; the read-only
             // commands turn it off (§AR-scanner.2.4, §AR-benchmarks).
             classify_citation_sources: true,
+            owner_lines: Vec::new(),
             grammar,
         }
     }

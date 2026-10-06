@@ -2,13 +2,14 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
+use super::line_owners::{LineOwners, resolve_requested_lines};
 use super::unmarked_headings::markdown_declaration_body_end;
 use crate::config::Config;
 use crate::grammar::{
     AliasGrammar, CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment,
     comment_blocks, doc_comment_rule, first_content_line, inline_note_verdicts,
 };
-use crate::model::{Findings, Id, InlineCitationSite, SectionHeadingOutsideDeclaration};
+use crate::model::{Findings, InlineCitationSite, SectionHeadingOutsideDeclaration};
 use crate::model::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -156,14 +157,26 @@ fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize,
 /// Settle who owns each citation site once body spans are known: classify the
 /// citing side, then promote the local candidates that gained a unique owner
 /// (§AR-scanner.2.4.2, §AR-scanner.2.4). Promotion reads what classification
-/// wrote, so the order is fixed here rather than left to the caller.
+/// wrote, so the order is fixed here rather than left to the caller. The lines a
+/// `cover --lines` run asks about are settled here too, by the same lookup, while
+/// the heading stack is still held (§FS-cover.6.2, §AR-scanner.2.4.4).
 pub(super) fn resolve_citation_owners(
     findings: &mut Findings,
     config: &Config,
     path: &Path,
     md_headings: &[(usize, usize)],
+    total_lines: usize,
     classify: bool,
 ) {
+    if !config.owner_lines.is_empty() {
+        resolve_requested_lines(
+            findings,
+            path,
+            md_headings,
+            total_lines,
+            &config.owner_lines,
+        );
+    }
     let has_local_candidates = !findings.local_section_citation_candidates.is_empty();
     if classify || has_local_candidates {
         classify_citation_sources(findings, config, path, md_headings);
@@ -184,76 +197,35 @@ fn classify_citation_sources(
     path: &Path,
     md_headings: &[(usize, usize)],
 ) {
-    // (body_start, body_end, id) for this file's declarations, so the enclosing
-    // lookup is a scan of a small local list.
-    let bodies: Vec<(usize, usize, Id, Vec<(String, usize, usize)>)> = findings
-        .declarations
-        .values()
-        .flatten()
-        .map(|decl| {
-            let mut sections = decl
-                .sections
-                .iter()
-                .map(|(path, info)| (path.clone(), info.line, info.heading_level))
-                .collect::<Vec<_>>();
-            sections.sort_by_key(|(_, line, _)| *line);
-            (decl.body_start, decl.body_end, decl.id.clone(), sections)
-        })
-        .collect();
-    let file_home = file_home_kind(path, config);
+    let owners = LineOwners::new(findings, md_headings);
     // §FS-config.3.9.2.2: step 3 of the fallback is the homeless kind, whose name
     // is `code` only where the project did not name it something truer.
-    let homeless = config.homeless_kind();
+    let unowned_kind =
+        file_home_kind(path, config).unwrap_or_else(|| config.homeless_kind().to_string());
+    let settle = |line: usize| match owners.owner_at(line) {
+        Some((id, section)) => (id.kind.clone(), Some(id.clone()), section),
+        None => (unowned_kind.clone(), None, None),
+    };
     for cite in &mut findings.citations {
-        let enclosing = bodies
-            .iter()
-            .filter(|(start, end, _, _)| *start <= cite.line && cite.line <= *end)
-            // Nearest preceding declaration: the one whose body starts latest.
-            .max_by_key(|(start, _, _, _)| *start);
-        match enclosing {
-            Some((_, _, id, sections)) => {
-                cite.source_kind = id.kind.clone();
-                cite.enclosing_declaration = Some(id.clone());
-                cite.enclosing_section = enclosing_section(sections, md_headings, cite.line);
-            }
-            None => {
-                cite.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());
-            }
-        }
+        (
+            cite.source_kind,
+            cite.enclosing_declaration,
+            cite.enclosing_section,
+        ) = settle(cite.line);
     }
     for candidate in &mut findings.legacy_citation_candidates {
-        let enclosing = bodies
-            .iter()
-            .filter(|(start, end, _, _)| *start <= candidate.line && candidate.line <= *end)
-            .max_by_key(|(start, _, _, _)| *start);
-        match enclosing {
-            Some((_, _, id, sections)) => {
-                candidate.source_kind = id.kind.clone();
-                candidate.enclosing_declaration = Some(id.clone());
-                candidate.enclosing_section =
-                    enclosing_section(sections, md_headings, candidate.line);
-            }
-            None => {
-                candidate.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());
-            }
-        }
+        (
+            candidate.source_kind,
+            candidate.enclosing_declaration,
+            candidate.enclosing_section,
+        ) = settle(candidate.line);
     }
     for candidate in &mut findings.local_section_citation_candidates {
-        let enclosing = bodies
-            .iter()
-            .filter(|(start, end, _, _)| *start <= candidate.line && candidate.line <= *end)
-            .max_by_key(|(start, _, _, _)| *start);
-        match enclosing {
-            Some((_, _, id, sections)) => {
-                candidate.source_kind = id.kind.clone();
-                candidate.enclosing_declaration = Some(id.clone());
-                candidate.enclosing_section =
-                    enclosing_section(sections, md_headings, candidate.line);
-            }
-            None => {
-                candidate.source_kind = file_home.clone().unwrap_or_else(|| homeless.to_string());
-            }
-        }
+        (
+            candidate.source_kind,
+            candidate.enclosing_declaration,
+            candidate.enclosing_section,
+        ) = settle(candidate.line);
     }
 }
 
@@ -299,37 +271,6 @@ fn promote_local_section_citations(findings: &mut Findings) {
             right.column,
         ))
     });
-}
-
-/// Resolve the nearest accepted chapter while letting every Markdown sibling
-/// heading close it (§FS-rules.2, §AR-scanner.2.4.4). Rejected, duplicate and
-/// unmarked headings are absent from `sections`, but remain present in the full
-/// fence-aware heading stack and therefore still delimit the preceding unit.
-fn enclosing_section(
-    sections: &[(String, usize, usize)],
-    md_headings: &[(usize, usize)],
-    site_line: usize,
-) -> Option<String> {
-    let (path, line, depth) = sections
-        .iter()
-        .filter(|(_, line, _)| *line <= site_line)
-        .max_by_key(|(_, line, _)| *line)?;
-    let end = if md_headings.is_empty() {
-        sections
-            .iter()
-            .filter(|(_, next_line, next_depth)| next_line > line && next_depth <= depth)
-            .map(|(_, next_line, _)| next_line - 1)
-            .min()
-            .unwrap_or(usize::MAX)
-    } else {
-        md_headings
-            .iter()
-            .filter(|(next_line, next_depth)| next_line > line && next_depth <= depth)
-            .map(|(next_line, _)| next_line - 1)
-            .min()
-            .unwrap_or(usize::MAX)
-    };
-    (site_line <= end).then(|| path.clone())
 }
 
 /// The kind whose configured home (`[[kinds]] folder` / `file`, §FS-config.3.4)

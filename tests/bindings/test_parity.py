@@ -8,7 +8,7 @@ import unittest
 import unicodedata
 from unittest.mock import patch
 
-from corpus import READ_CASES, MUTATIONS
+from corpus import FILE_READ_CASES, READ_CASES, MUTATIONS
 from support import REPO, binding, canonical, fixture, plain, python_call, rust_call, temporary, tree_bytes
 
 
@@ -47,6 +47,15 @@ class ParityTests(unittest.TestCase):
                 if operation == "check" and actual["result"] is not None:
                     self.assert_frozen_cli_projection(actual["result"]["report"],
                                                       actual["run_cautions"], response)
+                self.assertEqual(before, tree_bytes(root), "read operation wrote files")
+
+    def test_shared_file_read_corpus_complete_data_and_bytes(self):
+        # §FS-cover.6.1: `cover(lines=...)` names one file, not a tree.
+        for case, path, operation, args, options in FILE_READ_CASES:
+            with self.subTest(case=case, operation=operation, options=options), temporary() as temp:
+                root = fixture(temp, case)
+                before = tree_bytes(root)
+                self.compare(operation, root / path, args, options)
                 self.assertEqual(before, tree_bytes(root), "read operation wrote files")
 
     def assert_frozen_cli_projection(self, report, cautions, response):

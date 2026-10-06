@@ -10,7 +10,7 @@ from ._convert import convert
 from .errors import (ConfigError, FilesystemError, OperationError, QueryError,
                      PathEncodingError)
 from .types import (BatchResult, CheckResult, CompletionResult, ConfigResult,
-                    CoverResult, CoverTextResult, Failure, FetchResult, FmtResult,
+                    CoverLinesResult, CoverResult, CoverTextResult, Failure, FetchResult, FmtResult,
                     IdProposal, InitResult, IntegrationsResult, ListResult, SizesResult, ReferenceStyle,
                     RefsResult, ScanResult, SetupInstructions, ShowQuery, ShowResult)
 
@@ -171,8 +171,20 @@ def list_sizes(*, kinds: Sequence[str] = (), projects: Sequence[str] = (),
                  units=units, top=top)
 
 
-def cover(*, text: bool = False, root: PathInput | None = None) -> CoverResult | CoverTextResult:
-    """Read file-grouped coverage, with an optional text-oriented record."""
+def cover(*, text: bool = False, lines: Sequence[str] = (),
+          root: PathInput | None = None) -> CoverResult | CoverTextResult | CoverLinesResult:
+    """Read file-grouped coverage, with an optional text-oriented record.
+
+    Non-empty ``lines`` - each ``"N"`` or ``"N-M"``, as ``--lines`` takes it - asks
+    which declaration and section own those lines of the file ``root`` names
+    instead (§FS-cover.6)."""
+    if type(text) is not bool:
+        raise TypeError("text must be bool")
+    lines = _strings(lines, "lines")
+    if lines and text:
+        raise ValueError("lines and text cannot be combined")
+    if lines:
+        return _call("cover", CoverLinesResult, root, lines=lines)
     return _call("cover", CoverTextResult if text else CoverResult, root, text=text)
 
 

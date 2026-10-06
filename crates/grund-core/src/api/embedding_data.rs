@@ -67,6 +67,9 @@ record!(CoverCitation; project, path, line, column, id, section, marker, text,
 record!(CoverEntry; project, path, citations);
 record!(CoverTextCitation; line, column, text);
 record!(CoverTextEntry; path, citations);
+record!(CoverLineSection; section, start, end);
+record!(CoverLineOwner; declaration, start, end, sections);
+record!(CoverLines; project, path, start, end, owners);
 record!(FmtChange; path, line, label);
 record!(IdProposal; id, kind, number, slug, folder, file, e2e_case_dir,
     file_holds_single_declaration);

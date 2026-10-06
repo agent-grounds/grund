@@ -233,7 +233,7 @@ fn cover_rows(context: &WorkspaceContext) -> Vec<CoverRow<'_>> {
 /// section (§FS-cover.3.2), so it performs the citing-side post-pass — one of the
 /// four runs that do, and the reason the narrowable loader asks for it.
 fn cover_context(opts: &CoverOpts) -> Result<WorkspaceContext> {
-    load_narrowable_workspace_context(&opts.path, opts.path_provided)
+    load_narrowable_workspace_context(&opts.path, opts.path_provided, &[])
 }
 
 /// Every loaded project's scan errors, in project order (§FS-workspace.8.7):
@@ -244,7 +244,7 @@ fn cover_context(opts: &CoverOpts) -> Result<WorkspaceContext> {
 /// one list twice rather than two interleavings. `sort_path_key` on the
 /// unrendered path is how every other path ordering in the crate keys one; a
 /// second definition of "path order" here is a thing that drifts.
-fn cover_scan_errors(context: &WorkspaceContext) -> Vec<ApiScanError> {
+pub(super) fn cover_scan_errors(context: &WorkspaceContext) -> Vec<ApiScanError> {
     // §FS-errors.4: the same base the rows render against — `render_config`, the
     // workspace root in workspace mode and the only project otherwise. A path
     // spelled against the member names no file from where the run was launched.

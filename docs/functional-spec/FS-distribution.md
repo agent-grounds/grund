@@ -277,7 +277,7 @@ instructions have no root. Defaults below are normative, not merely examples.
 | `refs(id, *, section=None, descendants=False)` | Warning-preserving metadata/totals |
 | `list_ids(*, kinds=(), projects=(), unused=False, selector=None)` | Entries and summaries |
 | `list_sizes(*, kinds=(), projects=(), unused=False, selector=None, units=("lines","words","bytes"), top=None)` | Lead/full sizes |
-| `cover(*, text=False, lines=())` | Structured or text coverage data; non-empty `lines` gives line ownership ([§FS-cover.6](FS-cover.md#6-line-ownership)) |
+| `cover(*, text=False, lines=())` | Structured or text coverage data; non-empty `lines` — strings `"N"` or `"N-M"`, each as `--lines` takes it, with `root` naming the file and `text` false — gives line ownership ([§FS-cover.6](FS-cover.md#6-line-ownership)) |
 | `fmt(*, write=False, marker=False, cross_refs=False)` | Format preview or managed writes |
 | `propose_id(kind, title, *, width=3)` | Warning-preserving ID proposal |
 | `init(target=None, *, name=None, description=None, docs=False, force=False, write=False, check=False, no_vcs=False, agents=None)` | Scaffold output; None agents auto-selects |

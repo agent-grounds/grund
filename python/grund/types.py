@@ -297,6 +297,37 @@ class CoverTextResult(Cautioned):
 
 
 @dataclass(frozen=True)
+class CoverLineSection:
+    section: str | None
+    start: int
+    end: int
+
+
+@dataclass(frozen=True)
+class CoverLineOwner:
+    declaration: str
+    start: int
+    end: int
+    sections: tuple[CoverLineSection, ...]
+
+
+@dataclass(frozen=True)
+class CoverLines:
+    project: str | None
+    path: str
+    start: int
+    end: int
+    owners: tuple[CoverLineOwner, ...]
+
+
+@dataclass(frozen=True)
+class CoverLinesResult(Cautioned):
+    output_format: str
+    records: tuple[CoverLines, ...]
+    scan_errors: tuple[ScanError, ...]
+
+
+@dataclass(frozen=True)
 class FmtChange:
     path: str
     line: int

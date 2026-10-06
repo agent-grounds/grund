@@ -32,6 +32,7 @@ mod check_inputs;
 mod e2e;
 mod failure;
 mod headings;
+mod line_owners;
 mod paths;
 mod records;
 mod report;
@@ -43,6 +44,7 @@ pub use e2e::{E2eCase, E2eSpecRef};
 pub(crate) use failure::OperationContext;
 pub use failure::OperationDiagnostic;
 pub use headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
+pub(crate) use line_owners::{FileLineOwnership, OwnerRun, RangeOwnership, SectionRun};
 pub use paths::canonical_snapshot_path;
 pub use records::{
     Citation, Declaration, DocCommentBlock, FileHeading, FileStructure, Findings, Id,
