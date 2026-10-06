@@ -2,7 +2,7 @@
 
 The evidence [§DISC-grund-core-public-surface](2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) argues from. It classifies nothing on its own authority: the counting convention is [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name), the columns are [§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries), and `tests/integration/test_public_surface_inventory.py` holds the first column equal to the crate root's export list ([§DISC-grund-core-public-surface.5](2026-09-22-grund-core-public-surface.md#5-what-is-checked)).
 
-The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e`, workspace `0.16.2-dev`; the existing rows retain their original evidence. **186 rows, one per public root name.** The counts below include those additions.
+The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`; the existing rows retain their original evidence. **193 rows, one per public root name.** The counts below include both additions; the Python frontend now supplies consumer evidence alongside CLI and LSP.
 
 ## How a cell reads
 
@@ -14,7 +14,7 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 **Spec** — how [§FS-distribution.3.1](../../functional-spec/FS-distribution.md#31-rust-grund-core-crate) reaches the name. `named`: its text or its example writes the symbol. `related API`: a Rustdoc-visible function of the `api` component, which [§AR-system.2.9](../../architecture/README.md#29-api) makes the embedding surface and which that point's "and related APIs" reaches. `data type of X`: it appears in the signature of a `named` or `related API` entry point, transitively — one such path is named, not all of them. `no`: outside that closure, so the specification supports embedding it nowhere.
 
-**Consumers** — a textual `use grund_core::…` or `grund_core::…` in `grund-cli`, `grund-lsp` or their test crates. `none found` is the result of searching **this repository** and never a claim about embedders outside it ([§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries)).
+**Consumers** — a textual `use grund_core::…` or `grund_core::…` in `grund-cli`, `grund-lsp`, `grund-py` or their test crates. `none found` is the result of searching **this repository** and never a claim about embedders outside it ([§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries)).
 
 **Structural** — for a name no frontend spells: the chain from something one does call, so `via check_with_run_warnings → CheckOutput` means the CLI receives the type without naming it. `—` where the consumer column already answers. `none found` in both columns means no repository consumer of either kind was found.
 
@@ -24,22 +24,22 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 186 |
-| Rustdoc-visible | 173 |
+| Public root names | 193 |
+| Rustdoc-visible | 180 |
 | `#[doc(hidden)]` | 13 |
-| Named, a related API, or a data type of one | 107 |
-| Outside that closure | 79 |
-| Named by a frontend or its tests | 114 |
+| Named, a related API, or a data type of one | 112 |
+| Outside that closure | 81 |
+| Named by a frontend or its tests | 116 |
 | Reached structurally only | 34 |
-| No repository consumer of either kind | 38 |
-| Disposition keep | 112 |
+| No repository consumer of either kind | 43 |
+| Disposition keep | 117 |
 | Disposition keep, hidden | 13 |
-| Disposition keep, name in the spec | 16 |
+| Disposition keep, name in the spec | 18 |
 | Disposition hide | 11 |
 | Disposition retire with the ramp | 0 |
 | Disposition facade, then retire | 34 |
 
-The two count columns do not line up, and they are not meant to: 38 names have no repository consumer while 79 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 43 names have no repository consumer while 81 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
@@ -82,6 +82,8 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `ConversationTarget` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `cover` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `cover_text` | api | visible | related API | none found | none found | keep |
+| `cover_text_with_run_warnings` | api | visible | related API | none found | none found | keep |
+| `cover_with_run_warnings` | api | visible | related API | none found | none found | keep |
 | `CoverCitation` | api | visible | data type of `cover` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `CoverEntry` | api | visible | data type of `cover` | grund-cli `grund-cli/src/cli_cover.rs:106` | — | keep |
 | `CoverOpts` | api | visible | data type of `cover` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
@@ -98,6 +100,8 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `E2eSpecRef` | model | visible | data type of `Findings` | none found | none found | keep |
 | `effective_config` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/integrations.rs:103` | — | keep |
 | `EmbeddedValueRoot` | model | visible | data type of `Findings` | none found | none found | keep |
+| `embedding_call` | api | visible | related API | grund-py `grund-py/src/lib.rs:3` | — | keep |
+| `EmbeddingRequest` | api | visible | data type of `embedding_call` | grund-py `grund-py/src/lib.rs:3` | — | keep |
 | `expand_target` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `fetch_snapshot` | writers | visible | no | none found | none found | keep, name in the spec |
 | `fetch_snapshot_with_run_warnings` | writers | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
@@ -113,6 +117,7 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `FmtOutput` | api | visible | data type of `format_references` | none found | via format_references → FmtOutput `grund-cli/src/cli_fmt.rs:35` | keep |
 | `FmtScanAbort` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `format_references` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
+| `format_references_with_run_warnings` | api | visible | related API | none found | none found | keep |
 | `GLOBAL_AGENT_INSTRUCTION_TARGETS` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `GlobalAgentTarget` | writers | visible | no | none found | via GLOBAL_AGENT_INSTRUCTION_TARGETS → GlobalAgentTarget `grund-cli/src/lib.rs:32` | facade, then retire |
 | `Grammar` | grammar | visible | data type of `validate_config` | none found | via Config → Grammar `grund-cli/src/lib.rs:13` | keep |
@@ -150,6 +155,7 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `LinkSupport` | writers | visible | no | none found | via GLOBAL_AGENT_INSTRUCTION_TARGETS → GlobalAgentTarget → LinkSupport `grund-cli/src/lib.rs:32` | facade, then retire |
 | `list` | api | visible | related API | none found | none found | keep |
 | `list_sizes` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
+| `list_sizes_with_run_warnings` | queries | visible | no | none found | none found | keep, name in the spec |
 | `list_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `ListEntry` | api | visible | data type of `list` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `ListOpts` | api | visible | data type of `list` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
@@ -181,6 +187,7 @@ The two count columns do not line up, and they are not meant to: 38 names have n
 | `NearMissHeading` | model | visible | data type of `Findings` | none found | none found | keep |
 | `needs_wezterm_wiring` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `on_type_line_edits` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
+| `OperationDiagnostic` | model | visible | no | none found | none found | keep, name in the spec |
 | `PointSizeUnit` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `propose_id` | api | visible | related API | none found | none found | keep |
 | `propose_id_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |

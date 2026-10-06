@@ -26,7 +26,13 @@ pub(super) fn error_data(error: anyhow::Error, cautions: &[Finding]) -> Value {
         result["code"] = json!(query.code);
         result["sites"] = query.sites.data();
     }
-    if let Some(io) = error.downcast_ref::<std::io::Error>() {
+    // §FS-distribution.3.3.2: an I/O wrapper can retain the OS cause in its source.
+    if let Some(io) = error
+        .chain()
+        .filter_map(|source| source.downcast_ref::<std::io::Error>())
+        .find(|io| io.raw_os_error().is_some())
+        .or_else(|| error.downcast_ref::<std::io::Error>())
+    {
         if result["kind"] == "operation" {
             result["kind"] = json!("filesystem");
         }
