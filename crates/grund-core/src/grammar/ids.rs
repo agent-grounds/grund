@@ -58,6 +58,46 @@ pub(crate) fn parse_id_arg(raw: &str, grammar: &Grammar) -> Result<(Id, Option<S
 }
 
 impl Grammar {
+    /// Full-ID matches for the shared scanner and note parser (§FS-check.1.1.10).
+    /// The tuple's offset rebases captures from a marker's tail onto the line.
+    /// Explicit markers establish starts without a word boundary; ordinary bare
+    /// matches keep theirs. A marked token owns its whole span, including any
+    /// ID-shaped suffix, so it is emitted once and claims full-ID precedence.
+    /// Context exclusions remain the caller's decision over these same captures.
+    pub(crate) fn citation_captures<'a>(
+        &self,
+        line: &'a str,
+        marker: &str,
+    ) -> Vec<(usize, regex::Captures<'a>)> {
+        let mut matches = Vec::new();
+        if !marker.is_empty() {
+            let mut claimed_end = 0;
+            for (marker_start, _) in line.match_indices(marker) {
+                if marker_start < claimed_end {
+                    continue;
+                }
+                let offset = marker_start + marker.len();
+                if let Some(caps) = self.citation_prefix_re.captures(&line[offset..]) {
+                    claimed_end = offset + caps.get(0).unwrap().end();
+                    matches.push((offset, caps));
+                }
+            }
+        }
+        let marked_count = matches.len();
+        for caps in self.citation_re.captures_iter(line) {
+            let full = caps.get(0).unwrap();
+            if matches[..marked_count].iter().any(|(offset, marked)| {
+                let token = marked.get(0).unwrap();
+                full.start() < offset + token.end() && full.end() > offset - marker.len()
+            }) {
+                continue;
+            }
+            matches.push((0, caps));
+        }
+        matches.sort_by_key(|(offset, caps)| offset + caps.get(0).unwrap().start());
+        matches
+    }
+
     /// Whether `raw` has the shape of an unqualified `<ID>[.<section>]` argument
     /// this grammar accepts — shape only, never resolved — so `show` can tell a
     /// second coordinate in its path slot from a mistyped path (§FS-show.1.4.1).

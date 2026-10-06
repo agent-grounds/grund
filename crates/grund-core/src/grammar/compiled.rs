@@ -149,11 +149,13 @@ pub struct Grammar {
     /// [`Grammar::opens_section_suffix`] (§FS-declarations.line.section-suffix.3).
     section_suffix_re: Regex,
     pub(crate) section_re: Regex,
-    /// One citation regex, capturing an optional `<namespace>/` prefix
-    /// (§FS-workspace.1, §AR-workspace.3.1). The scanner decides whether to
-    /// emit a qualified citation based on whether the marker `§` precedes the
-    /// match; this regex never has two modes.
+    /// Bare-token detection retains its word boundary (§FS-check.1.1.10).
+    /// Both full-ID patterns capture the optional `<namespace>/` prefix
+    /// (§FS-workspace.1, §AR-workspace.3.1).
     pub(crate) citation_re: Regex,
+    /// A full-ID prefix directly after an explicit marker needs no intervening
+    /// word boundary (§FS-check.1.1.10); `citation_captures` merges both paths.
+    pub(super) citation_prefix_re: Regex,
     pub(super) id_input_re: Regex,
     /// The compiled grammar remembers the gate so every token consumer can
     /// enforce the same whole-token suppression rule (§AR-scanner.2.3.4).
@@ -370,6 +372,9 @@ impl Grammar {
         // the marker (§AR-workspace.3.1, §FS-workspace.6.1).
         let namespace_prefix = format!(r"(?:(?P<namespace>{})/)?", *PROJECT_PATH_PATTERN);
         let citation_re = Regex::new(&format!(r"\b{}{}{}", namespace_prefix, id_pat, sec_suffix))?;
+        // §FS-check.1.1.10: only the explicit-marker path bypasses the bare boundary.
+        let citation_prefix_re =
+            Regex::new(&format!(r"\A{}{}{}", namespace_prefix, id_pat, sec_suffix))?;
         let id_input_re = Regex::new(&format!(r"^{}{}$", id_pat, sec_suffix))?;
         let legacy = LegacyGrammar::build(kinds, format, &section_pattern, &comment_prefix)?;
 
@@ -456,6 +461,7 @@ impl Grammar {
             section_suffix_re,
             section_re,
             citation_re,
+            citation_prefix_re,
             id_input_re,
             named_sections,
             near_misses,

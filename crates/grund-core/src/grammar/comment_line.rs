@@ -26,11 +26,14 @@ fn citation_token_ranges(
     alias_grammars: &[AliasGrammar<'_>],
 ) -> Vec<(usize, usize)> {
     let mut ranges = Vec::new();
-    for caps in lexical.grammar.citation_re.captures_iter(line) {
+    // §FS-check.1.1.10: note classification shares the scanner's marked-token starts.
+    for (offset, caps) in lexical.grammar.citation_captures(line, lexical.marker) {
         let Some(full) = caps.get(0) else { continue };
+        let token_start = offset + full.start();
+        let token_end = offset + full.end();
         let namespace = caps.name("namespace");
-        let has_marker = line[..full.start()].ends_with(lexical.marker);
-        if lexical.grammar.has_reserved_named_tail(line, full.end()) {
+        let has_marker = line[..token_start].ends_with(lexical.marker);
+        if lexical.grammar.has_reserved_named_tail(line, token_end) {
             continue;
         }
         if namespace.is_some() && !has_marker {
@@ -46,13 +49,13 @@ fn citation_token_ranges(
         {
             continue;
         }
-        if !has_marker && is_inside_string_literal(line, full.start()) {
+        if !has_marker && is_inside_string_literal(line, token_start) {
             continue;
         }
         let start = if has_marker {
-            full.start().saturating_sub(lexical.marker.len())
+            token_start.saturating_sub(lexical.marker.len())
         } else {
-            full.start()
+            token_start
         };
         if namespace.is_some()
             && has_marker
@@ -60,7 +63,7 @@ fn citation_token_ranges(
         {
             continue;
         }
-        ranges.push((start, full.end()));
+        ranges.push((start, token_end));
     }
 
     if lexical.marker.is_empty() {
