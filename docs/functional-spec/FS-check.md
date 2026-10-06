@@ -1423,24 +1423,73 @@ The declaration-side near miss is **no longer** in this section: a heading shape
 
 ## 6. Watch mode (`--watch`)
 
-Status: planned — implementation tracked under [§RM-watch](../roadmap.md#rm-watch-implement-grund-check---watch).
-
-When implemented, `grund check --watch [<path>]` will run the check once, then stay resident and re-run it whenever a file under the scanned tree (or the discovered `grund.toml`) changes. It is the editor-less counterpart to the optional LSP server ([§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)): the LSP integrates `grund` into an editor's diagnostics; `--watch` is the plain-terminal "every save" loop that [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) exists for. Until [§RM-watch](../roadmap.md#rm-watch-implement-grund-check---watch) lands, `grund check --watch` is a CLI error (`error: unknown flag \`--watch\``, exit 2).
+`grund check --watch [<path>]` checks immediately, then stays resident and checks again when effective local inputs change. It is the terminal counterpart to [§FS-lsp](FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server), serving [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible). The approved lifecycle and output choices are recorded in [§DF-watch-terminal-loop](../decisions/functional/DF-watch-terminal-loop.md#df-watch-terminal-loop-a-terminal-watch-loop-preserves-ordinary-check-reports); delivery is tracked by [§RM-watch](../roadmap.md#rm-watch-implement-grund-check---watch).
 
 How it notices a change is [§FS-check.6.1](FS-check.md#61-change-detection), what each run prints is [§FS-check.6.2](FS-check.md#62-each-run-is-a-plain-grund-check), how it ends is [§FS-check.6.3](FS-check.md#63-lifecycle), and which command takes the flag is [§FS-check.6.4](FS-check.md#64-scope).
 
 ### 6.1 Change detection
 
-Filesystem notifications where the OS provides them; a debounce window coalesces a burst of writes into one re-check. No polling loop is required, and there is no configurable interval — the watcher reacts, it does not sample.
+The watcher uses native `notify` filesystem notifications on Linux, macOS and Windows. Mounts and pseudo-filesystems that do not deliver usable notifications are unsupported. There is no polling fallback or configurable polling interval. Read/access events do not trigger checks.
+
+#### 6.1.1 Subscribe before reading
+
+Subscribe before the initial scan. Newly discovered inputs must be subscribed before they are read. On refresh, add coverage, re-resolve under that coverage, then retire obsolete subscriptions. Events during discovery, subscription changes or scans must not disappear between a read and subscription; they arrange a subsequent check against the latest state.
+
+#### 6.1.2 Bounded debounce and serialized work
+
+While idle, run after 100 ms without a relevant event, or after 500 ms from the first pending relevant event, whichever comes first. A burst of writes or an atomic-save rename sequence within that window coalesces. Long saves can expose intermediate states; debounce is not a filesystem transaction.
+
+During a scan/publication retain one pending rerun, rather than a queue entry per event. Scans and report publications are serialized, with no concurrent scans or interleaved reports. A pending rerun observes the latest inputs after the current run; continued writes cannot postpone idle work indefinitely.
+
+#### 6.1.3 Effective input inventory
+
+Observe every effective local input that can change the equivalent one-shot result, including paths outside the selected reporting subtree ([§FS-check.1.3.6.1](FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)):
+
+- Both `grund.toml` and `.agents/grund.toml` at upward discovery and ancestor-claim candidates, including absent candidates and config precedence changes.
+- Workspace roots, nested members, member-glob parents and absent member candidates; resolution-wide source roots and kind homes.
+- Catalog JSON, agent entrypoints, indexes, stub targets and other checker probes, and followed file-link targets outside source roots.
+- Effective ancestor and nested `.gitignore`/`.ignore`, `.git/info/exclude`, global Git excludes, and the `.gitconfig`/XDG inputs through which those exclusions are discovered.
+
+This is the shared discovery/checker's inventory, not a second set of resolution semantics. Re-resolve config, membership, ignores, catalogs and output defaults on each run. Narrowed checks retain resolution-wide coverage. Hidden discovery inputs such as `.agents/grund.toml` remain observed when hidden source directories are excluded.
+
+Recursive subscriptions cover resolved source roots; ancestor/home coverage is shallow and path-filtered. Broad recursive roots may consume watches for ignored descendants. Missing or replaced inputs retain nearest-existing-parent anchors so creation, deletion, rename, atomic replacement, member additions/removals, and deleted/recreated roots refresh coverage rather than leaving dead subscriptions.
+
+#### 6.1.4 Uncertain notifications and recovery
+
+Lost events, overflow, unknown-path/uncertain events and internal queue saturation force full input rediscovery, rescan and subscription reconciliation. Replacement uses parent anchors to reattach. A failed setup/runtime subscription or failed watcher recovery is fatal under [§FS-check.6.3.2](FS-check.md#632-fatal-watcher-failures); the process must not silently remain resident with stale results. An ordinary input failure during that rescan remains recoverable under [§FS-check.6.3.1](FS-check.md#631-recoverable-runs) if usable discovery coverage can be retained.
 
 ### 6.2 Each run is a plain `grund check`
 
-Output and exit-status semantics of an individual run are exactly [§FS-check.2](FS-check.md#2-outputs)/[§FS-check.2.1](FS-check.md#21-report-format) on the tree's state at that moment — byte-identical to what a non-`--watch` invocation would print ([§FS-errors.4](FS-errors.md#4-determinism)). Before each run, and only when stdout is a terminal, the previous run's output is cleared so the terminal always shows the current report; piped output and `--format=json` carry no clearing bytes and stay byte-identical to a plain run, and with `--format=json` each run emits the same finding NDJSON as non-watch mode, scoped to that run.
+Each run preserves the ordinary check's stdout/stderr bytes, finding order and status on that tree state ([§FS-check.2](FS-check.md#2-outputs), [§FS-errors.4](FS-errors.md#4-determinism)), except the terminal controls in [§FS-check.6.2.2](FS-check.md#622-owned-terminal-screen). Reuse the ordinary checking, selection, sorting, rendering and status mapping. Every run preserves `--full`, grounding, suggestions, trial-rule selection, repeatable `--only`/`--ignore`, their precedence, and unhideable operational failures. Explicit `--format` overrides config defaults, including defaults changed while watching.
+
+#### 6.2.1 Exact stream contract
+
+Clean text prints the ordinary `success` marker ([§FS-check.2.1.3](FS-check.md#213-the-success-line)); JSON is ordinary finding NDJSON ([§FS-check.2.1.4](FS-check.md#214-json)). Clean JSON emits no record. Concatenated JSON therefore exposes neither clean runs nor every run boundary. No envelope, banner, timestamp or production run/completion record is added. Findings, warnings and operational errors keep their ordinary stream ownership. Redirected streams append the successive ordinary outputs.
+
+#### 6.2.2 Owned terminal screen
+
+Text owns an alternate screen only if stdout is an alternate-screen-capable terminal and stderr either shares that terminal or is redirected. Enter through stdout with `\x1b[?1049h`; immediately before each publication clear only that owned screen with `\x1b[H\x1b[2J`; restore through stdout with `\x1b[?1049l` on exit or before JSON publication. These spellings denote the corresponding escape bytes, not literal backslash text.
+
+Shared-terminal stderr is cleared with the report; redirected stderr appends and receives no clearing bytes. Redirected stdout, distinct stdout/stderr terminals and dumb terminals append on both streams, with no enter/clear/restore bytes. JSON never enters or clears a screen. A text-to-JSON format change restores the owned screen before any JSON bytes; a later eligible text run can acquire it again. No stream changes owner. Exit restores pre-watch terminal content rather than retaining the last report. Fatal failure restores first, then prints its error.
 
 ### 6.3 Lifecycle
 
-The process runs until interrupted (Ctrl-C / SIGINT). On interrupt it exits with the exit code of the most recently completed run (`0`/`1`/`2`), so `grund check --watch &` followed by a later signal is still a meaningful CI-ish probe. There is no TUI, no key bindings, no prompt — it is non-interactive per [§FS-non-goals.10](FS-non-goals.md#10-interactive-mode), just a re-printing checker. No network I/O ([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)); the only files touched are the ones the scan already reads.
+The process runs until interrupted or a fatal watcher failure. It is non-interactive: no TUI, key bindings or prompt ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). It performs no network I/O ([§FS-non-goals.11](FS-non-goals.md#11-network-access-during-a-check)), launches no configured processes and writes no filesystem inputs. It may observe local metadata and parent anchors needed by [§FS-check.6.1.3](FS-check.md#613-effective-input-inventory), beyond files whose contents the scan reads.
+
+#### 6.3.1 Recoverable runs
+
+Ordinary findings and config/read failures publish the ordinary status `0`, `1` or `2` and remain resident for repair. Initial invalid config retains discovery and parent coverage. Later failed runs retain the last usable inventory plus discovery anchors until correction. Config-dependent trial-rule refusals are recoverable runs; static invocation errors terminate before entering the loop ([§FS-check.6.4](FS-check.md#64-scope)).
+
+#### 6.3.2 Fatal watcher failures
+
+Setup/runtime subscription failures and failed watcher recovery restore any owned screen, print an actionable stderr `error:` diagnostic identifying the failed watching operation/input and exit `2`. This status overrides any previously completed check status. Release subscriptions and join workers on fatal exit as on interruption.
+
+#### 6.3.3 Interrupt and completion
+
+On Ctrl-C/SIGINT discard pending work. Let an active synchronous scan finish privately and discard its unpublished result. Publication already begun finishes and counts as completed only when both streams have been fully published and flushed. Shutdown may therefore wait for an active scan/publication.
+
+Return the most recently completed run's status (`0`/`1`/`2`). If none has completed, restore any owned screen and print `error: interrupted before the first check completed` on stderr, returning `2`. Restore the screen, release subscriptions and join workers before exit; no watcher or worker remains resident. An unpublished interrupted result never changes the last completed status.
 
 ### 6.4 Scope
 
-`--watch` will be a `check` flag spelled as `grund check --watch [<path>]` ([§FS-cli](FS-cli.md#fs-cli-grunds-command-line-surface-conventions)). Other subcommands will not take it; a one-shot `grund fmt` or ID query has nothing to keep watching.
+`--watch` is a `check` flag spelled as `grund check --watch [<path>]` ([§FS-cli](FS-cli.md#fs-cli-grunds-command-line-surface-conventions)). Other subcommands reject it. Parse and validate static invocation choices once, preserving ordinary validation diagnostics and their precedence; reuse those choices for every run. Config-dependent validity and output defaults are re-evaluated with the tree, rather than frozen at startup. There is no daemon/service protocol, public binding watch API, incremental engine or LSP dependency.

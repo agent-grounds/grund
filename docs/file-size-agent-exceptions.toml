@@ -163,7 +163,7 @@ match = "exact"
 rules = ["docs"]
 kind = "deferred"
 max_accepted = { value = 900, unit = "lines" }
-until = "the check specification is partitioned into recognition, reporting, and finding declarations with existing section citations migrated"
+until = "the check specification is partitioned into recognition, reporting, finding and watch declarations with existing section citations migrated"
 reason = """
-Missing boundary: citation recognition, command reporting, and the finding catalog still share one declaration. Splitting the report and finding catalog into separate declarations requires a mapped migration of their stable numbered section IDs and callers; that migration is outside the specification-only contract for issue #483. This entry records that existing debt while the configured-marker recognition point is pinned.
+Missing boundary: citation recognition, command reporting, the finding catalog and the watch points extended for issue 473 still share one declaration. Splitting them into separate declarations requires a mapped migration of their stable numbered section IDs and callers; that migration is outside the specification-only contracts for issues #483 and #473. This entry records that existing debt while the configured-marker recognition and watch points are pinned.
 """
