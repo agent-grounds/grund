@@ -1,0 +1,15 @@
+grund_config_version = 1
+
+[id]
+format = "{kind}_{slug}"
+
+[reference]
+marker = "§"
+
+[fmt.cross_refs]
+enabled = false
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+index = false

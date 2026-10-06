@@ -36,6 +36,21 @@ fn e2e_cases_match_expected_reports() {
     assert_every_case_passed("e2e cases", &outcomes);
 }
 
+/// §FS-check.1.1.10: port the control/subject reproducer across all graph consumers.
+#[test]
+fn word_character_marker_cli_contract() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let mut outcomes = Vec::new();
+    for marker in ["default", "underscore"] {
+        for surface in ["refs", "cover", "check", "missing"] {
+            let name = format!("word-character-marker-{marker}-{surface}");
+            outcomes.push(run_case(&root, &cases.join(name), E2e));
+        }
+    }
+    assert_every_case_passed("configured marker graph", &outcomes);
+}
+
 /// §FS-show.3.5.2: the check breadcrumb belongs only to the existing-path
 /// migration case. Port grund.33's clean-check and resolving-ID controls before
 /// comparing the malformed coordinate and both non-path alias refusals.

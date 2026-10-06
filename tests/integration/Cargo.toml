@@ -21,6 +21,10 @@ name = "lsp_completion"
 path = "lsp_completion.rs"
 
 [[test]]
+name = "lsp_word_character_marker"
+path = "lsp_word_character_marker.rs"
+
+[[test]]
 name = "lsp_cli_parity"
 path = "lsp_cli_parity.rs"
 
