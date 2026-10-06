@@ -23,9 +23,9 @@ class RegressionTests(unittest.TestCase):
         (root / "unread/note.md").write_text("This block is intentionally not scanned.\n")
         return root
 
-    def assert_fetch_filesystem_failure(self, root, path, os_error):
+    def assert_fetch_filesystem_failure(self, root, path, os_error, *, check_bytes=True):
         args, options = ("alpha/TICKET-1234",), {"write": True}
-        before = tree_bytes(root)
+        before = tree_bytes(root) if check_bytes else None
         expected, wire, _ = rust_call("fetch", root, args, options)
         actual = python_call(self.module, "fetch", root, args, options)
         self.assertEqual(expected, actual, "complete failure/caution parity")
@@ -44,7 +44,9 @@ class RegressionTests(unittest.TestCase):
         self.assertTrue(any(os.strerror(os_error) in cause for cause in failure.causes))
         self.assertTrue(failure.run_cautions, "workspace cautions must survive the I/O failure")
         self.assertEqual(actual["run_cautions"], plain(failure.run_cautions))
-        self.assertEqual(before, tree_bytes(root), "failed fetch must preserve bytes")
+        if check_bytes:
+            self.assertEqual(before, tree_bytes(root), "failed fetch must preserve bytes")
+        return failure
 
     @unittest.skipUnless(os.name == "posix", "fixture fetcher is a POSIX shell executable")
     def test_missing_fetch_executable_retains_io_source(self):
@@ -69,6 +71,32 @@ class RegressionTests(unittest.TestCase):
                 self.assert_fetch_filesystem_failure(root, home / "TICKET-1234.md", errno.EACCES)
             finally:
                 home.chmod(permissions)
+
+    @unittest.skipUnless(os.name == "posix", "requires POSIX directory traversal permissions")
+    def test_denied_fetch_snapshot_traversal_retains_io_source(self):
+        if os.geteuid() == 0:
+            self.skipTest("root bypasses traversal permissions; run as an unprivileged user")
+        with temporary() as temp:
+            root = self.fetch_fixture(temp)
+            home = root / "packages/alpha/docs/tickets"
+            home.mkdir(parents=True, exist_ok=True)
+            before = tree_bytes(root)
+            permissions = home.stat().st_mode
+            home.chmod(0o000)
+            try:
+                with self.assertRaises(PermissionError) as caught:
+                    with os.scandir(home) as entries:
+                        list(entries)
+                self.assertEqual(errno.EACCES, caught.exception.errno)
+                # Inspect bytes only after restoring the unreadable directory.
+                failure = self.assert_fetch_filesystem_failure(
+                    root, home, caught.exception.errno, check_bytes=False)
+                self.assertIn(
+                    f"{os.strerror(caught.exception.errno)} (os error {caught.exception.errno})",
+                    failure.causes, "retain the original I/O cause, not only the scan reason")
+            finally:
+                home.chmod(permissions)
+            self.assertEqual(before, tree_bytes(root), "failed traversal must preserve bytes")
 
     @unittest.skipUnless(os.name == "posix", "requires POSIX directory symlink semantics")
     def test_explicit_symlink_parent_root_matches_engine(self):
