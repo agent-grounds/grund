@@ -45,6 +45,13 @@ fn watch_effective_input_inventory_matrix() {
     );
     // Resolution-wide kind homes, ignored include paths and root replacement.
     edit_case(
+        |f| {
+            std::fs::create_dir_all(f.0.join(".git")).unwrap();
+            f.write("src/main.rs", BAD);
+        },
+        |f| f.write("src/.gitignore", "main.rs\n"),
+    );
+    edit_case(
         |f| f.write("src/main.rs", BAD),
         |f| f.write(".ignore", "src/main.rs\n"),
     );
@@ -148,6 +155,13 @@ fn watch_inventory_ancestor_claims_and_ignore() {
     let ignored = watch_test::one_shot(opts.clone(), &CheckFindingSelection::default(), None);
     assert_ne!(before.stdout, ignored.stdout);
     h.matches(&ignored);
+    std::fs::remove_file(f.0.join(".ignore")).unwrap();
+    h.matches(&before);
+    std::fs::create_dir_all(f.0.join(".git")).unwrap();
+    f.write(".gitignore", "child/src/main.rs\n");
+    let git_ignored = watch_test::one_shot(opts.clone(), &CheckFindingSelection::default(), None);
+    assert_ne!(before.stdout, git_ignored.stdout);
+    h.matches(&git_ignored);
     f.write(
         "grund.toml",
         &format!("{CONFIG}\n[workspace]\nmembers = [\"child\"]\n"),
