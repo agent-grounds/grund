@@ -583,7 +583,7 @@ All three describe v1 exactly and stay true of it. In v2 the row is declared by 
 
 So `migrate` must translate rather than copy. A bare v1 name becomes a glob that matches at any depth, which is what [§FS-config.3.5](../../functional-spec/FS-config.md#35-scan--what-gets-scanned) already means by it. A path-shaped v1 entry — one containing `/` — matched nothing under the component matcher and becomes, in v2, the glob it looks like; `migrate` reports each one, because that is the single case where the rewrite changes what is scanned.
 
-That same path-shaped entry is a v1 defect of its own and is fixed separately, as an immediate located config error: an entry that can never match is a mistake the config should fail loudly on rather than accept in silence.
+That same path-shaped entry is a v1 defect of its own and is fixed separately, as an immediate located config error: an entry that can never match is a mistake the config should fail loudly on rather than accept in silence. The fix is [§FS-config.3.5.16](../../functional-spec/FS-config.md#3516-an-exclude-entry-containing--is-refused), and it puts one requirement on `migrate`: a historical v1 file that still carries such an entry must be readable by the migrator without first passing the corrected validation, and its report must say how each one's reach changes ([§DF-scan-exclude-component-names.2.4](../../decisions/functional/DF-scan-exclude-component-names.md#24-what-this-leaves-to-the-v2-migration)).
 
 ### 8.4 Dropping `include` widens no scan
 
