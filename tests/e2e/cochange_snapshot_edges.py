@@ -120,6 +120,47 @@ class SnapshotEdgeTests(RecipeCase):
         else:
             self.report(result, 0)
 
+    def test_symlink_resolution_os_errors_keep_exact_path_and_stable_report(self):
+        """Host link failures retain their path (§FS-cochange-recipe.snapshots, §FS-cochange-recipe.output)."""
+        self.fixture.stage_blob("a", b"src/lib.py", "120000")
+        self.fixture.commit("Tracked link", stage=False)
+        # Inject only the host resolution error; Git, snapshots and the report
+        # still run through the real entry point, on every host.
+        launcher = '''import errno
+from pathlib import Path
+import runpy
+import sys
+from unittest.mock import patch
+original = Path.resolve
+failure = int(sys.argv.pop(1))
+def resolve(path, *args, **kwargs):
+    if path.name == "a" and kwargs.get("strict"):
+        exc = OSError(failure, "host cannot access symlink", str(path))
+        exc.winerror = 1920
+        raise exc
+    return original(path, *args, **kwargs)
+sys.argv = sys.argv[1:]
+sys.path.insert(0, str(Path(sys.argv[0]).parent))
+with patch.object(Path, "resolve", resolve):
+    runpy.run_path(sys.argv[0], run_name="__main__")
+'''
+        import errno
+        binary = os.environ.get("GRUND_BUILT") or shutil.which("grund")
+        for failure in (errno.EACCES, errno.EINVAL):
+            with self.subTest(errno=failure):
+                command = [sys.executable, "-c", launcher, str(failure), str(RECIPE),
+                    "--repo", str(self.fixture.root), "--policy", str(self.fixture.policy),
+                    "--grund", binary, "ci", "--target", self.fixture.base, "--head", "HEAD"]
+                first = subprocess.run(command, capture_output=True, text=True)
+                report = self.report(first, 2)
+                self.error(report, "unsupported-input", "a")
+                self.assertIn("host that supports", report["errors"][0]["message"])
+                self.assertNotIn(str(Path.home() / "ag/tmp"), first.stdout)
+                self.assertEqual(1, len(first.stdout.splitlines()))
+                second = subprocess.run(command, capture_output=True, text=True)
+                self.report(second, 2)
+                self.assertEqual(first.stdout, second.stdout)
+
     def test_git_root_native_and_forward_slash_spellings_agree(self):
         """Git/native path spellings denote the same root (§FS-cochange-recipe.snapshots)."""
         native = self.report(self.fixture.invoke(), 0)
