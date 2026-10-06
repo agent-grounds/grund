@@ -1,6 +1,8 @@
 //! Effective input/anchor evidence from shared discovery (§FS-check.6.1.3).
 use crate::support::*;
-use grund::{WatchObservation, watch_test};
+#[cfg(unix)]
+use grund::WatchObservation;
+use grund::watch_test;
 use grund_core::{CheckFindingSelection, CheckInput};
 use std::{
     collections::BTreeSet,
