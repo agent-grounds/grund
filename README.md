@@ -327,7 +327,7 @@ That rule plus a clean `grund check` is the whole contract: every reference reso
 - [`docs/user-facing/clickable-citations.md`](docs/user-facing/clickable-citations.md) — make citations clickable in your terminal
 - [`docs/user-facing/external-facts.md`](docs/user-facing/external-facts.md) — materialize external tickets as committed offline snapshots
 - [`docs/user-facing/coordinate-sizes.md`](docs/user-facing/coordinate-sizes.md) — measure coordinate leads and opt into oversized-lead warnings
-- [`docs/user-facing/rules.md`](docs/user-facing/rules.md) — write checked chapter and citation rules in controlled English
+- [`docs/user-facing/rules.md`](docs/user-facing/rules.md) — write checked chapter and citation rules in controlled English; [runnable example](examples/rules/)
 - [`docs/user-facing/values.md`](docs/user-facing/values.md) — declare and check shared values in Markdown, JSON, prose, and code comments
 - [`docs/grund.md`](docs/grund.md) — why this exists
 - [`docs/goals.md`](docs/goals.md) — what we measure ourselves against
