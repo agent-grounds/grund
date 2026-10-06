@@ -35,6 +35,14 @@ fn is_live_test_source(root: &Path, file: &Path) -> bool {
     if path.starts_with("tests/integration/") {
         return true;
     }
+    // §FS-distribution.3.0.3: binding acceptance is live test source too,
+    // even while its recorded entry failure still demonstrates the missing API.
+    if path.starts_with("tests/bindings/") && path.ends_with(".py") {
+        return relative
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.starts_with("test_"));
+    }
     if !path.starts_with("crates/") || !path.ends_with(".rs") {
         return false;
     }
@@ -164,7 +172,7 @@ folder = "docs"
 title = "Behavior"
 
 [scan]
-extensions = ["md", "rs"]
+extensions = ["md", "rs", "py"]
 "#,
         )?;
         fs::write(
@@ -335,6 +343,14 @@ fn repository_evidence_counts_sources_and_excludes_its_own_synthetic_proofs() {
             "// \u{a7}FS-proof.integration\n",
         ),
         (
+            "tests/bindings/test_behavior.py",
+            "\"\"\"\u{a7}FS-proof.binding\"\"\"\n",
+        ),
+        (
+            "tests/bindings/support.py",
+            "\"\"\"\u{a7}FS-proof.helper\"\"\"\n",
+        ),
+        (
             "tests/integration/functional_spec_coverage.rs",
             "// \u{a7}FS-proof.gate\nconst INVENTORY: &str = \"FS-proof.inventory\";\n",
         ),
@@ -378,6 +394,7 @@ fn repository_evidence_counts_sources_and_excludes_its_own_synthetic_proofs() {
                 "FS-proof.unit",
                 "FS-proof.crate",
                 "FS-proof.integration",
+                "FS-proof.binding",
                 "FS-proof.manifest",
             ]
             .map(str::to_string)

@@ -168,7 +168,7 @@ title = "Init scaffold templates: what grund init writes, verbatim"
 # home is walked by construction (FS-config.3.5), so the test homes, `examples`,
 # `.github/workflows`, and `scripts` are not repeated here; `skills` and
 # `templates` are homes too, and ones the config lists without walking.
-include = ["docs", "src", "crates", "README.md", "AGENTS.md"]
+include = ["docs", "src", "crates", "tests/bindings", "README.md", "AGENTS.md"]
 # `repo` / `expected.repo`: the e2e fixture trees under `tests/e2e/cases/*/` are
 # test inputs, not this project's code — keep them out of the host scan so strict
 # mode and `require_grounding` (above) apply to grund's own sources, not the
