@@ -2,6 +2,35 @@
 
 `grund-lsp` is the optional editor server for `grund`. It provides citation completion, diagnostics, hover previews, usage counts on declaration titles, go-to-definition, references, document links, and live `$$` to `§` formatting from the same engine as the CLI ([§FS-lsp](../functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)).
 
+## Screenshots
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="../assets/lsp/hover-preview.png">
+    <source media="(prefers-color-scheme: light)" srcset="../assets/lsp/hover-preview-light.png">
+    <img src="../assets/lsp/hover-preview-light.png" width="96%" alt="Hover preview of [§FS-declarations.checks.misplaced-declaration](../functional-spec/FS-declarations.md#checksmisplaced-declaration-misplaced-declaration-configured-kind-home) shown directly above the grund code that implements the misplaced-declaration check">
+  </picture>
+  <br><sub><strong>Hover previews</strong> — the spec and the code that satisfies it, in one frame.</sub>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="../assets/lsp/error-reporting.png">
+    <source media="(prefers-color-scheme: light)" srcset="../assets/lsp/error-reporting-light.png">
+    <img src="../assets/lsp/error-reporting-light.png" width="96%" alt="Dangling citation diagnostic showing the nearest declared ID hint">
+  </picture>
+  <br><sub><strong>Error reporting</strong> — dangling citations are flagged inline with a "did you mean" hint.</sub>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="../assets/lsp/definitions.png">
+    <source media="(prefers-color-scheme: light)" srcset="../assets/lsp/definitions-light.png">
+    <img src="../assets/lsp/definitions-light.png" width="96%" alt="Go-to-definition results listing FS-check.3.7 declaration and citation targets">
+  </picture>
+  <br><sub><strong>Definitions &amp; references</strong> — jump between a declaration and every §citation of it.</sub>
+</p>
+
 ## Install
 
 Install the CLI first:

@@ -1433,7 +1433,7 @@ The watcher uses native `notify` filesystem notifications on Linux, macOS and Wi
 
 #### 6.1.1 Subscribe before reading
 
-Subscribe before the initial scan. Newly discovered inputs must be subscribed before they are read. On refresh, add coverage, re-resolve under that coverage, then retire obsolete subscriptions. Events during discovery, subscription changes or scans must not disappear between a read and subscription; they arrange a subsequent check against the latest state.
+Subscribe before the initial scan. Newly discovered inputs must be subscribed before they are read or probed for existence, including each candidate that can affect resolution. This ordering also holds in parallel workspace project scans. On refresh, add coverage, re-resolve under that coverage, then retire obsolete subscriptions. Events during discovery, subscription changes or scans must not disappear between a read and subscription; they arrange a subsequent check against the latest state.
 
 #### 6.1.2 Bounded debounce and serialized work
 
@@ -1453,6 +1453,8 @@ Observe every effective local input that can change the equivalent one-shot resu
 This is the shared discovery/checker's inventory, not a second set of resolution semantics. Re-resolve config, membership, ignores, catalogs and output defaults on each run. Narrowed checks retain resolution-wide coverage. Hidden discovery inputs such as `.agents/grund.toml` remain observed when hidden source directories are excluded.
 
 Recursive subscriptions cover resolved source roots; ancestor/home coverage is shallow and path-filtered. Broad recursive roots may consume watches for ignored descendants. Missing or replaced inputs retain nearest-existing-parent anchors so creation, deletion, rename, atomic replacement, member additions/removals, and deleted/recreated roots refresh coverage rather than leaving dead subscriptions.
+
+Lexical directory aliases retain their link-replacement anchors while sharing physical native coverage. Retiring an alias must preserve any coverage still required by another input, including recursive coverage; replacement or retargeting re-resolves that ownership under the anchors.
 
 #### 6.1.4 Uncertain notifications and recovery
 

@@ -1,6 +1,8 @@
 //! Private boundary evidence for §FS-check.6.1–§FS-check.6.3 and §AR-bindings.3.
 //! Uses the native backend on Linux/macOS/Windows; no filesystem polling.
 
+#[path = "watch_observer/aliases.rs"]
+mod aliases;
 #[path = "watch_observer/coordination.rs"]
 mod coordination;
 #[path = "watch_observer/global_ignore.rs"]

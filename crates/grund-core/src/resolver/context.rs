@@ -385,15 +385,21 @@ fn load_workspace_projects_with_overlays(
     // targets in scope. Project scans are independent once aliases and target
     // grammars are validated; sort by the original entry index before returning
     // so root/member ordering stays byte-deterministic.
+
+    // §FS-check.6.1.1, §AR-bindings.3: project workers inherit scoped coverage
+    // before tree discovery, then restore their previous observer on return.
+    let observer = crate::config::check_input_observer();
     let mut indexed = if entries.len() >= 2 {
         entries
             .into_par_iter()
             .enumerate()
             .map(|(index, entry)| {
-                (
-                    index,
-                    load_workspace_project(entry.alias, entry.config, &targets, overlays),
-                )
+                crate::config::with_check_input_observer(observer.clone(), || {
+                    (
+                        index,
+                        load_workspace_project(entry.alias, entry.config, &targets, overlays),
+                    )
+                })
             })
             .collect::<Vec<_>>()
     } else {
