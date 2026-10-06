@@ -46,6 +46,12 @@ entry instead of allowing the baseline to conceal it.
 
 ## 2. Goal meters
 
+`tests/bindings/` is the executable Rust/Python complete-data and canonical-byte
+meter required by [§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity). Until the missing frontend and Rust oracle
+adapter are supplied, its entry failure is evidence of absence, not measured parity.
+After it passes it measures Rust/Python only; Node remains pending until #469 adds
+its adapter. CLI goldens remain a separate authoritative projection.
+
 | Goal | Meter |
 |---|---|
 | [§GOAL-agent-grounding](../goals.md#goal-agent-grounding-agents-stay-cited-as-they-work) | Agent entrypoint fixtures ([§FS-init.2.3](../functional-spec/FS-init.md#23-generated-agent-entrypoints)), grounding checks ([§FS-check.3.6](../functional-spec/FS-check.md#36-ungrounded-unit-opt-in)), coverage index ([§FS-cover](../functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file)), and the co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)). |

@@ -14,6 +14,11 @@ api ──┼─► [ grund-lsp ]  ─► LSP over stdio
 
 The frontends' side of [§AR-system.3](README.md#3-frontends) and the api's contract of [§AR-system.2.9](README.md#29-api). Every frontend takes the data the api returns and gives back a rendering or a transport of it; none holds a regex, a walk or a rule, and none depends on another. The engine's side of the contract is section 2; each frontend has a section of its own below.
 
+The approved Python addition is an independent frontend over this boundary
+([§FS-distribution.3.3](../functional-spec/FS-distribution.md#33-python-grund-pypi-package)); its acceptance tests initially fail until the local extension
+exists. Node coverage and registry distribution remain pending. No Python operation
+delegates to a CLI process or imports another frontend.
+
 ## terms: Terms
 
 Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) (section), [§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4-scanning-and-project-structure) (scan), and
@@ -39,9 +44,21 @@ grund/
 
 All four frontend crates take their engine logic from `grund-core` alone and depend on none of each other. `tests/integration/test_frontend_isolation.py` holds this on the resolved dependency graph `cargo metadata` reports rather than on the manifests' intent: the CLI's tree carries no LSP transport, the server's no CLI, and the engine's no frontend. That is what lets [§DA-lsp-optional](../decisions/architectural/DA-lsp-optional.md#da-lsp-optional-lsp-server-ships-as-a-separate-optional-binary) hold: no JSON-RPC machinery or LSP type reaches `grund-core`, so none is in `grund-cli`'s tree.
 
+Python joins the resolved graph proof in `tests/bindings/test_isolation.py`:
+grund-py depends directly on core and transitively on no frontend. The ordinary
+Cargo CLI graph excludes PyO3/Python build dependencies ([§FS-distribution.3.3.7](../functional-spec/FS-distribution.md#337-local-source-and-typing-handoff)).
+This extends, rather than replaces, the existing CLI/LSP isolation proof.
+
 ## 2. grund-core: the only place logic lives
 
 Every check, every show, every regex, every walker invocation lives in `grund-core`. The crate exposes:
+
+Bindings reuse current warning-preserving scoped APIs, selection and batch queries,
+size/coverage/config/completion APIs, snapshot materialization and managed writers.
+Additive failure carriers classify errors at source without parsing Display text;
+core owns non-Unicode workspace preflight and integration-install orchestration.
+Existing Rust entry points and CLI rendering/defaults stay compatible
+([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). Historical signatures below are not a frozen Python schema.
 
 - `grund_core::scan(root: &Path) -> Result<Findings>`
 - `grund_core::check(root: &Path) -> Result<Report>`
@@ -78,7 +95,24 @@ Prebuilt platform binaries are uploaded as separate npm packages (`@grund-cli/li
 
 ## 6. grund-py: the PyO3 binding
 
-Same operations, exposed as Python functions. Built and packaged via `maturin`. Wheels are produced by `cibuildwheel` in CI for each release. Source distributions are also uploaded so unsupported platforms can build from source.
+The planned grund-py crate owns only PyO3 conversion and exception policy over supported core
+data APIs ([§FS-distribution.3.3](../functional-spec/FS-distribution.md#33-python-grund-pypi-package)). Frozen dataclasses, tuples and read-only config
+mappings in `python/grund` expose the public schema; private `grund._native` holds
+the abi3-py310 extension. Root `pyproject.toml` selects maturin, with source inclusion
+for independently installing an unpacked sdist and accurate types/py.typed.
+
+Rust work runs with the GIL released; calls check Python interrupts on return and
+carry per-call scope rather than changing cwd ([§FS-distribution.3.3.4](../functional-spec/FS-distribution.md#334-silent-synchronous-calls)).
+Core supplies warning/failure/path/install adapters; Python does not walk, resolve,
+check, parse or reproduce managed-write behavior. No dependency on CLI/LSP/Node is
+allowed. `tests/bindings/` compares complete data and canonical bytes, separately
+from the frozen CLI wire projection ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)).
+
+Local build readiness does not claim published wheels. #471 owns cibuildwheel
+release assembly and CLI payload placement; the binding adds no console entrypoint.
+Carry “Adapt Python marshalling to #466/#453/#454” without changing the approved
+Python schema. #469 supplies the later Node adapter; neither coordination is a
+prerequisite for this local frontend.
 
 ## 7. Why this shape
 

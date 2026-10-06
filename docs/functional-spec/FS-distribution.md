@@ -14,6 +14,11 @@ alias), and [§FS-terms.terms.5](FS-terms.md#terms5-findings) (finding, severity
 
 ## 1. Targets
 
+Local Python API support is required by [§FS-distribution.3.3](FS-distribution.md#33-python-grund-pypi-package) independently of registry
+availability. The initial binding supplies a locally installable extension and source
+distribution; the PyPI release matrix, CLI payload and publication remain separate work.
+An approved contract or a failing acceptance test does not establish implemented support.
+
 | Registry | Package name        | Status      | Contents                                                                  |
 |----------|---------------------|-------------|---------------------------------------------------------------------------|
 | cargo    | `grund-core`          | implemented | Shared engine library used by the CLI, LSP, and future bindings.            |
@@ -56,11 +61,27 @@ CLI reports use logical paths, relative to the base `relative_paths` selects ([�
 
 Each binding exposes the same conceptual operations as the CLI subcommands, plus a programmatic check-and-iterate path so the engine can be embedded inside test runners and editor servers.
 
+The initial Python inventory is normative in [§FS-distribution.3.3.5](FS-distribution.md#335-complete-initial-inventory). Process
+transport and editor-only exclusions must be explicit; an absent operation cannot be
+advertised as supported. Node is a later adapter to the same parity contract.
+
 ### 3.0 Language-neutral data shapes
 
-Every binding returns the same data, only spelled idiomatically: a report and its findings ([§FS-distribution.3.0.1](FS-distribution.md#301-report-and-finding)), and the options a `show` takes ([§FS-distribution.3.0.2](FS-distribution.md#302-showopts)). These fields are normative. The byte-for-byte JSON form the CLI emits under `--format=json`, and IDE/agent integrations consume, follows the same shape and is the cross-binding equivalence test for [§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms), tracked in [AR-goal-measurement.2](../architecture/AR-goal-measurement.md#2-goal-meters).
+Every binding returns the same data, only spelled idiomatically: a report and its
+findings ([§FS-distribution.3.0.1](FS-distribution.md#301-report-and-finding)), and show
+options ([§FS-distribution.3.0.2](FS-distribution.md#302-showopts)). These fields are
+normative. Complete host data and the frozen CLI JSON projection are compared
+separately under [§FS-distribution.3.0.3](FS-distribution.md#303-complete-data-and-canonical-parity), serving
+[§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms)
+and tracked in [AR-goal-measurement.2](../architecture/AR-goal-measurement.md#2-goal-meters).
 
 #### 3.0.1 Report and Finding
+
+Host results retain all engine data, including nullable columns, multi-site locations,
+rule authority, scan-error status, output-format metadata and run cautions. Run cautions
+remain distinct from report warnings, including when setup fails. The CLI projection
+below stays frozen: it omits columns and projects empty sites/authority to null; it is
+not the complete host schema. [§FS-distribution.3.0.3](FS-distribution.md#303-complete-data-and-canonical-parity) compares both forms separately.
 
 ```
 Report {
@@ -94,6 +115,12 @@ Finding {
 
 #### 3.0.2 ShowOpts
 
+Python takes required query operands positionally and section/mode/format/root as
+keywords ([§FS-distribution.3.3.5](FS-distribution.md#335-complete-initial-inventory)). Roots and query failures follow
+[§FS-distribution.3.3.3](FS-distribution.md#333-per-call-scope-and-path-encoding) and [§FS-distribution.3.3.2](FS-distribution.md#332-operational-failures-and-invalid-arguments). Batch setup failure raises
+once; individual failed queries remain ordered outcomes. An empty batch succeeds
+without loading configuration.
+
 ```
 ShowOpts {
   section: string?    // dotted section path, e.g. "3.1.2"
@@ -105,7 +132,46 @@ ShowOpts {
 }
 ```
 
+#### 3.0.3 Complete data and canonical parity
+
+The shared `tests/bindings/` corpus compares complete Rust and Python result,
+failure and run-caution data, preserving every field and engine array order. A future
+Node adapter joins this harness; Rust/Python evidence must never claim Node coverage.
+Adapters use supported data APIs, not CLI subprocesses or message-only comparisons.
+
+The canonical UTF-8 JSON envelope has exactly `failure`, `result`, `run_cautions`:
+one of failure/result is null, except that an empty successful result may be null.
+Objects sort keys recursively by UTF-8 bytes; arrays keep engine order. Nullable
+fields are present, empty collections are arrays, separators are compact, and exactly
+one LF ends the record. Unicode and `/` remain literal. Quote, backslash, LF, CR and
+tab use JSON escapes; every other U+0000–U+001F character uses lowercase `\u00xx`
+(including backspace and form feed). No raw Rust serialization substitutes for this
+specified projection. Full structured equality and exact canonical bytes are separate
+assertions.
+
+Compare the frozen CLI projection separately to existing stdout/stderr JSON goldens.
+It keeps global stable path/line/message ordering (null path first, absent line as
+zero, warning/error/suggestion tie order), suggestion channel instead of severity,
+null empty sites/authority, authority last, and no column key. Run cautions are
+accounted for separately from report warning records and raw stderr cautions.
+
+Corpus acceptance includes clean/error trees, config failures, caution-only runs and
+cautions before failure, suggestions enabled/disabled, selector authority/safety,
+missing/ambiguous single and batch queries, workspaces, Unicode/control characters
+and logical separators. Every operation has success/refusal coverage. Writers run
+on isolated copies and compare preview/no-execution behavior and resulting bytes
+with core, including isolated integration user homes.
+
 ### 3.1 Rust (`grund-core` crate)
+
+The Python frontend may require additive warning-preserving, structured-failure,
+workspace-path-preflight and managed-integration adapters. They belong in core and
+preserve supported Rust entry points and existing CLI defaults, verdicts and bytes.
+Classification originates where the failure occurs; frontends do not parse Display
+messages for diagnostic fields. The public Python schema does not freeze the internal
+Config or Findings layout. Carry “Adapt Python marshalling to #466/#453/#454” when
+Python precedes that transition: replace internal adapters and rerun parity while
+preserving the approved Python schema.
 
 ```rust
 let report = grund_core::check(&path)?;
@@ -134,11 +200,125 @@ The Node binding is built with `napi-rs`. Native binaries are prebuilt for the p
 ```python
 from grund import check, show
 
-report = check("./repo")
-body = show("FS-check", mode="brief")
+repo = "tests/e2e/cases/json-report/repo"
+result = check(repo)
+for finding in result.report:
+    print(finding.code, finding.line)  # dangling 3
+assert "FS-999-missing" in show("FS-001-alpha", root=repo, mode="brief").body
 ```
 
-The Python binding is built with `PyO3` and packaged with `maturin`. Wheels are built for CPython 3.10+ across the platforms covered by `cibuildwheel`. The distribution package and import module are both named `grund` ([§DA-pypi-uses-grund-as-the-package-name](../decisions/architectural/DA-pypi-uses-grund-as-the-package-name.md#da-pypi-uses-grund-as-the-package-name-pypi-uses-grund-as-the-package-name)).
+The Python binding requires PyO3 and maturin. Future release wheels use cibuildwheel;
+the local source/build handoff is [§FS-distribution.3.3.7](FS-distribution.md#337-local-source-and-typing-handoff). Distribution and import
+names are both `grund` ([§DA-pypi-uses-grund-as-the-package-name](../decisions/architectural/DA-pypi-uses-grund-as-the-package-name.md#da-pypi-uses-grund-as-the-package-name-pypi-uses-grund-as-the-package-name)).
+
+The following is the required local contract; registry availability remains pending.
+
+#### 3.3.1 Typed immutable results
+
+Results/options are frozen dataclasses; collections are tuples, with explicit None
+for optional fields. Effective config is a read-only schema-keyed mapping, including
+nested mappings, rather than an exported internal Rust Config record. CheckResult
+carries `report`, `selected_report`, `had_scan_errors`, `output_format` and separate
+`run_cautions`. Report has errors/warnings/suggestions tuples; iteration yields those
+groups in that order, preserving engine order within each. Findings retain
+severity/channel, code, path, line, column, message, sites and authority. Scan returns
+a catalog/citations/scan-diagnostic snapshot. Other operation records retain every
+supported engine output field and expose run_cautions separately. ShowQuery is a
+frozen record with `id` and nullable `section=None`. Batch records have nullable
+`result`/`failure` fields. Refs includes file summaries and site/file totals; list
+includes summaries. Empty collections never become None.
+
+#### 3.3.2 Operational failures and invalid arguments
+
+GrundError has ConfigError, FilesystemError, QueryError and fallback OperationError
+subclasses. Each carries typed `.failure`: code, message, nullable path/line/column,
+sites, authority, causes, run_cautions, partial_output and structured details (such
+as candidates and OS error codes). Locations come from engine data, never text
+parsing. Completed checks containing findings return normally. Single unsuccessful
+queries raise QueryError; a batch continues with the same failure per record, while
+setup failure raises once. Empty batch input succeeds without config loading.
+Unknown ID kind in propose_id raises OperationError; rejected queries raise QueryError.
+Wrong Python types raise TypeError; invalid option values raise ValueError.
+PathEncodingError is a ValueError subclass for rejected path encodings.
+
+#### 3.3.3 Per-call scope and path encoding
+
+Paths accept str or os.PathLike[str]. root=None snapshots cwd at entry and means
+omitted scope; explicit files/directories keep explicit-path engine semantics.
+Reuse config discovery without config injection. Calls against different roots are
+independent. Report paths are engine logical strings with `/`, independently of
+native filesystem inputs. Reject bytes/byte-returning PathLike with TypeError,
+surrogates with PathEncodingError and embedded NUL with ValueError before work.
+Core preflight reuses workspace discovery to reject the known unnamed non-Unicode
+member alias case with PathEncodingError before unsafe alias derivation. This bounded
+protection changes no CLI behavior and promises no arbitrary Rust panic recovery.
+
+#### 3.3.4 Silent synchronous calls
+
+Calls read no process argv, print to neither stdout nor stderr, never exit Python
+and never change global cwd. Synchronous Rust work releases the GIL. Independent
+read calls may overlap; callers serialize writers to the same files. Pending Python
+interrupts are checked on return, so Rust work may complete before KeyboardInterrupt.
+No async API, mid-call cancellation or additional rollback is promised.
+
+#### 3.3.5 Complete initial inventory
+
+Required operands are positional; all other arguments are keywords. Every disk-tree
+operation below also accepts root=None; check accepts root positionally. scan requires
+its root positionally. init uses target in place of root; integrations and setup
+instructions have no root. Defaults below are normative, not merely examples.
+
+| Operation signature (besides common root) | Result/core meaning |
+| --- | --- |
+| `check(root=None, *, require_grounding=False, suggestions=False, full=False, rule=None, only=(), ignore=(), only_rule=False)` | Complete and selected report, warning-preserving check |
+| `scan(root)` | Raw scanner snapshot |
+| `show(id, *, section=None, mode="lead", format="text")` | Scoped show result |
+| `show_batch(queries=None, *, mode="lead")` | None means all; ordered strings/ShowQuery records |
+| `refs(id, *, section=None, descendants=False)` | Warning-preserving metadata/totals |
+| `list_ids(*, kinds=(), projects=(), unused=False, selector=None)` | Entries and summaries |
+| `list_sizes(*, kinds=(), projects=(), unused=False, selector=None, units=("lines","words","bytes"), top=None)` | Lead/full sizes |
+| `cover(*, text=False)` | Structured or text coverage data |
+| `fmt(*, write=False, marker=False, cross_refs=False)` | Format preview or managed writes |
+| `propose_id(kind, title, *, width=3)` | Warning-preserving ID proposal |
+| `init(target=None, *, name=None, description=None, docs=False, force=False, write=False, check=False, no_vcs=False, agents=None)` | Scaffold output; None agents auto-selects |
+| `effective_config()` / `validate_config()` | Config/schema data and cautions |
+| `fetch(id, *, write=False)` | Materialized snapshot; explicit write required |
+| `integrations(client=None, *, write=False, conversation=None, conversation_target=None, agent=None)` | Detection/artifacts or managed install |
+| `complete_ids(prefix="", *, sections=False)` / `reference_style()` | Completion/style data |
+| `agent_setup_instructions()` | Canonical setup payload |
+
+Modes are lead/brief/toc/full; formats text/md/json. Filters/selectors are string
+sequences. Units are lines/words/bytes; top is positive, width non-negative.
+Selectors filter only selected_report; ignore wins, rule selection requires rule,
+and safety io findings remain. Kind overrides, workspace aliases, exclusions and
+scope remain engine decisions. Config-enabled cross-reference formatting applies
+even when cross_refs=False. No unimplemented inventory entry counts as support.
+
+Shell scripts, stdin/NDJSON transport, watch/process lifecycle, exit codes and LSP
+transport are frontend concerns. Optional overlay/on-type/hover editor utilities
+are excluded from the initial disk-backed API; no CLI conceptual operation is dropped.
+
+#### 3.3.6 Explicit mutation opt-ins
+
+fmt previews by default. init maps write=False to dry-run; check=True suppresses
+writes and reports pending changes. Force never replaces config. fetch refuses
+write=False with ValueError before execution; it promises no preview. Integration
+reads return artifacts/detection; writes preserve preference validation, agent gates,
+managed ownership and manual steps. Reads never execute fetchers. Existing engine
+data-preservation contracts and CLI defaults remain unchanged.
+
+#### 3.3.7 Local source and typing handoff
+
+Require CPython 3.10+ with GIL and abi3-py310. PyPy and free-threaded Python support
+are not promised. Root pyproject.toml selects maturin; python/grund supplies the
+public API/types/py.typed and grund._native is private. Clean checkout and independently
+unpacked sdist both install importable grund without registry credentials. The sdist
+includes necessary workspace manifests, lockfile, Rust sources/assets, Python/types
+and licence. Python-only dependencies do not become ordinary Cargo CLI requirements.
+Add no competing CLI console entrypoint; release matrix, prebuilt CLI placement and
+publication belong to #471. Accurate signatures/type information and runnable
+check/iteration/show examples belong in user documentation and example indexes.
+Local support is described independently of unpublished PyPI availability.
 
 ## 4. Release process
 
