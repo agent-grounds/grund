@@ -49,6 +49,7 @@ mod point_sizes;
 mod record;
 mod report_paths;
 mod run_warnings;
+mod scan_block;
 mod scope_roots;
 mod workspace_block;
 
@@ -109,6 +110,8 @@ mod tests_id_grammar;
 mod tests_kind_index;
 #[cfg(test)]
 mod tests_non_citable_kinds;
+#[cfg(test)]
+mod tests_scan_exclude;
 #[cfg(test)]
 mod tests_validation;
 
