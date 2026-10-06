@@ -27,6 +27,9 @@ fn watch_completed_run_option_matrix() {
     let _serial = crate::support::serial();
     let f = Fixture::new();
     f.write("src/main.rs", BAD);
+    // §FS-check.6.2: multisite duplicate ordering and run-level stderr routing.
+    f.write("docs/functional-spec/FS-dupe.md", "# FS-live: Duplicate\n");
+    f.write(".agents/grund.toml", CONFIG);
     f.write("src/ungrounded.rs", "fn ungrounded() {}\n");
     f.write("outside/note.md", "\u{a7}FS-outside-missing\n");
     f.write(
