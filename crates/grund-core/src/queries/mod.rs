@@ -87,6 +87,8 @@ pub(crate) use show::show_declaration;
 #[cfg(test)]
 mod tests_editor_completion;
 #[cfg(test)]
+mod tests_editor_completion_overlap;
+#[cfg(test)]
 mod tests_editor_completion_workspace;
 #[cfg(test)]
 mod tests_lsp_hover;
