@@ -553,6 +553,8 @@ pub(super) fn scan_file_text(
     let has_unmarked_headings = !unmarked_heading_candidates.is_empty();
     let has_local_section_candidates = !findings.local_section_citation_candidates.is_empty();
     if classify
+        // §FS-cover.6.2: a `cover --lines` request reads the body spans too.
+        || !config.owner_lines.is_empty()
         || has_text_sections
         || has_value_declarations
         || has_embedded_roots
@@ -605,7 +607,7 @@ pub(super) fn scan_file_text(
             findings,
         );
     }
-    resolve_citation_owners(findings, config, path, &md_headings, classify);
+    resolve_citation_owners(findings, config, path, &md_headings, total_lines, classify);
     // §AR-scanner.2.7.1: the headings and doc-comment blocks a grounding unit finer
     // than the file is cut out of — recorded only where the file's own row asks
     // for one, so a level-1 tree pays nothing (§FS-config.3.4.8.2).

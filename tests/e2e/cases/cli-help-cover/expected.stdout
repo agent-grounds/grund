@@ -1,15 +1,20 @@
 grund cover — group the citation graph by scanned file.
 
 Usage:  grund cover [PATH] [--format text|json]
+        grund cover FILE --lines N|N-M [--lines …] [--format text|json]
 
 PATH defaults to `.`. The command runs the same scan as `check` and `refs`,
 then prints one file record with the citations found in that file.
+With --lines it prints instead, for each range of FILE, the declaration
+and section that own its lines.
 
 Options:
   --format text|json   text (default) groups citations by file; json emits one record per file.
+  --lines N|N-M        report the owners of these lines of FILE; repeatable, one record per range.
 
 Exit:  0 scan succeeded · 2 unreadable tree, incomplete scan, or CLI error.
 
 Examples:
   grund cover src/                # source files and their spec citations
   grund cover --format json       # machine-readable coverage index
+  grund cover docs/FS-x.md --lines 105-121   # which spec points a diff hunk edits

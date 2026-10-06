@@ -142,16 +142,17 @@ pub use writers::{
 // function per question, with the option and output records around it
 // (§AR-bindings.2, §FS-distribution.3).
 pub use api::{
-    CheckOpts, CheckOutput, CompleteIdsOpts, CoverCitation, CoverEntry, CoverOpts, CoverOutput,
+    CheckOpts, CheckOutput, CompleteIdsOpts, CoverCitation, CoverEntry, CoverLineOwner,
+    CoverLineSection, CoverLines, CoverLinesOpts, CoverLinesOutput, CoverOpts, CoverOutput,
     CoverTextCitation, CoverTextEntry, CoverTextOutput, EmbeddingRequest, FmtChange, FmtOpts,
     FmtOutput, IdOpts, IdProposal, IdProposalOutcome, ListEntry, ListOpts, ListOutput, ListSummary,
     ListValueRoot, RefHit, ReferenceStyle, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure,
     RefsQueryFailureKind, RefsWithMetadata, check, check_with_opts, check_with_run_warnings,
     complete_ids, complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover,
-    cover_text, cover_text_with_run_warnings, cover_with_run_warnings, effective_config,
-    embedding_call, format_references, format_references_with_run_warnings, list,
-    list_with_run_warnings, lsp_snapshot, lsp_snapshot_with_completion, lsp_snapshot_with_metadata,
-    propose_id, propose_id_with_run_warnings, reference_style, refs, refs_outcome,
-    refs_with_metadata, render_finding_sites_json, scan, show, show_with_overlays, show_with_scope,
-    validate_config,
+    cover_lines, cover_lines_with_run_warnings, cover_text, cover_text_with_run_warnings,
+    cover_with_run_warnings, effective_config, embedding_call, format_references,
+    format_references_with_run_warnings, list, list_with_run_warnings, lsp_snapshot,
+    lsp_snapshot_with_completion, lsp_snapshot_with_metadata, parse_cover_line_range, propose_id,
+    propose_id_with_run_warnings, reference_style, refs, refs_outcome, refs_with_metadata,
+    render_finding_sites_json, scan, show, show_with_overlays, show_with_scope, validate_config,
 };

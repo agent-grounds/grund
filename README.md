@@ -292,7 +292,7 @@ pip install pre-commit && cargo install lychee && pre-commit install
 - **`grund <ID>[.<section>]`** — print one declaration body, for pulling spec content into agent prompts.
 - **`grund list`** — the ID catalog.
 - **`grund refs <ID>`** — list every citation of a declaration.
-- **`grund cover`** — group the citation graph by file, for git-diff recipes.
+- **`grund cover`** — group the citation graph by file, for git-diff recipes; with `--lines`, say which declaration and section own a range of one file, so a diff hunk maps to the spec points it edits.
 - **`grund fmt`** — normalize citation syntax (`$$` → `§`, optional Markdown link wrapping).
 - **`grund fetch <ID>`** — explicitly materialize one configured external snapshot.
 - **`grund id <KIND> "<title>"`** — emit the next conflict-free ID for a new declaration.

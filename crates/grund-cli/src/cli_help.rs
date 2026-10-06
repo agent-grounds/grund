@@ -177,13 +177,19 @@ fn print_subcommand_help(cmd: &str) {
             println!("grund cover — group the citation graph by scanned file.");
             println!();
             println!("Usage:  grund cover [PATH] [--format text|json]");
+            println!("        grund cover FILE --lines N|N-M [--lines …] [--format text|json]");
             println!();
             println!("PATH defaults to `.`. The command runs the same scan as `check` and `refs`,");
             println!("then prints one file record with the citations found in that file.");
+            println!("With --lines it prints instead, for each range of FILE, the declaration");
+            println!("and section that own its lines.");
             println!();
             println!("Options:");
             println!(
                 "  --format text|json   text (default) groups citations by file; json emits one record per file."
+            );
+            println!(
+                "  --lines N|N-M        report the owners of these lines of FILE; repeatable, one record per range."
             );
             println!();
             println!("Exit:  0 scan succeeded · 2 unreadable tree, incomplete scan, or CLI error.");
@@ -191,6 +197,9 @@ fn print_subcommand_help(cmd: &str) {
             println!("Examples:");
             println!("  grund cover src/                # source files and their spec citations");
             println!("  grund cover --format json       # machine-readable coverage index");
+            println!(
+                "  grund cover docs/FS-x.md --lines 105-121   # which spec points a diff hunk edits"
+            );
         }
         "fmt" => print_fmt_help(),
         "id" => {

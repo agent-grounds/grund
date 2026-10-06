@@ -37,6 +37,7 @@ mod complete_ids;
 mod config;
 mod config_findings;
 mod cover;
+mod cover_lines;
 mod embedding;
 mod embedding_config;
 mod embedding_data;
@@ -66,6 +67,10 @@ pub use config::{
 pub use cover::{
     CoverCitation, CoverEntry, CoverOpts, CoverOutput, CoverTextCitation, CoverTextEntry,
     CoverTextOutput, cover, cover_text, cover_text_with_run_warnings, cover_with_run_warnings,
+};
+pub use cover_lines::{
+    CoverLineOwner, CoverLineSection, CoverLines, CoverLinesOpts, CoverLinesOutput, cover_lines,
+    cover_lines_with_run_warnings, parse_cover_line_range,
 };
 pub use embedding::{EmbeddingRequest, embedding_call};
 pub use fmt::{

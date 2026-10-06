@@ -317,11 +317,17 @@ fn single_project_context(
 /// `cover --format json` publishes the enclosing declaration and section of every
 /// site it lists (§FS-cover.3.2, §AR-scanner.2.4.2). This function has one
 /// caller, so that is a statement about `cover` alone.
+///
+/// `owner_lines` are the ranges a `cover --lines` run asks about, empty on every
+/// other run: they ride on the config into each file's pass, which resolves them
+/// while its heading stack is held (§FS-cover.6.2, §AR-scanner.2.4.4).
 pub(crate) fn load_narrowable_workspace_context(
     path: &Path,
     path_provided: bool,
+    owner_lines: &[(usize, usize)],
 ) -> Result<WorkspaceContext> {
     let mut config = resolve_workspace_config(path)?;
+    config.owner_lines = owner_lines.to_vec();
     if !config.workspace_declared || scope_is_config_root(&config, path, path_provided) {
         // The resolved config is handed on rather than re-derived:
         // `load_workspace_context` would resolve it a second time, glob walk

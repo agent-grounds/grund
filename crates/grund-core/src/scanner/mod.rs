@@ -62,6 +62,8 @@ mod file_pass;
 mod json;
 mod legacy;
 mod legacy_inline;
+mod line_owners;
+mod merge;
 mod scan_error;
 mod scope_probe;
 mod section_record;
@@ -131,6 +133,8 @@ mod tests_escape_position;
 mod tests_file_pass;
 #[cfg(test)]
 mod tests_inline_site;
+#[cfg(test)]
+mod tests_line_owners;
 #[cfg(test)]
 mod tests_local_section_citations;
 #[cfg(test)]

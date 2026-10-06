@@ -154,6 +154,18 @@ pub(super) fn query(r: &EmbeddingRequest) -> Result<Value, Value> {
                 "entries":out.entries.data(),"scan_errors":out.scan_errors.data(),"run_cautions":out.warnings.data()}),
             )
         }
+        // §FS-cover.6: non-empty `lines` asks for line ownership instead.
+        "cover" if !r.strings("lines").is_empty() => {
+            let (cautions, result) = cover_lines_with_run_warnings(CoverLinesOpts {
+                path: r.root.clone(),
+                path_provided: r.explicit,
+                lines: r.strings("lines"),
+            });
+            let out = result.map_err(|e| error_data(e, &cautions))?;
+            Ok(
+                json!({"output_format":out.output_format,"records":out.records.data(),"scan_errors":out.scan_errors.data(),"run_cautions":out.warnings.data()}),
+            )
+        }
         "cover" => {
             let opts = CoverOpts {
                 path: r.root.clone(),

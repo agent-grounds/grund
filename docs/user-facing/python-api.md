@@ -48,7 +48,7 @@ The full inventory implements
 | `refs(id, *, section=None, descendants=False)` | `RefsResult`: hits, scan errors, note, kind title, file summaries, site/file totals, cautions |
 | `list_ids(*, kinds=(), projects=(), unused=False, selector=None)` | `ListResult`: entries, kind summaries, scan errors, cautions |
 | `list_sizes(*, kinds=(), projects=(), unused=False, selector=None, units=("lines","words","bytes"), top=None)` | `SizesResult`: ordered lead/full measurements, scan errors, cautions |
-| `cover(*, text=False)` | `CoverResult` or `CoverTextResult`: file-grouped coverage, scan errors, cautions |
+| `cover(*, text=False, lines=())` | `CoverResult` or `CoverTextResult`: file-grouped coverage, scan errors, cautions; with non-empty `lines`, `CoverLinesResult`: one ownership record per range, scan errors, cautions |
 | `fmt(*, write=False, marker=False, cross_refs=False)` | `FmtResult`: changes, scan errors, refused writes, cautions |
 | `propose_id(kind, title, *, width=3)` | `IdProposal`: ID, kind, nullable number/home hints, slug, cautions |
 | `init(target=None, *, name=None, description=None, docs=False, force=False, write=False, check=False, no_vcs=False, agents=None)` | `InitResult`: events, errors, notes, nullable next guidance, pending-change status, cautions |
@@ -66,6 +66,12 @@ Batch queries accept strings or ShowQuery records; None discovers every
 coordinate, while an empty sequence succeeds without loading config.
 Batch success records contain the complete ShowResult, with JSON supplied by
 the engine's batch read; each unsuccessful query retains a Failure in its record.
+
+`cover(lines=...)` takes strings, each `"N"` or `"N-M"` exactly as `grund cover
+--lines` takes it, so a refusal names the range as written; `root` names the one
+file asked about, and `text` must stay False. Each record carries the range and
+its owner runs, each owner run its section runs, as
+[§FS-cover.6.3](../functional-spec/FS-cover.md#63-output) describes.
 
 `mode` accepts lead/brief/toc/full; `format` accepts text/md/json. Filters and
 selectors take string sequences. Size units are lines/words/bytes, top is

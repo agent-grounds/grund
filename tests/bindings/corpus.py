@@ -45,6 +45,7 @@ READ_CASES = (
     ("json-report", "cover", (), {}),
     ("json-report", "cover", (), {"text": True}),
     ("check-invalid-config-json", "cover", (), {}),
+    ("cover-lines-directory", "cover", (), {"lines": ("1",)}),
     ("json-report", "propose_id", ("FS", "Python façade"), {}),
     ("json-report", "propose_id", ("UNKNOWN", "Title"), {}),
     ("json-report", "propose_id", ("FS", ""), {}),
@@ -60,6 +61,18 @@ READ_CASES = (
     ("check-invalid-config-json", "reference_style", (), {}),
     ("json-report", "integrations", (), {}),
     ("json-report", "agent_setup_instructions", (), {}),
+)
+
+# Reads whose root is one file of the fixture rather than the fixture itself
+# (§FS-cover.6.1): (fixture, path under it, operation, positional operands,
+# keyword options).
+FILE_READ_CASES = (
+    ("cover-lines-json", "docs/functional-spec/FS-001-alpha.md", "cover", (),
+     {"lines": ("17", "1-14", "20-31", "33-49")}),
+    ("cover-lines-source-json", "src/lib.rs", "cover", (), {"lines": ("1-10", "8")}),
+    ("cover-lines-past-eof", "docs/functional-spec/FS-001-alpha.md", "cover", (),
+     {"lines": ("45-50",)}),
+    ("cover-lines-outside-scan", "notes.txt", "cover", (), {"lines": ("1",)}),
 )
 
 MUTATIONS = (

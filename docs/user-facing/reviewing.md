@@ -24,4 +24,16 @@ $ grund cover --format json | jq -c 'select(.path == "crates/grund-core/src/chec
 
 `id` and `section` name what each site points *at*; `enclosing_declaration` and `enclosing_section` name the unit it sits *in*, so the record carries both ends of the `cites` edge and a report over those relations needs no second read of the tree. Both are `null` above because this file declares no ID of its own — in a spec file they read `"enclosing_declaration":"FS-cover","enclosing_section":"terms"` ([§FS-cover.3.2](../functional-spec/FS-cover.md#32---format-json)).
 
+**Which spec points does this hunk edit?** A citation's `enclosing_section` answers for the lines that carry a citation. A hunk also edits headings, blank lines and uncited sentences, so ask `cover` about the hunk's own line numbers — from the new side of the diff, because they are read against the tree on disk ([§FS-cover.6](../functional-spec/FS-cover.md#6-line-ownership)):
+
+```console
+$ grund cover docs/functional-spec/FS-config.md --lines 115-124
+docs/functional-spec/FS-config.md:115-124
+  115-118  FS-config.requirements.7
+  119-122  FS-config.requirements.8
+  123-124  FS-config.1
+```
+
+Each row is a run of lines and the unit that owns it, by the rules the scan itself uses, so named sections, fenced headings and the end of a doc-comment come out as `check` sees them. Pass one `--lines` per hunk to answer a whole file in one scan, and `--format json` for the records of [§FS-output-shapes.5.3](../functional-spec/FS-output-shapes.md#53-cover---lines---formatjson). This is ownership, not coverage: it says which unit a line lies in, never that the line is grounded.
+
 For an agent reviewing a code change, the loop is mechanical: list the `§…` citations in the changed files, run `grund <ID>` on each, and ask "does the code still match what the spec claims?"
