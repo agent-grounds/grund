@@ -114,7 +114,7 @@ fn watch_setup_failure_is_fatal_two() {
         None,
         Some("setup"),
     );
-    h.finish(2);
+    h.finish(2); // §FS-check.6.3.2: setup failure exits with status 2.
     assert!(
         !h.history
             .iter()
@@ -134,7 +134,7 @@ fn watch_runtime_subscription_failure_is_fatal_two() {
         "grund.toml",
         &format!("{CONFIG}\n[scan]\ninclude = [\"newsrc\"]\n"),
     );
-    h.finish(2);
+    h.finish(2); // §FS-check.6.3.2: subscription failure overrides the completed status.
 }
 
 #[test]
@@ -149,7 +149,7 @@ fn watch_failed_recovery_is_fatal_two() {
         assert_eq!(h.completed().status, previous);
         h.control.fail_next("recover");
         h.control.saturate();
-        h.finish(2);
+        h.finish(2); // §FS-check.6.3.2: failed recovery overrides either completed status.
     }
 }
 
@@ -213,7 +213,7 @@ fn watch_runtime_notification_failure_is_fatal_two() {
     h.completed();
     h.control
         .notify(Err(notify::Error::generic("native backend failed")));
-    h.finish(2);
+    h.finish(2); // §FS-check.6.3.2: runtime backend failure exits with status 2.
     assert!(String::from_utf8_lossy(&h.control.take_output()[1]).contains("native backend failed"));
 }
 
