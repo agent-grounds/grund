@@ -140,7 +140,7 @@ fn first_declaration_bytes(comment_prefix: &str) -> Vec<u8> {
 }
 
 /// The heading token §FS-declarations.checks.declaration-near-miss.1 reports, or `None` when this line is not one.
-/// Asked only where [`declaration_captures`] already declined, which it does for two
+/// Normally asked where [`declaration_captures`] already declined, which it does for two
 /// kinds of line: a heading that came close and missed, and one whose ID the section
 /// separator and a section follow, which is a coordinate and no heading at all
 /// (§FS-declarations.line.section-suffix). This reading's token ends at the first `:`,
@@ -155,6 +155,10 @@ pub(crate) fn near_miss_heading<'line, 'grammar>(
     is_md: bool,
 ) -> Option<(&'line str, &'grammar str, &'grammar str)> {
     let (token, format, kind) = off_grammar_heading(grammar, line, in_py_docstring, is_md)?;
+    // §FS-declarations.line.configured-literals: a canonical ID containing `:` is no near miss.
+    if declaration_captures(grammar, line, in_py_docstring, is_md).is_some() {
+        return None;
+    }
     (!grammar.opens_section_suffix(&line[token.end()..])).then_some((token.as_str(), format, kind))
 }
 
@@ -207,6 +211,9 @@ impl Grammar {
     }
 }
 
+/// §FS-declarations.line.configured-literals: configured literals stay in the
+/// canonical capture. The legacy pattern stops at the first colon, so a shorter
+/// legacy token cannot disqualify a canonical capture that reaches its boundary.
 pub(crate) fn declaration_captures<'a>(
     grammar: &Grammar,
     line: &'a str,
@@ -221,9 +228,10 @@ pub(crate) fn declaration_captures<'a>(
             .captures(line)
             .filter(|caps| is_md || caps.name("mdhashes").is_none())
     }?;
+    let id = captures.name("id")?;
     // §FS-declarations.line.section-suffix: an ID the separator and a section follow is a
     // coordinate, so the line declares nothing; `near_miss_heading` asks the same of its token.
-    if grammar.opens_section_suffix(&line[captures.name("id")?.end()..]) {
+    if grammar.opens_section_suffix(&line[id.end()..]) {
         return None;
     }
     // §FS-config.3.2.5: retain the exact token written before `:`. A narrowed
@@ -231,9 +239,11 @@ pub(crate) fn declaration_captures<'a>(
     // `FS-legacy-2:`); that prefix must not claim the declaration first.
     if let Some(complete) = legacy_declaration_captures(grammar, line, in_py_docstring, is_md)
         .and_then(|caps| caps.name("near"))
-        && captures
-            .name("id")
-            .is_none_or(|id| id.as_str() != complete.as_str())
+        && (complete.end() > id.end()
+            || line[id.end()..]
+                .chars()
+                .next()
+                .is_some_and(|ch| !ch.is_whitespace() && ch != ':' && ch != '`'))
     {
         return None;
     }
