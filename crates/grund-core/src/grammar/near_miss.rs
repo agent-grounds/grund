@@ -156,7 +156,11 @@ pub(crate) fn near_miss_heading<'line, 'grammar>(
 ) -> Option<(&'line str, &'grammar str, &'grammar str)> {
     let (token, format, kind) = off_grammar_heading(grammar, line, in_py_docstring, is_md)?;
     // §FS-declarations.line.configured-literals: a canonical ID containing `:` is no near miss.
-    if declaration_captures(grammar, line, in_py_docstring, is_md).is_some() {
+    // §FS-config.3.2.5: a capture that fails ID parsing still needs compatibility retention.
+    if declaration_captures(grammar, line, in_py_docstring, is_md)
+        .and_then(|caps| parse_id(&caps, grammar))
+        .is_some()
+    {
         return None;
     }
     (!grammar.opens_section_suffix(&line[token.end()..])).then_some((token.as_str(), format, kind))

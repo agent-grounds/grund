@@ -6,8 +6,8 @@
 //! pin the one answer underneath them, in each shape a declaration line takes.
 
 use super::{
-    Grammar, declaration_captures, declaration_id_on_line, near_miss_heading, parse_id_arg,
-    render_id,
+    Grammar, declaration_captures, declaration_id_on_line, near_miss_heading, parse_id,
+    parse_id_arg, render_id,
 };
 use crate::config::Config;
 use crate::testing::{numbered_config, test_root};
@@ -328,5 +328,41 @@ fn colon_format_section_suffix_does_not_declare_the_parent() {
         let (in_docstring, is_md) = shape.flags();
         assert!(declaration_captures(&config.grammar, line, in_docstring, is_md).is_none());
         assert_eq!(declared(&config.grammar, shape, line), None);
+    }
+}
+
+/// §FS-config.3.2.5: a syntactic capture whose number exceeds u32 remains a
+/// readable declaration under its exact spelling, with a near-miss diagnostic.
+#[test]
+fn numeric_overflow_preserves_the_compatibility_declaration() {
+    let config = config_with(
+        "numeric_overflow_preserves_the_compatibility_declaration",
+        |c| {
+            c.slug_pattern = "[a-z]+".into();
+        },
+    );
+    let token = "FS-4294967296-login";
+    assert!(parse_id_arg(token, &config.grammar).is_err());
+    for (shape, line) in [
+        (Shape::Markdown, "# FS-4294967296-login: Login"),
+        (Shape::Comment, "/// FS-4294967296-login: Login"),
+        (Shape::Docstring, "    FS-4294967296-login: Login"),
+    ] {
+        let (in_docstring, is_md) = shape.flags();
+        let captures = declaration_captures(&config.grammar, line, in_docstring, is_md)
+            .expect("numeric overflow still matches the configured declaration regex");
+        assert_eq!(captures.name("id").unwrap().as_str(), token);
+        assert!(parse_id(&captures, &config.grammar).is_none());
+        assert_eq!(
+            near_miss_heading(&config.grammar, line, in_docstring, is_md),
+            Some((token, "{kind}-{number}-{slug}", "FS")),
+            "{shape:?}: the rejected canonical capture must remain a near miss"
+        );
+        assert_eq!(
+            declared(&config.grammar, shape, line).as_deref(),
+            Some(token)
+        );
+        let (_, end) = declaration_id_on_line(&config.grammar, line, in_docstring, is_md).unwrap();
+        assert_eq!(&line[end..], ": Login", "{shape:?}: exact ID boundary");
     }
 }

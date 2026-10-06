@@ -37,3 +37,17 @@ case!(
     colon_format_underscore_control,
     "show-colon-format-underscore-control"
 );
+
+// §FS-config.3.2.5: canonical parse failures retain discovery, reading and diagnostics.
+case!(
+    numeric_overflow_list_retains_the_exact_declaration,
+    "list-numeric-overflow"
+);
+case!(
+    numeric_overflow_show_reads_the_compatibility_body,
+    "show-numeric-overflow"
+);
+case!(
+    numeric_overflow_check_reports_the_near_miss,
+    "check-numeric-overflow"
+);
