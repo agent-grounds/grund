@@ -48,6 +48,19 @@ pub(super) fn fetch_operational(message: impl Into<String>) -> FetchFailure {
     }
 }
 
+/// Retain the source beside the unchanged fetch refusal (§FS-distribution.3.3.2).
+pub(super) fn fetch_io(
+    diagnostic: &mut Option<anyhow::Error>,
+    path: &Path,
+    error: std::io::Error,
+    context: String,
+) -> FetchFailure {
+    let failure = fetch_operational(format!("{context}: {error}"));
+    let source = crate::model::OperationDiagnostic::filesystem(path, &error, context);
+    *diagnostic = Some(anyhow::Error::new(error).context(source));
+    failure
+}
+
 /// Materialize exactly one local or qualified external ID (§FS-fetch.1).
 pub fn fetch_snapshot(raw: &str, path: &Path) -> std::result::Result<(), FetchFailure> {
     fetch_snapshot_with_run_warnings(raw, path).1
@@ -154,9 +167,12 @@ fn fetch_run(
         .current_dir(&selected.root)
         .output()
         .map_err(|err| {
-            fetch_operational(format!(
-                "cannot run fetch integration `{fetch}` for {raw}: {err}"
-            ))
+            fetch_io(
+                diagnostic,
+                &integration,
+                err,
+                format!("cannot run fetch integration `{fetch}` for {raw}"),
+            )
         })?;
     if !output.status.success() {
         let status = output
@@ -185,12 +201,21 @@ fn fetch_run(
     };
     validate_fetched_declaration(snapshot, local, depth)?;
     match home {
-        FetchHome::File(path) => {
-            write_file_home(&path, &selected.grammar, &id, snapshot.as_bytes())
-        }
-        FetchHome::Folder(path) => {
-            write_folder_home(&path, &selected, &id, local, snapshot.as_bytes())
-        }
+        FetchHome::File(path) => write_file_home(
+            &path,
+            &selected.grammar,
+            &id,
+            snapshot.as_bytes(),
+            diagnostic,
+        ),
+        FetchHome::Folder(path) => write_folder_home(
+            &path,
+            &selected,
+            &id,
+            local,
+            snapshot.as_bytes(),
+            diagnostic,
+        ),
     }
 }
 

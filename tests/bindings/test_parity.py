@@ -5,10 +5,25 @@ import json
 from pathlib import Path
 import shutil
 import unittest
+import unicodedata
 from unittest.mock import patch
 
 from corpus import READ_CASES, MUTATIONS
 from support import REPO, binding, canonical, fixture, plain, python_call, rust_call, temporary, tree_bytes
+
+
+def cli_json(value):
+    """Ordered frozen CLI JSON, including its control escapes (§FS-distribution.3.0.3)."""
+    if isinstance(value, str):
+        escapes = {'"': '\\"', '\\': '\\\\', '\n': '\\n', '\r': '\\r', '\t': '\\t'}
+        return '"' + ''.join(escapes.get(c, f'\\u{ord(c):04x}'
+                                       if unicodedata.category(c) == "Cc" else c)
+                             for c in value) + '"'
+    if isinstance(value, dict):
+        return '{' + ','.join(cli_json(k) + ':' + cli_json(v) for k, v in value.items()) + '}'
+    if isinstance(value, list):
+        return '[' + ','.join(cli_json(v) for v in value) + ']'
+    return json.dumps(value, allow_nan=False, separators=(',', ':'))
 
 
 class ParityTests(unittest.TestCase):
@@ -30,10 +45,11 @@ class ParityTests(unittest.TestCase):
                 before = tree_bytes(root)
                 actual, response = self.compare(operation, root, args, options)
                 if operation == "check" and actual["result"] is not None:
-                    self.assert_frozen_cli_projection(actual["result"]["report"], response)
+                    self.assert_frozen_cli_projection(actual["result"]["report"],
+                                                      actual["run_cautions"], response)
                 self.assertEqual(before, tree_bytes(root), "read operation wrote files")
 
-    def assert_frozen_cli_projection(self, report, response):
+    def assert_frozen_cli_projection(self, report, cautions, response):
         # Construct expected records from every host field the frozen wire uses,
         # not from the Rust driver's projection. Stable sort preserves channel ties.
         rows = []
@@ -41,18 +57,29 @@ class ParityTests(unittest.TestCase):
             for finding in report[group]:
                 row = {"channel": "suggestion"} if group == "suggestions" else {
                     "severity": finding["severity"]}
+                sites = [{"path": site["path"], "line": site["line"]}
+                         for site in finding["sites"]]
                 row.update(path=finding["path"], line=finding["line"], code=finding["code"],
-                           message=finding["message"], sites=finding["sites"] or None,
+                           message=finding["message"], sites=sites or None,
                            authority=finding["authority"] or None)
                 rows.append(row)
         rows.sort(key=lambda row: (row["path"] is not None, row["path"] or "",
                                    row["line"] or 0, row["message"]))
-        actual = [json.loads(line) for line in response["cli_stdout"].splitlines()]
-        self.assertEqual(rows, actual)
-        for row in actual:
-            self.assertEqual([next(iter(row)), "path", "line", "code", "message", "sites", "authority"],
-                             list(row))
-            self.assertNotIn("column", row)
+        # §FS-distribution.3.0.3: cautions precede stderr findings as text.
+        caution_text = "".join("warning: " + f["message"] + "\n" for f in cautions)
+        for stream, located in (("stdout", True), ("stderr", False)):
+            expected = [row for row in rows if (row["line"] is not None) == located]
+            prefix = caution_text if stream == "stderr" else ""
+            wire = response["cli_" + stream]
+            self.assertTrue(wire.startswith(prefix))
+            actual = [json.loads(line) for line in wire[len(prefix):].splitlines()]
+            self.assertEqual(expected, actual)
+            for row in actual:
+                self.assertEqual([next(iter(row)), "path", "line", "code", "message",
+                                  "sites", "authority"], list(row))
+                self.assertNotIn("column", row)
+            serialized = "".join(cli_json(row) + "\n" for row in expected)
+            self.assertEqual((prefix + serialized).encode("utf-8"), wire.encode("utf-8"))
 
     def test_cli_json_goldens_remain_authoritative(self):
         for case in ("json-report", "check-invalid-config-json",
@@ -61,8 +88,11 @@ class ParityTests(unittest.TestCase):
                 root = fixture(temp, case)
                 _, response = self.compare("check", root, (), {})
                 source = REPO / "tests/e2e/cases" / case
-                self.assertEqual((source / "expected.stdout").read_text(), response["cli_stdout"])
-                self.assertEqual((source / "expected.stderr").read_text(), response["cli_stderr"])
+                for stream in ("stdout", "stderr"):
+                    golden = (source / ("expected." + stream)).read_bytes()
+                    # §FS-distribution.3.0.3: the CLI golden reader's lone-LF sentinel.
+                    expected = b"" if golden == b"\n" else golden
+                    self.assertEqual(expected, response["cli_" + stream].encode("utf-8"))
 
     def test_mutation_preview_write_and_refusal_bytes_match_core(self):
         for case, operation, args, options in MUTATIONS:

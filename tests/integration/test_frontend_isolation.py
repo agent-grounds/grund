@@ -12,7 +12,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ENGINE = "grund-core"
-FRONTENDS = {"grund", "grund-lsp"}
+FRONTENDS = {"grund", "grund-lsp", "grund-py"}
 LSP_TRANSPORT = {"lsp-server", "lsp-types"}
 
 

@@ -4,7 +4,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::fetch::{FetchFailure, fetch_operational};
+use super::fetch::{FetchFailure, fetch_io, fetch_operational};
 use crate::config::Config;
 use crate::grammar::{
     Grammar, markdown_fence_delimiter, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
@@ -110,15 +110,18 @@ pub(super) fn write_file_home(
     grammar: &Grammar,
     requested: &Id,
     snapshot: &[u8],
+    diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
     let original = match fs::read(path) {
         Ok(bytes) => bytes,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => Vec::new(),
         Err(err) => {
-            return Err(fetch_operational(format!(
-                "cannot read {}: {err}",
-                path.display()
-            )));
+            return Err(fetch_io(
+                diagnostic,
+                path,
+                err,
+                format!("cannot read {}", path.display()),
+            ));
         }
     };
     let declarations = declarations_at_depth(&original, grammar, 2)?;
@@ -164,7 +167,7 @@ pub(super) fn write_file_home(
         replacement.extend_from_slice(line_ending);
     }
     replacement.extend_from_slice(&original[end..]);
-    atomic_install(path, &replacement)
+    atomic_install(path, &replacement, diagnostic)
 }
 
 /// §FS-fetch.5: replace the unique declaring file or create `<ID>.md`.
@@ -174,6 +177,7 @@ pub(super) fn write_folder_home(
     requested: &Id,
     local: &str,
     snapshot: &[u8],
+    diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
     let mut matches = Vec::new();
     if folder.exists() {
@@ -203,7 +207,12 @@ pub(super) fn write_folder_home(
                 continue;
             }
             let bytes = fs::read(&path).map_err(|err| {
-                fetch_operational(format!("cannot read {}: {err}", path.display()))
+                fetch_io(
+                    diagnostic,
+                    &path,
+                    err,
+                    format!("cannot read {}", path.display()),
+                )
             })?;
             let declarations = declarations_at_depth(&bytes, &config.grammar, 1)?;
             let contains_requested = declarations
@@ -250,12 +259,16 @@ pub(super) fn write_folder_home(
             target.display()
         )));
     }
-    atomic_install(&target, snapshot)
+    atomic_install(&target, snapshot, diagnostic)
 }
 
 /// §FS-fetch.4 / §FS-fetch.5: install complete bytes by same-directory rename,
 /// leaving an unchanged target untouched.
-fn atomic_install(path: &Path, bytes: &[u8]) -> std::result::Result<(), FetchFailure> {
+fn atomic_install(
+    path: &Path,
+    bytes: &[u8],
+    diagnostic: &mut Option<anyhow::Error>,
+) -> std::result::Result<(), FetchFailure> {
     if fs::read(path).ok().as_deref() == Some(bytes) {
         return Ok(());
     }
@@ -263,16 +276,18 @@ fn atomic_install(path: &Path, bytes: &[u8]) -> std::result::Result<(), FetchFai
         Ok(metadata) => Some(metadata.permissions()),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => None,
         Err(err) => {
-            return Err(fetch_operational(format!(
-                "cannot read metadata for {}: {err}",
-                path.display()
-            )));
+            return Err(fetch_io(
+                diagnostic,
+                path,
+                err,
+                format!("cannot read metadata for {}", path.display()),
+            ));
         }
     };
     let parent = path
         .parent()
         .ok_or_else(|| fetch_operational(format!("cannot write {}", path.display())))?;
-    let created_directories = create_parent_directories(parent, path)?;
+    let created_directories = create_parent_directories(parent, path, diagnostic)?;
     let mut temporary = None;
     for attempt in 0..100u32 {
         let candidate = parent.join(format!(".grund-fetch-{}-{attempt}.tmp", std::process::id()));
@@ -288,10 +303,12 @@ fn atomic_install(path: &Path, bytes: &[u8]) -> std::result::Result<(), FetchFai
             Err(err) if err.kind() == std::io::ErrorKind::AlreadyExists => continue,
             Err(err) => {
                 rollback_created_directories(&created_directories);
-                return Err(fetch_operational(format!(
-                    "cannot write {}: {err}",
-                    path.display()
-                )));
+                return Err(fetch_io(
+                    diagnostic,
+                    path,
+                    err,
+                    format!("cannot write {}", path.display()),
+                ));
             }
         }
     }
@@ -313,19 +330,23 @@ fn atomic_install(path: &Path, bytes: &[u8]) -> std::result::Result<(), FetchFai
         drop(file);
         let _ = fs::remove_file(&temporary_path);
         rollback_created_directories(&created_directories);
-        return Err(fetch_operational(format!(
-            "cannot write {}: {err}",
-            path.display()
-        )));
+        return Err(fetch_io(
+            diagnostic,
+            path,
+            err,
+            format!("cannot write {}", path.display()),
+        ));
     }
     drop(file);
     if let Err(err) = fs::rename(&temporary_path, path) {
         let _ = fs::remove_file(&temporary_path);
         rollback_created_directories(&created_directories);
-        return Err(fetch_operational(format!(
-            "cannot atomically replace {}: {err}",
-            path.display()
-        )));
+        return Err(fetch_io(
+            diagnostic,
+            path,
+            err,
+            format!("cannot atomically replace {}", path.display()),
+        ));
     }
     Ok(())
 }
@@ -336,6 +357,7 @@ fn atomic_install(path: &Path, bytes: &[u8]) -> std::result::Result<(), FetchFai
 fn create_parent_directories(
     parent: &Path,
     target: &Path,
+    diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<Vec<PathBuf>, FetchFailure> {
     let mut missing = Vec::new();
     let mut cursor = parent;
@@ -352,14 +374,21 @@ fn create_parent_directories(
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
                 missing.push(cursor.to_path_buf());
                 cursor = cursor.parent().ok_or_else(|| {
-                    fetch_operational(format!("cannot write {}: {err}", target.display()))
+                    fetch_io(
+                        diagnostic,
+                        target,
+                        err,
+                        format!("cannot write {}", target.display()),
+                    )
                 })?;
             }
             Err(err) => {
-                return Err(fetch_operational(format!(
-                    "cannot write {}: {err}",
-                    target.display()
-                )));
+                return Err(fetch_io(
+                    diagnostic,
+                    target,
+                    err,
+                    format!("cannot write {}", target.display()),
+                ));
             }
         }
     }
@@ -368,10 +397,12 @@ fn create_parent_directories(
     for directory in missing.into_iter().rev() {
         if let Err(err) = fs::create_dir(&directory) {
             rollback_created_directories(&created);
-            return Err(fetch_operational(format!(
-                "cannot write {}: {err}",
-                target.display()
-            )));
+            return Err(fetch_io(
+                diagnostic,
+                target,
+                err,
+                format!("cannot write {}", target.display()),
+            ));
         }
         created.push(directory);
     }
