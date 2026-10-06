@@ -1,7 +1,7 @@
 # grund Python frontend
 
 The local Python API embeds `grund-core` through PyO3, as specified by
-[§FS-distribution.3.3](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-distribution.md#33-python-grund-pypi-package).
+[§FS-distribution.3.3](../../docs/functional-spec/FS-distribution.md#33-python-grund-pypi-package).
 PyPI publication is pending. Build/install from the repository root:
 
 ```sh
