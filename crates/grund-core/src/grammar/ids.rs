@@ -61,30 +61,40 @@ impl Grammar {
     /// Full-ID matches for the shared scanner and note parser (§FS-check.1.1.10).
     /// The tuple's offset rebases captures from a marker's tail onto the line.
     /// Explicit markers establish starts without a word boundary; ordinary bare
-    /// matches keep theirs. A marked token owns its whole span, including any
-    /// ID-shaped suffix, so it is emitted once and claims full-ID precedence.
+    /// matches keep theirs. An enclosing full ID owns its internal marker
+    /// suffixes; an explicit marker owns the following token's whole span.
+    /// Overlapping marker starts are tried until a full ID claims the span.
     /// Context exclusions remain the caller's decision over these same captures.
     pub(crate) fn citation_captures<'a>(
         &self,
         line: &'a str,
         marker: &str,
     ) -> Vec<(usize, regex::Captures<'a>)> {
+        let bare_matches: Vec<_> = self.citation_re.captures_iter(line).collect();
         let mut matches = Vec::new();
         if !marker.is_empty() {
             let mut claimed_end = 0;
-            for (marker_start, _) in line.match_indices(marker) {
-                if marker_start < claimed_end {
+            for (marker_start, _) in line.char_indices() {
+                if marker_start < claimed_end || !line[marker_start..].starts_with(marker) {
                     continue;
                 }
                 let offset = marker_start + marker.len();
                 if let Some(caps) = self.citation_prefix_re.captures(&line[offset..]) {
-                    claimed_end = offset + caps.get(0).unwrap().end();
+                    let token_end = offset + caps.get(0).unwrap().end();
+                    // §FS-check.1.1.10: an internal marker cannot steal a containing full ID.
+                    if bare_matches.iter().any(|bare| {
+                        let full = bare.get(0).unwrap();
+                        full.start() < marker_start && full.end() >= token_end
+                    }) {
+                        continue;
+                    }
+                    claimed_end = token_end;
                     matches.push((offset, caps));
                 }
             }
         }
         let marked_count = matches.len();
-        for caps in self.citation_re.captures_iter(line) {
+        for caps in bare_matches {
             let full = caps.get(0).unwrap();
             if matches[..marked_count].iter().any(|(offset, marked)| {
                 let token = marked.get(0).unwrap();

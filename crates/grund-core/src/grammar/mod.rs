@@ -158,3 +158,5 @@ mod tests_inline_note_layout;
 mod tests_never_rewrite;
 #[cfg(test)]
 mod tests_section_paths;
+#[cfg(test)]
+mod tests_word_character_marker;
