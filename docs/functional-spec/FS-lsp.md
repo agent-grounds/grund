@@ -120,6 +120,12 @@ diagnostic suppression remain unchanged
 
 ### 1.3 Go-to-definition
 
+Definition uses the shared recognized citation set, including configured word-character
+markers ([§FS-check.1.1.10](FS-check.md#1110-the-configured-marker-establishes-the-citation-start)).
+With marker `_` and format `{kind}_{slug}`, a cursor on the marker or inside the ID in
+`//! 😀 _FS_login` resolves to the `FS_login` declaration. The non-ASCII prefix does not
+shift the origin span: protocol positions and ranges use UTF-16 code units.
+
 An owned declaration-local numeric citation has the same definition target as its canonical full
 citation: the exact numeric section heading. It participates in declaration and exact-section
 citation lookups and in document highlights while retaining its local origin range. A missing,
@@ -375,6 +381,11 @@ The server reads the `grund.toml` via the same discovery logic as `grund check` 
 Editor-side LSP configuration (server arguments, workspace folders) is the user's responsibility per [§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor) and is not part of `grund.toml`.
 
 ## 4. Determinism and parity with the CLI
+
+Configured word-character markers yield the same citation edges in the CLI and the editor;
+definition navigation has no editor-only recognition fallback
+([§FS-lsp.1.3](FS-lsp.md#13-go-to-definition),
+[§FS-check.1.1.10](FS-check.md#1110-the-configured-marker-establishes-the-citation-start)).
 
 Same input + same config → same diagnostics, same hover body, same definition target, byte-for-byte ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 

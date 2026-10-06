@@ -155,3 +155,5 @@ mod tests_walk;
 mod tests_walk_errors;
 #[cfg(all(test, unix))]
 mod tests_walk_roots;
+#[cfg(test)]
+mod tests_word_character_marker;

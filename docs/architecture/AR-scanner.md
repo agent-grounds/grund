@@ -167,6 +167,14 @@ Whole Markdown values and embedded roots of either origin admit only contiguous 
 
 ### 2.3 Citation detection
 
+An explicit configured marker establishes a full-ID token's start independently of the
+bare-ID word boundary, including when the marker ends in a word character. The shared scan
+emits one record at the marker's raw source column, retaining the authored token and applying
+the existing exclusions and full-ID precedence
+([§FS-check.1.1.10](../functional-spec/FS-check.md#1110-the-configured-marker-establishes-the-citation-start)).
+The bare-token path retains its boundary; CLI and editor consumers do not recover these
+citations through separate parsers.
+
 The full-ID and number-only-ID passes keep precedence. Beside them, the per-line scan records a
 deferred candidate for each configured-marker-plus-numeric-path token and for each unsupported
 digit-starting tail that must receive a whole-token verdict

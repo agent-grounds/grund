@@ -184,6 +184,10 @@ project_description = "One line describing what this project is for" # optional
 
 ### 3.1 `[reference]` — citation form
 
+The marker may contain word characters, including `_`. An accepted marker establishes the
+start of a marked full-ID citation without a word boundary between marker and ID
+([§FS-check.1.1.10](FS-check.md#1110-the-configured-marker-establishes-the-citation-start)).
+
 ```toml
 [reference]
 marker            = "§"      # default; rare character that prefixes a citation in prose

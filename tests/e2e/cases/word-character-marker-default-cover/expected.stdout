@@ -1,0 +1,2 @@
+{"path":"docs/functional-spec/FS-login.md","citations":[]}
+{"path":"src/lib.rs","citations":[{"path":"src/lib.rs","line":1,"column":5,"id":"FS_login","section":null,"marker":true,"text":"§FS_login","enclosing_declaration":null,"enclosing_section":null}]}

@@ -116,6 +116,25 @@ settles why recognition is loud but the persisted form is never canonical.
 
 A **bare** ID-shaped token that begins immediately after the literal escape — the configured marker wrapped in `<` and `>` — is not treated as a citation, in Markdown and in source files alike, and under both strict modes. [§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves) already says that the escaped form is inert because the marker is not immediately followed by the ID, so *no pass* treats it as a citation; the bare-token pass is a pass, and it is the escape rather than the mode that suppresses it. The exclusion is **total**, not just a withheld error: such a token is not a citation for `refs`, for unused-declaration counting ([§FS-check.4.1](FS-check.md#41-unused-declaration)), or for grounding ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)) either — the same reach as [§FS-check.1.1.4](FS-check.md#114-markdown-link-destinations) and for the same reason, because `grund fmt` never rewrites an escape position ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten)) and a finding whose only named fix the tool refuses to perform is one a repository can never clear. Both escape forms are covered by this one rule, so the qualified `<§>alias/ID` is exempt here and not only by [§FS-workspace.1.3](FS-workspace.md#13-the-shape-outside-a-workspace)'s unmarked-`alias/ID` rule. The escape is spelled with the **configured** marker: where the marker is `@`, `<@>ID` is the escape and a `<§>`-wrapped token is an ordinary bare one. The `escaped-citation-resolves` suggestion of [§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves) is unaffected, in both modes, and remains the only report of such a site. Recorded in [§DF-escape-position-is-not-a-citation](../decisions/functional/DF-escape-position-is-not-a-citation.md#df-escape-position-is-not-a-citation-an-escape-position-is-not-a-citation-in-either-strict-mode).
 
+#### 1.1.10 The configured marker establishes the citation start
+
+The configured marker immediately followed by a full ID establishes a citation start even
+when the marker ends in a word character, such as `_`. No word boundary is required between
+that marker and the ID. With `[reference] marker = "_"` and `[id] format = "{kind}_{slug}"`,
+`_FS_login` is exactly one marked citation of `FS_login`, under either strict mode. Its record
+retains the authored token, source line, and column at the marker; `refs`, `cover`, inbound
+counts, grounding, and dangling checking consume that same edge. A missing target therefore
+receives the ordinary located dangling finding rather than disappearing.
+
+Only the explicit marker establishes this start: under `strict = false`, an unmarked ID still
+requires its ordinary token boundary and cannot be discovered inside a longer word. Default
+markers, qualified citations, section suffixes, and full-ID precedence retain their existing
+meaning. Escapes and every context exclusion above apply before recognizing a marked token;
+the marker does not make a fenced example or assigned Python data into a citation.
+
+The compatibility impact is recorded in
+[§DF-word-character-citation-markers](../decisions/functional/DF-word-character-citation-markers.md#df-word-character-citation-markers-recognize-accepted-word-character-markers).
+
 ### 1.2 The number-only shorthand
 
 When a kind's effective format carries **both** `{number}` and `{slug}` ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — the default `{kind}-{number}-{slug}` that `grund init` writes — the number alone already identifies a declaration within its kind, so `§FS-042` is an abbreviation of `§FS-042-user-login` rather than a different ID. `check` **recognizes** and resolves that shape independently of the project's persisted-form policy. Under the default `[reference] shorthand = "canonical"` it reports a unique shorthand to be rewritten; under `"accepted"` the same resolved edge may persist ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)). It is never silently ignored, which is what [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) means by "false negatives are bugs".

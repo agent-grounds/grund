@@ -157,3 +157,13 @@ until = "workspace concerns move into independently declared child specs with st
 reason = """
 This file is the single normative contract for workspace configuration, resolution, command scope, nested boundaries, and alias IDs. The issue-232 one-line correction belongs in §FS-workspace.5 so its existing citations remain stable. Missing boundary: independently declared child specifications for those concerns, plus a migration for the section citations that currently target this declaration.
 """
+[[exceptions]]
+path = "docs/functional-spec/FS-check.md"
+match = "exact"
+rules = ["docs"]
+kind = "deferred"
+max_accepted = { value = 900, unit = "lines" }
+until = "the check specification is partitioned into recognition, reporting, and finding declarations with existing section citations migrated"
+reason = """
+Missing boundary: citation recognition, command reporting, and the finding catalog still share one declaration. Splitting the report and finding catalog into separate declarations requires a mapped migration of their stable numbered section IDs and callers; that migration is outside the specification-only contract for issue #483. This entry records that existing debt while the configured-marker recognition point is pinned.
+"""
