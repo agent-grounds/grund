@@ -89,19 +89,45 @@ class SnapshotEdgeTests(RecipeCase):
     @unittest.skipUnless(os.name == "posix", "Tracked symlink fixture requires POSIX")
     def test_tracked_symlink_cycle_is_a_deterministic_json_refusal(self):
         """One report, exit 2, empty stderr (§FS-cochange-recipe.output, §FS-cochange-recipe.exit)."""
-        for path, target in (("a", "b"), ("b", "a"), ("c", "a")):
-            (self.fixture.root / path).symlink_to(target)
-        self.fixture.commit("Tracked symlink cycle")
-        first = self.fixture.invoke()
-        report = self.report(first, 2)
-        self.error(report, "unsupported-input", "c")
-        self.assertIn("symlink cycle", report["errors"][0]["message"])
-        self.assertIn("non-cyclic", report["errors"][0]["message"])
-        self.assertEqual(1, len(first.stdout.splitlines()))
-        self.assertNotIn(str(Path.home() / "ag/tmp"), first.stdout)
-        second = self.fixture.invoke()
-        self.report(second, 2)
-        self.assertEqual(first.stdout, second.stdout)
+        for links in ((("a", "a"),), (("a", "b"), ("b", "a")),
+                      (("a", "b"), ("b", "a"), ("c", "a"))):
+            with self.subTest(links=links):
+                self.fixture.git("reset", "--hard", self.fixture.base)
+                for path, target in links:
+                    (self.fixture.root / path).symlink_to(target)
+                self.fixture.commit("Tracked symlink cycle")
+                first = self.fixture.invoke()
+                report = self.report(first, 2)
+                self.error(report, "unsupported-input", "a")
+                self.assertIn("symlink cycle", report["errors"][0]["message"])
+                self.assertIn("non-cyclic", report["errors"][0]["message"])
+                self.assertEqual(1, len(first.stdout.splitlines()))
+                self.assertNotIn(str(Path.home() / "ag/tmp"), first.stdout)
+                second = self.fixture.invoke()
+                self.report(second, 2)
+                self.assertEqual(first.stdout, second.stdout)
+
+    def test_bounded_symlink_chain_and_dangling_link_preserve_snapshot(self):
+        """Complete-tree validation keeps bounded links (§FS-cochange-recipe.snapshots)."""
+        for path, target in (("a", "z"), ("z", "src/lib.py"), ("dangling", "absent")):
+            self.fixture.stage_blob(path, target.encode(), "120000")
+        self.fixture.commit("Bounded links", stage=False)
+        result = self.fixture.invoke()
+        if os.name == "nt" and result.returncode == 2:
+            report = self.report(result, 2)
+            self.error(report, "unsupported-input", "a")
+            self.assertIn("host that supports", report["errors"][0]["message"])
+        else:
+            self.report(result, 0)
+
+    def test_git_root_native_and_forward_slash_spellings_agree(self):
+        """Git/native path spellings denote the same root (§FS-cochange-recipe.snapshots)."""
+        native = self.report(self.fixture.invoke(), 0)
+        forward = self.report(self.fixture.invoke(repo=self.fixture.root.as_posix()), 0)
+        self.assertEqual(native, forward)
+        refused = self.report(self.fixture.invoke(repo=self.fixture.root / "src"), 2)
+        self.error(refused, "git-input")
+        self.assertIn("Git root", refused["errors"][0]["message"])
 
     @unittest.skipUnless(os.name == "posix", "Tracked symlink fixture requires POSIX")
     def test_tracked_symlink_escaping_snapshot_still_refuses(self):

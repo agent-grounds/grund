@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-import unittest
+import sys
 from cochange_fixture import CONFIG, ROOT, RecipeCase, trailer
 
 
@@ -29,6 +29,11 @@ class RefusalTests(RecipeCase):
         proxy = Path(self.temp.name) / "grund-proxy"
         shutil.copyfile(ROOT / "tests/e2e/cochange_query_proxy.py", proxy)
         proxy.chmod(0o755)
+        if os.name == "nt":
+            launcher = proxy.with_suffix(".cmd")
+            launcher.write_text("@" + subprocess.list2cmdline([sys.executable, str(proxy)]) +
+                                " %*\n", encoding="utf-8")
+            proxy = launcher
         environment = {**os.environ, "COCHANGE_REAL_GRUND":
             os.environ.get("GRUND_BUILT", shutil.which("grund")),
             "COCHANGE_CORRUPT_QUERY": query, "COCHANGE_CORRUPTION": corruption}
@@ -130,15 +135,11 @@ class RefusalTests(RecipeCase):
         self.fixture.git("sparse-checkout", "set", "src")
         self.error(self.report(self.fixture.invoke("commit-msg"), 2), "unsupported-input")
 
-    @unittest.skipUnless(os.name == "posix", "Git byte paths require POSIX")
     def test_non_utf8_paths_and_submodules_refuse(self):
-        path = os.fsencode(self.fixture.root) + b"/src/non-utf8-\xff.py"
-        with open(path, "wb") as stream:
-            stream.write(b"value = 1\n")
-        self.fixture.git("add", "-A")
-        self.fixture.git("commit", "-q", "-m", "Byte path")
+        self.fixture.stage_blob(b"src/non-utf8-\xff.py", b"value = 1\n")
+        self.fixture.commit("Byte path", stage=False)
         self.error(self.report(self.fixture.invoke(), 2), "unsupported-input")
-        self.fixture.git("reset", "--hard", self.fixture.base)
+        self.fixture.git("reset", "--mixed", self.fixture.base)
         self.fixture.git("update-index", "--add", "--cacheinfo",
             f"160000,{self.fixture.base},vendor")
         self.fixture.commit("Gitlink", stage=False)
