@@ -160,16 +160,6 @@ This file is the single normative contract for workspace configuration, resoluti
 Issue 474 changes only the link to the renamed roadmap heading in this file, without adding prose or increasing its size. The former 900-line ceiling was already exceeded; the ceiling is reconciled to the measured 1149 non-blank lines, with the same split boundary and no growth allowance.
 """
 [[exceptions]]
-path = "docs/functional-spec/FS-check.md"
-match = "exact"
-rules = ["docs"]
-kind = "deferred"
-max_accepted = { value = 822, unit = "lines" }
-until = "standing-check concerns move into child declarations with migrated FS-check section citations"
-reason = """
-The standing-check contract combines grounding, citation validity, chapter checks, link checks and reporting. Missing boundary: independently declared child contracts for those checks and stable replacements for their existing section citations. Issue 474 only repairs a link to the renamed co-change roadmap heading, adding no prose; splitting the standing-check contract during that link repair would expand a recipe specification task into a migration. This ceiling is the current measured size and permits no growth.
-"""
-[[exceptions]]
 path = "README.md"
 match = "exact"
 rules = ["entrypoints"]
