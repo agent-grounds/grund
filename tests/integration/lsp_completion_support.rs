@@ -26,13 +26,17 @@ static NEXT_ROOT: AtomicUsize = AtomicUsize::new(0);
 pub struct Fixture(pub PathBuf);
 impl Fixture {
     pub fn new() -> Self {
-        let root = PathBuf::from(std::env::var_os("HOME").expect("HOME"))
-            .join("ag/tmp")
-            .join(format!(
-                "grund-completion-{}-{}",
-                std::process::id(),
-                NEXT_ROOT.fetch_add(1, Ordering::Relaxed)
-            ));
+        let root = PathBuf::from(
+            std::env::var_os("HOME")
+                .or_else(|| std::env::var_os("USERPROFILE"))
+                .expect("user home"),
+        )
+        .join("ag/tmp")
+        .join(format!(
+            "grund-completion-{}-{}",
+            std::process::id(),
+            NEXT_ROOT.fetch_add(1, Ordering::Relaxed)
+        ));
         fs::create_dir_all(root.parent().unwrap()).unwrap();
         fs::create_dir(&root).expect("claim exclusive fixture root");
         let fixture = Self(root);
