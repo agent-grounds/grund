@@ -28,6 +28,7 @@
 //! `scanner/tree.rs`, the queries and the writers being siblings that both
 //! rebase a path against it.
 
+mod check_inputs;
 mod e2e;
 mod failure;
 mod headings;
@@ -37,6 +38,7 @@ mod report;
 mod text;
 mod values;
 
+pub use check_inputs::{CheckInput, CheckInputObserver, with_check_input_observer};
 pub use e2e::{E2eCase, E2eSpecRef};
 pub(crate) use failure::OperationContext;
 pub use failure::OperationDiagnostic;
@@ -55,6 +57,7 @@ pub use values::{
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
+pub(crate) use check_inputs::{check_input_observer, observe_input};
 pub(crate) use headings::UnmarkedHeadingCandidate;
 pub(crate) use paths::{
     canonicalize_existing_prefix, configured_home_path_key, format_path, is_hidden,

@@ -378,7 +378,7 @@ pub(crate) fn is_stub_for_inline_decl(
 
 pub(crate) fn resolve_stub_target(root: &Path, stub_file: &Path, target: &Path) -> PathBuf {
     if target.is_absolute() {
-        crate::config::observe_input(target, false);
+        super::observe_input(target, false);
         return target.to_path_buf();
     }
     let stub_file = if stub_file.is_absolute() {
@@ -391,8 +391,8 @@ pub(crate) fn resolve_stub_target(root: &Path, stub_file: &Path, target: &Path) 
     let root_relative = normalize_path_lexically(&root.join(target));
     // §FS-check.6.1.1, §FS-check.6.1.3: cover both candidates before selection,
     // including missing intermediate directories and followed-link anchors.
-    crate::config::observe_input(&markdown_relative, false);
-    crate::config::observe_input(&root_relative, false);
+    super::observe_input(&markdown_relative, false);
+    super::observe_input(&root_relative, false);
     if markdown_relative.exists() {
         markdown_relative
     } else {

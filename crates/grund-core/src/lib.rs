@@ -63,11 +63,12 @@ pub(crate) mod testing;
 // §AR-system.2.2 model: the records every component passes along — the findings
 // a walk produces, the published report, and the value bindings (§FS-values.2).
 pub use model::{
-    Citation, Declaration, DeclarationSource, DocCommentBlock, E2eCase, E2eSpecRef,
-    EmbeddedValueRoot, FileHeading, FileStructure, Finding, FindingSite, Findings, Id,
-    InlineCitationSite, InvalidValueSite, NearMissHeading, OperationDiagnostic, Report,
-    SectionHeadingOutsideDeclaration, SectionInfo, ShowOutput, ShowSection, UnmarkedHeading,
-    ValueBinding, ValueComponent, ValueComponentKind, ValueRootOrigin, canonical_snapshot_path,
+    CheckInput, CheckInputObserver, Citation, Declaration, DeclarationSource, DocCommentBlock,
+    E2eCase, E2eSpecRef, EmbeddedValueRoot, FileHeading, FileStructure, Finding, FindingSite,
+    Findings, Id, InlineCitationSite, InvalidValueSite, NearMissHeading, OperationDiagnostic,
+    Report, SectionHeadingOutsideDeclaration, SectionInfo, ShowOutput, ShowSection,
+    UnmarkedHeading, ValueBinding, ValueComponent, ValueComponentKind, ValueRootOrigin,
+    canonical_snapshot_path, with_check_input_observer,
 };
 
 // §AR-system.2.1 grammar: the compiled ID grammar, the one lexical fact an
@@ -78,10 +79,9 @@ pub use grammar::{Grammar, INTEGRATIONS_BLOCK_VERSION};
 // §AR-system.2.3 config: the validated `Config` and the `grund.toml` records it
 // is read from (§FS-config).
 pub use config::{
-    AbsentOptionalNamespace, CheckInput, CheckInputObserver, CitationDisjunction, CitationLevel,
-    CitationRules, CitationTarget, Config, ConfigLocation, KindCitationRules, KindConfig,
-    KindIndex, KindResolution, LeadSizeWarning, NamespaceMatch, PointSizeUnit, ShorthandPolicy,
-    with_check_input_observer,
+    AbsentOptionalNamespace, CitationDisjunction, CitationLevel, CitationRules, CitationTarget,
+    Config, ConfigLocation, KindCitationRules, KindConfig, KindIndex, KindResolution,
+    LeadSizeWarning, NamespaceMatch, PointSizeUnit, ShorthandPolicy,
 };
 
 // §AR-system.2.5 scanner: the published form of what the walk raises
