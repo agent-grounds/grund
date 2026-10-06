@@ -57,7 +57,8 @@ use crate::workspace::WorkspaceCitationTarget;
 /// §FS-fmt.2.3.4); and any bare token at all under `[reference] strict`
 /// (§FS-config.3.1).
 ///
-/// One citation regex is used for every scan; whether a match is qualified
+/// The shared full-ID matcher admits explicit-marker starts and bare-token
+/// boundaries (§FS-check.1.1.10); whether a match is qualified
 /// (marker + `<alias>/<ID>`) or unqualified (marker + `<ID>`) is determined by
 /// whether the `<namespace>` capture fired (§AR-workspace.3.1). The alias
 /// prefix is only honoured when the marker precedes it — an unmarked
@@ -371,27 +372,27 @@ pub(super) fn scan_file_text(
         // not this pass emitted a citation there. The shorthand pass skips these
         // (§DF-number-only-citation-shorthand.2.6), so the full ID always wins.
         let mut claimed_markers: Vec<usize> = Vec::new();
-        for caps in config.grammar.citation_re.captures_iter(scan_line) {
+        // §FS-check.1.1.10: explicit-marker and bare starts share the same policy gates.
+        for (offset, caps) in config.grammar.citation_captures(scan_line, &config.marker) {
             let Some(full) = caps.get(0) else { continue };
+            let token_start = offset + full.start();
+            let token_end = offset + full.end();
             let namespace = caps.name("namespace").map(|m| m.as_str().to_string());
-            let has_marker = scan_line[..full.start()].ends_with(&config.marker);
+            let has_marker = scan_line[..token_start].ends_with(&config.marker);
             if has_marker {
-                claimed_markers.push(full.start() - config.marker.len());
+                claimed_markers.push(token_start - config.marker.len());
             }
             // §FS-check.1.1.2 / §AR-scanner.2.3.4: a reserved `number.name`
             // candidate is consumed as one rejected token, never shortened to
             // the valid numeric prefix the regex necessarily matched.
-            if config
-                .grammar
-                .has_reserved_named_tail(scan_line, full.end())
-            {
+            if config.grammar.has_reserved_named_tail(scan_line, token_end) {
                 continue;
             }
             // §FS-check.1.1.9 / §AR-scanner.2.3.1: the never-rewrite zones are asked
             // before the unmarked-`alias/ID` rule and the strict gate, so the escape
             // is what exempts `<§>ID` and `<§>alias/ID` alike, in both modes.
             let bare_zone = !has_marker
-                && bare_token_in_never_rewrite_zone(scan_line, is_md, full.start(), &config.marker);
+                && bare_token_in_never_rewrite_zone(scan_line, is_md, token_start, &config.marker);
             if bare_zone {
                 continue;
             }
@@ -423,9 +424,9 @@ pub(super) fn scan_file_text(
                 continue;
             };
             let start = if has_marker {
-                full.start().saturating_sub(config.marker.len())
+                token_start.saturating_sub(config.marker.len())
             } else {
-                full.start()
+                token_start
             };
             if namespace.is_some()
                 && has_marker
@@ -439,7 +440,7 @@ pub(super) fn scan_file_text(
             {
                 continue;
             }
-            let text = scan_line[start..full.end()].to_string();
+            let text = scan_line[start..token_end].to_string();
             if namespace.is_some() && has_marker {
                 qualified_marker_starts.insert(start);
             }
