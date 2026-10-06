@@ -33,6 +33,8 @@ display-name matching ([§FS-rules.3.1](../functional-spec/FS-rules.md#31-chapte
 comparison diagnostics ([§FS-rules.7.2.1](../functional-spec/FS-rules.md#721-display-name-comparison-context))
 and whitespace guidance ([§FS-rules.3.5.1](../functional-spec/FS-rules.md#351-presence-name-whitespace-refusal)).
 Its shipped skill copies use public links ([§REQ-shipped-surfaces.2](../requirements/REQ-shipped-surfaces.md#2-the-grounding-moves-it-is-not-deleted)).
+A subject is also a query: [Querying grund](querying.md) feeds the units
+`grund list --selector` prints to `grund show --batch` to read their structure.
 
 <!-- BEGIN chapter-rules -->
 ### Chapter rules
