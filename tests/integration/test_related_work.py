@@ -8,11 +8,9 @@ entry raises. The roadmap does not count as that citer, because it deletes a
 point once the point ships. No architecture point describes this repository's
 own documents, so this test cites the points it holds them to instead.
 
-The tests that need the entries landed under `@unittest.expectedFailure`, one
-commit before the entries, because the pre-commit hook runs this suite and a
-plainly failing test could not be committed without `--no-verify`, which this
-repository forbids. An expected failure that passes fails the suite, so the
-commit that writes the entries takes the decorators off."""
+§REQ-readme.1 and §REQ-readme.evidence require a short README path to a sourced,
+task-oriented comparison. The assertions below detect the reported misleading
+passages and preserve addresses; factual source review remains required."""
 
 import re
 import subprocess
@@ -50,10 +48,8 @@ CHAPTERS = (
     "departs: Where grund departs",
 )
 
-# The six tools of the comparison matrix, which moves out of the roadmap's
-# trace-tools positioning point and into the traceability-tools entry; TRLC and
-# LOBSTER share one row.
-MATRIX_TOOLS = ("OpenFastTrace", "Sphinx-Needs", "TRLC", "LOBSTER", "Doorstop", "Duvet", "SARA")
+TRACE_ENTRY = FOLDER / "REL-traceability-tools.md"
+README = REPO_ROOT / "README.md"
 
 FENCE_OPEN = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 FENCE_CLOSE = re.compile(r"^ {0,3}(`{3,}|~{3,})\s*$")
@@ -158,13 +154,23 @@ def _declaration_body(text, declared):
     return body
 
 
-def _first_cells(lines):
-    cells = []
-    for line in lines:
-        if line.lstrip().startswith("|"):
-            parts = line.strip().strip("|").split("|")
-            cells.append(parts[0].strip())
-    return cells
+def _positioning_defects(text):
+    """Finite regressions from #475, not a factual-quality classifier."""
+    patterns = {
+        "future gap-report promise": r"^\| \*\*grund\*\* \|.*⏳.*RM-gap-report",
+        "coverage-parity promise": r"Coverage parity is one shipping milestone away",
+        "blanket schema-check prohibition": r"schema-level custom check rules \(would require severity / exit-code config",
+        "blanket atomic-clause claim": r"They model each clause as its own atomic item",
+        "blanket coverage-only claim": r"They are optimized for a coverage report|traceability tools optimized for a coverage report",
+    }
+    return [label for label, pattern in patterns.items() if re.search(pattern, text, re.M)]
+
+
+def _has_comparison_link(text):
+    return bool(re.search(
+        r"(?:\]\(|\]:\s*)[^\s]*docs/related-work/REL-traceability-tools\.md(?:[#)\s]|$)",
+        text,
+    ))
 
 
 class RelatedWorkTests(unittest.TestCase):
@@ -223,20 +229,88 @@ class RelatedWorkTests(unittest.TestCase):
         uncited = [f"REL-{slug}" for slug in ENTRIES if not citers.get(f"REL-{slug}")]
         self.assertEqual([], uncited, f"cited only from {HOME}/ or the roadmap, or not at all")
 
-    def test_the_trace_tool_matrix_moved_from_the_roadmap_to_its_entry(self):
+    def test_readme_links_to_the_existing_comparison(self):
+        self.assertTrue(
+            _has_comparison_link(README.read_text(encoding="utf-8")),
+            "README has no Markdown link to docs/related-work/REL-traceability-tools.md",
+        )
+
+    def test_traceability_comparison_uses_prose_without_rankings_or_promises(self):
+        text = TRACE_ENTRY.read_text(encoding="utf-8")
+        self.assertEqual([], _positioning_defects(text), "comparison retains misleading positioning")
+        self.assertFalse(
+            any(line.lstrip().startswith("|") for line in _prose_lines(text)),
+            "comparison retains the ranking matrix instead of task-oriented prose",
+        )
+
+    def test_retained_claims_have_the_approved_dated_primary_source_ledger(self):
+        text = TRACE_ENTRY.read_text(encoding="utf-8")
+        # The finite ledger approved in the proposal; presence is not source verification.
+        for source in (
+            "2026-10-06", "unversioned", "4.10.0", "8.5.0",
+            "https://openfasttrace.itsallcode.org/user_guide/user_guide.html",
+            "https://openfasttrace.itsallcode.org/user_guide/use_cases/html_tracing_reports.html",
+            "https://sphinx-needs.readthedocs.io/en/8.5.0/directives/needextract.html",
+            "https://sphinx-needs.readthedocs.io/en/8.5.0/schema/index.html",
+        ):
+            with self.subTest(source=source):
+                self.assertTrue(source in text, f"comparison missing ledger evidence: {source}")
+
+    def test_comparison_grounds_shipped_tasks_and_separate_boundaries(self):
+        text = TRACE_ENTRY.read_text(encoding="utf-8")
+        for point in (
+            "FS-show.2.2", "FS-check.3.1", "FS-check.3.2", "FS-cover.2",
+            "FS-rules.3.1", "FS-rules.3.2", "FS-rules.3.3", "FS-rules.3.4",
+            "FS-non-goals.9", "FS-non-goals.12.1",
+        ):
+            with self.subTest(point=point):
+                self.assertTrue("§" + point in text, f"comparison missing shipped support: {point}")
+
+    def test_roadmap_positioning_removes_parity_and_boundary_inferences(self):
+        text = ROADMAP.read_text(encoding="utf-8")
+        self.assertEqual([], _positioning_defects(text), "roadmap retains misleading positioning")
+
+    def test_published_comparison_and_roadmap_addresses_remain(self):
+        text = TRACE_ENTRY.read_text(encoding="utf-8")
+        self.assertRegex(text, r"(?m)^### work\.matrix: ")
         roadmap = ROADMAP.read_text(encoding="utf-8")
-        stray = [line for line in _prose_lines(roadmap)
-                 if line.lstrip().startswith("|") and any(tool in line for tool in MATRIX_TOOLS)]
-        self.assertEqual([], stray, "the matrix still sits in docs/roadmap.md")
+        for declared in ("RM-positioning", "RM-positioning-trace-tools", "RM-gap-report"):
+            with self.subTest(declared=declared):
+                body = _declaration_body(roadmap, declared)
+                self.assertIsNotNone(body, f"published address {declared} removed")
+                for number in (1, 2, 3):
+                    self.assertTrue(any(line.startswith(f"### {number}.") for line in body),
+                                    f"published address {declared}.{number} removed")
         body = _declaration_body(roadmap, "RM-positioning-trace-tools")
-        if body is not None:
-            cited = {match.group(1) for line in body for match in REL_CITATION.finditer(line)}
-            self.assertIn("REL-traceability-tools", cited)
-        entry = _entry("traceability-tools")
-        self.assertTrue(entry.is_file(), _missing("traceability-tools"))
-        cells = _first_cells(_prose_lines(entry.read_text(encoding="utf-8")))
-        for tool in ("grund",) + MATRIX_TOOLS:
-            self.assertTrue(any(tool in cell for cell in cells), f"the matrix has no {tool} row")
+        self.assertTrue(any("§REL-traceability-tools" in line for line in body))
+
+
+class PositioningDetectorProbes(unittest.TestCase):
+    def test_the_reported_misleading_claims_are_detected(self):
+        for text in (
+            "| **grund** | ⏳ §RM-gap-report |",
+            "Coverage parity is one shipping milestone away.",
+            "schema-level custom check rules (would require severity / exit-code config)",
+            "They model each clause as its own atomic item.",
+            "They are optimized for a coverage report.",
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(_positioning_defects(text))
+
+    def test_task_and_boundary_prose_is_not_a_reported_defect(self):
+        self.assertEqual([], _positioning_defects(
+            "cover groups citations by scanned file. Chapter and citation counts are checked. "
+            "Severity is fixed; arbitrary engine scripting is absent."
+        ))
+
+    def test_comparison_link_must_be_a_markdown_destination(self):
+        target = "docs/related-work/REL-traceability-tools.md"
+        for text in ("", target, "[comparison](docs/other.md)"):
+            with self.subTest(text=text):
+                self.assertFalse(_has_comparison_link(text))
+        for text in (f"[comparison]({target}#workmatrix)", f"[comparison]: {target}"):
+            with self.subTest(text=text):
+                self.assertTrue(_has_comparison_link(text))
 
 
 if __name__ == "__main__":
