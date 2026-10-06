@@ -24,11 +24,12 @@ def configuration(snapshot, policy):
         if home in visited:
             return
         visited.add(home)
-        config = home / 'grund.toml'
-        if not config.is_file():
-            config = home / '.agents/grund.toml'
+        config = next((path for path in (home / 'grund.toml', home / '.agents/grund.toml')
+                       if path.exists() or path.is_symlink()), None)
         try:
-            value = tomllib.loads(config.read_text(encoding='utf-8'))
+            # No config uses canonical member defaults (§FS-workspace.2).
+            # Grund queries, rather than this boundary check, determine scan facts.
+            value = tomllib.loads(config.read_text(encoding='utf-8')) if config else {}
         except (OSError, ValueError) as exc:
             raise Refusal('config', f'Cannot read snapshot Grund config: {exc}; correct tracked config.')
         workspace = value.get('workspace', {})
@@ -43,7 +44,8 @@ def configuration(snapshot, policy):
         if any(not isinstance(items, list) or any(not isinstance(item, str) for item in items)
                for items in (members, optional, includes)):
             raise Refusal('config', 'Grund member/include lists must contain strings; correct tracked config.')
-        signatures[str(home.relative_to(snapshot))] = (value.get('project_name'), members, optional)
+        identity = value.get('project_name') or (home.name if home != root.resolve() else None)
+        signatures[str(home.relative_to(snapshot))] = (identity, members, optional)
         for kind in kinds:
             for key in ('folder', 'file'):
                 if key in kind:

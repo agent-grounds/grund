@@ -11,6 +11,7 @@ from cochange_evidence import EvidenceTests
 from cochange_history import HistoryTests
 from cochange_refusals import RefusalTests, WorkspaceTests
 from cochange_compatibility import CompatibilityTests
+from cochange_snapshot_edges import SnapshotEdgeTests
 
 
 if __name__ == "__main__":

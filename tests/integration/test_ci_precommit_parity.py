@@ -4,9 +4,9 @@ hook needs before that step, gives every hook bound only to a stage without a
 file list the explicit counterpart that stage's input demands (§AR-ci.1.1,
 §AR-ci.8), and the Rust hooks spell the commands the workflow's own steps spell,
 warnings denied on both sides (§AR-ci.3), and §AR-ci.3's own prose spells them
-too, so the architecture hands a reader the command the gate runs. The files are
-read as text: the CI Python has no YAML parser, and the shapes asserted here are
-line-shaped.
+too, so the architecture hands a reader the command the gate runs. Hook/workflow
+files are read as text: the CI Python has no YAML parser. The Python wrapper's
+discovery argv is inspected as syntax, without executing its setup or tests.
 
 §AR-ci.1.2 divides the work: this test holds the *existence* of a counterpart,
 because that is the half a line-shaped read can see. The other half — that the
@@ -17,6 +17,7 @@ attribution gate.
 §FS-distribution.4.6 takes one gate away rather than adding one: no hook and no
 workflow job asks a change for a changelog entry (§AR-ci.7)."""
 
+import ast
 import re
 import unittest
 from pathlib import Path
@@ -27,6 +28,7 @@ PRE_COMMIT = REPO_ROOT / ".pre-commit-config.yaml"
 WORKFLOWS = REPO_ROOT / ".github" / "workflows"
 CI = WORKFLOWS / "ci.yml"
 AR_CI = REPO_ROOT / "docs" / "architecture" / "AR-ci.md"
+PYTHON_GATE = REPO_ROOT / "scripts" / "run_python_gate.py"
 RUST_HOOKS = ("cargo-fmt-check", "cargo-build", "cargo-test")
 FILE_LIST_STAGES = ("pre-commit", "manual")
 ENV_PREFIX = "env RUSTFLAGS=-Dwarnings "
@@ -170,14 +172,49 @@ class CiPreCommitParityTests(unittest.TestCase):
                 scripts = set(re.findall(r"scripts/[\w./-]*changelog[\w.-]*", text)) - {RELEASE_HELPER}
                 self.assertEqual(set(), scripts, "a workflow still runs a changelog check")
 
-    def test_python_tests_are_discovered_from_this_home_on_both_sides(self):
+    def assert_python_discovery_parity(self, hook, ci_runs, wrapper):
+        """Shared setup must reach this test home (§AR-ci.1.2, §FS-cochange-recipe.examples)."""
         home = Path(__file__).resolve().parent.relative_to(REPO_ROOT).as_posix()
-        hook = self.by_id["python-test"]["entry"]
-        ci = [run for run in self.ci_runs if "unittest discover" in run]
+        command = "python scripts/run_python_gate.py"
+        self.assertEqual(command, hook)
+        ci = [run for run in ci_runs if "run_python_gate.py" in run]
         self.assertEqual(1, len(ci), ci)
-        for command in (hook, ci[0]):
-            with self.subTest(command=command):
-                self.assertRegex(command, rf"unittest discover -s {re.escape(home)} -p ")
+        self.assertEqual(hook, ci[0])
+        calls = [node for node in ast.walk(ast.parse(wrapper))
+                 if isinstance(node, ast.Call) and ast.unparse(node.func) == "subprocess.run"
+                 and node.args and isinstance(node.args[0], ast.List)
+                 and any(isinstance(arg, ast.Constant) and arg.value == "unittest"
+                         for arg in node.args[0].elts)]
+        self.assertEqual(1, len(calls))
+        argv = calls[0].args[0].elts
+        self.assertEqual("sys.executable", ast.unparse(argv[0]))
+        self.assertEqual(["-m", "unittest", "discover", "-s", home, "-p", "test_*.py"],
+                         [ast.literal_eval(arg) for arg in argv[1:]])
+        keywords = {keyword.arg: ast.unparse(keyword.value) for keyword in calls[0].keywords}
+        self.assertEqual("ROOT", keywords.get("cwd"))
+        self.assertEqual("inputs()", keywords.get("env"))
+
+    def test_python_tests_are_discovered_from_this_home_on_both_sides(self):
+        self.assert_python_discovery_parity(self.by_id["python-test"]["entry"], self.ci_runs,
+                                            PYTHON_GATE.read_text(encoding="utf-8"))
+
+    def test_python_discovery_parity_rejects_wrong_home_and_mismatched_invocations(self):
+        wrapper = PYTHON_GATE.read_text(encoding="utf-8")
+        hook = self.by_id["python-test"]["entry"]
+        home = Path(__file__).resolve().parent.relative_to(REPO_ROOT).as_posix()
+        wrong_home = wrapper.replace(home, "tests/e2e")
+        self.assertNotEqual(wrapper, wrong_home)
+        variants = ((hook, self.ci_runs, wrong_home),
+                    (hook + " --other", self.ci_runs, wrapper),
+                    (hook, [run + " --other" if run == hook else run for run in self.ci_runs], wrapper))
+        for candidate in variants:
+            with self.subTest(hook=candidate[0], ci=candidate[1]):
+                with self.assertRaises(AssertionError):
+                    self.assert_python_discovery_parity(*candidate)
+
+    def test_ar_ci_3_spells_the_python_wrapper_command(self):
+        spans = _section_lead(AR_CI.read_text(encoding="utf-8"), "## 3. Current hooks")
+        self.assertIn(self.by_id["python-test"]["entry"], spans)
 
     def test_a_clone_installs_every_stage_a_hook_uses(self):
         installed = re.search(r"default_install_hook_types:\s*\[(.*)\]", self.pre_commit_text)
