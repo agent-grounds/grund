@@ -134,7 +134,6 @@ class CoreConcernsLedgerTest(unittest.TestCase):
     def setUp(self):
         self.text = DISCUSSION.read_text(encoding="utf-8")
 
-    @unittest.expectedFailure
     def test_every_open_choice_names_its_owner_or_what_settled_it(self):
         problems = []
         for number in ("10.1", "10.2"):
@@ -148,7 +147,6 @@ class CoreConcernsLedgerTest(unittest.TestCase):
             ]
         self.assertEqual([], problems)
 
-    @unittest.expectedFailure
     def test_every_ledger_row_removes_after_its_notice_and_after_what_shipped(self):
         body = section(self.text, "9.9")
         self.assertIsNotNone(body, "§DISC-core-concerns.9.9 is missing")
