@@ -18,7 +18,6 @@
 //! per candidate.
 
 use std::collections::BTreeSet;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::expand::enclosing_workspace_of;
@@ -258,7 +257,8 @@ fn is_project_root_of_run(config: &Config, canonical: &Path) -> bool {
 /// rejects, and two readers of one file that disagreed about what a section header
 /// is would be the worse bug (§FS-workspace.6.1.7).
 fn workspace_table_line(config_path: &Path) -> Option<usize> {
-    let text = fs::read_to_string(config_path).ok()?;
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let text = crate::config::input_read_to_string(config_path).ok()?;
     text.lines().enumerate().find_map(|(idx, raw_line)| {
         let line = strip_comment(raw_line).trim();
         (line.starts_with('[')

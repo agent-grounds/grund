@@ -1,5 +1,4 @@
 use anyhow::Result;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::config::Config;
@@ -192,7 +191,8 @@ pub(super) fn paths_same_location_key(left: &Path, right: &Path) -> bool {
 /// the check that a stub's link target actually carries the inline home it claims
 /// (§FS-declarations.checks.broken-stub, §AR-checker.2.5, §AR-scanner.4).
 pub(crate) fn file_declares_inline_home(path: &Path, id: &Id, config: &Config) -> Result<bool> {
-    let text = fs::read_to_string(path)?;
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let text = crate::config::input_read_to_string(path)?;
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let mut py_docstring = PythonDocstringScanState::default();

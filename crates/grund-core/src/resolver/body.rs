@@ -16,7 +16,6 @@
 
 use anyhow::{Context, Result, anyhow};
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::config::Config;
@@ -401,6 +400,8 @@ fn read_text_with_overlays(path: &Path, overlays: &TextOverlays) -> Result<Strin
     if let Some(text) = overlay_text(overlays, path) {
         Ok(text.to_string())
     } else {
-        fs::read_to_string(path).with_context(|| format!("read {}", path.display()))
+        // §FS-check.6.1.1: cover this effective input before its shared read.
+        crate::config::input_read_to_string(path)
+            .with_context(|| format!("read {}", path.display()))
     }
 }

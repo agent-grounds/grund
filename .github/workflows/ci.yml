@@ -52,6 +52,11 @@ jobs:
       - name: cargo fmt --check
         run: cargo fmt --all -- --check
 
+      # §FS-check.6.1.1, §AR-bindings.3: exercise actual native backends and
+      # private lifecycle boundaries on Linux, macOS and Windows.
+      - name: native watch contract
+        run: cargo test -p grund --features test-watch --test check_watch_observer --locked
+
       # The file-size ownership regression asks `fissile measure` for each split owner
       # (§AR-core-module-layout.1.5), so the binary is on PATH for the python tests on
       # every leg, not only the one that runs the hooks.

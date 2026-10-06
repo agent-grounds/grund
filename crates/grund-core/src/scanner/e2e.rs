@@ -81,7 +81,8 @@ pub(super) fn scan_e2e_cases(
     if scan_root.join("expected.exit").is_file() {
         case_dirs.push(scan_root);
     } else {
-        for entry in fs::read_dir(&scan_root)? {
+        // §FS-check.6.1.1: cover this effective input before its shared read.
+        for entry in crate::config::input_read_dir(&scan_root)? {
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() && path.join("expected.exit").is_file() {
@@ -159,14 +160,16 @@ pub(crate) fn e2e_case_dir_name(config: &Config, rendered: &str) -> String {
 fn read_e2e_case(config: &Config, dir: &Path) -> Result<E2eCase> {
     let command_args = dir.join("command.args");
     let args = if command_args.is_file() {
-        fs::read_to_string(&command_args)?
+        // §FS-check.6.1.1: cover this effective input before its shared read.
+        crate::config::input_read_to_string(&command_args)?
             .split_whitespace()
             .map(str::to_string)
             .collect()
     } else {
         vec!["check".to_string()]
     };
-    let expected_exit = fs::read_to_string(dir.join("expected.exit"))?
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let expected_exit = crate::config::input_read_to_string(dir.join("expected.exit"))?
         .trim()
         .parse::<i32>()
         .with_context(|| format!("parse {}/expected.exit", format_path(dir)))?;
@@ -188,7 +191,8 @@ fn read_e2e_spec_refs(config: &Config, dir: &Path) -> Result<Vec<E2eSpecRef>> {
     if !path.is_file() {
         return Ok(Vec::new());
     }
-    let text = fs::read_to_string(path)?;
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let text = crate::config::input_read_to_string(path)?;
     Ok(text
         .lines()
         .filter_map(|line| e2e_spec_ref_from_line(config, line.trim()))
@@ -227,7 +231,8 @@ fn e2e_spec_ref_from_line(config: &Config, line: &str) -> Option<E2eSpecRef> {
 }
 
 fn collect_relative_fixture_files(root: &Path, dir: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
-    for entry in fs::read_dir(dir)? {
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    for entry in crate::config::input_read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
         if path.is_dir() {

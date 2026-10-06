@@ -117,9 +117,15 @@ fn scan_file_results(
     workspace_targets: &[WorkspaceCitationTarget],
     overlays: &TextOverlays,
 ) -> Vec<FileScanResult> {
+    // §AR-bindings.3: scoped observation follows the shared parallel scan.
+    let observer = crate::config::check_input_observer();
     files
         .par_iter()
-        .map(|file| scan_one_file(file, config, workspace_targets, overlays))
+        .map(|file| {
+            crate::config::with_check_input_observer(observer.clone(), || {
+                scan_one_file(file, config, workspace_targets, overlays)
+            })
+        })
         .collect::<Vec<_>>()
 }
 

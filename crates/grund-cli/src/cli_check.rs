@@ -9,10 +9,13 @@ fn command_check(args: &[String]) -> ExitCode {
     let mut include_suggestions = false;
     let mut full = false;
     let mut rule = None;
+    let mut watch = false;
     let mut selection = CheckFindingSelection::default();
     let mut idx = 0;
     while idx < args.len() {
         match args[idx].as_str() {
+            // §FS-check.6.4: parsing/validation is shared with one-shot check.
+            "--watch" => watch = true,
             other if other.starts_with("--format=") => {
                 format_override = Some(other.trim_start_matches("--format=").to_string());
             }
@@ -118,29 +121,70 @@ fn command_check(args: &[String]) -> ExitCode {
         eprintln!("error: --only-rule requires --rule");
         return ExitCode::from(2);
     }
-    let (run_warnings, output) = check_with_run_warnings(CheckOpts {
+    let opts = CheckOpts {
         path,
         path_provided,
         require_grounding,
         include_suggestions,
         full,
         rule,
-    });
+    };
+    if watch {
+        return command_check_watch(opts, selection, format_override);
+    }
+    let output = prepare_check_run(opts, &selection, format_override.as_deref());
+    if let Err(err) = publish_check_run(&output) {
+        eprintln!("error: publishing check report: {err}");
+        return ExitCode::from(2);
+    }
+    ExitCode::from(output.status)
+}
+
+/// A complete private report, prepared by the one-shot path and published by
+/// either frontend mode (§FS-check.6.2, §FS-check.6.3.3).
+struct PreparedCheckRun {
+    stdout: Vec<u8>,
+    stderr: Vec<u8>,
+    status: u8,
+    format: String,
+}
+
+fn prepare_check_run(
+    opts: CheckOpts,
+    selection: &CheckFindingSelection,
+    format_override: Option<&str>,
+) -> PreparedCheckRun {
+    let (run_warnings, output) = check_with_run_warnings(opts);
+    let mut prepared = PreparedCheckRun {
+        stdout: Vec::new(),
+        stderr: Vec::new(),
+        status: 2,
+        format: format_override.unwrap_or("text").to_string(),
+    };
     // §FS-check.4.10.8: render root warnings once, before the report
     // or later refusal. They remain data until this frontend chooses their stream
     // and shape (§FS-distribution.3.1).
-    render_run_warnings(&run_warnings);
+    for warning in &run_warnings {
+        prepared
+            .stderr
+            .extend_from_slice(format!("warning: {}\n", warning.message).as_bytes());
+    }
     let mut output = match output {
         Ok(output) => output,
         Err(err) => {
-            eprintln!("error: {err:#}");
-            return ExitCode::from(2);
+            prepared
+                .stderr
+                .extend_from_slice(format!("error: {err:#}\n").as_bytes());
+            return prepared;
         }
     };
-    let format = format_override.unwrap_or(output.output_format);
-    if !matches!(format.as_str(), "text" | "json") {
-        eprintln!("error: unsupported check format `{format}`");
-        return ExitCode::from(2);
+    let format = format_override.unwrap_or(&output.output_format);
+    prepared.format = format.to_string();
+    if !matches!(format, "text" | "json") {
+        prepared
+            .stderr
+            .extend_from_slice(format!("error: unsupported check format `{format}`\n").as_bytes());
+        return prepared;
     }
     // §FS-check.2.1.2: the complete API report exists before the CLI applies its
     // presentation query; retained diagnostics then use ordinary rendering.
@@ -157,32 +201,47 @@ fn command_check(args: &[String]) -> ExitCode {
         .suggestions
         .retain(|finding| selection.retains(finding.code, &finding.authority));
     if format == "json" {
-        render_check_json(&output.report);
+        render_check_json(&output.report, &mut prepared);
     } else {
-        render_check_text(&output.report, run_warnings.len());
+        render_check_text(&output.report, run_warnings.len(), &mut prepared);
     }
-    if output.had_scan_errors {
-        ExitCode::from(2)
+    prepared.status = if output.had_scan_errors {
+        2
     } else if output.report.errors.is_empty() {
-        ExitCode::SUCCESS
+        0
     } else {
-        ExitCode::FAILURE
-    }
+        1
+    };
+    prepared
+}
+
+/// Both flushes delimit completion (§FS-check.6.3.3). Once this starts, SIGINT
+/// cannot discard half a report; the caller checks interruption beforehand.
+fn publish_check_run(run: &PreparedCheckRun) -> std::io::Result<()> {
+    use std::io::Write;
+    let mut stdout = std::io::stdout().lock();
+    let mut stderr = std::io::stderr().lock();
+    stderr.write_all(&run.stderr)?;
+    #[cfg(feature = "test-watch")]
+    watch_capture_write(1, &run.stderr);
+    stdout.write_all(&run.stdout)?;
+    #[cfg(feature = "test-watch")]
+    watch_capture_write(0, &run.stdout);
+    stdout.flush()?;
+    watch_observe(WatchObservation::StdoutFlushed);
+    stderr.flush()?;
+    watch_observe(WatchObservation::StderrFlushed);
+    Ok(())
 }
 
 /// Compare one format's retained findings by the fixed bytewise key
 /// (§FS-errors.4.1); text applies it per channel and JSON applies it globally.
 fn finding_cmp(a: &Finding, b: &Finding) -> std::cmp::Ordering {
-    (
-        a.path.as_deref(),
-        a.line.unwrap_or(0),
-        a.message.as_str(),
-    )
-        .cmp(&(
-            b.path.as_deref(),
-            b.line.unwrap_or(0),
-            b.message.as_str(),
-        ))
+    (a.path.as_deref(), a.line.unwrap_or(0), a.message.as_str()).cmp(&(
+        b.path.as_deref(),
+        b.line.unwrap_or(0),
+        b.message.as_str(),
+    ))
 }
 
 fn sorted_text_findings(report: &Report) -> Vec<(&'static str, &Finding)> {
@@ -234,7 +293,7 @@ fn sorted_json_findings(report: &Report) -> Vec<(&'static str, &Finding)> {
 /// stderr, before this report existed (§FS-check.4.10.11, §FS-workspace.6.1.7). They are not report findings, so nothing in `report`
 /// records them — and a run that says part of its tree is unchecked must not also
 /// say `success` (§FS-check.2.1.3).
-fn render_check_text(report: &Report, run_warnings: usize) {
+fn render_check_text(report: &Report, run_warnings: usize, prepared: &mut PreparedCheckRun) {
     // §FS-check.2.3.2: suggestions never suppress `success`, but when present
     // (caller passed --suggestions) they are printed, so the marker only stands
     // in for a run with nothing at all to show.
@@ -243,7 +302,7 @@ fn render_check_text(report: &Report, run_warnings: usize) {
         && report.warnings.is_empty()
         && report.suggestions.is_empty()
     {
-        println!("success");
+        prepared.stdout.extend_from_slice(b"success\n");
         return;
     }
     for (severity, finding) in sorted_text_findings(report) {
@@ -257,20 +316,28 @@ fn render_check_text(report: &Report, run_warnings: usize) {
             _ => format!("{severity}: {}", finding.message),
         };
         if finding.line.is_some() {
-            println!("{line}");
+            prepared
+                .stdout
+                .extend_from_slice(format!("{line}\n").as_bytes());
         } else {
-            eprintln!("{line}");
+            prepared
+                .stderr
+                .extend_from_slice(format!("{line}\n").as_bytes());
         }
     }
 }
 
-fn render_check_json(report: &Report) {
+fn render_check_json(report: &Report, prepared: &mut PreparedCheckRun) {
     for (severity, finding) in sorted_json_findings(report) {
         let object = render_finding_json(severity, finding);
         if finding.line.is_some() {
-            println!("{object}");
+            prepared
+                .stdout
+                .extend_from_slice(format!("{object}\n").as_bytes());
         } else {
-            eprintln!("{object}");
+            prepared
+                .stderr
+                .extend_from_slice(format!("{object}\n").as_bytes());
         }
     }
 }

@@ -163,6 +163,12 @@ jump-friendly prefix. `grund check | …` / `grund check --format=json | jq` wor
 without redirection (the linter convention — only run-level `error:` lines, like
 an unreadable path, go to stderr). JSON output remains diagnostics-only and in
 global location order, so a clean `grund check --format=json` prints nothing.
+
+`grund check --watch` checks immediately and updates the terminal after saves;
+Ctrl-C restores an owned alternate screen and returns the last completed status.
+Redirected output appends ordinary reports, and clean JSON runs have no visible
+boundary. See the [watch guide](docs/user-facing/watch.md)
+([§FS-check.6](docs/functional-spec/FS-check.md#6-watch-mode---watch)).
 Exact-text consumers migrating from the former unmarked, global-location report
 should use `--format=json`, whose bytes, object shape, and order are unchanged.
 

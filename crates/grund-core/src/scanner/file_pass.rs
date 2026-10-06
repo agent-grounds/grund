@@ -11,7 +11,6 @@
 
 use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::chapter_values::validate_declared_value_chapters;
@@ -76,7 +75,8 @@ pub(super) fn scan_file(
     findings: &mut Findings,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<()> {
-    let text = fs::read_to_string(path)?;
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let text = crate::config::input_read_to_string(path)?;
     scan_file_text(path, &text, config, findings, workspace_targets)
 }
 

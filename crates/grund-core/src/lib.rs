@@ -78,9 +78,10 @@ pub use grammar::{Grammar, INTEGRATIONS_BLOCK_VERSION};
 // §AR-system.2.3 config: the validated `Config` and the `grund.toml` records it
 // is read from (§FS-config).
 pub use config::{
-    AbsentOptionalNamespace, CitationDisjunction, CitationLevel, CitationRules, CitationTarget,
-    Config, ConfigLocation, KindCitationRules, KindConfig, KindIndex, KindResolution,
-    LeadSizeWarning, NamespaceMatch, PointSizeUnit, ShorthandPolicy,
+    AbsentOptionalNamespace, CheckInput, CheckInputObserver, CitationDisjunction, CitationLevel,
+    CitationRules, CitationTarget, Config, ConfigLocation, KindCitationRules, KindConfig,
+    KindIndex, KindResolution, LeadSizeWarning, NamespaceMatch, PointSizeUnit, ShorthandPolicy,
+    with_check_input_observer,
 };
 
 // §AR-system.2.5 scanner: the published form of what the walk raises
