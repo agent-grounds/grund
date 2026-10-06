@@ -1,0 +1,1 @@
+cover src/lib.rs --lines 1-10 --lines 8

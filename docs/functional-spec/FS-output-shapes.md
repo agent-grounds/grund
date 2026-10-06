@@ -205,6 +205,22 @@ With `--total` it emits exactly one object instead, at every count: `{"sites":14
 
 The fixed prefix fields are `id`, `section`, `kind`, `path`, `line`, `stub`, `defines`, and `duplicate`. A workspace row begins with `project`; its `id` remains workspace-qualified ([§FS-workspace.8.3](FS-workspace.md#83-grund-list)). Selected unit pairs follow in caller order as `lead_<unit>`, `full_<unit>`; bare `--size` therefore emits `lines`, `words`, then `bytes`. Unselected pairs are absent. A broken stub uses `null` for each selected measurement. These are per-coordinate records rather than declaration-summary records, so `title` and `refs` are absent.
 
+### 5.3 `cover --lines --format=json`
+
+`cover <file> --lines <range> --format=json` emits one line-ownership object per `--lines`, in the order given ([§FS-cover.6.3](FS-cover.md#63-output)):
+
+```json
+{"path":"docs/functional-spec/FS-001-login.md","start":4,"end":12,"owners":[{"declaration":"FS-001-login","start":5,"end":12,"sections":[{"section":null,"start":5,"end":7},{"section":"1","start":8,"end":12}]}]}
+```
+
+The fields and their order are normative:
+
+- `path`, then `start` and `end`, the requested range as numbers.
+- `owners`, an array of owner runs in line order, empty when nothing in the range is owned. Each is `declaration` (a bare ID string), then `start` and `end` of the run, then `sections`.
+- `sections`, a non-empty array of section runs in line order that partitions its owner run. Each is `section` (`string | null`, `null` for no section), then `start` and `end`.
+
+A record carries a leading `project` exactly when a [§FS-cover.3.2](FS-cover.md#32---format-json) record of the same run would. A `--lines` run names one file, which is always a narrowed scan with no workspace loaded ([§FS-workspace.8.6.1](FS-workspace.md#861-a-narrower-path-is-one-narrowed-scan)), so today no `--lines` record carries it.
+
 ## 6. CLI and config failures
 
 CLI-level failures use raw text on stderr, not JSON, because the command did not reach its data-producing phase:
@@ -259,6 +275,9 @@ For each case above, [§FS-output-shapes.7.1](FS-output-shapes.md#71-the-matrix)
 | `refs --total` text, cited | one `cited at <n> site(s) across <m> file(s)` line | empty | `0` |
 | `refs --total` text, uncited | one `not cited` line | empty, or the [§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations) `note:` for an ID neither declared nor cited | `0` |
 | `refs --total --format=json`, any count | exactly one `{"sites":<n>,"files":<m>}` object | as the text rows | `0` |
+| `cover --lines`, a scanned file, text or JSON | one block or object per range | empty | `0` |
+| `cover --lines`, a file outside the scan | empty | empty | `0` |
+| `cover --lines` usage error ([§FS-cover.6.4](FS-cover.md#64-errors)) | empty | one raw `error:` line | `2` |
 | bad flag / malformed CLI | empty | raw `error:` text | `2` |
 | invalid config during `config validate` | empty | raw `error: <path>:<line>:` text | `1` |
 | invalid config blocking another command | empty | raw `error: <path>:<line>:` text | `2` |

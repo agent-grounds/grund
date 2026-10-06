@@ -21,7 +21,7 @@ SIGNATURES = {
     "list_ids": ({}, dict(kinds=(), projects=(), unused=False, selector=None)),
     "list_sizes": ({}, dict(kinds=(), projects=(), unused=False, selector=None,
                             units=("lines", "words", "bytes"), top=None)),
-    "cover": ({}, dict(text=False)),
+    "cover": ({}, dict(text=False, lines=())),
     "fmt": ({}, dict(write=False, marker=False, cross_refs=False)),
     "propose_id": ({"kind": ..., "title": ...}, dict(width=3)),
     "init": ({"target": None}, dict(name=None, description=None, docs=False, force=False,

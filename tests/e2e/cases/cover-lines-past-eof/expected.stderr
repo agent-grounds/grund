@@ -1,0 +1,1 @@
+error: --lines `45-50` ends past line 49, the last line of `docs/functional-spec/FS-001-alpha.md`

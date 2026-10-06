@@ -1,6 +1,6 @@
 # FS-cover: grund groups citations by scanned file
 
-The `cover` subcommand exposes the citation graph as data: for each scanned file, which declaration IDs does it cite, and where? This is the plumbing surface for the diff-aware co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits)): git decides what changed, `cover` says which IDs the changed files lean on. Serves [§GOAL-agent-grounding.1](../goals.md#1-the-three-layers) and keeps the policy layer out of `grund-core`.
+The `cover` subcommand exposes the citation graph as data: for each scanned file, which declaration IDs does it cite, and where? This is the plumbing surface for the diff-aware co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits)): git decides what changed, `cover` says which IDs the changed files lean on. Asked for line ranges of one file with `--lines`, it also says which declaration and section own each line ([§FS-cover.6](FS-cover.md#6-line-ownership)), so a caller holding a diff hunk can name the spec points it edits. Serves [§GOAL-agent-grounding.1](../goals.md#1-the-three-layers) and keeps the policy layer out of `grund-core`.
 
 ## terms: Terms
 
@@ -13,9 +13,11 @@ binding, snapshot).
 
 ```
 grund cover [<path>] [--format text|json]
+grund cover <file> --lines <N>|<N>-<M> [--lines …] [--format text|json]
 ```
 
 - `<path>` — directory or file whose tree is scanned. Defaults to `.`. Discovery is the same as every other subcommand (walk up to a `grund.toml`, else defaults — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). It bounds the **scan**, exactly as it does for `grund check`, and that is what decides the scope: every project at a workspace root, that member alone inside a member, that subtree alone below a config root ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)).
+- `--lines <N>|<N>-<M>` — answer line ownership for that range of `<file>` instead of grouping citations ([§FS-cover.6.1](FS-cover.md#61-input)). Repeatable.
 - `--format text|json` — output shape ([§FS-cover.3](FS-cover.md#3-outputs)). Default `text`. An unsupported value is answered before anything is loaded ([§FS-cover.1.1](FS-cover.md#11-an-unsupported---format-is-answered-before-the-load)).
 
 `cover` is a query, like `list` and `refs` — non-interactive, no prompts ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). It reads no git history ([§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)) and parses no AST ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).
@@ -97,8 +99,77 @@ In workspace mode both the per-file object and each nested citation object gain 
   - **A config the run needs does not load** — including a `[workspace]` block whose members cannot be expanded (a duplicate or invalid alias, a missing member, a block with nothing in scope). `cover` spans the whole workspace ([§FS-workspace.8.6](FS-workspace.md#86-grund-cover)), so it fails on such a tree exactly where `grund list` does.
   - **A scan / I/O error in any project the run loaded** ([§FS-check.2](FS-check.md#2-outputs) partial-scan semantics apply: records found before or after the unreadable file may print, but the result is not trustworthy as complete). A member's unreadable file fails the run at the workspace root, because the grouping the run just printed is incomplete for the tree it claimed ([§FS-workspace.8.7](FS-workspace.md#87-output-and-exit-codes)).
 
+With `--lines`, a third way to exit `2` is a usage error in the request itself, answered before any output ([§FS-cover.6.4](FS-cover.md#64-errors)).
+
 There is no `1`: `cover` is a query over the current tree and has no finding class of its own.
 
 ## 5. Why this exists
 
-`grund refs <ID>` answers "who cites this ID?" and `grund list` answers "what IDs exist?". The co-change gate needs the inverse grouping: "for this changed file, what IDs does it cite?" A shell script could run `grund refs` once per ID and regroup the output, but that is slower, loses files with zero citations, and makes every recipe reconstruct scanner state. `cover` provides that view directly while preserving the no-git, no-policy boundary: git diff is an input to the recipe, not to `grund cover`.
+`grund refs <ID>` answers "who cites this ID?" and `grund list` answers "what IDs exist?". The co-change gate needs the inverse grouping: "for this changed file, what IDs does it cite?" A shell script could run `grund refs` once per ID and regroup the output, but that is slower, loses files with zero citations, and makes every recipe reconstruct scanner state. `cover` provides that view directly while preserving the no-git, no-policy boundary: git diff is an input to the recipe, not to `grund cover`. Which declaration and section own a changed line is the same reconstruction one level down — a caller's own heading regex misplaces named sections, depth rules, fences and doc-comment ends — so `--lines` answers it from the scan as well ([§FS-cover.6](FS-cover.md#6-line-ownership)).
+
+## 6. Line ownership
+
+`grund cover <file> --lines <range>` reports, for each requested range, which declaration bodies and which sections the range's lines lie in, by the rules the scan already applies to a citation site's `enclosing_declaration` and `enclosing_section` ([§FS-cover.3.2](FS-cover.md#32---format-json)). A caller that holds a diff's line numbers can then name the spec points a hunk edits without parsing the file itself.
+
+The input is a path and line numbers in the current tree, never a revision or a diff ([§FS-cover.5](FS-cover.md#5-why-this-exists), [§FS-non-goals.6](FS-non-goals.md#6-decision-database-audit-log-history-tracking)): the caller already has the line numbers from its diff, and they must be numbers of the tree on disk. Ownership is **structural** — which body a line lies in. It is not citation coverage and says nothing about whether a line is grounded, so the co-change recipe's rule against inferring coverage from a nearby citation is unaffected ([§FS-cochange-recipe.evidence](FS-cochange-recipe.md#evidence-both-edits-for-one-resolved-direct-target)).
+
+### 6.1 Input
+
+- Exactly one `<path>`, and it must be a file ([§FS-cover.6.4](FS-cover.md#64-errors)). Discovery and scope are those of any other `cover` run with that path ([§FS-cover.1](FS-cover.md#1-inputs)): a file is narrower than its config root, so the run is one narrowed scan of the enclosing project ([§FS-workspace.8.6.1](FS-workspace.md#861-a-narrower-path-is-one-narrowed-scan)).
+- `--lines <N>` or `--lines <N>-<M>`, also spelled `--lines=<…>`, with 1-based line numbers and `N <= M`; `<N>` alone is `<N>-<N>`. The range is inclusive at both ends and its end must not pass the file's last line.
+- `--lines` may be repeated, so a caller sends every hunk of one file in one scan. Each range is answered independently, in the order given; overlapping or repeated ranges are answered as often as they are asked.
+- `--format` and `[output] format` apply as to any `cover` run, including [§FS-cover.1.1](FS-cover.md#11-an-unsupported---format-is-answered-before-the-load).
+
+Under `--lines` the per-file record of [§FS-cover.3](FS-cover.md#3-outputs) is not emitted; the two record shapes never mix in one run. Without `--lines`, `cover` prints exactly what it printed before.
+
+### 6.2 Ownership rules
+
+A line's **owner** is the declaration whose body range contains it, the nearest preceding one when bodies nest; its **section** is the innermost accepted section of that declaration containing it, or none. These are the scan's own rules for a citation site, applied to every line, so a line that carries a citation is owned exactly as that citation's `enclosing_declaration` / `enclosing_section` say. At the edges:
+
+- A declaration's heading line belongs to that declaration, under no section.
+- A section heading line belongs to its own section.
+- A blank line belongs to the unit it sits in: one just above a heading still belongs to the section above it.
+- A Markdown body ends at the next heading of the same or a shallower level; from there on nothing owns the lines unless another declaration does.
+- A rejected or duplicate section heading closes the section above it and opens nothing; its lines belong to the declaration under no section until an accepted heading opens one. The first occurrence of a duplicated path keeps its lines.
+- A `#` line inside a fenced code block is not a heading and changes nothing.
+- A stub owns only its one line.
+- A source declaration owns its comment or docstring block up to the next declaration line in that block. The code below the block is owned by nothing: grund does not understand scopes ([§FS-non-goals.3](FS-non-goals.md#3-code-ast-parsing)).
+
+### 6.3 Output
+
+One record per `--lines`, in the order given. A record lists the range's **owner runs**: the maximal runs of consecutive lines owned by one declaration, clipped to the range, in line order. A range that crosses a declaration boundary has two or more, and one declaration appears twice when a nested declaration's body interrupts it. Each owner run is partitioned into **section runs**, the maximal runs of lines under one innermost section, where no section is `null` — the lead, or lines no accepted section contains. Lines owned by nothing appear in no owner run.
+
+`--format json` writes one NDJSON object per range, in the shape [§FS-output-shapes.5.3](FS-output-shapes.md#53-cover---lines---formatjson) fixes:
+
+```json
+{"path":"docs/functional-spec/FS-config.md","start":115,"end":124,"owners":[{"declaration":"FS-config","start":115,"end":124,"sections":[{"section":"requirements.7","start":115,"end":118},{"section":"requirements.8","start":119,"end":122},{"section":"1","start":123,"end":124}]}]}
+{"path":"src/report.rs","start":347,"end":358,"owners":[{"declaration":"AR-checker","start":347,"end":355,"sections":[{"section":"4","start":347,"end":355}]}]}
+```
+
+`"owners":[]` means no line of the range is owned. `path` renders as on the [§FS-cover.3.2](FS-cover.md#32---format-json) record of the same run, and `declaration` renders bare, as `enclosing_declaration` does.
+
+`--format text` prints, per range, a heading `<path>:<range>`, then one row per run, in line order: two spaces, the run, two spaces, and its unit — `<declaration>` for a run under no section, `<declaration>.<section>` under one, `(no owner)` for lines nothing owns. A range or run of one line prints as `<N>`, a longer one as `<N>-<M>`:
+
+```
+$ grund cover docs/functional-spec/FS-config.md --lines 115-124
+docs/functional-spec/FS-config.md:115-124
+  115-118  FS-config.requirements.7
+  119-122  FS-config.requirements.8
+  123-124  FS-config.1
+```
+
+A file that exists but that the scan does not read — an excluded path, or a type grund does not scan — produces no record and exits `0`, which is how `cover` already tells "not scanned" from "scanned" ([§FS-cover.2](FS-cover.md#2-behaviour)).
+
+### 6.4 Errors
+
+Each of these is a usage error: one `error:` line on stderr, nothing on stdout, exit `2`, as for every CLI-level failure ([§FS-output-shapes.6](FS-output-shapes.md#6-cli-and-config-failures)):
+
+- `--lines` with no `<path>`: `error: --lines needs a file path`.
+- `--lines` with a directory: ``error: --lines needs a file path, and `<path>` is a directory``.
+- `--lines` with no value: `error: --lines requires a value`.
+- A range that is not `<N>` or `<N>-<M>` in decimal digits: ``error: --lines takes <N> or <N>-<M>, got `<range>` ``.
+- A `0` in a range: ``error: --lines `<range>`: lines are numbered from 1``.
+- An end before its start: ``error: --lines `<range>` ends before it starts``.
+- An end past the file's last line, the commonest mistake, line numbers taken from the old side of a diff: ``error: --lines `<range>` ends past line <L>, the last line of `<path>` ``.
+
+`<path>` and `<range>` are echoed as the caller wrote them; `<L>` is the file's line count. A path that does not exist exits `2` as it does without `--lines`, and so does a scan that cannot read the file ([§FS-cover.4](FS-cover.md#4-exit-codes)). There is still no exit `1`.
