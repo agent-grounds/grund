@@ -196,8 +196,12 @@ mod cleanup {
         }
 
         fn run(&self, cargo_status: &str) -> Output {
+            self.run_with_path(cargo_status, &std::env::var_os("PATH").unwrap())
+        }
+
+        fn run_with_path(&self, cargo_status: &str, fallback: &std::ffi::OsStr) -> Output {
             let mut paths = vec![self.0.join("bin")];
-            paths.extend(std::env::split_paths(&std::env::var_os("PATH").unwrap()));
+            paths.extend(std::env::split_paths(fallback));
             Command::new(self.0.join("scripts/clean.sh"))
                 .current_dir(&self.0)
                 .env("PATH", std::env::join_paths(paths).unwrap())
@@ -220,18 +224,31 @@ mod cleanup {
     fn relocated_clean_preserves_checkout_cleanup_scope() {
         let fixture = Fixture::new();
         let output = fixture.run("0");
+        assert_success(&fixture, &output);
+    }
+
+    fn assert_cargo_call(fixture: &Fixture) {
+        assert_eq!(
+            fs::read_to_string(fixture.0.join("cargo-call"))
+                .expect("controlled cargo must record its invocation"),
+            format!("{}\nclean\n", fixture.0.display())
+        );
+    }
+
+    fn assert_success(fixture: &Fixture, output: &Output) {
         assert!(
             output.status.success(),
             "{}",
             String::from_utf8_lossy(&output.stderr)
         );
-        assert_eq!(
-            fs::read_to_string(fixture.0.join("cargo-call")).unwrap(),
-            format!("{}\nclean\n", fixture.0.display())
-        );
+        assert_cargo_call(fixture);
         for path in ["panta/build", "scripts/cache"] {
             assert!(!fixture.0.join(path).exists(), "remove tagged {path}");
         }
+        assert_preserved(fixture);
+    }
+
+    fn assert_preserved(fixture: &Fixture) {
         for (path, contents) in [
             ("invalid/CACHEDIR.TAG", "not a cache signature\n"),
             ("untagged/payload", "keep me"),
@@ -247,7 +264,12 @@ mod cleanup {
     #[test]
     fn relocated_clean_stops_when_cargo_clean_fails() {
         let fixture = Fixture::new();
-        assert_eq!(fixture.run("7").status.code(), Some(7));
+        assert_failure(&fixture, &fixture.run("7"));
+    }
+
+    fn assert_failure(fixture: &Fixture, output: &Output) {
+        assert_eq!(output.status.code(), Some(7));
+        assert_cargo_call(fixture);
         for path in [
             "panta/build/payload",
             "scripts/cache/payload",
@@ -257,6 +279,97 @@ mod cleanup {
                 fs::read_to_string(fixture.0.join(path)).unwrap(),
                 "cache data"
             );
+        }
+        for path in ["panta/build/CACHEDIR.TAG", "scripts/cache/CACHEDIR.TAG"] {
+            assert_eq!(fs::read_to_string(fixture.0.join(path)).unwrap(), TAG);
+        }
+        assert_preserved(fixture);
+    }
+
+    #[cfg(target_os = "linux")]
+    mod writer_pressure {
+        use super::*;
+
+        // Installed tools only: an echo decoy exposes cargo PATH fallback safely.
+        fn isolated_path(fixture: &Fixture) -> PathBuf {
+            let fallback = fixture.0.join("fallback");
+            fs::create_dir(&fallback).unwrap();
+            let search = std::env::var_os("PATH").unwrap();
+            for (name, tool) in [
+                ("sh", "sh"),
+                ("find", "find"),
+                ("head", "head"),
+                ("grep", "grep"),
+                ("rm", "rm"),
+                ("dirname", "dirname"),
+                ("cargo", "echo"),
+            ] {
+                let installed = std::env::split_paths(&search)
+                    .map(|path| path.join(tool))
+                    .find(|path| path.is_file())
+                    .unwrap_or_else(|| panic!("missing installed test prerequisite: {tool}"));
+                std::os::unix::fs::symlink(installed, fallback.join(name)).unwrap();
+            }
+            fallback
+        }
+
+        fn check(boundary: &str, cargo_status: &str) {
+            let fixture = Fixture::new();
+            let fallback = isolated_path(&fixture);
+            let executable = fixture.0.join(boundary);
+            let writer = match fs::OpenOptions::new().write(true).open(&executable) {
+                Ok(writer) => Some(writer),
+                // The cargo executable may disappear when the substitute becomes shell-local.
+                Err(error)
+                    if boundary == "bin/cargo" && error.kind() == std::io::ErrorKind::NotFound =>
+                {
+                    None
+                }
+                Err(error) => panic!("hold writable descriptor on {boundary}: {error}"),
+            };
+            if writer.is_some() {
+                let error = Command::new(&executable)
+                    .output()
+                    .expect_err("Linux must reject direct execution while a writer is held");
+                assert_eq!(error.raw_os_error(), Some(26));
+                eprintln!("writer pressure at {boundary}: {error:?}");
+            }
+            let output = fixture.run_with_path(cargo_status, fallback.as_os_str());
+            assert!(
+                output.stdout.is_empty(),
+                "escaped controlled cargo substitute to PATH decoy: {}",
+                String::from_utf8_lossy(&output.stdout)
+            );
+            match cargo_status {
+                "0" => assert_success(&fixture, &output),
+                "7" => assert_failure(&fixture, &output),
+                _ => unreachable!(),
+            }
+            drop(writer);
+        }
+
+        /// §FS-repository-maintenance.1.4.1: scope survives a busy copied script.
+        #[test]
+        fn held_script_writer_preserves_cleanup_scope() {
+            check("scripts/clean.sh", "0");
+        }
+
+        /// §FS-repository-maintenance.1.4.1: cargo status 7 survives a busy copied script.
+        #[test]
+        fn held_script_writer_preserves_cargo_failure() {
+            check("scripts/clean.sh", "7");
+        }
+
+        /// §FS-repository-maintenance.1.4.1: scope and cargo isolation survive a busy stub.
+        #[test]
+        fn held_cargo_writer_preserves_cleanup_scope() {
+            check("bin/cargo", "0");
+        }
+
+        /// §FS-repository-maintenance.1.4.1: the substitute still supplies status 7.
+        #[test]
+        fn held_cargo_writer_preserves_cargo_failure() {
+            check("bin/cargo", "7");
         }
     }
 }

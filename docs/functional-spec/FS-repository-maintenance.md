@@ -51,3 +51,23 @@ that contain a valid cache tag, including scratch builds, and exits 0. It leaves
 untagged directories and directories with invalid cache tags intact. Traversal
 prunes `.git` entries, so Git metadata and cache-tagged content inside `.git`
 remain intact. Relocation preserves these existing responsibilities.
+
+#### 1.4.1 Disposable acceptance remains reliable under writable-descriptor pressure
+
+Cleanup acceptance reads the actual copied `scripts/clean.sh` bytes in an
+exclusively owned disposable root. A controlled cargo substitute records its
+working directory and arguments and supplies the selected exit status; installed
+cargo must never run. This proves checkout-root execution
+[§FS-repository-maintenance.1.3](FS-repository-maintenance.md#13-checkout-root-execution)
+without cleaning the working checkout.
+
+On Linux, keeping writable descriptors open on the copied script and, separately,
+any generated cargo executable must not prevent acceptance from running. Each
+boundary is exercised with cargo status 0 and 7. Success records exactly
+`cargo clean` at the fixture root, removes valid tagged directories, and preserves
+invalid tags, untagged content, and Git metadata including tagged Git content.
+Status 7 records the same invocation, returns 7, and leaves all cache payloads
+and preserved content intact. A removed generated cargo executable needs no
+writer, but still requires these invocation, status, and cleanup assertions.
+Portable cleanup acceptance and the independent executable-mode and
+checkout-manifest checks remain in place.
