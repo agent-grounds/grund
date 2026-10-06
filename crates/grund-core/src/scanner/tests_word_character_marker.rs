@@ -174,8 +174,24 @@ fn word_character_marker_containing_full_ids_keep_their_target() {
                 }
             );
             let report = check_findings(&findings, &config);
-            assert!(report.errors.is_empty(), "{:?}", report.errors);
-            assert!(report.warnings.is_empty(), "{:?}", report.warnings);
+            assert!(
+                report.errors.is_empty(),
+                "{:?}",
+                report
+                    .errors
+                    .iter()
+                    .map(|error| (&error.code, &error.message))
+                    .collect::<Vec<_>>()
+            );
+            assert!(
+                report.warnings.is_empty(),
+                "{:?}",
+                report
+                    .warnings
+                    .iter()
+                    .map(|warning| (&warning.code, &warning.message))
+                    .collect::<Vec<_>>()
+            );
         }
     }
 }
@@ -219,8 +235,24 @@ fn word_character_marker_overlapping_starts_keep_one_positioned_edge() {
                 assert!(!citation.shorthand);
                 assert_eq!(citation.text, format!("{marker}FS_login"));
                 let report = check_findings(&findings, &config);
-                assert!(report.errors.is_empty(), "{:?}", report.errors);
-                assert!(report.warnings.is_empty(), "{:?}", report.warnings);
+                assert!(
+                    report.errors.is_empty(),
+                    "{:?}",
+                    report
+                        .errors
+                        .iter()
+                        .map(|error| (&error.code, &error.message))
+                        .collect::<Vec<_>>()
+                );
+                assert!(
+                    report.warnings.is_empty(),
+                    "{:?}",
+                    report
+                        .warnings
+                        .iter()
+                        .map(|warning| (&warning.code, &warning.message))
+                        .collect::<Vec<_>>()
+                );
             }
         }
     }
