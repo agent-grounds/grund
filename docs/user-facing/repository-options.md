@@ -76,7 +76,7 @@ one contiguous level of numbered components ([§FS-values.2.4](../functional-spe
 ```markdown
 # FS-pricing: Pricing rules
 ## 2. Regional floor <!-- grund:value -->
-## 2.1. 1200
+### 2.1. 1200
 
 ## 3. Use
 
