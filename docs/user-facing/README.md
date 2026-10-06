@@ -16,6 +16,7 @@ command's own `--help` page links the guide and example that cover it
 | [External facts](external-facts.md) | [`examples/external-tickets`](../../examples/external-tickets/) |
 | [`grund init` repository shapes](init-repo-shapes.md) | [`examples/scheme-*`](../../examples/) |
 | [Editor support via LSP](lsp.md) | — |
+| [Querying grund](querying.md) | — |
 | [Terminal feedback with watch](watch.md) | — |
 | [Writing chapter rules](rules.md) | [`examples/rules`](../../examples/rules/) |
 | [First-class values](values.md) | [`examples/values`](../../examples/values/) |
