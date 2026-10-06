@@ -198,7 +198,6 @@ The trigger, marker, and recognized `KIND` set are read from the discovered `gru
 
 These are out of scope for the first version but compatible with the architecture:
 
-- `textDocument/completion` — autocomplete `§F` to declared `FS-…` IDs from the workspace.
 - `textDocument/codeAction` — quick fixes for "unknown reference" (suggest similarly-named IDs) and "section not found" (suggest sibling sections).
 - `workspace/symbol` — fuzzy-find IDs across the project.
 
@@ -207,6 +206,84 @@ Each addition is a separate roadmap item if and when it is taken on.
 Fetching a missing snapshot is reserved with code actions: this version
 advertises neither a “Fetch <ID>” action nor `workspace/executeCommand` and
 never runs `grund fetch` from the server.
+
+### 1.6 Declared-ID completion
+
+`textDocument/completion` offers declared IDs while an author writes a citation.
+Acceptance inserts one resolving citation through an ordinary plain-text edit.
+This capability discovers declarations, not sections or value-specific choices.
+
+#### 1.6.1 Eligibility, exclusions and triggering
+
+Recognition uses the document owner's effective marker, trigger and ID grammar.
+A complete introducer followed by an empty or partial ID is eligible; take the
+longest matching complete introducer. Require an introducer even with
+`strict = false`. An empty marker disables marker entry while a nonempty trigger
+remains usable. A manual request immediately after the trigger offers choices
+without automatically converting money or prose.
+
+Completion honours the full-token formatter refusals ([§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten), [§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)):
+escaped illustrations, ordinary source strings, Markdown inline code, link
+destinations, fences, declaration headings, suppressed scopes, out-of-scope files
+and outward file symlinks. Comments and real Python docstrings remain eligible.
+The different eager-conversion exclusions ([§FS-lsp.1.4.4](FS-lsp.md#144-where-the-trigger-conversion-refuses)) remain unchanged.
+
+Initialization advertises completion with the deduplicated final single
+characters of nonempty markers and triggers from initially loaded projects and
+members, never multi-character strings. Manual requests and client identifier
+continuation cover longer prefixes. A configuration or workspace-folder change
+introducing a new trigger character requires a client restart for automatic
+triggering; manual requests always use current effective configuration.
+
+#### 1.6.2 Candidates, resolution and ordering
+
+Candidates come from the cached owner catalog. A complete known alias plus `/`
+selects the loaded target project's catalog and grammar through the existing
+qualified resolver ([§FS-workspace.4.1](FS-workspace.md#41-each-lookup-stays-in-its-project)). Unknown or unavailable aliases yield no
+items. Never offer an unqualified sibling declaration. Offer only uniquely
+resolving declaration spellings, including retained legacy spellings; incomplete
+declaration discovery withholds edits.
+
+Each item carries its ID, declaration title and project-relative source path.
+Matching is case-sensitive prefix matching with no fuzzy fallback. Exact-prefix
+matches come first, then configured kind order and bytewise ID. Explicit
+`sortText` encodes that order; `filterText` includes the original introducer and
+candidate ID, including any written qualification.
+
+#### 1.6.3 Whole-token replacement
+
+Each item returns one minimal, single-line plain-text edit replacing the whole
+active citation token with the effective marker and chosen full ID. Include the
+old suffix right of the cursor and any existing section suffix; requests within
+a section yield no candidates. Boundaries respect configured grammar punctuation
+and citation delimiters. Protocol ranges are UTF-16-correct, including non-BMP
+characters before the edit. Preserve surrounding prose, adjacent citations,
+Markdown destinations and text after the token. No snippet or additional edit
+is needed.
+
+#### 1.6.4 Snapshot and live-transform interaction
+
+Core owns semantic recognition, candidate selection, byte edits and cached
+context; LSP owns request/response mapping and UTF-16 conversion. Read the
+existing owner snapshot and overlays ([§FS-lsp.2.2.2](FS-lsp.md#222-one-project-answers-each-document)), never a shell-completion
+rescan per request. Preserve public struct constructors. Requests observe
+preceding notified document changes; declaration edits and close notifications
+refresh or restore the catalog used for navigation. Completion lists have
+`isIncomplete = true`, so further typing refreshes choices.
+
+Preserve live-transform timing ([§FS-lsp.1.4.1](FS-lsp.md#141-when-each-rewrite-fires)) and its distinct exclusions
+([§FS-lsp.1.4.3](FS-lsp.md#143-where-the-expansion-refuses), [§FS-lsp.1.4.4](FS-lsp.md#144-where-the-trigger-conversion-refuses)). Before/after-conversion requests, immediate
+trigger acceptance, continuous typing and typing after acceptance leave one
+canonical citation. On-type replay on the resulting unchanged document is a
+no-op. Ordinary rewritable fixtures resolve and require no further citation
+normalization by `grund fmt --check`; intentional eager-conversion exceptions
+remain separate.
+
+After applying either edit, clients discard competing obsolete completion or
+on-type responses and re-request against the notified document. Ordinary LSP
+text edits cannot prevent arbitrary client application of stale responses.
+Acceptance keys, including Tab, belong to the client ([§FS-lsp.2.3](FS-lsp.md#23-editor-configuration-one-time-per-editor)), with no
+server interception.
 
 ## 2. Installation and lifecycle
 
@@ -262,6 +339,13 @@ the generated import template or editor protocol.
 
 Adding a new editor's snippet to the user-facing guide is a small contribution; it does not require a release.
 
+The guide documents declared-ID authoring ([§FS-lsp.1.6](FS-lsp.md#16-declared-id-completion)), exclusions, restart and
+manual-request fallback, and obsolete-response handling. Acceptance, including
+Tab, is client-owned: verify guidance against official Helix, Neovim, Zed,
+VSCode and eglot/lsp-mode documentation and supply a minimal mapping only where
+needed. The server supplies plain-text edits, never a Tab interceptor or editor
+extension.
+
 ### 2.4 Installed editor integrations
 
 `grund-lsp integrations` is the batch surface for editor-client configuration carried by the installed `grund-lsp` version. It is distinct from `grund integrations`, which configures clickable-citation rendering clients ([§FS-integrations](FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations)). The initial catalog contains one entry, `lsp4ij`, with a one-line description. Listing prints the catalog on stdout, writes nothing, leaves stderr empty, and exits `0`.
@@ -294,6 +378,9 @@ Editor-side LSP configuration (server arguments, workspace folders) is the user'
 
 Same input + same config → same diagnostics, same hover body, same definition target, byte-for-byte ([§FS-non-goals.13](FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)).
 
+Completion candidates, metadata, ordering and edit ranges obey the same promise
+([§FS-lsp.1.6.2](FS-lsp.md#162-candidates-resolution-and-ordering), [§FS-lsp.1.6.3](FS-lsp.md#163-whole-token-replacement)).
+
 The LSP server does not have an "interactive" mode or a confirmation prompt ([§FS-non-goals.10](FS-non-goals.md#10-interactive-mode)). It is the same engine with a different transport.
 
 ### 4.1 How parity is held
@@ -305,9 +392,14 @@ remain core behavior: the server transports hard findings and `invalid-rule`
 and contains no parallel rule implementation
 ([§FS-rules.9](FS-rules.md#9-managed-guidance-and-editor-parity)).
 
+Completion acceptance tests apply a source-comment edit, require resolution
+through the shared resolver, and require clean `grund fmt --check`. They cover
+owner isolation, qualified targets, notified overlays, UTF-16 ranges and the
+completion/on-type sequences of [§FS-lsp.1.6.4](FS-lsp.md#164-snapshot-and-live-transform-interaction) alongside preserved trigger tests.
+
 ### 4.2 Embedded values
 
-For an embedded value, this parity covers the CLI's marked-root shape and comparison findings, raw `show --toc` hover slice, tag-free semantic title range, component definition target, and existing dotted-token citation lookups, highlights, and document links. Shell completion remains the core catalog's ordinary section completion and LSP completion remains reserved; neither surface adds a value-specific candidate.
+For an embedded value, this parity covers the CLI's marked-root shape and comparison findings, raw `show --toc` hover slice, tag-free semantic title range, component definition target, and existing dotted-token citation lookups, highlights, and document links. Shell completion remains the core catalog's ordinary section completion; LSP completion offers ordinary declared IDs ([§FS-lsp.1.6.2](FS-lsp.md#162-candidates-resolution-and-ordering)). Neither surface adds a value-specific candidate.
 
 ### 4.3 Off-grammar declarations
 

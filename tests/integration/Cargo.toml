@@ -17,6 +17,10 @@ description = "Integration tests: proof that the parts of grund fit as designed.
 autotests = false
 
 [[test]]
+name = "lsp_completion"
+path = "lsp_completion.rs"
+
+[[test]]
 name = "lsp_cli_parity"
 path = "lsp_cli_parity.rs"
 
