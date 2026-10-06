@@ -226,3 +226,27 @@ fn watch_real_queue_saturation_preserves_fatal_backend_error() {
         String::from_utf8_lossy(&h.control.take_output()[1]).contains("fatal despite saturation")
     );
 }
+
+#[test]
+fn watch_real_queue_saturation_rescans_latest_state() {
+    let _serial = crate::support::serial();
+    let f = Fixture::new();
+    let mut h = Harness::start(&f, None, None);
+    h.completed();
+    let release = h.pause("scanned");
+    f.write("src/main.rs", BAD);
+    h.stage("scanned");
+    for _ in 0..129 {
+        h.control.notify(Ok(changed_event(f.0.join("src/main.rs"))));
+    }
+    f.write("src/main.rs", CLEAN);
+    release.send(()).unwrap();
+    assert_eq!(h.completed().status, 1);
+    h.matches(&f.ordinary());
+    h.stop(0);
+    assert!(
+        h.history
+            .iter()
+            .any(|event| matches!(event, WatchObservation::Recovered))
+    );
+}

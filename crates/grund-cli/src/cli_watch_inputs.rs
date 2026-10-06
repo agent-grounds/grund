@@ -20,6 +20,14 @@ fn native_watch_backend(
     lost: std::sync::Arc<std::sync::atomic::AtomicBool>,
     runtime_failure: std::sync::Arc<std::sync::Mutex<Option<String>>>,
 ) -> Result<NativeWatchBackend, String> {
+    // §FS-check.6.1: unsupported platforms must not select a polling backend.
+    if !cfg!(any(
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "windows"
+    )) {
+        return Err("native watch notifications are unsupported on this platform".to_string());
+    }
     let (closed, finished) = std::sync::mpsc::channel();
     struct Closed(std::sync::mpsc::Sender<()>);
     impl Drop for Closed {
