@@ -35,7 +35,7 @@ class Git:
         self.env = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
         self.env.update(GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull,
                         GIT_OPTIONAL_LOCKS='0')
-        if self.text('rev-parse', '--show-toplevel') != str(self.repo):
+        if Path(self.text('rev-parse', '--show-toplevel')).resolve() != self.repo:
             raise Refusal('git-input', '--repo must name the Git root; supply its top-level path.')
         if self.text('rev-parse', '--is-shallow-repository') != 'false':
             raise Refusal('git-input', 'Shallow history is unsupported; fetch complete history first.')
@@ -129,6 +129,7 @@ class Git:
             entries.append((mode, oid, path))
         data = self.run('cat-file', '--batch', data=''.join(oid + '\n' for _, oid, _ in entries).encode())
         position = 0
+        links = []
         for mode, oid, path in entries:
             end = data.index(b'\n', position)
             header = data[position:end].decode().split()
@@ -137,25 +138,34 @@ class Git:
             size = int(header[2]); position = end + 1
             blob = data[position:position + size]; position += size + 1
             output = destination / path
-            output.parent.mkdir(parents=True, exist_ok=True)
-            if mode == '120000':
-                try:
+            try:
+                output.parent.mkdir(parents=True, exist_ok=True)
+                if mode == '120000':
                     target = blob.decode('utf-8')
-                    try:
-                        resolved = (output.parent / target).resolve()
-                    except (RuntimeError, OSError) as exc:
-                        if isinstance(exc, OSError) and exc.errno != errno.ELOOP:
-                            raise
-                        raise Refusal('unsupported-input', f'{path}: symlink cycle; '
-                                      'replace it with a bounded non-cyclic link.', path)
-                    if not resolved.is_relative_to(destination):
-                        raise ValueError('symlink leaves snapshot')
                     output.symlink_to(target)
-                except (ValueError, UnicodeError) as exc:
-                    raise Refusal('unsupported-input', f'{path}: {exc}; use a bounded symlink.', path)
-            else:
-                output.write_bytes(blob)
-                output.chmod(0o755 if mode == '100755' else 0o644)
+                    links.append((output, path))
+                else:
+                    output.write_bytes(blob)
+                    output.chmod(0o755 if mode == '100755' else 0o644)
+            except (OSError, ValueError, UnicodeError) as exc:
+                raise Refusal('unsupported-input', f'{path}: cannot materialize tracked path/mode '
+                              f'({type(exc).__name__}); use a host that supports it or correct the path.', path)
+        # Strict resolution catches cycles on Python 3.13+ too. All links must
+        # exist before checking (§FS-cochange-recipe.snapshots).
+        for output, path in links:
+            try:
+                try:
+                    resolved = output.resolve(strict=True)
+                except FileNotFoundError:
+                    resolved = output.resolve()
+            except (RuntimeError, OSError) as exc:
+                if isinstance(exc, OSError) and exc.errno != errno.ELOOP:
+                    raise
+                raise Refusal('unsupported-input', f'{path}: symlink cycle; '
+                              'replace it with a bounded non-cyclic link.', path)
+            if not resolved.is_relative_to(destination):
+                raise Refusal('unsupported-input', f'{path}: symlink leaves snapshot; '
+                              'use a bounded symlink.', path)
         # A nested Git context prevents parent ignore rules from erasing the scan.
         isolated = {**self.env, 'GIT_CONFIG_COUNT': '1', 'GIT_CONFIG_KEY_0': 'init.defaultBranch',
                     'GIT_CONFIG_VALUE_0': 'snapshot'}

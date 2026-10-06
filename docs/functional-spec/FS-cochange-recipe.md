@@ -49,6 +49,9 @@ tree. Never change contributor index bytes or working files. Every Git compariso
 and Grund query uses the same isolated tracked blob/mode contents, without checkout
 filters, archive substitution, inherited parent ignores or live-tree fallback.
 Keep symlink modes without following them outside the isolated root.
+Validate links after materializing the complete tree; symlink cycles refuse,
+including cycles without an extra incoming link. Compare the Git root as a
+filesystem path, accepting equivalent native and Git separator spellings.
 
 Run independent `check`, `cover`, `list` and batch `show` in each required tree at
 the configured root ([§FS-cover.4](FS-cover.md#4-exit-codes), [§FS-list.4](FS-list.md#4-exit-codes), [§FS-show.1.8](FS-show.md#18---batch-an-explicit-query-stream)). Ordinary config changes
@@ -73,6 +76,8 @@ roots outside it, submodules, unmerged/intent-to-add/split/sparse index forms an
 non-UTF-8 paths. Name the unsupported input or failing query and a corrective
 action. Partial query output can never produce success. Query formats, ordinary
 severity/exit mappings and offline behavior stay unchanged.
+Tracked names or modes that the host filesystem cannot represent also refuse
+with the exact Git path and a corrective action; never rename or omit them.
 
 Use NUL-delimited Git paths and fixed rename detection (`--find-renames=50%`).
 Compare blob identities and modes to distinguish pure moves and mode-only edits.

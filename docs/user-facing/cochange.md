@@ -31,6 +31,10 @@ only reports edits and CI must execute them. Paths in results are Git-relative,
 even when `config_root` names a nested app. Configuration edits are read from
 their own snapshots. Namespace migrations and roots outside the Git tree are
 explicitly unsupported.
+Snapshots also refuse symlink cycles and tracked names or modes the host cannot
+represent, naming the exact Git path. For example, a newline in a filename is
+supported on POSIX but requires another host for evaluation on Windows. The
+recipe never renames or drops unsupported paths to obtain a result.
 
 **Local commit-msg hook**
 

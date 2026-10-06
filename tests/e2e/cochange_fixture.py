@@ -73,6 +73,17 @@ class Fixture:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text, encoding="utf-8")
 
+    def stage_blob(self, path, data, mode="100644"):
+        """Build exact Git names/modes without host filename restrictions (§FS-cochange-recipe.snapshots)."""
+        oid = subprocess.run(["git", "-C", str(self.root), "hash-object", "-w", "--stdin"],
+            input=data, capture_output=True, check=True).stdout.strip()
+        name = path.encode("utf-8") if isinstance(path, str) else path
+        # Synthetic invalid names must reach the recipe even on Git for Windows.
+        # Relax only this object/index construction, never the gate being tested.
+        subprocess.run(["git", "-C", str(self.root), "-c", "core.protectNTFS=false",
+                        "update-index", "-z", "--index-info"],
+            input=mode.encode() + b" " + oid + b"\t" + name + b"\0", check=True)
+
     def edit(self, path):
         with (self.root / path).open("a", encoding="utf-8") as out:
             out.write("\n# Related edit\n")
@@ -90,9 +101,9 @@ class Fixture:
         self.git("commit", "-q", "--allow-empty", "-m", message)
         return self.git("rev-parse", "HEAD")
 
-    def invoke(self, mode="ci", message="Change", base=None, grund=None, **kwargs):
+    def invoke(self, mode="ci", message="Change", base=None, grund=None, repo=None, **kwargs):
         executable = grund or os.environ.get("GRUND_BUILT") or shutil.which("grund")
-        common = [sys.executable, str(RECIPE), "--repo", str(self.root),
+        common = [sys.executable, str(RECIPE), "--repo", str(repo or self.root),
                   "--policy", str(self.policy), "--grund", str(executable)]
         if mode == "commit-msg":
             msg = self.root.parent / (self.root.name + "-message")

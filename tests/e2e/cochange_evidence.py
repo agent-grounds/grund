@@ -1,4 +1,6 @@
 """File-level acceptance for §FS-cochange-recipe.evidence and snapshots."""
+import os
+
 from cochange_fixture import RecipeCase, trailer
 
 
@@ -89,26 +91,40 @@ class EvidenceTests(RecipeCase):
             with self.subTest(modes=modes):
                 self.fixture.git("reset", "--hard", self.fixture.base)
                 self.fixture.change()
+                self.fixture.git("add", "-A")
                 for path in ("docs/FS-alpha.md", "tests/test_lib.py"):
                     if modes:
-                        (self.fixture.root / path).chmod(0o755)
+                        self.fixture.stage_blob(path, (self.fixture.root / path).read_bytes(), "100755")
                     else:
                         self.fixture.git("mv", path, path.replace("alpha", "renamed").replace("test_lib", "test_moved"))
                 if not modes:
                     index = self.fixture.root / "docs/README.md"
                     index.write_text(index.read_text().replace("(FS-alpha.md)", "(FS-renamed.md)"))
+                    self.fixture.git("add", "-A")
+                self.fixture.commit("Evidence move or mode", stage=False)
                 self.assertEqual(["spec", "test"],
-                                 self.source_row(self.evaluate(1))["missing"])
+                                 self.source_row(self.report(self.fixture.invoke(), 1))["missing"])
 
     def test_spaces_and_newlines_are_exact_paths(self):
+        space = "src/space name.py"
+        self.fixture.write(space, self.fixture.source())
+        report = self.evaluate(0, "Add space" + trailer(paths=(space,)))
+        self.assertEqual(space, self.source_row(report, space)["waivers"][0]["path"])
         path = "src/space and\nnewline.py"
-        self.fixture.write(path, self.fixture.source())
-        report = self.evaluate(0, "Add" + trailer(paths=(path,)))
-        self.assertEqual(path, self.source_row(report, path)["waivers"][0]["path"])
+        self.fixture.stage_blob(path, self.fixture.source().encode("utf-8"))
+        self.fixture.commit("Add newline" + trailer(paths=(path,)), stage=False)
+        report = self.report(self.fixture.invoke(), 2 if os.name == "nt" else 0)
+        if os.name == "nt":
+            self.error(report, "unsupported-input", path)
+            self.assertIn("supports", report["errors"][0]["message"])
+        else:
+            self.assertEqual(path, self.source_row(report, path)["waivers"][0]["path"])
 
     def test_source_mode_only_change_keeps_obligations(self):
-        (self.fixture.root / "src/lib.py").chmod(0o755)
-        self.assertEqual(["spec", "test"], self.source_row(self.evaluate(1))["missing"])
+        self.fixture.stage_blob("src/lib.py", (self.fixture.root / "src/lib.py").read_bytes(), "100755")
+        self.fixture.commit("Source mode", stage=False)
+        self.assertEqual(["spec", "test"],
+                         self.source_row(self.report(self.fixture.invoke(), 1))["missing"])
 
     def test_deleted_spec_and_test_content_supply_base_evidence(self):
         # Remove the source too, so ordinary check has no dangling candidate citation.
