@@ -5,7 +5,10 @@
 //! `*-section-suffixed-line-*` pin what `list`, `check` and `show` print; these
 //! pin the one answer underneath them, in each shape a declaration line takes.
 
-use super::{Grammar, declaration_id_on_line, near_miss_heading, render_id};
+use super::{
+    Grammar, declaration_captures, declaration_id_on_line, near_miss_heading, parse_id_arg,
+    render_id,
+};
 use crate::config::Config;
 use crate::testing::{numbered_config, test_root};
 
@@ -223,5 +226,107 @@ fn with_the_colon_the_whole_token_is_the_near_miss() {
             Some("FS-042-user-login.2"),
             "{shape:?} line {line:?} is reported as a near miss"
         );
+    }
+}
+
+/// §FS-declarations.line.configured-literals: the full canonical identity and
+/// the body reader's boundary must survive an internal colon in every shape.
+#[test]
+fn colon_format_declaration_is_canonical_in_every_shape() {
+    let config = config_with(
+        "colon_format_declaration_is_canonical_in_every_shape",
+        |c| {
+            c.id_format = "{kind}:{slug}".into();
+        },
+    );
+    let expected = parse_id_arg("FS:login", &config.grammar).unwrap().0;
+    for (shape, line) in [
+        (Shape::Markdown, "# FS:login: Login"),
+        (Shape::Comment, "/// FS:login: Login"),
+        (Shape::Docstring, "    FS:login: Login"),
+    ] {
+        let (in_docstring, is_md) = shape.flags();
+        let captures = declaration_captures(&config.grammar, line, in_docstring, is_md)
+            .unwrap_or_else(|| {
+                panic!("{shape:?}: {line:?} lost its canonical declaration capture")
+            });
+        assert_eq!(captures.name("id").unwrap().as_str(), "FS:login");
+        let (actual, end) =
+            declaration_id_on_line(&config.grammar, line, in_docstring, is_md).unwrap();
+        assert_eq!(
+            actual, expected,
+            "{shape:?}: declaration and query identities"
+        );
+        assert_eq!(&line[end..], ": Login", "{shape:?}: complete ID boundary");
+    }
+}
+
+/// §FS-declarations.line.configured-literals: a conforming heading must never
+/// be diagnosed as a near miss, even though its spelling can be cataloged today.
+#[test]
+fn colon_format_declaration_is_not_a_near_miss() {
+    let config = config_with("colon_format_declaration_is_not_a_near_miss", |c| {
+        c.id_format = "{kind}:{slug}".into();
+    });
+    for (shape, line) in [
+        (Shape::Markdown, "# FS:login: Login"),
+        (Shape::Comment, "/// FS:login: Login"),
+        (Shape::Docstring, "    FS:login: Login"),
+    ] {
+        let (in_docstring, is_md) = shape.flags();
+        assert!(
+            near_miss_heading(&config.grammar, line, in_docstring, is_md).is_none(),
+            "{shape:?}: {line:?} is conforming, not a declaration-near-miss"
+        );
+    }
+}
+
+/// §FS-config.3.2.5: the colon-format correction must preserve the guard that
+/// retains a longer off-grammar token instead of claiming its canonical prefix.
+#[test]
+fn colon_format_fix_preserves_longer_off_grammar_tokens() {
+    let config = config_with(
+        "colon_format_fix_preserves_longer_off_grammar_tokens",
+        |c| {
+            c.id_format = "{kind}-{slug}".into();
+            c.slug_pattern = "[a-z]+".into();
+        },
+    );
+    for (shape, line) in [
+        (Shape::Markdown, "# FS-legacy-2: Login"),
+        (Shape::Comment, "/// FS-legacy-2: Login"),
+        (Shape::Docstring, "    FS-legacy-2: Login"),
+    ] {
+        let (in_docstring, is_md) = shape.flags();
+        assert!(declaration_captures(&config.grammar, line, in_docstring, is_md).is_none());
+        assert_eq!(
+            declared(&config.grammar, shape, line).as_deref(),
+            Some("FS-legacy-2")
+        );
+        assert_eq!(
+            near_miss_heading(&config.grammar, line, in_docstring, is_md).map(|hit| hit.0),
+            Some("FS-legacy-2")
+        );
+    }
+}
+
+/// §FS-declarations.line.section-suffix: an internal colon does not make a
+/// section coordinate a canonical declaration, or declare its parent ID.
+#[test]
+fn colon_format_section_suffix_does_not_declare_the_parent() {
+    let config = config_with(
+        "colon_format_section_suffix_does_not_declare_the_parent",
+        |c| {
+            c.id_format = "{kind}:{slug}".into();
+        },
+    );
+    for (shape, line) in [
+        (Shape::Markdown, "# FS:login.2 names a section"),
+        (Shape::Comment, "/// FS:login.2 names a section"),
+        (Shape::Docstring, "    FS:login.2 names a section"),
+    ] {
+        let (in_docstring, is_md) = shape.flags();
+        assert!(declaration_captures(&config.grammar, line, in_docstring, is_md).is_none());
+        assert_eq!(declared(&config.grammar, shape, line), None);
     }
 }

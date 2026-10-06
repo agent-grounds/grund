@@ -42,6 +42,10 @@ load: an explicit query stream ([§FS-show.1.8](FS-show.md#18---batch-an-explici
 
 `<ID>` is the full ID without the marker (e.g. `FS-check`). It may include an inline section (`FS-check.3.1`); the dotted form uses the configured `[id] section_separator`. Beyond the kind's grammar it accepts an exact off-grammar ID the catalog retains ([§FS-show.1.1.1](FS-show.md#111-exact-off-grammar-ids)); the catalog-prefix ambiguity fails rather than guesses ([§FS-show.1.1.2](FS-show.md#112-where-the-id-ends-and-the-section-begins)); and a missing fetch-backed snapshot is a failed offline query ([§FS-show.1.1.3](FS-show.md#113-a-missing-fetched-snapshot)).
 
+Configured literals such as `:` remain part of a conforming ID when it is
+discovered and read; the complete ID printed by `list` is the same ID accepted
+here ([§FS-declarations.line.configured-literals](FS-declarations.md#lineconfigured-literals-configured-literals-belong-to-the-canonical-id)).
+
 #### 1.1.1 Exact off-grammar IDs
 
 Parsing first accepts the named kind's effective grammar, then exact written IDs retained in that project's shared catalog for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)); an off-grammar string with no exact declaration remains invalid. All four whole-declaration slices and both section forms apply unchanged to an exact off-grammar declaration.
