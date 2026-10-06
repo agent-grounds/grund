@@ -1490,7 +1490,7 @@ Setup/runtime subscription failures and failed watcher recovery restore any owne
 
 On Ctrl-C/SIGINT discard pending work. Let an active synchronous scan finish privately and discard its unpublished result. Publication already begun finishes and counts as completed only when both streams have been fully published and flushed. Shutdown may therefore wait for an active scan/publication.
 
-Return the most recently completed run's status (`0`/`1`/`2`). If none has completed, restore any owned screen and print `error: interrupted before the first check completed` on stderr, returning `2`. Restore the screen, release subscriptions and join workers before exit; no watcher or worker remains resident. An unpublished interrupted result never changes the last completed status.
+Return the most recently completed run's status (`0`/`1`/`2`). If none has completed, restore any owned screen and print `error: interrupted before the first check completed` on stderr, returning `2`. Restore the screen, release subscriptions and join workers before exit; no watcher or worker remains resident. Release is bounded: a native backend that has not released its subscriptions within 5 seconds of being closed, on refresh or at exit, is a fatal watcher failure under [§FS-check.6.3.2](FS-check.md#632-fatal-watcher-failures), never an indefinite wait. An unpublished interrupted result never changes the last completed status.
 
 ### 6.4 Scope
 

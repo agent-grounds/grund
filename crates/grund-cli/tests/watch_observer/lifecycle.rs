@@ -103,6 +103,30 @@ fn watch_shutdown_joins_workers_and_releases_subscriptions() {
     again.stop(0);
 }
 
+/// §FS-check.6.3.3: a backend that keeps its callback, as an orphaned native
+/// request does, ends the session fatally within the bound; the next one runs.
+#[test]
+fn watch_unreleased_backend_is_fatal_two_and_bounded() {
+    let _serial = crate::support::serial();
+    let f = Fixture::new();
+    let mut h = Harness::options(
+        f.opts(),
+        CheckFindingSelection::default(),
+        None,
+        None,
+        Some("release"),
+    );
+    h.stage("scanning");
+    h.stop(2);
+    assert!(
+        String::from_utf8_lossy(&h.control.take_output()[1])
+            .contains("error: watch: releasing native subscriptions")
+    );
+    let mut again = Harness::start(&f, None, None);
+    again.completed();
+    again.stop(0);
+}
+
 #[test]
 fn watch_setup_failure_is_fatal_two() {
     let _serial = crate::support::serial();

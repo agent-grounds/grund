@@ -57,6 +57,7 @@ pub mod watch_test {
         pub(super) runtime_failure: Mutex<Option<Arc<Mutex<Option<String>>>>>,
         pub(super) output: Mutex<[Vec<u8>; 2]>,
         pub(super) terminal: Mutex<Option<bool>>,
+        pub(super) retained: Mutex<Vec<Arc<dyn std::any::Any + Send + Sync>>>,
     }
 
     impl Control {
@@ -69,6 +70,7 @@ pub mod watch_test {
                 runtime_failure: Mutex::new(None),
                 output: Mutex::new(Default::default()),
                 terminal: Mutex::new(None),
+                retained: Mutex::new(Vec::new()),
             })
         }
         pub fn fail_next(&self, operation: &str) {
@@ -186,6 +188,16 @@ pub mod watch_test {
 fn watch_capture_write(stream: usize, bytes: &[u8]) {
     if let Some(control) = WATCH_TEST_CONTROL.lock().unwrap().as_ref() {
         control.output.lock().unwrap()[stream].extend_from_slice(bytes);
+    }
+}
+
+/// An injected `release` keeps the next backend's callback alive past its
+/// release, as an orphaned native request does (§FS-check.6.3.3).
+fn watch_retain_callback(callback: std::sync::Arc<dyn std::any::Any + Send + Sync>) {
+    if watch_inject_failure_event("release").is_err() {
+        if let Some(control) = WATCH_TEST_CONTROL.lock().unwrap().as_ref() {
+            control.retained.lock().unwrap().push(callback);
+        }
     }
 }
 
