@@ -63,17 +63,41 @@ pub fn fetch_snapshot_with_run_warnings(
     path: &Path,
 ) -> (Vec<Finding>, std::result::Result<(), FetchFailure>) {
     let mut run_warnings = Vec::new();
-    let result = fetch_run(raw, path, &mut run_warnings);
+    let result = fetch_run(raw, path, &mut run_warnings, &mut None);
     (run_warnings, result)
+}
+
+/// Structured source errors without changing FetchFailure (§FS-distribution.3.1).
+pub(crate) fn fetch_with_diagnostics(raw: &str, path: &Path) -> (Vec<Finding>, anyhow::Result<()>) {
+    let mut warnings = Vec::new();
+    let mut diagnostic = None;
+    let result = fetch_run(raw, path, &mut warnings, &mut diagnostic).map_err(|failure| {
+        diagnostic.unwrap_or_else(|| {
+            crate::model::OperationDiagnostic::new(
+                match failure.kind {
+                    FetchFailureKind::Query => "query",
+                    FetchFailureKind::Operational => "operation",
+                },
+                "fetch",
+                failure.message,
+            )
+            .into()
+        })
+    });
+    (warnings, result)
 }
 
 fn fetch_run(
     raw: &str,
     path: &Path,
     run_warnings: &mut Vec<Finding>,
+    diagnostic: &mut Option<anyhow::Error>,
 ) -> std::result::Result<(), FetchFailure> {
-    let mut root_config =
-        resolve_workspace_config(path).map_err(|err| fetch_operational(format!("{err:#}")))?;
+    let mut root_config = resolve_workspace_config(path).map_err(|err| {
+        let message = format!("{err:#}");
+        *diagnostic = Some(err);
+        fetch_operational(message)
+    })?;
     let (namespace, local) = raw
         .rsplit_once('/')
         .map_or((None, raw), |(ns, id)| (Some(ns), id));
@@ -83,8 +107,11 @@ fn fetch_run(
                 "unknown project alias `{namespace}` for fetch"
             )));
         }
-        let projects = expand_workspace_tree(&mut root_config)
-            .map_err(|err| fetch_operational(format!("{err:#}")))?;
+        let projects = expand_workspace_tree(&mut root_config).map_err(|err| {
+            let message = format!("{err:#}");
+            *diagnostic = Some(err);
+            fetch_operational(message)
+        })?;
         *run_warnings = run_warning_findings(&root_config, settled_run_warnings(&root_config));
         projects
             .into_iter()

@@ -8,7 +8,7 @@
 //! config work every walking command shares, not something `check` owns
 //! (§AR-core-module-layout.1).
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
@@ -171,7 +171,15 @@ pub(super) fn config_location_error(
     source: Option<&ConfigLocation>,
     message: String,
 ) -> anyhow::Error {
-    anyhow!("{}", config_location_message(source, message))
+    // §FS-distribution.3.3.2: the config key owns the location and classification.
+    let mut failure = crate::model::OperationDiagnostic::new(
+        "config",
+        "config",
+        config_location_message(source, message),
+    );
+    failure.path = source.map(|s| format_path(&s.path));
+    failure.line = source.map(|s| s.line);
+    failure.into()
 }
 
 /// The breadcrumb every diagnostic about a config key wears — `<config>:<line>:`

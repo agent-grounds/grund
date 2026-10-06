@@ -55,6 +55,7 @@ mod editor_on_type;
 mod editor_snapshot;
 mod show;
 mod show_query;
+mod size_output;
 mod sizes;
 
 pub use batch::{BatchShowFailure, BatchShowQuery, BatchShowRecord, show_batch_with_scope};
@@ -69,7 +70,10 @@ pub use editor_snapshot::{
     LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
 };
 pub use show_query::{ShowFormat, ShowMode, ShowOpts, ShowQueryError};
-pub use sizes::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, list_sizes};
+pub use sizes::{
+    ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, list_sizes,
+    list_sizes_with_run_warnings,
+};
 
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
@@ -94,3 +98,6 @@ mod tests_editor_completion_workspace;
 mod tests_lsp_hover;
 #[cfg(test)]
 mod tests_workspace_message_paths;
+
+// §FS-distribution.3.1: the additive full-data batch adapter.
+pub(crate) use batch::show_batch_data;

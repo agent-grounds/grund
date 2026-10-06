@@ -462,7 +462,15 @@ pub(crate) fn strip_comment(line: &str) -> &str {
 /// Fail config parsing with a `path:line: message` error — the located-finding
 /// shape applied to a malformed `grund.toml` (§FS-config.4.3, §FS-errors.2.1).
 pub(super) fn bail_config<T>(path: &Path, line: usize, message: String) -> Result<T> {
-    Err(anyhow!("{}:{}: {}", format_path(path), line, message))
+    // §FS-distribution.3.3.2: preserve the parser's location without parsing Display.
+    let mut failure = crate::model::OperationDiagnostic::new(
+        "config",
+        "config",
+        format!("{}:{}: {}", format_path(path), line, message),
+    );
+    failure.path = Some(format_path(path));
+    failure.line = Some(line);
+    Err(failure.into())
 }
 
 pub(super) fn parse_string(path: &Path, line: usize, value: &str) -> Result<String> {
@@ -507,13 +515,9 @@ pub(super) fn parse_bool(path: &Path, line: usize, value: &str) -> Result<bool> 
 }
 
 pub(super) fn parse_usize(path: &Path, line: usize, value: &str) -> Result<usize> {
-    value.parse::<usize>().map_err(|_| {
-        anyhow!(
-            "{}:{}: expected non-negative integer",
-            format_path(path),
-            line
-        )
-    })
+    value
+        .parse::<usize>()
+        .or_else(|_| bail_config(path, line, "expected non-negative integer".to_string()))
 }
 
 pub(crate) fn parse_string_list(path: &Path, line: usize, value: &str) -> Result<Vec<String>> {

@@ -113,10 +113,14 @@ pub(crate) fn load_config(start: &Path) -> Result<Config> {
     // Zero-config (§GOAL-zero-config): the "project root" is the current working
     // directory, never the path passed on the command line. Reports stay relative to
     // `cli_base` (the resolved path arg) when `relative_paths` is off (§FS-config.3.6.1).
-    let root = std::env::current_dir()
-        .ok()
-        .and_then(|cwd| fs::canonicalize(&cwd).ok())
-        .unwrap_or_else(|| walk_start.clone());
+    // §FS-distribution.3.3.3: embedding scopes this fallback to its supplied root.
+    let root = match super::call_scope::embedding_base() {
+        Some(base) => fs::canonicalize(&base).unwrap_or(base),
+        None => std::env::current_dir()
+            .ok()
+            .and_then(|cwd| fs::canonicalize(&cwd).ok())
+            .unwrap_or_else(|| walk_start.clone()),
+    };
     let mut config = Config::default_for(root);
     config.cli_base = walk_start;
     Ok(config)
@@ -167,7 +171,20 @@ pub(crate) fn load_config_at_with_report_base(
     if let Some(candidate) = candidate {
         let report_path = report_relative(&candidate);
         config.config_file = Some(report_path.clone());
-        parse_config_file(&candidate, &report_path, &mut config)?;
+        // §FS-distribution.3.3.2: classify all config-load failures at discovery.
+        parse_config_file(&candidate, &report_path, &mut config).map_err(|error| {
+            if error
+                .downcast_ref::<crate::model::OperationDiagnostic>()
+                .is_some()
+            {
+                error
+            } else {
+                let mut diagnostic =
+                    crate::model::OperationDiagnostic::from_error("config", "config", error);
+                diagnostic.path = Some(crate::model::format_path(&report_path));
+                diagnostic.into()
+            }
+        })?;
     }
     Ok(config)
 }

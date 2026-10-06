@@ -1,0 +1,27 @@
+# Local mixed package and #471 source handoff (§FS-distribution.3.3.7).
+[build-system]
+requires = ["maturin>=1.9,<2"]
+build-backend = "maturin"
+
+[project]
+name = "grund"
+version = "0.16.2.dev0"
+requires-python = ">=3.10"
+description = "Embed the grund documentation grounding engine in Python"
+readme = "crates/grund-py/README.md"
+license = "MIT"
+classifiers = ["Programming Language :: Python :: Implementation :: CPython"]
+
+[tool.maturin]
+manifest-path = "crates/grund-py/Cargo.toml"
+python-source = "python"
+module-name = "grund._native"
+features = ["extension-module"]
+include = [
+  { path = "Cargo.toml", format = "sdist" },
+  { path = "Cargo.lock", format = "sdist" },
+  { path = "crates/**/*", format = "sdist" },
+  { path = "tests/integration/**/*", format = "sdist" },
+  { path = "python/**/*", format = "sdist" },
+  { path = "LICENSE", format = "sdist" },
+]

@@ -49,10 +49,13 @@ pub(crate) fn show_declaration_with_overlays(
     overlays: &TextOverlays,
 ) -> Result<ShowOutput> {
     let root = &config.root;
-    let decls = findings
-        .declarations
-        .get(id)
-        .ok_or_else(|| anyhow!("ID not found: {}", render_id(&config.grammar, id)))?;
+    let decls = findings.declarations.get(id).ok_or_else(|| {
+        anyhow!(crate::model::OperationDiagnostic::new(
+            "query",
+            "not-found",
+            format!("ID not found: {}", render_id(&config.grammar, id))
+        ))
+    })?;
     // §FS-show.2.2.1: share the independent-home refusal with refs (§FS-refs.4).
     if let Some(refusal) = ambiguous_id_refusal(config, path_config, decls, id) {
         return Err(refusal.into());
@@ -71,23 +74,31 @@ pub(crate) fn show_declaration_with_overlays(
     };
     if decl.is_stub {
         if !file.exists() {
-            return Err(anyhow!(
-                "broken stub: {} (stub at {}:{} points at {}, which does not exist)",
-                render_id(&config.grammar, id),
-                display_path(path_config, &decl.file),
-                decl.line,
-                format_path(decl.defined_in.as_ref().unwrap())
-            ));
+            return Err(anyhow!(crate::model::OperationDiagnostic::new(
+                "query",
+                "broken-stub",
+                format!(
+                    "broken stub: {} (stub at {}:{} points at {}, which does not exist)",
+                    render_id(&config.grammar, id),
+                    display_path(path_config, &decl.file),
+                    decl.line,
+                    format_path(decl.defined_in.as_ref().unwrap())
+                )
+            )));
         }
         if !file_declares_inline_home(&file, id, config).unwrap_or(false) {
-            return Err(anyhow!(
-                "broken stub: {} (stub at {}:{} points at {}, which contains no inline declaration of {})",
-                render_id(&config.grammar, id),
-                display_path(path_config, &decl.file),
-                decl.line,
-                format_path(decl.defined_in.as_ref().unwrap()),
-                render_id(&config.grammar, id)
-            ));
+            return Err(anyhow!(crate::model::OperationDiagnostic::new(
+                "query",
+                "broken-stub",
+                format!(
+                    "broken stub: {} (stub at {}:{} points at {}, which contains no inline declaration of {})",
+                    render_id(&config.grammar, id),
+                    display_path(path_config, &decl.file),
+                    decl.line,
+                    format_path(decl.defined_in.as_ref().unwrap()),
+                    render_id(&config.grammar, id)
+                )
+            )));
         }
     }
     let body_decl = if decl.is_stub {
@@ -107,12 +118,16 @@ pub(crate) fn show_declaration_with_overlays(
     if let Some(section) = section
         && !body_decl.sections.contains_key(section)
     {
-        return Err(anyhow!(
-            "section not found: {}{}{}",
-            render_id(&config.grammar, id),
-            config.section_separator,
-            section
-        ));
+        return Err(anyhow!(crate::model::OperationDiagnostic::new(
+            "query",
+            "missing-section",
+            format!(
+                "section not found: {}{}{}",
+                render_id(&config.grammar, id),
+                config.section_separator,
+                section
+            )
+        )));
     }
     extract_declaration_body(
         &file,
@@ -138,20 +153,28 @@ fn show_json_value(
     let (body, line) = match section {
         Some(section) => {
             let info = decl.sections.get(section).ok_or_else(|| {
-                anyhow!(
-                    "section not found: {}{}{}",
-                    render_id(&config.grammar, id),
-                    config.section_separator,
-                    section
-                )
+                anyhow!(crate::model::OperationDiagnostic::new(
+                    "query",
+                    "missing-section",
+                    format!(
+                        "section not found: {}{}{}",
+                        render_id(&config.grammar, id),
+                        config.section_separator,
+                        section
+                    )
+                ))
             })?;
             let value = info.value.as_ref().ok_or_else(|| {
-                anyhow!(
-                    "section not found: {}{}{}",
-                    render_id(&config.grammar, id),
-                    config.section_separator,
-                    section
-                )
+                anyhow!(crate::model::OperationDiagnostic::new(
+                    "query",
+                    "missing-section",
+                    format!(
+                        "section not found: {}{}{}",
+                        render_id(&config.grammar, id),
+                        config.section_separator,
+                        section
+                    )
+                ))
             })?;
             (value.source_slice.clone(), info.line)
         }

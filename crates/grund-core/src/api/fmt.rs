@@ -73,7 +73,19 @@ pub struct FmtOutput {
 /// Programmatic `fmt`: run the normalizer and return the changed locations
 /// without printing the CLI report or mapping the exit code (§AR-bindings.2).
 pub fn format_references(opts: FmtOpts) -> Result<FmtOutput> {
+    format_references_with_run_warnings(opts).1
+}
+
+/// Additive cautions survive a later refusal (§FS-distribution.3.1).
+pub fn format_references_with_run_warnings(opts: FmtOpts) -> (Vec<Finding>, Result<FmtOutput>) {
+    let mut cautions = Vec::new();
+    let result = format_references_run(opts, &mut cautions);
+    (cautions, result)
+}
+
+fn format_references_run(opts: FmtOpts, cautions: &mut Vec<Finding>) -> Result<FmtOutput> {
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
+    *cautions = context_run_warnings(&context);
     let config = context.render_config().clone();
     let explicit_cross_refs = opts.cross_refs;
     let workspace_for_wrap = if context.workspace_loaded {

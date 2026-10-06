@@ -38,6 +38,74 @@ pub struct BatchShowRecord {
     pub result: std::result::Result<String, BatchShowFailure>,
 }
 
+/// Rich batch records preserve all query diagnostics and ShowOutput fields
+/// without changing the existing JSON batch API (§FS-distribution.3.1).
+pub(crate) struct BatchDataRecord {
+    pub(crate) query: BatchShowQuery,
+    pub(crate) result: Result<ShowOutput>,
+}
+
+/// The same shared context and query implementation, with source-typed failures
+/// retained rather than projected to CLI JSON (§FS-distribution.3.3.2).
+pub(crate) fn show_batch_data(
+    queries: Option<Vec<BatchShowQuery>>,
+    mut opts: ShowOpts,
+    path_provided: bool,
+) -> (Vec<Finding>, Result<Vec<BatchDataRecord>>) {
+    let mut cautions = Vec::new();
+    let result = (|| {
+        if queries.as_ref().is_some_and(Vec::is_empty) {
+            return Ok(Vec::new());
+        }
+        let context = load_workspace_context(&opts.path, path_provided)?;
+        cautions = run_warning_findings(context.render_config(), context.run_warnings.clone());
+        if let Some((file, message)) = context.projects.iter().find_map(|p| p.scan_errors.first()) {
+            let mut diagnostic =
+                crate::model::OperationDiagnostic::new("filesystem", "io", message);
+            diagnostic.path = Some(display_path(context.render_config(), file));
+            return Err(diagnostic.into());
+        }
+        let queries = queries.unwrap_or_else(|| exhaustive_batch_queries(&context));
+        opts.format = ShowFormat::Json;
+        queries
+            .into_iter()
+            .map(|query| {
+                let result = show_batch_query_in_context(
+                    &context,
+                    &query.id,
+                    ShowOpts {
+                        section: query.section.clone(),
+                        ..opts.clone()
+                    },
+                    &TextOverlays::new(),
+                );
+                match result {
+                    Ok(mut output) => {
+                        output.path = display_path(context.render_config(), &output.path).into();
+                        Ok(BatchDataRecord {
+                            query,
+                            result: Ok(output),
+                        })
+                    }
+                    Err(error)
+                        if error.downcast_ref::<ShowQueryError>().is_some()
+                            || error
+                                .downcast_ref::<crate::model::OperationDiagnostic>()
+                                .is_some_and(|e| e.class == "query") =>
+                    {
+                        Ok(BatchDataRecord {
+                            query,
+                            result: Err(error),
+                        })
+                    }
+                    Err(error) => Err(error),
+                }
+            })
+            .collect()
+    })();
+    (cautions, result)
+}
+
 /// Run an explicit query list (`Some`) or exhaustive discovery (`None`) against
 /// one shared workspace context. This is intentionally a CLI adapter rather
 /// than a replacement for the stable one-query core API (§FS-show.2.6).
@@ -120,34 +188,36 @@ fn show_batch_query_in_context(
     let project = match alias.as_deref() {
         Some(name) => context.project_by_alias(name).ok_or_else(|| {
             if !context.workspace_loaded {
-                anyhow!(
+                anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
                     "unknown project alias `{name}`\nnote: workspace aliases are defined in the root grund.toml under [workspace]"
-                )
+                )))
             } else {
-                anyhow!(
+                anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
                     "unknown project alias `{name}`\nknown aliases: {}",
                     context.aliases().join(", ")
-                )
+                )))
             }
         })?,
         None => context.current_project().ok_or_else(|| {
             let known = context.aliases().join(", ");
             if known.is_empty() {
-                anyhow!("unqualified ID requires a project alias when include_root = false")
+                anyhow!(crate::model::OperationDiagnostic::new("query", "query-failed", format!("unqualified ID requires a project alias when include_root = false")))
             } else {
-                anyhow!(
+                anyhow!(crate::model::OperationDiagnostic::new("query", "query-failed", format!(
                     "unqualified ID requires a project alias when include_root = false\nknown aliases: {known}"
-                )
+                )))
             }
         })?,
     };
     let config = &project.config;
-    let (id, inline_section) =
-        resolve_id_arg(raw_id, config, &project.findings).map_err(|error| anyhow!("{error}"))?;
+    let (id, inline_section) = resolve_id_arg(raw_id, config, &project.findings)
+        .map_err(|error| anyhow::Error::new(error.diagnostic()))?;
     if opts.section.is_some() && inline_section.is_some() {
-        return Err(anyhow!(
-            "--section cannot be combined with an inline section"
-        ));
+        return Err(anyhow!(crate::model::OperationDiagnostic::new(
+            "query",
+            "query-failed",
+            format!("--section cannot be combined with an inline section")
+        )));
     }
     let section = opts.section.or(inline_section);
     let mut output = show_declaration_with_overlays(
@@ -222,6 +292,16 @@ fn exhaustive_batch_queries(context: &WorkspaceContext) -> Vec<BatchShowQuery> {
 /// Convert only coordinate-level refusals into envelopes. An unexpected body
 /// read or other operational error remains a run-level abort (§FS-show.2.6.3).
 fn batch_query_failure(error: &anyhow::Error) -> Option<BatchShowFailure> {
+    // §FS-distribution.3.3.2: new source carriers need no message classification.
+    if let Some(carrier) = error.downcast_ref::<crate::model::OperationDiagnostic>()
+        && carrier.class == "query"
+    {
+        return Some(BatchShowFailure {
+            code: carrier.code,
+            message: carrier.message.clone(),
+            sites: Vec::new(),
+        });
+    }
     if let Some(carrier) = error.downcast_ref::<ShowQueryError>() {
         return Some(BatchShowFailure {
             code: carrier.code,

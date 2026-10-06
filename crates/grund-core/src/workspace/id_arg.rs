@@ -10,7 +10,7 @@
 //! caller parses it with the *target* project's grammar rather than its own
 //! (§AR-workspace.2).
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 
 use crate::config::{INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
 
@@ -23,7 +23,10 @@ use crate::config::{INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
 pub(crate) fn split_qualified_id_arg(raw: &str) -> Result<(Option<String>, &str)> {
     if let Some((alias, rest)) = raw.rsplit_once('/') {
         if let Some(message) = invalid_alias_path_message(alias) {
-            return Err(anyhow!("{message}"));
+            // §FS-distribution.3.3.2: alias refusals retain source classification.
+            return Err(
+                crate::model::OperationDiagnostic::new("query", "query-failed", message).into(),
+            );
         }
         return Ok((Some(alias.to_string()), rest));
     }

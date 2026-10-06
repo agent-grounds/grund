@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::init_block::{
     AgentsUpdateResult, update_agents_block, write_or_update_canonical_agent_entrypoint,
@@ -7,7 +7,7 @@ use super::init_block::{
 pub(crate) use super::init_guidance::init_fs_home;
 use super::init_guidance::{InitNext, docs_scaffold_for_config};
 use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
-use super::init_plan::{InitAgentEntrypointSelection, selected_init_agent_entrypoints};
+use super::init_plan::selected_init_agent_entrypoints;
 use super::init_render::{agents_workspace_members_section, init_pending_effective_config};
 use super::init_target::{refuse_init_global_instruction_paths, refuse_init_target};
 use crate::checker::{
@@ -24,131 +24,7 @@ use crate::templates::{
 };
 use crate::workspace::populate_workspace_boundary;
 
-#[derive(Clone)]
-pub struct InitOpts {
-    pub target: PathBuf,
-    /// Explicit generated project identity. When absent, `init` uses the
-    /// target-local configured name before the basename (§FS-init.2.3.8).
-    pub name: Option<String>,
-    /// `--description` — pending one-line `project_description` for a freshly
-    /// written config (§FS-init.1, §DF-workspace-member-descriptions).
-    pub description: Option<String>,
-    pub docs: bool,
-    pub force: bool,
-    pub dry_run: bool,
-    /// `--check` — the `--dry-run` preview taken as a verdict (§FS-init.1):
-    /// writes nothing, reports what `--dry-run` reports, and leaves the caller
-    /// to exit `1` when any reported event is a change (§FS-init.4.1). It implies
-    /// `dry_run` inside `init` rather than opening a second path through it.
-    pub check: bool,
-    /// `--no-vcs` — scaffold into a target no version-control marker covers
-    /// (§FS-init.1.2.3). Lifts that rule and only that one; it is not `--force`,
-    /// which decides whether files `init` owns get overwritten (§FS-init.3).
-    pub no_vcs: bool,
-    pub agent_selection: InitAgentEntrypointSelection,
-}
-
-impl Default for InitOpts {
-    fn default() -> Self {
-        Self {
-            target: PathBuf::from("."),
-            name: None,
-            description: None,
-            docs: false,
-            force: false,
-            dry_run: false,
-            check: false,
-            no_vcs: false,
-            agent_selection: InitAgentEntrypointSelection::default(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct InitEvent {
-    pub verb: &'static str,
-    pub path: String,
-}
-
-impl InitEvent {
-    /// Whether this event reports work rather than a path that was already
-    /// current. Every verb but `exists` is a change — `wrote`/`appended`/
-    /// `updated` and their `would-` forms alike. The one definition of the
-    /// predicate: it suppresses the `next:` block (§FS-init.2.2.2) and it decides
-    /// the `--check` exit code (§FS-init.4.1), which is why those two agree.
-    pub fn is_change(&self) -> bool {
-        self.verb != "exists"
-    }
-}
-
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct InitOutput {
-    pub events: Vec<InitEvent>,
-    /// Located validation findings discovered before any write (§FS-rules.4).
-    /// They are ordinary report rows and make `init` exit 1, not operational
-    /// failures that would exit 2.
-    pub errors: Vec<Finding>,
-    /// Things the run could not do that the caller would otherwise have to
-    /// notice for itself (§FS-init.2.3.4.17.4). Reported, never fatal.
-    pub notes: Vec<String>,
-    pub next: Option<InitNext>,
-    /// The run's warning channel (§FS-distribution.3.1): the `[workspace]`
-    /// cautions the walk-up settled — §FS-check.4.10's unread opted-out block
-    /// and §FS-workspace.6.1.7.5's undecidable ancestor claim; an absorbed scan
-    /// fails the expansion instead, which leaves the section out
-    /// (§FS-check.3.30.2). `init` expands the outermost workspace above
-    /// its target to teach the alias set, so it resolves a block's member
-    /// boundary like every other walking command and owes the reader the same
-    /// lines (§FS-check.2.1.1).
-    pub warnings: Vec<Finding>,
-}
-
-impl InitOutput {
-    /// Whether the run reported anything left to do — the verdict `--check`
-    /// draws from the report it just printed (§FS-init.4.1). Notes and the
-    /// `next:` block are deliberately not consulted: a note is a report, not a
-    /// finding.
-    pub fn has_pending_changes(&self) -> bool {
-        self.events.iter().any(InitEvent::is_change)
-    }
-
-    pub fn has_errors(&self) -> bool {
-        !self.errors.is_empty()
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct InitError {
-    pub output: InitOutput,
-    pub message: String,
-}
-
-impl InitError {
-    fn new(message: impl Into<String>) -> Self {
-        Self {
-            output: InitOutput::default(),
-            message: message.into(),
-        }
-    }
-
-    fn with_events(events: Vec<InitEvent>, message: impl Into<String>) -> Self {
-        Self {
-            output: InitOutput {
-                events,
-                ..InitOutput::default()
-            },
-            message: message.into(),
-        }
-    }
-}
-
-impl std::fmt::Display for InitError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.message.fmt(f)
-    }
-}
-
-impl std::error::Error for InitError {}
+pub use super::init_output::{InitError, InitEvent, InitOpts, InitOutput};
 
 /// Insert the shared, entrypoint-relative chapter-rule section while leaving
 /// non-rule projects untouched (§FS-init.2.3.5.10).
@@ -211,6 +87,29 @@ fn render_chapter_rules(mut block: String, section: Option<&str>) -> String {
 /// `AGENTS.md` is the canonical file — which every other agent reads too, so it
 /// must keep the plain form.
 pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
+    init_run(opts, &mut None, &mut Vec::new())
+}
+
+/// Keep failure sources beside partial output without changing InitError
+/// (§FS-distribution.3.1, §FS-distribution.3.3.2).
+pub(crate) fn init_with_diagnostics(
+    opts: InitOpts,
+) -> (
+    std::result::Result<InitOutput, InitError>,
+    Option<anyhow::Error>,
+    Vec<Finding>,
+) {
+    let mut diagnostic = None;
+    let mut cautions = Vec::new();
+    let result = init_run(opts, &mut diagnostic, &mut cautions);
+    (result, diagnostic, cautions)
+}
+
+fn init_run(
+    opts: InitOpts,
+    diagnostic: &mut Option<anyhow::Error>,
+    cautions: &mut Vec<Finding>,
+) -> std::result::Result<InitOutput, InitError> {
     let InitOpts {
         target,
         name,
@@ -248,8 +147,13 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     // §FS-init.2.1.1.1, §FS-init.2.3.4.17: do both before the entrypoint plan,
     // so each renderer consumes the same identity and effective grammar.
     let (mut init_config, resolved_name) =
-        init_pending_effective_config(&target, name.as_deref(), description.as_deref())
-            .map_err(|err| InitError::new(err.to_string()))?;
+        init_pending_effective_config(&target, name.as_deref(), description.as_deref()).map_err(
+            |err| {
+                let message = err.to_string();
+                *diagnostic = Some(err);
+                InitError::new(message)
+            },
+        )?;
     // §FS-init.2.2.2: the guidance probe consumes the exact §AR-workspace.6
     // boundary used by scanner commands. Keep this best-effort: the existing
     // workspace renderer owns init's diagnostics and error-tolerant behavior.
@@ -259,9 +163,20 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
     // any entrypoint write, then reuse their exact titles in managed guidance.
     let rule_kind_enabled = init_config.kinds.iter().any(|kind| kind.rules);
     let (rule_rows, rule_errors, rule_findings) = if rule_kind_enabled {
-        let (findings, errors) = scan_tree(&init_config, Some(&target), true)
-            .map_err(|err| InitError::new(err.to_string()))?;
+        let (findings, errors) = scan_tree(&init_config, Some(&target), true).map_err(|err| {
+            let message = err.to_string();
+            *diagnostic = Some(err);
+            InitError::new(message)
+        })?;
         if let Some((path, message)) = errors.first() {
+            // §FS-distribution.3.3.2: scanner errors carry a source path.
+            let mut source = crate::model::OperationDiagnostic::new(
+                "filesystem",
+                "io",
+                format!("{}: {message}", path.display()),
+            );
+            source.path = Some(format_path(path));
+            *diagnostic = Some(source.into());
             return Err(InitError::new(format!("{}: {message}", path.display())));
         }
         // §FS-rules.4.1: the workspace this project's own config declares, which
@@ -321,6 +236,8 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
         &target,
         agent_entrypoints.canonical,
     );
+    // §FS-distribution.3.3.2: later write failures retain these run cautions.
+    *cautions = run_warnings.clone();
     // Render the base once per conversation surface (§FS-init.2.3.4.17.2).
     // §FS-init.2.3.5.10: the shared rule renderer adds destinations per file.
     let render_block = |surface| {
@@ -416,6 +333,21 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
                         path: rel,
                     }),
                     Err(err) => {
+                        // §FS-distribution.3.3.2: classify while the original source is held.
+                        let mut source = crate::model::OperationDiagnostic::new(
+                            if err.downcast_ref::<std::io::Error>().is_some() {
+                                "filesystem"
+                            } else {
+                                "operation"
+                            },
+                            "init",
+                            format!("update {}: {err}", format_path(&path)),
+                        );
+                        source.path = Some(format_path(&path));
+                        if let Some(io) = err.downcast_ref::<std::io::Error>() {
+                            source.details = serde_json::json!({"os_error":io.raw_os_error()});
+                        }
+                        *diagnostic = Some(source.into());
                         return Err(InitError::with_events(
                             events,
                             // Forward slashes on every platform, like report
@@ -431,12 +363,30 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
                     && let Some(parent) = path.parent()
                     && let Err(err) = fs::create_dir_all(parent)
                 {
+                    // §FS-distribution.3.3.2: retain source I/O data before string projection.
+                    *diagnostic = Some(
+                        crate::model::OperationDiagnostic::filesystem(
+                            &parent,
+                            &err,
+                            format!("create {}: {err}", parent.display()),
+                        )
+                        .into(),
+                    );
                     return Err(InitError::with_events(
                         events,
                         format!("create {}: {err}", parent.display()),
                     ));
                 }
                 if !dry_run && let Err(err) = fs::write(&path, entrypoint_block) {
+                    // §FS-distribution.3.3.2: retain source I/O data before string projection.
+                    *diagnostic = Some(
+                        crate::model::OperationDiagnostic::filesystem(
+                            &path,
+                            &err,
+                            format!("write {}: {err}", path.display()),
+                        )
+                        .into(),
+                    );
                     return Err(InitError::with_events(
                         events,
                         format!("write {}: {err}", path.display()),
@@ -477,6 +427,15 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
                 render_grund_toml(&resolved_name, description.as_deref()),
             )
         {
+            // §FS-distribution.3.3.2: retain source I/O data before string projection.
+            *diagnostic = Some(
+                crate::model::OperationDiagnostic::filesystem(
+                    &config_dest,
+                    &err,
+                    format!("write {}: {err}", config_dest.display()),
+                )
+                .into(),
+            );
             return Err(InitError::with_events(
                 events,
                 format!("write {}: {err}", config_dest.display()),
@@ -508,12 +467,30 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
             && let Some(parent) = dest.parent()
             && let Err(err) = fs::create_dir_all(parent)
         {
+            // §FS-distribution.3.3.2: retain source I/O data before string projection.
+            *diagnostic = Some(
+                crate::model::OperationDiagnostic::filesystem(
+                    &parent,
+                    &err,
+                    format!("create {}: {err}", parent.display()),
+                )
+                .into(),
+            );
             return Err(InitError::with_events(
                 events,
                 format!("create {}: {err}", parent.display()),
             ));
         }
         if !dry_run && let Err(err) = fs::write(&dest, contents) {
+            // §FS-distribution.3.3.2: retain source I/O data before string projection.
+            *diagnostic = Some(
+                crate::model::OperationDiagnostic::filesystem(
+                    &dest,
+                    &err,
+                    format!("write {}: {err}", dest.display()),
+                )
+                .into(),
+            );
             return Err(InitError::with_events(
                 events,
                 format!("write {}: {err}", dest.display()),
@@ -555,6 +532,14 @@ pub fn init(opts: InitOpts) -> std::result::Result<InitOutput, InitError> {
             // inspect: this note is the only place the state is visible, so
             // dropping it on an unreadable link would report a clean run.
             Err((path, message)) => {
+                // §FS-distribution.3.3.2: inspect failures keep their known path.
+                let mut source = crate::model::OperationDiagnostic::new(
+                    "filesystem",
+                    "io",
+                    format!("inspect {}: {message}", path.display()),
+                );
+                source.path = Some(format_path(&path));
+                *diagnostic = Some(source.into());
                 return Err(InitError::with_events(
                     events,
                     format!("inspect {}: {message}", path.display()),

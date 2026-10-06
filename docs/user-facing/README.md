@@ -8,6 +8,7 @@ command's own `--help` page links the guide and example that cover it
 
 | Guide | Example |
 |---|---|
+| [Python API](python-api.md) | [`examples/python-api`](../../examples/python-api/) |
 | [Citation directions](citation-directions.md) | — |
 | [Clickable citations](clickable-citations.md) | — |
 | [Coordinate sizes](coordinate-sizes.md) | — |

@@ -1,11 +1,9 @@
 use anyhow::{Result, anyhow};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
 
 use super::citation_counts::ListCitationCounts;
 use crate::config::{
-    Config, PointSizeUnit, display_path, measure_point_text, non_citable_kind_error,
-    run_warning_findings,
+    Config, display_path, measure_point_text, non_citable_kind_error, run_warning_findings,
 };
 use crate::grammar::render_id;
 use crate::model::{
@@ -14,95 +12,26 @@ use crate::model::{
 };
 use crate::resolver::{PointBodyCache, WorkspaceContext, load_workspace_context, point_body_pair};
 use crate::rules::sentence::{RuleSubject, RuleVocabulary, parse_selector};
-use crate::scanner::{ApiScanError, api_scan_error};
+use crate::scanner::api_scan_error;
 
-/// Options for the additive per-point size catalog (§FS-list.1, §FS-list.3.4).
-#[derive(Clone)]
-pub struct ListSizeOpts {
-    pub path: PathBuf,
-    pub path_provided: bool,
-    pub kind_filter: BTreeSet<String>,
-    pub project_filter: BTreeSet<String>,
-    pub unused_only: bool,
-    /// Optional declaration/chapter selector (§FS-rules.8).
-    pub selector: Option<String>,
-    pub units: Vec<PointSizeUnit>,
-    pub top: Option<usize>,
-}
-
-impl Default for ListSizeOpts {
-    fn default() -> Self {
-        Self {
-            path: PathBuf::from("."),
-            path_provided: false,
-            kind_filter: BTreeSet::new(),
-            project_filter: BTreeSet::new(),
-            unused_only: false,
-            selector: None,
-            units: vec![
-                PointSizeUnit::Lines,
-                PointSizeUnit::Words,
-                PointSizeUnit::Bytes,
-            ],
-            top: None,
-        }
-    }
-}
-
-/// One selected unit's lead/full pair, kept in caller order (§FS-list.3.4).
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ListSizeMeasurement {
-    pub unit: PointSizeUnit,
-    pub lead: Option<usize>,
-    pub full: Option<usize>,
-}
-
-/// One declaration or section site in the size catalog (§FS-list.2,
-/// §FS-list.3.4). Unlike [`ListEntry`](crate::ListEntry), it deliberately carries no title/ref
-/// fields and never collapses ambiguous sites.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ListSizeEntry {
-    pub project: Option<String>,
-    pub id: String,
-    pub section: Option<String>,
-    /// The owning project's configured separator, used to render the text
-    /// coordinate without adding a wire field (§FS-list.3.4.3).
-    pub section_separator: String,
-    pub kind: String,
-    pub path: String,
-    pub line: usize,
-    pub stub: bool,
-    pub defines: Option<String>,
-    pub duplicate: bool,
-    pub measurements: Vec<ListSizeMeasurement>,
-}
-
-/// Structured result for one deterministic size-catalog scan (§FS-list.3.4).
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ListSizeOutput {
-    pub output_format: String,
-    pub workspace: bool,
-    pub entries: Vec<ListSizeEntry>,
-    pub scan_errors: Vec<ApiScanError>,
-    /// The run's warning channel (§FS-distribution.3.1): the three `[workspace]`
-    /// cautions of §FS-check.3.29.15, §FS-check.4.10.11 and
-    /// §FS-workspace.6.1.7. A frontend renders each as one CLI-level `warning:`
-    /// on stderr (§FS-check.2.1.1).
-    ///
-    /// Three keep the anchor the engine gave them — the `grund.toml` line their
-    /// own message already names — and an editor publishes those on that line
-    /// (§FS-lsp.1.1.3). §FS-check.3.29.15's is the exception: it carries no
-    /// location field at all, states its location inside its own text
-    /// (§FS-check.3.29.7), and reaches an editor off `check`'s report instead,
-    /// located and as an error (§FS-check.3.29.13).
-    pub warnings: Vec<Finding>,
-}
+pub use super::size_output::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput};
 
 /// Programmatic point-size catalog. It selects the same declaration set as
 /// [`list`](crate::list), adds scanner-recorded section sites, and measures show-identical
 /// lead/full bodies through one per-file cache (§FS-list.2, §FS-list.3.4.1,
 /// §FS-workspace.8.3.3).
 pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
+    list_sizes_with_run_warnings(opts).1
+}
+
+/// Additive cautions survive a later refusal (§FS-distribution.3.1).
+pub fn list_sizes_with_run_warnings(opts: ListSizeOpts) -> (Vec<Finding>, Result<ListSizeOutput>) {
+    let mut cautions = Vec::new();
+    let result = list_sizes_run(opts, &mut cautions);
+    (cautions, result)
+}
+
+fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<ListSizeOutput> {
     if opts.units.is_empty() {
         return Err(anyhow!("at least one size unit is required"));
     }
@@ -110,6 +39,7 @@ pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
         return Err(anyhow!("top must be positive"));
     }
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
+    *cautions = run_warning_findings(context.render_config(), context.run_warnings.clone());
     validate_list_scope_filters(&context, &opts.project_filter, &opts.kind_filter)?;
     let selected_projects = || {
         context.projects.iter().filter(|project| {

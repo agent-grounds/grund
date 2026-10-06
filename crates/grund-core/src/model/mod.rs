@@ -29,6 +29,7 @@
 //! rebase a path against it.
 
 mod e2e;
+mod failure;
 mod headings;
 mod paths;
 mod records;
@@ -37,6 +38,8 @@ mod text;
 mod values;
 
 pub use e2e::{E2eCase, E2eSpecRef};
+pub(crate) use failure::OperationContext;
+pub use failure::OperationDiagnostic;
 pub use headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
 pub use paths::canonical_snapshot_path;
 pub use records::{

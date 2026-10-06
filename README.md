@@ -199,7 +199,7 @@ See the [review guide](docs/user-facing/reviewing.md) for citation blast radius 
 cargo install grund
 ```
 
-That installs the `grund` binary from the [`grund` crate on crates.io](https://crates.io/crates/grund) onto your `PATH`. npm and PyPI bindings are planned — see [`FS-distribution`](docs/functional-spec/FS-distribution.md).
+That installs the `grund` binary from the [`grund` crate on crates.io](https://crates.io/crates/grund) onto your `PATH`. The [Python API](docs/user-facing/python-api.md) installs locally with `python -m pip install .`; [its example](examples/python-api/) shows `import grund`. npm support and PyPI publication remain planned ([§FS-distribution.3.3.7](docs/functional-spec/FS-distribution.md#337-local-source-and-typing-handoff)).
 
 This README is itself under spec: [§REQ-readme](docs/requirements/REQ-readme.md#req-readme-the-readme-is-the-grounded-shop-window) — every example above is captured from this repository, and the citations here are checked by `grund check` like any other scanned file's.
 
