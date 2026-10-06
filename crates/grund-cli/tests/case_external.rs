@@ -14,7 +14,10 @@ struct Fixture {
 
 impl Fixture {
     fn new(name: &str, external: &str) -> Self {
-        let root = PathBuf::from(std::env::var_os("HOME").expect("HOME"))
+        let home = std::env::var_os("HOME")
+            .or_else(|| std::env::var_os("USERPROFILE"))
+            .expect("scratch home");
+        let root = PathBuf::from(home)
             .join("ag/tmp")
             .join(format!("grund-external-{}-{name}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
@@ -76,7 +79,7 @@ fn external_argv_preserves_literals_stdin_copy_and_final_tree() {
         "external-literals",
         r#"["python3","{repo_copy}/probe.py","a b","","$HOME",";","{other}"]"#,
     );
-    let probe = "import pathlib, sys\nprint('|'.join(sys.argv[1:]))\nprint(sys.stdin.read().strip())\npathlib.Path(__file__).with_name('result.txt').write_text('done\\n')\n";
+    let probe = "import pathlib, sys\nprint('|'.join(sys.argv[1:]))\nprint(sys.stdin.read().strip())\npathlib.Path(__file__).with_name('result.txt').write_text('done\\n', encoding='utf-8', newline='\\n')\n";
     fs::write(fixture.case.join("repo/probe.py"), probe).unwrap();
     fs::write(fixture.case.join("command.stdin"), "input\n").unwrap();
     fs::write(
@@ -124,7 +127,7 @@ fn external_grund_placeholder_names_this_builds_binary() {
 fn external_cwd_uses_copy_without_argument_placeholders() {
     let fixture = Fixture::new(
         "external-cwd",
-        r#"["python3","-c","import pathlib; print(pathlib.Path('src/empty.py').read_text(), end='')"]"#,
+        r#"["python3","-c","import pathlib, sys; sys.stdout.buffer.write(pathlib.Path('src/empty.py').read_bytes())"]"#,
     );
     fs::write(fixture.case.join("command.cwd"), "{repo_copy}\n").unwrap();
     fs::write(fixture.case.join("expected.stdout"), "# \u{a7}FS-demo\n").unwrap();

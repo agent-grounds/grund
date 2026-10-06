@@ -46,13 +46,16 @@ def demonstrate(template, grund):
         ]
         for name, spec, test, targets, waiver in cases:
             git('reset', '--hard', base)
-            (repo / 'src/lib.py').write_text(''.join('# ' + chr(167) + t + '\n' for t in targets) + 'value = 2\n')
+            (repo / 'src/lib.py').write_text(
+                ''.join('# ' + chr(167) + t + '\n' for t in targets) + 'value = 2\n',
+                encoding='utf-8', newline='\n')
             if spec:
-                with (repo / 'docs/FS-alpha.md').open('a') as stream:
+                with (repo / 'docs/FS-alpha.md').open('a', encoding='utf-8', newline='\n') as stream:
                     stream.write('\nRelated contract edit.\n')
             if test:
                 target = 'FS-beta.1' if test == 'beta' else 'FS-alpha.1'
-                (repo / 'tests/test_lib.py').write_text('# ' + chr(167) + target + '\nvalue = 2\n')
+                (repo / 'tests/test_lib.py').write_text('# ' + chr(167) + target + '\nvalue = 2\n',
+                                                     encoding='utf-8', newline='\n')
             message = name
             if waiver:
                 message += '\n\nGrund-Cochange: ' + json.dumps(dict(paths=['src/lib.py'],
