@@ -1,0 +1,12 @@
+grund_config_version = 1
+project_name = "walkthrough"
+[id]
+format = "{kind}-{slug}"
+[reference]
+strict = true
+[[kinds]]
+kind = "FS"
+folder = "docs"
+[scan]
+include = ["src", "tests"]
+extensions = ["md", "py"]

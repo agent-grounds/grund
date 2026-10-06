@@ -278,7 +278,7 @@ The generated project name comes from `--name` when supplied, then from the targ
 
 ## Pre-commit
 
-This repo ships a ready-to-install [.pre-commit-config.yaml](.pre-commit-config.yaml) — `grund check` for citations, `grund init --check` for a stale managed block, `lychee` for Markdown links:
+This repo ships a ready-to-install [.pre-commit-config.yaml](.pre-commit-config.yaml) — `grund check` for citations, `grund init --check` for a stale managed block, `lychee` for Markdown links. For optional staged commit-msg/whole-PR evidence of related spec and test edits with reason-bearing trailers, see the [co-change recipe](docs/user-facing/cochange.md); Grund runs its demonstrations without enabling that contribution gate ([§FS-cochange-recipe.examples](docs/functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)):
 
 ```bash
 pip install pre-commit && cargo install lychee && pre-commit install

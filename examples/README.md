@@ -34,6 +34,7 @@ summarizes when to reach for each.
 | [`rules/`](rules/)                                           | Controlled-English rules over declarations, named chapters, and citations ([§FS-rules](../docs/functional-spec/FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules)) |
 | [`values/`](values/)                                         | Markdown/JSON value declarations and explicit consistency bindings ([§FS-values](../docs/functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)) |
 | [`external-tickets/`](external-tickets/)                     | Explicitly materialized external facts resolved from committed snapshots ([§FS-fetch](../docs/functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)) |
+| [`cochange/`](cochange/) | Opt-in Git/CI evidence of related spec and test edits ([§FS-cochange-recipe.examples](../docs/functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)) |
 
 The [Python API workflow](python-api/) embeds the same engine using a local
 extension installation ([§FS-distribution.3.3.7](../docs/functional-spec/FS-distribution.md#337-local-source-and-typing-handoff)); its native acceptance

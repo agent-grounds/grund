@@ -12,6 +12,7 @@ command's own `--help` page links the guide and example that cover it
 | [Citation directions](citation-directions.md) | — |
 | [Clickable citations](clickable-citations.md) | — |
 | [Coordinate sizes](coordinate-sizes.md) | — |
+| [Git co-change evidence](cochange.md) | [`examples/cochange`](../../examples/cochange/) |
 | [External facts](external-facts.md) | [`examples/external-tickets`](../../examples/external-tickets/) |
 | [`grund init` repository shapes](init-repo-shapes.md) | [`examples/scheme-*`](../../examples/) |
 | [Editor support via LSP](lsp.md) | — |

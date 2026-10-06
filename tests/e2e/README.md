@@ -284,3 +284,16 @@ can read is the same silence in a new spelling.
 - a chapter declared in a source doc-comment is the same chapter as the same heading in Markdown ([§FS-rules.5.1.1](../../docs/functional-spec/FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote), [grund#351](https://github.com/agent-grounds/grund/issues/351)): the ticket's own four-file tree, where `Each AR must have exactly one Terms chapter.` passes for the Markdown and the doc-comment declaration alike ([§FS-rules.3.1](../../docs/functional-spec/FS-rules.md#31-chapter-presence)) and `list --selector AR.terms --format json` titles both rows `Terms`; the same tree under a rule naming a chapter neither has, which reports both and so shows the source declaration is a subject the rule reaches; and every comment a heading can sit behind — `///`, `//!`, a block comment's ` * `, `#`, `--` and `;`, with a Python docstring and a Markdown file as the controls — passing the same rule and listing the same title, so the comment around a heading is never part of its label
 
 Warning coverage is partial. The inline-citation-style family pins its warning channel here — the soft-cap overrun and the `inline_note_layout_check = "warn"` case both assert the warning text and the exit code it must not move. Other warning tiers are not covered yet; they are lower priority than the error, retrieval, formatting, and configuration contracts.
+
+The [co-change example](../../examples/cochange/README.md) uses
+`command.external`, a nonempty JSON argv array, instead of `command.args`
+([§FS-examples.5.4](../../docs/functional-spec/FS-examples.md#54-commandexternal-invokes-an-explicit-json-argv)).
+The runner invokes it directly, preserving empty arguments and literal shell
+punctuation. `{repo}`, `{repo_copy}` and their `/suffix` forms retain existing
+path behavior; a whole `{grund}` argument names the built binary. Both command
+manifests together or malformed external argv refuse before copying/spawning.
+Stdin, cwd, goldens, final-tree comparison and refresh remain shared. The recipe's
+Git/process acceptance modules are collected by `tests/integration/test_cochange_recipe.py`.
+`python scripts/run_python_gate.py` provides portable built/released 0.16.1
+inputs for the ordinary Python gate; missing setup is a failure, never a skip
+([§FS-cochange-recipe.examples](../../docs/functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)).
