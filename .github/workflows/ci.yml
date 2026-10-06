@@ -45,6 +45,8 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
+            ~/ag/tmp/grund-cochange-release-0.16.1
+            ~/ag/tmp/grund-release-build
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
@@ -65,7 +67,8 @@ jobs:
           cargo install fissile --version 0.8.3 --locked
 
       - name: python tests
-        run: python -m unittest discover -s tests/integration -p 'test_*.py'
+        # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.
+        run: python scripts/run_python_gate.py
 
       - name: Install pre-commit hook dependencies
         if: matrix.os == 'ubuntu-latest'

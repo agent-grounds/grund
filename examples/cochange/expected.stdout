@@ -1,0 +1,30 @@
+missing grounding: exit 1
+  src/lib.py: missing grounding
+missing evidence: exit 1
+  src/lib.py: missing spec, test
+  FS-alpha: spec=[] test=[]
+spec only: exit 1
+  src/lib.py: missing test
+  FS-alpha: spec=["docs/FS-alpha.md"] test=[]
+test only: exit 1
+  src/lib.py: missing spec
+  FS-alpha: spec=[] test=["tests/test_lib.py"]
+unrelated test: exit 1
+  src/lib.py: missing test
+  FS-alpha: spec=["docs/FS-alpha.md"] test=[]
+split targets: exit 1
+  src/lib.py: missing test
+  FS-alpha: spec=["docs/FS-alpha.md"] test=[]
+  FS-beta: spec=[] test=["tests/test_lib.py"]
+complete evidence: exit 0
+  src/lib.py: missing none
+  FS-alpha: spec=["docs/FS-alpha.md"] test=["tests/test_lib.py"]
+unchanged contract: exit 0
+  src/lib.py: missing none
+  FS-alpha: spec=[] test=["tests/test_lib.py"]
+  waiver spec: Existing contract; used=True
+refactor: exit 0
+  src/lib.py: missing none
+  FS-alpha: spec=[] test=[]
+  waiver spec, test: Refactor only; used=True
+file-level related edits; no changed-line coverage, semantic correctness or test execution proof
