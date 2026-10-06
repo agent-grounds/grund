@@ -27,6 +27,28 @@ comment-prefixed line in a source file, or a bare line inside a Python docstring
 line has to be the shape a declaration takes, and one shape that starts out like it is
 not.
 
+### line.configured-literals: Configured literals belong to the canonical ID
+
+A literal in the effective ID format belongs to the ID, including `:`
+([§FS-config.3.2](FS-config.md#32-id--id-grammar)). Under
+`format = "{kind}:{slug}"`, `# FS:login: Login` declares the canonical ID
+`FS:login` with title `Login`: the first colon is part of the ID, and the colon
+after the complete ID separates its title. This holds in every declaration
+position, including source comments and Python docstrings. A shorter token
+ending at an internal colon must not turn a conforming declaration into an
+off-grammar declaration or a `declaration-near-miss` finding.
+
+Discovery and body rereading retain that complete canonical identity, so the
+ID printed by `list` resolves through bare and explicit `show`, both for its
+lead and for its sections
+([§FS-show.1.1](FS-show.md#11-id), [§FS-list.2](FS-list.md#2-behaviour)). For
+`# FS:login: Login` followed by a blank line and `Lead.`, both `grund FS:login`
+and `grund show FS:login` print `Lead.` and exit `0`. This does not accept a
+canonical prefix in place of a longer off-grammar token
+([§FS-config.3.2.5](FS-config.md#325-off-grammar-declarations-stay-readable)),
+or turn a section-suffixed coordinate into a canonical declaration
+([§FS-declarations.line.section-suffix](FS-declarations.md#linesection-suffix-an-id-with-a-section-after-it-declares-nothing)).
+
 ### line.section-suffix: An ID with a section after it declares nothing
 
 A line in declaration position whose first token is an ID followed directly by the
