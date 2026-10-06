@@ -96,6 +96,8 @@ fn completion_hyphen_overlap_acceptance_resolves_and_formatting_replays_are_noop
             assert_eq!(
                 cite.target_path.as_ref().unwrap(),
                 &f.0.join("docs/functional-spec/FS-login.md")
+                    .canonicalize()
+                    .unwrap()
             );
             for text in [accepted.clone(), format!("{accepted} and more")] {
                 assert!(
