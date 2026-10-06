@@ -584,6 +584,16 @@ The last line checks the config itself: `grund check .` reads only what `[scan] 
 
 If custom config affects `AGENTS.md`, ensure `grund.toml` exists before `grund init` so the generated managed block reflects the selected ID grammar, marker, strict mode, kinds, and existing artifact layout.
 
+## Querying the Structure
+
+Once the tree checks clean, read its structure with grund's queries rather than by parsing heading lines: `grund list --selector` takes a rule subject as a query, and its `{id, section}` rows are the input `grund show --batch` expands. Each answer's `.result.sections[]` lists the unit's subpoints as `path`, `title` and `depth`:
+
+```bash
+grund list --selector "The requirements chapter of each FS" --format json | jq -c '{id,section}' | grund show --batch --toc --format json
+```
+
+The [Querying grund guide](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md) has the rest: bodies in bulk with `show --batch --brief|--full` or `--all`, `refs --descendants`, and the whole citation graph from `cover --format json`.
+
 ## Editor Setup
 
 Optional, and only if the user wants editor integration (diagnostics, hover previews, go-to-definition, references, and the live `$$` → `§` transform). `grund init` does not write editor config; wiring an editor to `grund-lsp` is the user's one-time work.
