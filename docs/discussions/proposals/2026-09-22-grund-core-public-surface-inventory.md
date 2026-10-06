@@ -2,7 +2,7 @@
 
 The evidence [§DISC-grund-core-public-surface](2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) argues from. It classifies nothing on its own authority: the counting convention is [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name), the columns are [§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries), and `tests/integration/test_public_surface_inventory.py` holds the first column equal to the crate root's export list ([§DISC-grund-core-public-surface.5](2026-09-22-grund-core-public-surface.md#5-what-is-checked)).
 
-The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`; the existing rows retain their original evidence. **193 rows, one per public root name.** The counts below include both additions; the Python frontend now supplies consumer evidence alongside CLI and LSP.
+The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, and three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it; the existing rows retain their original evidence. **196 rows, one per public root name.** The counts below include all three additions; the Python frontend now supplies consumer evidence alongside CLI and LSP.
 
 ## How a cell reads
 
@@ -24,22 +24,22 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 193 |
+| Public root names | 196 |
 | Rustdoc-visible | 180 |
-| `#[doc(hidden)]` | 13 |
+| `#[doc(hidden)]` | 16 |
 | Named, a related API, or a data type of one | 112 |
-| Outside that closure | 81 |
+| Outside that closure | 84 |
 | Named by a frontend or its tests | 116 |
-| Reached structurally only | 34 |
+| Reached structurally only | 37 |
 | No repository consumer of either kind | 43 |
 | Disposition keep | 117 |
-| Disposition keep, hidden | 13 |
+| Disposition keep, hidden | 16 |
 | Disposition keep, name in the spec | 18 |
 | Disposition hide | 11 |
 | Disposition retire with the ramp | 0 |
 | Disposition facade, then retire | 34 |
 
-The two count columns do not line up, and they are not meant to: 43 names have no repository consumer while 81 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 43 names have no repository consumer while 84 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
@@ -62,6 +62,8 @@ The two count columns do not line up, and they are not meant to: 43 names have n
 | `check_with_opts` | api | visible | related API | none found | none found | keep |
 | `check_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `CheckFindingSelection` | checker | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:27` | — | keep, hidden |
+| `CheckInput` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch_inputs.rs:10` | — | keep, hidden |
+| `CheckInputObserver` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch.rs:78` | — | keep, hidden |
 | `CheckOpts` | api | visible | data type of `check_with_opts` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `CheckOutput` | api | visible | data type of `check_with_opts` | none found | via check_with_run_warnings → CheckOutput `grund-cli/src/cli_check.rs:111` | keep |
 | `Citation` | model | visible | data type of `Findings` | none found | none found | keep |
@@ -237,4 +239,5 @@ The two count columns do not line up, and they are not meant to: 43 names have n
 | `vscode_integration_is_current` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `VSCODE_PACKAGE_JSON` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `WEZTERM_APPLY_CALL` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
+| `with_check_input_observer` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch.rs:117` | — | keep, hidden |
 | `write_resolver_script` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |

@@ -52,15 +52,15 @@ mod run_warnings;
 mod scope_roots;
 mod workspace_block;
 
+pub(crate) use crate::model::{check_input_observer, observe_input, with_check_input_observer};
 pub use citations::{
     CitationDisjunction, CitationLevel, CitationRules, CitationTarget, KindCitationRules,
     NamespaceMatch,
 };
 pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
-pub use inputs::{CheckInput, CheckInputObserver, with_check_input_observer};
 pub(crate) use inputs::{
-    check_input_observer, input_read_dir, input_read_to_string, observe_config,
-    observe_config_candidates, observe_ignore_inputs, observe_input,
+    input_read_dir, input_read_to_string, observe_config, observe_config_candidates,
+    observe_ignore_inputs,
 };
 pub use kind::{KindConfig, KindIndex, KindResolution};
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
