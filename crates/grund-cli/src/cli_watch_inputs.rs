@@ -147,7 +147,7 @@ impl WatchSubscriptions {
                 return false;
             }
         }
-        watch_observe(WatchObservation::Input(input));
+        watch_observe!(WatchObservation::Input(input));
         true
     }
 
@@ -159,7 +159,7 @@ impl WatchSubscriptions {
         {
             return Ok(());
         }
-        watch_inject_failure("subscribe")?;
+        watch_inject_failure!("subscribe")?;
         let mode = if recursive {
             notify::RecursiveMode::Recursive
         } else {
@@ -169,7 +169,7 @@ impl WatchSubscriptions {
             .watch(&path, mode)
             .map_err(|err| format!("subscribing to {}: {err}", path.display()))?;
         self.handles.insert(path.clone(), recursive);
-        watch_observe(WatchObservation::Subscribed(path, recursive));
+        watch_observe!(WatchObservation::Subscribed(path, recursive));
         Ok(())
     }
 
@@ -181,7 +181,7 @@ impl WatchSubscriptions {
     /// old one. This repairs stale inode watches as well as loss/overflow
     /// (§FS-check.6.1.4). Failure is fatal, never a stale resident loop.
     fn recover(&mut self) -> Result<(), String> {
-        watch_inject_failure("recover")?;
+        watch_inject_failure!("recover")?;
         let mut replacement = native_watch_backend(
             self.tx.clone(),
             self.lost.clone(),
@@ -205,11 +205,11 @@ impl WatchSubscriptions {
             replacement
                 .watch(path, mode)
                 .map_err(|err| format!("recovering watch for {}: {err}", path.display()))?;
-            watch_observe(WatchObservation::Subscribed(path.clone(), *recursive));
+            watch_observe!(WatchObservation::Subscribed(path.clone(), *recursive));
         }
         self.watcher = replacement;
         self.handles = handles;
-        watch_observe(WatchObservation::Recovered);
+        watch_observe!(WatchObservation::Recovered);
         Ok(())
     }
 
@@ -241,7 +241,7 @@ impl WatchSubscriptions {
                 .unwatch(&path)
                 .map_err(|err| format!("retiring watch for {}: {err}", path.display()))?;
             self.handles.remove(&path);
-            watch_observe(WatchObservation::Retired(path));
+            watch_observe!(WatchObservation::Retired(path));
         }
         Ok(())
     }
