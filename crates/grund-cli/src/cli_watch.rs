@@ -229,7 +229,14 @@ fn run_check_watch(
             .is_some_and(|wait| wait.is_zero());
     }
     drop(observer);
+    // §FS-check.6.3.3: a backend that keeps its subscriptions is fatal, not a hang.
+    let released = subscriptions
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .watcher
+        .close();
     drop(subscriptions);
+    failure = failure.or(released.err());
     if let Some(err) = runtime_failure
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)

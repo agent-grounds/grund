@@ -36,7 +36,9 @@ fn native_watch_backend(
             let _ = self.0.send(());
         }
     }
-    let closed = Closed(closed);
+    let closed = std::sync::Arc::new(Closed(closed));
+    #[cfg(feature = "test-watch")]
+    watch_retain_callback(closed.clone());
     use notify::Watcher;
     // §FS-check.6.1.3: followed targets receive explicit physical coverage;
     // recursive traversal must not register their lexical aliases again.
@@ -51,6 +53,7 @@ fn native_watch_backend(
     Ok(NativeWatchBackend {
         watcher: Some(watcher),
         finished,
+        registered: BTreeSet::new(),
     })
 }
 
@@ -83,22 +86,46 @@ fn watch_queue_notice(
 
 /// Some notify backends request asynchronous shutdown in Drop. Await destruction
 /// of their callback, after their native handles close, before finishing our
-/// session; macOS also joins its native worker (§FS-check.6.3.3).
+/// session; macOS also joins its native worker. The wait is bounded: a backend
+/// that keeps its callback is a fatal failure, never a hang (§FS-check.6.3.3).
 struct NativeWatchBackend {
     watcher: Option<notify::RecommendedWatcher>,
     finished: std::sync::mpsc::Receiver<()>,
+    registered: BTreeSet<PathBuf>,
 }
 
 impl NativeWatchBackend {
+    /// ReadDirectoryChangesW keys registrations by path, so a second one orphans
+    /// the first request, and that request keeps the callback past release.
+    /// Refuse it on every platform (§FS-check.6.1.3, §FS-check.6.3.3).
     fn watch(&mut self, path: &Path, mode: notify::RecursiveMode) -> notify::Result<()> {
         use notify::Watcher;
-        self.watcher.as_mut().unwrap().watch(path, mode)
+        if self.registered.contains(path) {
+            return Err(notify::Error::generic("directory already registered on this backend")
+                .add_path(path.to_path_buf()));
+        }
+        self.watcher.as_mut().unwrap().watch(path, mode)?;
+        self.registered.insert(path.to_path_buf());
+        Ok(())
+    }
+
+    fn close(&mut self) -> Result<(), String> {
+        let Some(watcher) = self.watcher.take() else {
+            return Ok(());
+        };
+        drop(watcher);
+        match self.finished.recv_timeout(std::time::Duration::from_secs(5)) {
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Err(
+                "releasing native subscriptions: the backend kept its callback past 5 seconds"
+                    .to_string(),
+            ),
+            _ => Ok(()),
+        }
     }
 }
 impl Drop for NativeWatchBackend {
     fn drop(&mut self) {
-        drop(self.watcher.take());
-        let _ = self.finished.recv();
+        let _ = self.close();
     }
 }
 
@@ -181,6 +208,13 @@ impl WatchSubscriptions {
             return Ok(());
         }
         watch_inject_failure!("subscribe")?;
+        // §FS-check.6.1.3: a shallow anchor that becomes recursive coverage moves
+        // to a complete replacement backend instead of registering its directory twice.
+        if self.handles.contains_key(&path) {
+            let mut handles = self.handles.clone();
+            handles.insert(path, true);
+            return self.replace_coverage(handles);
+        }
         let mode = if recursive {
             notify::RecursiveMode::Recursive
         } else {
@@ -249,7 +283,7 @@ impl WatchSubscriptions {
                 .map_err(|err| format!("recovering watch for {}: {err}", path.display()))?;
             watch_observe!(WatchObservation::Subscribed(path.clone(), *recursive));
         }
-        self.watcher = replacement;
+        std::mem::replace(&mut self.watcher, replacement).close()?;
         for _path in self.handles.keys().filter(|path| !handles.contains_key(*path)) {
             watch_observe!(WatchObservation::Retired(_path.clone()));
         }
