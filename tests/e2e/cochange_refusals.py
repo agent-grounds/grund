@@ -146,6 +146,33 @@ class RefusalTests(RecipeCase):
 
 
 class WorkspaceTests(RecipeCase):
+    def test_configless_member_uses_canonical_defaults_with_built_and_released(self):
+        """Default member identity and facts (§FS-workspace.2, §FS-cochange-recipe.snapshots)."""
+        self.fixture.write("grund.toml", CONFIG + '\n[workspace]\nmembers = ["member"]\n')
+        self.fixture.write("member/requirements.md",
+            "# FS-001-alpha: Alpha\n\n## 1. Behavior\n\nBefore.\n")
+        self.fixture.write("member/src/lib.rs", "// " + chr(167) + "FS-001-alpha.1\npub fn foo() {}\n")
+        self.fixture.write("member/e2e/test.rs", "// " + chr(167) + "FS-001-alpha.1\n#[test] fn test_foo() {}\n")
+        policy = json.loads(self.fixture.policy.read_text())
+        policy["source_paths"].append("member/src/")
+        policy["test_paths"].append("member/e2e/")
+        self.fixture.policy.write_text(json.dumps(policy))
+        self.fixture.base = self.fixture.commit("Configless member baseline")
+        for path in ("member/src/lib.rs", "member/requirements.md", "member/e2e/test.rs"):
+            self.fixture.edit(path)
+        self.fixture.commit("Complete member evidence")
+        for name in ("GRUND_BUILT", "GRUND_RELEASED"):
+            with self.subTest(binary=name):
+                report = self.report(self.fixture.invoke(grund=os.environ[name]), 0)
+                self.assertEqual([], report["errors"])
+                source = self.source_row(report, "member/src/lib.rs")
+                self.assertEqual([], source["missing"])
+                self.assertEqual([{"project": "member", "id": "FS-001-alpha",
+                    "spec_paths": ["member/requirements.md"], "test_paths": ["member/e2e/test.rs"],
+                    "snapshot": "candidate"}], source["targets"])
+        self.assertFalse((self.fixture.root / "member/grund.toml").exists())
+        self.assertFalse((self.fixture.root / "member/.agents/grund.toml").exists())
+
     def workspace(self):
         self.fixture.write("grund.toml", CONFIG +
             '\n[workspace]\nmembers = ["packages/one", "packages/two"]\n')

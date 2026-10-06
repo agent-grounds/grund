@@ -1,5 +1,6 @@
 """Exact Git/index snapshots and comparisons for §FS-cochange-recipe.snapshots."""
 from dataclasses import dataclass
+import errno
 import os
 from pathlib import Path
 import shutil
@@ -27,6 +28,10 @@ class Git:
     def __init__(self, repo):
         """Local complete history only (§FS-cochange-recipe.snapshots)."""
         self.repo = Path(repo).resolve()
+        # Git -C resolves a relative active index from the repository root.
+        # Capture it before isolating Git environments (§FS-cochange-recipe.snapshots).
+        active = os.environ.get('GIT_INDEX_FILE')
+        self.active_index = self.repo / active if active is not None else None
         self.env = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
         self.env.update(GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL=os.devnull,
                         GIT_OPTIONAL_LOCKS='0')
@@ -60,7 +65,9 @@ class Git:
 
     def index(self, scratch):
         """Copy the index before write-tree, refusing unsupported forms (§FS-cochange-recipe.snapshots)."""
-        index = Path(self.text('rev-parse', '--git-path', 'index'))
+        index = self.active_index
+        if index is None:
+            index = Path(self.text('rev-parse', '--git-path', 'index'))
         if not index.is_absolute():
             index = self.repo / index
         copied = scratch / 'index'
@@ -134,7 +141,14 @@ class Git:
             if mode == '120000':
                 try:
                     target = blob.decode('utf-8')
-                    if not (output.parent / target).resolve().is_relative_to(destination):
+                    try:
+                        resolved = (output.parent / target).resolve()
+                    except (RuntimeError, OSError) as exc:
+                        if isinstance(exc, OSError) and exc.errno != errno.ELOOP:
+                            raise
+                        raise Refusal('unsupported-input', f'{path}: symlink cycle; '
+                                      'replace it with a bounded non-cyclic link.', path)
+                    if not resolved.is_relative_to(destination):
                         raise ValueError('symlink leaves snapshot')
                     output.symlink_to(target)
                 except (ValueError, UnicodeError) as exc:

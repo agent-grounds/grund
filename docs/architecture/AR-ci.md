@@ -30,7 +30,7 @@ When a new pre-commit hook is added, the same change must ensure CI can run it. 
 
 ### 1.2 The parity test
 
-All of this is checked rather than remembered: `tests/integration/test_ci_precommit_parity.py` reads the two files and fails when CI stops invoking the hook list, a hook's binary has no pinned install step before that gate, a `commit-msg` hook has no range-scanning counterpart, the Rust hooks and the workflow's own steps spell different commands, [§AR-ci.3](AR-ci.md#3-current-hooks) does not spell a command a Rust hook runs, warnings are denied on one side only, the Python tests are discovered from different directories, or a hook bound only to a stage without a file list has no CI step naming the same `scripts/` script. What it holds is the *existence* of a counterpart, which is line-shaped; the *same verdict* half of [§AR-ci.1.1](AR-ci.md#11-stages-without-a-file-list) is held by each gate's own test, which runs both invocations against one fixture tree and asserts they agree — for the attribution gate, `tests/integration/test_check_no_claude_attribution.py`.
+All of this is checked rather than remembered: `tests/integration/test_ci_precommit_parity.py` reads the hook list, workflow and Python wrapper and fails when CI stops invoking the hook list, a hook's binary has no pinned install step before that gate, a `commit-msg` hook has no range-scanning counterpart, the Rust hooks and the workflow's own steps spell different commands, [§AR-ci.3](AR-ci.md#3-current-hooks) does not spell a command a Rust hook runs, warnings are denied on one side only, the Python gates invoke different wrappers or discover tests from the wrong directory, or a hook bound only to a stage without a file list has no CI step naming the same `scripts/` script. What it holds is the *existence* of a counterpart, which is line-shaped; the *same verdict* half of [§AR-ci.1.1](AR-ci.md#11-stages-without-a-file-list) is held by each gate's own test, which runs both invocations against one fixture tree and asserts they agree — for the attribution gate, `tests/integration/test_check_no_claude_attribution.py`.
 
 ## 2. Platform scope
 
@@ -41,6 +41,13 @@ CI dependency and build caches are performance optimizations only. A cache resto
 ## 3. Current hooks
 
 The current pre-commit gate runs the same Rust format/build/test commands that development CI runs: `cargo fmt --all -- --check`, `cargo build --workspace --all-targets --locked` with warnings denied, and `cargo test --workspace --all-targets --locked --features grund/test-workspace-load-count`. A plain `cargo test --workspace --all-targets --locked` is green on the same tree but runs less: it reports every test that reads the workspace-load observer as `ignored`, naming the feature that test needs ([§AR-ci.3.3](AR-ci.md#33-test-only-observers)). The test hook also runs at `pre-push`, so a contributor who commits while a test is transiently broken still gets the same local stop before sending the branch. It is the one hook `pre-push` runs: no hook asks a change for a changelog entry at any stage, because no change is gated on the changelog ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)).
+
+Both Python gates run `python scripts/run_python_gate.py`. The wrapper prepares
+the built binary and released Grund 0.16.1 for the co-change compatibility cases
+([§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)), then runs
+`python -m unittest discover -s tests/integration -p test_*.py` with that environment
+from the repository root. The parity test checks the shared wrapper invocation
+and its discovery directory and pattern.
 
 ### 3.1 Citations and links
 
