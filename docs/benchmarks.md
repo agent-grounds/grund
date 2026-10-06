@@ -1,10 +1,16 @@
 # Local benchmark report
 
-This report is a local wall-clock snapshot for the `grund` repo. It complements the instruction-counting CI benchmark in [§AR-benchmarks](architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands). It is meant for product-facing comparisons with Lychee; it is not the release-blocking regression meter.
+This archival report preserves the 2026-05-20 local wall-clock run for the `grund`
+repo and a historical instruction-count snapshot. The tables, samples and provenance
+below are historical evidence, not measurements of the current release or a general
+speed ranking against Lychee.
 
 ## Instruction-Count Baseline
 
-The release-blocking meter is Callgrind instruction count, not wall-clock time ([§DA-benchmark-instruction-counting](decisions/architectural/DA-benchmark-instruction-counting.md#da-benchmark-instruction-counting-the-performance-harness-counts-instructions-not-wall-clock-seconds)). Pull-request CI compares against the current base branch and records the `Ir` comparison in its summaries; the limits are not wired up, so growth does not yet fail the build ([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)); the table below is the committed human-readable snapshot from `cargo bench -p grund --features bench --locked --bench instructions -- --save-summary=json` on 2026-05-20.
+The table below is the historical committed instruction-count snapshot from
+`cargo bench -p grund --features bench --locked --bench instructions -- --save-summary=json`
+on 2026-05-20. Its inputs include this repository as it then stood; it is not the
+baseline that current pull-request CI uses.
 
 | Benchmark | Input | Instructions (`Ir`) | Estimated Cycles |
 |---|---|---:|---:|
@@ -18,12 +24,33 @@ The release-blocking meter is Callgrind instruction count, not wall-clock time (
 | `cover` | this repo | 301,086,562 | 433,510,661 |
 | `fmt_check` | this repo | 349,977,643 | 502,904,379 |
 
+Current benchmarks use generated fixtures rather than the live repository
+([§AR-benchmarks.1.1](architecture/AR-benchmarks.md#11-generated-fixtures-never-this-repository)).
+Pull-request CI measures the base branch and then the PR commit, recording the `Ir`
+comparison in summaries; pushes to `main` record counts without comparing against
+themselves ([§AR-ci.5.1](architecture/AR-ci.md#51-pull-requests-and-pushes)).
+Instruction-regression limits are not enforced: growth is reported but does not fail
+the build ([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)).
+
+Callgrind instruction count is a repeatable workload-cost proxy for a given binary
+and input, not elapsed time or a universal latency guarantee
+([§AR-benchmarks.2](architecture/AR-benchmarks.md#2-why-instruction-counts-not-wall-clock)).
+Comparisons must control the input, invocation, toolchain and build settings. Different
+binaries, including PGO versus non-PGO builds, can change counts independently of
+the source change under review. Compare revisions under consistent build conditions
+([§AR-benchmarks.5](architecture/AR-benchmarks.md#5-comparing-two-revisions)); PGO
+is excluded from development CI ([§AR-ci.6](architecture/AR-ci.md#6-pgo-stays-out-of-development-ci)).
+The archival provenance below does not record compiler flags or PGO state; it cannot
+establish comparability with a differently built binary today.
+
 ## Instructions
 
-Regenerate this report from the repository root:
+Keep this report as an archive. Write future local measurements to a separate file
+from the repository root, retaining their own date, machine, binary and workload context:
 
 ```sh
-python3 scripts/local-benchmark-report.py --out docs/benchmarks.md
+mkdir -p "$HOME/ag/tmp"
+python3 scripts/local-benchmark-report.py --out "$HOME/ag/tmp/grund-local-benchmark-report.md"
 ```
 
 Useful options:
@@ -33,11 +60,11 @@ Useful options:
 - `--lychee PATH` points at a specific Lychee binary.
 - `--lychee-path PATH` may be repeated to replace the default Lychee inputs: `README.md docs examples`.
 
-For a fair local comparison, build the release binary first:
+To measure a locally built release binary, build it before running the command above.
+This build choice alone does not make the two tools' workloads equivalent:
 
 ```sh
 cargo build --release --locked
-python3 scripts/local-benchmark-report.py --out docs/benchmarks.md
 ```
 
 ## Method
@@ -98,18 +125,17 @@ Markdown cross-reference links are generated presentation over the underlying ci
 
 ## Throughput
 
-At the warm median, `grund check .` scans about 722k lines of source per second — roughly the throughput figure on the README badge.
+At the warm median in this 2026-05-20 run, `grund check .` scans about 722k lines
+of source per second. This is local throughput for the recorded binary and scanned
+tree, not a current-release performance guarantee.
 
 ## Comparison
 
-`grund check .` checks 2.3x as many local intent edges as Lychee checks links in this run.
-Using warm medians, `grund check .` is 18.0x faster than the configured Lychee run.
-Per checked edge, `grund` costs about 12 microseconds; Lychee costs about 494 microseconds per link.
-
-Product copy:
-
-> Lychee checks whether Markdown links still open. `grund` checks whether the project still knows why the code exists.
-> On this local run, `grund` checks more than twice as many project-intent edges and finishes several times faster.
+The commands above perform different workloads: `grund` scans local declarations
+and citations; the configured Lychee run checks links, including URL work affected
+by caches and network conditions. The originally reported warm-median elapsed-time
+ratio was 18.0 for these runs. Citation edges and links are different units, and that ratio
+does not establish general relative speed or an interchangeable cost per checked item.
 
 ## Raw Warm Samples
 

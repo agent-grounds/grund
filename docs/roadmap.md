@@ -147,34 +147,55 @@ E2E fixtures: a plain `//` ID note inside a function body is *not* a declaration
 
 ## RM-positioning: the Lychee contrast and the instruction-count framing in README and landing copy
 
-`grund` lives next to `lychee` in CI, not against it ([§FS-non-goals.1](functional-spec/FS-non-goals.md#1-markdown-link-validation), [§AR-ci.3](architecture/AR-ci.md#3-current-hooks)). The README says so in mechanism — a `§`-marked citation in a Rust file is invisible to a link checker — and not yet in product terms: the "Lychee is the link checker; `grund` is the intent checker" pair and the instruction-count-not-stopwatch framing beside the benchmark badge are still to be written, and the committed instruction-count baseline they attach to exists now ([§AR-benchmarks](architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands)). This milestone ships words, not code.
+`grund` and Lychee run together in this repository's CI
+([§FS-non-goals.1](functional-spec/FS-non-goals.md#1-markdown-link-validation),
+[§AR-ci.3](architecture/AR-ci.md#3-current-hooks)). The README already explains
+their different jobs. This documentation milestone keeps that explanation factual
+and connects the archival measurements to current reporting; it adds no benchmark
+machinery or measurements ([§REQ-readme.evidence](requirements/REQ-readme.md#evidence-positioning-and-performance-claims-have-evidence)).
 
 ### 1. What
 
-A short "vs. a link checker" block in the README:
+Reuse the existing README paragraph, correcting Lychee's scope to Markdown and HTML
+as supported by the primary-source ledger in
+[§REL-traceability-tools.work](related-work/REL-traceability-tools.md#work-what-the-work-is).
+Describe Grund's citation resolution and declared constraints without implying proof
+of semantic implementation correctness.
 
-- Lychee checks whether Markdown links still open; `grund` checks whether your code still knows why it exists.
-- Lychee catches dead links; `grund` catches dead grounding.
-- Lychee validates the web of pages; `grund` validates the web of intent.
-- Lychee says "this URL broke"; `grund` says "this implementation lost its spec."
-- Use Lychee for links out; use `grund` for reasons in.
-- Lychee guards navigation; `grund` guards meaning.
-
-…landing on the closing line: **Lychee is the link checker; `grund` is the intent checker. Both belong in CI; they guard different failure modes.**
-
-And the benchmark framing next to the local throughput badge, naming the committed instruction-count baseline of [§AR-benchmarks](architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands): **`grund` measures performance by instruction count, not stopwatch time — same binary, same repo, same number — which gives CI a stable regression meter instead of a noisy timing guess** ([§DA-benchmark-instruction-counting](decisions/architectural/DA-benchmark-instruction-counting.md#da-benchmark-instruction-counting-the-performance-harness-counts-instructions-not-wall-clock-seconds), [§AR-goal-measurement.2](architecture/AR-goal-measurement.md#2-goal-meters)).
+Retire the undated throughput badge and give a short path to [the archival report](benchmarks.md):
+the 2026-05-20 local elapsed-time run and historical instruction-count snapshot remain
+available with their provenance. Explain current generated-fixture reporting
+([§AR-benchmarks.1.1](architecture/AR-benchmarks.md#11-generated-fixtures-never-this-repository))
+against the PR base branch ([§AR-ci.5.1](architecture/AR-ci.md#51-pull-requests-and-pushes)).
+Instruction count is a workload-cost proxy under binary/input/build assumptions,
+including PGO comparability ([§AR-benchmarks.2](architecture/AR-benchmarks.md#2-why-instruction-counts-not-wall-clock),
+[§AR-benchmarks.5](architecture/AR-benchmarks.md#5-comparing-two-revisions)); regression
+limits are not enforced ([§AR-ci.5.2](architecture/AR-ci.md#52-regression-limits)).
 
 ### 2. Why now
 
-The 0.1.0 product review found the README explained the *mechanism* well and the *pitch* thinly: a reader who already runs `lychee` could not tell in one line what `grund` adds beside it ([§GRUND-grund.1](grund.md#1-what-grund-does-about-it)). The framing is cheap to write and pays off on every landing. It pairs with [§AR-benchmarks](architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands) because the instruction-count line earns its full place now that there is a committed figure to attach it to.
+Readers need to distinguish link validation from citation checking, and historical
+timing evidence from current CI reporting. Reusing the introduction and linking to
+the detailed evidence keeps the common path concise
+([§REQ-readme.1](requirements/REQ-readme.md#1-what-it-must-say)).
 
 ### 3. Measurable
 
-The README (and landing page, if any) carries a "vs. link checkers" block whose closing line is the "link checker / intent checker" pair. The benchmark section states the instruction-count-not-wall-clock framing alongside the committed baseline from [§AR-benchmarks](architecture/AR-benchmarks.md#ar-benchmarks-instruction-counting-benchmarks-for-the-hot-cli-commands). `grund check` stays clean.
+The README links to the archive and current reporting, with no throughput badge or
+duplicate introductory block. The report preserves measured data and explains unlike
+workloads, build assumptions and unenforced instruction-regression limits. Future
+measurement instructions write elsewhere. Factual review and link/citation checks
+support the text regression checks
+([§REQ-readme.evidence](requirements/REQ-readme.md#evidence-positioning-and-performance-claims-have-evidence)).
 
 ## RM-gap-report: orphan and uncovered ID reports
 
-The inverse of [§FS-cover](functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file): same scan, but instead of "what does this file cite?" it answers "which declared IDs have nothing climbing into them?" Without it `grund` is a navigation tool; with it, `grund` is a traceability tool — the column every comparable requirements tool already has. The framing comparison lives in [§RM-positioning-trace-tools](roadmap.md#rm-positioning-trace-tools-position-grund-against-requirements-traceability-tools-in-readme).
+A proposed inverse of [§FS-cover.2](functional-spec/FS-cover.md#2-behaviour):
+instead of "what does this file cite?" it would answer "which declared IDs have
+nothing climbing into them?" The command below is design work, not a shipped
+capability or a commitment to parity with another tool. Current retrieval and
+checking tasks are described in
+[§REL-traceability-tools.work.matrix](related-work/REL-traceability-tools.md#workmatrix-reader-tasks).
 
 The orphan half already exists as `grund list --unused` ([§FS-list](functional-spec/FS-list.md#fs-list-grund-lists-every-declared-id)), which lists the declarations nothing cites; what remains is the *unclimbed* view and the report shape below. GitHub: [#89](https://github.com/agent-grounds/grund/issues/89) asks for the deliberately-uncited marker that lets that list be driven to zero.
 
@@ -189,7 +210,11 @@ Output is sorted lexicographically by `(kind, id)` for byte-identical reproducib
 
 ### 2. Why now
 
-[§FS-cover](functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) shipped the index but not the inverted view. Every neighbour tool (OFT, Sphinx-Needs, Doorstop, Duvet) ships a "what's uncovered?" report as the centrepiece feature, and on the comparison matrix in [§REL-traceability-tools.work.matrix](related-work/REL-traceability-tools.md#workmatrix-the-comparison-matrix) this is the single line that flips `grund` from "fewer features than OFT" to "different axis from OFT, with parity on the obvious one."
+[§FS-cover.2](functional-spec/FS-cover.md#2-behaviour) groups citations by scanned
+file, including files with no citations, without judging sufficient coverage. An
+inverted view could help a reader inspect inbound relationships directly. Its
+usefulness must be assessed on that task, independently of the documentation
+correction in [§RM-positioning-trace-tools](roadmap.md#rm-positioning-trace-tools-position-grund-against-requirements-traceability-tools-in-readme).
 
 ### 3. Measurable
 
@@ -197,27 +222,50 @@ E2E fixtures: a clean tree returns no orphans; deleting an `E2E-` that cited an 
 
 ## RM-positioning-trace-tools: position grund against requirements-traceability tools in README
 
-[§RM-positioning](roadmap.md#rm-positioning-the-lychee-contrast-and-the-instruction-count-framing-in-readme-and-landing-copy) covers Lychee — link checker vs. intent checker. It does not cover the *other* neighbourhood `grund` lives in: dedicated requirements-traceability tools that already do markdown specs, ID citations, and coverage reports. A reader landing on the README from that world (OFT, Sphinx-Needs, TRLC, Doorstop, Duvet, SARA) cannot tell in one line what `grund` adds beside them. This milestone ships positioning copy, not code.
+[§RM-positioning](roadmap.md#rm-positioning-the-lychee-contrast-and-the-instruction-count-framing-in-readme-and-landing-copy)
+covers links and performance evidence. This milestone connects the README to the
+existing requirements-traceability explanation, organised around reader tasks
+([§REL-traceability-tools.work.matrix](related-work/REL-traceability-tools.md#workmatrix-reader-tasks)).
+It corrects documentation, not product behavior.
 
 ### 1. What
 
-A new "vs. traceability tools" block in the README and landing page, anchored by a compact comparison matrix and three short positioning lines. The matrix is the one kept in [§REL-traceability-tools.work.matrix](related-work/REL-traceability-tools.md#workmatrix-the-comparison-matrix).
+Add one concise README link and reuse the existing resolver examples. In the related
+work, replace rankings and historical generalisations with sourced task-oriented prose:
+read a cited section ([§FS-show.2.2](functional-spec/FS-show.md#22-section)), check
+citation targets ([§FS-check.3.1](functional-spec/FS-check.md#31-dangling-citation),
+[§FS-check.3.2](functional-spec/FS-check.md#32-missing-section)), and query citations
+by scanned file ([§FS-cover.2](functional-spec/FS-cover.md#2-behaviour)). Resolving
+a citation does not prove semantic implementation correctness or sufficient coverage.
 
-The positioning lands on three sentences:
-
-- **OFT, Sphinx-Needs, TRLC, Doorstop, Duvet are traceability tools optimized for a coverage report.** `grund` is a *grounding* tool optimized for an agent reading one specific fact: the sectioned `§<ID>.3.1` citation plus the depth-controlled resolver give a model a one-command path to the smallest text that justifies a line of code ([§GOAL-agent-grounding.1](goals.md#1-the-three-layers)).
-- **They model each clause as its own atomic item.** `grund` keeps the clause inside the spec it belongs to and lets the citation point at the heading — fewer files to author, cheaper to read in an agent's context window.
-- **Coverage parity is one shipping milestone away.** [§RM-gap-report](roadmap.md#rm-gap-report-orphan-and-uncovered-id-reports) inverts the [§FS-cover](functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) index and answers "which IDs are uncovered?" — the column that today reads ⏳ in that matrix.
-
-A short "we deliberately don't" footnote points at [§FS-non-goals](functional-spec/FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do) and names three features the neighbours have that `grund` will not grow: ReqIF / OFT interchange (would import a foreign citation grammar and break the "two installs agree" contract, [§FS-non-goals.13](functional-spec/FS-non-goals.md#13-anything-that-would-let-two-grund-installs-disagree)), schema-level custom check rules (would require severity / exit-code config, [§FS-non-goals.9](functional-spec/FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization)), and HTML/PDF publishing (a third first-party surface, [§FS-non-goals.12](functional-spec/FS-non-goals.md#12-surfaces-outside-grund-core-and-the-lsp-transport)).
+Describe supported chapter and citation constraints
+([§FS-rules.3.1](functional-spec/FS-rules.md#31-chapter-presence),
+[§FS-rules.3.2](functional-spec/FS-rules.md#32-outbound-citation-count),
+[§FS-rules.3.3](functional-spec/FS-rules.md#33-per-target-coverage),
+[§FS-rules.3.4](functional-spec/FS-rules.md#34-inbound-citation-count-and-prohibition))
+separately from fixed severity
+([§FS-non-goals.9](functional-spec/FS-non-goals.md#9-severity-exit-code-or-report-ordering-customization))
+and absent arbitrary engine scripting
+([§FS-non-goals.12.1](functional-spec/FS-non-goals.md#121-plugins-or-scripting-hooks-inside-the-engine)).
+Do not derive a new interchange policy from those boundaries. The gap command above
+and the design work in #458/#468 remain proposals, not shipped capabilities or
+prerequisites for this correction.
 
 ### 2. Why now
 
-A reader in the requirements-traceability community currently sees `grund` as "another markdown reqs tool, but with fewer features" — because the README does not name the axis on which `grund` is actually different (sectioned citations + agent-readable resolver, not coverage reports). Writing the positioning before [§RM-distribution](roadmap.md#rm-distribution-cargo--npm--pypi-from-one-engine) ships gets the framing right before that audience arrives via npm and PyPI. Pairs with [§RM-positioning](roadmap.md#rm-positioning-the-lychee-contrast-and-the-instruction-count-framing-in-readme-and-landing-copy): one block for the "I already run a link checker" reader, one for the "I already run OFT" reader.
+Concrete tasks let a reader assess Grund beside an existing requirements tool without
+blanket claims about that tool's purpose or data model. The detailed home already exists;
+a short README path makes it discoverable without duplicating it
+([§REQ-readme.1](requirements/REQ-readme.md#1-what-it-must-say)).
 
 ### 3. Measurable
 
-The README (and landing page, if any) carries a "vs. traceability tools" section whose matrix names the six tools of [§REL-traceability-tools.work.matrix](related-work/REL-traceability-tools.md#workmatrix-the-comparison-matrix) with creation year, whose capability columns include the sectioned-citation row, and whose closing sentence is the "traceability tool / grounding tool" pair. The "we deliberately don't" footnote names the three rejected features with [§FS-non-goals](functional-spec/FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do) pointers. `grund check` stays clean.
+The README links to the existing comparison. Each retained competitor capability claim
+has scoped primary-source support with a checked date and version or unversioned status.
+The prose preserves published section coordinates, describes shipped tasks and precise
+boundaries, and makes no future gap or coverage-parity promise. Review the claims and
+validate citations and links alongside text regression checks
+([§REQ-readme.evidence](requirements/REQ-readme.md#evidence-positioning-and-performance-claims-have-evidence)).
 
 ## RM-workspace-absorbed-scan-error: flip the absorbed-scan warning to an error
 
