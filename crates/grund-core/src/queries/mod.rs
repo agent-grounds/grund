@@ -49,6 +49,7 @@
 mod ambiguity;
 mod batch;
 mod citation_counts;
+mod editor_completion;
 mod editor_hover;
 mod editor_on_type;
 mod editor_snapshot;
@@ -57,6 +58,7 @@ mod show_query;
 mod sizes;
 
 pub use batch::{BatchShowFailure, BatchShowQuery, BatchShowRecord, show_batch_with_scope};
+pub use editor_completion::{CitationCompletion, LspCompletionContext};
 pub use editor_hover::{
     LspUsage, citation_under_title, lsp_hover_with_kind_title, lsp_title_hover_body, usage_clause,
     usage_over_paths,
@@ -64,7 +66,7 @@ pub use editor_hover::{
 pub use editor_on_type::{DeclaredId, LineEdit, can_replace_trigger_at, on_type_line_edits};
 pub use editor_snapshot::{
     LspCitation, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts,
-    LspSnapshotWithMetadata, LspStub,
+    LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
 };
 pub use show_query::{ShowFormat, ShowMode, ShowOpts, ShowQueryError};
 pub use sizes::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput, list_sizes};
@@ -82,6 +84,10 @@ pub(crate) use show::show_declaration;
 
 // The cases that pin this component, one module per behaviour area
 // (§AR-core-module-layout.1.3).
+#[cfg(test)]
+mod tests_editor_completion;
+#[cfg(test)]
+mod tests_editor_completion_workspace;
 #[cfg(test)]
 mod tests_lsp_hover;
 #[cfg(test)]

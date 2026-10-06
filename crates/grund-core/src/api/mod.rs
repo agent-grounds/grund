@@ -66,7 +66,7 @@ pub use id::{IdOpts, IdProposal, IdProposalOutcome, propose_id, propose_id_with_
 pub use list::{
     ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot, list, list_with_run_warnings,
 };
-pub use lsp_snapshot::{lsp_snapshot, lsp_snapshot_with_metadata};
+pub use lsp_snapshot::{lsp_snapshot, lsp_snapshot_with_completion, lsp_snapshot_with_metadata};
 pub use refs::{
     RefHit, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure, RefsQueryFailureKind,
     RefsWithMetadata, refs, refs_outcome, refs_with_metadata,

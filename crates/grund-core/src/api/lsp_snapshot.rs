@@ -24,8 +24,8 @@ use crate::model::{
     Declaration, TextOverlays, canonical_snapshot_path, is_stub_for_inline_decl, sort_path_key,
 };
 use crate::queries::{
-    LspCitation, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts,
-    LspSnapshotWithMetadata, LspStub,
+    LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange, LspSnapshot,
+    LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
 };
 use crate::resolver::load_resolved_workspace_context;
 use crate::scanner::api_scan_error;
@@ -42,6 +42,12 @@ pub fn lsp_snapshot(opts: LspSnapshotOpts) -> Result<LspSnapshot> {
 /// Build hover metadata in the same scan as the editor snapshot (§FS-lsp.1.2).
 /// Existing snapshot carriers and the original entry point remain unchanged.
 pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWithMetadata> {
+    Ok(lsp_snapshot_with_completion(opts)?.metadata)
+}
+
+/// Load completion configuration and candidates with the editor snapshot
+/// (§FS-lsp.1.6.2, §FS-lsp.1.6.4), never separately per request.
+pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshotWithCompletion> {
     let overlays = normalized_overlays(opts.open_documents);
     // §FS-lsp.1.1: classify citing sides so the citation-direction checks
     // (`missing-citation` / `forbidden-citation`) run and surface as editor
@@ -57,6 +63,7 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
     let context =
         load_resolved_workspace_context(config, &opts.path, opts.path_provided, &overlays, true)?;
     let render_config = context.render_config().clone();
+    let completion = LspCompletionContext::from_workspace(&context);
     let report = editor_report(&context, &overlays, &opts.path, report_scope.as_ref());
     // LSP routes findings back to project snapshots by filesystem identity.
     // Preserve absolute paths here instead of reconstructing them from rendered
@@ -300,22 +307,25 @@ pub fn lsp_snapshot_with_metadata(opts: LspSnapshotOpts) -> Result<LspSnapshotWi
     // each one anchors at — the same channel the CLI renders, from the same place
     // (§FS-lsp.4.1).
     let run_warnings = public_lsp_run_warnings(&render_config, editor_run_warnings(&context));
-    Ok(LspSnapshotWithMetadata {
-        kind_titles,
-        snapshot: LspSnapshot {
-            root: absolutize_path(&render_config.root),
-            marker: render_config.marker,
-            trigger: render_config.trigger,
-            workspace: context.workspace_loaded,
-            report,
-            run_warnings,
-            declarations,
-            sections,
-            finding_ranges,
-            stubs,
-            citations,
-            scanned_files,
-            scan_errors,
+    Ok(LspSnapshotWithCompletion {
+        completion,
+        metadata: LspSnapshotWithMetadata {
+            kind_titles,
+            snapshot: LspSnapshot {
+                root: absolutize_path(&render_config.root),
+                marker: render_config.marker,
+                trigger: render_config.trigger,
+                workspace: context.workspace_loaded,
+                report,
+                run_warnings,
+                declarations,
+                sections,
+                finding_ranges,
+                stubs,
+                citations,
+                scanned_files,
+                scan_errors,
+            },
         },
     })
 }

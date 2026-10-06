@@ -140,3 +140,10 @@ pub struct LspSnapshotWithMetadata {
     pub snapshot: LspSnapshot,
     pub kind_titles: BTreeMap<String, String>,
 }
+
+/// Additive authoring context built in the snapshot's one scan (§AR-lsp.2,
+/// §FS-lsp.1.6.4). Original snapshot/metadata constructors remain available.
+pub struct LspSnapshotWithCompletion {
+    pub metadata: LspSnapshotWithMetadata,
+    pub completion: super::LspCompletionContext,
+}
