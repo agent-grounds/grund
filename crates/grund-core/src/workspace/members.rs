@@ -88,7 +88,8 @@ pub(super) fn expand_workspace_member_list(config: &Config) -> Result<ExpandedMe
             // §FS-workspace.2.4: reading the directory is part of interpreting
             // this config entry, so every I/O failure stays at the `members`
             // line and names the glob as written rather than escaping bare.
-            let entries = fs::read_dir(&parent).map_err(|err| {
+            // §FS-check.6.1.1: cover this effective input before its shared read.
+            let entries = crate::config::input_read_dir(&parent).map_err(|err| {
                 workspace_members_error(
                     config,
                     format!("cannot read workspace member glob `{member}`: {err}"),
@@ -308,7 +309,8 @@ fn member_claims(root: &Path, entries: &[String]) -> Vec<MemberClaim> {
 /// cannot be read, or the value is not a list — and carries the reason the
 /// warning that says so has to name.
 pub(crate) fn ancestor_member_entries(config_path: &Path) -> Result<Vec<String>, String> {
-    let text = fs::read_to_string(config_path).map_err(|err| err.to_string())?;
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let text = crate::config::input_read_to_string(config_path).map_err(|err| err.to_string())?;
     let mut in_workspace = false;
     let mut entries = Vec::new();
     let mut optional = Vec::new();

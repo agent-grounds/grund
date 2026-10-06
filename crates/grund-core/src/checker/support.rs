@@ -1,5 +1,3 @@
-use std::fs;
-
 use crate::config::Config;
 use crate::grammar::{is_inside_inline_code, render_id, render_qualified_id};
 use crate::model::{Citation, Diagnostic, Findings, Id, sort_path_key};
@@ -70,7 +68,8 @@ pub(super) fn citation_in_markdown_inline_code(cite: &Citation) -> bool {
     if cite.file.extension().and_then(|e| e.to_str()) != Some("md") {
         return false;
     }
-    let Ok(text) = fs::read_to_string(&cite.file) else {
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let Ok(text) = crate::config::input_read_to_string(&cite.file) else {
         return false;
     };
     let Some(line) = text.lines().nth(cite.line.saturating_sub(1)) else {

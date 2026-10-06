@@ -319,6 +319,10 @@ pub(crate) fn companion_workspace_exists(
     root: &Path,
     entrypoint: &CompanionAgentEntrypoint,
 ) -> bool {
+    // §FS-check.6.1.3: absent ownership evidence is also a checking input.
+    if let Some(workspace) = entrypoint.workspace {
+        crate::config::observe_input(&root.join(workspace), false);
+    }
     entrypoint
         .workspace
         .is_some_and(|workspace| root.join(workspace).is_dir())
@@ -345,17 +349,24 @@ fn companion_selected_by_evidence(
 fn companion_has_managed_block(path: &Path) -> bool {
     // Malformed delimiters still prove grund ownership — selecting the file
     // lets `check` surface the defect instead of silently skipping it.
-    fs::read_to_string(path)
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    crate::config::input_read_to_string(path)
         .is_ok_and(|text| !matches!(find_agents_block(&text), AgentsBlockLookup::Absent))
 }
 
 pub(crate) fn is_file_or_symlink(path: &Path) -> bool {
+    // §FS-check.6.1.1: observe registry probes before deciding absence.
+    if !crate::config::observe_input(path, false) {
+        return false;
+    }
     fs::symlink_metadata(path)
         .map(|m| m.file_type())
         .is_ok_and(|t| t.is_file() || t.is_symlink())
 }
 
 pub(crate) fn path_missing_without_following_symlinks(path: &Path) -> bool {
+    // §FS-check.6.1.3: creation of a missing entrypoint changes the verdict.
+    crate::config::observe_input(path, false);
     match fs::symlink_metadata(path) {
         Ok(_) => false,
         Err(err) => err.kind() == std::io::ErrorKind::NotFound,

@@ -14,7 +14,6 @@
 //! `grammar/anchors.rs`.
 
 use anyhow::{Context, Result};
-use std::fs;
 use std::path::Path;
 
 use crate::config::Config;
@@ -177,7 +176,9 @@ fn section_heading_text(
     section: &str,
     config: &Config,
 ) -> Result<Option<String>> {
-    let text = fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let text = crate::config::input_read_to_string(path)
+        .with_context(|| format!("read {}", path.display()))?;
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let mut in_decl = false;

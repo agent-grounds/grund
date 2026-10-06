@@ -2,7 +2,6 @@
 //! (§FS-values.2.2, §AR-scanner.2.1.3, §AR-scanner.3).
 
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::json::{JsonNode, JsonReader};
@@ -48,7 +47,8 @@ pub(super) fn scan_value_json_sources(
             .find_map(|candidate| overlay_text(overlays, candidate))
         {
             Some(text) => text.to_string(),
-            None => match fs::read_to_string(path) {
+            // §FS-check.6.1.1: cover this effective input before its shared read.
+            None => match crate::config::input_read_to_string(path) {
                 Ok(text) => text,
                 Err(error) => {
                     errors.push((
@@ -107,7 +107,8 @@ pub(super) fn value_json_sources<'a>(
         }
         let Some(folder) = &kind.folder else { continue };
         let folder = normalize_path_lexically(&config.root.join(folder));
-        let entries = fs::read_dir(&folder)
+        // §FS-check.6.1.1: cover this effective input before its shared read.
+        let entries = crate::config::input_read_dir(&folder)
             .map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
         for entry in entries {
             let entry =

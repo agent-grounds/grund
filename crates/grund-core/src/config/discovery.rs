@@ -29,6 +29,8 @@ const CONFIG_NAMES: [&[&str]; 2] = [&["grund.toml"], &[".agents", "grund.toml"]]
 /// file — a dangling symlink at either name was already a miss under both
 /// tests, since `exists()` follows symlinks too.
 fn config_files_in(dir: &Path) -> impl Iterator<Item = PathBuf> + use<'_> {
+    // §FS-check.6.1.1: precedence probes are inputs, including absent names.
+    super::observe_config_candidates(dir);
     CONFIG_NAMES
         .iter()
         .map(|segments| {
@@ -124,6 +126,8 @@ pub(crate) fn load_config(start: &Path) -> Result<Config> {
     };
     let mut config = Config::default_for(root);
     config.cli_base = walk_start;
+    // §FS-check.6.1.3: zero-config still has effective roots and probes.
+    super::observe_config(&config);
     Ok(config)
 }
 
@@ -187,5 +191,7 @@ pub(crate) fn load_config_at_with_report_base(
             }
         })?;
     }
+    // §FS-check.6.1.1: expose coverage before member expansion/checker reads.
+    super::observe_config(&config);
     Ok(config)
 }

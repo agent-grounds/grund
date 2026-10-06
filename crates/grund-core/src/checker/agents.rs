@@ -1,4 +1,3 @@
-use std::fs;
 use std::path::Path;
 
 use crate::config::Config;
@@ -125,10 +124,13 @@ fn check_agent_block_path_with_rules(
     require_block: bool,
     rule_guidance: Option<(&Findings, &[(String, String)])>,
 ) {
+    // §FS-check.6.1.3: retain this probe when the entrypoint is absent.
+    crate::config::observe_input(path, false);
     if !path.exists() {
         return;
     }
-    let Ok(text) = fs::read_to_string(path) else {
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let Ok(text) = crate::config::input_read_to_string(path) else {
         let file_name = path
             .file_name()
             .and_then(|name| name.to_str())

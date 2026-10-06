@@ -68,6 +68,12 @@ include!("cli_help_fetch.rs");
 include!("cli_help_config.rs");
 include!("cli.rs");
 include!("cli_check.rs");
+include!("cli_watch.rs");
+include!("cli_watch_inputs.rs");
+include!("cli_watch_terminal.rs");
+include!("cli_watch_signal.rs");
+#[cfg(feature = "test-watch")]
+include!("cli_watch_observer.rs");
 include!("cli_show.rs");
 include!("cli_show_batch.rs");
 include!("cli_list.rs");

@@ -8,7 +8,6 @@
 //! (§FS-check.4.1.2, §DF-index-not-an-inbound-citation).
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::index_entries::KindIndexEntries;
@@ -334,7 +333,8 @@ pub(super) fn check_kind_indexes(
         // §FS-check.3.18.7: a folder whose index file does not exist is the same
         // finding, once per declaration — the strongest form of the same fact, not
         // a different one. The three ways it can fail to read are named apart.
-        let text = fs::read_to_string(&target.index_file).ok();
+        // §FS-check.6.1.1: cover this effective input before its shared read.
+        let text = crate::config::input_read_to_string(&target.index_file).ok();
         let absent = match &text {
             Some(_) => "",
             None if target.index_file.is_dir() => " (the index file is a directory)",

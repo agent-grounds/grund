@@ -33,7 +33,11 @@ pub(super) fn scannable_walker(
     physical_root: &Path,
     link_roots: &std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
     looping_links: &std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
-) -> ignore::Walk {
+) -> Result<ignore::Walk> {
+    // §FS-check.6.1.3: include ignore discovery outside the source roots.
+    if config.respect_gitignore && !crate::config::observe_ignore_inputs(scan_root) {
+        return Err(anyhow!("watch ignore coverage failed"));
+    }
     let mut builder = WalkBuilder::new(scan_root);
     builder.hidden(false);
     // §FS-config.3.5.1: a symlink is part of the tree at the path it occupies, so
@@ -76,7 +80,7 @@ pub(super) fn scannable_walker(
         looping_links: std::sync::Arc::clone(looping_links),
     };
     builder.filter_entry(move |entry| filter.keep(entry));
-    builder.build()
+    Ok(builder.build())
 }
 
 /// §FS-check.4.10.2: whether a walk of `scan_root` under this config would read a
@@ -131,16 +135,17 @@ pub(crate) fn walk_reads_any_file(config: &Config, scan_root: &Path) -> bool {
     }
     let link_roots = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
     let looping_links = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
-    scannable_walker(
+    let Ok(walker) = scannable_walker(
         config,
         scan_root,
         &canonical_scan_root,
         &physical_root,
         &link_roots,
         &looping_links,
-    )
-    .filter_map(Result::ok)
-    .any(|entry| {
+    ) else {
+        return false;
+    };
+    walker.filter_map(Result::ok).any(|entry| {
         entry
             .file_type()
             .is_some_and(|file_type| file_type.is_file())
@@ -211,6 +216,15 @@ impl WalkDirFilter {
     /// from a tree the run has just called unreadable and reads past `[scan] include`,
     /// so the link is pruned here and the report raised afterwards.
     fn keep(&self, entry: &ignore::DirEntry) -> bool {
+        // §FS-check.6.1.1: linked files/dirs expose targets before descent/read.
+        if entry.path_is_symlink() {
+            if !crate::config::observe_input(
+                entry.path(),
+                entry.file_type().is_some_and(|t| t.is_dir()),
+            ) {
+                return false;
+            }
+        }
         if entry.depth() == 0 {
             return true;
         }

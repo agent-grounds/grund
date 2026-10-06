@@ -9,7 +9,6 @@
 //! `kind_table.rs`, `citations.rs` and `grounding.rs` (§AR-core-module-layout.1).
 
 use anyhow::{Context, Result, anyhow};
-use std::fs;
 use std::path::Path;
 
 use super::citations::{parse_citation_entry, validate_citation_rules};
@@ -33,7 +32,8 @@ pub(super) fn parse_config_file(
     report_path: &Path,
     config: &mut Config,
 ) -> Result<()> {
-    let text = fs::read_to_string(read_path)
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let text = crate::config::input_read_to_string(read_path)
         .with_context(|| format!("read {}", format_path(report_path)))?;
     // Everything below reports problems against the stable relative path.
     let path = report_path;

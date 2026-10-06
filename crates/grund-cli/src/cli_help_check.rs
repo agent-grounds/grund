@@ -4,7 +4,7 @@ fn print_check_help() {
     println!("grund check — validate every ID citation across the repo.");
     println!();
     println!(
-        "Usage:  grund check [PATH] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--only-rule] [--format text|json]"
+        "Usage:  grund check [PATH] [--watch] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--only-rule] [--format text|json]"
     );
     println!();
     println!(
@@ -19,6 +19,10 @@ fn print_check_help() {
     println!("Path validation is explicit; `grund PATH` is parsed as an ID query.");
     println!();
     println!("Options:");
+    // §FS-cli.3.3: the resident flag's discovery and lifecycle contract.
+    println!("  --watch              check immediately, then re-check on native filesystem notifications.");
+    println!("                       Ctrl-C returns the last completed status (2 before completion).");
+    println!("                       Text may use an alternate screen; clean JSON runs emit no record.");
     // §FS-check.2.1: describe the explicit channels and fixed text grouping.
     println!(
         "  --format text|json   text (default) prints `success` or `path:line: <channel>: message`,"
@@ -87,6 +91,7 @@ fn print_check_help() {
     println!();
     println!("Examples:");
     println!("  grund check              # check the whole repo");
+    println!("  grund check --watch      # live terminal feedback; Ctrl-C to stop");
     println!("  grund check docs/        # check one subtree");
     println!("  grund check --full       # plus unresolved references and outside sections beyond include");
     println!(
@@ -101,6 +106,7 @@ fn print_check_help() {
     println!("  grund check --format json | jq # machine-readable diagnostics for CI");
     print_guide_links(
         &[
+            "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/watch.md",
             "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/rules.md",
             "https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md",
         ],

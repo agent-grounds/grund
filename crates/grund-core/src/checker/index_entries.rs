@@ -3,7 +3,6 @@
 //! family past the core-source file budget (§AR-core-module-layout.3).
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use super::index::{KindIndexTarget, declarations_under_folder, kind_index_targets};
@@ -127,7 +126,8 @@ fn enroll_external_inline_declarations(
     let lines_by_index: BTreeMap<&Path, Vec<String>> = targets
         .iter()
         .filter_map(|target| {
-            let text = fs::read_to_string(&target.index_file).ok()?;
+            // §FS-check.6.1.1: cover this effective input before its shared read.
+            let text = crate::config::input_read_to_string(&target.index_file).ok()?;
             Some((
                 target.index_key.as_path(),
                 text.lines().map(str::to_string).collect(),

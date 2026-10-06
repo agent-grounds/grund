@@ -1,7 +1,7 @@
 //! Reporting traversal and its source-retaining adapter (§AR-scanner.1,
 //! §FS-distribution.3.3.2). Walk setup and filtering remain in `walk.rs`.
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -116,6 +116,10 @@ pub(crate) fn walk_scannable_files_with_sources(
     // are canonical already (§FS-config.1) — one `stat` per run either way.
     let physical_root = canonical_config_root(config);
     for scan_root in roots {
+        // §FS-check.6.1.1: the actual walk roots are covered before traversal.
+        if !crate::config::observe_input(&scan_root, true) {
+            return Err(anyhow!("watch input coverage failed"));
+        }
         if !scan_root.exists() {
             continue;
         }
@@ -166,7 +170,7 @@ pub(crate) fn walk_scannable_files_with_sources(
             &physical_root,
             &link_roots,
             &looping_links,
-        );
+        )?;
         let mut root_files = Vec::new();
         for entry in walker {
             let entry = match entry {
