@@ -46,7 +46,7 @@ The benched subcommands are the ones the agent loop and the CI/pre-commit gate r
 | `show` | `grund <ID> <fixture>` | An agent grounding itself on a bare citation — the lead-default read AGENTS.md / CLAUDE.md tell it to do first, before editing the code that realizes a cited ID. |
 | `show --full` | `grund <ID> --full <fixture>` | An agent escalating to the full declaration body when the narrower slices are not enough. |
 | `refs` | `grund refs <ID> <fixture>` | An agent checking a declaration's blast radius before changing or moving it. |
-| `cover` | `grund cover <fixture>` | What the diff-aware co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-a-pre-commit--ci-recipe--no-impl-change-without-spec-and-test)) and CI consume. |
+| `cover` | `grund cover <fixture>` | What the diff-aware co-change recipe ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits)) and CI consume. |
 | `fmt --check` | `grund fmt --check <fixture>` | The pre-commit / CI normalization gate. |
 
 ### 1.3 `fmt --check` measures a canonical fixture

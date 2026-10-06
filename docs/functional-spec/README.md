@@ -11,6 +11,7 @@ The subcommands a user runs on the command line.
 - [§FS-list](FS-list.md#fs-list-grund-lists-every-declared-id) — grund lists every declared ID
 - [§FS-refs](FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id) — grund lists every citation of an ID
 - [§FS-cover](FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file) — grund groups citations by scanned file
+- [§FS-cochange-recipe](FS-cochange-recipe.md#fs-cochange-recipe-an-opt-in-git-recipe-reports-related-declaration-and-test-edits) — an opt-in Git recipe reports related declaration and test edits
 - [§FS-fmt](FS-fmt.md#fs-fmt-grund-normalizes-citations-in-bulk) — grund normalizes citations in bulk
 - [§FS-init](FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo) — grund bootstraps a new grund-conformant repo
 - [§FS-id](FS-id.md#fs-id-grund-proposes-ids-for-new-declarations) — grund proposes IDs for new declarations

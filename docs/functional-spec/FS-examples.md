@@ -37,6 +37,9 @@ They include the chapter-rules repository at `examples/rules/`, whose runnable
 goldens and documentation coverage are normative in
 [§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples).
 
+They include the opt-in Git co-change workflow at `examples/cochange/`, specified
+by [§FS-cochange-recipe.examples](FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance), with commit-msg/CI evidence and visible waivers.
+
 ### 2.1 The values example
 
 The examples include an optional first-class-values repository showing `values = true`, Markdown and home JSON declarations, exact numeric equality, prose and scanned-comment bindings, direct runtime JSON use, and a caught mismatch. It demonstrates the deliberate unbackticked non-binding without implying interpolation or value inference ([§FS-values](FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)).
@@ -72,6 +75,8 @@ harness ([§FS-rules.10](FS-rules.md#10-documentation-and-executable-examples)).
 The external-ticket example runs offline; its contract is [§FS-examples.5.2](FS-examples.md#52-the-external-ticket-example-runs-offline).
 
 How a manifest's `command.args` becomes the arguments `grund` runs with is [§FS-examples.5.3](FS-examples.md#53-commandargs-is-read-as-shell-words-or-refused).
+
+An explicit external command uses [§FS-examples.5.4](FS-examples.md#54-commandexternal-invokes-an-explicit-json-argv) through this same runner.
 
 ### 5.1 Synthetic verdict probes always compare
 
@@ -119,3 +124,26 @@ and quotes the line. So every line either becomes the arguments a shell would
 give its quoted words, or the runner says why it will not. It is never run as a
 different set of arguments, which would leave the author reading `grund`'s
 complaint about its argument count against a case written correctly.
+
+### 5.4 `command.external` invokes an explicit JSON argv
+
+A case or example may supply `command.external` instead of `command.args`.
+Its content is a nonempty JSON array of strings; its first string is a nonempty
+executable. Invoke it directly without a shell, splitting, expansion or Grund
+argument interpretation. Literal empty arguments, quotes, spaces and shell
+punctuation reach the child unchanged. Both manifests together, malformed JSON,
+non-string items, an empty array or empty executable refuse before fixture copying
+or spawning; the refusal names the case and manifest(s).
+
+Apply the existing `{repo}` and `{repo_copy}` path placeholders to whole arguments
+and their `/suffix` form. `{grund}` as a whole argument denotes the built binary
+used by the runner; other braces remain literal. The working-directory default
+and `command.cwd`, `command.stdin`, copying, symlink handling, exit/stream/tree
+comparison, deterministic reruns and refresh accounting stay shared under
+[§FS-examples.5](FS-examples.md#5-e2e-reuse-without-duplication). An external command using `{repo_copy}` is mutating by the same
+criterion as `command.args`. Ordinary `command.args` and its default continue
+to invoke Grund under [§FS-examples.5.3](FS-examples.md#53-commandargs-is-read-as-shell-words-or-refused) without interpretation changes.
+
+[§FS-cochange-recipe.examples](FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance) uses this seam for its maintained Git walkthrough;
+there is no separate example executor. Executable-spawn failures name the case
+and external executable and never count as golden success.

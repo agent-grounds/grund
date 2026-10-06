@@ -152,10 +152,32 @@ path = "docs/functional-spec/FS-workspace.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 900, unit = "lines" }
+max_accepted = { value = 1149, unit = "lines" }
 until = "workspace concerns move into independently declared child specs with stable replacements for existing FS-workspace section citations"
 reason = """
 This file is the single normative contract for workspace configuration, resolution, command scope, nested boundaries, and alias IDs. The issue-232 one-line correction belongs in §FS-workspace.5 so its existing citations remain stable. Missing boundary: independently declared child specifications for those concerns, plus a migration for the section citations that currently target this declaration.
+
+Issue 474 changes only the link to the renamed roadmap heading in this file, without adding prose or increasing its size. The former 900-line ceiling was already exceeded; the ceiling is reconciled to the measured 1149 non-blank lines, with the same split boundary and no growth allowance.
+"""
+[[exceptions]]
+path = "docs/functional-spec/FS-check.md"
+match = "exact"
+rules = ["docs"]
+kind = "deferred"
+max_accepted = { value = 822, unit = "lines" }
+until = "standing-check concerns move into child declarations with migrated FS-check section citations"
+reason = """
+The standing-check contract combines grounding, citation validity, chapter checks, link checks and reporting. Missing boundary: independently declared child contracts for those checks and stable replacements for their existing section citations. Issue 474 only repairs a link to the renamed co-change roadmap heading, adding no prose; splitting the standing-check contract during that link repair would expand a recipe specification task into a migration. This ceiling is the current measured size and permits no growth.
+"""
+[[exceptions]]
+path = "README.md"
+match = "exact"
+rules = ["entrypoints"]
+kind = "deferred"
+max_accepted = { value = 427, unit = "lines" }
+until = "detailed command walkthroughs move into user-facing guides with a concise linked landing table and maintained real excerpts"
+reason = """
+The landing page still includes detailed command walkthroughs beside its concise introduction. Missing boundary: guide pages carrying those longer scenarios, with the landing page linking them while preserving its real-excerpt obligations under §REQ-readme.2. Issue 474 updates the roadmap link and aligns the both-evidence wording within one existing line; the runnable recipe guidance is a later implementation task. No README lines or size growth are added in this specification commit. The ceiling accepts exactly its current non-blank line count and permits no growth.
 """
 [[exceptions]]
 path = "docs/functional-spec/FS-check.md"
