@@ -1,0 +1,1 @@
+cover packages/alpha/docs/FS-alpha-thing.md --format json --lines 1-3

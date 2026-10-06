@@ -246,7 +246,7 @@ caller that reads one must be on the list above.
 
 #### 2.4.3 The enclosing declaration
 
-The enclosing declaration is also recorded on the citation — on every run that performs the post-pass ([§AR-scanner.2.4.2](AR-scanner.md#242-citation-source-kind)) — so the obligation pass ([§AR-checker.2.9](../../crates/grund-core/src/checker/report.rs)) can ask "does this declaration's body cite the target?" as a lookup rather than a re-scan.
+The enclosing declaration is also recorded on the citation — on every run that performs the post-pass ([§AR-scanner.2.4.2](AR-scanner.md#242-citation-source-kind)) — so the obligation pass ([§AR-checker.2.9](../../crates/grund-core/src/checker/report.rs)) can ask "does this declaration's body cite the target?" as a lookup rather than a re-scan. The same lookup, one function over the file's body ranges, answers the declaration that owns any requested line on a `grund cover --lines` run ([§FS-cover.6.2](../functional-spec/FS-cover.md#62-ownership-rules)), so a line and a citation on it can never be given different owners.
 
 Unmarked Markdown candidates ([§AR-scanner.2.2.7](AR-scanner.md#227-unmarked-markdown-headings)) use the same body ranges and nearest-enclosing lookup. That shared ownership is why a candidate under a nested declaration names the nested ID, while a pre-declaration title or a same-or-shallower ATX heading that closed the body has no owner and remains legal ([§FS-declarations.checks.unmarked-heading](../functional-spec/FS-declarations.md#checksunmarked-heading-unmarked-markdown-heading)).
 
@@ -259,7 +259,7 @@ nearest preceding accepted section whose subtree contains the site wins, and a
 same-or-shallower heading closes it. A duplicate occurrence of a section
 path, and a rejected path, cannot own a site; the primary occurrence of a
 duplicated path still can. This is structural attribution,
-not rule evaluation ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)).
+not rule evaluation ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)). On a `grund cover --lines` run the requested ranges are passed into the file's pass and resolved there, while the heading stack is still held, by the same lookup that fills `enclosing_section` ([§FS-cover.6.2](../functional-spec/FS-cover.md#62-ownership-rules)).
 
 The scanner neither imports the rules component nor constructs `RuleFacts`.
 The Markdown fact adapter reads this field from the resolved structural model

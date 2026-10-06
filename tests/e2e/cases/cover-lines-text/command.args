@@ -1,0 +1,1 @@
+cover docs/functional-spec/FS-001-alpha.md --lines 17 --lines=16 --lines 11 --lines 1-14 --lines 20-31 --lines 33-49
