@@ -233,10 +233,10 @@ the line is already indented, use:
 
 This requests completion rather than forcing popup acceptance; Company/Corfu
 users keep their existing selection and acceptance bindings. See the official
-[Emacs symbol completion](https://www.gnu.org/software/emacs/manual/html_node/emacs/Symbol-Completion.html),
-[Eglot features](https://www.gnu.org/software/emacs/manual/html_node/eglot/Eglot-Features.html),
+[Emacs symbol completion (manual source)](https://github.com/emacs-mirror/emacs/blob/master/doc/emacs/programs.texi),
+[Eglot features (manual source)](https://github.com/emacs-mirror/emacs/blob/master/doc/misc/eglot.texi),
 and [lsp-mode completion settings](https://emacs-lsp.github.io/lsp-mode/page/settings/completion/).
-The Tab option is described in [Emacs indentation convenience](https://www.gnu.org/software/emacs/manual/html_node/emacs/Indent-Convenience.html).
+The Tab option is described in [Emacs indentation convenience (manual source)](https://github.com/emacs-mirror/emacs/blob/master/doc/emacs/indent.texi).
 
 ## Helix
 
