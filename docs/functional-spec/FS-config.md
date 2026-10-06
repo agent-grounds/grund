@@ -1119,6 +1119,8 @@ A `grund.toml` that fails validation causes every `grund` subcommand to exit wit
 
 For concrete stderr examples and the distinction between `config validate` exit `1` and config-blocked command exit `2`, see [§FS-output-shapes.6](FS-output-shapes.md#6-cli-and-config-failures).
 
+In `check --watch`, invalid config ends a run with those same error bytes and status `2`, while the process remains resident for repair ([§FS-check.6.3.1](FS-check.md#631-recoverable-runs)). Discovery coverage survives an invalid initial config; later failures retain the last usable inventory and anchors. This exception changes no one-shot command's refusal.
+
 ## 5. Schema versioning
 
 The TOML file may include a top-level `grund_config_version = N`. The current version is **1**. Future incompatible schema changes increment this; grund refuses to load a config whose version is greater than the grund binary's known maximum, with an error suggesting an upgrade. Configs with no version key are interpreted as version 1. A new key is not a new version ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)), and an older version keeps its meaning ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)).

@@ -61,7 +61,7 @@ Integration test runs the same spec corpus through all three bindings and assert
 
 ## RM-watch: implement grund check --watch
 
-Per [§FS-check.6](functional-spec/FS-check.md#6-watch-mode---watch). The editor-less "every save" loop [§GOAL-fast-feedback](goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) exists for — re-run `grund check` on every change under the scanned tree, clearing prior output each run.
+Per [§FS-check.6](functional-spec/FS-check.md#6-watch-mode---watch). The terminal "every save" loop [§GOAL-fast-feedback](goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) exists for — re-run `grund check` on effective local-input changes, with terminal screen ownership governed by [§FS-check.6.2.2](functional-spec/FS-check.md#622-owned-terminal-screen).
 
 Together with [§FS-lsp](functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server), this ships the live feedback loop: LSP for editor users, `grund check --watch` for terminal users and editor setups that do not speak LSP.
 
@@ -75,7 +75,9 @@ Together with [§FS-lsp](functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optiona
 
 ### 3. Measurable
 
-An e2e fixture starts `grund check --watch` on a clean fixture (asserts silent first run), writes a file that introduces a dangling ref (asserts the next run prints it), removes the bad citation (asserts the run goes silent again), then sends SIGINT (asserts exit code matches the last run). A second fixture asserts `--format=json` emits one self-contained report per run.
+Bounded subprocess tests start `grund check --watch` and compare the immediate and subsequent reports with one-shot checks: clean text prints `success`, a dangling citation prints the ordinary finding, and repair returns to `success`. SIGINT returns the last fully flushed status. JSON emits only ordinary finding NDJSON; clean runs and some run boundaries are invisible ([§FS-check.6.2.1](functional-spec/FS-check.md#621-exact-stream-contract)). A private test-build completion observer proves empty JSON recovery without changing production streams ([§AR-bindings.3](architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary)).
+
+Fake-clock/event and barrier tests pin 100 ms quiet / 500 ms maximum debounce, startup coverage and serialized pending work. Real filesystem tests cover atomic saves, creation/rename/deletion, effective config/ignore/catalog/member/link changes and root replacement. Injected backend failures and PTYs pin loss recovery, fatal exit, interrupt cleanup and independent-stream screen restoration ([§FS-check.6.1](functional-spec/FS-check.md#61-change-detection), [§FS-check.6.3](functional-spec/FS-check.md#63-lifecycle), [§FS-check.6.2.2](functional-spec/FS-check.md#622-owned-terminal-screen)). Existing one-shot goldens stay authoritative; help and captures follow implementation.
 
 ## RM-lsp-completion-tab: LSP ID autocomplete accepted with Tab
 
