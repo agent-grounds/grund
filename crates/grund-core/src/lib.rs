@@ -65,7 +65,7 @@ pub(crate) mod testing;
 pub use model::{
     Citation, Declaration, DeclarationSource, DocCommentBlock, E2eCase, E2eSpecRef,
     EmbeddedValueRoot, FileHeading, FileStructure, Finding, FindingSite, Findings, Id,
-    InlineCitationSite, InvalidValueSite, NearMissHeading, Report,
+    InlineCitationSite, InvalidValueSite, NearMissHeading, OperationDiagnostic, Report,
     SectionHeadingOutsideDeclaration, SectionInfo, ShowOutput, ShowSection, UnmarkedHeading,
     ValueBinding, ValueComponent, ValueComponentKind, ValueRootOrigin, canonical_snapshot_path,
 };
@@ -105,8 +105,8 @@ pub use queries::{
     LspCompletionContext, LspDeclaration, LspFindingRange, LspSnapshot, LspSnapshotOpts,
     LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub, LspUsage, ShowFormat, ShowMode,
     ShowOpts, ShowQueryError, can_replace_trigger_at, citation_under_title, list_sizes,
-    lsp_hover_with_kind_title, lsp_title_hover_body, on_type_line_edits, show_batch_with_scope,
-    usage_clause, usage_over_paths,
+    list_sizes_with_run_warnings, lsp_hover_with_kind_title, lsp_title_hover_body,
+    on_type_line_edits, show_batch_with_scope, usage_clause, usage_over_paths,
 };
 
 // §AR-system.2.11 templates: the setup skill a command prints byte-for-byte and
@@ -142,13 +142,15 @@ pub use writers::{
 // (§AR-bindings.2, §FS-distribution.3).
 pub use api::{
     CheckOpts, CheckOutput, CompleteIdsOpts, CoverCitation, CoverEntry, CoverOpts, CoverOutput,
-    CoverTextCitation, CoverTextEntry, CoverTextOutput, FmtChange, FmtOpts, FmtOutput, IdOpts,
-    IdProposal, IdProposalOutcome, ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot,
-    RefHit, ReferenceStyle, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure,
+    CoverTextCitation, CoverTextEntry, CoverTextOutput, EmbeddingRequest, FmtChange, FmtOpts,
+    FmtOutput, IdOpts, IdProposal, IdProposalOutcome, ListEntry, ListOpts, ListOutput, ListSummary,
+    ListValueRoot, RefHit, ReferenceStyle, RefsOpts, RefsOutcome, RefsOutput, RefsQueryFailure,
     RefsQueryFailureKind, RefsWithMetadata, check, check_with_opts, check_with_run_warnings,
     complete_ids, complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover,
-    cover_text, effective_config, format_references, list, list_with_run_warnings, lsp_snapshot,
-    lsp_snapshot_with_completion, lsp_snapshot_with_metadata, propose_id,
-    propose_id_with_run_warnings, reference_style, refs, refs_outcome, refs_with_metadata,
-    render_finding_sites_json, scan, show, show_with_overlays, show_with_scope, validate_config,
+    cover_text, cover_text_with_run_warnings, cover_with_run_warnings, effective_config,
+    embedding_call, format_references, format_references_with_run_warnings, list,
+    list_with_run_warnings, lsp_snapshot, lsp_snapshot_with_completion, lsp_snapshot_with_metadata,
+    propose_id, propose_id_with_run_warnings, reference_style, refs, refs_outcome,
+    refs_with_metadata, render_finding_sites_json, scan, show, show_with_overlays, show_with_scope,
+    validate_config,
 };

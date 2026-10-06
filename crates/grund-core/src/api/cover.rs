@@ -268,7 +268,19 @@ fn cover_scan_errors(context: &WorkspaceContext) -> Vec<ApiScanError> {
 /// project the run loaded, without choosing a CLI output format or process exit
 /// code (§AR-bindings.2, §FS-workspace.8.6).
 pub fn cover(opts: CoverOpts) -> Result<CoverOutput> {
+    cover_with_run_warnings(opts).1
+}
+
+/// Additive cautions survive a later refusal (§FS-distribution.3.1).
+pub fn cover_with_run_warnings(opts: CoverOpts) -> (Vec<Finding>, Result<CoverOutput>) {
+    let mut cautions = Vec::new();
+    let result = cover_run(opts, &mut cautions);
+    (cautions, result)
+}
+
+fn cover_run(opts: CoverOpts, cautions: &mut Vec<Finding>) -> Result<CoverOutput> {
     let context = cover_context(&opts)?;
+    *cautions = context_run_warnings(&context);
     let entries = cover_rows(&context)
         .into_iter()
         .map(|row| CoverEntry {
@@ -310,7 +322,19 @@ pub fn cover(opts: CoverOpts) -> Result<CoverOutput> {
 /// the text view carries no alias because the path already renders from the
 /// workspace root and the token is printed verbatim (§FS-cover.3.1).
 pub fn cover_text(opts: CoverOpts) -> Result<CoverTextOutput> {
+    cover_text_with_run_warnings(opts).1
+}
+
+/// Additive cautions survive a later refusal (§FS-distribution.3.1).
+pub fn cover_text_with_run_warnings(opts: CoverOpts) -> (Vec<Finding>, Result<CoverTextOutput>) {
+    let mut cautions = Vec::new();
+    let result = cover_text_run(opts, &mut cautions);
+    (cautions, result)
+}
+
+fn cover_text_run(opts: CoverOpts, cautions: &mut Vec<Finding>) -> Result<CoverTextOutput> {
     let context = cover_context(&opts)?;
+    *cautions = context_run_warnings(&context);
     let entries = cover_rows(&context)
         .into_iter()
         .map(|row| CoverTextEntry {

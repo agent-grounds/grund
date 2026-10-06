@@ -35,6 +35,10 @@ summarizes when to reach for each.
 | [`values/`](values/)                                         | Markdown/JSON value declarations and explicit consistency bindings ([§FS-values](../docs/functional-spec/FS-values.md#fs-values-opted-in-kinds-bind-authored-components-to-one-declared-value)) |
 | [`external-tickets/`](external-tickets/)                     | Explicitly materialized external facts resolved from committed snapshots ([§FS-fetch](../docs/functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)) |
 
+The [Python API workflow](python-api/) embeds the same engine using a local
+extension installation ([§FS-distribution.3.3.7](../docs/functional-spec/FS-distribution.md#337-local-source-and-typing-handoff)); its native acceptance
+coverage is in the shared binding corpus.
+
 ## Run an example
 
 From the repo root, with a built `grund` binary on `$PATH` (or invoked

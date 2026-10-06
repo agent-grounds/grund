@@ -36,10 +36,20 @@ fn section_in_scope(cited: Option<&str>, requested: &str, descendants: bool) -> 
 /// Resolve and refuse recorded target ambiguities before filtering any citations
 /// (§FS-refs.4), retaining absent-target queries (§FS-refs.1).
 pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
+    refs_impl_with_details(opts, &mut serde_json::json!({}), &mut Vec::new())
+}
+
+/// Additive source diagnostics without changing RefsOutput (§FS-distribution.3.1).
+pub(super) fn refs_impl_with_details(
+    opts: RefsOpts,
+    details: &mut serde_json::Value,
+    cautions: &mut Vec<crate::Finding>,
+) -> Result<RefsWithMetadata> {
     // §AR-scanner.2.4.2: the classifying loader, not the plain one — `refs`
     // publishes each hit's enclosing declaration and section (§FS-refs.3.2), and
     // the plain wrapper is shared by the five queries that do not.
     let context = load_classifying_workspace_context(&opts.path, opts.path_provided)?;
+    *cautions = context_run_warnings(&context);
     let current_config = context
         .current_project()
         .map(|project| &project.config)
@@ -53,24 +63,24 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
     let target_project = match alias.as_deref() {
         Some(name) => context.project_by_alias(name).ok_or_else(|| {
             if !context.workspace_loaded {
-                anyhow!(
+                anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
                     "unknown project alias `{name}`\nnote: workspace aliases are defined in the root grund.toml under [workspace]"
-                )
+                )))
             } else {
-                anyhow!(
+                anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
                     "unknown project alias `{name}`\nknown aliases: {}",
                     context.aliases().join(", ")
-                )
+                )))
             }
         })?,
         None => context.current_project().ok_or_else(|| {
             let known = context.aliases().join(", ");
             if known.is_empty() {
-                anyhow!("unqualified ID requires a project alias when include_root = false")
+                anyhow!(crate::model::OperationDiagnostic::new("query", "query-failed", format!("unqualified ID requires a project alias when include_root = false")))
             } else {
-                anyhow!(
+                anyhow!(crate::model::OperationDiagnostic::new("query", "query-failed", format!(
                     "unqualified ID requires a project alias when include_root = false\nknown aliases: {known}"
-                )
+                )))
             }
         })?,
     };
@@ -92,6 +102,8 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
     {
         Ok(resolved) => resolved,
         Err(error) => {
+            // §FS-distribution.3.3.2: retain original resolver data.
+            *details = error.diagnostic().details;
             return Ok(RefsWithMetadata {
                 kind_title: None,
                 outcome: RefsOutcome {
@@ -112,9 +124,11 @@ pub(super) fn refs_impl(opts: RefsOpts) -> Result<RefsWithMetadata> {
         }
     };
     if opts.section.is_some() && inline_section.is_some() {
-        return Err(anyhow!(
-            "--section cannot be combined with an inline section"
-        ));
+        return Err(anyhow!(crate::model::OperationDiagnostic::new(
+            "query",
+            "query-failed",
+            format!("--section cannot be combined with an inline section")
+        )));
     }
     let section = opts.section.or(inline_section);
 

@@ -36,6 +36,7 @@ mod findings;
 mod id_arg;
 mod members;
 mod optional_members;
+mod preflight;
 mod scope;
 mod unlisted;
 
@@ -54,6 +55,7 @@ pub(crate) use members::AncestorWorkspaces;
 pub(crate) use optional_members::{
     absent_only_workspace_caution, absent_optional_member_warnings, namespace_is_unverified,
 };
+pub(crate) use preflight::preflight_embedding_paths;
 pub(crate) use scope::{
     apply_workspace_boundary, populate_workspace_boundary, resolve_workspace_config,
     scope_is_config_root,

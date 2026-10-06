@@ -85,13 +85,16 @@ mod init;
 mod init_block;
 mod init_guidance;
 mod init_notes;
+mod init_output;
 mod init_plan;
 mod init_render;
 mod init_target;
 mod init_workspace_members;
 mod integrations_agents;
+mod integrations_api;
 mod integrations_clients;
 mod integrations_detect;
+mod integrations_guidance;
 mod integrations_install;
 mod integrations_user_config;
 
@@ -170,3 +173,12 @@ mod tests_local_section_citations;
 mod tests_open_resolver;
 #[cfg(test)]
 mod tests_workspace_members;
+
+// §FS-distribution.3.1: additive managed-install orchestration.
+pub(crate) use integrations_api::integrations_data;
+
+// §FS-distribution.3.1: preserve init's source error beside its partial output.
+pub(crate) use init::init_with_diagnostics;
+
+// §FS-distribution.3.1: additive structured fetch failures.
+pub(crate) use fetch::fetch_with_diagnostics;

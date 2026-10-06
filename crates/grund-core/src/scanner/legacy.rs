@@ -52,13 +52,20 @@ pub(crate) fn resolve_id_arg(
             Ok(parsed) => Ok((parsed.id, parsed.section)),
             Err(err) => Err(IdArgError::Unparsable(err)),
         },
-        many => Err(IdArgError::Ambiguous(anyhow!(
-            "ambiguous ID: {raw} (matches {})",
-            many.iter()
+        many => {
+            // §FS-distribution.3.3.2: candidates are resolver data, not parsed prose.
+            let candidates = many
+                .iter()
                 .map(|(id, _)| render_id(&config.grammar, id))
-                .collect::<Vec<_>>()
-                .join(", ")
-        ))),
+                .collect::<Vec<_>>();
+            let mut diagnostic = crate::model::OperationDiagnostic::new(
+                "query",
+                "ambiguous",
+                format!("ambiguous ID: {raw} (matches {})", candidates.join(", ")),
+            );
+            diagnostic.details = serde_json::json!({"candidates": candidates});
+            Err(IdArgError::Ambiguous(anyhow!(diagnostic)))
+        }
     }
 }
 

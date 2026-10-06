@@ -107,6 +107,24 @@ pub(crate) enum IdArgError {
 }
 
 impl IdArgError {
+    /// Source-classified query data for hosts (§FS-distribution.3.3.2).
+    pub(crate) fn diagnostic(&self) -> crate::model::OperationDiagnostic {
+        if let Some(existing) = self
+            .error()
+            .downcast_ref::<crate::model::OperationDiagnostic>()
+        {
+            return existing.clone();
+        }
+        crate::model::OperationDiagnostic::new(
+            "query",
+            match self {
+                Self::Unparsable(_) => "invalid-id",
+                Self::Ambiguous(_) => "ambiguous",
+            },
+            self.to_string(),
+        )
+    }
+
     fn error(&self) -> &anyhow::Error {
         match self {
             Self::Unparsable(err) | Self::Ambiguous(err) => err,

@@ -71,7 +71,18 @@ pub(crate) fn with_member_id_candidates(
         return err;
     }
     match member_id_candidate_clause(context, raw_id) {
-        Some(clause) => anyhow!("{message}{clause}"),
+        Some(clause) => {
+            // §FS-distribution.3.3.2: retain source classification and candidates.
+            if let Some(source) = err.downcast_ref::<crate::model::OperationDiagnostic>() {
+                let mut diagnostic = source.clone();
+                diagnostic.message = format!("{message}{clause}");
+                diagnostic.details =
+                    serde_json::json!({"candidates": member_id_candidates(context, raw_id)});
+                diagnostic.into()
+            } else {
+                anyhow!("{message}{clause}")
+            }
+        }
         None => err,
     }
 }

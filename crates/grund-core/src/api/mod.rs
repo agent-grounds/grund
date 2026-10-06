@@ -37,6 +37,12 @@ mod complete_ids;
 mod config;
 mod config_findings;
 mod cover;
+mod embedding;
+mod embedding_config;
+mod embedding_data;
+mod embedding_failure;
+mod embedding_queries;
+mod embedding_writers;
 mod fmt;
 mod id;
 mod list;
@@ -59,9 +65,12 @@ pub use config::{
 };
 pub use cover::{
     CoverCitation, CoverEntry, CoverOpts, CoverOutput, CoverTextCitation, CoverTextEntry,
-    CoverTextOutput, cover, cover_text,
+    CoverTextOutput, cover, cover_text, cover_text_with_run_warnings, cover_with_run_warnings,
 };
-pub use fmt::{FmtChange, FmtOpts, FmtOutput, format_references};
+pub use embedding::{EmbeddingRequest, embedding_call};
+pub use fmt::{
+    FmtChange, FmtOpts, FmtOutput, format_references, format_references_with_run_warnings,
+};
 pub use id::{IdOpts, IdProposal, IdProposalOutcome, propose_id, propose_id_with_run_warnings};
 pub use list::{
     ListEntry, ListOpts, ListOutput, ListSummary, ListValueRoot, list, list_with_run_warnings,

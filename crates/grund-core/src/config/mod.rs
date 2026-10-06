@@ -34,6 +34,7 @@
 //! alone and went further down, to `model/paths.rs`; this is the half that needs
 //! a `Config`.
 
+mod call_scope;
 mod citations;
 mod discovery;
 mod fmt_block;
@@ -104,3 +105,6 @@ mod tests_kind_index;
 mod tests_non_citable_kinds;
 #[cfg(test)]
 mod tests_validation;
+
+// §FS-distribution.3.3.3: explicit embedding roots never change process cwd.
+pub(crate) use call_scope::with_embedding_base;

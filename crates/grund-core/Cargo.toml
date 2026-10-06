@@ -9,7 +9,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 readme = "README.md"
-include = ["src/**", "assets/**", "Cargo.toml", "README.md"]
+include = ["src/**", "assets/**", "examples/**", "Cargo.toml", "README.md"]
 
 [dependencies]
 ignore = "0.4"
@@ -22,6 +22,11 @@ anyhow = "1"
 once_cell = "1"
 rayon = "1"
 unicode-normalization = "0.1"
+serde_json = "1"
+
+[[example]]
+name = "grund-binding-oracle"
+path = "examples/grund-binding-oracle.rs"
 
 [features]
 # Black-box CLI tests use this opt-in observer to prove a batch loads one

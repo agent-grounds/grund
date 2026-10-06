@@ -83,43 +83,52 @@ fn show_run(
             .project_by_alias(name)
             .ok_or_else(|| {
                 if !context.workspace_loaded {
-                    anyhow!(
+                    anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
                         "unknown project alias `{name}`\nnote: workspace aliases are defined in the root grund.toml under [workspace]"
-                    )
+                    )))
                 } else {
-                    anyhow!(
+                    anyhow!(crate::model::OperationDiagnostic::new("query", "unknown-project", format!(
                         "unknown project alias `{name}`\nknown aliases: {}",
                         context.aliases().join(", ")
-                    )
+                    )))
                 }
             })?,
         None => context.current_project().ok_or_else(|| {
             let known = context.aliases().join(", ");
             if known.is_empty() {
-                anyhow!("unqualified ID requires a project alias when include_root = false")
+                anyhow!(crate::model::OperationDiagnostic::new("query", "query-failed", format!("unqualified ID requires a project alias when include_root = false")))
             } else {
-                anyhow!(
+                anyhow!(crate::model::OperationDiagnostic::new("query", "query-failed", format!(
                     "unqualified ID requires a project alias when include_root = false\nknown aliases: {known}"
-                )
+                )))
             }
         })?,
     };
     // §FS-workspace.8.7.3: rendered against the run's config, not the target
     // project's — the same spelling `check` uses for the same tree.
     if let Some((file, message)) = project.scan_errors.first() {
-        return Err(anyhow!(
-            "{}: {}",
-            display_path(context.render_config(), file),
-            message
-        ));
+        // §FS-distribution.3.3.2: scan failures are located filesystem outcomes.
+        let path = display_path(context.render_config(), file);
+        let mut failure = crate::model::OperationDiagnostic::new(
+            "filesystem",
+            "io",
+            format!("{path}: {message}"),
+        );
+        failure.path = Some(path);
+        failure.details = serde_json::json!({"scan_errors": project.scan_errors.iter()
+            .map(|(path,message)| serde_json::json!({"path": display_path(context.render_config(),path),"message":message}))
+            .collect::<Vec<_>>()});
+        return Err(failure.into());
     }
     let config = &project.config;
-    let (id, inline_section) =
-        resolve_id_arg(raw_id, config, &project.findings).map_err(|err| anyhow!("{err}"))?;
+    let (id, inline_section) = resolve_id_arg(raw_id, config, &project.findings)
+        .map_err(|error| anyhow::Error::new(error.diagnostic()))?;
     if opts.section.is_some() && inline_section.is_some() {
-        return Err(anyhow!(
-            "--section cannot be combined with an inline section"
-        ));
+        return Err(anyhow!(crate::model::OperationDiagnostic::new(
+            "query",
+            "query-failed",
+            format!("--section cannot be combined with an inline section")
+        )));
     }
     let section = opts.section.or(inline_section);
     let mut output = show_declaration_with_overlays(
