@@ -60,6 +60,32 @@ const SUBCOMMANDS: &[&str] = &[
 /// completion helper (§FS-completions.2).
 const HIDDEN_SUBCOMMANDS: &[&str] = &["complete"];
 
+// §AR-bindings.3: distributed builds erase private hooks and their arguments.
+#[cfg(feature = "test-watch")]
+macro_rules! watch_observe {
+    ($event:expr) => {
+        watch_observe_event($event)
+    };
+}
+#[cfg(not(feature = "test-watch"))]
+macro_rules! watch_observe {
+    ($event:expr) => {
+        ()
+    };
+}
+#[cfg(feature = "test-watch")]
+macro_rules! watch_inject_failure {
+    ($operation:expr) => {
+        watch_inject_failure_event($operation)
+    };
+}
+#[cfg(not(feature = "test-watch"))]
+macro_rules! watch_inject_failure {
+    ($operation:expr) => {
+        Ok::<(), String>(())
+    };
+}
+
 include!("cli_help.rs");
 include!("cli_help_check.rs");
 include!("cli_help_show.rs");

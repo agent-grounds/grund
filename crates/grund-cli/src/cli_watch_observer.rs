@@ -19,7 +19,7 @@ static WATCH_TEST_CONTROL: std::sync::Mutex<Option<std::sync::Arc<watch_test::Co
     std::sync::Mutex::new(None);
 static WATCH_TEST_SESSION: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
-fn watch_observe(mut event: WatchObservation) {
+fn watch_observe_event(mut event: WatchObservation) {
     let control = WATCH_TEST_CONTROL.lock().unwrap().clone();
     if let Some(control) = control {
         if let WatchObservation::Completed(_, stdout, stderr) = &mut event {
@@ -31,7 +31,7 @@ fn watch_observe(mut event: WatchObservation) {
     }
 }
 
-fn watch_inject_failure(operation: &str) -> Result<(), String> {
+fn watch_inject_failure_event(operation: &str) -> Result<(), String> {
     let control = WATCH_TEST_CONTROL.lock().unwrap().clone();
     if let Some(control) = control {
         let mut failure = control.failure.lock().unwrap();

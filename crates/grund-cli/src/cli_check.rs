@@ -228,9 +228,9 @@ fn publish_check_run(run: &PreparedCheckRun) -> std::io::Result<()> {
     #[cfg(feature = "test-watch")]
     watch_capture_write(0, &run.stdout);
     stdout.flush()?;
-    watch_observe(WatchObservation::StdoutFlushed);
+    watch_observe!(WatchObservation::StdoutFlushed);
     stderr.flush()?;
-    watch_observe(WatchObservation::StderrFlushed);
+    watch_observe!(WatchObservation::StderrFlushed);
     Ok(())
 }
 
