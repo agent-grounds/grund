@@ -140,7 +140,20 @@ fn watch_effective_input_inventory_matrix() {
 fn watch_inventory_ancestor_claims_and_ignore() {
     let _serial = crate::support::serial();
     let f = Fixture::new();
-    f.write("child/grund.toml", CONFIG);
+    f.write(
+        "child/grund.toml",
+        &format!("project_name = \"child\"\n{CONFIG}\n[workspace]\nmembers = [\"leaf\"]\n"),
+    );
+    f.write(
+        "child/leaf/grund.toml",
+        "grund_config_version = 1\nproject_name = \"leaf\"\n[id]\nformat = \"{kind}-{slug}\"\n",
+    );
+    f.write(
+        "child/leaf/docs/functional-spec/FS-target.md",
+        "# FS-target: Target\n",
+    );
+    // §FS-check.6.1.3: an outer claim prefixes the leaf alias with child/.
+    f.write("child/src/claim.rs", "// \u{a7}child/leaf/FS-target\n");
     f.write("child/src/main.rs", BAD);
     let mut opts = f.opts();
     opts.path = f.0.join("child");
@@ -168,11 +181,24 @@ fn watch_inventory_ancestor_claims_and_ignore() {
         "grund.toml",
         &format!("{CONFIG}\n[workspace]\nmembers = [\"child\"]\n"),
     );
-    let claimed = watch_test::one_shot(opts, &CheckFindingSelection::default(), None);
+    let claimed = watch_test::one_shot(opts.clone(), &CheckFindingSelection::default(), None);
     assert!(
-        claimed.stdout != ignored.stdout
-            || claimed.stderr != ignored.stderr
-            || claimed.status != ignored.status
+        claimed.stdout != git_ignored.stdout
+            || claimed.stderr != git_ignored.stderr
+            || claimed.status != git_ignored.status
+    );
+    h.matches(&claimed);
+    // Refreshed coverage must continue to see the claimed leaf's declarations.
+    f.write(
+        "child/leaf/docs/functional-spec/FS-target.md",
+        "# FS-replaced: Replaced\n",
+    );
+    let changed = watch_test::one_shot(opts.clone(), &CheckFindingSelection::default(), None);
+    assert_ne!(claimed.stdout, changed.stdout);
+    h.matches(&changed);
+    f.write(
+        "child/leaf/docs/functional-spec/FS-target.md",
+        "# FS-target: Target\n",
     );
     h.matches(&claimed);
     h.stop(claimed.status);

@@ -58,12 +58,12 @@ fn watch_completed_run_option_matrix() {
                 }
                 "suggestions" => {
                     opts.include_suggestions = true;
-                    opts.rule = Some("Each FS should cite GOAL.".into());
+                    opts.rule = Some("Each FS should cite at least one GOAL.".into());
                 }
                 "grounding" => opts.require_grounding = true,
                 "full" => opts.full = true,
                 "trial" => {
-                    opts.rule = Some("Each FS must cite FS.".into());
+                    opts.rule = Some("Each FS must cite at least one FS.".into());
                     selection.scope_to_trial_rule();
                 }
                 "narrowed" => {
@@ -73,6 +73,28 @@ fn watch_completed_run_option_matrix() {
                 _ => {}
             }
             let expected = watch_test::one_shot(opts.clone(), &selection, Some(format));
+            if matches!(option, "trial" | "suggestions") {
+                let baseline =
+                    watch_test::one_shot(f.opts(), &CheckFindingSelection::default(), Some(format));
+                assert_ne!(expected.status, 2, "{option} must exercise a valid rule");
+                assert_ne!(expected.stdout, baseline.stdout);
+                let output = String::from_utf8_lossy(&expected.stdout);
+                let (channel, message) = if option == "trial" {
+                    assert_eq!(expected.status, 1);
+                    ("error", "FS-live must cite FS (--rule)")
+                } else {
+                    ("suggestion", "FS-live should cite GOAL (--rule)")
+                };
+                assert!(output.contains(message), "{option}: {output}");
+                if format == "text" {
+                    assert!(output.contains(&format!("{channel}: {message}")));
+                } else {
+                    assert!(output.lines().any(|line| {
+                        let row: serde_json::Value = serde_json::from_str(line).unwrap();
+                        row["severity"] == channel && row["message"] == message
+                    }));
+                }
+            }
             let mut h = Harness::options(opts, selection, Some(format), None, None);
             h.matches(&expected);
             h.stop(expected.status);
@@ -106,7 +128,7 @@ fn watch_config_dependent_trial_refusal_repairs() {
     let _serial = crate::support::serial();
     let f = Fixture::new();
     let mut opts = f.opts();
-    opts.rule = Some("Each FS must cite FS.".into());
+    opts.rule = Some("Each FS must cite at least one FS.".into());
     let mut h = Harness::options(
         opts.clone(),
         CheckFindingSelection::default(),
@@ -116,12 +138,18 @@ fn watch_config_dependent_trial_refusal_repairs() {
     );
     let initial = h.completed();
     assert_eq!(initial.status, 1);
+    let ordinary = watch_test::one_shot(opts.clone(), &CheckFindingSelection::default(), None);
+    assert_eq!(initial.stdout, ordinary.stdout);
+    assert_eq!(initial.stderr, ordinary.stderr);
+    assert_eq!(initial.status, ordinary.status);
+    assert!(String::from_utf8_lossy(&initial.stdout).contains("FS-live must cite FS (--rule)"));
     f.write(
         "grund.toml",
         &format!("{CONFIG}\n[[kinds]]\nkind = \"CUSTOM\"\nfolder = \"docs\"\n"),
     );
     let refused = watch_test::one_shot(opts.clone(), &CheckFindingSelection::default(), None);
     assert_eq!(refused.status, 2);
+    assert!(!refused.stderr.is_empty());
     h.matches(&refused);
     f.write("grund.toml", CONFIG);
     h.matches(&initial);

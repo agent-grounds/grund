@@ -97,6 +97,12 @@ pub(crate) fn discovery_start_dir(path: &Path) -> &Path {
 /// against the repository, so `grund check src/` scopes *into* `src/` instead of
 /// looking for `src/docs`, `src/e2e`, `src/src`.
 pub(crate) fn load_config(start: &Path) -> Result<Config> {
+    // §FS-check.6.1.1, §FS-check.6.1.3: cover the lexical invocation and its
+    // followed targets before type probes or canonical discovery lose the link.
+    anyhow::ensure!(
+        super::observe_input(start, false),
+        "watch input coverage failed"
+    );
     let start_dir = discovery_start_dir(start).to_path_buf();
     // Resolve to an absolute path before walking up, mirroring how `cargo` finds
     // `Cargo.toml` (§FS-config.1): a relative `.` or `subdir/` must still discover

@@ -35,6 +35,9 @@ fn watch_inventory_git_home_child() {
         return;
     };
     let f = Fixture::new();
+    // §FS-check.6.1.3: ignore resolves global patterns from cwd. This process
+    // runs only the isolated child case, so the parent tests keep their cwd.
+    std::env::set_current_dir(&f.0).unwrap();
     f.write("src/main.rs", BAD);
     std::fs::create_dir_all(f.0.join(".git/info")).unwrap();
     let home = std::path::PathBuf::from(std::env::var_os("HOME").unwrap());
@@ -85,11 +88,19 @@ fn watch_inventory_git_home_child() {
     let after = f.ordinary();
     assert_ne!(before.stdout, after.stdout);
     h.matches(&after);
-    if scenario == "worktree" {
-        std::fs::write(home.join("common/info/exclude"), "").unwrap();
-        h.matches(&before);
-        h.stop(before.status);
-    } else {
-        h.stop(after.status);
-    }
+    assert_eq!(after.status, 0);
+    let effective_excludes = match scenario.as_str() {
+        "global" => xdg.join("git/ignore"),
+        "worktree" => home.join("common/info/exclude"),
+        _ => excludes,
+    };
+    std::fs::write(&effective_excludes, "").unwrap();
+    let repaired = f.ordinary();
+    assert_eq!(repaired.stdout, before.stdout);
+    assert_eq!(repaired.stderr, before.stderr);
+    assert_eq!(repaired.status, before.status);
+    h.matches(&repaired);
+    std::fs::write(&effective_excludes, "src/main.rs\n").unwrap();
+    h.matches(&after);
+    h.stop(after.status);
 }

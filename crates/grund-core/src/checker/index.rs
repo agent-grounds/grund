@@ -330,9 +330,8 @@ pub(super) fn check_kind_indexes(
             continue;
         }
         let index_display = display_path(path_config, &target.index_file);
-        // §FS-check.3.18.7: a folder whose index file does not exist is the same
-        // finding, once per declaration — the strongest form of the same fact, not
-        // a different one. The three ways it can fail to read are named apart.
+        // §FS-check.3.18.7: an absent index is reported once per declaration;
+        // distinguish missing files, directories and unreadable files.
         // §FS-check.6.1.1: cover this effective input before its shared read.
         let text = crate::config::input_read_to_string(&target.index_file).ok();
         let absent = match &text {

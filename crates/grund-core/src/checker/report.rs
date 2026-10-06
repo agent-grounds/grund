@@ -581,6 +581,9 @@ pub(crate) fn check_with_workspace_and_overlays(
                 continue;
             };
             let resolved = resolve_stub_target(&config.root, &decl.file, target);
+            // §FS-check.6.1.1, §FS-check.6.1.3: absent targets are inputs too;
+            // subscribe to their creation/replacement anchors before probing.
+            crate::config::observe_input(&resolved, false);
             if !resolved.exists() {
                 report.errors.push(Diagnostic {
                     code: "broken-stub",

@@ -1,6 +1,6 @@
 grund check — validate every ID citation across the repo.
 
-Usage:  grund check [PATH] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--only-rule] [--format text|json]
+Usage:  grund check [PATH] [--watch] [--rule SENTENCE] [--full] [--require-grounding] [--suggestions] [--only CODE] [--ignore CODE] [--only-rule] [--format text|json]
 
 PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback.
 With no config, grund scans `docs/`, `e2e/`, and `src/`; set `[scan] include` to widen it.
@@ -8,6 +8,9 @@ Pointing grund at an explicit PATH reports exactly that file or directory; citat
 Path validation is explicit; `grund PATH` is parsed as an ID query.
 
 Options:
+  --watch              check immediately, then re-check on native filesystem notifications.
+                       Ctrl-C returns the last completed status (2 before completion).
+                       Text may use an alternate screen; clean JSON runs emit no record.
   --format text|json   text (default) prints `success` or `path:line: <channel>: message`,
                        grouped errors, warnings, then enabled suggestions; json emits NDJSON.
   --full               also walk past [scan] include and report unresolved references or section headings outside declaration bodies there.
@@ -91,6 +94,7 @@ Exit:  0 clean · 1 dangling / duplicate / unknown-section / ungrounded findings
 
 Examples:
   grund check              # check the whole repo
+  grund check --watch      # live terminal feedback; Ctrl-C to stop
   grund check docs/        # check one subtree
   grund check --full       # plus unresolved references and outside sections beyond include
   grund check --rule "Each FS should have exactly one requirements chapter." --suggestions
@@ -98,6 +102,7 @@ Examples:
   grund check --rule "Each FS must have exactly one security chapter." --only-rule # what does this sentence find?
   grund check --format json | jq # machine-readable diagnostics for CI
 
+Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/watch.md
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/rules.md
 Guide:    https://github.com/agent-grounds/grund/blob/main/docs/user-facing/citation-directions.md
 Example:  https://github.com/agent-grounds/grund/tree/main/examples/rules

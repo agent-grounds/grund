@@ -10,6 +10,56 @@ mod watch_process;
 use std::fs;
 use watch_process::{BAD, CLEAN, CONFIG, Fixture, Watch};
 
+/// §FS-check.6.1.3: creating an absent external stub target repairs the run.
+#[test]
+fn watch_missing_stub_target_creation_repairs() {
+    let f = Fixture::new();
+    f.write(
+        "docs/functional-spec/FS-live.md",
+        "# FS-live: [definition](../../absent/impl.rs)\n",
+    );
+    let before = f.check(&[]);
+    assert_eq!(before.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&before.stdout).contains("stub link target missing"));
+    let mut watch = Watch::start(&f, &[]);
+    watch.report(&before);
+    f.write("absent/impl.rs", "/// FS-live: Definition\n");
+    let after = f.check(&[]);
+    assert_eq!(after.status.code(), Some(0));
+    assert_ne!(before.stdout, after.stdout);
+    watch.report(&after);
+    watch.interrupt(0);
+}
+
+/// §FS-check.6.1.3, §FS-check.6.1.4: re-resolve a replaced invocation link.
+#[test]
+fn watch_lexical_project_link_retargets() {
+    use std::os::unix::fs::symlink;
+    let anchor = Fixture::new();
+    let first = Fixture::new();
+    let second = Fixture::new();
+    second.write("src/main.rs", BAD);
+    let link = anchor.0.join("project");
+    symlink(&first.0, &link).unwrap();
+    let args = [link.to_str().unwrap(), "--format=text"];
+    let before = anchor.check(&args);
+    assert_eq!(before.status.code(), Some(0));
+    let mut watch = Watch::start(&anchor, &args);
+    watch.report(&before);
+    symlink(&second.0, anchor.0.join("next-link")).unwrap();
+    fs::rename(anchor.0.join("next-link"), &link).unwrap();
+    let after = anchor.check(&args);
+    assert_eq!(after.status.code(), Some(1));
+    assert_ne!(before.stdout, after.stdout);
+    assert!(String::from_utf8_lossy(&after.stdout).contains("unknown reference FS-missing"));
+    watch.report(&after);
+    second.write("src/main.rs", CLEAN);
+    let repaired = anchor.check(&args);
+    assert_eq!(repaired.status.code(), Some(0));
+    watch.report(&repaired);
+    watch.interrupt(0);
+}
+
 /// §FS-check.6.2.1, §FS-check.6.3.3: immediate text, save, repair and status 0.
 #[test]
 fn watch_text_checks_immediately_then_reports_save_and_repair() {
