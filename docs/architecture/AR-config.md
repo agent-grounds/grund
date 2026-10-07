@@ -245,7 +245,10 @@ Meaning validation, as opposed to spelling, runs once on the `Project` in
 names, uniqueness of names and of the complement, home and value prerequisites,
 the grounding pair, and the marker that `strict` requires. Spelling errors, such
 as an unknown key, a wrong type or a value outside a closed set, stay with the
-reader that read the spelling.
+reader that read the spelling. Each rule runs once, at the point the v1 reader
+used to raise it: the `[reference]` meanings before the `[[kinds]]` table is
+lowered and its entries refused, the member lists and `[citations]` after the
+grammar compiles. That way a file with several errors reports the same first error.
 
 An error keeps the text and the `path:line` anchor it has today
 ([§FS-config.4.3](../functional-spec/FS-config.md#43-invalid-config-behavior)), because each validated value carries the `ConfigLocation` it

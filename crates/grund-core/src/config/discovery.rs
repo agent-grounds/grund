@@ -219,10 +219,18 @@ fn defaults_under(run: &Run) -> Config {
 /// Read one config file into the façade (§AR-config.2): lowered by the reader
 /// of the version that spelled it, judged once (§AR-config.4), and compiled
 /// (§AR-config.1.5). `report_path` is the path every error names.
+///
+/// The steps interleave in v1's order, so a file with several errors reports
+/// the first one it always did (§AR-config.4): the `[reference]` meanings, then
+/// the `[[kinds]]` refusals and the kind table, then the grammar, then the
+/// member lists and `[citations]`.
 fn read_config(read_path: &Path, report_path: &Path, root: &Path, run: &Run) -> Result<Config> {
-    let project = v1::read(read_path, report_path, root)?;
-    validate::validate(report_path, &project)?;
+    let read = v1::read_sections(read_path, report_path)?;
+    validate::reference(report_path, &read.project)?;
+    let project = read.lower_kinds(report_path, root)?;
+    validate::kinds(report_path, &project)?;
     let compiled = compile(&project)
         .with_context(|| format!("{}: invalid [id] grammar", format_path(report_path)))?;
+    validate::lists(report_path, &project)?;
     Ok(Config::from_records(&project, run, &compiled))
 }

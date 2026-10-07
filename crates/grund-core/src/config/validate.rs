@@ -20,10 +20,10 @@ use super::v1::bail_config;
 use super::workspace_block::validate_workspace_lists;
 use crate::model::format_path;
 
-/// §AR-config.4: every meaning rule over `project`, in the order a reader that
-/// still judged them used to raise them. `path` is the report path of the file
-/// the project was read from.
-pub(super) fn validate(path: &Path, project: &Project) -> Result<()> {
+/// §AR-config.4: the `[reference]` meanings, which read no `[[kinds]]` row:
+/// the marker `strict` requires and the inline-note budget. `path` is the report
+/// path of the file the project was read from.
+pub(super) fn reference(path: &Path, project: &Project) -> Result<()> {
     let citation = &project.schema.citation;
     if citation.strict && citation.marker.is_empty() {
         return Err(anyhow!(
@@ -44,20 +44,31 @@ pub(super) fn validate(path: &Path, project: &Project) -> Result<()> {
             "reference.inline_note_suggested_lines must be <= inline_note_max_lines".to_string(),
         )?;
     }
+    Ok(())
+}
+
+/// §AR-config.4: the meanings of the final kind table — the grounding pair per
+/// row and globally, one complement, unique and prefix-free names.
+pub(super) fn kinds(path: &Path, project: &Project) -> Result<()> {
     let kinds = project.kind_configs();
     validate_kind_grounding(path, project, &kinds)?;
     validate_kind_table(path, &kinds)?;
     // §FS-config.3.4.8: both grounding keys resolve per row against these
     // defaults, so the cross-section rule is asked once the kind table is final
     // — the built-in table included.
-    validate_global_grounding(path, project, &kinds)?;
+    validate_global_grounding(path, project, &kinds)
+}
+
+/// §AR-config.4: the member lists and the `[citations]` rules against the final
+/// kind set, judged after the grammar compiles, as v1 always judged them.
+pub(super) fn lists(path: &Path, project: &Project) -> Result<()> {
     // §AR-workspace.5.2: post-parse invariants run on every load, not gated on which
     // section appeared. Free-form `project_name` is slug-checked later
     // (§AR-workspace.5.3); both member lists are shape-checked in `workspace_block.rs`.
     validate_workspace_lists(&project.workspace)?;
     // §FS-config.3.9.5: validate `[citations]` against the final kind set.
     if project.rules.citations.declared {
-        validate_citation_rules(path, &kinds, &project.rules.citations)?;
+        validate_citation_rules(path, &project.kind_configs(), &project.rules.citations)?;
     }
     Ok(())
 }
