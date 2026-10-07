@@ -218,6 +218,8 @@ impl Grammar {
 /// §FS-declarations.line.configured-literals: configured literals stay in the
 /// canonical capture. The legacy pattern stops at the first colon, so a shorter
 /// legacy token cannot disqualify a canonical capture that reaches its boundary.
+/// §FS-declarations.line.configured-slug: the patterns match a token delimiter
+/// instead of a word boundary; the `id` capture ends before that delimiter.
 pub(crate) fn declaration_captures<'a>(
     grammar: &Grammar,
     line: &'a str,
@@ -243,11 +245,7 @@ pub(crate) fn declaration_captures<'a>(
     // `FS-legacy-2:`); that prefix must not claim the declaration first.
     if let Some(complete) = legacy_declaration_captures(grammar, line, in_py_docstring, is_md)
         .and_then(|caps| caps.name("near"))
-        && (complete.end() > id.end()
-            || line[id.end()..]
-                .chars()
-                .next()
-                .is_some_and(|ch| !ch.is_whitespace() && ch != ':' && ch != '`'))
+        && complete.end() > id.end()
     {
         return None;
     }
@@ -275,6 +273,8 @@ fn legacy_declaration_captures<'a>(
 /// from a declaration-position line, returning the end of its written ID token
 /// (§FS-config.3.2.5). Re-read consumers use this instead of inventing their own
 /// compatibility fallback.
+/// The canonical ID's end excludes its matched delimiter
+/// (§FS-declarations.line.configured-slug), preserving the title on rereads.
 pub(crate) fn declaration_id_on_line(
     grammar: &Grammar,
     line: &str,
@@ -284,7 +284,7 @@ pub(crate) fn declaration_id_on_line(
     if let Some(caps) = declaration_captures(grammar, line, in_py_docstring, is_md)
         && let Some(id) = parse_id(&caps, grammar)
     {
-        return Some((id, caps.get(0)?.end()));
+        return Some((id, caps.name("id")?.end()));
     }
     let (text, _, kind) = near_miss_heading(grammar, line, in_py_docstring, is_md)?;
     let start = line.find(text)?;

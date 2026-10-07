@@ -346,14 +346,17 @@ impl Grammar {
         // Declaration grammar (§AR-scanner.2.1): Markdown-form is `#+` then ID,
         // with the `#` mandatory in `.md`; code-form requires a comment prefix and
         // then the ID directly (§DF-code-declarations-drop-hash).
+
+        // §FS-declarations.line.configured-slug: the ID need not end in a word character.
+        // Match its delimiter explicitly so regex alternatives cannot claim a shorter prefix.
         let decl_re = Regex::new(&format!(
-            r"^\s*(?:{prefix}\s+|(?P<mdhashes>#+)\s+){id}\b",
+            r"^\s*(?:{prefix}\s+|(?P<mdhashes>#+)\s+){id}(?:[:\s`]|$)",
             prefix = comment_prefix,
             id = id_pat
         ))?;
-        let docstring_decl_re = Regex::new(&format!(r"^\s*{id}\b", id = id_pat))?;
-        // The `\b` above also matches between an ID and the separator, so both patterns
-        // leave `.2 …` after the ID; `opens_section_suffix` refuses that (§AR-scanner.2.1.1).
+        let docstring_decl_re = Regex::new(&format!(r"^\s*{id}(?:[:\s`]|$)", id = id_pat))?;
+        // §FS-declarations.line.section-suffix: a coordinate can match an ID prefix;
+        // `opens_section_suffix` refuses it in the shared capture reader.
         let section_suffix_re = Regex::new(&format!(r"\A{sep_quoted}(?:{section_pattern})"))?;
         // §FS-config.3.3.1: name-bearing headings require the explicit colon form;
         // numeric headings retain optional full stops. Rust regexes lack lookahead, so

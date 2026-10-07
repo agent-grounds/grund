@@ -180,7 +180,8 @@ pub(super) fn scan_file_text(
                     .or_default()
                     .push(prev);
             }
-            let tail = &scan_line[caps.get(0).unwrap().end()..];
+            // §FS-declarations.line.configured-slug: the matched delimiter belongs to the tail.
+            let tail = &scan_line[caps.name("id").unwrap().end()..];
             let mut is_stub = false;
             let mut defined_in = None;
             if is_md
