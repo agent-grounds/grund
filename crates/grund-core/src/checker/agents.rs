@@ -206,7 +206,7 @@ fn check_agent_block_path_with_rules(
             let mut generated_sections = vec![
                 (
                     "### Citation directions",
-                    citation_directions_section(config),
+                    citation_directions_section(config.project()),
                     "citation directions",
                 ),
                 // §FS-init.2.3.6.1: the local-conversation sentence derives from
@@ -214,7 +214,10 @@ fn check_agent_block_path_with_rules(
                 // (§FS-init.2.3.4.17.2), so drift re-renders for *this* file's surface.
                 (
                     "### Clickable citations",
-                    clickable_citations_section(config, ConversationSurface::for_entrypoint(path)),
+                    clickable_citations_section(
+                        config.project(),
+                        ConversationSurface::for_entrypoint(path),
+                    ),
                     "clickable citations",
                 ),
             ];

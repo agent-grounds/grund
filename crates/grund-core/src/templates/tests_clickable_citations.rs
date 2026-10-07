@@ -11,7 +11,7 @@ fn clickable_citations_section_is_fixed_without_opinion() {
     let root = test_root("clickable_citations_section_is_fixed_without_opinion");
     write(&root.join("grund.toml"), "grund_config_version = 1\n");
     let config = load_config(&root).expect("load config");
-    let rendered = clickable_citations_section(&config, ConversationSurface::Plain);
+    let rendered = clickable_citations_section(config.project(), ConversationSurface::Plain);
     assert_eq!(
         rendered,
         "### Clickable citations\n\nOn repository web surfaces, link `§<ID>` to the PR branch in PR bodies, the reviewed commit in reviews, an exact commit for permalinks, and the default branch otherwise; fall back to plain when unsure."
@@ -38,7 +38,7 @@ fn clickable_citations_section_renders_conversation_opinion() {
 
     // The gated fallback (§DF-conversation-link-target.2.4): the location
     // travels as plain text where no click-test says more.
-    let plain = clickable_citations_section(&config, ConversationSurface::Plain);
+    let plain = clickable_citations_section(config.project(), ConversationSurface::Plain);
     assert!(plain.starts_with("### Clickable citations\n\nOn repository web surfaces,"));
     assert!(plain.contains(
         "In local conversations, follow `§<ID>` with its declaration location as plain `path:line` text; fall back to the bare citation when unsure."
@@ -49,7 +49,7 @@ fn clickable_citations_section_renders_conversation_opinion() {
 
     // The Claude entrypoints: a Markdown link over the machine-independent
     // `file` target, the citation itself as the visible text.
-    let linked = clickable_citations_section(&config, ConversationSurface::Linked);
+    let linked = clickable_citations_section(config.project(), ConversationSurface::Linked);
     assert!(linked.contains(
         "In local conversations, render `§<ID>` as a Markdown link whose visible text is the citation itself and whose target is `file://<absolute path>#L<line>` for its declaration; fall back to the bare citation when unsure."
     ));
@@ -71,12 +71,12 @@ fn clickable_citations_section_renders_the_configured_marker() {
         "grund_config_version = 1\n[reference]\nmarker = \"@\"\nconversation = \"link\"\n",
     );
     let config = load_config(&root).expect("load config");
-    let rendered = clickable_citations_section(&config, ConversationSurface::Plain);
+    let rendered = clickable_citations_section(config.project(), ConversationSurface::Plain);
     // Both sentences: the always-present web rule and the config-derived one.
     assert!(rendered.contains("On repository web surfaces, link `@<ID>` to the PR branch"));
     assert!(rendered.contains("In local conversations, follow `@<ID>` with its declaration"));
     // The linked form renders the marker too — it is the citation's own.
-    let linked = clickable_citations_section(&config, ConversationSurface::Linked);
+    let linked = clickable_citations_section(config.project(), ConversationSurface::Linked);
     assert!(linked.contains("In local conversations, render `@<ID>` as a Markdown link"));
     assert!(
         !linked.contains('\u{a7}'),

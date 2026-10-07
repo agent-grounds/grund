@@ -135,7 +135,9 @@ fn embedded_templates_are_lf_canonical() {
 #[test]
 fn agents_guidance_uses_configured_section_separator() {
     let mut config = Config::default_for(PathBuf::from("."));
-    config.section_separator = "#".to_string();
+    config
+        .edit_project(|project| project.schema.ids.section_separator = "#".to_string())
+        .expect("a `#` separator compiles");
 
     let rendered = render_agents_md("demo", &config, Path::new("."), true);
 

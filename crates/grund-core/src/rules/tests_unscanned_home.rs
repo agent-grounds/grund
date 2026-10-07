@@ -6,7 +6,7 @@
 
 use super::facts::{NodeKey, RuleFacts};
 use super::markdown::adapt_markdown;
-use crate::checker::{check_chapter_rules, check_findings};
+use crate::checker::{check_chapter_rules, check_findings, markdown_project};
 use crate::config::{Config, load_config};
 use crate::model::Catalog;
 use crate::scanner::scan_tree;
@@ -70,7 +70,7 @@ fn cited_by_uses(facts: &RuleFacts) -> Vec<String> {
 #[test]
 fn rules_read_no_target_without_a_section_citation() {
     let (config, findings) = stub_repo("rules_unscanned_home_bare", "\u{a7}AR-second");
-    let facts = adapt_markdown(&findings, &config, true);
+    let facts = adapt_markdown(&findings, markdown_project(&config), true);
     assert_eq!(
         findings.stub_targets.read_count(),
         0,
@@ -90,7 +90,7 @@ fn rules_read_no_target_without_a_section_citation() {
 fn a_chapter_of_an_unscanned_home_is_a_node_without_a_chapter_row() {
     let uses = "\u{a7}AR-second.goals and \u{a7}AR-second.goals.1";
     let (config, findings) = stub_repo("rules_unscanned_home_chapter", uses);
-    let facts = adapt_markdown(&findings, &config, true);
+    let facts = adapt_markdown(&findings, markdown_project(&config), true);
     assert_eq!(
         cited_by_uses(&facts),
         ["AR-second.goals", "AR-second.goals"],

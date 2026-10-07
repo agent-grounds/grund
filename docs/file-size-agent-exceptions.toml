@@ -189,3 +189,13 @@ until = "the rules specification is partitioned into grammar, refusal, relationa
 reason = """
 Missing boundary: the sentence grammar and its strict refusals (§FS-rules.3), the findings (§FS-rules.7) and the command surfaces with their refusal tables (§FS-rules.8) still share one declaration. Splitting them into separate declarations requires a mapped migration of their stable numbered section IDs and callers; §FS-rules.8.1 alone is cited from twelve files. That migration is outside the specification-only contract for issue #520, whose approved proposal names the new point §FS-rules.3.5.2 beside the refusals it extends. This entry records that existing debt while the point and its table are pinned. The fix for #511 then added §FS-rules.2.1, saying a chapter subject's `NAME` is its whole path, rewrote the §FS-rules.5.2 join that path changes, and added one sentence to §FS-rules.8. The relational meaning (§FS-rules.5) has grown its own sub-structure inside the same declaration too, and moving it out is the same mapped migration, not part of a selector bug fix. The ceiling accepts exactly the measured 1033 non-blank lines and permits no growth.
 """
+[[exceptions]]
+path = "crates/grund-core/src/templates/tests_citation_directions.rs"
+match = "exact"
+rules = ["tests"]
+kind = "deferred"
+max_accepted = { value = 500, unit = "lines" }
+until = "the documented-page check and its fence readers leave for a sibling module"
+reason = """
+Over the soft budget before this change; touched here only to pass the section the project record it now renders from (§AR-config.5), which promoted the soft finding. Every case renders one config through one renderer, one per row of the §DF-directions-render table. Missing boundary: the documented-example case at the end of the file, with fenced_example and fence_language, reads a docs page rather than a rendered table and is a module of its own (tests_citation_directions_page.rs), which takes the file under budget.
+"""

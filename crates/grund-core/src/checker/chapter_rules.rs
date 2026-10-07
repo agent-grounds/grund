@@ -4,19 +4,44 @@
 
 use crate::config::{Config, known_kinds_line};
 use crate::grammar::render_id;
-use crate::model::{Catalog, CheckReport, Declaration, Diagnostic};
-use crate::resolver::WorkspaceCheckTarget;
+use crate::model::{Catalog, CheckReport, Declaration, Diagnostic, Id};
+use crate::resolver::{SectionHome, WorkspaceCheckTarget, section_home};
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{
     citation_precedence, evaluate, evaluate_suggestions, one_rules_authority,
     unresolved_subject_diagnostic,
 };
-use crate::rules::markdown::{adapt_markdown, adapt_workspace};
+use crate::rules::markdown::{MarkdownProject, SectionHomes, adapt_markdown, adapt_workspace};
 use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
 use crate::workspace::expand_workspace_tree;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::support::sort_diagnostics;
+
+/// What the rules adapter reads of `config`: the façade stays in the checker
+/// (§AR-config.5, §AR-rules.3).
+pub(crate) fn markdown_project(config: &Config) -> MarkdownProject<'_> {
+    MarkdownProject {
+        name: config.project_name.as_deref(),
+        root: &config.root,
+        grammar: &config.grammar,
+        section_separator: &config.section_separator,
+        homes: config,
+    }
+}
+
+/// A project's sections resolve as `check` resolves them, a stub's in its target
+/// read under this project's scan settings (§FS-check.3.2.1, §AR-resolver.5).
+impl SectionHomes for Config {
+    fn section_home<'c>(
+        &self,
+        findings: &'c Catalog,
+        id: &Id,
+        section: &str,
+    ) -> Option<SectionHome<'c>> {
+        section_home(findings, self, id, section)
+    }
+}
 
 pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
     let kinds = config
@@ -199,7 +224,7 @@ pub(crate) fn configured_rule_sentences(
     config: &Config,
     vocab: &RuleVocabulary,
 ) -> Result<ConfiguredRules, Diagnostic> {
-    let facts = adapt_markdown(findings, config, true);
+    let facts = adapt_markdown(findings, markdown_project(config), true);
     let rule_kinds = config
         .kinds
         .iter()
@@ -284,8 +309,17 @@ pub(crate) fn check_chapter_rules(
         add_workspace_targets(&mut vocab, projects);
     }
     let facts = match workspace {
-        Some((selected, projects)) => adapt_workspace(selected, projects, complete),
-        None => adapt_markdown(findings, config, complete),
+        Some((selected, projects)) => {
+            let projects = projects
+                .iter()
+                .map(|(alias, target)| {
+                    let project = markdown_project(target.config);
+                    (alias.as_str(), target.findings, project)
+                })
+                .collect::<Vec<_>>();
+            adapt_workspace(selected, &projects, complete)
+        }
+        None => adapt_markdown(findings, markdown_project(config), complete),
     };
     let mut rules = Vec::new();
     let rule_kinds = config
@@ -342,7 +376,7 @@ pub(crate) fn check_chapter_rules(
     if let Some(rule) = ad_hoc {
         rules.push(rule);
     }
-    let precedence = citation_precedence(config);
+    let precedence = citation_precedence(&config.citations);
     // §FS-rules.7: one channel per level, so the absence arrives among the
     // errors its level already fills and every caller's own sort orders it.
     let (errors, ramp_warnings) = evaluate(&rules, &precedence, &facts);

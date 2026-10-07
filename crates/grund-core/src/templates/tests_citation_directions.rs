@@ -40,7 +40,7 @@ citable = false
 fn render(name: &str, config: &str) -> String {
     let root = test_root(name);
     write(&root.join("grund.toml"), config);
-    citation_directions_section(&load_config(&root).expect("load config"))
+    citation_directions_section(load_config(&root).expect("load config").project())
 }
 
 /// [`render`] over the shared kinds table plus one case's own rules.
@@ -530,7 +530,7 @@ fn documented_citation_directions_example_matches_production_render() {
         ),
     );
     let config = load_config(&root).expect("load documented config");
-    let rendered = citation_directions_section(&config);
+    let rendered = citation_directions_section(config.project());
     let expected = documented_render
         .strip_suffix('\n')
         .expect("render example ends with a newline");

@@ -2,6 +2,7 @@
 /// The engine answers which keys those are and prints none of them
 /// (§FS-distribution.3.1); this is the terminal's rendering of that answer, the
 /// frontend's like every other byte (§AR-bindings.3).
+#[allow(deprecated)] // §AR-config.5: the façade until this reads `Project`.
 fn print_config_warnings(config: &Config) {
     for warning in config_warnings(config) {
         eprintln!("warning: {warning}");
@@ -69,6 +70,7 @@ fn command_config(args: &[String]) -> ExitCode {
     }
 }
 
+#[allow(deprecated)] // §AR-config.5: the façade until this reads `Project`.
 fn print_effective_config(config: &Config) {
     // §FS-config.4.2
     println!("grund_config_version = 1");
@@ -277,6 +279,7 @@ fn print_effective_config(config: &Config) {
 /// Print the effective `[citations]` section for `grund config show`
 /// (§FS-config.4.2). Per-kind tables print in sorted order for deterministic
 /// output (§FS-errors.4).
+#[allow(deprecated)] // §AR-config.5: the façade until this reads `Project`.
 fn print_citation_rules(citations: &CitationRules) {
     println!();
     println!("[citations]");
