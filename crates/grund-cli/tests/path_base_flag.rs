@@ -253,6 +253,31 @@ fn broken_member_config_is_named_from_the_invocation() {
     );
 }
 
+/// §FS-cli.3.4: a `[workspace]` expansion error is a config-load error too, so the
+/// root config it names follows the flag like a parse error in the same file.
+#[test]
+fn workspace_expansion_error_is_named_from_the_invocation() {
+    let root = fixture("missing-member", "");
+    let config = ROOT_CONFIG.replace("[\"member\"]", "[\"member\", \"nope\"]");
+    fs::write(root.join("grund.toml"), config).expect("name a missing member");
+    let src = root.join("src/deep");
+    let error = |path: &str| {
+        format!(
+            "error: {path}:5: workspace member does not exist: nope — list it in \
+             [workspace] optional_members if it may be legitimately absent\n"
+        )
+    };
+
+    assert_eq!(
+        run(&["check"], &src),
+        (Some(2), String::new(), error("grund.toml"))
+    );
+    assert_eq!(
+        run(&["check", "--path-base=invocation"], &src),
+        (Some(2), String::new(), error("../../grund.toml"))
+    );
+}
+
 /// §FS-cli.3.5: a bad value of either run flag is a usage error answered before the
 /// load, on every command that takes the flag — even against a broken `grund.toml`.
 #[test]

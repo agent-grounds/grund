@@ -2,7 +2,7 @@
 
 The evidence [§DISC-grund-core-public-surface](2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) argues from. It classifies nothing on its own authority: the counting convention is [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name), the columns are [§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries), and `tests/integration/test_public_surface_inventory.py` holds the first column equal to the crate root's export list ([§DISC-grund-core-public-surface.5](2026-09-22-grund-core-public-surface.md#5-what-is-checked)).
 
-The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it, and eight additive `cover --lines` exports of [§FS-cover.6](../../functional-spec/FS-cover.md#6-line-ownership) were read at `1f129faef7`; the existing rows retain their original evidence. **204 rows, one per public root name.** The counts below include all four additions; the Python frontend now supplies consumer evidence alongside CLI and LSP.
+The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it, and eight additive `cover --lines` exports of [§FS-cover.6](../../functional-spec/FS-cover.md#6-line-ownership) were read at `1f129faef7`, and two hidden run-flag seams of [§FS-cli.3.4](../../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from) carry the `--path-base` a frontend parses; the existing rows retain their original evidence. **206 rows, one per public root name.** The counts below include all five additions; the Python frontend now supplies consumer evidence alongside CLI and LSP.
 
 ## How a cell reads
 
@@ -24,22 +24,22 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 204 |
+| Public root names | 206 |
 | Rustdoc-visible | 188 |
-| `#[doc(hidden)]` | 16 |
+| `#[doc(hidden)]` | 18 |
 | Named, a related API, or a data type of one | 120 |
-| Outside that closure | 84 |
-| Named by a frontend or its tests | 119 |
+| Outside that closure | 86 |
+| Named by a frontend or its tests | 121 |
 | Reached structurally only | 40 |
 | No repository consumer of either kind | 45 |
 | Disposition keep | 125 |
-| Disposition keep, hidden | 16 |
+| Disposition keep, hidden | 18 |
 | Disposition keep, name in the spec | 18 |
 | Disposition hide | 11 |
 | Disposition retire with the ramp | 0 |
 | Disposition facade, then retire | 34 |
 
-The two count columns do not line up, and they are not meant to: 43 names have no repository consumer while 84 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 43 names have no repository consumer while 86 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
@@ -198,6 +198,7 @@ The two count columns do not line up, and they are not meant to: 43 names have n
 | `on_type_line_edits` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
 | `OperationDiagnostic` | model | visible | no | none found | none found | keep, name in the spec |
 | `parse_cover_line_range` | api | visible | related API | none found | none found | keep |
+| `PathBase` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli.rs:58` | — | keep, hidden |
 | `PointSizeUnit` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `propose_id` | api | visible | related API | none found | none found | keep |
 | `propose_id_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
@@ -248,4 +249,5 @@ The two count columns do not line up, and they are not meant to: 43 names have n
 | `VSCODE_PACKAGE_JSON` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `WEZTERM_APPLY_CALL` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `with_check_input_observer` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch.rs:117` | — | keep, hidden |
+| `with_report_path_base` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli.rs:74` | — | keep, hidden |
 | `write_resolver_script` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
