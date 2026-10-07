@@ -61,7 +61,7 @@ impl RunWarning {
             return None;
         }
         let mut held = config.clone();
-        held.run_warnings = Vec::new();
+        held.clear_run_warnings();
         Some(Self::UnreadBlock {
             config: Box::new(held),
             project_roots,

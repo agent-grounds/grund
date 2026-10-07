@@ -234,7 +234,7 @@ pub(crate) fn load_resolved_workspace_context(
 ) -> Result<WorkspaceContext> {
     // §AR-scanner.2.4.2 / §AR-benchmarks: who passes what is on the doc comment
     // above; workspace members inherit the answer below.
-    config.classify_citation_sources = classify_citation_sources;
+    config.set_classify_citation_sources(classify_citation_sources);
     // §FS-workspace.5 / §AR-workspace.6: workspace mode applies whenever the
     // discovered config carries `[workspace]` after member-scope rewriting, so this
     // flag is the single canonical "is this a workspace run?".
@@ -346,7 +346,7 @@ pub(crate) fn load_narrowable_workspace_context(
     owner_lines: &[(usize, usize)],
 ) -> Result<WorkspaceContext> {
     let mut config = resolve_workspace_config(path)?;
-    config.owner_lines = owner_lines.to_vec();
+    config.set_owner_lines(owner_lines.to_vec());
     if !config.workspace_declared || scope_is_config_root(&config, path, path_provided) {
         // The resolved config is handed on rather than re-derived:
         // `load_workspace_context` would resolve it a second time, glob walk
@@ -361,7 +361,7 @@ pub(crate) fn load_narrowable_workspace_context(
     }
     // §AR-scanner.2.4.2: the narrowed scan performs the pass too, so one command
     // does not answer two ways depending on where it was invoked (§FS-cover.3.2).
-    config.classify_citation_sources = true;
+    config.set_classify_citation_sources(true);
     single_project_context(config, path, path_provided, &TextOverlays::new())
 }
 
@@ -371,7 +371,7 @@ pub(crate) fn load_narrowable_workspace_context(
 ///
 /// Returns one [`WorkspaceProject`] per project in the canonical order:
 /// the root first when `include_root = true`, then members in member-glob
-/// order. Mutates `root_config.workspace_boundary_roots` so any subsequent
+/// order. Sets `root_config`'s workspace boundary roots so any subsequent
 /// root scan respects the member boundary (§AR-workspace.6).
 pub(crate) fn load_workspace_projects(root_config: &mut Config) -> Result<Vec<WorkspaceProject>> {
     load_workspace_projects_with_overlays(root_config, &TextOverlays::new())
@@ -391,8 +391,10 @@ fn load_workspace_projects_with_overlays(
     // read-only run skips the post-pass workspace-wide. §FS-check.1.3.8: `--full` is a
     // property of the run, so every member walks past its own `[scan] include` too.
     for entry in &mut entries {
-        entry.config.classify_citation_sources = root_config.classify_citation_sources;
-        entry.config.scan_full = root_config.scan_full;
+        entry
+            .config
+            .set_classify_citation_sources(root_config.classify_citation_sources);
+        entry.config.set_scan_full(root_config.scan_full);
     }
 
     // Stage 2: build the target list up-front so each project's scan can

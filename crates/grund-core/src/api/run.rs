@@ -97,16 +97,16 @@ pub(super) fn run_check_with_run_warnings(
     // §FS-rules.4: ad-hoc grammar/vocabulary refusals happen before scanning.
     // §FS-check.1.3: `--full` cancels `[scan] include` for the walk. It is a
     // per-run flag, never a config key (§DF-check-full-scope.2.5).
-    config.scan_full = full;
+    config.set_scan_full(full);
     // §FS-check.1.3.6.1: the path is the report scope, so the walk reads the
     // ordinary roots too. On the config for the reason `scan_full` is — the
     // scanner asks for it four frames below the run that decided it.
-    config.scan_resolution_wide = !scope_is_config_root(&config, path, path_provided);
+    config.set_scan_resolution_wide(!scope_is_config_root(&config, path, path_provided));
     // §FS-check.1: the flag and `[reference] require_grounding` are one knob, so
     // it sets the same global default — it never turns the key off, and a
     // `[[kinds]]` row that says `false` stays exempt under it (§FS-config.3.4.8.3).
     if force_require_grounding {
-        config.require_grounding = true;
+        config.force_require_grounding();
     }
     if config.workspace_declared && scope_is_config_root(&config, path, path_provided) {
         let run = run_workspace_check(config, force_require_grounding, full, ad_hoc_sentence)?;
@@ -251,7 +251,7 @@ fn run_workspace_check(
     // after the load is equivalent to setting it before.
     if force_require_grounding {
         for project in &mut projects {
-            project.config.require_grounding = true;
+            project.config.force_require_grounding();
         }
     }
     // §FS-check.1.3.8: `include` is a per-project statement, so each project's

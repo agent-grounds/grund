@@ -105,7 +105,7 @@ fn enclosing_alias_prefix(config: &mut Config) -> Result<String> {
     // §FS-workspace.6.1.7: the climb that spells this run's own alias path is the one
     // that owes the reader an ancestor it could not read, so what it found travels
     // on the run's config with the rest of its warnings (§FS-distribution.3.1).
-    config.run_warnings.extend(
+    config.extend_run_warnings(
         ancestors
             .take_warnings()
             .into_iter()
@@ -245,7 +245,7 @@ pub(crate) fn expand_workspace_tree_with_report_base(
     // §FS-check.3.29: no warning here. Every route in asks this block first —
     // `resolve_workspace_config` (§AR-workspace.5.1), or `find_init_workspace_root`
     // for `init` — so this only repopulates that boundary; asking again says it twice.
-    root_config.workspace_boundary_roots = members.iter().map(|m| m.root.clone()).collect();
+    root_config.set_workspace_boundary_roots(members.iter().map(|m| m.root.clone()).collect());
 
     let mut entries: Vec<WorkspaceProjectEntry> = Vec::new();
     let mut visited: Vec<PathBuf> = vec![root_config.root.clone()];
@@ -327,20 +327,24 @@ pub(crate) fn expand_workspace_tree_with_report_base(
         // The run's warning channel belongs to the run and not to a project of it
         // (§FS-distribution.3.1): the root project's config is a clone of the one
         // the boundary pass wrote to, and a second copy is a second line.
-        entry.config.run_warnings = Vec::new();
-        entry.config.workspace_scope_path = self_path.clone();
-        entry.config.workspace_project_roots = project_roots.clone();
-        entry.config.workspace_absent_optional = absent_optional.clone();
+        entry.config.clear_run_warnings();
+        entry.config.set_workspace_scope_path(self_path.clone());
+        entry
+            .config
+            .set_workspace_project_roots(project_roots.clone());
+        entry
+            .config
+            .set_workspace_absent_optional(absent_optional.clone());
     }
-    root_config.workspace_project_roots = project_roots;
+    root_config.set_workspace_project_roots(project_roots);
     // §FS-check.4.9: the root config is what the report is rendered from, so it is
     // where the announcement is read back off (`run_workspace_check`).
-    root_config.workspace_absent_optional = absent_optional;
+    root_config.set_workspace_absent_optional(absent_optional);
     // §FS-check.4.10.7: the blocks that opted out, posed now that `project_roots`
     // exists — see this function's docs. The walk that answers one is the
     // resolver's, so the channel carries the block (§AR-resolver.placement).
     let project_roots = root_config.workspace_project_roots.clone();
-    root_config.run_warnings.extend(
+    root_config.extend_run_warnings(
         unread_blocks
             .iter()
             .filter_map(|block| RunWarning::unread_block(block, project_roots.clone())),
@@ -452,8 +456,8 @@ fn collect_workspace_members(
         // nowhere else, so this is where it is refused — at its own `members`
         // line (§FS-errors.4).
         reject_absorbed_scan(&member_config, &nested.members)?;
-        member_config.workspace_boundary_roots =
-            nested.members.iter().map(|m| m.root.clone()).collect();
+        member_config
+            .set_workspace_boundary_roots(nested.members.iter().map(|m| m.root.clone()).collect());
         // §FS-check.4.10.7: and whether its own tree holds anything unread, at the
         // same line — no outermost-block privilege either way. The boundary above
         // is set first: the block is what the question travels as.

@@ -68,7 +68,7 @@ pub(super) fn init_pending_effective_config(
     explicit_name: Option<&str>,
     description: Option<&str>,
 ) -> Result<(Config, String)> {
-    let mut config = if config_file_in(target).is_some() {
+    let config = if config_file_in(target).is_some() {
         load_config(target)?
     } else {
         Config::default_for(target.to_path_buf())
@@ -80,8 +80,8 @@ pub(super) fn init_pending_effective_config(
         None => derive_default_name(target)?,
     };
     if config.config_file.is_none() {
-        config.project_name = Some(name.clone());
-        config.project_description = description.map(str::to_string);
+        let config = config.with_identity(Some(name.clone()), description.map(str::to_string));
+        return Ok((config, name));
     }
     Ok((config, name))
 }

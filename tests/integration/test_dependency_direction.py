@@ -269,7 +269,6 @@ class ConfigFacadeTests(unittest.TestCase):
         """Remove a component from CONFIG_FACADE in the change that moves it off."""
         self.assertEqual([], sorted(CONFIG_FACADE - components_naming_config()))
 
-    @unittest.expectedFailure
     def test_no_config_field_is_written_outside_config(self):
         """A per-run change is made to the `Run`, and the façade is rebuilt from it."""
         fields = config_fields()

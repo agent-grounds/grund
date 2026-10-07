@@ -41,7 +41,7 @@ pub(super) fn widen_for_path_anchor(
     if config.workspace_declared || scope_is_config_root(config, path, path_provided) {
         return Ok(None);
     }
-    config.scan_resolution_wide = true;
+    config.set_scan_resolution_wide(true);
     path_report_scope(config, path, path_provided)
 }
 
@@ -104,7 +104,7 @@ fn check_workspace_context(
         // §FS-check.1: the same global default the key sets, per member — an
         // explicit `false` on a `[[kinds]]` row still wins (§FS-config.3.4.8.3).
         if force_require_grounding {
-            config.require_grounding = true;
+            config.force_require_grounding();
         }
         let mut project_report = if context.workspace_loaded {
             check_with_workspace_and_overlays(

@@ -57,7 +57,7 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
     // even when the server process started elsewhere; CLI discovery deliberately
     // roots defaults at cwd, so this API corrects that root before it builds.
     if opts.path_provided && opts.path.is_dir() && config.config_file.is_none() {
-        config.root = canonical_snapshot_path(&opts.path);
+        config.set_root(canonical_snapshot_path(&opts.path));
     }
     let report_scope = widen_for_path_anchor(&mut config, &opts.path, opts.path_provided)?;
     let context =
