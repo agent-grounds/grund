@@ -16,7 +16,6 @@ use std::path::Path;
 
 use super::citations::parse_citation_entry;
 use super::grounding::{check_grounding_level, parse_kind_grounding_key};
-use super::kind_rows::lower_parsed_kinds;
 use super::kind_table::{ParsedKind, parse_kinds_key};
 use super::scan_block::parse_scan_exclude;
 use crate::config::fmt_block::validate_fmt_exclude;
@@ -26,18 +25,19 @@ use crate::config::record::{ConfigLocation, ShorthandPolicy};
 use crate::grammar::{id_grammar_key_slash_error, is_escaped};
 use crate::model::format_path;
 
-/// Lower one `grund.toml` over `project` — the schema of §FS-config.3 and its
+/// Lower one `grund.toml` over `project`, all but its `[[kinds]]` table — the schema of §FS-config.3 and its
 /// subsections (`[reference]` 3.1, `[id]` 3.2/3.3, `[[kinds]]` 3.4, `[scan]` 3.5,
 /// `[output]` 3.6, `[fmt.cross_refs]` 3.7, `[fmt]` 3.10), each key into the
 /// record its row of §AR-config.3.1 names. Any unknown section/key or malformed
 /// value is a hard error reported as `path:line:` (§FS-config.4.3, §FS-errors.2.1).
-/// `root` is the config root a value home must exist under (§FS-config.3.4.9).
+/// The `[[kinds]]` entries come back read but not lowered, `None` where the file
+/// declared no table, so their refusals keep v1's place in the error order
+/// (§AR-config.4).
 pub(super) fn parse_config_file(
     read_path: &Path,
     report_path: &Path,
-    root: &Path,
     project: &mut Project,
-) -> Result<()> {
+) -> Result<Option<Vec<ParsedKind>>> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
     let text = crate::config::input_read_to_string(read_path)
         .with_context(|| format!("read {}", format_path(report_path)))?;
@@ -403,11 +403,8 @@ pub(super) fn parse_config_file(
         parsed_kinds.push(kind);
     }
     // [[kinds]] replaces the built-in rows entirely (§FS-config.3.4), and only
-    // where the file declared the block at all.
-    if kinds_block_seen {
-        lower_parsed_kinds(path, root, parsed_kinds, project)?;
-    }
-    Ok(())
+    // where the file declared the block at all; `v1::Read` lowers it.
+    Ok(kinds_block_seen.then_some(parsed_kinds))
 }
 
 /// Drop a trailing `#`-comment from a `grund.toml` line (§FS-config.3).

@@ -10,7 +10,7 @@ use super::tests_lowering_keys::lower;
 use super::v1::default_project;
 use super::v1::mapping::DEFAULTS;
 use super::*;
-use crate::testing::test_root;
+use crate::testing::{test_root, write};
 
 /// §AR-config.3.3 item 4: each implicit default, asserted on an empty file and
 /// on a file that writes keys but no `[[kinds]]`.
@@ -231,4 +231,25 @@ fn from_records_round_trips_the_default_and_this_repository() {
     assert!(!e2e.citable && e2e.folder.as_deref() == Some("tests/e2e"));
     let places = config.project().schema.places().count();
     assert!(places > config.project().schema.kinds().count());
+}
+
+/// §AR-config.4: a file with several errors reports the first one v1 always did.
+/// The `[reference]` meanings are judged before the `[[kinds]]` refusals, so
+/// the strict marker wins over a row that sets both `folder` and `file`.
+#[test]
+fn a_file_with_several_errors_reports_v1s_first() {
+    let root = test_root("lowering_first_error_order");
+    write(
+        &root.join("grund.toml"),
+        "[reference]\nmarker = \"\"\nstrict = true\n\n\
+         [[kinds]]\nkind = \"X\"\nfolder = \"a\"\nfile = \"b.md\"\n",
+    );
+    let error = match load_config(&root) {
+        Ok(_) => panic!("expected the config to be rejected"),
+        Err(error) => format!("{error:#}"),
+    };
+    assert_eq!(
+        error,
+        "grund.toml: reference.strict requires a non-empty marker"
+    );
 }
