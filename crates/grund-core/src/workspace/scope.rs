@@ -80,7 +80,7 @@ pub(crate) fn apply_workspace_boundary(config: &mut Config) -> Result<()> {
     // spelled with, which only the expansion walk composes (`expand_workspace_tree`).
     reject_absorbed_scan(config, &members)?;
     let unread = RunWarning::unread_block(config, Vec::new());
-    config.run_warnings.extend(unread);
+    config.extend_run_warnings(unread);
     Ok(())
 }
 
@@ -93,7 +93,7 @@ pub(crate) fn populate_workspace_boundary(
         return Ok(None);
     }
     let members = expand_workspace_member_list(config)?.members;
-    config.workspace_boundary_roots = members.iter().map(|member| member.root.clone()).collect();
+    config.set_workspace_boundary_roots(members.iter().map(|member| member.root.clone()).collect());
     Ok(Some(members))
 }
 

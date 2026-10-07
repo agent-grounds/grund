@@ -175,17 +175,16 @@ impl Config {
         self.workspace_project_roots = self.records.run.workspace.project_roots.clone();
     }
 
-    /// The run's own workspace alias path and the optional members it found
-    /// absent, stamped onto every project it loaded (§FS-workspace.6.1.5,
-    /// §FS-check.4.9).
-    pub(crate) fn set_workspace_scope(
-        &mut self,
-        scope_path: String,
-        absent_optional: Vec<AbsentOptionalNamespace>,
-    ) {
+    /// The alias path of the run's own workspace root, stamped onto every
+    /// project it loaded (§FS-workspace.6.1.5).
+    pub(crate) fn set_workspace_scope_path(&mut self, scope_path: String) {
         self.records.run.workspace.scope_path = scope_path;
-        self.records.run.workspace.absent_optional = absent_optional;
         self.workspace_scope_path = self.records.run.workspace.scope_path.clone();
+    }
+
+    /// The optional members this run found absent (§FS-check.4.9).
+    pub(crate) fn set_workspace_absent_optional(&mut self, absent: Vec<AbsentOptionalNamespace>) {
+        self.records.run.workspace.absent_optional = absent;
         self.workspace_absent_optional = self.records.run.workspace.absent_optional.clone();
     }
 
@@ -195,12 +194,12 @@ impl Config {
         self.run_warnings = self.records.run.warnings.clone();
     }
 
-    /// Hands the run's warnings over, leaving the channel empty: one project's
-    /// cautions are announced once, by the run that owns them
+    /// Empties the run's warning channel on a project that is not the run's:
+    /// the run's cautions are announced once, by the config that owns them
     /// (§FS-distribution.3.1).
-    pub(crate) fn take_run_warnings(&mut self) -> Vec<RunWarning> {
+    pub(crate) fn clear_run_warnings(&mut self) {
         self.records.run.warnings.clear();
-        std::mem::take(&mut self.run_warnings)
+        self.run_warnings.clear();
     }
 
     /// This project as one standalone namespace: the `[workspace]` member lists

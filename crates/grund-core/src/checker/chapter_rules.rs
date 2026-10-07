@@ -161,9 +161,7 @@ pub(crate) fn declared_workspace_vocabulary(config: &Config) -> RuleVocabulary {
     }
     let mut root_config = config.clone();
     let entries = expand_workspace_tree(&mut root_config).unwrap_or_else(|_| {
-        let mut alone = config.clone();
-        alone.workspace_members.clear();
-        alone.workspace_optional_members.clear();
+        let mut alone = config.without_members();
         expand_workspace_tree(&mut alone).unwrap_or_default()
     });
     add_namespaces(

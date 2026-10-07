@@ -49,10 +49,10 @@ pub(crate) fn unread_block_scope_root(
     project_roots: &[PathBuf],
 ) -> Option<String> {
     let mut walk = config.clone();
-    walk.workspace_project_roots = project_roots.to_vec();
-    walk.workspace_project_roots
-        .push(canonical_config_root(config));
-    walk.scan_full = false;
+    let mut roots = project_roots.to_vec();
+    roots.push(canonical_config_root(config));
+    walk.set_workspace_project_roots(roots);
+    walk.set_scan_full(false);
     uncovered_block_scope_roots(config)
         .into_iter()
         .find(|root| walk_reads_any_file(&walk, root))
