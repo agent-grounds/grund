@@ -117,7 +117,7 @@ impl Grammar {
     /// on declaration/section regexes is §AR-scanner.4.3 (declarations live in code
     /// doc-comments too).
     ///
-    /// The `/` rejections repeat `config/parse.rs` because the whole namespace grammar
+    /// The `/` rejections repeat `config/v1/parse.rs` because the whole namespace grammar
     /// rests on "an ID never contains `/`". Each component pattern is compiled on
     /// its own because two patterns whose parentheses balance only against each
     /// other — `number_pattern = "("` with `slug_pattern = "a)"` — compile fine as
@@ -142,7 +142,7 @@ impl Grammar {
             return Err(anyhow!("[id] grammar needs at least one [[kinds]] entry"));
         }
         // §FS-config.3.2.3: the "an ID never contains `/`" invariant, enforced over
-        // every component an ID is built from. `config/parse.rs` rejects each key at its
+        // every component an ID is built from. `config/v1/parse.rs` rejects each key at its
         // own line first; this is the backstop for a `Config` assembled in code.
         if let Some(message) = id_grammar_literal_slash_error("[id].format", format) {
             return Err(anyhow!("{message}"));
