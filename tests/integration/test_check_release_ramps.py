@@ -328,7 +328,7 @@ class ThisRepositoryTests(unittest.TestCase):
         )
         report = ramps.report(self.claims, "0.12.4")
         self.assertTrue(
-            any("config/kind_table.rs" in line for line in report),
+            any("config/v1/kind_table.rs" in line for line in report),
             "the `prefix` removal is still read as a landed clause of this tree",
         )
 
