@@ -123,6 +123,11 @@ Consume `Findings` and the tree. Produce edits: citation normalization and cross
 
 ### 2.9 api
 
+Additive typed outcomes preserve source-classified failures, partial records and
+earlier cautions for Node/Python without changing supported Rust signatures or
+CLI bytes ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). Batch/config/integration projections reuse
+shared contexts and mutation policy; frontend code only transports those records.
+
 Consumes everything above. Produces the embedding surface: data-returning functions and the public types ([§AR-bindings.2](AR-bindings.md#2-grund-core-the-only-place-logic-lives), [§FS-distribution.3](../functional-spec/FS-distribution.md#3-api-surfaces)). Writes to no stream, exits no process and knows no frontend. Module: `crates/grund-core/src/api/`, one file per surface beside the private adapters that fill it. There is no process-frontend exception (section 2.9.1).
 
 #### 2.9.1 No process frontend lives in the engine

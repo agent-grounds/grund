@@ -12,11 +12,15 @@ api ──┼─► [ grund-lsp ]  ─► LSP over stdio
       no frontend depends on another; every regex, walk and rule stays in the engine
 ```
 
+Node's adapter depends directly on the core, never the CLI, LSP or Python
+frontend. Native transport and JS validation introduce no scanner, resolver,
+checker or write-policy implementation ([§FS-distribution.3.2.1](../functional-spec/FS-distribution.md#321-operations-options-and-refusals)).
+
 The frontends' side of [§AR-system.3](README.md#3-frontends) and the api's contract of [§AR-system.2.9](README.md#29-api). Every frontend takes the data the api returns and gives back a rendering or a transport of it; none holds a regex, a walk or a rule, and none depends on another. The engine's side of the contract is section 2; each frontend has a section of its own below.
 
 The approved Python addition is an independent frontend over this boundary
 ([§FS-distribution.3.3](../functional-spec/FS-distribution.md#33-python-grund-pypi-package)); its acceptance tests initially fail until the local extension
-exists. Node coverage and registry distribution remain pending. No Python operation
+exists. Registry distribution remains pending. No Python operation
 delegates to a CLI process or imports another frontend.
 
 ## terms: Terms
@@ -25,6 +29,10 @@ Leans on [§FS-terms.terms.1](../functional-spec/FS-terms.md#terms1-declarations
 [§FS-terms.terms.5](../functional-spec/FS-terms.md#terms5-findings) (severity).
 
 ## 1. Target workspace layout
+
+Resolved dependency evidence includes `grund-node` and excludes napi/Node
+dependencies from core, CLI and LSP. CLI/LSP Cargo builds remain independent of
+Node/npm tooling.
 
 The shipped split ([§AR-system.1](README.md#1-the-system)) keeps one checked report behind every frontend and gives `grund-lsp` and the language bindings a library package to depend on. `grund-core` exposes the data-returning APIs of section 2 and the LSP snapshot; the binary, help, version, SIGPIPE setup, dispatch, flag parsing, text/JSON rendering and exit-code mapping live in `grund-cli` (section 3). Its renderer gives text and JSON deliberately distinct deterministic orders — severity groups for text, global location order for compatible JSON — without changing the shared report or LSP messages ([§FS-errors.4](../functional-spec/FS-errors.md#4-determinism)).
 
@@ -50,6 +58,16 @@ Cargo CLI graph excludes PyO3/Python build dependencies ([§FS-distribution.3.3.
 This extends, rather than replaces, the existing CLI/LSP isolation proof.
 
 ## 2. grund-core: the only place logic lives
+
+Additive `ApiOutcome<T> { run_cautions, result: Result<T, ApiFailure> }`
+carriers preserve cautions before failures and attach classification at the
+source, with unchanged Display output ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). Typed batch data,
+schema-keyed config values, path-base carriers and integration-install
+orchestration reuse current contexts and policy. Existing supported signatures
+remain available; no regex or substring classification belongs in a binding.
+Expected errors carry query/config/io/operation kinds, actual source coordinates,
+sites, authority, causes, details and typed partial outputs. Unknown recoverable
+errors retain an operation fallback. Compatible #470 carriers are reused.
 
 Every check, every show, every regex, every walker invocation lives in `grund-core`. The crate exposes:
 
@@ -90,12 +108,46 @@ Speaks LSP over stdio ([§AR-lsp.4](AR-lsp.md#4-transport)). Imports `grund-core
 
 ## 5. grund-node: the napi-rs binding
 
-Re-exports the same operations as Promise-returning Node functions. The npm `grund-cli` package ships:
+Implements [§FS-distribution.3.2.1](../functional-spec/FS-distribution.md#321-operations-options-and-refusals) through [§FS-distribution.3.2.4](../functional-spec/FS-distribution.md#324-acceptance-evidence). The crate
+owns napi-rs conversion and AsyncTask dispatch; owned inputs and records cross
+the worker boundary. Compute does all engine/filesystem work on libuv workers;
+resolve marshals data on the live JS thread. No Tokio runtime or CLI subprocess.
+Roots/options are captured and copied before the first await, without chdir.
 
-- The `grund` binary (so `npx grund-cli` works).
-- A small JS module re-exporting `check`, `show`, etc. against the napi binding (so `import { check } from 'grund-cli'` works).
+Unwind-capable builds catch panics at compute and native conversion/resolve/
+reject boundaries. One hook dispatcher suppresses only guarded binding requests
+and chains the previous hook elsewhere. A bounded addon-owned Rayon pool marks
+its workers with the same guard, preventing scanner panics from printing before
+their unwind is caught. No global core pool or Node dependency enters the engine.
+Environment and in-flight-job ownership keep Rust resources alive through
+worker_threads teardown, discard callbacks to destroyed environments and release
+leases after running work finishes. No abort/OOM recovery or rollback promise.
 
-Prebuilt platform binaries are uploaded as separate npm packages (`@grund-cli/linux-x64`, etc.) per the `napi-rs` convention; the main package picks the right one at install time.
+An atomic lease per loaded addon rejects overlapping actual writers across roots
+with busy/writer-busy. fmt(write), init unless check/dryRun, fetch and
+integrations(write) acquire it before side effects; read/preview calls do not.
+RAII releases the lease on success/error/unwind. No pool-worker mutex queue,
+cross-process lock or external-write snapshot is introduced.
+
+The private `grund.node` exports invoke and matching schema/engine/package/
+target/N-API metadata. A shared lazy CJS loader and explicit ESM facade preserve
+GrundError identity on Node 22/24, N-API 8. A matching local payload wins over an
+exact-version platform payload; corrupt/incompatible local payloads fail without
+fallback. Imports without native payload work; calls reject structured load
+failures without downloading or compiling ([§FS-distribution.3.2.3.2](../functional-spec/FS-distribution.md#3232-moduleruntimeload-interface)).
+
+#469 owns JS/TS assets, `package-api.json`, native/source builders and a
+disposable API-only staging helper. #471 owns the single assembly manifest,
+grund executable launcher, optional platform packages and installed-platform
+evidence. The fragment is consumed by that recipe, never a second committed
+umbrella manifest. The explicit bundled locked source workflow in
+[§FS-distribution.3.2.3.3](../functional-spec/FS-distribution.md#3233-source-buildlocal-package-ownership) uses an external Cargo target directory. #470 owns
+the common corpus/oracle; Node supplies its adapter and fixtures. Complete-data
+and frozen CLI-byte parity are distinct proofs ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)).
+
+Later “Adapt Node to #466” changes internals while retaining this approved host
+contract and supported Rust consumers. #459/#463 unshipped behavior is deferred;
+publication, registry changes and version bumps are outside local readiness.
 
 ## 6. grund-py: the PyO3 binding
 
