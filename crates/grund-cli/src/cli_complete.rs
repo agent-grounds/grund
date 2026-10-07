@@ -68,6 +68,11 @@ fn command_complete_ids(args: &[String]) -> ExitCode {
 }
 
 fn command_completions(args: &[String]) -> ExitCode {
+    // §FS-cli.3: completions takes no flags, so a run flag here is an unknown flag.
+    if let Some(flag) = args.iter().find(|a| a.starts_with('-')) {
+        eprintln!("error: unknown flag `{flag}`");
+        return ExitCode::from(2);
+    }
     if args.is_empty() {
         eprintln!("error: completions requires <bash|zsh|fish>");
         return ExitCode::from(2);

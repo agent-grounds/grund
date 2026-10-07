@@ -40,9 +40,6 @@ fn print_guide_links(guides: &[&str], examples: &[&str]) {
     }
 }
 
-/// Per-subcommand `--help` / `help <subcommand>` page (§FS-cli.2.3, §FS-cli.3): what
-/// it takes, every flag with a one-line example, the exit codes, and the common
-/// recovery path. Goes to stdout, exit 0 — help is never an error.
 /// §FS-cli.3.4: the run-flag lines of every command that takes `--path-base`, naming
 /// the flag that replaces each `[output]` key; the commands that honour
 /// `[output] format` also name `--format json` as its replacement (§FS-cli.3).
@@ -62,6 +59,9 @@ fn print_run_flag_help(honours_format: bool) {
     }
 }
 
+/// Per-subcommand `--help` / `help <subcommand>` page (§FS-cli.2.3, §FS-cli.3): what
+/// it takes, every flag with a one-line example, the exit codes, and the common
+/// recovery path. Goes to stdout, exit 0 — help is never an error.
 fn print_subcommand_help(cmd: &str) {
     match cmd {
         "check" => print_check_help(),

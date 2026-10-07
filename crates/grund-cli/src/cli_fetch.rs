@@ -1,6 +1,11 @@
 /// `grund fetch <ID>`: the sole explicit external integration entry point
 /// (§FS-fetch.1, §FS-fetch.7).
 fn command_fetch(args: &[String]) -> ExitCode {
+    // §FS-cli.3: fetch takes no flags, so a run flag here is an unknown flag, not a miscount.
+    if let Some(flag) = args.iter().find(|a| a.starts_with('-')) {
+        eprintln!("error: unknown flag `{flag}`");
+        return ExitCode::from(2);
+    }
     if args.len() != 1 {
         eprintln!("error: fetch requires exactly one <ID>");
         return ExitCode::from(2);
