@@ -30,6 +30,7 @@ The editor surface — an optional LSP server that any LSP-aware editor can talk
 How `grund` is shipped.
 
 - [§FS-distribution](FS-distribution.md#fs-distribution-grund-distribution-targets) — grund distribution targets
+- [§FS-distribution-candidate](FS-distribution-candidate.md#fs-distribution-candidate-one-candidate-is-assembled-rehearsed-and-verified-before-any-registry-sees-it) — one candidate is assembled, rehearsed and verified before any registry sees it
 
 ## The ground
 

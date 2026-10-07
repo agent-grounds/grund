@@ -21,6 +21,8 @@ import unittest
 from collections import namedtuple
 from pathlib import Path
 
+from distribution_support import registry_rows
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CRATES = REPO_ROOT / "crates"
@@ -44,7 +46,7 @@ UNDER_FAKE_CURL = 'PATH="$(cygpath -u "$1" 2>/dev/null || printf %s "$1"):$PATH"
 # shape rather than by helper name; the `notice_` prefix is what separates a
 # claim from a notice.
 
-# The table keeps pinning all seven claimed names when a registry's ownership
+# The table keeps pinning every claimed name when a registry's ownership
 # rule moves to a helper of its own (§FS-distribution.1.1.1).
 CALL = re.compile(
     r"""^([a-z_]+)\s+"([^"]+)"\s+"([^"]+)"\s+"([^"]+)"\s*$""",
@@ -63,6 +65,12 @@ def guard_calls():
     for helper, registry, name, url in CALL.findall(NAME_GUARD.read_text(encoding="utf-8")):
         found["notice" if helper.startswith("notice_") else "claimed"][(registry, name)] = url
     return found
+
+
+def platform_names():
+    """§FS-distribution.1.1: one `@grund-cli` and one `@grund-lsp` name per registry row."""
+    return [("npm", f"@{family}/{row['npm_suffix']}")
+            for row in registry_rows() for family in ("grund-cli", "grund-lsp")]
 
 
 def manifest(package):
@@ -98,7 +106,7 @@ class PackageNameTests(unittest.TestCase):
                 ("npm", "grund-lsp"),
                 ("pypi", "grund"),
                 ("pypi", "grund-lsp"),
-            },
+            } | set(platform_names()),
             set(self.calls["claimed"]),
         )
 
@@ -543,6 +551,17 @@ class NpmAndPyPiTests(unittest.TestCase):
                 run = run_guard({url: served(body)})
                 self.assertEqual(1, run.returncode)
                 self.assertIn(f"error: {registry}/{name} is already taken by another project", run.stderr)
+
+    def test_every_platform_name_is_held_to_the_npm_rule(self):
+        for registry, name in platform_names():
+            with self.subTest(name=name):
+                url = self.claimed(registry, name)
+                ours = run_guard({url: served(package_metadata(OUR_REPOSITORY))})
+                self.assertEqual(0, ours.returncode, ours.stderr)
+                self.assertIn(f"ok: npm/{name} is owned by this project", ours.stdout)
+                theirs = run_guard({url: served(package_metadata("https://github.com/someone/else"))})
+                self.assertEqual(1, theirs.returncode)
+                self.assertIn(f"error: npm/{name} is already taken by another project", theirs.stderr)
 
     def test_the_bare_npm_name_stays_an_informational_notice(self):
         url = REGISTRY_URL["npm"].format(name="grund")
