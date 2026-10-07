@@ -280,11 +280,11 @@ fn titled_show_json_keeps_path_and_line_as_the_terminal_pair() {
     for (query, expected) in [
         (
             "FS-authored",
-            "{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\",\"kind_title\":\"Product contracts\",\"path\":\"docs/FS-authored.md\",\"line\":1}\n",
+            "{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\",\"kind_title\":\"Product contracts\",\"anchor\":\"fs-authored-authored\",\"path\":\"docs/FS-authored.md\",\"line\":1}\n",
         ),
         (
             "FS-authored.1",
-            "{\"id\":\"FS-authored\",\"section\":\"1\",\"body\":\"## 1. Detail\\n\\nDetail body.\\n\",\"kind_title\":\"Product contracts\",\"path\":\"docs/FS-authored.md\",\"line\":5}\n",
+            "{\"id\":\"FS-authored\",\"section\":\"1\",\"body\":\"## 1. Detail\\n\\nDetail body.\\n\",\"kind_title\":\"Product contracts\",\"anchor\":\"1-detail\",\"path\":\"docs/FS-authored.md\",\"line\":5}\n",
         ),
     ] {
         let output = Command::new(binaries::grund())
