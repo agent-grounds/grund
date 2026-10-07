@@ -26,6 +26,7 @@ fn print_fmt_help() {
     println!(
         "                 runs by default in both modes for Markdown scopes; set [fmt.cross_refs].enabled = false to opt out"
     );
+    print_run_flag_help(false);
     println!();
     println!(
         "With neither --check nor --write, fmt previews every change --write would apply and exits 1 if any."

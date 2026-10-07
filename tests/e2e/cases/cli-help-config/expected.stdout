@@ -5,6 +5,12 @@ Usage:  grund config <show | validate> [PATH]
   show       print the effective config as TOML (defaults filled in for keys you didn't set).
   validate   parse the discovered config and report the first error; exit 0 if it's well-formed.
 
+Options:
+  --path-base project|invocation
+                       project (default) spells report paths from the config root;
+                       invocation: relative to the path you passed, or the current directory if you passed none.
+                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
+
 PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback.
 There is no `--config <file>` override: it is discovered, not pointed at.
 

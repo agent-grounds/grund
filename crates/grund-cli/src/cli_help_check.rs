@@ -55,6 +55,7 @@ fn print_check_help() {
     println!(
         "  --only-rule          retain only what the --rule sentence found; requires --rule."
     );
+    print_run_flag_help(true);
     println!();
     println!(
         "Findings go to stdout (the linter convention) — `grund check | …` and `grund check"

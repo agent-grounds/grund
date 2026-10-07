@@ -27,6 +27,7 @@ fn print_show_help() {
         "  --batch                 read ordered {{\"id\":…,\"section\":…}} NDJSON queries from stdin"
     );
     println!("  --all                   with --batch, query every declaration and section");
+    print_run_flag_help(false);
     println!();
     println!(
         "Exit:  0 printed · 1 ID not found / ambiguous / broken stub / unknown section · 2 unknown project alias, or CLI error."

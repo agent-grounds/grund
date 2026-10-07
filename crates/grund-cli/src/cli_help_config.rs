@@ -12,6 +12,9 @@ fn print_config_help() {
         "  validate   parse the discovered config and report the first error; exit 0 if it's well-formed."
     );
     println!();
+    println!("Options:");
+    print_run_flag_help(false);
+    println!();
     println!(
         "PATH defaults to `.`; config is discovered by walking up from it — the root `grund.toml` is the home, `.agents/grund.toml` a deprecated fallback."
     );

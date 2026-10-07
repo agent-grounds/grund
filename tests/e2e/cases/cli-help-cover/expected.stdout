@@ -11,6 +11,11 @@ and section that own its lines.
 Options:
   --format text|json   text (default) groups citations by file; json emits one record per file.
   --lines N|N-M        report the owners of these lines of FILE; repeatable, one record per range.
+  --path-base project|invocation
+                       project (default) spells report paths from the config root;
+                       invocation: relative to the path you passed, or the current directory if you passed none.
+                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
+                       --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
 
 Exit:  0 scan succeeded · 2 unreadable tree, incomplete scan, or CLI error.
 

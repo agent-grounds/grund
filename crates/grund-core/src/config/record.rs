@@ -13,6 +13,7 @@
 use anyhow::Result;
 use std::path::PathBuf;
 
+use super::call_scope::PathBase;
 use super::citations::CitationRules;
 use super::kind::KindConfig;
 use super::kind_defaults::{
@@ -225,6 +226,11 @@ pub struct Config {
     /// (§AR-bindings.2). Each stands in place of the `success` marker on an
     /// otherwise clean run (§FS-check.2.1.3). Not a `grund.toml` key.
     pub(crate) run_warnings: Vec<RunWarning>,
+    /// The run's `--path-base`, when the caller passed one: it outranks
+    /// `relative_paths` for every project the run loads (§FS-cli.3.4). Taken
+    /// from the call scope when the config is built, so members carry it too.
+    /// Not a `grund.toml` key, so `config show` never prints it.
+    pub(crate) path_base: Option<PathBase>,
     /// §AR-workspace.6: the canonical root of **every** project this run loaded.
     /// `workspace_boundary_roots` above says what lies *below* this project, so a
     /// leaf member has none; this says where the *others* are, which is how a
@@ -389,6 +395,7 @@ impl Config {
             workspace_include_root_source: None,
             workspace_boundary_roots: Vec::new(),
             run_warnings: Vec::new(),
+            path_base: super::call_scope::report_path_base(),
             workspace_project_roots: Vec::new(),
             citations: CitationRules::default(),
             // On by default so `grund check` (and tests) classify; the read-only

@@ -16,6 +16,10 @@ Other options:
   --path PATH            repo or subtree to resolve the ID in (default `.`)
   --batch                 read ordered {"id":…,"section":…} NDJSON queries from stdin
   --all                   with --batch, query every declaration and section
+  --path-base project|invocation
+                       project (default) spells report paths from the config root;
+                       invocation: relative to the path you passed, or the current directory if you passed none.
+                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
 
 Exit:  0 printed · 1 ID not found / ambiguous / broken stub / unknown section · 2 unknown project alias, or CLI error.
 Batch: 0 all queries succeeded · 1 any query failed · 2 invocation, input, or scan error.

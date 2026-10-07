@@ -17,6 +17,11 @@ Options:
   --size[=lines,words,bytes]  coordinate lead/full sizes; bare selects all three units
   --top N             largest N leads by the first selected unit; requires --size
   --format text|json   text (default) is the table on stdout; json emits NDJSON (adds `refs` count).
+  --path-base project|invocation
+                       project (default) spells report paths from the config root;
+                       invocation: relative to the path you passed, or the current directory if you passed none.
+                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
+                       --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
 
 Exit:  0 scan succeeded (an empty catalog prints nothing) · 2 unreadable tree, or an unknown --kind.
 

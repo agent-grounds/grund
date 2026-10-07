@@ -43,6 +43,25 @@ fn print_guide_links(guides: &[&str], examples: &[&str]) {
 /// Per-subcommand `--help` / `help <subcommand>` page (§FS-cli.2.3, §FS-cli.3): what
 /// it takes, every flag with a one-line example, the exit codes, and the common
 /// recovery path. Goes to stdout, exit 0 — help is never an error.
+/// §FS-cli.3.4: the run-flag lines of every command that takes `--path-base`, naming
+/// the flag that replaces each `[output]` key; the commands that honour
+/// `[output] format` also name `--format json` as its replacement (§FS-cli.3).
+fn print_run_flag_help(honours_format: bool) {
+    println!("  --path-base project|invocation");
+    println!("                       project (default) spells report paths from the config root;");
+    println!(
+        "                       invocation: relative to the path you passed, or the current directory if you passed none."
+    );
+    println!(
+        "                       --path-base=invocation replaces a committed `[output] relative_paths = false`."
+    );
+    if honours_format {
+        println!(
+            "                       --format json replaces a committed `[output] format = \"json\"`; a flag outranks its key."
+        );
+    }
+}
+
 fn print_subcommand_help(cmd: &str) {
     match cmd {
         "check" => print_check_help(),
@@ -96,6 +115,7 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  --format text|json   text (default) is the table on stdout; json emits NDJSON (adds `refs` count)."
             );
+            print_run_flag_help(true);
             println!();
             println!(
                 "Exit:  0 scan succeeded (an empty catalog prints nothing) · 2 unreadable tree, or an unknown --kind."
@@ -155,6 +175,7 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  --format text|json   text (default) prints `path:line: <citation>`; json emits NDJSON."
             );
+            print_run_flag_help(true);
             println!();
             println!(
                 "The citation list is the result, so it goes to stdout (text and json alike) —"
@@ -191,6 +212,7 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  --lines N|N-M        report the owners of these lines of FILE; repeatable, one record per range."
             );
+            print_run_flag_help(true);
             println!();
             println!("Exit:  0 scan succeeded · 2 unreadable tree, incomplete scan, or CLI error.");
             println!();
@@ -227,6 +249,7 @@ fn print_subcommand_help(cmd: &str) {
             println!(
                 "  --format text|json   text (default) is the bare ID on stdout; json adds kind/number/slug/folder."
             );
+            print_run_flag_help(false);
             println!();
             println!(
                 "Exit:  0 ID emitted · 1 empty slug / collision · 2 unknown kind, scan, or CLI error."
@@ -353,6 +376,9 @@ fn print_subcommand_help(cmd: &str) {
             println!("only that preference. --conversation-target picks how a linked citation");
             println!("addresses its declaration; --agent scopes that choice to one agent instead");
             println!("of the machine. --format json emits a plan.");
+            println!();
+            println!("Options:");
+            print_run_flag_help(false);
             println!();
             println!("Preview and install examples:");
             println!("  grund integrations                    # detect and list what applies");

@@ -20,6 +20,11 @@ Options:
   --only <code>        retain one exact finding code; repeat for a union (`--only=<code>` also works).
   --ignore <code>      remove one exact finding code; repeat for a union; ignore wins over only (`--ignore=<code>` also works).
   --only-rule          retain only what the --rule sentence found; requires --rule.
+  --path-base project|invocation
+                       project (default) spells report paths from the config root;
+                       invocation: relative to the path you passed, or the current directory if you passed none.
+                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
+                       --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
 
 Findings go to stdout (the linter convention) — `grund check | …` and `grund check
 --format json | jq` need no redirect. Only run-level `error:` / `warning:` lines
