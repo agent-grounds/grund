@@ -1,7 +1,8 @@
 """§FS-distribution-candidate.1.1, §FS-distribution-candidate.2.1,
-§FS-distribution-candidate.6.1, §FS-distribution-candidate.6.4 — the candidate
-tool's offline half: the matrix it builds for, the inventory it plans, the npm
-package trees it writes, the verification it applies and the versions it keeps.
+§FS-distribution-candidate.6.1, §FS-distribution-candidate.6.4,
+§FS-distribution-candidate.6.5 — the candidate tool's offline half: the matrix it
+builds for, the inventory it plans, the npm package trees it writes, the
+verification it applies, the receipts it binds and the versions it keeps.
 
 Nothing here compiles or reaches a registry, so it runs in the ordinary gate on
 every CI platform; the installed, compiled half is the rehearsal lane under
@@ -22,7 +23,8 @@ from pathlib import Path
 from distribution_support import (
     REPO, SHA, VERSION, WHEEL_TAGS, candidate, candidate_json, expected_artifacts,
     expected_payloads, npm_selectors, pep440, placements, registry_rows,
-    repack_npm, rewrite_manifest, scratch, spec_matrix, synthetic_candidate,
+    repack_npm, rewrite_manifest, row_by_id, scratch, sha256, spec_matrix,
+    synthetic_candidate, write_receipts,
 )
 
 RELEASE = REPO / ".github" / "workflows" / "release.yml"
@@ -320,6 +322,50 @@ class VerifyTests(unittest.TestCase):
         rewrite_manifest(self.root, lambda m: m.update(
             artifacts=[a for a in m["artifacts"] if a["path"] != gone]))
         self.refused(gone)
+
+
+class ShareTests(unittest.TestCase):
+    """§FS-distribution-candidate.6.5 — a row's receipt binds to the candidate it is a
+    share of, whichever runner wrote the share: every manifest is LF bytes and hashed
+    as written (§FS-distribution-candidate.6.1). Windows is where a text-mode write
+    would differ, so the windows-latest gate is the one that holds this."""
+
+    ROW = "win32-x64-msvc"
+
+    def setUp(self):
+        temp = scratch("grund-share-")
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.built, self.digest = synthetic_candidate(self.root / "candidate", receipts=False)
+        result = candidate("share", self.built, "--row", self.ROW, "--out", self.root / "share")
+        self.assertEqual(0, result.returncode, result.stderr)
+
+    def bind(self, data):
+        """Receipt the share as run.py does, naming its manifest's bytes, then bind it."""
+        (self.root / "share" / "manifest.json").write_bytes(data)
+        write_receipts(self.root / "share", sha256(data), [row_by_id(self.ROW)])
+        return candidate("receipts", self.built, self.root / "share")
+
+    def test_a_shares_receipt_binds_to_the_candidate(self):
+        data = (self.root / "share" / "manifest.json").read_bytes()
+        self.assertNotIn(b"\r", data)
+        result = self.bind(data)
+        self.assertEqual(0, result.returncode, result.stderr)
+        bound = json.loads((self.built / "receipts" / f"{self.ROW}.json").read_text())
+        self.assertEqual([self.digest, sha256(data)],
+                         [bound["manifest_sha256"], bound["share_manifest_sha256"]])
+
+    def test_a_crlf_share_is_not_the_candidates_share(self):
+        lines = (self.root / "share" / "manifest.json").read_bytes().splitlines()
+        result = self.bind(b"\r\n".join(lines) + b"\r\n")
+        self.assertNotEqual(0, result.returncode, "receipts bound a CRLF share")
+        self.assertIn(f"is not row {self.ROW}'s share of {self.digest}", result.stderr)
+
+    def test_an_assembled_manifest_is_lf(self):
+        out = self.root / "assembled"
+        result = candidate("assemble", "--sha", SHA, "--out", out, self.root / "share")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertNotIn(b"\r", (out / "manifest.json").read_bytes())
 
 
 class VersionTests(unittest.TestCase):

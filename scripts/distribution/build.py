@@ -130,5 +130,6 @@ def build(row, sha, out, target_dir, products=None):
                 "toolchain": {"rust": matrix.RUST_TOOLCHAIN,
                               "images": {row["row"]: row["container"]} if row["container"] else {}},
                 "artifacts": artifacts, "payloads": built}
-    (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    # §FS-distribution-candidate.6.1: LF bytes, so a Windows row's manifest hashes as Linux's.
+    (out / "manifest.json").write_bytes((json.dumps(manifest, indent=2) + "\n").encode("utf-8"))
     print(f"ok: {out} holds {len(artifacts)} artifacts and {len(built)} payloads of row {row['row']}")

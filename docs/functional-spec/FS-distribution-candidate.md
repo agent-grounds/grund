@@ -148,7 +148,7 @@ The record of a candidate that the publisher trusts and nothing else.
 
 ### 6.1 One commit produces one manifest
 
-The candidate's `manifest.json` records: its schema version and scope; the package version and engine version; the commit SHA it was built from; the matrix rows; the Rust toolchain and the container image digests; every artifact the plan names, with its registry, package, version, file name and SHA-256; and every payload, with its product, target, build digest, optimization (`pgo` or `lto-exception`), profile and training digests, and each placement with the artifact, the path inside it, the digest there and the transformations between — repair, stripping — that the build applied. The manifest's own SHA-256 is the candidate's identity.
+The candidate's `manifest.json` records: its schema version and scope; the package version and engine version; the commit SHA it was built from; the matrix rows; the Rust toolchain and the container image digests; every artifact the plan names, with its registry, package, version, file name and SHA-256; and every payload, with its product, target, build digest, optimization (`pgo` or `lto-exception`), profile and training digests, and each placement with the artifact, the path inside it, the digest there and the transformations between — repair, stripping — that the build applied. The manifest's own SHA-256 is the candidate's identity. Every `manifest.json` the tool writes — a row's, the assembled candidate's and each row's share — is UTF-8 with LF line endings on every runner, and its digest is taken over those bytes on disk, so it does not depend on the runner that wrote it.
 
 ### 6.2 One version across every package
 
