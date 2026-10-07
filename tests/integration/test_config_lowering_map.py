@@ -145,7 +145,7 @@ class ConfigLoweringPageTests(unittest.TestCase):
 
 
 class ConfigLoweringCodeTests(unittest.TestCase):
-    """The code's table, against the page. These fail until `mapping.rs` exists."""
+    """The code's table in `config/v1/mapping.rs`, against the page."""
 
     def test_mapping_rs_lowers_every_key_where_the_page_says(self):
         self.assertEqual([], _disagreements(code_table("KEYS"), page_keys()))
