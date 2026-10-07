@@ -1,0 +1,135 @@
+name: Cross-registry publish
+
+# §FS-distribution-candidate.8.1: upload one rehearsed candidate's npm and PyPI
+# artifacts. Disabled by a literal `if: ${{ false }}` on the publishing job.
+
+# Turning it on is a reviewed change of its own, made by an operator separately
+# authorized to publish.
+
+# §FS-distribution-candidate.8.2: holding the npm scopes and the PyPI projects,
+# their trusted publishers and the gated environment are unmet prerequisites.
+
+# Those are: the `@grund-cli` and `@grund-lsp` scopes and the `grund-cli` and
+# `grund-lsp` names on npm, the `grund` and `grund-lsp` projects on PyPI, a trusted
+# publisher on each registry for this workflow, and the `cross-registry-publish`
+# environment with a required reviewer. Nothing in this repository creates them.
+
+# §FS-distribution-candidate.8.3, §FS-distribution-candidate.8.4: it builds nothing,
+# and the crates must already resolve, published by `release.yml`.
+
+# A person starts it, naming the commit, the manifest digest and the
+# `candidate-rehearsal.yml` run whose `rehearsed-candidate` artifact holds the
+# bytes. The candidate is downloaded from that run, verified as a release, and
+# handed to `scripts/distribution/publish.py`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        required: true
+        description: "The commit the candidate was built from"
+      manifest_sha256:
+        required: true
+        description: "The SHA-256 of the rehearsed candidate's manifest.json"
+      rehearsal_run_id:
+        required: true
+        description: "The candidate-rehearsal.yml run that rehearsed it"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check the rehearsed candidate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.candidate_sha }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: rehearsed-candidate
+          path: candidate
+          run-id: ${{ inputs.rehearsal_run_id }}
+          github-token: ${{ github.token }}
+
+      # §FS-distribution-candidate.6.4, §FS-distribution-candidate.6.5: the whole plan,
+      # at a release version, with every registry row's receipt for this manifest.
+      - name: Verify the candidate as a release
+        shell: bash
+        run: |
+          python scripts/distribution/candidate.py verify candidate --release --sha "${{ inputs.candidate_sha }}"
+          actual="$(sha256sum candidate/manifest.json | awk '{ print $1 }')"
+          if [ "$actual" != "${{ inputs.manifest_sha256 }}" ]; then
+            echo "error: the rehearsed manifest is $actual, not ${{ inputs.manifest_sha256 }}" >&2
+            exit 1
+          fi
+
+  publish:
+    name: publish npm and PyPI packages
+    needs: check
+    if: ${{ false }}
+    environment: cross-registry-publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      # §FS-distribution-candidate.8.2: trusted publishing exchanges this identity
+      # for short-lived registry tokens; no stored token is read.
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.candidate_sha }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: rehearsed-candidate
+          path: candidate
+          run-id: ${{ inputs.rehearsal_run_id }}
+          github-token: ${{ github.token }}
+
+      # §FS-distribution.4.2.6: this lane publishes too, so the ramps it ships must
+      # agree with the version it ships.
+      - name: Check release ramps
+        shell: bash
+        run: |
+          version="$(python -c 'import json; print(json.load(open("candidate/manifest.json"))["version"])')"
+          python3 scripts/check_release_ramps.py "$version"
+
+      # §FS-distribution-candidate.8.6: checksums say a file is the rehearsed one,
+      # the attestation says which workflow run built it.
+      - name: Attest the candidate's provenance
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: |
+            candidate/npm/*.tgz
+            candidate/pypi/*
+
+      - name: Publish the candidate's npm and PyPI artifacts
+        shell: bash
+        run: |
+          python scripts/distribution/publish.py --candidate candidate \
+            --manifest-sha256 "${{ inputs.manifest_sha256 }}" \
+            --sha "${{ inputs.candidate_sha }}" \
+            --status-out publish-status.json
+
+      - uses: actions/upload-artifact@v5
+        if: ${{ always() }}
+        with:
+          name: publish-status
+          path: publish-status.json
+          if-no-files-found: ignore

@@ -1,0 +1,273 @@
+name: Candidate rehearsal
+
+# §FS-distribution-candidate.5.1: build one commit's cross-registry candidate and
+# prove it on every row, holding no credential and uploading to no registry.
+
+# Only a person starts it, and it can read the repository and nothing else. npm
+# installs go through a loopback registry serving the candidate's own tarballs,
+# Cargo installs come from its `.crate` files, and Python installs from its wheel
+# and sdist files with no index.
+
+# §FS-distribution-candidate.5.6, §FS-distribution-candidate.6.5: each row is built
+# and rehearsed on its own runner, and each receipt is bound to the one candidate.
+
+# `build` makes one row's candidate; `assemble` merges the six into the candidate
+# whose manifest the publisher is given; `rehearse` proves each row against its
+# share of it (`candidate.py share`: the row's own artifacts and the row-independent
+# ones, byte for byte, under a manifest naming the candidate's digest); `receipts`
+# accepts each row's receipt only for exactly that share and records it against the
+# candidate. The `rehearsed-candidate` artifact is what `cross-registry-publish.yml`
+# is pointed at, by this run's id.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_TOOLCHAIN: "1.95.0"
+
+jobs:
+  build:
+    name: build (${{ matrix.row }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - row: linux-x64-gnu
+            runner: ubuntu-latest
+          - row: linux-arm64-gnu
+            runner: ubuntu-24.04-arm
+          - row: darwin-x64
+            runner: macos-15-intel
+          - row: darwin-arm64
+            runner: macos-15
+          - row: win32-x64-msvc
+            runner: windows-latest
+          - row: win32-arm64-msvc
+            runner: windows-11-arm
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: llvm-tools-preview
+
+      # The Node addon and the Python extension train on their own runtimes
+      # (§FS-distribution-candidate.7.1).
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # §FS-distribution-candidate.7.4: only win32-arm64-msvc may package an LTO
+      # build, and only when training wrote no profile; `candidate.py build` decides.
+      - name: Build the row's candidate
+        shell: bash
+        run: |
+          python scripts/distribution/candidate.py build --row "${{ matrix.row }}" \
+            --sha "$GITHUB_SHA" --out "$RUNNER_TEMP/candidate" --target-dir "$RUNNER_TEMP/target"
+
+      - name: Verify the row's candidate
+        shell: bash
+        run: python scripts/distribution/candidate.py verify "$RUNNER_TEMP/candidate" --sha "$GITHUB_SHA"
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: row-${{ matrix.row }}
+          path: ${{ runner.temp }}/candidate
+          if-no-files-found: error
+
+  assemble:
+    name: assemble the candidate
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: row-*
+          path: rows
+
+      - name: Assemble and verify
+        shell: bash
+        run: |
+          python scripts/distribution/candidate.py assemble --sha "$GITHUB_SHA" --out candidate rows/row-*
+          python scripts/distribution/candidate.py verify candidate --sha "$GITHUB_SHA"
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: candidate
+          path: candidate
+          if-no-files-found: error
+
+  rehearse:
+    name: rehearse (${{ matrix.row }})
+    needs: assemble
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - row: linux-x64-gnu
+            runner: ubuntu-latest
+            registry: true
+          - row: linux-arm64-gnu
+            runner: ubuntu-24.04-arm
+            registry: true
+          - row: darwin-x64
+            runner: macos-15-intel
+            registry: true
+          - row: darwin-arm64
+            runner: macos-15
+            registry: true
+          - row: win32-x64-msvc
+            runner: windows-latest
+            registry: true
+          # Archives only: no registry package, so no receipt (§FS-distribution-candidate.1.1).
+          - row: win32-arm64-msvc
+            runner: windows-11-arm
+            registry: false
+    steps:
+      - uses: actions/checkout@v6
+
+      # Cargo installs from the `.crate` files, the source fallbacks and the PGO
+      # provenance checks build; every installed check strips Rust from `PATH`.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: llvm-tools-preview
+
+      # §FS-distribution-candidate.1.2: CPython 3.10 through 3.14, every one named.
+      - uses: actions/setup-python@v6
+        id: py310
+        with:
+          python-version: "3.10"
+      - uses: actions/setup-python@v6
+        id: py311
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-python@v6
+        id: py312
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-python@v6
+        id: py313
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-python@v6
+        id: py314
+        with:
+          python-version: "3.14"
+
+      - name: Name the interpreters and install pipx
+        shell: bash
+        env:
+          PYTHONS: >-
+            ${{ steps.py310.outputs.python-path }}
+            ${{ steps.py311.outputs.python-path }}
+            ${{ steps.py312.outputs.python-path }}
+            ${{ steps.py313.outputs.python-path }}
+            ${{ steps.py314.outputs.python-path }}
+        run: |
+          python -c "import os; print('GRUND_REHEARSAL_PYTHONS=' + os.pathsep.join(os.environ['PYTHONS'].split()))" >> "$GITHUB_ENV"
+          python -m pip install --upgrade pipx
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: candidate
+          path: candidate
+
+      - name: Take the row's share
+        shell: bash
+        run: |
+          python scripts/distribution/candidate.py share candidate --row "${{ matrix.row }}" --out share
+          python scripts/distribution/candidate.py verify share --sha "$GITHUB_SHA"
+
+      - uses: actions/setup-node@v6
+        if: ${{ matrix.registry }}
+        with:
+          node-version: 22
+
+      - name: Rehearse the npm packages on Node 22
+        if: ${{ matrix.registry }}
+        shell: bash
+        run: |
+          python tests/integration/rehearsal/run.py --row "${{ matrix.row }}" --candidate share \
+            --only install --only cli-parity --only api-parity --only lsp-lifecycle --only source-install
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Rehearse the row on Node 24 and write its receipt
+        if: ${{ matrix.registry }}
+        shell: bash
+        run: |
+          python tests/integration/rehearsal/run.py --row "${{ matrix.row }}" --candidate share \
+            --receipt "share/receipts/${{ matrix.row }}.json"
+
+      - name: Rehearse the archives
+        if: ${{ ! matrix.registry }}
+        shell: bash
+        run: |
+          python tests/integration/rehearsal/run.py --row "${{ matrix.row }}" --candidate share \
+            --only inventory --only provenance
+
+      - uses: actions/upload-artifact@v5
+        if: ${{ matrix.registry }}
+        with:
+          name: share-${{ matrix.row }}
+          path: |
+            share/manifest.json
+            share/receipts/
+          if-no-files-found: error
+
+  receipts:
+    name: bind the receipts
+    needs:
+      - assemble
+      - rehearse
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: candidate
+          path: candidate
+
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: share-*
+          path: shares
+
+      - name: Bind every row's receipt to the candidate
+        shell: bash
+        run: |
+          python scripts/distribution/candidate.py receipts candidate shares/share-*
+          python scripts/distribution/candidate.py verify candidate --sha "$GITHUB_SHA"
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: rehearsed-candidate
+          path: candidate
+          if-no-files-found: error
