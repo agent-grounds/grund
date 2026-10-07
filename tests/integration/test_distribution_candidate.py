@@ -412,7 +412,9 @@ class VersionTests(unittest.TestCase):
         """§FS-distribution.4.3: the verify job reads the release source ref, the tag
         when it recovers one, so the working tree must not stand in for it."""
         root = self.copy()
-        git = ["git", "-C", str(root), "-c", "user.name=t", "-c", "user.email=t@t"]
+        # Nothing git starts may write into the repository after the test returns.
+        git = ["git", "-C", str(root), "-c", "user.name=t", "-c", "user.email=t@t",
+               "-c", "maintenance.auto=false", "-c", "gc.auto=0", "-c", "core.fsmonitor=false"]
         subprocess.run([*git, "init", "-q"], check=True)
         subprocess.run([*git, "add", "-A"], check=True)
         subprocess.run([*git, "commit", "-qm", "release"], check=True)
