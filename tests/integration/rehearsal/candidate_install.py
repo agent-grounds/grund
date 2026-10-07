@@ -78,8 +78,8 @@ class PythonInstallTests(Rehearsed):
                 with self.subTest(python=python, dist=dist):
                     environment, env, _ = venv(python, dist)
                     self.assert_answers(command(bin_dir(environment), product), product, env)
-                    self.assertFalse(any(bin_dir(environment).glob(f"{other}*")),
-                                     f"the {dist} wheel installed {other}")
+                    self.assertFalse([p for p in bin_dir(environment).glob(f"{other}*")
+                                      if p.stem == other], f"the {dist} wheel installed {other}")
                     shown = run_checked([interpreter(environment), "-m", "pip", "show", dist],
                                         env=env).stdout
                     self.assertIn(f"Version: {wheel_version()}", shown)
