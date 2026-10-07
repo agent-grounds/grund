@@ -94,16 +94,12 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install cargo-edit
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-edit
-
       - name: Bump workspace version and refresh lockfile
         shell: bash
         run: |
           set -euo pipefail
-          cargo set-version --workspace "${{ steps.versions.outputs.next }}"
+          # §FS-distribution-candidate.6.2: every version source, `pyproject.toml` included.
+          python3 scripts/distribution/candidate.py set-version "${{ steps.versions.outputs.next }}"
           cargo update --workspace
           printf 'grund %s\n' "${{ steps.versions.outputs.next }}" > tests/e2e/cases/cli-version/expected.stdout
           # The release section lists the pull requests merged since the tag, read
@@ -123,7 +119,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
-          git add Cargo.toml crates/grund-core/Cargo.toml crates/grund-cli/Cargo.toml crates/grund-lsp/Cargo.toml Cargo.lock tests/e2e/cases/cli-version/expected.stdout docs/changelog.md docs/changelog
+          git add Cargo.toml crates/grund-core/Cargo.toml crates/grund-cli/Cargo.toml crates/grund-lsp/Cargo.toml Cargo.lock pyproject.toml tests/e2e/cases/cli-version/expected.stdout docs/changelog.md docs/changelog
           git commit -m "Release v${next}"
           git push -u origin "$branch"
 
@@ -206,7 +202,7 @@ jobs:
           # the tag a build came from.
           git fetch origin main
           git checkout -B main refs/remotes/origin/main
-          cargo set-version --workspace "$dev"
+          python3 scripts/distribution/candidate.py set-version "$dev"
           # The version fixture is checked, so a bump that skips it pushes a main
           # whose own e2e suite fails. The release bump writes the same file.
           printf 'grund %s\n' "$dev" > tests/e2e/cases/cli-version/expected.stdout

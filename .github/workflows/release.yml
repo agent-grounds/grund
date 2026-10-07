@@ -135,6 +135,15 @@ jobs:
 
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "manifest_ref=$manifest_ref" >> "$GITHUB_OUTPUT"
+
+      # §FS-distribution-candidate.6.2: `pyproject.toml` and `Cargo.lock` carry the
+      # version too, and are read at the same release source ref.
+      - name: Check every version source
+        shell: bash
+        run: |
+          manifest_ref="${{ steps.version.outputs.manifest_ref }}"
+          python3 scripts/distribution/candidate.py versions --ref "$manifest_ref" --expect "${{ steps.version.outputs.version }}"
 
       - name: Resolve release mode
         id: mode
@@ -337,6 +346,7 @@ jobs:
               source "$HOME/.cargo/env"
               rustup component add llvm-tools-preview
               bash scripts/pgo-build.sh
+              bash scripts/pgo-build.sh --product grund-lsp
             '
 
       # Files written from inside the container are root-owned on the host.
@@ -354,29 +364,27 @@ jobs:
             printf '%s\n' "$out" >&2
             exit 1
           fi
+          ./target/release/grund-lsp --version
 
+      # §FS-distribution.4.8: a `grund-lsp` archive beside each `grund` one.
       - name: Package binary
         id: package
         run: |
           set -euo pipefail
 
           version="${{ needs.verify.outputs.version }}"
+          package() {
+            mkdir -p "dist/$2"
+            cp "./target/release/$1" README.md LICENSE "dist/$2/"
+            tar -czf "$2.tar.gz" -C dist "$2"
+            sha256sum "$2.tar.gz" > "$2.tar.gz.sha256"
+          }
+          base="grund-lsp-${version}-${{ matrix.triple }}"
+          package grund-lsp "$base"
+          echo "lsp_archive=${base}.tar.gz" >> "$GITHUB_OUTPUT"
           base="grund-${version}-${{ matrix.triple }}"
-          dir="dist/${base}"
-          mkdir -p "$dir"
-
-          cp ./target/release/grund "$dir/"
-          cp README.md LICENSE "$dir/"
-
-          archive="${base}.tar.gz"
-          tar -czf "$archive" -C dist "$base"
-          if command -v sha256sum >/dev/null 2>&1; then
-            sha256sum "$archive" > "${archive}.sha256"
-          else
-            shasum -a 256 "$archive" > "${archive}.sha256"
-          fi
-
-          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+          package grund "$base"
+          echo "archive=${base}.tar.gz" >> "$GITHUB_OUTPUT"
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v5
@@ -385,6 +393,8 @@ jobs:
           path: |
             ${{ steps.package.outputs.archive }}
             ${{ steps.package.outputs.archive }}.sha256
+            ${{ steps.package.outputs.lsp_archive }}
+            ${{ steps.package.outputs.lsp_archive }}.sha256
           if-no-files-found: error
 
   build-native-pgo:
@@ -433,7 +443,9 @@ jobs:
         id: pgo
         continue-on-error: ${{ ! matrix.pgo_required }}
         shell: bash
-        run: bash scripts/pgo-build.sh
+        run: |
+          bash scripts/pgo-build.sh
+          bash scripts/pgo-build.sh --product grund-lsp
 
       # Windows ARM hosted runners can fail during LLVM PGO training even though
       # the ordinary release binary is sound; keep the platform artifact
@@ -441,7 +453,7 @@ jobs:
       - name: Build LTO release binary fallback
         if: ${{ ! matrix.pgo_required && steps.pgo.outcome == 'failure' }}
         shell: bash
-        run: cargo build --release --locked
+        run: cargo build --release --locked -p grund -p grund-lsp
 
       - name: Self-check release binary
         shell: bash
@@ -458,6 +470,9 @@ jobs:
             printf '%s\n' "$out" >&2
             exit 1
           fi
+          lsp="./target/release/grund-lsp"
+          [[ "$bin" != *.exe ]] || lsp="${lsp}.exe"
+          "$lsp" --version
 
       - name: Package binary
         id: package
@@ -467,33 +482,36 @@ jobs:
 
           host="$(rustc -vV | awk '/^host:/ { print $2 }')"
           version="${{ needs.verify.outputs.version }}"
+          package() {
+            local bin="./target/release/$1" base="$2"
+            if [[ "$host" == *windows* ]]; then
+              bin="${bin}.exe"
+            fi
+            mkdir -p "dist/${base}"
+            cp "$bin" README.md LICENSE "dist/${base}/"
+
+            if [[ "$host" == *windows* ]]; then
+              archive="${base}.zip"
+              powershell -NoProfile -Command \
+                "Compress-Archive -Path 'dist/${base}' -DestinationPath '${archive}' -Force"
+            else
+              archive="${base}.tar.gz"
+              tar -czf "$archive" -C dist "$base"
+            fi
+
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "$archive" > "${archive}.sha256"
+            else
+              shasum -a 256 "$archive" > "${archive}.sha256"
+            fi
+          }
+
+          # §FS-distribution.4.8: a `grund-lsp` archive beside each `grund` one.
+          base="grund-lsp-${version}-${host}"
+          package grund-lsp "$base"
+          echo "lsp_archive=$archive" >> "$GITHUB_OUTPUT"
           base="grund-${version}-${host}"
-          dir="dist/${base}"
-          mkdir -p "$dir"
-
-          bin="./target/release/grund"
-          if [[ "$host" == *windows* ]]; then
-            bin="${bin}.exe"
-          fi
-
-          cp "$bin" "$dir/"
-          cp README.md LICENSE "$dir/"
-
-          if [[ "$host" == *windows* ]]; then
-            archive="${base}.zip"
-            powershell -NoProfile -Command \
-              "Compress-Archive -Path 'dist/${base}' -DestinationPath '${archive}' -Force"
-          else
-            archive="${base}.tar.gz"
-            tar -czf "$archive" -C dist "$base"
-          fi
-
-          if command -v sha256sum >/dev/null 2>&1; then
-            sha256sum "$archive" > "${archive}.sha256"
-          else
-            shasum -a 256 "$archive" > "${archive}.sha256"
-          fi
-
+          package grund "$base"
           echo "archive=$archive" >> "$GITHUB_OUTPUT"
 
       - name: Upload binary artifact
@@ -503,6 +521,8 @@ jobs:
           path: |
             ${{ steps.package.outputs.archive }}
             ${{ steps.package.outputs.archive }}.sha256
+            ${{ steps.package.outputs.lsp_archive }}
+            ${{ steps.package.outputs.lsp_archive }}.sha256
           if-no-files-found: error
 
   publish-crates:
