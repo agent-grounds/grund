@@ -1,0 +1,22 @@
+grund_config_version = 1
+project_name = "consumer"
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+
+[[kinds]]
+kind = "FS"
+file = "docs/fs.md"
+
+[scan]
+include = ["docs", ".grund/notes.md"]
+
+[workspace]
+members = []

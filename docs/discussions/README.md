@@ -20,5 +20,6 @@ Discussion notes use the project-local `DISC` kind declared in `grund.toml`. Pro
 - [§DISC-grund-core-public-surface](proposals/2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) — What `grund_core`'s public root surface is, and what it should be
   - [The `grund-core` public root surface, name by name](proposals/2026-09-22-grund-core-public-surface-inventory.md) — the evidence it argues from: one classified row per public root name
 - [§DISC-core-concerns](proposals/2026-09-30-core-concerns.md#disc-core-concerns-three-concerns-over-two-trees--how-the-configuration-the-core-spec-and-the-engine-are-organized) — Three concerns over two trees: how the configuration, the core spec and the engine are organized
+- [§DISC-remote-projects](proposals/2026-10-07-remote-projects.md#disc-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched) — *(concluded)* A remote project is a workspace member whose bytes were fetched — decided in [§DF-remote-projects](../decisions/functional/DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root)
 
 This index is navigational — citations should target the proposal ID directly, never this file.

@@ -15,12 +15,8 @@ configuration they already own.
 
 ## 2. Materialization is explicit
 
-Only a deliberate `grund fetch <ID>` invocation may execute the selected kind's
-configured integration, under [§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot). It does not make verification online: the integration's output must first become a local Markdown declaration, and subsequent resolution uses that committed snapshot through the ordinary scanner.
+Only a deliberate `grund fetch` invocation may reach outside the tree, and it names what it materializes. `grund fetch <ID>` executes the selected kind's configured integration under [§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot); `grund fetch --remote <alias>`, or `--remote --all`, reads the repository a `[workspace.remotes.<alias>]` table declares, under [§FS-remote-projects](../functional-spec/FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection). Neither makes verification online: an integration's output must first become a local Markdown declaration, and a remote must first become a committed projection pinned in `grund.lock`. Subsequent resolution reads those committed bytes through the ordinary scanner.
 
 ## 3. No implicit freshness
 
-Grund does not check remote freshness, re-fetch on a timer, fetch during editor events,
-or silently materialize a missing citation. Integrations decide how to contact their
-service; grund decides only whether their complete declaration output is safe to place
-in the configured home.
+Grund never asks about freshness on its own: no verification path, timer or editor event checks whether an upstream moved, re-fetches, or silently materializes a missing citation. Freshness is asked only by an explicit `grund fetch`, `--remote --check` included, and a `--check` that cannot obtain the ref fails rather than reporting the pin current. For a kind's integration, the integration decides how to contact its service, and grund decides only whether its complete declaration output is safe to place in the configured home. For a remote, grund contacts the declared source itself: it resolves the declared ref, reads that commit's tracked tree from git objects, runs nothing the remote supplies (no hook, checkout filter, script or integration), and installs the projection only when it is complete and loadable.

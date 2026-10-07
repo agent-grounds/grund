@@ -65,6 +65,7 @@ Concrete fixtures that keep the command specs readable while pinning exact examp
 - [§FS-config](FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up) — grund reads a TOML config file found by walking up
 - [§FS-inline-citation-style](FS-inline-citation-style.md#fs-inline-citation-style-configurable-shape-of-inline-code-comment-citations) — configurable shape of inline code-comment citations
 - [§FS-workspace](FS-workspace.md#fs-workspace-grund-validates-cross-project-citations-in-a-workspace) — grund validates cross-project citations in a workspace
+- [§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection) — a project cites another repository's declarations from a committed, pinned projection
 - [§FS-non-goals](FS-non-goals.md#fs-non-goals-what-grund-will-deliberately-not-do) — what grund will deliberately not do
 
 ## Repository maintenance

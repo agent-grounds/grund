@@ -1,0 +1,3 @@
+.grund/notes.md:3: error: unknown reference GOAL-gone
+docs/fs.md:5: error: unknown reference GOAL-x
+docs/fs.md:3: warning: declared but never cited: FS-a

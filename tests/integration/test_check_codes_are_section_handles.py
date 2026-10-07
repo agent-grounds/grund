@@ -95,9 +95,21 @@ NOT_YET_MIGRATED = (
 )
 
 
+# Codes the catalog publishes ahead of the release that introduces them: their
+# sections and rows land with the contract, and the selector constant gains them
+# with the Remotes piece of §DF-remote-projects, which strikes them off here.
+SPECIFIED_AHEAD = {
+    "FS-remote-projects": ("remote-missing", "remote-modified", "remote-orphan", "remote-stale"),
+}
+
+
 def _selectable_codes():
     """The public selector vocabulary, read from the shipped constant."""
     return set(SELECTION_CODES.findall(SELECTION.read_text(encoding="utf-8")))
+
+
+def _specified_ahead():
+    return {code for codes in SPECIFIED_AHEAD.values() for code in codes}
 
 
 def _catalog_rows():
@@ -160,7 +172,23 @@ class CheckCodeSectionTests(unittest.TestCase):
         self.assertEqual([], missing)
 
     def test_catalog_and_selector_vocabulary_agree(self):
-        self.assertEqual(_selectable_codes(), set(_catalog_rows()))
+        self.assertEqual(_selectable_codes(), set(_catalog_rows()) - _specified_ahead())
+
+    def test_codes_specified_ahead_have_a_section_and_a_row_but_no_selector(self):
+        rows = _catalog_rows()
+        selectable = _selectable_codes()
+        problems = []
+        for spec, codes in sorted(SPECIFIED_AHEAD.items()):
+            sections = _check_sections(spec)
+            for code in codes:
+                coordinate = f"{spec}.checks.{code}"
+                if code not in sections:
+                    problems.append(f"{coordinate}: no such section")
+                if code not in rows or not any(coordinate in cell for cell in rows[code][1:]):
+                    problems.append(f"{code}: no catalog row citing {coordinate}")
+                if code in selectable:
+                    problems.append(f"{code}: now selectable, strike it off SPECIFIED_AHEAD")
+        self.assertEqual([], problems)
 
     def test_every_selectable_code_is_migrated_or_listed(self):
         accounted = set(NOT_YET_MIGRATED)

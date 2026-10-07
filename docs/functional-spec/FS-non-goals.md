@@ -79,7 +79,7 @@ Per [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out) and [§FS-c
 
 `grund check` performs no network I/O and executes no configured integration.
 Neither do queries, formatting, completion, or LSP requests
-([§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)). There is no "fetch this URL," no "validate against a remote schema," and no telemetry. Explicit `grund fetch <ID>` may run the configured local integration, but correctness is evaluated only after its output is saved as a repository declaration; verification itself remains offline.
+([§REQ-runs-offline](../requirements/REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service)). There is no "fetch this URL," no "validate against a remote schema," and no telemetry. Explicit `grund fetch <ID>` may run the configured local integration, and explicit `grund fetch --remote` may read a declared remote repository ([§FS-fetch.remote](FS-fetch.md#remote-remote-projections)), but correctness is evaluated only after the output is saved in the repository, as a declaration or a committed projection; verification itself remains offline.
 
 ## 12. Surfaces outside `grund-core` and the LSP transport
 

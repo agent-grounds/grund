@@ -1,0 +1,4 @@
+# Not a grund lock: no [workspace.remotes] table asks for one, so it is never parsed.
+[[package]]
+name = "unrelated"
+version = "0.1.0"
