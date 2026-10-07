@@ -1,1 +1,1 @@
-{"id":"FS-001-pricing","section":"1","body":"## 1. Price <!-- grund:value -->\n\n### 1.1. 1200\n### 1.2. USD\n","sections":[{"path":"1.1","title":"1200","depth":1},{"path":"1.2","title":"USD","depth":1}],"path":"docs/pricing.md","line":3}
+{"id":"FS-001-pricing","section":"1","body":"## 1. Price <!-- grund:value -->\n\n### 1.1. 1200\n### 1.2. USD\n","sections":[{"path":"1.1","title":"1200","depth":1,"anchor":"11-1200"},{"path":"1.2","title":"USD","depth":1,"anchor":"12-usd"}],"anchor":"1-price","path":"docs/pricing.md","line":3}
