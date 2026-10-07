@@ -8,10 +8,12 @@ command's own `--help` page links the guide and example that cover it
 
 | Guide | Example |
 |---|---|
+| [Installation](installation.md) | — |
 | [Python API](python-api.md) | [`examples/python-api`](../../examples/python-api/) |
 | [Citation directions](citation-directions.md) | — |
 | [Clickable citations](clickable-citations.md) | — |
 | [Coordinate sizes](coordinate-sizes.md) | — |
+| [Distribution runbook](distribution-runbook.md) | — |
 | [Git co-change evidence](cochange.md) | [`examples/cochange`](../../examples/cochange/) |
 | [External facts](external-facts.md) | [`examples/external-tickets`](../../examples/external-tickets/) |
 | [`grund init` repository shapes](init-repo-shapes.md) | [`examples/scheme-*`](../../examples/) |
