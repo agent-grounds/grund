@@ -49,6 +49,37 @@ canonical prefix in place of a longer off-grammar token
 or turn a section-suffixed coordinate into a canonical declaration
 ([§FS-declarations.line.section-suffix](FS-declarations.md#linesection-suffix-an-id-with-a-section-after-it-declares-nothing)).
 
+### line.configured-slug: Characters admitted by the slug pattern belong to the canonical ID
+
+The effective `slug_pattern` determines the slug's characters
+([§FS-config.3.2](FS-config.md#32-id--id-grammar)). A complete token that
+matches that grammar is a canonical declaration even when its final character
+is non-word punctuation. Under `format = "{kind}-{slug}"` and
+`slug_pattern = "[a-z*][a-z0-9*-]*"`, `# FS-*: Literal star` and
+`# FS-tail*: Trailing star` declare `FS-*` and `FS-tail*`, respectively;
+the `*` is part of the slug. This holds in Markdown headings, source comments
+and bare declaration lines inside Python docstrings.
+
+Discovery and body rereading retain the same complete canonical identity.
+`list` prints the declaration and `cover` records its marked citations; bare
+and explicit `show` print its actual lead
+([§FS-show.1.1](FS-show.md#11-id)). `refs` lists its citation sites; with no
+citers it exits `0` without the note that the operand is neither declared nor
+cited ([§FS-refs.2.1](FS-refs.md#21-an-id-with-no-citations)). With valid Markdown-link
+index entries and no other findings, `check` prints `success` and exits `0`:
+the canonical declaration is no `declaration-near-miss`, its citations are
+known references, and its index links resolve
+([§FS-check.3.1](FS-check.md#31-dangling-citation),
+[§REQ-no-wrong-citation.2](../requirements/REQ-no-wrong-citation.md#2-no-false-alarms)).
+
+The whole token must match. An invalid extension such as `FS-tail*!` is not
+a canonical declaration of `FS-tail*`; a colon-terminated off-grammar token
+keeps its complete spelling under
+[§FS-config.3.2.5](FS-config.md#325-off-grammar-declarations-stay-readable).
+A section-coordinate heading such as `# FS-tail*.2 names a section` declares
+nothing under
+[§FS-declarations.line.section-suffix](FS-declarations.md#linesection-suffix-an-id-with-a-section-after-it-declares-nothing).
+
 ### line.section-suffix: An ID with a section after it declares nothing
 
 A line in declaration position whose first token is an ID followed directly by the

@@ -1,0 +1,11 @@
+docs/FS-cite.md:
+  3:7 §FS-*
+  3:18 §FS-tail*
+docs/FS-star.md:
+  (no citations)
+docs/FS-tail.md:
+  (no citations)
+docs/README.md:
+  3:4 §FS-*
+  4:4 §FS-tail*
+  5:4 §FS-cite

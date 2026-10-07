@@ -41,6 +41,99 @@ fn declared(grammar: &Grammar, shape: Shape, line: &str) -> Option<String> {
         .map(|(id, _)| render_id(grammar, &id))
 }
 
+/// §FS-declarations.line.configured-slug: punctuation admitted by the slug
+/// grammar keeps the query's identity in every declaration position.
+#[test]
+fn configured_star_slug_declarations_keep_canonical_identity() {
+    let config = config_with(
+        "configured_star_slug_declarations_keep_canonical_identity",
+        |c| {
+            c.id_format = "{kind}-{slug}".into();
+            c.slug_pattern = "[a-z*][a-z0-9*-]*".into();
+        },
+    );
+    let mut disagreements = Vec::new();
+    for token in ["FS-*", "FS-tail*"] {
+        let expected = parse_id_arg(token, &config.grammar).unwrap().0;
+        for (shape, prefix) in [
+            (Shape::Markdown, "# "),
+            (Shape::Comment, "/// "),
+            (Shape::Docstring, "    "),
+        ] {
+            let line = format!("{prefix}{token}: Literal star");
+            let (in_docstring, is_md) = shape.flags();
+            let actual = declaration_id_on_line(&config.grammar, &line, in_docstring, is_md);
+            if actual.as_ref().map(|(id, _)| id) != Some(&expected) {
+                disagreements.push(format!(
+                    "{shape:?} {token}: expected {expected:?}, got {actual:?}"
+                ));
+            }
+            if let Some((_, end)) = actual {
+                assert_eq!(&line[end..], ": Literal star", "{shape:?} {token}");
+            }
+        }
+    }
+    assert!(disagreements.is_empty(), "{}", disagreements.join("\n"));
+}
+
+/// §FS-declarations.line.configured-slug: preserving punctuation never grants
+/// a canonical prefix to an invalid longer token or a section coordinate.
+#[test]
+fn configured_star_slug_invalid_extended_tokens_keep_exact_spelling() {
+    let config = config_with(
+        "configured_star_slug_preserves_complete_token_and_section_guards",
+        |c| {
+            c.id_format = "{kind}-{slug}".into();
+            c.slug_pattern = "[a-z*][a-z0-9*-]*".into();
+        },
+    );
+    for (shape, prefix) in [
+        (Shape::Markdown, "# "),
+        (Shape::Comment, "/// "),
+        (Shape::Docstring, "    "),
+    ] {
+        let (in_docstring, is_md) = shape.flags();
+        let invalid = format!("{prefix}FS-tail*!: Invalid extension");
+        assert!(declaration_captures(&config.grammar, &invalid, in_docstring, is_md).is_none());
+        assert_eq!(
+            declared(&config.grammar, shape, &invalid).as_deref(),
+            Some("FS-tail*!")
+        );
+        assert_eq!(
+            near_miss_heading(&config.grammar, &invalid, in_docstring, is_md).map(|hit| hit.0),
+            Some("FS-tail*!")
+        );
+    }
+}
+
+/// §FS-declarations.line.configured-slug: a section heading cannot declare
+/// either its parent ID or a shorter canonical prefix of that parent.
+#[test]
+fn configured_star_slug_section_coordinates_never_declare_a_prefix() {
+    let config = config_with(
+        "configured_star_slug_section_coordinates_never_declare_a_prefix",
+        |c| {
+            c.id_format = "{kind}-{slug}".into();
+            c.slug_pattern = "[a-z*][a-z0-9*-]*".into();
+        },
+    );
+    for (shape, prefix) in [
+        (Shape::Markdown, "# "),
+        (Shape::Comment, "/// "),
+        (Shape::Docstring, "    "),
+    ] {
+        let (in_docstring, is_md) = shape.flags();
+        let coordinate = format!("{prefix}FS-tail*.2 names a section");
+        assert_eq!(declared(&config.grammar, shape, &coordinate), None);
+        let with_colon = format!("{prefix}FS-tail*.2: Section coordinate");
+        assert!(declaration_captures(&config.grammar, &with_colon, in_docstring, is_md).is_none());
+        assert_eq!(
+            declared(&config.grammar, shape, &with_colon).as_deref(),
+            Some("FS-tail*.2")
+        );
+    }
+}
+
 /// The default `{kind}-{number}-{slug}` grammar with `edit` applied on top.
 fn config_with(name: &str, edit: impl FnOnce(&mut Config)) -> Config {
     let mut config = numbered_config(test_root(name));
