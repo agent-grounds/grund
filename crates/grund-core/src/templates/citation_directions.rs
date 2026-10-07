@@ -1,6 +1,6 @@
 use crate::config::{
     CitationDisjunction, CitationLevel, CitationTarget, KindCitationRules, KindConfig,
-    NamespaceMatch, Project,
+    NamespaceMatch, Project, Run,
 };
 
 /// The public citation-directions page the scaffold config and the no-`[citations]`
@@ -37,12 +37,12 @@ pub(crate) const CITATION_LEVEL_LEGEND: &str = "`must`/`never` are `grund check`
 /// feature keeps a stable block (§FS-init.2.3.4.10); the grounding sentence
 /// renders under either, because it is generated from `[reference]
 /// require_grounding` and not from the direction rules (§FS-check.3.6).
-pub(crate) fn citation_directions_section(project: &Project) -> String {
+pub(crate) fn citation_directions_section(project: &Project, run: &Run) -> String {
     // Built as lines joined with `\n` and returned without a trailing newline:
     // the `{CITATION_DIRECTIONS}` placeholder in the template supplies the single
     // block-final newline, so `grund init` stays idempotent on re-run.
     let mut lines = vec!["### Citation directions".to_string(), String::new()];
-    let grounding = citation_grounding_sentence(project);
+    let grounding = citation_grounding_sentence(project, run);
     if !project.rules.citations.declared {
         lines.push(join_sentences(
             &format!(
@@ -104,10 +104,10 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
 /// misplaced (§FS-declarations.checks.misplaced-declaration.3). An unwalked home
 /// (§FS-config.3.4.7.4) is left out — nothing in it is scanned, so the rule never
 /// reaches it. Per-row grounding levels (§FS-config.3.4.8) are not this sentence's.
-/// It reads the project's value, never a run's `--require-grounding`: a managed
-/// block says what the file says, whatever one invocation turned on (§AR-config.5).
-fn citation_grounding_sentence(project: &Project) -> Option<String> {
-    if !project.rules.grounding.require {
+/// It reads the effective value, the project's OR the run's `--require-grounding`
+/// (§FS-check.3.6), so the drift `check --require-grounding` reports is unchanged.
+fn citation_grounding_sentence(project: &Project, run: &Run) -> Option<String> {
+    if !(project.rules.grounding.require || run.scope.require_grounding) {
         return None;
     }
     let base = "Every source file must cite a declared ID or declare one inline";

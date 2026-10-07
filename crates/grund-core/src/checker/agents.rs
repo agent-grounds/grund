@@ -206,7 +206,7 @@ fn check_agent_block_path_with_rules(
             let mut generated_sections = vec![
                 (
                     "### Citation directions",
-                    citation_directions_section(config.project()),
+                    citation_directions_section(config.project(), config.run()),
                     "citation directions",
                 ),
                 // §FS-init.2.3.6.1: the local-conversation sentence derives from

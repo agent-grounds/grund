@@ -451,7 +451,7 @@ fn the_homeless_kind_renders_as_directions_only() {
         ),
         "its title says what it covers: {block}"
     );
-    let directions = citation_directions_section(config.project());
+    let directions = citation_directions_section(config.project(), config.run());
     let src = directions.find("(**src**").expect("the src row");
     let fs = directions
         .find("Each **FS** declaration")

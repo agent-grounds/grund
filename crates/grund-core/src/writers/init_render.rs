@@ -103,6 +103,7 @@ pub(crate) fn render_agents_append_block_at(
     render_agents_append_block(
         name,
         config.project(),
+        config.run(),
         config.compiled(),
         &workspace_members,
         surface,
