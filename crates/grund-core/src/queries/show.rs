@@ -250,7 +250,10 @@ pub(crate) fn render_show_output_json(
         extra.push_str(&format!(",\"kind_title\":\"{}\"", json_escape(title)));
     }
     // §FS-show.3.1.3.1: the heading anchor always precedes the closing location pair.
-    extra.push_str(&format!(",\"anchor\":{}", json_anchor(anchors.selected.as_deref())));
+    extra.push_str(&format!(
+        ",\"anchor\":{}",
+        json_anchor(anchors.selected.as_deref())
+    ));
     format!(
         "{{\"id\":\"{}\",\"section\":{},\"body\":\"{}\"{},\"path\":\"{}\",\"line\":{}}}",
         json_escape(&render_id(&config.grammar, id)),
