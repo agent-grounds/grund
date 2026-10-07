@@ -238,6 +238,7 @@ fn show_batch_query_in_context(
     output.json = Some(render_show_output_json(
         config,
         context.render_config(),
+        &project.findings,
         &id,
         section.as_deref(),
         opts.mode.render_mode(),
