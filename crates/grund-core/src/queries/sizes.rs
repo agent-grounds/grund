@@ -66,7 +66,11 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
     let selector = opts
         .selector
         .as_deref()
-        .map(|raw| parse_selector(raw, &vocabulary).map_err(|error| anyhow!(error.message)))
+        .map(|raw| {
+            // §FS-rules.8.1: a refusal recovering no kind ends in `known kinds:`.
+            parse_selector(raw, &vocabulary)
+                .map_err(|refusal| anyhow!(refusal.render(&context.known_kinds_line())))
+        })
         .transpose()?;
 
     struct Pending<'a> {
@@ -337,16 +341,7 @@ fn validate_list_scope_filters(
                 Some(candidate) => non_citable_kind_error(candidate),
                 None => format!("unknown kind `{kind}`"),
             };
-            let mut known = Vec::new();
-            let mut seen = BTreeSet::new();
-            for project in &context.projects {
-                for configured in &project.config.kinds {
-                    if configured.citable && seen.insert(configured.kind.clone()) {
-                        known.push(configured.kind.clone());
-                    }
-                }
-            }
-            return Err(anyhow!("{headline}\nknown kinds: {}", known.join(", ")));
+            return Err(anyhow!("{headline}\n{}", context.known_kinds_line()));
         }
     }
     Ok(())

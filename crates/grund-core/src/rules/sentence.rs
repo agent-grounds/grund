@@ -1,6 +1,7 @@
 //! The controlled-English sentence front end (§FS-rules.2–4, §AR-rules.2).
 
 mod count;
+mod selectors;
 mod subjects;
 mod targets;
 
@@ -11,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use subjects::parse_subject;
 use targets::kind_targets;
 
-pub(crate) use subjects::parse_selector;
+pub(crate) use selectors::parse_selector;
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) enum RuleSubject {

@@ -81,4 +81,4 @@ on the reason.
   answered with its subject. **Who this breaks:** a script matching a refused
   selector's exact stderr, or its text after `accepted form:`. Exit codes,
   stdout and the accepted selectors do not move, and `check --rule` prints
-  every byte it did. (agent-grounds/grund#505)
+  every byte it did. Closes [issue #505](https://github.com/agent-grounds/grund/issues/505). (PR #509)

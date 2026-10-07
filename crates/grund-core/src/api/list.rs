@@ -116,16 +116,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 Some(candidate) => non_citable_kind_error(candidate),
                 None => format!("unknown kind `{kind}`"),
             };
-            let mut known: Vec<String> = Vec::new();
-            let mut seen: BTreeSet<String> = BTreeSet::new();
-            for project in &context.projects {
-                for k in &project.config.kinds {
-                    if k.citable && seen.insert(k.kind.clone()) {
-                        known.push(k.kind.clone());
-                    }
-                }
-            }
-            return Err(anyhow!("{headline}\nknown kinds: {}", known.join(", ")));
+            return Err(anyhow!("{headline}\n{}", context.known_kinds_line()));
         }
     }
     let selected_projects = || {
@@ -153,7 +144,11 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
     let selector = opts
         .selector
         .as_deref()
-        .map(|raw| parse_selector(raw, &vocabulary).map_err(|error| anyhow!(error.message)))
+        .map(|raw| {
+            // §FS-rules.8.1: a refusal recovering no kind ends in `known kinds:`.
+            parse_selector(raw, &vocabulary)
+                .map_err(|refusal| anyhow!(refusal.render(&context.known_kinds_line())))
+        })
         .transpose()?;
 
     struct Entry<'a> {
