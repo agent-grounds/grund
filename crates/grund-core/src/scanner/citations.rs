@@ -111,7 +111,8 @@ pub(super) fn scan_local_section_candidates(
 /// falling through to the workspace-root run. Workspace-root and
 /// workspace-aware paths use the target's actual grammar via
 /// `scan_workspace_qualified_pass`, which is the one place the tail itself is
-/// judged.
+/// judged — for a known alias; an unknown one has no target there either, and
+/// is read with this same shape (§FS-workspace.1.2.1).
 ///
 /// `qualified_claimed` carries the marker offsets a qualified citation already
 /// exists at — the full-ID pass's on entry, this pass's own on return. The
@@ -143,45 +144,64 @@ pub(super) fn scan_fallback_qualified_citations(
             continue;
         };
         let id_start = token_start + prefix.get(0).unwrap().end();
-        let Some(id_rest) = line.scan_line.get(id_start..) else {
-            continue;
-        };
-        // §FS-workspace.5.2: the tail grammar does not decide recognition — a
-        // tail outside `KIND[-NUM]-SLUG` is an `unknown project alias` error
-        // all the same, at its own site.
-        let Some((id, section, id_len)) = parse_qualified_id_prefix(id_rest) else {
-            continue;
-        };
-        let token_end = id_start + id_len;
-        qualified_claimed.insert(marker_start);
-        findings.citations.push(Citation {
-            namespace: Some(alias.to_string()),
-            id,
-            section,
-            file: line.path.to_path_buf(),
-            line: line.lineno,
-            column: line.column_offset + marker_start + 1,
-            has_marker: true,
-            // The loose parser has no target grammar to derive a shorthand from,
-            // so a fallback-parsed qualified citation is never one (§AR-scanner.2.6).
-            shorthand: false,
-            local_section: false,
-            shorthand_rewritable: true,
-            numeric_run: false,
-            text: line.scan_line[marker_start..token_end].to_string(),
-            inline_site: line.inline_sites.get(&line.lineno).cloned(),
-            // §AR-scanner.2.4: classified in the post-pass in `scan_file`.
-            source_kind: String::new(),
-            enclosing_declaration: None,
-            enclosing_section: None,
-        });
+        if push_fallback_qualified_citation(line, marker_start, alias, id_start, findings) {
+            qualified_claimed.insert(marker_start);
+        }
     }
+}
+
+/// Push the qualified citation at `marker_start` whose tail, starting at
+/// `id_start`, is read with the loose `KIND[-NUM]-SLUG` shape rather than any
+/// project's grammar. Both runs that have no target to read a tail with use it:
+/// a run that loads no workspace (§FS-workspace.5.2), and a workspace run whose
+/// alias names no loaded project (§FS-workspace.1.2.1). Returns whether a
+/// citation was pushed.
+fn push_fallback_qualified_citation(
+    line: &CitationLine<'_>,
+    marker_start: usize,
+    alias: &str,
+    id_start: usize,
+    findings: &mut Findings,
+) -> bool {
+    let Some(id_rest) = line.scan_line.get(id_start..) else {
+        return false;
+    };
+    // §FS-workspace.5.2: the tail grammar does not decide recognition — a
+    // tail outside `KIND[-NUM]-SLUG` is an `unknown project alias` error
+    // all the same, at its own site.
+    let Some((id, section, id_len)) = parse_qualified_id_prefix(id_rest) else {
+        return false;
+    };
+    let token_end = id_start + id_len;
+    findings.citations.push(Citation {
+        namespace: Some(alias.to_string()),
+        id,
+        section,
+        file: line.path.to_path_buf(),
+        line: line.lineno,
+        column: line.column_offset + marker_start + 1,
+        has_marker: true,
+        // The loose parser has no target grammar to derive a shorthand from,
+        // so a fallback-parsed qualified citation is never one (§AR-scanner.2.6).
+        shorthand: false,
+        local_section: false,
+        shorthand_rewritable: true,
+        numeric_run: false,
+        text: line.scan_line[marker_start..token_end].to_string(),
+        inline_site: line.inline_sites.get(&line.lineno).cloned(),
+        // §AR-scanner.2.4: classified in the post-pass in `scan_file`.
+        source_kind: String::new(),
+        enclosing_declaration: None,
+        enclosing_section: None,
+    });
+    true
 }
 
 /// One line's worth of marker-qualified workspace citations: a `§<alias>/<ID>`
 /// token whose ID tail parses with the target project's grammar
-/// (§FS-workspace.1.2, §AR-workspace.2). Runs inline during `scan_file` in
-/// workspace mode so the file is read once, not twice.
+/// (§FS-workspace.1.2, §AR-workspace.2), or whose alias names no loaded project
+/// and whose tail is read with the fallback shape (§FS-workspace.1.2.1). Runs
+/// inline during `scan_file` in workspace mode so the file is read once, not twice.
 pub(super) fn scan_workspace_qualified_pass(
     line: &CitationLine<'_>,
     targets: &[WorkspaceCitationTarget],
@@ -205,21 +225,20 @@ pub(super) fn scan_workspace_qualified_pass(
             continue;
         };
         let id_start = token_start + prefix.get(0).unwrap().end();
+        // §FS-workspace.1.2.1: an alias naming no loaded project has no target, so
+        // no loaded grammar reads its tail — the fallback shape does, whatever kind
+        // it names, and the resolver reports the alias at this site.
+        let Some(target) = targets.iter().find(|target| target.alias == alias) else {
+            push_fallback_qualified_citation(line, marker_start, alias, id_start, findings);
+            continue;
+        };
         let Some(id_rest) = line.scan_line.get(id_start..) else {
             continue;
         };
-        // The winning target is kept, not just its parse: §FS-fmt.2.4.1 asks the
-        // numeric-run question with the *target's* number shape, the same grammar
-        // that claimed the token.
-        let parsed = match targets.iter().find(|target| target.alias == alias) {
-            Some(target) => parse_longest_id_prefix(id_rest, &target.config.grammar)
-                .map(|parsed| (parsed, &target.config)),
-            None => targets.iter().find_map(|target| {
-                parse_longest_id_prefix(id_rest, &target.config.grammar)
-                    .map(|parsed| (parsed, &target.config))
-            }),
-        };
-        let Some((parsed, target_config)) = parsed else {
+        // §FS-fmt.2.4.1 asks the numeric-run question with the *target's* number
+        // shape, the same grammar that claimed the token.
+        let target_config = &target.config;
+        let Some(parsed) = parse_longest_id_prefix(id_rest, &target_config.grammar) else {
             continue;
         };
         if target_config
