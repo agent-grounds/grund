@@ -1,0 +1,1 @@
+check --path-base=x {repo}

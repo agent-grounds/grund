@@ -294,7 +294,7 @@ Findings are written to **stdout**, one per line, in the form:
 <path>:<line>: suggestion: <message>
 ```
 
-`<path>` is relative to the base `[output] relative_paths` selects — the config root under the default ([§FS-config.3.6](FS-config.md#36-output--report-format)). `<line>` is 1-indexed. The `<path>:<line>:` prefix is mandatory on every finding so editors and agents can jump unmodified — this is the contract from [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements).
+`<path>` is relative to the base `--path-base` selects, else `[output] relative_paths` — the config root under the default ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from), [§FS-config.3.6](FS-config.md#36-output--report-format)). `<line>` is 1-indexed. The `<path>:<line>:` prefix is mandatory on every finding so editors and agents can jump unmodified — this is the contract from [§GOAL-friendliness-first.1](../goals.md#1-hard-requirements).
 
 Every retained located text finding carries its lowercase channel after that jump-friendly prefix: `error:` for [§FS-check.3](FS-check.md#3-errors-detected), `warning:` for [§FS-check.4](FS-check.md#4-warnings), and `suggestion:` for an enabled [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in) advisory. The channel prefix is report structure rather than part of the finding's message; `<message>` retains its ordinary bytes. Text reports follow the grouped order [§FS-errors.4](FS-errors.md#4-determinism) fixes. Every retained finding remains present and unabridged.
 
