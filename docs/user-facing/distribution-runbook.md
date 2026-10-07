@@ -166,10 +166,16 @@ Before that change may be made ([§FS-distribution-candidate.8.2](../functional-
   that point leaves the run partial, and a rerun resumes it.
 - **The environment.** A `cross-registry-publish` environment with a required
   reviewer, so every run waits for a maintainer's approval.
-- **Attestations.** The publishing job attests the build provenance of every
-  npm and PyPI file with `actions/attest-build-provenance` before it uploads.
-  Checksums say a file is the rehearsed one; the attestation says which
-  workflow run built it. Signing and notarization are deferred.
+- **Attestations.** The publishing job attests every npm and PyPI file with
+  `actions/attest-build-provenance` before it uploads. Checksums say a file is
+  the rehearsed one. The attestation binds the published files to the
+  publishing run, which took them from the rehearsal run `rehearsal_run_id`
+  names. It does not record which run built them. Signing and notarization are
+  deferred.
+- **The registries' own attestations.** npm provenance and PyPI's PEP 740
+  attestations must be in place before publication is turned on. The publisher
+  produces neither today: its npm upload carries no provenance statement and its
+  PyPI upload no `attestations` field.
 - **The crates.** The matching `grund-core`, `grund` and `grund-lsp` must
   already resolve on crates.io, published by `release.yml`; the publisher waits
   for them and publishes no crate ([§FS-distribution-candidate.8.4](../functional-spec/FS-distribution-candidate.md#84-order-and-readiness)).

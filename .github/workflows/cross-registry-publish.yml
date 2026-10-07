@@ -110,8 +110,9 @@ jobs:
           version="$(python -c 'import json; print(json.load(open("candidate/manifest.json"))["version"])')"
           python3 scripts/check_release_ramps.py "$version"
 
-      # §FS-distribution-candidate.8.6: checksums say a file is the rehearsed one,
-      # the attestation says which workflow run built it.
+      # §FS-distribution-candidate.8.6: checksums say a file is the rehearsed one. This
+      # binds the published files to this publishing run, which took them from the run
+      # `rehearsal_run_id` names; it does not record which run built them.
       - name: Attest the candidate's provenance
         uses: actions/attest-build-provenance@v3
         with:
