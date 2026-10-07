@@ -97,7 +97,7 @@ A citation with a section suffix (`§FS-<user-login>.3.1` or, in an opted-in rep
 - `grund <ID> --toc` — the lead plus the section map, for choosing the next subsection
 - `grund <ID> --brief` — heading plus first paragraph only, for hover-sized previews
 - `grund <ID> --full` — the full declaration body when the narrower reads are not enough
-- `grund <ID> --format json` — for tooling
+- `grund <ID> --format json` — for tooling; it carries the heading `anchor`, so a web link to the point is one read ([recipe](docs/user-facing/querying.md#link-a-citation-from-one-read))
 
 For many reads, the explicit batch form accepts ordered NDJSON and reuses one workspace scan; `--all` discovers every declaration and section from that same loaded catalog ([§FS-show.2.6](docs/functional-spec/FS-show.md#26-batch-resolution)):
 
