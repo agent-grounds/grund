@@ -362,9 +362,10 @@ def synthetic_candidate(root, version=VERSION, sha=SHA, scope="full-release",
         "toolchain": {"rust": "1.95.0"},
         "artifacts": artifacts, "payloads": payloads,
     }
-    text = json.dumps(manifest, indent=2, sort_keys=True) + "\n"
-    (root / "manifest.json").write_text(text, encoding="utf-8")
-    digest = sha256(text.encode())
+    # §FS-distribution-candidate.6.1: the digest is of the bytes on disk, LF on Windows too.
+    data = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    (root / "manifest.json").write_bytes(data)
+    digest = sha256(data)
     if receipts:
         write_receipts(root, digest)
     return root, digest
@@ -383,9 +384,9 @@ def rewrite_manifest(root, change):
     path = Path(root) / "manifest.json"
     manifest = json.loads(path.read_text(encoding="utf-8"))
     change(manifest)
-    text = json.dumps(manifest, indent=2, sort_keys=True) + "\n"
-    path.write_text(text, encoding="utf-8")
-    digest = sha256(text.encode())
+    data = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    path.write_bytes(data)
+    digest = sha256(data)
     write_receipts(root, digest)
     return digest
 
