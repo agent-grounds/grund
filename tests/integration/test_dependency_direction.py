@@ -60,6 +60,34 @@ NOTE = "§AR-system.4"
 # Empty is the state this dict is meant to stay in.
 RECORDED_DEBT = {}
 
+# §AR-config.5: the components still naming the `Config` façade outside their
+# tests. Held like the ledger above: a component off the list may not name it,
+# and one that stops naming it leaves the list, so the list only shrinks.
+CONFIG_FACADE = {
+    "api",
+    "checker",
+    "config",
+    "queries",
+    "resolver",
+    "scanner",
+    "workspace",
+    "writers",
+}
+
+# The façade by name: the type, not `KindConfig` or a word inside a longer one.
+CONFIG_NAME = re.compile(r"\bConfig\b")
+# A binding that holds a `Config`: a parameter or local typed as one, or a local
+# cloned from a receiver whose name says it is a config.
+CONFIG_BINDING = re.compile(
+    r"\b(?:mut\s+)?([a-z_][a-z0-9_]*)\s*:\s*(?:&\s*(?:'[a-z_]+\s+)?(?:mut\s+)?)?Config\b"
+    r"|\blet\s+mut\s+([a-z_][a-z0-9_]*)\s*=\s*[a-z_.]*config[a-z_]*\.clone\(\)"
+)
+# `<receiver>.<field> = …`, `+=`, `-=`, or a mutating call on the field.
+FIELD_WRITE = re.compile(
+    r"\b((?:[a-z_][a-z0-9_]*\.)*[a-z_][a-z0-9_]*)\.([a-z_][a-z0-9_]*)"
+    r"(?:\s*(?:=(?![=>])|\+=|-=)|\.(?:push|extend|retain|clear|insert|truncate|sort|dedup)\()"
+)
+
 
 def _components():
     return sorted(path.name for path in CORE.iterdir() if path.is_dir())
@@ -97,6 +125,52 @@ def _references():
                     if name:
                         found.setdefault((relative, f"{other}::{name}"), line)
     return found
+
+
+def _code(path):
+    """A file without its `//` comment lines, which name `Config` in prose."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return "\n".join("" if line.lstrip().startswith("//") else line for line in lines)
+
+
+def _implementation_files(component):
+    for path in sorted((CORE / component).glob("**/*.rs")):
+        if not _is_test_module(path):
+            yield path
+
+
+def components_naming_config():
+    """Every component whose implementation names the `Config` type."""
+    return {
+        component
+        for component in _components()
+        if any(CONFIG_NAME.search(_code(path)) for path in _implementation_files(component))
+    }
+
+
+def config_fields():
+    """The public fields of the `Config` façade, read from its declaration."""
+    for path in sorted((CORE / "config").glob("**/*.rs")):
+        match = re.search(r"^pub struct Config \{(.*?)^\}", _code(path), re.M | re.S)
+        if match:
+            return set(re.findall(r"^\s*pub(?:\([a-z]+\))?\s+([a-z_][a-z0-9_]*)\s*:", match.group(1), re.M))
+    raise AssertionError("no `pub struct Config` under config/")
+
+
+def config_writes(text, fields):
+    """`(line, receiver.field)` for every write to a `Config` field in `text`.
+
+    A receiver is a config when its last name says so (`config`,
+    `root_config`, `entry.config`) or when the file binds that name to a
+    `Config` (§AR-config.5). A heuristic, held to the cases below."""
+    bound = {name for pair in CONFIG_BINDING.findall(text) for name in pair if name}
+    writes = []
+    for match in FIELD_WRITE.finditer(text):
+        receiver, field = match.groups()
+        last = receiver.split(".")[-1]
+        if field in fields and ("config" in last or last in bound):
+            writes.append((text.count("\n", 0, match.start()) + 1, f"{receiver}.{field}"))
+    return writes
 
 
 def _reads_downward(component, other):
@@ -165,6 +239,48 @@ class DependencyDirectionTests(unittest.TestCase):
             if line is not None and not _note_is_above(file, line):
                 unmarked.append(f"{file}:{line} ({item})")
         self.assertEqual([], unmarked, "recorded reads with no §AR-system.4 note above them")
+
+
+class ConfigFacadeTests(unittest.TestCase):
+    """§AR-config.5: the façade list only shrinks, and nothing writes the façade."""
+
+    maxDiff = None
+
+    def test_the_writer_detector_sees_the_shapes_it_must(self):
+        fields = {"scan_full", "owner_lines", "require_grounding"}
+        text = (
+            "fn a(config: &mut Config) { config.scan_full = true; }\n"
+            "fn b(c: &Config) { let mut walk = c.clone(); }\n"
+            "fn c(root: &Config) { let mut alone = root_config.clone(); alone.owner_lines.clear(); }\n"
+            "fn d(p: P) { p.config.require_grounding = true; }\n"
+            "fn e(r: &mut Run) { r.scan_full = true; if x.scan_full == y {} }\n"
+            "fn f(c: &Config) { match c { s if s.scan_full => 1 } }\n"
+        )
+        self.assertEqual(
+            ["config.scan_full", "alone.owner_lines", "p.config.require_grounding"],
+            [write for _, write in config_writes(text, fields)],
+        )
+
+    @unittest.expectedFailure
+    def test_no_component_off_the_list_names_config(self):
+        self.assertEqual([], sorted(components_naming_config() - CONFIG_FACADE))
+
+    def test_every_component_on_the_list_still_names_config(self):
+        """Remove a component from CONFIG_FACADE in the change that moves it off."""
+        self.assertEqual([], sorted(CONFIG_FACADE - components_naming_config()))
+
+    @unittest.expectedFailure
+    def test_no_config_field_is_written_outside_config(self):
+        """A per-run change is made to the `Run`, and the façade is rebuilt from it."""
+        fields = config_fields()
+        writes = []
+        for component in _components():
+            if component == "config":
+                continue
+            for path in _implementation_files(component):
+                relative = path.relative_to(CORE).as_posix()
+                writes.extend(f"{relative}:{line} writes {write}" for line, write in config_writes(_code(path), fields))
+        self.assertEqual([], writes)
 
 
 if __name__ == "__main__":

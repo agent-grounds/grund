@@ -45,6 +45,24 @@ ENTRY_POINTS = (
     "init",
 )
 
+# §AR-config.1 and §DA-config-concern-records.4: the records ship at the root
+# beside the names they replace, and each replaced name is a deprecated alias
+# whose note names the release that removes it (§DISC-core-concerns.9.9).
+CONCERN_RECORDS = ("Catalog", "Project", "Run", "Compiled", "effective_project")
+DEPRECATED_ALIASES = ("Findings", "Config", "KindConfig", "CitationRules")
+NOTICE, REMOVAL = "0.17.0", "0.19.0"
+# The disposition §DISC-grund-core-public-surface.4 gives a name a ramp already
+# written into the tree removes.
+RAMP = "retire with the ramp"
+# A root `pub type` alias and the attributes stacked above it.
+# An attribute may span lines, the way rustfmt wraps a long one.
+ALIAS = re.compile(r"((?:^#\[[^\]]*\]\s*)*)^pub\s+type\s+([A-Za-z_][A-Za-z0-9_]*)\b", re.MULTILINE)
+DEPRECATED = re.compile(
+    r'#\[deprecated\(\s*since\s*=\s*"([^"]*)"\s*,\s*note\s*=\s*"([^"]*)"\s*,?\s*\)\]'
+)
+# An inventory row's first and last cells: the name and its disposition.
+DISPOSITION = re.compile(r"^\|\s*`([A-Za-z_][A-Za-z0-9_]*)`\s*\|.*\|\s*([^|]+?)\s*\|\s*$", re.MULTILINE)
+
 
 class GlobReExport(AssertionError):
     pass
@@ -114,6 +132,22 @@ def inventory_names():
     return ROW.findall(INVENTORY.read_text(encoding="utf-8"))
 
 
+def deprecated_aliases():
+    """`name -> (since, note)` for every deprecated root `pub type` alias."""
+    found = {}
+    for attributes, name in ALIAS.findall(_source()):
+        match = DEPRECATED.search(attributes)
+        if match:
+            found[name] = match.groups()
+    return found
+
+
+def inventory_dispositions():
+    if not INVENTORY.is_file():
+        return {}
+    return dict(DISPOSITION.findall(INVENTORY.read_text(encoding="utf-8")))
+
+
 def _sample(names, limit=8):
     names = sorted(names)
     shown = ", ".join(names[:limit])
@@ -167,6 +201,39 @@ class PublicSurfaceInventoryTests(unittest.TestCase):
             _sample(duplicated),
             "inventory rows repeating one name, so one name has two dispositions",
         )
+
+
+class ConcernRecordSurfaceTests(unittest.TestCase):
+    """§AR-config.1: the records are public, and the names they replace take the
+    deprecation path of §REQ-backwards-compatibility.2 rather than vanishing."""
+
+    @unittest.expectedFailure
+    def test_the_concern_records_are_root_names(self):
+        missing = [name for name in CONCERN_RECORDS if name not in set(public_root_names())]
+        self.assertEqual([], missing)
+
+    @unittest.expectedFailure
+    def test_each_replaced_name_is_a_deprecated_alias_naming_its_removal(self):
+        aliases = deprecated_aliases()
+        wrong = []
+        for name in DEPRECATED_ALIASES:
+            if name not in aliases:
+                wrong.append(f"{name}: no #[deprecated] `pub type` at the crate root")
+                continue
+            since, note = aliases[name]
+            if since != NOTICE or REMOVAL not in note:
+                wrong.append(f"{name}: since {since!r}, note {note!r}")
+        self.assertEqual([], wrong)
+
+    @unittest.expectedFailure
+    def test_the_inventory_retires_the_replaced_names_with_the_ramp(self):
+        dispositions = inventory_dispositions()
+        wrong = [
+            f"{name}: {dispositions.get(name, '(no row)')}"
+            for name in DEPRECATED_ALIASES
+            if dispositions.get(name) != RAMP
+        ]
+        self.assertEqual([], wrong)
 
 
 if __name__ == "__main__":

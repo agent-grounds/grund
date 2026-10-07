@@ -78,7 +78,7 @@ core owns non-Unicode workspace preflight and integration-install orchestration.
 Existing Rust entry points and CLI rendering/defaults stay compatible
 ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). Historical signatures below are not a frozen Python schema.
 
-- `grund_core::scan(root: &Path) -> Result<Findings>`
+- `grund_core::scan(root: &Path) -> Result<Catalog>`
 - `grund_core::check(root: &Path) -> Result<Report>`
 - `grund_core::check_with_opts(opts: CheckOpts) -> Result<CheckOutput>`
 - `grund_core::show(id: &str, opts: ShowOpts) -> Result<ShowOutput>`
@@ -89,8 +89,9 @@ Existing Rust entry points and CLI rendering/defaults stay compatible
 - `grund_core::propose_id(kind, title, opts) -> Result<IdProposalOutcome>`
 - `grund_core::init(opts: InitOpts) -> Result<InitOutput>`
 - `grund_core::complete_ids(opts: CompleteIdsOpts) -> Result<Vec<String>>`
-- `grund_core::effective_config(path)` / `grund_core::validate_config(path)`
-- The `Findings`, `Declaration`, `Citation`, `Report` data types.
+- `grund_core::effective_project(path) -> Result<Project>`, and `grund_core::effective_config(path)` / `grund_core::validate_config(path)` beside it
+- The `Catalog`, `Declaration`, `Citation`, `Report` data types, and the configuration records `Project`, `Run` and `Compiled` ([§AR-config.1](AR-config.md#1-the-records)).
+- `Findings`, `Config`, `KindConfig` and `CitationRules`, deprecated since `0.17.0` and removed in `0.19.0`: `Findings` is an alias of `Catalog`, and `Config` is the façade [§AR-config.5](AR-config.md#5-the-config-façade-and-the-list-that-only-shrinks) builds from the records.
 
 Every name on the crate's public surface returns data and writes to no stream; callers decide what to do with it ([§FS-distribution.3.1](../functional-spec/FS-distribution.md#31-rust-grund-core-crate)). The former `grund_core::main_entry()` exception and its `compat/` renderer are absent ([§AR-system.2.9.1](README.md#291-no-process-frontend-lives-in-the-engine)). The published `grund` CLI owns command parsing, terminal rendering and exit-code policy for every command, and imports no `grund_core::command_*` symbol and no engine renderer under any spelling — `run_integrations` and `print_config_warnings` are the CLI's own ([§FS-integrations.1](../functional-spec/FS-integrations.md#1-user-facing-command), [§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path), [§DA-engine-renders-nothing](../decisions/architectural/DA-engine-renders-nothing.md#da-engine-renders-nothing-the-engine-renders-nothing-so-the-deprecated-compat-frontend-retires)). `tests/integration/test_engine_boundary.py` holds the boundary: no engine source writes to a stream or exits a process, no process-entry export or compatibility frontend test machinery remains, and neither live frontend references an engine renderer.
 

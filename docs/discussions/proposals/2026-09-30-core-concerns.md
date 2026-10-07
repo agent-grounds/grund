@@ -294,6 +294,8 @@ Three things in that sketch are the agora's rather than the draft's, and each cl
 
 `Findings` becomes `Catalog`, the name [§FS-terms.terms.1](../../functional-spec/FS-terms.md#terms1-declarations-and-coordinates) already gives the scan's shared set; a *finding* is a report item, and the central type should not wear another word's name.
 
+**Amended 2026-10-07.** The sketch's `place: Option<Place>` and `Extent /* Folders | Files | Complement */` are superseded by the ruling of [§DISC-core-concerns.6.4](2026-09-30-core-concerns.md#64-amended-after-the-verdict-v-a08-and-v-a14): a row carries `places: Vec<Place>`, and an extent is one `Folder`, one `File` or the `Complement`, so a row with several places holds several of them. The record as built is [§AR-config.1.3](../../architecture/AR-config.md#13-rows-places-and-kinds-over-one-vector), and [§DA-config-concern-records.2.1](../../decisions/architectural/DA-config-concern-records.md#21-one-project-three-concern-records-and-an-envelope) carries the same amendment.
+
 ### 5.2 Stages take one concern
 
 ```rust
@@ -632,8 +634,10 @@ The vocabulary of [§DISC-core-concerns.4.1](2026-09-30-core-concerns.md#41-voca
 
 Not shipped. Planned for `0.17.0`, the notice release of [§DISC-core-concerns.9.9](2026-09-30-core-concerns.md#99-the-deprecation-ledger), as `agent-grounds/grund#453` and `agent-grounds/grund#454`.
 
+**Status 2026-10-07.** `agent-grounds/grund#453` writes the records, the v1 reader under `config/v1/`, the `Findings` → `Catalog` rename and the shrinking `Config` façade list ([§AR-config](../../architecture/AR-config.md#ar-config-one-project-per-project-read-by-one-reader-per-version-and-lowered-losslessly)). The `conform`/`judge` split and the three crossings of [§DISC-core-concerns.2.7](2026-09-30-core-concerns.md#27-the-engine-already-reads-by-concern) stay with `agent-grounds/grund#454`. Phase 1 is shipped when the release that carries both is cut ([§DISC-core-concerns.9.8](2026-09-30-core-concerns.md#98-what-shipped) records tags, not merges).
 
-`Project`, `Run` and `Compiled` split out of `Config`, with the v1 reader as `config/v1.rs` lowering into them; the checker split into `conform` and `judge`; the three leaks of [§DISC-core-concerns.2.7](2026-09-30-core-concerns.md#27-the-engine-already-reads-by-concern) closed by signature; `Findings` → `Catalog`, and `Row { place, kind }` with `places()` and `kinds()` over one vector. `Config` stays as a façade, and a component is finished when it no longer names it — a list that only shrinks, held the way [§AR-system.4](../../architecture/README.md#4-dependency-direction)'s upward reads are held. The public names of [§DISC-core-concerns.5.4](2026-09-30-core-concerns.md#54-the-public-surface) take the deprecation path, their notes naming the removal [§DISC-core-concerns.9.7](2026-09-30-core-concerns.md#97-what-a-deprecation-note-may-name) allows.
+
+`Project`, `Run` and `Compiled` split out of `Config`, with the v1 reader under `config/v1/` lowering into them; the checker split into `conform` and `judge`; the three leaks of [§DISC-core-concerns.2.7](2026-09-30-core-concerns.md#27-the-engine-already-reads-by-concern) closed by signature; `Findings` → `Catalog`, and `Row { places, kind }` with `places()` and `kinds()` over one vector. `Config` stays as a façade, and a component is finished when it no longer names it — a list that only shrinks, held the way [§AR-system.4](../../architecture/README.md#4-dependency-direction)'s upward reads are held. The public names of [§DISC-core-concerns.5.4](2026-09-30-core-concerns.md#54-the-public-surface) take the deprecation path, their notes naming the removal [§DISC-core-concerns.9.7](2026-09-30-core-concerns.md#97-what-a-deprecation-note-may-name) allows.
 
 Gate: every existing test and e2e case byte-identical, no new upward read, and the derived concern inventory of Phase 0 regenerated from the new signatures and unchanged.
 
