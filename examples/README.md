@@ -42,6 +42,11 @@ coverage is in the shared binding corpus.
 
 ## Run an example
 
+The [Node API consumer](node-api/) is tested through a fresh packed-package
+installation ([§FS-distribution.3.2.4](../docs/functional-spec/FS-distribution.md#324-acceptance-evidence));
+follow its README and the [Node guide](../docs/user-facing/node-api.md).
+Its consumer capture uses the existing json-report fixture.
+
 From the repo root, with a built `grund` binary on `$PATH` (or invoked
 via `cargo run --`):
 

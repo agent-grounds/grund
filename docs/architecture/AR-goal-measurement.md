@@ -47,10 +47,14 @@ entry instead of allowing the baseline to conceal it.
 ## 2. Goal meters
 
 `tests/bindings/` is the executable Rust/Python complete-data and canonical-byte
-meter required by [§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity). Until the missing frontend and Rust oracle
-adapter are supplied, its entry failure is evidence of absence, not measured parity.
-After it passes it measures Rust/Python only; Node remains pending until #469 adds
-its adapter. CLI goldens remain a separate authoritative projection.
+meter required by [§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity), and `tests/bindings/node/` with
+`tests/e2e/test_node_binding.py` is the Rust/Node one, specified in [§FS-distribution.3.2.4](../functional-spec/FS-distribution.md#324-acceptance-evidence).
+Until a frontend and its Rust oracle adapter are supplied, its meter's entry
+failure is evidence of absence, not measured parity; once passing, each measures
+its own pair only and claims no coverage of the other. Passing complete-data and
+separate same-version CLI stdout/stderr/status comparisons measure local parity,
+never registry availability or packaging's entire installed-platform matrix. CLI
+goldens remain a separate authoritative projection.
 
 | Goal | Meter |
 |---|---|

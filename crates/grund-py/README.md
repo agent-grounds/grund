@@ -41,8 +41,9 @@ Carry **Adapt Python marshalling to #466/#453/#454**: replace internal Rust
 adapters when that core transition lands, preserve the approved Python schema,
 and rerun the complete parity corpus. The additive `EmbeddingRequest`/envelope
 surface uses schema fields instead of exposing Config or Findings layouts.
-Node (#469) adds its adapter to the same corpus; current parity infrastructure
-targets Rust/Python and does not claim Node has been implemented or checked.
+Node's adapter lives in `tests/bindings/node/`, run by its own
+`tests/bindings/node/run.py` against the same Rust oracle; this package's parity
+infrastructure targets Rust/Python and claims no Node coverage.
 
 ## Checking locally
 

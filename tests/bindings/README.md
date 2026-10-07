@@ -30,8 +30,10 @@ The Python adapter recursively enumerates every dataclass field and tuple; it
 does not whitelist report fields. Deep equality and canonical byte equality are
 both mandatory. The canonical comparator is a test-only encoder, not a shipped
 conversion implementation. The operation/fixture matrix lives in corpus.py.
-Node later joins ADAPTERS in support.py with the same request/response contract;
-there is no Node coverage claim today.
+Node's adapter exists in [`node/`](node/): `node/adapter.mjs` speaks the same
+request/response contract to the same Rust oracle, and `node/run.py` runs it
+apart from ADAPTERS in support.py. Neither binding's parity claims the other's
+coverage.
 
 Local build tests copy only git-tracked source to scratch under `~/ag/tmp`, install
 in fresh environments, build an sdist and install its unpacked sources separately.
