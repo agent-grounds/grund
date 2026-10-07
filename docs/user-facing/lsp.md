@@ -33,13 +33,8 @@
 
 ## Install
 
-Install the CLI first:
-
-```bash
-cargo install grund
-```
-
-Then install the LSP server separately:
+`grund-lsp` installs on its own. It does not need the `grund` CLI, and the CLI
+does not pull it in; install whichever you use ([§FS-lsp.2.1](../functional-spec/FS-lsp.md#21-install)):
 
 ```bash
 cargo install grund-lsp
@@ -52,6 +47,11 @@ When testing from this repository before a release, install the workspace crate 
 cargo install --path crates/grund-lsp
 grund-lsp --version
 ```
+
+There is no `grund-lsp` on npm or PyPI yet. A locally built candidate's
+`grund-lsp` wheel or npm tarballs install the server alone, with no CLI and no
+Rust toolchain, and put the same `grund-lsp` command on `PATH`; see
+[installing from a local candidate](installation.md#from-a-local-candidate).
 
 `grund-lsp` speaks LSP over stdio. Configure your editor to launch `grund-lsp` from the workspace root; there is no daemon, socket, or long-running service outside the editor process ([§FS-lsp.2.2](../functional-spec/FS-lsp.md#22-lifecycle)).
 
