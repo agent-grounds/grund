@@ -11,7 +11,7 @@ use super::*;
 use crate::checker::{check_findings, dangling_message};
 use crate::config::{Config, load_config_at_with_report_base};
 #[cfg(unix)]
-use crate::model::{Declaration, DeclarationSource, Findings};
+use crate::model::{Catalog, Declaration, DeclarationSource};
 use crate::model::{Id, TextOverlays, format_path};
 use crate::testing::{
     findings_signature, legacy_fs_folder_config, scan_errors_signature, test_root, write,
@@ -77,7 +77,7 @@ fn parallel_file_scan_matches_sequential_scan() {
     assert_eq!(
         findings_signature(&config, &parallel),
         findings_signature(&config, &sequential),
-        "parallel file scanning must merge to the same Findings as the sequential path"
+        "parallel file scanning must merge to the same Catalog as the sequential path"
     );
     assert_eq!(
         scan_errors_signature(parallel_errors),
@@ -264,7 +264,7 @@ fn check_uses_scanned_symlink_path_for_kind_home() {
         num: Some(1),
         slug: Some("router".to_string()),
     };
-    let mut findings = Findings::default();
+    let mut findings = Catalog::default();
     findings.declarations.insert(
         id.clone(),
         vec![Declaration {

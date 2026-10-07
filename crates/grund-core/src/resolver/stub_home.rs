@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use crate::config::Config;
 use crate::model::{
-    Declaration, Findings, Id, TargetRecords, TextOverlays, is_stub_for_inline_decl,
+    Catalog, Declaration, Id, TargetRecords, TextOverlays, is_stub_for_inline_decl,
     paths_same_location, physical_path_key, resolve_stub_target,
 };
 use crate::scanner::{scan_reads_target, scan_unwalked_file};
@@ -44,7 +44,7 @@ pub(crate) fn target_records(
 
 /// The declaration of `id` that `stub` pairs with in a target the walk recorded
 /// nothing of `id` at (§FS-check.3.2.1): read on the first ask, at most once per
-/// target per run, under the overlays the walk read (`Findings::stub_targets`).
+/// target per run, under the overlays the walk read (`Catalog::stub_targets`).
 ///
 /// `None` for anything but a stub whose target is another scannable file. A target
 /// holding a recorded declaration of `id` answers from that record, which is
@@ -55,7 +55,7 @@ pub(crate) fn target_records(
 /// declares `id` twice, and every target of an ID with more than one home, which
 /// `show` refuses as ambiguous rather than read (§FS-show.2.3.7, §FS-show.2.2.1).
 pub(crate) fn unscanned_stub_home<'a>(
-    findings: &'a Findings,
+    findings: &'a Catalog,
     config: &Config,
     id: &Id,
     stub: &Declaration,
@@ -101,7 +101,7 @@ pub(crate) fn unscanned_stub_home<'a>(
 /// value's authority from, as it would were the target scanned (§FS-check.3.2.1),
 /// and the home the size catalog measures (§FS-list.3.4.6).
 pub(crate) fn home_as_scanned<'a>(
-    findings: &'a Findings,
+    findings: &'a Catalog,
     config: &Config,
     id: &Id,
     home: &'a Declaration,
@@ -111,7 +111,7 @@ pub(crate) fn home_as_scanned<'a>(
 
 /// Every stub's target, by physical location: the slots one run keeps, resolved
 /// once, on the first section a recorded declaration does not hold.
-fn stub_target_keys(findings: &Findings, config: &Config) -> Vec<PathBuf> {
+fn stub_target_keys(findings: &Catalog, config: &Config) -> Vec<PathBuf> {
     findings
         .declarations
         .values()

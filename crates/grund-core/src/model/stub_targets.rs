@@ -1,6 +1,6 @@
 //! The stub targets one run reads outside its walk, each at most once
 //! (§FS-check.3.2.1, §AR-resolver.5). The records a target holds are a fact of the
-//! tree the walk saw, so they live with the `Findings` that walk produced: a
+//! tree the walk saw, so they live with the `Catalog` that walk produced: a
 //! rescan, such as the next `--watch` run, starts from empty slots and reads every
 //! target it needs again, through the input observation of §FS-check.6.1.1.
 //!
@@ -21,7 +21,7 @@ pub(crate) type TargetRecords = BTreeMap<Id, Vec<Declaration>>;
 /// first time any slot is asked for, and a slot is filled the first time its own
 /// target is, so a target no reader asks about is never read and one many readers
 /// ask about is read once. Both are `OnceLock`s rather than a locked map so a
-/// filled slot can be borrowed for as long as the `Findings` that owns it.
+/// filled slot can be borrowed for as long as the `Catalog` that owns it.
 #[derive(Default)]
 pub(crate) struct StubTargets {
     /// The editor's text the walk read (§FS-lsp.1.1), so a target read after it

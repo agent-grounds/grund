@@ -16,12 +16,12 @@ use super::*;
 use crate::checker::check_findings;
 use crate::config::Config;
 use crate::grammar::DocstringContent;
-use crate::model::{CheckReport, Findings};
+use crate::model::{Catalog, CheckReport};
 use crate::queries::{DeclaredId, on_type_line_edits};
 use crate::scanner::scan_tree;
 use crate::testing::{numbered_config, test_root, write};
 
-fn check_tree(config: &Config, root: &Path) -> (Findings, CheckReport) {
+fn check_tree(config: &Config, root: &Path) -> (Catalog, CheckReport) {
     let (findings, errors) = scan_tree(config, Some(root), true).expect("scan");
     assert!(errors.is_empty(), "unexpected scan errors: {errors:?}");
     let report = check_findings(&findings, config);

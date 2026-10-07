@@ -1,5 +1,5 @@
 //! The scanner component (§AR-system.2.5): one walk of the tree that reads every
-//! file once and produces `Findings` — every declaration, section, citation,
+//! file once and produces `Catalog` — every declaration, section, citation,
 //! value binding and grounding unit in it (§FS-check.1, §AR-scanner). It consumes
 //! the scope and the grammar, knows no rule and no frontend, and never asks
 //! whether it is in a workspace.
@@ -11,12 +11,12 @@
 //! traversal of §AR-scanner.1 in `walk*`, the per-file line pass of
 //! §AR-scanner.2 in `file_pass`, the passes it calls out to for citations,
 //! values and grounding structure, the tree-level driver that merges one
-//! `Findings` out of many in `tree`, the record of each stub's home that driver
+//! `Catalog` out of many in `tree`, the record of each stub's home that driver
 //! makes once the walk is done (§AR-scanner.4.6) in `stub_homes`, and the
 //! off-grammar reconciliation of §FS-config.3.2 in `legacy*`.
 //!
 //! What the component does **not** hold any more: the `FileStructure` records
-//! §AR-scanner.2.7 fills went down into `model/`, because `Findings` carries them
+//! §AR-scanner.2.7 fills went down into `model/`, because `Catalog` carries them
 //! and they are plain data, and five lexical items the flat layout parked here
 //! went down into `grammar/` (§AR-system.2.1). The snapshot canonicalization of
 //! §AR-lsp.5.1 followed them into `model/paths.rs` when §AR-system.2.9 became a

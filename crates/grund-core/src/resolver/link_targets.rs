@@ -20,7 +20,7 @@ use super::stub_home::home_as_scanned;
 use crate::config::Config;
 use crate::grammar::{anchor_slug, reduce_heading_text, render_id};
 use crate::model::{
-    Declaration, Findings, Id, SectionInfo, is_stub_for_inline_decl, resolve_stub_target,
+    Catalog, Declaration, Id, SectionInfo, is_stub_for_inline_decl, resolve_stub_target,
 };
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
@@ -37,7 +37,7 @@ pub(crate) fn markdown_link_target(
     id: &Id,
     section: Option<&str>,
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
 ) -> Option<String> {
     markdown_link_target_with_root(from_file, id, section, config, findings, None)
 }
@@ -52,7 +52,7 @@ pub(crate) fn markdown_link_target_with_root(
     id: &Id,
     section: Option<&str>,
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     path_root: Option<&Path>,
 ) -> Option<String> {
     let decls = findings.declarations.get(id)?;

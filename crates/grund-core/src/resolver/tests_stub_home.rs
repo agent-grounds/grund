@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 
 use super::*;
 use crate::config::{Config, load_config};
-use crate::model::{CheckInput, Findings, Id, normalize_path_lexically, with_check_input_observer};
+use crate::model::{Catalog, CheckInput, Id, normalize_path_lexically, with_check_input_observer};
 use crate::scanner::scan_tree;
 use crate::testing::{test_root, write};
 
@@ -41,7 +41,7 @@ fn id(slug: &str) -> Id {
 
 /// A scanned `FS-first` with a section, and stubs of `FS-second` and `FS-third`
 /// in `docs/` pointing at `source.rs`, which `[scan] include` leaves out.
-fn stub_repo(name: &str) -> (Config, Findings) {
+fn stub_repo(name: &str) -> (Config, Catalog) {
     let root = test_root(name);
     write(&root.join("grund.toml"), CONFIG);
     write(
@@ -58,7 +58,7 @@ fn stub_repo(name: &str) -> (Config, Findings) {
     rescan(&root)
 }
 
-fn rescan(root: &Path) -> (Config, Findings) {
+fn rescan(root: &Path) -> (Config, Catalog) {
     let config = load_config(root).expect("load config");
     let (findings, _) = scan_tree(&config, None, false).expect("scan");
     (config, findings)

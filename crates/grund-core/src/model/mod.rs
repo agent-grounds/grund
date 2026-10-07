@@ -1,9 +1,9 @@
 //! The model component (§AR-system.2.2): the data every other component passes
-//! along — `Findings`, `Declaration`, `Citation` and `Report`, plus the value
+//! along — `Catalog`, `Declaration`, `Citation` and `Report`, plus the value
 //! records (§FS-values.2). It consumes nothing and is types plus tiny helpers,
 //! so it knows nothing of the tree, the rules or a frontend. The `Config` record
 //! sat here while config was a file-name category and is config's own since
-//! §AR-system.2.3 became a module; the grounding-structure records `Findings`
+//! §AR-system.2.3 became a module; the grounding-structure records `Catalog`
 //! carries came the other way, out of the scanner, when §AR-system.2.5 became
 //! one (§AR-scanner.2.7).
 //!
@@ -48,7 +48,7 @@ pub use headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHe
 pub(crate) use line_owners::{FileLineOwnership, OwnerRun, RangeOwnership, SectionRun};
 pub use paths::canonical_snapshot_path;
 pub use records::{
-    Citation, Declaration, DocCommentBlock, FileHeading, FileStructure, Findings, Id,
+    Catalog, Citation, Declaration, DocCommentBlock, FileHeading, FileStructure, Id,
     InlineCitationSite, SectionInfo, ShowOutput, ShowSection,
 };
 pub use report::{Finding, FindingSite, Report};

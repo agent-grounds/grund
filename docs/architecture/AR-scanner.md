@@ -1,17 +1,17 @@
 # AR-scanner: how grund discovers declarations and citations
 
-The scanner is the single tree-walk that produces grund's input data, the `Findings` of section 3, and it holds the one probe over the tree that is no part of that walk: which agent entrypoint files a repository has ([§AR-system.2.5](README.md#25-scanner)). Every check in [§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo) and every retrieval in [§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id) derives from what the scanner finds. Speed ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)) is set here.
+The scanner is the single tree-walk that produces grund's input data, the `Catalog` of section 3, and it holds the one probe over the tree that is no part of that walk: which agent entrypoint files a repository has ([§AR-system.2.5](README.md#25-scanner)). Every check in [§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo) and every retrieval in [§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id) derives from what the scanner finds. Speed ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)) is set here.
 
 ## placement: Where the scanner sits
 
 ```text
 config ────┐
-workspace ─┼─► [ scanner ] ─► Findings ─┬─► checker
+workspace ─┼─► [ scanner ] ─► Catalog ──┬─► checker
 grammar ───┘                            ├─► queries
                                         └─► writers
 ```
 
-The fifth box of the pipeline ([§AR-system.2.5](README.md#25-scanner)). It takes the scope from workspace and config ([§AR-system.2.4](README.md#24-workspace), [§AR-system.2.3](README.md#23-config)) and the lexical facts from grammar ([§AR-system.2.1](README.md#21-grammar)), and gives one `Findings` (section 3) to the checker, the queries and the writers ([§AR-system.2.6](README.md#26-checker), [§AR-system.2.7](README.md#27-queries), [§AR-system.2.8](README.md#28-writers)). It knows no rule and no frontend, and never asks whether it is in a workspace: the resolver above it answers that ([§AR-workspace.3.2](AR-workspace.md#32-the-scanner-never-branches-on-workspace)).
+The fifth box of the pipeline ([§AR-system.2.5](README.md#25-scanner)). It takes the scope from workspace and config ([§AR-system.2.4](README.md#24-workspace), [§AR-system.2.3](README.md#23-config)) and the lexical facts from grammar ([§AR-system.2.1](README.md#21-grammar)), and gives one `Catalog` (section 3) to the checker, the queries and the writers ([§AR-system.2.6](README.md#26-checker), [§AR-system.2.7](README.md#27-queries), [§AR-system.2.8](README.md#28-writers)). It knows no rule and no frontend, and never asks whether it is in a workspace: the resolver above it answers that ([§AR-workspace.3.2](AR-workspace.md#32-the-scanner-never-branches-on-workspace)).
 
 ## terms: Terms
 
@@ -347,7 +347,7 @@ The record is **structure, not units**: the level that turns it into units belon
 
 ## 3. Output
 
-The walk's only structured output is a `Findings` struct, and everything downstream (checking, showing, IDE diagnostics) operates on it; which agent entrypoint files a repository has is the scanner's one answer outside it, from a probe that is no part of the walk ([§AR-system.2.5](README.md#25-scanner)). `Findings` contains:
+The walk's only structured output is a `Catalog` struct, and everything downstream (checking, showing, IDE diagnostics) operates on it; which agent entrypoint files a repository has is the scanner's one answer outside it, from a probe that is no part of the walk ([§AR-system.2.5](README.md#25-scanner)). `Catalog` contains:
 
 - `declarations: BTreeMap<Id, Vec<Declaration>>` — keyed by ID, with file/line, stub-info (and, on a stub, every line its home declares the ID on — [§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk)), the recorded sections (each section path paired with its heading text — [§AR-scanner.2.2](AR-scanner.md#22-section-detection)) per declaration, and the body line range ([§AR-scanner.2.4.1](AR-scanner.md#241-declaration-body-range)). An `E2E` declaration ([§AR-scanner.6](AR-scanner.md#6-e2e-case-declarations)) carries its case-directory path, fixture list, invocation, and expected exit code instead.
 - `citations: Vec<Citation>` — each with the referenced ID, optional section, file, line, and start column, whether it was written marker-prefixed or bare, whether it was written in the number-only shorthand ([§AR-scanner.2.6](AR-scanner.md#26-number-only-shorthand-citations)), the resolved source kind plus enclosing declaration ([§AR-scanner.2.4.2](AR-scanner.md#242-citation-source-kind), [§AR-scanner.2.4.3](AR-scanner.md#243-the-enclosing-declaration)), and, in a source inline comment, its inline citation site ([§AR-scanner.3.1](AR-scanner.md#31-inline-citation-sites)).

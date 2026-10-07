@@ -8,14 +8,14 @@
 //! the format it missed, and the shape that format reads — never a corrected ID,
 //! which would be an opinion about what the author meant (§FS-non-goals.3).
 
-use crate::model::{CheckReport, Diagnostic, Findings, LANDED_CLAUSE};
+use crate::model::{Catalog, CheckReport, Diagnostic, LANDED_CLAUSE};
 
 /// §FS-declarations.checks.declaration-near-miss: one error per heading that came close, since
 /// `0.16.0` (§FS-declarations.checks.declaration-near-miss.5). The severity never changes catalog
 /// recognition or citation promotion, so the read commands still resolve the ID. Sorted with the
 /// rest of the report by the shared comparator, so a run over one tree prints them in the same
 /// order every time (§FS-errors.4.1).
-pub(super) fn check_declaration_near_misses(findings: &Findings, report: &mut CheckReport) {
+pub(super) fn check_declaration_near_misses(findings: &Catalog, report: &mut CheckReport) {
     report.errors.extend(
         findings
             .near_miss_headings

@@ -1,7 +1,7 @@
 use crate::config::{Config, LeadSizeWarning, measure_point_text};
 use crate::grammar::render_id;
 use crate::model::{
-    CheckReport, Declaration, Diagnostic, Findings, Id, SectionInfo, TextOverlays,
+    Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, TextOverlays,
     is_stub_for_inline_decl,
 };
 use crate::resolver::{PointBodyCache, point_body_pair};
@@ -12,7 +12,7 @@ use crate::resolver::{PointBodyCache, point_body_pair};
 /// pass only applies the configured strict threshold and constructs the fixed
 /// warning, keeping CLI and LSP on the same checker path.
 pub(super) fn check_oversized_leads(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     current_alias: Option<&str>,
     overlays: &TextOverlays,

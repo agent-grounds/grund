@@ -11,7 +11,7 @@
 
 use super::{load_workspace_context, markdown_link_target, markdown_link_target_with_root};
 use crate::config::load_config;
-use crate::model::{Findings, Id};
+use crate::model::{Catalog, Id};
 use crate::testing::{scan_findings, test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\n[reference]\nstrict = true\n\
@@ -52,7 +52,7 @@ struct Links {
 
 /// The tree `config` and `files` write, scanned; then what the walk records, and
 /// the links `docs/uses.md` takes.
-fn links_of_a(name: &str, config: &str, files: &[(&str, &str)]) -> (Findings, Links) {
+fn links_of_a(name: &str, config: &str, files: &[(&str, &str)]) -> (Catalog, Links) {
     let root = test_root(name);
     write(&root.join("grund.toml"), config);
     write(&root.join("docs/uses.md"), "Uses \u{a7}FS-a.2.\n");
@@ -72,7 +72,7 @@ fn links_of_a(name: &str, config: &str, files: &[(&str, &str)]) -> (Findings, Li
 }
 
 /// Premise: the walk records `FS-a`'s home with a section 1 and no section 2.
-fn assert_home_has_only_section_1(findings: &Findings) {
+fn assert_home_has_only_section_1(findings: &Catalog) {
     let decls = findings
         .declarations
         .get(&id_a())
@@ -89,7 +89,7 @@ fn assert_home_has_only_section_1(findings: &Findings) {
 
 /// Premise of the unwalked stub case: the walk's only record of `FS-a` is the
 /// stub, so the target's sections are read from outside it (§FS-check.3.2.1).
-fn assert_only_the_stub_is_recorded(findings: &Findings) {
+fn assert_only_the_stub_is_recorded(findings: &Catalog) {
     let decls = findings
         .declarations
         .get(&id_a())

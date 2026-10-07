@@ -21,7 +21,7 @@ use crate::resolver::WorkspaceCheckTarget;
 /// §FS-check.3.13.3 / §AR-checker.2.12: the one finding a number-only shorthand
 /// site earns. The candidate set is re-derived here rather than read off the
 /// citation, so the message is right whether or not the scanner's resolution
-/// pass has run — a synthetic `Findings` fed straight to the checker gets the
+/// pass has run — a synthetic `Catalog` fed straight to the checker gets the
 /// same three shapes.
 ///
 /// The marker comes from the *citing* project (it is what the author types) while

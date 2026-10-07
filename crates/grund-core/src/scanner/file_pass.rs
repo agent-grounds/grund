@@ -42,7 +42,7 @@ use crate::grammar::{
     near_miss_heading, parse_id, qualified_suppressed_in_source, section_path, source_scan_line,
 };
 use crate::model::{
-    Citation, Declaration, DeclarationSource, Findings, Id, NearMissHeading,
+    Catalog, Citation, Declaration, DeclarationSource, Id, NearMissHeading,
     UnmarkedHeadingCandidate,
 };
 use crate::workspace::WorkspaceCitationTarget;
@@ -72,7 +72,7 @@ use crate::workspace::WorkspaceCitationTarget;
 pub(super) fn scan_file(
     path: &Path,
     config: &Config,
-    findings: &mut Findings,
+    findings: &mut Catalog,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<()> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
@@ -99,12 +99,12 @@ pub(super) fn scan_file(
 ///
 /// Text section headings also require the spans, because the shared coordinate
 /// catalog is body-local (§FS-show.2.1.2.1). `scan_one_file` gives this call a fresh
-/// `Findings`, so `findings` holds exactly this file's records.
+/// `Catalog`, so `findings` holds exactly this file's records.
 pub(super) fn scan_file_text(
     path: &Path,
     text: &str,
     config: &Config,
-    findings: &mut Findings,
+    findings: &mut Catalog,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<()> {
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");

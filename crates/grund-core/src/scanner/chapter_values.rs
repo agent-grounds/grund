@@ -13,7 +13,7 @@ use super::embedded_value_context::{
 use super::section_record::section_is_chapter_value_root;
 use super::value_context::SourceValueLineContext;
 use crate::config::{Config, kind_value_chapter};
-use crate::model::{Findings, InvalidValueSite, paths_same_location};
+use crate::model::{Catalog, InvalidValueSite, paths_same_location};
 
 /// What a declared chapter may not hold. One message for every shape, because
 /// the rule is one rule — the chapter holds value roots and nothing else — and
@@ -32,7 +32,7 @@ pub(super) fn validate_declared_value_chapters(
     is_py: bool,
     config: &Config,
     source_contexts: Option<&[Option<SourceValueLineContext>]>,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     let normalized = normalized_value_lines(text, is_py, config, source_contexts);
     let mut invalid = Vec::new();

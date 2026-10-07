@@ -10,7 +10,7 @@ use super::tree::heading_level_for_line;
 use crate::config::{Config, kind_value_chapter};
 use crate::grammar::{SourceScanLine, section_anchor_text, strip_block_closer};
 use crate::model::{
-    Declaration, EmbeddedValueRoot, Findings, SectionInfo, ValueRootOrigin, named_section_component,
+    Catalog, Declaration, EmbeddedValueRoot, SectionInfo, ValueRootOrigin, named_section_component,
 };
 
 /// Record `sec` on `decl`, and say whether the line's embedded marker was
@@ -27,7 +27,7 @@ pub(super) fn record_section_heading(
     embedded_marker: Option<usize>,
     config: &Config,
     path: &Path,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) -> bool {
     let heading_level = heading_level_for_line(scan_line, is_md || scan.in_py_docstring, caps);
     if heading_level <= decl.heading_level {

@@ -17,14 +17,14 @@ use crate::grammar::{
     parse_id_arg, parse_id_arg_with_shorthand, render_id, shorthand_candidates, shorthand_names,
 };
 use crate::model::sort_path_key;
-use crate::model::{Citation, Declaration, Findings, Id, LegacyCitationCandidate};
+use crate::model::{Catalog, Citation, Declaration, Id, LegacyCitationCandidate};
 
 /// Resolve a query through the canonical grammar first, then combine exact
 /// catalog compatibility with number shorthand (§FS-config.3.2.6, §FS-show.1).
 pub(crate) fn resolve_id_arg(
     raw: &str,
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
 ) -> std::result::Result<(Id, Option<String>), IdArgError> {
     if let Ok(parsed) = parse_id_arg(raw, &config.grammar) {
         return Ok(parsed);
@@ -73,7 +73,7 @@ pub(crate) fn resolve_id_arg(
 /// by the same tree scan (§FS-config.3.2.6, §FS-check.1.1.1). This is deliberately
 /// a catalog operation: the authoring regex stays strict, and no unbacked token
 /// can become a citation.
-pub(super) fn promote_local_legacy_citations(config: &Config, findings: &mut Findings) {
+pub(super) fn promote_local_legacy_citations(config: &Config, findings: &mut Catalog) {
     let catalog = legacy_catalog_ids(&findings.declarations);
     let configured_catalog = configured_catalog_ids(&findings.declarations);
     let candidates = std::mem::take(&mut findings.legacy_citation_candidates);
@@ -300,7 +300,7 @@ pub(crate) fn sort_citations(citations: &mut [Citation]) {
 pub(crate) fn collect_local_legacy_markdown_citations(
     line: &str,
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     citations: &mut Vec<MarkdownLineCitation>,
 ) {
     let catalog = legacy_catalog_ids(&findings.declarations);

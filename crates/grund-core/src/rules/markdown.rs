@@ -5,13 +5,13 @@ use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use crate::config::Config;
 use crate::grammar::{render_id, section_display_name};
-use crate::model::{Declaration, Findings, Id, is_stub_for_inline_decl};
+use crate::model::{Catalog, Declaration, Id, is_stub_for_inline_decl};
 use crate::resolver::{SectionHome, WorkspaceCheckTarget, section_home};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Adapt one standalone project. The producer-neutral schema uses the stable
 /// project name as its selected scope (§AR-rules.3).
-pub(crate) fn adapt_markdown(findings: &Findings, config: &Config, complete: bool) -> RuleFacts {
+pub(crate) fn adapt_markdown(findings: &Catalog, config: &Config, complete: bool) -> RuleFacts {
     let project = config
         .project_name
         .as_deref()
@@ -38,7 +38,7 @@ pub(crate) fn adapt_workspace(
 
 fn adapt_projects(
     selected: &str,
-    projects: &[(&str, &Findings, &Config)],
+    projects: &[(&str, &Catalog, &Config)],
     complete: bool,
 ) -> RuleFacts {
     let mut facts = RuleFacts {

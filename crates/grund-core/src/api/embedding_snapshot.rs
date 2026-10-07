@@ -24,7 +24,7 @@ pub(super) fn scan(r: &EmbeddingRequest) -> Result<Value, Value> {
     Ok(json!({"snapshot":snapshot,"run_cautions":cautions.data()}))
 }
 
-fn snapshot(c: &Config, f: &Findings) -> Value {
+fn snapshot(c: &Config, f: &Catalog) -> Value {
     let id = |i: &Id| render_id(&c.grammar, i);
     let path = |p: &std::path::Path| display_path(c, p);
     let section = |p: &str, s: &SectionInfo| {

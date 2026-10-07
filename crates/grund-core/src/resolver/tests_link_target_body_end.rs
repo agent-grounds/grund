@@ -11,7 +11,7 @@
 
 use super::markdown_link_target;
 use crate::config::load_config;
-use crate::model::{Findings, Id};
+use crate::model::{Catalog, Id};
 use crate::testing::{scan_findings, test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\n[reference]\nstrict = true\n\
@@ -37,7 +37,7 @@ fn id_a() -> Id {
 
 /// The tree `files` writes, scanned; then what the walk records, and the link
 /// `docs/uses.md` takes for a citation of `FS-a.1`.
-fn link_of_a_1(name: &str, files: &[(&str, &str)]) -> (Findings, Option<String>) {
+fn link_of_a_1(name: &str, files: &[(&str, &str)]) -> (Catalog, Option<String>) {
     let root = test_root(name);
     write(&root.join("grund.toml"), CONFIG);
     write(&root.join("docs/uses.md"), "Uses \u{a7}FS-a.1.\n");
@@ -58,7 +58,7 @@ fn link_of_a_1(name: &str, files: &[(&str, &str)]) -> (Findings, Option<String>)
 
 /// Premise of the stub cases: the walk's only record of `FS-a` is the stub, so
 /// the target's sections are read from outside it (§FS-check.3.2.1).
-fn assert_only_the_stub_is_recorded(findings: &Findings) {
+fn assert_only_the_stub_is_recorded(findings: &Catalog) {
     let decls = findings
         .declarations
         .get(&id_a())

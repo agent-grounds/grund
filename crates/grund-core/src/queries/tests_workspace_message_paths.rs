@@ -15,7 +15,7 @@ use std::collections::BTreeMap;
 use super::*;
 use crate::checker::check_with_workspace;
 use crate::config::Config;
-use crate::model::{FindingSite, Findings, Id, ShowRenderMode};
+use crate::model::{Catalog, FindingSite, Id, ShowRenderMode};
 use crate::resolver::WorkspaceCheckTarget;
 use crate::scanner::scan_tree;
 use crate::testing::{
@@ -41,7 +41,7 @@ fn router() -> Id {
 /// A workspace whose one member is `apps/api`, holding `files`. Returns the
 /// root config the report renders against and the member config the project
 /// is checked with — the pair every case here needs to keep apart.
-fn member_workspace(name: &str, files: &[(&str, &str)]) -> (Config, Config, Findings) {
+fn member_workspace(name: &str, files: &[(&str, &str)]) -> (Config, Config, Catalog) {
     let root = test_root(name);
     let member = root.join("apps/api");
     for (path, text) in files {

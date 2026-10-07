@@ -22,7 +22,7 @@ use super::support::{heading_marks, section_depth};
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
-    CheckReport, Diagnostic, Findings, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
+    Catalog, CheckReport, Diagnostic, LANDED_CLAUSE, SectionHeadingOutsideDeclaration, Site,
 };
 use crate::resolver::WorkspaceProject;
 use crate::scanner::section_path_is_numeric;
@@ -46,7 +46,7 @@ use crate::scanner::section_path_is_numeric;
 /// either way, since a path is in `colliding` only because a heading claimed it
 /// twice.
 pub(super) fn check_section_headings(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     path_config: &Config,
     report: &mut CheckReport,
@@ -236,7 +236,7 @@ fn section_outside_declaration_diagnostic(
     }
 }
 
-pub(super) fn retain_heading_findings_in_scope(findings: &mut Findings, scope: &ScanScope) {
+pub(super) fn retain_heading_findings_in_scope(findings: &mut Catalog, scope: &ScanScope) {
     findings
         .section_headings_outside_declarations
         .retain(|heading| scope.contains(&heading.file));
@@ -251,7 +251,7 @@ pub(super) fn retain_heading_findings_in_scope(findings: &mut Findings, scope: &
 /// keeps the same public code and message when `--full` discovers it beyond
 /// `[scan] include`.
 pub(crate) fn out_of_scope_section_headings(
-    findings: &Findings,
+    findings: &Catalog,
     scope: Option<&ScanScope>,
 ) -> Vec<Diagnostic> {
     let Some(scope) = scope else {

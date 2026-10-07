@@ -14,7 +14,7 @@ use crate::config::Config;
 use crate::config::display_path;
 use crate::grammar::resolve_shorthand_citations;
 use crate::model::{
-    Findings, StubTargets, TextOverlays, canonicalize_existing_prefix, normalize_path_lexically,
+    Catalog, StubTargets, TextOverlays, canonicalize_existing_prefix, normalize_path_lexically,
     paths_same_location, sort_path_key,
 };
 use crate::workspace::WorkspaceCitationTarget;
@@ -52,7 +52,7 @@ pub(super) fn heading_level_for_line(
 /// fatal, `check` and `refs` report it and exit 2 with a still-printed report.
 pub(crate) type ScanError = (PathBuf, String);
 
-type FileScanResult = (PathBuf, std::result::Result<Findings, String>);
+type FileScanResult = (PathBuf, std::result::Result<Catalog, String>);
 
 fn scan_one_file(
     file: &Path,
@@ -60,7 +60,7 @@ fn scan_one_file(
     workspace_targets: &[WorkspaceCitationTarget],
     overlays: &TextOverlays,
 ) -> FileScanResult {
-    let mut findings = Findings::default();
+    let mut findings = Catalog::default();
     let result = if let Some(text) = overlay_text(overlays, file) {
         scan_file_text(file, text, config, &mut findings, workspace_targets)
     } else {
@@ -82,7 +82,7 @@ pub(crate) fn scan_unwalked_file(
     file: &Path,
     config: &Config,
     overlays: &TextOverlays,
-) -> Result<Findings> {
+) -> Result<Catalog> {
     let (_, result) = scan_one_file(file, config, &[], overlays);
     result.map_err(|message| anyhow!(message))
 }
@@ -114,7 +114,7 @@ pub(crate) fn scan_tree(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
-) -> Result<(Findings, Vec<ScanError>)> {
+) -> Result<(Catalog, Vec<ScanError>)> {
     scan_tree_with_workspace(config, scope, explicit_scope, &[])
 }
 
@@ -127,7 +127,7 @@ pub(crate) fn scan_tree_with_workspace(
     scope: Option<&Path>,
     explicit_scope: bool,
     workspace_targets: &[WorkspaceCitationTarget],
-) -> Result<(Findings, Vec<ScanError>)> {
+) -> Result<(Catalog, Vec<ScanError>)> {
     scan_tree_with_workspace_threshold(
         config,
         scope,
@@ -145,18 +145,18 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     workspace_targets: &[WorkspaceCitationTarget],
     parallel_min_files: usize,
     overlays: &TextOverlays,
-) -> Result<(Findings, Vec<ScanError>)> {
+) -> Result<(Catalog, Vec<ScanError>)> {
     // §FS-config.3.5: a link the walk could not resolve is already a scan failure
     // before a single file is opened — it joins the per-file ones (§FS-check.2.4).
     let walked = walk_scannable_files_reporting(config, scope, explicit_scope)?;
     // §FS-check.3.29.11: the walk's directories travel with its files, for the rule that
     // asks which of them holds a `[workspace]` block nothing claims. Carried, not
     // judged: the scanner never asks that question itself (§AR-workspace.1).
-    let mut findings = Findings {
+    let mut findings = Catalog {
         walked_dirs: walked.dirs,
         // §FS-check.3.2.1: a stub target read after the walk reads the walk's text.
         stub_targets: StubTargets::new(overlays),
-        ..Findings::default()
+        ..Catalog::default()
     };
     let (mut files, mut errors) = (walked.files, walked.errors);
     add_overlay_scan_files(config, scope, explicit_scope, overlays, &mut files)?;
@@ -231,7 +231,7 @@ pub(crate) fn scan_tree_with_workspace_overlays(
     explicit_scope: bool,
     workspace_targets: &[WorkspaceCitationTarget],
     overlays: &TextOverlays,
-) -> Result<(Findings, Vec<ScanError>)> {
+) -> Result<(Catalog, Vec<ScanError>)> {
     scan_tree_with_workspace_threshold(
         config,
         scope,
@@ -390,7 +390,7 @@ pub(crate) fn scan_tree_strict(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
-) -> Result<Findings> {
+) -> Result<Catalog> {
     let (findings, errors) = scan_tree(config, scope, explicit_scope)?;
     if let Some((path, message)) = errors.into_iter().next() {
         return Err(anyhow!("{}: {}", display_path(config, &path), message));

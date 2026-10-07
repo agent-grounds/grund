@@ -22,7 +22,7 @@ findings, or only configs?
 ```text
 workspace ─► project map ─┐
                           ▼
-scanner ─► Findings ─► [ resolver ] ─┬─► loaded project set ─► checker, queries, writers
+scanner ─► Catalog ──► [ resolver ] ─┬─► loaded project set ─► checker, queries, writers
                                      ├─► citation ──► target project
                                      ├─► declaration ──► body by recorded span
                                      ├─► declaration ──► link target
@@ -31,7 +31,7 @@ scanner ─► Findings ─► [ resolver ] ─┬─► loaded project set ─�
 
 The tenth box of the pipeline ([§AR-system.2.10](README.md#210-resolver)). It takes the
 project map workspace expanded out of configs ([§AR-system.2.4](README.md#24-workspace)) and each
-project's `Findings` from the scanner ([§AR-system.2.5](README.md#25-scanner)), and gives the
+project's `Catalog` from the scanner ([§AR-system.2.5](README.md#25-scanner)), and gives the
 checker, the queries and the writers the loaded project set with the four
 answers above ([§AR-system.2.6](README.md#26-checker), [§AR-system.2.7](README.md#27-queries), [§AR-system.2.8](README.md#28-writers)). It
 knows no rule and no rendering: it settles which project a coordinate lands in
@@ -60,7 +60,7 @@ form, citation site), [§FS-terms.terms.4](../functional-spec/FS-terms.md#terms4
 
 `target_for_citation(cite, local, local_config, workspace)` in
 `resolver/citation_target.rs` is the single function any command calls to map a
-citation to the project it resolves against — that project's `Findings` and the
+citation to the project it resolves against — that project's `Catalog` and the
 `Config` its ID is parsed and rendered with ([§AR-workspace.2](AR-workspace.md#2-single-citation-grammar)):
 
 - `cite.namespace == None` → resolves against `local` (the current project).
@@ -205,7 +205,7 @@ index, and which project to read it in out of section 1.
 A stub stands for its target's declaration, so a citation of one of its sections
 resolves where the target declares that section, scanned or not
 ([§FS-check.3.2.1](../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)). Where the walk reached the target, the target's record is among
-the `Findings` and nothing is read. Where it did not, the only record of the ID is
+the `Catalog` and nothing is read. Where it did not, the only record of the ID is
 the stub, which has no sections of its own, and a lookup that stopped at the
 records would report a section the target plainly declares. So the lookup goes on
 to `resolver/stub_home.rs`: the reading `show` already made of a target outside the
@@ -252,7 +252,7 @@ budget does not: it judges scanned sites only ([§FS-declarations.checks.oversiz
 
 Three properties hold the read to what a scan of the target would be:
 
-- **Once, on a miss.** `Findings::stub_targets` keeps one slot per stub target,
+- **Once, on a miss.** `Catalog::stub_targets` keeps one slot per stub target,
   filled the first time a reader misses there and borrowed for the rest of the
   run. A section a record holds reads nothing, and a target many IDs and sections
   ask about is read once. A `--full` run narrows its findings after the slots are
@@ -260,7 +260,7 @@ Three properties hold the read to what a scan of the target would be:
   sits at the target is asked of the current records on every lookup.
 - **Observed.** The read goes through the input observation of [§FS-check.6.1.1](../functional-spec/FS-check.md#611-subscribe-before-reading), so
   a watching run re-checks when the target changes. The slots belong to the
-  `Findings` a scan produced, so the next run starts from empty ones and reads the
+  `Catalog` a scan produced, so the next run starts from empty ones and reads the
   target again.
 - **The editor's text.** The slots carry the overlays the walk was given, so a
   target open in an editor answers as a save would ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)). `show` passes

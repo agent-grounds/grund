@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use super::references::{ReferenceTier, check_citation_resolution};
 use super::sections::retain_heading_findings_in_scope;
 use crate::config::{Config, unwalked_home_roots};
-use crate::model::{CheckReport, DeclarationSource, Diagnostic, Findings, sort_path_key};
+use crate::model::{Catalog, CheckReport, DeclarationSource, Diagnostic, sort_path_key};
 use crate::resolver::{WorkspaceCheckTarget, WorkspaceProject};
 use crate::scanner::{CANONICAL_AGENT_ENTRYPOINT, COMPANION_AGENT_ENTRYPOINTS, scan_roots_for};
 use crate::workspace::scope_is_config_root;
@@ -160,7 +160,7 @@ const AGENTS_INIT_CODE: &str = "agents-init";
 /// the §FS-check.2.2 empty-scan caution asks, since the cautions are computed
 /// against the report scope and not the resolution scope. A path holding no
 /// scannable file still earns its caution however much the wider walk read.
-pub(crate) fn scope_read_any_file(findings: &Findings, scope: Option<&ScanScope>) -> bool {
+pub(crate) fn scope_read_any_file(findings: &Catalog, scope: Option<&ScanScope>) -> bool {
     match scope {
         None => !findings.scanned_files.is_empty(),
         Some(scope) => findings
@@ -196,7 +196,7 @@ fn agent_entrypoint_paths(config: &Config) -> Vec<PathBuf> {
 /// `report_shorthand_citation` judges a site against — one predicate covering the
 /// unqualified and the cross-member qualified form alike, where an undo pass here
 /// could only reach the unqualified one.
-pub(crate) fn retain_findings_in_scope(findings: &mut Findings, scope: Option<&ScanScope>) {
+pub(crate) fn retain_findings_in_scope(findings: &mut Catalog, scope: Option<&ScanScope>) {
     let Some(scope) = scope else { return };
     findings.declarations.retain(|_, decls| {
         decls.retain(|decl| {
@@ -240,7 +240,7 @@ pub(crate) fn retain_findings_in_scope(findings: &mut Findings, scope: Option<&S
 /// scope, resolved against the *whole* walk so a citation whose declaration is
 /// also out there still resolves. Empty without `--full`.
 pub(crate) fn out_of_scope_references(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     scope: Option<&ScanScope>,

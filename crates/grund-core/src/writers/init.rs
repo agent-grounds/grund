@@ -12,7 +12,7 @@ use crate::checker::{
     chapter_rules_section, configured_rule_sentences, declared_workspace_vocabulary,
 };
 use crate::config::{Config, config_file_in, display_path};
-use crate::model::{Diagnostic, Finding, FindingSite, Findings, format_path};
+use crate::model::{Catalog, Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{
     CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file, scan_tree,
 };
@@ -201,7 +201,7 @@ fn init_run(
             }
         }
     } else {
-        (Vec::new(), Vec::new(), Findings::default())
+        (Vec::new(), Vec::new(), Catalog::default())
     };
 
     let agent_entrypoints = match selected_init_agent_entrypoints(&target, &agent_selection, reach)

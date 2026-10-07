@@ -50,7 +50,7 @@ fn escape_tree(name: &str) -> (std::path::PathBuf, Config) {
     (root, config)
 }
 
-fn citation_sites(findings: &crate::model::Findings) -> Vec<(String, usize, bool)> {
+fn citation_sites(findings: &crate::model::Catalog) -> Vec<(String, usize, bool)> {
     let mut sites = findings
         .citations
         .iter()

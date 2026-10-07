@@ -11,7 +11,7 @@ use super::stub_home::stub_home;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
-    Declaration, FindingSite, Findings, Id, TextOverlays, is_stub_for_inline_decl,
+    Catalog, Declaration, FindingSite, Id, TextOverlays, is_stub_for_inline_decl,
     resolve_stub_target,
 };
 
@@ -23,7 +23,7 @@ use crate::model::{
 pub(crate) fn declaration_ambiguity_refusal(
     config: &Config,
     path_config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     id: &Id,
     section: Option<&str>,
 ) -> Option<ShowQueryError> {

@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use super::*;
 use crate::api::{FmtOpts, format_references};
 use crate::config::Config;
-use crate::model::{Findings, Id, ShowRenderMode};
+use crate::model::{Catalog, Id, ShowRenderMode};
 use crate::queries::show_declaration;
 use crate::testing::{
     canonical_test_path, check_run, codes, findings, scan_findings, test_root, write,
@@ -47,7 +47,7 @@ fn bus_id() -> Id {
     }
 }
 
-fn scanned_index(root: &Path) -> (Config, Findings, KindIndexEntries) {
+fn scanned_index(root: &Path) -> (Config, Catalog, KindIndexEntries) {
     let config = resolve_workspace_config(root).expect("load config");
     let findings = scan_findings(&config, root);
     let entries = KindIndexEntries::new(&findings, &config);

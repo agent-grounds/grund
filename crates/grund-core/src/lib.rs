@@ -34,7 +34,7 @@ mod rules;
 // what `checker/mod.rs` re-exports (§AR-checker).
 mod checker;
 // §AR-system.2.7: the queries are one Rust module too, so every answer read
-// from `Findings` is declared in `queries/` and what crosses the boundary is
+// from `Catalog` is declared in `queries/` and what crosses the boundary is
 // what `queries/mod.rs` re-exports (§FS-show, §FS-list, §FS-lsp).
 mod queries;
 // §AR-system.2.8: the writers are one Rust module too — the formatter, the ID
@@ -60,16 +60,22 @@ pub(crate) mod testing;
 // its `mod.rs` re-exports `pub(crate)`, and what an embedder reaches is this
 // list (§AR-system.4, §AR-bindings.2).
 
-// §AR-system.2.2 model: the records every component passes along — the findings
+// §AR-system.2.2 model: the records every component passes along — the catalog
 // a walk produces, the published report, and the value bindings (§FS-values.2).
 pub use model::{
-    CheckInput, CheckInputObserver, Citation, Declaration, DeclarationSource, DocCommentBlock,
-    E2eCase, E2eSpecRef, EmbeddedValueRoot, FileHeading, FileStructure, Finding, FindingSite,
-    Findings, Id, InlineCitationSite, InvalidValueSite, NearMissHeading, OperationDiagnostic,
+    Catalog, CheckInput, CheckInputObserver, Citation, Declaration, DeclarationSource,
+    DocCommentBlock, E2eCase, E2eSpecRef, EmbeddedValueRoot, FileHeading, FileStructure, Finding,
+    FindingSite, Id, InlineCitationSite, InvalidValueSite, NearMissHeading, OperationDiagnostic,
     Report, SectionHeadingOutsideDeclaration, SectionInfo, ShowOutput, ShowSection,
     UnmarkedHeading, ValueBinding, ValueComponent, ValueComponentKind, ValueRootOrigin,
     canonical_snapshot_path, with_check_input_observer,
 };
+
+/// The scan's shared facts under the name they had before the glossary's word
+/// (§FS-terms.terms.1): an alias of [`Catalog`], kept on the deprecation path of
+/// §REQ-backwards-compatibility.2 and removed in `0.19.0` (§FS-distribution.3.1).
+#[deprecated(since = "0.17.0", note = "renamed to `Catalog`; removed in 0.19.0")]
+pub type Findings = Catalog;
 
 // §AR-system.2.1 grammar: the compiled ID grammar, the one lexical fact an
 // embedder names (§FS-config.3.2), and the version a managed integrations block
@@ -100,7 +106,7 @@ pub use resolver::names_member_id_candidate;
 // documented names, but a frontend reads it (§FS-check.1.4).
 pub use checker::{CHECK_FINDING_CODES, CheckFindingSelection};
 
-// §AR-system.2.7 queries: the answers read straight from `Findings` — the
+// §AR-system.2.7 queries: the answers read straight from `Catalog` — the
 // editor's snapshot, hover and on-type edits, the show options and their typed
 // refusal, the batch show, and the size catalog (§FS-show, §FS-list, §FS-lsp).
 pub use queries::{

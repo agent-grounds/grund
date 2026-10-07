@@ -4,7 +4,7 @@
 
 use crate::config::{Config, known_kinds_line};
 use crate::grammar::render_id;
-use crate::model::{CheckReport, Declaration, Diagnostic, Findings};
+use crate::model::{Catalog, CheckReport, Declaration, Diagnostic};
 use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{
@@ -197,7 +197,7 @@ pub(crate) struct ConfiguredRules {
 /// bullet is the authored sentence and one tree must render one block
 /// (§FS-rules.9.1).
 pub(crate) fn configured_rule_sentences(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     vocab: &RuleVocabulary,
 ) -> Result<ConfiguredRules, Diagnostic> {
@@ -271,7 +271,7 @@ pub(crate) fn configured_rule_sentences(
 /// Append configured and optional ad-hoc rule results to the shared report.
 /// An incomplete scan passes an explicitly incomplete snapshot to the engine.
 pub(crate) fn check_chapter_rules(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     complete: bool,
     ad_hoc: Option<ParsedRule>,

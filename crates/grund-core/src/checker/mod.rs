@@ -1,6 +1,6 @@
-//! The checker component (§AR-system.2.6): the `Report` a run's `Findings`
+//! The checker component (§AR-system.2.6): the `Report` a run's `Catalog`
 //! produce — errors, warnings and suggestions, each rule one pass over part of
-//! the findings (§FS-check). It consumes `Findings`, reads a file's text after
+//! the findings (§FS-check). It consumes `Catalog`, reads a file's text after
 //! the scan only in the rules §AR-checker.placement lists, and knows no frontend.
 //! Design: §AR-checker, declared in `report.rs` on the entry point the whole
 //! component exists to answer.

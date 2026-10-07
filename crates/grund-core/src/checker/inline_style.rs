@@ -17,14 +17,14 @@ use std::path::Path;
 
 use crate::config::Config;
 use crate::grammar::{CITATION_RUN_SEPARATOR, LayoutChannel, layout_channel};
-use crate::model::{CheckReport, Citation, Diagnostic, Findings, InlineCitationSite, plural};
+use crate::model::{Catalog, CheckReport, Citation, Diagnostic, InlineCitationSite, plural};
 
 /// The citation tokens of one inline citation site, for the message a budget
 /// finding names (§FS-inline-citation-style.4.1.2, §FS-inline-citation-style.4.2): each citation's `text`
 /// exactly as written — marker, qualifier, section — in source order,
 /// duplicates dropped after the first, chain-spelled with
 /// `CITATION_RUN_SEPARATOR` the way §FS-inline-citation-style.3.3 already joins a citation run.
-fn site_citation_texts(findings: &Findings) -> BTreeMap<(&Path, usize), String> {
+fn site_citation_texts(findings: &Catalog) -> BTreeMap<(&Path, usize), String> {
     let mut per_site: BTreeMap<(&Path, usize), Vec<&str>> = BTreeMap::new();
     for cite in &findings.citations {
         let Some(site) = &cite.inline_site else {
@@ -67,7 +67,7 @@ const BLOCK_SPLIT_CLAUSE: &str = "; a blank line splits a note, an empty comment
 /// layout deviations, so nothing here re-reads a file
 /// (§FS-inline-citation-style.4).
 pub(super) fn check_inline_citation_style(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     report: &mut CheckReport,
 ) {

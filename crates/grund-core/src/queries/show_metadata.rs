@@ -1,10 +1,10 @@
 //! Transport metadata sourced before rendering (§FS-distribution.3.2.2.2).
 use crate::config::Config;
 use crate::grammar::render_id;
-use crate::model::{Findings, Id};
+use crate::model::{Catalog, Id};
 use serde_json::{Value, json};
 
-pub(crate) fn show_metadata(c: &Config, f: &Findings, id: &Id, section: Option<&str>) -> Value {
+pub(crate) fn show_metadata(c: &Config, f: &Catalog, id: &Id, section: Option<&str>) -> Value {
     let manifest = f
         .declarations
         .get(id)

@@ -54,7 +54,7 @@ fn style_findings(config: &Config, root: &Path) -> (Vec<usize>, Vec<usize>) {
 /// §FS-inline-citation-style.4.4.1: one error per nonconforming line, anchored
 /// at the line — never at the site's opener, and never on a conforming sibling.
 ///
-/// §FS-inline-citation-style.7.3: the rule is a pure pass over `Findings`. The
+/// §FS-inline-citation-style.7.3: the rule is a pure pass over `Catalog`. The
 /// verdicts arrive on the inline citation site the scanner recorded, so
 /// `check_findings` is handed no root and no file and could not re-read a line
 /// to decide its shape even if it wanted to.

@@ -10,7 +10,7 @@ use crate::api::{CheckRun, run_check};
 use crate::checker::{check_findings, diagnostic_cmp};
 use crate::config::{Config, KindIndex, config_file_in, display_path};
 use crate::grammar::render_id;
-use crate::model::{CheckReport, Diagnostic, Findings, format_path, sort_path_key};
+use crate::model::{Catalog, CheckReport, Diagnostic, format_path, sort_path_key};
 use crate::scanner::{ScanError, scan_tree};
 use crate::templates::ConversationSurface;
 use crate::writers::render_agents_append_block_at;
@@ -115,7 +115,7 @@ pub(crate) fn embedded_value_config(root: PathBuf) -> Config {
     config
 }
 
-pub(crate) fn scan_embedded_value(name: &str, source: &str) -> (Config, Findings) {
+pub(crate) fn scan_embedded_value(name: &str, source: &str) -> (Config, Catalog) {
     let root = test_root(name);
     let path = root.join("docs/value.md");
     write(&path, source);
@@ -181,7 +181,7 @@ pub(crate) fn canonical_test_path(path: &Path) -> PathBuf {
     std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
-pub(crate) fn findings_signature(config: &Config, findings: &Findings) -> Vec<String> {
+pub(crate) fn findings_signature(config: &Config, findings: &Catalog) -> Vec<String> {
     let mut rows = Vec::new();
     for (id, declarations) in &findings.declarations {
         for declaration in declarations {
@@ -403,8 +403,8 @@ pub(crate) fn drifted_include_repo(name: &str) -> PathBuf {
 /// prints (§FS-check.2.1), so a test can compare two runs as text.
 /// The whole tree scanned with `path_provided`, which is what a test means by
 /// "point grund at this fixture". Shared by every suite that asserts over
-/// `Findings` rather than over a rendered report.
-pub(crate) fn scan_findings(config: &Config, root: &Path) -> Findings {
+/// `Catalog` rather than over a rendered report.
+pub(crate) fn scan_findings(config: &Config, root: &Path) -> Catalog {
     let (findings, _) = scan_tree(config, Some(root), true).expect("scan tree");
     findings
 }
@@ -555,7 +555,7 @@ pub(crate) fn findings(run: &CheckRun) -> Vec<String> {
 /// happened to declare anything.
 /// Unix only: every caller is a symlink case and so `#[cfg(unix)]` too.
 #[cfg(unix)]
-pub(crate) fn scanned(config: &Config, findings: &Findings) -> Vec<String> {
+pub(crate) fn scanned(config: &Config, findings: &Catalog) -> Vec<String> {
     let mut files: Vec<String> = findings
         .scanned_files
         .iter()

@@ -17,7 +17,7 @@ use crate::grammar::{
     declaration_id_on_line, is_inside_inline_code, never_rewrite_context, render_id,
 };
 use crate::model::{
-    CheckReport, Citation, Declaration, Diagnostic, Findings, Id, configured_home_path_key,
+    Catalog, CheckReport, Citation, Declaration, Diagnostic, Id, configured_home_path_key,
     is_stub_for_inline_decl, physical_path_key, scanned_decl_relative_path, scanned_path_key,
 };
 use crate::resolver::section_resolves;
@@ -249,7 +249,7 @@ pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 /// ever named on a site the pass will in fact rewrite, which is what
 /// `IndexCitationForm::Bare` is narrowed to mean.
 pub(super) fn check_kind_indexes(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     path_config: &Config,
     report: &mut CheckReport,

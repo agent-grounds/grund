@@ -4,7 +4,7 @@
 //! §FS-config.3.2.6).
 //!
 //! The single-project half of the same reconciliation is the scanner's own, in
-//! `scanner/legacy.rs`, and stays there: it runs on one `Findings` inside the
+//! `scanner/legacy.rs`, and stays there: it runs on one `Catalog` inside the
 //! walk that produced it. This half needs *every* project's findings at once, so
 //! it runs where the loaded set exists and reads the per-candidate promotion
 //! downward (§AR-resolver.placement, §AR-system.4). It is deliberately still a

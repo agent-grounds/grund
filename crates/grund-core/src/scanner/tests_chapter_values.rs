@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use super::*;
 use crate::api::check;
 use crate::config::Config;
-use crate::model::{Findings, ValueRootOrigin};
+use crate::model::{Catalog, ValueRootOrigin};
 use crate::testing::{embedded_value_config, test_root, write};
 
 /// `AR` declarations under `docs/`, with `values` as the declared chapter and
@@ -27,7 +27,7 @@ fn chapter_config(root: PathBuf, chapter: Option<&str>) -> Config {
     config
 }
 
-fn scan_chapter(name: &str, chapter: Option<&str>, source: &str) -> (Config, Findings) {
+fn scan_chapter(name: &str, chapter: Option<&str>, source: &str) -> (Config, Catalog) {
     let root = test_root(name);
     let path = root.join("docs/power.md");
     write(&path, source);
@@ -37,7 +37,7 @@ fn scan_chapter(name: &str, chapter: Option<&str>, source: &str) -> (Config, Fin
     (config, findings)
 }
 
-fn root_origins(findings: &Findings) -> Vec<(String, ValueRootOrigin)> {
+fn root_origins(findings: &Catalog) -> Vec<(String, ValueRootOrigin)> {
     findings
         .declarations
         .values()

@@ -5,7 +5,7 @@ use std::path::Path;
 
 use crate::config::Config;
 use crate::grammar::render_id;
-use crate::model::{Citation, Findings};
+use crate::model::{Catalog, Citation};
 use crate::resolver::section_resolves;
 
 /// Expand only scanner-proven, uniquely owned local section edges whose cited
@@ -25,7 +25,7 @@ pub(super) fn expand_local_section_citations(
     path: &Path,
     lineno: usize,
     config: &Config,
-    findings: Option<&Findings>,
+    findings: Option<&Catalog>,
     trigger_marker_starts: &[usize],
     saw_candidate: &mut bool,
     expansions: &mut Vec<(usize, String, String)>,
@@ -87,7 +87,7 @@ pub(super) fn expand_local_section_citations(
 /// permit, and a cited section its owner records a heading for (§FS-fmt.2.4.6),
 /// asked of the lookup `check` withholds the command on (§FS-check.3.24.1), which
 /// reads a stub's sections from its target (§FS-check.3.2.1).
-fn expandable(cite: &Citation, findings: &Findings, config: &Config) -> bool {
+fn expandable(cite: &Citation, findings: &Catalog, config: &Config) -> bool {
     cite.shorthand_rewritable
         && section_resolves(
             findings,

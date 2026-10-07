@@ -15,7 +15,7 @@ use std::path::Path;
 use super::citations::ObligationUnit;
 use super::homes::{DeclarationHome, KindHomeIndex};
 use crate::config::{Config, DEFAULT_GROUNDING_LEVEL, KindConfig, grounding_level_for_kind};
-use crate::model::{CheckReport, Citation, Diagnostic, FileStructure, Findings};
+use crate::model::{Catalog, CheckReport, Citation, Diagnostic, FileStructure};
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 use crate::workspace::namespace_is_unverified;
 
@@ -47,7 +47,7 @@ enum GroundingSubject {
 /// — and a unit that lost its grounding to a missing directory would be a finding
 /// at the site the run is required to say nothing about.
 pub(super) fn check_grounding(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     kind_homes: &KindHomeIndex<'_>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
@@ -231,7 +231,7 @@ fn grounding_unit_spans(structure: Option<&FileStructure>, level: usize) -> Vec<
 pub(super) fn file_obligation_units<'a>(
     citing_kind: &str,
     config: &Config,
-    findings: &'a Findings,
+    findings: &'a Catalog,
     by_file: &BTreeMap<(&'a str, &'a Path), Vec<&'a Citation>>,
 ) -> Vec<ObligationUnit<'a>> {
     let place = config

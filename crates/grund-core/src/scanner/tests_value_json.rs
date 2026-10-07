@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use super::json::{JsonNode, JsonReader};
 use super::scan_tree;
 use crate::config::load_config;
-use crate::model::{DeclarationSource, Findings, ValueComponentKind};
+use crate::model::{Catalog, DeclarationSource, ValueComponentKind};
 use crate::testing::{test_root, write};
 
 fn value_root(name: &str, kinds: &str) -> PathBuf {
@@ -33,14 +33,14 @@ fn one_kind(name: &str) -> PathBuf {
     )
 }
 
-fn scan(root: &Path) -> Findings {
+fn scan(root: &Path) -> Catalog {
     let config = load_config(root).expect("load value config");
     let (findings, errors) = scan_tree(&config, Some(root), true).expect("scan value fixture");
     assert!(errors.is_empty(), "readable value fixture: {errors:?}");
     findings
 }
 
-fn declarations<'a>(findings: &'a Findings, kind: &str, slug: &str) -> &'a [crate::Declaration] {
+fn declarations<'a>(findings: &'a Catalog, kind: &str, slug: &str) -> &'a [crate::Declaration] {
     findings
         .declarations
         .iter()

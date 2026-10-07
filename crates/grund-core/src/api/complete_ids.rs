@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use crate::config::Config;
 use crate::grammar::render_id;
-use crate::model::{Finding, Findings};
+use crate::model::{Catalog, Finding};
 use crate::resolver::load_workspace_context;
 
 use super::report::context_run_warnings;
@@ -119,7 +119,7 @@ fn add_complete_id_candidates(
     candidates: &mut BTreeSet<String>,
     alias: Option<&str>,
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     include_sections: bool,
 ) {
     let qualifier = alias.map(|alias| format!("{alias}/")).unwrap_or_default();

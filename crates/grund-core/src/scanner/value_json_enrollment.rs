@@ -8,7 +8,7 @@ use super::json::{JsonMember, JsonNode, JsonSpan, json_line_column};
 use crate::config::{Config, KindConfig};
 use crate::grammar::parse_id_arg;
 use crate::model::{
-    Declaration, DeclarationSource, Findings, Id, InvalidValueSite, SectionInfo, ValueComponent,
+    Catalog, Declaration, DeclarationSource, Id, InvalidValueSite, SectionInfo, ValueComponent,
     ValueComponentKind, component_text_is_valid,
 };
 
@@ -18,7 +18,7 @@ pub(super) fn enroll_json_member(
     owners: &[&KindConfig],
     text: &str,
     member: JsonMember,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     let parsed = parse_id_arg(&member.key.decoded, &config.grammar);
     let Ok((id, None)) = parsed else {
@@ -155,7 +155,7 @@ pub(super) fn enroll_json_member(
 }
 
 pub(super) fn push_json_invalid(
-    findings: &mut Findings,
+    findings: &mut Catalog,
     id: Option<Id>,
     path: &Path,
     text: &str,

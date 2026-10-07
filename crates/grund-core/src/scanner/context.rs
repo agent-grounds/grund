@@ -9,7 +9,7 @@ use crate::grammar::{
     AliasGrammar, CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment,
     comment_blocks, doc_comment_rule, first_content_line, inline_note_verdicts,
 };
-use crate::model::{Findings, InlineCitationSite, SectionHeadingOutsideDeclaration};
+use crate::model::{Catalog, InlineCitationSite, SectionHeadingOutsideDeclaration};
 use crate::model::{scanned_decl_relative_path, scanned_path_key, sort_path_key};
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -21,7 +21,7 @@ use crate::workspace::WorkspaceCitationTarget;
 /// here makes every map reader agree without a surface-local guard. Rejected
 /// duplicate claimants become outside-heading sites too, never stale
 /// `duplicate-section` collisions.
-pub(super) fn retain_in_body_sections(findings: &mut Findings) {
+pub(super) fn retain_in_body_sections(findings: &mut Catalog) {
     let mut rejected = Vec::new();
     for decl in findings.declarations.values_mut().flatten() {
         let body = decl.body_start..=decl.body_end;
@@ -87,7 +87,7 @@ pub(crate) fn markdown_heading_level(line: &str) -> Option<usize> {
 /// in a source file it is bounded by the comment/docstring block the declaration
 /// opens, capped before the next declaration sharing that block.
 pub(super) fn assign_declaration_bodies(
-    findings: &mut Findings,
+    findings: &mut Catalog,
     is_md: bool,
     is_py: bool,
     config: &Config,
@@ -161,7 +161,7 @@ fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize,
 /// `cover --lines` run asks about are settled here too, by the same lookup, while
 /// the heading stack is still held (§FS-cover.6.2, §AR-scanner.2.4.4).
 pub(super) fn resolve_citation_owners(
-    findings: &mut Findings,
+    findings: &mut Catalog,
     config: &Config,
     path: &Path,
     md_headings: &[(usize, usize)],
@@ -192,7 +192,7 @@ pub(super) fn resolve_citation_owners(
 /// else the homeless kind — `code`, or whatever the project named it
 /// (§FS-config.3.9.2.2).
 fn classify_citation_sources(
-    findings: &mut Findings,
+    findings: &mut Catalog,
     config: &Config,
     path: &Path,
     md_headings: &[(usize, usize)],
@@ -234,7 +234,7 @@ fn classify_citation_sources(
 /// (§AR-scanner.2.4, §DF-declaration-local-section-shorthand.2.4). Unsupported
 /// and ownerless records remain diagnostic-only, so no consumer can infer a
 /// target that the body rule did not supply.
-fn promote_local_section_citations(findings: &mut Findings) {
+fn promote_local_section_citations(findings: &mut Catalog) {
     let candidates = std::mem::take(&mut findings.local_section_citation_candidates);
     for candidate in candidates {
         let Some(section) = candidate.section.clone() else {

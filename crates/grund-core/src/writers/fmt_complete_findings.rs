@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use super::fmt_error::FmtScanAbort;
 use crate::config::Config;
-use crate::model::Findings;
+use crate::model::Catalog;
 use crate::resolver::WorkspaceProject;
 use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
 
@@ -14,7 +14,7 @@ use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
 /// a well-formed citation of a real declaration that no later pass can see
 /// (§REQ-no-wrong-citation.3). Completeness is therefore a precondition of the
 /// consumer rather than a habit of each producer: `FmtRunOpts` takes the proof,
-/// not the findings, so a call site that has a `Findings` at hand and skips the
+/// not the findings, so a call site that has a `Catalog` at hand and skips the
 /// check does not compile (issue #105).
 ///
 /// That guarantee is why this is a real `mod` and not a newtype beside the rest
@@ -35,7 +35,7 @@ use crate::scanner::{ApiScanError, api_scan_error, scan_tree};
 /// satisfied with an empty one, which is the bypass again with more ceremony.
 mod complete_findings {
     use super::{
-        ApiScanError, Config, Findings, FmtScanAbort, Result, WorkspaceProject, api_scan_error,
+        ApiScanError, Catalog, Config, FmtScanAbort, Result, WorkspaceProject, api_scan_error,
         scan_tree,
     };
     // Everything above is imported by the file this module sits in; the module
@@ -45,7 +45,7 @@ mod complete_findings {
     /// A whole-project scan that met no unreadable path, owning its findings
     /// (§FS-fmt.7.4). `fmt_tree` holds one when it had to scan for itself.
     pub(crate) struct CompleteScan {
-        findings: Findings,
+        findings: Catalog,
     }
 
     impl CompleteScan {
@@ -84,25 +84,25 @@ mod complete_findings {
             Ok(Self { findings })
         }
 
-        /// The proven set. Only this direction exists: a `&Findings` never
+        /// The proven set. Only this direction exists: a `&Catalog` never
         /// becomes a proof, which is the whole of §FS-fmt.7.4.
-        pub(crate) fn findings(&self) -> &Findings {
+        pub(crate) fn findings(&self) -> &Catalog {
             &self.findings
         }
     }
 
     /// A borrowed declaration set carrying the proof that the scan which
     /// produced it met no error (§FS-fmt.7.4) — what `FmtRunOpts` accepts in
-    /// place of a bare `&Findings`.
+    /// place of a bare `&Catalog`.
     #[derive(Clone, Copy)]
     pub(crate) struct CompleteFindings<'a> {
-        findings: &'a Findings,
+        findings: &'a Catalog,
     }
 
     impl<'a> CompleteFindings<'a> {
         /// The proven set, in the one direction that is sound. See
         /// `CompleteScan::findings`.
-        pub(crate) fn findings(self) -> &'a Findings {
+        pub(crate) fn findings(self) -> &'a Catalog {
             self.findings
         }
     }
@@ -112,7 +112,7 @@ mod complete_findings {
         /// reusable by `fmt_tree` only when the scan that produced them met no
         /// error (§FS-fmt.3.2, §FS-fmt.7.1). A caller that reuses a scan instead of
         /// running one has to answer the question a fresh scan would have failed
-        /// on, not just borrow the `Findings` beside it — reuse is an
+        /// on, not just borrow the `Catalog` beside it — reuse is an
         /// optimization of one computation and never a second one.
         ///
         /// It lives here, beside the field it proves, because this is the only
