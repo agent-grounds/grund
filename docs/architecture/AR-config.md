@@ -70,7 +70,9 @@ and `output`.
 per `[[kinds]]` row, in file order. `Place { extent, scanned }` with
 `Extent::Folder(path) | File(path) | Complement`.
 `Kind { id_format, form, index, origin }`, where `form` is
-`Prose | Value { chapter } | Rule` and `origin` is `Local | External { fetch }`.
+`Prose | Value { chapter } | Rule { value_chapter }` and `origin` is `Local | External { fetch }`.
+`Rule` keeps `value_chapter` because v1 accepts `rules = true` together with
+`value_chapter`, and a lossless lowering keeps both.
 `Schema::places()` yields `(name, &Place)` for every place of every row, and
 `Schema::kinds()` yields `(name, &Kind)` for every row with a kind. The three
 states [§DISC-core-concerns.10.1](../discussions/proposals/2026-09-30-core-concerns.md#101-the-five-decisions-the-2026-09-30-proposal-leaves-open) keeps apart are distinct by construction:
