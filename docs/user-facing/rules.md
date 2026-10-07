@@ -35,6 +35,8 @@ and whitespace guidance ([§FS-rules.3.5.1](../functional-spec/FS-rules.md#351-p
 Its shipped skill copies use public links ([§REQ-shipped-surfaces.2](../requirements/REQ-shipped-surfaces.md#2-the-grounding-moves-it-is-not-deleted)).
 A subject is also a query: [Querying grund](querying.md) feeds the units
 `grund list --selector` prints to `grund show --batch` to read their structure.
+`KIND.NAME`, such as `FS.requirements`, is a selector shorthand for
+`The NAME chapter of each KIND` that a rule sentence does not accept ([§FS-rules.2](../functional-spec/FS-rules.md#2-subject-selectors)).
 
 <!-- BEGIN chapter-rules -->
 ### Chapter rules

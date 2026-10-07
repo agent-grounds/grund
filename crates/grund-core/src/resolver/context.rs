@@ -112,6 +112,21 @@ impl WorkspaceContext {
             .map(|project| project.alias.as_str())
             .collect()
     }
+
+    /// The `known kinds:` line that ends an unknown `--kind` (§FS-list.1.1) and
+    /// a `--selector` refusal that recovers no kind (§FS-rules.8.1): every
+    /// citable kind of every loaded project, once, in configuration order.
+    pub(crate) fn known_kinds_line(&self) -> String {
+        let mut seen = std::collections::BTreeSet::new();
+        let known = self
+            .projects
+            .iter()
+            .flat_map(|project| &project.config.kinds)
+            .filter(|kind| kind.citable && seen.insert(kind.kind.as_str()))
+            .map(|kind| kind.kind.as_str())
+            .collect::<Vec<_>>();
+        format!("known kinds: {}", known.join(", "))
+    }
 }
 
 /// Load every project a query command should see, given the same `(path,

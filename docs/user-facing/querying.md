@@ -30,6 +30,19 @@ With `--format json` each row is one NDJSON object. `id` and `section` name the
 unit — `section` is present only for a selected section — and the rest say
 where it is declared, its title, and how often it is cited.
 
+A selector names chapters only, so a numbered section is refused, and every
+refusal ends in a selector to paste back
+([§FS-rules.8.1](../functional-spec/FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)):
+
+```console
+$ grund list --selector FS.requirements.1
+error: numbered chapter subjects can detach when headings move; accepted selector: FS.requirements
+hint: grund show --batch --toc expands each selected unit into its sections
+```
+
+To reach `requirements.1`, select the named chapter and expand it with
+`grund show --batch --toc --format json`, as the next section does.
+
 ## Expand a unit's subtree: `show --batch --toc --format json`
 
 The `{id, section}` pair of a `list` row is exactly one query of
