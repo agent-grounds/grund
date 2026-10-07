@@ -1,5 +1,5 @@
 """§FS-distribution.4.2.6, §FS-distribution.4.3, §FS-distribution.4.4,
-§FS-distribution.4.8, §FS-distribution.4.9, §FS-distribution.4.10 — what the
+§FS-distribution.4.5, §FS-distribution.4.8, §FS-distribution.4.9, §FS-distribution.4.10 — what the
 release workflows must still do for a release to mean what the spec says it
 means: run the release guard on every publication path, publish a commit that
 already carries its version, release without waiting for a hand-written changelog,
@@ -175,6 +175,23 @@ class NoChangelogHoldTests(unittest.TestCase):
                 self.assertIn("GH_TOKEN: ${{ github.token }}", text)
 
 
+class VersionBumpTests(unittest.TestCase):
+    """§FS-distribution.4.5 — both helpers write every version source with one
+    tool, for the release and for the `-dev` advance, and commit `pyproject.toml`."""
+
+    def test_both_helpers_write_every_version_source(self):
+        for name in NoChangelogHoldTests.HELPERS:
+            with self.subTest(workflow=name):
+                text = (WORKFLOWS / name).read_text(encoding="utf-8")
+                self.assertNotIn("cargo set-version", text)
+                self.assertIn('scripts/distribution/candidate.py set-version '
+                              '"${{ steps.versions.outputs.next }}"', text)
+                self.assertIn('scripts/distribution/candidate.py set-version "$dev"', text)
+                staged = re.search(r"(?m)^\s+git add Cargo\.toml .*$", text)
+                self.assertIsNotNone(staged, "the release commit stages no version source")
+                self.assertIn("pyproject.toml", staged.group(0).split())
+
+
 class VerifyJobTests(unittest.TestCase):
     """§FS-distribution.4.3 — `release.yml` publishes a commit that already
     carries its version: it verifies the requested version against the Cargo
@@ -217,9 +234,16 @@ class VerifyJobTests(unittest.TestCase):
         §FS-distribution.4.3 — so the search term is shown to be a real one by
         finding it in the workflow that *does* bump."""
         bumper = (WORKFLOWS / "auto-bump.yml").read_text(encoding="utf-8")
-        self.assertIn("cargo set-version", bumper)
-        self.assertNotIn("cargo set-version", self.text)
+        self.assertIn("set-version", bumper)
+        self.assertNotIn("set-version", self.text)
         self.assertNotIn("cargo-edit", self.text)
+
+    def test_every_version_source_carries_the_requested_version(self):
+        """§FS-distribution-candidate.6.2: `pyproject.toml` is a version source too,
+        read at the release source ref, which is the tag when recovering one."""
+        self.assertIn("python3 scripts/distribution/candidate.py versions", self.verify)
+        self.assertIn('--ref "$manifest_ref" --expect "${{ steps.version.outputs.version }}"',
+                      self.verify)
 
     def test_every_advertised_target_is_built(self):
         targets = ("x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu")
@@ -288,6 +312,15 @@ class ProfileGuidedOptimizationTests(unittest.TestCase):
         for name in ("build-linux-gnu-pgo", "build-native-pgo"):
             with self.subTest(job=name):
                 self.assertIn("bash scripts/pgo-build.sh", squash(self.jobs[name]))
+
+    def test_both_builds_package_the_language_server_too(self):
+        """§FS-distribution.4.8: six `grund-lsp` archives beside the six CLI ones,
+        from a profile trained on `grund-lsp` (§FS-distribution-candidate.7.1)."""
+        for name in ("build-linux-gnu-pgo", "build-native-pgo"):
+            with self.subTest(job=name):
+                body = squash(self.jobs[name])
+                self.assertIn("pgo-build.sh --product grund-lsp", body)
+                self.assertIn('base="grund-lsp-${version}-', body)
 
     def test_no_binary_is_packaged_before_it_self_checks(self):
         for name, check in (

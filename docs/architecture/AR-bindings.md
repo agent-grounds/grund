@@ -145,6 +145,14 @@ umbrella manifest. The explicit bundled locked source workflow in
 the common corpus/oracle; Node supplies its adapter and fixtures. Complete-data
 and frozen CLI-byte parity are distinct proofs ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)).
 
+#471's recipe is `scripts/distribution/candidate.py`. It reads `package-api.json`
+unchanged and adds only the name, version, `bin`, the exact-version optional platform
+packages and `grund.platformPackages` ([§FS-distribution-candidate.2.3](../functional-spec/FS-distribution-candidate.md#23-one-assembly-recipe-consumes-the-bindings-fragment)). Each platform
+package's `index.cjs` gives the loader `{addonPath, metadata}` and the launcher
+`executablePath`. The launcher is a plain Node script that spawns the payload with
+inherited stdio and forwards its status and signals ([§FS-distribution-candidate.3.2](../functional-spec/FS-distribution-candidate.md#32-the-npm-launcher-is-invisible)); it
+loads no addon and never compiles or downloads ([§FS-distribution-candidate.3.3](../functional-spec/FS-distribution-candidate.md#33-a-missing-payload-is-an-error-never-a-substitute)).
+
 Later “Adapt Node to #466” changes internals while retaining this approved host
 contract and supported Rust consumers. #459/#463 unshipped behavior is deferred;
 publication, registry changes and version bumps are outside local readiness.
@@ -166,6 +174,12 @@ from the frozen CLI wire projection ([§FS-distribution.3.0.3](../functional-spe
 
 Local build readiness does not claim published wheels. #471 owns cibuildwheel
 release assembly and CLI payload placement; the binding adds no console entrypoint.
+Release assembly builds one abi3 extension per registry row with its own profile and
+places the separately PGO-built `grund` executable as wheel data in `scripts/`, so
+installers put the payload itself on `PATH`. cibuildwheel then installs that one wheel
+into CPython 3.10 through 3.14 and runs the acceptance modules against each
+([§FS-distribution-candidate.1.2](../functional-spec/FS-distribution-candidate.md#12-every-registry-row-proves-every-runtime-it-promises), [§FS-distribution-candidate.3.1](../functional-spec/FS-distribution-candidate.md#31-payloads-sit-where-each-registry-runs-them)). `grund-lsp` wheels
+carry only the server and are tagged `py3-none`.
 Carry “Adapt Python marshalling to #466/#453/#454” without changing the approved
 Python schema. #469 supplies the later Node adapter; neither coordination is a
 prerequisite for this local frontend.
@@ -175,4 +189,4 @@ prerequisite for this local frontend.
 - **One source of truth for behavior.** Bug fixes and new rules land in `grund-core` and reach all three ecosystems on the next release.
 - **No re-implementation.** Neither Node nor Python developers need to maintain a parallel parser or a parallel rule set.
 - **Fast everywhere.** The compiled engine is the same in all three; the bindings add only a thin marshalling layer.
-- **Independent release cadence per crate when needed.** A Node-only fix in `grund-node` does not require a `grund-core` version bump.
+- **Independent release cadence per crate when needed.** A Node-only fix in `grund-node` does not require a `grund-core` version bump. Such a candidate is scoped `binding-only`: its manifest records the binding's own package version beside the unchanged engine and CLI version, and it never claims ecosystem completeness ([§FS-distribution-candidate.6.3](../functional-spec/FS-distribution-candidate.md#63-a-binding-only-candidate-never-claims-completeness)).
