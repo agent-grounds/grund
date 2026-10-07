@@ -19,6 +19,10 @@ availability. The initial binding supplies a locally installable extension and s
 distribution; the PyPI release matrix, CLI payload and publication remain separate work.
 An approved contract or a failing acceptance test does not establish implemented support.
 
+Local API readiness means a source-built, packed and freshly installed consumer
+passes [§FS-distribution.3.2.4](FS-distribution.md#324-acceptance-evidence). It does not mean npm registry availability,
+prebuilt-platform installation evidence or authorization to publish.
+
 | Registry | Package name        | Status      | Contents                                                                  |
 |----------|---------------------|-------------|---------------------------------------------------------------------------|
 | cargo    | `grund-core`          | implemented | Shared engine library used by the CLI, LSP, and future bindings.            |
@@ -63,7 +67,9 @@ Each binding exposes the same conceptual operations as the CLI subcommands, plus
 
 The initial Python inventory is normative in [§FS-distribution.3.3.5](FS-distribution.md#335-complete-initial-inventory). Process
 transport and editor-only exclusions must be explicit; an absent operation cannot be
-advertised as supported. Node is a later adapter to the same parity contract.
+advertised as supported. Node's complete disk-backed operation inventory and
+process/editor exclusions are normative in [§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals) and
+[§FS-distribution.3.2.1.1](FS-distribution.md#3211-exclusions-and-later-adaptation).
 
 ### 3.0 Language-neutral data shapes
 
@@ -79,7 +85,9 @@ and tracked in [AR-goal-measurement.2](../architecture/AR-goal-measurement.md#2-
 
 Host results retain all engine data, including nullable columns, multi-site locations,
 rule authority, scan-error status, output-format metadata and run cautions. Run cautions
-remain distinct from report warnings, including when setup fails. The CLI projection
+remain distinct from report warnings, including when setup fails. Node's records also
+carry complete and selected reports and partial outputs, with empty collections as
+arrays and optional fields present as null ([§FS-distribution.3.2.2](FS-distribution.md#322-typed-readonly-host-records)). The CLI projection
 below stays frozen: it omits columns and projects empty sites/authority to null; it is
 not the complete host schema. [§FS-distribution.3.0.3](FS-distribution.md#303-complete-data-and-canonical-parity) compares both forms separately.
 
@@ -119,7 +127,8 @@ Python takes required query operands positionally and section/mode/format/root a
 keywords ([§FS-distribution.3.3.5](FS-distribution.md#335-complete-initial-inventory)). Roots and query failures follow
 [§FS-distribution.3.3.3](FS-distribution.md#333-per-call-scope-and-path-encoding) and [§FS-distribution.3.3.2](FS-distribution.md#332-operational-failures-and-invalid-arguments). Batch setup failure raises
 once; individual failed queries remain ordered outcomes. An empty batch succeeds
-without loading configuration.
+without loading configuration. Node's exact option defaults and typed query failures
+are in [§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals) and [§FS-distribution.3.2.2](FS-distribution.md#322-typed-readonly-host-records).
 
 ```
 ShowOpts {
@@ -135,8 +144,10 @@ ShowOpts {
 #### 3.0.3 Complete data and canonical parity
 
 The shared `tests/bindings/` corpus compares complete Rust and Python result,
-failure and run-caution data, preserving every field and engine array order. A future
-Node adapter joins this harness; Rust/Python evidence must never claim Node coverage.
+failure and run-caution data, preserving every field and engine array order. The Node
+adapter (`tests/bindings/node/`) runs against the same Rust oracle and protocol,
+extended by the oracle's `--metadata` reply and no-`root` framing
+([§FS-distribution.3.2.4](FS-distribution.md#324-acceptance-evidence)); neither binding's evidence claims the other's coverage.
 Adapters use supported data APIs, not CLI subprocesses or message-only comparisons.
 
 The canonical UTF-8 JSON envelope has exactly `failure`, `result`, `run_cautions`:
@@ -162,6 +173,60 @@ and logical separators. Every operation has success/refusal coverage. Writers ru
 on isolated copies and compare preview/no-execution behavior and resulting bytes
 with core, including isolated integration user homes.
 
+##### 3.0.3.1 Node adapter mapping and frozen CLI wire projection
+
+The Node adapter writes the envelope above itself, with no arbitrary
+JSON.stringify guarantee: that uses different escapes for backspace/form-feed
+and object order. Node conversion explicitly maps
+fixed host camelCase fields to snake_case; authored IDs/config keys are opaque.
+Separate top-level runCautions into run_cautions, do not duplicate them; complete
+check result keeps report/selected_report/had_scan_errors/output_format. Compare
+every native-only field too, including column, sites, authority and query details.
+Require same source SHA/engine version/config/tree/invocation and ignore state;
+wrong version fails comparison, never normalization of findings or messages.
+
+Second channel projects those same host records into the EXISTING CLI wire form.
+The comparator produces byte-identical stdout AND stderr, plus CLI status
+expectations where meaningful. Frozen wire projection is explicitly distinct
+from the lossless host envelope; these are the only permitted differences:
+
+- Check uses selectedReport, not the entire object. Stable sort by bytewise
+  `(path,line-or-0,message)`, null path before paths; ties retain initial
+  warning/error/suggestion chain order. Keys: severity OR suggestion channel,
+  path,line,code,message,sites,authority. Native-only column and envelope metadata
+  do not add CLI keys; sites/authority empty arrays become null only in this
+  frozen wire projection. Actual values/sites/order/authority do not disappear.
+- Line-present findings go to stdout; line-less findings go to stderr. Separate
+  run_cautions render as existing `warning: <message>\n` text on stderr even in
+  JSON mode, before any later refusal/report. Config diagnostic report warnings
+  remain JSON findings where existing CLI requires them. No generic warning
+  flattening between these channels. Clean nonempty JSON check has zero bytes;
+  empty scan has its existing stderr finding.
+- Single query failure uses the frozen diagnostic object on stderr; a batch
+  per-query failure uses the exact query/result/error envelope on stdout. Launch
+  failures stay CLI `error:` text, including existing hints/known lists. No
+  frontend message parsing to infer classes or locations.
+- Show uses existing engine query JSON when available and typed metadata to pin
+  it; optional kind_title placement and E2E/value shapes are preserved. Batch
+  preserves input/exhaustive order and the JSON-only CLI mode. Refs/list/cover
+  and size rows use their fixed command fields/key orders; host envelope fields
+  and null optional metadata do not invent extra CLI keys. Size measurements
+  lower to lead_<unit>/full_<unit> pairs in caller unit order. Test total/summary
+  projections separately.
+- CLI escaping is its actual json_escape contract: quote/backslash/LF/CR/tab
+  escapes plus ALL Rust char::is_control characters as lowercase `\\uNNNN`,
+  including DEL/C1. This differs deliberately from the lossless corpus C0 rule;
+  cover control-character fixtures so JSON.stringify cannot pass by accident.
+- Paths keep core '/' rendering and invocation/config base; no absolute-path
+  replacement, regex message repair, platform basename stripping or arbitrary
+  sort is allowed. Mutation/config/TOML/text surfaces use exact existing command
+  goldens where no JSON command exists; complete-data comparison is still required.
+
+Comparator/serializers are test infrastructure. Production bindings return
+records and never print; the CLI remains the renderer. Reuse tests/e2e cases,
+particularly json-report, show/refs ambiguities, rule authority, config warnings,
+workspace root/member modes, Unicode and formatter/init refusal fixtures. Fixture names in tests refer to concrete test inputs; future measured coverage is recorded only after the tests execute.
+
 ### 3.1 Rust (`grund-core` crate)
 
 The Python frontend may require additive warning-preserving, structured-failure,
@@ -180,6 +245,14 @@ let body = grund_core::show("FS-check", ShowOpts::default())?;
 
 `Report` and the underlying `Findings` are exposed as plain data structures so callers can iterate, filter, or render their own output. Every function on this surface returns data and writes to no stream, which is what lets one answer be rendered by a terminal, an editor and an embedder alike — the report's warning channel included, so a caution settled before any report exists still reaches a caller as a warning rather than as a line on its stderr ([§FS-check.4.10](FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread), [§FS-workspace.6.1.7.6](FS-workspace.md#6176-how-the-undecidable-claim-warning-travels)). Process callers use the `grund` CLI package; embedders call the data-returning `check`, `show`, `scan`, and related APIs ([§FS-distribution.3.1.1](FS-distribution.md#311-main_entry-is-absent-from-the-embedding-api)).
 
+Additive `ApiOutcome<T>` and source-classified `ApiFailure` carriers retain
+earlier run cautions on both success and failure. Typed batch records, schema
+config values and integration-install orchestration reuse current engine
+loaders, queries and write policies. All supported Rust signatures and existing
+Display/CLI bytes remain unchanged. Classification occurs at the producing
+source, never by parsing rendered messages; unexpected recoverable failures
+retain an operation class and cause chain. No Node dependency enters the core.
+
 #### 3.1.1 `main_entry()` is absent from the embedding API
 
 `grund_core::main_entry()` is not exported in 0.15.0 or later. It was a process entry point — it parsed argv, printed, and returned an exit code — kept for `grund-core = "0.4"` consumers until 0.14.0 shipped a deprecation note naming its removal in 0.15.0, the sequence [§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path) requires. A former caller uses `check`, `show`, `scan`, or another data-returning engine API when embedding grund, and invokes the `grund` CLI package when it needs a process entry point. Removing the engine adapter changes none of the shipped CLI's commands, flags, rendered bytes, or exit decisions, and changes no LSP behavior.
@@ -189,11 +262,439 @@ let body = grund_core::show("FS-check", ShowOpts::default())?;
 ```js
 import { check, show } from 'grund-cli';
 
-const report = await check('./repo');
+const result = await check('./repo'); // findings are result.report.errors, warnings, suggestions
 const body = await show('FS-check', { mode: 'brief' });
 ```
 
-The Node binding is built with `napi-rs`. Native binaries are prebuilt for the platforms covered by `napi-rs` (macOS arm64/x64, Linux x64/arm64, Windows x64). Source builds are supported as a fallback.
+The native binding uses napi-rs over the shared core. This contract authorizes
+local buildable/installable API artifacts; registry publication remains pending.
+Supported prebuilt targets are packaging's GNU Linux x64/arm64, macOS x64/arm64
+and Windows x64 matrix. Local evidence does not certify that whole matrix.
+
+#### 3.2.1 Operations, options and refusals
+
+All functions below return Promises, including argument-validation and loader
+failures. Required strings are positional; options are an optional plain object.
+Unknown keys, wrong types, NUL, unpaired UTF-16 surrogates, non-finite numbers,
+unsafe integers, invalid enum values and conflicting options reject `input`.
+No URL, Buffer, config injection or argv API. Omitted optional values mean default;
+explicit null is allowed only for `section`, batch queries and nullable options
+whose declarations explicitly permit it. Arrays are copied at entry.
+
+`RootOptions = {root?: string}`. Every tree operation snapshots cwd at entry,
+resolves a relative operand against that snapshot, and passes an absolute path
+plus the original omitted/explicit bit to core. It never calls chdir. `check`
+takes root positionally; init takes target positionally; other calls take root
+in options. `scan` requires an explicit root. Output bases remain the core's:
+config-root or invocation operand per existing relative_paths semantics. Any
+needed path-base carrier is additive core data, not a JS path resolver.
+
+Results are typed records with `runCautions: Finding[]` at their top level;
+these are separate from report warnings. A refusal carries the same array on
+`GrundError.failure`. Common config/I/O/operation failure classes apply to all
+calls that load a tree; the table names additional operation-specific cases.
+
+| Public Promise signature | Options/defaults beyond root | Reused core; minimum additive seam | Result and refusal behavior |
+| --- | --- | --- | --- |
+| `check(root?: string, options?: CheckOptions): Promise<CheckResult>` | requireGrounding=false, suggestions=false, full=false, rule=null, only=[], ignore=[], onlyRule=false | `check_with_run_warnings`, `CheckFindingSelection`; typed `check_outcome` | complete report, selectedReport, outputFormat, hadScanErrors, runCautions; findings and partial file I/O resolve; failed setup rejects. Selection validated before discovery; ignore wins, rule-produced codes carry invalid-rule, safety io always survives, onlyRule requires rule. |
+| `scan(root: string): Promise<ScanResult>` | Explicit path; no checker flags | `scan`/strict scan, additive `scan_outcome` over the same pipeline with warning and normalized snapshot carriers | declarations/citations/scan facts available as arrays, not a live iterator; strict scan failures reject with available partial facts and cautions. No parallel JS scan. |
+| `show(id: string, options?: ShowOptions): Promise<ShowResult>` | section=null, mode=lead, format=text; modes lead/brief/toc/full, formats text/md/json | `show_with_scope`, typed query errors, additive `show_outcome` | body/path/line/sections/json plus cautions. Query refusal rejects query with sites or candidate IDs; setup rejects config/io. Inline section plus section option is a query failure, not a JS parser reinterpretation. |
+| `showBatch(queries: readonly (string \| ShowQuery)[] \| null, options?: BatchOptions): Promise<BatchResult>` | null means all coordinates; [] is empty without config loading; mode=lead | `show_batch_with_scope`'s single-context machinery; additive `show_batch_data_outcome` before the existing JSON rendering | ordered `{query,ok:true,result}` or `{query,ok:false,failure}` records, plus cautions. Validate entire input before discovery. Per-query failures continue; setup failure rejects once. No stdin/NDJSON input API. |
+| `refs(id: string, options?: RefsOptions): Promise<RefsResult>` | section=null, descendants=false | `refs_with_metadata`/`refs_outcome`, typed `refs_metadata_outcome` | hits, workspace, outputFormat, note, scanErrors, kindTitle, derived summaries/totals, cautions. Valid undeclared target retains hits/note; invalid ID/ambiguity rejects query with available context. No imposed show-not-found rule. |
+| `list(options?: ListOptions): Promise<ListResult>` | kinds=[], projects=[], unused=false, selector=null | `list_with_run_warnings`, typed `list_outcome` | entries/summaries/workspace/outputFormat/scanErrors/cautions. Unknown/non-citable kinds, unknown project, project filter without workspace, invalid/unresolved selector reject; not empty success. |
+| `listSizes(options?: SizeOptions): Promise<SizeResult>` | list options plus units=[lines,words,bytes], top=null; units nonempty, unique, caller ordered; top positive | `list_sizes`, typed warning-preserving `list_sizes_outcome` | entries with ordered unit/nullable lead/full measurements, workspace/outputFormat/scanErrors/cautions. Filters precede top; first unit ranks; existing stable tie-break; broken stub measures remain null. |
+| `cover(options?: RootOptions): Promise<CoverResult>` | none | `cover`, typed `cover_outcome` | entries including empty files, all citation/site/project/enclosing coordinates, outputFormat, scanErrors/cautions. `cover_text` is a rendering-oriented lower-detail projection, not an additional public operation; complete cover data can supply it. |
+| `fmt(options?: FmtOptions): Promise<FmtResult>` | write=false, marker=false, crossRefs=false | `format_references`, `FmtScanAbort`, typed `format_outcome` | changes/path/line/label, scanErrors, refusedWrites, cautions. Core completed partial runs resolve with diagnostics; fatal preflight or later write errors reject with partial output. Config-enabled cross refs still runs when crossRefs=false. Preview is default; no added check flag/exit decision. |
+| `proposeId(kind: string, title: string, options?: IdOptions): Promise<IdResult>` | width=3, nonnegative safe integer | `propose_id_with_run_warnings`, typed `propose_id_outcome` | id/kind/number/slug/folder/file/e2eCaseDir/fileHoldsSingleDeclaration/cautions. Unknown/non-citable kind rejects operation with known kinds; empty slug or collision rejects query. No writes or implicit declaration creation. |
+| `init(target?: string, options?: InitOptions): Promise<InitResult>` | name=null, description=null, docs=false, force=false, dryRun=false, check=false, noVcs=false, agents=null (automatic) | `init`, `InitError`, additive typed `init_outcome` | events/errors/notes/next/pendingChanges/cautions. Explicit call writes by default, unlike fmt. check implies dryRun. Core preflight refusals reject; completed validation findings resolve; partial write failure rejects with events. Home/global/VCS guards, protected config and companion bytes preserved. |
+| `completeIds(options?: CompleteOptions): Promise<CompleteResult>` | prefix="", sections=false | `complete_ids_with_run_warnings`, typed `complete_ids_outcome` | ids/cautions; deterministic sorted deduplicated candidates, aliases and separators from core. Core errors reject here; only shell keystroke frontend has silent-error policy. |
+| `effectiveConfig(options?: RootOptions): Promise<ConfigResult>` | none | `effective_config`, config warning helpers, additive `effective_config_outcome` plus schema-keyed values projection | root/configFile/values/cautions; discovered config with effective defaults; no declaration scan, no broad Rust Config object. |
+| `validateConfig(options?: RootOptions): Promise<ConfigResult>` | none | `validate_config`, additive `validate_config_outcome` | same record; expands member configs exactly as core, scans no declaration bodies; invalid config rejects config with location and earlier cautions. |
+| `fetch(id: string, options?: RootOptions): Promise<FetchResult>` | Explicit fetch is the write authorization; no invented preview flag | `fetch_snapshot_with_run_warnings`, additive typed `fetch_outcome` before string flattening | id/cautions; typed query/config/io/operation failures; captures integration outputs as core does. Only this operation executes configured integration; no implicit fetching. |
+| `integrations(options?: IntegrationOptions): Promise<IntegrationResult>` | client=null, write=false, conversation=null, conversationTarget=null, agent=null; client set codium/iterm2/kitty/tmux/vscode/wezterm; conversation plain/link; target file/path/web/vscode/vscodium/cursor | Existing IntegrationClient/detection/artifact/managed writers; additive shared `integrations_outcome` orchestration | detected clients/descriptors/artifact data or events/notes/preferences/manualSteps, cautions; user-global operation, no root. Preserve validation, user-config-before-write, active-agent gates and owned paths. Only explicit write mutates. No fabricated CLI JSON-install mode. |
+| `referenceStyle(path: string): Promise<StyleResult>` | explicit document path | `reference_style`, typed `reference_style_outcome` | marker/trigger/cautions; member configuration wins exactly as core. |
+| `agentSetupInstructions(): Promise<SetupResult>` | none | `AGENT_SETUP_INSTRUCTIONS` through `canonical_template_text` | instructions, empty cautions; existing packaged workflow returned as data, never printed. |
+
+`summaries` and `totals` in refs are transport projections over existing hits,
+with byte-sorted paths and site counts; no new graph query or resolution rule.
+All flags affecting engine behavior map to current core mechanisms. Output-only
+CLI switches (refs total/summary, id explain, format exit code) become returned
+records/derived fields, not fake process options. The omitted showBatch mode
+format is deliberate: typed results plus canonical json are always returned;
+the existing engine batch CLI operation is json-only.
+
+##### 3.2.1.1 Exclusions and later adaptation
+
+LSP snapshots/overlays/hover/on-type edits and protocol lifecycle remain the LSP
+frontend's: only disk-backed batch operations, completion and referenceStyle are
+public here. No generated first-party editor plugin or Node watch/streaming API.
+Help/version dispatch, argv, exit codes, SIGPIPE, static shell completion-script
+printing and CLI/LSP launchers remain process surfaces. Build/engine version
+metadata is available privately for package matching, not another engine API.
+`cover` line ownership ([§FS-cover.6](FS-cover.md#6-line-ownership)) is excluded from the initial inventory,
+pending later adaptation: `cover` takes no `lines` option.
+#459 format/path-base/v2 settings and #463 schema-view wait for their actual core
+implementation, then require a separate contract extension. No placeholder API
+or JS interpretation of those proposals. #453/#454/#466 are later internal
+adaptation, not landing blockers. #470 shared corpus and #471 assembly are
+coordination interfaces; no separate GitHub issue must close first.
+
+#### 3.2.2 Typed readonly host records
+
+Records
+are ordinary JS objects, arrays iterate synchronously after the Promise resolves,
+and TS properties are readonly. No persistent native handles, session objects,
+live iterators or permanent promise to mirror Rust `Config`/`Findings` layout.
+Optional result fields are present as null, never silently omitted/undefined;
+collections are [] when empty. Schema-controlled input defaults are in [§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals).
+Integers crossing as number must be within Number.MAX_SAFE_INTEGER; unexpected
+overflow rejects operation with code `numeric-overflow`, never truncates.
+Coordinates keep core one-based byte-column units; do not convert to UTF-16.
+
+##### 3.2.2.1 Common records
+
+```ts
+type Site = { readonly path: string; readonly line: number };
+type Finding = {
+  readonly code: string; readonly message: string;
+  readonly path: string | null; readonly line: number | null;
+  readonly column: number | null;
+  readonly sites: readonly Site[]; readonly authority: readonly string[];
+} & ({readonly severity: 'error' | 'warning'} |
+     {readonly channel: 'suggestion'});
+type Report = {
+  readonly errors: readonly Finding[];
+  readonly warnings: readonly Finding[];
+  readonly suggestions: readonly Finding[];
+};
+type Cautions = { readonly runCautions: readonly Finding[] };
+type ScanError = { readonly path: string; readonly message: string };
+type FailureKind = 'input' | 'query' | 'config' | 'io' | 'operation'
+                 | 'load' | 'worker' | 'native' | 'busy';
+type Failure = {
+  readonly kind: FailureKind; readonly code: string;
+  readonly operation: string; readonly message: string;
+  readonly path: string | null; readonly line: number | null;
+  readonly column: number | null; readonly sites: readonly Site[];
+  readonly authority: readonly string[];
+  readonly causes: readonly string[];
+  readonly details: Readonly<Record<string, JsonValue>>;
+  readonly partial: PartialOutcome | null;
+  readonly runCautions: readonly Finding[];
+};
+type JsonValue = null | boolean | number | string |
+  readonly JsonValue[] | {readonly [key: string]: JsonValue};
+// The emitted declarations enumerate these operation-specific unions;
+// they do not publish unknown/any as the payload.
+type PartialOutcome =
+  | {readonly operation: 'scan'; readonly result: ScanSnapshot}
+  | {readonly operation: 'refs'; readonly result: RefsData}
+  | {readonly operation: 'fmt'; readonly result: FmtData}
+  | {readonly operation: 'init'; readonly result: InitData}
+  | {readonly operation: 'integrations'; readonly result: IntegrationInstallData};
+declare class GrundError extends Error { readonly failure: Failure }
+```
+
+`kind` is the stable discriminant; `code` is a documented machine code, not a
+localized sentence. Expected query codes preserve not-found, missing-section,
+broken-stub, ambiguous, ambiguous-section, invalid-id and query-failed. Other
+codes identify invalid-argument/unknown-option/conflicting-options/path-encoding,
+invalid-config, filesystem, operation-failed, native-load, worker-failed,
+native-panic, writer-busy and numeric-overflow. Specific engine codes/details
+can extend this string catalog compatibly; callers branch on kind and known codes.
+Query details include candidates/formatHint where core supplies them; I/O includes
+OS code when available; load includes expected target/addon/versions, attempted
+locations and cause chain. No unsupported source location is invented.
+
+Input validation and synchronous napi conversion errors are caught inside async
+public wrappers; therefore callers always receive rejected Promises. Lazy load
+lets import succeed even without a compatible addon; the first call rejects
+load. A corrupt JS package that cannot be parsed/imported is a module-system
+error outside an operation Promise. Errors do not print. Same class identity
+is shared by ESM and CJS. Batch query failures use the same Failure data without
+throwing; batch setup failures reject GrundError once.
+
+##### 3.2.2.2 Result fields
+
+Every following record adds Cautions; warning vectors present on native outputs
+are moved there once, not repeated in data. Other fields use fixed camelCase
+host names, listed here. The shared canonical corpus converts them to snake_case
+and preserves authored arbitrary keys; it never mechanically renames IDs or
+configuration keys. The existing core output_format is preserved as metadata,
+not permission to return a string in place of typed data.
+
+- CheckResult: `report`, `selectedReport`, `hadScanErrors`, `outputFormat`.
+  `report` is complete under the requested scope/options, selectedReport is
+  computed with core CheckFindingSelection. With no filters they are equal.
+  hadScanErrors=true means incomplete, even if selectedReport has no errors.
+- ShowResult: `id`, `section:string|null`, `kindTitle:string|null`, `body`,
+  `path`, `line`, `sections: {path,title,depth}[]`,
+  `json: string|null` (core's exact existing JSON when requested),
+  `manifest:{kind:'E2E',args:string[],expectedExit:number,fixtures:string[]}|null`.
+  The additive outcome supplies query metadata from the same loaded context,
+  before rendering; no second scan or parsing rendered prose.
+  JSON source/E2E/value bodies preserve core semantics rather than treating all
+  output as prose. All four slice modes and all three single-show formats exist.
+- BatchResult: `records: {query:{id,section:string|null},ok:true,result:ShowData}
+  | {query,ok:false,failure:Failure}[]`. ShowData has ShowResult's fields except
+  cautions, mode is invocation-wide, canonical per-query JSON is preserved.
+- RefsData: `outputFormat`, `workspace`, `kindTitle:string|null`, `note:string|null`,
+  `hits`, `scanErrors`, `summaries:{project:string|null,path,count,lines:number[]}[]`,
+  `totals:{sites,files}`. Every RefHit has project/path/line/column/id/
+  section/marker/text/enclosingDeclaration/enclosingSection; nullable coordinates
+  stay null. Summary lines retain the CLI's duplicate-line policy and ordering.
+- ListResult: `outputFormat`, `workspace`, `entries`, `summaries`, `scanErrors`.
+  Entry: project/id/section/sectionSeparator/kind/path/line/title/stub/defines/
+  refs/duplicate/valueRoots:{id,valid}[]. Summary: project/kind/title/home/count.
+  project/section/title/defines nullable; output wire omits keys only where the
+  existing CLI shape does. Keep kind titles and authored project/kind order.
+- SizeResult: outputFormat/workspace/scanErrors/entries. Size entry:
+  project/id/section/sectionSeparator/kind/path/line/stub/defines/duplicate/
+  measurements:{unit:'lines'|'words'|'bytes',lead:number|null,full:number|null}[].
+- CoverResult: outputFormat/scanErrors/entries:{project,path,citations:RefHit[]}[];
+  no loss of empty files or citing-side membership.
+- FmtData: changes:{path,line,label}[]/scanErrors/refusedWrites:string[].
+  Completed partial run carries changes and scan errors; refusal partial may
+  contain no changes. No made-up rollback or atomic-all-files guarantee.
+- IdResult: id/kind/number:number|null/slug/folder:string|null/file:string|null/
+  e2eCaseDir:string|null/fileHoldsSingleDeclaration:boolean.
+- InitData: events:{verb,path}[]/errors:Finding[]/notes:string[]/
+  next:{docs:boolean,entrypoint:string,scanReadsFile:boolean,fsHome:
+  {kind:'file',path:string,headingName:string,headingMarker:string} |
+  {kind:'folder',path:string}}|null/pendingChanges:boolean.
+- CompleteResult: ids:string[]. FetchResult: id:string (the requested operand).
+- ConfigResult: root:string/configFile:string|null/values:ConfigValues.
+  ConfigValues is a readonly, typed tree of current public configuration keys:
+  version/project_name/project_description/reference/id/kinds/scan/fmt/output/
+  workspace. Key spelling is the TOML schema, intentionally not renamed; this
+  is inspectable configuration, not a Rust memory layout. Only effective keys
+  known to the schema are included; optional entries remain null where absent;
+  rules, kind order, resolution/fetch and inheritance preserve current meaning.
+  Root/configFile give discovery provenance; no invented per-key provenance.
+- StyleResult: marker/trigger. SetupResult: instructions.
+- IntegrationResult is discriminated by `mode:'detection'|'artifact'|'install'`.
+  Detection has detected:string[] and clients:ClientDescriptor[]; artifact
+  has client:ClientDescriptor/artifacts:{path:string|null,content:string}[]/
+  manualSteps:string[]; install has events:{verb,path}[]/notes:string[]/
+  preferences:{conversation,conversationTarget,agentOverrides}/manualSteps.
+  Descriptor: client/kind/detected/installed:boolean|null/installKind/
+  configTarget/resolverTarget:string|null; manual clients keep installed=null.
+  These are transport facts from existing helpers; orchestration policy stays
+  in core. User-global paths may be absolute, as integrations already documents.
+
+##### 3.2.2.3 Scan snapshot
+
+ScanResult exposes `snapshot:ScanSnapshot`, not arbitrary object-valued native
+Findings. Snapshot includes declarations, citations, escapedCitations,
+scannedFiles, walkedDirs, fileStructures, valueBindings, invalidValueDeclarations,
+invalidValueBindings, sectionHeadingsOutsideDeclarations, unmarkedHeadings and
+nearMissHeadings. Arrays preserve deterministic core order. Declaration groups
+are flattened by rendered ID/path/line, retaining every duplicate site; sections
+are ordered entries, retaining duplicate section claims separately. Private
+legacy/local candidate lists remain private; promoted citations already expose
+the semantic edges. Strict scan errors reject, with available snapshot partial.
+
+Declaration records: id/kind/number/slug/path/line/headingLevel/title/sections/
+duplicateSections/stub/defines/e2eCase/bodyStart/bodyEnd/bodyHasContent/source/
+valueValid. Citation records retain namespace/id/section/path/line/column/marker/
+  shorthand/localSection/shorthandRewritable/numericRun/text/inlineSite/
+  enclosingDeclaration/enclosingSection.
+Each structural/value fact is a fixed typed record carrying the actual source
+fields under camelCase, with paths rendered through core; source is discriminated
+text versus JSON memberSlice/keyColumn/keyText. Value numbers stay normalized
+coefficient/exponent strings or source strings, never lossy JS floating values.
+No new checker verdict is derived from these facts in JS.
+
+##### 3.2.2.4 Option record details
+
+Options in [§FS-distribution.3.2.1](FS-distribution.md#321-operations-options-and-refusals) are the exact public names and defaults. agents
+is null/omitted for automatic selection, otherwise a nonempty readonly array
+of canonical/claude/gemini/pi/copilot/cursor/windsurf/zed. Each maps to existing
+InitAgentEntrypointSelection flags; [] rejects rather than silently auto-selects.
+Integration agent names reuse known_agent's closed supported set; unsupported
+names reject input. conversation/target/agent require write=true; agent also
+requires conversationTarget; write with no client requires conversation or
+conversationTarget. Validation precedes mutation and is reused from shared core.
+
+#### 3.2.3 Workers, loading and source builds
+
+##### 3.2.3.1 Execution
+
+Use napi-rs AsyncTask over Node-API async work. Native `invoke` snapshots and
+owns Rust inputs before dispatch; compute performs all config, filesystem,
+scan/query/write and host-neutral record construction on libuv workers. Resolve
+only marshals owned results on the live JS thread. No Tokio runtime, JS engine
+logic or subprocess CLI. JS async wrappers validate/copy operands before the
+first await; cwd is captured synchronously once and passed as request data.
+Support worker_threads environments; never retain JS values/napi_env in compute.
+
+An atomic writer lease shared by the loaded addon rejects a second simultaneous
+mutating call with `busy/writer-busy`, rather than queueing pool workers on a
+mutex. This is deliberately conservative across roots: fmt(write), init unless
+check/dryRun, fetch and integrations(write). Preview/read calls do not acquire
+it. Lease acquired before engine side effects, released by RAII on success,
+error or unwind. Independent reads overlap. Reads concurrent with a writer may
+observe filesystem changes; no atomic snapshot across calls or external writers
+is promised. Callers serialize read/write groups when they need a fixed tree.
+Multiple installed copies/processes are separate native instances and remain
+the caller's coordination responsibility. No filesystem lock/cache is introduced.
+
+Pin unwind-capable addon builds. Catch unwinding panics in compute and every
+native conversion/resolve/reject boundary, returning native/native-panic; typed
+engine errors remain errors, never panics. Build failure if panic=abort is chosen
+for this supported builder. To keep contained panics silent, a once-installed
+Rust panic-hook dispatcher suppresses printing only under a thread-local binding
+request guard and chains the previous hook otherwise; do not repeatedly swap
+hooks per call. The dispatcher captures no napi_env and lasts for the addon
+lifetime. Run core parallel work inside an addon-owned bounded Rayon pool using
+`ThreadPool::install`; mark its workers with the same suppression guard through
+start/exit handlers. Otherwise nested scanner worker panics would print before
+the compute catch sees their propagated unwind. This reuses the core's Rayon
+walk, without changing its global pool or placing Node dependencies in core.
+Pool ownership is reference-counted by environments and in-flight Rust jobs;
+drop it after the last one finishes. TLS and writer guards drop on unwind; panic payload handling itself
+must not re-panic. Validate the known non-Unicode unnamed-member case through
+shared core preflight before the existing alias derivation, preserving CLI's
+documented deviation until its separate fix. Recoverable panics are contained;
+abort/OOM/process corruption are not an in-process isolation promise. Do not
+claim catch_unwind handles those. Test hook chaining alongside another native
+Rust caller, including worker completion and teardown.
+
+Addon context is per Node environment; request Rust data lives independently
+until completion. Register cleanup through Node-API/napi-rs mechanisms; stop
+accepting jobs on teardown, discard callbacks to destroyed environments, and
+release job resources/leases after any already-running compute completes.
+Normal pending calls keep the host alive. Forceful worker termination may let
+in-flight native writes finish; no rollback. No AbortSignal/cancellation/watch
+API this delivery; napi's queued-only cancellation would not stop running writes.
+No global cwd change, argv parsing, host exit or unexpected stdout/stderr.
+
+##### 3.2.3.2 Module/runtime/load interface
+
+Support Node 22.x and 24.x, N-API 8, ESM and CJS. npm engines is
+`^22.0.0 || ^24.0.0`; this declares majors, not an automatic promise of all newer
+Node hosts or Electron/Bun/Deno/browser runtimes. Platform support is packaging's
+five addon targets: linux-x64-gnu/linux-arm64-gnu/darwin-x64/darwin-arm64/
+win32-x64-msvc; no musl or Windows-arm prebuilt claim. Payload/runtime floors
+follow the approved #471 matrix; this machine proves only its local source build.
+
+Artifact name `grund.node`, internal exports `invoke` (owned request → async
+native outcome) and `metadata` (apiSchemaVersion=1, engineVersion, packageVersion,
+target, napiVersion=8). Each platform package exposes its exact-version addon
+path and metadata. These are private ABI glue, not a standalone C ABI contract.
+Local build metadata is also written as `native/metadata.json`.
+The optional platform module exposes `{addonPath, metadata}`, with an absolute
+addon path and the same metadata record; packaging owns its package name and
+exact-version dependency. These private descriptor field names fix the loader
+handoff without creating a public package subpath.
+Public wrappers/types provide exactly the function inventory in the matrix.
+
+Lazy CJS loader is the shared implementation; ESM facade uses explicit named
+exports from it so require/import share errors/options semantics. Precedence:
+1. Local source-built `native/grund.node` when matching metadata exists.
+2. Exact same-package-version optional platform payload selected by OS/CPU/libc.
+No architecture substitution, network download, CLI subprocess or silent rebuild.
+Selection/loading failures reject GrundError(load), with target/attempted paths
+and original cause details. A present incompatible/corrupt local artifact fails,
+not silent fallback. Validate metadata before accepting requests. #471 owns
+platform dependency generation and distribution, Node provides loader protocol.
+
+Conditional exports map import to index.mjs with index.d.mts, require to
+index.cjs with index.d.cts; types conditions precede implementations. Root types
+may point to index.d.mts for tools reading package metadata. Private addon/build
+paths are not public package exports. Files include JS/TS declarations, loader,
+README/license, local native payload when built, and builder/source closure for
+explicit fallback. No LSP dependency/bin. #471 alone adds grund launcher/bin,
+optional platform dependencies and CLI payloads to the shared assembly manifest.
+
+##### 3.2.3.3 Source build/local package ownership
+
+#469 owns `crates/grund-node` Rust binding/build.rs, JS/TS assets, source builder,
+and `package-api.json`: an API export/file/build metadata fragment, not a second
+package manifest. #471 owns the single assembly manifest/recipe. A local staging
+helper materializes a disposable API-only `grund-cli/package.json` from that
+fragment and workspace version when no assembly recipe exists yet; it never
+commits a competing umbrella manifest. #471 later consumes the same fragment,
+adds CLI assembly and rejects divergent export/source-build metadata. Local
+API-only package is explicitly labelled a rehearsal; no CLI executable claim.
+
+Builder contract:
+`node crates/grund-node/build.mjs --source-root <repo> --out-dir <stage>/native
+ --target <rust-triple> --target-dir <external-cargo-target> --profile release`.
+It calls Cargo with --locked against bundled workspace/core/node sources, then
+copies the cdylib to grund.node and writes metadata. Default target is host;
+release is ordinary LTO, not new PGO training. Require Rust/Cargo at the native
+builder's pinned toolchain (1.95.0), linker/SDK and Node/npm; dependency access
+or populated caches required for source builds. Node API construction stays
+napi-rs; no node-gyp dependency or Node header scraping.
+
+Disposable package has script `build:source` invoking `node build/source.mjs`.
+The local helper is `node crates/grund-node/stage.mjs --out-dir <package>
+--target-dir <external-cargo-target>`. The source entry point accepts an
+explicit `--target-dir` and uses its bundled `build/sources/` closure.
+Unpacked package includes build/source.mjs and the minimal complete Cargo source
+closure (workspace/package manifests/lock/toolchain, core/node sources and core
+assets), with copied workspace membership adjusted for that source bundle only.
+External target-dir and output-dir are explicit; generated files stay outside
+checkout. Run `npm run build:source`, `npm pack`, install tarball in a fresh
+consumer, then prove ESM/CJS/TS. Also remove native artifacts from an unpacked
+tarball and repeat source build/import to prove the bundled fallback, not just
+a build that accidentally reaches the checkout. #471 composes this entry point
+with its CLI builder; it does not invent a second native invocation. npm install
+does no automatic source compilation. Lock fragment/build tool versions, record
+input SHA and artifact engine/package versions for packaging and corpus matching.
+
+Current workspace version supplies local npm-valid dev version by the agreed
+single mapping (currently 0.16.2-dev); no repository version bump. Initial API
+is pre-1.0: additive records/operations allowed; removals/renames require the
+existing documented compatibility/deprecation path or an accepted explicit
+pre-1.0 decision. #466 adaptation must not silently alter approved host/wire
+behavior. Full ecosystem release alignment and a later binding-only maintenance
+cadence remain #471's policy; no publication, registry changes or PGO evidence
+are created here.
+
+#### 3.2.4 Acceptance evidence
+
+Usage/API documentation lives in `docs/user-facing/node-api.md`, with the
+captured `examples/node-api/example.mjs` and `expected.stdout` example and
+honest local-versus-registry status in README/guide/example indexes.
+`crates/grund-node/README.md` and packaged JS/TS guidance document prerequisites,
+loader/export metadata and the #471 handoff. Public examples execute against the
+locally built package; no unpublished registry availability is implied.
+
+| Ticket criterion | Failing test before implementation | Future implementation proof |
+| --- | --- | --- |
+| Surface and local example | `node_local_package` attempts the reproducible local builder/pack/install entry point and asserts a real package contract; fails today because the capability is absent, not because an existing addon was never built | fresh npm consumer runs check/show example and verifies dangling code/body; each exported operation and matching declaration exists |
+| All operations/core/data failures | parameterized success/refusal fixtures over all 18 declared operations | Rust/Node complete-data equality, warning-preserving errors, Promise rejection for invalid args, completed failed check resolves; selection from same complete report; strict scan, partial fmt/init and batch distinctions |
+| Responsive event loop/native safety | timer advances before a controlled long native compute finishes; test-only native failure seam | AsyncTask engine work off JS thread; catch unwind/native conversion and worker rejection; writer lease drops; host alive, no unwinding FFI; no production fault-injection export |
+| Canonical parity | Native Node path absent; serializer/corpus assertions are blocked | same-version stdout/stderr bytes and complete envelopes; null/multi-sites/authority, Unicode/control chars, query/warning-before-failure/partial scan and repeated determinism |
+| Core read/write/config semantics | copied tree mutation fixtures and forbidden fetch sentinel | compare read-only tree digest; core-owned exact post-write bytes; preview/force/dryRun/check/protected config/external symlink/whole-set preflight/partial-run refusals; reads execute no fetcher |
+| Concurrency/lifecycle/silence | independent two-root options loop; barrier before writer lease release; worker-thread teardown | cwd unchanged, input mutations cannot change owned requests, repeat/concurrent reads match isolated runs; overlapping writes reject busy without side effects; cleanup safe, controlled panic silent, unrelated hook preserved; stdout/stderr empty |
+| Source build/import/TS | clean staging/unpacked tarball consumer contract | pinned Node 22 and 24, Rust toolchain/linker; explicit npm build:source with missing addon; npm pack/install; ESM/CJS both work; strict tsc NodeNext and CJS consumers, wrong options rejected by TS and runtime |
+| Isolation/handoff/docs | add frontend graph/engine-boundary expectations | core lacks napi/Node/frontends; Node direct core dependency only; CLI/LSP cargo builds work without npm/Node; native metadata matches fragment; package contents/types/sources; documentation examples actually captured |
+
+Tests must use deterministic barriers for writer overlaps, not scheduling luck.
+Event-loop proof measures timer progress while compute is active, not a timer
+that fires before dispatch. Hook tests include an actual panic in a subprocess
+consumer (the API implementation itself invokes no CLI subprocess), so unintended
+host termination/streams are caught without terminating the test runner. Defer
+all installed-prebuilt platform matrix, npx/LSP/PGO/publisher evidence to #471.
+Local host evidence never certifies the entire support matrix.
+
+No task-specific plan/run.sh reproducer exists. The triage capability inventory
+is evidence, not the final failing user test. Specify commits spec/failing tests
+first, then implement adapters/types/builder, then review/green runs binding
+checks and the ordinary `pre-commit run --all-files`. Node acceptance must be
+part of the documented checked workflow, not only a developer's manual command;
+ordinary CLI/LSP builds still require no Node. `fissile check --staged` is required
+before final completion. Local readiness is measured independently of registry availability.
+
+The documented checked workflow runs `python tests/bindings/node/run.py` as
+well as `pre-commit run --all-files` and `fissile check --staged`. The binding
+suite requires Node/npm, the pinned Rust toolchain, linker/SDK and dependency
+access or populated caches; ordinary CLI/LSP Cargo builds need no Node tooling.
+No cancellation, rollback, external-writer snapshot, abort/OOM recovery,
+publishing, registry reservation, version bump or release dispatch is promised.
 
 ### 3.3 Python (`grund` PyPI package)
 
