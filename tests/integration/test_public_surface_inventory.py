@@ -207,12 +207,10 @@ class ConcernRecordSurfaceTests(unittest.TestCase):
     """§AR-config.1: the records are public, and the names they replace take the
     deprecation path of §REQ-backwards-compatibility.2 rather than vanishing."""
 
-    @unittest.expectedFailure
     def test_the_concern_records_are_root_names(self):
         missing = [name for name in CONCERN_RECORDS if name not in set(public_root_names())]
         self.assertEqual([], missing)
 
-    @unittest.expectedFailure
     def test_each_replaced_name_is_a_deprecated_alias_naming_its_removal(self):
         aliases = deprecated_aliases()
         wrong = []
@@ -225,7 +223,6 @@ class ConcernRecordSurfaceTests(unittest.TestCase):
                 wrong.append(f"{name}: since {since!r}, note {note!r}")
         self.assertEqual([], wrong)
 
-    @unittest.expectedFailure
     def test_the_inventory_retires_the_replaced_names_with_the_ramp(self):
         dispositions = inventory_dispositions()
         wrong = [

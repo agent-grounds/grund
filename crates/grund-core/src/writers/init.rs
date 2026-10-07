@@ -238,7 +238,13 @@ fn init_run(
     // Render the base once per conversation surface (§FS-init.2.3.4.17.2).
     // §FS-init.2.3.5.10: the shared rule renderer adds destinations per file.
     let render_block = |surface| {
-        render_agents_append_block(&resolved_name, &init_config, &workspace_members, surface)
+        render_agents_append_block(
+            &resolved_name,
+            init_config.project(),
+            init_config.compiled(),
+            &workspace_members,
+            surface,
+        )
     };
     let add_chapter_rules = |block: String, path: &Path| {
         // §FS-init.2.3.5.10: a pending entrypoint cannot be canonicalized yet;

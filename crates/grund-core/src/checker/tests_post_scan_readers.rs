@@ -74,7 +74,9 @@ const READERS: &[(&str, &str, &str)] = &[
     // A stub's target outside the walk, read for a value binding's home.
     ("values.rs", "home_as_scanned", "AR-checker.2.18"),
     // The chapter-rule facts, whose `cites` reads a stub's target for a section,
-    // built for the rules themselves and for the rules section of an entrypoint.
+    // built for the rules themselves and for the rules section of an entrypoint;
+    // the adapter asks for that section through the `SectionHomes` answered here.
+    ("chapter_rules.rs", "section_home", "AR-rules.3"),
     ("chapter_rules.rs", "adapt_markdown", "AR-rules.3"),
     ("chapter_rules.rs", "adapt_workspace", "AR-rules.3"),
     ("chapter_rules.rs", "adapt_markdown", "AR-checker.2.7"),

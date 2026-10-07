@@ -82,16 +82,42 @@ pub type Findings = Catalog;
 // is written and read at (§FS-integrations.4.2).
 pub use grammar::{Grammar, INTEGRATIONS_BLOCK_VERSION};
 
-// §AR-system.2.3 config: the validated `Config` and the `grund.toml` records it
-// is read from (§FS-config).
+// §AR-system.2.3 config: the concern records a `grund.toml` lowers to — the
+// project, the run's facts, and what is compiled from the project once
+// (§AR-config.1) — and the records they are spelled in (§FS-config).
 pub use config::{
-    AbsentOptionalNamespace, CitationDisjunction, CitationLevel, CitationRules, CitationTarget,
-    Config, ConfigLocation, KindCitationRules, KindConfig, KindIndex, KindResolution,
-    LeadSizeWarning, NamespaceMatch, PointSizeUnit, ShorthandPolicy,
+    AbsentOptionalNamespace, CitationDisjunction, CitationLevel, CitationTarget, Compiled,
+    ConfigLocation, KindCitationRules, KindIndex, KindResolution, LeadSizeWarning, NamespaceMatch,
+    PointSizeUnit, Project, Run, ShorthandPolicy,
 };
 // §FS-cli.3.4: the run's `--path-base`, which a frontend parses and scopes.
 // `#[doc(hidden)]`, like the check-input observer.
 pub use config::{PathBase, with_report_path_base};
+
+/// The validated configuration façade, built from [`Project`], [`Run`] and
+/// [`Compiled`] (§AR-config.5): kept on the deprecation path of
+/// §REQ-backwards-compatibility.2 and removed in `0.19.0` (§AR-config.1).
+#[deprecated(
+    since = "0.17.0",
+    note = "read `Project` from `effective_project`; removed in 0.19.0"
+)]
+pub type Config = config::Config;
+
+/// One `[[kinds]]` row in its version-1 shape, which a [`Project`] holds as
+/// rows (§AR-config.1.3); removed in `0.19.0` (§REQ-backwards-compatibility.2).
+#[deprecated(
+    since = "0.17.0",
+    note = "read `Project::schema` rows; removed in 0.19.0"
+)]
+pub type KindConfig = config::KindConfig;
+
+/// The `[citations]` rules under the name they had before the records
+/// (§AR-config.1.4); removed in `0.19.0` (§REQ-backwards-compatibility.2).
+#[deprecated(
+    since = "0.17.0",
+    note = "read `Project::rules.citations`; removed in 0.19.0"
+)]
+pub type CitationRules = config::CitationRules;
 
 // §AR-system.2.5 scanner: the published form of what the walk raises
 // (§FS-check.2.4).
@@ -160,12 +186,12 @@ pub use api::{
     RefsWithMetadata, check, check_with_opts, check_with_run_warnings, complete_ids,
     complete_ids_with_run_warnings, config_run_warnings, config_warnings, cover, cover_lines,
     cover_lines_with_run_warnings, cover_text, cover_text_with_run_warnings,
-    cover_with_run_warnings, effective_config, embedding_call, format_references,
-    format_references_with_run_warnings, list, list_with_run_warnings, lsp_snapshot,
-    lsp_snapshot_with_completion, lsp_snapshot_with_metadata, node_embedding_call, node_request,
-    parse_cover_line_range, propose_id, propose_id_with_run_warnings, reference_style, refs,
-    refs_outcome, refs_with_metadata, render_finding_sites_json, scan, show, show_with_overlays,
-    show_with_scope, validate_config,
+    cover_with_run_warnings, effective_config, effective_project, embedding_call,
+    format_references, format_references_with_run_warnings, list, list_with_run_warnings,
+    lsp_snapshot, lsp_snapshot_with_completion, lsp_snapshot_with_metadata, node_embedding_call,
+    node_request, parse_cover_line_range, propose_id, propose_id_with_run_warnings,
+    reference_style, refs, refs_outcome, refs_with_metadata, render_finding_sites_json, scan, show,
+    show_with_overlays, show_with_scope, validate_config,
 };
 #[cfg(feature = "test-binding-writes")]
 pub use writers::{BindingWriteFaultGuard, binding_write_fault};

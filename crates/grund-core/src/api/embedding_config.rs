@@ -4,6 +4,8 @@ use super::embedding::EmbeddingRequest;
 use super::embedding_data::Data;
 use super::embedding_failure::error_data;
 use crate::*;
+// The façade itself, not the root's deprecated alias of it (§AR-config.5).
+use crate::config::Config;
 use serde_json::{Value, json};
 use std::path::Path;
 

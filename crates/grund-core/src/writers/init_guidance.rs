@@ -151,26 +151,27 @@ pub(crate) fn docs_scaffold_for_config(
     fs_home: &InitFsHome,
     config: &Config,
 ) -> Vec<(String, String)> {
+    let project = config.project();
     let mut files = Vec::new();
     match fs_home {
         InitFsHome::File { path, .. } => files.push((
             path.clone(),
-            render_scaffold_id_shapes(REQUIREMENTS_TEMPLATE, "FS", config),
+            render_scaffold_id_shapes(REQUIREMENTS_TEMPLATE, "FS", project),
         )),
         InitFsHome::Folder { path } => files.push((
             format!("{path}/README.md"),
-            render_scaffold_id_shapes(FS_README_TEMPLATE, "FS", config),
+            render_scaffold_id_shapes(FS_README_TEMPLATE, "FS", project),
         )),
     }
     files.extend(
         [
             (
                 "docs/grund.md",
-                render_scaffold_id_shapes(GRUND_DOC_TEMPLATE, "GRUND", config),
+                render_scaffold_id_shapes(GRUND_DOC_TEMPLATE, "GRUND", project),
             ),
             (
                 "docs/goals.md",
-                render_scaffold_id_shapes(GOALS_TEMPLATE, "GOAL", config),
+                render_scaffold_id_shapes(GOALS_TEMPLATE, "GOAL", project),
             ),
             (
                 "docs/roadmap.md",
@@ -182,15 +183,15 @@ pub(crate) fn docs_scaffold_for_config(
             ),
             (
                 "docs/architecture/README.md",
-                render_scaffold_id_shapes(AS_README_TEMPLATE, "AR", config),
+                render_scaffold_id_shapes(AS_README_TEMPLATE, "AR", project),
             ),
             (
                 "docs/decisions/architectural/README.md",
-                render_scaffold_id_shapes(DA_README_TEMPLATE, "DA", config),
+                render_scaffold_id_shapes(DA_README_TEMPLATE, "DA", project),
             ),
             (
                 "docs/decisions/functional/README.md",
-                render_scaffold_id_shapes(DF_README_TEMPLATE, "DF", config),
+                render_scaffold_id_shapes(DF_README_TEMPLATE, "DF", project),
             ),
             ("tests/e2e/README.md", render_e2e_readme(fs_home)),
             (

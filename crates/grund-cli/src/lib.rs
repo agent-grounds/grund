@@ -10,6 +10,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+// §AR-config.5: `Config` and `CitationRules` are deprecated root aliases until
+// `grund config show` reads `Project` (§AR-bindings.2).
+#[allow(deprecated)]
 use grund_core::{
     AGENT_SETUP_INSTRUCTIONS, ApiScanError, BatchShowQuery, CheckOpts, CitationDisjunction,
     CitationLevel, CitationRules, CitationTarget, CompleteIdsOpts, Config, CoverCitation,

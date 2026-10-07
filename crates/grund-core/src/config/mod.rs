@@ -66,19 +66,27 @@ pub use citations::{
     NamespaceMatch,
 };
 pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
-pub use compiled::{Compiled, ScanDemand};
+pub use compiled::Compiled;
+// The parts of the records (§AR-config.1): an embedder reaches them through the
+// public fields of `Project`, `Run` and `Compiled`, and this component's tests
+// name them here.
+#[allow(unused_imports)]
+pub use compiled::ScanDemand;
 pub(crate) use inputs::{
     input_read_dir, input_read_to_string, observe_config, observe_config_candidates,
     observe_ignore_inputs,
 };
 pub use kind::{KindConfig, KindIndex, KindResolution};
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
+#[allow(unused_imports)]
 pub use project::{
     CitationSyntax, Citations, FmtPresentation, Grounding, IdGrammar, KindGrounding, Members,
     NoteStyle, OutputPresentation, Presentation, Project, Rules, Schema, Sources,
 };
 pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
+#[allow(unused_imports)]
 pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
+#[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};
 
 // What the other components read, each by this module's path (§AR-system.4):

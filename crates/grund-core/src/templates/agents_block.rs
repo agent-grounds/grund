@@ -13,7 +13,7 @@
 use super::assets::{AGENTS_TEMPLATE, canonical_template_text};
 use super::citation_directions::citation_directions_section;
 use super::clickable_citations::{ConversationSurface, clickable_citations_section};
-use crate::config::{Config, kind_prefixes};
+use crate::config::{Compiled, Project, kind_prefixes};
 use crate::grammar::{id_shape, inline_note_layout_sentence};
 use crate::model::plural;
 
@@ -35,23 +35,24 @@ use crate::model::plural;
 /// reference.
 fn agents_template_substitutions(
     name: &str,
-    config: &Config,
+    (project, compiled): (&Project, &Compiled),
     workspace_members: &str,
     surface: ConversationSurface,
 ) -> Vec<(&'static str, String)> {
-    let sep = config.section_separator.as_str();
-    let marker = config.marker.as_str();
-    let id_shape = id_shape(&config.id_format);
-    let id_example = config
-        .id_format
+    let ids = &project.schema.ids;
+    let sep = ids.section_separator.as_str();
+    let marker = project.schema.citation.marker.as_str();
+    let id_shape = id_shape(&ids.format);
+    let id_example = ids
+        .format
         .replace("{kind}", "FS")
         .replace("{number}", "042")
         .replace("{slug}", "user-login");
     // §FS-init.2.3.8.2: the worked example illustrates a non-existent ID, so it is
     // rendered in the `<marker>`-escaped form (§FS-workspace.1).
     let cite_example = format!("<{marker}>{id_example}{sep}3{sep}1");
-    let kinds_set = format!("{{{}}}", kind_prefixes(&config.kinds).join(", "));
-    let bare_note = if config.strict {
+    let kinds_set = format!("{{{}}}", kind_prefixes(&project.kind_configs()).join(", "));
+    let bare_note = if project.schema.citation.strict {
         format!(
             "Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `{marker}`-prefixed citations are checked."
         )
@@ -60,8 +61,8 @@ fn agents_template_substitutions(
             "Bare ID-shaped tokens are also recognized as citations because `[reference] strict = false` is set in `grund.toml`; remove that compatibility override or set strict back to `true` to require the `{marker}` marker (run `grund fmt --marker` first to upgrade existing bare citations)."
         )
     };
-    let section_heading_note = section_heading_note(config, marker);
-    let inline_citation_style = inline_citation_style_sentence(config);
+    let section_heading_note = section_heading_note(project, marker);
+    let inline_citation_style = inline_citation_style_sentence(project, compiled);
     vec![
         ("{NAME}", name.to_string()),
         ("{ID_SHAPE_SEC}", format!("{id_shape}[{sep}<section>]")),
@@ -72,24 +73,28 @@ fn agents_template_substitutions(
         ("{SECTION_HEADING_NOTE}", section_heading_note),
         ("{INLINE_CITATION_STYLE}", inline_citation_style),
         ("{MARKER}", marker.to_string()),
-        ("{TRIGGER}", config.trigger.clone()),
-        ("{DECLARATION_MAP}", declaration_map(config)),
-        ("{CITATION_DIRECTIONS}", citation_directions_section(config)),
+        ("{TRIGGER}", project.presentation.trigger.clone()),
+        ("{DECLARATION_MAP}", declaration_map(project)),
+        (
+            "{CITATION_DIRECTIONS}",
+            citation_directions_section(project),
+        ),
         (
             "{CLICKABLE_CITATIONS}",
-            clickable_citations_section(config, surface),
+            clickable_citations_section(project, surface),
         ),
         ("{WORKSPACE_MEMBERS}", workspace_members.to_string()),
     ]
 }
 
-fn section_heading_note(config: &Config, marker: &str) -> String {
-    let sep = config.section_separator.as_str();
+fn section_heading_note(project: &Project, marker: &str) -> String {
+    let ids = &project.schema.ids;
+    let sep = ids.section_separator.as_str();
     let unmarked_policy = " Every non-declaration heading inside a Markdown declaration body must carry a numbered or enabled named section path; file titles, headings that close the body, fenced examples, non-ATX text, and source doc-comments stay exempt, while bold labels remain the non-citable alternative.";
     // §FS-init.2.3.4.5: enabled repositories teach explicit complete handles;
     // the generated false default retains the prior numeric-only bytes here.
-    if config.named_sections {
-        let verdict = match config.section_heading_levels.as_str() {
+    if ids.named_sections {
+        let verdict = match ids.section_heading_levels.as_str() {
             "strict" => "an error",
             "warn" => "a warning",
             _ => "recommended for readability",
@@ -98,7 +103,7 @@ fn section_heading_note(config: &Config, marker: &str) -> String {
             "Named sections are enabled: use explicit complete paths (`## goals: Goals`, `### goals.performance: Performance`, `### goals.3: Ordered child`) so `{marker}<ID>{sep}goals.performance` resolves; handles are letter-first lowercase names, `name.number` is legal, and `number.name` is reserved. Heading depth must match each path component ({verdict}). Purely numbered headings remain citable.{unmarked_policy}"
         );
     }
-    match config.section_heading_levels.as_str() {
+    match ids.section_heading_levels.as_str() {
         "strict" => format!(
             "Numbered headings inside a declaration are citable sections: use depth-matching headings (`## 1. …`, `### 1.1 …`, etc.) so `{marker}<ID>{sep}1` / `{marker}<ID>{sep}1.1` resolve; mismatched heading depth is a `grund check` error.{unmarked_policy}"
         ),
@@ -133,26 +138,27 @@ const DOC_COMMENT_SENTENCE: &str = " Doc-comments (`///`, `//!`, `/** */`, a doc
 const BLOCK_SENTENCE: &str =
     " A note is one comment block: a blank line splits it, an empty comment line does not.";
 
-pub(crate) fn inline_citation_style_sentence(config: &Config) -> String {
-    if config.inline_style == "citation-only" {
+pub(crate) fn inline_citation_style_sentence(project: &Project, compiled: &Compiled) -> String {
+    let notes = &project.schema.notes;
+    if notes.inline_style == "citation-only" {
         return format!(
             "Inline citations carry no prose — put rationale in the spec.{DOC_COMMENT_SENTENCE}"
         );
     }
-    let budgets = if config.inline_note_suggested_lines == config.inline_note_max_lines {
+    let budgets = if notes.suggested_lines == notes.max_lines {
         format!(
             "Inline notes: ≤ {} line{}, ≤ {} columns.",
-            config.inline_note_max_lines,
-            plural(config.inline_note_max_lines),
-            config.inline_note_max_columns
+            notes.max_lines,
+            plural(notes.max_lines),
+            notes.max_columns
         )
     } else {
         format!(
             "Inline notes: ≤ {} line{} preferred, hard cap {} lines; ≤ {} columns.",
-            config.inline_note_suggested_lines,
-            plural(config.inline_note_suggested_lines),
-            config.inline_note_max_lines,
-            config.inline_note_max_columns
+            notes.suggested_lines,
+            plural(notes.suggested_lines),
+            notes.max_lines,
+            notes.max_columns
         )
     };
     // §FS-inline-citation-style.5.3: the layout sentence appends to the budgets
@@ -160,7 +166,7 @@ pub(crate) fn inline_citation_style_sentence(config: &Config) -> String {
     // renders the byte-identical block it rendered before that key existed.
     format!(
         "{budgets}{BLOCK_SENTENCE}{}{DOC_COMMENT_SENTENCE}",
-        inline_note_layout_sentence(config.lexical())
+        inline_note_layout_sentence(compiled.lexical(project))
     )
 }
 
@@ -189,13 +195,13 @@ pub(crate) fn markdown_link_destination(raw: &str) -> String {
 ///
 /// Either way, every kind with a home links to it, and an unwalked kind is one
 /// of them: its row is why it is configured.
-fn declaration_map(config: &Config) -> String {
+fn declaration_map(project: &Project) -> String {
     // §FS-init.2.3.4.4.1: the homeless kind gets no row. Every row is a link to a
     // place, and it is the one kind that is not a place — the complement of all
     // of them. Its citation directions still render (§FS-init.2.3.5).
-    let homeless = config.homeless_kind();
-    let rows = config
-        .kinds
+    let homeless = project.schema.complement_name();
+    let kinds = project.kind_configs();
+    let rows = kinds
         .iter()
         .filter(|kind| kind.kind != homeless)
         .map(|kind| {
@@ -235,13 +241,14 @@ fn row(label: &str, home: &str, title: &str) -> String {
 /// initialized and handed to every surface that block is written to.
 pub(crate) fn render_agents_append_block(
     name: &str,
-    config: &Config,
+    project: &Project,
+    compiled: &Compiled,
     workspace_members: &str,
     surface: ConversationSurface,
 ) -> String {
     let mut rendered = canonical_template_text(AGENTS_TEMPLATE);
     for (placeholder, value) in
-        agents_template_substitutions(name, config, workspace_members, surface)
+        agents_template_substitutions(name, (project, compiled), workspace_members, surface)
     {
         rendered = rendered.replace(placeholder, &value);
     }

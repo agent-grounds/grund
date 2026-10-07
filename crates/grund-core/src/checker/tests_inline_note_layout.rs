@@ -5,7 +5,7 @@
 use std::path::{Path, PathBuf};
 
 use super::*;
-use crate::config::{Config, load_config};
+use crate::config::{Config, Project, load_config};
 use crate::model::Diagnostic;
 use crate::scanner::scan_tree;
 use crate::templates::inline_citation_style_sentence;
@@ -190,35 +190,49 @@ fn both_layout_keys_load_and_reject_unknown_values() {
 #[test]
 fn agents_sentence_teaches_the_configured_layout() {
     let root = test_root("agents_sentence_teaches_the_configured_layout");
-    let any = layout_config(root.clone(), "any");
+    // The sentence renders from the project's records (§AR-config.5), so each
+    // case states its notes there rather than on the façade.
+    let sentence = |edit: &dyn Fn(&mut Project)| {
+        let mut config = Config::default_for(root.clone());
+        config
+            .edit_project(|project| edit(project))
+            .expect("the edited project compiles");
+        inline_citation_style_sentence(config.project(), config.compiled())
+    };
     assert_eq!(
-        inline_citation_style_sentence(&any),
+        sentence(&|project| project.schema.notes.layout = "any".into()),
         "Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns. A note is one comment block: a blank line splits it, an empty comment line does not. Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there."
     );
 
-    let mut colon = layout_config(root.clone(), "citation-first-colon");
-    colon.inline_note_layout_check = "error".into();
+    let colon = |project: &mut Project| project.schema.notes.layout = "citation-first-colon".into();
     assert_eq!(
-        inline_citation_style_sentence(&colon),
+        sentence(&|project| {
+            colon(project);
+            project.schema.notes.layout_check = "error".into();
+        }),
         "Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns. A note is one comment block: a blank line splits it, an empty comment line does not. Lay each note out citation-first: `// §<ID>: <note>` (several citations: `// §<ID>, §<ID>: <note>`). Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there."
     );
 
     // The enforcement level is not an instruction: `off` renders the same
     // sentence `error` does.
-    let mut off = layout_config(root.clone(), "citation-first-colon");
-    off.marker = "@".into();
-    assert!(inline_citation_style_sentence(&off).contains("`// @<ID>: <note>`"));
+    let off = sentence(&|project| {
+        colon(project);
+        project.schema.citation.marker = "@".into();
+    });
+    assert!(off.contains("`// @<ID>: <note>`"));
 
     // A style that permits no note at all has no layout to teach — but the
     // doc-comment sentence closes this style too (§FS-inline-citation-style.5.4).
-    let mut citation_only = layout_config(root, "citation-first-colon");
-    citation_only.inline_style = "citation-only".into();
+    let citation_only = sentence(&|project| {
+        colon(project);
+        project.schema.notes.inline_style = "citation-only".into();
+    });
     assert_eq!(
-        inline_citation_style_sentence(&citation_only),
+        citation_only,
         "Inline citations carry no prose — put rationale in the spec. Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there."
     );
     assert!(
-        inline_citation_style_sentence(&citation_only).contains("are documentation, not notes"),
+        citation_only.contains("are documentation, not notes"),
         "the doc-comment sentence must close `citation-only` too"
     );
 }

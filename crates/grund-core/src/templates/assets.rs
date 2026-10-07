@@ -8,7 +8,7 @@
 //! `writers/init.rs` decides *which* of these a `--docs` scaffold writes and
 //! where, and this file only says what each one says (§AR-system.2.11).
 
-use crate::config::{Config, escape_toml_basic};
+use crate::config::{Project, escape_toml_basic};
 use crate::grammar::id_shape;
 
 pub(super) const AGENTS_TEMPLATE: &str = include_str!("../../assets/templates/AGENTS.md");
@@ -58,14 +58,14 @@ pub fn canonical_template_text(template: &str) -> String {
 /// both use the repository format. Bind the kind placeholder before rendering
 /// the remaining schematic components so configured literals stay unchanged
 /// (§FS-init.2.1.3).
-pub(crate) fn render_scaffold_id_shapes(template: &str, kind: &str, config: &Config) -> String {
-    let effective_format = config
-        .kinds
+pub(crate) fn render_scaffold_id_shapes(template: &str, kind: &str, project: &Project) -> String {
+    let effective_format = project
+        .schema
+        .rows
         .iter()
-        .find(|candidate| candidate.kind == kind)
-        .map_or(config.id_format.as_str(), |candidate| {
-            candidate.effective_format(config)
-        });
+        .find(|row| row.name == kind)
+        .and_then(|row| row.kind.as_ref()?.id_format.as_deref())
+        .unwrap_or(&project.schema.ids.format);
     let shape = id_shape(&effective_format.replace("{kind}", kind));
     canonical_template_text(template).replace(&format!("{{{kind}_ID_SHAPE}}"), &shape)
 }

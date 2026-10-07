@@ -7,7 +7,7 @@ use anyhow::Result;
 use super::project::Project;
 use super::record::DEFAULT_GROUNDING_LEVEL;
 use super::rows::Row;
-use crate::grammar::{Grammar, GrammarKind};
+use crate::grammar::{Grammar, GrammarKind, LexicalSettings};
 
 /// §AR-config.1.5: `compile(&Project)`.
 #[derive(Clone)]
@@ -24,6 +24,28 @@ pub struct ScanDemand {
     /// tree — every config written before the keys existed — pays nothing
     /// (§GOAL-fast-feedback).
     pub grounding_units: bool,
+}
+
+impl Compiled {
+    /// The lexical settings of `project` under this grammar — what a scan and a
+    /// rendered note sentence read, without the façade (§AR-config.5).
+    pub(crate) fn lexical<'a>(&'a self, project: &'a Project) -> LexicalSettings<'a> {
+        let (citation, sources, notes) = (
+            &project.schema.citation,
+            &project.schema.sources,
+            &project.schema.notes,
+        );
+        LexicalSettings {
+            grammar: &self.grammar,
+            marker: &citation.marker,
+            strict: citation.strict,
+            comment_prefixes: &sources.comment_prefixes,
+            docstring_python: sources.docstring_python,
+            inline_style: &notes.inline_style,
+            inline_note_layout: &notes.layout,
+            inline_note_layout_check: &notes.layout_check,
+        }
+    }
 }
 
 /// §AR-config.1.5: compile the grammar and the scan demand of `project`.

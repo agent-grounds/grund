@@ -68,6 +68,10 @@ pub(crate) use chapter_rules::{
     check_chapter_rules, configured_rule_sentences, declared_workspace_vocabulary, parse_ad_hoc,
     parse_ad_hoc_with_workspace, workspace_vocabulary,
 };
+// The rules component's own tests build the adapter's view the way the checker
+// does (§AR-core-module-layout.1.3).
+#[cfg(test)]
+pub(crate) use chapter_rules::markdown_project;
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
 pub(crate) use reference_scope::{

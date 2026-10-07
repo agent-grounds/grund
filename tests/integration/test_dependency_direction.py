@@ -261,7 +261,6 @@ class ConfigFacadeTests(unittest.TestCase):
             [write for _, write in config_writes(text, fields)],
         )
 
-    @unittest.expectedFailure
     def test_no_component_off_the_list_names_config(self):
         self.assertEqual([], sorted(components_naming_config() - CONFIG_FACADE))
 

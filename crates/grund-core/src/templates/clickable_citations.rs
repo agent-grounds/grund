@@ -8,7 +8,7 @@
 
 use std::path::Path;
 
-use crate::config::Config;
+use crate::config::Project;
 
 /// Render the `### Clickable citations` section (§FS-init.2.3.6): the fixed
 /// repository-web convention always, plus the config-derived local-conversation
@@ -33,15 +33,18 @@ use crate::config::Config;
 /// precedence. This committed opinion is the no-knowledge fallback, and a
 /// machine whose user-level block states a rendering knows something about its
 /// own surface that the repository cannot — its choice wins.
-pub(crate) fn clickable_citations_section(config: &Config, surface: ConversationSurface) -> String {
+pub(crate) fn clickable_citations_section(
+    project: &Project,
+    surface: ConversationSurface,
+) -> String {
     // The wording is fixed; the marker is the repository's own
     // (§FS-init.2.3.6), interpolated here rather than left as a `{MARKER}`
     // placeholder.
-    let marker = config.marker.as_str();
+    let marker = project.schema.citation.marker.as_str();
     let mut section = format!(
         "### Clickable citations\n\nOn repository web surfaces, link `{marker}<ID>` to the PR branch in PR bodies, the reviewed commit in reviews, an exact commit for permalinks, and the default branch otherwise; fall back to plain when unsure."
     );
-    if config.conversation.as_deref() == Some("link") {
+    if project.presentation.conversation.as_deref() == Some("link") {
         // §DF-conversation-link-target: the committed form is always the `file`
         // target (§FS-non-goals.13); which of the two forms is rendered is the
         // per-agent gate (§DF-conversation-link-target.2.4).

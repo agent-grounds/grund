@@ -1,15 +1,17 @@
 //! Existing citation directions normalized for engine-owned semantic
 //! precedence (§FS-rules.6, §AR-rules.1).
 
-use crate::config::{Config, render_citation_target};
+use crate::config::{CitationRules, render_citation_target};
 use crate::rules::{
     Cardinality, ParsedRule, RuleAnchor, RuleLevel, RulePolarity, RuleRelation, RuleSubject,
     RuleTargets, TargetMode,
 };
 
-pub(crate) fn citation_precedence(config: &Config) -> Vec<ParsedRule> {
+/// The project's `[citations]` directions as engine rules; it reads the rules
+/// record alone, not the configuration façade (§AR-config.5).
+pub(crate) fn citation_precedence(citations: &CitationRules) -> Vec<ParsedRule> {
     let mut rules = Vec::new();
-    for (subject, directions) in &config.citations.per_kind {
+    for (subject, directions) in &citations.per_kind {
         for (level, polarity, entries) in [
             (
                 RuleLevel::Required,

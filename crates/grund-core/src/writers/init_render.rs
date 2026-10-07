@@ -100,7 +100,13 @@ pub(crate) fn render_agents_append_block_at(
 ) -> String {
     let (workspace_members, _) =
         agents_workspace_members_section(name, config, target, canonical_agent_entrypoint_selected);
-    render_agents_append_block(name, config, &workspace_members, surface)
+    render_agents_append_block(
+        name,
+        config.project(),
+        config.compiled(),
+        &workspace_members,
+        surface,
+    )
 }
 
 /// The full generated `AGENTS.md` for a fresh repo — the H1 scaffolding line

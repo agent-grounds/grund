@@ -1,6 +1,6 @@
 use crate::config::{
-    CitationDisjunction, CitationLevel, CitationTarget, Config, KindCitationRules, KindConfig,
-    NamespaceMatch,
+    CitationDisjunction, CitationLevel, CitationTarget, KindCitationRules, KindConfig,
+    NamespaceMatch, Project,
 };
 
 /// The public citation-directions page the scaffold config and the no-`[citations]`
@@ -37,13 +37,13 @@ pub(crate) const CITATION_LEVEL_LEGEND: &str = "`must`/`never` are `grund check`
 /// feature keeps a stable block (§FS-init.2.3.4.10); the grounding sentence
 /// renders under either, because it is generated from `[reference]
 /// require_grounding` and not from the direction rules (§FS-check.3.6).
-pub(crate) fn citation_directions_section(config: &Config) -> String {
+pub(crate) fn citation_directions_section(project: &Project) -> String {
     // Built as lines joined with `\n` and returned without a trailing newline:
     // the `{CITATION_DIRECTIONS}` placeholder in the template supplies the single
     // block-final newline, so `grund init` stays idempotent on re-run.
     let mut lines = vec!["### Citation directions".to_string(), String::new()];
-    let grounding = citation_grounding_sentence(config);
-    if !config.citations.declared {
+    let grounding = citation_grounding_sentence(project);
+    if !project.rules.citations.declared {
         lines.push(join_sentences(
             &format!(
                 "Specs cite goals, architecture cites specs, code and executable tests cite the specs they realize. In a citation rule array, entries are all required; `|` inside one entry means any one alternative. See {CITATION_DIRECTIONS_URL} for the levels and examples."
@@ -57,32 +57,34 @@ pub(crate) fn citation_directions_section(config: &Config) -> String {
     // `[[kinds]]` order, then the homeless kind last (§FS-init.2.3.5.1) — wherever
     // in the table a project happened to declare it, because it is the
     // complement of every row above it and reads as the closing case.
-    let homeless = config.homeless_kind();
-    let mut kinds: Vec<&str> = config
-        .kinds
+    let homeless = project.schema.complement_name();
+    let rows = project.kind_configs();
+    let mut kinds: Vec<&str> = rows
         .iter()
         .map(|kind| kind.kind.as_str())
         .filter(|kind| *kind != homeless)
         .collect();
-    if config.citations.per_kind.contains_key(homeless) {
+    if project.rules.citations.per_kind.contains_key(homeless) {
         kinds.push(homeless);
     }
     for kind in kinds {
-        let Some(rules) = config.citations.per_kind.get(kind) else {
+        let Some(rules) = project.rules.citations.per_kind.get(kind) else {
             continue;
         };
-        let Some(clauses) = citation_direction_clauses(config, rules) else {
+        let Some(clauses) = citation_direction_clauses(project, rules) else {
             continue;
         };
         lines.push(format!(
             "- {} {clauses}.",
-            citation_direction_subject(config, kind, homeless)
+            citation_direction_subject(project, kind, homeless)
         ));
     }
     // Load-bearing (§FS-init.2.3.5.6): silence is open only when the global default
     // leaves it open, and a per-kind default never reaches it — that one is
     // folded into its own bullet, which is *listed above*.
-    lines.push(citation_closing_line(config.citations.global_default));
+    lines.push(citation_closing_line(
+        project.rules.citations.global_default,
+    ));
     lines.join("\n")
 }
 
@@ -102,14 +104,16 @@ fn join_sentences(first: &str, second: Option<&str>) -> String {
 /// misplaced (§FS-declarations.checks.misplaced-declaration.3). An unwalked home
 /// (§FS-config.3.4.7.4) is left out — nothing in it is scanned, so the rule never
 /// reaches it. Per-row grounding levels (§FS-config.3.4.8) are not this sentence's.
-fn citation_grounding_sentence(config: &Config) -> Option<String> {
-    if !config.require_grounding {
+/// It reads the project's value, never a run's `--require-grounding`: a managed
+/// block says what the file says, whatever one invocation turned on (§AR-config.5).
+fn citation_grounding_sentence(project: &Project) -> Option<String> {
+    if !project.rules.grounding.require {
         return None;
     }
     let base = "Every source file must cite a declared ID or declare one inline";
-    let homeless = config.homeless_kind();
-    let homes = config
-        .kinds
+    let homeless = project.schema.complement_name();
+    let homes = project
+        .kind_configs()
         .iter()
         .filter(|kind| !kind.citable && kind.scan && kind.kind != homeless)
         .filter_map(KindConfig::place_label)
@@ -137,10 +141,10 @@ fn citation_grounding_sentence(config: &Config) -> Option<String> {
 /// not a unit. In a non-citable home the opposite holds — a skill without a spec
 /// is the defect — so nothing narrows that subject, and `require_grounding`
 /// closes the hole.
-fn citation_direction_subject(config: &Config, kind: &str, homeless: &str) -> String {
+fn citation_direction_subject(project: &Project, kind: &str, homeless: &str) -> String {
+    let kinds = project.kind_configs();
     if kind == homeless {
-        let scope = config
-            .kinds
+        let scope = kinds
             .iter()
             .find(|configured| configured.kind == kind)
             .and_then(|configured| configured.title.as_deref())
@@ -149,8 +153,7 @@ fn citation_direction_subject(config: &Config, kind: &str, homeless: &str) -> St
             "Each source file outside the Project map (**{kind}**{scope}) that cites anything"
         );
     }
-    let configured = config
-        .kinds
+    let configured = kinds
         .iter()
         .find(|configured| configured.kind == kind && !configured.citable);
     match configured {
@@ -175,7 +178,7 @@ fn citation_direction_subject(config: &Config, kind: &str, homeless: &str) -> St
 /// §FS-check.3.12 already uses in its findings) and follows with the short form
 /// (`never cite`) the legend names: the subject is a noun phrase, so a bullet
 /// opening on a bare `never cite` is not a sentence.
-fn citation_direction_clauses(config: &Config, rules: &KindCitationRules) -> Option<String> {
+fn citation_direction_clauses(project: &Project, rules: &KindCitationRules) -> Option<String> {
     let folded = citation_permission_is_closed(rules);
     let mut clauses = Vec::new();
     if !rules.must.is_empty() {
@@ -216,7 +219,7 @@ fn citation_direction_clauses(config: &Config, rules: &KindCitationRules) -> Opt
             citation_rule_targets(&rules.should_not)
         ));
     }
-    if !folded && let Some(clause) = citation_default_clause(config, rules, clauses.is_empty()) {
+    if !folded && let Some(clause) = citation_default_clause(project, rules, clauses.is_empty()) {
         clauses.push(clause);
     }
     if clauses.is_empty() {
@@ -245,7 +248,7 @@ fn citation_permission_is_closed(rules: &KindCitationRules) -> bool {
 /// nothing, so those say something only where they punch a hole in a **closed
 /// global** default — and then what they say is that this kind is open.
 fn citation_default_clause(
-    config: &Config,
+    project: &Project,
     rules: &KindCitationRules,
     first: bool,
 ) -> Option<String> {
@@ -256,7 +259,7 @@ fn citation_default_clause(
         CitationLevel::ShouldNot if first => Some(format!("should not cite {anything}")),
         CitationLevel::ShouldNot => Some(format!("avoid citing {anything}")),
         CitationLevel::May | CitationLevel::Must | CitationLevel::Should => {
-            citation_default_is_closed(config.citations.global_default)
+            citation_default_is_closed(project.rules.citations.global_default)
                 .then(|| format!("may cite {anything}"))
         }
     }

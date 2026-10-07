@@ -2,7 +2,7 @@
 
 The evidence [§DISC-grund-core-public-surface](2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) argues from. It classifies nothing on its own authority: the counting convention is [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name), the columns are [§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries), and `tests/integration/test_public_surface_inventory.py` holds the first column equal to the crate root's export list ([§DISC-grund-core-public-surface.5](2026-09-22-grund-core-public-surface.md#5-what-is-checked)).
 
-The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it, and eight additive `cover --lines` exports of [§FS-cover.6](../../functional-spec/FS-cover.md#6-line-ownership) were read at `1f129faef7`, and two hidden run-flag seams of [§FS-cli.3.4](../../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from) carry the `--path-base` a frontend parses, and eight additive Node-binding exports of [§FS-distribution.3.2](../../functional-spec/FS-distribution.md#32-node-grund-cli-npm-package) were read at `92bd7ff28d`; the existing rows retain their original evidence. The two writer-fault exports exist only with `test-binding-writes`; `visible` describes their definitions when that feature is enabled. **214 rows, one per public root name**, including feature-gated exports. The counts below include all six additions; the Python and Node frontends now supply consumer evidence alongside CLI and LSP.
+The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it, and eight additive `cover --lines` exports of [§FS-cover.6](../../functional-spec/FS-cover.md#6-line-ownership) were read at `1f129faef7`, and two hidden run-flag seams of [§FS-cli.3.4](../../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from) carry the `--path-base` a frontend parses, and eight additive Node-binding exports of [§FS-distribution.3.2](../../functional-spec/FS-distribution.md#32-node-grund-cli-npm-package) were read at `92bd7ff28d`; the concern records `Catalog`, `Project`, `Run` and `Compiled` of [§AR-config.1](../../architecture/AR-config.md#1-the-records), with `effective_project`, followed, and `Config`, `KindConfig` and `CitationRules` became the deprecated aliases that ramp removes; the existing rows retain their original evidence. The two writer-fault exports exist only with `test-binding-writes`; `visible` describes their definitions when that feature is enabled. **219 rows, one per public root name**, including feature-gated exports. The counts below include every addition; the Python and Node frontends now supply consumer evidence alongside CLI and LSP.
 
 ## How a cell reads
 
@@ -24,19 +24,19 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 215 |
-| Rustdoc-visible | 197 |
+| Public root names | 219 |
+| Rustdoc-visible | 201 |
 | `#[doc(hidden)]` | 18 |
-| Named, a related API, or a data type of one | 123 |
-| Outside that closure | 92 |
+| Named, a related API, or a data type of one | 125 |
+| Outside that closure | 94 |
 | Named by a frontend or its tests | 126 |
 | Reached structurally only | 43 |
-| No repository consumer of either kind | 46 |
-| Disposition keep | 133 |
+| No repository consumer of either kind | 50 |
+| Disposition keep | 134 |
 | Disposition keep, hidden | 18 |
 | Disposition keep, name in the spec | 18 |
 | Disposition hide | 11 |
-| Disposition retire with the ramp | 1 |
+| Disposition retire with the ramp | 4 |
 | Disposition facade, then retire | 34 |
 
 The two count columns do not line up, and they are not meant to: 45 names have no repository consumer while 92 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
@@ -78,12 +78,13 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `citation_under_title` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
 | `CitationDisjunction` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `CitationLevel` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `CitationRules` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
+| `CitationRules` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | retire with the ramp |
 | `CitationTarget` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
+| `Compiled` | config | visible | no | none found | none found | keep |
 | `complete_ids` | api | visible | related API | none found | none found | keep |
 | `complete_ids_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `CompleteIdsOpts` | api | visible | data type of `complete_ids` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `Config` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
+| `Config` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | retire with the ramp |
 | `config_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `config_warnings` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `ConfigLocation` | config | visible | data type of `validate_config` | none found | via Config → ConfigLocation `grund-cli/src/lib.rs:13` | keep |
@@ -115,6 +116,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `E2eCase` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `E2eSpecRef` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `effective_config` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/integrations.rs:103` | — | keep |
+| `effective_project` | api | visible | related API | none found | none found | keep |
 | `EmbeddedValueRoot` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `embedding_call` | api | visible | related API | grund-py `grund-py/src/lib.rs:3`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
 | `EmbeddingRequest` | api | visible | data type of `embedding_call` | grund-py `grund-py/src/lib.rs:3`; grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
@@ -160,7 +162,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `INTEGRATIONS_BLOCK_VERSION` | grammar | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `InvalidValueSite` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `KindCitationRules` | config | visible | data type of `validate_config` | none found | via CitationRules → KindCitationRules `grund-cli/src/lib.rs:13` | keep |
-| `KindConfig` | config | visible | data type of `validate_config` | none found | via Config → KindConfig `grund-cli/src/lib.rs:13` | keep |
+| `KindConfig` | config | visible | data type of `validate_config` | none found | via Config → KindConfig `grund-cli/src/lib.rs:13` | retire with the ramp |
 | `KindIndex` | config | visible | data type of `validate_config` | none found | via Config → KindConfig → KindIndex `grund-cli/src/lib.rs:13` | keep |
 | `KindResolution` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/cli_config.rs:204` | — | keep |
 | `known_agent` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
@@ -209,6 +211,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `parse_cover_line_range` | api | visible | related API | none found | none found | keep |
 | `PathBase` | config | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli.rs:58` | — | keep, hidden |
 | `PointSizeUnit` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
+| `Project` | config | visible | named | none found | none found | keep |
 | `propose_id` | api | visible | related API | none found | none found | keep |
 | `propose_id_with_run_warnings` | api | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `read_optional_text` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
@@ -227,6 +230,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `render_finding_sites_json` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `Report` | model | visible | named | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `RESOLVER_TARGET` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
+| `Run` | config | visible | no | none found | none found | keep |
 | `scan` | api | visible | named | none found | none found | keep |
 | `scan_user_config` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `SectionHeadingOutsideDeclaration` | model | visible | data type of `Catalog` | none found | none found | keep |

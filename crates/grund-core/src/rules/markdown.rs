@@ -3,21 +3,57 @@
 
 use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
-use crate::config::Config;
-use crate::grammar::{render_id, section_display_name};
+use crate::grammar::{Grammar, render_id, section_display_name};
 use crate::model::{Catalog, Declaration, Id, is_stub_for_inline_decl};
-use crate::resolver::{SectionHome, WorkspaceCheckTarget, section_home};
+use crate::resolver::SectionHome;
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
+
+/// What the adapter reads of one project, and nothing more: the rules
+/// component holds no configuration façade (§AR-config.5, §AR-rules.3). The
+/// checker builds it from the project it checks.
+#[derive(Clone, Copy)]
+pub(crate) struct MarkdownProject<'a> {
+    /// The stable project name, the selected scope of a standalone adaptation.
+    pub(crate) name: Option<&'a str>,
+    /// The config root a stub's inline declaration resolves under.
+    pub(crate) root: &'a Path,
+    /// The ID grammar labels render through.
+    pub(crate) grammar: &'a Grammar,
+    /// The separator between an ID and its section in a chapter label.
+    pub(crate) section_separator: &'a str,
+    /// Where a section of an ID resolves, a stub's target the walk did not
+    /// reach included (§FS-check.3.2.1).
+    pub(crate) homes: &'a dyn SectionHomes,
+}
+
+/// The one question the adapter asks of a project's scan settings: where a
+/// cited section of `id` resolves, which for a stub whose target the walk did
+/// not record means reading that target as the scan would. The checker answers
+/// it from the project it checks, so the façade stays out of this component
+/// (§AR-config.5, §AR-rules.3).
+pub(crate) trait SectionHomes {
+    fn section_home<'c>(
+        &self,
+        findings: &'c Catalog,
+        id: &Id,
+        section: &str,
+    ) -> Option<SectionHome<'c>>;
+}
 
 /// Adapt one standalone project. The producer-neutral schema uses the stable
 /// project name as its selected scope (§AR-rules.3).
-pub(crate) fn adapt_markdown(findings: &Catalog, config: &Config, complete: bool) -> RuleFacts {
-    let project = config
-        .project_name
-        .as_deref()
-        .unwrap_or("local")
-        .to_string();
-    adapt_projects(&project, &[(project.as_str(), findings, config)], complete)
+pub(crate) fn adapt_markdown(
+    findings: &Catalog,
+    project: MarkdownProject<'_>,
+    complete: bool,
+) -> RuleFacts {
+    let selected = project.name.unwrap_or("local").to_string();
+    adapt_workspace(
+        &selected,
+        &[(selected.as_str(), findings, project)],
+        complete,
+    )
 }
 
 /// Adapt the complete resolved workspace while keeping the selected member's
@@ -26,19 +62,7 @@ pub(crate) fn adapt_markdown(findings: &Catalog, config: &Config, complete: bool
 /// learning resolver records (§FS-rules.2, §AR-rules.3).
 pub(crate) fn adapt_workspace(
     selected: &str,
-    workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
-    complete: bool,
-) -> RuleFacts {
-    let projects = workspace
-        .iter()
-        .map(|(alias, target)| (alias.as_str(), target.findings, target.config))
-        .collect::<Vec<_>>();
-    adapt_projects(selected, &projects, complete)
-}
-
-fn adapt_projects(
-    selected: &str,
-    projects: &[(&str, &Catalog, &Config)],
+    projects: &[(&str, &Catalog, MarkdownProject<'_>)],
     complete: bool,
 ) -> RuleFacts {
     let mut facts = RuleFacts {
@@ -65,10 +89,10 @@ fn adapt_projects(
     // The IDs whose home outside the walk a citation resolved into, its chapters minted.
     let mut minted_homes: BTreeSet<(String, Id)> = BTreeSet::new();
 
-    for (alias, findings, config) in projects {
+    for (alias, findings, project) in projects {
         let local = *alias == selected;
         for (id, homes) in &findings.declarations {
-            let bare_label = render_id(&config.grammar, id);
+            let bare_label = render_id(project.grammar, id);
             let label = if local {
                 bare_label.clone()
             } else {
@@ -79,7 +103,7 @@ fn adapt_projects(
             // §FS-list.2.5).
             for (ordinal, home) in homes
                 .iter()
-                .filter(|home| !is_stub_for_inline_decl(&config.root, home, homes))
+                .filter(|home| !is_stub_for_inline_decl(project.root, home, homes))
                 .enumerate()
             {
                 let key = NodeKey(format!(
@@ -124,7 +148,7 @@ fn adapt_projects(
                     facts.nodes.insert(
                         chapter,
                         NodeMeta {
-                            label: format!("{label}{}{section}", config.section_separator),
+                            label: format!("{label}{}{section}", project.section_separator),
                             anchor: RuleAnchor {
                                 path: home.file.to_string_lossy().into_owned(),
                                 line: info.line,
@@ -149,7 +173,7 @@ fn adapt_projects(
                 continue;
             };
             let target_alias = citation.namespace.as_deref().unwrap_or(alias);
-            let Some((_, target_findings, target_config)) = projects
+            let Some((_, target_findings, target_project)) = projects
                 .iter()
                 .find(|(candidate, _, _)| *candidate == target_alias)
             else {
@@ -162,7 +186,7 @@ fn adapt_projects(
             // ID is ambiguous here as it is to `check` (§FS-declarations.checks.duplicate.1).
             let mut resolved = target_homes
                 .iter()
-                .filter(|home| !is_stub_for_inline_decl(&target_config.root, home, target_homes))
+                .filter(|home| !is_stub_for_inline_decl(target_project.root, home, target_homes))
                 .flat_map(Declaration::home_sites);
             let (Some(_), None) = (resolved.next(), resolved.next()) else {
                 // Unknown and ambiguous targets retain their ordinary resolver
@@ -181,7 +205,9 @@ fn adapt_projects(
             let (target, newly_counted) = match citation.section.as_ref() {
                 Some(section) => {
                     let Some(home) =
-                        section_home(target_findings, target_config, &citation.id, section)
+                        target_project
+                            .homes
+                            .section_home(target_findings, &citation.id, section)
                     else {
                         continue;
                     };
@@ -194,7 +220,7 @@ fn adapt_projects(
                             &mut chapters,
                             (target_alias, &citation.id, &target_declaration),
                             home,
-                            &target_config.section_separator,
+                            target_project.section_separator,
                         );
                     }
                     (

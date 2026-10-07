@@ -2,9 +2,10 @@
 //! say*, as a function of the effective config and nothing else — the
 //! `AGENTS.md` block of §FS-init.2.3 with its two generated sections, and the
 //! `grund.toml` and scaffold payload `grund init` writes beside it
-//! (§FS-init.2.1, §FS-init.2.4). It consumes config and the grammar's
-//! managed-block markers, knows no file, no rule and no report, and writes
-//! nothing.
+//! (§FS-init.2.1, §FS-init.2.4). It reads the config's records — `&Project`,
+//! and `&Compiled` where a sentence needs the lexical settings, never the
+//! `Config` façade (§AR-config.5) — and the grammar's managed-block markers,
+//! knows no file, no rule and no report, and writes nothing.
 //!
 //! It is a component rather than a corner of the writers because two commands
 //! need the same answer from opposite directions: `init` writes the block, and

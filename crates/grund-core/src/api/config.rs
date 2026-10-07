@@ -1,5 +1,5 @@
-//! The published config contract (§AR-system.2.9): the effective `Config` for a
-//! path, the validation `grund config validate` is (§FS-config.4.1), and the
+//! The published config contract (§AR-system.2.9): the effective `Project` for
+//! a path and the `Config` façade over it (§AR-bindings.2), the validation `grund config validate` is (§FS-config.4.1), and the
 //! non-fatal `warning:` texts a loaded config carries — all as data, with no
 //! CLI TOML rendered and no stream written (§AR-bindings.2).
 
@@ -9,7 +9,7 @@ use std::path::Path;
 
 use super::config_findings::config_diagnostics;
 use super::report::public_run_warnings;
-use crate::config::{Config, load_config};
+use crate::config::{Config, Project, load_config};
 use crate::model::Finding;
 use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config};
@@ -29,6 +29,13 @@ pub fn config_run_warnings(config: &Config) -> Vec<Finding> {
 
 pub fn effective_config(path: &Path) -> Result<Config> {
     load_config(path)
+}
+
+/// The project the config for `path` lowers to, every default applied and no
+/// per-run fact in it (§AR-config.1.1, §AR-bindings.2): what an embedder reads
+/// in place of the `Config` façade, which is on its way out (§AR-config.5).
+pub fn effective_project(path: &Path) -> Result<Project> {
+    Ok(load_config(path)?.project().clone())
 }
 
 /// Validate config discovery/parsing for a path without printing CLI output
