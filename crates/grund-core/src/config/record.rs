@@ -15,16 +15,14 @@ use std::path::PathBuf;
 
 use super::call_scope::PathBase;
 use super::citations::CitationRules;
+use super::facade::Records;
 use super::kind::KindConfig;
-use super::kind_defaults::{
-    DEFAULT_KINDS, default_kind_citable, default_kind_file, default_kind_folder,
-    default_kind_index, default_kind_title,
-};
 use super::point_sizes::LeadSizeWarning;
 use super::run_warnings::RunWarning;
+use super::v1;
 use crate::grammar::{Grammar, GrammarKind, LexicalSettings};
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ConfigLocation {
     pub path: PathBuf,
     pub line: usize,
@@ -39,7 +37,7 @@ pub struct ConfigLocation {
 /// of the fact holds (§FS-workspace.4). It was the workspace component's while
 /// `Config` was `model`'s, which made this file read it upward (§AR-system.4);
 /// what workspace owns is the walk that *fills* it (§FS-check.4.9).
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct AbsentOptionalNamespace {
     /// The entry **as the config wrote it** — the string an author can edit
     /// (§FS-errors.4).
@@ -262,6 +260,9 @@ pub struct Config {
     /// while its heading stack is held (§AR-scanner.2.4.4).
     pub owner_lines: Vec<(usize, usize)>,
     pub grammar: Grammar,
+    /// The records this façade shows (§AR-config.5), read through
+    /// [`Config::project`], [`Config::run`] and [`Config::compiled`].
+    pub(super) records: Records,
 }
 
 /// The **default** name of the homeless kind — the citing kind of every site
@@ -278,146 +279,24 @@ pub(crate) const DEFAULT_GROUNDING_LEVEL: usize = 1;
 /// The heading levels a `grounding_level` may name (§FS-config.3.4.8.2). Markdown
 /// has six, and a value outside them names no heading.
 pub(super) const GROUNDING_LEVELS: std::ops::RangeInclusive<usize> = 1..=6;
-const DEFAULT_ID_FORMAT: &str = "{kind}-{number}-{slug}";
-const DEFAULT_SECTION_SEPARATOR: &str = ".";
-const DEFAULT_NUMBER_PATTERN: &str = r"\d+";
-const DEFAULT_SLUG_PATTERN: &str = r"[a-z0-9][a-z0-9-]*";
 
 impl Config {
     /// The built-in defaults — the canonical grammar a conformant tree gets with
-    /// no config at all (§FS-config.3, §GOAL-zero-config). `grund init`
-    /// writes these same values out verbatim as a teaching surface (§FS-init.2.4.3).
+    /// no config at all (§FS-config.3, §GOAL-zero-config): the v1 default project
+    /// (§AR-config.3.2) under a run rooted at `root`. `grund init` writes these
+    /// same values out verbatim as a teaching surface (§FS-init.2.4.3).
     pub(crate) fn default_for(root: PathBuf) -> Self {
-        let kinds: Vec<KindConfig> = DEFAULT_KINDS
-            .iter()
-            .map(|kind| KindConfig {
-                kind: kind.to_string(),
-                folder: default_kind_folder(kind).map(str::to_string),
-                file: default_kind_file(kind).map(str::to_string),
-                title: default_kind_title(kind).map(str::to_string),
-                index: default_kind_index(kind),
-                citable: default_kind_citable(kind),
-                scan: true,
-                require_grounding: None,
-                grounding_level: None,
-                values: false,
-                value_chapter: None,
-                rules: false,
-                format: None,
-                resolve: None,
-                fetch: None,
-            })
-            .collect();
-        let grammar = Grammar::build(
-            DEFAULT_ID_FORMAT,
-            &grammar_kinds(&kinds),
-            DEFAULT_NUMBER_PATTERN,
-            DEFAULT_SLUG_PATTERN,
-            DEFAULT_SECTION_SEPARATOR,
-            false,
-            &DEFAULT_COMMENT_PREFIXES
-                .iter()
-                .map(|prefix| prefix.to_string())
-                .collect::<Vec<_>>(),
-        )
-        .expect("default grammar must compile");
-        Self {
-            cli_base: root.clone(),
-            root,
-            config_file: None,
-            redundant_config_file: None,
-            project_name: None,
-            project_name_source: None,
-            project_description: None,
-            marker: "§".to_string(),
-            trigger: "$$".to_string(),
-            strict: true,
-            shorthand: ShorthandPolicy::Canonical,
-            require_grounding: false,
-            grounding_level: DEFAULT_GROUNDING_LEVEL,
-            grounding_units: false,
-            conversation: None,
-            lead_size_warning: None,
-            inline_style: "citation-with-note".into(),
-            inline_note_suggested_lines: 1,
-            inline_note_max_lines: 3,
-            inline_note_max_columns: 100,
-            inline_note_layout: "any".into(),
-            inline_note_layout_check: "off".into(),
-            warn_on_suggested: false,
-            include: Some(
-                DEFAULT_INCLUDE
-                    .iter()
-                    .map(|path| path.to_string())
-                    .collect(),
-            ),
-            scan_full: false,
-            scan_resolution_wide: false,
-            exclude: vec![
-                "target".into(),
-                "node_modules".into(),
-                ".git".into(),
-                "dist".into(),
-                "build".into(),
-                ".venv".into(),
-            ],
-            extensions: DEFAULT_SCAN_EXTENSIONS
-                .iter()
-                .map(|extension| extension.to_string())
-                .collect(),
-            comment_prefixes: DEFAULT_COMMENT_PREFIXES
-                .iter()
-                .map(|prefix| prefix.to_string())
-                .collect(),
-            docstring_python: true,
-            respect_gitignore: true,
-            output_format: "text".into(),
-            relative_paths: true,
-            id_format: DEFAULT_ID_FORMAT.into(),
-            section_separator: DEFAULT_SECTION_SEPARATOR.into(),
-            number_pattern: DEFAULT_NUMBER_PATTERN.into(),
-            slug_pattern: DEFAULT_SLUG_PATTERN.into(),
-            named_sections: false,
-            section_heading_levels: "strict".into(),
-            kinds,
-            fmt_exclude: Vec::new(),
-            fmt_cross_refs_enabled: true,
-            cross_ref_anchor_format: "github".into(),
-            workspace_declared: false,
-            workspace_members: Vec::new(),
-            workspace_members_source: None,
-            workspace_optional_members: Vec::new(),
-            workspace_optional_members_source: None,
-            workspace_absent_optional: Vec::new(),
-            workspace_section_source: None,
-            workspace_scope_path: String::new(),
-            workspace_include_root: true,
-            workspace_include_root_source: None,
-            workspace_boundary_roots: Vec::new(),
-            run_warnings: Vec::new(),
-            path_base: super::call_scope::report_path_base(),
-            workspace_project_roots: Vec::new(),
-            citations: CitationRules::default(),
-            // On by default so `grund check` (and tests) classify; the read-only
-            // commands turn it off (§AR-scanner.2.4, §AR-benchmarks).
-            classify_citation_sources: true,
-            owner_lines: Vec::new(),
-            grammar,
-        }
+        Self::from_project(&v1::default_project(false), root).expect("default grammar must compile")
     }
 
     /// Compatibility defaults for an already-authored `grund.toml` that
-    /// predates the `requirements.md` generated default and omits `[[kinds]]`.
-    /// New zero-config projects and freshly generated configs use
-    /// [`Config::default_for`]; existing configs without explicit kind homes keep
-    /// the old implicit FS folder until they opt into `file = "requirements.md"`.
+    /// predates the `requirements.md` generated default and omits `[[kinds]]`
+    /// (§AR-config.3.2 `legacy FS home`). New zero-config projects and freshly
+    /// generated configs use [`Config::default_for`]; existing configs without
+    /// explicit kind homes keep the old implicit FS folder until they opt into
+    /// `file = "requirements.md"`.
     pub(super) fn default_for_existing_config(root: PathBuf) -> Self {
-        let mut config = Self::default_for(root);
-        if let Some(fs_kind) = config.kinds.iter_mut().find(|kind| kind.kind == "FS") {
-            fs_kind.folder = Some("docs/functional-spec".to_string());
-            fs_kind.file = None;
-        }
-        config
+        Self::from_project(&v1::default_project(true), root).expect("default grammar must compile")
     }
 
     /// The homeless kind for this config (§FS-config.3.9.2) — the citing kind
@@ -549,18 +428,6 @@ pub(super) fn declared_homeless_kind(kinds: &[KindConfig]) -> Option<&KindConfig
         .iter()
         .find(|kind| !kind.citable && kind.folder.is_none() && kind.file.is_none())
 }
-/// The `[scan]` defaults a `Config` starts from (§FS-config.3.5): what a repo
-/// with no `include` walks, the extensions it reads, and the comment prefixes a
-/// declaration or an inline note may sit behind. Config defaults rather than
-/// grammar, so they live beside the record that starts from them — the compiled
-/// grammar takes `comment_prefixes` as an argument and holds no opinion about
-/// what it should be (§AR-system.2.1, §AR-system.2.3).
-const DEFAULT_INCLUDE: &[&str] = &["requirements.md", "docs", "e2e", "src"];
-const DEFAULT_SCAN_EXTENSIONS: &[&str] = &[
-    "md", "rs", "go", "java", "kt", "ts", "tsx", "js", "py", "c", "cpp", "swift", "scala", "rb",
-    "php", "cs", "lisp", "scm", "clj", "sql", "hs", "lhs", "lua", "ada", "adb", "ads",
-];
-const DEFAULT_COMMENT_PREFIXES: &[&str] = &["//", "#", ";", "--", "*", "/*"];
 
 /// Whether a `[[kinds]]` row opted its home into first-class values
 /// (§FS-values.2, §FS-config.3.4). A `[[kinds]]` lookup like the three above,

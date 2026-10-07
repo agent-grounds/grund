@@ -33,10 +33,17 @@
 //! `output` category. The spelling it renders through is a function of a `Path`
 //! alone and went further down, to `model/paths.rs`; this is the half that needs
 //! a `Config`.
+//! The concern records of §AR-config.1 are `project.rs` and `rows.rs`, with the
+//! invocation's facts in `run.rs` and what is derived once in `compiled.rs`;
+//! `facade.rs` builds `Config` from them and holds every per-run setter
+//! (§AR-config.5), and `v1/` is the version-1 reader with its defaults
+//! (§AR-config.3).
 
 mod call_scope;
 mod citations;
+mod compiled;
 mod discovery;
+mod facade;
 mod fmt_block;
 mod grounding;
 mod inputs;
@@ -46,11 +53,15 @@ mod kind_table;
 mod kind_values;
 mod parse;
 mod point_sizes;
+mod project;
 mod record;
 mod report_paths;
+mod rows;
+mod run;
 mod run_warnings;
 mod scan_block;
 mod scope_roots;
+mod v1;
 mod workspace_block;
 
 pub(crate) use crate::model::{check_input_observer, observe_input, with_check_input_observer};
@@ -59,13 +70,20 @@ pub use citations::{
     NamespaceMatch,
 };
 pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
+pub use compiled::{Compiled, ScanDemand};
 pub(crate) use inputs::{
     input_read_dir, input_read_to_string, observe_config, observe_config_candidates,
     observe_ignore_inputs,
 };
 pub use kind::{KindConfig, KindIndex, KindResolution};
 pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
+pub use project::{
+    CitationSyntax, Citations, FmtPresentation, Grounding, IdGrammar, KindGrounding, Members,
+    NoteStyle, OutputPresentation, Presentation, Project, Rules, Schema, Sources,
+};
 pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
+pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
+pub use run::{Run, RunScope, RunWorkspace};
 
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
@@ -110,6 +128,8 @@ mod tests_id_grammar;
 mod tests_kind_index;
 #[cfg(test)]
 mod tests_non_citable_kinds;
+#[cfg(test)]
+mod tests_records;
 #[cfg(test)]
 mod tests_report_paths;
 #[cfg(test)]
