@@ -17,7 +17,7 @@ use super::values::check_values;
 use crate::config::{Config, display_path};
 use crate::grammar::{render_id, render_qualified_id};
 use crate::model::{
-    CheckReport, Declaration, Diagnostic, Findings, Id, Site, TextOverlays, format_path,
+    Catalog, CheckReport, Declaration, Diagnostic, Id, Site, TextOverlays, format_path,
     is_stub_for_inline_decl, resolve_stub_target, sort_path_key,
 };
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
@@ -25,7 +25,7 @@ use crate::scanner::file_declares_inline_home;
 
 /// AR-checker: how grund validates the scanner's findings
 ///
-/// The checker takes the resolved `Findings` produced from §AR-scanner, asks
+/// The checker takes the resolved `Catalog` produced from §AR-scanner, asks
 /// §AR-rules for chapter-rule diagnostics, and produces one `CheckReport`. It
 /// implements the checks in §FS-check and orchestrates, but does not implement,
 /// the parser/facts/engine split of §FS-rules.11.
@@ -33,12 +33,12 @@ use crate::scanner::file_declares_inline_home;
 /// ## placement: Where the checker sits
 ///
 /// ```text
-/// resolver ─► loaded Findings ─┐
+/// resolver ─► loaded Catalog ─┐
 /// rules ─► Diagnostic ─────────┼─► [ checker ] ─► Report ─► api ─► cli, lsp
 /// config ──────────────────────┘
 /// ```
 ///
-/// The sixth box of the pipeline (§AR-system.2.6). It takes `Findings` from the
+/// The sixth box of the pipeline (§AR-system.2.6). It takes `Catalog` from the
 /// resolver (§AR-system.2.10), rule diagnostics from §AR-system.2.12, and the
 /// config it needs to judge them, and gives one `Report` to the api
 /// (§AR-system.2.9), which every frontend renders unchanged. It knows no
@@ -90,7 +90,7 @@ use crate::scanner::file_declares_inline_home;
 ///
 /// ## 1. Inputs and outputs
 ///
-/// - Input: loaded `Findings` from the resolver, chapter-rule `Diagnostic`s
+/// - Input: loaded `Catalog` from the resolver, chapter-rule `Diagnostic`s
 ///   from §AR-rules, plus the repo root and config (needed to resolve stub-link
 ///   paths, to read managed agent-entrypoint init blocks, and to know whether
 ///   `[reference] require_grounding` is on).
@@ -406,15 +406,15 @@ use crate::scanner::file_declares_inline_home;
 /// - New rules can be added without touching the scanner.
 /// - The optional LSP server (§AR-lsp) can run a subset of checks (e.g., only
 ///   dangling references on the active file's citations) against a cached scan.
-/// - Tests can feed synthetic `Findings` directly to the checker without disk I/O.
-pub(crate) fn check_findings(findings: &Findings, config: &Config) -> CheckReport {
+/// - Tests can feed synthetic `Catalog` directly to the checker without disk I/O.
+pub(crate) fn check_findings(findings: &Catalog, config: &Config) -> CheckReport {
     check_with_workspace(findings, config, config, None, &BTreeMap::new())
 }
 
 /// Disk-backed compatibility entry for the shared checker; the LSP sibling
 /// below supplies overlays so §FS-declarations.checks.oversized-lead measures the editor's live text.
 pub(crate) fn check_with_workspace(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     path_config: &Config,
     current_alias: Option<&str>,
@@ -453,7 +453,7 @@ pub(crate) fn check_with_workspace(
 /// would make the rule inert exactly where it was asked for. Which place is
 /// asked, and how finely, is a `[[kinds]]` row's to say (§FS-config.3.4.8).
 pub(crate) fn check_with_workspace_and_overlays(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     path_config: &Config,
     current_alias: Option<&str>,

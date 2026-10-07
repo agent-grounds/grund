@@ -2,10 +2,10 @@
 //! (§FS-check.1.1.8, §AR-scanner.2.3, §AR-scanner.2.4).
 
 use super::*;
-use crate::model::{Citation, Findings, Id};
+use crate::model::{Catalog, Citation, Id};
 use crate::testing::{numbered_config, test_root, write};
 
-fn local_citations(findings: &Findings) -> Vec<&Citation> {
+fn local_citations(findings: &Catalog) -> Vec<&Citation> {
     findings
         .citations
         .iter()

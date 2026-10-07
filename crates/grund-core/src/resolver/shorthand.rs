@@ -27,7 +27,7 @@ use crate::grammar::{
     never_rewrite_context_in, parse_id, parse_id_arg, parse_id_arg_with_shorthand, render_id,
     shorthand_names,
 };
-use crate::model::{Findings, Id};
+use crate::model::{Catalog, Id};
 
 /// Everything one `grund fmt` walk needs to expand a shorthand: this project's
 /// declaration index, plus one per workspace alias for the qualified form
@@ -54,7 +54,7 @@ pub(crate) struct ShorthandAliasTarget<'a> {
 impl<'a> ShorthandTargets<'a> {
     pub(crate) fn new(
         config: &Config,
-        findings: Option<&'a Findings>,
+        findings: Option<&'a Catalog>,
         workspace: Option<&'a WorkspaceContext>,
     ) -> Self {
         Self {

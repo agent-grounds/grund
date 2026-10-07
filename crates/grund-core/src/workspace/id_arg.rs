@@ -5,7 +5,7 @@
 //!
 //! A question about the `[workspace]` vocabulary and nothing else: it reads the
 //! slug grammar of `config/workspace_block.rs` and no project, no scan and no
-//! `Findings`, which is why it stayed here when the loaded project set left for
+//! `Catalog`, which is why it stayed here when the loaded project set left for
 //! `resolver/` (§AR-system.2.10). The ID tail is deliberately left raw, so the
 //! caller parses it with the *target* project's grammar rather than its own
 //! (§AR-workspace.2).

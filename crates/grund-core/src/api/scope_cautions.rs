@@ -18,10 +18,10 @@ use std::path::Path;
 use crate::checker::{ScanScope, scope_read_any_file};
 use crate::config::{Config, display_path, kind_prefixes};
 use crate::grammar::id_shape;
-use crate::model::{Diagnostic, Findings, format_path, normalize_path_lexically};
+use crate::model::{Catalog, Diagnostic, format_path, normalize_path_lexically};
 use crate::workspace::scope_is_config_root;
 
-fn nothing_recognized(findings: &Findings) -> bool {
+fn nothing_recognized(findings: &Catalog) -> bool {
     !findings.scanned_files.is_empty()
         && findings.declarations.is_empty()
         && findings.citations.is_empty()
@@ -55,7 +55,7 @@ fn nothing_recognized(findings: &Findings) -> bool {
 /// wider walk read plenty — the caution is about what the caller asked about.
 pub(super) fn scan_scope_caution(
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     path: &Path,
     path_provided: bool,
     report_is_silent: bool,

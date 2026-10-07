@@ -16,7 +16,7 @@ use crate::config::{
 };
 use crate::grammar::render_id;
 use crate::model::{
-    CITATION_DIRECTION_REPAIR, CheckReport, Citation, Diagnostic, E2eSpecRef, Findings, Id,
+    CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id,
     paths_same_location,
 };
 use crate::scanner::file_home_kind;
@@ -44,7 +44,7 @@ fn citing_side_label(config: &Config, kind: &str) -> String {
 /// rescans they replace were O(kinds × declarations × citations) and dominated
 /// `grund check` on a large tree.
 pub(super) fn check_citation_obligations(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     report: &mut CheckReport,
 ) {
@@ -145,7 +145,7 @@ pub(super) fn check_citation_obligations(
 /// stay inside the same home boundary.
 fn empty_citation_obligation_warning(
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     citing_kind: &str,
     rules: &KindCitationRules,
 ) -> Option<Diagnostic> {
@@ -285,7 +285,7 @@ fn non_citable_kind_names(config: &Config) -> BTreeSet<&str> {
 fn obligation_units<'a>(
     citing_kind: &str,
     config: &Config,
-    findings: &'a Findings,
+    findings: &'a Catalog,
     by_decl: &BTreeMap<&'a Id, Vec<&'a Citation>>,
     by_file: &BTreeMap<(&'a str, &'a Path), Vec<&'a Citation>>,
     e2e_by_case: &BTreeMap<&'a Path, Vec<&'a Citation>>,
@@ -367,7 +367,7 @@ fn obligation_diagnostic(
 /// `discouraged-citation` suggestion (`should-not`). The error carries
 /// §FS-check.3.12's repair suffix; the suggestion does not (§FS-check.2.3).
 pub(super) fn check_citation_prohibitions(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     report: &mut CheckReport,
 ) {

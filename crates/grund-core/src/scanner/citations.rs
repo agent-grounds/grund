@@ -5,7 +5,7 @@ use crate::grammar::{
     QUALIFIED_CITATION_PREFIX, never_rewrite_context_in, parse_id, parse_longest_id_prefix,
     parse_qualified_id_prefix, qualified_suppressed_in_source,
 };
-use crate::model::{Citation, Findings, LegacyCitationCandidate, LocalSectionCitationCandidate};
+use crate::model::{Catalog, Citation, LegacyCitationCandidate, LocalSectionCitationCandidate};
 use crate::workspace::WorkspaceCitationTarget;
 
 /// Whether `fmt` may rewrite the citation whose marker starts at `marker_start` —
@@ -32,7 +32,7 @@ pub(super) fn scan_local_section_candidates(
     line: &CitationLine<'_>,
     claimed_markers: &[usize],
     qualified_claimed: &BTreeSet<usize>,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     if line.config.marker.is_empty() {
         return;
@@ -121,7 +121,7 @@ pub(super) fn scan_local_section_candidates(
 pub(super) fn scan_fallback_qualified_citations(
     line: &CitationLine<'_>,
     qualified_claimed: &mut BTreeSet<usize>,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     if line.config.marker.is_empty() {
         return;
@@ -161,7 +161,7 @@ fn push_fallback_qualified_citation(
     marker_start: usize,
     alias: &str,
     id_start: usize,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) -> bool {
     let Some(id_rest) = line.scan_line.get(id_start..) else {
         return false;
@@ -205,7 +205,7 @@ fn push_fallback_qualified_citation(
 pub(super) fn scan_workspace_qualified_pass(
     line: &CitationLine<'_>,
     targets: &[WorkspaceCitationTarget],
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     if line.config.marker.is_empty() || targets.is_empty() {
         return;
@@ -284,7 +284,7 @@ pub(super) fn scan_workspace_qualified_pass(
 /// catalog reconciliation promotes only exact declaration-backed spellings
 /// (§FS-check.1.1.1, §FS-config.3.2.6). The remainder of the already-read line is
 /// enough to defer token/section precedence without a second file read.
-pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings: &mut Findings) {
+pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings: &mut Catalog) {
     if line.config.marker.is_empty() || !line.scan_line.contains(&line.config.marker) {
         return;
     }
@@ -333,7 +333,7 @@ pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings:
 /// bracketed live citation, not an intended illustration. IDs are parsed with
 /// the citing project's grammar; a cross-namespace target with an exotic grammar
 /// may be missed, which only ever costs a suggestion, never a false error.
-pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Findings) {
+pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Catalog) {
     if line.config.marker.is_empty() {
         return;
     }
@@ -422,7 +422,7 @@ pub(super) fn scan_shorthand_citations(
     workspace_mode: bool,
     claimed_markers: &[usize],
     qualified_claimed: &BTreeSet<usize>,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     if line.config.marker.is_empty() {
         return;

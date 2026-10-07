@@ -25,7 +25,7 @@ use crate::grammar::{
     in_escape_position, is_inside_inline_code, is_inside_markdown_link_destination,
     markdown_fence_delimiter, string_literal_in,
 };
-use crate::model::{Findings, Id};
+use crate::model::{Catalog, Id};
 use crate::resolver::{
     ShorthandTargets, WorkspaceContext, expand_shorthand_citations_with_origins,
 };
@@ -141,7 +141,7 @@ pub(crate) struct FmtLineOpts<'a> {
     /// (§FS-fmt.2.5.3). Elsewhere `cross_refs` already means "wrap what this file
     /// has" and the carve-out has nothing to add.
     pub(crate) index_entry_ids: Option<&'a BTreeSet<Id>>,
-    pub(crate) findings: Option<&'a Findings>,
+    pub(crate) findings: Option<&'a Catalog>,
     pub(crate) workspace: Option<&'a WorkspaceContext>,
     /// The declaration indexes the shorthand rewrite resolves against, built once
     /// per walk (§FS-fmt.2.4.5). Separate from `findings` because a qualified

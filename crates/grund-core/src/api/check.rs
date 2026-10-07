@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 
 use super::report::public_report;
 use super::run::run_check_with_run_warnings;
-use crate::model::{Finding, Findings, Report};
+use crate::model::{Catalog, Finding, Report};
 use crate::scanner::scan_tree_strict;
 use crate::workspace::resolve_workspace_config;
 
@@ -69,7 +69,7 @@ pub struct CheckOutput {
 
 /// Scan one project tree and return the raw scanner findings. This is the
 /// embedding surface later frontends share instead of re-reading files.
-pub fn scan(path: &Path) -> Result<Findings> {
+pub fn scan(path: &Path) -> Result<Catalog> {
     let config = resolve_workspace_config(path)?;
     scan_tree_strict(&config, Some(path), true)
 }

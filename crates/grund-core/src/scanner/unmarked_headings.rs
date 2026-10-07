@@ -1,12 +1,12 @@
 use std::collections::BTreeMap;
 
-use crate::model::{Declaration, Findings, UnmarkedHeading, UnmarkedHeadingCandidate};
+use crate::model::{Catalog, Declaration, UnmarkedHeading, UnmarkedHeadingCandidate};
 
 /// Retain only Markdown headings owned by a declaration body, choose the
 /// nearest nested owner, and assign deterministic unused section paths
 /// (§AR-scanner.2.2.7, §AR-scanner.2.4.1, §FS-declarations.checks.unmarked-heading).
 pub(super) fn assign_unmarked_heading_owners(
-    findings: &mut Findings,
+    findings: &mut Catalog,
     mut candidates: Vec<UnmarkedHeadingCandidate>,
     md_headings: &[(usize, usize)],
     total_lines: usize,

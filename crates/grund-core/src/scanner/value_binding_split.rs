@@ -10,7 +10,7 @@ use super::value_binding_attempts::{
     AttemptedValueTarget, attempted_value_target, split_value_binding_site,
 };
 use super::value_context::{binding_span_is_inside, value_binding_context};
-use crate::model::Findings;
+use crate::model::Catalog;
 use crate::workspace::WorkspaceCitationTarget;
 
 /// A literal whose closing backtick ended its line, held for one line so the
@@ -45,7 +45,7 @@ pub(super) fn scan_split_binding(
     line: &CitationLine<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
     held: &mut Option<SplitLiteral>,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     let earlier = held.take();
     let Some(context) = value_binding_context(line) else {

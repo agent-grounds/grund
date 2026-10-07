@@ -13,7 +13,7 @@ use std::path::PathBuf;
 
 use super::*;
 use crate::config::Config;
-use crate::model::Findings;
+use crate::model::Catalog;
 use crate::testing::{embedded_value_config, test_root, write};
 
 /// One declaration per way a heading can be carried in source, each beside the
@@ -32,7 +32,7 @@ const ENVELOPES: &[(&str, &str)] = &[
 /// `AR` declarations with named sections on, each carrying the same two
 /// headings, `## terms: Terms` and `## 1. Overview`: once in Markdown, and once
 /// in every envelope of `ENVELOPES`.
-fn scan_envelopes(name: &str) -> Findings {
+fn scan_envelopes(name: &str) -> Catalog {
     let root = test_root(name);
     write(
         &root.join("docs/AR-001-markdown.md"),
@@ -102,7 +102,7 @@ fn named_config(root: PathBuf) -> Config {
 
 /// Every recorded `(section path, title)` of the one `AR` declaration whose
 /// slug is `slug`, in path order.
-fn titles(findings: &Findings, slug: &str) -> Vec<(String, String)> {
+fn titles(findings: &Catalog, slug: &str) -> Vec<(String, String)> {
     let decls = findings
         .declarations
         .iter()

@@ -28,7 +28,7 @@ A `--format` value outside `text|json` is a usage error the caller can fix witho
 
 ## 2. Behaviour
 
-`cover` runs the same scan as `check`, `list`, and `refs` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)) and only renders the `Findings` the scanner already collected. It does not decide whether a file is sufficiently covered, whether a hunk is behavioral, or whether a spec/test co-change is required; those are recipe concerns ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits)).
+`cover` runs the same scan as `check`, `list`, and `refs` ([AR-scanner](../architecture/AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations)) and only renders the `Catalog` the scanner already collected. It does not decide whether a file is sufficiently covered, whether a hunk is behavioral, or whether a spec/test co-change is required; those are recipe concerns ([§RM-cochange-gate](../roadmap.md#rm-cochange-gate-an-opt-in-commit-msg--ci-recipe-for-spec-and-test-edits)).
 
 An owned declaration-local numeric citation ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)) is one ordinary resolved citation in this grouping: it carries the owner's full ID and exact section while its `text` remains the authored local spelling. It therefore also counts for unused-declaration, grounding, and citation-direction questions that consume the same graph. Ownerless and unsupported local candidates contribute no guessed edge.
 

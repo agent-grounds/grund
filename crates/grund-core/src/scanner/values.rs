@@ -13,7 +13,7 @@ use super::value_binding_attempts::{
 use super::value_context::{binding_span_is_inside, value_binding_context};
 use crate::config::Config;
 use crate::model::{
-    Findings, Id, InvalidValueSite, ValueBinding, authored_component, component_text_is_valid,
+    Catalog, Id, InvalidValueSite, ValueBinding, authored_component, component_text_is_valid,
     paths_same_location, value_binding_section_shape_is_valid,
 };
 use crate::workspace::WorkspaceCitationTarget;
@@ -38,7 +38,7 @@ pub(super) fn validate_markdown_value_declarations(
     text: &str,
     is_md: bool,
     config: &Config,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     if !config.kinds.iter().any(|kind| kind.values) {
         return;
@@ -185,14 +185,14 @@ pub(crate) fn markdown_component<'a>(line: &'a str, config: &Config) -> Option<(
 }
 
 /// Record only exact authored bindings in Markdown or a recognized whole-line
-/// source comment. The citation remains in `Findings::citations`; this record
+/// source comment. The citation remains in `Catalog::citations`; this record
 /// adds the component and binding span without a second resolver
 /// (§FS-values.3, §DA-explicit-value-bindings.2).
 pub(super) fn scan_value_bindings(
     line: &CitationLine<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
     citation_start: usize,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     let Some(context) = value_binding_context(line) else {
         return;

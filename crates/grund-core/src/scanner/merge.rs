@@ -2,12 +2,12 @@
 //! record list the pass fills is appended here, so a record the pass learns to
 //! produce is carried to the run by one more line in one place.
 
-use crate::model::Findings;
+use crate::model::Catalog;
 
 /// Append every record of one file's `source` to the run's `target`. A list
 /// missing here is silently dropped from every surface, which is how
 /// `escaped_citations` was once lost.
-pub(super) fn merge_findings(target: &mut Findings, mut source: Findings) {
+pub(super) fn merge_findings(target: &mut Catalog, mut source: Catalog) {
     for (id, mut declarations) in source.declarations {
         target
             .declarations

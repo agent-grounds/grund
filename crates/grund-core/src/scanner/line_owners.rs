@@ -6,7 +6,7 @@
 
 use std::path::Path;
 
-use crate::model::{FileLineOwnership, Findings, Id, OwnerRun, RangeOwnership, SectionRun};
+use crate::model::{Catalog, FileLineOwnership, Id, OwnerRun, RangeOwnership, SectionRun};
 
 /// One file's declaration bodies with their accepted sections, and the
 /// fence-aware heading stack that closes them: the single place a line is given
@@ -23,7 +23,7 @@ pub(super) struct LineOwners<'a> {
 impl<'a> LineOwners<'a> {
     /// Taken after the body spans are assigned, so the lookup is a scan of a
     /// small local list rather than of the file.
-    pub(super) fn new(findings: &Findings, md_headings: &'a [(usize, usize)]) -> Self {
+    pub(super) fn new(findings: &Catalog, md_headings: &'a [(usize, usize)]) -> Self {
         let bodies = findings
             .declarations
             .values()
@@ -95,7 +95,7 @@ fn enclosing_section(
 /// ends past it is the caller's, which knows how the range was written
 /// (§FS-cover.6.4).
 pub(super) fn resolve_requested_lines(
-    findings: &mut Findings,
+    findings: &mut Catalog,
     path: &Path,
     md_headings: &[(usize, usize)],
     total_lines: usize,

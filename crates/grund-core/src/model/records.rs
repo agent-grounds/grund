@@ -307,12 +307,14 @@ pub struct InlineCitationSite {
 
 pub(crate) type TextOverlays = BTreeMap<PathBuf, String>;
 
-/// Everything the scanner found in one tree walk — declarations grouped by ID
-/// (so duplicates surface, §FS-declarations.checks.duplicate) and citations in encounter order. This
+/// Everything the scanner found in one tree walk — the catalog of
+/// §FS-terms.terms.1: declarations grouped by ID (so duplicates surface,
+/// §FS-declarations.checks.duplicate) and citations in encounter order. This
 /// is the scanner's whole output; the checker (§AR-checker) consumes it without
-/// re-reading files.
+/// re-reading files. It was `Findings` before §AR-system.2.2 took the glossary's
+/// word, which kept the report item `Finding` apart from it (§FS-terms.terms.5).
 #[derive(Default)]
-pub struct Findings {
+pub struct Catalog {
     pub declarations: BTreeMap<Id, Vec<Declaration>>,
     pub citations: Vec<Citation>,
     /// Numeric and enabled named section headings that the line scan attached

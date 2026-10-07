@@ -2,7 +2,7 @@
 //! normalization and the cross-reference links of §FS-fmt, the proposed ID of
 //! §FS-id, the init scaffold with its managed agent-entrypoint block (§FS-init),
 //! the external fact snapshot of §FS-fetch, and the clickable-citation client
-//! artifacts of §FS-integrations. They consume `Findings` and the tree, are the
+//! artifacts of §FS-integrations. They consume `Catalog` and the tree, are the
 //! only components that write to it, and each writes only what its spec names
 //! (§REQ-no-data-loss).
 //!

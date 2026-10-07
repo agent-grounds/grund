@@ -4,7 +4,7 @@
 //! §FS-show.2.1.2.1.
 
 use crate::checker::check_findings;
-use crate::model::{Findings, Id, ShowRenderMode};
+use crate::model::{Catalog, Id, ShowRenderMode};
 use crate::queries::show_declaration;
 use crate::testing::{
     legacy_fs_folder_config, located_diagnostics, scan_findings, test_root, write,
@@ -18,7 +18,7 @@ fn id(kind: &str, number: u32, slug: &str) -> Id {
     }
 }
 
-fn section_paths(findings: &Findings, id: &Id, file_suffix: &str) -> Vec<String> {
+fn section_paths(findings: &Catalog, id: &Id, file_suffix: &str) -> Vec<String> {
     findings.declarations[id]
         .iter()
         .find(|declaration| declaration.file.ends_with(file_suffix))

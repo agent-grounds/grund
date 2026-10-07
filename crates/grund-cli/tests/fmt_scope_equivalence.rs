@@ -3,7 +3,7 @@
 //! exit code, same tree afterwards, in every mode.
 //!
 //! This file used to pin that for one tree and one mode — the shape issue #105
-//! had, where the no-path form reused a project's already-computed `Findings`
+//! had, where the no-path form reused a project's already-computed `Catalog`
 //! without checking whether the scan that produced them met an error, and so
 //! rewrote a tree the explicit-path form correctly refused. The property is the
 //! same; what changed is that it is now asserted over every shape in the corpus

@@ -22,7 +22,7 @@ use crate::grammar::{
     MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, is_inside_inline_code, parse_id,
     parse_longest_id_prefix,
 };
-use crate::model::{Findings, Id};
+use crate::model::{Catalog, Id};
 use crate::resolver::{
     ShorthandTargets, WorkspaceContext, markdown_link_target, markdown_link_target_with_root,
 };
@@ -45,7 +45,7 @@ pub(crate) fn wrap_markdown_links(
     line: &str,
     path: &Path,
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     workspace: Option<&WorkspaceContext>,
     only_ids: Option<&BTreeSet<Id>>,
 ) -> String {
@@ -59,7 +59,7 @@ pub(super) fn wrap_markdown_links_with_targets(
     line: &str,
     path: &Path,
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     workspace: Option<&WorkspaceContext>,
     only_ids: Option<&BTreeSet<Id>>,
     shorthand_targets: &ShorthandTargets<'_>,
@@ -141,7 +141,7 @@ pub(super) fn wrap_markdown_links_with_targets(
 fn markdown_link_citations(
     line: &str,
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     workspace: Option<&WorkspaceContext>,
     shorthand_targets: &ShorthandTargets<'_>,
 ) -> Vec<MarkdownLineCitation> {

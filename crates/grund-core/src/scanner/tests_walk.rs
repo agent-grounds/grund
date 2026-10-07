@@ -8,7 +8,7 @@ use std::path::Path;
 
 use super::*;
 use crate::config::Config;
-use crate::model::Findings;
+use crate::model::Catalog;
 use crate::testing::{
     canonical_test_path, check_run, findings, legacy_fs_folder_config, linked_repo,
     located_diagnostics, scan_errors, scanned, symlink, test_root, write,
@@ -407,7 +407,7 @@ fn a_parent_relative_scan_root_outside_the_project_is_still_followed() {
 
 /// A member's scan, with the run's other project roots on the config — what
 /// workspace expansion stamps onto every project it loaded (§AR-workspace.6.2).
-fn member_scan(root: &Path, member: &str) -> (Config, Findings) {
+fn member_scan(root: &Path, member: &str) -> (Config, Catalog) {
     let mut config = Config::default_for(root.join(member));
     config.include = Some(vec!["docs".into()]);
     config.workspace_project_roots = vec![

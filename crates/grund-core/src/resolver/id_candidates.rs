@@ -5,7 +5,7 @@
 //! It sits with the loaded project set rather than with `show`, because the
 //! question it answers is about that set: which of the run's projects declares
 //! this text under its own `[id]` grammar, and whether the run saw the whole
-//! tree at all (§AR-resolver.3). It needs every project's `Findings`, which is
+//! tree at all (§AR-resolver.3). It needs every project's `Catalog`, which is
 //! what moved it out of `workspace/` with the loader it reads
 //! (§AR-resolver.placement).
 

@@ -2,7 +2,7 @@
 //! (§AR-goal-measurement.1). The production scanner owns the catalog; this
 //! integration target owns the cross-tree evidence and exception policy.
 
-use grund_core::{Findings, scan};
+use grund_core::{Catalog, scan};
 use std::collections::BTreeSet;
 use std::fs;
 use std::io;
@@ -56,7 +56,7 @@ fn is_live_test_source(root: &Path, file: &Path) -> bool {
             .is_some_and(|name| name.starts_with("tests_"))
 }
 
-fn repository_evidence(root: &Path, catalog: &Findings) -> BTreeSet<String> {
+fn repository_evidence(root: &Path, catalog: &Catalog) -> BTreeSet<String> {
     // §AR-goal-measurement.1: source paths and their filter share the scanner's canonical root.
     let root = root.canonicalize().expect("canonical evidence root");
     let mut evidence = BTreeSet::new();
@@ -193,7 +193,7 @@ extensions = ["md", "rs", "py"]
         Ok(Self { root })
     }
 
-    fn scan(&self) -> Findings {
+    fn scan(&self) -> Catalog {
         scan(&self.root).expect("scan synthetic functional spec")
     }
 }
@@ -207,7 +207,7 @@ impl Drop for Fixture {
     }
 }
 
-fn declaration<'a>(catalog: &'a Findings, slug: &str) -> &'a grund_core::Declaration {
+fn declaration<'a>(catalog: &'a Catalog, slug: &str) -> &'a grund_core::Declaration {
     catalog
         .declarations
         .iter()

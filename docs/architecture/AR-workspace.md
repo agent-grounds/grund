@@ -29,7 +29,7 @@ config ─► Config ─► [ workspace ] ─┬─► scope, boundary roots ─
 
 The fourth box of the pipeline ([§AR-system.2.4](README.md#24-workspace)). It takes the configs that config produced ([§AR-system.2.3](README.md#23-config)) and gives the scanner its scope and boundary roots ([§AR-system.2.5](README.md#25-scanner)) and the resolver the project map and the alias each project answers to ([§AR-system.2.10](README.md#210-resolver)). It knows no rule, no rendering and no scan: the namespace is one dimension that flows through the single-project pipeline unchanged, which is what the rest of this page holds ([§AR-system.4](README.md#4-dependency-direction)).
 
-Everything here is answered from config text alone. Anything that needs a walk, or the `Findings` a walk produced, is the resolver's — which is why the walk-level facts this layer once reached up for are `config/scope_roots.rs` and `model/paths.rs` now, and why the [§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread) probe is *posed* here and *answered* there ([§AR-resolver.placement](AR-resolver.md#placement-where-the-resolver-sits)).
+Everything here is answered from config text alone. Anything that needs a walk, or the `Catalog` a walk produced, is the resolver's — which is why the walk-level facts this layer once reached up for are `config/scope_roots.rs` and `model/paths.rs` now, and why the [§FS-check.4.10](../functional-spec/FS-check.md#410-include_root--false-leaves-the-blocks-own-files-unread) probe is *posed* here and *answered* there ([§AR-resolver.placement](AR-resolver.md#placement-where-the-resolver-sits)).
 
 ## terms: Terms
 

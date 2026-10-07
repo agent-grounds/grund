@@ -1,5 +1,5 @@
 //! The one function that maps a citation to the project it resolves against
-//! (§AR-system.2.10, §AR-resolver.1): the target's `Findings` and the `Config`
+//! (§AR-system.2.10, §AR-resolver.1): the target's `Catalog` and the `Config`
 //! its ID is parsed and rendered with, or `None` when the alias is unknown
 //! (§FS-workspace.1.2, §FS-workspace.8).
 //!
@@ -19,13 +19,13 @@ use std::collections::BTreeMap;
 
 use super::stub_home::unscanned_stub_home;
 use crate::config::Config;
-use crate::model::{Citation, Declaration, Findings, Id};
+use crate::model::{Catalog, Citation, Declaration, Id};
 
 /// One project a citation can resolve against, as a rule needs it: the findings
 /// the ID is looked up in and the config that spells it, because a workspace may
 /// mix `[id] format`s (§FS-workspace.1.2, §AR-workspace.2).
 pub(crate) struct WorkspaceCheckTarget<'a> {
-    pub(crate) findings: &'a Findings,
+    pub(crate) findings: &'a Catalog,
     pub(crate) config: &'a Config,
 }
 
@@ -34,7 +34,7 @@ pub(crate) struct WorkspaceCheckTarget<'a> {
 /// alias returns `None` for the caller to locate.
 pub(crate) fn target_for_citation<'a>(
     cite: &Citation,
-    local: &'a Findings,
+    local: &'a Catalog,
     local_config: &'a Config,
     workspace: &'a BTreeMap<String, WorkspaceCheckTarget<'a>>,
 ) -> Option<WorkspaceCheckTarget<'a>> {
@@ -54,7 +54,7 @@ pub(crate) fn target_for_citation<'a>(
 /// asked as a yes/no by the rules that only need that (§FS-check.3.1).
 pub(crate) fn citation_resolves(
     cite: &Citation,
-    local: &Findings,
+    local: &Catalog,
     local_config: &Config,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
 ) -> bool {
@@ -71,7 +71,7 @@ pub(crate) fn citation_resolves(
 /// path and a partially resolving one all answer `false`. It is `section_home`,
 /// asked as a yes/no.
 pub(crate) fn section_resolves(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     id: &Id,
     section: &str,
@@ -97,7 +97,7 @@ pub(crate) enum SectionHome<'a> {
 /// to, the target's for a workspace citation, because the stub's link resolves
 /// against its root.
 pub(crate) fn section_home<'a>(
-    findings: &'a Findings,
+    findings: &'a Catalog,
     config: &Config,
     id: &Id,
     section: &str,

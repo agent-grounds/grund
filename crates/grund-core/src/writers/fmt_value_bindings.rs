@@ -8,7 +8,7 @@ use crate::checker::{
 use crate::config::Config;
 use crate::grammar::MarkdownLineCitation;
 use crate::model::{
-    Findings, component_text_is_valid, value_binding_section_ends_in_coordinate,
+    Catalog, component_text_is_valid, value_binding_section_ends_in_coordinate,
     value_binding_section_shape_is_valid,
 };
 use crate::resolver::WorkspaceContext;
@@ -24,7 +24,7 @@ pub(super) fn markdown_citation_is_value_binding(
     line: &str,
     citation: &MarkdownLineCitation,
     config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     workspace: Option<&WorkspaceContext>,
 ) -> bool {
     let (target_config, target_findings) = match citation.namespace.as_deref() {

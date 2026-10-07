@@ -9,7 +9,7 @@
 
 use std::path::Path;
 
-use crate::model::{FileLineOwnership, Findings, Id};
+use crate::model::{Catalog, FileLineOwnership, Id};
 use crate::testing::{legacy_fs_folder_config, scan_findings, test_root, write};
 
 /// The owner a whole-file `--lines` answer gives `line`, as the rendered
@@ -28,7 +28,7 @@ fn answered_owner(owned: &FileLineOwnership, line: usize) -> Option<(Id, Option<
     Some((run.declaration.clone(), section.section.clone()))
 }
 
-fn ownership_of<'a>(findings: &'a Findings, file: &Path) -> &'a FileLineOwnership {
+fn ownership_of<'a>(findings: &'a Catalog, file: &Path) -> &'a FileLineOwnership {
     findings
         .line_ownership
         .iter()

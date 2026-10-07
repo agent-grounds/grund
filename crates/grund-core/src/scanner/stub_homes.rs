@@ -18,7 +18,7 @@ use crate::grammar::{
     source_scan_line,
 };
 use crate::model::{
-    Declaration, Findings, Id, StubHome, TextOverlays, paths_same_location, physical_path_key,
+    Catalog, Declaration, Id, StubHome, TextOverlays, paths_same_location, physical_path_key,
     resolve_stub_target,
 };
 
@@ -105,7 +105,7 @@ fn inline_home_lines<'a>(
 /// stubs and IDs name it. A lone stub is read because its target may declare the ID
 /// twice, two homes whether or not the walk reached it
 /// (§FS-declarations.checks.duplicate.1); an ID no stub declares is passed over.
-pub(super) fn record_stub_homes(config: &Config, overlays: &TextOverlays, findings: &mut Findings) {
+pub(super) fn record_stub_homes(config: &Config, overlays: &TextOverlays, findings: &mut Catalog) {
     let mut targets = TargetTexts::new(overlays);
     for (id, decls) in &mut findings.declarations {
         if !decls.iter().any(|decl| decl.is_stub) {

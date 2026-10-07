@@ -1,6 +1,6 @@
 //! Exact-leaf coverage policy and reviewed exception tables (§AR-goal-measurement.1).
 
-use grund_core::Findings;
+use grund_core::Catalog;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, Eq, PartialEq)]
@@ -22,7 +22,7 @@ pub(super) struct Exception<'a> {
 /// exception tables (§AR-goal-measurement.1). An exception is valid only while
 /// its point is an uncited leaf; that makes proof retire debt automatically.
 pub(super) fn functional_spec_coverage_problems(
-    catalog: &Findings,
+    catalog: &Catalog,
     evidence: &BTreeSet<&str>,
     permanent: &[Exception<'_>],
     temporary: &[Exception<'_>],
@@ -77,7 +77,7 @@ pub(super) fn functional_spec_coverage_problems(
     problems
 }
 
-fn functional_spec_sections(catalog: &Findings) -> BTreeSet<String> {
+fn functional_spec_sections(catalog: &Catalog) -> BTreeSet<String> {
     let mut sections = BTreeSet::new();
     for (id, declarations) in &catalog.declarations {
         if id.kind != "FS" {

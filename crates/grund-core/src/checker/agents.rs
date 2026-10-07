@@ -4,7 +4,7 @@ use crate::config::Config;
 use crate::grammar::{
     AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block, parse_id_arg,
 };
-use crate::model::{CheckReport, Diagnostic, Findings};
+use crate::model::{Catalog, CheckReport, Diagnostic};
 use crate::resolver::{WorkspaceCheckTarget, markdown_link_target};
 use crate::scanner::companion_agent_entrypoints;
 use crate::templates::{
@@ -42,7 +42,7 @@ fn agents_init_message(detail: String) -> String {
 /// workspace root resolve a member's cross-boundary rule and so catch a member
 /// block missing its bullet (§FS-rules.9.1).
 pub(super) fn check_agents_block_version(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     report: &mut CheckReport,
@@ -122,7 +122,7 @@ fn check_agent_block_path_with_rules(
     path: &Path,
     report: &mut CheckReport,
     require_block: bool,
-    rule_guidance: Option<(&Findings, &[(String, String)])>,
+    rule_guidance: Option<(&Catalog, &[(String, String)])>,
 ) {
     // §FS-check.6.1.3: retain this probe when the entrypoint is absent.
     crate::config::observe_input(path, false);
@@ -266,7 +266,7 @@ fn check_agent_block_path_with_rules(
 pub(crate) fn chapter_rules_section(
     config: &Config,
     path: &Path,
-    findings: &Findings,
+    findings: &Catalog,
     rows: &[(String, String)],
 ) -> String {
     let mut section = String::from(

@@ -3,7 +3,7 @@ use super::stub_home::stub_home;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
-    Declaration, DeclarationSource, Findings, Id, SectionInfo, ShowOutput, ShowRenderMode,
+    Catalog, Declaration, DeclarationSource, Id, SectionInfo, ShowOutput, ShowRenderMode,
     TextOverlays, format_path, json_escape, paths_same_location, resolve_stub_target,
 };
 use crate::resolver::{
@@ -18,7 +18,7 @@ use std::borrow::Cow;
 pub(crate) fn show_declaration(
     config: &Config,
     path_config: &Config,
-    findings: &Findings,
+    findings: &Catalog,
     id: &Id,
     section: Option<&str>,
     mode: ShowRenderMode,
@@ -51,7 +51,7 @@ pub(crate) fn show_declaration(
 pub(crate) fn show_declaration_with_overlays<'a>(
     config: &Config,
     path_config: &Config,
-    findings: &'a Findings,
+    findings: &'a Catalog,
     id: &Id,
     section: Option<&str>,
     mode: ShowRenderMode,

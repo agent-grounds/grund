@@ -8,7 +8,7 @@ use super::facts::{NodeKey, RuleFacts};
 use super::markdown::adapt_markdown;
 use crate::checker::{check_chapter_rules, check_findings};
 use crate::config::{Config, load_config};
-use crate::model::Findings;
+use crate::model::Catalog;
 use crate::scanner::scan_tree;
 use crate::testing::{test_root, write};
 
@@ -31,7 +31,7 @@ const UNCITED: &str = "AR-second is cited by FS 0 times; RULE-ar-cited requires 
 
 /// A stub of `AR-second` in `docs/` pointing at `source.rs`, which `[scan] include`
 /// leaves out, `FS-uses` citing `uses`, and a rule that every AR is cited.
-fn stub_repo(name: &str, uses: &str) -> (Config, Findings) {
+fn stub_repo(name: &str, uses: &str) -> (Config, Catalog) {
     let root = test_root(name);
     write(&root.join("grund.toml"), CONFIG);
     write(

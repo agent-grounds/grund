@@ -24,19 +24,19 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 214 |
-| Rustdoc-visible | 196 |
+| Public root names | 215 |
+| Rustdoc-visible | 197 |
 | `#[doc(hidden)]` | 18 |
-| Named, a related API, or a data type of one | 122 |
+| Named, a related API, or a data type of one | 123 |
 | Outside that closure | 92 |
 | Named by a frontend or its tests | 126 |
 | Reached structurally only | 43 |
-| No repository consumer of either kind | 45 |
+| No repository consumer of either kind | 46 |
 | Disposition keep | 133 |
 | Disposition keep, hidden | 18 |
 | Disposition keep, name in the spec | 18 |
 | Disposition hide | 11 |
-| Disposition retire with the ramp | 0 |
+| Disposition retire with the ramp | 1 |
 | Disposition facade, then retire | 34 |
 
 The two count columns do not line up, and they are not meant to: 45 names have no repository consumer while 92 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
@@ -63,6 +63,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `can_replace_trigger_at` | queries | visible | no | none found | none found | hide |
 | `canonical_snapshot_path` | model | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
 | `canonical_template_text` | templates | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | hide |
+| `Catalog` | model | visible | named | none found | none found | keep |
 | `check` | api | visible | named | grund-lsp tests `grund-lsp/tests/chapter_values.rs:40` | — | keep |
 | `CHECK_FINDING_CODES` | checker | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:27` | — | keep, hidden |
 | `check_with_opts` | api | visible | related API | none found | none found | keep |
@@ -72,7 +73,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `CheckInputObserver` | model | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/cli_watch.rs:78` | — | keep, hidden |
 | `CheckOpts` | api | visible | data type of `check_with_opts` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `CheckOutput` | api | visible | data type of `check_with_opts` | none found | via check_with_run_warnings → CheckOutput `grund-cli/src/cli_check.rs:111` | keep |
-| `Citation` | model | visible | data type of `Findings` | none found | none found | keep |
+| `Citation` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `CitationCompletion` | queries | visible | data type of `lsp_snapshot_with_completion` | none found | via lsp_snapshot_with_completion → LspSnapshotWithCompletion → LspCompletionContext::complete → CitationCompletion `grund-lsp/src/completion.rs:26` | keep |
 | `citation_under_title` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
 | `CitationDisjunction` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
@@ -106,15 +107,15 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `CoverTextCitation` | api | visible | data type of `cover_text` | none found | none found | keep |
 | `CoverTextEntry` | api | visible | data type of `cover_text` | none found | none found | keep |
 | `CoverTextOutput` | api | visible | data type of `cover_text` | none found | none found | keep |
-| `Declaration` | model | visible | data type of `Findings` | none found | none found | keep |
-| `DeclarationSource` | model | visible | data type of `Findings` | none found | none found | keep |
+| `Declaration` | model | visible | data type of `Catalog` | none found | none found | keep |
+| `DeclarationSource` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `DeclaredId` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
 | `detect_clients` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `DocCommentBlock` | model | visible | data type of `Findings` | none found | none found | keep |
-| `E2eCase` | model | visible | data type of `Findings` | none found | none found | keep |
-| `E2eSpecRef` | model | visible | data type of `Findings` | none found | none found | keep |
+| `DocCommentBlock` | model | visible | data type of `Catalog` | none found | none found | keep |
+| `E2eCase` | model | visible | data type of `Catalog` | none found | none found | keep |
+| `E2eSpecRef` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `effective_config` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/integrations.rs:103` | — | keep |
-| `EmbeddedValueRoot` | model | visible | data type of `Findings` | none found | none found | keep |
+| `EmbeddedValueRoot` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `embedding_call` | api | visible | related API | grund-py `grund-py/src/lib.rs:3`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
 | `EmbeddingRequest` | api | visible | data type of `embedding_call` | grund-py `grund-py/src/lib.rs:3`; grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
 | `expand_target` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
@@ -122,10 +123,10 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `fetch_snapshot_with_run_warnings` | writers | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `FetchFailure` | writers | visible | no | none found | via fetch_snapshot_with_run_warnings → FetchFailure `grund-cli/src/cli_fetch.rs:8` | keep, name in the spec |
 | `FetchFailureKind` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `FileHeading` | model | visible | data type of `Findings` | none found | none found | keep |
-| `FileStructure` | model | visible | data type of `Findings` | none found | none found | keep |
+| `FileHeading` | model | visible | data type of `Catalog` | none found | none found | keep |
+| `FileStructure` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `Finding` | model | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/lib.rs:4` | — | keep |
-| `Findings` | model | visible | named | none found | none found | keep |
+| `Findings` | model | visible | named | none found | none found | retire with the ramp |
 | `FindingSite` | model | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `FmtChange` | api | visible | data type of `format_references` | none found | via format_references → FmtOutput → FmtChange `grund-cli/src/cli_fmt.rs:35` | keep |
 | `FmtOpts` | api | visible | data type of `format_references` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
@@ -137,7 +138,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `GlobalAgentTarget` | writers | visible | no | none found | via GLOBAL_AGENT_INSTRUCTION_TARGETS → GlobalAgentTarget `grund-cli/src/lib.rs:32` | facade, then retire |
 | `Grammar` | grammar | visible | data type of `validate_config` | none found | via Config → Grammar `grund-cli/src/lib.rs:13` | keep |
 | `GRUND_OPEN_RESOLVER` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `Id` | model | visible | data type of `Findings` | none found | none found | keep |
+| `Id` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `IdOpts` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `IdProposal` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `IdProposalOutcome` | api | visible | data type of `propose_id` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
@@ -149,7 +150,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `InitNext` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
 | `InitOpts` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
 | `InitOutput` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, name in the spec |
-| `InlineCitationSite` | model | visible | data type of `Findings` | none found | none found | keep |
+| `InlineCitationSite` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `install_agent_guidance_block` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `install_managed_block` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `install_reference_key` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
@@ -157,7 +158,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `integration_is_current` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `IntegrationClient` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `INTEGRATIONS_BLOCK_VERSION` | grammar | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `InvalidValueSite` | model | visible | data type of `Findings` | none found | none found | keep |
+| `InvalidValueSite` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `KindCitationRules` | config | visible | data type of `validate_config` | none found | via CitationRules → KindCitationRules `grund-cli/src/lib.rs:13` | keep |
 | `KindConfig` | config | visible | data type of `validate_config` | none found | via Config → KindConfig `grund-cli/src/lib.rs:13` | keep |
 | `KindIndex` | config | visible | data type of `validate_config` | none found | via Config → KindConfig → KindIndex `grund-cli/src/lib.rs:13` | keep |
@@ -199,7 +200,7 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `merge_outcomes` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `names_member_id_candidate` | resolver | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | hide |
 | `NamespaceMatch` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `NearMissHeading` | model | visible | data type of `Findings` | none found | none found | keep |
+| `NearMissHeading` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `needs_wezterm_wiring` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `node_embedding_call` | api | visible | related API | grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
 | `node_request` | api | visible | related API | oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
@@ -228,8 +229,8 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `RESOLVER_TARGET` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `scan` | api | visible | named | none found | none found | keep |
 | `scan_user_config` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
-| `SectionHeadingOutsideDeclaration` | model | visible | data type of `Findings` | none found | none found | keep |
-| `SectionInfo` | model | visible | data type of `Findings` | none found | none found | keep |
+| `SectionHeadingOutsideDeclaration` | model | visible | data type of `Catalog` | none found | none found | keep |
+| `SectionInfo` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `ShorthandPolicy` | config | visible | data type of `validate_config` | none found | via Config → ShorthandPolicy `grund-cli/src/lib.rs:13` | keep |
 | `show` | api | visible | named | none found | none found | keep |
 | `show_batch_with_scope` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
@@ -241,17 +242,17 @@ The two count columns do not line up, and they are not meant to: 45 names have n
 | `ShowOutput` | model | visible | data type of `show` | none found | via show_with_scope → ShowOutput `grund-cli/src/cli_show.rs:166` | keep |
 | `ShowQueryError` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `ShowSection` | model | visible | data type of `show` | none found | via show_with_scope → ShowOutput → ShowSection `grund-cli/src/cli_show.rs:166` | keep |
-| `UnmarkedHeading` | model | visible | data type of `Findings` | none found | none found | keep |
+| `UnmarkedHeading` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `usage_clause` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | via lsp_title_hover_body → usage_clause `grund-lsp/src/lib.rs:4` | keep |
 | `usage_over_paths` | queries | visible | no | grund-cli `grund-cli/src/lib.rs:13` | via title_usage → usage_over_paths `grund-lsp/src/lib.rs:4` | keep |
 | `USER_CONFIG_TARGET` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `user_grund_config_path` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `UserConfigScan` | writers | visible | no | none found | via scan_user_config → UserConfigScan `grund-cli/src/cli_integrations_write.rs:230` | facade, then retire |
 | `validate_config` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
-| `ValueBinding` | model | visible | data type of `Findings` | none found | none found | keep |
-| `ValueComponent` | model | visible | data type of `Findings` | none found | none found | keep |
-| `ValueComponentKind` | model | visible | data type of `Findings` | none found | none found | keep |
-| `ValueRootOrigin` | model | visible | data type of `Findings` | none found | none found | keep |
+| `ValueBinding` | model | visible | data type of `Catalog` | none found | none found | keep |
+| `ValueComponent` | model | visible | data type of `Catalog` | none found | none found | keep |
+| `ValueComponentKind` | model | visible | data type of `Catalog` | none found | none found | keep |
+| `ValueRootOrigin` | model | visible | data type of `Catalog` | none found | none found | keep |
 | `VSCODE_EXTENSION_JS` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `vscode_integration_is_current` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `VSCODE_PACKAGE_JSON` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |

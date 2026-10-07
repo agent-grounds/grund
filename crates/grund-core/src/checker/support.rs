@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::grammar::{is_inside_inline_code, render_id, render_qualified_id};
-use crate::model::{Citation, Diagnostic, Findings, Id, sort_path_key};
+use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
 
 /// §FS-check.3.1: the dangling message. A near same-kind ID is a likely typo; a
 /// Markdown inline-code context is a likely illustration. Offer whichever
@@ -10,7 +10,7 @@ use crate::model::{Citation, Diagnostic, Findings, Id, sort_path_key};
 pub(crate) fn dangling_message(
     config: &Config,
     namespace: Option<&str>,
-    findings: &Findings,
+    findings: &Catalog,
     missing: &Id,
     in_inline_code: bool,
 ) -> String {
@@ -35,7 +35,7 @@ pub(crate) fn dangling_message(
 pub(super) fn missing_snapshot_message(
     config: &Config,
     namespace: Option<&str>,
-    findings: &Findings,
+    findings: &Catalog,
     missing: &Id,
     in_inline_code: bool,
     home: &str,
@@ -82,7 +82,7 @@ pub(super) fn citation_in_markdown_inline_code(cite: &Citation) -> bool {
 fn nearest_declared_id(
     config: &Config,
     namespace: Option<&str>,
-    findings: &Findings,
+    findings: &Catalog,
     missing: &Id,
 ) -> Option<String> {
     let missing_text = render_id(&config.grammar, missing);

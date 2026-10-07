@@ -21,7 +21,7 @@ use super::legacy_promotion::promote_qualified_legacy_citations;
 use super::shorthand::resolve_qualified_shorthand_citations;
 use super::unread_block::settled_run_warnings;
 use crate::config::Config;
-use crate::model::{Diagnostic, Findings, TextOverlays};
+use crate::model::{Catalog, Diagnostic, TextOverlays};
 use crate::scanner::{ScanError, scan_tree_with_workspace_overlays};
 use crate::workspace::{
     WorkspaceCitationTarget, expand_workspace_tree, resolve_workspace_config, scope_is_config_root,
@@ -35,7 +35,7 @@ use crate::workspace::{
 pub(crate) struct WorkspaceProject {
     pub(crate) alias: String,
     pub(crate) config: Config,
-    pub(crate) findings: Findings,
+    pub(crate) findings: Catalog,
     pub(crate) scan_errors: Vec<ScanError>,
 }
 

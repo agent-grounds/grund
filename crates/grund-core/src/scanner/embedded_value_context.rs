@@ -6,7 +6,7 @@ use std::path::Path;
 use super::value_context::SourceValueLineContext;
 use crate::config::Config;
 use crate::grammar::{PythonDocstringScanState, source_scan_line};
-use crate::model::{DeclarationSource, Findings, Id, InvalidValueSite, named_section_component};
+use crate::model::{Catalog, DeclarationSource, Id, InvalidValueSite, named_section_component};
 
 pub(crate) const EMBEDDED_VALUE_MARKER: &str = "<!-- grund:value -->";
 
@@ -86,7 +86,7 @@ pub(super) fn normalized_value_lines(
 }
 
 pub(super) fn push_invalid_embedded_marker(
-    findings: &mut Findings,
+    findings: &mut Catalog,
     id: Option<Id>,
     path: &Path,
     line: usize,

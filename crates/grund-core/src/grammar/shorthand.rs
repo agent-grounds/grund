@@ -36,7 +36,7 @@ use std::collections::BTreeMap;
 
 use super::compiled::Grammar;
 use super::ids::{parse_id, parse_id_arg};
-use crate::model::{Citation, Declaration, Findings, Id};
+use crate::model::{Catalog, Citation, Declaration, Id};
 
 /// One parsed ID token: the `Id`, its optional section path, and whether it was
 /// written in the number-only shorthand (§FS-check.1.2). A shorthand `Id` carries
@@ -244,7 +244,7 @@ fn shorthand_index_number(grammar: &Grammar, declared: &Id) -> Option<Option<u32
 /// The escaped citations are resolved too. Without that, `<§>FS-042` escaping a
 /// real declaration is silently exempt from a check that catches
 /// `<§>FS-042-user-login`.
-pub(crate) fn resolve_shorthand_citations(grammar: &Grammar, findings: &mut Findings) {
+pub(crate) fn resolve_shorthand_citations(grammar: &Grammar, findings: &mut Catalog) {
     let pending = |citations: &[Citation]| {
         citations
             .iter()

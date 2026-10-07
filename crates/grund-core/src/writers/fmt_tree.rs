@@ -11,7 +11,7 @@ use super::fmt_rewrite::{FmtLineOpts, rewrite_file};
 use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::{Config, display_path, fmt_excluded};
 use crate::grammar::FMT_DIRECTIVE;
-use crate::model::Findings;
+use crate::model::Catalog;
 use crate::resolver::{ShorthandTargets, WorkspaceContext};
 use crate::scanner::{
     ApiScanError, api_scan_error, walk_scannable_files, walk_scannable_files_reporting,
@@ -88,7 +88,7 @@ pub(crate) struct FmtRunOpts<'a> {
 /// Walk the tree and rewrite each scannable file line by line — never touching a
 /// declaration heading or anything inside a fenced code block (§FS-fmt.2.3) — and
 /// either write the changes back (`--write`) or just collect `(path, line, label)`
-/// for `--check`/dry-run (§FS-fmt.3). `--cross-refs` needs the full `Findings` first
+/// for `--check`/dry-run (§FS-fmt.3). `--cross-refs` needs the full `Catalog` first
 /// so a link is only emitted when its target resolves (§FS-fmt.6.4).
 ///
 /// Why the link pass takes the whole project's declarations and the shorthand
@@ -152,7 +152,7 @@ pub(crate) fn fmt_tree(
     } else {
         None
     };
-    let mut findings: Option<&Findings> = if link_pass {
+    let mut findings: Option<&Catalog> = if link_pass {
         precomputed_findings.or(owned_findings.as_ref().map(CompleteScan::findings))
     } else {
         precomputed_findings

@@ -40,7 +40,7 @@ ENGINE_FORBIDDEN = (
     re.compile(r"\b(?:crate|super(?::super)*)::(?:rules::)?(?:sentence|markdown)\b"),
     re.compile(r"\bcrate::(?:grammar|scanner|resolver|queries|writers)::"),
     re.compile(r"\bstd::(?:fs|path)::"),
-    re.compile(r"\b(?:Path|PathBuf|Findings|Finding|Report|Declaration|Citation|SectionInfo)\b"),
+    re.compile(r"\b(?:Path|PathBuf|Catalog|Findings|Finding|Report|Declaration|Citation|SectionInfo)\b"),
     re.compile(r"\b(?:parse_rule|RuleParser|RuleSentence|sentence|title)\b"),
 )
 ADAPTER_FORBIDDEN = (

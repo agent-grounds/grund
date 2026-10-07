@@ -8,13 +8,13 @@ use super::json::{JsonNode, JsonReader};
 use super::tree::{ScanError, overlay_text};
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
 use crate::config::{Config, KindConfig};
-use crate::model::{DeclarationSource, Findings, TextOverlays, normalize_path_lexically};
+use crate::model::{Catalog, DeclarationSource, TextOverlays, normalize_path_lexically};
 use crate::model::{paths_same_location, physical_path_key, sort_path_key};
 
 pub(super) fn scan_value_json_sources(
     config: &Config,
     overlays: &TextOverlays,
-    findings: &mut Findings,
+    findings: &mut Catalog,
     errors: &mut Vec<ScanError>,
 ) {
     let sources = match value_json_sources(config, overlays) {
@@ -143,7 +143,7 @@ fn enroll_json_root(
     owners: &[&KindConfig],
     text: &str,
     root: JsonNode,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     let JsonNode::Object(members, span) = root else {
         let span = root.span();

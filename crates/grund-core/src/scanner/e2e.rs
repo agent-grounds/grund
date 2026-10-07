@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use crate::config::{Config, root_scope_roots};
 use crate::grammar::{literal_after_kind_placeholder, parse_id_arg};
-use crate::model::{Declaration, DeclarationSource, E2eCase, E2eSpecRef, Findings, Id};
+use crate::model::{Catalog, Declaration, DeclarationSource, E2eCase, E2eSpecRef, Id};
 use crate::model::{format_path, sort_path_key};
 
 /// §FS-config.3.5.8, §FS-check.1.3.6.1: whether the project's *ordinary* walk reads
@@ -36,7 +36,7 @@ pub(super) fn scan_e2e_cases(
     config: &Config,
     scope: Option<&Path>,
     explicit_scope: bool,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) -> Result<()> {
     let Some(kind) = config
         .kinds

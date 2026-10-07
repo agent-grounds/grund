@@ -9,7 +9,7 @@ use super::index::{KindIndexTarget, declarations_under_folder, kind_index_target
 use crate::config::Config;
 use crate::grammar::never_rewrite_context;
 use crate::model::{
-    Citation, Declaration, Findings, Id, is_stub_for_inline_decl, physical_path_key,
+    Catalog, Citation, Declaration, Id, is_stub_for_inline_decl, physical_path_key,
     scanned_decl_relative_path, scanned_path_key,
 };
 use crate::resolver::markdown_link_target;
@@ -29,7 +29,7 @@ pub(crate) struct KindIndexEntries {
 }
 
 impl KindIndexEntries {
-    pub(crate) fn new(findings: &Findings, config: &Config) -> Self {
+    pub(crate) fn new(findings: &Catalog, config: &Config) -> Self {
         let configured_root = scanned_path_key(&config.root);
         let physical_root = physical_path_key(&config.root);
         let targets = kind_index_targets(config);
@@ -109,7 +109,7 @@ impl KindIndexEntries {
 /// Citations are already scanner records; index text is read once per target
 /// solely to inspect the persisted Markdown wrapper and destination.
 fn enroll_external_inline_declarations(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     targets: &[KindIndexTarget<'_>],
     configured_root: &Path,

@@ -1,5 +1,5 @@
 //! The per-file structure a grounding unit is cut out of (§AR-scanner.2.7): the
-//! pass that fills the `FileStructure` records `model` carries on `Findings`
+//! pass that fills the `FileStructure` records `model` carries on `Catalog`
 //! (§AR-system.2.2). The records themselves are plain data and sit there; what
 //! is here is the reading of a file that produces one.
 //!
@@ -20,7 +20,7 @@ use crate::grammar::{
     DocCommentRule, block_is_doc_comment, comment_blocks, doc_comment_rule, first_content_line,
     markdown_fence_delimiter,
 };
-use crate::model::{DocCommentBlock, FileHeading, FileStructure, Findings};
+use crate::model::{Catalog, DocCommentBlock, FileHeading, FileStructure};
 
 /// Record `path`'s grounding structure into `findings`, or do nothing when the
 /// row this file belongs to asks for no unit finer than the file
@@ -30,7 +30,7 @@ pub(super) fn record_file_structure(
     path: &Path,
     text: &str,
     config: &Config,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     // The project-wide answer first: one field read exempts every file of a
     // level-1 tree — every configuration written before the keys existed — from

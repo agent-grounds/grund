@@ -18,7 +18,7 @@ use super::support::{
 };
 use crate::config::{Config, KindResolution, display_path};
 use crate::grammar::render_qualified_id;
-use crate::model::{CheckReport, Diagnostic, Findings};
+use crate::model::{Catalog, CheckReport, Diagnostic};
 use crate::resolver::{
     WorkspaceCheckTarget, join_alternatives, section_resolves, target_for_citation,
 };
@@ -79,7 +79,7 @@ fn full_citation_or_escape(config: &Config, written: &str) -> String {
 /// that made the skip legal rather than at every site (§FS-check.4.9.1). Every other
 /// unknown alias still errors here.
 pub(super) fn check_citation_resolution(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     path_config: &Config,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,

@@ -6,7 +6,7 @@ use super::value_roots::root_binding_finding;
 use crate::config::{Config, kind_uses_values, kind_value_chapter};
 use crate::grammar::render_id;
 use crate::model::{
-    CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Findings, Id, Site, ValueBinding,
+    Catalog, CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, ValueBinding,
     is_stub_for_inline_decl, value_binding_section_ends_in_coordinate, value_components_equal,
 };
 use crate::resolver::{WorkspaceCheckTarget, home_as_scanned};
@@ -16,7 +16,7 @@ use crate::resolver::{WorkspaceCheckTarget, home_as_scanned};
 /// workspace catalog as ordinary citations, and compares only one valid,
 /// unique target: a numbered component, or a root's whole component run.
 pub(super) fn check_values(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     path_config: &Config,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
@@ -153,7 +153,7 @@ pub(super) enum BindingAim<'a> {
 /// duplicate declaration, or a missing component leaves the site to the finding
 /// that owns it, so it is `Inert` here.
 pub(super) fn binding_aim<'a>(
-    findings: &'a Findings,
+    findings: &'a Catalog,
     config: &Config,
     binding: &'a ValueBinding,
 ) -> BindingAim<'a> {
@@ -311,7 +311,7 @@ fn embedded_root_for_binding<'a>(
 }
 
 fn binding_target_reports_invalid_attempt(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     id: &Id,
     section: Option<&str>,
@@ -349,7 +349,7 @@ fn binding_aims_at_declared_chapter(
 /// chapter root's path carrying names and a marked root's subtree reaching
 /// below a component.
 pub(crate) fn binding_aims_at_embedded_value_authority(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     id: &Id,
     section: &str,
@@ -367,7 +367,7 @@ pub(crate) fn binding_aims_at_embedded_value_authority(
 /// marked or chapter root that owns the cited path (§FS-values.2.4,
 /// §FS-values.2.5).
 pub(crate) fn binding_target_has_any_value_authority(
-    findings: &Findings,
+    findings: &Catalog,
     config: &Config,
     id: &Id,
     section: Option<&str>,
@@ -383,7 +383,7 @@ pub(crate) fn binding_target_has_any_value_authority(
 /// value authority an attempt is classified by and `fmt` protects, as it would be
 /// were the target scanned (§FS-check.3.2.1, §FS-values.3.1.1, §FS-values.8).
 fn declarations_as_scanned<'a>(
-    findings: &'a Findings,
+    findings: &'a Catalog,
     config: &'a Config,
     id: &'a Id,
 ) -> impl Iterator<Item = &'a Declaration> {

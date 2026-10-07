@@ -1,5 +1,5 @@
 //! The queries component (§AR-system.2.7): one answer per question, read from
-//! the `Findings` a run already produced — a declaration body (§FS-show), the
+//! the `Catalog` a run already produced — a declaration body (§FS-show), the
 //! citers of an ID (§FS-refs), the catalog (§FS-list), per-file coverage
 //! (§FS-cover), shell completions (§FS-completions), and the editor's hover and
 //! on-type answers (§FS-lsp). A query is the data half: it knows no rendering,

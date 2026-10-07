@@ -13,7 +13,7 @@ use super::value_context::SourceValueLineContext;
 use super::values::{markdown_component, value_declaration_is_in_home};
 use crate::config::Config;
 use crate::model::{
-    EmbeddedValueRoot, Findings, InvalidValueSite, ValueRootOrigin, authored_component,
+    Catalog, EmbeddedValueRoot, InvalidValueSite, ValueRootOrigin, authored_component,
     component_text_is_valid, paths_same_location,
 };
 
@@ -27,7 +27,7 @@ pub(super) fn validate_embedded_value_roots(
     is_py: bool,
     config: &Config,
     source_contexts: Option<&[Option<SourceValueLineContext>]>,
-    findings: &mut Findings,
+    findings: &mut Catalog,
 ) {
     let normalized = normalized_value_lines(text, is_py, config, source_contexts);
 
