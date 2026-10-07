@@ -408,11 +408,16 @@ class FakeRegistries:
 
     `faults` maps (registry, method, package) to a list of HTTP statuses served, in order,
     before normal behavior resumes; `hidden` names packages that accept an upload
-    and never show it. Every request is logged as (method, decoded path)."""
+    and never show it. `refused` names npm packages, or `pypi`, whose token exchange is
+    refused; `grants` maps one to how many exchanges succeed before every later one is.
+    Each exchange issues a new token and only the newest is accepted, so an accepted
+    upload used the last exchange before it. Every request is logged as (method, decoded
+    path)."""
 
     def __init__(self):
         self.npm, self.pypi, self.crates = {}, {}, {}
         self.faults, self.hidden, self.refused, self.log = {}, set(), set(), []
+        self.grants, self.tokens = {}, {}
         self.lock = threading.Lock()
         handler = type("Handler", (_Handler,), {"registries": self})
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -441,6 +446,16 @@ class FakeRegistries:
     def environment(self):
         return {"ACTIONS_ID_TOKEN_REQUEST_URL": f"{self.base}/oidc/token?api-version=2.0",
                 "ACTIONS_ID_TOKEN_REQUEST_TOKEN": "request-token"}
+
+    def issue(self, key, prefix):
+        """A new token for an npm package or `pypi`, or None when the exchange is refused."""
+        with self.lock:
+            if key in self.refused or self.grants.get(key, 1) < 1:
+                return None
+            if key in self.grants:
+                self.grants[key] -= 1
+            self.tokens[key] = f"{prefix}:{len(self.log)}"
+            return self.tokens[key]
 
     def fault(self, registry, method, package):
         with self.lock:
@@ -486,19 +501,21 @@ class _Handler(BaseHTTPRequestHandler):
             return self.reply(200 if ok else 401, {"value": f"oidc:{audience}"})
         if path.startswith("/npm/-/npm/v1/oidc/token/exchange/package/"):
             name = path.rsplit("/package/", 1)[1]
-            if name in r.refused:
+            token = r.issue(name, f"npm-token:{name}")
+            if token is None:
                 return self.reply(403, {"message": f"no trusted publisher for {name}"})
             ok = self.headers.get("Authorization") == "Bearer oidc:npm:registry.npmjs.org"
-            return self.reply(200 if ok else 401, {"token": f"npm-token:{name}"})
+            return self.reply(200 if ok else 401, {"token": token})
         if path.startswith("/npm/"):
             return self.npm(method, path[len("/npm/"):])
         if path == "/pypi/_/oidc/audience":
             return self.reply(200, {"audience": "pypi"})
         if path == "/pypi/_/oidc/mint-token":
             token = json.loads(self.body() or b"{}").get("token")
-            if "pypi" in r.refused or token != "oidc:pypi":
+            token = r.issue("pypi", "pypi-token") if token == "oidc:pypi" else None
+            if token is None:
                 return self.reply(403, {"message": "invalid-publisher"})
-            return self.reply(200, {"success": True, "token": "pypi-token"})
+            return self.reply(200, {"success": True, "token": token})
         if path == "/pypi/legacy/" and method == "POST":
             return self.pypi_upload()
         match = re.fullmatch(r"/pypi/pypi/([^/]+)/([^/]+)/json", path)
@@ -535,7 +552,7 @@ class _Handler(BaseHTTPRequestHandler):
             return self.reply(200, {"name": name, "versions": versions})
         if method != "PUT":
             return self.reply(405, {})
-        if self.headers.get("Authorization") != f"Bearer npm-token:{name}":
+        if self.headers.get("Authorization") != f"Bearer {r.tokens.get(name)}":
             return self.reply(401, {"error": "unauthorized"})
         document = json.loads(self.body())
         version = next(iter(document["versions"]))
@@ -550,7 +567,7 @@ class _Handler(BaseHTTPRequestHandler):
 
     def pypi_upload(self):
         r = self.registries
-        expected = "Basic " + base64.b64encode(b"__token__:pypi-token").decode()
+        expected = "Basic " + base64.b64encode(f"__token__:{r.tokens.get('pypi')}".encode()).decode()
         if self.headers.get("Authorization") != expected:
             return self.reply(403, {"message": "Invalid or non-existent authentication"})
         raw = (f"Content-Type: {self.headers['Content-Type']}\r\n\r\n").encode() + self.body()
