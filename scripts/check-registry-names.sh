@@ -149,7 +149,8 @@ check_claimed_json_name() {
   local registry="$1"
   local name="$2"
   local url="$3"
-  local out="$tmpdir/${registry}-${name}.json"
+  # A scoped npm name carries a slash, which is no file name.
+  local out="$tmpdir/${registry}-${name//\//_}.json"
   local code
 
   code="$(http_get "$url" "$out")"
@@ -204,6 +205,18 @@ check_crates_io_claimed_name "crates.io" "grund" "https://crates.io/api/v1/crate
 check_crates_io_claimed_name "crates.io" "grund-lsp" "https://crates.io/api/v1/crates/grund-lsp"
 check_claimed_json_name "npm" "grund-cli" "https://registry.npmjs.org/grund-cli"
 check_claimed_json_name "npm" "grund-lsp" "https://registry.npmjs.org/grund-lsp"
+# §FS-distribution.1.1: the npm platform packages of §FS-distribution-candidate.2.2,
+# one per registry row, held to the same npm rule.
+check_claimed_json_name "npm" "@grund-cli/linux-x64-gnu" "https://registry.npmjs.org/@grund-cli/linux-x64-gnu"
+check_claimed_json_name "npm" "@grund-cli/linux-arm64-gnu" "https://registry.npmjs.org/@grund-cli/linux-arm64-gnu"
+check_claimed_json_name "npm" "@grund-cli/darwin-x64" "https://registry.npmjs.org/@grund-cli/darwin-x64"
+check_claimed_json_name "npm" "@grund-cli/darwin-arm64" "https://registry.npmjs.org/@grund-cli/darwin-arm64"
+check_claimed_json_name "npm" "@grund-cli/win32-x64-msvc" "https://registry.npmjs.org/@grund-cli/win32-x64-msvc"
+check_claimed_json_name "npm" "@grund-lsp/linux-x64-gnu" "https://registry.npmjs.org/@grund-lsp/linux-x64-gnu"
+check_claimed_json_name "npm" "@grund-lsp/linux-arm64-gnu" "https://registry.npmjs.org/@grund-lsp/linux-arm64-gnu"
+check_claimed_json_name "npm" "@grund-lsp/darwin-x64" "https://registry.npmjs.org/@grund-lsp/darwin-x64"
+check_claimed_json_name "npm" "@grund-lsp/darwin-arm64" "https://registry.npmjs.org/@grund-lsp/darwin-arm64"
+check_claimed_json_name "npm" "@grund-lsp/win32-x64-msvc" "https://registry.npmjs.org/@grund-lsp/win32-x64-msvc"
 check_claimed_json_name "pypi" "grund" "https://pypi.org/pypi/grund/json"
 check_claimed_json_name "pypi" "grund-lsp" "https://pypi.org/pypi/grund-lsp/json"
 
