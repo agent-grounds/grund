@@ -126,16 +126,6 @@ The ceiling moved 475 -> 477 when the file went beside the code it pins (§AR-co
 """
 
 [[exceptions]]
-path = "crates/grund-core/src/grammar/compiled.rs"
-match = "exact"
-rules = ["core-source"]
-kind = "deferred"
-max_accepted = { value = 382, unit = "lines" }
-until = "the heading-text reduction and the managed-block markers leave, so this file is the compiled grammar and nothing else"
-reason = """
-The compiled ID grammar: `Grammar::build` turning `[id] format`, the kinds and the comment prefixes into one set of regexes. It is the module's grammar file since `grammar` became a Rust module (§AR-system.2.1): the per-line readers — the comment-prefix alternation and the Python-docstring normalization of §AR-scanner.4 — left with the move, into `grammar/source_line.rs`, which was the boundary the previous entry named, and the three `[scan]` defaults left for config.rs because they are config defaults rather than grammar. That took the ceiling 411 -> 387 even after the explicit imports a module costs. What is left over the budget is two groups that are not the grammar either: the heading-text reduction a renderer's anchor is slugged from (§DF-github-anchor-fidelity) and the managed-block delimiters of §FS-init.2.3, both regexes over text that `Grammar::build` never reads. Missing boundary: each of those as its own file. Not taken with the module move, because a component's first commit moves files rather than inventing them. The ceiling moved 387 -> 388 when the scanner became a module (§AR-system.2.5) and two of this component's own items came down out of scanner files — `LegacyGrammar` to grammar/near_miss.rs and the `{kind}` literal reader of the `[id] format` template to grammar/id_format.rs: one more import line, no more logic. It moved 388 -> 382 when `Grammar::build` stopped taking `[[kinds]]` rows and started taking the citable names and formats as plain values (§AR-system.2.1): the `citable` filter this file repeated at five places is config's now, applied once where the list is built.
-"""
-[[exceptions]]
 path = "crates/grund-core/src/checker/tests_citation_directions.rs"
 match = "exact"
 rules = ["tests"]
