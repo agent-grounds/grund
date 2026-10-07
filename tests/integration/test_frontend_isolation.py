@@ -12,8 +12,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ENGINE = "grund-core"
-FRONTENDS = {"grund", "grund-lsp", "grund-py"}
+FRONTENDS = {"grund", "grund-lsp", "grund-py", "grund-node"}
 LSP_TRANSPORT = {"lsp-server", "lsp-types"}
+NODE_RUNTIME = {"napi", "napi-sys", "napi-derive", "nodejs"}
 
 
 class Graph:
@@ -73,7 +74,7 @@ class FrontendIsolationTests(unittest.TestCase):
     def test_the_engine_depends_on_no_frontend(self):
         self.assertEqual(
             set(),
-            self.graph.closure(ENGINE) & (FRONTENDS | LSP_TRANSPORT),
+            self.graph.closure(ENGINE) & (FRONTENDS | LSP_TRANSPORT | NODE_RUNTIME),
             "grund-core is the engine every frontend depends on, and depends on none of them",
         )
 
@@ -93,6 +94,18 @@ class FrontendIsolationTests(unittest.TestCase):
         for member in self.graph.member_id:
             if member != "grund-integration-tests":
                 self.assertNotIn("grund-integration-tests", self.graph.closure(member))
+
+    def test_the_node_frontend_is_a_resolved_napi_engine_adapter(self):
+        self.assertIn("grund-node", self.graph.member_id,
+                      "the supported Node embedding frontend is absent")
+        self.assertIn(ENGINE, self.graph.direct("grund-node"))
+        self.assertIn("napi", self.graph.direct("grund-node"))
+        self.assertEqual(set(), self.graph.closure("grund-node") &
+                         ({"grund", "grund-lsp", "grund-py"} | LSP_TRANSPORT))
+
+    def test_cli_and_lsp_need_no_node_runtime(self):
+        for member in ("grund", "grund-lsp"):
+            self.assertEqual(set(), self.graph.closure(member) & NODE_RUNTIME)
 
 
 if __name__ == "__main__":
