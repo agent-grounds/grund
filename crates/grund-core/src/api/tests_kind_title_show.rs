@@ -1,5 +1,6 @@
 //! Target-kind metadata on every successful show form (§FS-config.3.4.3,
-//! §FS-output-shapes.4, §FS-output-shapes.4.1, §FS-show.2.4).
+//! §FS-output-shapes.4, §FS-output-shapes.4.1, §FS-show.2.4), beside the heading anchor
+//! that always precedes the closing location pair (§FS-show.3.1.3.1).
 
 use super::*;
 use crate::model::json_escape;
@@ -55,7 +56,7 @@ fn kind_title_show_modes_preserve_bodies_and_terminal_location_pair() {
             (
                 ShowMode::Toc,
                 "Lead.\n\n## 1. Detail\n",
-                ",\"sections\":[{\"path\":\"1\",\"title\":\"Detail\",\"depth\":1}]",
+                ",\"sections\":[{\"path\":\"1\",\"title\":\"Detail\",\"depth\":1,\"anchor\":\"1-detail\"}]",
             ),
         ] {
             let shown = read(&root, "FS-authored", mode, ShowFormat::Json);
@@ -63,7 +64,7 @@ fn kind_title_show_modes_preserve_bodies_and_terminal_location_pair() {
             assert_eq!(
                 shown.json.unwrap(),
                 format!(
-                    "{{\"id\":\"FS-authored\",\"section\":null,\"body\":\"{}\"{sections}{metadata},\"path\":\"docs/FS-authored.md\",\"line\":1}}",
+                    "{{\"id\":\"FS-authored\",\"section\":null,\"body\":\"{}\"{sections}{metadata},\"anchor\":\"fs-authored-authored-title\",\"path\":\"docs/FS-authored.md\",\"line\":1}}",
                     json_escape(body)
                 )
             );
@@ -77,7 +78,7 @@ fn kind_title_show_modes_preserve_bodies_and_terminal_location_pair() {
             assert_eq!(
                 section.json.unwrap(),
                 format!(
-                    "{{\"id\":\"FS-authored\",\"section\":\"1\",\"body\":\"{}\"{section_map}{metadata},\"path\":\"docs/FS-authored.md\",\"line\":5}}",
+                    "{{\"id\":\"FS-authored\",\"section\":\"1\",\"body\":\"{}\"{section_map}{metadata},\"anchor\":\"1-detail\",\"path\":\"docs/FS-authored.md\",\"line\":5}}",
                     json_escape(section_body)
                 )
             );
@@ -104,7 +105,7 @@ fn kind_title_show_uses_effective_defaults() {
         read(&root, "FS-authored", ShowMode::Lead, ShowFormat::Json)
             .json
             .unwrap(),
-        "{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\",\"kind_title\":\"What: behavior, requirements, and constraints\",\"path\":\"requirements.md\",\"line\":1}"
+        "{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\",\"kind_title\":\"What: behavior, requirements, and constraints\",\"anchor\":\"fs-authored-authored\",\"path\":\"requirements.md\",\"line\":1}"
     );
 }
 
@@ -178,7 +179,7 @@ fn kind_title_show_e2e_and_json_values_keep_their_alternate_shapes() {
             assert_eq!(
                 e2e.json.unwrap(),
                 format!(
-                    "{{\"id\":\"E2E-login\",\"kind\":\"E2E\",\"path\":\"cases/login\",\"args\":[\"check\",\"--format\",\"json\",\"repo\"],\"expected_exit\":0,\"fixtures\":[\"command.args\",\"expected.exit\"]{metadata}}}"
+                    "{{\"id\":\"E2E-login\",\"kind\":\"E2E\",\"path\":\"cases/login\",\"args\":[\"check\",\"--format\",\"json\",\"repo\"],\"expected_exit\":0,\"fixtures\":[\"command.args\",\"expected.exit\"],\"anchor\":null{metadata}}}"
                 )
             );
             for (id, section, body) in [
@@ -195,7 +196,7 @@ fn kind_title_show_e2e_and_json_values_keep_their_alternate_shapes() {
                 assert_eq!(
                     shown.json.unwrap(),
                     format!(
-                        "{{\"id\":\"CONST-price\",\"section\":{section},\"body\":\"{}\"{map}{metadata},\"path\":\"values/data.json\",\"line\":2}}",
+                        "{{\"id\":\"CONST-price\",\"section\":{section},\"body\":\"{}\"{map}{metadata},\"anchor\":null,\"path\":\"values/data.json\",\"line\":2}}",
                         json_escape(body)
                     )
                 );
@@ -261,7 +262,7 @@ fn kind_title_show_workspace_and_batch_select_each_targets_title() {
             .map(|title| format!(",\"kind_title\":\"{title}\""))
             .unwrap_or_default();
         let expected = format!(
-            "{{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\"{metadata},\"path\":\"{prefix}docs/FS-authored.md\",\"line\":1}}"
+            "{{\"id\":\"FS-authored\",\"section\":null,\"body\":\"Lead.\\n\"{metadata},\"anchor\":\"fs-authored-authored\",\"path\":\"{prefix}docs/FS-authored.md\",\"line\":1}}"
         );
         assert_eq!(records[index].result.as_ref().unwrap(), &expected);
         assert_eq!(
