@@ -24,7 +24,7 @@ grund cover <file> --lines <N>|<N>-<M> [--lines …] [--format text|json]
 
 ### 1.1 An unsupported `--format` is answered before the load
 
-A `--format` value outside `text|json` is a usage error the caller can fix without touching the repository, so it is answered **before anything is loaded**: the scan can fail first ([§FS-cover.4](FS-cover.md#4-exit-codes)), and which of two errors a caller sees must not depend on the tree they happened to point at. A `[output] format` key carrying an unsupported value is a property of the tree, so it is reported after the load, like any other config fault.
+A `--format` value outside `text|json` is a usage error the caller can fix without touching the repository, so it is answered **before anything is loaded**: the scan can fail first ([§FS-cover.4](FS-cover.md#4-exit-codes)), and which of two errors a caller sees must not depend on the tree they happened to point at. A `[output] format` key carrying an unsupported value is a property of the tree, so it is reported after the load, like any other config fault. Every command answers a bad run flag this way ([§FS-cli.3.5](FS-cli.md#35-a-bad-run-flag-is-answered-before-the-load)); `cover` is where the rule was first stated.
 
 ## 2. Behaviour
 

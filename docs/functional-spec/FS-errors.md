@@ -18,7 +18,7 @@ verdict), [§FS-terms.terms.6](FS-terms.md#terms6-rules-and-directions) (rule), 
 - **code catalog** — The sorted, published set of `check` finding codes. A compound of this
   file's own: it is not the declaration catalog.
 - **report base** — The directory every `path` in a report is rendered against, selected by
-  `relative_paths`.
+  `--path-base` when it is passed, else by `relative_paths`.
 
 ## 1. Streams
 
@@ -55,7 +55,7 @@ A finding that points at a specific source site:
 <path>:<line>: <channel>: <message>
 ```
 
-- `<path>` is rendered against the report base that `relative_paths` selects ([§FS-config.3.6](FS-config.md#36-output--report-format)).
+- `<path>` is rendered against the report base that `--path-base` selects, else `relative_paths` ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from), [§FS-config.3.6](FS-config.md#36-output--report-format)).
 - `<line>` is 1-indexed.
 - `<channel>` is the lowercase `error`, `warning`, or `suggestion` prefix used
   by `grund check`; other commands omit it.

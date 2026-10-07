@@ -1,0 +1,1 @@
+check --path-base=invocation tests/e2e/cases/path-base-invocation-equals-relative-paths-false/repo/sub

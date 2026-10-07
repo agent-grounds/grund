@@ -39,6 +39,10 @@ second base.
 
 ## 4. Consequences
 
+- One base, two ways to reach it: the run flag `--path-base=invocation`
+  ([§FS-cli.3.4](../../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from)) selects this same CLI base, with the same bounded `..`
+  spellings, without committing the key, and `--path-base=project` returns a
+  run to the root-relative base even where the key says otherwise.
 - Default `relative_paths = true` reports remain workspace-root-relative.
 - In-base `relative_paths = false` spellings remain unchanged.
 - Workspace aggregation may add `..`, but only to reach a target still inside

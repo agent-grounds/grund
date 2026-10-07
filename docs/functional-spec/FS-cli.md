@@ -77,6 +77,17 @@ Where a user guide or a runnable example covers the command, its page ends with 
 ## 3. Cross-subcommand flags
 
 - `--format text|json` — accepted by the subcommands with a machine-readable result or finding surface ([§FS-errors.5](FS-errors.md#5-json-format) lists them, [§FS-integrations.5](FS-integrations.md#5-json-format)). `text` is the default; `json` opts into the stable machine shapes, on the streams of [§FS-cli.3.1](FS-cli.md#31-the---format-json-streams). It is not a global flag: the operational commands [§FS-errors.5](FS-errors.md#5-json-format) lists, whose output is human text or generated files, reject `--format`.
+- `--path-base project|invocation` — the report base every rendered path is spelled from ([§FS-cli.3.4](FS-cli.md#34---path-base--where-report-paths-are-spelled-from)). `project` is the default.
+- Both are **run flags**: a caller's choice for this one run, written after the subcommand as `--flag value` or `--flag=value`. When one is passed it outranks the v1 `[output]` key that sets the same default for the tree ([§FS-config.3.6](FS-config.md#36-output--report-format)), so the precedence is flag, then key, then default. A bad value of either is answered before anything is loaded ([§FS-cli.3.5](FS-cli.md#35-a-bad-run-flag-is-answered-before-the-load)).
+
+  | command | `--format` | honours v1 `[output] format` | `--path-base` |
+  |---|---|---|---|
+  | `check` (incl. `--watch`), `list`, `refs`, `cover` | `text\|json` | yes | yes |
+  | `show` (incl. `--batch` and the bare-ID form), `id`, `integrations` | `text\|json` | no — the key never reached them, and a tree that commits `format = "json"` must not change their bytes on upgrade ([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered)) | yes |
+  | `fmt`, `config validate`, `config show` | rejected | — | yes: they render paths and config-load errors |
+  | `init`, `fetch`, `completions`, `agent-setup-instructions` | rejected | — | rejected |
+
+  A rejected flag is a CLI-level error of the command's own flag rules — `unknown flag`, or `agent-setup-instructions takes no arguments` — as today, per [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location). `fmt` and `config` gain no JSON surface here: designing one is their own spec's business ([§FS-errors.5](FS-errors.md#5-json-format)). The inert `[output] color` key gets no run-flag counterpart and there is no `--color`.
 - A path argument, when a subcommand takes one, defaults to `.` and is resolved the same way everywhere (config discovery walks up from it — [§FS-config.1](FS-config.md#1-file-location-and-discovery)). Every path-taking subcommand accepts at most one ([§FS-cli.3.2](FS-cli.md#32-at-most-one-path)).
 - `--only <code>`, `--ignore <code>`, and the boolean `--only-rule` are `check`-only finding-query flags ([§FS-check.1](FS-check.md#1-inputs)); other subcommands reject them. The `check` help page documents them ([§FS-cli.3.3](FS-cli.md#33-the-check-selector-help)).
 
@@ -95,6 +106,32 @@ The `check` help page documents both `--flag value` and `--flag=value`, repetiti
 It documents the third selector on the same footing: that `--only-rule` narrows the report to what the `--rule` sentence authored rather than by code, that the axes intersect, that it refuses with `error: --only-rule requires --rule` when no trial sentence was given, and that a `should`-level sentence also needs `--suggestions` to be seen ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A selector reachable only from the specification is not discoverable at a terminal, which is where a sentence gets tried.
 
 The same help documents `--watch [<path>]`, an example of the immediate-check/every-save loop, recoverable config/read errors, last-completed-status interruption and pre-first-completion/fatal-watcher status `2` ([§FS-check.6.3](FS-check.md#63-lifecycle)). It links the public watch guide for native-backend and notification-silent-filesystem limits, terminal/redirection behavior and invisible clean JSON runs ([§FS-check.6.1](FS-check.md#61-change-detection), [§FS-check.6.2](FS-check.md#62-each-run-is-a-plain-grund-check)). Help and captured README examples must describe working behavior; a future transcript must be captured after implementation, not invented while specifying the feature.
+
+### 3.4 `--path-base` — where report paths are spelled from
+
+`--path-base=project|invocation` selects the report base ([§FS-errors.terms](FS-errors.md#terms-terms)) for the whole run:
+
+- **`project`** (the default) — relative to the config root the run resolved against, the workspace root when a workspace is loaded. This is what v1 `[output] relative_paths = true` gives.
+- **`invocation`** — relative to the path you passed, or the current directory if you passed none: the path argument itself when it is a directory, its parent directory when it is a file, else the working directory. This is the CLI base of [§FS-config.3.6.1](FS-config.md#361-relative_paths--false--the-cli-base), so `--path-base=invocation` prints byte for byte what `[output] relative_paths = false` prints today, including the bounded `..` components of [§DF-cli-base-parent-paths](../decisions/functional/DF-cli-base-parent-paths.md#df-cli-base-parent-paths-relative_paths--false-keeps-one-cli-base-and-may-climb-within-the-loaded-root). It is not the literal working directory: `cd / && grund check /abs/ws/src/lib.rs` reports `lib.rs`, never a path that climbs out of the loaded root, which [§FS-errors.4](FS-errors.md#4-determinism) forbids.
+
+**One base for the whole run.** The flag sets the base for every project the run loads, members included: a workspace whose root and member disagree on `relative_paths` reports from the one base the flag names. It applies to every rendered path — the primary `<path>` of a text finding, the paths inside its message, JSON `path` and `sites[].path`, the `error: <path>: <reason>` line of a per-file scan failure ([§FS-workspace.8.7.3](FS-workspace.md#873-paths)), and the config file named by a config-load error ([§FS-errors.2](FS-errors.md#2-the-fixed-shapes)), which is the one path a config key can never move, because the key is read only after that config loaded. `check --watch` applies it on every rerun.
+
+**Relation to the key.** When the flag is absent, the v1 `[output] relative_paths` key decides, exactly as before ([§FS-config.3.6](FS-config.md#36-output--report-format)). When the flag is present it wins: `--path-base=project` overrides a committed `relative_paths = false`, and `--path-base=invocation` overrides the default.
+
+**Help.** The help page of every command that takes the flag shows it with both values defined in the words above, and names `--path-base=invocation` as the replacement for `[output] relative_paths = false`; the commands that honour `[output] format` name `--format json` as its replacement the same way.
+
+### 3.5 A bad run flag is answered before the load
+
+An unsupported `--format` or `--path-base` value is a usage error the caller can fix without touching the repository, so every command answers it **before anything is loaded** — before config discovery, before a member's `grund.toml` is read, before any scan — on stderr with empty stdout and exit `2`, regardless of the other flag's value:
+
+```
+$ grund list --format bogus
+error: unsupported list format `bogus`
+$ grund check --path-base=x
+error: unsupported path base `x` (expected project or invocation)
+```
+
+Which of two errors a caller sees must not depend on the tree they happened to point at: `grund list --format bogus` in a tree whose `grund.toml` is broken reports the flag, as `check`, `cover`, `show` and `id` already do. A `[output] format` or `relative_paths` key carrying an unsupported value is a property of the tree, so it is reported after the load, like any other config fault. [§FS-cover.1.1](FS-cover.md#11-an-unsupported---format-is-answered-before-the-load) is this rule as `cover` first stated it.
 
 ## 4. Errors with no source location
 
@@ -121,7 +158,7 @@ $ grund --format json refs FS-cli
 error: --format follows the subcommand: grund refs --format json FS-cli
 ```
 
-- **Which word is the subcommand.** The leading flags are skipped together with the values of the value-taking `show` flags (`--format`, `--section`, `--path`), written either as a separate word or as `--flag=value`; the first word left is the one tested. Any leading flag counts, not only `--format`: `grund --brief list` is refused the same way.
+- **Which word is the subcommand.** The leading flags are skipped together with the values of the value-taking flags (`--format`, `--path-base`, `--section`, `--path`), written either as a separate word or as `--flag=value`; the first word left is the one tested. Any leading flag counts, not only `--format`: `grund --brief list` is refused the same way. So is `grund --path-base invocation list`, which names `grund list --path-base invocation`; `--path-base` is counted as value-taking so that its value is never mistaken for the ID of a default `show` query.
 - **What the message names.** The first leading flag as written, without its value, then the corrected command: `grund`, the subcommand, every leading argument in the order and spelling it was written (values included), then the arguments that followed the subcommand, joined by single spaces. The error is about placement only: the corrected command may still be refused by that subcommand's own flag rules.
 - **How it is reported.** Stderr, empty stdout, exit `2`, regardless of `--format`, before config discovery or any scan, like every other error here.
 - **What stays valid.** A leading flag before a word that is not a known subcommand is the default `show` query of [§FS-cli.1](FS-cli.md#1-the-default-subcommand), unchanged: `grund --format json FS-cli` reads `FS-cli` as JSON and exits `0`, and a word that is no ID stays the exit-`1` query failure of [§FS-cli.1.2](FS-cli.md#12-a-first-word-that-is-not-an-id). No name that collides with a subcommand could ever have resolved as an ID there, so nothing that worked before this rule stops working.
