@@ -3,10 +3,13 @@ use crate::checker::file_declares_inline_home;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
-    Declaration, DeclarationSource, Findings, Id, ShowOutput, ShowRenderMode, TextOverlays,
-    format_path, json_escape, paths_same_location, resolve_stub_target,
+    Declaration, DeclarationSource, Findings, Id, SectionInfo, ShowOutput, ShowRenderMode,
+    TextOverlays, format_path, json_escape, paths_same_location, resolve_stub_target,
 };
-use crate::resolver::{extract_declaration_body, show_e2e_case};
+use crate::resolver::{
+    extract_declaration_body, heading_anchor, section_site_anchor, show_e2e_case,
+    takes_heading_anchor,
+};
 use anyhow::{Result, anyhow};
 
 #[cfg(test)]
@@ -201,6 +204,7 @@ fn show_json_value(
 pub(crate) fn render_show_output_json(
     config: &Config,
     path_config: &Config,
+    findings: &Findings,
     id: &Id,
     section: Option<&str>,
     mode: ShowRenderMode,
@@ -212,6 +216,7 @@ pub(crate) fn render_show_output_json(
     if let Some(json) = &output.json {
         return json.clone();
     }
+    let anchors = ShowAnchors::of(config, findings, id, section, output);
     let mut extra = String::new();
     if matches!(mode, ShowRenderMode::Toc) {
         extra.push_str(",\"sections\":[");
@@ -219,12 +224,14 @@ pub(crate) fn render_show_output_json(
             &output
                 .sections
                 .iter()
-                .map(|section| {
+                .zip(&anchors.sections)
+                .map(|(section, anchor)| {
                     format!(
-                        "{{\"path\":\"{}\",\"title\":\"{}\",\"depth\":{}}}",
+                        "{{\"path\":\"{}\",\"title\":\"{}\",\"depth\":{},\"anchor\":{}}}",
                         json_escape(&section.path),
                         json_escape(&section.title),
-                        section.depth
+                        section.depth,
+                        json_anchor(anchor.as_deref())
                     )
                 })
                 .collect::<Vec<_>>()
@@ -242,6 +249,8 @@ pub(crate) fn render_show_output_json(
     {
         extra.push_str(&format!(",\"kind_title\":\"{}\"", json_escape(title)));
     }
+    // §FS-show.3.1.3.1: the heading anchor always precedes the closing location pair.
+    extra.push_str(&format!(",\"anchor\":{}", json_anchor(anchors.selected.as_deref())));
     format!(
         "{{\"id\":\"{}\",\"section\":{},\"body\":\"{}\"{},\"path\":\"{}\",\"line\":{}}}",
         json_escape(&render_id(&config.grammar, id)),
@@ -254,4 +263,84 @@ pub(crate) fn render_show_output_json(
         json_escape(&display_path(path_config, &output.path)),
         output.line,
     )
+}
+
+fn json_anchor(anchor: Option<&str>) -> String {
+    match anchor {
+        Some(anchor) => format!("\"{}\"", json_escape(anchor)),
+        None => "null".to_string(),
+    }
+}
+
+/// The heading anchors a JSON show object carries (§FS-show.3.1.3.1): the
+/// selected coordinate's, and one per `--toc` entry in the entries' order. Each
+/// is the fragment `fmt --cross-refs` derives under the target project's profile
+/// (`config`), or `None` where the site has no heading anchor — a source or JSON
+/// home, or the `none` profile. Derived from the file the body was read out of,
+/// so a stub reports its target's (null for source) and never its own heading.
+struct ShowAnchors {
+    selected: Option<String>,
+    sections: Vec<Option<String>>,
+}
+
+impl ShowAnchors {
+    fn of(
+        config: &Config,
+        findings: &Findings,
+        id: &Id,
+        section: Option<&str>,
+        output: &ShowOutput,
+    ) -> Self {
+        let none = || Self {
+            selected: None,
+            sections: vec![None; output.sections.len()],
+        };
+        if !takes_heading_anchor(&output.path, config) {
+            return none();
+        }
+        let Some(decl) = findings.declarations.get(id).and_then(|decls| {
+            decls
+                .iter()
+                .find(|decl| !decl.is_stub && paths_same_location(&decl.file, &output.path))
+        }) else {
+            return none();
+        };
+        // §FS-show.3.1.3.1: each `--toc` entry anchors on its own heading site.
+        // The entries are the recorded sites after the selected heading, in
+        // document order; a path the cursor cannot place falls back to the map.
+        let mut sites: Vec<(&str, &SectionInfo)> = decl
+            .sections
+            .iter()
+            .map(|(path, info)| (path.as_str(), info))
+            .chain(
+                decl.duplicate_sections
+                    .iter()
+                    .map(|(path, info)| (path.as_str(), info)),
+            )
+            .filter(|(_, info)| info.line > output.line)
+            .collect();
+        sites.sort_by_key(|(_, info)| info.line);
+        let mut cursor = 0;
+        let sections = output
+            .sections
+            .iter()
+            .map(|entry| {
+                let site = match sites[cursor..]
+                    .iter()
+                    .position(|(path, _)| *path == entry.path)
+                {
+                    Some(offset) => {
+                        cursor += offset + 1;
+                        Some(sites[cursor - 1].1)
+                    }
+                    None => decl.sections.get(&entry.path),
+                };
+                site.map(|site| section_site_anchor(site, config))
+            })
+            .collect();
+        Self {
+            selected: heading_anchor(&output.path, decl, id, section, config),
+            sections,
+        }
+    }
 }

@@ -77,8 +77,10 @@ pub(crate) fn show_e2e_case(
         .and_then(|kind| kind.title.as_deref())
         .map(|title| format!(",\"kind_title\":\"{}\"", json_escape(title)))
         .unwrap_or_default();
+    // §FS-show.2.4.2: a case directory has no heading, so `anchor` is null, after
+    // `fixtures` and before the optional closing `kind_title`.
     let json = format!(
-        "{{\"id\":\"{}\",\"kind\":\"E2E\",\"path\":\"{}\",\"args\":[{}],\"expected_exit\":{},\"fixtures\":[{}]{}}}",
+        "{{\"id\":\"{}\",\"kind\":\"E2E\",\"path\":\"{}\",\"args\":[{}],\"expected_exit\":{},\"fixtures\":[{}],\"anchor\":null{}}}",
         json_escape(&render_id(&config.grammar, id)),
         // path_config, not config: an `<alias>/E2E-x` shown from a workspace
         // root must report the same root-relative path as every other kind

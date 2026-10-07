@@ -21,7 +21,9 @@ use crate::grammar::{
     PythonDocstringScanState, anchor_slug, declaration_id_on_line, reduce_heading_text, render_id,
     section_anchor_text, section_path, source_scan_line,
 };
-use crate::model::{Declaration, Findings, Id, is_stub_for_inline_decl, resolve_stub_target};
+use crate::model::{
+    Declaration, Findings, Id, SectionInfo, is_stub_for_inline_decl, resolve_stub_target,
+};
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
 /// home file — following an inline-spec stub to its real source file — plus a
@@ -69,22 +71,54 @@ pub(crate) fn markdown_link_target_with_root(
         Some(root) => relative_url_under(from_file, &home, root),
         None => relative_url(from_file, &home, config),
     };
-    let is_md = home.extension().and_then(|e| e.to_str()) == Some("md");
-    if !is_md || config.cross_ref_anchor_format == "none" {
+    if !takes_heading_anchor(&home, config) {
         return Some(rel);
     }
+    let anchor = heading_anchor(&home, home_decl, id, section, config)?;
+    Some(format!("{}#{}", rel, anchor))
+}
+
+/// Whether a link into `home` carries a heading anchor at all: only a Markdown
+/// home does, and not under the `none` profile (§FS-fmt.6.2, §FS-fmt.6.7.1).
+/// `show --format=json` asks the same question for its `anchor` field, so a
+/// `null` there is exactly a bare file link here (§FS-show.3.1.3.1).
+pub(crate) fn takes_heading_anchor(home: &Path, config: &Config) -> bool {
+    home.extension().and_then(|e| e.to_str()) == Some("md")
+        && config.cross_ref_anchor_format != "none"
+}
+
+/// The heading anchor, without its `#`, of `decl` in its Markdown `home`: the
+/// cited section's heading for a `.<section>` coordinate, the declaration's own
+/// heading for a bare ID (§FS-fmt.6.2, §DF-md-link-anchor-strategy,
+/// §DF-declaration-anchor). The one derivation `fmt --cross-refs` writes and
+/// `show --format=json` reports, so the two cannot drift (§FS-show.3.1.3.1).
+/// `None` when the section's heading cannot be found. The caller has already
+/// checked `takes_heading_anchor`.
+pub(crate) fn heading_anchor(
+    home: &Path,
+    decl: &Declaration,
+    id: &Id,
+    section: Option<&str>,
+    config: &Config,
+) -> Option<String> {
     let heading = match section {
-        Some(sec) => home_decl
+        Some(sec) => decl
             .sections
             .get(sec)
             .map(|section| section.title.clone())
-            .or_else(|| section_heading_text(&home, id, sec, config).ok().flatten())?,
+            .or_else(|| section_heading_text(home, id, sec, config).ok().flatten())?,
         // §DF-declaration-anchor: a bare-ID citation to a Markdown home links to
         // that declaration's own heading anchor, not just the file.
-        None => declaration_heading_text(home_decl, config),
+        None => declaration_heading_text(decl, config),
     };
-    let anchor = anchor_slug(&heading, &config.cross_ref_anchor_format);
-    Some(format!("{}#{}", rel, anchor))
+    Some(anchor_slug(&heading, &config.cross_ref_anchor_format))
+}
+
+/// The anchor of one recorded section heading site, from the heading text the
+/// scanner stored for it (§FS-show.3.1.3.1): each `--toc` entry reads its own
+/// site, so a duplicated path still carries the anchor of the heading listed.
+pub(crate) fn section_site_anchor(site: &SectionInfo, config: &Config) -> String {
+    anchor_slug(&site.title, &config.cross_ref_anchor_format)
 }
 
 /// The text content of a Markdown declaration's `# <ID>: <title>` heading — the

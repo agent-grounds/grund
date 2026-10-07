@@ -87,7 +87,10 @@ pub(crate) use context::{
 };
 pub(crate) use e2e_body::show_e2e_case;
 pub(crate) use id_candidates::{join_alternatives, with_member_id_candidates};
-pub(crate) use link_targets::{markdown_link_target, markdown_link_target_with_root};
+pub(crate) use link_targets::{
+    heading_anchor, markdown_link_target, markdown_link_target_with_root, section_site_anchor,
+    takes_heading_anchor,
+};
 pub(crate) use point_body::point_body_pair;
 pub(crate) use shorthand::{
     ShorthandTargets, expand_shorthand_citations_with_origins, shorthand_token_expansion,
