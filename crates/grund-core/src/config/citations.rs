@@ -48,7 +48,7 @@ pub struct CitationTarget {
 
 /// One `[citations]` array entry — a disjunction of targets joined by `|`
 /// (§FS-config.3.9.1.1). Satisfied by a citation matching any one target.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CitationDisjunction {
     pub targets: Vec<CitationTarget>,
 }
@@ -57,7 +57,7 @@ pub struct CitationDisjunction {
 /// are obligations checked per declaration; `should_not` / `must_not` are
 /// prohibitions checked per citation site; `may` is an explicit permission that
 /// punches a hole in a stricter `default`.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct KindCitationRules {
     pub default: Option<CitationLevel>,
     pub must: Vec<CitationDisjunction>,
@@ -70,7 +70,7 @@ pub struct KindCitationRules {
 /// The parsed `[citations]` section (§FS-config.3.9): the global default level
 /// and the per-citing-kind rule tables. `declared` records whether the section
 /// was present at all — absent means no direction checks run.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct CitationRules {
     pub declared: bool,
     pub global_default: Option<CitationLevel>,

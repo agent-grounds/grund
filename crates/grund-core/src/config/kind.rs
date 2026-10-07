@@ -8,7 +8,7 @@ use super::record::Config;
 /// every declaration of this kind must live in that exact file — a *single-file
 /// kind*, used by `GRUND`/`GOAL`/`RM` whose IDs all live in one document
 /// (`docs/grund.md`, `docs/goals.md`, `docs/roadmap.md`).
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct KindConfig {
     /// The `kind` key (§FS-config.3.4) — the name `[citations.<kind>]` keys on,
     /// and, for a citable kind, the literal prefix of every ID in it. Spelled
