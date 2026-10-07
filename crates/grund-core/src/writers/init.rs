@@ -241,6 +241,7 @@ fn init_run(
         render_agents_append_block(
             &resolved_name,
             init_config.project(),
+            init_config.run(),
             init_config.compiled(),
             &workspace_members,
             surface,

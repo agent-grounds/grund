@@ -54,6 +54,39 @@ fn citation_directions_drift_is_reported() {
     );
 }
 
+// §FS-check.3.5 / §FS-check.3.6: the grounding sentence renders from the effective
+// value, so a block written without `require_grounding` drifts under
+// `check --require-grounding`, as it did before the concern split (§AR-config.5).
+#[test]
+fn require_grounding_flag_reports_grounding_sentence_drift() {
+    let root = test_root("require_grounding_flag_reports_grounding_sentence_drift");
+    write(
+        &root.join("grund.toml"),
+        "[citations]\n[citations.e2e]\nmust = [\"FS\"]\n",
+    );
+    let mut config = load_config(&root).expect("load config");
+    let fresh =
+        render_agents_append_block_at("demo", &config, &root, true, ConversationSurface::Plain);
+    write(&root.join("AGENTS.md"), &format!("# demo\n\n{fresh}"));
+    let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan");
+    let drift = |report: &CheckReport| {
+        report
+            .errors
+            .iter()
+            .any(|d| d.code == "agents-init" && d.message.contains("citation directions differ"))
+    };
+    assert!(
+        !drift(&check_findings(&findings, &config)),
+        "plain check sees no drift"
+    );
+
+    config.force_require_grounding();
+    assert!(
+        drift(&check_findings(&findings, &config)),
+        "--require-grounding must re-render the grounding sentence and report the stale block"
+    );
+}
+
 // §FS-check.3.5 / §FS-init.2.3.6.1: flipping `[reference] conversation` without
 // re-running `grund init` leaves a v-current block whose clickable-citations
 // section disagrees with the live config — an agents-init drift finding.
@@ -149,7 +182,7 @@ fn citation_directions_drift_compares_managed_block_only() {
         "**tests/e2e/** must cite FS",
         "**tests/e2e/** should cite GOAL",
     );
-    let expected = citation_directions_section(config.project());
+    let expected = citation_directions_section(config.project(), config.run());
     write(
         &root.join("AGENTS.md"),
         &format!("# demo\n\n{stale}\n\n## Notes\n\n{expected}\n"),
@@ -180,7 +213,7 @@ fn citation_directions_drift_rejects_extra_managed_section_bytes() {
     let config = load_config(&root).expect("load config");
     let fresh =
         render_agents_append_block_at("demo", &config, &root, true, ConversationSurface::Plain);
-    let expected = citation_directions_section(config.project());
+    let expected = citation_directions_section(config.project(), config.run());
     let stale = fresh.replace(
         &expected,
         &format!("{expected}\n\nstale hand-edited citation guidance"),

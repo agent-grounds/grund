@@ -13,7 +13,7 @@
 use super::assets::{AGENTS_TEMPLATE, canonical_template_text};
 use super::citation_directions::citation_directions_section;
 use super::clickable_citations::{ConversationSurface, clickable_citations_section};
-use crate::config::{Compiled, Project, kind_prefixes};
+use crate::config::{Compiled, Project, Run, kind_prefixes};
 use crate::grammar::{id_shape, inline_note_layout_sentence};
 use crate::model::plural;
 
@@ -35,7 +35,7 @@ use crate::model::plural;
 /// reference.
 fn agents_template_substitutions(
     name: &str,
-    (project, compiled): (&Project, &Compiled),
+    (project, run, compiled): (&Project, &Run, &Compiled),
     workspace_members: &str,
     surface: ConversationSurface,
 ) -> Vec<(&'static str, String)> {
@@ -77,7 +77,7 @@ fn agents_template_substitutions(
         ("{DECLARATION_MAP}", declaration_map(project)),
         (
             "{CITATION_DIRECTIONS}",
-            citation_directions_section(project),
+            citation_directions_section(project, run),
         ),
         (
             "{CLICKABLE_CITATIONS}",
@@ -242,13 +242,14 @@ fn row(label: &str, home: &str, title: &str) -> String {
 pub(crate) fn render_agents_append_block(
     name: &str,
     project: &Project,
+    run: &Run,
     compiled: &Compiled,
     workspace_members: &str,
     surface: ConversationSurface,
 ) -> String {
     let mut rendered = canonical_template_text(AGENTS_TEMPLATE);
     for (placeholder, value) in
-        agents_template_substitutions(name, (project, compiled), workspace_members, surface)
+        agents_template_substitutions(name, (project, run, compiled), workspace_members, surface)
     {
         rendered = rendered.replace(placeholder, &value);
     }
