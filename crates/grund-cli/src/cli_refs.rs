@@ -65,6 +65,11 @@ fn command_refs(args: &[String]) -> ExitCode {
         eprintln!("error: refs requires an ID");
         return ExitCode::from(2);
     };
+    // §FS-cli.3.5: a bad `--format` is answered before discovery, so a broken
+    // `grund.toml` cannot shadow it.
+    if let Err(code) = run_format("refs", format_override.as_deref()) {
+        return code;
+    }
     let metadata = match refs_with_metadata(RefsOpts {
         path,
         path_provided,

@@ -108,11 +108,9 @@ fn command_check(args: &[String]) -> ExitCode {
         }
         idx += 1;
     }
-    if let Some(format) = &format_override
-        && !matches!(format.as_str(), "text" | "json")
-    {
-        eprintln!("error: unsupported check format `{format}`");
-        return ExitCode::from(2);
+    // §FS-cli.3.5: a bad `--format` is answered before anything loads.
+    if let Err(code) = run_format("check", format_override.as_deref()) {
+        return code;
     }
     // §FS-rules.8, §FS-check.1.4: scoping to no sentence would print `success`
     // and exit 0, reading as a verdict rather than as the mistake it is — so it

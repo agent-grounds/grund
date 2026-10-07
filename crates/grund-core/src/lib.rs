@@ -83,6 +83,9 @@ pub use config::{
     Config, ConfigLocation, KindCitationRules, KindConfig, KindIndex, KindResolution,
     LeadSizeWarning, NamespaceMatch, PointSizeUnit, ShorthandPolicy,
 };
+// §FS-cli.3.4: the run's `--path-base`, which a frontend parses and scopes.
+// `#[doc(hidden)]`, like the check-input observer.
+pub use config::{PathBase, with_report_path_base};
 
 // §AR-system.2.5 scanner: the published form of what the walk raises
 // (§FS-check.2.4).

@@ -9,6 +9,10 @@ Options:
   --marker       also prefix bare `<ID>` tokens with the marker        e.g. grund fmt --write --marker
   --cross-refs   wrap citations as Markdown links to targets          e.g. grund fmt --write --cross-refs
                  runs by default in both modes for Markdown scopes; set [fmt.cross_refs].enabled = false to opt out
+  --path-base project|invocation
+                       project (default) spells report paths from the config root;
+                       invocation: relative to the path you passed, or the current directory if you passed none.
+                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
 
 With neither --check nor --write, fmt previews every change --write would apply and exits 1 if any.
 --write prints `rewrote N lines:` then one `  <path> (count)` line per file touched.

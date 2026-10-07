@@ -98,6 +98,7 @@ A citation with a section suffix (`§FS-<user-login>.3.1` or, in an opted-in rep
 - `grund <ID> --brief` — heading plus first paragraph only, for hover-sized previews
 - `grund <ID> --full` — the full declaration body when the narrower reads are not enough
 - `grund <ID> --format json` — for tooling; it carries the heading `anchor`, so a web link to the point is one read ([recipe](docs/user-facing/querying.md#link-a-citation-from-one-read))
+- `--path-base=invocation` — on any read or check, spells the paths it reports relative to where you ran it rather than to the project root, without committing `[output] relative_paths = false` ([§FS-cli.3.4](docs/functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from))
 
 For many reads, the explicit batch form accepts ordered NDJSON and reuses one workspace scan; `--all` discovers every declaration and section from that same loaded catalog ([§FS-show.2.6](docs/functional-spec/FS-show.md#26-batch-resolution)):
 

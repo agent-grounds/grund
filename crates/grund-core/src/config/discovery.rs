@@ -182,22 +182,43 @@ pub(crate) fn load_config_at_with_report_base(
     if let Some(candidate) = candidate {
         let report_path = report_relative(&candidate);
         config.config_file = Some(report_path.clone());
-        // §FS-distribution.3.3.2: classify all config-load failures at discovery.
-        parse_config_file(&candidate, &report_path, &mut config).map_err(|error| {
-            if error
-                .downcast_ref::<crate::model::OperationDiagnostic>()
-                .is_some()
-            {
-                error
-            } else {
-                let mut diagnostic =
-                    crate::model::OperationDiagnostic::from_error("config", "config", error);
-                diagnostic.path = Some(crate::model::format_path(&report_path));
-                diagnostic.into()
-            }
-        })?;
+        if let Err(error) = parse_config_file(&candidate, &report_path, &mut config) {
+            // §FS-cli.3.4: under `--path-base=invocation` the failing file is named
+            // from the CLI base. Only the error moves: the locations the parse
+            // records stay report paths, so the file is read again for its message.
+            let error = match config.path_base {
+                Some(super::call_scope::PathBase::Invocation) => {
+                    let named = relative_from_base(cli_base, &candidate);
+                    let mut scratch = Config::default_for_existing_config(root.clone());
+                    parse_config_file(&candidate, &named, &mut scratch)
+                        .err()
+                        .map_or_else(
+                            || config_load_error(error, &report_path),
+                            |error| config_load_error(error, &named),
+                        )
+                }
+                _ => config_load_error(error, &report_path),
+            };
+            return Err(error);
+        }
     }
     // §FS-check.6.1.1: expose coverage before member expansion/checker reads.
     super::observe_config(&config);
     Ok(config)
+}
+
+/// §FS-distribution.3.3.2: classify every config-load failure at discovery, naming
+/// the file by the report path it was read under.
+fn config_load_error(error: anyhow::Error, report_path: &Path) -> anyhow::Error {
+    if error
+        .downcast_ref::<crate::model::OperationDiagnostic>()
+        .is_some()
+    {
+        error
+    } else {
+        let mut diagnostic =
+            crate::model::OperationDiagnostic::from_error("config", "config", error);
+        diagnostic.path = Some(crate::model::format_path(report_path));
+        diagnostic.into()
+    }
 }

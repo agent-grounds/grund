@@ -14,6 +14,12 @@ only that preference. --conversation-target picks how a linked citation
 addresses its declaration; --agent scopes that choice to one agent instead
 of the machine. --format json emits a plan.
 
+Options:
+  --path-base project|invocation
+                       project (default) spells report paths from the config root;
+                       invocation: relative to the path you passed, or the current directory if you passed none.
+                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
+
 Preview and install examples:
   grund integrations                    # detect and list what applies
   grund integrations wezterm            # print the snippet + resolver

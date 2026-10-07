@@ -116,6 +116,12 @@ fragment. The
 base and the ref are yours to choose; `grund` hands over the data and renders
 no URL itself ([§DF-show-anchor-data](../decisions/functional/DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives)).
 
+Every JSON `path` is spelled from the project root by default, which is
+what a repository URL wants. `--path-base=invocation` spells it from the path
+you passed, or the current directory if you passed none, instead — for an
+editor or a shell that joins it to where it stands
+([§FS-cli.3.4](../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from)).
+
 ## Who cites a point: `refs`, `--descendants`
 
 `grund refs <ID>` lists every site that cites the point ([§FS-refs.1](../functional-spec/FS-refs.md#1-inputs)); `--summary`

@@ -15,6 +15,11 @@ Options:
   --summary            group citations by citing file             e.g. grund refs FS-login --summary
   --total              the set's size instead of its members      e.g. grund refs FS-login --total
   --format text|json   text (default) prints `path:line: <citation>`; json emits NDJSON.
+  --path-base project|invocation
+                       project (default) spells report paths from the config root;
+                       invocation: relative to the path you passed, or the current directory if you passed none.
+                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
+                       --format json replaces a committed `[output] format = "json"`; a flag outranks its key.
 
 The citation list is the result, so it goes to stdout (text and json alike) —
 `grund refs <ID> | …` works like `grund list`. Only the typo `note:` goes to stderr.

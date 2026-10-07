@@ -10,6 +10,10 @@ Options:
   --width N      minimum digit width for the number (default 3)   e.g. grund id FS "x" --width 4
   --explain      also print where to put the declaration file     e.g. grund id FS "x" --explain
   --format text|json   text (default) is the bare ID on stdout; json adds kind/number/slug/folder.
+  --path-base project|invocation
+                       project (default) spells report paths from the config root;
+                       invocation: relative to the path you passed, or the current directory if you passed none.
+                       --path-base=invocation replaces a committed `[output] relative_paths = false`.
 
 Exit:  0 ID emitted · 1 empty slug / collision · 2 unknown kind, scan, or CLI error.
 

@@ -1,6 +1,7 @@
 //! How a report spells a path, which is a question about one `grund.toml` key
 //! (§AR-system.2.3): `[output] relative_paths` picks the base every reported
-//! path is rendered against (§FS-config.3.6).
+//! path is rendered against (§FS-config.3.6), unless the run's `--path-base`
+//! outranks it (§FS-cli.3.4).
 //!
 //! It sat in the deprecated path's `output` category while workspace, the
 //! scanner, the checker, the queries, the writers and the api all read it upward
@@ -12,23 +13,43 @@
 
 use std::path::Path;
 
+use super::call_scope::PathBase;
 use super::record::Config;
 use crate::model::{Diagnostic, Finding, format_path, relative_from_base};
 
+impl Config {
+    /// Whether this run spells report paths from the config root: the run's
+    /// `--path-base` when one was passed, else `[output] relative_paths`
+    /// (§FS-cli.3.4 — flag, then key, then the `project` default).
+    pub(crate) fn reports_from_root(&self) -> bool {
+        match self.path_base {
+            Some(PathBase::Project) => true,
+            Some(PathBase::Invocation) => false,
+            None => self.relative_paths,
+        }
+    }
+
+    /// The directory every reported path is spelled from (§FS-cli.3.4).
+    pub(crate) fn report_base(&self) -> &Path {
+        if self.reports_from_root() {
+            &self.root
+        } else {
+            &self.cli_base
+        }
+    }
+}
+
 /// Render a path the way reports show it: relative to the repo root by default,
-/// or relative to the CLI base directory when `[output] relative_paths = false`
-/// (§FS-config.3.6 — an in-root target outside that base uses bounded `..`).
+/// or relative to the CLI base directory under `--path-base=invocation` or
+/// `[output] relative_paths = false` (§FS-config.3.6.1 — an in-root target
+/// outside that base uses bounded `..`).
 pub(crate) fn display_path(config: &Config, path: &Path) -> String {
-    let base = if config.relative_paths {
-        &config.root
-    } else {
-        &config.cli_base
-    };
+    let base = config.report_base();
     let relative = path
         .strip_prefix(base)
         .map(Path::to_path_buf)
         .unwrap_or_else(|_| {
-            if !config.relative_paths && path.starts_with(&config.root) {
+            if !config.reports_from_root() && path.starts_with(&config.root) {
                 relative_from_base(base, path)
             } else {
                 path.to_path_buf()

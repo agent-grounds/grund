@@ -7,17 +7,72 @@ fn command_agent_setup_instructions(args: &[String]) -> ExitCode {
     ExitCode::SUCCESS
 }
 
+/// The report format a run prints: the `--format` flag, else the v1
+/// `[output] format` key the load read, else `text` (§FS-cli.3). One parse for the
+/// flag before the load and the key after it.
 fn command_output_format(
     command: &str,
     configured: &str,
     override_format: Option<String>,
 ) -> Result<String, ExitCode> {
     let format = override_format.unwrap_or_else(|| configured.to_string());
-    if matches!(format.as_str(), "text" | "json") {
-        Ok(format)
-    } else {
-        eprintln!("error: unsupported {command} format `{format}`");
-        Err(ExitCode::from(2))
+    run_format(command, Some(&format))?;
+    Ok(format)
+}
+
+/// §FS-cli.3.5: a `--format` value is a usage error the caller can fix without
+/// touching the tree, so every reporting command asks this before it loads.
+fn run_format(command: &str, format: Option<&str>) -> Result<(), ExitCode> {
+    match format {
+        None | Some("text" | "json") => Ok(()),
+        Some(format) => {
+            eprintln!("error: unsupported {command} format `{format}`");
+            Err(ExitCode::from(2))
+        }
+    }
+}
+
+/// §FS-cli.3.4, §FS-cli.3.5: take the run's `--path-base` (either spelling, the
+/// last one wins) out of a command's arguments and parse it before anything is
+/// loaded, so a bad value is answered ahead of discovery on every command.
+fn take_path_base(args: &[String]) -> Result<(Vec<String>, Option<PathBase>), ExitCode> {
+    let mut rest = Vec::with_capacity(args.len());
+    let mut value = None;
+    let mut words = args.iter();
+    while let Some(arg) = words.next() {
+        if let Some(written) = arg.strip_prefix("--path-base=") {
+            value = Some(written.to_string());
+        } else if arg == "--path-base" {
+            let Some(written) = words.next() else {
+                eprintln!("error: --path-base requires a value");
+                return Err(ExitCode::from(2));
+            };
+            value = Some(written.clone());
+        } else {
+            rest.push(arg.clone());
+        }
+    }
+    let Some(value) = value else {
+        return Ok((rest, None));
+    };
+    match PathBase::parse(&value) {
+        Some(base) => Ok((rest, Some(base))),
+        None => {
+            eprintln!("error: unsupported path base `{value}` (expected project or invocation)");
+            Err(ExitCode::from(2))
+        }
+    }
+}
+
+/// Run a command that renders a report path or a config-load error inside its
+/// `--path-base` scope, so every config the run loads — members and each `check
+/// --watch` rerun included — carries it (§FS-cli.3.4). `main_entry` routes only
+/// the commands §FS-cli.3 gives the flag through here; the rest reject it as
+/// their own unknown flag.
+fn with_path_base(args: &[String], command: impl FnOnce(&[String]) -> ExitCode) -> ExitCode {
+    match take_path_base(args) {
+        Ok((rest, base)) => with_report_path_base(base, || command(&rest)),
+        Err(code) => code,
     }
 }
 
@@ -161,20 +216,20 @@ pub fn main_entry() -> ExitCode {
             eprintln!("hint: run `grund --help` for the list of subcommands");
             ExitCode::from(2)
         }
-        Some("check") => command_check(&args[1..]),
-        Some("show") => command_show(&args[1..]),
-        Some("list") => command_list(&args[1..]),
-        Some("refs") => command_refs(&args[1..]),
-        Some("cover") => command_cover(&args[1..]),
-        Some("fmt") => command_fmt(&args[1..]),
+        Some("check") => with_path_base(&args[1..], command_check),
+        Some("show") => with_path_base(&args[1..], command_show),
+        Some("list") => with_path_base(&args[1..], command_list),
+        Some("refs") => with_path_base(&args[1..], command_refs),
+        Some("cover") => with_path_base(&args[1..], command_cover),
+        Some("fmt") => with_path_base(&args[1..], command_fmt),
         // §FS-fetch.1: only this explicit verb reaches the configured process.
         Some("fetch") => command_fetch(&args[1..]),
-        Some("id") => command_id(&args[1..]),
+        Some("id") => with_path_base(&args[1..], command_id),
         Some("init") => command_init(&args[1..]),
-        Some("config") => command_config(&args[1..]),
+        Some("config") => with_path_base(&args[1..], command_config),
         Some("agent-setup-instructions") => command_agent_setup_instructions(&args[1..]),
         Some("completions") => command_completions(&args[1..]),
-        Some("integrations") => command_integrations(&args[1..]),
+        Some("integrations") => with_path_base(&args[1..], command_integrations),
         Some("complete") => command_complete(&args[1..]),
         // Any first argument that is not a known subcommand is an ID query
         // (§FS-cli.1), unless flags lead a known subcommand (§FS-cli.4.1).
@@ -184,7 +239,7 @@ pub fn main_entry() -> ExitCode {
                 eprintln!("error: {message}");
                 ExitCode::from(2)
             }
-            None => command_show_default(&args),
+            None => with_path_base(&args, command_show_default),
         },
     }
 }
@@ -192,11 +247,13 @@ pub fn main_entry() -> ExitCode {
 /// The §FS-cli.4.1 message when `args` opens with flags and the first word after
 /// them is a subcommand `main_entry` dispatches on: the first flag without its
 /// value, then the command with every leading argument moved after the
-/// subcommand. Values of the `show` value flags are skipped with their flag.
+/// subcommand. Values of the `show` value flags and of `--path-base` are skipped
+/// with their flag, so a value is never read as a default `show` ID.
 fn flag_before_subcommand(args: &[String]) -> Option<String> {
     let mut index = 0;
-    while args.get(index).is_some_and(|arg| arg.starts_with('-')) {
-        index += if SHOW_VALUE_FLAGS.contains(&args[index].as_str()) { 2 } else { 1 };
+    while let Some(arg) = args.get(index).filter(|arg| arg.starts_with('-')) {
+        let takes_value = SHOW_VALUE_FLAGS.contains(&arg.as_str()) || arg == "--path-base";
+        index += if takes_value { 2 } else { 1 };
     }
     let sub = args.get(index)?.as_str();
     if index == 0 || !(SUBCOMMANDS.contains(&sub) || HIDDEN_SUBCOMMANDS.contains(&sub)) {

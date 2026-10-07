@@ -151,6 +151,11 @@ fn command_list(args: &[String]) -> ExitCode {
         }
         idx += 1;
     }
+    // §FS-cli.3.5: a bad `--format` is answered before discovery, so a broken
+    // `grund.toml` cannot shadow it.
+    if let Err(code) = run_format("list", format_override.as_deref()) {
+        return code;
+    }
     // §FS-list.1.7: size-selector combinations are launch errors decided before
     // config discovery or scanning.
     if size_units.is_some() && summary {

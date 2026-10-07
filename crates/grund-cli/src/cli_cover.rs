@@ -55,12 +55,9 @@ fn command_cover(args: &[String]) -> ExitCode {
     }
     // §FS-cover.1.1: a bad `--format` value is a usage error, answered before the scan
     // so that which of two errors a caller sees does not depend on the tree they
-    // happened to point at — the scan can now fail first (§FS-cover.4).
-    if let Some(format) = format_override.as_deref() {
-        if !matches!(format, "text" | "json") {
-            eprintln!("error: unsupported cover format `{format}`");
-            return ExitCode::from(2);
-        }
+    // happened to point at — the scan can now fail first (§FS-cover.4, §FS-cli.3.5).
+    if let Err(code) = run_format("cover", format_override.as_deref()) {
+        return code;
     }
     if !lines.is_empty() {
         return command_cover_lines(

@@ -111,9 +111,13 @@ mod tests_kind_index;
 #[cfg(test)]
 mod tests_non_citable_kinds;
 #[cfg(test)]
+mod tests_report_paths;
+#[cfg(test)]
 mod tests_scan_exclude;
 #[cfg(test)]
 mod tests_validation;
 
 // §FS-distribution.3.3.3: explicit embedding roots never change process cwd.
 pub(crate) use call_scope::with_embedding_base;
+// §FS-cli.3.4: the run's `--path-base`, scoped like the embedding base.
+pub use call_scope::{PathBase, with_report_path_base};

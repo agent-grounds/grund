@@ -241,11 +241,7 @@ pub(super) fn full_scope_ignored_warning(
 /// Render an explicit lexical scope without resolving its final symlink.
 /// Canonical ancestors only identify the report base when the OS respells it.
 fn display_lexical_scope(config: &Config, path: &Path) -> String {
-    let base = if config.relative_paths {
-        &config.root
-    } else {
-        &config.cli_base
-    };
+    let base = config.report_base();
     for ancestor in path.ancestors() {
         if fs::canonicalize(ancestor)
             .map(|resolved| resolved == *base)
