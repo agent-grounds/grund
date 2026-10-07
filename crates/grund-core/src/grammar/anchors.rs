@@ -15,7 +15,7 @@
 
 use unicode_normalization::UnicodeNormalization;
 
-use super::compiled::reduce_heading_text;
+use super::heading_text::reduce_heading_text;
 
 /// Slugify a heading into a fragment anchor, dispatching on the configured
 /// `[fmt.cross_refs] anchor_format` profile (github / gitlab / mkdocs / pandoc) —
