@@ -78,10 +78,10 @@ bytes and shape:
 
 ## 4. `show --format=json`
 
-A successful `show --format=json` emits exactly one JSON object on stdout and nothing on stderr. The examples below select kinds without an effective title; in a declaration or section object, a titled kind adds `kind_title` immediately before the terminal `path`, `line` pair:
+A successful `show --format=json` emits exactly one JSON object on stdout and nothing on stderr. The examples below select kinds without an effective title; in a declaration or section object, a titled kind adds `kind_title` immediately before `anchor`, which precedes the terminal `path`, `line` pair:
 
 ```json
-{"id":"FS-001-alpha","section":"1","body":"## 1. First\n\nFirst body.\n","path":"docs/functional-spec/FS-001-alpha.md","line":5}
+{"id":"FS-001-alpha","section":"1","body":"## 1. First\n\nFirst body.\n","anchor":"1-first","path":"docs/functional-spec/FS-001-alpha.md","line":5}
 ```
 
 Fields:
@@ -89,26 +89,33 @@ Fields:
 - `id` is the resolved declaration ID.
 - `section` is the requested section path as a string, or `null` for a whole declaration.
 - `body` is exactly the text-mode body, including trailing newline when text mode would print one.
-- `sections`, present for `show --toc --format=json`, is the ordered section-map slice as objects with `path`, `title`, and `depth`.
-- `kind_title`, when the resolved target kind has a title, is a string after `sections` when present and before `path`. It is omitted when absent and remains `""` when configured empty ([§FS-config.3.4.3](FS-config.md#343-title)).
+- `sections`, present for `show --toc --format=json`, is the ordered section-map slice as objects with `path`, `title`, `depth`, and `anchor`, in that order; each entry's `anchor` is its own heading's.
+- `kind_title`, when the resolved target kind has a title, is a string after `sections` when present and before `anchor`. It is omitted when absent and remains `""` when configured empty ([§FS-config.3.4.3](FS-config.md#343-title)).
+- `anchor` is always present, a string without its leading `#` or `null`: the fragment `grund fmt --cross-refs` derives for the selected heading under the target project's anchor profile, and `null` where that site has no heading anchor ([§FS-show.3.1.3.1](FS-show.md#3131-the-heading-anchor)).
 - `path` and `line` point at the declaration or selected section start and are always the object's final pair, in that order.
 
 `show --toc --format=json` example:
 
 ```json
-{"id":"FS-001-alpha","section":null,"body":"Alpha overview.\n\n## 1. First\n### 1.1 Child\n","sections":[{"path":"1","title":"First","depth":1},{"path":"1.1","title":"Child","depth":2}],"path":"docs/functional-spec/FS-001-alpha.md","line":1}
+{"id":"FS-001-alpha","section":null,"body":"Alpha overview.\n\n## 1. First\n### 1.1 Child\n","sections":[{"path":"1","title":"First","depth":1,"anchor":"1-first"},{"path":"1.1","title":"Child","depth":2,"anchor":"11-child"}],"anchor":"fs-001-alpha-alpha","path":"docs/functional-spec/FS-001-alpha.md","line":1}
 ```
 
 `show --brief --format=json` keeps the normal `show` object shape and narrows only `body`:
 
 ```json
-{"id":"FS-001-alpha","section":null,"body":"# FS-001-alpha: Alpha\n\nAlpha overview.\n","path":"docs/functional-spec/FS-001-alpha.md","line":1}
+{"id":"FS-001-alpha","section":null,"body":"# FS-001-alpha: Alpha\n\nAlpha overview.\n","anchor":"fs-001-alpha-alpha","path":"docs/functional-spec/FS-001-alpha.md","line":1}
 ```
 
 Every successful form carries the optional metadata field: declarations, sections,
 lead/full/brief/toc and JSON values place it before their terminal location pair;
 E2E manifests keep their distinct `id`, `kind`, `path` prefix and append it last. It
 never changes `body`, authored section `title`, locations or workspace provenance.
+
+Every successful form also carries `anchor`. A declaration, section or JSON value
+object places it after `kind_title` and before the terminal pair, so its full key
+order is `id`, `section`, `body`, `sections` (`--toc` only), `kind_title` (when
+titled), `anchor`, `path`, `line`. An E2E manifest places `anchor:null` after
+`fixtures` and before its optional final `kind_title` ([§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json)).
 
 Failed queries emit one finding object on stderr and leave stdout empty; launch-time errors stay raw `error:` text.
 
@@ -118,15 +125,17 @@ Batch output is NDJSON with exactly one envelope per query. Object keys have the
 fixed order shown here:
 
 ```json
-{"query":{"id":"FS-login","section":"1"},"ok":true,"result":{"id":"FS-login","section":"1","body":"## 1. Login\n","path":"docs/functional-spec/FS-login.md","line":5},"error":null}
+{"query":{"id":"FS-login","section":"1"},"ok":true,"result":{"id":"FS-login","section":"1","body":"## 1. Login\n","anchor":"1-login","path":"docs/functional-spec/FS-login.md","line":5},"error":null}
 {"query":{"id":"FS-missing","section":null},"ok":false,"result":null,"error":{"severity":"error","path":null,"line":null,"code":"not-found","message":"ID not found: FS-missing","sites":null,"authority":null}}
 ```
 
 `query.id` preserves the caller's spelling for explicit input and carries the
 generated local-or-qualified spelling for `--all`; `query.section` is the
 explicit or generated section string, or `null`. A success places the unchanged
-current single-show JSON object in `result`, including optional `kind_title` before
-the declaration/section object's terminal `path`, `line` pair, and sets `error` to `null`. A failed
+current single-show JSON object in `result`, including optional `kind_title` and
+`anchor` before the declaration/section object's terminal `path`, `line` pair, and sets `error` to `null`:
+a successful `result` is byte for byte the object the single query for the same
+coordinate and mode prints, explicit and `--all` alike. A failed
 query sets `result` to `null` and places the unchanged current finding object
 in `error`, its terminal `authority` included and always `null` there, no query
 failure being a chapter rule's ([§FS-errors.5.2](FS-errors.md#52-on-stderr--what-is-not-output)). Every envelope is on stdout in explicit-input or exhaustive order;
@@ -142,12 +151,12 @@ CLI `error:` prefix (including the `known aliases:` or standalone `note:` line).
 For an E2E case, `show --format=json` uses the E2E manifest shape from [§FS-show.2.4](FS-show.md#24-e2e-cases), whose fields, `path` among them, [§FS-show.2.4.2](FS-show.md#242-the-manifest-as-json) defines.
 
 ```json
-{"id":"E2E-login","kind":"E2E","path":"e2e/cases/login","args":[],"expected_exit":0,"fixtures":["expected.exit","expected.stdout","repo/docs/functional-spec/FS-001-login.md"]}
+{"id":"E2E-login","kind":"E2E","path":"e2e/cases/login","args":[],"expected_exit":0,"fixtures":["expected.exit","expected.stdout","repo/docs/functional-spec/FS-001-login.md"],"anchor":null}
 ```
 
 ### 4.3 JSON value declarations
 
-For a JSON value declaration, every read mode's `body` is the exact available member or element source slice and `path`/`line` is that slice's exact span start; no Markdown heading or title is synthesized ([§FS-values.6.2](FS-values.md#62-json-declarations-in-the-catalog)).
+For a JSON value declaration, every read mode's `body` is the exact available member or element source slice and `path`/`line` is that slice's exact span start, and `anchor` is `null`; no Markdown heading, title or anchor is synthesized ([§FS-values.6.2](FS-values.md#62-json-declarations-in-the-catalog)).
 
 ## 5. `list --format=json`
 

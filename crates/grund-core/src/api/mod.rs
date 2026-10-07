@@ -137,3 +137,5 @@ mod tests_shorthand_surfaces;
 mod tests_kind_title_refs;
 #[cfg(test)]
 mod tests_kind_title_show;
+#[cfg(test)]
+mod tests_show_anchor;

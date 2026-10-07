@@ -38,6 +38,8 @@ this is recorded below.
    repository exercises the `AGENTS.md` recipe; observations land in the test matrix below.
    If neural anchors prove unreliable in practice, the recorded fallback is to revisit a
    *data* surface first (e.g. the anchor as a field in the ID query's JSON) before any command.
+   They did, and that fallback was taken: the ID query's JSON now carries the anchor
+   ([§DF-show-anchor-data](DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives)), while no command was added.
 5. **Hover titles cost more than they return.** GitHub preserves an optional Markdown link title
    and desktop browsers can expose it as a delayed native tooltip, but it is not a declaration
    preview, has no touch equivalent, and has inconsistent accessibility. Repeating the declaration
@@ -105,7 +107,9 @@ The long form behind the two-sentence `AGENTS.md` instruction:
   The writing context selects the ref: PR branch in PR bodies, reviewed commit in reviews,
   explicit commit for permalinks, and the default branch otherwise. When unsure, keep the plain
   citation.
-- **Anchor** (this repo's `github` profile, [§FS-fmt.6.7](../../functional-spec/FS-fmt.md#67-configurability)): slugify the heading's rendered text —
+- **Anchor**: take the `anchor` field of the `grund <ID> --format json` read the path came
+  from, and treat `null` as no heading anchor ([§DF-show-anchor-data](DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives), which supersedes the
+  hand-slugging below). As first recorded (this repo's `github` profile, [§FS-fmt.6.7](../../functional-spec/FS-fmt.md#67-configurability)): slugify the heading's rendered text —
   lowercase, delete every character that is not a letter, digit, `_`, or `-`, each space
   becomes one `-`, no run-collapsing and no trimming. A bare-ID citation anchors on the
   declaration heading, a section citation on the section heading; a source-home declaration
@@ -115,7 +119,8 @@ The long form behind the two-sentence `AGENTS.md` instruction:
 
 ## 6. Consequences
 
-- Anchor fidelity is on the agent; the visible text can stay exactly the citation on every
+- Anchor fidelity was on the agent until [§DF-show-anchor-data](DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives) moved it to the data `show`
+  returns; composing the URL still is. In either case the visible text can stay exactly the citation on every
   surface, so it remains greppable and `grund check`-able wherever it is quoted back.
 - Repository-web links carry no declaration-heading title: navigation earns its token cost;
   limited native hover text does not.

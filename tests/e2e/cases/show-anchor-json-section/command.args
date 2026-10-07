@@ -1,0 +1,1 @@
+show --full --format=json FS-001-alpha.2 {repo}
