@@ -1,16 +1,18 @@
 //! Config *discovery*: which file governs a directory, and where the walk stops
 //! (§FS-config.1, §DF-config-file-location). Kept apart from the reader in
-//! `parse.rs` because the two answer different questions — "which file" versus
+//! `v1/parse.rs` because the two answer different questions — "which file" versus
 //! "what does this file say" — and only this half knows there are two names
 //! (§AR-core-module-layout.1).
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::parse::parse_config_file;
+use super::compiled::compile;
 use super::record::Config;
-use crate::model::relative_from_base;
+use super::run::Run;
+use super::{v1, validate};
+use crate::model::{format_path, relative_from_base};
 
 /// The two names one directory may hold its config under, in probe order
 /// (§FS-config.1): the bare root-visible `grund.toml` first, then
@@ -130,8 +132,9 @@ pub(crate) fn load_config(start: &Path) -> Result<Config> {
             .and_then(|cwd| fs::canonicalize(&cwd).ok())
             .unwrap_or_else(|| walk_start.clone()),
     };
-    let mut config = Config::default_for(root);
-    config.cli_base = walk_start;
+    let mut run = Run::at(root);
+    run.cli_base = walk_start;
+    let config = defaults_under(&run);
     // §FS-check.6.1.3: zero-config still has effective roots and probes.
     super::observe_config(&config);
     Ok(config)
@@ -159,19 +162,15 @@ pub(crate) fn load_config_at_with_report_base(
 ) -> Result<Config> {
     let root = fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
     let candidate = config_file_in(&root);
-    let mut config = if candidate.is_some() {
-        Config::default_for_existing_config(root.clone())
-    } else {
-        Config::default_for(root.clone())
-    };
-    config.cli_base = cli_base.to_path_buf();
+    let mut run = Run::at(root.clone());
+    run.cli_base = cli_base.to_path_buf();
     // Report config errors against a stable relative path, never the absolute
     // discovered path (§FS-errors.4: deterministic, no absolute paths outside the
     // configured root).
 
     // §FS-cli.3.4: under `--path-base=invocation` every location the load records,
     // and so every config-load error, is spelled from the CLI base.
-    let invocation = config.path_base == Some(super::call_scope::PathBase::Invocation);
+    let invocation = run.path_base == Some(super::call_scope::PathBase::Invocation);
     let report_relative = |path: &Path| match report_base {
         _ if invocation => relative_from_base(cli_base, path),
         Some(base) => relative_from_base(base, path),
@@ -182,27 +181,48 @@ pub(crate) fn load_config_at_with_report_base(
     };
     // §FS-check.4.3.2: the loser of a two-name tie is recorded, not read, so every
     // surface that reports on the config can name the file grund ignored.
-    config.redundant_config_file =
-        redundant_config_file_in(&root).map(|path| report_relative(&path));
-    if let Some(candidate) = candidate {
-        let report_path = report_relative(&candidate);
-        config.config_file = Some(report_path.clone());
-        // §FS-distribution.3.3.2: classify all config-load failures at discovery.
-        parse_config_file(&candidate, &report_path, &mut config).map_err(|error| {
-            if error
-                .downcast_ref::<crate::model::OperationDiagnostic>()
-                .is_some()
-            {
-                error
-            } else {
-                let mut diagnostic =
-                    crate::model::OperationDiagnostic::from_error("config", "config", error);
-                diagnostic.path = Some(crate::model::format_path(&report_path));
-                diagnostic.into()
-            }
-        })?;
-    }
+    run.redundant_config_file = redundant_config_file_in(&root).map(|path| report_relative(&path));
+    let config = match candidate {
+        None => defaults_under(&run),
+        Some(candidate) => {
+            let report_path = report_relative(&candidate);
+            run.config_file = Some(report_path.clone());
+            // §FS-distribution.3.3.2: classify all config-load failures at discovery.
+            read_config(&candidate, &report_path, &root, &run).map_err(|error| {
+                if error
+                    .downcast_ref::<crate::model::OperationDiagnostic>()
+                    .is_some()
+                {
+                    error
+                } else {
+                    let mut diagnostic =
+                        crate::model::OperationDiagnostic::from_error("config", "config", error);
+                    diagnostic.path = Some(format_path(&report_path));
+                    diagnostic.into()
+                }
+            })?
+        }
+    };
     // §FS-check.6.1.1: expose coverage before member expansion/checker reads.
     super::observe_config(&config);
     Ok(config)
+}
+
+/// The zero-config façade under `run` (§GOAL-zero-config): the v1 default
+/// project, which no file narrowed (§AR-config.3.2).
+fn defaults_under(run: &Run) -> Config {
+    let project = v1::default_project(false);
+    let compiled = compile(&project).expect("default grammar must compile");
+    Config::from_records(&project, run, &compiled)
+}
+
+/// Read one config file into the façade (§AR-config.2): lowered by the reader
+/// of the version that spelled it, judged once (§AR-config.4), and compiled
+/// (§AR-config.1.5). `report_path` is the path every error names.
+fn read_config(read_path: &Path, report_path: &Path, root: &Path, run: &Run) -> Result<Config> {
+    let project = v1::read(read_path, report_path, root)?;
+    validate::validate(report_path, &project)?;
+    let compiled = compile(&project)
+        .with_context(|| format!("{}: invalid [id] grammar", format_path(report_path)))?;
+    Ok(Config::from_records(&project, run, &compiled))
 }

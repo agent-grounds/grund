@@ -1,15 +1,16 @@
 //! The effective configuration record (§AR-system.2.3): one validated `Config`
 //! per project — every `grund.toml` key (§FS-config.3) merged over the built-in
-//! defaults (§FS-config.principle.unit) — with the `[scan]` defaults it starts
-//! from and the `[[kinds]]` lookups that answer questions about the finalized
-//! kind set.
+//! defaults (§FS-config.principle.unit) — with the `[[kinds]]` lookups that
+//! answer questions about the finalized kind set.
 //!
-//! The record rather than the reader: `parse.rs` fills one of these in, and this
-//! file says what there is to fill and what a filled one means. It lived in
+//! The façade rather than the reader: `v1/` lowers a file into the records of
+//! §AR-config.1 and `facade.rs` builds one of these from them (§AR-config.5);
+//! this file says what the façade shows and what a built one means. It lived in
 //! `model/records.rs` while config was a file-name category, which is what made
 //! `model` read the `[[kinds]]` defaults and the point-size policy upward
 //! (§AR-system.4); it is config's own now.
 
+#[cfg(test)]
 use anyhow::Result;
 use std::path::PathBuf;
 
@@ -20,7 +21,9 @@ use super::kind::KindConfig;
 use super::point_sizes::LeadSizeWarning;
 use super::run_warnings::RunWarning;
 use super::v1;
-use crate::grammar::{Grammar, GrammarKind, LexicalSettings};
+#[cfg(test)]
+use crate::grammar::GrammarKind;
+use crate::grammar::{Grammar, LexicalSettings};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConfigLocation {
@@ -289,16 +292,6 @@ impl Config {
         Self::from_project(&v1::default_project(false), root).expect("default grammar must compile")
     }
 
-    /// Compatibility defaults for an already-authored `grund.toml` that
-    /// predates the `requirements.md` generated default and omits `[[kinds]]`
-    /// (§AR-config.3.2 `legacy FS home`). New zero-config projects and freshly
-    /// generated configs use [`Config::default_for`]; existing configs without
-    /// explicit kind homes keep the old implicit FS folder until they opt into
-    /// `file = "requirements.md"`.
-    pub(super) fn default_for_existing_config(root: PathBuf) -> Self {
-        Self::from_project(&v1::default_project(true), root).expect("default grammar must compile")
-    }
-
     /// The homeless kind for this config (§FS-config.3.9.2) — the citing kind
     /// every site outside every configured home resolves to. The declared entry
     /// when the table has one, else the reserved `code`.
@@ -306,9 +299,11 @@ impl Config {
         declared_homeless_kind(&self.kinds).map_or(CODE_SOURCE_KIND, |kind| kind.kind.as_str())
     }
 
-    /// Recompile the `Grammar` after `[id]` / `[[kinds]]` / `[scan].comment_prefixes`
-    /// keys are read from a config file (§FS-config.3) — keeps the regexes and the
-    /// scalar config in lockstep.
+    /// Recompile the `Grammar` after a test set the façade's `[id]` /
+    /// `[[kinds]]` / `[scan].comment_prefixes` fields directly (§FS-config.3) —
+    /// keeps the regexes and the scalar fields in lockstep. A loaded config is
+    /// compiled once, from its `Project` (§AR-config.1.5).
+    #[cfg(test)]
     pub(crate) fn rebuild_grammar(&mut self) -> Result<()> {
         self.grammar = Grammar::build(
             &self.id_format,
@@ -353,6 +348,7 @@ impl Config {
 /// places inside `Grammar::build` that used to repeat it: a non-citable kind
 /// declares no IDs, so it enters no pattern, and deciding that is config's
 /// (§AR-system.2.1).
+#[cfg(test)]
 fn grammar_kinds(kinds: &[KindConfig]) -> Vec<GrammarKind> {
     kinds
         .iter()

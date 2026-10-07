@@ -2,14 +2,16 @@
 //! them (§FS-config.3.4.9, §FS-config.3.4.13), beside `kind_table.rs`'s
 //! whole-list rules (§AR-core-module-layout.1). Both are structural: neither
 //! reads a declaration's content, and each refusal names a state in which no
-//! value coordinate could ever exist.
+//! value coordinate could ever exist. The v1 reader asks them per entry, in
+//! the same pass as the row refusals they are interleaved with, because the
+//! home they check is read off the filesystem under the config root
+//! (§AR-config.4).
 
 use anyhow::{Result, anyhow};
 use std::fs;
 use std::path::Path;
 
 use super::kind_table::ParsedKind;
-use super::record::Config;
 use crate::model::{format_path, normalize_path_lexically};
 
 /// Every relationship `values` and `value_chapter` need of their own row
@@ -18,7 +20,8 @@ use crate::model::{format_path, normalize_path_lexically};
 pub(super) fn validate_kind_value_keys(
     path: &Path,
     entry: &ParsedKind,
-    config: &Config,
+    root: &Path,
+    named_sections: bool,
 ) -> Result<()> {
     let k = &entry.config;
     if k.values {
@@ -41,7 +44,7 @@ pub(super) fn validate_kind_value_keys(
                 ));
             }
         };
-        validate_value_home(path, line, &config.root, &k.kind, home, expects_file)?;
+        validate_value_home(path, line, root, &k.kind, home, expects_file)?;
     }
     // §FS-config.3.4.13: the chapter key's own relationships. Each is a
     // state in which no coordinate could ever exist, so the config is
@@ -50,7 +53,7 @@ pub(super) fn validate_kind_value_keys(
         let line = entry.value_chapter_line.unwrap_or(entry.header_line);
         // §FS-config.3.2.7 is a prerequisite, not a consequence: without
         // named sections the handle this key names is not even a section.
-        if !config.named_sections {
+        if !named_sections {
             return Err(anyhow!(
                 "{}:{line}: [[kinds]] sets `value_chapter` but [id] named_sections is not true",
                 format_path(path)
@@ -91,7 +94,7 @@ pub(super) fn validate_kind_value_keys(
                 ));
             }
         };
-        validate_value_home(path, line, &config.root, &k.kind, home, expects_file)?;
+        validate_value_home(path, line, root, &k.kind, home, expects_file)?;
     }
     Ok(())
 }

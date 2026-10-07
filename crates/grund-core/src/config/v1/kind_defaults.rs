@@ -8,7 +8,7 @@
 //! a repository declared. They meet where a declared row picks up a per-name
 //! default the key left unset.
 
-use super::kind::KindIndex;
+use crate::config::kind::KindIndex;
 
 /// The canonical kind set (§FS-config.3.4). `e2e` and `integration` are
 /// *non-citable*: a test proves a claim someone else wrote, so it cites and is

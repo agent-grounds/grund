@@ -1,22 +1,20 @@
-//! The `[[kinds]]` half of the config (§FS-config.3.4), beside `grounding.rs`
-//! and `citations.rs` (§AR-core-module-layout.1): the per-key reader that fills
-//! one `[[kinds]]` entry and the whole-list validation that runs once the file
-//! is read. Both are pure functions over the parsed entries — the discovery and
-//! the section walk stay in `discovery.rs` and `parse.rs`, and the per-name
-//! defaults a declared row picks up in `kind_defaults.rs`.
+//! The v1 spelling of `[[kinds]]` (§FS-config.3.4), beside `grounding.rs` and
+//! `citations.rs` (§AR-core-module-layout.1): the per-key reader that fills one
+//! `[[kinds]]` entry. The section walk stays in `parse.rs`; what becomes of the
+//! entries once the file is read — the refusals of an entry no row can hold, and
+//! the rows the rest lower into — is `kind_rows.rs` (§AR-config.3.1); and the
+//! rules over the whole lowered table — unique names, one complement,
+//! prefix-free citable names, the grounding pair — are `config/validate.rs`'s
+//! (§AR-config.4).
 
-use anyhow::{Result, anyhow};
-
+use anyhow::Result;
 use std::path::{Component, Path};
 
-use super::grounding::{ParsedGrounding, validate_kind_grounding};
-use super::kind::{KindConfig, KindIndex, KindResolution};
-use super::kind_defaults::default_kind_index;
-use super::kind_values::validate_kind_value_keys;
+use super::grounding::ParsedGrounding;
 use super::parse::{bail_config, parse_bool, parse_string};
-use super::record::{CODE_SOURCE_KIND, Config};
+use crate::config::kind::{KindConfig, KindIndex, KindResolution};
 use crate::grammar::id_grammar_literal_slash_error;
-use crate::model::{format_path, named_section_component};
+use crate::model::named_section_component;
 
 /// One `[[kinds]]` entry as the parser has it so far: the entry itself, the line
 /// its `[[kinds]]` header sat on (what an entry-level error anchors at), and
@@ -362,222 +360,4 @@ fn kind_index_name_error(name: &str) -> Option<String> {
         ));
     }
     None
-}
-
-/// Every whole-list rule a `[[kinds]]` block has to satisfy (§FS-config.3.4):
-/// each entry names a kind, `folder` and `file` are exclusive, `index` needs a
-/// folder and a citable kind, a non-citable kind needs a home, `code` is
-/// reserved, names are unique, and no *citable* kind's name is a prefix of
-/// another's. Applied only when the file declared the block at all — `[[kinds]]`
-/// replaces the defaults entirely rather than merging into them.
-///
-/// It also resolves the per-name `index` defaults, so a declared kind and a
-/// built-in one of the same name agree about what `index` is when the key is
-/// absent (§FS-config.3.4).
-///
-/// Why the `index` default is resolved here: `[[kinds]]` replaces the built-in list
-/// rather than merging into it, so without that step the same block `grund init` writes
-/// would mean one thing when the file omits the key and another when the file spells
-/// it out — and every repository whose config predates the key would inherit an
-/// obligation the built-in default deliberately declines.
-pub(super) fn apply_parsed_kinds(
-    path: &Path,
-    parsed: Vec<ParsedKind>,
-    config: &mut Config,
-) -> Result<()> {
-    // [[kinds]] replaces defaults entirely, per §FS-config.3.4.
-    if let Some(nameless) = parsed.iter().find(|entry| entry.config.kind.is_empty()) {
-        return Err(anyhow!(
-            "{}:{}: every [[kinds]] entry must declare a `kind`",
-            format_path(path),
-            nameless.header_line
-        ));
-    }
-    if parsed.is_empty() {
-        return Err(anyhow!(
-            "{}: at least one [[kinds]] entry must declare a `kind`",
-            format_path(path)
-        ));
-    }
-    for entry in &parsed {
-        let k = &entry.config;
-        let rule_file_is_markdown = k.file.as_deref().is_none_or(|file| {
-            Path::new(file).extension().and_then(|ext| ext.to_str()) == Some("md")
-        });
-        if k.rules
-            && (!k.citable
-                || !k.scan
-                || (k.folder.is_none() && k.file.is_none())
-                || !rule_file_is_markdown
-                || k.values
-                || k.fetch.is_some())
-        {
-            return Err(anyhow!(
-                "{}: kind `{}` sets `rules = true` but rule kinds must be citable, scanned Markdown kinds with a `file` or `folder` home and without `values` or `fetch`",
-                format_path(path),
-                k.kind
-            ));
-        }
-        // §FS-config.3.4.10: an override belongs only to an ID namespace; an
-        // explicit obligation needs the fetch remedy, and fetching needs one
-        // unambiguous snapshot home.
-        if k.format.is_some() && !k.citable {
-            return Err(anyhow!(
-                "{}: kind `{}` sets `format` with `citable = false`",
-                format_path(path),
-                k.kind
-            ));
-        }
-        if k.resolve.is_some() && k.fetch.is_none() {
-            return Err(anyhow!(
-                "{}: kind `{}` sets `resolve` but requires `fetch`",
-                format_path(path),
-                k.kind
-            ));
-        }
-        if k.fetch.is_some() {
-            if !k.citable {
-                return Err(anyhow!(
-                    "{}: kind `{}` sets `fetch` with `citable = false`",
-                    format_path(path),
-                    k.kind
-                ));
-            }
-            if usize::from(k.file.is_some()) + usize::from(k.folder.is_some()) != 1 {
-                return Err(anyhow!(
-                    "{}: kind `{}` sets `fetch` without exactly one `file` or `folder` home",
-                    format_path(path),
-                    k.kind
-                ));
-            }
-        }
-        // Reject kinds that set both `folder` and `file` — they're mutually exclusive
-        // (§FS-config.3.4): a kind is either multi-file (folder) or single-file
-        // (file), and "can always be broken up" swaps one key for the other.
-        if k.folder.is_some() && k.file.is_some() {
-            return Err(anyhow!(
-                "{}: kind `{}` sets both `folder` and `file` (use one)",
-                format_path(path),
-                k.kind
-            ));
-        }
-        // §FS-config.3.4: `index` names a file inside `folder`, so a kind
-        // with no folder — a single-file `file` kind, or one with no home at
-        // all — has nothing to index and the key is a config error.
-        if k.index != KindIndex::Default && k.folder.is_none() {
-            return Err(anyhow!(
-                "{}: kind `{}` sets `index` without `folder` (only a folder kind has an index)",
-                format_path(path),
-                k.kind
-            ));
-        }
-        // §FS-config.3.4: an index lists the folder's declarations
-        // (§FS-check.3.18.1), and a non-citable kind has none — so the key is not a
-        // no-op here, it is a statement about a set that can never be non-empty.
-        if k.index != KindIndex::Default && !k.citable {
-            return Err(anyhow!(
-                "{}: kind `{}` sets `index` and `citable = false` (a non-citable kind declares nothing to index)",
-                format_path(path),
-                k.kind
-            ));
-        }
-        // §FS-config.3.9.2.2: `code` is the *default* name of the homeless kind, and a
-        // name a project may take only by declaring that kind — the complement of
-        // every home. Any other row wearing it would collide with that fallback.
-        if k.kind == CODE_SOURCE_KIND && !(!k.citable && k.folder.is_none() && k.file.is_none()) {
-            return Err(anyhow!(
-                "{}: `{CODE_SOURCE_KIND}` names the homeless kind — a [[kinds]] entry may take it only with `citable = false` and no `folder` or `file`",
-                format_path(path)
-            ));
-        }
-        validate_kind_value_keys(path, entry, config)?;
-    }
-    // §FS-config.3.4.7.6: an unwalked kind is a place and nothing more. A citable one
-    // would have declarations nobody reads — the trap §FS-config.3.5.10 closes — and the
-    // homeless kind has no home to leave unwalked (`[scan] include` says what is read).
-    for entry in &parsed {
-        let k = &entry.config;
-        if k.scan {
-            continue;
-        }
-        if k.citable {
-            return Err(anyhow!(
-                "{}: kind `{}` sets `scan = false` and declares IDs (an unwalked kind's declarations would be invisible — set `citable = false`, or drop the key)",
-                format_path(path),
-                k.kind
-            ));
-        }
-        if k.folder.is_none() && k.file.is_none() {
-            return Err(anyhow!(
-                "{}: kind `{}` sets `scan = false` without a home (what of the homeless kind is walked is `[scan] include`'s to say)",
-                format_path(path),
-                k.kind
-            ));
-        }
-    }
-    // §FS-config.3.4.8.5: the grounding pair, once the row shape it is validated against
-    // is known to be legal. The `[reference]` boolean goes with it: a row's level is
-    // judged against the value the row resolves to, not the one it wrote.
-    validate_kind_grounding(path, &parsed, config.require_grounding)?;
-    // §FS-config.3.4: the `index` default is keyed on the name, and this is where a
-    // *declared* kind picks it up. Runs after the validation above, which reads
-    // `index` as the file wrote it.
-    let mut kinds: Vec<KindConfig> = parsed.iter().map(|entry| entry.config.clone()).collect();
-    for kind in &mut kinds {
-        if kind.index == KindIndex::Default && kind.folder.is_some() && kind.citable {
-            kind.index = default_kind_index(&kind.kind);
-        }
-        if kind.fetch.is_some() && kind.resolve.is_none() {
-            kind.resolve = Some(KindResolution::Must);
-        }
-    }
-    // §FS-config.3.9.2.1: the homeless kind is the complement of every configured home,
-    // and a complement is one place. Two rows claiming it would leave the fallback
-    // with no single answer, so the second is refused rather than resolved by order.
-    let homeless: Vec<&KindConfig> = kinds
-        .iter()
-        .filter(|kind| !kind.citable && kind.folder.is_none() && kind.file.is_none())
-        .collect();
-    if let [first, second, ..] = homeless.as_slice() {
-        return Err(anyhow!(
-            "{}: kinds `{}` and `{}` both declare the homeless kind (no `folder`, no `file`) — there is one complement of every home",
-            format_path(path),
-            first.kind,
-            second.kind
-        ));
-    }
-    // §FS-config.3.4: names are unique across the whole table — `[citations.*]`
-    // and `grund list --kind` key on one, so two rows wearing one name is a
-    // config with no answer to "which".
-    for (i, a) in kinds.iter().enumerate() {
-        if kinds[..i].iter().any(|b| b.kind == a.kind) {
-            return Err(anyhow!(
-                "{}: kind `{}` is declared twice",
-                format_path(path),
-                a.kind
-            ));
-        }
-    }
-    // Reject kinds whose name is a prefix of another kind's name (§FS-config.3.4 —
-    // tokenization would be ambiguous). Scoped to *citable* kinds: `DAT-foo` parses as
-    // `DA` or `DAT`, and a name that never appears in an ID never tokenizes.
-    for (i, a) in kinds.iter().enumerate() {
-        for (j, b) in kinds.iter().enumerate() {
-            if i != j
-                && a.citable
-                && b.citable
-                && a.kind.len() <= b.kind.len()
-                && b.kind.starts_with(a.kind.as_str())
-            {
-                return Err(anyhow!(
-                    "{}: kinds `{}` and `{}` collide (one is a prefix of the other)",
-                    format_path(path),
-                    a.kind,
-                    b.kind
-                ));
-            }
-        }
-    }
-    config.kinds = kinds;
-    Ok(())
 }

@@ -1,8 +1,9 @@
-//! The grounding half of the config (§FS-config.3.4.8), beside `kind_table.rs`
-//! (§AR-core-module-layout.1): the two keys that say *whether* a place's files
-//! must cite a declared ID and *how finely* that is asked, their `[reference]`
-//! defaults, the rules that reject a combination they cannot describe, and the
-//! per-row resolution every reader of them goes through.
+//! The grounding half of the config (§FS-config.3.4.8): the two keys that say
+//! *whether* a place's files must cite a declared ID and *how finely* that is
+//! asked, their `[reference]` defaults, and the per-row resolution every reader
+//! of them goes through. The v1 spelling of the keys is `v1/grounding.rs`, and
+//! the rules that reject a combination they cannot describe run once on the
+//! lowered project in `validate.rs` (§AR-config.4).
 //!
 //! They live here rather than with the rest of `[[kinds]]` because they are one
 //! contract spanning two sections: each key is written either on a row or in
@@ -11,175 +12,8 @@
 //! grounding on). Keeping the pair in one file is what stops that rule from
 //! being written twice.
 
-use anyhow::Result;
-use std::path::Path;
-
 use super::kind::KindConfig;
-use super::kind_table::ParsedKind;
-use super::parse::{bail_config, parse_bool, parse_usize};
-use super::record::{Config, DEFAULT_GROUNDING_LEVEL, GROUNDING_LEVELS, declared_homeless_kind};
-
-/// Where a `[[kinds]]` row wrote each grounding key. The *values* live on the
-/// row's `KindConfig`, where every reader wants them; only the lines are held
-/// aside, so a rejection anchors at the offending key rather than at the block
-/// header (§FS-config.4.3).
-#[derive(Default)]
-pub(super) struct ParsedGrounding {
-    require_line: Option<usize>,
-    level_line: Option<usize>,
-}
-
-/// Read one `[[kinds]]` grounding key into the row being parsed
-/// (§FS-config.3.4.8.3). Both keys are booleans-and-integers with no defaulting of
-/// their own: an absent key stays `None` and inherits `[reference]` later.
-pub(super) fn parse_kind_grounding_key(
-    path: &Path,
-    line_no: usize,
-    key: &str,
-    value: &str,
-    current_kind: &mut Option<ParsedKind>,
-) -> Result<()> {
-    let Some(slot) = current_kind.as_mut() else {
-        bail_config(path, line_no, format!("`{key}` outside of [[kinds]] block"))?;
-        unreachable!();
-    };
-    if key == "require_grounding" {
-        slot.config.require_grounding = Some(parse_bool(path, line_no, value)?);
-        slot.grounding.require_line = Some(line_no);
-    } else {
-        let level = parse_usize(path, line_no, value)?;
-        check_grounding_level(path, line_no, level)?;
-        slot.config.grounding_level = Some(level);
-        slot.grounding.level_line = Some(line_no);
-    }
-    Ok(())
-}
-
-/// §FS-config.3.4.8.2: a level outside `1..=6` names no heading Markdown can have,
-/// wherever it is written.
-pub(super) fn check_grounding_level(path: &Path, line_no: usize, level: usize) -> Result<()> {
-    if !GROUNDING_LEVELS.contains(&level) {
-        bail_config(
-            path,
-            line_no,
-            format!(
-                "`grounding_level` must be a Markdown heading level {}..{} (`{level}` is not)",
-                GROUNDING_LEVELS.start(),
-                GROUNDING_LEVELS.end()
-            ),
-        )?;
-    }
-    Ok(())
-}
-
-/// Every rule the two row keys have to satisfy (§FS-config.3.4.8.5), each closing a
-/// state they cannot describe. Run over the parsed entries once the rest of the
-/// `[[kinds]]` validation has passed, so a row that is already malformed is
-/// reported as that rather than as a grounding error.
-///
-/// `global_require` is the `[reference]` default the rows resolve against, which
-/// is why this runs after the whole file is parsed: whether a row's level is dead
-/// is a question about the row's *effective* boolean, not about what it wrote.
-pub(super) fn validate_kind_grounding(
-    path: &Path,
-    parsed: &[ParsedKind],
-    global_require: bool,
-) -> Result<()> {
-    for entry in parsed {
-        let kind = &entry.config;
-        // §FS-config.3.4.7.4: nothing in an unwalked home is read, so the rule
-        // could never fire — the reasoning that already refuses a
-        // `[citations.<kind>]` rule on an unwalked citing kind.
-        if kind.require_grounding == Some(true)
-            && !kind.scan
-            && let Some(line) = entry.grounding.require_line
-        {
-            bail_config(
-                path,
-                line,
-                format!(
-                    "kind `{}` sets `require_grounding = true` and `scan = false` (no file in an unwalked home is read, so the rule could never fire)",
-                    kind.kind
-                ),
-            )?;
-        }
-        // §FS-config.3.4.8.5: a citable single-file kind is one declaration document,
-        // which §FS-check.3.6.1.1 leaves alone — as `index` means nothing on a file kind.
-        // A non-citable `file` home is governed like any other, so there they mean.
-        if kind.file.is_some()
-            && kind.citable
-            && let Some((key, line)) = grounding_key_site(&entry.grounding)
-        {
-            bail_config(
-                path,
-                line,
-                format!(
-                    "kind `{}` sets `{key}` with `file` on a citable kind (a citable single-file kind is one declaration document, which the grounding rule leaves alone — a non-citable one takes both keys)",
-                    kind.kind
-                ),
-            )?;
-        }
-        // §FS-config.3.4.8.5: a level on a row whose *effective* `require_grounding` is
-        // off is a unit for a rule that never runs there — the row spelling of the
-        // `[reference]` rejection below, and what keeps §AR-scanner.2.7 off such a tree.
-        if let Some(line) = entry.grounding.level_line
-            && !kind.require_grounding.unwrap_or(global_require)
-        {
-            let cause = if kind.require_grounding == Some(false) {
-                "`require_grounding = false` (the level could never fire)".to_string()
-            } else {
-                "nothing turns grounding on for it (set `require_grounding = true` here or in [reference])".to_string()
-            };
-            bail_config(
-                path,
-                line,
-                format!("kind `{}` sets `grounding_level` and {cause}", kind.kind),
-            )?;
-        }
-    }
-    Ok(())
-}
-
-/// Which of the two keys a row wrote first, for the citable-`file` rejection
-/// above — by line, so the message names the key the reader can go and delete.
-fn grounding_key_site(grounding: &ParsedGrounding) -> Option<(&'static str, usize)> {
-    let require = grounding
-        .require_line
-        .map(|line| ("require_grounding", line));
-    let level = grounding.level_line.map(|line| ("grounding_level", line));
-    match (require, level) {
-        (Some(a), Some(b)) if b.1 < a.1 => Some(b),
-        (Some(a), _) => Some(a),
-        (None, other) => other,
-    }
-}
-
-/// §FS-config.3.4.8.5: `[reference] grounding_level` with the global boolean off
-/// and no row turning grounding on is a unit for a rule nothing switched on —
-/// the row-scoped rejection above, one scope up. Run after `[[kinds]]` is final,
-/// because "no row turns it on" is a question about the resolved table.
-pub(super) fn validate_global_grounding(
-    path: &Path,
-    config: &Config,
-    line: Option<usize>,
-) -> Result<()> {
-    let Some(line) = line else {
-        return Ok(());
-    };
-    if config.require_grounding
-        || config
-            .kinds
-            .iter()
-            .any(|kind| kind.require_grounding == Some(true))
-    {
-        return Ok(());
-    }
-    bail_config(
-        path,
-        line,
-        "[reference] `grounding_level` is set and nothing turns grounding on (set `require_grounding` here or on a [[kinds]] row)".to_string(),
-    )
-}
+use super::record::{Config, declared_homeless_kind};
 
 /// The effective grounding level of the row named `kind` (§FS-config.3.4.8) —
 /// including the homeless kind, whose row a config need not have declared.
@@ -245,18 +79,5 @@ impl Config {
             lines.push(format!("grounding_level = {level}"));
         }
         lines
-    }
-
-    /// Whether any place asks for a unit finer than the file, which is what the
-    /// scanner records per-file structure for (§AR-scanner.2.7.2). Derived once, on
-    /// load, so the question is a field read per file rather than a walk of the
-    /// kind table.
-    pub(super) fn recompute_grounding_units(&mut self) {
-        let homeless = self.homeless_grounding().1;
-        self.grounding_units = homeless > DEFAULT_GROUNDING_LEVEL
-            || self
-                .kinds
-                .iter()
-                .any(|kind| self.kind_grounding(kind).1 > DEFAULT_GROUNDING_LEVEL);
     }
 }

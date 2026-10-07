@@ -29,7 +29,7 @@ The rule is stated as a relation over scopes rather than as an enumeration of th
 
 [§FS-config.principle.inventory](../../functional-spec/FS-config.md#principleinventory-the-settings-admitted-at-both-the-project-and-the-kind-scope) claims a *complete* list of the settings admitted at both the project and the kind scope. A claim of completeness is only worth what its derivation is worth, so the derivation is recorded here to be re-run rather than trusted.
 
-**Stage 1 — the candidate set, from the parse sites.** Every committed parse site is enumerated: `config/parse.rs` (the project tables), `config/kind_table.rs` (a `[[kinds]]` row), and `config/citations.rs` (`[citations]` and `[citations.<KIND>]`). This is complete by construction: a key no parser accepts cannot be written at that scope.
+**Stage 1 — the candidate set, from the parse sites.** Every committed parse site is enumerated: `config/v1/parse.rs` (the project tables), `config/v1/kind_table.rs` (a `[[kinds]]` row), and `config/v1/citations.rs` (`[citations]` and `[citations.<KIND>]`). This is complete by construction: a key no parser accepts cannot be written at that scope.
 
 **Stage 2 — the criterion, from the resolution sites.** A pair exists if and only if one place in the code chooses between a narrower-scope value and a wider-scope value **of the same setting**. Stage 1 bounds the search; stage 2 decides.
 
@@ -95,9 +95,9 @@ The withdrawal is recorded here rather than performed silently in `FS`, because 
 
   ```
   $ comm -12 \
-      <(grep -oE "^\s+\"[a-z_]+\" =>" crates/grund-core/src/config/kind_table.rs \
+      <(grep -oE "^\s+\"[a-z_]+\" =>" crates/grund-core/src/config/v1/kind_table.rs \
         | grep -oE "[a-z_]+" | sort -u) \
-      <(grep -oE "\(\"[a-z_.]+\", \"?[a-z_]*\"?" crates/grund-core/src/config/parse.rs \
+      <(grep -oE "\(\"[a-z_.]+\", \"?[a-z_]*\"?" crates/grund-core/src/config/v1/parse.rs \
         | sed -E "s/.*, \"?([a-z_]+)\"?.*/\1/" | sort -u)
   format
   ```

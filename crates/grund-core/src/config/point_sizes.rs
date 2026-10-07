@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
 use std::path::Path;
 
-use super::parse::{bail_config, parse_string, parse_usize};
+use super::v1::{bail_config, parse_string, parse_usize};
 use crate::model::format_path;
 
 /// The closed built-in point-size vocabulary, its opt-in warning policy and

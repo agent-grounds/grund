@@ -6,7 +6,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::config::kind_defaults::{
+use super::kind_defaults::{
     DEFAULT_KINDS, default_kind_citable, default_kind_file, default_kind_folder,
     default_kind_index, default_kind_title,
 };
