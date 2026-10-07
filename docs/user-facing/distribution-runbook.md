@@ -66,7 +66,22 @@ The rehearsal installs the candidate's own files into fresh environments with
 no Rust on `PATH`, and replays the CLI, API and language-server corpora against
 every install ([§FS-distribution-candidate.5.2](../functional-spec/FS-distribution-candidate.md#52-every-registry-row-installs-fresh-and-without-rust) through
 [§FS-distribution-candidate.5.5](../functional-spec/FS-distribution-candidate.md#55-every-installed-language-server-holds-its-lifecycle)). Locally it runs the host's row and names the
-others as skipped:
+others as skipped.
+
+The API corpora compare every install with the same-source Rust oracle
+([§FS-distribution-candidate.5.4](../functional-spec/FS-distribution-candidate.md#54-every-installed-api-answers-alike)), which the rehearsal does not build. Build it
+from the commit first, as CI does. The Python corpus reads it from
+`target/debug`, the Node one from `GRUND_BINDINGS_ORACLE`:
+
+```bash
+GRUND_BINDINGS_SOURCE_SHA="$(git rev-parse HEAD)" cargo build --locked -p grund-core \
+  --example grund-binding-oracle --target-dir ~/oracle-target
+mkdir -p target/debug
+cp ~/oracle-target/debug/examples/grund-binding-oracle target/debug/
+export GRUND_BINDINGS_ORACLE=~/oracle-target/debug/examples/grund-binding-oracle
+```
+
+Then rehearse:
 
 ```bash
 GRUND_REHEARSAL_PYTHONS=/path/to/python3.10:/path/to/python3.11:/path/to/python3.12:/path/to/python3.13:/path/to/python3.14 \
@@ -92,8 +107,9 @@ repository and nothing else ([§FS-distribution-candidate.5.1](../functional-spe
    every row present it is a `full-release`.
 3. `rehearse` — each row takes its share of that candidate with
    `candidate.py share` (its own artifacts and the row-independent ones, byte for
-   byte, under a manifest naming the candidate's digest) and runs `run.py`
-   against it, on Node 22 and then on Node 24, writing its receipt.
+   byte, under a manifest naming the candidate's digest), builds the oracle,
+   and runs `run.py` against it, on Node 22 and then on Node 24, writing its
+   receipt.
    `win32-arm64-msvc` has no registry packages, so it rehearses only its
    inventory and provenance and writes no receipt.
 4. `receipts` — `candidate.py receipts` accepts a row's receipt only when that

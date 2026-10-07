@@ -187,6 +187,34 @@ jobs:
           python -c "import os; print('GRUND_REHEARSAL_PYTHONS=' + os.pathsep.join(os.environ['PYTHONS'].split()))" >> "$GITHUB_ENV"
           python -m pip install --upgrade pipx
 
+      # §FS-distribution-candidate.5.4: the same-source oracle, built as ci.yml builds it.
+      # The Python corpus reads it from target/debug, the Node one from the environment.
+      - name: Prepare the same-source binding oracle
+        if: ${{ matrix.registry }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          import shutil
+          import subprocess
+          from pathlib import Path
+
+          source_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          target = (Path.home() / "ag/tmp/grund-bindings-oracle").resolve()
+          build_env = dict(os.environ, GRUND_BINDINGS_SOURCE_SHA=source_sha)
+          subprocess.run([
+              "cargo", "build", "--locked", "-p", "grund-core",
+              "--example", "grund-binding-oracle", "--target-dir", str(target),
+          ], env=build_env, check=True)
+          executable = "grund-binding-oracle.exe" if os.name == "nt" else "grund-binding-oracle"
+          oracle = target / "debug/examples" / executable
+          placed = Path("target/debug") / executable
+          placed.parent.mkdir(parents=True, exist_ok=True)
+          shutil.copy2(oracle, placed)
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
+              output.write(f"GRUND_BINDINGS_ORACLE={oracle}\n")
+          PY
+
       - uses: actions/download-artifact@v5
         with:
           name: candidate
