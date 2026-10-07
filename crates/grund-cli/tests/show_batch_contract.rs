@@ -40,7 +40,8 @@ impl Repo {
             "grund_config_version = 1\nproject_name = \"member\"\n\n\
              [reference]\nstrict = false\n\n\
              [id]\nformat = \"{kind}-{slug}\"\nnamed_sections = true\n\n\
-             [scan]\ninclude = [\"docs\"]\n",
+             [scan]\ninclude = [\"docs\"]\n\n\
+             [fmt.cross_refs]\nanchor_format = \"mkdocs\"\n",
         );
         write(
             &root.join("docs/FS-alpha.md"),
@@ -51,7 +52,7 @@ impl Repo {
         );
         write(
             &root.join("member/docs/FS-beta.md"),
-            "# FS-beta: Beta\n\nBeta lead.\n\n## 2. Member section\n\nMember body.\n",
+            "# FS-beta: Beta\n\nBeta lead.\n\n## 2. Member — section\n\nMember body.\n",
         );
         Self(root)
     }
@@ -318,4 +319,158 @@ fn show_batch_loads_one_workspace_for_many_queries_and_for_all() {
         stderr(&all)
     );
     assert_many_queries_succeeded(&explicit, &all);
+}
+
+fn run_single(repo: &Repo, coordinate: &str, extra_args: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_grund"))
+        .args(["show", coordinate, "--format=json"])
+        .args(extra_args)
+        .current_dir(repo.path())
+        .output()
+        .expect("run grund show")
+}
+
+/// The raw bytes of a successful envelope's `result`: everything between its
+/// `"result":` key and the closing `,"error":null}` (§FS-output-shapes.4.1).
+fn raw_result(envelope: &str) -> &str {
+    let start = envelope.find(",\"result\":").expect("envelope has result") + ",\"result\":".len();
+    let end = envelope
+        .strip_suffix(",\"error\":null}")
+        .expect("successful envelope closes on a null error")
+        .len();
+    &envelope[start..end]
+}
+
+/// The keys of a JSON object line in wire order, read off the bytes rather
+/// than through a map that might reorder them.
+fn top_level_keys(object: &str) -> Vec<String> {
+    let value: Value = serde_json::from_str(object).expect("result is JSON");
+    let map = value.as_object().expect("result is an object");
+    let mut keys: Vec<(usize, String)> = map
+        .keys()
+        .map(|key| {
+            let needle = format!("\"{key}\":");
+            let mut depth = 0usize;
+            let bytes = object.as_bytes();
+            let mut in_string = false;
+            let mut escaped = false;
+            let mut found = None;
+            for (index, &byte) in bytes.iter().enumerate() {
+                if in_string {
+                    if escaped {
+                        escaped = false;
+                    } else if byte == b'\\' {
+                        escaped = true;
+                    } else if byte == b'"' {
+                        in_string = false;
+                    }
+                    continue;
+                }
+                match byte {
+                    b'{' | b'[' => depth += 1,
+                    b'}' | b']' => depth -= 1,
+                    b'"' => {
+                        if depth == 1 && object[index..].starts_with(&needle) {
+                            found = Some(index);
+                            break;
+                        }
+                        in_string = true;
+                    }
+                    _ => {}
+                }
+            }
+            (found.expect("key found at top level"), key.clone())
+        })
+        .collect();
+    keys.sort();
+    keys.into_iter().map(|(_, key)| key).collect()
+}
+
+/// Every successful read, single or batch, carries the selected heading's
+/// anchor before the closing `path`, `line` pair, each `--toc` entry carries
+/// its own, and a member read takes the member's `anchor_format` profile
+/// (§FS-show.3.1.3.1, §FS-output-shapes.4, §FS-output-shapes.4.1).
+#[test]
+fn show_batch_results_equal_single_reads_and_carry_the_heading_anchor() {
+    let repo = Repo::new("anchor");
+    let coordinates = [
+        ("FS-alpha", None, "fs-alpha-alpha"),
+        ("FS-alpha", Some("1"), "1-numeric"),
+        ("FS-alpha", Some("1.1"), "11-child"),
+        ("FS-alpha", Some("goals"), "goals-named"),
+        ("member/FS-beta", None, "fs-beta-beta"),
+        ("member/FS-beta", Some("2"), "2-member-section"),
+    ];
+    let input: String = coordinates
+        .iter()
+        .map(|(id, section, _)| match section {
+            Some(section) => format!("{{\"id\":\"{id}\",\"section\":\"{section}\"}}\n"),
+            None => format!("{{\"id\":\"{id}\"}}\n"),
+        })
+        .collect();
+    for flag in [None, Some("--brief"), Some("--toc"), Some("--full")] {
+        let args = flag.into_iter().collect::<Vec<_>>();
+        let batch = run_batch(&repo, &args, &input, None);
+        assert_eq!(batch.status.code(), Some(0), "{flag:?}: {}", stderr(&batch));
+        let batch_out = stdout(&batch);
+        let envelopes: Vec<&str> = batch_out.lines().collect();
+        assert_eq!(envelopes.len(), coordinates.len(), "{flag:?}");
+        for ((id, section, anchor), envelope) in coordinates.iter().zip(&envelopes) {
+            let coordinate = match section {
+                Some(section) => format!("{id}.{section}"),
+                None => id.to_string(),
+            };
+            let single = run_single(&repo, &coordinate, &args);
+            assert_eq!(single.status.code(), Some(0), "{coordinate} {flag:?}");
+            let single_out = stdout(&single);
+            let single_line = single_out.trim_end_matches('\n');
+            assert_eq!(raw_result(envelope), single_line, "{coordinate} {flag:?}");
+
+            let mut expected_keys = vec!["id", "section", "body"];
+            if flag == Some("--toc") {
+                expected_keys.push("sections");
+            }
+            expected_keys.extend(["kind_title", "anchor", "path", "line"]);
+            assert_eq!(
+                top_level_keys(single_line),
+                expected_keys,
+                "{coordinate} {flag:?}: {single_line}"
+            );
+            let value: Value = serde_json::from_str(single_line).unwrap();
+            assert_eq!(value["anchor"], *anchor, "{coordinate} {flag:?}");
+        }
+    }
+
+    let toc = run_single(&repo, "FS-alpha", &["--toc"]);
+    let toc: Value = serde_json::from_str(stdout(&toc).trim_end()).unwrap();
+    assert_eq!(
+        toc["sections"],
+        serde_json::json!([
+            {"path": "1", "title": "Numeric", "depth": 1, "anchor": "1-numeric"},
+            {"path": "1.1", "title": "Child", "depth": 2, "anchor": "11-child"},
+            {"path": "goals", "title": "Named", "depth": 1, "anchor": "goals-named"},
+        ])
+    );
+
+    let all = run_batch(&repo, &["--all"], "", None);
+    assert_eq!(all.status.code(), Some(0), "--all: {}", stderr(&all));
+    let all_out = stdout(&all);
+    for envelope in all_out.lines() {
+        let record: Value = serde_json::from_str(envelope).unwrap();
+        let id = record["query"]["id"].as_str().unwrap();
+        let coordinate = match record["query"]["section"].as_str() {
+            Some(section) => format!("{id}.{section}"),
+            None => id.to_string(),
+        };
+        let single = run_single(&repo, &coordinate, &[]);
+        assert_eq!(
+            raw_result(envelope),
+            stdout(&single).trim_end_matches('\n'),
+            "--all {coordinate}"
+        );
+        assert!(
+            record["result"]["anchor"].is_string(),
+            "--all {coordinate}: {envelope}"
+        );
+    }
 }
