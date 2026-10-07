@@ -36,7 +36,7 @@ released on request, so this entry does not quote it.
   label, its ID and title, and the kind tells a reader what the unit is for
   ([§FS-config.3.4](../functional-spec/FS-config.md#34-kinds--recognized-kinds)).
 - Horn's relevancy principle is the read grund serves: one point per unit, returned on its
-  own rather than with the file around it ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file), [§GRUND-structure](../grund.md#grund-structure-the-projects-long-term-memory-stays-organized)).
+  own rather than with the file around it ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file), [§GRUND-schema.2](../grund.md#2-keeping-it)).
 
 ## departs: Where grund departs
 

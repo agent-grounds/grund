@@ -2,7 +2,7 @@
 
 Flexiformality names documents that carry informal parts for human readers and formal
 parts a machine can act on, side by side. A grounded repository is such a document: prose,
-with declarations and `§` citations in it that a checker reads ([§GRUND-structure](../grund.md#grund-structure-the-projects-long-term-memory-stays-organized)).
+with declarations and `§` citations in it that a checker reads ([§GRUND-schema.1](../grund.md#1-declaring-it)).
 
 ## work: What the work is
 
@@ -36,7 +36,7 @@ Vogt's claim: the paper cites neither Kohlhase nor Shipman.
 
 - A document need not be formal throughout to be useful to a machine. grund checks the
   formal parts, the declarations and the citations, and leaves the rest to human readers
-  ([§GRUND-consistency](../grund.md#grund-consistency-the-structure-stays-consistent), [§FS-non-goals.2](../functional-spec/FS-non-goals.md#2-spelling-grammar-prose-quality)).
+  ([§GRUND-links.2](../grund.md#2-holding-every-edit-to-them), [§FS-non-goals.2](../functional-spec/FS-non-goals.md#2-spelling-grammar-prose-quality)).
 - As in sTeX, a reference is to something declared, and one that names nothing is an
   error ([§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration)).
 

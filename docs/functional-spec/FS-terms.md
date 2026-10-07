@@ -47,7 +47,7 @@ rewritten, so no change owes a pass of its own and none is held for one. A pass
 commissioned on purpose is the other way to pay it and is permitted; it answers for the
 words it names and for nothing else.
 
-[§GRUND-consistency](../grund.md#grund-consistency-the-structure-stays-consistent) promises that every cited ID and section coordinate resolves. A term
+[§GRUND-links.2](../grund.md#2-holding-every-edit-to-them) promises that every cited ID and section coordinate resolves. A term
 here is a bold label, not a coordinate, so `grund check` holds the sections that contain
 the vocabulary and the citations that reach those sections — not the labels, the names
 in a lean line's parentheses, their uniqueness or their meaning, or whether a document's

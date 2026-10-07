@@ -1,6 +1,6 @@
 # REQ-no-data-loss: grund never eats user content
 
-A wrong verdict can be re-run; destroyed content cannot. `grund` writes only what it owns, only when it was asked to — a `grund` invocation must never be the reason a repository lost work. The tool that organizes a project's long-term memory ([§GRUND-structure](../grund.md#grund-structure-the-projects-long-term-memory-stays-organized)) is the last thing that should be able to destroy it.
+A wrong verdict can be re-run; destroyed content cannot. `grund` writes only what it owns, only when it was asked to — a `grund` invocation must never be the reason a repository lost work. The tool that organizes a project's long-term memory ([§GRUND-schema](../grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)) is the last thing that should be able to destroy it.
 
 ## 1. The query surface never writes
 

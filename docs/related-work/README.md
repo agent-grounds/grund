@@ -1,7 +1,7 @@
 # Related work
 
 Where grund comes from, and what it deliberately is not, is part of its why
-([§GRUND-understanding](../grund.md#grund-understanding-the-why-stays-known)). This
+([§GRUND-grund](../grund.md#grund-grund-agents-stay-grounded-in-the-spec)). This
 folder gives each body of related work, an idea grund descends from or a tool that sits
 beside it, one declaration, so that a goal or a decision can say "this is incremental
 formalization, and here is where we depart from it" in one `§` instead of retelling it.

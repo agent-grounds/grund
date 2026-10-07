@@ -3,7 +3,7 @@
 Incremental formalization is the closest named idea to what grund does with a
 repository's prose: people write informally, and structure is added later, one place at a
 time, once it is clear and pays for itself. It is the lineage of the declarations that
-organize a project's memory one fact at a time inside free prose ([§GRUND-structure](../grund.md#grund-structure-the-projects-long-term-memory-stays-organized)).
+organize a project's memory one fact at a time inside free prose ([§GRUND-schema.1](../grund.md#1-declaring-it)).
 
 ## work: What the work is
 
@@ -32,8 +32,8 @@ in Interactive Systems*, appeared in *Computer Supported Cooperative Work* 8(4):
 - Prose is legal by default. The text between IDs is opaque content to grund
   ([§FS-non-goals.2](../functional-spec/FS-non-goals.md#2-spelling-grammar-prose-quality)), and nothing requires a paragraph to carry an ID.
 - Formality is added one spot at a time, by the author, where it pays: a heading becomes
-  a declaration with a stable address ([§GRUND-structure](../grund.md#grund-structure-the-projects-long-term-memory-stays-organized)), and a `§` citation becomes an
-  edge that is checked ([§GRUND-consistency](../grund.md#grund-consistency-the-structure-stays-consistent)).
+  a declaration with a stable address ([§GRUND-schema.2](../grund.md#2-keeping-it)), and a `§` citation becomes an
+  edge that is checked ([§GRUND-links.2](../grund.md#2-holding-every-edit-to-them)).
 - Shipman and Marshall's cost is kept low at the start: a conformant repository needs no
   configuration at all ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)).
 
