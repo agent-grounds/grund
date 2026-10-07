@@ -10,6 +10,8 @@ mod documentation;
 mod refusals;
 #[path = "rules_contract/regressions.rs"]
 mod regressions;
+#[path = "rules_contract/selector_refusals.rs"]
+mod selector_refusals;
 #[path = "rules_contract/support.rs"]
 mod support;
 #[path = "rules_contract/surfaces.rs"]

@@ -61,6 +61,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-rule-authority-is-a-field](DF-rule-authority-is-a-field.md#df-rule-authority-is-a-field-a-findings-rule-authority-is-a-record-field-and-the-trial-sentence-selector-is-a-query-over-it) — a finding's rule authority is a record field, and the trial-sentence selector is a query over it
 - [§DF-narrowed-check-keeps-invalid-rule](DF-narrowed-check-keeps-invalid-rule.md#df-narrowed-check-keeps-invalid-rule-a-check-narrowed-to-a-rules-code-keeps-the-error-that-says-the-rule-could-not-run) — a check narrowed to a rule's code keeps the error that says the rule could not run
 - [§DF-section-citation-counts-in-rules](DF-section-citation-counts-in-rules.md#df-section-citation-counts-in-rules-a-resolved-citation-to-a-numbered-section-counts-in-chapter-rules) — a resolved citation to a numbered section counts in chapter rules
+- [§DF-selector-refusal-rewrites](DF-selector-refusal-rewrites.md#df-selector-refusal-rewrites-a-refused-selector-is-answered-with-a-selector-and-its-old-lines-are-replaced-not-appended-to) — a refused selector is answered with a selector, and its old lines are replaced, not appended to
 
 ## Config, discovery, and workspaces
 

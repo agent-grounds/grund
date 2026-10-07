@@ -64,7 +64,8 @@ unit is the named heading and its subtree through the line before the next
 heading of the same or shallower depth. Rejected outside-body and unmarked
 headings are not units.
 
-The four accepted subject spellings are:
+The four accepted subject spellings, and the one shorthand only a selector
+accepts, are:
 
 | Authored subject | Selector and match |
 |---|---|
@@ -72,6 +73,7 @@ The four accepted subject spellings are:
 | `ID` | the one local declaration with that full ID |
 | `The NAME chapter of each KIND` | that named chapter of every local declaration of the kind that has one |
 | `ID.NAME[.NAME…]` | the one local named chapter with that exact coordinate |
+| `KIND.NAME[.NAME…]` | selector only: means `The NAME chapter of each KIND`, and a rule sentence refuses it |
 
 In chapter subjects, `NAME` selects the section handle, not its display name.
 For `## goal: Goal and hypothesis`, `The goal chapter of each BENCH` selects
@@ -781,9 +783,99 @@ after `"id"`, and puts the declaration ID in `id` and exact component path in
 both forms a chapter row's title is the chapter's display name
 ([§FS-rules.5.1.1](FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)).
 Invalid syntax, unknown vocabulary, disabled named sections, and ambiguous
-exact literals are exit-2 invocation errors. A valid selector with no matches
+exact literals are exit-2 invocation errors, and the first three are answered
+with a selector to paste rather than a rule sentence ([§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)). A valid selector with no matches
 prints nothing and exits 0. `--selector` is a flag; the positional remains the
 scan path.
+
+### 8.1 A refused selector is answered with a selector
+
+Every `list` mode that takes `--selector`, `--size` included, refuses a
+selector it cannot accept on stderr, writes nothing to stdout, and exits `2`.
+Its `error:` line names the production that failed and ends in exactly one
+accepted selector, which a reader can paste back into `--selector`:
+
+```text
+error: <reason>; accepted selector: <selector>
+```
+
+The reason is the one [§FS-rules.3.5](FS-rules.md#35-strict-refusals) gives for the same subject wherever that
+reason is true, so a rule and a selector never disagree about what failed.
+Three refusals name the true failure in place of a grammar or vocabulary
+mismatch. A numbered component reached through `KIND.NAME` or
+`The NAME chapter of each KIND` gets the numbered reason the ID spelling gets.
+A wildcard component reached the same way gets the wildcard reason.
+`Each chapter of each KIND` gets the chapter-quantified reason, not an unknown
+kind.
+
+The suggestion is built from what was typed and from the configured kinds,
+never from a fixed template:
+
+1. Its kind is the configured kind the text names or starts with: `FS-*` and
+   `FS-login` both give `FS`.
+2. A declaration written as a valid ID is kept.
+3. The longest run of named components before the first refused one is kept:
+   `requirements.1` gives `requirements`, and `*` gives nothing.
+4. It keeps the spelling that was typed. `KIND[.NAME…]` and `Each KIND` keep
+   theirs. An ID stays an ID when step 2 kept its declaration, and otherwise
+   becomes `KIND[.NAME…]`. `The NAME chapter of each KIND` keeps its spelling
+   while a `NAME` survives step 3, and otherwise becomes `Each KIND`.
+
+The refusal for disabled named sections suggests the selector as typed, after
+`accepted selector after enabling it:`, because enabling them is what makes it
+valid.
+
+Where no configured kind can be recovered, nothing is guessed. The reason
+stands alone, and a second line lists the configured citable kinds exactly as
+an unknown `--kind` does ([§FS-list.1.1](FS-list.md#11---kind)):
+
+```text
+error: <reason>
+known kinds: <kinds>
+```
+
+A refusal never suggests a rule sentence. A selector that is itself one, a
+subject followed by `must` or `should`, is refused for being one. Its
+suggestion is that subject, the text before the modality, and when the subject
+would itself be refused the refusal is the subject's own.
+
+The refusals whose reason names a numbered chapter, a section-component
+wildcard or a chapter quantifier add one stderr breadcrumb
+([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)). The units they reach for are found by expanding the chapter
+the suggestion selects:
+
+```text
+hint: grund show --batch --toc expands each selected unit into its sections
+```
+
+In a repository whose one kind is `FS`, with named sections on and `FS-login`
+holding a named `requirements` chapter, these are the exact refusals. A second line marked
+*hint* is the breadcrumb above.
+
+| Refused selector | Exact reason and accepted selector | Second line |
+|---|---|---|
+| `FS-*.requirements` | `literal subject "FS-*.requirements" does not match the configured ID grammar; accepted selector: FS.requirements` | none |
+| `FS.requirements.1` | `numbered chapter subjects can detach when headings move; accepted selector: FS.requirements` | hint |
+| `FS-login.requirements.1` | `numbered chapter subjects can detach when headings move; accepted selector: FS-login.requirements` | hint |
+| `The requirements.1 chapter of each FS` | `numbered chapter subjects can detach when headings move; accepted selector: The requirements chapter of each FS` | hint |
+| `FS.*` | `section-component wildcards are not accepted in phase 1; accepted selector: FS` | hint |
+| `FS-login.*` | `section-component wildcards are not accepted in phase 1; accepted selector: FS-login` | hint |
+| `Each chapter of each FS` | `chapter-quantified subjects are not accepted in phase 1; accepted selector: Each FS` | hint |
+| `*/FS` | `subject namespaces must be local in phase 1; accepted selector: FS` | none |
+| `FS.Requirements` | `named chapter subject "FS.Requirements" does not match the configured section grammar; accepted selector: FS` | none |
+| `FS.requirements` with named sections off | `named chapter subjects require [id] named_sections = true; accepted selector after enabling it: FS.requirements` | none |
+| `Each POLICY` | `unknown kind "POLICY"` | `known kinds: FS` |
+| `POLICY.requirements` | `literal subject "POLICY.requirements" does not match the configured ID grammar` | `known kinds: FS` |
+| `requirements` | `literal subject "requirements" does not match the configured ID grammar` | `known kinds: FS` |
+| `FS-login must cite at least one GOAL.` | `a rule sentence is not a selector; accepted selector: FS-login` | none |
+
+An exact literal that does not resolve or is ambiguous keeps its refusal,
+which suggests nothing. The rule surfaces do not move: `check --rule` and a
+configured rule declaration keep every byte they print, every row of
+[§FS-rules.3.5](FS-rules.md#35-strict-refusals) included, for the subjects this table refuses as for any other.
+The decision to replace these
+lines rather than append to them is
+[§DF-selector-refusal-rewrites](../decisions/functional/DF-selector-refusal-rewrites.md#df-selector-refusal-rewrites-a-refused-selector-is-answered-with-a-selector-and-its-old-lines-are-replaced-not-appended-to).
 
 ## 9. Managed guidance and editor parity
 

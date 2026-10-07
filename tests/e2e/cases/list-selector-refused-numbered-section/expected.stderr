@@ -1,0 +1,2 @@
+error: numbered chapter subjects can detach when headings move; accepted selector: FS.requirements
+hint: grund show --batch --toc expands each selected unit into its sections

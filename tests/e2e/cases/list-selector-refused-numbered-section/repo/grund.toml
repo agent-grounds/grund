@@ -1,0 +1,17 @@
+grund_config_version = 1
+project_name = "selector-refusals"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+section_separator = "."
+named_sections = true
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+title = "What"
