@@ -39,10 +39,18 @@ mod config_findings;
 mod cover;
 mod cover_lines;
 mod embedding;
+mod embedding_node;
+mod embedding_node_show;
+mod embedding_outcome;
+mod embedding_refs;
+pub use embedding_outcome::{ApiFailure, ApiFailureSite, ApiOutcome, ApiPartialOutput};
 mod embedding_config;
 mod embedding_data;
 mod embedding_failure;
+mod embedding_integrations;
 mod embedding_queries;
+mod embedding_snapshot;
+mod embedding_snapshot_records;
 mod embedding_writers;
 mod fmt;
 mod id;
@@ -73,6 +81,7 @@ pub use cover_lines::{
     cover_lines_with_run_warnings, parse_cover_line_range,
 };
 pub use embedding::{EmbeddingRequest, embedding_call};
+pub use embedding_node::{node_embedding_call, node_request};
 pub use fmt::{
     FmtChange, FmtOpts, FmtOutput, format_references, format_references_with_run_warnings,
 };

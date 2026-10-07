@@ -129,3 +129,17 @@ impl std::fmt::Display for InitError {
 }
 
 impl std::error::Error for InitError {}
+
+/// Stderr verb for a newly written file. `--dry-run` reports `would-write `
+/// instead of `wrote `; otherwise the verbs match a real run (§FS-init.2.2).
+pub(super) fn verb_wrote(dry_run: bool) -> &'static str {
+    if dry_run { "would-write" } else { "wrote" }
+}
+
+pub(super) fn verb_appended(dry_run: bool) -> &'static str {
+    if dry_run { "would-append" } else { "appended" }
+}
+
+pub(super) fn verb_updated(dry_run: bool) -> &'static str {
+    if dry_run { "would-update" } else { "updated" }
+}

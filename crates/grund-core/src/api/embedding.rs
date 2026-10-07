@@ -46,10 +46,16 @@ impl EmbeddingRequest {
 /// Complete results or structured failures, never streams/process state
 /// (§FS-distribution.3.3.1, §FS-distribution.3.3.2, §FS-distribution.3.3.4).
 pub fn embedding_call(request: EmbeddingRequest) -> Value {
-    crate::config::with_embedding_base(&request.root, || envelope(run(&request)))
+    crate::config::with_embedding_base(&request.root, || {
+        envelope(run(&request, embedding_queries::query))
+    })
 }
 
-fn run(r: &EmbeddingRequest) -> Result<Value, Value> {
+/// The read/query delegate a host projection may replace; every other step is
+/// shared, so Node's show metadata never reaches Python (§FS-distribution.3.2.2.2).
+pub(super) type Query = fn(&EmbeddingRequest) -> Result<Value, Value>;
+
+pub(super) fn run(r: &EmbeddingRequest, query: Query) -> Result<Value, Value> {
     // §FS-distribution.3.3.5: empty input succeeds without config discovery.
     if r.operation == "show_batch"
         && r.args
@@ -79,7 +85,7 @@ fn run(r: &EmbeddingRequest) -> Result<Value, Value> {
         "check" => check_data(r),
         "scan" => embedding_queries::scan_data(r),
         "show" | "show_batch" | "refs" | "list_ids" | "list_sizes" | "cover" | "propose_id"
-        | "complete_ids" => embedding_queries::query(r),
+        | "complete_ids" => query(r),
         "effective_config" | "validate_config" | "reference_style" => embedding_config::config(r),
         "fmt" | "init" | "fetch" | "integrations" => embedding_writers::write(r),
         "agent_setup_instructions" => Ok(

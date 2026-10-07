@@ -2,7 +2,7 @@
 //! including automatic cross-reference enablement (§FS-fmt.6.6). Per-file and
 //! per-line rewriting remains in `fmt_rewrite.rs`.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -184,8 +184,18 @@ pub(crate) fn fmt_tree(
             refused_writes.push(display_path(opts.render, &path));
             continue;
         }
-        let original =
-            fs::read_to_string(&path).with_context(|| format!("read {}", path.display()))?;
+        // §FS-distribution.3.2.2.1: a later read failure retains earlier owned writes.
+        let original = fs::read_to_string(&path).map_err(|error| {
+            partial_io_error(
+                opts.render,
+                &path,
+                "read",
+                error,
+                &changes,
+                &scan_errors,
+                &refused_writes,
+            )
+        })?;
         let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
         // §FS-fmt.2.5.1: an excluded file keeps its bytes, so the ordinary pass
         // is off here — every rewrite with it (§FS-fmt.2.5).
@@ -252,7 +262,31 @@ pub(crate) fn fmt_tree(
             if original.ends_with('\n') {
                 output.push('\n');
             }
-            fs::write(&path, output).with_context(|| format!("write {}", path.display()))?;
+            // §FS-distribution.3.2.2.1: preserve completed changes on later I/O failure.
+            if let Err(error) = fs::write(&path, output) {
+                changes.truncate(file_changes_start);
+                return Err(partial_io_error(
+                    opts.render,
+                    &path,
+                    "write",
+                    error,
+                    &changes,
+                    &scan_errors,
+                    &refused_writes,
+                ));
+            }
+            #[cfg(feature = "test-binding-writes")]
+            if let Err(error) = super::binding_write_fault::after_write() {
+                return Err(partial_io_error(
+                    opts.render,
+                    &path,
+                    "write",
+                    error,
+                    &changes,
+                    &scan_errors,
+                    &refused_writes,
+                ));
+            }
         }
     }
     Ok(FmtTreeOutcome {
@@ -260,4 +294,25 @@ pub(crate) fn fmt_tree(
         scan_errors,
         refused_writes,
     })
+}
+
+fn partial_io_error(
+    render: &Config,
+    path: &Path,
+    verb: &str,
+    error: std::io::Error,
+    changes: &[(PathBuf, usize, String)],
+    scan_errors: &[ApiScanError],
+    refused_writes: &[String],
+) -> anyhow::Error {
+    let mut diagnostic = crate::model::OperationDiagnostic::filesystem(
+        path,
+        &error,
+        format!("{verb} {}", path.display()),
+    );
+    diagnostic.partial_output = serde_json::json!({"changes":changes.iter().map(|(path,line,label)|
+            serde_json::json!({"path":display_path(render,path),"line":line,"label":label})).collect::<Vec<_>>(),
+            "scan_errors":scan_errors.iter().map(|e|serde_json::json!({"path":e.path,"message":e.message})).collect::<Vec<_>>(),
+            "refused_writes":refused_writes});
+    anyhow::Error::new(error).context(diagnostic)
 }

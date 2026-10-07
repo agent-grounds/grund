@@ -1,9 +1,7 @@
 use std::fs;
 use std::path::Path;
 
-use super::init_block::{
-    AgentsUpdateResult, update_agents_block, write_or_update_canonical_agent_entrypoint,
-};
+use super::init_block::write_or_update_canonical_agent_entrypoint;
 pub(crate) use super::init_guidance::init_fs_home;
 use super::init_guidance::{InitNext, docs_scaffold_for_config};
 use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entrypoint_note};
@@ -16,8 +14,7 @@ use crate::checker::{
 use crate::config::{Config, config_file_in, display_path};
 use crate::model::{Diagnostic, Finding, FindingSite, Findings, format_path};
 use crate::scanner::{
-    CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
-    effective_scope_reads_any_file, scan_tree,
+    CANONICAL_AGENT_ENTRYPOINT, CanonicalSurfaceReach, effective_scope_reads_any_file, scan_tree,
 };
 use crate::templates::{
     ConversationSurface, render_agents_append_block, render_agents_md_from_block, render_grund_toml,
@@ -288,118 +285,38 @@ fn init_run(
             Ok(event) => {
                 any_change |= event.is_change();
                 events.push(event);
+                #[cfg(feature = "test-binding-writes")]
+                if !dry_run && events.last().is_some_and(InitEvent::is_change) {
+                    if let Err(error) = super::binding_write_fault::after_write() {
+                        *diagnostic = Some(
+                            crate::model::OperationDiagnostic::filesystem(
+                                &target.join(CANONICAL_AGENT_ENTRYPOINT),
+                                &error,
+                                error.to_string(),
+                            )
+                            .into(),
+                        );
+                        return Err(InitError::with_events(events, error.to_string()));
+                    }
+                }
             }
             Err(message) => return Err(InitError::with_events(events, message)),
         }
         workflow_entrypoint = Some(CANONICAL_AGENT_ENTRYPOINT.to_string());
     }
 
-    for entrypoint in agent_entrypoints.companions {
-        let path_ref = entrypoint.path();
-        // The Claude entrypoints teach the linked form; every other companion
-        // gets the plain-location block (§FS-init.2.3.4.17.2).
-        let entrypoint_block = match ConversationSurface::for_entrypoint(path_ref) {
-            ConversationSurface::Linked => claude_block.as_deref().unwrap_or(&agents_block),
-            ConversationSurface::Plain => &agents_block,
-        };
-        let entrypoint_block = add_chapter_rules(entrypoint_block.to_string(), path_ref);
-        let rel = path_ref
-            .strip_prefix(&target)
-            .unwrap_or(path_ref)
-            .to_path_buf();
-        let rel = format_path(&rel);
-        if workflow_entrypoint.is_none() {
-            workflow_entrypoint = Some(rel.clone());
-        }
-        match entrypoint {
-            InitCompanionAgentEntrypoint::Existing(path) => {
-                match update_agents_block(&path, &entrypoint_block, &rel, dry_run) {
-                    Ok(AgentsUpdateResult::Appended) => {
-                        events.push(InitEvent {
-                            verb: verb_appended(dry_run),
-                            path: rel,
-                        });
-                        any_change = true;
-                    }
-                    Ok(AgentsUpdateResult::Updated) => {
-                        events.push(InitEvent {
-                            verb: verb_updated(dry_run),
-                            path: rel,
-                        });
-                        any_change = true;
-                    }
-                    Ok(AgentsUpdateResult::Unchanged) => events.push(InitEvent {
-                        verb: "exists",
-                        path: rel,
-                    }),
-                    Err(err) => {
-                        // §FS-distribution.3.3.2: classify while the original source is held.
-                        let mut source = crate::model::OperationDiagnostic::new(
-                            if err.downcast_ref::<std::io::Error>().is_some() {
-                                "filesystem"
-                            } else {
-                                "operation"
-                            },
-                            "init",
-                            format!("update {}: {err}", format_path(&path)),
-                        );
-                        source.path = Some(format_path(&path));
-                        if let Some(io) = err.downcast_ref::<std::io::Error>() {
-                            source.details = serde_json::json!({"os_error":io.raw_os_error()});
-                        }
-                        *diagnostic = Some(source.into());
-                        return Err(InitError::with_events(
-                            events,
-                            // Forward slashes on every platform, like report
-                            // paths (§FS-errors.2.2) — Windows must not leak
-                            // backslashes into the message.
-                            format!("update {}: {err}", format_path(&path)),
-                        ));
-                    }
-                }
-            }
-            InitCompanionAgentEntrypoint::MissingAlias(path) => {
-                if !dry_run
-                    && let Some(parent) = path.parent()
-                    && let Err(err) = fs::create_dir_all(parent)
-                {
-                    // §FS-distribution.3.3.2: retain source I/O data before string projection.
-                    *diagnostic = Some(
-                        crate::model::OperationDiagnostic::filesystem(
-                            &parent,
-                            &err,
-                            format!("create {}: {err}", parent.display()),
-                        )
-                        .into(),
-                    );
-                    return Err(InitError::with_events(
-                        events,
-                        format!("create {}: {err}", parent.display()),
-                    ));
-                }
-                if !dry_run && let Err(err) = fs::write(&path, entrypoint_block) {
-                    // §FS-distribution.3.3.2: retain source I/O data before string projection.
-                    *diagnostic = Some(
-                        crate::model::OperationDiagnostic::filesystem(
-                            &path,
-                            &err,
-                            format!("write {}: {err}", path.display()),
-                        )
-                        .into(),
-                    );
-                    return Err(InitError::with_events(
-                        events,
-                        format!("write {}: {err}", path.display()),
-                    ));
-                }
-                events.push(InitEvent {
-                    verb: verb_wrote(dry_run),
-                    path: rel,
-                });
-                any_change = true;
-            }
-        }
-    }
+    super::init_companions::write_companions(super::init_companions::CompanionWrite {
+        target: &target,
+        companions: agent_entrypoints.companions,
+        agents_block: &agents_block,
+        claude_block: claude_block.as_deref(),
+        add_chapter_rules,
+        dry_run,
+        diagnostic,
+        events: &mut events,
+        workflow_entrypoint: &mut workflow_entrypoint,
+        any_change: &mut any_change,
+    })?;
 
     // `grund.toml` is the project's configuration (§GOAL-configurable): written
     // only when the target has none (§FS-config.1), never overwritten, reported
@@ -445,6 +362,20 @@ fn init_run(
             verb: verb_wrote(dry_run),
             path: config_rel.to_string(),
         });
+        #[cfg(feature = "test-binding-writes")]
+        if !dry_run {
+            if let Err(error) = super::binding_write_fault::after_write() {
+                *diagnostic = Some(
+                    crate::model::OperationDiagnostic::filesystem(
+                        &config_dest,
+                        &error,
+                        error.to_string(),
+                    )
+                    .into(),
+                );
+                return Err(InitError::with_events(events, error.to_string()));
+            }
+        }
         any_change = true;
     }
 
@@ -500,6 +431,16 @@ fn init_run(
             verb: verb_wrote(dry_run),
             path: rel.clone(),
         });
+        #[cfg(feature = "test-binding-writes")]
+        if !dry_run {
+            if let Err(error) = super::binding_write_fault::after_write() {
+                *diagnostic = Some(
+                    crate::model::OperationDiagnostic::filesystem(&dest, &error, error.to_string())
+                        .into(),
+                );
+                return Err(InitError::with_events(events, error.to_string()));
+            }
+        }
         any_change = true;
     }
 
@@ -578,16 +519,4 @@ fn init_finding(config: &Config, diagnostic: Diagnostic) -> Finding {
     }
 }
 
-/// Stderr verb for a newly written file. `--dry-run` reports `would-write `
-/// instead of `wrote `; otherwise the verbs match a real run (§FS-init.2.2).
-pub(super) fn verb_wrote(dry_run: bool) -> &'static str {
-    if dry_run { "would-write" } else { "wrote" }
-}
-
-pub(super) fn verb_appended(dry_run: bool) -> &'static str {
-    if dry_run { "would-append" } else { "appended" }
-}
-
-pub(super) fn verb_updated(dry_run: bool) -> &'static str {
-    if dry_run { "would-update" } else { "updated" }
-}
+pub(super) use super::init_output::{verb_appended, verb_updated, verb_wrote};

@@ -53,7 +53,10 @@ mod editor_completion;
 mod editor_hover;
 mod editor_on_type;
 mod editor_snapshot;
+mod selector_refusal;
 mod show;
+mod show_metadata;
+pub(crate) use show_metadata::show_metadata;
 mod show_query;
 mod size_output;
 mod sizes;
@@ -80,6 +83,7 @@ pub use sizes::{
 // directory that can name any of it.
 pub(crate) use ambiguity::declaration_ambiguity_refusal;
 pub(crate) use citation_counts::ListCitationCounts;
+pub(crate) use selector_refusal::{require_unique_literal, selector_refusal};
 pub(crate) use show::{render_show_output_json, show_declaration_with_overlays};
 
 // What other components' tests read (§AR-core-module-layout.1.3).
