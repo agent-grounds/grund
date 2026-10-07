@@ -15,9 +15,18 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONFIG = REPO_ROOT / "crates" / "grund-core" / "src" / "config"
-PARSE = CONFIG / "parse.rs"
-KIND_TABLE = CONFIG / "kind_table.rs"
-CITATIONS = CONFIG / "citations.rs"
+
+
+def _parse_site(name):
+    """A parse site, in the v1 reader's directory once it has moved there
+    (§AR-config.2), and beside discovery until then."""
+    moved = CONFIG / "v1" / name
+    return moved if moved.is_file() else CONFIG / name
+
+
+PARSE = _parse_site("parse.rs")
+KIND_TABLE = _parse_site("kind_table.rs")
+CITATIONS = _parse_site("citations.rs")
 INVENTORY = (
     REPO_ROOT / "docs" / "decisions" / "functional" / "DF-config-concerns.md"
 )

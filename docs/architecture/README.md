@@ -1,7 +1,7 @@
 # AR-system: one engine, twelve components, three frontends
 
 `grund` is one pipeline. A single tree walk reads every file once and produces
-`Findings`; the resolver completes the structural model; chapter-rule parsing
+the `Catalog`; the resolver completes the structural model; chapter-rule parsing
 and fact production meet only as `ParsedRule` and `RuleFacts` in the rules
 engine; checker rules turn that model into a `Report`; queries and writers
 answer from the same model; and thin frontends render or transport what the
@@ -58,13 +58,13 @@ The same components as the data moves through them:
 ```text
                grund.toml ──► config ──► workspace ──┐
                                                      ▼
-  tree ──► scanner ──► Findings ─────────────────► resolver ────────────────┐
+  tree ──► scanner ──► Catalog ──────────────────► resolver ────────────────┐
                                                         │                  │
                              rule titles + vocabulary ──┤                  │
                                                         ▼                  ▼
                               ParsedRule + RuleFacts ─► rules ─► Diagnostic│
                                                                            ▼
-                       loaded Findings ─────────────────► checker ─► Report ─┐
+                       loaded Catalog ──────────────────► checker ─► Report ─┐
                               │                                             │
                               ├──► queries ──► data ────────────────────────┤
                               └──► writers ──► edits ───────────────────────┤
@@ -87,11 +87,11 @@ Consumes text. Produces the lexical facts every other component shares: the ID g
 
 ### 2.2 model
 
-Consumes nothing. Produces the data every component passes along: `Findings`, `Declaration`, `Citation`, `Report`, and the value records ([§FS-values.2](../functional-spec/FS-values.md#2-value-declarations)). Knows nothing else; it is types and tiny helpers. Module: `crates/grund-core/src/model/`.
+Consumes nothing. Produces the data every component passes along: `Catalog`, `Declaration`, `Citation`, `Report`, and the value records ([§FS-values.2](../functional-spec/FS-values.md#2-value-declarations)). Knows nothing else; it is types and tiny helpers. Module: `crates/grund-core/src/model/`.
 
 ### 2.3 config
 
-Consumes `grund.toml` and the defaults. Produces one validated `Config` per project ([§FS-config](../functional-spec/FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up)). Knows nothing of the tree it describes. Module: `crates/grund-core/src/config/`.
+Consumes `grund.toml`, the defaults and the invocation. Produces one `Project`, `Run` and `Compiled` per project, and the `Config` façade built from them for the components that have not moved off it ([§FS-config](../functional-spec/FS-config.md#fs-config-grund-reads-a-toml-config-file-found-by-walking-up), [§DA-config-concern-records](../decisions/architectural/DA-config-concern-records.md#da-config-concern-records-the-configuration-becomes-three-concern-records-inside-an-envelope-and-the-checker-splits-in-two)). One reader per version lowers its file into the `Project`, and nothing above config reads the version ([§FS-config.5.2](../functional-spec/FS-config.md#52-every-older-version-keeps-its-meaning)). Knows nothing of the tree it describes. Design: [§AR-config](AR-config.md#ar-config-one-project-per-project-read-by-one-reader-per-version-and-lowered-losslessly). Module: `crates/grund-core/src/config/`.
 
 ### 2.4 workspace
 
@@ -99,11 +99,11 @@ Consumes configs. Produces the multi-project scope — member expansion, claims,
 
 ### 2.5 scanner
 
-Consumes the scope and the grammar. Produces `Findings`: every declaration, section, citation, value binding and grounding unit in the tree, from one walk ([§FS-check.1](../functional-spec/FS-check.md#1-inputs)) — and the one probe over the tree that is no part of that walk, which agent entrypoint files a repository has, because `init` and `check` both ask it and must not disagree ([§FS-init.2.1](../functional-spec/FS-init.md#21-files-written-updated-or-left-in-place), [§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)). Knows no rule and no frontend, and never asks whether it is in a workspace. Design: [§AR-scanner](AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations). Module: `crates/grund-core/src/scanner/`.
+Consumes the scope and the grammar. Produces the `Catalog`: every declaration, section, citation, value binding and grounding unit in the tree, from one walk ([§FS-check.1](../functional-spec/FS-check.md#1-inputs)) — and the one probe over the tree that is no part of that walk, which agent entrypoint files a repository has, because `init` and `check` both ask it and must not disagree ([§FS-init.2.1](../functional-spec/FS-init.md#21-files-written-updated-or-left-in-place), [§FS-check.3.5](../functional-spec/FS-check.md#35-invalid-agent-entrypoint-init-block)). Knows no rule and no frontend, and never asks whether it is in a workspace. Design: [§AR-scanner](AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations). Module: `crates/grund-core/src/scanner/`.
 
 ### 2.6 checker
 
-Consumes the resolver's loaded `Findings` and diagnostics from the rules
+Consumes the resolver's loaded `Catalog` and diagnostics from the rules
 component. Produces the `Report`: errors, warnings and suggestions, each check
 one pass over its owned input ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo),
 [§FS-rules.11](../functional-spec/FS-rules.md#11-functional-architecture-constraint)).
@@ -116,11 +116,11 @@ lists, and knows no frontend. Design:
 
 ### 2.7 queries
 
-Consume `Findings`. Produce data for one question each: a declaration body ([§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id)), the citers of an ID ([§FS-refs](../functional-spec/FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id)), the catalog ([§FS-list](../functional-spec/FS-list.md#fs-list-grund-lists-every-declared-id)), per-file coverage ([§FS-cover](../functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file)), shell completions ([§FS-completions](../functional-spec/FS-completions.md#fs-completions-grund-completes-declared-ids-in-shells)), and the editor's snapshot, hover and on-type answers ([§FS-lsp](../functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)). Know no rendering; the text and JSON shapes belong to the frontends. Module: `crates/grund-core/src/queries/`.
+Consume the `Catalog`. Produce data for one question each: a declaration body ([§FS-show](../functional-spec/FS-show.md#fs-show-grund-reads-a-single-declaration-body-by-id)), the citers of an ID ([§FS-refs](../functional-spec/FS-refs.md#fs-refs-grund-lists-every-citation-of-an-id)), the catalog ([§FS-list](../functional-spec/FS-list.md#fs-list-grund-lists-every-declared-id)), per-file coverage ([§FS-cover](../functional-spec/FS-cover.md#fs-cover-grund-groups-citations-by-scanned-file)), shell completions ([§FS-completions](../functional-spec/FS-completions.md#fs-completions-grund-completes-declared-ids-in-shells)), and the editor's snapshot, hover and on-type answers ([§FS-lsp](../functional-spec/FS-lsp.md#fs-lsp-grund-ships-an-optional-lsp-server)). Know no rendering; the text and JSON shapes belong to the frontends. Module: `crates/grund-core/src/queries/`.
 
 ### 2.8 writers
 
-Consume `Findings` and the tree. Produce edits: citation normalization and cross-reference links ([§FS-fmt](../functional-spec/FS-fmt.md#fs-fmt-grund-normalizes-citations-in-bulk)), a proposed ID ([§FS-id](../functional-spec/FS-id.md#fs-id-grund-proposes-ids-for-new-declarations)), the init scaffold and the managed agent-entrypoint block — which files a run writes, the splice that puts the block in one, and the walk-up the block's workspace section needs, the block *text* being the templates' (section 2.11) ([§FS-init](../functional-spec/FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo)) — an external fact snapshot ([§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)), and the clickable-citation client artifacts ([§FS-integrations](../functional-spec/FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations)). The only components that write to the tree, and each writes only what its spec names ([§REQ-no-data-loss](../requirements/REQ-no-data-loss.md#req-no-data-loss-grund-never-eats-user-content)). Module: `crates/grund-core/src/writers/`. The `grund` CLI calls these data-returning operations and owns their argv, rendered bytes and exit codes; for example, `integrations` is implemented by `crates/grund-cli/src/cli_integrations*.rs` over the `pub` block of `writers/mod.rs` ([§FS-integrations.1](../functional-spec/FS-integrations.md#1-user-facing-command), [§AR-bindings.3](AR-bindings.md#3-cratesgrund-cli-the-cli-binary)).
+Consume the `Catalog` and the tree. Produce edits: citation normalization and cross-reference links ([§FS-fmt](../functional-spec/FS-fmt.md#fs-fmt-grund-normalizes-citations-in-bulk)), a proposed ID ([§FS-id](../functional-spec/FS-id.md#fs-id-grund-proposes-ids-for-new-declarations)), the init scaffold and the managed agent-entrypoint block — which files a run writes, the splice that puts the block in one, and the walk-up the block's workspace section needs, the block *text* being the templates' (section 2.11) ([§FS-init](../functional-spec/FS-init.md#fs-init-grund-bootstraps-a-new-grund-conformant-repo)) — an external fact snapshot ([§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)), and the clickable-citation client artifacts ([§FS-integrations](../functional-spec/FS-integrations.md#fs-integrations-grund-prints-and-installs-its-rendering-layer-integrations)). The only components that write to the tree, and each writes only what its spec names ([§REQ-no-data-loss](../requirements/REQ-no-data-loss.md#req-no-data-loss-grund-never-eats-user-content)). Module: `crates/grund-core/src/writers/`. The `grund` CLI calls these data-returning operations and owns their argv, rendered bytes and exit codes; for example, `integrations` is implemented by `crates/grund-cli/src/cli_integrations*.rs` over the `pub` block of `writers/mod.rs` ([§FS-integrations.1](../functional-spec/FS-integrations.md#1-user-facing-command), [§AR-bindings.3](AR-bindings.md#3-cratesgrund-cli-the-cli-binary)).
 
 ### 2.9 api
 
@@ -137,7 +137,7 @@ No engine component parses argv, renders to a stream, or decides a process exit 
 
 ### 2.10 resolver
 
-Consumes the project map from workspace and every project's `Findings` from the scanner. Produces the loaded project set a run operates on — each project scanned, its off-grammar citations and its cross-namespace number-only shorthands reconciled across the whole set — and four answers that are functions of what a run loaded: which project a citation resolves against, a declaration's body sliced by the spans the scan recorded, the link target its ID resolves to, and which declaration a shorthand token names in whichever project's catalog answers for it ([§AR-resolver.4](AR-resolver.md#4-the-shorthand-a-whole-runs-catalog-resolves)) ([§FS-workspace.8](../functional-spec/FS-workspace.md#8-other-commands), [§FS-show.2](../functional-spec/FS-show.md#2-behavior), [§FS-fmt.6.2](../functional-spec/FS-fmt.md#62-form), [§FS-fmt.2.4](../functional-spec/FS-fmt.md#24-shorthand-to-canonical)). Knows no rule and no rendering; it runs scans, which is what puts it above the scanner while the config half of the workspace stays below it. Design: [§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them). Module: `crates/grund-core/src/resolver/`.
+Consumes the project map from workspace and every project's `Catalog` from the scanner. Produces the loaded project set a run operates on — each project scanned, its off-grammar citations and its cross-namespace number-only shorthands reconciled across the whole set — and four answers that are functions of what a run loaded: which project a citation resolves against, a declaration's body sliced by the spans the scan recorded, the link target its ID resolves to, and which declaration a shorthand token names in whichever project's catalog answers for it ([§AR-resolver.4](AR-resolver.md#4-the-shorthand-a-whole-runs-catalog-resolves)) ([§FS-workspace.8](../functional-spec/FS-workspace.md#8-other-commands), [§FS-show.2](../functional-spec/FS-show.md#2-behavior), [§FS-fmt.6.2](../functional-spec/FS-fmt.md#62-form), [§FS-fmt.2.4](../functional-spec/FS-fmt.md#24-shorthand-to-canonical)). Knows no rule and no rendering; it runs scans, which is what puts it above the scanner while the config half of the workspace stays below it. Design: [§AR-resolver](AR-resolver.md#ar-resolver-how-a-run-loads-every-project-and-resolves-a-citation-to-one-of-them). Module: `crates/grund-core/src/resolver/`.
 
 ### 2.11 templates
 
@@ -172,7 +172,10 @@ nothing outside a module directory can name what its `mod.rs` does not re-export
 ([§AR-core-module-layout.1.1](AR-core-module-layout.md#11-modrs-is-the-components-whole-boundary)) —
 and `tests/integration/test_dependency_direction.py` holds the order across
 those directories, with every read that still runs the other way listed one by
-one and marked at its import, so the list can only shrink. The rules component's
+one and marked at its import, so the list can only shrink. The same test holds
+`CONFIG_FACADE`, the components that still name the broad `Config` façade, the
+same way: a component off the list may not name it, and one that stops naming it
+leaves the list, so that list only shrinks too ([§AR-config.5](AR-config.md#5-the-config-façade-and-the-list-that-only-shrinks)). The rules component's
 internal direction and stronger parser/engine prohibitions are held by
 `tests/integration/test_rules_architecture.py` ([§AR-rules.6](AR-rules.md#6-boundary-tests)).
 Three consequences are held by tests of their own:
@@ -202,6 +205,7 @@ The components and frontends:
 
 | ID | Subject |
 |---|---|
+| [§AR-config](AR-config.md#ar-config-one-project-per-project-read-by-one-reader-per-version-and-lowered-losslessly) | how a `grund.toml` is read by its version's reader and lowered into `Project`, `Run` and `Compiled` |
 | [§AR-scanner](AR-scanner.md#ar-scanner-how-grund-discovers-declarations-and-citations) | how grund discovers declarations and citations |
 | [§AR-checker](../../crates/grund-core/src/checker/report.rs) | how grund validates the scanner's findings — declared and enrolled directly from `crates/grund-core/src/checker/report.rs` |
 | [§AR-workspace](AR-workspace.md#ar-workspace-how-the-config-time-workspace-layer-composes-with-the-config-loader-and-the-scanner) | how the config-time workspace layer composes with the config loader and the scanner |
