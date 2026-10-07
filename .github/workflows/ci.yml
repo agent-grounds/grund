@@ -22,6 +22,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+    env:
+      # §FS-distribution.3.0.3: corpus pipes carry UTF-8 on every host.
+      PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v6
 
@@ -36,6 +39,16 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.x"
+
+      # §FS-distribution.3.2.3.2: acceptance uses a supported Node major.
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+
+      # §FS-distribution.3.2.3.3: source builders require this pinned toolchain.
+      - name: Install binding Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
 
       - name: Cache cargo registry and target
         uses: actions/cache@v5
@@ -65,6 +78,33 @@ jobs:
       - name: Install fissile
         run: |
           cargo install fissile --version 0.8.3 --locked
+
+      # §FS-distribution.3.0.3: build the shared oracle from the actual checkout,
+      # including a PR merge checkout, before either Python or pre-commit runs.
+      - name: Prepare same-source binding oracle
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          import subprocess
+          from pathlib import Path
+
+          source_sha = subprocess.check_output(
+              ["git", "rev-parse", "HEAD"], text=True,
+          ).strip()
+          target = (Path.home() / "ag/tmp/grund-bindings-ci-oracle").resolve()
+          build_env = dict(os.environ, GRUND_BINDINGS_SOURCE_SHA=source_sha)
+          subprocess.run([
+              "cargo", "+1.95.0", "build", "--locked", "-p", "grund-core",
+              "--example", "grund-binding-oracle", "--target-dir", str(target),
+          ], env=build_env, check=True)
+          executable = "grund-binding-oracle.exe" if os.name == "nt" else "grund-binding-oracle"
+          oracle = target / "debug/examples" / executable
+          if not oracle.is_file():
+              raise FileNotFoundError(oracle)
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as output:
+              output.write(f"GRUND_BINDINGS_ORACLE={oracle}\n")
+          PY
 
       - name: python tests
         # §FS-cochange-recipe.examples: compatibility is mandatory, not environment-dependent.

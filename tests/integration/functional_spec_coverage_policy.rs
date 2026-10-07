@@ -182,7 +182,6 @@ pub(super) const PERMANENT_EXCEPTIONS: &[Exception<'static>] = &[
     Exception { id: "FS-lsp.1.5", reason: "planned LSP capability" },
     Exception { id: "FS-workspace.8.4.5", reason: "permitted interim fallback, obliging the tool to nothing" },
     Exception { id: "FS-distribution.2", reason: "distribution target description" },
-    Exception { id: "FS-distribution.3.2", reason: "packaging target" },
     Exception { id: "FS-distribution.4.11", reason: "planned full-ecosystem release" },
     Exception { id: "FS-distribution.5", reason: "distribution target description" },
     Exception { id: "FS-init.2.3.4.1", reason: "covered by the byte-exact generated init block" },
