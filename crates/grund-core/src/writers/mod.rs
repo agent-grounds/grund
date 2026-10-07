@@ -83,6 +83,7 @@ mod fmt_workspace;
 mod id;
 mod init;
 mod init_block;
+mod init_companions;
 mod init_guidance;
 mod init_notes;
 mod init_output;
@@ -182,3 +183,7 @@ pub(crate) use init::init_with_diagnostics;
 
 // §FS-distribution.3.1: additive structured fetch failures.
 pub(crate) use fetch::fetch_with_diagnostics;
+#[cfg(feature = "test-binding-writes")]
+mod binding_write_fault;
+#[cfg(feature = "test-binding-writes")]
+pub use binding_write_fault::{BindingWriteFaultGuard, binding_write_fault};

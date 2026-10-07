@@ -14,7 +14,7 @@ use std::path::PathBuf;
 use crate::config::{Config, KindConfig, display_path, non_citable_kind_error};
 use crate::grammar::{render_id, section_display_name};
 use crate::model::{Declaration, Finding, Id, format_path, is_stub_for_inline_decl, sort_path_key};
-use crate::queries::ListCitationCounts;
+use crate::queries::{ListCitationCounts, require_unique_literal, selector_refusal};
 use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::rules::sentence::{RuleSubject, RuleVocabulary, parse_selector};
 
@@ -147,7 +147,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         .map(|raw| {
             // §FS-rules.8.1: a refusal recovering no kind ends in `known kinds:`.
             parse_selector(raw, &vocabulary)
-                .map_err(|refusal| anyhow!(refusal.render(&context.known_kinds_line())))
+                .map_err(|refusal| selector_refusal(refusal.render(&context.known_kinds_line())))
         })
         .transpose()?;
 
@@ -262,12 +262,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             _ => None,
         };
         if let Some((literal, exact_matches)) = resolution {
-            if exact_matches == 0 {
-                return Err(anyhow!("literal subject {literal} does not resolve"));
-            }
-            if exact_matches > 1 {
-                return Err(anyhow!("literal subject {literal} is ambiguous"));
-            }
+            require_unique_literal(&literal, exact_matches)?;
         }
     }
 

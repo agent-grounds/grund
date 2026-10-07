@@ -43,6 +43,7 @@ pub struct BatchShowRecord {
 pub(crate) struct BatchDataRecord {
     pub(crate) query: BatchShowQuery,
     pub(crate) result: Result<ShowOutput>,
+    pub(crate) metadata: serde_json::Value,
 }
 
 /// The same shared context and query implementation, with source-typed failures
@@ -70,7 +71,8 @@ pub(crate) fn show_batch_data(
         queries
             .into_iter()
             .map(|query| {
-                let result = show_batch_query_in_context(
+                let mut metadata = serde_json::Value::Null;
+                let result = show_batch_query_with_metadata(
                     &context,
                     &query.id,
                     ShowOpts {
@@ -78,6 +80,7 @@ pub(crate) fn show_batch_data(
                         ..opts.clone()
                     },
                     &TextOverlays::new(),
+                    &mut metadata,
                 );
                 match result {
                     Ok(mut output) => {
@@ -85,6 +88,7 @@ pub(crate) fn show_batch_data(
                         Ok(BatchDataRecord {
                             query,
                             result: Ok(output),
+                            metadata,
                         })
                     }
                     Err(error)
@@ -96,6 +100,7 @@ pub(crate) fn show_batch_data(
                         Ok(BatchDataRecord {
                             query,
                             result: Err(error),
+                            metadata,
                         })
                     }
                     Err(error) => Err(error),
@@ -184,6 +189,22 @@ fn show_batch_query_in_context(
     opts: ShowOpts,
     overlays: &TextOverlays,
 ) -> Result<ShowOutput> {
+    show_batch_query_with_metadata(
+        context,
+        id_arg,
+        opts,
+        overlays,
+        &mut serde_json::Value::Null,
+    )
+}
+
+fn show_batch_query_with_metadata(
+    context: &WorkspaceContext,
+    id_arg: &str,
+    opts: ShowOpts,
+    overlays: &TextOverlays,
+    metadata: &mut serde_json::Value,
+) -> Result<ShowOutput> {
     let (alias, raw_id) = split_qualified_id_arg(id_arg)?;
     let project = match alias.as_deref() {
         Some(name) => context.project_by_alias(name).ok_or_else(|| {
@@ -220,6 +241,7 @@ fn show_batch_query_in_context(
         )));
     }
     let section = opts.section.or(inline_section);
+    *metadata = super::show_metadata(config, &project.findings, &id, section.as_deref());
     let mut output = show_declaration_with_overlays(
         config,
         context.render_config(),

@@ -5,11 +5,19 @@ mod canonical;
 #[path = "binding_oracle/cli.rs"]
 mod cli;
 
-use grund_core::{EmbeddingRequest, embedding_call};
+use grund_core::{EmbeddingRequest, embedding_call, node_embedding_call, node_request};
 use serde_json::{Value, json};
 use std::io::{self, Read, Write};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    if std::env::args().any(|a| a == "--metadata") {
+        println!(
+            "{}",
+            json!({"protocolVersion":1,"engineVersion":env!("CARGO_PKG_VERSION"),
+            "sourceSha":option_env!("GRUND_BINDINGS_SOURCE_SHA").ok_or("build oracle with GRUND_BINDINGS_SOURCE_SHA")?})
+        );
+        return Ok(());
+    }
     let mut input = String::new();
     io::stdin().read_to_string(&mut input)?;
     let request: Value = serde_json::from_str(&input)?;
@@ -29,6 +37,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .as_str()
         .ok_or("missing operation")?
         .to_owned();
+    // #469 extends #470's framing; the original root/options Python protocol
+    // remains available (§FS-distribution.3.0.3).
+    if request.get("root").is_none() {
+        let data = node_embedding_call(node_request(
+            &operation,
+            request["args"].as_array().cloned().unwrap_or_default(),
+            &std::env::current_dir()?,
+        ));
+        io::stdout().lock().write_all(&canonical::encode(&data))?;
+        return Ok(());
+    }
     let data = embedding_call(EmbeddingRequest {
         operation: operation.clone(),
         root: request["root"].as_str().ok_or("missing root")?.into(),

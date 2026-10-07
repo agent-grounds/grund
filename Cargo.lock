@@ -180,6 +180,7 @@ dependencies = [
  "rayon",
  "regex",
  "regex-syntax",
+ "serde",
  "serde_json",
  "unicode-normalization",
 ]

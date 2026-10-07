@@ -20,10 +20,13 @@ pub(super) fn error_data(error: anyhow::Error, cautions: &[Finding]) -> Value {
         result["line"] = json!(source.line);
         result["column"] = json!(source.column);
         result["details"] = source.details.clone();
+        result["partial_output"] = source.partial_output.clone();
     }
     if let Some(query) = error.downcast_ref::<ShowQueryError>() {
         result["kind"] = json!("query");
         result["code"] = json!(query.code);
+        // §FS-distribution.3.0.3: the primary CLI query message excludes internal contexts.
+        result["message"] = json!(query.to_string());
         result["sites"] = query.sites.data();
     }
     // §FS-distribution.3.3.2: an I/O wrapper can retain the OS cause in its source.
@@ -38,10 +41,18 @@ pub(super) fn error_data(error: anyhow::Error, cautions: &[Finding]) -> Value {
         }
         result["details"]["os_error"] = json!(io.raw_os_error());
     }
+    // §FS-distribution.3.3.2: a scan abort is a filesystem refusal with its scan errors.
+    if let Some(abort) = error.downcast_ref::<crate::FmtScanAbort>() {
+        result["kind"] = json!("filesystem");
+        result["code"] = json!("io");
+        result["partial_output"] = json!({"changes":[],"scan_errors":abort.scan_errors.data(),
+            "refused_writes":[]});
+    }
     if let Some(refs) = error.downcast_ref::<RefsOutput>() {
         result["run_cautions"] = refs.warnings.data();
         result["partial_output"] = json!({"scan_errors": refs.scan_errors.data(),
-            "output_format": refs.output_format, "workspace": refs.workspace});
+            "output_format": refs.output_format, "workspace": refs.workspace,
+            "hits": refs.hits.data(), "kind_title": null, "note": refs.note});
     }
     result["causes"] = json!(
         error
@@ -52,7 +63,9 @@ pub(super) fn error_data(error: anyhow::Error, cautions: &[Finding]) -> Value {
     );
     if let Some(context) = error.downcast_ref::<crate::model::OperationContext>() {
         result["message"] = json!(context.message);
-        result["run_cautions"] = context.cautions.clone();
+        if !context.cautions.is_null() {
+            result["run_cautions"] = context.cautions.clone();
+        }
         result["partial_output"] = context.partial_output.clone();
     }
     result

@@ -5,6 +5,44 @@ use super::embedding_data::Data;
 use super::embedding_failure::error_data;
 use crate::*;
 use serde_json::{Value, json};
+use std::path::Path;
+
+/// Preserve discovery cautions before workspace validation can refuse a member
+/// (§FS-distribution.3.2.1, §FS-distribution.3.1). Supported Rust signatures stay intact.
+pub(super) fn load(path: &Path, validate: bool) -> (Vec<Finding>, anyhow::Result<Config>) {
+    let discovered = match effective_config(path) {
+        Ok(config) => config,
+        Err(error) => return (Vec::new(), Err(error)),
+    };
+    let earlier = cautions(&discovered);
+    if !validate {
+        return (earlier, Ok(discovered));
+    }
+    // §FS-distribution.3.2.3.1: refuse unsafe aliases while retaining discovery cautions.
+    if let Err(error) = crate::workspace::preflight_embedding_paths(path) {
+        return (earlier, Err(error));
+    }
+    let result = validate_config(path);
+    let cautions = result.as_ref().map(cautions).unwrap_or(earlier);
+    (cautions, result)
+}
+
+fn cautions(config: &Config) -> Vec<Finding> {
+    let mut cautions = config_run_warnings(config);
+    cautions.extend(
+        super::config_findings::config_diagnostics(config).map(|d| Finding {
+            severity: "warning",
+            code: d.code,
+            path: d.path.map(|p| crate::config::display_path(config, &p)),
+            line: d.line,
+            column: d.column,
+            message: d.message,
+            sites: Vec::new(),
+            authority: Vec::new(),
+        }),
+    );
+    cautions
+}
 
 pub(super) fn config(r: &EmbeddingRequest) -> Result<Value, Value> {
     let c = if r.operation == "validate_config" {
@@ -49,7 +87,7 @@ fn disjunctions(values: &[CitationDisjunction]) -> Vec<String> {
 
 /// Every persisted setting, with derived engine caches excluded from the public
 /// schema so #466 can change those caches independently (§FS-distribution.3.1).
-fn schema(c: &Config) -> Value {
+pub(super) fn schema(c: &Config) -> Value {
     let mut citations = serde_json::Map::new();
     citations.insert(
         "default".into(),

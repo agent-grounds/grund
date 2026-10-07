@@ -13,6 +13,7 @@ pub struct OperationDiagnostic {
     pub line: Option<usize>,
     pub column: Option<usize>,
     pub details: Value,
+    pub partial_output: Value,
     source: Option<std::sync::Arc<anyhow::Error>>,
 }
 
@@ -27,6 +28,7 @@ impl OperationDiagnostic {
             line: None,
             column: None,
             details: json!({}),
+            partial_output: Value::Null,
             source: None,
         }
     }

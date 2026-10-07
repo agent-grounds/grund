@@ -7,7 +7,7 @@ use crate::config::display_path;
 use crate::*;
 use serde_json::{Value, json};
 
-fn show_opts(r: &EmbeddingRequest) -> ShowOpts {
+pub(super) fn show_opts(r: &EmbeddingRequest) -> ShowOpts {
     ShowOpts {
         path: r.root.clone(),
         section: r.string("section"),

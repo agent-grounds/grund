@@ -48,11 +48,31 @@ pub(crate) fn fmt_workspace_projects(
                 outcome.scan_errors.append(&mut walked.scan_errors);
                 outcome.refused_writes.append(&mut walked.refused_writes);
             }
-            Err(error) => {
+            Err(mut error) => {
                 if let Some(abort) = error.downcast_ref::<FmtScanAbort>() {
                     strict_abort = true;
                     preflight_scan_errors.extend(abort.scan_errors.iter().cloned());
                 } else {
+                    // §FS-distribution.3.2.2.1: retain prior projects in a late writer failure.
+                    if let Some(diagnostic) = error.downcast_mut::<crate::OperationDiagnostic>() {
+                        let partial = &mut diagnostic.partial_output;
+                        if partial.is_object() {
+                            let preceding = serde_json::json!({
+                                "changes":outcome.changes.iter().map(|(path,line,label)|
+                                    serde_json::json!({"path":crate::config::display_path(render,path),
+                                        "line":line,"label":label})).collect::<Vec<_>>(),
+                                "scan_errors":outcome.scan_errors.iter().map(|e|
+                                    serde_json::json!({"path":e.path,"message":e.message})).collect::<Vec<_>>(),
+                                "refused_writes":outcome.refused_writes});
+                            for key in ["changes", "scan_errors", "refused_writes"] {
+                                let mut ordered =
+                                    preceding[key].as_array().cloned().unwrap_or_default();
+                                ordered
+                                    .extend(partial[key].as_array().into_iter().flatten().cloned());
+                                partial[key] = serde_json::json!(ordered);
+                            }
+                        }
+                    }
                     return Err(error);
                 }
             }

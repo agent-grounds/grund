@@ -2,7 +2,7 @@
 
 The evidence [§DISC-grund-core-public-surface](2026-09-22-grund-core-public-surface.md#disc-grund-core-public-surface-what-grund-cores-public-root-surface-is-and-what-it-should-be) argues from. It classifies nothing on its own authority: the counting convention is [§DISC-grund-core-public-surface.3](2026-09-22-grund-core-public-surface.md#3-what-counts-as-a-public-root-name), the columns are [§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries), and `tests/integration/test_public_surface_inventory.py` holds the first column equal to the crate root's export list ([§DISC-grund-core-public-surface.5](2026-09-22-grund-core-public-surface.md#5-what-is-checked)).
 
-The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it, and eight additive `cover --lines` exports of [§FS-cover.6](../../functional-spec/FS-cover.md#6-line-ownership) were read at `1f129faef7`, and two hidden run-flag seams of [§FS-cli.3.4](../../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from) carry the `--path-base` a frontend parses; the existing rows retain their original evidence. **206 rows, one per public root name.** The counts below include all five additions; the Python frontend now supplies consumer evidence alongside CLI and LSP.
+The original 182-name audit uses the baseline [§DISC-grund-core-public-surface.2](2026-09-22-grund-core-public-surface.md#2-the-audited-baseline) records — `7283e23bb0`, workspace `0.14.2-dev`, `v0.14.1-26-g7283e23bb0`. Four additive completion exports were read at `abba38146e` and seven additive Python-binding exports at `fa57931b17`, both workspace `0.16.2-dev`, three hidden, data-only watch seams of [§AR-bindings.3](../../architecture/AR-bindings.md#3-cratesgrund-cli-the-cli-binary) extend it, and eight additive `cover --lines` exports of [§FS-cover.6](../../functional-spec/FS-cover.md#6-line-ownership) were read at `1f129faef7`, and two hidden run-flag seams of [§FS-cli.3.4](../../functional-spec/FS-cli.md#34---path-base--where-report-paths-are-spelled-from) carry the `--path-base` a frontend parses, and eight additive Node-binding exports of [§FS-distribution.3.2](../../functional-spec/FS-distribution.md#32-node-grund-cli-npm-package) were read at `92bd7ff28d`; the existing rows retain their original evidence. The two writer-fault exports exist only with `test-binding-writes`; `visible` describes their definitions when that feature is enabled. **214 rows, one per public root name**, including feature-gated exports. The counts below include all six additions; the Python and Node frontends now supply consumer evidence alongside CLI and LSP.
 
 ## How a cell reads
 
@@ -14,7 +14,7 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 **Spec** — how [§FS-distribution.3.1](../../functional-spec/FS-distribution.md#31-rust-grund-core-crate) reaches the name. `named`: its text or its example writes the symbol. `related API`: a Rustdoc-visible function of the `api` component, which [§AR-system.2.9](../../architecture/README.md#29-api) makes the embedding surface and which that point's "and related APIs" reaches. `data type of X`: it appears in the signature of a `named` or `related API` entry point, transitively — one such path is named, not all of them. `no`: outside that closure, so the specification supports embedding it nowhere.
 
-**Consumers** — a textual `use grund_core::…` or `grund_core::…` in `grund-cli`, `grund-lsp`, `grund-py` or their test crates. `none found` is the result of searching **this repository** and never a claim about embedders outside it ([§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries)).
+**Consumers** — a textual `use grund_core::…` or `grund_core::…` in `grund-cli`, `grund-lsp`, `grund-py`, `grund-node` or their test crates, or in the shared Rust oracle example `grund-core/examples/grund-binding-oracle.rs`. `none found` is the result of searching **this repository** and never a claim about embedders outside it ([§DISC-grund-core-public-surface.4](2026-09-22-grund-core-public-surface.md#4-what-every-inventory-row-carries)).
 
 **Structural** — for a name no frontend spells: the chain from something one does call, so `via check_with_run_warnings → CheckOutput` means the CLI receives the type without naming it. `—` where the consumer column already answers. `none found` in both columns means no repository consumer of either kind was found.
 
@@ -24,22 +24,22 @@ Paths are relative to `crates/`, and an evidence location is one site, not every
 
 | Reading | Count |
 | --- | --- |
-| Public root names | 206 |
-| Rustdoc-visible | 188 |
+| Public root names | 214 |
+| Rustdoc-visible | 196 |
 | `#[doc(hidden)]` | 18 |
-| Named, a related API, or a data type of one | 120 |
-| Outside that closure | 86 |
-| Named by a frontend or its tests | 121 |
-| Reached structurally only | 40 |
+| Named, a related API, or a data type of one | 122 |
+| Outside that closure | 92 |
+| Named by a frontend or its tests | 126 |
+| Reached structurally only | 43 |
 | No repository consumer of either kind | 45 |
-| Disposition keep | 125 |
+| Disposition keep | 133 |
 | Disposition keep, hidden | 18 |
 | Disposition keep, name in the spec | 18 |
 | Disposition hide | 11 |
 | Disposition retire with the ramp | 0 |
 | Disposition facade, then retire | 34 |
 
-The two count columns do not line up, and they are not meant to: 43 names have no repository consumer while 86 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
+The two count columns do not line up, and they are not meant to: 45 names have no repository consumer while 92 sit outside what the specification reaches, and the two sets overlap only in part. A name can be specification-supported and unused here — that is most of what `scan` returns — or used by a frontend and supported nowhere, which is what a seam is.
 
 ## The inventory
 
@@ -48,10 +48,16 @@ The two count columns do not line up, and they are not meant to: 43 names have n
 | `AbsentOptionalNamespace` | config | visible | data type of `validate_config` | none found | via Config → AbsentOptionalNamespace `grund-cli/src/lib.rs:13` | keep |
 | `agent_override_table` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `AGENT_SETUP_INSTRUCTIONS` | templates | visible | no | grund-cli `grund-cli/src/lib.rs:13` | — | hide |
+| `ApiFailure` | api | visible | no | none found | via ApiOutcome → ApiFailure `grund-node/src/lib.rs:165` | keep |
+| `ApiFailureSite` | api | visible | no | none found | via ApiOutcome → ApiFailure → ApiFailureSite `grund-node/src/lib.rs:165` | keep |
+| `ApiOutcome` | api | visible | no | grund-node `grund-node/src/lib.rs:165` | — | keep |
+| `ApiPartialOutput` | api | visible | no | none found | via ApiOutcome → ApiFailure → ApiPartialOutput `grund-node/src/lib.rs:165` | keep |
 | `ApiScanError` | scanner | visible | data type of `refs` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `BatchShowFailure` | queries | `#[doc(hidden)]` | no | none found | via show_batch_with_scope → BatchShowRecord → BatchShowFailure `grund-cli/src/cli_show_batch.rs:63` | keep, hidden |
 | `BatchShowQuery` | queries | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
 | `BatchShowRecord` | queries | `#[doc(hidden)]` | no | none found | via show_batch_with_scope → BatchShowRecord `grund-cli/src/cli_show_batch.rs:63` | keep, hidden |
+| `binding_write_fault` | writers | visible | no | grund-node test seams `grund-node/src/test_runtime.rs:142` | — | keep |
+| `BindingWriteFaultGuard` | writers | visible | no | grund-node test seams `grund-node/src/test_runtime.rs:135` | — | keep |
 | `block_outcome_verb` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `BlockOutcome` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `can_replace_trigger_at` | queries | visible | no | none found | none found | hide |
@@ -109,8 +115,8 @@ The two count columns do not line up, and they are not meant to: 43 names have n
 | `E2eSpecRef` | model | visible | data type of `Findings` | none found | none found | keep |
 | `effective_config` | api | visible | related API | grund-cli `grund-cli/src/lib.rs:13`; grund-lsp `grund-lsp/src/integrations.rs:103` | — | keep |
 | `EmbeddedValueRoot` | model | visible | data type of `Findings` | none found | none found | keep |
-| `embedding_call` | api | visible | related API | grund-py `grund-py/src/lib.rs:3` | — | keep |
-| `EmbeddingRequest` | api | visible | data type of `embedding_call` | grund-py `grund-py/src/lib.rs:3` | — | keep |
+| `embedding_call` | api | visible | related API | grund-py `grund-py/src/lib.rs:3`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
+| `EmbeddingRequest` | api | visible | data type of `embedding_call` | grund-py `grund-py/src/lib.rs:3`; grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
 | `expand_target` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
 | `fetch_snapshot` | writers | visible | no | none found | none found | keep, name in the spec |
 | `fetch_snapshot_with_run_warnings` | writers | `#[doc(hidden)]` | no | grund-cli `grund-cli/src/lib.rs:13` | — | keep, hidden |
@@ -195,6 +201,8 @@ The two count columns do not line up, and they are not meant to: 43 names have n
 | `NamespaceMatch` | config | visible | data type of `validate_config` | grund-cli `grund-cli/src/lib.rs:13` | — | keep |
 | `NearMissHeading` | model | visible | data type of `Findings` | none found | none found | keep |
 | `needs_wezterm_wiring` | writers | visible | no | grund-cli `grund-cli/src/lib.rs:32` | — | facade, then retire |
+| `node_embedding_call` | api | visible | related API | grund-node `grund-node/src/lib.rs:7`; oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
+| `node_request` | api | visible | related API | oracle `grund-core/examples/grund-binding-oracle.rs:8` | — | keep |
 | `on_type_line_edits` | queries | visible | no | grund-lsp `grund-lsp/src/lib.rs:4` | — | hide |
 | `OperationDiagnostic` | model | visible | no | none found | none found | keep, name in the spec |
 | `parse_cover_line_range` | api | visible | related API | none found | none found | keep |

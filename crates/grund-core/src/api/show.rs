@@ -64,8 +64,34 @@ fn show_with_scope_and_overlays(
     overlays: &TextOverlays,
 ) -> (Vec<Finding>, Result<ShowOutput>) {
     let mut run_warnings = Vec::new();
-    let output = show_run(id_arg, opts, path_provided, overlays, &mut run_warnings);
+    let output = show_run(
+        id_arg,
+        opts,
+        path_provided,
+        overlays,
+        &mut run_warnings,
+        &mut serde_json::Value::Null,
+    );
     (run_warnings, output)
+}
+
+/// Query metadata from the same loaded context (§FS-distribution.3.2.2.2).
+pub(super) fn show_data(
+    id: &str,
+    opts: ShowOpts,
+    explicit: bool,
+) -> (Vec<Finding>, Result<(ShowOutput, serde_json::Value)>) {
+    let mut warnings = Vec::new();
+    let mut metadata = serde_json::Value::Null;
+    let result = show_run(
+        id,
+        opts,
+        explicit,
+        &TextOverlays::new(),
+        &mut warnings,
+        &mut metadata,
+    );
+    (warnings, result.map(|out| (out, metadata)))
 }
 
 fn show_run(
@@ -74,6 +100,7 @@ fn show_run(
     path_provided: bool,
     overlays: &TextOverlays,
     run_warnings: &mut Vec<Finding>,
+    metadata: &mut serde_json::Value,
 ) -> Result<ShowOutput> {
     let context = load_workspace_context_with_overlays(&opts.path, path_provided, overlays, false)?;
     *run_warnings = context_run_warnings(&context);
@@ -131,6 +158,7 @@ fn show_run(
         )));
     }
     let section = opts.section.or(inline_section);
+    *metadata = crate::queries::show_metadata(config, &project.findings, &id, section.as_deref());
     let mut output = show_declaration_with_overlays(
         config,
         context.render_config(),
@@ -162,5 +190,6 @@ fn show_run(
         );
         output.json = Some(json);
     }
+    metadata["path"] = serde_json::json!(display_path(context.render_config(), &output.path));
     Ok(output)
 }

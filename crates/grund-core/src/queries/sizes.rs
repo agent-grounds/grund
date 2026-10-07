@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::citation_counts::ListCitationCounts;
+use super::selector_refusal::{require_unique_literal, selector_refusal};
 use crate::config::{
     Config, display_path, measure_point_text, non_citable_kind_error, run_warning_findings,
 };
@@ -69,7 +70,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         .map(|raw| {
             // §FS-rules.8.1: a refusal recovering no kind ends in `known kinds:`.
             parse_selector(raw, &vocabulary)
-                .map_err(|refusal| anyhow!(refusal.render(&context.known_kinds_line())))
+                .map_err(|refusal| selector_refusal(refusal.render(&context.known_kinds_line())))
         })
         .transpose()?;
 
@@ -199,12 +200,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             _ => None,
         };
         if let Some((literal, matches)) = resolution {
-            if matches == 0 {
-                return Err(anyhow!("literal subject {literal} does not resolve"));
-            }
-            if matches > 1 {
-                return Err(anyhow!("literal subject {literal} is ambiguous"));
-            }
+            require_unique_literal(&literal, matches)?;
         }
         pending.retain(|row| {
             let rendered = render_id(&row.project_config.grammar, row.id);
