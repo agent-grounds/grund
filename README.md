@@ -4,11 +4,10 @@
 
 > **Keep your agents grounded** — specs, docs, and code as one knowledge graph, always in sync.
 
-`grund` exists so you always know *why* — why your agents did what they did, why a line is the way it is: all work stays grounded in the spec that called for it ([§GRUND-grund](docs/grund.md#grund-grund-agents-stay-grounded-in-the-spec)). It keeps three promises:
+`grund` exists so you always know *why* — why your agents did what they did, why a line is the way it is: all work stays grounded in the spec that called for it ([§GRUND-grund](docs/grund.md#grund-grund-agents-stay-grounded-in-the-spec)). Keeping the why means keeping a structure, and `grund` takes on the two parts of it that are hard:
 
-- **The why stays known** — everything in the project cites the spec point that says why it is the way it is ([§GRUND-understanding](docs/grund.md#grund-understanding-the-why-stays-known)).
-- **The project's long-term memory stays organized** — every fact has a stable ID, fetched on demand in minimal tokens instead of re-read from whole files ([§GRUND-structure](docs/grund.md#grund-structure-the-projects-long-term-memory-stays-organized)).
-- **The structure stays consistent** — `grund check` fails the build the moment work and memory drift apart ([§GRUND-consistency](docs/grund.md#grund-consistency-the-structure-stays-consistent)).
+- **The shape of what your project knows** — its kinds of fact, where each lives, and how it is sectioned — declared once in `grund.toml`, with every fact at a stable ID that is fetched on demand in minimal tokens instead of re-read from whole files ([§GRUND-schema](docs/grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)).
+- **The links between code and text, and the rules they follow** — every unit of code cites the spec point that says why it is the way it is, and `grund check` fails the build the moment a link dangles or breaks a rule the project declared ([§GRUND-links](docs/grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)).
 
 `grund` is built around one workflow:
 
@@ -17,7 +16,7 @@
 2. **Re-read before you edit.** `grund <ID>.<section>` pulls just that subsection into context — no full-file reads, no token bloat.
 3. **No dangling pointers.** `grund check` validates that every cited ID resolves — in `.md`, Rust `///`, Java doc-comments, Python docstrings, Go `//`, JSDoc, every doc-comment form `grund` knows about.
 
-[Lychee](https://lychee.cli.rs/) checks links in Markdown and HTML. A `§`-marked citation of `FS-check.3.2` in `crates/grund-core/src/checker/references.rs` needs an ID resolver rather than ordinary link validation. `grund` resolves those citations and checks declared constraints: Lychee is the link checker; `grund` is the intent checker. Both belong in CI; they guard different failure modes. [§GRUND-grund.1](docs/grund.md#1-what-grund-does-about-it)
+[Lychee](https://lychee.cli.rs/) checks links in Markdown and HTML. A `§`-marked citation of `FS-check.3.2` in `crates/grund-core/src/checker/references.rs` needs an ID resolver rather than ordinary link validation. `grund` resolves those citations and checks declared constraints: Lychee is the link checker; `grund` is the intent checker. Both belong in CI; they guard different failure modes. [§GRUND-links.2](docs/grund.md#2-holding-every-edit-to-them)
 
 See the [requirements-traceability comparison](docs/related-work/REL-traceability-tools.md#workmatrix-reader-tasks) for concrete retrieval and checking tasks and their limits.
 

@@ -3,7 +3,7 @@
 Gradual typing lets one program mix checked and unchecked parts and move code between them
 one annotation at a time. "Gradual typing for prose" is the programmer's slogan for what
 grund does to a repository's text: what is marked is checked, and the rest is left alone
-([§GRUND-consistency](../grund.md#grund-consistency-the-structure-stays-consistent)).
+([§GRUND-links.2](../grund.md#2-holding-every-edit-to-them)).
 
 ## work: What the work is
 

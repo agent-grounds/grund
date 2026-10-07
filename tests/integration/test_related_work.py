@@ -1,5 +1,5 @@
 """Related work has a citable home, and every entry in it is grounded. Where grund
-comes from is part of its why (§GRUND-understanding), so the `REL` kind names the
+comes from is part of its why (§GRUND-grund), so the `REL` kind names the
 ground it bears on (§FS-config.3.9), its folder's index fixes the three chapters
 every entry carries (§REQ-spec-section-names.shape), and every entry is cited
 from outside its folder: an index entry is not a citation of it

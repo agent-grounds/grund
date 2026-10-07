@@ -30,7 +30,7 @@ from it. It is the current wave of the design whose codebases grund is for
 - The specification comes first and the code is held to it; grund exists for codebases
   that work this way ([§GRUND-grund.2](../grund.md#2-who-it-is-for)).
 - A requirement gets a stable identifier code can point back at, as Spec Kit's numbers
-  and specre's ULIDs do ([§GRUND-structure](../grund.md#grund-structure-the-projects-long-term-memory-stays-organized)).
+  and specre's ULIDs do ([§GRUND-schema.2](../grund.md#2-keeping-it)).
 
 ## departs: Where grund departs
 

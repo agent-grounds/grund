@@ -17,7 +17,7 @@ Illustrative IDs are not covered and never were: `FS-login`, `FS-014-user-login`
 
 ## 2. The grounding moves, it is not deleted
 
-Removing a citation from a payload is only half the fix. The sentence still has a reason, and that reason is still this repository's to record, so the `§` citation moves to the file that *owns* the shipped bytes — the module holding the `include_str!`, the spec point the behaviour belongs to — where it is checked like every other citation. A payload edit that drops a citation without rehoming it trades a wrong address for no address, which is the loss [§GRUND-understanding](../grund.md#grund-understanding-the-why-stays-known) is about.
+Removing a citation from a payload is only half the fix. The sentence still has a reason, and that reason is still this repository's to record, so the `§` citation moves to the file that *owns* the shipped bytes — the module holding the `include_str!`, the spec point the behaviour belongs to — where it is checked like every other citation. A payload edit that drops a citation without rehoming it trades a wrong address for no address, which is the loss [§GRUND-links](../grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold) is about.
 
 This is also why a home whose files ship verbatim is configured `scan = false` ([§FS-config.3.4.7](../functional-spec/FS-config.md#347-scan--a-place-that-is-listed-not-scanned)): the key exists for exactly this content, and it says in the config what this requirement says in prose — nothing in that directory is this repository's to ground.
 

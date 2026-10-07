@@ -67,7 +67,7 @@ properties of the implementation.
 ## agrees: Where grund agrees
 
 Stable IDs let code refer back to intent held as repository text
-([§GRUND-structure](../grund.md#grund-structure-the-projects-long-term-memory-stays-organized)).
+([§GRUND-links](../grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)).
 The OpenFastTrace task above is another concrete use of source tags to connect code
 to specification items. Grund's structural checks can run in CI before merge
 ([§GRUND-grund.2](../grund.md#2-who-it-is-for)).

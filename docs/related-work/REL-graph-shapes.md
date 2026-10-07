@@ -3,7 +3,7 @@
 SHACL validates a graph against declared shapes, and Schematron validates a document by
 rules rather than by a grammar. Together they are the precedent for checking a structure
 by declared constraints of graded severity, which is what citation directions do to the
-citation graph ([§GRUND-consistency](../grund.md#grund-consistency-the-structure-stays-consistent)).
+citation graph ([§GRUND-links.1](../grund.md#1-declaring-the-rules)).
 
 ## work: What the work is
 
