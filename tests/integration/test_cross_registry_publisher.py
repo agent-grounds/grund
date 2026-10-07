@@ -175,6 +175,76 @@ class AuthorityTests(PublisherFixture):
         self.assertEqual([], self.registries.uploads())
 
 
+class FreshTokenTests(PublisherFixture):
+    """§FS-distribution-candidate.8.2 — each upload uses a token exchanged immediately before
+    it, from a fresh identity token; §FS-distribution-candidate.8.5 — a refusal there is
+    reported partial and a rerun completes it. The fake accepts only the newest token it
+    issued, so an accepted upload used the last exchange before it."""
+
+    MINT = ("POST", "/pypi/_/oidc/mint-token")
+
+    def last(self, before, match):
+        return max((i for i, entry in enumerate(self.registries.log[:before]) if match(entry)),
+                   default=-1)
+
+    def asked(self, entry):
+        """A question to a registry: a preflight, a crate or a readiness wait."""
+        return entry[0] == "GET" and "/oidc/" not in entry[1]
+
+    def assert_fresh(self, upload, exchange):
+        exchanged = self.last(upload, lambda e: e == exchange)
+        waited = self.last(upload, self.asked)
+        self.assertGreater(exchanged, waited, "the token was exchanged before the last wait")
+        self.assertGreater(self.last(exchanged, lambda e: e[1] == "/oidc/token"), waited,
+                           "the identity token was taken before the last wait")
+
+    def test_every_npm_upload_uses_a_token_exchanged_after_the_previous_wait(self):
+        result = self.publish()
+        self.assertEqual(0, result.returncode, result.stderr)
+        exchange = "/npm/-/npm/v1/oidc/token/exchange/package/"
+        for i, (method, path) in enumerate(self.registries.log):
+            if method == "PUT":
+                with self.subTest(package=path):
+                    self.assert_fresh(i, ("POST", exchange + path[len("/npm/"):]))
+
+    def test_every_pypi_upload_uses_a_token_minted_after_the_last_npm_wait(self):
+        result = self.publish()
+        self.assertEqual(0, result.returncode, result.stderr)
+        log = self.registries.log
+        last_npm = max(i for i, (m, p) in enumerate(log) if m == "PUT")
+        uploads = [i for i, entry in enumerate(log) if entry == ("POST", "/pypi/legacy/")]
+        self.assertLess(last_npm, uploads[0])
+        for i in uploads:
+            with self.subTest(upload=i):
+                self.assert_fresh(i, self.MINT)
+
+    def refused_later(self, key, artifact, naming):
+        self.registries.grants[key] = 1
+        first = self.publish()
+        self.assertNotEqual(0, first.returncode)
+        self.assertIn(naming, first.stderr)
+        status, states = self.state()
+        self.assertFalse(status["complete"])
+        self.assertEqual("failed", states[artifact])
+        before = {a for a, s in states.items() if s == "published"}
+        del self.registries.grants[key]
+        second = self.publish()
+        self.assertEqual(0, second.returncode, second.stderr)
+        status, states = self.state()
+        self.assertTrue(status["complete"])
+        self.assertEqual("published", states[artifact])
+        self.assertEqual({"skipped"}, {states[a] for a in before} or {"skipped"})
+
+    def test_a_refused_npm_exchange_after_the_check_is_partial_and_a_rerun_completes_it(self):
+        name = "@grund-cli/darwin-x64"
+        self.refused_later(name, f"npm/grund-cli-darwin-x64-{VERSION}.tgz", name)
+
+    def test_a_refused_pypi_mint_after_the_check_is_partial_and_a_rerun_completes_it(self):
+        artifact = next(a["path"] for a in self.uploaded
+                        if a["registry"] == "pypi" and a["package"] == "grund")
+        self.refused_later("pypi", artifact, Path(artifact).name)
+
+
 class VerificationGateTests(PublisherFixture):
     """§FS-distribution-candidate.8.3 — only the rehearsed bytes, or nothing."""
 

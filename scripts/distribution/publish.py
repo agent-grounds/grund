@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Upload one verified, rehearsed candidate's npm and PyPI artifacts, and nothing else.
 
+§FS-distribution-candidate.8.2: every identity is exchanged before anything waits or uploads,
+and each upload then takes a token exchanged immediately before it.
 §FS-distribution-candidate.8.3: the candidate is verified as a release and every
 registry row's receipt must name its manifest digest before any registry is asked
 anything; this script only reads and uploads the candidate's files and never runs a
@@ -118,34 +120,55 @@ class Run:
             sets[name] = files
         return todo, sets
 
-    def publish(self, tokens, pypi_token, todo, sets):
+    def npm_token(self, name, oidc=None):
+        oidc = oidc or registries.identity_token(registries.NPM_AUDIENCE)
+        return registries.npm_exchange(self.args.npm_registry, name, oidc)
+
+    def authorize(self):
+        """§FS-distribution-candidate.8.2: every identity, once, as the authority check; the
+        tokens are dropped, since a readiness wait can outlast them."""
+        oidc = registries.identity_token(registries.NPM_AUDIENCE)
+        for item in self.items:
+            if item["registry"] == "npm":
+                self.npm_token(item["package"], oidc)
+        registries.pypi_mint(self.args.pypi_url)
+
+    def pypi_token(self, item):
+        try:
+            return registries.pypi_mint(self.args.pypi_url)
+        except Refused as refusal:
+            raise Refused(f"{refusal} (stopped before {Path(item['path']).name})") from None
+
+    def publish(self, todo, sets):
         for item in todo:
             self.state[item["path"]] = "failed"
             data = self.data(item)
+            # §FS-distribution-candidate.8.2: exchanged now, after the previous package's wait.
             registries.npm_publish(self.args.npm_registry, item["package"], item["version"], data,
-                                   tokens[item["package"]])
+                                   self.npm_token(item["package"]))
             integrity = registries.npm_integrity(data)
             self.wait(f"{item['package']}@{item['version']} on npm", lambda i=item: integrity ==
                       registries.npm_held(self.args.npm_registry, i["package"], i["version"]))
             self.state[item["path"]] = "published"
         for name, files in sets.items():
+            token = None
             for item in (f for f in files if self.state[f["path"]] == "pending"):
                 self.state[item["path"]] = "failed"
+                # §FS-distribution-candidate.8.2: minted once per set, after the waits before it;
+                # PyPI's trusted-publishing token lives at most 15 minutes, a wait up to 30.
+                token = token or self.pypi_token(item)
                 registries.pypi_upload(self.args.pypi_upload_url, self.root / item["path"],
-                                       self.data(item), pypi_token)
+                                       self.data(item), token)
                 self.state[item["path"]] = "published"
             expected = {Path(f["path"]).name: f["sha256"] for f in files}
             self.wait(f"the complete {name} {files[0]['version']} set on pypi", lambda n=name, f=files:
                       registries.pypi_held(self.args.pypi_url, n, f[0]["version"]) == expected)
 
     def run(self):
-        oidc = registries.identity_token(registries.NPM_AUDIENCE)
+        self.authorize()
         self.crates()
-        names = [a["package"] for a in self.items if a["registry"] == "npm"]
-        tokens = {name: registries.npm_exchange(self.args.npm_registry, name, oidc) for name in names}
-        pypi_token = registries.pypi_mint(self.args.pypi_url)
         todo, sets = self.preflight()
-        self.publish(tokens, pypi_token, todo, sets)
+        self.publish(todo, sets)
 
 
 def main(argv=None):

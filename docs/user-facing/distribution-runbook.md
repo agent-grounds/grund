@@ -159,8 +159,11 @@ Before that change may be made ([§FS-distribution-candidate.8.2](../functional-
 - **Trusted publishers.** On npm and on PyPI, a trusted publisher for each
   package naming this repository, `cross-registry-publish.yml` and the
   `cross-registry-publish` environment. The workflow holds no stored token;
-  its job's identity token is exchanged for a short-lived one per registry, and
-  a refused exchange stops the run before any upload, naming the package.
+  its job's identity token is exchanged for a short-lived one per registry.
+  Every exchange is made once before any upload, and a refused one stops the
+  run there, naming the package. Each upload then exchanges a fresh token
+  immediately before it, because a readiness wait can outlast one; a refusal at
+  that point leaves the run partial, and a rerun resumes it.
 - **The environment.** A `cross-registry-publish` environment with a required
   reviewer, so every run waits for a maintainer's approval.
 - **Attestations.** The publishing job attests the build provenance of every
