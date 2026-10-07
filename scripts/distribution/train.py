@@ -6,8 +6,9 @@ session over stdio; the Node addon and the Python extension through native API c
 over the operations of §AR-benchmarks.1.5's list. `scripts/pgo-build.sh` runs this
 with the instrumented payload, and reads `describe` for the evidence it records.
 
-Plain Python 3.6, because the manylinux2014 image the Linux release builds in has
-nothing newer on the path it trains from.
+Plain Python 3.6 syntax, because `pgo-build.sh`'s `find_python` accepts any Python 3.6
+or newer to run it; in the manylinux2014 image the Linux release builds in, that is
+`/opt/python/cp312-cp312/bin/python3`.
 """
 
 import json
