@@ -72,6 +72,20 @@ ID and section grammar. For a qualified citation, it uses the target project's
 grammar: `<§>api/FS-001-session` is parsed with `api`'s `[id]` config, even when
 the citing/root project uses a different ID format.
 
+#### 1.2.1 An unknown alias has no grammar to read its tail
+
+A qualified citation whose alias path names no loaded project has no target, so
+no project's grammar reads its tail — not the citing project's, and not that of
+whichever loaded project happens to declare the tail's kind. A workspace run
+reads such a tail with the fixed `KIND[-NUM]-SLUG` fallback shape of a run that
+loads no workspace ([§FS-workspace.5.2](FS-workspace.md#52-recognition-in-a-run-that-loads-no-workspace)), and the citation is reported at its site as
+`unknown project alias <alias>` ([§FS-check.3.8](FS-check.md#38-cross-project-citation-failure)) whatever kind the tail names. So
+`<§>org/GOAL-x` is an unknown-alias error in a workspace where no loaded project
+declares `GOAL`, exactly as it is in the same repository without `[workspace]`
+and exactly as `<§>org/FS-a` is where one does: the unknown thing is the alias,
+and whether any loaded grammar would accept the tail cannot hide it. A known
+alias is unchanged — its target's grammar reads the tail.
+
 ### 1.3 The shape outside a workspace
 
 The shape is read the same way in **every** repository, including one with no
@@ -586,8 +600,10 @@ not loaded there. That shape does not decide whether a qualified citation is rep
 unknown thing is the alias, which needs no tail grammar, so a tail that does not
 match it (lowercase kinds, slug-only ID grammars that don't split on `-`/`_`,
 kinds with non-`[A-Z0-9]` characters) is an `unknown project alias` error all the
-same. The workspace-root run, which parses each qualified tail with the target
-project's grammar, is the one place that checks the tail itself.
+same. The workspace-root run, which parses each qualified tail whose alias names
+a loaded project with that target project's grammar, is the one place that checks
+the tail itself; a tail whose alias names no loaded project has no target there
+either, and is read with this same fallback shape ([§FS-workspace.1.2.1](FS-workspace.md#121-an-unknown-alias-has-no-grammar-to-read-its-tail)).
 
 ## 6. Nested project boundary
 

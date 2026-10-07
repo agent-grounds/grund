@@ -1,0 +1,13 @@
+grund_config_version = 1
+project_name = "consumer"
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+file = "docs/fs.md"
+title = "Specs"
+
+[workspace]
+members = ["sub"]
