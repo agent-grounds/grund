@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/grund-core", "crates/grund-cli", "crates/grund-lsp", "crates/grund-py", "tests/integration"]
+members = ["crates/grund-core", "crates/grund-cli", "crates/grund-lsp", "crates/grund-py", "crates/grund-node", "tests/integration"]
 default-members = ["crates/grund-cli"]
 resolver = "3"
 
