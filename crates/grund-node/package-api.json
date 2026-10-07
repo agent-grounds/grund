@@ -1,0 +1,22 @@
+{
+  "exports": {
+    ".": {
+      "import": { "types": "./index.d.mts", "default": "./index.mjs" },
+      "require": { "types": "./index.d.cts", "default": "./index.cjs" }
+    }
+  },
+  "types": "./index.d.mts",
+  "engines": { "node": "^22.0.0 || ^24.0.0" },
+  "files": [
+    "*.cjs", "*.mjs", "*.d.mts", "*.d.cts", "README.md", "LICENSE", "native", "build"
+  ],
+  "scripts": { "build:source": "node build/source.mjs" },
+  "grund": {
+    "apiSchemaVersion": 1,
+    "napiVersion": 8,
+    "rustToolchain": "1.95.0",
+    "addon": "native/grund.node",
+    "sourceBuild": "build/source.mjs",
+    "sourceClosure": "build/sources"
+  }
+}
