@@ -34,6 +34,12 @@ def _build_cli():
     shutil.copy2(target / "release" / name, scripts / name)
 
 
+def prepare_metadata_for_build_wheel(metadata_directory, config_settings=None):
+    # maturin refuses a `data` directory that is missing, and the CLI is not built yet.
+    (HERE / "data").mkdir(exist_ok=True)
+    return maturin.prepare_metadata_for_build_wheel(metadata_directory, config_settings)
+
+
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     _build_cli()
     return maturin.build_wheel(wheel_directory, config_settings, metadata_directory)
