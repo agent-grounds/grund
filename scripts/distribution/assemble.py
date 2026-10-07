@@ -33,6 +33,11 @@ def _dump(manifest):
     return json.dumps(manifest, indent=2) + "\n"
 
 
+def _write(path, manifest):
+    """§FS-distribution-candidate.6.1: UTF-8 and LF on every runner, Windows included."""
+    path.write_bytes(_dump(manifest).encode("utf-8"))
+
+
 def _copy(source, target, path):
     (target / path).parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source / path, target / path)
@@ -75,7 +80,7 @@ def assemble(row_dirs, sha, out):
                 "rows": order, "toolchain": {**first["toolchain"], "images": images},
                 "artifacts": sorted(artifacts, key=lambda a: rank[a["path"]]),
                 "payloads": payloads}
-    (out / "manifest.json").write_text(_dump(manifest), encoding="utf-8")
+    _write(out / "manifest.json", manifest)
     print(f"ok: {out} assembles {len(order)} rows, {manifest['scope']}")
 
 
@@ -94,7 +99,7 @@ def share(candidate, row, out):
     projected = project(manifest, digest, row)
     for item in projected["artifacts"]:
         _copy(candidate, out, item["path"])
-    (out / "manifest.json").write_text(_dump(projected), encoding="utf-8")
+    _write(out / "manifest.json", projected)
     print(f"ok: {out} is row {row}'s share of {digest}")
 
 
@@ -104,9 +109,9 @@ def receipts(candidate, shares):
     manifest, digest = verify.read_manifest(candidate)
     problems = []
     for directory in map(Path, shares):
-        text = (directory / "manifest.json").read_text(encoding="utf-8")
-        row = json.loads(text)["rows"][0]
-        if text != _dump(project(manifest, digest, row)):
+        data = (directory / "manifest.json").read_bytes()
+        row = json.loads(data)["rows"][0]
+        if data != _dump(project(manifest, digest, row)).encode("utf-8"):
             problems.append(f"{directory} is not row {row}'s share of {digest}")
             continue
         try:
@@ -114,7 +119,7 @@ def receipts(candidate, shares):
         except (OSError, ValueError):
             problems.append(f"{directory} holds no receipt for row {row}")
             continue
-        share_digest = verify.sha256(text.encode("utf-8"))
+        share_digest = verify.sha256(data)
         checks = receipt.get("checks") or {}
         if receipt.get("manifest_sha256") != share_digest or receipt.get("row") != row:
             problems.append(f"the receipt in {directory} is not for its share {share_digest}")
