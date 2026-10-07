@@ -11,6 +11,7 @@ What `grund` must never break — the hard invariants a release is blocked on �
 - [§REQ-deterministic-output](REQ-deterministic-output.md#req-deterministic-output-same-input-same-bytes) — same input, same bytes
 - [§REQ-never-crashes](REQ-never-crashes.md#req-never-crashes-garbage-in-diagnostic-out) — garbage in, diagnostic out
 - [§REQ-runs-offline](REQ-runs-offline.md#req-runs-offline-verification-never-depends-on-an-external-service) — verification never depends on an external service
+- [§REQ-remote-equivalence](REQ-remote-equivalence.md#req-remote-equivalence-a-fetched-remote-answers-every-operation-as-a-local-project-does) — a fetched remote answers every operation as a local project does
 
 ## This repository
 

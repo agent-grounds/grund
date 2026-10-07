@@ -53,6 +53,8 @@ Reserving `root` (or any other name) would shadow any real project actually name
 
 `[projects.payments] ref = "main"` would mean a passing `check` is a promise about whichever commit was HEAD at the last `sync` — silently invalidated by any upstream push. That is a [§GOAL-no-dangling-refs](../../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) hazard packaged as a feature. The first implementation therefore stops at workspace-local aliases. External repos should be added only with a committed lockfile or cached declaration index that keeps `grund check` offline and reproducible.
 
+Resolved by [§DF-remote-projects](DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root): a remote is pinned to a full commit in a committed `grund.lock`, and its complete tracked tree is committed as a projection the ordinary scanner reads offline ([§FS-remote-projects](../../functional-spec/FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection)).
+
 ### 3.5 Network I/O must be one explicit verb
 
 External references, when implemented, must be validated against local state, never the network. This keeps `grund check` deterministic across machines and fast enough for [§GOAL-fast-feedback](../../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) — per-keystroke in an IDE, per-save in a watcher, per-commit in CI. A future `grund sync`-style verb is the right place for network behavior. A single network verb is easier to audit, sandbox, and reason about than network behavior diffused across commands.

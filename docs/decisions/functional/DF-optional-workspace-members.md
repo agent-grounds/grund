@@ -169,4 +169,6 @@ the line would be noise in every generated config to spare one reader a
 documentation lookup. And an absent member's namespace is skipped whole rather
 than checked against a cached catalog of what it used to hold, which is the
 shape [§FS-workspace.7](../../functional-spec/FS-workspace.md#7-neighboring-repos) would need for neighbouring repositories and is a different
-feature.
+feature, now decided in [§DF-remote-projects](DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root) as a committed projection rather than a catalog.
+An absent optional member inside a remote reuses this decision's announcement
+([§FS-remote-projects.differences.consumer-site](../../functional-spec/FS-remote-projects.md#differencesconsumer-site-suppression-never-lets-a-consumer-citation-pass)).

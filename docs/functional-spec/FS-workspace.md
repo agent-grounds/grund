@@ -472,17 +472,15 @@ A member alias is the member config's `project_name`, or the member directory's
 basename when omitted. A member listed in `optional_members` is the one exception,
 and it is an exception in both checkouts: its alias is the entry's last path
 segment, and a `project_name` that disagrees with that segment is a config error
-rather than a second name ([§FS-workspace.2.2.2](FS-workspace.md#222-the-alias-of-an-optional-member)).
+rather than a second name ([§FS-workspace.2.2.2](FS-workspace.md#222-the-alias-of-an-optional-member)). A mounted member's alias is its entry's last
+segment too, and a remote's is its table key ([§FS-remote-projects.declaration.alias](FS-remote-projects.md#declarationalias-the-alias-is-the-table-key)).
 
 Aliases must match the lowercase slug grammar in [§FS-workspace.1.1](FS-workspace.md#11-the-alias-path) and must be unique **among
-siblings** — the root project and the top-level members share one level, and
+siblings** — the root project, the top-level members and the block's remotes share one level, and
 each nested `[workspace]` block's members share another ([§FS-workspace.6.1](FS-workspace.md#61-nested-workspaces)). A duplicate or
 invalid alias is a launch-time error, because a qualified citation would
 otherwise have two possible targets. Two projects under different parents may
 carry the same alias: their alias paths still differ, so nothing is ambiguous.
-
-A project's optional one-line `project_description` follows the same residency
-rule as the alias, but it is presentation metadata only ([§FS-workspace.3.1](FS-workspace.md#31-project-descriptions)).
 
 ### 3.1 Project descriptions
 
@@ -753,7 +751,9 @@ does, which is
 multi-segment `members` entry (`grp/inner`) hops a directory that may itself
 declare `[workspace]` and list the same child, and the outer claim is the one the
 scan down from the outermost root follows — ordinary nesting has one claim per
-directory, where the two agree.
+directory, where the two agree. A mounted root is the one exception: no claim above it reaches
+inside, and a path inside it is read from its own claims and shown outside under its alias
+([§FS-remote-projects.mount.rule](FS-remote-projects.md#mountrule-a-mounted-root-resolves-natively-and-is-shown-under-its-alias)).
 
 #### 6.1.7 A claiming block that cannot answer fails the run
 
@@ -806,14 +806,16 @@ command inside it.
 
 ##### 6.1.7.4 The claim is read from `members` entries alone
 
-The claim is read from the **`members` and `optional_members` entries alone**
-([§FS-workspace.2.2.9.1](FS-workspace.md#2291-the-ancestor-climb-reads-optional_members)), never from a loaded config: those two values are parsed on their own
+The claim is read from the **`members`, `optional_members` and `mounted_members` entries and the
+`[workspace.remotes]` keys alone**, each key claiming `.grund/remotes/<key>/`
+([§FS-workspace.2.2.9.1](FS-workspace.md#2291-the-ancestor-climb-reads-optional_members), [§FS-remote-projects.declaration.registration](FS-remote-projects.md#declarationregistration-only-a-declaration-registers-a-remote)), never from a loaded config: those values are parsed on their own
 — no other key read, no shape rule applied — so a config that fails to load is
 still asked whether it claims this directory. Deciding it from a loaded config instead made *every* load
 failure above a repository silently equal to "claims nothing", which is the
 collapsed prefix this rule exists to prevent, and two mistakes on one `members`
 line then behaved oppositely: a member that does not exist failed the subtree
-run, while an entry the shape rule rejects ([§FS-workspace.2.3](FS-workspace.md#23-what-a-member-entry-may-name)) let it re-spell itself.
+run, while an entry the shape rule rejects ([§FS-workspace.2.3](FS-workspace.md#23-what-a-member-entry-may-name)) let it re-spell itself. A run started inside
+a projection climbs only to learn that it is mounted and under which alias ([§FS-remote-projects.mount.inside](FS-remote-projects.md#mountinside-a-run-started-inside-a-projection)).
 
 ##### 6.1.7.5 An unobtainable `members` value leaves the claim undecidable
 
@@ -892,12 +894,9 @@ scan include is not a link traversal and retains the intentional external scope
 
 ## 7. Neighboring repos
 
-Neighboring repositories in the same organization should use the same external
-syntax, for example `<§>payments/FS-refunds`, but external repository resolution
-is not part of this first implementation. It requires an explicit cache or
-lockfile so ordinary `grund check` remains offline, deterministic, and fast
-([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)). Until that cache layer exists, aliases are
-workspace-local.
+A neighbouring repository is cited as `<alias>/<ID>`, for example `<§>payments/FS-refunds`, once
+it is declared as a remote and fetched into a committed, pinned projection
+([§FS-remote-projects](FS-remote-projects.md#fs-remote-projects-a-project-cites-another-repositorys-declarations-from-a-committed-pinned-projection)), offline and fast ([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)).
 
 ## 8. Other commands
 

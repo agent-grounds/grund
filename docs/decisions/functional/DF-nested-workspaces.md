@@ -189,6 +189,10 @@ not name the offending line.
   cross-project citations, once, from `<§>sprayer/<ID>` to
   `<§>hardware-current/sprayer/<ID>`. [§DF-nested-workspaces.3.2](DF-nested-workspaces.md#32-the-real-cost-is-short-names-and-it-is-paid-at-the-diagnostic)'s diagnostic is what makes that
   migration mechanical rather than a search.
+- A remote's own nested pins stay isolated under the remote's alias: if `org` and
+  `policy` each pin a `payments`, they are `org/payments` and `policy/payments`,
+  two projects, with no version solver and no rebinding
+  ([§FS-remote-projects.mount.nested](../../functional-spec/FS-remote-projects.md#mountnested-nested-pins-stay-isolated), [§DF-remote-projects](DF-remote-projects.md#df-remote-projects-a-remote-project-is-a-workspace-member-whose-bytes-were-fetched-mounted-as-its-own-root)).
 
 ## 5. Alternatives considered
 

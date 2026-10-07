@@ -1,0 +1,9 @@
+grund_config_version = 1
+project_name = "x"
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
