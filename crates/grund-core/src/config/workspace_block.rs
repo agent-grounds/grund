@@ -18,27 +18,27 @@
 use anyhow::{Result, anyhow};
 use std::path::Path;
 
-use super::record::Config;
+use super::project::Members;
 use crate::model::format_path;
 
 /// §AR-workspace.5.2, §FS-workspace.2.2: both `[workspace]` member lists
 /// shape-checked, on every load and whichever sections the file declared. The
-/// one entry point the reader calls, the way it calls `validate_citation_rules`
-/// for `[citations]`: which refusals a list earns is this file's, and the reader
-/// only has to know that the block has some (§AR-core-module-layout.1).
-pub(super) fn validate_workspace_lists(config: &Config) -> Result<()> {
-    if let Some(source) = &config.workspace_members_source {
-        for member in &config.workspace_members {
+/// one entry point `validate.rs` calls, the way it calls `validate_citation_rules`
+/// for `[citations]`: which refusals a list earns is this file's, and the
+/// validator only has to know that the block has some (§AR-core-module-layout.1).
+pub(super) fn validate_workspace_lists(members: &Members) -> Result<()> {
+    if let Some(source) = &members.members_source {
+        for member in &members.members {
             validate_workspace_member(&source.path, source.line, member)?;
         }
     }
-    if let Some(source) = &config.workspace_optional_members_source {
-        for member in &config.workspace_optional_members {
+    if let Some(source) = &members.optional_members_source {
+        for member in &members.optional_members {
             validate_optional_workspace_member(
                 &source.path,
                 source.line,
                 member,
-                &config.workspace_members,
+                &members.members,
             )?;
         }
     }

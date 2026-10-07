@@ -48,10 +48,6 @@ mod fmt_block;
 mod grounding;
 mod inputs;
 mod kind;
-mod kind_defaults;
-mod kind_table;
-mod kind_values;
-mod parse;
 mod point_sizes;
 mod project;
 mod record;
@@ -59,9 +55,9 @@ mod report_paths;
 mod rows;
 mod run;
 mod run_warnings;
-mod scan_block;
 mod scope_roots;
 mod v1;
+mod validate;
 mod workspace_block;
 
 pub(crate) use crate::model::{check_input_observer, observe_input, with_check_input_observer};
@@ -95,7 +91,6 @@ pub(crate) use discovery::{
 pub(crate) use fmt_block::fmt_excluded;
 pub(crate) use grounding::grounding_level_for_kind;
 pub(crate) use kind::escape_toml_basic;
-pub(crate) use parse::{parse_string_list, strip_comment};
 pub(crate) use point_sizes::measure_point_text;
 pub(crate) use record::{
     DEFAULT_GROUNDING_LEVEL, kind_prefixes, kind_uses_values, kind_value_chapter, known_kinds_line,
@@ -106,6 +101,7 @@ pub(crate) use run_warnings::RunWarning;
 pub(crate) use scope_roots::{
     canonical_config_root, root_scope_roots, unwalked_home_roots, unwalked_homes,
 };
+pub(crate) use v1::{parse_string_list, strip_comment};
 pub(crate) use workspace_block::{
     INVALID_ALIAS_PATH_EXPECTED, both_member_lists_message, invalid_alias_path_segment,
     invalid_project_alias_message, is_valid_project_alias, optional_member_alias_segment,
@@ -126,6 +122,10 @@ mod tests_grounding;
 mod tests_id_grammar;
 #[cfg(test)]
 mod tests_kind_index;
+#[cfg(test)]
+mod tests_lowering;
+#[cfg(test)]
+mod tests_lowering_keys;
 #[cfg(test)]
 mod tests_non_citable_kinds;
 #[cfg(test)]

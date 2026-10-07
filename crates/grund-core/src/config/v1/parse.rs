@@ -1,36 +1,42 @@
-//! The `grund.toml` reader (§FS-config.3): one line-oriented pass over the file
-//! that fills a `Config`, the scalar value parsers every section shares, and the
-//! `[workspace]` member and alias validation.
+//! The version-1 `grund.toml` reader (§FS-config.3, §AR-config.2): one
+//! line-oriented pass over the file that lowers each key into the `Project`
+//! record that holds its concern (§AR-config.3.1), and the scalar value parsers
+//! every section shares.
 //!
-//! The reader rather than the record or the discovery: `discovery.rs` says which
-//! file governs a directory and `record.rs` says what a filled `Config` means,
-//! while the three sections with a grammar of their own — `[[kinds]]`,
-//! `[citations]` and the grounding pair — read their own keys in
-//! `kind_table.rs`, `citations.rs` and `grounding.rs` (§AR-core-module-layout.1).
+//! The reader rather than the record or the discovery: `config/discovery.rs`
+//! says which file governs a directory and `config/project.rs` what a lowered
+//! `Project` means, while the three sections with a grammar of their own —
+//! `[[kinds]]`, `[citations]` and the grounding pair — read their own keys in
+//! `kind_table.rs`, `citations.rs` and `grounding.rs` beside this file
+//! (§AR-core-module-layout.1). Only spelling is refused here; what a lowered
+//! project means is judged once, in `config/validate.rs` (§AR-config.4).
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use std::path::Path;
 
-use super::citations::{parse_citation_entry, validate_citation_rules};
-use super::grounding::{
-    check_grounding_level, parse_kind_grounding_key, validate_global_grounding,
-};
-use super::kind_table::{ParsedKind, apply_parsed_kinds, parse_kinds_key};
-use super::point_sizes::parse_lead_size_warning;
-use super::record::{Config, ConfigLocation, ShorthandPolicy};
-use super::workspace_block::validate_workspace_lists;
-use super::{fmt_block::validate_fmt_exclude, scan_block::parse_scan_exclude};
+use super::citations::parse_citation_entry;
+use super::grounding::{check_grounding_level, parse_kind_grounding_key};
+use super::kind_rows::lower_parsed_kinds;
+use super::kind_table::{ParsedKind, parse_kinds_key};
+use super::scan_block::parse_scan_exclude;
+use crate::config::fmt_block::validate_fmt_exclude;
+use crate::config::point_sizes::parse_lead_size_warning;
+use crate::config::project::Project;
+use crate::config::record::{ConfigLocation, ShorthandPolicy};
 use crate::grammar::{id_grammar_key_slash_error, is_escaped};
 use crate::model::format_path;
 
-/// Parse one `grund.toml` over `config` — the schema of §FS-config.3 and its
+/// Lower one `grund.toml` over `project` — the schema of §FS-config.3 and its
 /// subsections (`[reference]` 3.1, `[id]` 3.2/3.3, `[[kinds]]` 3.4, `[scan]` 3.5,
-/// `[output]` 3.6, `[fmt.cross_refs]` 3.7, `[fmt]` 3.10). Any unknown section/key or malformed
+/// `[output]` 3.6, `[fmt.cross_refs]` 3.7, `[fmt]` 3.10), each key into the
+/// record its row of §AR-config.3.1 names. Any unknown section/key or malformed
 /// value is a hard error reported as `path:line:` (§FS-config.4.3, §FS-errors.2.1).
+/// `root` is the config root a value home must exist under (§FS-config.3.4.9).
 pub(super) fn parse_config_file(
     read_path: &Path,
     report_path: &Path,
-    config: &mut Config,
+    root: &Path,
+    project: &mut Project,
 ) -> Result<()> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
     let text = crate::config::input_read_to_string(read_path)
@@ -38,16 +44,15 @@ pub(super) fn parse_config_file(
     // Everything below reports problems against the stable relative path.
     let path = report_path;
     let mut section = String::new();
-    let mut grammar_dirty = false;
     let mut parsed_kinds: Vec<ParsedKind> = Vec::new();
     let mut current_kind: Option<ParsedKind> = None;
     let mut kinds_block_seen = false;
-    let mut inline_note_suggested_lines_source = None;
-    // §FS-config.3.4.8.5: where `[reference] grounding_level` was written, so the
-    // "nothing turns grounding on" rejection anchors at the key rather than at
-    // line 1. Asked once the `[[kinds]]` table is final.
-    let mut grounding_level_source = None;
-    let mut inline_note_max_lines_source = None;
+    let at = |line: usize| {
+        Some(ConfigLocation {
+            path: path.to_path_buf(),
+            line,
+        })
+    };
     for (idx, raw_line) in text.lines().enumerate() {
         let line_no = idx + 1;
         let line = strip_comment(raw_line).trim();
@@ -63,13 +68,10 @@ pub(super) fn parse_config_file(
                         bail_config(path, line_no, "expected `[workspace]` (table)".to_string())?;
                     }
                     if section == "workspace" {
-                        config.workspace_declared = true;
+                        project.workspace.declared = true;
                         // §FS-workspace.6.1.3: the block's own anchor, for the
                         // errors that are about the block and not about a key.
-                        config.workspace_section_source = Some(ConfigLocation {
-                            path: path.to_path_buf(),
-                            line: line_no,
-                        });
+                        project.workspace.section_source = at(line_no);
                     }
                 }
                 "kinds" => {
@@ -97,13 +99,10 @@ pub(super) fn parse_config_file(
                             "expected `[citations]` / `[citations.<KIND>]` (table)".to_string(),
                         )?;
                     }
-                    config.citations.declared = true;
+                    let citations = &mut project.rules.citations;
+                    citations.declared = true;
                     if let Some(kind) = other.strip_prefix("citations.") {
-                        config
-                            .citations
-                            .per_kind
-                            .entry(kind.to_string())
-                            .or_default();
+                        citations.per_kind.entry(kind.to_string()).or_default();
                     }
                 }
                 other => bail_config(path, line_no, format!("unknown config section `{other}`"))?,
@@ -132,11 +131,8 @@ pub(super) fn parse_config_file(
                 }
             }
             ("", "project_name") => {
-                config.project_name = Some(parse_string(path, line_no, value)?);
-                config.project_name_source = Some(ConfigLocation {
-                    path: path.to_path_buf(),
-                    line: line_no,
-                });
+                project.name = Some(parse_string(path, line_no, value)?);
+                project.name_source = at(line_no);
             }
             ("", "project_description") => {
                 let description = parse_string(path, line_no, value)?;
@@ -149,16 +145,22 @@ pub(super) fn parse_config_file(
                         "project_description must be a single line".to_string(),
                     )?;
                 }
-                config.project_description = Some(description);
+                project.presentation.description = Some(description);
             }
-            ("reference", "marker") => config.marker = parse_string(path, line_no, value)?,
-            ("reference", "trigger") => config.trigger = parse_string(path, line_no, value)?,
-            ("reference", "strict") => config.strict = parse_bool(path, line_no, value)?,
+            ("reference", "marker") => {
+                project.schema.citation.marker = parse_string(path, line_no, value)?
+            }
+            ("reference", "trigger") => {
+                project.presentation.trigger = parse_string(path, line_no, value)?
+            }
+            ("reference", "strict") => {
+                project.schema.citation.strict = parse_bool(path, line_no, value)?
+            }
             // §FS-config.3.1.1: closed persisted-form policy. Parsing the string
             // first keeps non-string failures on the ordinary located path.
             ("reference", "shorthand") => {
                 let policy = parse_string(path, line_no, value)?;
-                config.shorthand = match policy.as_str() {
+                project.schema.citation.shorthand = match policy.as_str() {
                     "canonical" => ShorthandPolicy::Canonical,
                     "accepted" => ShorthandPolicy::Accepted,
                     _ => bail_config(
@@ -171,14 +173,17 @@ pub(super) fn parse_config_file(
                 };
             }
             ("reference", "require_grounding") => {
-                config.require_grounding = parse_bool(path, line_no, value)?
+                project.rules.grounding.require = parse_bool(path, line_no, value)?
             }
             // §FS-config.3.4.8.2: the default unit inside every governed file; the
             // key's own rules live in `grounding.rs` with its row twin.
             ("reference", "grounding_level") => {
-                config.grounding_level = parse_usize(path, line_no, value)?;
-                check_grounding_level(path, line_no, config.grounding_level)?;
-                grounding_level_source = Some(line_no);
+                let level = parse_usize(path, line_no, value)?;
+                check_grounding_level(path, line_no, level)?;
+                project.rules.grounding.level = level;
+                // §FS-config.3.4.8.5: where the key was written, so the "nothing
+                // turns grounding on" rejection anchors at it rather than at line 1.
+                project.rules.grounding.level_source = at(line_no);
             }
             ("reference", "conversation") => {
                 // §FS-config.3.1.6, §DF-repo-conversation-opinion.2.2: closed enum with the
@@ -191,12 +196,12 @@ pub(super) fn parse_config_file(
                         format!("unknown [reference] conversation `{opinion}` (expected link)"),
                     )?;
                 }
-                config.conversation = Some(opinion);
+                project.presentation.conversation = Some(opinion);
             }
             // §FS-config.3.1.2: one closed inline table opts this project into the
             // fixed-warning lead budget. Absence is the complete off switch.
             ("reference", "lead_size_warning") => {
-                config.lead_size_warning = Some(parse_lead_size_warning(path, line_no, value)?);
+                project.schema.leads = Some(parse_lead_size_warning(path, line_no, value)?);
             }
             // §FS-config.3.1.8: closed enum; the rejection names the value and the set.
             ("reference", "inline_style") => {
@@ -210,18 +215,18 @@ pub(super) fn parse_config_file(
                         ),
                     )?;
                 }
-                config.inline_style = style;
+                project.schema.notes.inline_style = style;
             }
             ("reference", "inline_note_suggested_lines") => {
-                config.inline_note_suggested_lines = parse_usize(path, line_no, value)?;
-                inline_note_suggested_lines_source = Some(line_no);
+                project.schema.notes.suggested_lines = parse_usize(path, line_no, value)?;
+                project.schema.notes.suggested_lines_source = at(line_no);
             }
             ("reference", "inline_note_max_lines") => {
-                config.inline_note_max_lines = parse_usize(path, line_no, value)?;
-                inline_note_max_lines_source = Some(line_no);
+                project.schema.notes.max_lines = parse_usize(path, line_no, value)?;
+                project.schema.notes.max_lines_source = at(line_no);
             }
             ("reference", "inline_note_max_columns") => {
-                config.inline_note_max_columns = parse_usize(path, line_no, value)?
+                project.schema.notes.max_columns = parse_usize(path, line_no, value)?
             }
             // §FS-inline-citation-style.2.2: two closed enums, rejected on load like
             // `inline_style` above — a typo must not read as "no house style".
@@ -236,7 +241,7 @@ pub(super) fn parse_config_file(
                         ),
                     )?;
                 }
-                config.inline_note_layout = layout;
+                project.schema.notes.layout = layout;
             }
             ("reference", "inline_note_layout_check") => {
                 let level = parse_string(path, line_no, value)?;
@@ -249,10 +254,10 @@ pub(super) fn parse_config_file(
                         ),
                     )?;
                 }
-                config.inline_note_layout_check = level;
+                project.schema.notes.layout_check = level;
             }
             ("reference", "warn_on_suggested") => {
-                config.warn_on_suggested = parse_bool(path, line_no, value)?
+                project.schema.notes.warn_on_suggested = parse_bool(path, line_no, value)?
             }
             // §FS-config.3.2.3: the keys an ID is built from share one rule — no `/` —
             // so they share one arm and `id_grammar_rules.rs` answers per key; checked
@@ -262,19 +267,18 @@ pub(super) fn parse_config_file(
                 if let Some(message) = id_grammar_key_slash_error(key, &parsed) {
                     bail_config(path, line_no, message)?;
                 }
+                let ids = &mut project.schema.ids;
                 match key {
-                    "format" => config.id_format = parsed,
-                    "section_separator" => config.section_separator = parsed,
-                    "number_pattern" => config.number_pattern = parsed,
-                    _ => config.slug_pattern = parsed,
+                    "format" => ids.format = parsed,
+                    "section_separator" => ids.section_separator = parsed,
+                    "number_pattern" => ids.number_pattern = parsed,
+                    _ => ids.slug_pattern = parsed,
                 }
-                grammar_dirty = true;
             }
             // §FS-config.3.2.7: named coordinates are an explicit, absent-by-default
-            // grammar change, so parsing the key recompiles every shared pattern.
+            // grammar change, which `compile` folds into every shared pattern.
             ("id", "named_sections") => {
-                config.named_sections = parse_bool(path, line_no, value)?;
-                grammar_dirty = true;
+                project.schema.ids.named_sections = parse_bool(path, line_no, value)?;
             }
             ("id", "section_heading_levels") => {
                 let mode = parse_string(path, line_no, value)?;
@@ -287,7 +291,7 @@ pub(super) fn parse_config_file(
                         ),
                     )?;
                 }
-                config.section_heading_levels = mode;
+                project.schema.ids.section_heading_levels = mode;
             }
             // §FS-config.3.4.8: the two grounding keys are `grounding.rs`'s
             // on both sides — the row and the `[reference]` default — so the
@@ -302,30 +306,35 @@ pub(super) fn parse_config_file(
                     bail_config(path, line_no, format!("unknown config key `{key}`"))?;
                 }
             }
-            ("scan", "include") => config.include = Some(parse_string_list(path, line_no, value)?),
-            ("scan", "exclude") => config.exclude = parse_scan_exclude(path, line_no, value)?,
-            ("scan", "extensions") => config.extensions = parse_string_list(path, line_no, value)?,
+            ("scan", "include") => {
+                project.schema.sources.include = Some(parse_string_list(path, line_no, value)?)
+            }
+            ("scan", "exclude") => {
+                project.schema.sources.exclude = parse_scan_exclude(path, line_no, value)?
+            }
+            ("scan", "extensions") => {
+                project.schema.sources.extensions = parse_string_list(path, line_no, value)?
+            }
             ("scan", "comment_prefixes") => {
-                config.comment_prefixes = parse_string_list(path, line_no, value)?;
-                grammar_dirty = true;
+                project.schema.sources.comment_prefixes = parse_string_list(path, line_no, value)?;
             }
             ("scan", "docstring_python") => {
-                config.docstring_python = parse_bool(path, line_no, value)?;
+                project.schema.sources.docstring_python = parse_bool(path, line_no, value)?;
             }
             ("scan", "respect_gitignore") => {
-                config.respect_gitignore = parse_bool(path, line_no, value)?;
+                project.schema.sources.respect_gitignore = parse_bool(path, line_no, value)?;
             }
             ("output", "format") => {
                 let format = parse_string(path, line_no, value)?;
                 if !matches!(format.as_str(), "text" | "json") {
                     bail_config(path, line_no, "unsupported output format".to_string())?;
                 }
-                config.output_format = format;
+                project.presentation.output.format = format;
             }
             ("output", "color") => {
                 // Reserved — colored output is not yet implemented (§FS-config.6,
-                // §FS-errors.3): the value is inert today but still validated against
-                // the documented set, so a typo fails on load instead of being ignored.
+                // §FS-errors.3): inert today, but validated so a typo fails on load,
+                // and kept, because the lowering loses no key (§AR-config.3.1).
                 let color = parse_string(path, line_no, value)?;
                 if !matches!(color.as_str(), "auto" | "always" | "never") {
                     bail_config(
@@ -336,9 +345,10 @@ pub(super) fn parse_config_file(
                         ),
                     )?;
                 }
+                project.presentation.output.color = Some(color);
             }
             ("output", "relative_paths") => {
-                config.relative_paths = parse_bool(path, line_no, value)?;
+                project.presentation.output.relative_paths = parse_bool(path, line_no, value)?;
             }
             // §FS-config.3.10.1: validated as it is parsed, so a malformed glob is a
             // config error at its own line rather than a surprise at the first
@@ -348,10 +358,10 @@ pub(super) fn parse_config_file(
                 if let Err(message) = validate_fmt_exclude(&patterns) {
                     bail_config(path, line_no, message)?;
                 }
-                config.fmt_exclude = patterns;
+                project.presentation.fmt.exclude = patterns;
             }
             ("fmt.cross_refs", "enabled") => {
-                config.fmt_cross_refs_enabled = parse_bool(path, line_no, value)?;
+                project.presentation.fmt.cross_refs_enabled = parse_bool(path, line_no, value)?;
             }
             ("fmt.cross_refs", "anchor_format") => {
                 let format = parse_string(path, line_no, value)?;
@@ -361,39 +371,30 @@ pub(super) fn parse_config_file(
                 ) {
                     bail_config(path, line_no, "unknown md link anchor format".to_string())?;
                 }
-                config.cross_ref_anchor_format = format;
+                project.presentation.fmt.anchor_format = format;
             }
             ("workspace", "members") => {
-                config.workspace_members = parse_string_list(path, line_no, value)?;
-                config.workspace_members_source = Some(ConfigLocation {
-                    path: path.to_path_buf(),
-                    line: line_no,
-                });
+                project.workspace.members = parse_string_list(path, line_no, value)?;
+                project.workspace.members_source = at(line_no);
             }
             // §FS-config.3.8, §FS-workspace.2.2: the sibling list, read by the same
             // parser as `members` — which is what keeps `grund_config_version` at 1
             // and a binary older than the key refusing it rather than ignoring it.
             ("workspace", "optional_members") => {
-                config.workspace_optional_members = parse_string_list(path, line_no, value)?;
-                config.workspace_optional_members_source = Some(ConfigLocation {
-                    path: path.to_path_buf(),
-                    line: line_no,
-                });
+                project.workspace.optional_members = parse_string_list(path, line_no, value)?;
+                project.workspace.optional_members_source = at(line_no);
             }
             ("workspace", "include_root") => {
-                config.workspace_include_root = parse_bool(path, line_no, value)?;
+                project.workspace.include_root = parse_bool(path, line_no, value)?;
                 // §FS-check.4.10.5: the key that decides is the line to open, so it
                 // is located like `members` above rather than left to the block's
                 // own `[workspace]` header.
-                config.workspace_include_root_source = Some(ConfigLocation {
-                    path: path.to_path_buf(),
-                    line: line_no,
-                });
+                project.workspace.include_root_source = at(line_no);
             }
             // §FS-config.3.9: `[citations]` `default`, and the level keys of each
             // `[citations.<KIND>]` table.
             (s, k) if s == "citations" || s.starts_with("citations.") => {
-                parse_citation_entry(path, line_no, s, k, value, &mut config.citations)?;
+                parse_citation_entry(path, line_no, s, k, value, &mut project.rules.citations)?;
             }
             _ => bail_config(path, line_no, format!("unknown config key `{key}`"))?,
         }
@@ -401,42 +402,10 @@ pub(super) fn parse_config_file(
     if let Some(kind) = current_kind.take() {
         parsed_kinds.push(kind);
     }
-    if config.strict && config.marker.is_empty() {
-        return Err(anyhow!(
-            "{}: reference.strict requires a non-empty marker",
-            format_path(path)
-        ));
-    }
-    if config.inline_note_suggested_lines > config.inline_note_max_lines {
-        let line = inline_note_suggested_lines_source
-            .or(inline_note_max_lines_source)
-            .unwrap_or(1);
-        bail_config(
-            path,
-            line,
-            "reference.inline_note_suggested_lines must be <= inline_note_max_lines".to_string(),
-        )?;
-    }
+    // [[kinds]] replaces the built-in rows entirely (§FS-config.3.4), and only
+    // where the file declared the block at all.
     if kinds_block_seen {
-        apply_parsed_kinds(path, parsed_kinds, config)?;
-    }
-    // §FS-config.3.4.8: both keys resolve per row against these defaults, so the
-    // cross-section rule and the derived scanner flag are asked once the kind
-    // table is final — the built-in table included.
-    validate_global_grounding(path, config, grounding_level_source)?;
-    config.recompute_grounding_units();
-    if grammar_dirty || kinds_block_seen {
-        config
-            .rebuild_grammar()
-            .with_context(|| format!("{}: invalid [id] grammar", format_path(path)))?;
-    }
-    // §AR-workspace.5.2: post-parse invariants run on every load, not gated on which
-    // section appeared. Free-form `project_name` is slug-checked later
-    // (§AR-workspace.5.3); both member lists are shape-checked in `workspace_block.rs`.
-    validate_workspace_lists(config)?;
-    // §FS-config.3.9.5: validate `[citations]` after the kind set is final.
-    if config.citations.declared {
-        validate_citation_rules(path, config)?;
+        lower_parsed_kinds(path, root, parsed_kinds, project)?;
     }
     Ok(())
 }
@@ -461,7 +430,7 @@ pub(crate) fn strip_comment(line: &str) -> &str {
 
 /// Fail config parsing with a `path:line: message` error — the located-finding
 /// shape applied to a malformed `grund.toml` (§FS-config.4.3, §FS-errors.2.1).
-pub(super) fn bail_config<T>(path: &Path, line: usize, message: String) -> Result<T> {
+pub(in crate::config) fn bail_config<T>(path: &Path, line: usize, message: String) -> Result<T> {
     // §FS-distribution.3.3.2: preserve the parser's location without parsing Display.
     let mut failure = crate::model::OperationDiagnostic::new(
         "config",
@@ -473,7 +442,7 @@ pub(super) fn bail_config<T>(path: &Path, line: usize, message: String) -> Resul
     Err(failure.into())
 }
 
-pub(super) fn parse_string(path: &Path, line: usize, value: &str) -> Result<String> {
+pub(in crate::config) fn parse_string(path: &Path, line: usize, value: &str) -> Result<String> {
     if !(value.starts_with('"') && value.ends_with('"') && value.len() >= 2) {
         return bail_config(path, line, "expected string".to_string());
     }
@@ -506,7 +475,7 @@ pub(super) fn parse_string(path: &Path, line: usize, value: &str) -> Result<Stri
     Ok(out)
 }
 
-pub(super) fn parse_bool(path: &Path, line: usize, value: &str) -> Result<bool> {
+pub(in crate::config) fn parse_bool(path: &Path, line: usize, value: &str) -> Result<bool> {
     match value {
         "true" => Ok(true),
         "false" => Ok(false),
@@ -514,7 +483,7 @@ pub(super) fn parse_bool(path: &Path, line: usize, value: &str) -> Result<bool> 
     }
 }
 
-pub(super) fn parse_usize(path: &Path, line: usize, value: &str) -> Result<usize> {
+pub(in crate::config) fn parse_usize(path: &Path, line: usize, value: &str) -> Result<usize> {
     value
         .parse::<usize>()
         .or_else(|_| bail_config(path, line, "expected non-negative integer".to_string()))

@@ -1,6 +1,8 @@
 //! The `[citations]` half of the config (§FS-config.3.9): the parsed direction
-//! rules — levels, namespace matchers and cited targets — and the reader and
-//! whole-section validator that produce them.
+//! rules — levels, namespace matchers and cited targets — the target grammar
+//! the rules engine shares, and the whole-section validator `validate.rs` runs
+//! on the lowered project (§AR-config.4). The v1 spelling of the two tables is
+//! read in `v1/citations.rs`.
 //!
 //! Beside `kind_table.rs` and `grounding.rs` for the same reason they are their
 //! own files: `[citations]` is one section of `grund.toml` with a grammar of its
@@ -13,8 +15,8 @@ use anyhow::{Result, anyhow};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use super::parse::{bail_config, parse_string, parse_string_list};
-use super::record::{Config, citing_kind_names};
+use super::kind::KindConfig;
+use super::record::citing_kind_names;
 use super::workspace_block::{INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_segment};
 use crate::model::format_path;
 
@@ -76,104 +78,6 @@ pub struct CitationRules {
     pub global_default: Option<CitationLevel>,
     pub per_kind: BTreeMap<String, KindCitationRules>,
 }
-/// Parse one `[citations]` / `[citations.<KIND>]` key (§FS-config.3.9). The
-/// top-level table takes only `default`; a per-kind table takes `default` plus
-/// the five level lists.
-pub(super) fn parse_citation_entry(
-    path: &Path,
-    line_no: usize,
-    section: &str,
-    key: &str,
-    value: &str,
-    citations: &mut CitationRules,
-) -> Result<()> {
-    if section == "citations" {
-        return match key {
-            "default" => {
-                citations.global_default = Some(parse_citation_level(path, line_no, value)?);
-                Ok(())
-            }
-            other => bail_config(
-                path,
-                line_no,
-                format!(
-                    "unknown key `{other}` in [citations] (expected `default`, or a [citations.<KIND>] table)"
-                ),
-            ),
-        };
-    }
-    let kind = section
-        .strip_prefix("citations.")
-        .expect("caller guarantees a citations. section");
-    let rules = citations.per_kind.entry(kind.to_string()).or_default();
-    match key {
-        "default" => rules.default = Some(parse_citation_level(path, line_no, value)?),
-        "must" => rules.must = parse_citation_disjunctions(path, line_no, value)?,
-        "should" => rules.should = parse_citation_disjunctions(path, line_no, value)?,
-        "may" => rules.may = parse_citation_disjunctions(path, line_no, value)?,
-        "should-not" => rules.should_not = parse_citation_disjunctions(path, line_no, value)?,
-        "must-not" => rules.must_not = parse_citation_disjunctions(path, line_no, value)?,
-        other => bail_config(
-            path,
-            line_no,
-            format!(
-                "unknown key `{other}` in [citations.{kind}] (expected must, should, may, should-not, must-not, or default)"
-            ),
-        )?,
-    }
-    Ok(())
-}
-
-fn parse_citation_level(path: &Path, line_no: usize, value: &str) -> Result<CitationLevel> {
-    let level = parse_string(path, line_no, value)?;
-    match level.as_str() {
-        "must" => Ok(CitationLevel::Must),
-        "should" => Ok(CitationLevel::Should),
-        "may" => Ok(CitationLevel::May),
-        "should-not" => Ok(CitationLevel::ShouldNot),
-        "must-not" => Ok(CitationLevel::MustNot),
-        other => bail_config(
-            path,
-            line_no,
-            format!(
-                "unknown citation level `{other}` (expected must, should, may, should-not, or must-not)"
-            ),
-        ),
-    }
-}
-
-fn parse_citation_disjunctions(
-    path: &Path,
-    line_no: usize,
-    value: &str,
-) -> Result<Vec<CitationDisjunction>> {
-    parse_string_list(path, line_no, value)?
-        .iter()
-        .map(|entry| parse_citation_disjunction(path, line_no, entry))
-        .collect()
-}
-
-fn parse_citation_disjunction(
-    path: &Path,
-    line_no: usize,
-    entry: &str,
-) -> Result<CitationDisjunction> {
-    let mut targets = Vec::new();
-    for token in entry.split('|') {
-        let token = token.trim();
-        if token.is_empty() {
-            bail_config(path, line_no, "empty citation target".to_string())?;
-        }
-        targets.push(parse_citation_target(path, line_no, token)?);
-    }
-    Ok(CitationDisjunction { targets })
-}
-
-fn parse_citation_target(path: &Path, line_no: usize, token: &str) -> Result<CitationTarget> {
-    parse_citation_target_entry(token)
-        .map_err(|message| anyhow!("{}:{line_no}: {message}", format_path(path)))
-}
-
 /// Parse the released namespace-aware target-entry grammar without attaching a
 /// config-file location. Chapter-rule object targets reuse this exact lexical
 /// boundary (§FS-rules.2, §FS-config.3.9.3.1).
@@ -233,18 +137,21 @@ fn invalid_citation_target_message(token: &str, qualifier: &str, kind: &str) -> 
 /// (§FS-config.3.9.5): every citing kind is a configured kind or `code`, every
 /// target names a *citable* configured kind, and no two targets of the same
 /// cited kind whose namespace matchers overlap sit at different levels.
-pub(super) fn validate_citation_rules(path: &Path, config: &Config) -> Result<()> {
+pub(super) fn validate_citation_rules(
+    path: &Path,
+    kinds: &[KindConfig],
+    citations: &CitationRules,
+) -> Result<()> {
     // The citing side is any name in the table plus `code` — a non-citable kind
     // cites like any other place (§FS-config.3.9). The cited side is narrower:
     // only a citable kind has IDs to be the target of a citation.
-    let citing_known: BTreeSet<&str> = citing_kind_names(&config.kinds).into_iter().collect();
-    let known: BTreeSet<&str> = config
-        .kinds
+    let citing_known: BTreeSet<&str> = citing_kind_names(kinds).into_iter().collect();
+    let known: BTreeSet<&str> = kinds
         .iter()
         .filter(|k| k.citable)
         .map(|k| k.kind.as_str())
         .collect();
-    for (citing, rules) in &config.citations.per_kind {
+    for (citing, rules) in &citations.per_kind {
         if !citing_known.contains(citing.as_str()) {
             return Err(anyhow!(
                 "{}: [citations.{citing}] names an unknown kind `{citing}`",
@@ -254,7 +161,7 @@ pub(super) fn validate_citation_rules(path: &Path, config: &Config) -> Result<()
         // §FS-config.3.4.7.6: a rule on a kind whose home is not walked could
         // never fire — the vacuous pass §DF-non-citable-kinds.2.5 refused, one
         // level up — so the config is refused where it makes the promise.
-        if config.kinds.iter().any(|k| k.kind == *citing && !k.scan) {
+        if kinds.iter().any(|k| k.kind == *citing && !k.scan) {
             return Err(anyhow!(
                 "{}: [citations.{citing}] names an unwalked kind `{citing}` (its home is `scan = false`, so no file in it is checked and the rule could never fire)",
                 format_path(path)

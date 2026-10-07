@@ -100,7 +100,7 @@ fn the_default_facade_is_built_from_its_records() {
     assert!(!config.grounding_units);
     assert!(config.classify_citation_sources);
 
-    let legacy = Config::default_for_existing_config(root);
+    let legacy = Config::from_project(&default_project(true), root).unwrap();
     let fs = legacy.kinds.iter().find(|kind| kind.kind == "FS").unwrap();
     assert_eq!(fs.folder.as_deref(), Some("docs/functional-spec"));
     assert_eq!(fs.file, None);
