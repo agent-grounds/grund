@@ -110,7 +110,9 @@ https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-show.md
 
 `anchor` is `null` where the site has no heading anchor: a declaration whose
 home is a source file, a JSON value, an E2E case, and every read under
-`anchor_format = "none"`. Link those by `#L<line>`, as the recipe does. The
+`anchor_format = "none"`. Link those by `#L<line>`, as the recipe does, except
+an E2E case: its object has no `line`, so link its directory `path` with no
+fragment. The
 base and the ref are yours to choose; `grund` hands over the data and renders
 no URL itself ([§DF-show-anchor-data](../decisions/functional/DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives)).
 
