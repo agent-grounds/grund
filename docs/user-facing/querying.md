@@ -51,15 +51,16 @@ Each output line answers one query, in input order:
 ```text
 {"query": {"id", "section"},
  "ok": true,
- "result": {"id", "section", "path", "line", "kind_title", "body",
-            "sections": [{"path", "title", "depth"}, …]},
+ "result": {"id", "section", "body", "sections": [{"path", "title", "depth", "anchor"}, …],
+            "kind_title", "anchor", "path", "line"},
  "error": null}
 ```
 
 Read `.result.sections[]`: `path` is the section path under `.result.id`
 (`requirements.1`), so cite or fetch it as `<id>.<path>`
-(`FS-config.requirements.1`); `title` is its heading text, and `depth` how far
-below the queried unit it sits. A query that does not resolve answers
+(`FS-config.requirements.1`); `title` is its heading text, `depth` how far
+below the queried unit it sits, and `anchor` the fragment a web link to that
+heading takes ([Link a citation from one read](#link-a-citation-from-one-read)). A query that does not resolve answers
 `"ok":false` with an `error` object instead of a `result`, and the batch exits 1:
 
 ```console
@@ -75,7 +76,7 @@ flag the lead; the answer is the `result` object above without `sections`:
 
 ```console
 $ echo '{"id":"FS-show","section":"1.8"}' | grund show --batch --brief --format json | jq -c '{query, ok, result: (.result | keys)}'
-{"query":{"id":"FS-show","section":"1.8"},"ok":true,"result":["body","id","kind_title","line","path","section"]}
+{"query":{"id":"FS-show","section":"1.8"},"ok":true,"result":["anchor","body","id","kind_title","line","path","section"]}
 ```
 
 `grund show --batch --full --format json` reads the same queries and returns
@@ -90,6 +91,28 @@ $ grund show --batch --all --brief --format json | head -1 | cut -c1-120
 
 Prefer a selector-fed batch to `--all` filtered with `jq`: it reads only the
 units you asked for.
+
+## Link a citation from one read
+
+Every `--format json` read of a declaration or section carries `anchor`: the
+fragment, without its `#`, that `grund fmt --cross-refs` would write for the
+same coordinate under the project's `anchor_format`
+([§FS-show.3.1.3.1](../functional-spec/FS-show.md#3131-the-heading-anchor)). So a web link is `path` plus `anchor`, and
+nothing has to slug a heading by hand:
+
+```console
+$ grund FS-show.3.1.3 --format json | jq -c '{path, anchor, line}'
+{"path":"docs/functional-spec/FS-show.md","anchor":"313-json","line":458}
+$ grund FS-show.3.1.3 --format json \
+    | jq -r '"https://github.com/agent-grounds/grund/blob/main/\(.path)" + (if .anchor then "#\(.anchor)" else "#L\(.line)" end)'
+https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-show.md#313-json
+```
+
+`anchor` is `null` where the site has no heading anchor: a declaration whose
+home is a source file, a JSON value, an E2E case, and every read under
+`anchor_format = "none"`. Link those by `#L<line>`, as the recipe does. The
+base and the ref are yours to choose; `grund` hands over the data and renders
+no URL itself ([§DF-show-anchor-data](../decisions/functional/DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives)).
 
 ## Who cites a point: `refs`, `--descendants`
 

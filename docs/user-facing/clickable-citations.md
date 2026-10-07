@@ -498,6 +498,11 @@ grund integrations --write --conversation-target vscodium
 | `web` | the forge URL at the current commit | the transcript will be read by people without the repository |
 | `path` | the location as plain `path:line` text | you prefer no link at all |
 
+A `web` link to a Markdown heading needs the fragment the forge renders for it.
+Do not slug the heading by hand: every `grund <ID> --format json` read carries
+it as `anchor`, so the link is one read away
+([Link a citation from one read](querying.md#link-a-citation-from-one-read)).
+
 The flag records the value and re-renders the instruction blocks; editing the
 key by hand and re-running `grund integrations --write` is equivalent. It is
 accepted (and inert) while your preference is still `plain`, so the target you
