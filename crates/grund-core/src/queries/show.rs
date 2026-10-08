@@ -1,4 +1,5 @@
 use super::ambiguity::{ambiguous_id_refusal, ambiguous_section_refusal};
+use super::stub_home::stub_home;
 use crate::checker::file_declares_inline_home;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
@@ -104,17 +105,11 @@ pub(crate) fn show_declaration_with_overlays(
             )));
         }
     }
-    let body_decl = if decl.is_stub {
-        decls
-            .iter()
-            .find(|other| paths_same_location(&other.file, &file))
-            .unwrap_or(decl)
-    } else {
-        decl
-    };
+    // §FS-show.2.3.7: a stub reads its target's declaration, found by the ID.
+    let body_decl = stub_home(config, decls, decl, &file, id, overlays);
     if let Some(section) = section
         && let Some(refusal) =
-            ambiguous_section_refusal(config, path_config, decls, decl, &file, id, section)
+            ambiguous_section_refusal(config, path_config, &body_decl, &file, id, section)
     {
         return Err(refusal.into());
     }
@@ -135,7 +130,7 @@ pub(crate) fn show_declaration_with_overlays(
     extract_declaration_body(
         &file,
         id,
-        body_decl,
+        &body_decl,
         section,
         mode,
         include_heading,

@@ -74,6 +74,18 @@ fn scan_one_file(
     }
 }
 
+/// One file's pass outside any walk (§AR-scanner.2), its overlay first: the
+/// records of a file the walk did not reach, for a stub whose target lies
+/// outside scan scope and still reads as the scanned file would (§FS-show.2.3.7).
+pub(crate) fn scan_unwalked_file(
+    file: &Path,
+    config: &Config,
+    overlays: &TextOverlays,
+) -> Result<Findings> {
+    let (_, result) = scan_one_file(file, config, &[], overlays);
+    result.map_err(|message| anyhow!(message))
+}
+
 fn scan_file_results(
     files: &[PathBuf],
     config: &Config,
