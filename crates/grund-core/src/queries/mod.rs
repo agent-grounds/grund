@@ -21,7 +21,7 @@
 //! (§AR-core-module-layout.1.1). The submodules are the former `show*`, `list*`
 //! and editor-answer category files, one per question — the show entry points,
 //! the batch adapter over one loaded context, the catalog's shared citation
-//! counts, the point-size catalog, and the two editor answers.
+//! counts and scope check, the point-size catalog, and the two editor answers.
 //! The editor pair is `editor_hover` and `editor_on_type` rather than `lsp` and
 //! `on_type`: the engine names no frontend's protocol (§AR-system.4), and what
 //! these two hold is the hover body and the keystroke rule of §FS-lsp, which an
@@ -53,6 +53,7 @@ mod editor_completion;
 mod editor_hover;
 mod editor_on_type;
 mod editor_snapshot;
+mod list_scope;
 mod selector_refusal;
 mod show;
 mod show_metadata;
@@ -83,7 +84,8 @@ pub use sizes::{
 // directory that can name any of it.
 pub(crate) use ambiguity::declaration_ambiguity_refusal;
 pub(crate) use citation_counts::ListCitationCounts;
-pub(crate) use selector_refusal::{require_unique_literal, selector_refusal};
+pub(crate) use list_scope::check_list_scope;
+pub(crate) use selector_refusal::require_unique_literal;
 pub(crate) use show::{render_show_output_json, show_declaration_with_overlays};
 
 // What other components' tests read (§AR-core-module-layout.1.3).
