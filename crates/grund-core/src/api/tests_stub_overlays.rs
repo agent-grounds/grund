@@ -5,6 +5,7 @@
 //! target is in the scan.
 
 use super::{lsp_snapshot, show_with_overlays};
+use crate::model::format_path;
 use crate::queries::{LspSnapshotOpts, ShowOpts};
 use crate::testing::{test_root, write};
 use std::collections::BTreeMap;
@@ -91,7 +92,7 @@ fn show_second(root: &Path, editor: Option<&str>) -> Result<String, String> {
 }
 
 /// The editor snapshot's `broken-stub` errors, as `path:line message` with the
-/// path relative to `root`.
+/// path relative to `root` and spelled as a report spells it (§FS-errors.4).
 fn broken_stubs(root: &Path, editor: Option<&str>) -> Vec<String> {
     let snapshot = lsp_snapshot(LspSnapshotOpts {
         path: root.to_path_buf(),
@@ -106,7 +107,7 @@ fn broken_stubs(root: &Path, editor: Option<&str>) -> Vec<String> {
         .filter(|finding| finding.code == "broken-stub")
         .map(|finding| {
             let path = Path::new(finding.path.as_deref().unwrap_or("?"));
-            let path = path.strip_prefix(root).unwrap_or(path).display();
+            let path = format_path(path.strip_prefix(root).unwrap_or(path));
             format!("{path}:{} {}", finding.line.unwrap_or(0), finding.message)
         })
         .collect()
