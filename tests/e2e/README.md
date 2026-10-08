@@ -104,6 +104,14 @@ can read is the same silence in a new spelling.
 - dangling Markdown citation
 - missing Markdown section
 - duplicate Markdown declaration
+- a stub whose target is outside `[scan] include`, counted as the scanned tree counts it
+  ([§FS-declarations.checks.duplicate.1](../../docs/functional-spec/FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), [grund#532](https://github.com/agent-grounds/grund/issues/532)):
+  two stubs to one unscanned file are one home in `check`, `list` and `show`
+  ([§FS-declarations.checks.duplicate.2](../../docs/functional-spec/FS-declarations.md#checksduplicate2-stubs-to-one-target-are-one-home)), two stubs to two files that each declare
+  the ID are still a duplicate, and a duplicate or ambiguity with a real second
+  declaration names the target's line rather than the stub's, in text and JSON
+  ([§FS-declarations.checks.duplicate.3](../../docs/functional-spec/FS-declarations.md#checksduplicate3-a-home-reached-through-stubs-is-named-at-its-target)) — beside the one-stub tree and the scanned
+  controls of both shapes, which read as they always have
 - declaration-local section coordinates: `show` rejects a numeric heading after
   a body-closing plain chapter, while `check` reports that orphan once in text
   and JSON under `section-outside-declaration`; `--only` retains it and
