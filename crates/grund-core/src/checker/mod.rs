@@ -96,6 +96,8 @@ pub(crate) use support::diagnostic_cmp;
 #[cfg(test)]
 mod tests_alias_hints;
 #[cfg(test)]
+mod tests_broken_stub_fences;
+#[cfg(test)]
 mod tests_check_full;
 #[cfg(test)]
 mod tests_citation_directions;

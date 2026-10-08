@@ -221,6 +221,7 @@ can read is the same silence in a new spelling.
 - `show` Rust inline declaration extraction
 - Markdown stub to Rust inline declaration
 - broken Markdown-to-Rust inline stub
+- a stub whose Markdown target declares its ID only inside a fenced block, with the target outside and inside `[scan] include` ([§FS-declarations.checks.broken-stub.2](../../docs/functional-spec/FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing)): `check` reports the broken stub at its line and `show` refuses it as [§FS-show.2.3.4](../../docs/functional-spec/FS-show.md#234-broken-stub) says rather than answering `ID not found`, while a target holding a fenced example beside the real declaration stays healthy in both scopes and `show` reads the real body
 - a stub whose Rust or Markdown target lies outside `[scan] include`, read by its ID rather than at the stub's own line ([§FS-show.2.3.7](../../docs/functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)): the lead, a section, `--toc`, `--format json`, an ambiguous section refused by `show` and by `refs`, an ID the target declares twice refused in text and JSON as `ambiguous ID`, a Markdown target's heading anchors on the lead, a section and each `--toc` entry, and a batch whose one stub sits on the same line as its target and whose others do not
 - Rust source comment to Markdown citation
 - Rust `///` doc-comment declaration and marked citation under strict mode
