@@ -30,8 +30,9 @@ use crate::scanner::scan_unwalked_file;
 /// and lists its citations (§FS-refs.4.1). `show` has already refused a broken
 /// stub (§FS-show.2.3.4), judged on this same overlay-first text
 /// (§FS-declarations.checks.broken-stub.1), so it reaches this only where that
-/// line test finds a declaration the scanner's pass does not record, such as one
-/// inside a fenced block of a Markdown target.
+/// line test finds a declaration the scanner's pass does not record. The two read
+/// fences alike (§FS-declarations.checks.broken-stub.2): a heading inside a fenced
+/// block of a Markdown target declares nothing to either.
 pub(super) fn stub_home<'a>(
     config: &Config,
     path_config: &Config,
