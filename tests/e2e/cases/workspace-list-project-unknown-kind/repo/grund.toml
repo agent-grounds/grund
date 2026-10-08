@@ -1,0 +1,26 @@
+grund_config_version = 1
+project_name = "root"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+title = "What"
+
+[[kinds]]
+kind = "AR"
+folder = "docs/ar"
+title = "How"
+
+[scan]
+include = ["docs"]
+
+[workspace]
+members = ["api"]
