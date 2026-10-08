@@ -1,0 +1,23 @@
+grund_config_version = 1
+project_name = "api"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "API"
+folder = "docs/api"
+title = "API"
+
+[[kinds]]
+kind = "SKILL"
+folder = "docs/skill"
+title = "Skill, citable here"
+
+[scan]
+include = ["docs"]

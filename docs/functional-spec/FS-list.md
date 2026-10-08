@@ -45,11 +45,13 @@ known kinds: GRUND, GOAL, FS, AR, DF, DA, RM
 
 The `known kinds:` line lists the citable kinds only: they are the whole set this selector accepts. Under `--project` that set is the selected projects' kinds ([§FS-list.1.2](FS-list.md#12---project)).
 
+Selected workspace projects may configure one kind differently. The kind is accepted when any selected project has it citable, which is exactly when the `known kinds:` line names it, and it is refused as non-citable only when none does. In a workspace whose `root` project configures `SKILL` with `citable = false` and whose member `api` has `SKILL` citable, `grund list --kind SKILL` lists `api/SKILL-intro`, while `grund list --project root --kind SKILL` is refused with the headline above and `known kinds: FS, AR`.
+
 ### 1.2 `--project`
 
 `--project <alias>[,<alias>...]` lists, in workspace mode, only declarations from the named projects, and composes with `--kind` by intersection. Outside workspace mode it is a CLI-level error (exit `2`); an unknown alias is also a CLI-level error (exit `2`), the same shape as an unknown `--kind` ([§FS-list.4](FS-list.md#4-exit-codes)). Workspace qualification, size behavior, and member-local invocation are specified in [§FS-workspace.8.3](FS-workspace.md#83-grund-list).
 
-A narrowed run accepts only the kinds its selected projects configure, so `--kind` is looked up in those projects alone, and a kind only another loaded project configures is unknown here. Its refusal ([§FS-list.1.1](FS-list.md#11---kind)) ends in a `known kinds:` line that lists the citable kinds of the selected projects only, once each, in configuration order. In a workspace whose `root` project configures `FS` and `AR` and whose member `api` configures `API`:
+A narrowed run accepts only the kinds its selected projects configure, so `--kind` is looked up in those projects alone, accepted when any of them has it citable ([§FS-list.1.1](FS-list.md#11---kind)), and a kind only another loaded project configures is unknown here. Its refusal ([§FS-list.1.1](FS-list.md#11---kind)) ends in a `known kinds:` line that lists the citable kinds of the selected projects only, once each, in configuration order. In a workspace whose `root` project configures `FS` and `AR` and whose member `api` configures `API`:
 
 ```text
 $ grund list --project root --kind API
