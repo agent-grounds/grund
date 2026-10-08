@@ -1,8 +1,8 @@
 //! Scanner-recorded query ambiguities shared by show and refs (§FS-refs.4,
-//! §FS-show.2.2.1, §FS-show.2.2.2). No body extraction or stub validation is
-//! needed to decide whether a recorded target has multiple claimants; a stub's
-//! target the walk did not reach is recorded by the scanner's own pass over it
-//! (§FS-show.2.3.7).
+//! §FS-show.2.2.1, §FS-show.2.2.2). No body extraction is needed to decide
+//! whether a recorded target has multiple claimants. A stub's homes are found in
+//! its target, scanned or not (§FS-refs.4.1): a target the walk did not reach is
+//! recorded by the scanner's own pass over it (§FS-show.2.3.7).
 
 use std::path::Path;
 
@@ -17,6 +17,9 @@ use crate::model::{
 
 /// Refuse only independent homes or the requested section's recorded collision
 /// (§FS-refs.4). Absent declarations and sections remain valid citation queries.
+/// A stub's homes are those of its target, scanned or not, so a bare ID and a
+/// section coordinate are refused from the one record `stub_home` chooses; a
+/// stub it cannot pair refuses nothing (§FS-refs.4.1).
 pub(crate) fn declaration_ambiguity_refusal(
     config: &Config,
     path_config: &Config,
@@ -28,14 +31,13 @@ pub(crate) fn declaration_ambiguity_refusal(
     if let Some(refusal) = ambiguous_id_refusal(config, path_config, decls, id) {
         return Some(refusal);
     }
-    let section = section?;
     let decl = decls.iter().find(|decl| decl.is_stub).unwrap_or(&decls[0]);
     let file = if let Some(target) = &decl.defined_in {
         resolve_stub_target(&config.root, &decl.file, target)
     } else {
         decl.file.clone()
     };
-    // §FS-show.2.3.7: refused from the record show would read, scanned or not.
+    // §FS-refs.4.1: refused from the record show would read, before a bare ID returns.
     let body_decl = match stub_home(
         config,
         path_config,
@@ -48,6 +50,7 @@ pub(crate) fn declaration_ambiguity_refusal(
         Ok(body_decl) => body_decl,
         Err(refusal) => return Some(refusal),
     };
+    let section = section?;
     ambiguous_section_refusal(config, path_config, &body_decl, &file, id, section)
 }
 

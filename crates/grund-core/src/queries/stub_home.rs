@@ -1,6 +1,7 @@
 //! The declaration a stub pairs with (§FS-show.2.3.7), shared by show's body and
-//! the section refusals show and refs make (§FS-show.2.2.2, §FS-refs.4), so the
-//! record a coordinate reads and the record it is refused from are one record.
+//! section refusal (§FS-show.2.2.2) and by refs' refusals of a stub's ID, bare or
+//! with a section (§FS-refs.4.1), so the record a coordinate reads and the record
+//! it is refused from are one record.
 
 use std::borrow::Cow;
 use std::path::Path;
@@ -24,8 +25,9 @@ use crate::scanner::scan_unwalked_file;
 /// rather than read from the first.
 ///
 /// A target that cannot be read, or whose pass yields no inline declaration of
-/// `id`, leaves the stub's own record. refs' section refusal makes no stub check,
-/// so it reaches this for a broken stub. `show` has already refused a broken
+/// `id`, leaves the stub's own record. refs makes no stub check, so every refs
+/// query on a stub's ID, bare or with a section, reaches this for a broken stub
+/// and lists its citations (§FS-refs.4.1). `show` has already refused a broken
 /// stub (§FS-show.2.3.4), but that check reads the disk, so it reaches this too
 /// when an editor's overlay drops a declaration the disk still holds.
 pub(super) fn stub_home<'a>(
