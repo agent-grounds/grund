@@ -209,7 +209,7 @@ The selected section heading is printed verbatim in all four modes — `text` st
 
 #### 2.2.1 Ambiguous ID
 
-If an ID has more than one home — the duplicate-declaration error from [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) — `show` does not pick one. A stub paired with the source declaration it points at is *one* home, not two; ambiguity means two or more independent declarations remain after that pairing collapses. When ambiguous, `show` exits 1 with a single bare stderr line — no `<path>:<line>:` prefix ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)):
+If an ID has more than one home — the duplicate-declaration error from [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration) — `show` does not pick one. A stub paired with the source declaration it points at is *one* home, not two — whether or not the target is scanned, and however many stubs point at it ([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), [§FS-declarations.checks.duplicate.2](FS-declarations.md#checksduplicate2-stubs-to-one-target-are-one-home)); ambiguity means two or more independent declarations remain after that pairing collapses, and a home reached through stubs is listed at its target's declaration ([§FS-declarations.checks.duplicate.3](FS-declarations.md#checksduplicate3-a-home-reached-through-stubs-is-named-at-its-target)). When ambiguous, `show` exits 1 with a single bare stderr line — no `<path>:<line>:` prefix ([§FS-errors.2.3](FS-errors.md#23-bare-query-failure)):
 
 ```
 ambiguous ID: <ID> (declared at <path>:<line>, <path>:<line>[, ...])

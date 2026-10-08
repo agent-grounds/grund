@@ -153,6 +153,20 @@ The same ID declared more than once: any two declarations that are not stubs ([�
 
 Duplicate JSON keys, cross-file JSON IDs, Markdown/JSON collisions, and overlapping opted-in ownership feed this same ambiguity rule even when their components agree. A duplicate target cannot be value-compared ([§FS-values.2.3](FS-values.md#23-duplicates-and-ownership)).
 
+A stub whose link holds is not a home of its own, whether or not the scan reaches what it points at ([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)); stubs that point at one target are one home ([§FS-declarations.checks.duplicate.2](FS-declarations.md#checksduplicate2-stubs-to-one-target-are-one-home)); and a home reached through stubs is named at its target's declaration ([§FS-declarations.checks.duplicate.3](FS-declarations.md#checksduplicate3-a-home-reached-through-stubs-is-named-at-its-target)).
+
+#### checks.duplicate.1: A stub pairs with its target whether or not the target is scanned
+
+A stub whose target declares its ID — the stub [§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub) accepts — is the pointer to that declaration, not a second home of the ID, whether or not `[scan] include` reaches the target. The broken-stub check reads the target from disk to accept the stub, and the count of homes takes the same reading: the scan scope, which decides nothing about the stub's health, decides nothing about how many homes its ID has. A lone stub to an unscanned target still stands for its home, so its ID has one home, never none. A broken stub pairs with nothing and stays a home of its own, scanned target or not.
+
+#### checks.duplicate.2: Stubs to one target are one home
+
+Stubs of one ID whose links resolve to the same target file are one home between them, not one each: two pointers to one declaration do not make it two. Stubs whose links resolve to different files, each declaring the ID, are as many homes as there are files, and the ID is a duplicate. A surface that shows such a home at a stub rather than at its target — `list`, where the target is outside the scan — shows it once, at the first of its stubs in `path:line` order.
+
+#### checks.duplicate.3: A home reached through stubs is named at its target
+
+Where a duplicate error or an ambiguity refusal ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)) lists a home that stubs point at, the site it names is the target's declaration of the ID, `<path>:<line>`, exactly as it would be were the target scanned — never a stub's own line, which has nothing to fix. The sites sort, and the error is located, per [§FS-check.2.1](FS-check.md#21-report-format) over those names, so the first site may be in the target file. The same sites travel in the finding's JSON `sites` ([§FS-errors.5](FS-errors.md#5-json-format)).
+
 ### checks.declaration-near-miss: Declaration near miss
 
 A heading that opens the way a declaration does and does not match its effective ID format remains a declaration for read compatibility ([§FS-config.3.2](FS-config.md#32-id--id-grammar)). The classic stumble is `# FS-login: …` under the default `{kind}-{number}-{slug}` — the `-NNN-` left out. `check` emits one **error** per such declaration, at the line a contributor has to edit:
