@@ -1,0 +1,1 @@
+{"severity":"error","path":null,"line":null,"code":"ambiguous","message":"ambiguous ID: FS-second (declared at source.rs:11, source.rs:6)","sites":[{"path":"source.rs","line":11},{"path":"source.rs","line":6}],"authority":null}

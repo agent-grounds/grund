@@ -36,7 +36,18 @@ pub(crate) fn declaration_ambiguity_refusal(
         decl.file.clone()
     };
     // §FS-show.2.3.7: refused from the record show would read, scanned or not.
-    let body_decl = stub_home(config, decls, decl, &file, id, &TextOverlays::new());
+    let body_decl = match stub_home(
+        config,
+        path_config,
+        decls,
+        decl,
+        &file,
+        id,
+        &TextOverlays::new(),
+    ) {
+        Ok(body_decl) => body_decl,
+        Err(refusal) => return Some(refusal),
+    };
     ambiguous_section_refusal(config, path_config, &body_decl, &file, id, section)
 }
 

@@ -106,7 +106,7 @@ pub(crate) fn show_declaration_with_overlays(
         }
     }
     // §FS-show.2.3.7: a stub reads its target's declaration, found by the ID.
-    let body_decl = stub_home(config, decls, decl, &file, id, overlays);
+    let body_decl = stub_home(config, path_config, decls, decl, &file, id, overlays)?;
     if let Some(section) = section
         && let Some(refusal) =
             ambiguous_section_refusal(config, path_config, &body_decl, &file, id, section)
