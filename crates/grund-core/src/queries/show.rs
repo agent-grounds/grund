@@ -1,6 +1,5 @@
 use super::ambiguity::{ambiguous_id_refusal, ambiguous_section_refusal};
 use super::stub_home::stub_home;
-use crate::checker::file_declares_inline_home;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
@@ -11,6 +10,7 @@ use crate::resolver::{
     extract_declaration_body, heading_anchor, section_site_anchor, show_e2e_case,
     takes_heading_anchor,
 };
+use crate::scanner::file_declares_inline_home;
 use anyhow::{Result, anyhow};
 use std::borrow::Cow;
 

@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::agents::check_agents_block_version;
 use super::citations::{check_citation_obligations, check_citation_prohibitions};
 use super::grounding::check_grounding;
-use super::homes::{KindHomeIndex, file_declares_inline_home, paths_same_location_key};
+use super::homes::{KindHomeIndex, paths_same_location_key};
 use super::index::check_kind_indexes;
 use super::index_entries::KindIndexEntries;
 use super::inline_style::check_inline_citation_style;
@@ -20,7 +20,7 @@ use crate::model::{
     is_stub_for_inline_decl, resolve_stub_target, sort_path_key,
 };
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
-use crate::scanner::is_scannable;
+use crate::scanner::{file_declares_inline_home, is_scannable};
 
 /// AR-checker: how grund validates the scanner's findings
 ///
@@ -78,7 +78,11 @@ use crate::scanner::is_scannable;
 /// lexicographically-first site (sort by `path`, then `line`); list every other
 /// site parenthetically in the message. This keeps the report's `path:line:`
 /// prefix invariant (§AR-checker.3, §FS-check.2.1) while still naming all sites. A stub and
-/// the inline declaration it points at count as one home, not two.
+/// the inline declaration it points at count as one home, not two — whether or not the walk
+/// reached that declaration, and however many stubs point at it — and a home a stub stands for
+/// is named at its target's declaration, from the record §AR-scanner.4.6 leaves on the stub
+/// (§FS-declarations.checks.duplicate.1, §FS-declarations.checks.duplicate.2,
+/// §FS-declarations.checks.duplicate.3).
 ///
 /// ### 2.2 Misplaced declarations (§FS-declarations.checks.misplaced-declaration)
 ///
@@ -113,7 +117,8 @@ use crate::scanner::is_scannable;
 /// target, resolve it against the repo root, verify the path exists, then re-scan
 /// that file for an inline declaration of the same ID. Either failure → one error
 /// at the stub site. This is the only rule that re-reads a file; everything else
-/// comes from `findings`.
+/// comes from `findings`. The reading is the scanner's (§AR-scanner.4.6), so the stub
+/// this rule accepts is the stub the count of homes pairs with its target.
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
 ///
@@ -420,11 +425,15 @@ pub(crate) fn check_with_workspace_and_overlays(
             .filter(|decl| !is_stub_for_inline_decl(&config.root, decl, decls))
             .collect();
         if duplicate_homes.len() > 1 {
+            // §FS-declarations.checks.duplicate.3: a stub's home is named at its target.
             let mut sites: Vec<Site> = duplicate_homes
                 .iter()
-                .map(|d| Site {
-                    path: d.file.clone(),
-                    line: d.line,
+                .map(|d| {
+                    let (path, line) = d.home_site();
+                    Site {
+                        path: path.to_path_buf(),
+                        line,
+                    }
                 })
                 .collect();
             sites.sort_by(|a, b| {

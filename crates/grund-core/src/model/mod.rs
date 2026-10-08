@@ -67,7 +67,7 @@ pub(crate) use paths::{
     scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
 pub(crate) use records::{
-    LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode, TextOverlays,
+    LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode, StubHome, TextOverlays,
     is_stub_for_inline_decl, resolve_stub_target,
 };
 pub(crate) use report::{CheckReport, Diagnostic, LANDED_CLAUSE, Site};

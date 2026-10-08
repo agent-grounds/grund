@@ -1,0 +1,122 @@
+//! A stub's home, recorded once after the walk (§AR-scanner.4.6): where the file a
+//! stub points at declares the stub's ID, read the way the broken-stub rule reads
+//! it (§FS-declarations.checks.broken-stub), so the count of homes and the stub's
+//! health agree whether or not the walk reached the target
+//! (§FS-declarations.checks.duplicate.1).
+
+use anyhow::Result;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
+
+use super::walk_boundaries::is_scannable;
+use crate::config::Config;
+use crate::grammar::{
+    PythonDocstringScanState, STUB_LINK_HEADING, declaration_id_on_line, source_scan_line,
+};
+use crate::model::{
+    Declaration, Findings, Id, StubHome, paths_same_location, physical_path_key,
+    resolve_stub_target,
+};
+
+/// Whether `path` contains a real (non-stub) inline declaration of `id` —
+/// the check that a stub's link target actually carries the inline home it claims
+/// (§FS-declarations.checks.broken-stub, §AR-checker.2.5, §AR-scanner.4).
+pub(crate) fn file_declares_inline_home(path: &Path, id: &Id, config: &Config) -> Result<bool> {
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let text = crate::config::input_read_to_string(path)?;
+    Ok(inline_home_line(&text, path, id, config).is_some())
+}
+
+/// The first line of `text`, the contents of `path`, that declares `id` and is not
+/// itself a stub link (§FS-declarations.checks.broken-stub, §AR-scanner.4.6).
+fn inline_home_line(text: &str, path: &Path, id: &Id, config: &Config) -> Option<usize> {
+    let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
+    let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
+    let mut py_docstring = PythonDocstringScanState::default();
+    for (index, line) in text.lines().enumerate() {
+        let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
+        let scan_line = scan.text.as_ref();
+        if let Some((found, token_end)) =
+            declaration_id_on_line(&config.grammar, scan_line, scan.in_py_docstring, is_md)
+            && &found == id
+        {
+            let tail = &scan_line[token_end..];
+            if STUB_LINK_HEADING.is_match(tail) {
+                continue;
+            }
+            return Some(index + 1);
+        }
+    }
+    None
+}
+
+/// Record on every stub of an ID declared more than once where its home declares
+/// the ID (§AR-scanner.4.6): the record of the ID at the stub's target when the walk
+/// reached it, else the target read from disk, once per target however many stubs
+/// and IDs name it. An ID declared once is passed over unresolved, so a lone stub
+/// costs nothing here and stays its own home (§FS-declarations.checks.duplicate.1).
+pub(super) fn record_stub_homes(config: &Config, findings: &mut Findings) {
+    let mut targets = TargetTexts::default();
+    for (id, decls) in &mut findings.declarations {
+        if decls.len() < 2 || !decls.iter().any(|decl| decl.is_stub) {
+            continue;
+        }
+        let homes: Vec<Option<StubHome>> = decls
+            .iter()
+            .map(|decl| stub_home(config, id, decl, decls.as_slice(), &mut targets))
+            .collect();
+        for (decl, home) in decls.iter_mut().zip(homes) {
+            decl.stub_home = home;
+        }
+    }
+}
+
+/// Where `decl`, if it is a stub, finds the home it points at (§AR-scanner.4.6).
+fn stub_home(
+    config: &Config,
+    id: &Id,
+    decl: &Declaration,
+    decls: &[Declaration],
+    targets: &mut TargetTexts,
+) -> Option<StubHome> {
+    if !decl.is_stub {
+        return None;
+    }
+    let target = decl.defined_in.as_ref()?;
+    let resolved = resolve_stub_target(&config.root, &decl.file, target);
+    // Kept where the walk reached the target, so a scope narrowed after it still
+    // pairs the stub (§AR-checker.2.13).
+    if let Some(record) = decls
+        .iter()
+        .find(|other| paths_same_location(&other.file, &resolved) && other.file != decl.file)
+    {
+        return Some(StubHome {
+            path: record.file.clone(),
+            line: record.line,
+        });
+    }
+    // §AR-checker.2.5: the broken-stub rule's own reading, scannable files only.
+    if !resolved.is_file() || !is_scannable(&resolved, config) {
+        return None;
+    }
+    let line = inline_home_line(targets.read(&resolved)?, &resolved, id, config)?;
+    Some(StubHome {
+        path: resolved,
+        line,
+    })
+}
+
+/// The targets one pass has read, by physical location, so each is read once
+/// (§AR-scanner.4.6). An unreadable target is remembered as such.
+#[derive(Default)]
+struct TargetTexts(BTreeMap<PathBuf, Option<String>>);
+
+impl TargetTexts {
+    fn read(&mut self, path: &Path) -> Option<&str> {
+        self.0
+            .entry(physical_path_key(path))
+            // §FS-check.6.1.1: cover this effective input before its shared read.
+            .or_insert_with(|| crate::config::input_read_to_string(path).ok())
+            .as_deref()
+    }
+}
