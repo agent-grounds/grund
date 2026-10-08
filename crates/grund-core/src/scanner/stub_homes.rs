@@ -5,25 +5,37 @@
 //! (§FS-declarations.checks.duplicate.1).
 
 use anyhow::Result;
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+use super::tree::overlay_text;
 use super::walk_boundaries::is_scannable;
 use crate::config::Config;
 use crate::grammar::{
     PythonDocstringScanState, STUB_LINK_HEADING, declaration_id_on_line, source_scan_line,
 };
 use crate::model::{
-    Declaration, Findings, Id, StubHome, paths_same_location, physical_path_key,
+    Declaration, Findings, Id, StubHome, TextOverlays, paths_same_location, physical_path_key,
     resolve_stub_target,
 };
 
 /// Whether `path` contains a real (non-stub) inline declaration of `id` —
 /// the check that a stub's link target actually carries the inline home it claims
-/// (§FS-declarations.checks.broken-stub, §AR-checker.2.5, §AR-scanner.4).
-pub(crate) fn file_declares_inline_home(path: &Path, id: &Id, config: &Config) -> Result<bool> {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let text = crate::config::input_read_to_string(path)?;
+/// (§FS-declarations.checks.broken-stub, §AR-checker.2.5, §AR-scanner.4). The
+/// target is read as a save would write it (§FS-declarations.checks.broken-stub.1):
+/// the editor's overlay where there is one, the disk otherwise, as the scan reads it.
+pub(crate) fn file_declares_inline_home(
+    path: &Path,
+    id: &Id,
+    config: &Config,
+    overlays: &TextOverlays,
+) -> Result<bool> {
+    let text = match overlay_text(overlays, path) {
+        Some(text) => Cow::Borrowed(text),
+        // §FS-check.6.1.1: cover this effective input before its shared read.
+        None => Cow::Owned(crate::config::input_read_to_string(path)?),
+    };
     Ok(inline_home_line(&text, path, id, config).is_some())
 }
 

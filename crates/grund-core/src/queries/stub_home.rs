@@ -28,8 +28,10 @@ use crate::scanner::scan_unwalked_file;
 /// `id`, leaves the stub's own record. refs makes no stub check, so every refs
 /// query on a stub's ID, bare or with a section, reaches this for a broken stub
 /// and lists its citations (§FS-refs.4.1). `show` has already refused a broken
-/// stub (§FS-show.2.3.4), but that check reads the disk, so it reaches this too
-/// when an editor's overlay drops a declaration the disk still holds.
+/// stub (§FS-show.2.3.4), judged on this same overlay-first text
+/// (§FS-declarations.checks.broken-stub.1), so it reaches this only where that
+/// line test finds a declaration the scanner's pass does not record, such as one
+/// inside a fenced block of a Markdown target.
 pub(super) fn stub_home<'a>(
     config: &Config,
     path_config: &Config,
