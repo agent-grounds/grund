@@ -117,11 +117,15 @@ use crate::scanner::{file_declares_inline_home, is_scannable};
 /// target, resolve it against the repo root, verify the path exists, then re-scan
 /// that file for an inline declaration of the same ID. The re-read takes the
 /// editor's overlay text first and the disk second, as the scanner does, so the
-/// verdict is the one a save would give (§FS-declarations.checks.broken-stub.1).
-/// Either failure → one error at the stub site. This is the only rule that
-/// re-reads a file; everything else comes from `findings`. The reading is the
-/// scanner's (§AR-scanner.4.6), so the stub this rule accepts is the stub the count
-/// of homes pairs with its target.
+/// verdict is the one a save would give (§FS-declarations.checks.broken-stub.1),
+/// and it reads that text as the scanner does too: in a Markdown target, fence
+/// delimiter lines and every line while a fence is open are skipped through the
+/// scanner's own fence reader (§AR-scanner.2.3.3), so a fenced example heading of
+/// the ID is not its declaration (§FS-declarations.checks.broken-stub.2). Either
+/// failure → one error at the stub site. This is the only rule that re-reads a
+/// file; everything else comes from `findings`. The reading is the scanner's
+/// (§AR-scanner.4.6), so the stub this rule accepts is the stub the count of homes
+/// pairs with its target.
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
 ///
