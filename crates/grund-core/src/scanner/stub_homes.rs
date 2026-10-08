@@ -84,6 +84,11 @@ fn stub_home(
     }
     let target = decl.defined_in.as_ref()?;
     let resolved = resolve_stub_target(&config.root, &decl.file, target);
+    // A stub that links to its own file pairs with nothing in it, as the predicate
+    // has it, so its sites stay its own line and its file's (§AR-scanner.4.6).
+    if paths_same_location(&config.root.join(&decl.file), &resolved) {
+        return None;
+    }
     // Kept where the walk reached the target, so a scope narrowed after it still
     // pairs the stub (§AR-checker.2.13).
     if let Some(record) = decls
