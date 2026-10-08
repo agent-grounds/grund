@@ -18,8 +18,8 @@ level, rule, grounded).
   about.
 - **selector** — What a subject or target spelling matches: a kind, a named chapter, or one
   exact ID.
-- **chapter** — A rule's unit inside a declaration: one named child heading of it, as against
-  the declaration's whole body. The rule grammar's subject-unit word.
+- **chapter** — A rule's unit inside a declaration: one named heading in its body, direct or
+  nested, as against the declaration's whole body. The rule grammar's subject-unit word.
 - **display name** — The label an author wrote after a chapter's coordinate: `Terms` in
   `## terms: Terms`. What a presence rule names, whatever file the heading is in
   ([§FS-rules.5.1.1](FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)).
@@ -71,14 +71,16 @@ accepts, are:
 |---|---|
 | `Each KIND` | every local declaration of that configured citable kind |
 | `ID` | the one local declaration with that full ID |
-| `The NAME chapter of each KIND` | that named chapter of every local declaration of the kind that has one |
+| `The NAME chapter of each KIND` | the chapter at that whole path of every local declaration of the kind that has one |
 | `ID.NAME[.NAME…]` | the one local named chapter with that exact coordinate |
 | `KIND.NAME[.NAME…]` | selector only: means `The NAME chapter of each KIND`, and a rule sentence refuses it |
 
 In chapter subjects, `NAME` selects the section handle, not its display name.
 For `## goal: Goal and hypothesis`, `The goal chapter of each BENCH` selects
 the `goal` coordinate even though its display name is `Goal and hypothesis`.
-Presence rules compare the other field ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)).
+Presence rules compare the other field ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)). A chapter subject's
+`NAME` is the chapter's whole path from its declaration, never only that
+path's last component ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)).
 
 A token exactly equal to a configured citable kind name is the quantified kind
 selector; any longer token must parse as a full ID under that kind's effective
@@ -117,6 +119,34 @@ Object kind targets use the existing target-entry grammar of
 pinned `alias/KIND` and `*/KIND`. Alternatives joined with `or` are one target
 set. Repeated or differently ordered kinds normalize to the same byte-sorted
 set for meaning and deduplication.
+
+### 2.1 A chapter's NAME is its whole path
+
+A chapter subject's `NAME` is the whole section path from the declaration to
+the chapter, one named component or several. It selects the chapter at exactly
+that path, at whatever depth the chapter is declared, and it is never compared
+with the last component of a path alone. Take `FS-login`, whose
+`## requirements` chapter holds a `### requirements.terms` chapter:
+
+- `FS.requirements.terms` and `The requirements.terms chapter of each FS`
+  select `FS-login.requirements.terms`, the same chapter its exact coordinate
+  selects.
+- `FS.terms` and `The terms chapter of each FS` select a `## terms` chapter
+  directly under `FS-login` where there is one. They never select the nested
+  `requirements.terms`, which only shares its last component.
+- `FS.requirements` selects the `requirements` chapter, whose unit includes
+  `requirements.terms`. It does not select `requirements.terms` as a unit of
+  its own.
+
+The path is the same under any `section_separator`, because the separator
+stands only between a declaration and its first component: with
+`section_separator = ":"` the dotted selector is `FS:requirements.terms`.
+
+So a `NAME` means one thing on every surface that reads a subject: the rule
+families ([§FS-rules.3](FS-rules.md#3-the-five-sentence-families)), the declarations a rule leaves unreached
+([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)), and every `list --selector` mode,
+`--size` included ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A declaration contributes a unit exactly when
+it has a chapter at that path, and it is unreached exactly when it has none.
 
 ## 3. The five sentence families
 
@@ -485,9 +515,11 @@ trees that pass without them; those findings warn for one release
 #### 5.1.1 A chapter's display name is the label its author wrote
 
 A `chapter` fact's `display_name` is the label the author wrote after the
-chapter's coordinate: `Terms` in `## terms: Terms`. It is the same label
-whether the declaration's body lives in a Markdown file or in a source
-doc-comment. A heading in a doc-comment sits behind the comment that carries
+chapter's coordinate: `Terms` in `## terms: Terms`. A nested chapter's
+coordinate is its whole path, so `### requirements.terms: Terms` is
+`chapter(c, requirements.terms, Terms)`, and its label is `Terms` as well. It
+is the same label whether the declaration's body lives in a Markdown file or in
+a source doc-comment. A heading in a doc-comment sits behind the comment that carries
 it — `///`, `//!`, a block comment's ` * `, a hash comment's `#`, or any other
 configured prefix
 ([§FS-config.3.5.14](FS-config.md#3514-comment_prefixes-compose-with-extensions))
@@ -535,21 +567,30 @@ A chapter subject `The N chapter of each K` carries a second premise, taken
 over the declarations of the kind rather than over the chapters `S` selected:
 
 ```text
-chapter_handle(c, N) :- chapter(c, q, _), last_component(q) = N.
-chapter_of(d, N)     :- chapter_handle(c, N), decl(d, K), contains(d, c).
+chapter_handle(c, N) :- chapter(c, N, _).
+owns(d, c)           :- decl(d, _), contains(d, c), chapter(c, _, _).
+owns(d, c)           :- owns(d, p), contains(p, c), chapter(c, _, _).
+chapter_of(d, N)     :- chapter_handle(c, N), decl(d, K), owns(d, c).
 unreached(d, N)      :- decl(d, K), not chapter_of(d, N).
 ```
 
 `chapter_handle` is the subject selector of [§FS-rules.2](FS-rules.md#2-subject-selectors) read as a relation. A
-subject's `N` is an accepted section component, so it joins the last component
-of the section path — `chapter`'s second position — and not the display name in
-its third, which is what the presence family's `chapter_count` counts
+subject's `N` is an accepted section path, one named component or several
+([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so it joins the whole of the section path — `chapter`'s
+second position — and neither that path's last component nor the display name
+in its third, which is what the presence family's `chapter_count` counts
 ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)). The two clauses therefore
 join different positions of the same relation, and this one follows the
 selector rather than `chapter_count`: `chapter_of(d, N)` holds exactly when `d`
 owns one of the chapters `S` selected, so contributing no unit and being
 unreached are one set rather than two, and no declaration can both hand a
 relation a unit and be reported as out of the rule's reach.
+
+`owns` follows `contains` from a declaration down through its chapters, so a
+nested chapter belongs to the declaration whose body holds it, not only to the
+chapter directly above it. `contains(d, c)` alone reaches only `d`'s direct
+chapters, which is what presence counts ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)), and is too narrow for
+a path of several components.
 
 The outbound-count, per-target-coverage and inbound-count families report every
 `unreached(d, N)` beside every `not within(n, cardinality)`
@@ -873,8 +914,11 @@ empty report reads like a sentence that found nothing.
 `grund list --selector "<selector>" [<path>]` filters the shared catalog to
 matched declaration and chapter units and composes by intersection with the
 existing path, kind, project, unused, summary, size, top, and format selectors
-where their output modes admit unit rows. Text prints the canonical coordinate,
-two spaces, location, two spaces, and title. A chapter JSON row uses the list
+where their output modes admit unit rows. It selects exactly the units the
+same subject selects in a rule, in every mode, `--size` included, so
+`FS.requirements.terms` lists that nested chapter and `FS.terms` only a `terms`
+chapter directly under its declaration ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)). Text prints the
+canonical coordinate, two spaces, location, two spaces, and title. A chapter JSON row uses the list
 object's existing fields in their existing order, adds `"section"` immediately
 after `"id"`, and puts the declaration ID in `id` and exact component path in
 `section`; a declaration row remains byte-for-byte the ordinary list row. In
@@ -1141,8 +1185,9 @@ A check this specification raises is a section named by its diagnostic code
 
 A declaration of a kind that a chapter-scoped citation rule over that kind
 cannot reach. The rule's subject is `The <NAME> chapter of each <KIND>`, the
-declaration is a local declaration of `<KIND>`, and it has no accepted direct
-chapter named `<NAME>`, so it contributes no unit to the selection
+declaration is a local declaration of `<KIND>`, and it has no accepted
+chapter at the section path `<NAME>` ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so it contributes no unit
+to the selection
 ([§FS-rules.2](FS-rules.md#2-subject-selectors)) and the rule's relation says
 nothing about it.
 
