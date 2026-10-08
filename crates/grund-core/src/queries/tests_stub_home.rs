@@ -72,6 +72,7 @@ fn unscanned_stub_target_reads_the_overlay_by_its_id() {
             &overlays,
         )
         .expect("§FS-show.2.3.7: a stub that is not broken reads its target")
+        .0
     };
 
     let lead = show(None);

@@ -12,6 +12,7 @@ use crate::resolver::{
     takes_heading_anchor,
 };
 use anyhow::{Result, anyhow};
+use std::borrow::Cow;
 
 #[cfg(test)]
 pub(crate) fn show_declaration(
@@ -33,6 +34,7 @@ pub(crate) fn show_declaration(
         include_heading,
         &TextOverlays::new(),
     )
+    .map(|(output, _)| output)
 }
 
 /// `path_config` renders every path this function reports (§FS-config.3.6) — the
@@ -42,16 +44,20 @@ pub(crate) fn show_declaration(
 /// against the root the rest of the run spells its paths from
 /// (§FS-workspace.8.1.2). `config` stays the *project's*: it owns the ID grammar
 /// `render_id` reads and the tree the body is read out of.
-pub(crate) fn show_declaration_with_overlays(
+///
+/// Beside the output it returns the record the body was read out of, a stub's
+/// target declaration rather than the stub (§FS-show.2.3.7), which is the record
+/// `render_show_output_json` derives the heading anchors from.
+pub(crate) fn show_declaration_with_overlays<'a>(
     config: &Config,
     path_config: &Config,
-    findings: &Findings,
+    findings: &'a Findings,
     id: &Id,
     section: Option<&str>,
     mode: ShowRenderMode,
     include_heading: bool,
     overlays: &TextOverlays,
-) -> Result<ShowOutput> {
+) -> Result<(ShowOutput, Cow<'a, Declaration>)> {
     let root = &config.root;
     let decls = findings.declarations.get(id).ok_or_else(|| {
         anyhow!(crate::model::OperationDiagnostic::new(
@@ -66,10 +72,12 @@ pub(crate) fn show_declaration_with_overlays(
     }
     let decl = decls.iter().find(|decl| decl.is_stub).unwrap_or(&decls[0]);
     if matches!(decl.source, DeclarationSource::Json { .. }) {
-        return show_json_value(config, id, decl, section);
+        let output = show_json_value(config, id, decl, section)?;
+        return Ok((output, Cow::Borrowed(decl)));
     }
     if let Some(case) = &decl.e2e_case {
-        return show_e2e_case(config, path_config, id, case, section, mode);
+        let output = show_e2e_case(config, path_config, id, case, section, mode)?;
+        return Ok((output, Cow::Borrowed(decl)));
     }
     let file = if let Some(target) = &decl.defined_in {
         resolve_stub_target(root, &decl.file, target)
@@ -127,7 +135,7 @@ pub(crate) fn show_declaration_with_overlays(
             )
         )));
     }
-    extract_declaration_body(
+    let output = extract_declaration_body(
         &file,
         id,
         &body_decl,
@@ -136,7 +144,8 @@ pub(crate) fn show_declaration_with_overlays(
         include_heading,
         config,
         overlays,
-    )
+    )?;
+    Ok((output, body_decl))
 }
 
 /// JSON values have source slices rather than Markdown bodies. Every show mode
@@ -196,10 +205,12 @@ fn show_json_value(
 /// workspace root reports a path relative to that root rather than to the member
 /// (§FS-config.3.6: paths are relative to *the config root*, and §FS-integrations.3.1.5
 /// joins this path against the root `grund-open` discovered).
+///
+/// `home` is the record `show_declaration_with_overlays` read the body out of.
 pub(crate) fn render_show_output_json(
     config: &Config,
     path_config: &Config,
-    findings: &Findings,
+    home: &Declaration,
     id: &Id,
     section: Option<&str>,
     mode: ShowRenderMode,
@@ -211,7 +222,7 @@ pub(crate) fn render_show_output_json(
     if let Some(json) = &output.json {
         return json.clone();
     }
-    let anchors = ShowAnchors::of(config, findings, id, section, output);
+    let anchors = ShowAnchors::of(config, home, id, section, output);
     let mut extra = String::new();
     if matches!(mode, ShowRenderMode::Toc) {
         extra.push_str(",\"sections\":[");
@@ -274,8 +285,9 @@ fn json_anchor(anchor: Option<&str>) -> String {
 /// selected coordinate's, and one per `--toc` entry in the entries' order. Each
 /// is the fragment `fmt --cross-refs` derives under the target project's profile
 /// (`config`), or `None` where the site has no heading anchor — a source or JSON
-/// home, or the `none` profile. Derived from the file the body was read out of,
-/// so a stub reports its target's (null for source) and never its own heading.
+/// home, or the `none` profile. Derived from the record the body was read out
+/// of, so a stub reports its target's (null for source), scanned or not
+/// (§FS-show.2.3.7), and never its own heading.
 struct ShowAnchors {
     selected: Option<String>,
     sections: Vec<Option<String>>,
@@ -284,7 +296,7 @@ struct ShowAnchors {
 impl ShowAnchors {
     fn of(
         config: &Config,
-        findings: &Findings,
+        decl: &Declaration,
         id: &Id,
         section: Option<&str>,
         output: &ShowOutput,
@@ -293,16 +305,12 @@ impl ShowAnchors {
             selected: None,
             sections: vec![None; output.sections.len()],
         };
-        if !takes_heading_anchor(&output.path, config) {
+        if !takes_heading_anchor(&output.path, config)
+            || decl.is_stub
+            || !paths_same_location(&decl.file, &output.path)
+        {
             return none();
         }
-        let Some(decl) = findings.declarations.get(id).and_then(|decls| {
-            decls
-                .iter()
-                .find(|decl| !decl.is_stub && paths_same_location(&decl.file, &output.path))
-        }) else {
-            return none();
-        };
         // §FS-show.3.1.3.1: each `--toc` entry anchors on its own heading site.
         // The entries are the recorded sites after the selected heading, in
         // document order; a path the cursor cannot place falls back to the map.
