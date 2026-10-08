@@ -27,7 +27,9 @@ rebuild from that closure. Typescript 5.9.3 is a test-only pinned consumer compi
 not a production package dependency.
 
 `adapter.mjs` extends #470's common corpus through newline JSON requests
-`{operation,args}`. Set `GRUND_BINDINGS_ORACLE` to that same-source Rust oracle.
+`{operation,args}`. Set `GRUND_BINDINGS_ORACLE` to that same-source Rust oracle
+when running this suite on its own; the Python gate builds it from `HEAD` when
+the variable is unset ([§AR-ci.3.4](../../../docs/architecture/AR-ci.md#34-the-python-gates-inputs)).
 Its `--metadata` returns `protocolVersion:1`, `sourceSha` and `engineVersion`;
 ordinary invocations read one request on stdin and emit the complete canonical
 `failure,result,run_cautions` envelope. These small framing choices fill an

@@ -296,5 +296,6 @@ manifests together or malformed external argv refuse before copying/spawning.
 Stdin, cwd, goldens, final-tree comparison and refresh remain shared. The recipe's
 Git/process acceptance modules are collected by `tests/integration/test_cochange_recipe.py`.
 `python scripts/run_python_gate.py` provides portable built/released 0.16.1
-inputs for the ordinary Python gate; missing setup is a failure, never a skip
-([§FS-cochange-recipe.examples](../../docs/functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)).
+inputs for the ordinary Python gate, and the same-source binding oracle built
+from `HEAD`; missing setup is a failure, never a skip
+([§FS-cochange-recipe.examples](../../docs/functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance), [§AR-ci.3.4](../../docs/architecture/AR-ci.md#34-the-python-gates-inputs)).

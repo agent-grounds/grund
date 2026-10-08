@@ -92,7 +92,10 @@ The native seams are private and accept no public-operation fault options.
 The shared Rust oracle is sourced from #470's shared-core subset at
 17e6647c84, extended here with Node framing
 ([§FS-distribution.3.0.3](../../docs/functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)).
-After committing the tested source:
+The Python gate, `python scripts/run_python_gate.py`, builds it from `HEAD`
+itself whenever `GRUND_BINDINGS_ORACLE` is unset
+([§AR-ci.3.4](../../docs/architecture/AR-ci.md#34-the-python-gates-inputs)). To run `run.py` on its own, build and export it
+after committing the tested source:
 
 ```sh
 GRUND_BINDINGS_SOURCE_SHA="$(git rev-parse HEAD)" cargo +1.95.0 build \
