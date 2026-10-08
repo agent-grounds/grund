@@ -19,7 +19,7 @@ use std::collections::BTreeMap;
 
 use super::stub_home::unscanned_stub_home;
 use crate::config::Config;
-use crate::model::{Citation, Findings, Id};
+use crate::model::{Citation, Declaration, Findings, Id};
 
 /// One project a citation can resolve against, as a rule needs it: the findings
 /// the ID is looked up in and the config that spells it, because a workspace may
@@ -68,26 +68,47 @@ pub(crate) fn citation_resolves(
 /// declines a declaration-local rewrite on, and §FS-check.3.17.4 admits a bare
 /// index entry by, so the finding and the refusals cannot disagree. An undeclared
 /// `id` has no sections, and an owner with no numbered headings, a wholly absent
-/// path and a partially resolving one all answer `false`.
-///
-/// A stub's sections are its target's, scanned or not (§FS-check.3.2.1): where no
-/// recorded declaration holds the path, a stub of `id` whose target the walk did
-/// not record answers from that target's one declaration of `id`, read once per run;
-/// an ID `show` refuses as ambiguous lends no section there.
-/// `config` is the project `findings` belong to, the target's for a workspace
-/// citation, because the stub's link resolves against its root.
+/// path and a partially resolving one all answer `false`. It is `section_home`,
+/// asked as a yes/no.
 pub(crate) fn section_resolves(
     findings: &Findings,
     config: &Config,
     id: &Id,
     section: &str,
 ) -> bool {
-    let Some(decls) = findings.declarations.get(id) else {
-        return false;
-    };
-    decls.iter().any(|decl| decl.sections.contains_key(section))
-        || decls.iter().any(|stub| {
-            unscanned_stub_home(findings, config, id, stub)
-                .is_some_and(|home| home.sections.contains_key(section))
-        })
+    section_home(findings, config, id, section).is_some()
+}
+
+/// Which record holds a section a citation resolves to (§FS-check.3.2.1).
+pub(crate) enum SectionHome<'a> {
+    /// A declaration the walk recorded.
+    Recorded,
+    /// The one declaration of the ID in a stub's target the walk did not reach.
+    Unscanned(&'a Declaration),
+}
+
+/// Where `section` of `id` resolves, or `None` where it does not. A stub's sections
+/// are its target's, scanned or not (§FS-check.3.2.1): where no recorded declaration
+/// holds the path, a stub of `id` whose target the walk did not record answers from
+/// that target's one declaration of `id`, read once per run; an ID `show` refuses as
+/// ambiguous lends no section there. A rule's `cites` fact asks here rather than
+/// `section_resolves`, because a citation into a home outside the walk counts for
+/// that home's chapter (§FS-rules.5.1). `config` is the project `findings` belong
+/// to, the target's for a workspace citation, because the stub's link resolves
+/// against its root.
+pub(crate) fn section_home<'a>(
+    findings: &'a Findings,
+    config: &Config,
+    id: &Id,
+    section: &str,
+) -> Option<SectionHome<'a>> {
+    let decls = findings.declarations.get(id)?;
+    if decls.iter().any(|decl| decl.sections.contains_key(section)) {
+        return Some(SectionHome::Recorded);
+    }
+    decls
+        .iter()
+        .filter_map(|stub| unscanned_stub_home(findings, config, id, stub))
+        .find(|home| home.sections.contains_key(section))
+        .map(SectionHome::Unscanned)
 }
