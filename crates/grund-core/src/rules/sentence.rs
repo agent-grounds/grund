@@ -30,6 +30,25 @@ pub(crate) enum RuleSubject {
     },
 }
 
+impl RuleSubject {
+    /// The section path this subject selects in a declaration of `kind`
+    /// rendered as `declaration`, or `None` where it selects no chapter there.
+    /// A chapter-of-kind `NAME` is the whole path, never its last component
+    /// (§FS-rules.2.1), so it is looked up exactly as an exact coordinate's path
+    /// is, and `list` and `list --size` read a subject the same way (§FS-rules.8).
+    pub(crate) fn chapter_path(&self, kind: &str, declaration: &str) -> Option<&str> {
+        match self {
+            Self::ChapterOfKind { kind: wanted, name } if wanted == kind => Some(name),
+            Self::ExactChapter {
+                declaration: wanted,
+                path,
+                ..
+            } if wanted == declaration => Some(path),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) enum RuleLevel {
     Required,
