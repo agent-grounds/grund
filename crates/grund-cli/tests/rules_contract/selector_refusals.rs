@@ -1,6 +1,7 @@
 //! A refused `list --selector` is answered with a selector a reader can paste
 //! back, never with a rule sentence (§FS-rules.8.1), while `check --rule` keeps
-//! every byte it printed (§FS-rules.3.5). The fixture is the repository
+//! every byte it printed (§FS-rules.3.5) but where a subject needs named
+//! sections, which §FS-rules.3.5.2 answers. The fixture is the repository
 //! the `list-selector-refused-*` e2e cases share: one kind, `FS`, and `FS-login`
 //! with a named `requirements` chapter holding two numbered sections and a named
 //! `should` chapter.

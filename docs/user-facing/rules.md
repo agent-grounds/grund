@@ -38,6 +38,19 @@ A subject is also a query: [Querying grund](querying.md) feeds the units
 `KIND.NAME`, such as `FS.requirements`, is a selector shorthand for
 `The NAME chapter of each KIND` that a rule sentence does not accept ([§FS-rules.2](../functional-spec/FS-rules.md#2-subject-selectors)).
 
+Named-chapter subjects require `[id] named_sections = true`. With named
+sections off, a refused subject is answered with a sentence you can paste
+back, and its label says whether you have to turn the switch on first:
+`accepted form after enabling it:` where you do, and a plain `accepted form:`
+where the sentence works as configured. `FS-*.requirements` is not an ID, so it
+is answered with the chapter subject it meant
+([§FS-rules.3.5.2](../functional-spec/FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)):
+
+```text
+$ grund check --rule 'FS-*.requirements must cite at least one REQ.'
+error: named chapter subjects require [id] named_sections = true; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.
+```
+
 <!-- BEGIN chapter-rules -->
 ### Chapter rules
 

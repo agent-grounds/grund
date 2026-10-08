@@ -62,6 +62,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-narrowed-check-keeps-invalid-rule](DF-narrowed-check-keeps-invalid-rule.md#df-narrowed-check-keeps-invalid-rule-a-check-narrowed-to-a-rules-code-keeps-the-error-that-says-the-rule-could-not-run) — a check narrowed to a rule's code keeps the error that says the rule could not run
 - [§DF-section-citation-counts-in-rules](DF-section-citation-counts-in-rules.md#df-section-citation-counts-in-rules-a-resolved-citation-to-a-numbered-section-counts-in-chapter-rules) — a resolved citation to a numbered section counts in chapter rules
 - [§DF-selector-refusal-rewrites](DF-selector-refusal-rewrites.md#df-selector-refusal-rewrites-a-refused-selector-is-answered-with-a-selector-and-its-old-lines-are-replaced-not-appended-to) — a refused selector is answered with a selector, and its old lines are replaced, not appended to
+- [§DF-rule-after-enabling-rewrites](DF-rule-after-enabling-rewrites.md#df-rule-after-enabling-rewrites-a-rule-subject-that-needs-named-sections-is-answered-with-one-they-make-valid-in-place) — a rule subject that needs named sections is answered with one they make valid, in place
 
 ## Config, discovery, and workspaces
 
