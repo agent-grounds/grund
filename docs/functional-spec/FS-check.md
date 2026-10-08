@@ -501,7 +501,10 @@ code. A broken stub
 broken-stub finding, and a citation of one of its sections is `missing section` as before. A
 target that declares the ID more than once pairs as `show` refuses it, ambiguously
 ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), and lends no section, and so does every target of an ID with more than one home
-([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)).
+([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)). The target is read only to answer a citation into it, so what `check`
+judges of the home itself stays as it was outside the scan: its declaration, the citations it
+makes, and its chapters as a rule's subjects or in a rule's count of chapters
+([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path), [§FS-rules.3.1](FS-rules.md#31-chapter-presence)).
 Decided in [§DF-stub-sections-from-unscanned-target](../decisions/functional/DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it).
 
 ### 3.3 Duplicate declaration

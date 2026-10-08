@@ -1,0 +1,3 @@
+docs/ar/second.md:1: error: AR-second is cited by FS 0 times; RULE-ar-cited requires at least one
+docs/ar/third.md:1: error: AR-third is cited by FS 0 times; RULE-ar-cited requires at least one
+docs/rules/RULE-ar-cited.md:1: warning: declared but never cited: RULE-ar-cited
