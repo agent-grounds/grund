@@ -69,8 +69,9 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         .as_deref()
         .map(|raw| {
             // §FS-rules.8.1: a refusal recovering no kind ends in `known kinds:`.
-            parse_selector(raw, &vocabulary)
-                .map_err(|refusal| selector_refusal(refusal.render(&context.known_kinds_line())))
+            parse_selector(raw, &vocabulary).map_err(|refusal| {
+                selector_refusal(refusal.render(&context.known_kinds_line(&opts.project_filter)))
+            })
         })
         .transpose()?;
 
@@ -337,7 +338,10 @@ fn validate_list_scope_filters(
                 Some(candidate) => non_citable_kind_error(candidate),
                 None => format!("unknown kind `{kind}`"),
             };
-            return Err(anyhow!("{headline}\n{}", context.known_kinds_line()));
+            return Err(anyhow!(
+                "{headline}\n{}",
+                context.known_kinds_line(project_filter)
+            ));
         }
     }
     Ok(())
