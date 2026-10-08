@@ -112,6 +112,14 @@ can read is the same silence in a new spelling.
   declaration names the target's line rather than the stub's, in text and JSON
   ([§FS-declarations.checks.duplicate.3](../../docs/functional-spec/FS-declarations.md#checksduplicate3-a-home-reached-through-stubs-is-named-at-its-target)) — beside the one-stub tree and the scanned
   controls of both shapes, which read as they always have
+- a section citation of a stub whose target is outside `[scan] include`, resolved in that target
+  as the scanned tree resolves it ([§FS-check.3.2.1](../../docs/functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [grund#529](https://github.com/agent-grounds/grund/issues/529)):
+  a section the target declares is clean for one stub, for two stubs to the target, and under
+  `--full`; a rule counts a citation of a named chapter there; a value binding to one is compared,
+  and the mismatch named at the target's line; a bare index entry of one is the
+  `unlinked-index-entry` that `fmt` wraps — beside a section the target does not declare, and one
+  of a broken stub whose file holds that heading under another ID, each still `missing section`
+  in the same words
 - declaration-local section coordinates: `show` rejects a numeric heading after
   a body-closing plain chapter, while `check` reports that orphan once in text
   and JSON under `section-outside-declaration`; `--only` retains it and

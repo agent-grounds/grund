@@ -473,6 +473,32 @@ finding and this missing-section finding are independent, so a missing local pat
 
 For a value binding the explicit numeric component must resolve here before comparison; a missing component produces this finding alone, not a mismatch ([§FS-values.5.1](FS-values.md#51-resolve-before-comparison)).
 
+#### 3.2.1 A stub's sections are its target's, scanned or not
+
+A citation of a stub's ID names a section of the declaration the stub pairs with
+([§FS-declarations.checks.duplicate.1](FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned)), so the section exists exactly where that declaration
+records a heading at the requested path, read from the stub's target whether or not
+`[scan] include` reaches it. The stub declares no sections of its own
+([§FS-declarations.checks.duplicate-section.2](FS-declarations.md#checksduplicate-section2-scoped-to-that-declarations-body)), so its own record never answers; the target's
+declaration is the one `grund <ID>.<path>` slices ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), and `check` and `show`
+answer from that one section set ([§FS-show.2.2.2.2](FS-show.md#2222-the-headings-check-counts)). A section citation reads as it would were
+the target scanned: stubs to one target are one home and so one section set
+([§FS-declarations.checks.duplicate.2](FS-declarations.md#checksduplicate2-stubs-to-one-target-are-one-home)), and a `--full` run, whose report inside the default scope
+is the plain run's ([§FS-check.1.3.4](FS-check.md#134-purely-additive)), resolves it as the plain run does.
+
+That answer is one fact, and every reader of it in `check` takes it: this finding, the `cites`
+fact a rule counts a resolved citation by ([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)), the value a binding is compared with once
+its component resolves ([§FS-values.5.1](FS-values.md#51-resolve-before-comparison)), the gate that admits a bare index
+entry `fmt` can wrap ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), and the declaration-local rewrite that declines an absent
+section ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)) with the command clause it withholds there ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)).
+
+Nothing else moves. A section the target does not declare is reported as before, in the same
+words — `missing section <ID>.<path>` for a numeric path — and under the same `missing-section`
+code. A broken stub
+([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) pairs with nothing and gains no section: it keeps its
+broken-stub finding, and a citation of one of its sections is `missing section` as before.
+Decided in [§DF-stub-sections-from-unscanned-target](../decisions/functional/DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it).
+
 ### 3.3 Duplicate declaration
 
 Moved to [§FS-declarations.checks.duplicate](FS-declarations.md#checksduplicate-duplicate-declaration). This address is kept so citations written before the move still resolve.
