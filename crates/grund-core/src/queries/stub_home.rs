@@ -10,7 +10,7 @@ use super::ambiguity::ambiguous_id_refusal;
 use super::show_query::ShowQueryError;
 use crate::config::Config;
 use crate::model::{Declaration, Id, TextOverlays, paths_same_location};
-use crate::scanner::scan_unwalked_file;
+use crate::resolver::target_records;
 
 /// The record whose body, sections and anchors a query on `decl` reads
 /// (§FS-show.2.3.7): `decl` itself unless it is a stub, and otherwise the
@@ -18,7 +18,8 @@ use crate::scanner::scan_unwalked_file;
 /// line it sits and never at the stub's own line. That is the scanned record
 /// when the walk reached `file`. When it did not, it is the record the scanner's
 /// own pass over `file` produces, read from the editor's overlay where there is
-/// one.
+/// one, by the resolver's reading that `check`'s section lookup takes too
+/// (§AR-resolver.5, §FS-check.3.2.1).
 ///
 /// An unscanned target holding two inline declarations of `id` is refused as
 /// `ambiguous ID` at their sites, as the scanned tree refuses it (§FS-show.2.2.1),
@@ -51,13 +52,10 @@ pub(super) fn stub_home<'a>(
     {
         return Ok(Cow::Borrowed(scanned));
     }
-    let mut homes: Vec<Declaration> = scan_unwalked_file(file, config, overlays)
-        .ok()
-        .and_then(|mut findings| findings.declarations.remove(id))
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|record| !record.is_stub)
-        .collect();
+    // §FS-show.2.2.2.2: the reading `check` takes a stub's sections from (§FS-check.3.2.1).
+    let mut homes = target_records(file, config, overlays)
+        .remove(id)
+        .unwrap_or_default();
     // §FS-show.2.3.7, §FS-show.2.2.1: two homes in the target refuse as if scanned.
     if let Some(refusal) = ambiguous_id_refusal(config, path_config, &homes, id) {
         return Err(refusal);

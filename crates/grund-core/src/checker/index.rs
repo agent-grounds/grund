@@ -20,6 +20,7 @@ use crate::model::{
     CheckReport, Citation, Declaration, Diagnostic, Findings, Id, configured_home_path_key,
     is_stub_for_inline_decl, physical_path_key, scanned_decl_relative_path, scanned_path_key,
 };
+use crate::resolver::section_resolves;
 
 /// One kind's index obligation, resolved against the config root
 /// (§FS-config.3.4). `folder_key` and `index_key` are config-root-relative and
@@ -144,20 +145,6 @@ fn index_citation_form(line: &str, text: &str, marker: &str) -> IndexCitationFor
         form = IndexCitationForm::Bare;
     }
     form
-}
-
-/// Whether the section this citation names is one some declaration of the ID
-/// declares — the same test §FS-check.3.2 applies before reporting a missing
-/// section. A citation with no section always resolves; the ID itself is known
-/// to be declared, because only declared IDs reach the index rule.
-fn index_section_resolves(findings: &Findings, citation: &Citation) -> bool {
-    let Some(section) = &citation.section else {
-        return true;
-    };
-    findings
-        .declarations
-        .get(&citation.id)
-        .is_some_and(|decls| decls.iter().any(|decl| decl.sections.contains_key(section)))
 }
 
 /// What an index says about one ID: whether any citation of it is a full link,
@@ -367,12 +354,16 @@ pub(super) fn check_kind_indexes(
             // neither satisfies the rule nor triggers §FS-check.3.17.5
             // (§DF-index-entry-form.2.3), so the ID is reported as unlisted.
             let form = index_citation_form(line, &citation.text, &config.marker);
+            // §FS-check.3.2.1: §FS-check.3.2's own test, so a stub's section in a
+            // target outside the walk admits the entry.
+            let section_known = citation
+                .section
+                .as_deref()
+                .is_none_or(|section| section_resolves(findings, config, &citation.id, section));
             // §FS-fmt.6.2.1: `fmt` skips a section citation with no link target and
             // reports `rewrote 0 lines`. The physical-root predicate above is the
             // other §FS-check.3.17.4 gate; only the bare form is gated.
-            let form = if form == IndexCitationForm::Bare
-                && (!bare_repairable || !index_section_resolves(findings, citation))
-            {
+            let form = if form == IndexCitationForm::Bare && (!bare_repairable || !section_known) {
                 IndexCitationForm::Ignored
             } else {
                 form

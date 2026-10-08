@@ -108,7 +108,10 @@ use crate::scanner::{file_declares_inline_home, is_scannable};
 /// ### 2.4 Missing sections (§FS-check.3.2)
 ///
 /// For each citation with a section path, look up the section in the matching
-/// declaration's recorded sections. Missing → one error at the citation site.
+/// declaration's recorded sections. Where the walk recorded only a stub of the ID,
+/// the lookup goes on to the stub's target, scanned or not, and reads its
+/// declaration of the ID once per run (§FS-check.3.2.1, §AR-resolver.5). Missing →
+/// one error at the citation site.
 ///
 /// ### 2.5 Broken inline-spec stubs (§FS-declarations.checks.broken-stub)
 ///
@@ -122,10 +125,11 @@ use crate::scanner::{file_declares_inline_home, is_scannable};
 /// delimiter lines and every line while a fence is open are skipped through the
 /// scanner's own fence reader (§AR-scanner.2.3.3), so a fenced example heading of
 /// the ID is not its declaration (§FS-declarations.checks.broken-stub.2). Either
-/// failure → one error at the stub site. This is the only rule that re-reads a
-/// file; everything else comes from `findings`. The reading is the scanner's
-/// (§AR-scanner.4.6), so the stub this rule accepts is the stub the count of homes
-/// pairs with its target.
+/// failure → one error at the stub site. This rule and the section lookup of
+/// §AR-checker.2.4 are the only ones that read a file again; everything else comes
+/// from `findings`. The reading is the scanner's (§AR-scanner.4.6), so the stub
+/// this rule accepts is the stub the count of homes pairs with its target, and the
+/// one whose sections the lookup reads (§AR-resolver.5).
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
 ///

@@ -199,3 +199,52 @@ What is *not* here is the finding a shorthand site earns. Unique, ambiguous or
 unknown is a verdict, and a verdict is the checker's ([§FS-check.3.13](../functional-spec/FS-check.md#313-number-only-shorthand-citation),
 [§AR-checker.2.12](../../crates/grund-core/src/checker/report.rs)): it reads the candidate set downward out of the grammar's
 index, and which project to read it in out of section 1.
+
+## 5. A stub's sections, where the walk did not reach its target
+
+A stub stands for its target's declaration, so a citation of one of its sections
+resolves where the target declares that section, scanned or not
+([§FS-check.3.2.1](../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)). Where the walk reached the target, the target's record is among
+the `Findings` and nothing is read. Where it did not, the only record of the ID is
+the stub, which has no sections of its own, and a lookup that stopped at the
+records would report a section the target plainly declares. So the lookup goes on
+to `resolver/stub_home.rs`: the reading `show` already made of a target outside the
+walk ([§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)), moved down out of `queries/` so that both commands answer
+from one record and count one section set ([§FS-show.2.2.2.2](../functional-spec/FS-show.md#2222-the-headings-check-counts)).
+
+That reading is the scanner's own pass over the target, `scan_unwalked_file`, kept
+to the declarations of the ID that are not themselves stubs. It reads the
+declaration of the ID and never the file's headings, so a broken stub, whose target
+declares no home of the ID, gains no section and stays a broken stub. It reads only
+where the broken-stub rule reads ([§AR-checker.2.5](../../crates/grund-core/src/checker/report.rs)): a scannable file other than the
+stub's own, at which no record of the ID already sits.
+
+`section_resolves` in `resolver/citation_target.rs` is the one test, and every
+reader in `check` asks it: the missing-section finding ([§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs)), the
+`grund fmt --write` clause that finding carries ([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)), the bare index
+entry the index rule admits ([§FS-check.3.17.4](../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), the local-section expansion `fmt`
+writes ([§FS-fmt.2.4.6](../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the `cites` fact a rule reads ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)). A value
+binding compares against `homes_as_scanned` instead, the target's declarations in
+place of the stub, so a mismatch names the target's line ([§FS-values.5.1](../functional-spec/FS-values.md#51-resolve-before-comparison)). A
+workspace citation asks with the target project's `Config`, out of section 1,
+because the stub's link resolves against that project's root.
+
+Three properties hold the read to what a scan of the target would be:
+
+- **Once, on a miss.** `Findings::stub_targets` keeps one slot per stub target,
+  filled the first time a reader misses there and borrowed for the rest of the
+  run. A section a record holds reads nothing, and a target many IDs and sections
+  ask about is read once. A `--full` run narrows its findings after the slots are
+  made ([§AR-resolver.3.3](AR-resolver.md#33-two-scopes-and-which-narrowness-a-narrow-scope-keeps)), which changes nothing a slot holds: whether a record
+  sits at the target is asked of the current records on every lookup.
+- **Observed.** The read goes through the input observation of [§FS-check.6.1.1](../functional-spec/FS-check.md#611-subscribe-before-reading), so
+  a watching run re-checks when the target changes. The slots belong to the
+  `Findings` a scan produced, so the next run starts from empty ones and reads the
+  target again.
+- **The editor's text.** The slots carry the overlays the walk was given, so a
+  target open in an editor answers as a save would ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)). `show` passes
+  the overlays it was given straight to the same reading instead.
+
+What stays in [§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk) is recording. Its post-walk pass records a home only
+for an ID declared more than once; a lone stub's target is read here, and only when
+a section asks.

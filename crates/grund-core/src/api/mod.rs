@@ -143,6 +143,8 @@ mod tests_shorthand_docstring;
 mod tests_shorthand_surfaces;
 #[cfg(test)]
 mod tests_stub_overlays;
+#[cfg(test)]
+mod tests_stub_section_overlays;
 
 #[cfg(test)]
 mod tests_kind_title_refs;
