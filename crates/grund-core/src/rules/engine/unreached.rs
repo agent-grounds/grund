@@ -46,7 +46,7 @@ pub(super) fn report_unreached(
     } else {
         ""
     };
-    for declaration in unreached_declarations(kind, selected, facts, index) {
+    for declaration in unreached_declarations(kind, selected, index) {
         let message = format!(
             "{} has no {name} chapter, so {authority} cannot reach it; add the chapter, \
              or narrow the rule to the declarations that have one{landed}",
@@ -68,30 +68,25 @@ pub(super) fn report_unreached(
 ///
 /// It is read as the complement of the selection rather than as a second join
 /// over `chapter`, which is what §FS-rules.5.2's `chapter_of` says as well: that
-/// clause is written over the subject selector's section-component join and not
-/// over the presence family's display-name count (§FS-rules.3.1). So
+/// clause is written over the subject selector's whole-path join (§FS-rules.2.1)
+/// and not over the presence family's display-name count (§FS-rules.3.1). So
 /// "contributes no unit" and "is unreached" are one set by construction
 /// (§FS-rules.2) — no declaration can both hand the relation a unit and be
 /// reported as out of the rule's reach.
 ///
-/// §FS-rules.5.3: form the complement using each declaration's direct chapter
-/// bucket, sharing selector data rather than joining global relations again.
-fn unreached_declarations(
-    kind: &str,
-    selected: &[NodeKey],
-    facts: &RuleFacts,
-    index: &FactIndex<'_>,
-) -> Vec<NodeKey> {
-    let selected = selected.iter().collect::<std::collections::BTreeSet<_>>();
+/// §FS-rules.5.2's `owns` reaches a chapter at any depth, so the complement is
+/// formed from the selected chapters' cached owners rather than from each
+/// declaration's direct chapter bucket, sharing selector data rather than
+/// joining global relations again (§FS-rules.5.3).
+fn unreached_declarations(kind: &str, selected: &[NodeKey], index: &FactIndex<'_>) -> Vec<NodeKey> {
+    let reached = selected
+        .iter()
+        .filter_map(|chapter| index.owner(chapter))
+        .collect::<std::collections::BTreeSet<_>>();
     index
         .declarations_of_kind(kind)
         .iter()
-        .filter(|node| {
-            !index
-                .chapters_of(node)
-                .iter()
-                .any(|row| selected.contains(&facts.chapter[*row].0))
-        })
+        .filter(|node| !reached.contains(**node))
         .map(|node| (*node).clone())
         .collect()
 }

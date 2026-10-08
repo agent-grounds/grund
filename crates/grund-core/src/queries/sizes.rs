@@ -181,15 +181,10 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             match (subject, row.section) {
                 (RuleSubject::Kind(kind), None) => kind == &row.id.kind,
                 (RuleSubject::ExactDeclaration(literal), None) => literal == &rendered,
-                (RuleSubject::ChapterOfKind { kind, name }, Some((section, _))) => {
-                    kind == &row.id.kind && section.rsplit('.').next() == Some(name.as_str())
+                // §FS-rules.2.1: the whole path, read as `list` reads it (§FS-rules.8).
+                (subject, Some((section, _))) => {
+                    subject.chapter_path(&row.id.kind, &rendered) == Some(section)
                 }
-                (
-                    RuleSubject::ExactChapter {
-                        declaration, path, ..
-                    },
-                    Some((section, _)),
-                ) => declaration == &rendered && path == section,
                 _ => false,
             }
         });

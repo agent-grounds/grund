@@ -37,6 +37,9 @@ A subject is also a query: [Querying grund](querying.md) feeds the units
 `grund list --selector` prints to `grund show --batch` to read their structure.
 `KIND.NAME`, such as `FS.requirements`, is a selector shorthand for
 `The NAME chapter of each KIND` that a rule sentence does not accept ([§FS-rules.2](../functional-spec/FS-rules.md#2-subject-selectors)).
+In either spelling `NAME` is the chapter's whole path: `FS.requirements.terms`
+selects a nested `requirements.terms` chapter, and `FS.terms` only a `terms`
+chapter directly under each FS ([§FS-rules.2.1](../functional-spec/FS-rules.md#21-a-chapters-name-is-its-whole-path)).
 
 Named-chapter subjects require `[id] named_sections = true`. With named
 sections off, a refused subject is answered with a sentence you can paste

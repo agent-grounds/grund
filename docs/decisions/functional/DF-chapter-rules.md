@@ -121,4 +121,4 @@ moves.
   window is owed
   ([§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise)):
   the dotted subject had no defined meaning, and the only `must` runs it let
-  pass are those two, which read no chapter at all. Closes [issue #511](https://github.com/agent-grounds/grund/issues/511).
+  pass are those two, which read no chapter at all. Closes [issue #511](https://github.com/agent-grounds/grund/issues/511). (PR #523)

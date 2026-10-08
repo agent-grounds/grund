@@ -28,19 +28,17 @@ pub(super) fn select_subjects(
             .flatten()
             .map(|node| (*node).clone())
             .collect(),
-        RuleSubject::ChapterOfKind { kind, name } => {
-            // §FS-rules.5.2: select direct children by handle, in chapter-fact order.
-            let rows: BTreeSet<_> = index
-                .declarations_of_kind(kind)
-                .iter()
-                .flat_map(|node| index.chapters_of(node))
-                .copied()
-                .filter(|row| facts.chapter[*row].1.rsplit('.').next() == Some(name))
-                .collect();
-            rows.into_iter()
-                .map(|row| facts.chapter[row].0.clone())
-                .collect()
-        }
+        // §FS-rules.2.1, §FS-rules.5.2: `chapter_handle` joins the whole path, and
+        // `owns` keeps a chapter at any depth under a declaration of the kind.
+        // The path bucket is already in chapter-fact order.
+        RuleSubject::ChapterOfKind { kind, name } => index
+            .paths
+            .get(name.as_str())
+            .into_iter()
+            .flatten()
+            .filter(|node| index.declaration_kind(node) == Some(kind.as_str()))
+            .map(|node| (*node).clone())
+            .collect(),
         RuleSubject::ExactChapter {
             declaration, path, ..
         } => index

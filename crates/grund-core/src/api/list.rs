@@ -263,11 +263,14 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 {
                     vec![base()]
                 }
-                Some(RuleSubject::ChapterOfKind { kind, name }) if kind == &entry.id.kind => entry
-                    .home
-                    .sections
-                    .iter()
-                    .filter(|(section, _)| section.rsplit('.').next() == Some(name.as_str()))
+                // §FS-rules.2.1: a chapter subject names one whole path, so each
+                // declaration contributes at most the one chapter at it.
+                Some(subject) => subject
+                    .chapter_path(
+                        &entry.id.kind,
+                        &render_id(&entry.project_config.grammar, entry.id),
+                    )
+                    .and_then(|path| entry.home.sections.get_key_value(path))
                     .map(|(section, info)| {
                         let mut row = base();
                         row.section = Some(section.clone());
@@ -280,28 +283,8 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                         row.value_roots.clear();
                         row
                     })
-                    .collect(),
-                Some(RuleSubject::ExactChapter {
-                    declaration, path, ..
-                }) if declaration == &render_id(&entry.project_config.grammar, entry.id) => entry
-                    .home
-                    .sections
-                    .get(path)
-                    .map(|info| {
-                        let mut row = base();
-                        row.section = Some(path.clone());
-                        row.line = info.line;
-                        row.title = Some(section_display_name(&info.title, path).to_string());
-                        row.stub = false;
-                        row.defines = None;
-                        row.refs = 0;
-                        row.duplicate = false;
-                        row.value_roots.clear();
-                        row
-                    })
                     .into_iter()
                     .collect(),
-                _ => Vec::new(),
             }
         })
         .collect::<Vec<_>>();
