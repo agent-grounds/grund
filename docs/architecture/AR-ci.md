@@ -44,7 +44,8 @@ The current pre-commit gate runs the same Rust format/build/test commands that d
 
 Both Python gates run `python scripts/run_python_gate.py`. The wrapper prepares
 the built binary and released Grund 0.16.1 for the co-change compatibility cases
-([§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)), then runs
+([§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)) and the same-source binding oracle for the
+Node parity tests ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)), the three inputs of [§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs), then runs
 `python -m unittest discover -s tests/integration -p test_*.py` with that environment
 from the repository root. The parity test checks the shared wrapper invocation
 and its discovery directory and pattern.
@@ -104,6 +105,37 @@ Last of the `grund` hooks, and immediately after `grund fmt --write` because tha
 Some tests count what the binary did rather than read what it printed, and the binary counts only when a test-only feature compiles the counter in. `test-workspace-load-count` is the one today: the workspace-load observer of [§AR-resolver.3.1](AR-resolver.md#31-grund-show---batch-loads-once), reached from the `grund` package as `grund/test-workspace-load-count`, and absent from every other build for the reason [§AR-ci.5.3](AR-ci.md#53-the-bench-feature) keeps the `bench` harness out of the regular matrix. The gate's test command enables every such feature, so the gate observes everything. A plain `cargo test` does not, and it is the run a contributor without the hooks types; its reader is the one who must not be sent the wrong way ([§GOAL-friendliness-first](../goals.md#goal-friendliness-first-as-user--and-agent-friendly-as-possible)). Without the feature the observer's log is never written, so a count read from it is an observed zero rather than an absent observation: a test expecting one load fails naming a file, a line and two integers, which sends the search into the code under test instead of the command line, and a test expecting none passes having observed nothing.
 
 Stated so a test can hold a test file to it: **a test that reads an observation compiled only under a feature is ignored in a build without that feature, and its ignore reason names the feature as the gate passes it.** It never asserts on the observation there, so a default run neither fails nor passes on something it could not have seen; the same case's other assertions — exit code, stdout, stderr — sit in a test that runs in every build. `tests/integration/test_feature_gated_observers.py` holds each test file that reads an observer to this, and holds the gate's test command to naming every feature such a file needs, because the gate itself, running with every feature on, cannot see a test that breaks the rule.
+
+### 3.4 The Python gate's inputs
+
+The wrapper hands its discovery run three inputs, each an absolute path in the
+environment, and treats the three alike: a variable already set is used as
+given, and an unset one is prepared from this checkout. `GRUND_BUILT` is the
+tree's own `grund`, built by `cargo build -p grund --locked`. `GRUND_RELEASED`
+is released Grund 0.16.1, installed once into the wrapper's scratch and held to
+its `--version`. `GRUND_BINDINGS_ORACLE` is the same-source Rust oracle the Node
+adapter is compared against ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)): the `grund-binding-oracle`
+example of `grund-core`, built with `GRUND_BINDINGS_SOURCE_SHA` set to
+`git rev-parse HEAD`, so that its `--metadata` reply names the commit under test
+and protocol version 1. That is how the workflow's own step builds it. The
+wrapper builds it with the plain `cargo` its other build uses, because the
+workflow's toolchain pin is CI's, and a local gate must not fail for want of it.
+It prepares the oracle on every run that is not given one, and the build is
+incremental, so a run after a new commit meets an oracle of that commit rather
+than a stale one.
+
+Preparing an input never turns into skipping the tests that need it. A build
+that fails, or an executable missing where its build put it, fails the gate:
+[§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance) asks this of the compatibility run, and the Node
+parity tests ask the same of theirs. The workflow sets the oracle before the
+wrapper runs, as [§AR-ci.1](AR-ci.md#1-pre-commit-is-the-source-of-truth) lets it install a hook's prerequisites first, and the
+wrapper then uses that one. Nothing a local run lacks may stand between it and
+the verdict CI reaches on the same tree.
+
+`tests/integration/test_python_gate_inputs.py` holds the wrapper to this. With
+the oracle unset and no CI in its environment, the oracle the wrapper returns
+must answer `--metadata` with this checkout's `HEAD` and protocol version 1. An
+oracle it is given must come back as that same file's absolute path.
 
 ## 4. Performance smoke guard
 
