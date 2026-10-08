@@ -159,7 +159,7 @@ fn show_run(
     }
     let section = opts.section.or(inline_section);
     *metadata = crate::queries::show_metadata(config, &project.findings, &id, section.as_deref());
-    let mut output = show_declaration_with_overlays(
+    let (mut output, home) = show_declaration_with_overlays(
         config,
         context.render_config(),
         &project.findings,
@@ -182,7 +182,7 @@ fn show_run(
         let json = render_show_output_json(
             config,
             context.render_config(),
-            &project.findings,
+            &home,
             &id,
             section.as_deref(),
             opts.mode.render_mode(),

@@ -1,0 +1,1 @@
+show --batch --toc {repo} --format=json
