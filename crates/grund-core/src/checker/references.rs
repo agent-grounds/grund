@@ -89,7 +89,7 @@ pub(super) fn check_citation_resolution(
         let command = if cite.shorthand_rewritable
             && tier == ReferenceTier::Configured
             // §FS-check.3.24.1: an absent target section is a site fmt declines.
-            && section_resolves(findings, &cite.id, section)
+            && section_resolves(findings, config, &cite.id, section)
         {
             "; run `grund fmt --write`"
         } else {
@@ -263,9 +263,10 @@ pub(super) fn check_citation_resolution(
             continue;
         }
         // §FS-check.3.2: the ID resolves but no declaration has a heading at the
-        // cited section path — the lookup §FS-fmt.2.4.6 declines a local rewrite on.
+        // cited section path — the lookup §FS-fmt.2.4.6 declines a local rewrite on,
+        // which reads a stub's sections from its target, scanned or not (§FS-check.3.2.1).
         if let Some(sec) = &cite.section {
-            if !section_resolves(target.findings, &cite.id, sec) {
+            if !section_resolves(target.findings, target.config, &cite.id, sec) {
                 let coordinate = format!(
                     "{}{}{}",
                     render_qualified_id(

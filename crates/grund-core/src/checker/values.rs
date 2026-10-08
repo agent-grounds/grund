@@ -9,7 +9,7 @@ use crate::model::{
     CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Findings, Id, Site, ValueBinding,
     is_stub_for_inline_decl, value_binding_section_ends_in_coordinate, value_components_equal,
 };
-use crate::resolver::WorkspaceCheckTarget;
+use crate::resolver::{WorkspaceCheckTarget, homes_as_scanned};
 
 /// The independent explicit-value checker pass (§AR-checker.2.18,
 /// §FS-values.5). It consumes scanner records, resolves through the same
@@ -157,11 +157,15 @@ pub(super) fn binding_aim<'a>(
     config: &Config,
     binding: &'a ValueBinding,
 ) -> BindingAim<'a> {
-    let homes = findings
+    // §FS-values.5.1: compared as if a stub's target were scanned (§FS-check.3.2.1).
+    let homes: Vec<&Declaration> = findings
         .declarations
         .get(&binding.id)
         .map(|decls| value_homes(decls, &config.root))
-        .unwrap_or_default();
+        .unwrap_or_default()
+        .into_iter()
+        .flat_map(|home| homes_as_scanned(findings, config, &binding.id, home))
+        .collect();
     let declaration = match homes[..] {
         [home] => Some(home),
         _ => None,

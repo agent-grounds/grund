@@ -17,6 +17,7 @@
 
 use std::collections::BTreeMap;
 
+use super::stub_home::unscanned_stub_homes;
 use crate::config::Config;
 use crate::model::{Citation, Findings, Id};
 
@@ -63,13 +64,30 @@ pub(crate) fn citation_resolves(
 }
 
 /// Whether some declaration of `id` records a heading at section path `section`:
-/// the one lookup §FS-check.3.2 reports a missing section from and §FS-fmt.2.4.6
-/// declines a declaration-local rewrite on, so the finding and the refusal cannot
-/// disagree. An undeclared `id` has no sections, and an owner with no numbered
-/// headings, a wholly absent path and a partially resolving one all answer `false`.
-pub(crate) fn section_resolves(findings: &Findings, id: &Id, section: &str) -> bool {
-    findings
-        .declarations
-        .get(id)
-        .is_some_and(|decls| decls.iter().any(|decl| decl.sections.contains_key(section)))
+/// the one lookup §FS-check.3.2 reports a missing section from, §FS-fmt.2.4.6
+/// declines a declaration-local rewrite on, and §FS-check.3.17.4 admits a bare
+/// index entry by, so the finding and the refusals cannot disagree. An undeclared
+/// `id` has no sections, and an owner with no numbered headings, a wholly absent
+/// path and a partially resolving one all answer `false`.
+///
+/// A stub's sections are its target's, scanned or not (§FS-check.3.2.1): where no
+/// recorded declaration holds the path, a stub of `id` whose target the walk did
+/// not record answers from that target's declaration of `id`, read once per run.
+/// `config` is the project `findings` belong to, the target's for a workspace
+/// citation, because the stub's link resolves against its root.
+pub(crate) fn section_resolves(
+    findings: &Findings,
+    config: &Config,
+    id: &Id,
+    section: &str,
+) -> bool {
+    let Some(decls) = findings.declarations.get(id) else {
+        return false;
+    };
+    decls.iter().any(|decl| decl.sections.contains_key(section))
+        || decls.iter().any(|stub| {
+            unscanned_stub_homes(findings, config, id, stub)
+                .iter()
+                .any(|home| home.sections.contains_key(section))
+        })
 }

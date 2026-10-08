@@ -14,7 +14,7 @@ use crate::config::Config;
 use crate::config::display_path;
 use crate::grammar::resolve_shorthand_citations;
 use crate::model::{
-    Findings, TextOverlays, canonicalize_existing_prefix, normalize_path_lexically,
+    Findings, StubTargets, TextOverlays, canonicalize_existing_prefix, normalize_path_lexically,
     paths_same_location, sort_path_key,
 };
 use crate::workspace::WorkspaceCitationTarget;
@@ -154,6 +154,8 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     // judged: the scanner never asks that question itself (§AR-workspace.1).
     let mut findings = Findings {
         walked_dirs: walked.dirs,
+        // §FS-check.3.2.1: a stub target read after the walk reads the walk's text.
+        stub_targets: StubTargets::new(overlays),
         ..Findings::default()
     };
     let (mut files, mut errors) = (walked.files, walked.errors);

@@ -6,7 +6,7 @@ use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteK
 use crate::config::Config;
 use crate::grammar::{render_id, section_display_name};
 use crate::model::{Findings, Id, is_stub_for_inline_decl};
-use crate::resolver::WorkspaceCheckTarget;
+use crate::resolver::{WorkspaceCheckTarget, section_resolves};
 use std::collections::BTreeMap;
 
 /// Adapt one standalone project. The producer-neutral schema uses the stable
@@ -172,7 +172,7 @@ fn adapt_projects(
             let mut resolved = target_homes
                 .iter()
                 .filter(|home| !is_stub_for_inline_decl(&target_config.root, home, target_homes));
-            let (Some(target_home), None) = (resolved.next(), resolved.next()) else {
+            let (Some(_), None) = (resolved.next(), resolved.next()) else {
                 // Unknown and ambiguous targets retain their ordinary resolver
                 // findings but never become logical edges (§FS-rules.5.1).
                 continue;
@@ -183,10 +183,15 @@ fn adapt_projects(
             else {
                 continue;
             };
-            // §FS-rules.5.1: a resolved section that is no rule unit counts for
-            // its nearest named ancestor chapter, or else its declaration.
+            // §FS-rules.5.1: a resolved section that is no rule unit counts for its nearest
+            // named ancestor chapter, or else its declaration. It resolves where `check`
+            // finds it, a stub's in its target, scanned or not (§FS-check.3.2.1).
             let (target, newly_counted) = match citation.section.as_ref() {
-                Some(section) if !target_home.sections.contains_key(section) => continue,
+                Some(section)
+                    if !section_resolves(target_findings, target_config, &citation.id, section) =>
+                {
+                    continue;
+                }
                 Some(section) => (
                     nearest_chapter(&chapters, target_alias, &citation.id, section)
                         .unwrap_or(target_declaration),

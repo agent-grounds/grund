@@ -5,6 +5,7 @@ use super::e2e::E2eCase;
 use super::headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
 use super::line_owners::FileLineOwnership;
 use super::paths::{normalize_path_lexically, paths_same_location, sort_path_key};
+use super::stub_targets::StubTargets;
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
 };
@@ -352,6 +353,10 @@ pub struct Findings {
     /// per scanned file (§FS-cover.6, §AR-scanner.2.4.4). Empty — and never
     /// computed — unless `Config::owner_lines` is set.
     pub(crate) line_ownership: Vec<FileLineOwnership>,
+    /// The stub targets outside the walk that this run has read, each once, and
+    /// the overlays it read them under (§FS-check.3.2.1, §AR-resolver.5). Empty
+    /// until a reader asks for a section no recorded declaration holds.
+    pub(crate) stub_targets: StubTargets,
 }
 
 /// ID-query slice mode (§FS-show.1.6): each rung adds to the previous one —

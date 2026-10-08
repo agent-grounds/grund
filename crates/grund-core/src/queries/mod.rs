@@ -7,7 +7,9 @@
 //! `ambiguity.rs` shares show's scanner-recorded home and section refusals with
 //! refs (§FS-refs.4), without making a citation query read a declaration body.
 //! `stub_home.rs` is the record both read for a stub: its target's, found by the
-//! ID whether or not the walk reached the target (§FS-show.2.3.7).
+//! ID whether or not the walk reached the target (§FS-show.2.3.7). Reading a
+//! target the walk did not reach is `resolver/stub_home.rs`, because `check`'s
+//! section lookup reads it too (§FS-check.3.2.1, §AR-resolver.5).
 //!
 //! Three files left when §AR-system.2.10 became a component, all one fact: a
 //! declaration's body sliced by the spans a scan recorded is a function of the
