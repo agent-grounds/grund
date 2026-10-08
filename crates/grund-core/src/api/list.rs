@@ -95,6 +95,8 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             };
         }
     }
+    // §FS-list.1.2: a refusal names only the kinds the selected projects accept.
+    let known_kinds = || context.known_kinds_line(&opts.project_filter);
     for kind in &opts.kind_filter {
         // §FS-list.1.1, as in the CLI frontend: a configured but non-citable kind
         // is refused with its reason rather than selected into an empty list.
@@ -116,7 +118,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 Some(candidate) => non_citable_kind_error(candidate),
                 None => format!("unknown kind `{kind}`"),
             };
-            return Err(anyhow!("{headline}\n{}", context.known_kinds_line()));
+            return Err(anyhow!("{headline}\n{}", known_kinds()));
         }
     }
     let selected_projects = || {
@@ -147,7 +149,7 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         .map(|raw| {
             // §FS-rules.8.1: a refusal recovering no kind ends in `known kinds:`.
             parse_selector(raw, &vocabulary)
-                .map_err(|refusal| selector_refusal(refusal.render(&context.known_kinds_line())))
+                .map_err(|refusal| selector_refusal(refusal.render(&known_kinds())))
         })
         .transpose()?;
 
