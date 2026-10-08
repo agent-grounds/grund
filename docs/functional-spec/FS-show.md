@@ -277,7 +277,7 @@ When the ID's home is in code — whether discovered directly, enrolled by its k
 
 A source declaration is written as `<comment-prefix> <ID>: <title>` (or bare `<ID>: <title>` inside a Python docstring), with no markdown `#` prefix. Decided in [§DF-code-declarations-drop-hash](../decisions/functional/DF-code-declarations-drop-hash.md#df-code-declarations-drop-hash-code-resident-declarations-may-drop-the--prefix). A line that opens with an ID followed by a section, `<ID>.2 …`, is not one: it declares nothing ([§FS-declarations.line.section-suffix](FS-declarations.md#linesection-suffix-an-id-with-a-section-after-it-declares-nothing)).
 
-The doc-comment forms are [§FS-show.2.3.5](FS-show.md#235-the-doc-comment-forms), and one doc-comment may hold several declarations ([§FS-show.2.3.6](FS-show.md#236-several-declarations-in-one-doc-comment)).
+The doc-comment forms are [§FS-show.2.3.5](FS-show.md#235-the-doc-comment-forms), and one doc-comment may hold several declarations ([§FS-show.2.3.6](FS-show.md#236-several-declarations-in-one-doc-comment)). A stub's target is found by the ID it declares, in scan scope or not ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)).
 
 #### 2.3.1 What counts as the "comment block"
 
@@ -352,6 +352,14 @@ pub struct Router { ... }
 ```
 
 `grund AR-router` returns the first body; `grund FS-router-priority` returns the second. Multi-declaration comments compose with every slice flag (`--brief`, default, `--toc`, `--full`) because each is just a normal declaration the scanner happens to have found in the same doc-comment.
+
+#### 2.3.7 A stub's target is found by its ID
+
+A stub that is not broken ([§FS-show.2.3.4](FS-show.md#234-broken-stub)) pairs with the source declaration of its `<ID>` in the file at `<path>`, and `show` finds that declaration by the ID, on whichever line of the file it sits. Scan scope plays no part: a target outside `[scan] include` reads exactly as it would were it scanned. Nor does the stub's own line: it says where the stub is, never where in `<path>` the declaration is.
+
+So the body `show` slices is that declaration's comment block, in every mode, and `--format json` names the target and the declaration's line in it ([§FS-show.3.1.3](FS-show.md#313-json)). The sections a coordinate can select are that declaration's own ([§FS-show.2.3.3](FS-show.md#233-section-selection-inside-a-doc-comment)), and two of its headings on one path are refused like any other ambiguous section ([§FS-show.2.2.2](FS-show.md#222-ambiguous-section)). The stub has no body or sections of its own for `show` to read.
+
+The two `broken stub:` lines of [§FS-show.2.3.4](FS-show.md#234-broken-stub) remain the only refusals a stub can draw. When neither applies, `show` reads the target: it never answers `ID not found` for an ID that `grund list` lists by its stub.
 
 ### 2.4 E2E cases
 

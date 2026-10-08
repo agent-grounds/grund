@@ -213,6 +213,7 @@ can read is the same silence in a new spelling.
 - `show` Rust inline declaration extraction
 - Markdown stub to Rust inline declaration
 - broken Markdown-to-Rust inline stub
+- a stub whose Rust target lies outside `[scan] include`, read by its ID rather than at the stub's own line ([§FS-show.2.3.7](../../docs/functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)): the lead, a section, `--toc`, `--format json`, an ambiguous section refused, and a batch whose one stub sits on the same line as its target and whose others do not
 - Rust source comment to Markdown citation
 - Rust `///` doc-comment declaration and marked citation under strict mode
 - Rust block doc-comment declaration and marked citation under strict mode
