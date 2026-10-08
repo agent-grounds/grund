@@ -7,7 +7,7 @@
 //! (§FS-rules.3.5) and `selectors.rs` renders it as a selector (§FS-rules.8.1),
 //! so both surfaces agree on what failed because only one parser decided it.
 
-use super::{RuleParseError, RuleSubject, RuleVocabulary, error};
+use super::{RuleLevel, RuleParseError, RulePolarity, RuleSubject, RuleVocabulary, error};
 use crate::grammar::{parse_id_arg, render_id};
 
 /// Which production of a subject failed (§FS-rules.3.5).
@@ -141,6 +141,28 @@ pub(super) fn refused(
         path: path.map(Into::into),
         separator: separator.into(),
     }
+}
+
+/// Split a sentence into its subject, its modality and its predicate. The
+/// modality is found in a fixed order rather than at the earliest position
+/// (§FS-rules.3.6), and a rule and a pasted selector both split here, so they
+/// read the same subject from the same sentence (§FS-rules.8.1).
+pub(super) fn split_modality(sentence: &str) -> Option<(&str, RuleLevel, RulePolarity, &str)> {
+    [
+        (" must not ", RuleLevel::Required, RulePolarity::Prohibiting),
+        (
+            " should not ",
+            RuleLevel::Recommended,
+            RulePolarity::Prohibiting,
+        ),
+        (" must ", RuleLevel::Required, RulePolarity::Positive),
+        (" should ", RuleLevel::Recommended, RulePolarity::Positive),
+    ]
+    .into_iter()
+    .find_map(|(modality, level, polarity)| {
+        let (subject, predicate) = sentence.split_once(modality)?;
+        Some((subject, level, polarity, predicate))
+    })
 }
 
 pub(super) fn parse_subject(
