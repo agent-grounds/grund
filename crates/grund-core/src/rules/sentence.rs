@@ -9,7 +9,7 @@ use super::RuleAnchor;
 use crate::grammar::Grammar;
 use count::{CountSpelling, count_prefix, positive};
 use std::collections::{BTreeMap, BTreeSet};
-use subjects::parse_subject;
+use subjects::{parse_subject, split_modality};
 use targets::kind_targets;
 
 pub(crate) use selectors::parse_selector;
@@ -190,24 +190,13 @@ pub(crate) fn parse_rule(
         ));
     }
     let sentence = &title[..title.len() - 1];
-    let (subject_text, level, polarity, predicate) = if let Some((a, b)) =
-        sentence.split_once(" must not ")
-    {
-        (a, RuleLevel::Required, RulePolarity::Prohibiting, b)
-    } else if let Some((a, b)) = sentence.split_once(" should not ") {
-        (a, RuleLevel::Recommended, RulePolarity::Prohibiting, b)
-    } else if let Some((a, b)) = sentence.split_once(" must ") {
-        (a, RuleLevel::Required, RulePolarity::Positive, b)
-    } else if let Some((a, b)) = sentence.split_once(" should ") {
-        (a, RuleLevel::Recommended, RulePolarity::Positive, b)
-    } else if sentence.contains(" may not ") {
-        return Err(error(
-            "modality \"may not\" is not accepted; accepted form: Each FS must not cite any AR.",
-        ));
-    } else {
-        return Err(error(
-            "rule has no accepted modality; accepted form: Each FS must cite at least one GOAL.",
-        ));
+    // §FS-rules.3.6: the subject ends at the modality found first in a fixed order.
+    let Some((subject_text, level, polarity, predicate)) = split_modality(sentence) else {
+        return Err(error(if sentence.contains(" may not ") {
+            "modality \"may not\" is not accepted; accepted form: Each FS must not cite any AR."
+        } else {
+            "rule has no accepted modality; accepted form: Each FS must cite at least one GOAL."
+        }));
     };
     let subject = parse_subject(subject_text, vocabulary)?;
     let mut unverifiable = None;

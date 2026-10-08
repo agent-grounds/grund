@@ -2,6 +2,8 @@
 //! rows the ID patterns are compiled from, the scalar `grund.toml` keys a
 //! lexical reader consults beside those patterns, and the per-alias grammar a
 //! qualified citation's ID tail is read with (§FS-config.3.2, §FS-workspace.1.2).
+//! A grammar also keeps what it was compiled from, so a refused selector can be
+//! answered as if named sections were on (§FS-rules.8.1).
 //!
 //! Records rather than lookups, and the reason this component names no `Config`
 //! (§AR-system.4). Every value here is config's decision — it owns the keys, it
@@ -9,6 +11,8 @@
 //! grammar only reads it. The `Grammar` travels *inside*
 //! [`LexicalSettings`] rather than beside it, so a reader cannot pair one
 //! project's compiled patterns with another project's keys.
+
+use anyhow::Result;
 
 use super::compiled::Grammar;
 
@@ -20,9 +24,44 @@ use super::compiled::Grammar;
 /// its name never tokenizes and never enters a pattern — config applies that
 /// filter when it builds the list, which is why nothing below reads a `citable`
 /// flag (§AR-scanner.2.1.1).
+#[derive(Clone)]
 pub(crate) struct GrammarKind {
     pub(crate) name: String,
     pub(crate) format: Option<String>,
+}
+
+/// Everything config handed [`Grammar::build`] but the named-sections switch,
+/// kept by the grammar it built so that grammar can be compiled again with the
+/// switch on (§FS-rules.8.1).
+pub(super) struct GrammarSource {
+    pub(super) format: String,
+    pub(super) kinds: Vec<GrammarKind>,
+    pub(super) number_pattern: String,
+    pub(super) slug_pattern: String,
+    pub(super) section_separator: String,
+    pub(super) comment_prefixes: Vec<String>,
+}
+
+impl Grammar {
+    /// This grammar as `build` compiles it with `[id] named_sections` on. Only a
+    /// `list --selector` refused for needing named sections asks for it, to be
+    /// answered with what the same selector gets once they are on
+    /// (§FS-rules.8.1), so nothing else ever compiles it.
+    pub(crate) fn with_named_sections(&self) -> Result<Self> {
+        if self.named_sections {
+            return Ok(self.clone());
+        }
+        let source = &self.source;
+        Self::build(
+            &source.format,
+            &source.kinds,
+            &source.number_pattern,
+            &source.slug_pattern,
+            &source.section_separator,
+            true,
+            &source.comment_prefixes,
+        )
+    }
 }
 
 /// The compiled grammar plus the scalar keys a lexical reader consults beside it
