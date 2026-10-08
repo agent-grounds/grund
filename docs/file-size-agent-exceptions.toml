@@ -179,13 +179,3 @@ until = "the fixture-root helpers (test_root, uncovered_base, physical_test_root
 reason = """
 Shared fixtures for every component's tests (§AR-core-module-layout.1.2), past the soft budget before this entry. It is edited only when a shared fixture moves with the code it mirrors — here current_marker() following the managed block's version bump (§FS-init.2.3.7.1), a one-line change no split would have avoided. Missing boundary: the fixture-root discovery of §AR-ci.10.3 (test_root, temp_candidates, uncovered_base, physical_test_root) is a self-contained concern every suite calls but none of the config or signature builders touch; it can become its own testing module, which needs testing.rs to become a directory module first.
 """
-[[exceptions]]
-path = "crates/grund-core/src/api/list.rs"
-match = "exact"
-rules = ["core-source"]
-kind = "deferred"
-max_accepted = { value = 405, unit = "lines" }
-until = "the list scope check (the --project aliases, the --kind lookup and the --selector vocabulary) leaves for a sibling that list and list --size both call"
-reason = """
-The `list` contract and its catalog (§AR-system.2.9), past the soft budget before this entry. Soft-edit promotion then refused the narrowed `known kinds:` line of §FS-list.1.2, which changes two call sites and adds one line here, a change no split would have avoided. Most of the file is `list_run`, from the loaded workspace context to the sorted rows. One part of it is not the catalog: the scope check at its head, which validates the `--project` aliases, looks each `--kind` up in the selected projects and refuses it, and builds the `RuleVocabulary` that `--selector` parses against. `queries/sizes.rs` repeats all three for `list --size`, in `validate_list_scope_filters` and its own vocabulary. Missing boundary: one sibling holding that scope check, called by both files, which also removes the copy in sizes.rs. Not taken with the known-kinds fix, because unifying the two is a refactor of its own.
-"""
