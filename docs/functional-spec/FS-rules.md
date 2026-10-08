@@ -258,6 +258,16 @@ An empty `NAME` uses the same refusal. This adds guidance without admitting any
 new grammar. An ad-hoc refusal still writes nothing to stdout and exits 2
 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 
+### 3.6 Where a sentence's subject ends
+
+A sentence's subject is the text before its modality. The modality is found in
+a fixed order, not at the earliest position: the first ` must not `, else the
+first ` should not `, else the first ` must `, else the first ` should `. So
+`The should chapter of each FS must cite at least one FS.` has the subject
+`The should chapter of each FS`, because ` must ` is tried before ` should `,
+and `The must chapter of each FS should not cite any AR.` has the subject
+`The must chapter of each FS`, because ` should not ` is tried before ` must `.
+
 ## 4. Validation lifecycle
 
 `config validate` validates only the optional `rules` key and its relationship
@@ -801,12 +811,13 @@ error: <reason>; accepted selector: <selector>
 
 The reason is the one [§FS-rules.3.5](FS-rules.md#35-strict-refusals) gives for the same subject wherever that
 reason is true, so a rule and a selector never disagree about what failed.
-Three refusals name the true failure in place of a grammar or vocabulary
+Four refusals name the true failure in place of a grammar or vocabulary
 mismatch. A numbered component reached through `KIND.NAME` or
 `The NAME chapter of each KIND` gets the numbered reason the ID spelling gets.
 A wildcard component reached the same way gets the wildcard reason.
 `Each chapter of each KIND` gets the chapter-quantified reason, not an unknown
-kind.
+kind. `Each */KIND` gets the namespace reason the rule sentence gets, not an
+unknown kind.
 
 The suggestion is built from what was typed and from the configured kinds,
 never from a fixed template:
@@ -821,38 +832,50 @@ never from a fixed template:
    becomes `KIND[.NAME…]`. `The NAME chapter of each KIND` keeps its spelling
    while a `NAME` survives step 3, and otherwise becomes `Each KIND`.
 
-The refusal for disabled named sections suggests the selector as typed, after
-`accepted selector after enabling it:`, because enabling them is what makes it
-valid.
+With named sections off, a selector refused for needing them is suggested what
+the same selector would be suggested with them on. Where enabling them makes it
+valid, that is the selector as typed. Where it would still be refused, it is
+the selector the four steps build for that refusal, and where no configured
+kind is recovered nothing is suggested. The label says whether pasting it back needs
+the change: `accepted selector after enabling it:` only where the suggestion
+itself needs named sections, and `accepted selector:` where the repository
+accepts it as configured. The reason stays the one [§FS-rules.3.5](FS-rules.md#35-strict-refusals) gives for
+the subject as configured, that named chapter subjects require named sections,
+so these refusals add no breadcrumb.
 
 Where no configured kind can be recovered, nothing is guessed. The reason
 stands alone, and a second line lists the configured citable kinds exactly as
-an unknown `--kind` does ([§FS-list.1.1](FS-list.md#11---kind)):
+an unknown `--kind` does ([§FS-list.1.1](FS-list.md#11---kind)). A refusal that earns the breadcrumb
+below prints it as a third line, after the kinds:
 
 ```text
 error: <reason>
 known kinds: <kinds>
+hint: grund show --batch --toc expands each selected unit into its sections
 ```
 
 A refusal never suggests a rule sentence. A selector that is itself one, a
-subject followed by `must` or `should`, is refused for being one. Its
-suggestion is that subject, the text before the modality, and when the subject
-would itself be refused the refusal is the subject's own.
+subject followed by a modality, is refused for being one. Its subject is the
+one the rule sentence has, ending where [§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends) ends it, so a selector and
+`check --rule` read the same subject from the same sentence. Its suggestion is
+that subject, the text before the modality, and when the subject would itself
+be refused the refusal is the subject's own.
 
 The refusals whose reason names a numbered chapter, a section-component
 wildcard or a chapter quantifier add one stderr breadcrumb
-([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)). The units they reach for are found by expanding the chapter
-the suggestion selects:
+([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)), whether or not a kind was recovered. The units they reach for are
+found by expanding the chapter the suggestion selects, or, where nothing is
+suggested, the units of a kind the `known kinds:` line names:
 
 ```text
 hint: grund show --batch --toc expands each selected unit into its sections
 ```
 
 In a repository whose one kind is `FS`, with named sections on and `FS-login`
-holding a named `requirements` chapter, these are the exact refusals. A second line marked
-*hint* is the breadcrumb above.
+holding named `requirements` and `should` chapters, these are the exact
+refusals. A line marked *hint* is the breadcrumb above.
 
-| Refused selector | Exact reason and accepted selector | Second line |
+| Refused selector | Exact reason and accepted selector | Lines after it |
 |---|---|---|
 | `FS-*.requirements` | `literal subject "FS-*.requirements" does not match the configured ID grammar; accepted selector: FS.requirements` | none |
 | `FS.requirements.1` | `numbered chapter subjects can detach when headings move; accepted selector: FS.requirements` | hint |
@@ -862,12 +885,27 @@ holding a named `requirements` chapter, these are the exact refusals. A second l
 | `FS-login.*` | `section-component wildcards are not accepted in phase 1; accepted selector: FS-login` | hint |
 | `Each chapter of each FS` | `chapter-quantified subjects are not accepted in phase 1; accepted selector: Each FS` | hint |
 | `*/FS` | `subject namespaces must be local in phase 1; accepted selector: FS` | none |
+| `Each */FS` | `subject namespaces must be local in phase 1; accepted selector: Each FS` | none |
 | `FS.Requirements` | `named chapter subject "FS.Requirements" does not match the configured section grammar; accepted selector: FS` | none |
-| `FS.requirements` with named sections off | `named chapter subjects require [id] named_sections = true; accepted selector after enabling it: FS.requirements` | none |
 | `Each POLICY` | `unknown kind "POLICY"` | `known kinds: FS` |
 | `POLICY.requirements` | `literal subject "POLICY.requirements" does not match the configured ID grammar` | `known kinds: FS` |
 | `requirements` | `literal subject "requirements" does not match the configured ID grammar` | `known kinds: FS` |
+| `Each chapter of each POLICY` | `chapter-quantified subjects are not accepted in phase 1` | `known kinds: FS`, then hint |
+| `API.requirements.1` | `numbered chapter subjects can detach when headings move` | `known kinds: FS`, then hint |
 | `FS-login must cite at least one GOAL.` | `a rule sentence is not a selector; accepted selector: FS-login` | none |
+| `The should chapter of each FS must cite at least one FS.` | `a rule sentence is not a selector; accepted selector: The should chapter of each FS` | none |
+
+With named sections off in the same repository, these are the exact refusals.
+None of them earns the breadcrumb.
+
+| Refused selector | Exact reason and accepted selector | Lines after it |
+|---|---|---|
+| `FS.requirements` | `named chapter subjects require [id] named_sections = true; accepted selector after enabling it: FS.requirements` | none |
+| `FS-*.requirements` | `named chapter subjects require [id] named_sections = true; accepted selector after enabling it: FS.requirements` | none |
+| `FS.requirements.1` | `named chapter subjects require [id] named_sections = true; accepted selector after enabling it: FS.requirements` | none |
+| `FS.*` | `named chapter subjects require [id] named_sections = true; accepted selector: FS` | none |
+| `The * chapter of each FS` | `named chapter subjects require [id] named_sections = true; accepted selector: Each FS` | none |
+| `POLICY.requirements` | `named chapter subjects require [id] named_sections = true` | `known kinds: FS` |
 
 An exact literal that does not resolve or is ambiguous keeps its refusal,
 which suggests nothing. The rule surfaces do not move: `check --rule` and a
