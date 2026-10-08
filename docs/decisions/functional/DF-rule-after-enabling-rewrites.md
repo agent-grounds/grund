@@ -96,7 +96,10 @@ decision its consequences reserve for changing documented rows of
   as configured. Where no configured kind can be recovered, as with
   `POLICY.requirements`, nothing is suggested: `check --rule` prints the reason
   and then `known kinds: …`, and the finding ends at the reason. **Who this
-  breaks:** a script matching the exact stderr of `check --rule`, or the exact
-  `message` of an `invalid-rule` finding, for such a subject. Exit codes,
-  stdout, the finding code and location, and every documented refusal row do
-  not move. Closes [issue #520](https://github.com/agent-grounds/grund/issues/520).
+  breaks:** a script matching the exact stderr of `check --rule`, the exact
+  `message` of an `invalid-rule` finding, or the exact failure message of the
+  Python `check(rule=…)` or Node `check(root, { rule })`, for such a subject.
+  That failure message changes as `check --rule`'s stderr does, and where no
+  kind is recovered it gains the `known kinds:` line as a second line. Exit
+  codes, stdout, the finding code and location, and every documented refusal
+  row do not move. Closes [issue #520](https://github.com/agent-grounds/grund/issues/520).

@@ -292,10 +292,15 @@ question ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 Where nothing is suggested, the two rule surfaces differ, because only one of
 them can print a second line:
 
-- `check --rule` prints the reason alone and then a second line listing the
-  configured citable kinds exactly as an unknown `--kind` does
-  ([§FS-list.1.1](FS-list.md#11---kind)). These are the two lines `list --selector` prints for the same
-  subject ([§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)). It writes nothing to stdout and exits 2.
+- `check --rule` prints the reason alone and then a `known kinds:` line in the
+  form an unknown `--kind` ends in, naming the whole set the subject accepts
+  ([§FS-list.1.1](FS-list.md#11---kind)): the citable kinds of the project whose configuration reads the
+  subject, once each, in configuration order. That is the root project at a
+  workspace root and the member under a member path. In one project these are
+  the two lines `list --selector` prints for the same subject ([§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)).
+  At a workspace root that selector lists every loaded project's kinds
+  ([§FS-list.1.2](FS-list.md#12---project)), and the rule only the root's, because its subject accepts no
+  other. It writes nothing to stdout and exits 2.
 - A configured rule declaration's `invalid-rule` finding is the reason alone,
   `<RULE-ID> is not a valid rule: <reason>`, because a finding is one message
   on one line ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
