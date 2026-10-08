@@ -144,6 +144,32 @@ fn refused_queries_recommend_check_only_for_existing_paths() {
     assert_every_case_passed("show failure hints", &outcomes);
 }
 
+/// §FS-rules.2.1: a chapter subject's NAME is the chapter's whole path, on every
+/// surface that reads one — `list --selector`, `--size`, and `check` — and under
+/// a `:` separator too. The dotted cases port grund.72's five; the
+/// one-component cases hold `FS.terms` to the top-level chapter only.
+#[test]
+fn chapter_subject_name_is_its_whole_path() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = [
+        "list-selector-chapter-dotted-name",
+        "list-selector-chapter-dotted-name-sentence",
+        "list-size-selector-chapter-dotted-name",
+        "list-selector-chapter-dotted-name-colon-separator",
+        "check-rules-chapter-dotted-name-reached",
+        "check-rules-chapter-dotted-name-unreached",
+        "check-rules-chapter-dotted-name-prohibition",
+        "list-selector-chapter-one-component-name",
+        "list-size-selector-chapter-one-component-name",
+        "check-rules-chapter-one-component-name",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &cases.join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("chapter subject whole path", &outcomes);
+}
+
 /// Completion scripts participate in the same two independent runs as every
 /// immutable case, so their bytes are stable across invocations (§FS-completions.3).
 #[test]

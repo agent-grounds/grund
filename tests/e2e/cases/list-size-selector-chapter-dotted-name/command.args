@@ -1,0 +1,1 @@
+list {repo} --size=words --selector FS.requirements.terms

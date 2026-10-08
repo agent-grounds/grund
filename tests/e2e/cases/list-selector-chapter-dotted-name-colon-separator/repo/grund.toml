@@ -1,0 +1,17 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{number}-{slug}"
+section_separator = ":"
+named_sections = true
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+index = false
+
+[scan]
+include = ["docs"]
