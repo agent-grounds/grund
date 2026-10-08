@@ -226,7 +226,12 @@ answers one declaration or none, and every reader falls back to the stub's own r
 reader in `check` asks it: the missing-section finding ([§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs)), the
 `grund fmt --write` clause that finding carries ([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)), the bare index
 entry the index rule admits ([§FS-check.3.17.4](../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), the local-section expansion `fmt`
-writes ([§FS-fmt.2.4.6](../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the `cites` fact a rule reads ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)). A value
+writes ([§FS-fmt.2.4.6](../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the `cites` fact a rule reads ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)). That last one
+asks `section_home`, the same test answering where the section was found: where it was
+found in a home outside the walk, the rule adapter mints that home's chapters as nodes on
+this miss, from the record the lookup returned, so the fact's target is the chapter the
+citation names, as on the scanned tree. They carry no `chapter` fact, so no subject or
+count of chapters reaches them ([§FS-check.3.2.1](../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [§AR-rules.3](AR-rules.md#3-rulefacts)). A value
 binding compares against `home_as_scanned` instead, the target's declaration in
 place of the stub, so a mismatch names the target's line ([§FS-values.5.1](../functional-spec/FS-values.md#51-resolve-before-comparison)). The value
 authority a malformed binding is refused by, and that `fmt --cross-refs` protects, is

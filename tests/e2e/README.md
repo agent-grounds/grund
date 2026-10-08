@@ -115,13 +115,18 @@ can read is the same silence in a new spelling.
 - a section citation of a stub whose target is outside `[scan] include`, resolved in that target
   as the scanned tree resolves it ([§FS-check.3.2.1](../../docs/functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [grund#529](https://github.com/agent-grounds/grund/issues/529)):
   a section the target declares is clean for one stub, for two stubs to the target, and under
-  `--full`; a rule counts a citation of a named chapter there; a value binding to one is compared,
-  and the mismatch named at the target's line; a malformed binding into one is the
-  `invalid value binding` the scanned tree reports, and `fmt --cross-refs` leaves one aimed at its
-  chapter unlinked; a bare index entry of one is the `unlinked-index-entry` that `fmt` wraps —
-  beside a section the target does not declare, one of a broken stub whose file holds that
-  heading under another ID, one of a target that declares the ID twice, and one of an ID whose
-  two stubs reach two targets, each still `missing section` in the same words
+  `--full`; a rule counts a citation of a named chapter there, or of a numbered section under one,
+  for that chapter and not the declaration, so an inbound `at least` count on the declaration
+  fails as on the scanned tree — at the stub's line rather than the target's, because where the
+  declaration of a home outside the scan is reported is not this change's to move — while the
+  home's chapters reach no count of chapters, so `at most 1` passes over two as it did before;
+  a value binding to one is compared, and the mismatch named at the target's line; a malformed
+  binding into one is the `invalid value binding` the scanned tree reports, and
+  `fmt --cross-refs` leaves one aimed at its chapter unlinked; a bare index entry of one is the
+  `unlinked-index-entry` that `fmt` wraps — beside a section the target does not declare, one of
+  a broken stub whose file holds that heading under another ID, one of a target that declares the
+  ID twice, and one of an ID whose two stubs reach two targets, each still `missing section` in
+  the same words
 - declaration-local section coordinates: `show` rejects a numeric heading after
   a body-closing plain chapter, while `check` reports that orphan once in text
   and JSON under `section-outside-declaration`; `--only` retains it and

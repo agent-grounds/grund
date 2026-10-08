@@ -72,8 +72,11 @@ The verdict moves in three ways, and no message template changes.
   So does any run that reaches a rule counting the citation: `--ignore missing-section`, `--only`
   with a code a rule produces such as `forbidden-citation`, a trial `--rule "<sentence>"
   --only-rule`, or a path holding the unit an inbound count judges but not the citation ([§FS-check.1.3.6.1](../../functional-spec/FS-check.md#1361-a-path-scope-narrows-the-report-not-the-resolution)). The citation
-  now counts, so a prohibition or an `at most N` or `exactly N` count can newly report, and an
-  `at least` count can newly pass. A named chapter reports as an error. A numbered section reports
+  now counts as it does on the scanned tree: a named chapter for that chapter, never for the
+  declaration that holds it, and a numbered section for its nearest named chapter, or else for the
+  declaration. So a prohibition or an `at most N` or `exactly N` count can newly report, and an
+  `at least` count can newly pass, while no chapter subject or count of chapters reaches the
+  home's chapters, as before. A named chapter reports as an error. A numbered section reports
   as the warning [§FS-rules.7.8](../../functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180) gives a newly counted section citation until grund 0.18.0, and the
   run still exits 0 until then.
 
@@ -89,13 +92,18 @@ One rewrite moves with them. `grund fmt --cross-refs` rewrote a binding aimed at
 declared chapter into a Markdown link. It now leaves the binding alone, as on the scanned tree,
 because the value authority `check` refuses it by is the authority `fmt` protects ([§FS-values.8](../../functional-spec/FS-values.md#8-formatting-stability)).
 
-Four things do not move. A configured citation direction ([§FS-config.3.9](../../functional-spec/FS-config.md#39-citations--citation-direction-rules)) drew this edge before,
+Five things do not move. A configured citation direction ([§FS-config.3.9](../../functional-spec/FS-config.md#39-citations--citation-direction-rules)) drew this edge before,
 section or not. A section the target does not declare, and every section of a broken stub, is
 reported as it was. A target that declares the ID more than once, and every target of an ID
 with more than one home, lends no section, because `show` refuses that ID as ambiguous rather
-than read it ([§FS-show.2.3.7](../../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)); its citations read as they did. And the declaration-local rewrite ([§FS-fmt.2.4.6](../../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)) cannot meet this case: a
+than read it ([§FS-show.2.3.7](../../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)); its citations read as they did. The declaration-local rewrite ([§FS-fmt.2.4.6](../../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)) cannot meet this case: a
 stub has no body, so a numeric local citation after one has no owner scanned or not, and the sites
-inside an unscanned target are never read.
+inside an unscanned target are never read. Last, the target is read only to answer a citation into
+it, so what `check` judges of the home itself stays as it was outside the scan
+([§FS-check.3.2.1](../../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)): its declaration, whose errors go unreported as with the invalid root above,
+the citations it makes, and its chapters as a rule's subjects or in a rule's count of chapters
+([§FS-rules.2.1](../../functional-spec/FS-rules.md#21-a-chapters-name-is-its-whole-path), [§FS-rules.3.1](../../functional-spec/FS-rules.md#31-chapter-presence)). A citation of one of those chapters counts for it, and nothing else
+about it is judged.
 
 ## 6. The correction route
 
