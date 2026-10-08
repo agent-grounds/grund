@@ -9,8 +9,8 @@ use std::path::{Path, PathBuf};
 
 use crate::config::Config;
 use crate::model::{
-    Declaration, Findings, Id, TargetRecords, TextOverlays, paths_same_location, physical_path_key,
-    resolve_stub_target,
+    Declaration, Findings, Id, TargetRecords, TextOverlays, is_stub_for_inline_decl,
+    paths_same_location, physical_path_key, resolve_stub_target,
 };
 use crate::scanner::{is_scannable, scan_unwalked_file};
 
@@ -36,25 +36,25 @@ pub(crate) fn target_records(
         .collect()
 }
 
-/// The declarations of `id` that `stub` pairs with in a target the walk recorded
+/// The declaration of `id` that `stub` pairs with in a target the walk recorded
 /// nothing of `id` at (§FS-check.3.2.1): read on the first ask, at most once per
 /// target per run, under the overlays the walk read (`Findings::stub_targets`).
 ///
-/// Empty for anything but a stub whose target is another scannable file. A target
+/// `None` for anything but a stub whose target is another scannable file. A target
 /// holding a recorded declaration of `id` answers from that record, which is
 /// already among `findings`; a stub that links to its own file pairs with nothing
 /// in it (§AR-scanner.4.6). A broken stub's target declares no home of `id`
-/// (§FS-declarations.checks.broken-stub), so it is empty too: what is read is the
-/// target's declaration of the ID, never the file's headings.
-pub(crate) fn unscanned_stub_homes<'a>(
+/// (§FS-declarations.checks.broken-stub), so it is `None` too: what is read is the
+/// target's declaration of the ID, never the file's headings. So is a target that
+/// declares `id` twice, and every target of an ID with more than one home, which
+/// `show` refuses as ambiguous rather than read (§FS-show.2.3.7, §FS-show.2.2.1).
+pub(crate) fn unscanned_stub_home<'a>(
     findings: &'a Findings,
     config: &Config,
     id: &Id,
     stub: &Declaration,
-) -> &'a [Declaration] {
-    let Some(target) = stub.defined_in.as_ref().filter(|_| stub.is_stub) else {
-        return &[];
-    };
+) -> Option<&'a Declaration> {
+    let target = stub.defined_in.as_ref().filter(|_| stub.is_stub)?;
     let resolved = resolve_stub_target(&config.root, &stub.file, target);
     let recorded = findings.declarations.get(id).map_or(&[][..], Vec::as_slice);
     if paths_same_location(&config.root.join(&stub.file), &resolved)
@@ -62,36 +62,44 @@ pub(crate) fn unscanned_stub_homes<'a>(
             .iter()
             .any(|decl| paths_same_location(&decl.file, &resolved))
     {
-        return &[];
+        return None;
+    }
+    // §FS-check.3.2.1: an ambiguous ID lends no section, as `show` reads none.
+    let mut homes = recorded
+        .iter()
+        .filter(|decl| !is_stub_for_inline_decl(&config.root, decl, recorded));
+    if homes.next().is_some() && homes.next().is_some() {
+        return None;
     }
     // §AR-checker.2.5: the broken-stub rule's own reading, scannable files only.
     if !resolved.is_file() || !is_scannable(&resolved, config) {
-        return &[];
+        return None;
     }
-    findings
+    match findings
         .stub_targets
         .records(
             &physical_path_key(&resolved),
             || stub_target_keys(findings, config),
             || target_records(&resolved, config, findings.stub_targets.overlays()),
-        )
-        .and_then(|records| records.get(id))
-        .map_or(&[], Vec::as_slice)
+        )?
+        .get(id)?
+        .as_slice()
+    {
+        [home] => Some(home),
+        _ => None,
+    }
 }
 
 /// `home` itself, or where it is a stub with a home outside the walk, the
-/// declarations of `id` there: the records a reader in `check` compares against,
-/// as it would were the target scanned (§FS-check.3.2.1).
-pub(crate) fn homes_as_scanned<'a>(
+/// declaration of `id` there: the record a reader in `check` reads a value or a
+/// value's authority from, as it would were the target scanned (§FS-check.3.2.1).
+pub(crate) fn home_as_scanned<'a>(
     findings: &'a Findings,
     config: &Config,
     id: &Id,
     home: &'a Declaration,
-) -> &'a [Declaration] {
-    match unscanned_stub_homes(findings, config, id, home) {
-        [] => std::slice::from_ref(home),
-        records => records,
-    }
+) -> &'a Declaration {
+    unscanned_stub_home(findings, config, id, home).unwrap_or(home)
 }
 
 /// Every stub's target, by physical location: the slots one run keeps, resolved

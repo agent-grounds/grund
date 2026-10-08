@@ -9,7 +9,7 @@ use crate::model::{
     CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Findings, Id, Site, ValueBinding,
     is_stub_for_inline_decl, value_binding_section_ends_in_coordinate, value_components_equal,
 };
-use crate::resolver::{WorkspaceCheckTarget, homes_as_scanned};
+use crate::resolver::{WorkspaceCheckTarget, home_as_scanned};
 
 /// The independent explicit-value checker pass (§AR-checker.2.18,
 /// §FS-values.5). It consumes scanner records, resolves through the same
@@ -164,7 +164,7 @@ pub(super) fn binding_aim<'a>(
         .map(|decls| value_homes(decls, &config.root))
         .unwrap_or_default()
         .into_iter()
-        .flat_map(|home| homes_as_scanned(findings, config, &binding.id, home))
+        .map(|home| home_as_scanned(findings, config, &binding.id, home))
         .collect();
     let declaration = match homes[..] {
         [home] => Some(home),
@@ -354,17 +354,12 @@ pub(crate) fn binding_aims_at_embedded_value_authority(
     id: &Id,
     section: &str,
 ) -> bool {
-    findings
-        .declarations
-        .get(id)
-        .into_iter()
-        .flatten()
-        .any(|declaration| {
-            binding_aims_at_declared_chapter(config, id, declaration, section)
-                || embedded_root_for_binding(declaration, section).is_some_and(|(_, relation)| {
-                    !matches!(relation, EmbeddedBindingRelation::InvalidImmediateComponent)
-                })
-        })
+    declarations_as_scanned(findings, config, id).any(|declaration| {
+        binding_aims_at_declared_chapter(config, id, declaration, section)
+            || embedded_root_for_binding(declaration, section).is_some_and(|(_, relation)| {
+                !matches!(relation, EmbeddedBindingRelation::InvalidImmediateComponent)
+            })
+    })
 }
 
 /// Whether a binding-shaped citation has value authority behind it: a kind
@@ -379,13 +374,25 @@ pub(crate) fn binding_target_has_any_value_authority(
 ) -> bool {
     kind_uses_values(config, &id.kind)
         || section.is_some_and(|section| {
-            findings
-                .declarations
-                .get(id)
-                .into_iter()
-                .flatten()
+            declarations_as_scanned(findings, config, id)
                 .any(|declaration| embedded_root_for_binding(declaration, section).is_some())
         })
+}
+
+/// Every declaration of `id`, a stub's read from its target outside the walk: the
+/// value authority an attempt is classified by and `fmt` protects, as it would be
+/// were the target scanned (§FS-check.3.2.1, §FS-values.3.1.1, §FS-values.8).
+fn declarations_as_scanned<'a>(
+    findings: &'a Findings,
+    config: &'a Config,
+    id: &'a Id,
+) -> impl Iterator<Item = &'a Declaration> {
+    findings
+        .declarations
+        .get(id)
+        .into_iter()
+        .flatten()
+        .map(move |declaration| home_as_scanned(findings, config, id, declaration))
 }
 
 fn invalid_binding_diagnostic(binding: &ValueBinding) -> Diagnostic {

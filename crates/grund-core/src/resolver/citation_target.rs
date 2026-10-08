@@ -17,7 +17,7 @@
 
 use std::collections::BTreeMap;
 
-use super::stub_home::unscanned_stub_homes;
+use super::stub_home::unscanned_stub_home;
 use crate::config::Config;
 use crate::model::{Citation, Findings, Id};
 
@@ -72,7 +72,8 @@ pub(crate) fn citation_resolves(
 ///
 /// A stub's sections are its target's, scanned or not (§FS-check.3.2.1): where no
 /// recorded declaration holds the path, a stub of `id` whose target the walk did
-/// not record answers from that target's declaration of `id`, read once per run.
+/// not record answers from that target's one declaration of `id`, read once per run;
+/// an ID `show` refuses as ambiguous lends no section there.
 /// `config` is the project `findings` belong to, the target's for a workspace
 /// citation, because the stub's link resolves against its root.
 pub(crate) fn section_resolves(
@@ -86,8 +87,7 @@ pub(crate) fn section_resolves(
     };
     decls.iter().any(|decl| decl.sections.contains_key(section))
         || decls.iter().any(|stub| {
-            unscanned_stub_homes(findings, config, id, stub)
-                .iter()
-                .any(|home| home.sections.contains_key(section))
+            unscanned_stub_home(findings, config, id, stub)
+                .is_some_and(|home| home.sections.contains_key(section))
         })
 }
