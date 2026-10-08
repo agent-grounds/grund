@@ -170,8 +170,8 @@ section collides ([§FS-show.2.2.2.4](FS-show.md#2224-only-the-requested-path-ca
 A valid stub paired with its inline declaration remains one home
 ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)). These ambiguity checks do not
 require a declaration or selected section to exist: `refs` still lists citations
-to absent targets ([§FS-refs.1](FS-refs.md#1-inputs)), without requiring body extraction or
-stub-target I/O.
+to absent targets ([§FS-refs.1](FS-refs.md#1-inputs)), and extracts no body to decide them. A
+stub's homes are found in its target, scanned or not ([§FS-refs.4.1](FS-refs.md#41-a-stubs-homes-are-found-in-its-target)).
 
 Grund 0.14.0 and 0.15.0 kept the former exit `2` and `error:` prefix for the two
 resolver rejections and warned that they would become failed queries; that
@@ -186,6 +186,23 @@ stderr and exit status are what the same invocation without the flag produces �
 and not the usage error exit `2` of [§FS-cli.4](FS-cli.md#4-errors-with-no-source-location), so a caller holding an
 operand it did not build may pass the flag without first learning whether that
 operand carries a section.
+
+### 4.1 A stub's homes are found in its target
+
+`refs` finds the homes of a stub's ID as `show` does
+([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)): it reads the stub's
+target for that ID, and a target outside `[scan] include` answers exactly as it
+would were it scanned. A target that declares the ID twice is an ambiguous ID at
+the target's sites ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), refused for a bare `<ID>`
+exactly as for `<ID>.<section>` or `--section`, and a selected section is checked
+against the target's own headings ([§FS-show.2.2.2](FS-show.md#222-ambiguous-section)). So the
+answer never depends on whether the target is in the scan.
+
+A stub that cannot be paired refuses nothing. Where its target does not exist, or
+exists and declares no such ID, `refs` lists the citations of the stub's ID and
+exits `0`, as it does for any absent target ([§FS-refs.1](FS-refs.md#1-inputs)). The
+`broken stub:` refusals belong to `show`, which needs the target's body
+([§FS-show.2.3.4](FS-show.md#234-broken-stub)); `refs` reads no body.
 
 ## 5. Why this exists
 
