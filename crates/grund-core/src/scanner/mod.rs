@@ -104,6 +104,7 @@ pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;
 pub(crate) use tree::{
     ScanError, overlay_text, scan_tree, scan_tree_strict, scan_tree_with_workspace_overlays,
+    scan_unwalked_file,
 };
 pub(crate) use walk::{scan_roots_for, walk_reads_any_file};
 pub(crate) use walk_boundaries::is_scannable;

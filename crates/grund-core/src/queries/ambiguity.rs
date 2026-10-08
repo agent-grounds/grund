@@ -1,14 +1,17 @@
 //! Scanner-recorded query ambiguities shared by show and refs (§FS-refs.4,
 //! §FS-show.2.2.1, §FS-show.2.2.2). No body extraction or stub validation is
-//! needed to decide whether a recorded target has multiple claimants.
+//! needed to decide whether a recorded target has multiple claimants; a stub's
+//! target the walk did not reach is recorded by the scanner's own pass over it
+//! (§FS-show.2.3.7).
 
 use std::path::Path;
 
 use super::show_query::ShowQueryError;
+use super::stub_home::stub_home;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
-    Declaration, FindingSite, Findings, Id, is_stub_for_inline_decl, paths_same_location,
+    Declaration, FindingSite, Findings, Id, TextOverlays, is_stub_for_inline_decl,
     resolve_stub_target,
 };
 
@@ -32,7 +35,9 @@ pub(crate) fn declaration_ambiguity_refusal(
     } else {
         decl.file.clone()
     };
-    ambiguous_section_refusal(config, path_config, decls, decl, &file, id, section)
+    // §FS-show.2.3.7: refused from the record show would read, scanned or not.
+    let body_decl = stub_home(config, decls, decl, &file, id, &TextOverlays::new());
+    ambiguous_section_refusal(config, path_config, &body_decl, &file, id, section)
 }
 
 /// A valid stub/inline pair is one home; multiple independent homes refuse with
@@ -81,25 +86,18 @@ pub(super) fn ambiguous_id_refusal(
 
 /// Refuse exactly the requested coordinate's scanner-recorded claims
 /// (§FS-show.2.2.2, §FS-refs.4), before reading a body or filtering citations.
-/// A stub's sections belong to its inline home; its own prose declares none
-/// (§FS-declarations.checks.duplicate-section.2). `path_config` owns report paths.
+/// `body_decl` is the record `stub_home` chose, so a stub's sections are its
+/// inline home's; its own prose declares none
+/// (§FS-declarations.checks.duplicate-section.2, §FS-show.2.3.7). `path_config`
+/// owns report paths.
 pub(super) fn ambiguous_section_refusal(
     config: &Config,
     path_config: &Config,
-    decls: &[Declaration],
-    decl: &Declaration,
+    body_decl: &Declaration,
     file: &Path,
     id: &Id,
     section: &str,
 ) -> Option<ShowQueryError> {
-    let body_decl = if decl.is_stub {
-        decls
-            .iter()
-            .find(|other| paths_same_location(&other.file, file))
-            .unwrap_or(decl)
-    } else {
-        decl
-    };
     let mut lines: Vec<usize> = body_decl
         .duplicate_sections
         .iter()
