@@ -1,0 +1,1 @@
+check --rule 'POLICY.requirements must cite at least one REQ.' {repo}

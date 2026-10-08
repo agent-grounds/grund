@@ -1,0 +1,1 @@
+check --rule 'FS-login.Requirements must cite at least one REQ.' {repo}

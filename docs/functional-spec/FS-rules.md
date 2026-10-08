@@ -218,7 +218,9 @@ Every offending physical citation site produces the existing
 
 No paraphrase or unlisted production is accepted. A refusal identifies the
 failed production and gives its canonical accepted rewrite; an ambiguity names
-every candidate and chooses none. The documentation and parser tests carry at
+every candidate and chooses none. The one refusal that gives no rewrite is a
+subject refused for needing named sections from which no configured kind can
+be recovered ([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)). The documentation and parser tests carry at
 least these exact rows:
 
 | Refused sentence | Exact reason and accepted rewrite(s) |
@@ -258,6 +260,74 @@ An empty `NAME` uses the same refusal. This adds guidance without admitting any
 new grammar. An ad-hoc refusal still writes nothing to stdout and exits 2
 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 
+#### 3.5.2 A subject that needs named sections is answered with one they make valid
+
+With `[id] named_sections = false`, a subject refused because named chapter
+subjects require named sections is answered with a subject that turning them on
+makes valid, so a reader who follows the suggestion is not refused again. It is
+built from what was typed and from the configured kinds:
+
+1. The subject is parsed again with named sections on. Where that parse accepts
+   it, the suggestion is the subject as typed.
+2. Otherwise the suggestion is what [§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)'s four steps build for that
+   second refusal, written as a rule subject. `KIND.NAME` is selector-only
+   ([§FS-rules.2](FS-rules.md#2-subject-selectors)), so where a selector would get `KIND.NAME[.NAME…]` the rule gets
+   `The NAME[.NAME…] chapter of each KIND`, and where a selector would get a
+   bare `KIND` the rule gets `Each KIND`.
+3. The label is `accepted form after enabling it:` only where the suggested
+   subject is refused with the configuration as it is, and `accepted form:`
+   where the repository accepts it as configured.
+4. Where no configured kind can be recovered, or a configured ID grammar cannot
+   be compiled with named sections on, nothing is suggested.
+5. The reason stays the one [§FS-rules.3.5](FS-rules.md#35-strict-refusals) gives for the subject as configured,
+   `named chapter subjects require [id] named_sections = true`, and the
+   predicate stays the fixed `must cite at least one REQ.`.
+
+So every sentence offered after `accepted form after enabling it:` is accepted
+by `check --rule` once `named_sections = true`, and every sentence offered after
+a plain `accepted form:` is accepted with the configuration as it is. Accepted
+means not refused before the scan; whether a literal resolves stays the scan's
+question ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
+
+Where nothing is suggested, the two rule surfaces differ, because only one of
+them can print a second line:
+
+- `check --rule` prints the reason alone and then a second line listing the
+  configured citable kinds exactly as an unknown `--kind` does
+  ([§FS-list.1.1](FS-list.md#11---kind)). These are the two lines `list --selector` prints for the same
+  subject ([§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)). It writes nothing to stdout and exits 2.
+- A configured rule declaration's `invalid-rule` finding is the reason alone,
+  `<RULE-ID> is not a valid rule: <reason>`, because a finding is one message
+  on one line ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
+
+In a repository whose kinds are `FS`, `REQ` and `GOAL`, with named sections off
+and `FS-login` holding a named `requirements` chapter with the sections
+`requirements.1` and `requirements.2`, these are the exact `check --rule`
+refusals. Each `error:` line opens with
+`named chapter subjects require [id] named_sections = true`, and the table
+gives what follows it.
+
+| Refused sentence (`… must cite at least one REQ.`) | After the reason |
+|---|---|
+| `FS-login.requirements` | `; accepted form after enabling it: FS-login.requirements must cite at least one REQ.` |
+| `The requirements chapter of each FS` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
+| `FS-*.requirements` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
+| `FS.requirements` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
+| `The requirements.1 chapter of each FS` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
+| `FS-login.Requirements` | `; accepted form: FS-login must cite at least one REQ.` |
+| `The Requirements chapter of each FS` | `; accepted form: Each FS must cite at least one REQ.` |
+| `The * chapter of each FS` | `; accepted form: Each FS must cite at least one REQ.` |
+| `POLICY.requirements` | nothing on the `error:` line, then the line `known kinds: FS, REQ, GOAL` |
+
+The first two rows are the subjects enabling named sections does make valid,
+and they print what they printed before this point existed; the first is the
+named-sections-off row of [§FS-rules.3.5](FS-rules.md#35-strict-refusals). A subject refused for its own production
+before named sections are asked about, such as `FS-login.*`, `FS-login.2` or
+`Each chapter of each FS`, keeps its [§FS-rules.3.5](FS-rules.md#35-strict-refusals) row. With named sections on,
+nothing here applies. The decision to replace the as-typed suggestion in place
+rather than append to it is
+[§DF-rule-after-enabling-rewrites](../decisions/functional/DF-rule-after-enabling-rewrites.md#df-rule-after-enabling-rewrites-a-rule-subject-that-needs-named-sections-is-answered-with-one-they-make-valid-in-place).
+
 ### 3.6 Where a sentence's subject ends
 
 A sentence's subject is the text before its modality. The modality is found in
@@ -281,7 +351,11 @@ being reported, and no surface silently omits it.
 `check --rule` is different only where a title declaration would have supplied
 a location. Grammar or vocabulary refusal is decided after config selection
 and before scanning, prints `error: <reason>; accepted form: <rewrite>` (or
-`accepted forms:`), writes nothing to stdout, and exits 2. A syntactically valid
+`accepted forms:`, or `accepted form after enabling it:` where the rewrite
+needs `[id] named_sections = true`), writes nothing to stdout, and exits 2. A
+subject refused for needing named sections from which no kind is recovered
+prints `error: <reason>` and then `known kinds: <kinds>` instead
+([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)). A syntactically valid
 unresolved literal requires the catalog, so after scanning it yields an
 `invalid-rule` attributed to `--rule` and the ordinary finding exit 1.
 
@@ -567,7 +641,16 @@ warnings now are those a newly counted section citation alone produces, until
 <RULE-ID> is not a valid rule: <reason>; accepted form: <canonical template>
 ```
 
-An ambiguous production uses `accepted forms:`. A resolution failure is:
+An ambiguous production uses `accepted forms:`, and a rewrite that needs
+`[id] named_sections = true` uses `accepted form after enabling it:`. A parse
+failure that offers no form, a subject refused for needing named sections from
+which no kind is recovered ([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)), is:
+
+```text
+<RULE-ID> is not a valid rule: <reason>
+```
+
+A resolution failure is:
 
 ```text
 <RULE-ID> is not a valid rule: literal subject <selector> does not resolve
@@ -908,10 +991,11 @@ None of them earns the breadcrumb.
 | `POLICY.requirements` | `named chapter subjects require [id] named_sections = true` | `known kinds: FS` |
 
 An exact literal that does not resolve or is ambiguous keeps its refusal,
-which suggests nothing. The rule surfaces do not move: `check --rule` and a
-configured rule declaration keep every byte they print, every row of
-[§FS-rules.3.5](FS-rules.md#35-strict-refusals) included, for the subjects this table refuses as for any other.
-The decision to replace these
+which suggests nothing. The rule surfaces, `check --rule` and a configured rule
+declaration, keep every byte they print, every row of [§FS-rules.3.5](FS-rules.md#35-strict-refusals) included,
+except where a subject is refused for needing named sections. That refusal is
+answered with a rule subject the same four steps build, as
+[§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) says. The decision to replace these
 lines rather than append to them is
 [§DF-selector-refusal-rewrites](../decisions/functional/DF-selector-refusal-rewrites.md#df-selector-refusal-rewrites-a-refused-selector-is-answered-with-a-selector-and-its-old-lines-are-replaced-not-appended-to).
 
@@ -976,8 +1060,9 @@ rather than passes over.
 The guide has a marked `### Chapter rules` writing section. Both repository and
 binary-embedded copies of `skills/grund-init/SKILL.md` contain a marked byte-
 identical copy of that section and remain wholly byte-identical to one another.
-The section includes every accepted family, every [§FS-rules.3.5](FS-rules.md#35-strict-refusals) refusal with its exact
-rewrite, the finding each example produces, and the exact
+The section includes every accepted family, every row of the [§FS-rules.3.5](FS-rules.md#35-strict-refusals) table
+and the [§FS-rules.3.5.1](FS-rules.md#351-presence-name-whitespace-refusal) refusal, each with its exact rewrite, the finding each
+example produces, and the exact
 `unreached-declaration` error a chapter-scoped citation rule produces about a
 declaration that has no such chapter, and the two actions
 that answer it ([§FS-rules.2](FS-rules.md#2-subject-selectors),
