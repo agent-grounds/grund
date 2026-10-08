@@ -1,5 +1,9 @@
 //! The four steps that build a refused selector's suggestion, on a
 //! hand-written vocabulary (§FS-rules.8.1).
+//!
+//! The named-sections-off suggestion is pinned black-box in
+//! `rules_contract/selector_refusals.rs`, since it reads the configuration
+//! as if named sections were on.
 
 use super::parse_selector;
 use crate::config::Config;
@@ -111,9 +115,41 @@ fn nothing_is_suggested_where_no_configured_kind_is_recovered() {
         refusal("FSX-login"),
         "literal subject \"FSX-login\" does not match the configured ID grammar\nknown kinds: FS"
     );
+}
+
+#[test]
+fn the_hint_follows_the_known_kinds_line_where_no_kind_is_recovered() {
+    for (selector, reason) in [
+        (
+            "Each chapter of each POLICY",
+            "chapter-quantified subjects are not accepted in phase 1",
+        ),
+        (
+            "API.requirements.1",
+            "numbered chapter subjects can detach when headings move",
+        ),
+        (
+            "API.*",
+            "section-component wildcards are not accepted in phase 1",
+        ),
+    ] {
+        assert_eq!(
+            refusal(selector),
+            format!("{reason}\nknown kinds: FS{HINT}"),
+            "{selector}"
+        );
+    }
+}
+
+#[test]
+fn each_namespaced_kind_gets_the_namespace_reason_the_rule_sentence_gets() {
     assert_eq!(
-        refusal("Each chapter of each POLICY"),
-        "chapter-quantified subjects are not accepted in phase 1\nknown kinds: FS"
+        refusal("Each */FS"),
+        "subject namespaces must be local in phase 1; accepted selector: Each FS"
+    );
+    assert_eq!(
+        refusal("Each */POLICY"),
+        "subject namespaces must be local in phase 1\nknown kinds: FS"
     );
 }
 
@@ -134,12 +170,43 @@ fn a_pasted_rule_sentence_is_answered_with_its_subject() {
             "numbered chapter subjects can detach when headings move; accepted selector: FS.requirements{HINT}"
         )
     );
-    // A chapter named `must` is a selector, not a pasted sentence.
+    // A chapter named `must` or `should` is a selector, not a pasted sentence.
     assert_eq!(
         parse_selector("The must chapter of each FS", &vocabulary(&["FS"])),
         Ok(RuleSubject::ChapterOfKind {
             kind: "FS".into(),
             name: "must".into(),
         })
+    );
+}
+
+/// §FS-rules.3.6: the subject ends where the rule sentence's does, the first
+/// ` must not `, ` should not `, ` must ` or ` should ` in that order.
+#[test]
+fn a_pasted_rule_sentence_is_split_where_the_rule_sentence_is() {
+    for (sentence, subject) in [
+        (
+            "The should chapter of each FS must cite at least one FS.",
+            "The should chapter of each FS",
+        ),
+        (
+            "The should chapter of each FS must not cite any AR.",
+            "The should chapter of each FS",
+        ),
+        (
+            "The must chapter of each FS should not cite any AR.",
+            "The must chapter of each FS",
+        ),
+    ] {
+        assert_eq!(
+            refusal(sentence),
+            format!("a rule sentence is not a selector; accepted selector: {subject}"),
+            "{sentence}"
+        );
+    }
+    // Guard: where the rule sentence's subject is `The`, so is the selector's.
+    assert_eq!(
+        refusal("The must chapter of each NOPE"),
+        "literal subject \"The\" does not match the configured ID grammar\nknown kinds: FS"
     );
 }
