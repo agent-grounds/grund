@@ -497,6 +497,20 @@ pub(crate) fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
         .collect()
 }
 
+/// The `known kinds:` line that ends an unknown `--kind` (§FS-list.1.1), a
+/// `--selector` refusal that recovers no kind (§FS-rules.8.1), and a
+/// `check --rule` refusal that offers no form (§FS-rules.3.5.2): every citable
+/// kind of `kinds`, once, in configuration order.
+pub(crate) fn known_kinds_line<'a>(kinds: impl IntoIterator<Item = &'a KindConfig>) -> String {
+    let mut seen = std::collections::BTreeSet::new();
+    let known = kinds
+        .into_iter()
+        .filter(|kind| kind.citable && seen.insert(kind.kind.as_str()))
+        .map(|kind| kind.kind.as_str())
+        .collect::<Vec<_>>();
+    format!("known kinds: {}", known.join(", "))
+}
+
 /// Why a configured kind cannot be selected with `--kind` or minted from
 /// (§FS-list.1.1, §FS-id.1.1). A non-citable kind is not a typo — it is a real row
 /// in `[[kinds]]` that will never have a declaration — so the message says that

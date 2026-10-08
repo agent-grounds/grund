@@ -122,16 +122,14 @@ impl WorkspaceContext {
         &self,
         project_filter: &std::collections::BTreeSet<String>,
     ) -> String {
-        let mut seen = std::collections::BTreeSet::new();
-        let known = self
-            .projects
-            .iter()
-            .filter(|project| project_filter.is_empty() || project_filter.contains(&project.alias))
-            .flat_map(|project| &project.config.kinds)
-            .filter(|kind| kind.citable && seen.insert(kind.kind.as_str()))
-            .map(|kind| kind.kind.as_str())
-            .collect::<Vec<_>>();
-        format!("known kinds: {}", known.join(", "))
+        crate::config::known_kinds_line(
+            self.projects
+                .iter()
+                .filter(|project| {
+                    project_filter.is_empty() || project_filter.contains(&project.alias)
+                })
+                .flat_map(|project| &project.config.kinds),
+        )
     }
 }
 
