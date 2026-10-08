@@ -13,7 +13,8 @@ use super::tree::overlay_text;
 use super::walk_boundaries::is_scannable;
 use crate::config::Config;
 use crate::grammar::{
-    PythonDocstringScanState, STUB_LINK_HEADING, declaration_id_on_line, source_scan_line,
+    PythonDocstringScanState, STUB_LINK_HEADING, declaration_id_on_line, markdown_fence_delimiter,
+    source_scan_line,
 };
 use crate::model::{
     Declaration, Findings, Id, StubHome, TextOverlays, paths_same_location, physical_path_key,
@@ -41,11 +42,21 @@ pub(crate) fn file_declares_inline_home(
 
 /// The first line of `text`, the contents of `path`, that declares `id` and is not
 /// itself a stub link (§FS-declarations.checks.broken-stub, §AR-scanner.4.6).
+/// A Markdown `text` is read the way the scan reads it: fence delimiter lines and
+/// every line inside a fence are skipped first (§AR-scanner.2.3.3), so a heading
+/// shown there as an example declares nothing (§FS-declarations.checks.broken-stub.2).
 fn inline_home_line(text: &str, path: &Path, id: &Id, config: &Config) -> Option<usize> {
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let mut py_docstring = PythonDocstringScanState::default();
+    let mut markdown_fence = None;
     for (index, line) in text.lines().enumerate() {
+        if is_md && markdown_fence_delimiter(&mut markdown_fence, line) {
+            continue;
+        }
+        if markdown_fence.is_some() {
+            continue;
+        }
         let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
         let scan_line = scan.text.as_ref();
         if let Some((found, token_end)) =
