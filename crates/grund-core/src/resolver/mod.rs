@@ -83,7 +83,8 @@ pub use id_candidates::names_member_id_candidate;
 // directory that can name any of it.
 pub(crate) use body::{PointBodyCache, extract_declaration_body};
 pub(crate) use citation_target::{
-    WorkspaceCheckTarget, citation_resolves, section_resolves, target_for_citation,
+    SectionHome, WorkspaceCheckTarget, citation_resolves, section_home, section_resolves,
+    target_for_citation,
 };
 pub(crate) use context::{
     WorkspaceContext, WorkspaceProject, load_classifying_workspace_context,
