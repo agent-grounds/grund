@@ -488,15 +488,20 @@ is the plain run's ([§FS-check.1.3.4](FS-check.md#134-purely-additive)), resolv
 
 That answer is one fact, and every reader of it in `check` takes it: this finding, the `cites`
 fact a rule counts a resolved citation by ([§FS-rules.5.1](FS-rules.md#51-facts-and-identity)), the value a binding is compared with once
-its component resolves ([§FS-values.5.1](FS-values.md#51-resolve-before-comparison)), the gate that admits a bare index
-entry `fmt` can wrap ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), and the declaration-local rewrite that declines an absent
-section ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)) with the command clause it withholds there ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)).
+its component resolves ([§FS-values.5.1](FS-values.md#51-resolve-before-comparison)), the value authority that makes a malformed binding an invalid
+attempt rather than prose ([§FS-values.3.1.1](FS-values.md#311-invalid-attempts-and-non-attempts)) and that `fmt --cross-refs` protects from a rewrite
+([§FS-values.8](FS-values.md#8-formatting-stability)), the gate that admits a bare index entry `fmt` can wrap ([§FS-check.3.17.4](FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), and the
+declaration-local rewrite that declines an absent section ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)) with the command clause
+it withholds there ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)).
 
 Nothing else moves. A section the target does not declare is reported as before, in the same
 words — `missing section <ID>.<path>` for a numeric path — and under the same `missing-section`
 code. A broken stub
 ([§FS-declarations.checks.broken-stub](FS-declarations.md#checksbroken-stub-broken-inline-spec-stub)) pairs with nothing and gains no section: it keeps its
-broken-stub finding, and a citation of one of its sections is `missing section` as before.
+broken-stub finding, and a citation of one of its sections is `missing section` as before. A
+target that declares the ID more than once pairs as `show` refuses it, ambiguously
+([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), and lends no section, and so does every target of an ID with more than one home
+([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)).
 Decided in [§DF-stub-sections-from-unscanned-target](../decisions/functional/DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it).
 
 ### 3.3 Duplicate declaration
