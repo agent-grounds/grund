@@ -41,10 +41,23 @@ use crate::scanner::{file_declares_inline_home, is_scannable};
 /// resolver (§AR-system.2.10), rule diagnostics from §AR-system.2.12, and the
 /// config it needs to judge them, and gives one `Report` to the api
 /// (§AR-system.2.9), which every frontend renders unchanged. It knows no
-/// frontend and reads no file, except in the two rules below that must re-read
-/// one (§AR-checker.2.5, §AR-checker.2.16). Chapter-rule sentence parsing, fact adaptation,
-/// evaluation, and semantic deduplication stay in §AR-rules; this component
-/// only sequences them and merges their diagnostics.
+/// frontend. Chapter-rule sentence parsing, fact adaptation, evaluation, and
+/// semantic deduplication stay in §AR-rules; this component only sequences them
+/// and merges their diagnostics.
+///
+/// A rule judges what the scan recorded in `Findings`. These read a file's text
+/// after the scan as well — the text an editor's overlay can stand in for, which
+/// a probe for whether a path exists or a scope path made canonical never reads —
+/// and `tests_post_scan_readers.rs` holds the list to the code:
+///
+/// - §AR-checker.2.3's hint: the line of a dangling Markdown citation, from disk.
+/// - §AR-checker.2.5: a stub's target, through the scanner's reader
+///   (§AR-scanner.4.6), overlay first and disk second.
+/// - §AR-checker.2.7: each agent entrypoint, from disk.
+/// - §AR-checker.2.16: each kind index it judges, from disk.
+/// - The opt-in lead budget (§FS-declarations.checks.oversized-lead): every home,
+///   through the resolver's point-body slicer (§AR-system.2.10), overlay first and
+///   disk second.
 ///
 /// ## terms: Terms
 ///
@@ -125,11 +138,11 @@ use crate::scanner::{file_declares_inline_home, is_scannable};
 /// delimiter lines and every line while a fence is open are skipped through the
 /// scanner's own fence reader (§AR-scanner.2.3.3), so a fenced example heading of
 /// the ID is not its declaration (§FS-declarations.checks.broken-stub.2). Either
-/// failure → one error at the stub site. This rule and the section lookup of
-/// §AR-checker.2.4 are the only ones that read a file again; everything else comes
-/// from `findings`. The reading is the scanner's (§AR-scanner.4.6), so the stub
-/// this rule accepts is the stub the count of homes pairs with its target, and the
-/// one whose sections the lookup reads (§AR-resolver.5).
+/// failure → one error at the stub site. The target's text is read after the scan
+/// (§AR-checker.placement), not taken from `findings`. The reading is the scanner's
+/// (§AR-scanner.4.6), so the stub this rule accepts is the stub the count of homes
+/// pairs with its target, and the one whose sections §AR-checker.2.4's lookup reads
+/// (§AR-resolver.5).
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
 ///
@@ -251,12 +264,12 @@ use crate::scanner::{file_declares_inline_home, is_scannable};
 /// budgets, and `inline_note_layout`. Everything it compares — the block's span,
 /// its widest column, whether it carries a note, and which of its lines deviate
 /// from the configured layout — was recorded by the scanner (§AR-scanner.3), so
-/// like every rule above except §AR-checker.2.5 this one reads no file. A site that misses
-/// several caps yields one finding per cap; a block whose layout deviates yields
-/// one per offending *line*, anchored there rather than at the block's opener,
-/// because that is the line an author edits (§FS-inline-citation-style.4.4.1). Two
-/// of the three tiers are opt-in and silent by default: the soft cap under
-/// `warn_on_suggested`, the layout under `inline_note_layout_check`.
+/// this rule reads no file. A site that misses several caps yields one finding
+/// per cap; a block whose layout deviates yields one per offending *line*,
+/// anchored there rather than at the block's opener, because that is the line an
+/// author edits (§FS-inline-citation-style.4.4.1). Two of the three tiers are
+/// opt-in and silent by default: the soft cap under `warn_on_suggested`, the
+/// layout under `inline_note_layout_check`.
 ///
 /// The rule is `inline_style.rs` rather than here — one file per invariant, the
 /// arrangement §AR-checker.2.12's shorthand rule already uses for the same reason. The
@@ -291,11 +304,11 @@ use crate::scanner::{file_declares_inline_home, is_scannable};
 /// to one ID, as in §AR-checker.2.1 — plus an external inline declaration whose canonical
 /// bare-ID source link enrolls it directly (§FS-check.3.18.3). The citations already
 /// recorded in the index file say which members it names. The index file itself
-/// is re-read, the second and last rule that touches disk after §AR-checker.2.5, because
-/// wrapper form and an external enrollment's exact destination are facts about
-/// the line, not the citation record. Ordinary in-folder entries still require
-/// only the wrapper shape; only external enrollment compares the destination to
-/// the one `fmt` derives (§FS-fmt.6.2, §DF-index-entry-form.2.7).
+/// is re-read (§AR-checker.placement), because wrapper form and an external
+/// enrollment's exact destination are facts about the line, not the citation
+/// record. Ordinary in-folder entries still require only the wrapper shape; only
+/// external enrollment compares the destination to the one `fmt` derives
+/// (§FS-fmt.6.2, §DF-index-entry-form.2.7).
 ///
 /// Both halves of the entry contract are errors, each anchored where its own fix
 /// is: a missing entry at the declaration, a bare one at its line in the index.

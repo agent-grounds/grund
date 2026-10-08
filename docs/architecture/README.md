@@ -108,8 +108,9 @@ component. Produces the `Report`: errors, warnings and suggestions, each check
 one pass over its owned input ([§FS-check](../functional-spec/FS-check.md#fs-check-grund-validates-every-citation-in-a-repo),
 [§FS-rules.11](../functional-spec/FS-rules.md#11-functional-architecture-constraint)).
 It orchestrates rule parsing, fact production and evaluation without owning any
-of their grammar or relational meaning. Reads no file except in the two checks
-that must, and knows no frontend. Design:
+of their grammar or relational meaning. Reads a file's text after the scan only
+in the checks [§AR-checker.placement](../../crates/grund-core/src/checker/report.rs)
+lists, and knows no frontend. Design:
 [§AR-checker](../../crates/grund-core/src/checker/report.rs). Module:
 `crates/grund-core/src/checker/`.
 
