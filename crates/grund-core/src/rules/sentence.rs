@@ -1,6 +1,7 @@
 //! The controlled-English sentence front end (§FS-rules.2–4, §AR-rules.2).
 
 mod count;
+mod recovery;
 mod selectors;
 mod subjects;
 mod targets;
@@ -110,6 +111,9 @@ impl RuleVocabulary {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct RuleParseError {
     pub(crate) message: String,
+    /// The refusal offers no form because nothing could be recovered, so
+    /// `check --rule` follows it with the `known kinds:` line (§FS-rules.3.5.2).
+    pub(crate) unrecovered: bool,
 }
 
 impl std::fmt::Display for RuleParseError {
@@ -122,6 +126,7 @@ impl std::error::Error for RuleParseError {}
 fn error(message: impl Into<String>) -> RuleParseError {
     RuleParseError {
         message: message.into(),
+        unrecovered: false,
     }
 }
 
@@ -198,7 +203,8 @@ pub(crate) fn parse_rule(
             "rule has no accepted modality; accepted form: Each FS must cite at least one GOAL."
         }));
     };
-    let subject = parse_subject(subject_text, vocabulary)?;
+    let subject = parse_subject(subject_text, vocabulary)
+        .map_err(|refusal| refusal.rule_error(vocabulary))?;
     let mut unverifiable = None;
     let (relation, targets, cardinality) =
         parse_predicate(predicate, polarity, vocabulary, &mut unverifiable)?;

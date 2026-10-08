@@ -2,18 +2,19 @@
 //! shorthand, and a refusal answered with a selector rather than a rule
 //! sentence (§FS-rules.8.1).
 //!
-//! What failed is decided once, by `parse_subject` and `validate_named_path`;
-//! this file only renders that decision. Where the section grammar refused a
-//! numbered or wildcard component, it names that component as what failed.
-//! Where named sections are off, it asks the same parser again with them on,
-//! for the suggestion alone.
+//! What failed is decided once, by `parse_subject` and `validate_named_path`,
+//! and what a suggestion can recover once, by `recovery.rs`; this file only
+//! renders those decisions. Where the section grammar refused a numbered or
+//! wildcard component, it names that component as what failed. Where named
+//! sections are off, it asks the same parser again with them on, for the
+//! suggestion alone.
 
+use super::recovery::{Recovered, as_if_enabled, recover};
 use super::subjects::{
-    Component, Spelling, SubjectFault, SubjectRefusal, is_named_component, parse_subject, refused,
-    split_modality, validate_named_path,
+    Component, Spelling, SubjectFault, SubjectRefusal, parse_subject, refused, split_modality,
+    validate_named_path,
 };
 use super::{RuleSubject, RuleVocabulary};
-use crate::grammar::Grammar;
 
 /// §FS-rules.8.1: the breadcrumb a numbered, wildcard or quantified refusal adds.
 const HINT: &str = "hint: grund show --batch --toc expands each selected unit into its sections";
@@ -124,7 +125,7 @@ fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefu
                 | SubjectFault::SectionWildcard
                 | SubjectFault::ChapterQuantified
         ),
-        suggestion: suggestion(refusal, vocabulary),
+        suggestion: recover(refusal, vocabulary).map(|recovered| recovered.selector()),
         after_enabling: false,
     }
 }
@@ -132,97 +133,16 @@ fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefu
 /// §FS-rules.8.1: a selector refused for needing named sections keeps that
 /// reason, and is suggested what the same selector is suggested with them on.
 fn answer_as_if_enabled(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefusal {
-    let suggestion =
-        enabled(vocabulary).and_then(|enabled| match select(&refusal.text, &enabled) {
-            Ok(_) => Some(refusal.text.clone()),
-            Err(own) => suggestion(&own, &enabled),
-        });
+    let suggested = as_if_enabled(&refusal.text, vocabulary, select, Recovered::selector);
     SelectorRefusal {
         reason: refusal.fault.reason(&refusal.text),
         // The label says whether pasting it back needs named sections on.
-        after_enabling: suggestion
-            .as_deref()
-            .is_some_and(|selector| select(selector, vocabulary).is_err()),
-        suggestion,
+        after_enabling: suggested
+            .as_ref()
+            .is_some_and(|suggested| suggested.after_enabling),
+        suggestion: suggested.map(|suggested| suggested.text),
         hint: false,
     }
-}
-
-/// The vocabulary with named sections on and every grammar compiled that way,
-/// or `None` where a grammar cannot be (§FS-rules.8.1).
-fn enabled(vocabulary: &RuleVocabulary) -> Option<RuleVocabulary> {
-    let id_grammars = vocabulary
-        .id_grammars
-        .iter()
-        .map(Grammar::with_named_sections)
-        .collect::<anyhow::Result<_>>()
-        .ok()?;
-    Some(RuleVocabulary {
-        named_sections: true,
-        id_grammars,
-        ..vocabulary.clone()
-    })
-}
-
-/// §FS-rules.8.1's four steps: the selector built from what was typed and the
-/// configured kinds, or `None` where no configured kind can be recovered.
-fn suggestion(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> Option<String> {
-    let head = refusal
-        .head
-        .rsplit_once('/')
-        .map_or(refusal.head.as_str(), |(_, local)| local);
-    let kind = recovered_kind(head, vocabulary)?;
-    let names = named_prefix(refusal.path.as_deref(), vocabulary);
-    let base = match refusal.spelling {
-        Spelling::Each => return Some(format!("Each {kind}")),
-        Spelling::ChapterOfEach if names.is_empty() => return Some(format!("Each {kind}")),
-        Spelling::ChapterOfEach => return Some(format!("The {names} chapter of each {kind}")),
-        Spelling::Literal if is_declaration(head, vocabulary) => head,
-        Spelling::KindName | Spelling::Literal => kind,
-    };
-    Some(if names.is_empty() {
-        base.into()
-    } else {
-        format!("{base}{}{names}", refusal.separator)
-    })
-}
-
-/// Step 1: the configured kind the text names or starts with, longest first.
-fn recovered_kind<'a>(head: &str, vocabulary: &'a RuleVocabulary) -> Option<&'a str> {
-    vocabulary
-        .kinds
-        .iter()
-        .filter(|kind| {
-            head.strip_prefix(kind.as_str())
-                .is_some_and(|rest| !rest.starts_with(|c: char| c.is_ascii_alphanumeric()))
-        })
-        .max_by_key(|kind| kind.len())
-        .map(String::as_str)
-}
-
-/// Step 2: whether a declaration was written as a valid ID.
-fn is_declaration(head: &str, vocabulary: &RuleVocabulary) -> bool {
-    matches!(
-        parse_subject(head, vocabulary),
-        Ok(RuleSubject::ExactDeclaration(_))
-    )
-}
-
-/// Step 3: the longest run of named components before the first refused one.
-fn named_prefix(path: Option<&str>, vocabulary: &RuleVocabulary) -> String {
-    let Some(path) = path else {
-        return String::new();
-    };
-    let components = path.split('.').collect::<Vec<_>>();
-    let named = components
-        .iter()
-        .take_while(|component| is_named_component(component))
-        .count();
-    (1..=named)
-        .rev()
-        .map(|length| components[..length].join("."))
-        .find(|prefix| validate_named_path(prefix, vocabulary).is_ok())
-        .unwrap_or_default()
 }
 
 #[cfg(test)]
