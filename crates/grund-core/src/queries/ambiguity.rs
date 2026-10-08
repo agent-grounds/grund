@@ -69,12 +69,14 @@ pub(super) fn ambiguous_id_refusal(
     if homes.len() <= 1 {
         return None;
     }
-    // §FS-errors.3.1: every site is spelled from the effective report root.
+    // §FS-errors.3.1: every site is spelled from the effective report root, and a
+    // home a stub stands for at its target (§FS-declarations.checks.duplicate.3).
     let mut sites: Vec<(String, String, usize)> = homes
         .iter()
         .map(|d| {
-            let path = display_path(path_config, &d.file);
-            (format!("{path}:{}", d.line), path, d.line)
+            let (file, line) = d.home_site();
+            let path = display_path(path_config, file);
+            (format!("{path}:{line}"), path, line)
         })
         .collect();
     sites.sort_by(|a, b| a.0.cmp(&b.0));

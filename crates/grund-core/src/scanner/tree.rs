@@ -6,6 +6,7 @@ use super::e2e::scan_e2e_cases;
 use super::file_pass::{scan_file, scan_file_text};
 use super::legacy::promote_local_legacy_citations;
 use super::merge::merge_findings;
+use super::stub_homes::record_stub_homes;
 use super::value_json::{scan_value_json_sources, value_json_sources};
 use super::walk::{is_direct_e2e_case_dir, scan_roots, walk_scannable_files_reporting};
 use super::walk_boundaries::is_scannable;
@@ -217,6 +218,8 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     // E2E cases above) has produced the declaration set.
     promote_local_legacy_citations(config, &mut findings);
     resolve_shorthand_citations(&config.grammar, &mut findings);
+    // §AR-scanner.4.6: a stub's home is known only once every declaration is in.
+    record_stub_homes(config, &mut findings);
     Ok((findings, errors))
 }
 
