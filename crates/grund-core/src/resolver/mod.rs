@@ -100,7 +100,7 @@ pub(crate) use point_body::point_body_pair;
 pub(crate) use shorthand::{
     ShorthandTargets, expand_shorthand_citations_with_origins, shorthand_token_expansion,
 };
-pub(crate) use stub_home::{homes_as_scanned, target_records};
+pub(crate) use stub_home::{home_as_scanned, target_records};
 pub(crate) use unread_block::settled_run_warnings;
 
 // The cases that pin this component, one module per behaviour area

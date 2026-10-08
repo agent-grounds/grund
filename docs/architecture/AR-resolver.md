@@ -217,15 +217,20 @@ to the declarations of the ID that are not themselves stubs. It reads the
 declaration of the ID and never the file's headings, so a broken stub, whose target
 declares no home of the ID, gains no section and stays a broken stub. It reads only
 where the broken-stub rule reads ([§AR-checker.2.5](../../crates/grund-core/src/checker/report.rs)): a scannable file other than the
-stub's own, at which no record of the ID already sits.
+stub's own, at which no record of the ID already sits. And it lends nothing where `show`
+refuses the ID as ambiguous: a target that declares the ID twice, and every target of an ID
+with more than one home ([§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id)). So `unscanned_stub_home`
+answers one declaration or none, and every reader falls back to the stub's own record.
 
 `section_resolves` in `resolver/citation_target.rs` is the one test, and every
 reader in `check` asks it: the missing-section finding ([§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs)), the
 `grund fmt --write` clause that finding carries ([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)), the bare index
 entry the index rule admits ([§FS-check.3.17.4](../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), the local-section expansion `fmt`
 writes ([§FS-fmt.2.4.6](../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the `cites` fact a rule reads ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)). A value
-binding compares against `homes_as_scanned` instead, the target's declarations in
-place of the stub, so a mismatch names the target's line ([§FS-values.5.1](../functional-spec/FS-values.md#51-resolve-before-comparison)). A
+binding compares against `home_as_scanned` instead, the target's declaration in
+place of the stub, so a mismatch names the target's line ([§FS-values.5.1](../functional-spec/FS-values.md#51-resolve-before-comparison)). The value
+authority a malformed binding is refused by, and that `fmt --cross-refs` protects, is
+read through it too, in the one predicate both share ([§FS-values.3.1.1](../functional-spec/FS-values.md#311-invalid-attempts-and-non-attempts), [§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). A
 workspace citation asks with the target project's `Config`, out of section 1,
 because the stub's link resolves against that project's root.
 
