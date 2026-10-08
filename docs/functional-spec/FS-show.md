@@ -249,7 +249,7 @@ The code is `ambiguous-section`, not [§FS-show.2.2.1](FS-show.md#221-ambiguous-
 
 ##### 2.2.2.2 The headings `check` counts
 
-Which headings count is [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)'s question, answered once: `show` refuses exactly the coordinates that rule reports, from the same recorded section set, so no coordinate is clean in `check` and unresolvable in `show`. For a stub ([§FS-show.2.3.4](FS-show.md#234-broken-stub)) that set is the **inline home's** — the file the query reads — never the stub's own prose.
+Which headings count is [§FS-declarations.checks.duplicate-section](FS-declarations.md#checksduplicate-section-duplicate-section-path)'s question, answered once: `show` refuses exactly the coordinates that rule reports, from the same recorded section set, so no coordinate is clean in `check` and unresolvable in `show`. For a stub ([§FS-show.2.3.4](FS-show.md#234-broken-stub)) that set is the **inline home's** — the file the query reads — never the stub's own prose. The home is read outside `[scan] include` too, by `check`'s section lookup as by this query ([§FS-check.3.2.1](FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)).
 
 ##### 2.2.2.3 The whole-declaration map still lists both
 
