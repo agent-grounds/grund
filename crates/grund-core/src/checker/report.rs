@@ -115,10 +115,13 @@ use crate::scanner::{file_declares_inline_home, is_scannable};
 /// For each declaration whose H1 has the stub shape `# <ID>: [<text>](<path>)`
 /// (description after the colon is a single bare markdown link), extract the link
 /// target, resolve it against the repo root, verify the path exists, then re-scan
-/// that file for an inline declaration of the same ID. Either failure → one error
-/// at the stub site. This is the only rule that re-reads a file; everything else
-/// comes from `findings`. The reading is the scanner's (§AR-scanner.4.6), so the stub
-/// this rule accepts is the stub the count of homes pairs with its target.
+/// that file for an inline declaration of the same ID. The re-read takes the
+/// editor's overlay text first and the disk second, as the scanner does, so the
+/// verdict is the one a save would give (§FS-declarations.checks.broken-stub.1).
+/// Either failure → one error at the stub site. This is the only rule that
+/// re-reads a file; everything else comes from `findings`. The reading is the
+/// scanner's (§AR-scanner.4.6), so the stub this rule accepts is the stub the count
+/// of homes pairs with its target.
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
 ///
@@ -603,7 +606,8 @@ pub(crate) fn check_with_workspace_and_overlays(
                 continue;
             }
             let inline_ok = if resolved.is_file() && is_scannable(&resolved, config) {
-                file_declares_inline_home(&resolved, id, config).unwrap_or(false)
+                // §FS-declarations.checks.broken-stub.1: the editor's text first, as scanned.
+                file_declares_inline_home(&resolved, id, config, overlays).unwrap_or(false)
             } else {
                 false
             };
