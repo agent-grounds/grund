@@ -1,7 +1,9 @@
 //! A refused `list --selector` is answered with a selector a reader can paste
 //! back, never with a rule sentence (§FS-rules.8.1), while `check --rule` keeps
 //! every byte it printed (§FS-rules.3.5) but where a subject needs named
-//! sections, which §FS-rules.3.5.2 answers. The fixture is the repository
+//! sections, which §FS-rules.3.5.2 answers, and the reason a chapter path is
+//! refused for, which names the same component a selector's does
+//! (§FS-rules.3.5.3). The fixture is the repository
 //! the `list-selector-refused-*` e2e cases share: one kind, `FS`, and `FS-login`
 //! with a named `requirements` chapter holding two numbered sections and a named
 //! `should` chapter.
@@ -47,6 +49,11 @@ fn rows() -> Vec<(&'static str, String)> {
         (
             "FS-login.requirements.1",
             format!("error: {numbered}; accepted selector: FS-login.requirements\n{HINT}"),
+        ),
+        // §FS-rules.3.5.3: an empty component is not a number, so no breadcrumb.
+        (
+            "FS-login.requirements.",
+            "error: named chapter subject \"FS-login.requirements.\" does not match the configured section grammar; accepted selector: FS-login.requirements\n".into(),
         ),
         (
             "The requirements.1 chapter of each FS",
@@ -284,9 +291,10 @@ fn every_suggested_selector_lists_units() {
     }
 }
 
-/// Guard, green before and after §FS-rules.8.1: a rule sentence reaching the
-/// same subjects keeps the released §FS-rules.3.5 bytes, so the selector
-/// rewrite cannot leak into `check --rule`.
+/// A rule sentence reaching the same subjects keeps the released accepted forms
+/// of §FS-rules.3.5, so the selector rewrite cannot leak into `check --rule`
+/// after the reason. The reason is the one a selector gets for the same
+/// component (§FS-rules.3.5.3), so `requirements.1` is numbered on both.
 #[test]
 fn the_rule_side_keeps_its_released_refusals() {
     for (sentence, stderr) in [
@@ -296,7 +304,7 @@ fn the_rule_side_keeps_its_released_refusals() {
         ),
         (
             "The requirements.1 chapter of each FS must cite at least one REQ.",
-            "error: named chapter subject \"The requirements.1 chapter of each FS\" does not match the configured section grammar; accepted form: FS-login.requirements must cite at least one REQ.\n",
+            "error: numbered chapter subjects can detach when headings move; accepted form: FS-login.requirements must cite at least one REQ.\n",
         ),
         (
             "Each */FS must cite at least one FS.",
