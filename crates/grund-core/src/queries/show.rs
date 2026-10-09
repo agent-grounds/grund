@@ -98,7 +98,8 @@ pub(crate) fn show_declaration_with_overlays<'a>(
                 )
             )));
         }
-        // §FS-declarations.checks.broken-stub.1: judge the text the body is read from.
+        // §FS-declarations.checks.broken-stub.1, §FS-declarations.checks.broken-stub.3:
+        // judge the text the body is read from, in a file the scan reads, as check does.
         if !file_declares_inline_home(&file, id, config, overlays).unwrap_or(false) {
             return Err(anyhow!(crate::model::OperationDiagnostic::new(
                 "query",

@@ -13,17 +13,22 @@ use crate::model::{
     Declaration, Findings, Id, TargetRecords, TextOverlays, is_stub_for_inline_decl,
     paths_same_location, physical_path_key, resolve_stub_target,
 };
-use crate::scanner::{is_scannable, scan_unwalked_file};
+use crate::scanner::{scan_reads_target, scan_unwalked_file};
 
 /// What the scanner's own pass over `file` declares, by ID, stubs left out: the
 /// records of a file the walk did not reach, read from the editor's overlay where
 /// there is one and from the disk through the input observation of §FS-check.6.1.1
-/// otherwise (§FS-show.2.3.7). A file that cannot be read declares nothing.
+/// otherwise (§FS-show.2.3.7). A file that cannot be read declares nothing, and so
+/// does one the scan would not read were it in scope, by its name or its extension
+/// (§FS-declarations.checks.broken-stub.3).
 pub(crate) fn target_records(
     file: &Path,
     config: &Config,
     overlays: &TextOverlays,
 ) -> TargetRecords {
+    if !scan_reads_target(file, config) {
+        return TargetRecords::new();
+    }
     let Ok(findings) = scan_unwalked_file(file, config, overlays) else {
         return TargetRecords::new();
     };
@@ -72,8 +77,8 @@ pub(crate) fn unscanned_stub_home<'a>(
     if homes.next().is_some() && homes.next().is_some() {
         return None;
     }
-    // §AR-checker.2.5: the broken-stub rule's own reading, scannable files only.
-    if !resolved.is_file() || !is_scannable(&resolved, config) {
+    // §FS-declarations.checks.broken-stub.3: the rule's own gate, before a slot is read.
+    if !scan_reads_target(&resolved, config) {
         return None;
     }
     match findings

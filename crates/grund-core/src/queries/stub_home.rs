@@ -26,14 +26,16 @@ use crate::resolver::target_records;
 /// rather than read from the first.
 ///
 /// A target that cannot be read, or whose pass yields no inline declaration of
-/// `id`, leaves the stub's own record. refs makes no stub check, so every refs
-/// query on a stub's ID, bare or with a section, reaches this for a broken stub
-/// and lists its citations (§FS-refs.4.1). `show` has already refused a broken
-/// stub (§FS-show.2.3.4), judged on this same overlay-first text
-/// (§FS-declarations.checks.broken-stub.1), so it reaches this only where that
-/// line test finds a declaration the scanner's pass does not record. The two read
-/// fences alike (§FS-declarations.checks.broken-stub.2): a heading inside a fenced
-/// block of a Markdown target declares nothing to either.
+/// `id`, leaves the stub's own record. So does a target the scan does not read, by
+/// its name or its extension, however many headings of `id` it holds: it declares
+/// nothing (§FS-declarations.checks.broken-stub.3). refs makes no stub check, so
+/// every refs query on a stub's ID, bare or with a section, reaches this for a
+/// broken stub and lists its citations (§FS-refs.4.1). `show` has already refused a
+/// broken stub (§FS-show.2.3.4), judged on this same overlay-first text
+/// (§FS-declarations.checks.broken-stub.1) of a file the scan reads, so it reaches
+/// this only where that line test finds a declaration the scanner's pass does not
+/// record. The two read fences alike (§FS-declarations.checks.broken-stub.2): a
+/// heading inside a fenced block of a Markdown target declares nothing to either.
 pub(super) fn stub_home<'a>(
     config: &Config,
     path_config: &Config,

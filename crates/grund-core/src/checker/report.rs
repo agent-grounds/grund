@@ -20,7 +20,7 @@ use crate::model::{
     is_stub_for_inline_decl, resolve_stub_target, sort_path_key,
 };
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
-use crate::scanner::{file_declares_inline_home, is_scannable};
+use crate::scanner::file_declares_inline_home;
 
 /// AR-checker: how grund validates the scanner's findings
 ///
@@ -147,7 +147,11 @@ use crate::scanner::{file_declares_inline_home, is_scannable};
 /// For each declaration whose H1 has the stub shape `# <ID>: [<text>](<path>)`
 /// (description after the colon is a single bare markdown link), extract the link
 /// target, resolve it against the repo root, verify the path exists, then re-scan
-/// that file for an inline declaration of the same ID. The re-read takes the
+/// that file for an inline declaration of the same ID. A target the scan does not
+/// read — not a file, a name that begins with `.`, or an extension outside
+/// `[scan] extensions` — holds none and is not read
+/// (§FS-declarations.checks.broken-stub.3), a gate the scanner's reader carries, so
+/// `show` refuses every stub this rule reports. The re-read takes the
 /// editor's overlay text first and the disk second, as the scanner does, so the
 /// verdict is the one a save would give (§FS-declarations.checks.broken-stub.1),
 /// and it reads that text as the scanner does too: in a Markdown target, fence
@@ -644,13 +648,9 @@ pub(crate) fn check_with_workspace_and_overlays(
                 });
                 continue;
             }
-            let inline_ok = if resolved.is_file() && is_scannable(&resolved, config) {
-                // §FS-declarations.checks.broken-stub.1: the editor's text first, as scanned.
-                file_declares_inline_home(&resolved, id, config, overlays).unwrap_or(false)
-            } else {
-                false
-            };
-            if !inline_ok {
+            // §FS-declarations.checks.broken-stub.1, §FS-declarations.checks.broken-stub.3:
+            // the editor's text first, of a file the scan reads, the reader `show` takes.
+            if !file_declares_inline_home(&resolved, id, config, overlays).unwrap_or(false) {
                 report.errors.push(Diagnostic {
                     code: "broken-stub",
                     path: Some(decl.file.clone()),
