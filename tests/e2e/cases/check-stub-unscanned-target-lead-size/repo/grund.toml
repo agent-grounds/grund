@@ -1,0 +1,18 @@
+grund_config_version = 1
+project_name = "fixture"
+
+[reference]
+strict = true
+require_grounding = false
+lead_size_warning = { max = 1, unit = "words" }
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+folder = "docs"
+index = false
+
+[scan]
+include = ["docs"]

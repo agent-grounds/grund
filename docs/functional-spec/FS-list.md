@@ -183,7 +183,7 @@ With `--kind FS,AR --summary` only those rows appear; with `--unused --summary` 
 
 ### 3.4 `--size` — per-coordinate lead and full-body measurements
 
-Size mode emits one row for each declaration site and each citable section site. A healthy stub collapses onto its inline home as in [§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical). A broken stub remains a row at the stub site, with no measurement. Independent duplicate declaration homes and duplicate section claimants remain separate, marked site-local rows ([§FS-list.2.6](FS-list.md#26-duplicate-declarations), [§FS-list.2.7](FS-list.md#27-duplicate-sections)).
+Size mode emits one row for each declaration site and each citable section site. A healthy stub collapses onto its inline home as in [§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical), wherever that home's file sits ([§FS-list.3.4.6](FS-list.md#346-a-home-outside-the-scan)). A broken stub remains a row at the stub site, with no measurement. Independent duplicate declaration homes and duplicate section claimants remain separate, marked site-local rows ([§FS-list.2.6](FS-list.md#26-duplicate-declarations), [§FS-list.2.7](FS-list.md#27-duplicate-sections)).
 
 Each row measures exactly the lead and the full body `show` returns for that site ([§FS-list.3.4.1](FS-list.md#341-measured-strings)), in `lines`, `words` and `bytes` counted over its UTF-8 bytes with no locale or Unicode-table input ([§FS-list.3.4.2](FS-list.md#342-units)). Text rows are headerless `<coordinate>  <path>:<line>  <unit>=<lead>/<full>` lines ([§FS-list.3.4.3](FS-list.md#343-text-rows)); JSON rows are NDJSON in a fixed field order, without the catalog's `title` and `refs` ([§FS-list.3.4.4](FS-list.md#344-json-rows)). Rows come in normal catalog order, and `--top` keeps the largest leads in the first selected unit after every filter ([§FS-list.3.4.5](FS-list.md#345-order-and---top)).
 
@@ -216,6 +216,12 @@ JSON output is NDJSON with fields in this order: optional workspace `project`, t
 #### 3.4.5 Order and `--top`
 
 Normal row order is existing workspace/project order and parsed-ID order, then the declaration before its sections, byte-sorted section path, then byte-sorted path and line to distinguish sites. `--top` is applied after `--project`, `--kind`, and `--unused`; `--unused` selects declarations by its ordinary rule and retains all section rows belonging to those declarations. Top mode sorts descending by the lead value of the first requested unit and uses normal row order as the total tie-break. It omits rows without measurements; fewer than `N` measurable rows returns all of them. An empty filtered result writes nothing and succeeds.
+
+#### 3.4.6 A home outside the scan
+
+A healthy stub collapses onto its inline home even where the home's file lies outside `[scan] include`. Size mode finds that home as `show` does, by the stub's ID in the target file, whether or not the walk reaches it ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)). Where that read finds the ID's one home, the rows are the ones the same tree prints with the target scanned: the declaration row at the home's `<path>:<line>`, then a row for each of the home's sections, every one measured, and in JSON `stub` is `false` and `defines` is `null` ([§FS-list.3.4.4](FS-list.md#344-json-rows)). No such row is labelled `broken stub`: the unmeasured stub-site row of [§FS-list.3.4.3](FS-list.md#343-text-rows) stays the row of a stub that is broken as [§FS-list.2.5](FS-list.md#25-inline-homes-stay-canonical) defines it, which `check` reports.
+
+Measuring a home does not bring its file into the scan. `check`'s opt-in lead warning measures leads by this mode but still judges only sites in the configured scan scope ([§FS-declarations.checks.oversized-lead.4](FS-declarations.md#checksoversized-lead4-which-sites-it-judges)), so a home outside `[scan] include` draws no size warning.
 
 ## 4. Exit codes
 
