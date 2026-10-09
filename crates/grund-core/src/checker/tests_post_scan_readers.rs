@@ -15,15 +15,20 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 /// The calls that read a file's text: the shared read of an effective input
-/// (§FS-check.6.1.1) or the standard library's, the scanner's reading of a
-/// stub's target (§AR-scanner.4.6), and the resolver's point-body slicer.
+/// (§FS-check.6.1.1) or the standard library's, and the calls a rule reaches such
+/// a read through in another file — the scanner's reading of a stub's target
+/// (§AR-scanner.4.6) and its listing of agent-entrypoint companions, which reads
+/// a companion's text, the resolver's point-body slicer, and the kind-index
+/// membership derivation, which reads every configured index.
 const READ_CALLS: &[&str] = &[
     "input_read_to_string",
     "read_to_string",
     "fs::read",
     "File::open",
     "file_declares_inline_home",
+    "companion_agent_entrypoints",
     "point_body_pair",
+    "KindIndexEntries::new",
 ];
 
 /// Which point owns the reads each checker file makes, by the call it makes them
@@ -33,8 +38,13 @@ const READERS: &[(&str, &str, &str)] = &[
     // The inline-code hint on a dangling Markdown citation.
     ("support.rs", "input_read_to_string", "AR-checker.2.3"),
     ("report.rs", "file_declares_inline_home", "AR-checker.2.5"),
+    // The unused-declaration rule, which reads every index to tell an index entry
+    // from an inbound citation.
+    ("report.rs", "KindIndexEntries::new", "AR-checker.2.6"),
     ("agents.rs", "input_read_to_string", "AR-checker.2.7"),
+    ("agents.rs", "companion_agent_entrypoints", "AR-checker.2.7"),
     ("index.rs", "input_read_to_string", "AR-checker.2.16"),
+    ("index.rs", "KindIndexEntries::new", "AR-checker.2.16"),
     (
         "index_entries.rs",
         "input_read_to_string",

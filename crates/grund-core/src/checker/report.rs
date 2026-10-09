@@ -53,11 +53,14 @@ use crate::scanner::{file_declares_inline_home, is_scannable};
 /// - §AR-checker.2.3's hint: the line of a dangling Markdown citation, from disk.
 /// - §AR-checker.2.5: a stub's target, through the scanner's reader
 ///   (§AR-scanner.4.6), overlay first and disk second.
+/// - §AR-checker.2.6: every configured kind index, from disk, through
+///   §AR-checker.2.16's membership derivation, so that an index entry is not
+///   counted as an inbound citation (§DF-index-not-an-inbound-citation).
 /// - §AR-checker.2.7: each agent entrypoint, from disk.
-/// - §AR-checker.2.16: each kind index it judges, from disk.
-/// - The opt-in lead budget (§FS-declarations.checks.oversized-lead): every home,
-///   through the resolver's point-body slicer (§AR-system.2.10), overlay first and
-///   disk second.
+/// - §AR-checker.2.16: every configured kind index, from disk.
+/// - The opt-in lead budget (§FS-declarations.checks.oversized-lead): every
+///   Markdown or doc-comment home, through the resolver's point-body slicer
+///   (§AR-system.2.10), overlay first and disk second.
 ///
 /// ## terms: Terms
 ///
