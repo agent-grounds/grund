@@ -58,6 +58,8 @@ use crate::scanner::file_declares_inline_home;
 /// - §AR-checker.2.4: a stub's unscanned target, for a cited section.
 /// - §FS-check.3.24.1: a stub's unscanned target, for the section of a local
 ///   section citation, before the finding offers `grund fmt --write`.
+/// - §FS-check.3.24.3: the same read, for the escape that finding offers in place
+///   of a full citation of a section its owner lacks.
 /// - §AR-checker.2.5: a stub's target, through the scanner's reader
 ///   (§AR-scanner.4.6), overlay first and disk second.
 /// - §AR-checker.2.6: every configured kind index, from disk, through
