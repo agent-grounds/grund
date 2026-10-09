@@ -109,6 +109,8 @@ pub(crate) use unread_block::settled_run_warnings;
 #[cfg(test)]
 mod tests_clean_body_line;
 #[cfg(test)]
+mod tests_link_target_body_end;
+#[cfg(test)]
 mod tests_link_target_fences;
 #[cfg(test)]
 mod tests_shorthand_numeric_run;
