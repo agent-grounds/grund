@@ -237,8 +237,9 @@ place of the stub, so a mismatch names the target's line ([§FS-values.5.1](../f
 authority a malformed binding is refused by, and that `fmt --cross-refs` protects, is
 read through it too, in the one predicate both share ([§FS-values.3.1.1](../functional-spec/FS-values.md#311-invalid-attempts-and-non-attempts), [§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). So
 is the heading a link anchors on, the declaration's own for a bare ID as much as a
-`.<section>`'s: `fmt --cross-refs` reads it out of the target's record, the one
-`show` anchors on, never off the stub's title-less line ([§FS-fmt.6.2.1.1](../functional-spec/FS-fmt.md#6211-through-a-stub-the-declarations-heading-is-the-targets)), and a
+`.<section>`'s: where the target declares the ID once, `fmt --cross-refs` reads it out
+of the target's record, the one `show` anchors on, not off the stub's title-less line
+([§FS-fmt.6.2.1.1](../functional-spec/FS-fmt.md#6211-through-a-stub-the-declarations-heading-is-the-targets)), and a
 heading that record leaves out of the body gives a section no anchor
 ([§FS-fmt.6.4.1](../functional-spec/FS-fmt.md#641-a-section-the-declaration-does-not-have-is-not-wrapped)). A
 workspace citation asks with the target project's `Config`, out of section 1,

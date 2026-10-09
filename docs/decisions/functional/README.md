@@ -36,6 +36,7 @@ The rendered view of a citation — `[§ID](path#anchor)` — and who owns it.
 - [§DF-github-anchor-fidelity](DF-github-anchor-fidelity.md#df-github-anchor-fidelity-the-github-anchor-profile-reproduces-github-slugger-exactly) — the github anchor profile reproduces github-slugger exactly
 - [§DF-declaration-anchor](DF-declaration-anchor.md#df-declaration-anchor-a-bare-id-markdown-link-points-at-the-declarations-heading-anchor) — a bare-ID Markdown link points at the declaration's heading anchor
 - [§DF-show-anchor-data](DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives) — show JSON carries the heading anchor grund already derives
+- [§DF-stub-heading-from-unscanned-target](DF-stub-heading-from-unscanned-target.md#df-stub-heading-from-unscanned-target-a-bare-id-link-through-a-stub-anchors-on-its-targets-heading-whether-or-not-the-scan-reaches-it) — a bare-ID link through a stub anchors on its target's heading whether or not the scan reaches it
 - [§DF-show-cross-ref-flattening](DF-show-cross-ref-flattening.md#df-show-cross-ref-flattening-grund-show-flattens-cross-reference-link-wrappers) — grund show flattens cross-reference link wrappers
 - [§DF-fmt-suppression](DF-fmt-suppression.md#df-fmt-suppression-fmt-suppression-is-per-file-and-per-region-and-the-index-carve-out-outranks-both) — fmt suppression is per file and per region, and the index carve-out outranks both
 
