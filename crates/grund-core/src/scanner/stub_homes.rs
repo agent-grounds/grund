@@ -1,8 +1,9 @@
 //! A stub's home, recorded once after the walk (§AR-scanner.4.6): where the file a
 //! stub points at declares the stub's ID, read the way the broken-stub rule reads
-//! it (§FS-declarations.checks.broken-stub), so the count of homes and the stub's
-//! health agree whether or not the walk reached the target
-//! (§FS-declarations.checks.duplicate.1).
+//! it (§FS-declarations.checks.broken-stub), through the one reader both take, as a
+//! save would write it (§FS-declarations.checks.broken-stub.1). So the count of
+//! homes and the stub's health agree whether or not the walk reached the target,
+//! and whether or not an edit to it is saved (§FS-declarations.checks.duplicate.1).
 
 use anyhow::Result;
 use std::borrow::Cow;
@@ -32,12 +33,21 @@ pub(crate) fn file_declares_inline_home(
     config: &Config,
     overlays: &TextOverlays,
 ) -> Result<bool> {
-    let text = match overlay_text(overlays, path) {
+    let text = target_text(path, overlays)?;
+    Ok(inline_home_line(&text, path, id, config).is_some())
+}
+
+/// The text of `path`, a stub's target, as a save would write it
+/// (§FS-declarations.checks.broken-stub.1): the editor's overlay where the target is
+/// open in one, the disk only where it is not. The broken-stub rule and the count of
+/// homes both read a target here, so the stub the one accepts is the stub the other
+/// pairs with its target (§FS-declarations.checks.duplicate.1).
+fn target_text<'a>(path: &Path, overlays: &'a TextOverlays) -> std::io::Result<Cow<'a, str>> {
+    Ok(match overlay_text(overlays, path) {
         Some(text) => Cow::Borrowed(text),
         // §FS-check.6.1.1: cover this effective input before its shared read.
         None => Cow::Owned(crate::config::input_read_to_string(path)?),
-    };
-    Ok(inline_home_line(&text, path, id, config).is_some())
+    })
 }
 
 /// The first line of `text`, the contents of `path`, that declares `id` and is not
@@ -74,12 +84,13 @@ fn inline_home_line(text: &str, path: &Path, id: &Id, config: &Config) -> Option
 }
 
 /// Record on every stub of an ID declared more than once where its home declares
-/// the ID (§AR-scanner.4.6): the record of the ID at the stub's target when the walk
-/// reached it, else the target read from disk, once per target however many stubs
-/// and IDs name it. An ID declared once is passed over unresolved, so a lone stub
-/// costs nothing here and stays its own home (§FS-declarations.checks.duplicate.1).
-pub(super) fn record_stub_homes(config: &Config, findings: &mut Findings) {
-    let mut targets = TargetTexts::default();
+/// the ID (§AR-scanner.4.6): the record of the ID at the stub's target where the walk
+/// holds one, else the target read as a save would write it, the editor's text in
+/// `overlays` where it is open and the disk otherwise, once per target however many
+/// stubs and IDs name it. An ID declared once is passed over unresolved, so a lone
+/// stub costs nothing here and stays its own home (§FS-declarations.checks.duplicate.1).
+pub(super) fn record_stub_homes(config: &Config, overlays: &TextOverlays, findings: &mut Findings) {
+    let mut targets = TargetTexts::new(overlays);
     for (id, decls) in &mut findings.declarations {
         if decls.len() < 2 || !decls.iter().any(|decl| decl.is_stub) {
             continue;
@@ -100,7 +111,7 @@ fn stub_home(
     id: &Id,
     decl: &Declaration,
     decls: &[Declaration],
-    targets: &mut TargetTexts,
+    targets: &mut TargetTexts<'_>,
 ) -> Option<StubHome> {
     if !decl.is_stub {
         return None;
@@ -127,6 +138,8 @@ fn stub_home(
     if !resolved.is_file() || !is_scannable(&resolved, config) {
         return None;
     }
+    // §FS-declarations.checks.duplicate.1: the rule's text, the editor's before the
+    // disk, whether or not the walk reached it (§FS-declarations.checks.broken-stub.1).
     let line = inline_home_line(targets.read(&resolved)?, &resolved, id, config)?;
     Some(StubHome {
         path: resolved,
@@ -135,16 +148,26 @@ fn stub_home(
 }
 
 /// The targets one pass has read, by physical location, so each is read once
-/// (§AR-scanner.4.6). An unreadable target is remembered as such.
-#[derive(Default)]
-struct TargetTexts(BTreeMap<PathBuf, Option<String>>);
+/// (§AR-scanner.4.6), through the broken-stub rule's reader `target_text`. An
+/// unreadable target is remembered as such.
+struct TargetTexts<'a> {
+    overlays: &'a TextOverlays,
+    texts: BTreeMap<PathBuf, Option<Cow<'a, str>>>,
+}
 
-impl TargetTexts {
+impl<'a> TargetTexts<'a> {
+    fn new(overlays: &'a TextOverlays) -> Self {
+        Self {
+            overlays,
+            texts: BTreeMap::new(),
+        }
+    }
+
     fn read(&mut self, path: &Path) -> Option<&str> {
-        self.0
+        let overlays = self.overlays;
+        self.texts
             .entry(physical_path_key(path))
-            // §FS-check.6.1.1: cover this effective input before its shared read.
-            .or_insert_with(|| crate::config::input_read_to_string(path).ok())
+            .or_insert_with(|| target_text(path, overlays).ok())
             .as_deref()
     }
 }
