@@ -20,10 +20,11 @@
 # (§FS-distribution-candidate.7.2): the key is written beside the merged profile,
 # and `--profile` uses an existing one only when its key is this build's.
 # `--evidence` writes the generate, train, merge and use record the candidate's
-# manifest carries (§FS-distribution-candidate.7.3). A training run that writes
-# no profile exits 3 and says so; every other failure exits otherwise, so a
-# caller can tell the one failure §FS-distribution-candidate.7.4 lets the
-# Windows arm64 row fall back on from all the rest.
+# manifest carries (§FS-distribution-candidate.7.3). On aarch64-pc-windows-msvc,
+# rustc crashing while it compiles the instrumented build exits 3 and says so;
+# every other failure exits otherwise, a training run that writes no profile
+# with 1, so a caller can tell the one failure §FS-distribution-candidate.7.4
+# lets the Windows arm64 row fall back on from all the rest.
 #
 # `--container IMAGE` runs the Cargo builds and the merge in that image (the
 # pinned manylinux2014 image of §FS-distribution.4.8) with this repository and
@@ -165,6 +166,35 @@ build() {
   RUSTFLAGS="${RUSTFLAGS:+$RUSTFLAGS }$1" in_build cargo "${args[@]}"
 }
 
+# §FS-distribution-candidate.7.4: the failure the Windows arm64 row may fall back on.
+# Every crate Cargo could not compile is a `-Cprofile-generate` rustc that crashed.
+crash="rustc crashed compiling the instrumented build"
+compiler_crashed() {
+  local crashed failed uncompiled
+  crashed="$(grep -c "process didn't exit successfully: .*rustc.*-Cprofile-generate.*(exit code: 0xc0000005, STATUS_ACCESS_VIOLATION)" "$1" || true)"
+  failed="$(grep -c "process didn't exit successfully" "$1" || true)"
+  uncompiled="$(grep -c "could not compile" "$1" || true)"
+  [ "$crashed" -gt 0 ] && [ "$crashed" -eq "$failed" ] && [ "$crashed" -eq "$uncompiled" ]
+}
+
+# Builds the instrumented payload. Only on the Windows arm64 host is Cargo's output
+# kept and read, and only that crash exits 3; elsewhere a failure keeps its own status.
+build_instrumented() {
+  if [ "$host" != aarch64-pc-windows-msvc ]; then
+    build "$1"
+    return
+  fi
+  local log="$pgo_dir/instrumented.log" status
+  set +e
+  { build "$1" 2>&1 1>&3 | tee "$log" >&2; status=${PIPESTATUS[0]}; } 3>&1
+  set -e
+  if [ "$status" -ne 0 ] && compiler_crashed "$log"; then
+    echo "error: $product: $crash (exit code: 0xc0000005, STATUS_ACCESS_VIOLATION)" >&2
+    exit 3
+  fi
+  return "$status"
+}
+
 find_python() {
   local candidate
   for candidate in "${GRUND_PGO_PYTHON:-}" python3 python /opt/python/cp312-cp312/bin/python3; do
@@ -197,7 +227,7 @@ else
   mkdir -p "$raw"
 
   echo "==> 1/3  build instrumented $product (-Cprofile-generate)"
-  build "-Cprofile-generate=$(rustc_path "$raw")"
+  build_instrumented "-Cprofile-generate=$(rustc_path "$raw")"
   # Build scripts are instrumented too; only the training run's profiles count.
   rm -rf "$raw"
   mkdir -p "$raw"
@@ -247,7 +277,7 @@ if [ -z "$profile" ]; then
   if [ ${#profraws[@]} -eq 0 ]; then
     echo "error: PGO training produced no .profraw files in $raw: training produced no profile" >&2
     echo "       (the instrumented $product did not run, or could not write its profile)" >&2
-    exit 3
+    exit 1
   fi
 
   # llvm-profdata ships in the build toolchain's llvm-tools-preview component.

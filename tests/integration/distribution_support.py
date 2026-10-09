@@ -321,7 +321,8 @@ def synthetic_candidate(root, version=VERSION, sha=SHA, scope="full-release",
             "optimization": "lto-exception" if lto else "pgo",
             "profile_sha256": None if lto else sha256(b"profile " + payload["id"].encode()),
             "training_sha256": None if lto else sha256(b"training " + payload["product"].encode()),
-            "exception": {"row": payload["row"], "failure": "training produced no profile"}
+            "exception": {"row": payload["row"],
+                          "failure": "rustc crashed compiling the instrumented build"}
             if lto else None,
             "profile_key": None if lto else {
                 "compiler": "rustc 1.95.0", "target": payload["target"], "source_sha": sha,

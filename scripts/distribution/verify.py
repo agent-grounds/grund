@@ -20,7 +20,7 @@ import matrix
 import plan
 
 EXCEPTION_ROW = "win32-arm64-msvc"
-NO_PROFILE = "training produced no profile"
+COMPILER_CRASH = "rustc crashed compiling the instrumented build"
 FIELDS = ("registry", "package", "kind", "row", "version")
 
 
@@ -177,7 +177,7 @@ def _optimization(pid, payload, sha):
             return [f"payload {pid} is an lto-exception on {payload.get('row')}; only "
                     f"{EXCEPTION_ROW} may fall back (§FS-distribution-candidate.7.4)"]
         failure = (payload.get("exception") or {}).get("failure")
-        return [] if failure == NO_PROFILE else [f"payload {pid}: lto-exception for {failure!r}"]
+        return [] if failure == COMPILER_CRASH else [f"payload {pid}: lto-exception for {failure!r}"]
     if kind != "pgo":
         return [f"payload {pid}: optimization {kind!r} is neither pgo nor lto-exception"]
     key, steps = payload.get("profile_key") or {}, payload.get("steps") or {}
