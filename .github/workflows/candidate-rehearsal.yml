@@ -69,7 +69,8 @@ jobs:
           python-version: "3.12"
 
       # §FS-distribution-candidate.7.4: only win32-arm64-msvc may package an LTO
-      # build, and only when training wrote no profile; `candidate.py build` decides.
+      # build, and only when rustc crashed compiling the instrumented build;
+      # `candidate.py build` decides.
       - name: Build the row's candidate
         shell: bash
         run: |

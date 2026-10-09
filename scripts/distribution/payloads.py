@@ -4,8 +4,9 @@
 `pgo-build.sh --product` run each. §FS-distribution-candidate.7.3: the record is the
 script's own account of the generate, train, merge and use steps, and the payload
 kept is the profile-use build it names. §FS-distribution-candidate.7.4: the script
-exits 3 when training wrote no profile; only the Windows arm64 row turns that into an
-LTO build, self-checked, and every other failure fails the candidate naming its row.
+exits 3 when rustc crashed compiling the instrumented build on the Windows arm64 host;
+only that row turns that into an LTO build, self-checked, and every other failure fails
+the candidate naming its row.
 Linux payloads are built in the row's pinned manylinux image (§FS-distribution.4.8),
 macOS payloads for 11.0 (§FS-distribution-candidate.1.3).
 """
@@ -17,7 +18,7 @@ import subprocess
 from pathlib import Path
 
 import matrix
-from verify import EXCEPTION_ROW, NO_PROFILE, sha256
+from verify import COMPILER_CRASH, EXCEPTION_ROW, sha256
 
 PGO = matrix.REPO / "scripts" / "pgo-build.sh"
 CRATE = {"grund": "grund", "grund-lsp": "grund-lsp"}
@@ -70,9 +71,9 @@ def build(payload, sha, version, target_dir, work):
         built = _exception(product, row, target_dir)
         record.update({"optimization": "lto-exception", "profile_sha256": None,
                        "training_sha256": None, "profile_key": None, "steps": None,
-                       "exception": {"row": row["row"], "failure": NO_PROFILE}})
+                       "exception": {"row": row["row"], "failure": COMPILER_CRASH}})
     elif status != 0:
-        why = (f": {NO_PROFILE}, and only {EXCEPTION_ROW} may fall back "
+        why = (f": {COMPILER_CRASH}, and only {EXCEPTION_ROW} may fall back "
                "(§FS-distribution-candidate.7.4)" if status == 3 else "")
         raise SystemExit(f"error: row {row['row']}: payload {payload['id']} failed "
                          f"(pgo-build.sh exited {status}){why}")

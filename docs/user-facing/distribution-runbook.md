@@ -56,9 +56,10 @@ an output directory that is not empty. Every payload is built by
 `llvm-tools-preview` component, Node 22 or 24, and a Python of 3.10 or newer
 for training must be on `PATH`.
 
-Training that writes no profile fails the build, naming the row, on every row
-but `win32-arm64-msvc`, which packages a self-checked LTO build instead and
-records the exception in the manifest ([§FS-distribution-candidate.7.4](../functional-spec/FS-distribution-candidate.md#74-only-an-identified-windows-arm64-training-failure-falls-back)).
+A payload that fails to build, train or self-check fails the candidate, naming
+the row. The one exception is `win32-arm64-msvc`, where rustc crashes compiling
+the instrumented build on hosted runners: that row packages a self-checked LTO
+build instead and records the crash in the manifest ([§FS-distribution-candidate.7.4](../functional-spec/FS-distribution-candidate.md#74-only-an-identified-windows-arm64-compiler-crash-falls-back)).
 
 ## Rehearse
 

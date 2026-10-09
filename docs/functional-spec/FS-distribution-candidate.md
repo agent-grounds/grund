@@ -182,9 +182,9 @@ A profile is keyed by compiler, target, source SHA, product, features and, for t
 
 The manifest records each payload's generate, train, merge and use steps and the digest of the profile-use build. The placed payload's digest is that build's, or that build's after a recorded transformation; an instrumented binary is never packaged.
 
-### 7.4 Only an identified Windows arm64 training failure falls back
+### 7.4 Only an identified Windows arm64 compiler crash falls back
 
-When the Windows arm64 row's training run produces no profile — the way hosted-runner PGO is broken there — that row may package a self-checked LTO build, recorded as `lto-exception` with the failure it met. A failure to build, merge or self-check is not that failure, and no failure on any other row or product is an exception: each fails the candidate ([§FS-distribution.4.9](FS-distribution.md#49-distributed-binaries-are-profile-guided-optimized)).
+When rustc crashes compiling the Windows arm64 row's instrumented build of a product — the way hosted-runner PGO is broken there: every crate Cargo could not compile is a `-Cprofile-generate` rustc process that exited `0xc0000005, STATUS_ACCESS_VIOLATION` — that row may package a self-checked LTO build of the product, recorded as `lto-exception` with the failure it met. A compile error, a build that fails any other way, a training run that writes no profile, and a failure to merge, to build with the profile or to self-check are not that failure, and no failure on any other row is an exception: each fails the candidate ([§FS-distribution.4.9](FS-distribution.md#49-distributed-binaries-are-profile-guided-optimized)).
 
 ## 8. The publisher
 

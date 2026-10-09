@@ -308,6 +308,11 @@ class VerifyTests(unittest.TestCase):
         self.assertNotEqual(0, result.returncode)
         self.assertIn("lto-exception", result.stderr)
         self.assertIn("linux-x64-gnu", result.stderr)
+        rewrite_manifest(allowed, lambda m: [p["exception"].update(failure="training produced no profile")
+                                             for p in m["payloads"] if p["exception"]])
+        result = self.verify(root=allowed)
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("lto-exception for 'training produced no profile'", result.stderr)
 
     def test_a_binding_only_candidate_is_not_a_release(self):
         """§FS-distribution-candidate.6.3."""
