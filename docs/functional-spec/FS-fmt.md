@@ -423,7 +423,13 @@ The citation bytes inside a recognized value binding are never wrapped or otherw
 
 The never-rewrite zones of [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) are the authority here as for every pass: a citation in a fenced code block, in an inline code span, on a declaration heading line, or in a suppressed scope is not wrapped, except a kind's index entry in a suppressed scope ([§FS-fmt.2.5.3](FS-fmt.md#253-a-kinds-index-is-still-linkified)).
 
-Beyond them, this pass also skips a citation whose declaration the scanner cannot locate. A dangling citation is a `grund check` error; `fmt` does not paper over it by emitting a link to a nonexistent file. Report the unwrapped citation; let `check` flag the underlying problem.
+Beyond them, this pass also skips a citation whose declaration the scanner cannot locate. A dangling citation is a `grund check` error; `fmt` does not paper over it by emitting a link to a nonexistent file. Report the unwrapped citation; let `check` flag the underlying problem. A `.<section>` citation of a section its declaration does not have is skipped the same way ([§FS-fmt.6.4.1](FS-fmt.md#641-a-section-the-declaration-does-not-have-is-not-wrapped)).
+
+#### 6.4.1 A section the declaration does not have is not wrapped
+
+A `.<section>` citation whose declaration resolves but holds no section at that path has no heading for its anchor to name ([§FS-fmt.6.2.1](FS-fmt.md#621-the-anchor-names-the-cited-heading)), so this pass leaves it as written: check mode lists no rewrite for it, `--write` leaves its bytes alone, and the error is `grund check`'s `missing section` ([§FS-check.3.2](FS-check.md#32-missing-section)). `fmt` does not link a section `check` says is not there.
+
+Which headings of a Markdown home are sections is the scan's answer, the one `check` reports against. A heading inside a fenced code block is an example and bounds no section ([§FS-show.2.5](FS-show.md#25-a-heading-inside-a-fenced-code-block-is-an-example)), so a `## 1. …` line inside a fence gives `§<ID>.1` no anchor. A fenced copy of a declaration's own `# <ID>: …` heading opens nothing either, so a real section heading that follows it but belongs to the declaration above is no section of `<ID>`. On a tree whose only heading at the cited path is fenced, `fmt` and `check` give the answer they give on the same tree with that fenced line deleted.
 
 ### 6.5 Interaction with `--marker`
 
@@ -481,6 +487,7 @@ E2E fixtures pin the pass ([§FS-fmt.6.8.1](FS-fmt.md#681-wrapping-parity-and-sk
 - re-derive on heading rename (a wrap pointing at the old slug is rewritten to the new one in a single `fmt` pass), and re-derive on file move
 - correct relative path across `docs/` subdirectories
 - fenced-block exemption; dangling-citation skipped; declaration-line skipped
+- a citation of a section its declaration lacks, where the only heading at that path is inside a fence, skipped: check mode silent, `--write` byte-identical, and `check` reporting the section missing ([§FS-fmt.6.4.1](FS-fmt.md#641-a-section-the-declaration-does-not-have-is-not-wrapped))
 - `--cross-refs` without `--marker` on a tree containing both forms
 
 #### 6.8.2 Anchors
