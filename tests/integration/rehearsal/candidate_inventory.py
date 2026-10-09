@@ -19,6 +19,7 @@ import subprocess
 import tarfile
 import unittest
 import zipfile
+from pathlib import Path
 
 from distribution_support import (
     REPO, candidate, candidate_json, expected_artifacts, expected_payloads, sha256,
@@ -42,6 +43,15 @@ def member(path, inner):
 
 def row_payloads():
     return [p for p in manifest()["payloads"] if p["row"] == row()["row"]]
+
+
+def llvm_readobj():
+    """The toolchain's own `llvm-readobj` (llvm-tools-preview): `dumpbin` is on `PATH`
+    only inside a Visual Studio developer shell, and no rehearsal step opens one."""
+    sysroot = Path(run_checked(["rustc", "--print", "sysroot"]).stdout.strip())
+    found = sorted(sysroot.glob("lib/rustlib/*/bin/llvm-readobj*"))
+    assert found, "environment prerequisite missing: llvm-readobj (rustup component llvm-tools-preview)"
+    return found[0]
 
 
 def deployment_targets(load):
@@ -146,8 +156,8 @@ class FloorTests(unittest.TestCase):
                     self.assertTrue(targets, "no deployment target recorded")
                     self.assertLessEqual(max(targets), FLOORS["macos"], f"{payload} targets macOS {max(targets)}")
                 else:
-                    imports = run_checked(["dumpbin", "/dependents", path]).stdout
-                    dlls = re.findall(r"(?im)^\s+(\S+\.dll)\s*$", imports)
+                    imports = run_checked([llvm_readobj(), "--coff-imports", path]).stdout
+                    dlls = re.findall(r"(?im)^\s*Name:\s*(\S+\.dll)\s*$", imports)
                     self.assertTrue(dlls, "no imports read")
                     self.assertEqual([], [d for d in dlls if FOREIGN_RUNTIME.match(d)])
 
