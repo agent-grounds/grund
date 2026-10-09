@@ -22,10 +22,22 @@ use crate::model::{
     resolve_stub_target,
 };
 
+/// Whether the scan reads `path`, a stub's target, at all: a file whose own name
+/// does not begin with `.` and whose extension `[scan] extensions` lists, wherever it
+/// lies (§FS-declarations.checks.broken-stub.3). A target it does not read declares
+/// nothing, whatever it holds, so every reader of a stub's target asks this before
+/// it reads: `file_declares_inline_home` for the broken-stub rule and `show`'s test,
+/// the count of homes below, and the resolver's reading of a target the walk did not
+/// reach (§AR-resolver.5), which `show`'s body and `refs`' refusals take.
+pub(crate) fn scan_reads_target(path: &Path, config: &Config) -> bool {
+    path.is_file() && is_scannable(path, config)
+}
+
 /// Whether `path` contains a real (non-stub) inline declaration of `id` —
 /// the check that a stub's link target actually carries the inline home it claims
-/// (§FS-declarations.checks.broken-stub, §AR-checker.2.5, §AR-scanner.4). The
-/// target is read as a save would write it (§FS-declarations.checks.broken-stub.1):
+/// (§FS-declarations.checks.broken-stub, §AR-checker.2.5, §AR-scanner.4). A target
+/// the scan does not read contains none (§FS-declarations.checks.broken-stub.3). One
+/// it does is read as a save would write it (§FS-declarations.checks.broken-stub.1):
 /// the editor's overlay where there is one, the disk otherwise, as the scan reads it.
 pub(crate) fn file_declares_inline_home(
     path: &Path,
@@ -33,6 +45,9 @@ pub(crate) fn file_declares_inline_home(
     config: &Config,
     overlays: &TextOverlays,
 ) -> Result<bool> {
+    if !scan_reads_target(path, config) {
+        return Ok(false);
+    }
     let text = target_text(path, overlays)?;
     Ok(inline_home_line(&text, path, id, config).is_some())
 }
@@ -134,8 +149,8 @@ fn stub_home(
             line: record.line,
         });
     }
-    // §AR-checker.2.5: the broken-stub rule's own reading, scannable files only.
-    if !resolved.is_file() || !is_scannable(&resolved, config) {
+    // §FS-declarations.checks.broken-stub.3: the rule's own gate, a file the scan reads.
+    if !scan_reads_target(&resolved, config) {
         return None;
     }
     // §FS-declarations.checks.duplicate.1: the rule's text, the editor's before the
