@@ -44,6 +44,20 @@ def row_payloads():
     return [p for p in manifest()["payloads"] if p["row"] == row()["row"]]
 
 
+def deployment_targets(load):
+    """The macOS versions `otool -l` records as the deployment target: LC_BUILD_VERSION's
+    `minos`, or LC_VERSION_MIN_MACOSX's `version`. A dylib's LC_ID_DYLIB `current version`
+    and LC_BUILD_VERSION's tool `version`s are not one."""
+    field = {"LC_BUILD_VERSION": "minos", "LC_VERSION_MIN_MACOSX": "version"}
+    targets = []
+    for command in load.split("Load command")[1:]:
+        name = re.search(r"(?m)^\s*cmd (\S+)", command)
+        if name and name.group(1) in field:
+            found = re.findall(rf"(?m)^\s*{field[name.group(1)]} (\d+)\.(\d+)", command)
+            targets += [tuple(map(int, version)) for version in found]
+    return targets
+
+
 class InventoryTests(unittest.TestCase):
     """§FS-distribution-candidate.2.1: nothing unplanned, nothing missing."""
 
@@ -128,9 +142,9 @@ class FloorTests(unittest.TestCase):
                     self.assertLessEqual(max(needed), FLOORS["glibc"], f"{payload} needs glibc {max(needed)}")
                 elif system == "darwin":
                     load = run_checked(["otool", "-l", path]).stdout
-                    minos = re.findall(r"(?:minos|version) (\d+)\.(\d+)", load)
-                    self.assertTrue(minos, "no deployment target recorded")
-                    self.assertLessEqual(tuple(map(int, minos[0])), FLOORS["macos"])
+                    targets = deployment_targets(load)
+                    self.assertTrue(targets, "no deployment target recorded")
+                    self.assertLessEqual(max(targets), FLOORS["macos"], f"{payload} targets macOS {max(targets)}")
                 else:
                     imports = run_checked(["dumpbin", "/dependents", path]).stdout
                     dlls = re.findall(r"(?im)^\s+(\S+\.dll)\s*$", imports)
