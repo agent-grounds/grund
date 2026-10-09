@@ -5,8 +5,8 @@
 //!
 //! It is one file rather than a function in `body.rs` because it is the *answer*
 //! a measurement reads, not the slicer: it chooses the body a site has at all —
-//! a JSON member's recorded slice, an e2e case's manifest, a retained stub's
-//! nothing — and only then falls through to the slicer (§FS-list.2).
+//! a JSON member's recorded slice, an e2e case's manifest, a stub's nothing —
+//! and only then falls through to the slicer (§FS-list.2).
 //!
 //! Both of its readers slice the lead through that one slicer, which is why
 //! neither can be a pure function in a lower component: the answer is a function
@@ -25,9 +25,11 @@ use crate::model::{Declaration, DeclarationSource, Id, SectionInfo, ShowRenderMo
 
 /// Return the lead/full text pair for one catalog site. JSON values and E2E
 /// cases already carry their canonical show bodies in scanner records; text
-/// declarations use the cached show slicer. A retained stub is broken (healthy
-/// stub rows collapse onto their inline home) and therefore unmeasurable
-/// (§FS-list.2.5, §FS-list.3.4).
+/// declarations use the cached show slicer. A stub that reaches it has no body to
+/// measure: either it is broken (§FS-list.2.5, §FS-list.3.4), or its home lies
+/// outside the walk and the caller is `check`'s lead budget, which judges scanned
+/// sites only (§FS-declarations.checks.oversized-lead.4). The size catalog passes
+/// such a stub's home instead (§FS-list.3.4.6).
 pub(crate) fn point_body_pair(
     cache: &mut PointBodyCache<'_>,
     config: &Config,
