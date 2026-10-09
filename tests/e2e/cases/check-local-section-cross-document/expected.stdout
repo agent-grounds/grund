@@ -1,0 +1,10 @@
+specs/argus.spec.md:7: error: local section citation §5.1 has no enclosing declaration; write a full citation or <§>5.1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
+usecases/reflection/jvm-reflection.md:3: error: local section citation §5.1; REFLECTION-jvm-reflection has no section 5.1, so write a full citation or <§>5.1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
+usecases/reflection/jvm-reflection.md:3: error: missing section REFLECTION-jvm-reflection.5.1
+usecases/reflection/jvm-reflection.md:7: error: local section citation §2.1; REFLECTION-jvm-reflection has no section 2.1, so write a full citation or <§>2.1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
+usecases/reflection/jvm-reflection.md:7: error: local section citation §4.5; REFLECTION-jvm-reflection has no section 4.5, so write a full citation or <§>4.5 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
+usecases/reflection/jvm-reflection.md:7: error: missing section REFLECTION-jvm-reflection.2.1
+usecases/reflection/jvm-reflection.md:7: error: missing section REFLECTION-jvm-reflection.4.5
+usecases/reflection/jvm-reflection.md:11: error: local section citation §10; REFLECTION-jvm-reflection has no section 10, so write a full citation or <§>10 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
+usecases/reflection/jvm-reflection.md:11: error: local section citation §2; write §REFLECTION-jvm-reflection.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
+usecases/reflection/jvm-reflection.md:11: error: missing section REFLECTION-jvm-reflection.10

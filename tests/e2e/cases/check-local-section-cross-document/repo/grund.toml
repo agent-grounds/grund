@@ -1,0 +1,19 @@
+grund_config_version = 1
+project_name = "argus77"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+section_separator = "."
+
+[[kinds]]
+kind = "REFLECTION"
+folder = "usecases/reflection"
+title = "Reflection use cases"
+
+[scan]
+include = ["usecases", "specs"]
+extensions = ["md"]

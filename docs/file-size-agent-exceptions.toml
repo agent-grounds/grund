@@ -164,10 +164,10 @@ path = "docs/functional-spec/FS-check.md"
 match = "exact"
 rules = ["docs"]
 kind = "deferred"
-max_accepted = { value = 900, unit = "lines" }
+max_accepted = { value = 1000, unit = "lines" }
 until = "the check specification is partitioned into recognition, reporting, finding and watch declarations with existing section citations migrated"
 reason = """
-Missing boundary: citation recognition, command reporting, the finding catalog and the watch points extended for issue 473 still share one declaration. Splitting them into separate declarations requires a mapped migration of their stable numbered section IDs and callers; that migration is outside the specification-only contracts for issues #483 and #473. This entry records that existing debt while the configured-marker recognition and watch points are pinned.
+Missing boundary: citation recognition, command reporting, the finding catalog and the watch points extended for issue 473 still share one declaration. Splitting them into separate declarations requires a mapped migration of their stable numbered section IDs and callers; that migration is outside the specification-only contracts for issues #483 and #473. This entry records that existing debt while the configured-marker recognition and watch points are pinned. Issue #515's approved proposal adds §FS-check.3.24.3 beside the local-section finding it extends, where the code is to cite it, so the ceiling moved to the next step rather than the finding catalog moving out first.
 """
 [[exceptions]]
 path = "crates/grund-core/src/testing.rs"

@@ -2,7 +2,10 @@
 //! declaration-local section finding shipped with survives as a verbatim
 //! contiguous prefix of every one of its three shapes, at the same offsets, so
 //! the release attribution §FS-check.3.24.1 adds is an append rather than a
-//! wording change.
+//! wording change — on the owned shape, wherever the owner has the section. Where
+//! it has not, the one exception §FS-check.3.24.2 names holds instead: the head
+//! through the token and the attribution at the end are all that is kept
+//! (§FS-check.3.24.3).
 //!
 //! Its own target rather than a group inside `local_section_citations.rs`: that
 //! file records the finding's *current* bytes and is expected to move whenever
@@ -145,13 +148,17 @@ fn a_digit_starting_unsupported_token_names_the_releases_without_the_command() {
     );
 }
 
-/// §FS-check.3.24.2 at its strongest: where §FS-fmt.2.4.6 refuses the rewrite,
-/// the shipped text plus the release pair is the *whole* message, so the prefix
-/// the licence rests on is the entire line. Its own fixture, because the one
-/// above is the three shapes and this is a fourth site rather than a fourth
-/// shape — the owned shape again, with a section its owner does not have.
+/// §FS-check.3.24.2's one exception, and the narrower promise it keeps. Where
+/// §FS-fmt.2.4.6 refuses the rewrite because the owner lacks the section, the
+/// shipped `write <citation>` is replaced (§FS-check.3.24.3), so it is no longer
+/// a prefix there; what a consumer can still match is the head through
+/// `local section citation <token>; ` and the attribution, which ends the line
+/// with nothing after it. The resolving control beside it keeps every byte. Its
+/// own fixture, because the one above is the three shapes and this is a fourth
+/// site rather than a fourth shape — the owned shape again, with a section its
+/// owner does not have.
 #[test]
-fn a_refused_site_ends_at_the_attribution_with_nothing_appended() {
+fn an_absent_site_keeps_the_head_and_the_attribution_and_drops_the_shipped_remedy() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../target/local-section-message-append/absent-target");
     let _ = fs::remove_dir_all(&root);
@@ -192,11 +199,19 @@ fn a_refused_site_ends_at_the_attribution_with_nothing_appended() {
     assert_eq!(
         messages[0],
         format!("{}{ATTRIBUTION}; run `grund fmt --write`", SHIPPED[0]),
-        "the resolving control keeps the command clause"
+        "the resolving control keeps every byte, the command clause included"
     );
-    assert_eq!(
-        messages[1],
-        format!("local section citation \u{a7}9.9; write \u{a7}FS-a.9.9{ATTRIBUTION}"),
-        "§FS-fmt.2.4.6: the refused site's whole message is the shipped text plus the pair"
+    let absent = &messages[1];
+    assert!(
+        absent.starts_with("local section citation \u{a7}9.9; "),
+        "§FS-check.3.24.2: the head through the token is kept: {absent:?}"
+    );
+    assert!(
+        absent.ends_with(ATTRIBUTION),
+        "§FS-check.3.24.2: the attribution still ends the line, with nothing after it: {absent:?}"
+    );
+    assert!(
+        !absent.starts_with("local section citation \u{a7}9.9; write \u{a7}FS-a.9.9"),
+        "§FS-check.3.24.2's exception: the shipped remedy names a section FS-a lacks, so it is replaced rather than kept as a prefix: {absent:?}"
     );
 }

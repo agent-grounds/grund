@@ -65,9 +65,11 @@ const READERS: &[(&str, &str, &str)] = &[
         "FS-declarations.checks.oversized-lead",
     ),
     // A stub's target outside the walk, read for a cited section: the missing
-    // section, and the `grund fmt --write` clause of a local section citation.
+    // section, the `grund fmt --write` clause of a local section citation, and
+    // the escape that citation offers where its owner lacks the section.
     ("references.rs", "section_resolves", "AR-checker.2.4"),
     ("references.rs", "section_resolves", "FS-check.3.24.1"),
+    ("references.rs", "section_resolves", "FS-check.3.24.3"),
     ("index.rs", "section_resolves", "AR-checker.2.16"),
     // A stub's target outside the walk, read for a value binding's home.
     ("values.rs", "home_as_scanned", "AR-checker.2.18"),

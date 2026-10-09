@@ -1,6 +1,6 @@
 docs/FS-a.md:3: error: local section citation §2; write §FS-a.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
 docs/FS-a.md:4: error: local section citation §2.1; write §FS-a.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
-docs/FS-a.md:5: error: local section citation §9.9; write §FS-a.9.9 — unchecked in grund 0.13.1, an error in 0.14.0
+docs/FS-a.md:5: error: local section citation §9.9; FS-a has no section 9.9, so write a full citation or <§>9.9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
 docs/FS-a.md:5: error: missing section FS-a.9.9
 docs/FS-a.md:7: error: missing section FS-a.9
 docs/FS-b.md:3: error: local section citation §2; write §FS-b.2 — unchecked in grund 0.13.1, an error in 0.14.0
