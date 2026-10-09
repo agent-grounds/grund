@@ -71,10 +71,12 @@ pub struct Declaration {
     pub duplicate_sections: Vec<(String, SectionInfo)>,
     pub is_stub: bool,
     pub defined_in: Option<PathBuf>,
-    /// On a stub of an ID declared more than once, where the home it points at
-    /// declares the ID — read after the walk, so a target the walk never reached
-    /// still has one (§AR-scanner.4.6). `None` on every other declaration, and on
-    /// a stub whose target does not declare the ID.
+    /// On a stub, a lone one too, every line the home it points at declares the ID
+    /// on — read after the walk, so a target the walk never reached still has them
+    /// (§AR-scanner.4.6), and a target that declares the ID twice has two
+    /// (§FS-declarations.checks.duplicate.1). `None` on every other declaration, on
+    /// a stub whose target does not declare the ID, and on one that links to its
+    /// own file.
     pub(crate) stub_home: Option<StubHome>,
     pub e2e_case: Option<E2eCase>,
     /// Heading text after `<ID>:` — the one-line title an author wrote
@@ -108,22 +110,26 @@ pub struct Declaration {
 
 impl Declaration {
     /// Where a duplicate or an ambiguity names this home: a stub that stands for
-    /// the home it points at is named at that home's declaration, exactly as it
-    /// would be were the target scanned, and every other home at its own line
-    /// (§FS-declarations.checks.duplicate.3).
-    pub(crate) fn home_site(&self) -> (&Path, usize) {
-        match &self.stub_home {
-            Some(home) => (&home.path, home.line),
-            None => (&self.file, self.line),
-        }
+    /// the home it points at is named at each of that home's declarations, exactly
+    /// as it would be were the target scanned, and every other home at its own line
+    /// (§FS-declarations.checks.duplicate.3). So a stub whose target declares the ID
+    /// twice stands for two homes (§FS-declarations.checks.duplicate.1).
+    pub(crate) fn home_sites(&self) -> impl Iterator<Item = (&Path, usize)> {
+        let (path, lines) = match &self.stub_home {
+            Some(home) => (home.path.as_path(), home.lines.as_slice()),
+            None => (self.file.as_path(), std::slice::from_ref(&self.line)),
+        };
+        lines.iter().map(move |&line| (path, line))
     }
 }
 
-/// The `path:line` a stub's target declares the stub's ID on (§AR-scanner.4.6).
+/// The `path` a stub's target is and every line of it that declares the stub's ID,
+/// ascending and never empty (§AR-scanner.4.6): each line is a home
+/// (§FS-declarations.checks.duplicate.1).
 #[derive(Debug, Clone)]
 pub(crate) struct StubHome {
     pub(crate) path: PathBuf,
-    pub(crate) line: usize,
+    pub(crate) lines: Vec<usize>,
 }
 
 /// One numeric or explicitly named subsection heading recorded inside a
@@ -399,7 +405,9 @@ pub struct ShowOutput {
 /// the stub still pairs with it (§FS-declarations.checks.duplicate.1): the first of
 /// the stubs recording that home, in `path:line` order, stands for it, and every
 /// later one is its pointer, so stubs to one target are one home and a lone stub
-/// stays one (§FS-declarations.checks.duplicate.2, §AR-scanner.4.6).
+/// stands for its own (§FS-declarations.checks.duplicate.2, §AR-scanner.4.6). The
+/// stub that stands for a target declaring the ID twice stands for both lines,
+/// once, and `Declaration::home_sites` names each.
 pub(crate) fn is_stub_for_inline_decl(
     root: &Path,
     decl: &Declaration,

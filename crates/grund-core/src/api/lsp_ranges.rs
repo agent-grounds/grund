@@ -78,9 +78,10 @@ pub(super) fn lsp_target_for_stub(
         return Some((inline.file.clone(), inline.line));
     }
     // §FS-declarations.checks.duplicate.2: a stub beside the one standing for an
-    // unscanned target goes where that one's home is declared.
+    // unscanned target goes where that one's home is declared, at the first of its
+    // lines as at the first record of a scanned target above.
     let home = stub.stub_home.as_ref()?;
-    Some((home.path.clone(), home.line))
+    Some((home.path.clone(), *home.lines.first()?))
 }
 
 pub(super) fn declaration_range_parts(

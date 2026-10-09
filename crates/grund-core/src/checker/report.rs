@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 
 use super::agents::check_agents_block_version;
 use super::citations::{check_citation_obligations, check_citation_prohibitions};
@@ -466,20 +467,19 @@ pub(crate) fn check_with_workspace_and_overlays(
 
     // §FS-declarations.checks.duplicate: an ID with more than one non-stub home is a duplicate.
     for (id, decls) in &findings.declarations {
-        let duplicate_homes: Vec<&Declaration> = decls
+        // §FS-declarations.checks.duplicate.3: a stub's home is named at its target, at
+        // each line there that declares the ID (§FS-declarations.checks.duplicate.1).
+        let home_sites: Vec<(&Path, usize)> = decls
             .iter()
             .filter(|decl| !is_stub_for_inline_decl(&config.root, decl, decls))
+            .flat_map(Declaration::home_sites)
             .collect();
-        if duplicate_homes.len() > 1 {
-            // §FS-declarations.checks.duplicate.3: a stub's home is named at its target.
-            let mut sites: Vec<Site> = duplicate_homes
-                .iter()
-                .map(|d| {
-                    let (path, line) = d.home_site();
-                    Site {
-                        path: path.to_path_buf(),
-                        line,
-                    }
+        if home_sites.len() > 1 {
+            let mut sites: Vec<Site> = home_sites
+                .into_iter()
+                .map(|(path, line)| Site {
+                    path: path.to_path_buf(),
+                    line,
                 })
                 .collect();
             sites.sort_by(|a, b| {
