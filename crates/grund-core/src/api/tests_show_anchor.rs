@@ -1,12 +1,13 @@
 //! The heading anchor `show --format=json` carries is the fragment
 //! `grund fmt --cross-refs` derives for the same coordinate, under every
-//! `anchor_format` profile (§FS-show.3.1.3.1, §FS-output-shapes.4).
+//! `anchor_format` profile (§FS-show.3.1.3.1, §FS-output-shapes.4), and through a
+//! stub whose target the walk did not reach (§FS-fmt.6.2.1.1).
 
 use super::*;
 use crate::queries::{ShowFormat, ShowMode, ShowOpts};
 use crate::testing::{test_root, write};
 use serde_json::Value;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 const PROFILES: [&str; 5] = ["github", "gitlab", "mkdocs", "pandoc", "none"];
 
@@ -135,4 +136,74 @@ fn show_anchor_equals_formatter_fragment_under_every_profile() {
             );
         }
     }
+}
+
+/// grund.93's tree: a stub in the walk to `notes/a.md`, which opens `# FS-a: A` and
+/// which `[scan] include` reaches only when `walked`, and a bare citation of `FS-a`.
+fn stub_tree(name: &str, stubs: &[&str], walked: bool) -> PathBuf {
+    let root = test_root(name);
+    let include = if walked {
+        r#"["docs", "notes"]"#
+    } else {
+        r#"["docs"]"#
+    };
+    write(
+        &root.join("grund.toml"),
+        &format!(
+            "grund_config_version = 1\n[reference]\nstrict = true\nrequire_grounding = false\n\
+             [id]\nformat = \"{{kind}}-{{slug}}\"\n\
+             [[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n\
+             [scan]\ninclude = {include}\n"
+        ),
+    );
+    for stub in stubs {
+        write(&root.join(stub), "# FS-a: [../notes/a.md](../notes/a.md)\n");
+    }
+    write(&root.join("notes/a.md"), "# FS-a: A\n\nLead.\n");
+    write(&root.join("docs/uses.md"), "Uses \u{a7}FS-a.\n");
+    root
+}
+
+/// §FS-fmt.6.2.1.1: through a stub, a bare ID anchors on the target's declaration
+/// heading, the anchor `show` reports (§FS-show.3.1.3.1), whether or not the walk
+/// reaches the target and however many stubs point at it. The walked tree is the
+/// control: the link the same tree takes once the target is scanned. Every tree is
+/// run before the verdict, so one failing shape never hides another.
+#[test]
+fn show_anchor_equals_formatter_fragment_through_a_stub() {
+    let mut mismatches = Vec::new();
+    for (name, stubs, walked) in [
+        ("one stub, target unscanned", &["docs/a.md"][..], false),
+        (
+            "two stubs, target unscanned",
+            &["docs/a.md", "docs/a-b.md"][..],
+            false,
+        ),
+        ("one stub, target walked", &["docs/a.md"][..], true),
+    ] {
+        let dir = format!("show_anchor_through_stub_{}", name.replace([' ', ','], "_"));
+        let root = stub_tree(&dir, stubs, walked);
+        assert_eq!(
+            anchor_of(&shown(&root, "FS-a", ShowMode::Lead)).as_deref(),
+            Some("fs-a-a"),
+            "{name}: premise: show FS-a anchors on the target's heading"
+        );
+        format_references(FmtOpts {
+            path: root.clone(),
+            path_provided: true,
+            write: true,
+            cross_refs: true,
+            ..FmtOpts::default()
+        })
+        .expect("fmt --cross-refs --write");
+        let written = std::fs::read_to_string(root.join("docs/uses.md")).unwrap();
+        if written != "Uses [\u{a7}FS-a](../notes/a.md#fs-a-a).\n" {
+            mismatches.push(format!("{name}: fmt wrote {written:?}"));
+        }
+    }
+    assert!(
+        mismatches.is_empty(),
+        "fmt must link FS-a to ../notes/a.md#fs-a-a, the heading show anchors on:\n{}",
+        mismatches.join("\n")
+    );
 }

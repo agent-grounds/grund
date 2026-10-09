@@ -209,6 +209,26 @@ fn a_section_heading_after_the_body_closes_is_not_linked() {
     assert_every_case_passed("closed-body section heading", &outcomes);
 }
 
+/// §FS-fmt.6.2.1.1: grund.93's tree, a bare ID whose only record in the walk is a
+/// stub to a Markdown target `[scan] include` leaves out. `fmt` links the target's
+/// declaration heading, the anchor `show` reports, with one stub and with two, as it
+/// does on the same tree with the target scanned.
+#[test]
+fn a_bare_id_through_a_stub_links_the_targets_heading() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = [
+        "fmt-cross-refs-stub-unscanned-target-bare-id-linked",
+        "fmt-cross-refs-two-stubs-unscanned-target-bare-id-linked",
+        "fmt-cross-refs-stub-scanned-target-bare-id-linked",
+        "show-stub-unscanned-target-bare-id-anchor-json",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &cases.join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("bare ID through a stub", &outcomes);
+}
+
 /// Completion scripts participate in the same two independent runs as every
 /// immutable case, so their bytes are stable across invocations (§FS-completions.3).
 #[test]
