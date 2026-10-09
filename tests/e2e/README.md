@@ -111,7 +111,10 @@ can read is the same silence in a new spelling.
   the ID are still a duplicate, and a duplicate or ambiguity with a real second
   declaration names the target's line rather than the stub's, in text and JSON
   ([§FS-declarations.checks.duplicate.3](../../docs/functional-spec/FS-declarations.md#checksduplicate3-a-home-reached-through-stubs-is-named-at-its-target)) — beside the one-stub tree and the scanned
-  controls of both shapes, which read as they always have
+  controls of both shapes, which read as they always have; and a lone stub to an unscanned
+  file that declares the ID twice is two homes ([grund#556](https://github.com/agent-grounds/grund/issues/556)), a duplicate named at both of the
+  target's lines in text and JSON, all three lines named beside a scanned second declaration,
+  and the stub's `list` row tagged
 - a section citation of a stub whose target is outside `[scan] include`, resolved in that target
   as the scanned tree resolves it ([§FS-check.3.2.1](../../docs/functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [grund#529](https://github.com/agent-grounds/grund/issues/529)):
   a section the target declares is clean for one stub, for two stubs to the target, and under
@@ -125,8 +128,8 @@ can read is the same silence in a new spelling.
   `fmt --cross-refs` leaves one aimed at its chapter unlinked; a bare index entry of one is the
   `unlinked-index-entry` that `fmt` wraps — beside a section the target does not declare, one of
   a broken stub whose file holds that heading under another ID, one of a target that declares the
-  ID twice, and one of an ID whose two stubs reach two targets, each still `missing section` in
-  the same words
+  ID twice, beside that target's duplicate, and one of an ID whose two stubs reach two targets,
+  each still `missing section` in the same words
 - declaration-local section coordinates: `show` rejects a numeric heading after
   a body-closing plain chapter, while `check` reports that orphan once in text
   and JSON under `section-outside-declaration`; `--only` retains it and

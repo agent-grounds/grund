@@ -66,8 +66,10 @@ The verdict moves in three ways, and the message templates do not change.
 
   Each of these exited 0 with `success` before, and exits 1 now. A plain `grund check`,
   with no path and no selection, already failed on the same tree with the duplicate, so no
-  tree that passes it fails after. A configured citation direction does not move: it drew
-  this edge before, ambiguous ID or not.
+  tree that passes it fails after. That holds of the trees this record moves: a stub whose
+  target outside the scan declares its ID twice stayed one home here, and a plain
+  `grund check` does newly fail on it once [§DF-stub-target-declared-twice](DF-stub-target-declared-twice.md#df-stub-target-declared-twice-a-stubs-target-that-declares-its-id-twice-is-two-homes-scanned-or-not) makes it two. A
+  configured citation direction does not move: it drew this edge before, ambiguous ID or not.
 
 ## 5. The correction route
 

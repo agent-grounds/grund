@@ -18,9 +18,23 @@ const DECLARES: &str = "/// FS-x: X\n///\n/// X lead.\npub fn x() {}\n";
 /// comment naming it is itself a declaration of it.
 const DROPS: &str = "pub fn x() {}\n";
 
-/// Two stubs of one ID in `docs/` pointing at `src/x.rs`, which holds `source` on
-/// disk and is inside `[scan] include` only when `scanned`.
-fn stub_repo(name: &str, scanned: bool, source: &str) -> PathBuf {
+/// The same file declaring the ID twice, at lines 1 and 6: two homes
+/// (§FS-declarations.checks.duplicate.1). Split so no line of this file opens
+/// with the second declaration, which the scan would read as one of its own.
+const TWICE: &str = concat!(
+    "/// FS-x: X\n///\n/// X lead.\npub fn x() {}\n\n",
+    "/// FS-x: Again\n///\n/// Again lead.\npub fn again() {}\n",
+);
+
+/// The two stubs of `FS-x` most trees here hold.
+const TWO_STUBS: &[&str] = &["docs/a.md", "docs/b.md"];
+
+/// A lone stub of `FS-x`: the walk records the ID once, at the stub.
+const LONE_STUB: &[&str] = &["docs/a.md"];
+
+/// The stubs of one ID in `docs/` named by `stubs`, pointing at `src/x.rs`, which
+/// holds `source` on disk and is inside `[scan] include` only when `scanned`.
+fn stub_repo(name: &str, scanned: bool, stubs: &[&str], source: &str) -> PathBuf {
     let root = std::fs::canonicalize(test_root(name)).expect("canonical test root");
     let include = if scanned {
         "[\"docs\", \"src\"]"
@@ -37,8 +51,9 @@ fn stub_repo(name: &str, scanned: bool, source: &str) -> PathBuf {
         ),
     );
     let stub = "# FS-x: [../src/x.rs](../src/x.rs)\n";
-    write(&root.join("docs/a.md"), stub);
-    write(&root.join("docs/b.md"), stub);
+    for path in stubs {
+        write(&root.join(path), stub);
+    }
     write(&root.join("src/x.rs"), source);
     root
 }
@@ -102,7 +117,7 @@ fn answers(root: &Path, editor: Option<&str>) -> Answers {
 /// `shown` and `errors`, exactly as they do once `editor` is saved.
 fn assert_answers_as_saved(
     name: &str,
-    scanned: bool,
+    (scanned, stubs): (bool, &[&str]),
     (disk, editor): (&str, &str),
     shown: Result<&str, &str>,
     errors: &[&str],
@@ -111,9 +126,9 @@ fn assert_answers_as_saved(
         shown.map(str::to_string).map_err(str::to_string),
         errors.iter().map(|error| error.to_string()).collect(),
     );
-    let saved = stub_repo(&format!("{name}_saved"), scanned, editor);
+    let saved = stub_repo(&format!("{name}_saved"), scanned, stubs, editor);
     assert_eq!(answers(&saved, None), expected, "saved, scanned={scanned}");
-    let edited = stub_repo(name, scanned, disk);
+    let edited = stub_repo(name, scanned, stubs, disk);
     assert_eq!(
         answers(&edited, Some(editor)),
         expected,
@@ -127,7 +142,7 @@ fn assert_answers_as_saved(
 fn assert_drop_leaves_two_homes(name: &str, scanned: bool) {
     assert_answers_as_saved(
         name,
-        scanned,
+        (scanned, TWO_STUBS),
         (DECLARES, DROPS),
         Err("ambiguous ID: FS-x (declared at docs/a.md:1, docs/b.md:1)"),
         &[
@@ -142,7 +157,8 @@ fn assert_drop_leaves_two_homes(name: &str, scanned: bool) {
 /// at the target (§FS-declarations.checks.duplicate.2).
 fn assert_declaration_pairs_the_stubs(name: &str, scanned: bool) {
     let texts = (DROPS, DECLARES);
-    assert_answers_as_saved(name, scanned, texts, Ok("src/x.rs:1 X lead."), &[]);
+    let shown = Ok("src/x.rs:1 X lead.");
+    assert_answers_as_saved(name, (scanned, TWO_STUBS), texts, shown, &[]);
 }
 
 #[test]
@@ -167,4 +183,39 @@ fn unsaved_drop_in_a_scanned_target_leaves_the_duplicate() {
 #[test]
 fn unsaved_declaration_in_a_scanned_target_pairs_the_stubs() {
     assert_declaration_pairs_the_stubs("stub_home_overlay_add_scanned", true);
+}
+
+/// The ID declared twice in the target, at lines 1 and 6, and refused by `show`
+/// as ambiguous: the snapshot reports the duplicate at both lines, as a save does.
+const TWO_HOMES: (Result<&str, &str>, &[&str]) = (
+    Err("ambiguous ID: FS-x (declared at src/x.rs:1, src/x.rs:6)"),
+    &["duplicate src/x.rs:1 duplicate declaration of FS-x (also declared at src/x.rs:6)"],
+);
+
+/// A lone stub stands for every declaration its unscanned target holds, so an
+/// unsaved second declaration there adds a home exactly as saving it would
+/// (§FS-declarations.checks.duplicate.1, §FS-declarations.checks.duplicate.3).
+#[test]
+fn unsaved_second_declaration_behind_a_lone_stub_adds_a_home() {
+    let (shown, errors) = TWO_HOMES;
+    let name = "stub_home_overlay_twice_lone_unscanned";
+    assert_answers_as_saved(name, (false, LONE_STUB), (DECLARES, TWICE), shown, errors);
+}
+
+/// Two stubs to that target stand for its two declarations once between them, not
+/// once each (§FS-declarations.checks.duplicate.2).
+#[test]
+fn unsaved_second_declaration_behind_two_stubs_adds_one_home() {
+    let (shown, errors) = TWO_HOMES;
+    let name = "stub_home_overlay_twice_two_unscanned";
+    assert_answers_as_saved(name, (false, TWO_STUBS), (DECLARES, TWICE), shown, errors);
+}
+
+/// The guard: the read behind a lone stub is the editor's text, so an unsaved
+/// edit that drops the second declaration leaves one home, whatever the disk holds.
+#[test]
+fn unsaved_drop_of_the_second_declaration_behind_a_lone_stub_leaves_one_home() {
+    let name = "stub_home_overlay_once_lone_unscanned";
+    let shown = Ok("src/x.rs:1 X lead.");
+    assert_answers_as_saved(name, (false, LONE_STUB), (TWICE, DECLARES), shown, &[]);
 }
