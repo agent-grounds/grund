@@ -1,0 +1,1 @@
+{"severity":"error","path":"notes/a.md","line":1,"code":"duplicate","message":"duplicate declaration of FS-a (also declared at notes/a.md:5)","sites":[{"path":"notes/a.md","line":1},{"path":"notes/a.md","line":5}],"authority":null}

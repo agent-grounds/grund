@@ -265,6 +265,7 @@ Three properties hold the read to what a scan of the target would be:
   target open in an editor answers as a save would ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)). `show` passes
   the overlays it was given straight to the same reading instead.
 
-What stays in [§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk) is recording. Its post-walk pass records a home only
-for an ID declared more than once; a lone stub's target is read here, and only when
-a reader asks for what it declares.
+What stays in [§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk) is recording. Its post-walk pass records on every stub the
+lines its home declares the ID on, a lone stub's too, which is all the count of homes
+needs; what the target declares beyond that is read here, and only when a reader asks
+for it.

@@ -1,1 +1,2 @@
 docs/uses.md:1: error: missing section FS-second.1
+source.rs:1: error: duplicate declaration of FS-second (also declared at source.rs:10)
