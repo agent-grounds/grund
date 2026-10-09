@@ -99,9 +99,10 @@ fn local_section_diagnostics_keep_cli_messages_and_exact_token_ranges() {
         ),
         (
             "local-section-citation",
-            // §FS-lsp.4 parity with `check`: `FS-a` has no section 9.9, so
-            // §FS-fmt.2.4.6 refuses the site and §FS-check.3.24.1 withholds the command.
-            "local section citation \u{a7}9.9; write \u{a7}FS-a.9.9 — unchecked in grund 0.13.1, an error in 0.14.0",
+            // §FS-lsp.4 parity with `check`: `FS-a` has no section 9.9, so the
+            // finding says so and offers the escape (§FS-check.3.24.3), and
+            // §FS-check.3.24.1 withholds the command §FS-fmt.2.4.6 would refuse.
+            "local section citation \u{a7}9.9; FS-a has no section 9.9, so write a full citation or <§>9.9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0",
             3,
             8,
             12,

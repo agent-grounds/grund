@@ -955,11 +955,15 @@ Every candidate from [§FS-check.1.1.8](FS-check.md#118-declaration-local-numeri
 `local-section-citation`, and every one of them ends by naming the two releases its verdict moved
 between ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)):
 
-- An owned numeric path is an error `local section citation <token>; write
+- An owned numeric path is an error whose remedy turns on whether the owner has the cited
+  section. Where it has, the error is `local section citation <token>; write
   <marker><owner><separator><path> — unchecked in grund 0.13.1, an error in 0.14.0`, which gains a
   further `` ; run `grund fmt --write` `` exactly where the next formatter pass would write
-  that site ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)). It remains a real edge for every graph consumer. A missing
-  target section independently receives [§FS-check.3.2](FS-check.md#32-missing-section).
+  that site ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)). Where it has not, that citation would be reported missing in turn, so
+  the error names the absence and gives the full-citation-or-escape guidance of the other two
+  shapes instead, and never the command clause ([§FS-check.3.24.3](FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)). Either way the site remains a
+  real edge for every graph consumer, and a missing target section independently receives
+  [§FS-check.3.2](FS-check.md#32-missing-section).
 - An ownerless or genuinely ambiguous site is an error that says no enclosing declaration can be
   chosen and instructs the author to write a full citation or escape the illustration, and then
   names the two releases. It has no guessed ID or navigation target, and never the command clause.
@@ -968,7 +972,8 @@ between ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-
   prefix becomes an edge, and the command clause is not its either.
 
 The finding covers the complete authored token for CLI and LSP ranges. An owned citation in a
-location protected from automatic writing still names its manual full replacement; formatter
+location protected from automatic writing still names its manual full replacement where the owner
+has the section, and the escape where it has not ([§FS-check.3.24.3](FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)); formatter
 eligibility changes what can be rewritten, not whether persisted local form is canonical — it
 changes only whether the message offers the command ([§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)). The
 same rule applies under configured markers and both strict modes.
@@ -994,17 +999,18 @@ it, and a fifth deliberately does not:
   byte-identical because there is no owner to expand it against;
 - an owned site inside inline code, a Markdown link destination, or a source string literal — the
   three contexts [§FS-fmt.2.3](FS-fmt.md#23-what-is-never-rewritten) forbids the rewrite in. The error itself still fires here, unlike
-  [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite)'s exemption, because the manual full replacement is a fix the author can
-  make; only the offer of the command goes;
+  [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite)'s exemption, because the manual remedy the finding names is a fix the author
+  can make; only the offer of the command goes;
 - an out-of-scope finding of a `--full` run, where `fmt` does not reach at all, for the reason
   [§FS-check.3.14.4](FS-check.md#3144-the-mechanical-shorthand-rewrite-is-withheld) withholds the sibling's. The scope still leads the message and the attribution
   still trails it ([§FS-check.3.14.6](FS-check.md#3146-the-scope-leads-the-message));
 - an owned site whose cited section does not resolve against the owner [§FS-fmt.2.4](FS-fmt.md#24-shorthand-to-canonical)
   picked for it, which that rewrite now leaves byte-identical
   ([§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)). The error itself
-  still fires, and so does the `missing section` error beside it ([§FS-check.3.2](FS-check.md#32-missing-section)) — the
-  pair is what tells a site the formatter refused from one it repaired. Only the offer of the
-  command goes;
+  still fires, in the wording [§FS-check.3.24.3](FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape) gives it, which says on its own line that the
+  owner has no such section — so a site the formatter refused is told from one it repaired by the
+  finding itself. The `missing section` error beside it still fires as well
+  ([§FS-check.3.2](FS-check.md#32-missing-section)), as the independent fact about the coordinate it is;
 - and nothing else. A `[fmt] exclude` file ([§FS-fmt.2.5](FS-fmt.md#25-suppressed-scopes)), a `grund:fmt off` region, and an index
   or document reached as an external file-symlink target ([§FS-fmt.2.3.2](FS-fmt.md#232-a-link-that-leaves-the-config-root-is-not-written-through)) **keep** the clause,
   though `fmt` writes nothing there either. That is [§FS-check.3.13.1](FS-check.md#3131-where-the-text-forbids-the-rewrite)'s boundary, held to a second
@@ -1018,7 +1024,8 @@ it, and a fifth deliberately does not:
 #### 3.24.2 An append, not a wording change
 
 The clauses are **appended**: the text this rule shipped with survives as a verbatim contiguous
-prefix, at the same offsets, on every one of the three shapes. That is why the change needs no
+prefix, at the same offsets, on every one of the three shapes — on the owned shape, wherever the
+owner has the cited section ([§FS-check.3.24.3](FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)). That is why the change needs no
 deprecation path of its own under [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) — the stable phrasing a tool
 greps on is still there to grep, and a consumer matching a prefix, or matching
 `code == "local-section-citation"`, reads exactly what it read before ([§FS-errors.3](FS-errors.md#3-message-text)). No verdict
@@ -1029,6 +1036,49 @@ One consumer is affected, the one comparing a whole line for equality, and its m
 one [§FS-errors.3.6](FS-errors.md#36-the-agents-init-messages) already named for this project — the stable `code`. It is owed a window only
 when a second wording change is coming, and none is: what ships is the final form, which is why
 these clauses carry no `wording changes in <release>` deadline and schedule no removal release.
+
+One exception was taken since, in place rather than through a window. Where the owner has no
+section at the cited path, everything after `local section citation <token>; ` up to the release
+attribution is replaced by [§FS-check.3.24.3](FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)'s text, because what it replaced was a citation the
+same run reports missing: advice that fails when it is followed, which nothing that worked can
+have depended on. The head through `local section citation <token>; ` and the attribution at the
+end are kept there too, and so is every byte at a site whose section exists. Why that needed no
+window either is [§DF-local-section-absent-target-escape](../decisions/functional/DF-local-section-absent-target-escape.md#df-local-section-absent-target-escape-an-owned-local-section-citation-whose-section-is-absent-is-answered-with-the-escape-in-place)'s.
+
+#### 3.24.3 An absent target section is answered with the escape
+
+Where the owner has no section at the cited path, the owned finding does not propose the full
+citation of that coordinate, which would only trade this error for the `missing section` beside
+it. It names the absence and offers the two remedies that clear the site, a full citation of
+whichever document was meant or the escape for prose naming a file that declares no ID:
+
+```text
+local section citation <token>; <owner> has no section <path>, so write a full citation or <<marker>><tail> to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
+```
+
+- **When.** Exactly where [§FS-check.3.2](FS-check.md#32-missing-section) reports `missing section` for the same coordinate on the
+  same line, a stub's sections read as [§FS-check.3.2.1](FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not) reads them; everywhere else the owned shape
+  keeps its full-citation wording. The context does not matter — inline code, a link
+  destination, a string literal, a `[fmt] exclude` file or a `grund:fmt off` region — and out
+  past `[scan] include` under `--full` the scope still leads ([§FS-check.3.14.6](FS-check.md#3146-the-scope-leads-the-message)).
+- **The words.** `<owner>` is the owner's ID as the first shape names it, `<path>` the section
+  path `missing section` names after it, and `<tail>` the token with its marker taken off, as the
+  other two shapes build it, so the escape is the token the author would type. A local path's
+  components are always separated by `.` ([§FS-check.1.1.8](FS-check.md#118-declaration-local-numeric-section-candidates)), so `<path>` and `<tail>` are the same
+  characters and `[id] section_separator` appears in neither; the escape carries the configured
+  marker, `<@>5.1` under `@`.
+- **The end.** The release attribution of [§FS-check.3.24.1](FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld) comes last and nothing follows it: the
+  command clause is never offered, because [§FS-fmt.2.4.6](FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one) refuses the rewrite. Code, severity,
+  location, count, ordering, exit code and the edge are those of an owned site whose section
+  exists.
+
+Line 3 of a use case whose `REFLECTION-jvm-reflection` has sections 1 and 2 only, where writing
+`<§>5.1` as told clears both lines:
+
+```text
+usecases/reflection/jvm-reflection.md:3: error: local section citation §5.1; REFLECTION-jvm-reflection has no section 5.1, so write a full citation or <§>5.1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
+usecases/reflection/jvm-reflection.md:3: error: missing section REFLECTION-jvm-reflection.5.1
+```
 
 ### 3.25 Invalid rule
 

@@ -1,6 +1,7 @@
 //! CLI contracts for declaration-local numeric citations across check, refs, and
 //! cover text/JSON surfaces (§FS-check.3.24, §FS-refs.2, §FS-cover.2), with
-//! deterministic finding order (§FS-errors.4.1).
+//! deterministic finding order (§FS-errors.4.1), and the remedy each finding names
+//! clearing its site when it is followed (§FS-check.3.24.3).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -74,10 +75,10 @@ fn check_text_reports_owned_missing_unsupported_and_ownerless_local_forms() {
         concat!(
             "docs/FS-a.md:3: error: local section citation \u{a7}2; write \u{a7}FS-a.2 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`\n",
             "docs/FS-a.md:4: error: local section citation \u{a7}2.1; write \u{a7}FS-a.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`\n",
-            // §FS-fmt.2.4.6 refuses this site, so §FS-check.3.24.1 withholds the
-            // command clause — and the `missing section` error below is what
-            // tells a refused site apart from a repaired one.
-            "docs/FS-a.md:5: error: local section citation \u{a7}9.9; write \u{a7}FS-a.9.9 — unchecked in grund 0.13.1, an error in 0.14.0\n",
+            // `FS-a` has no section 9.9, so the finding says so and offers the
+            // escape (§FS-check.3.24.3); §FS-fmt.2.4.6 refuses the site, so
+            // §FS-check.3.24.1 withholds the command clause.
+            "docs/FS-a.md:5: error: local section citation \u{a7}9.9; FS-a has no section 9.9, so write a full citation or <§>9.9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
             "docs/FS-a.md:5: error: missing section FS-a.9.9\n",
             "docs/FS-a.md:6: error: unsupported local section citation \u{a7}2.goals; write a full citation or <§>2.goals to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
             "docs/FS-a.md:7: error: unsupported local section citation \u{a7}2abc; write a full citation or <§>2abc to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0\n",
@@ -165,4 +166,99 @@ fn cover_json_counts_owned_local_edges_and_no_ownerless_guess() {
     assert_eq!(rows[0]["citations"][0]["text"], "\u{a7}2");
     assert_eq!(rows[1]["path"], "docs/outside.md");
     assert_eq!(rows[1]["citations"], serde_json::json!([]));
+}
+
+/// What the finding tells the author to write at its site: the first word after
+/// its first `write ` that carries the marker, a full citation or an escape alike.
+/// Read from the message, never assumed, so the test below follows whatever
+/// advice the binary actually gives.
+fn the_written_remedy(message: &str) -> String {
+    let (_, advice) = message
+        .split_once("write ")
+        .unwrap_or_else(|| panic!("the finding names what to write: {message:?}"));
+    advice
+        .split_whitespace()
+        .find(|word| word.contains('\u{a7}'))
+        .unwrap_or_else(|| panic!("the advice names a token to write: {message:?}"))
+        .to_string()
+}
+
+/// §FS-check.3.24.3, followed the way an agent follows it: every
+/// `local-section-citation` finding's own remedy is written over its token, and
+/// the tree is then clean. The fixture is agent-grounds/grund#515's shape — prose
+/// naming sections of other files inside a declaration whose own sections stop
+/// at 2 — with a resolving site beside them, whose full citation clears it too.
+/// Where the finding proposes the owner's full citation of a section the owner
+/// lacks, following it only trades the error for `missing section`.
+#[test]
+fn following_each_local_section_findings_remedy_clears_its_site() {
+    let root = std::env::temp_dir().join(format!(
+        "grund-cli-local-section-remedy-{}",
+        std::process::id()
+    ));
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(root.join("docs")).expect("create fixture");
+    fs::write(
+        root.join("grund.toml"),
+        concat!(
+            "grund_config_version = 1\nproject_name = \"local-section-remedy\"\n\n",
+            "[reference]\nstrict = true\nrequire_grounding = false\n\n",
+            "[id]\nformat = \"{kind}-{slug}\"\n\n",
+            "[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\nindex = false\n\n",
+            "[scan]\ninclude = [\"docs\"]\nextensions = [\"md\"]\n\n",
+            "[output]\nrelative_paths = true\n\n",
+            "[fmt.cross_refs]\nenabled = false\n",
+        ),
+    )
+    .expect("write config");
+    let file = root.join("docs/FS-reflection.md");
+    fs::write(
+        &file,
+        concat!(
+            "# FS-reflection: JVM reflection\n\n",
+            "Resolved only where the Lean engine (argus.spec.md \u{a7}5.1) can say so.\n\n",
+            "## 1. Scope\n\n",
+            "The call graph (argus.spec.md \u{a7}4.5) bounds what is resolved.\n\n",
+            "## 2. Limits\n\n",
+            "As graph-analysis.md \u{a7}10 requires; see \u{a7}2 above.\n",
+        ),
+    )
+    .expect("write declaration");
+
+    let before = run(&root, &["check"]);
+    assert_eq!(before.status.code(), Some(1), "{}", stdout(&before));
+    let mut lines = fs::read_to_string(&file)
+        .expect("read declaration")
+        .lines()
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+    let mut followed = Vec::new();
+    for finding in stdout(&before).lines() {
+        let Some((location, message)) = finding.split_once(": error: ") else {
+            continue;
+        };
+        let Some(rest) = message.strip_prefix("local section citation ") else {
+            continue;
+        };
+        let token = rest.split_once(';').expect("the token ends at `;`").0;
+        let line = location
+            .rsplit_once(':')
+            .and_then(|(_, line)| line.parse::<usize>().ok())
+            .expect("a located finding");
+        let remedy = the_written_remedy(message);
+        let text = &mut lines[line - 1];
+        assert!(text.contains(token), "line {line} holds {token}: {text:?}");
+        *text = text.replacen(token, &remedy, 1);
+        followed.push(format!("{token} -> {remedy}"));
+    }
+    assert_eq!(followed.len(), 4, "four owned sites: {}", stdout(&before));
+    fs::write(&file, lines.join("\n") + "\n").expect("apply the remedies");
+
+    let after = run(&root, &["check"]);
+    assert_eq!(
+        (after.status.code(), stdout(&after).as_str()),
+        (Some(0), "success\n"),
+        "§FS-check.3.24.3: each finding's own remedy clears its site; followed {followed:?}"
+    );
+    let _ = fs::remove_dir_all(root);
 }

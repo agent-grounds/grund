@@ -1,7 +1,7 @@
-docs/FS-bare.md:3: error: local section citation §1; write §FS-bare.1 — unchecked in grund 0.13.1, an error in 0.14.0
+docs/FS-bare.md:3: error: local section citation §1; FS-bare has no section 1, so write a full citation or <§>1 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
 docs/FS-bare.md:3: error: missing section FS-bare.1
 docs/FS-nine.md:3: error: local section citation §2.1; write §FS-nine.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
-docs/FS-nine.md:4: error: local section citation §12; write §FS-nine.12 — unchecked in grund 0.13.1, an error in 0.14.0
+docs/FS-nine.md:4: error: local section citation §12; FS-nine has no section 12, so write a full citation or <§>12 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
 docs/FS-nine.md:4: error: missing section FS-nine.12
-docs/FS-nine.md:5: error: local section citation §2.7; write §FS-nine.2.7 — unchecked in grund 0.13.1, an error in 0.14.0
+docs/FS-nine.md:5: error: local section citation §2.7; FS-nine has no section 2.7, so write a full citation or <§>2.7 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
 docs/FS-nine.md:5: error: missing section FS-nine.2.7
