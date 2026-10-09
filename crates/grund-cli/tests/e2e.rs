@@ -188,6 +188,27 @@ fn a_fenced_section_heading_is_not_linked() {
     assert_every_case_passed("fenced section heading", &outcomes);
 }
 
+/// §FS-fmt.6.4.1: grund.92's tree, a citation of a section whose only heading comes
+/// after a plain heading has closed the declaration's body, in a scanned home and
+/// through a stub to a target the walk does not reach. `fmt` links nothing, `check`
+/// reports the section missing, and a section inside that target's body still links.
+#[test]
+fn a_section_heading_after_the_body_closes_is_not_linked() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = [
+        "fmt-cross-refs-closed-body-section-skipped",
+        "fmt-cross-refs-closed-body-section-skipped-write",
+        "check-closed-body-section-heading-missing",
+        "fmt-cross-refs-stub-closed-body-section-skipped",
+        "fmt-cross-refs-stub-unscanned-target-section-linked",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &cases.join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("closed-body section heading", &outcomes);
+}
+
 /// Completion scripts participate in the same two independent runs as every
 /// immutable case, so their bytes are stable across invocations (§FS-completions.3).
 #[test]
