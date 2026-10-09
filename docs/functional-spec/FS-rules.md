@@ -248,7 +248,9 @@ Every offending physical citation site produces the existing
 
 No paraphrase or unlisted production is accepted. A refusal identifies the
 failed production and gives its canonical accepted rewrite; an ambiguity names
-every candidate and chooses none. The one refusal that gives no rewrite is a
+every candidate and chooses none. A chapter subject refused for its chapter
+path names the component that failed, whichever spelling reached it
+([§FS-rules.3.5.3](FS-rules.md#353-a-chapter-path-is-refused-for-the-component-that-failed)). The one refusal that gives no rewrite is a
 subject refused for needing named sections from which no configured kind can
 be recovered ([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)). The documentation and parser tests carry at
 least these exact rows:
@@ -362,6 +364,65 @@ before named sections are asked about, such as `FS-login.*`, `FS-login.2` or
 nothing here applies. The decision to replace the as-typed suggestion in place
 rather than append to it is
 [§DF-rule-after-enabling-rewrites](../decisions/functional/DF-rule-after-enabling-rewrites.md#df-rule-after-enabling-rewrites-a-rule-subject-that-needs-named-sections-is-answered-with-one-they-make-valid-in-place).
+
+#### 3.5.3 A chapter path is refused for the component that failed
+
+A chapter subject refused for its chapter path opens with the reason that
+names what is wrong with the path, whichever spelling reached it. So the
+literal spelling `FS-login.requirements.1` and the spelling
+`The requirements.1 chapter of each FS` are refused for the same thing. One
+component decides the reason, by its shape:
+
+| The component | The reason |
+|---|---|
+| all digits, such as `1` | `numbered chapter subjects can detach when headings move` |
+| holding `*` | `section-component wildcards are not accepted in phase 1` |
+| empty, left by a leading, doubled or trailing separator | `named chapter subject "<subject>" does not match the configured section grammar` |
+
+An empty component is not a number. Which component decides depends on the
+spelling:
+
+- In `The PATH chapter of each KIND`, as in a selector's `KIND.PATH`, it is the
+  first component of `PATH` that is not a named one ([§FS-rules.2](FS-rules.md#2-subject-selectors)). Any other
+  shape, such as `Requirements`, gets the section-grammar reason, and so does a
+  path of named components that the configured section grammar refuses.
+- In the literal spelling `ID.PATH`, a `*` anywhere in the path is refused
+  first. Otherwise it is the first component that is empty or all digits. A
+  literal path with neither goes on through the rest of the parse, so with
+  named sections on `FS-login.Requirements` is refused for its ID grammar.
+
+The literal spelling decides this before it asks whether named sections are on,
+as it decides a numbered or wildcard path ([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)). So with named
+sections off `FS-login.requirements.` still gets the section-grammar reason,
+while `The requirements.1 chapter of each FS`, which asks first, keeps its
+named-sections-off refusal.
+
+This point decides the reason alone. The accepted form after `; ` does not
+follow the component. A literal subject refused for an empty component is
+offered `<ID>.requirements`, where `<ID>` is the declaration it typed, as a
+numbered literal is: `FS-demo.requirements.` is offered
+`FS-demo.requirements must cite at least one REQ.`. A
+`The PATH chapter of each KIND` subject refused for a numbered or wildcard
+component is offered `FS-login.requirements must cite at least one REQ.`, as
+every other refusal of that spelling's path is.
+
+In a repository whose kinds are `FS` and `REQ`, with named sections on and
+`FS-login` holding a named `requirements` chapter, these are the exact refusals.
+`check --rule` prints each after `error: `, and a configured rule declaration's
+`invalid-rule` finding prints it after `is not a valid rule: ` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
+
+| Refused sentence (`… must cite at least one REQ.`) | Exact reason and accepted form |
+|---|---|
+| `The requirements.1 chapter of each FS` | `numbered chapter subjects can detach when headings move; accepted form: FS-login.requirements must cite at least one REQ.` |
+| `The requirements.* chapter of each FS` | `section-component wildcards are not accepted in phase 1; accepted form: FS-login.requirements must cite at least one REQ.` |
+| `FS-login.requirements.` | `named chapter subject "FS-login.requirements." does not match the configured section grammar; accepted form: FS-login.requirements must cite at least one REQ.` |
+| `FS-login..requirements` | `named chapter subject "FS-login..requirements" does not match the configured section grammar; accepted form: FS-login.requirements must cite at least one REQ.` |
+
+In the same repository `The requirements chapter of each FS` and
+`FS-login.requirements` are accepted. A selector is read by the same parse, so
+`list --selector` names the same component ([§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)). The decision to
+correct these reasons in place is
+[§DF-rule-refusal-reasons](../decisions/functional/DF-rule-refusal-reasons.md#df-rule-refusal-reasons-a-chapter-path-is-refused-for-the-component-that-failed-corrected-in-place).
 
 ### 3.6 Where a sentence's subject ends
 
@@ -949,7 +1010,9 @@ mismatch. A numbered component reached through `KIND.NAME` or
 A wildcard component reached the same way gets the wildcard reason.
 `Each chapter of each KIND` gets the chapter-quantified reason, not an unknown
 kind. `Each */KIND` gets the namespace reason the rule sentence gets, not an
-unknown kind.
+unknown kind. An empty component, left by a doubled or trailing separator, is
+not a number in any spelling, so it gets the section-grammar reason and no
+breadcrumb ([§FS-rules.3.5.3](FS-rules.md#353-a-chapter-path-is-refused-for-the-component-that-failed)).
 
 The suggestion is built from what was typed and from the configured kinds,
 never from a fixed template:
@@ -1012,6 +1075,7 @@ refusals. A line marked *hint* is the breadcrumb above.
 | `FS-*.requirements` | `literal subject "FS-*.requirements" does not match the configured ID grammar; accepted selector: FS.requirements` | none |
 | `FS.requirements.1` | `numbered chapter subjects can detach when headings move; accepted selector: FS.requirements` | hint |
 | `FS-login.requirements.1` | `numbered chapter subjects can detach when headings move; accepted selector: FS-login.requirements` | hint |
+| `FS-login.requirements.` | `named chapter subject "FS-login.requirements." does not match the configured section grammar; accepted selector: FS-login.requirements` | none |
 | `The requirements.1 chapter of each FS` | `numbered chapter subjects can detach when headings move; accepted selector: The requirements chapter of each FS` | hint |
 | `FS.*` | `section-component wildcards are not accepted in phase 1; accepted selector: FS` | hint |
 | `FS-login.*` | `section-component wildcards are not accepted in phase 1; accepted selector: FS-login` | hint |
@@ -1042,10 +1106,12 @@ None of them earns the breadcrumb.
 An exact literal that does not resolve or is ambiguous keeps its refusal,
 which suggests nothing. The rule surfaces, `check --rule` and a configured rule
 declaration, keep every byte they print, every row of [§FS-rules.3.5](FS-rules.md#35-strict-refusals) included,
-except where a subject is refused for needing named sections. That refusal is
+with two exceptions. A subject refused for needing named sections is
 answered with a rule subject the same four steps build, as
-[§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) says. The decision to replace these
-lines rather than append to them is
+[§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) says. A chapter subject refused for a component of its path
+opens with the reason a selector gets for the same component, as
+[§FS-rules.3.5.3](FS-rules.md#353-a-chapter-path-is-refused-for-the-component-that-failed) says, and keeps every byte after that reason. The decision to
+replace the selector's lines rather than append to them is
 [§DF-selector-refusal-rewrites](../decisions/functional/DF-selector-refusal-rewrites.md#df-selector-refusal-rewrites-a-refused-selector-is-answered-with-a-selector-and-its-old-lines-are-replaced-not-appended-to).
 
 ## 9. Managed guidance and editor parity

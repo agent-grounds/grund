@@ -4,6 +4,8 @@
 
 #[path = "rules_contract/authority.rs"]
 mod authority;
+#[path = "rules_contract/chapter_path_reasons.rs"]
+mod chapter_path_reasons;
 #[path = "rules_contract/documentation.rs"]
 mod documentation;
 #[path = "rules_contract/refusals.rs"]
