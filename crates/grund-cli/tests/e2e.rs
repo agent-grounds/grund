@@ -170,6 +170,24 @@ fn chapter_subject_name_is_its_whole_path() {
     assert_every_case_passed("chapter subject whole path", &outcomes);
 }
 
+/// §FS-fmt.6.4.1: grund.91's tree, a citation of a section whose only heading is
+/// inside a fence. `fmt` links nothing in either mode, and `check` still reports
+/// the section missing, as both do on the same tree without the fenced line.
+#[test]
+fn a_fenced_section_heading_is_not_linked() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = [
+        "fmt-cross-refs-fenced-section-skipped",
+        "fmt-cross-refs-fenced-section-skipped-write",
+        "check-fenced-section-heading-missing",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &cases.join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("fenced section heading", &outcomes);
+}
+
 /// Completion scripts participate in the same two independent runs as every
 /// immutable case, so their bytes are stable across invocations (§FS-completions.3).
 #[test]
