@@ -1,0 +1,1 @@
+docs/local.md:1: warning: FS-local lead is 2 words, over the configured maximum of 1; move detail into citable child sections, or promote a child section to its own ID after running grund refs FS-local --summary
