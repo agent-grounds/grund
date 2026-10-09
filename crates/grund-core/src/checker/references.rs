@@ -49,10 +49,22 @@ pub(super) const LOCAL_SECTION_RULE_RELEASE: &str = "0.14.0";
 
 /// §FS-check.3.24.1: the clause every shape of the finding ends with. Appended,
 /// never woven in, so the text the rule shipped with survives as a verbatim
-/// contiguous prefix (§FS-check.3.24.2).
+/// contiguous prefix wherever that text still stands (§FS-check.3.24.2).
 fn local_section_release_attribution() -> String {
     format!(
         " — unchecked in grund {LOCAL_SECTION_RULE_PRIOR_RELEASE}, an error in {LOCAL_SECTION_RULE_RELEASE}"
+    )
+}
+
+/// §FS-check.3.24, §FS-check.3.24.3: the remedy of every shape that has no full
+/// citation to propose — an ownerless site, an unsupported token, and an owned site
+/// whose owner lacks the section. `<tail>` is the token with its marker taken off,
+/// so the escape is the token the author would type.
+fn full_citation_or_escape(config: &Config, written: &str) -> String {
+    let tail = written.strip_prefix(&config.marker).unwrap_or(written);
+    format!(
+        "write a full citation or <{}>{tail} to show the shape without citing it",
+        config.marker,
     )
 }
 
@@ -82,14 +94,31 @@ pub(super) fn check_citation_resolution(
         if outside.is_some_and(|scope| scope.contains(&cite.file)) {
             continue;
         }
+        let written = cite.text.trim();
         let section = cite.section.as_deref().unwrap_or_default();
+        let owner = render_qualified_id(&config.grammar, None, &cite.id);
+        // §FS-check.3.24.3: where `missing section` fires beside this site, its full
+        // citation would only trade one error for the other; name the absence and the
+        // escape instead.
+        let resolves = section_resolves(findings, config, &cite.id, section);
+        let remedy = if resolves {
+            format!(
+                "write {}{owner}{}{section}",
+                config.marker, config.section_separator
+            )
+        } else {
+            format!(
+                "{owner} has no section {section}, so {}",
+                full_citation_or_escape(config, written)
+            )
+        };
         // §FS-check.3.24.1: offered exactly where the next formatter pass would
         // write this site — the test §FS-check.3.14.4 makes for the sibling rule,
         // so no finding names a command that would answer `rewrote 0 lines`.
         let command = if cite.shorthand_rewritable
             && tier == ReferenceTier::Configured
             // §FS-check.3.24.1: an absent target section is a site fmt declines.
-            && section_resolves(findings, config, &cite.id, section)
+            && resolves
         {
             "; run `grund fmt --write`"
         } else {
@@ -101,12 +130,7 @@ pub(super) fn check_citation_resolution(
             line: Some(cite.line),
             column: Some(cite.column),
             message: format!(
-                "local section citation {}; write {}{}{}{}{}{command}",
-                cite.text.trim(),
-                config.marker,
-                render_qualified_id(&config.grammar, None, &cite.id),
-                config.section_separator,
-                section,
+                "local section citation {written}; {remedy}{}{command}",
                 local_section_release_attribution(),
             ),
             sites: Vec::new(),
@@ -118,17 +142,11 @@ pub(super) fn check_citation_resolution(
             continue;
         }
         let written = candidate.text.trim();
-        let tail = written.strip_prefix(&config.marker).unwrap_or(written);
+        let guidance = full_citation_or_escape(config, written);
         let mut message = if candidate.section.is_none() {
-            format!(
-                "unsupported local section citation {written}; write a full citation or <{}>{tail} to show the shape without citing it",
-                config.marker,
-            )
+            format!("unsupported local section citation {written}; {guidance}")
         } else {
-            format!(
-                "local section citation {written} has no enclosing declaration; write a full citation or <{}>{tail} to show the shape without citing it",
-                config.marker,
-            )
+            format!("local section citation {written} has no enclosing declaration; {guidance}")
         };
         // §FS-check.3.24.1: both candidate shapes name the releases and neither
         // ever names the command — §FS-fmt.2.4 leaves them byte-identical

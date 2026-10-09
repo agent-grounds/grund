@@ -356,12 +356,14 @@ inside an `FS-check` declaration body with section 2.1 but no section 9.9:
 See §2.1 and §9.9.
 ```
 
-Both live local citations receive canonical-form errors naming their full
-replacements, alongside the independent missing-section diagnostic:
+Both live local citations receive canonical-form errors: the section 2.1 one names
+its full replacement, and the section 9.9 one names the absence and the escape instead
+([§FS-check.3.24.3](../functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)),
+alongside the independent missing-section diagnostic:
 
 ```text
 local section citation §2.1; write §FS-check.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
-local section citation §9.9; write §FS-check.9.9 — unchecked in grund 0.13.1, an error in 0.14.0
+local section citation §9.9; FS-check has no section 9.9, so write a full citation or <§>9.9 to show the shape without citing it — unchecked in grund 0.13.1, an error in 0.14.0
 missing section FS-check.9.9
 ```
 
