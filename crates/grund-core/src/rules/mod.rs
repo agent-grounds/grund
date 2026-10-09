@@ -37,6 +37,8 @@ mod tests_index_contract;
 #[cfg(test)]
 mod tests_named_off_subjects;
 #[cfg(test)]
+mod tests_refusal_forms;
+#[cfg(test)]
 mod tests_section_ramp;
 #[cfg(test)]
 mod tests_section_targets;
