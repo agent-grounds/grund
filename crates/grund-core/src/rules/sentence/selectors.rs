@@ -2,16 +2,15 @@
 //! shorthand, and a refusal answered with a selector rather than a rule
 //! sentence (§FS-rules.8.1).
 //!
-//! What failed is decided once, by `parse_subject` and `validate_named_path`,
-//! and what a suggestion can recover once, by `recovery.rs`; this file only
-//! renders those decisions. Where the section grammar refused a numbered or
-//! wildcard component, it names that component as what failed. Where named
+//! What failed is decided once, by `parse_subject` and `validate_named_path`
+//! and named by `SubjectFault::failed`, and what a suggestion can recover once,
+//! by `recovery.rs`; this file only renders those decisions. Where named
 //! sections are off, it asks the same parser again with them on, for the
 //! suggestion alone.
 
 use super::recovery::{Recovered, as_if_enabled, recover};
 use super::subjects::{
-    Component, Spelling, SubjectFault, SubjectRefusal, parse_subject, refused, split_modality,
+    Spelling, SubjectFault, SubjectRefusal, parse_subject, refused, split_modality,
     validate_named_path,
 };
 use super::{RuleSubject, RuleVocabulary};
@@ -108,11 +107,7 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
 /// Render a refused subject as a selector refusal (§FS-rules.8.1).
 fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefusal {
     // §FS-rules.8.1: a numbered or wildcard component is named as what failed.
-    let fault = match &refusal.fault {
-        SubjectFault::SectionGrammar(Component::Numbered) => SubjectFault::NumberedChapter,
-        SubjectFault::SectionGrammar(Component::Wildcard) => SubjectFault::SectionWildcard,
-        fault => fault.clone(),
-    };
+    let fault = refusal.fault.failed();
     if fault == SubjectFault::NamedSectionsOff {
         return answer_as_if_enabled(refusal, vocabulary);
     }
