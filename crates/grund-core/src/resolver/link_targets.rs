@@ -29,7 +29,9 @@ use crate::model::{
 /// `.<section>` citation, the declaration's own heading for a bare-ID citation
 /// (§FS-fmt.6.2, §DF-md-link-anchor-strategy, §DF-declaration-anchor). A source-file
 /// home (a stub's target) and the `none` profile both get a bare file link.
-/// `None` if the ID does not resolve (§FS-fmt.6.4).
+/// `None` if the ID does not resolve (§FS-fmt.6.4), and `None` for a `.<section>`
+/// citation of a section the declaration does not have, whether or not the link
+/// takes a heading anchor (§FS-fmt.6.4.1).
 pub(crate) fn markdown_link_target(
     from_file: &Path,
     id: &Id,
@@ -69,12 +71,23 @@ pub(crate) fn markdown_link_target_with_root(
         Some(root) => relative_url_under(from_file, &home, root),
         None => relative_url(from_file, &home, config),
     };
+    // §FS-fmt.6.4.1: a cited section is one the scan records, in a stub's target
+    // outside the walk too (§FS-check.3.2.1); one it lacks gets no link, anchor or not.
+    let scanned = match section {
+        Some(sec) => {
+            let scanned = home_as_scanned(findings, config, id, home_decl);
+            if !scanned.sections.contains_key(sec) {
+                return None;
+            }
+            Some(scanned)
+        }
+        None => None,
+    };
     if !takes_heading_anchor(&home, config) {
         return Some(rel);
     }
-    // §FS-fmt.6.2.1.1, §FS-fmt.6.4.1: the declaration's heading and a cited section are the
-    // ones the scan records, in a stub's target outside the walk too (§FS-check.3.2.1).
-    let anchor_decl = home_as_scanned(findings, config, id, home_decl);
+    // §FS-fmt.6.2.1.1: a bare ID's heading is the scan's record too.
+    let anchor_decl = scanned.unwrap_or_else(|| home_as_scanned(findings, config, id, home_decl));
     let anchor = heading_anchor(anchor_decl, section, config)?;
     Some(format!("{}#{}", rel, anchor))
 }
