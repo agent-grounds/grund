@@ -4,15 +4,15 @@
 //!
 //! A function of the loaded findings rather than of a rule or a write: it
 //! resolves the ID against the whole project's declarations, follows a stub to
-//! the file that really declares it, and takes a cited section's heading from the
-//! scanner's record of the home, a stub's target's where the walk did not reach
-//! it (§AR-resolver.placement, §AR-resolver.5). Two components ask it for the
-//! same answer — `grund fmt --cross-refs` for the link it writes (§FS-fmt.6) and
-//! the checker's index-entry rule for the link it compares against
-//! (§FS-check.3.18.5) — so it sat in `writers/fmt_link_targets.rs` while the
-//! checker read it upward out of a component above it (§AR-system.4). The
-//! derivation of an anchor *from* heading text is the lexical half and is
-//! `grammar/anchors.rs`.
+//! the file that really declares it, and takes the declaration's own heading and
+//! a cited section's from the scanner's record of the home, a stub's target's
+//! where the walk did not reach it (§FS-fmt.6.2.1.1, §AR-resolver.placement,
+//! §AR-resolver.5). Two components ask it for the same answer —
+//! `grund fmt --cross-refs` for the link it writes (§FS-fmt.6) and the checker's
+//! index-entry rule for the link it compares against (§FS-check.3.18.5) — so it
+//! sat in `writers/fmt_link_targets.rs` while the checker read it upward out of a
+//! component above it (§AR-system.4). The derivation of an anchor *from* heading
+//! text is the lexical half and is `grammar/anchors.rs`.
 
 use std::path::Path;
 
@@ -72,12 +72,9 @@ pub(crate) fn markdown_link_target_with_root(
     if !takes_heading_anchor(&home, config) {
         return Some(rel);
     }
-    // §FS-fmt.6.4.1: a cited section is one the scan records, in a stub's target
-    // outside the walk too, read as `check` reads it (§FS-check.3.2.1).
-    let anchor_decl = match section {
-        Some(_) => home_as_scanned(findings, config, id, home_decl),
-        None => home_decl,
-    };
+    // §FS-fmt.6.2.1.1, §FS-fmt.6.4.1: the declaration's heading and a cited section are the
+    // ones the scan records, in a stub's target outside the walk too (§FS-check.3.2.1).
+    let anchor_decl = home_as_scanned(findings, config, id, home_decl);
     let anchor = heading_anchor(anchor_decl, section, config)?;
     Some(format!("{}#{}", rel, anchor))
 }
