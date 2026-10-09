@@ -39,7 +39,8 @@ class PythonApiTests(unittest.TestCase):
         for python in pythons():
             with self.subTest(python=python):
                 environment, env, wheel = venv(python, "grund")
-                env = dict(env, GRUND_ACCEPTANCE_SOURCE=str(wheel))
+                # §FS-distribution.3.0.3: the corpus writes and pipes UTF-8, as ci.yml runs it.
+                env = dict(env, GRUND_ACCEPTANCE_SOURCE=str(wheel), PYTHONUTF8="1")
                 ran = subprocess.run([str(interpreter(environment)), "-m", "unittest", "-v",
                                       *ACCEPTANCE], cwd=BINDINGS, env=env, capture_output=True,
                                      text=True, encoding="utf-8", errors="replace", timeout=3600)

@@ -119,6 +119,10 @@ jobs:
     name: rehearse (${{ matrix.row }})
     needs: assemble
     runs-on: ${{ matrix.runner }}
+    env:
+      # §FS-distribution.3.0.3: the harness's corpus pipes carry UTF-8 on every host, as
+      # in ci.yml. `fresh_env` drops it, so no installed product runs under it.
+      PYTHONUTF8: "1"
     strategy:
       fail-fast: false
       matrix:
