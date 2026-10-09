@@ -243,7 +243,11 @@ of the target's record, the one `show` anchors on, not off the stub's title-less
 heading that record leaves out of the body gives a section no anchor
 ([§FS-fmt.6.4.1](../functional-spec/FS-fmt.md#641-a-section-the-declaration-does-not-have-is-not-wrapped)). A
 workspace citation asks with the target project's `Config`, out of section 1,
-because the stub's link resolves against that project's root.
+because the stub's link resolves against that project's root. Outside `check`, the
+size catalog of `list --size` puts each retained stub through `home_as_scanned`, so
+a healthy stub whose target the walk missed is measured at that home, with its
+sections ([§FS-list.3.4.6](../functional-spec/FS-list.md#346-a-home-outside-the-scan)). `check`'s lead
+budget does not: it judges scanned sites only ([§FS-declarations.checks.oversized-lead.4](../functional-spec/FS-declarations.md#checksoversized-lead4-which-sites-it-judges)).
 
 Three properties hold the read to what a scan of the target would be:
 

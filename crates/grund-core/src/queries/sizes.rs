@@ -10,7 +10,7 @@ use crate::model::{
     Declaration, Finding, Id, SectionInfo, TextOverlays, format_path, is_stub_for_inline_decl,
     sort_path_key,
 };
-use crate::resolver::{PointBodyCache, load_workspace_context, point_body_pair};
+use crate::resolver::{PointBodyCache, home_as_scanned, load_workspace_context, point_body_pair};
 use crate::rules::sentence::RuleSubject;
 use crate::scanner::api_scan_error;
 
@@ -19,7 +19,8 @@ pub use super::size_output::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, L
 /// Programmatic point-size catalog. It selects the same declaration set as
 /// [`list`](crate::list), adds scanner-recorded section sites, and measures show-identical
 /// lead/full bodies through one per-file cache (§FS-list.2, §FS-list.3.4.1,
-/// §FS-workspace.8.3.3).
+/// §FS-workspace.8.3.3). A healthy stub whose target the walk did not reach is measured
+/// at the home `show` reads there, with that home's sections (§FS-list.3.4.6).
 pub fn list_sizes(opts: ListSizeOpts) -> Result<ListSizeOutput> {
     list_sizes_with_run_warnings(opts).1
 }
@@ -81,9 +82,11 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             if opts.unused_only && id.kind == "E2E" && !opts.kind_filter.contains("E2E") {
                 continue;
             }
+            // §FS-list.3.4.6: a healthy stub whose home is outside the walk is that home.
             let mut homes: Vec<&Declaration> = declarations
                 .iter()
                 .filter(|decl| !is_stub_for_inline_decl(&project.config.root, decl, declarations))
+                .map(|decl| home_as_scanned(&project.findings, &project.config, id, decl))
                 .collect();
             homes.sort_by(|a, b| {
                 (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
