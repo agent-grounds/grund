@@ -5,10 +5,11 @@
 //! text: the production that failed, plus the kind, declaration and path it had
 //! read. The rule surfaces render that value to their released bytes
 //! (§FS-rules.3.5), except that a subject needing named sections is answered
-//! with one they make valid (§FS-rules.3.5.2), and `selectors.rs` renders it as
-//! a selector (§FS-rules.8.1). Both surfaces agree on what failed because only
-//! one parser decided it, and on what a suggestion recovers because only
-//! `recovery.rs` builds it.
+//! with one they make valid (§FS-rules.3.5.2) and a chapter path is refused for
+//! the component that failed (§FS-rules.3.5.3), and `selectors.rs` renders it
+//! as a selector (§FS-rules.8.1). Both surfaces agree on what failed because
+//! only one parser decided it and `SubjectFault::failed` names it for both, and
+//! on what a suggestion recovers because only `recovery.rs` builds it.
 
 use super::recovery::{Recovered, as_if_enabled};
 use super::{RuleLevel, RuleParseError, RulePolarity, RuleSubject, RuleVocabulary, error};
@@ -63,6 +64,18 @@ pub(super) struct SubjectRefusal {
 }
 
 impl SubjectFault {
+    /// What a refusal names as failed: a chapter path the section grammar
+    /// refused at a numbered or wildcard component is refused for that
+    /// component, whichever spelling reached it (§FS-rules.3.5.3,
+    /// §FS-rules.8.1).
+    pub(super) fn failed(&self) -> Self {
+        match self {
+            Self::SectionGrammar(Component::Numbered) => Self::NumberedChapter,
+            Self::SectionGrammar(Component::Wildcard) => Self::SectionWildcard,
+            fault => fault.clone(),
+        }
+    }
+
     /// The released reason a refusal opens with (§FS-rules.3.5).
     pub(super) fn reason(&self, text: &str) -> String {
         match self {
@@ -92,9 +105,13 @@ impl SubjectFault {
 
 impl SubjectRefusal {
     /// The rule surfaces' refusal, byte for byte as released (§FS-rules.3.5)
-    /// but where the subject needs named sections (§FS-rules.3.5.2).
+    /// but where the subject needs named sections (§FS-rules.3.5.2) and where
+    /// its chapter path failed at a component (§FS-rules.3.5.3), a correction
+    /// §DF-rule-refusal-reasons makes in place. Only the reason names that
+    /// component; the accepted form is chosen by the fault as the parser read
+    /// it and by the spelling.
     pub(super) fn rule_error(&self, vocabulary: &RuleVocabulary) -> RuleParseError {
-        let reason = self.fault.reason(&self.text);
+        let reason = self.fault.failed().reason(&self.text);
         let tail = match &self.fault {
             SubjectFault::UnknownKind(_) | SubjectFault::Namespace => {
                 "accepted form: Each FS must cite at least one GOAL.".to_string()
@@ -102,13 +119,16 @@ impl SubjectRefusal {
             SubjectFault::NamedSectionsOff => {
                 return self.after_enabling(reason, vocabulary);
             }
-            SubjectFault::SectionWildcard | SubjectFault::NumberedChapter => format!(
+            SubjectFault::SectionGrammar(_) if self.spelling != Spelling::Literal => {
+                "accepted form: FS-login.requirements must cite at least one REQ.".into()
+            }
+            // §FS-rules.3.5.3: a literal keeps its own declaration's chapter, whatever failed.
+            SubjectFault::SectionWildcard
+            | SubjectFault::NumberedChapter
+            | SubjectFault::SectionGrammar(_) => format!(
                 "accepted form: {}.requirements must cite at least one REQ.",
                 self.head
             ),
-            SubjectFault::SectionGrammar(_) => {
-                "accepted form: FS-login.requirements must cite at least one REQ.".into()
-            }
             SubjectFault::IdGrammar => {
                 "accepted form: FS-login must cite at least one GOAL.".into()
             }
@@ -230,12 +250,17 @@ pub(super) fn parse_subject(
     {
         return Err(literal(SubjectFault::SectionWildcard));
     }
+    // §FS-rules.3.5.3: the first empty or all-digit component decides; empty is no number.
     if let Some(section) = path
-        && section
+        && let Some(part) = section
             .split('.')
-            .any(|part| part.bytes().all(|b| b.is_ascii_digit()))
+            .find(|part| part.is_empty() || part.bytes().all(|b| b.is_ascii_digit()))
     {
-        return Err(literal(SubjectFault::NumberedChapter));
+        return Err(literal(if part.is_empty() {
+            SubjectFault::SectionGrammar(Component::Malformed)
+        } else {
+            SubjectFault::NumberedChapter
+        }));
     }
     if path.is_some() && !vocab.named_sections {
         return Err(literal(SubjectFault::NamedSectionsOff));
