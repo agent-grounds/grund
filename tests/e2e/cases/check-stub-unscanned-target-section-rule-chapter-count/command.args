@@ -1,0 +1,1 @@
+check --rule "Each AR must have at most 1 Goals chapter." --only-rule {repo}

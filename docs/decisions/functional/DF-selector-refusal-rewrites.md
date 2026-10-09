@@ -16,7 +16,8 @@ Three refusals also named the wrong failure. `FS.requirements.1` and
 `The requirements.1 chapter of each FS` were called section-grammar mismatches
 although they are grammatical numbered paths, `FS.*` was called the same
 although it is a component wildcard, and `Each chapter of each FS` was called an
-unknown kind (agent-grounds/grund#505).
+unknown kind (agent-grounds/grund#505). `Each */FS` was called an unknown kind
+too, although the rule sentence names its namespace (agent-grounds/grund#514).
 
 Those lines are message text, which tools may match
 ([§FS-errors.3](../../functional-spec/FS-errors.md#3-message-text), [§REQ-backwards-compatibility.1](../../requirements/REQ-backwards-compatibility.md#1-what-is-covered)), so changing them is a decision
@@ -25,10 +26,10 @@ rather than a fix.
 ## 2. Decision
 
 On the `--selector` surface the refusals are replaced now. A reason that was
-true keeps its released text, and the three that were not are corrected. The
+true keeps its released text, and the four that were not are corrected. The
 `accepted form:` tail becomes one `accepted selector:` built from what was typed
-and from the configured kinds, or a second `known kinds:` line where no kind can
-be recovered ([§FS-rules.8.1](../../functional-spec/FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)). `check --rule` and configured rule declarations keep
+and from the configured kinds, or a `known kinds:` line where no kind can be
+recovered ([§FS-rules.8.1](../../functional-spec/FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)). `check --rule` and configured rule declarations keep
 every byte, including every row of [§FS-rules.3.5](../../functional-spec/FS-rules.md#35-strict-refusals).
 
 The replacement is argued under the pre-release licence of
@@ -49,10 +50,11 @@ on the reason.
 ## 3. Consequences
 
 - A consumer matching a refused selector's exact line reads a new line. One
-  matching on the reason keeps matching, except on the three corrected reasons
+  matching on the reason keeps matching, except on the four corrected reasons
   and on a pasted rule sentence.
-- Some refusals gain a second line: `hint:` after a numbered, wildcard or
-  chapter-quantified refusal, and `known kinds:` where no kind is recovered.
+- Some refusals gain lines after the `error:` line: `known kinds:` where no kind
+  is recovered, and `hint:` after a numbered, wildcard or chapter-quantified
+  refusal, last where both are printed.
 - Exit codes, stdout, and the set of accepted selectors do not move.
 - The rule side keeps two defects of its own. The rule sentence
   `The requirements.1 chapter of each FS must cite at least one REQ.` is still
@@ -73,12 +75,16 @@ on the reason.
 - [§FS-rules.8.1](../../functional-spec/FS-rules.md#81-a-refused-selector-is-answered-with-a-selector): **a refused `grund list --selector` is answered with a selector,
   not a rule sentence.** Every refused selector's `accepted form: <rule
   sentence>` tail becomes `accepted selector: <selector>`, built from what was
-  typed and the configured kinds, or a second line `known kinds: …` where no
-  kind can be recovered. `FS.requirements.1` and
+  typed and the configured kinds, or a line `known kinds: …` where no kind can
+  be recovered. `FS.requirements.1` and
   `The requirements.1 chapter of each FS` are refused for being numbered, `FS.*`
   for its wildcard and `Each chapter of each FS` for its quantifier, and each of
-  those adds a `hint: grund show --batch --toc …` line. A pasted rule sentence is
-  answered with its subject. **Who this breaks:** a script matching a refused
+  those adds a `hint: grund show --batch --toc …` line, after `known kinds:`
+  where no kind is recovered. `Each */FS` is refused for its namespace. A pasted
+  rule sentence is answered with the subject `check --rule` reads from it. With
+  named sections off, the suggestion is one that `--selector` accepts once they
+  are on, and is labelled `accepted selector after enabling it:` only when it
+  needs them. **Who this breaks:** a script matching a refused
   selector's exact stderr, or its text after `accepted form:`. Exit codes,
   stdout and the accepted selectors do not move, and `check --rule` prints
   every byte it did. Closes [issue #505](https://github.com/agent-grounds/grund/issues/505). (PR #509)

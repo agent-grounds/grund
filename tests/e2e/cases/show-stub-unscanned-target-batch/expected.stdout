@@ -1,0 +1,4 @@
+{"query":{"id":"FS-first","section":null},"ok":true,"result":{"id":"FS-first","section":null,"body":"First lead.\n","anchor":null,"path":"source.rs","line":1},"error":null}
+{"query":{"id":"FS-second","section":null},"ok":true,"result":{"id":"FS-second","section":null,"body":"Second lead.\n","anchor":null,"path":"source.rs","line":6},"error":null}
+{"query":{"id":"FS-second.1","section":null},"ok":true,"result":{"id":"FS-second","section":"1","body":"## 1. Detail\n\nSecond detail.\n","anchor":null,"path":"source.rs","line":10},"error":null}
+{"query":{"id":"FS-third","section":null},"ok":true,"result":{"id":"FS-third","section":null,"body":"Third lead.\n","anchor":null,"path":"source.rs","line":15},"error":null}

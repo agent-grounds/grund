@@ -7,16 +7,16 @@
 //! (§AR-core-module-layout.3). The citation counts each row's `refs` is read off
 //! are the catalog query's, read downward (§FS-list.3.2.1).
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use crate::config::{Config, KindConfig, display_path, non_citable_kind_error};
+use crate::config::{Config, KindConfig, display_path};
 use crate::grammar::{render_id, section_display_name};
 use crate::model::{Declaration, Finding, Id, format_path, is_stub_for_inline_decl, sort_path_key};
-use crate::queries::{ListCitationCounts, require_unique_literal, selector_refusal};
+use crate::queries::{ListCitationCounts, check_list_scope, require_unique_literal};
 use crate::resolver::{WorkspaceProject, load_workspace_context};
-use crate::rules::sentence::{RuleSubject, RuleVocabulary, parse_selector};
+use crate::rules::sentence::RuleSubject;
 
 use super::report::context_run_warnings;
 use crate::scanner::api_scan_error;
@@ -78,78 +78,13 @@ pub fn list_with_run_warnings(opts: ListOpts) -> (Vec<Finding>, Result<ListOutpu
 fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutput> {
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
     *run_warnings = context_run_warnings(&context);
-    if !opts.project_filter.is_empty() && !context.workspace_loaded {
-        return Err(anyhow!(
-            "--project requires workspace mode (no [workspace] block discovered)"
-        ));
-    }
-    for alias in &opts.project_filter {
-        if context.project_by_alias(alias).is_none() {
-            let known = context.aliases().join(", ");
-            return if known.is_empty() {
-                Err(anyhow!("unknown project alias `{alias}`"))
-            } else {
-                Err(anyhow!(
-                    "unknown project alias `{alias}`\nknown aliases: {known}"
-                ))
-            };
-        }
-    }
-    for kind in &opts.kind_filter {
-        // §FS-list.1.1, as in the CLI frontend: a configured but non-citable kind
-        // is refused with its reason rather than selected into an empty list.
-        let matched = context
-            .projects
-            .iter()
-            .filter(|project| {
-                opts.project_filter.is_empty() || opts.project_filter.contains(&project.alias)
-            })
-            .find_map(|project| {
-                project
-                    .config
-                    .kinds
-                    .iter()
-                    .find(|candidate| &candidate.kind == kind)
-            });
-        if !matches!(matched, Some(candidate) if candidate.citable) {
-            let headline = match matched {
-                Some(candidate) => non_citable_kind_error(candidate),
-                None => format!("unknown kind `{kind}`"),
-            };
-            return Err(anyhow!("{headline}\n{}", context.known_kinds_line()));
-        }
-    }
-    let selected_projects = || {
-        context.projects.iter().filter(|project| {
-            opts.project_filter.is_empty() || opts.project_filter.contains(&project.alias)
-        })
-    };
-    let kinds = selected_projects()
-        .flat_map(|project| project.config.kinds.iter())
-        .filter(|kind| kind.citable)
-        .map(|kind| kind.kind.clone())
-        .collect::<BTreeSet<_>>();
-    let vocabulary = RuleVocabulary {
-        kinds: kinds.clone(),
-        target_kinds: kinds,
-        target_namespaces: BTreeMap::new(),
-        named_sections: selected_projects().all(|project| project.config.named_sections),
-        id_grammars: selected_projects()
-            .map(|project| project.config.grammar.clone())
-            .collect(),
-        section_separators: selected_projects()
-            .map(|project| project.config.section_separator.clone())
-            .collect(),
-    };
-    let selector = opts
-        .selector
-        .as_deref()
-        .map(|raw| {
-            // §FS-rules.8.1: a refusal recovering no kind ends in `known kinds:`.
-            parse_selector(raw, &vocabulary)
-                .map_err(|refusal| selector_refusal(refusal.render(&context.known_kinds_line())))
-        })
-        .transpose()?;
+    // §FS-list.1.2: aliases, kinds and selector are checked against the selection.
+    let selector = check_list_scope(
+        &context,
+        &opts.project_filter,
+        &opts.kind_filter,
+        opts.selector.as_deref(),
+    )?;
 
     struct Entry<'a> {
         project_alias: &'a str,
@@ -328,11 +263,14 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                 {
                     vec![base()]
                 }
-                Some(RuleSubject::ChapterOfKind { kind, name }) if kind == &entry.id.kind => entry
-                    .home
-                    .sections
-                    .iter()
-                    .filter(|(section, _)| section.rsplit('.').next() == Some(name.as_str()))
+                // §FS-rules.2.1: a chapter subject names one whole path, so each
+                // declaration contributes at most the one chapter at it.
+                Some(subject) => subject
+                    .chapter_path(
+                        &entry.id.kind,
+                        &render_id(&entry.project_config.grammar, entry.id),
+                    )
+                    .and_then(|path| entry.home.sections.get_key_value(path))
                     .map(|(section, info)| {
                         let mut row = base();
                         row.section = Some(section.clone());
@@ -345,28 +283,8 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
                         row.value_roots.clear();
                         row
                     })
-                    .collect(),
-                Some(RuleSubject::ExactChapter {
-                    declaration, path, ..
-                }) if declaration == &render_id(&entry.project_config.grammar, entry.id) => entry
-                    .home
-                    .sections
-                    .get(path)
-                    .map(|info| {
-                        let mut row = base();
-                        row.section = Some(path.clone());
-                        row.line = info.line;
-                        row.title = Some(section_display_name(&info.title, path).to_string());
-                        row.stub = false;
-                        row.defines = None;
-                        row.refs = 0;
-                        row.duplicate = false;
-                        row.value_roots.clear();
-                        row
-                    })
                     .into_iter()
                     .collect(),
-                _ => Vec::new(),
             }
         })
         .collect::<Vec<_>>();

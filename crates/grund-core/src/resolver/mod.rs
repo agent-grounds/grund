@@ -14,7 +14,7 @@
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
-//! (§AR-core-module-layout.1.1). Seven groups came from five components, each
+//! (§AR-core-module-layout.1.1). Eight groups came from five components, each
 //! because a component below was reading it upward or a sibling was answering
 //! for it:
 //!
@@ -45,6 +45,10 @@
 //!   persisted spelling stand (§AR-resolver.4). Recognizing the shape stays
 //!   lexical; only resolving it against every loaded project's declarations had
 //!   the grammar naming records three components above it (§AR-system.4).
+//! - `stub_home.rs` out of `queries/stub_home.rs`, the scanner's pass over a
+//!   stub's target the walk did not reach: `show` reads a stub's body out of it,
+//!   and every reader of a section in `check` and `fmt` asks it as well, so the
+//!   query was answering for its siblings (§FS-check.3.2.1, §AR-resolver.5).
 //!
 //! What went the other way, down rather than up, when this component was carved
 //! out: three walk-level facts workspace was reading from the scanner at config
@@ -69,6 +73,7 @@ mod legacy_promotion;
 mod link_targets;
 mod point_body;
 mod shorthand;
+mod stub_home;
 mod unread_block;
 
 pub use id_candidates::names_member_id_candidate;
@@ -78,7 +83,8 @@ pub use id_candidates::names_member_id_candidate;
 // directory that can name any of it.
 pub(crate) use body::{PointBodyCache, extract_declaration_body};
 pub(crate) use citation_target::{
-    WorkspaceCheckTarget, citation_resolves, section_resolves, target_for_citation,
+    SectionHome, WorkspaceCheckTarget, citation_resolves, section_home, section_resolves,
+    target_for_citation,
 };
 pub(crate) use context::{
     WorkspaceContext, WorkspaceProject, load_classifying_workspace_context,
@@ -95,6 +101,7 @@ pub(crate) use point_body::point_body_pair;
 pub(crate) use shorthand::{
     ShorthandTargets, expand_shorthand_citations_with_origins, shorthand_token_expansion,
 };
+pub(crate) use stub_home::{home_as_scanned, target_records};
 pub(crate) use unread_block::settled_run_warnings;
 
 // The cases that pin this component, one module per behaviour area
@@ -105,6 +112,8 @@ mod tests_clean_body_line;
 mod tests_shorthand_numeric_run;
 #[cfg(test)]
 mod tests_shorthand_rewrite;
+#[cfg(test)]
+mod tests_stub_home;
 #[cfg(test)]
 mod tests_unread_opted_out_block;
 #[cfg(test)]

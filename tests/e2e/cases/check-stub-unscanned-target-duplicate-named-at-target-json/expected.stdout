@@ -1,0 +1,2 @@
+{"severity":"warning","path":"docs/other.md","line":1,"code":"unused","message":"declared but never cited: FS-second","sites":null,"authority":null}
+{"severity":"error","path":"docs/other.md","line":1,"code":"duplicate","message":"duplicate declaration of FS-second (also declared at source.rs:6)","sites":[{"path":"docs/other.md","line":1},{"path":"source.rs","line":6}],"authority":null}

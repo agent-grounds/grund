@@ -1,0 +1,1 @@
+check --rule 'The requirements.terms chapter of each FS must cite at least one AR.' --only-rule {repo}

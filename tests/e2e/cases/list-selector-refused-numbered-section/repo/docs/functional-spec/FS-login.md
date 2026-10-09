@@ -7,3 +7,5 @@ Users log in.
 ### requirements.1: A password is required
 
 ### requirements.2: A lockout follows five failures
+
+## should: What login should do

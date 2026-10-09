@@ -1,0 +1,1 @@
+check --rule "Each FS must not cite any AR." --only-rule {repo}

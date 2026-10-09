@@ -24,7 +24,10 @@
 //! citation-to-target lookup with the `WorkspaceCheckTarget` pair it answers
 //! with, which every rule here now reads downward and which the grammar's
 //! shorthand resolution had been reading upward out of this component
-//! (§AR-system.4).
+//! (§AR-system.4). The broken-stub rule's reading of a stub's target followed,
+//! out of `homes.rs` into `scanner/stub_homes.rs`, when the scan came to record
+//! each stub's home with it (§AR-scanner.4.6): one reading, so the stub that rule
+//! accepts is the stub the count of homes pairs.
 //!
 //! `plural`, the plural `s` a count earns, came here from the writers' template
 //! renderer with §AR-system.2.8 and left again with §AR-system.2.11: the
@@ -64,7 +67,6 @@ pub(crate) use chapter_rules::{
     check_chapter_rules, configured_rule_sentences, declared_workspace_vocabulary, parse_ad_hoc,
     parse_ad_hoc_with_workspace, workspace_vocabulary,
 };
-pub(crate) use homes::file_declares_inline_home;
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
 pub(crate) use reference_scope::{
@@ -93,6 +95,8 @@ pub(crate) use support::diagnostic_cmp;
 // (§AR-core-module-layout.1.3).
 #[cfg(test)]
 mod tests_alias_hints;
+#[cfg(test)]
+mod tests_broken_stub_fences;
 #[cfg(test)]
 mod tests_check_full;
 #[cfg(test)]

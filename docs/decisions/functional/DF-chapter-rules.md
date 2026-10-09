@@ -79,3 +79,68 @@ invocation error. Closed-world absence and count conclusions are made only from
 a complete snapshot. Documentation, examples, shipped skills, managed agent
 guidance, CLI text/JSON, and LSP diagnostics are held to one grammar and one
 shared report by [§FS-rules](../../functional-spec/FS-rules.md#fs-rules-grounded-declarations-state-and-enforce-chapter-rules).
+
+A chapter subject's `NAME` is the chapter's whole path from its declaration
+([§FS-rules.2.1](../../functional-spec/FS-rules.md#21-a-chapters-name-is-its-whole-path)). Through grund 0.16.1 the selector compared only a path's last
+component with it, so a dotted `NAME` such as `requirements.terms` selected
+nothing on any surface: `list --selector` and `--size` printed no row, a
+positive citation rule reported every declaration of its kind
+`unreached-declaration`, and a prohibition passed without reading a chapter.
+A one-component `NAME` reached nested chapters in `list` that `check` never
+selected. Matching the whole path moves verdicts in one direction that can
+fail a run: a dotted prohibition, or a dotted positive rule run with
+`unreached-declaration` ignored, now evaluates the chapters it names. That is
+not a break under [§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise). The dotted subject had no
+defined meaning, because [§FS-rules.5.2](../../functional-spec/FS-rules.md#52-family-clauses) joined `N` as one section component, and
+on those runs it produced no output. A positive rule whose findings were
+reported already failed every tree holding a declaration of its kind, so that
+run can only move toward passing. On a tree without an `orphan-section` error,
+no verdict over a one-component `NAME` moves. The one exception is a heading
+nested without its parent, such as `### extra.terms: Terms` with no `extra`, in
+a run that ignores `orphan-section`. The Markdown producer files that orphan as
+a direct chapter of its declaration. `The terms chapter of each FS` used to
+take it for the `terms` chapter, and no longer does, so the declaration can now
+be unreached. A presence rule for `Terms` used to read its display name as
+`extra.terms: Terms`, and now counts it as `Terms`. Either rule can go from
+passing to failing on that tree. That is not a break under
+[§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise) either. An orphan's standing as a chapter had no
+defined meaning, because [§FS-declarations.checks.orphan-section](../../functional-spec/FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path) lets a
+name-bearing descendant be addressed only once every proper prefix is recorded.
+That standing came from the producer's fallback alone, and plain `check`
+refuses the tree as an error.
+
+## release-note: Release note
+
+- [§FS-rules.2.1](../../functional-spec/FS-rules.md#21-a-chapters-name-is-its-whole-path), [§FS-rules.5.2](../../functional-spec/FS-rules.md#52-family-clauses), [§FS-rules.8](../../functional-spec/FS-rules.md#8-command-surfaces): **a chapter subject's `NAME` is the
+  chapter's whole path.** `grund list --selector FS.requirements.terms`, the
+  sentence `The requirements.terms chapter of each FS`, `--size`, and
+  `FS:requirements.terms` under a `:` separator list the nested
+  `requirements.terms` chapter where they listed nothing, and `check` evaluates
+  a rule over that subject on the chapters that exist where it reported every
+  FS `has no requirements.terms chapter`. A one-component `NAME` selects only a
+  chapter directly under its declaration in `list`, as it already did in
+  `check`: `list --selector FS.terms` no longer lists a nested
+  `requirements.terms`. A nested chapter's row is titled by its display name,
+  `Terms`, where an exact `FS-login.requirements.terms` row repeated the
+  heading's `requirements.terms:` coordinate
+  ([§FS-rules.5.1.1](../../functional-spec/FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)). **Who this breaks:** a script that read nested chapters
+  through a one-component `list --selector` or `--size` `NAME`, or matched a
+  nested chapter row's title; a dotted
+  prohibition such as `The requirements.terms chapter of each FS must not cite
+  any AR.`, which passed without reading a chapter and now reports the sites it
+  forbids; a run that ignored `unreached-declaration` over a dotted positive
+  rule, which now reports the chapters that miss their citation; and a run that
+  ignored `orphan-section` over a heading nested without its parent, such as
+  `### extra.terms: Terms` with no `extra`. There
+  `The terms chapter of each FS must cite at least one AR.` took the orphan for
+  its `terms` chapter and no longer does, and
+  `Each FS must have at most 1 Terms chapter.` now counts it by its display name
+  `Terms`. No deprecation window is owed
+  ([§REQ-backwards-compatibility.4](../../requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise)).
+  The dotted subject had no defined meaning, and the only `must` runs it let
+  pass are the dotted prohibition and the dotted positive rule with
+  `unreached-declaration` ignored, which read no chapter at all. An orphan's
+  standing as a chapter had no defined meaning either, because
+  [§FS-declarations.checks.orphan-section](../../functional-spec/FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path)
+  addresses a name-bearing descendant only once every proper prefix is
+  recorded, and plain `check` refuses that tree as an error. Closes [issue #511](https://github.com/agent-grounds/grund/issues/511). (PR #523)

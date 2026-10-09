@@ -44,7 +44,8 @@ The current pre-commit gate runs the same Rust format/build/test commands that d
 
 Both Python gates run `python scripts/run_python_gate.py`. The wrapper prepares
 the built binary and released Grund 0.16.1 for the co-change compatibility cases
-([§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)), then runs
+([§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)) and the same-source binding oracle for the
+Node parity tests ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)), the three inputs of [§AR-ci.3.4](AR-ci.md#34-the-python-gates-inputs), then runs
 `python -m unittest discover -s tests/integration -p test_*.py` with that environment
 from the repository root. The parity test checks the shared wrapper invocation
 and its discovery directory and pattern.
@@ -105,6 +106,37 @@ Some tests count what the binary did rather than read what it printed, and the b
 
 Stated so a test can hold a test file to it: **a test that reads an observation compiled only under a feature is ignored in a build without that feature, and its ignore reason names the feature as the gate passes it.** It never asserts on the observation there, so a default run neither fails nor passes on something it could not have seen; the same case's other assertions — exit code, stdout, stderr — sit in a test that runs in every build. `tests/integration/test_feature_gated_observers.py` holds each test file that reads an observer to this, and holds the gate's test command to naming every feature such a file needs, because the gate itself, running with every feature on, cannot see a test that breaks the rule.
 
+### 3.4 The Python gate's inputs
+
+The wrapper hands its discovery run three inputs, each an absolute path in the
+environment, and treats the three alike: a variable already set is used as
+given, and an unset one is prepared from this checkout. `GRUND_BUILT` is the
+tree's own `grund`, built by `cargo build -p grund --locked`. `GRUND_RELEASED`
+is released Grund 0.16.1, installed once into the wrapper's scratch and held to
+its `--version`. `GRUND_BINDINGS_ORACLE` is the same-source Rust oracle the Node
+adapter is compared against ([§FS-distribution.3.0.3](../functional-spec/FS-distribution.md#303-complete-data-and-canonical-parity)): the `grund-binding-oracle`
+example of `grund-core`, built with `GRUND_BINDINGS_SOURCE_SHA` set to
+`git rev-parse HEAD`, so that its `--metadata` reply names the commit under test
+and protocol version 1. That is how the workflow's own step builds it. The
+wrapper builds it with the plain `cargo` its other build uses, because the
+workflow's toolchain pin is CI's, and a local gate must not fail for want of it.
+It prepares the oracle on every run that is not given one, and the build is
+incremental, so a run after a new commit meets an oracle of that commit rather
+than a stale one.
+
+Preparing an input never turns into skipping the tests that need it. A build
+that fails, or an executable missing where its build put it, fails the gate:
+[§FS-cochange-recipe.examples](../functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance) asks this of the compatibility run, and the Node
+parity tests ask the same of theirs. The workflow sets the oracle before the
+wrapper runs, as [§AR-ci.1](AR-ci.md#1-pre-commit-is-the-source-of-truth) lets it install a hook's prerequisites first, and the
+wrapper then uses that one. Nothing a local run lacks may stand between it and
+the verdict CI reaches on the same tree.
+
+`tests/integration/test_python_gate_inputs.py` holds the wrapper to this. With
+the oracle unset and no CI in its environment, the oracle the wrapper returns
+must answer `--metadata` with this checkout's `HEAD` and protocol version 1. An
+oracle it is given must come back as that same file's absolute path.
+
 ## 4. Performance smoke guard
 
 CI carries a cheap floor on [§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible) that does not depend on any benchmarking toolchain: the `grund check . --full` self-check step runs the already-built binary under a generous wall-clock `timeout` — long enough never to flake on a loaded runner, short enough to fail the build on a catastrophic regression such as an accidental quadratic walk or a second read pass over every file. It is not the budget itself (the budget is tens of milliseconds; the ceiling is tens of seconds) — it is the difference between "we'd notice eventually" and "the build is red on the commit that did it". The precise per-commit meter is the [§AR-ci.5](AR-ci.md#5-benchmark-job) benchmark job, and this timeout stays as its catastrophic backstop.
@@ -133,7 +165,7 @@ Development CI does **not** run the profile-guided-optimization pipeline. `scrip
 
 Neither a hook nor CI asks a change for a changelog entry: no change is gated on the changelog, and the release builds the record itself, from the pull requests merged since the previous tag ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)). A gate stood here — a `pre-push` hook and a pull-request job asking one question of local git, whether the branch added an entry — and released records cite this section for it, which is why the number stays. It went because the record moved: an entry per change cost every change a file, a number and a conflict on every rebase, and the hand-written release section that replaced it cost every release a pull request and held the scheduled one until somebody wrote it.
 
-What the gate asked that the release still needs is answered elsewhere. Nothing waits in the tree for a release ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)), so there is no pending entry to check and no hold: neither helper workflow numbers anything before the rotation, and the scheduled one no longer waits for a section to be written ([§FS-distribution.4.4](../functional-spec/FS-distribution.md#44-two-helper-workflows-bump-the-version-on-a-validated-candidate)). That nothing merged ships without its line is the release's own list to answer, since it asks the forge about every commit in the range and refuses rather than write a partial one ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)). The one record a change still writes for a release, a verdict correction's `release-note` section ([§FS-distribution.4.6.4](../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)), is asked of the tree by the Python suite — the backward-compatibility meter, `tests/integration/test_backwards_compatibility_routes.py` — which both `pre-commit run --all-files` and the test matrix run, so a correction without its notice fails on the pull request that makes it.
+What the gate asked that the release still needs is answered elsewhere. Nothing waits in the tree for a release ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)), so there is no pending entry to check and no hold: neither helper workflow numbers anything before the rotation, and the scheduled one no longer waits for a section to be written ([§FS-distribution.4.4](../functional-spec/FS-distribution.md#44-two-helper-workflows-bump-the-version-on-a-validated-candidate)). That nothing merged ships without its line is the release's own list to answer, since it asks the forge about every commit in the range and refuses rather than write a partial one ([§FS-distribution.4.6](../functional-spec/FS-distribution.md#46-the-release-lists-the-pull-requests-merged-since-the-previous-tag)). The one record a change still writes for a release, a verdict correction's `release-note` section ([§FS-distribution.4.6.4](../functional-spec/FS-distribution.md#464-compatibility-notices-come-from-the-decisions)), is asked of the tree by the Python suite — the backward-compatibility meter, `tests/integration/test_backwards_compatibility_routes.py` — which both `pre-commit run --all-files` and the test matrix run, so a correction without its notice fails on the pull request that makes it. The same suite holds every decision record's `release-note` section to the one bullet the bump publishes, reading it with the bump's own `release_notices` functions rather than a copy of them, in `tests/integration/test_release_note_shape.py` ([§FS-distribution.4.6.4.1](../functional-spec/FS-distribution.md#4641-the-shape-is-held-on-the-pull-request-that-writes-it)), so a notice the next release would refuse fails on the pull request that writes it rather than at that release.
 
 ## 8. Commit-message attribution gate
 

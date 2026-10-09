@@ -276,6 +276,7 @@ fn check_uses_scanned_symlink_path_for_kind_home() {
             duplicate_sections: Vec::new(),
             is_stub: false,
             defined_in: None,
+            stub_home: None,
             e2e_case: None,
             title: Some("Router".to_string()),
             body_start: 1,

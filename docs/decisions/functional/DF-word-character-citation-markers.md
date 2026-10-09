@@ -45,13 +45,12 @@ The applicable route is
 
 ## release-note: Release note
 
-Configured markers ending in word characters, such as `_`, now recognize unqualified full-ID
-citations. `refs`, `cover`, and editor definition navigation recover the missing edges, and
-`check` stops calling their targets unused. Repositories using such markers may now fail
-existing dangling, missing-section, or citation-policy checks for citations previously missed.
-Follow the located finding to correct or declare the target, or escape an illustration with
-the configured marker wrapped in angle brackets, such as `<_>FS_login`.
-
-This verdict change is the correction recorded in [§DF-word-character-citation-markers.2](DF-word-character-citation-markers.md#2-verdict-correction-and-compatibility), under [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), for the prior violation of [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded).
-Every finding names its location and an action the maintainer can take; the existing remedies
-apply to recovered citations.
+- Configured markers ending in word characters, such as `_`, now recognize unqualified full-ID
+  citations. `refs`, `cover`, and editor definition navigation recover the missing edges, and
+  `check` stops calling their targets unused. Repositories using such markers may now fail
+  existing dangling, missing-section, or citation-policy checks for citations previously missed.
+  Follow the located finding to correct or declare the target, or escape an illustration with
+  the configured marker wrapped in angle brackets, such as `<_>FS_login`.
+  This verdict change is the correction recorded in [§DF-word-character-citation-markers.2](DF-word-character-citation-markers.md#2-verdict-correction-and-compatibility), under [§REQ-backwards-compatibility.5](../../requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), for the prior violation of [§REQ-no-missed-citation.2](../../requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded).
+  Every finding names its location and an action the maintainer can take; the existing remedies
+  apply to recovered citations.

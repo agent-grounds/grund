@@ -36,6 +36,7 @@ mod line_owners;
 mod paths;
 mod records;
 mod report;
+mod stub_targets;
 mod text;
 mod values;
 
@@ -67,10 +68,11 @@ pub(crate) use paths::{
     scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
 pub(crate) use records::{
-    LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode, TextOverlays,
+    LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode, StubHome, TextOverlays,
     is_stub_for_inline_decl, resolve_stub_target,
 };
 pub(crate) use report::{CheckReport, Diagnostic, LANDED_CLAUSE, Site};
+pub(crate) use stub_targets::{StubTargets, TargetRecords};
 pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};
 pub(crate) use values::{
     JSON_NUMBER_RE, authored_component, component_text_is_valid, first_unequal_component,

@@ -141,6 +141,10 @@ mod tests_rule_overlays;
 mod tests_shorthand_docstring;
 #[cfg(test)]
 mod tests_shorthand_surfaces;
+#[cfg(test)]
+mod tests_stub_overlays;
+#[cfg(test)]
+mod tests_stub_section_overlays;
 
 #[cfg(test)]
 mod tests_kind_title_refs;

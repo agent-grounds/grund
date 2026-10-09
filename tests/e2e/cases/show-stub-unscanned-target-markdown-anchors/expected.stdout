@@ -1,0 +1,2 @@
+{"query":{"id":"FS-second","section":null},"ok":true,"result":{"id":"FS-second","section":null,"body":"Second lead.\n\n### 1. Detail\n","sections":[{"path":"1","title":"Detail","depth":1,"anchor":"1-detail"}],"anchor":"fs-second-second","path":"notes/second.md","line":5},"error":null}
+{"query":{"id":"FS-second.1","section":null},"ok":true,"result":{"id":"FS-second","section":"1","body":"### 1. Detail\n\nSecond detail.\n","sections":[],"anchor":"1-detail","path":"notes/second.md","line":9},"error":null}

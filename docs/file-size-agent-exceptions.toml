@@ -179,3 +179,13 @@ until = "the fixture-root helpers (test_root, uncovered_base, physical_test_root
 reason = """
 Shared fixtures for every component's tests (§AR-core-module-layout.1.2), past the soft budget before this entry. It is edited only when a shared fixture moves with the code it mirrors — here current_marker() following the managed block's version bump (§FS-init.2.3.7.1), a one-line change no split would have avoided. Missing boundary: the fixture-root discovery of §AR-ci.10.3 (test_root, temp_candidates, uncovered_base, physical_test_root) is a self-contained concern every suite calls but none of the config or signature builders touch; it can become its own testing module, which needs testing.rs to become a directory module first.
 """
+[[exceptions]]
+path = "docs/functional-spec/FS-rules.md"
+match = "exact"
+rules = ["docs"]
+kind = "deferred"
+max_accepted = { value = 1033, unit = "lines" }
+until = "the rules specification is partitioned into grammar, refusal, relational-meaning, finding and command-surface declarations with existing section citations migrated"
+reason = """
+Missing boundary: the sentence grammar and its strict refusals (§FS-rules.3), the findings (§FS-rules.7) and the command surfaces with their refusal tables (§FS-rules.8) still share one declaration. Splitting them into separate declarations requires a mapped migration of their stable numbered section IDs and callers; §FS-rules.8.1 alone is cited from twelve files. That migration is outside the specification-only contract for issue #520, whose approved proposal names the new point §FS-rules.3.5.2 beside the refusals it extends. This entry records that existing debt while the point and its table are pinned. The fix for #511 then added §FS-rules.2.1, saying a chapter subject's `NAME` is its whole path, rewrote the §FS-rules.5.2 join that path changes, and added one sentence to §FS-rules.8. The relational meaning (§FS-rules.5) has grown its own sub-structure inside the same declaration too, and moving it out is the same mapped migration, not part of a selector bug fix. The ceiling accepts exactly the measured 1033 non-blank lines and permits no growth.
+"""

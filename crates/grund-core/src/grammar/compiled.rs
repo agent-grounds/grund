@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 use super::id_format::{
     IdElement, ShorthandGrammar, id_pattern, literal_after_kind_placeholder, parse_id_format,
@@ -11,7 +12,7 @@ use super::id_rules::{
     id_grammar_literal_slash_error, id_grammar_pattern_slash_error, section_separator_slash_error,
 };
 use super::near_miss::{LegacyGrammar, NearMissGrammar};
-use super::settings::GrammarKind;
+use super::settings::{GrammarKind, GrammarSource};
 use super::source_line::comment_prefix_regex;
 use crate::model::Id;
 
@@ -104,6 +105,8 @@ pub struct Grammar {
     kind_parsers: Vec<(String, Regex)>,
     pub(super) kind_elements: BTreeMap<String, Vec<IdElement>>,
     pub(super) overridden_kinds: BTreeSet<String>,
+    /// What `build` was handed, for [`Grammar::with_named_sections`].
+    pub(super) source: Arc<GrammarSource>,
 }
 
 impl Grammar {
@@ -392,6 +395,14 @@ impl Grammar {
             kind_parsers,
             kind_elements,
             overridden_kinds,
+            source: Arc::new(GrammarSource {
+                format: format.into(),
+                kinds: kinds.to_vec(),
+                number_pattern: number_pattern.into(),
+                slug_pattern: slug_pattern.into(),
+                section_separator: section_separator.into(),
+                comment_prefixes: comment_prefixes.to_vec(),
+            }),
         })
     }
 

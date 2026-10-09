@@ -71,10 +71,16 @@ pub(super) fn lsp_target_for_stub(
 ) -> Option<(PathBuf, usize)> {
     let target = stub.defined_in.as_ref()?;
     let resolved = resolve_stub_target(&project.config.root, &stub.file, target);
-    let inline = decls
+    if let Some(inline) = decls
         .iter()
-        .find(|decl| paths_same_location(&decl.file, &resolved) && decl.file != stub.file)?;
-    Some((inline.file.clone(), inline.line))
+        .find(|decl| paths_same_location(&decl.file, &resolved) && decl.file != stub.file)
+    {
+        return Some((inline.file.clone(), inline.line));
+    }
+    // §FS-declarations.checks.duplicate.2: a stub beside the one standing for an
+    // unscanned target goes where that one's home is declared.
+    let home = stub.stub_home.as_ref()?;
+    Some((home.path.clone(), home.line))
 }
 
 pub(super) fn declaration_range_parts(

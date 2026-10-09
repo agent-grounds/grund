@@ -1,0 +1,2 @@
+docs/second.md:1: error: stub link target lacks FS-second: ../source.rs
+docs/uses.md:1: error: missing section FS-second.1

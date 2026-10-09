@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::agents::check_agents_block_version;
 use super::citations::{check_citation_obligations, check_citation_prohibitions};
 use super::grounding::check_grounding;
-use super::homes::{KindHomeIndex, file_declares_inline_home, paths_same_location_key};
+use super::homes::{KindHomeIndex, paths_same_location_key};
 use super::index::check_kind_indexes;
 use super::index_entries::KindIndexEntries;
 use super::inline_style::check_inline_citation_style;
@@ -20,7 +20,7 @@ use crate::model::{
     is_stub_for_inline_decl, resolve_stub_target, sort_path_key,
 };
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
-use crate::scanner::is_scannable;
+use crate::scanner::{file_declares_inline_home, is_scannable};
 
 /// AR-checker: how grund validates the scanner's findings
 ///
@@ -78,7 +78,11 @@ use crate::scanner::is_scannable;
 /// lexicographically-first site (sort by `path`, then `line`); list every other
 /// site parenthetically in the message. This keeps the report's `path:line:`
 /// prefix invariant (§AR-checker.3, §FS-check.2.1) while still naming all sites. A stub and
-/// the inline declaration it points at count as one home, not two.
+/// the inline declaration it points at count as one home, not two — whether or not the walk
+/// reached that declaration, and however many stubs point at it — and a home a stub stands for
+/// is named at its target's declaration, from the record §AR-scanner.4.6 leaves on the stub
+/// (§FS-declarations.checks.duplicate.1, §FS-declarations.checks.duplicate.2,
+/// §FS-declarations.checks.duplicate.3).
 ///
 /// ### 2.2 Misplaced declarations (§FS-declarations.checks.misplaced-declaration)
 ///
@@ -104,16 +108,28 @@ use crate::scanner::is_scannable;
 /// ### 2.4 Missing sections (§FS-check.3.2)
 ///
 /// For each citation with a section path, look up the section in the matching
-/// declaration's recorded sections. Missing → one error at the citation site.
+/// declaration's recorded sections. Where the walk recorded only a stub of the ID,
+/// the lookup goes on to the stub's target, scanned or not, and reads its
+/// declaration of the ID once per run (§FS-check.3.2.1, §AR-resolver.5). Missing →
+/// one error at the citation site.
 ///
 /// ### 2.5 Broken inline-spec stubs (§FS-declarations.checks.broken-stub)
 ///
 /// For each declaration whose H1 has the stub shape `# <ID>: [<text>](<path>)`
 /// (description after the colon is a single bare markdown link), extract the link
 /// target, resolve it against the repo root, verify the path exists, then re-scan
-/// that file for an inline declaration of the same ID. Either failure → one error
-/// at the stub site. This is the only rule that re-reads a file; everything else
-/// comes from `findings`.
+/// that file for an inline declaration of the same ID. The re-read takes the
+/// editor's overlay text first and the disk second, as the scanner does, so the
+/// verdict is the one a save would give (§FS-declarations.checks.broken-stub.1),
+/// and it reads that text as the scanner does too: in a Markdown target, fence
+/// delimiter lines and every line while a fence is open are skipped through the
+/// scanner's own fence reader (§AR-scanner.2.3.3), so a fenced example heading of
+/// the ID is not its declaration (§FS-declarations.checks.broken-stub.2). Either
+/// failure → one error at the stub site. This rule and the section lookup of
+/// §AR-checker.2.4 are the only ones that read a file again; everything else comes
+/// from `findings`. The reading is the scanner's (§AR-scanner.4.6), so the stub
+/// this rule accepts is the stub the count of homes pairs with its target, and the
+/// one whose sections the lookup reads (§AR-resolver.5).
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
 ///
@@ -420,11 +436,15 @@ pub(crate) fn check_with_workspace_and_overlays(
             .filter(|decl| !is_stub_for_inline_decl(&config.root, decl, decls))
             .collect();
         if duplicate_homes.len() > 1 {
+            // §FS-declarations.checks.duplicate.3: a stub's home is named at its target.
             let mut sites: Vec<Site> = duplicate_homes
                 .iter()
-                .map(|d| Site {
-                    path: d.file.clone(),
-                    line: d.line,
+                .map(|d| {
+                    let (path, line) = d.home_site();
+                    Site {
+                        path: path.to_path_buf(),
+                        line,
+                    }
                 })
                 .collect();
             sites.sort_by(|a, b| {
@@ -594,7 +614,8 @@ pub(crate) fn check_with_workspace_and_overlays(
                 continue;
             }
             let inline_ok = if resolved.is_file() && is_scannable(&resolved, config) {
-                file_declares_inline_home(&resolved, id, config).unwrap_or(false)
+                // §FS-declarations.checks.broken-stub.1: the editor's text first, as scanned.
+                file_declares_inline_home(&resolved, id, config, overlays).unwrap_or(false)
             } else {
                 false
             };

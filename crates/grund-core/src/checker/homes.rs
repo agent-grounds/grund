@@ -1,12 +1,8 @@
-use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 use crate::config::Config;
-use crate::grammar::{
-    PythonDocstringScanState, STUB_LINK_HEADING, declaration_id_on_line, source_scan_line,
-};
 use crate::model::{
-    Id, configured_home_path_key, physical_path_key, scanned_decl_relative_path, scanned_path_key,
+    configured_home_path_key, physical_path_key, scanned_decl_relative_path, scanned_path_key,
 };
 
 pub(super) struct DeclarationHome<'a> {
@@ -185,30 +181,4 @@ fn homes_overlap(left: &ConfiguredHome<'_>, right: &ConfiguredHome<'_>) -> bool 
 /// side per declaration would canonicalize the same home once per ID.
 pub(super) fn paths_same_location_key(left: &Path, right: &Path) -> bool {
     physical_path_key(left) == right
-}
-
-/// Whether `path` contains a real (non-stub) inline declaration of `id` —
-/// the check that a stub's link target actually carries the inline home it claims
-/// (§FS-declarations.checks.broken-stub, §AR-checker.2.5, §AR-scanner.4).
-pub(crate) fn file_declares_inline_home(path: &Path, id: &Id, config: &Config) -> Result<bool> {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let text = crate::config::input_read_to_string(path)?;
-    let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
-    let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
-    let mut py_docstring = PythonDocstringScanState::default();
-    for line in text.lines() {
-        let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
-        let scan_line = scan.text.as_ref();
-        if let Some((found, token_end)) =
-            declaration_id_on_line(&config.grammar, scan_line, scan.in_py_docstring, is_md)
-            && &found == id
-        {
-            let tail = &scan_line[token_end..];
-            if STUB_LINK_HEADING.is_match(tail) {
-                continue;
-            }
-            return Ok(true);
-        }
-    }
-    Ok(false)
 }

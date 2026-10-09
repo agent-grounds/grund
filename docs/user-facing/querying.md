@@ -31,7 +31,8 @@ unit — `section` is present only for a selected section — and the rest say
 where it is declared, its title, and how often it is cited.
 
 A selector names chapters only, so a numbered section is refused, and every
-refusal ends in a selector to paste back
+refusal offers a selector to paste back, or lists the configured kinds where it
+names none of them
 ([§FS-rules.8.1](../functional-spec/FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)):
 
 ```console

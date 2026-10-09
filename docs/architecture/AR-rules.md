@@ -120,7 +120,12 @@ Node and site keys are opaque values scoped by both project and producer; an
 engine may compare them inside the snapshot but may not derive paths, IDs, or
 scanner indexes from them. Side metadata is for located diagnostics and never
 participates in logical equality. Every relation key has metadata and refers to
-declared nodes/sites in the same snapshot.
+declared nodes/sites in the same snapshot. A declared node is one `nodes` holds,
+not only one a `decl` or `chapter` row names: a chapter of a stub's home outside
+the walk is a containment-only node, minted when a citation resolves into it, with
+metadata and its `contains` edge but no `chapter` row, so a citation counts for it
+while no subject or count of chapters reaches it
+([§FS-check.3.2.1](../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)).
 
 Every declaration and accepted chapter gets its own node facts even when no
 citation touches it, so citation edges never define a quantified universe.

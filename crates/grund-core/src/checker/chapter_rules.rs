@@ -2,7 +2,7 @@
 //! §AR-checker.1). Grammar, facts, evaluation, and deduplication stay owned by
 //! the rules component; this module only sequences and merges their results.
 
-use crate::config::Config;
+use crate::config::{Config, known_kinds_line};
 use crate::grammar::render_id;
 use crate::model::{CheckReport, Declaration, Diagnostic, Findings};
 use crate::resolver::WorkspaceCheckTarget;
@@ -36,7 +36,7 @@ pub(crate) fn vocabulary(config: &Config) -> RuleVocabulary {
 }
 
 pub(crate) fn parse_ad_hoc(config: &Config, sentence: &str) -> anyhow::Result<ParsedRule> {
-    parse_ad_hoc_with_vocabulary(sentence, vocabulary(config))
+    parse_ad_hoc_with_vocabulary(config, sentence, vocabulary(config))
 }
 
 pub(crate) fn parse_ad_hoc_with_workspace(
@@ -46,10 +46,13 @@ pub(crate) fn parse_ad_hoc_with_workspace(
 ) -> anyhow::Result<ParsedRule> {
     let mut vocab = vocabulary(config);
     add_workspace_targets(&mut vocab, projects);
-    parse_ad_hoc_with_vocabulary(sentence, vocab)
+    parse_ad_hoc_with_vocabulary(config, sentence, vocab)
 }
 
+/// `config` is the one whose kinds the subject is read against, so it is the
+/// one whose kinds a refusal that offers no form lists (§FS-rules.3.5.2).
 fn parse_ad_hoc_with_vocabulary(
+    config: &Config,
     sentence: &str,
     vocabulary: RuleVocabulary,
 ) -> anyhow::Result<ParsedRule> {
@@ -63,7 +66,14 @@ fn parse_ad_hoc_with_vocabulary(
         },
         &vocabulary,
     )
-    .map_err(|error| anyhow::anyhow!(error.message))?;
+    .map_err(|error| {
+        // §FS-rules.3.5.2: nothing to paste back, so the kinds follow the reason.
+        if error.unrecovered {
+            anyhow::anyhow!("{}\n{}", error.message, known_kinds_line(&config.kinds))
+        } else {
+            anyhow::anyhow!(error.message)
+        }
+    })?;
     // §FS-errors.3.7: `--rule` has no rule heading to report at, so a sentence
     // this scope cannot verify is refused before the scan like any other the
     // vocabulary check turns down.

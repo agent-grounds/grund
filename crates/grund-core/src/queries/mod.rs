@@ -6,6 +6,10 @@
 //! because the text and JSON shapes belong to the frontends.
 //! `ambiguity.rs` shares show's scanner-recorded home and section refusals with
 //! refs (§FS-refs.4), without making a citation query read a declaration body.
+//! `stub_home.rs` is the record both read for a stub: its target's, found by the
+//! ID whether or not the walk reached the target (§FS-show.2.3.7). Reading a
+//! target the walk did not reach is `resolver/stub_home.rs`, because `check`'s
+//! section lookup reads it too (§FS-check.3.2.1, §AR-resolver.5).
 //!
 //! Three files left when §AR-system.2.10 became a component, all one fact: a
 //! declaration's body sliced by the spans a scan recorded is a function of the
@@ -21,7 +25,7 @@
 //! (§AR-core-module-layout.1.1). The submodules are the former `show*`, `list*`
 //! and editor-answer category files, one per question — the show entry points,
 //! the batch adapter over one loaded context, the catalog's shared citation
-//! counts, the point-size catalog, and the two editor answers.
+//! counts and scope check, the point-size catalog, and the two editor answers.
 //! The editor pair is `editor_hover` and `editor_on_type` rather than `lsp` and
 //! `on_type`: the engine names no frontend's protocol (§AR-system.4), and what
 //! these two hold is the hover body and the keystroke rule of §FS-lsp, which an
@@ -53,6 +57,7 @@ mod editor_completion;
 mod editor_hover;
 mod editor_on_type;
 mod editor_snapshot;
+mod list_scope;
 mod selector_refusal;
 mod show;
 mod show_metadata;
@@ -60,6 +65,7 @@ pub(crate) use show_metadata::show_metadata;
 mod show_query;
 mod size_output;
 mod sizes;
+mod stub_home;
 
 pub use batch::{BatchShowFailure, BatchShowQuery, BatchShowRecord, show_batch_with_scope};
 pub use editor_completion::{CitationCompletion, LspCompletionContext};
@@ -83,7 +89,8 @@ pub use sizes::{
 // directory that can name any of it.
 pub(crate) use ambiguity::declaration_ambiguity_refusal;
 pub(crate) use citation_counts::ListCitationCounts;
-pub(crate) use selector_refusal::{require_unique_literal, selector_refusal};
+pub(crate) use list_scope::check_list_scope;
+pub(crate) use selector_refusal::require_unique_literal;
 pub(crate) use show::{render_show_output_json, show_declaration_with_overlays};
 
 // What other components' tests read (§AR-core-module-layout.1.3).
@@ -100,6 +107,8 @@ mod tests_editor_completion_overlap;
 mod tests_editor_completion_workspace;
 #[cfg(test)]
 mod tests_lsp_hover;
+#[cfg(test)]
+mod tests_stub_home;
 #[cfg(test)]
 mod tests_workspace_message_paths;
 

@@ -2,12 +2,16 @@
 //! shorthand, and a refusal answered with a selector rather than a rule
 //! sentence (§FS-rules.8.1).
 //!
-//! What failed is decided once, by `parse_subject` and `validate_named_path`;
-//! this file only renders that decision. Where the section grammar refused a
-//! numbered or wildcard component, it names that component as what failed.
+//! What failed is decided once, by `parse_subject` and `validate_named_path`,
+//! and what a suggestion can recover once, by `recovery.rs`; this file only
+//! renders those decisions. Where the section grammar refused a numbered or
+//! wildcard component, it names that component as what failed. Where named
+//! sections are off, it asks the same parser again with them on, for the
+//! suggestion alone.
 
+use super::recovery::{Recovered, as_if_enabled, recover};
 use super::subjects::{
-    Component, Spelling, SubjectFault, SubjectRefusal, is_named_component, parse_subject, refused,
+    Component, Spelling, SubjectFault, SubjectRefusal, parse_subject, refused, split_modality,
     validate_named_path,
 };
 use super::{RuleSubject, RuleVocabulary};
@@ -29,18 +33,19 @@ impl SelectorRefusal {
     /// The refusal's lines. `known_kinds` is the `known kinds:` line an unknown
     /// `--kind` prints, used where no kind was recovered (§FS-rules.8.1).
     pub(crate) fn render(&self, known_kinds: &str) -> String {
+        let hint = if self.hint {
+            format!("\n{HINT}")
+        } else {
+            String::new()
+        };
         let Some(suggestion) = &self.suggestion else {
-            return format!("{}\n{known_kinds}", self.reason);
+            // §FS-rules.8.1: the breadcrumb follows the kinds where none was recovered.
+            return format!("{}\n{known_kinds}{hint}", self.reason);
         };
         let accepted = if self.after_enabling {
             "accepted selector after enabling it"
         } else {
             "accepted selector"
-        };
-        let hint = if self.hint {
-            format!("\n{HINT}")
-        } else {
-            String::new()
         };
         format!("{}; {accepted}: {suggestion}{hint}", self.reason)
     }
@@ -56,13 +61,9 @@ pub(crate) fn parse_selector(
         Ok(subject) => return Ok(subject),
         Err(refusal) => refusal,
     };
-    // §FS-rules.8.1: a pasted rule sentence is answered with its subject.
-    let Some(subject) = [" must ", " should "]
-        .iter()
-        .filter_map(|modality| text.find(modality))
-        .min()
-        .map(|at| &text[..at])
-    else {
+    // §FS-rules.8.1: a pasted rule sentence is answered with its subject, which
+    // ends where the rule sentence's does (§FS-rules.3.6).
+    let Some((subject, ..)) = split_modality(text) else {
         return Err(answer(&refusal, vocabulary));
     };
     Err(match select(subject, vocabulary) {
@@ -94,6 +95,13 @@ fn select(text: &str, vocabulary: &RuleVocabulary) -> Result<RuleSubject, Subjec
             });
         }
     }
+    // §FS-rules.8.1: the namespace reason `parse_rule` gives before the subject.
+    if let Some(head) = text.strip_prefix("Each ")
+        && head.starts_with("*/")
+    {
+        let fault = SubjectFault::Namespace;
+        return Err(refused(fault, Spelling::Each, text, head, None, ""));
+    }
     parse_subject(text, vocabulary)
 }
 
@@ -105,85 +113,36 @@ fn answer(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefu
         SubjectFault::SectionGrammar(Component::Wildcard) => SubjectFault::SectionWildcard,
         fault => fault.clone(),
     };
-    let after_enabling = fault == SubjectFault::NamedSectionsOff;
-    let suggestion = if after_enabling {
-        Some(refusal.text.clone())
-    } else {
-        suggestion(refusal, vocabulary)
-    };
+    if fault == SubjectFault::NamedSectionsOff {
+        return answer_as_if_enabled(refusal, vocabulary);
+    }
     SelectorRefusal {
         reason: fault.reason(&refusal.text),
-        hint: suggestion.is_some()
-            && matches!(
-                fault,
-                SubjectFault::NumberedChapter
-                    | SubjectFault::SectionWildcard
-                    | SubjectFault::ChapterQuantified
-            ),
-        suggestion,
-        after_enabling,
+        // §FS-rules.8.1: the breadcrumb follows from the reason alone.
+        hint: matches!(
+            fault,
+            SubjectFault::NumberedChapter
+                | SubjectFault::SectionWildcard
+                | SubjectFault::ChapterQuantified
+        ),
+        suggestion: recover(refusal, vocabulary).map(|recovered| recovered.selector()),
+        after_enabling: false,
     }
 }
 
-/// §FS-rules.8.1's four steps: the selector built from what was typed and the
-/// configured kinds, or `None` where no configured kind can be recovered.
-fn suggestion(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> Option<String> {
-    let head = refusal
-        .head
-        .rsplit_once('/')
-        .map_or(refusal.head.as_str(), |(_, local)| local);
-    let kind = recovered_kind(head, vocabulary)?;
-    let names = named_prefix(refusal.path.as_deref(), vocabulary);
-    let base = match refusal.spelling {
-        Spelling::Each => return Some(format!("Each {kind}")),
-        Spelling::ChapterOfEach if names.is_empty() => return Some(format!("Each {kind}")),
-        Spelling::ChapterOfEach => return Some(format!("The {names} chapter of each {kind}")),
-        Spelling::Literal if is_declaration(head, vocabulary) => head,
-        Spelling::KindName | Spelling::Literal => kind,
-    };
-    Some(if names.is_empty() {
-        base.into()
-    } else {
-        format!("{base}{}{names}", refusal.separator)
-    })
-}
-
-/// Step 1: the configured kind the text names or starts with, longest first.
-fn recovered_kind<'a>(head: &str, vocabulary: &'a RuleVocabulary) -> Option<&'a str> {
-    vocabulary
-        .kinds
-        .iter()
-        .filter(|kind| {
-            head.strip_prefix(kind.as_str())
-                .is_some_and(|rest| !rest.starts_with(|c: char| c.is_ascii_alphanumeric()))
-        })
-        .max_by_key(|kind| kind.len())
-        .map(String::as_str)
-}
-
-/// Step 2: whether a declaration was written as a valid ID.
-fn is_declaration(head: &str, vocabulary: &RuleVocabulary) -> bool {
-    matches!(
-        parse_subject(head, vocabulary),
-        Ok(RuleSubject::ExactDeclaration(_))
-    )
-}
-
-/// Step 3: the longest run of named components before the first refused one.
-fn named_prefix(path: Option<&str>, vocabulary: &RuleVocabulary) -> String {
-    let Some(path) = path else {
-        return String::new();
-    };
-    let components = path.split('.').collect::<Vec<_>>();
-    let named = components
-        .iter()
-        .take_while(|component| is_named_component(component))
-        .count();
-    (1..=named)
-        .rev()
-        .map(|length| components[..length].join("."))
-        .find(|prefix| validate_named_path(prefix, vocabulary).is_ok())
-        .unwrap_or_default()
+/// §FS-rules.8.1: a selector refused for needing named sections keeps that
+/// reason, and is suggested what the same selector is suggested with them on.
+fn answer_as_if_enabled(refusal: &SubjectRefusal, vocabulary: &RuleVocabulary) -> SelectorRefusal {
+    let suggested = as_if_enabled(&refusal.text, vocabulary, select, Recovered::selector);
+    SelectorRefusal {
+        reason: refusal.fault.reason(&refusal.text),
+        // The label says whether pasting it back needs named sections on.
+        after_enabling: suggested
+            .as_ref()
+            .is_some_and(|suggested| suggested.after_enabling),
+        suggestion: suggested.map(|suggested| suggested.text),
+        hint: false,
+    }
 }
 
 #[cfg(test)]

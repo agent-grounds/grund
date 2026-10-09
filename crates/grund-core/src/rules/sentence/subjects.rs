@@ -3,11 +3,15 @@
 //!
 //! A refused subject comes back as what the parser read rather than as finished
 //! text: the production that failed, plus the kind, declaration and path it had
-//! read. The rule surface renders that value to its released bytes
-//! (§FS-rules.3.5) and `selectors.rs` renders it as a selector (§FS-rules.8.1),
-//! so both surfaces agree on what failed because only one parser decided it.
+//! read. The rule surfaces render that value to their released bytes
+//! (§FS-rules.3.5), except that a subject needing named sections is answered
+//! with one they make valid (§FS-rules.3.5.2), and `selectors.rs` renders it as
+//! a selector (§FS-rules.8.1). Both surfaces agree on what failed because only
+//! one parser decided it, and on what a suggestion recovers because only
+//! `recovery.rs` builds it.
 
-use super::{RuleParseError, RuleSubject, RuleVocabulary, error};
+use super::recovery::{Recovered, as_if_enabled};
+use super::{RuleLevel, RuleParseError, RulePolarity, RuleSubject, RuleVocabulary, error};
 use crate::grammar::{parse_id_arg, render_id};
 
 /// Which production of a subject failed (§FS-rules.3.5).
@@ -87,17 +91,17 @@ impl SubjectFault {
 }
 
 impl SubjectRefusal {
-    /// The rule surface's refusal, byte for byte as released (§FS-rules.3.5).
-    pub(super) fn rule_message(&self) -> String {
+    /// The rule surfaces' refusal, byte for byte as released (§FS-rules.3.5)
+    /// but where the subject needs named sections (§FS-rules.3.5.2).
+    pub(super) fn rule_error(&self, vocabulary: &RuleVocabulary) -> RuleParseError {
         let reason = self.fault.reason(&self.text);
         let tail = match &self.fault {
             SubjectFault::UnknownKind(_) | SubjectFault::Namespace => {
                 "accepted form: Each FS must cite at least one GOAL.".to_string()
             }
-            SubjectFault::NamedSectionsOff => format!(
-                "accepted form after enabling it: {} must cite at least one REQ.",
-                self.text
-            ),
+            SubjectFault::NamedSectionsOff => {
+                return self.after_enabling(reason, vocabulary);
+            }
             SubjectFault::SectionWildcard | SubjectFault::NumberedChapter => format!(
                 "accepted form: {}.requirements must cite at least one REQ.",
                 self.head
@@ -113,14 +117,35 @@ impl SubjectRefusal {
                     .into()
             }
         };
-        format!("{reason}; {tail}")
+        error(format!("{reason}; {tail}"))
     }
-}
 
-/// A rule sentence's subject refuses with the released bytes (§FS-rules.3.5).
-impl From<SubjectRefusal> for RuleParseError {
-    fn from(refusal: SubjectRefusal) -> Self {
-        error(refusal.rule_message())
+    /// §FS-rules.3.5.2: a subject refused for needing named sections is
+    /// suggested a rule subject that turning them on makes valid, labelled
+    /// `after enabling it` only where the repository refuses it as configured.
+    /// Where nothing is recovered the refusal is the reason alone, marked so
+    /// that `check --rule` lists the known kinds after it.
+    fn after_enabling(&self, reason: String, vocabulary: &RuleVocabulary) -> RuleParseError {
+        let Some(suggested) = as_if_enabled(
+            &self.text,
+            vocabulary,
+            parse_subject,
+            Recovered::rule_subject,
+        ) else {
+            return RuleParseError {
+                message: reason,
+                unrecovered: true,
+            };
+        };
+        let accepted = if suggested.after_enabling {
+            "accepted form after enabling it"
+        } else {
+            "accepted form"
+        };
+        error(format!(
+            "{reason}; {accepted}: {} must cite at least one REQ.",
+            suggested.text
+        ))
     }
 }
 
@@ -141,6 +166,28 @@ pub(super) fn refused(
         path: path.map(Into::into),
         separator: separator.into(),
     }
+}
+
+/// Split a sentence into its subject, its modality and its predicate. The
+/// modality is found in a fixed order rather than at the earliest position
+/// (§FS-rules.3.6), and a rule and a pasted selector both split here, so they
+/// read the same subject from the same sentence (§FS-rules.8.1).
+pub(super) fn split_modality(sentence: &str) -> Option<(&str, RuleLevel, RulePolarity, &str)> {
+    [
+        (" must not ", RuleLevel::Required, RulePolarity::Prohibiting),
+        (
+            " should not ",
+            RuleLevel::Recommended,
+            RulePolarity::Prohibiting,
+        ),
+        (" must ", RuleLevel::Required, RulePolarity::Positive),
+        (" should ", RuleLevel::Recommended, RulePolarity::Positive),
+    ]
+    .into_iter()
+    .find_map(|(modality, level, polarity)| {
+        let (subject, predicate) = sentence.split_once(modality)?;
+        Some((subject, level, polarity, predicate))
+    })
 }
 
 pub(super) fn parse_subject(

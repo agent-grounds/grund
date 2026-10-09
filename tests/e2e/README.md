@@ -104,6 +104,29 @@ can read is the same silence in a new spelling.
 - dangling Markdown citation
 - missing Markdown section
 - duplicate Markdown declaration
+- a stub whose target is outside `[scan] include`, counted as the scanned tree counts it
+  ([§FS-declarations.checks.duplicate.1](../../docs/functional-spec/FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), [grund#532](https://github.com/agent-grounds/grund/issues/532)):
+  two stubs to one unscanned file are one home in `check`, `list` and `show`
+  ([§FS-declarations.checks.duplicate.2](../../docs/functional-spec/FS-declarations.md#checksduplicate2-stubs-to-one-target-are-one-home)), two stubs to two files that each declare
+  the ID are still a duplicate, and a duplicate or ambiguity with a real second
+  declaration names the target's line rather than the stub's, in text and JSON
+  ([§FS-declarations.checks.duplicate.3](../../docs/functional-spec/FS-declarations.md#checksduplicate3-a-home-reached-through-stubs-is-named-at-its-target)) — beside the one-stub tree and the scanned
+  controls of both shapes, which read as they always have
+- a section citation of a stub whose target is outside `[scan] include`, resolved in that target
+  as the scanned tree resolves it ([§FS-check.3.2.1](../../docs/functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [grund#529](https://github.com/agent-grounds/grund/issues/529)):
+  a section the target declares is clean for one stub, for two stubs to the target, and under
+  `--full`; a rule counts a citation of a named chapter there, or of a numbered section under one,
+  for that chapter and not the declaration, so an inbound `at least` count on the declaration
+  fails as on the scanned tree — at the stub's line rather than the target's, because where the
+  declaration of a home outside the scan is reported is not this change's to move — while the
+  home's chapters reach no count of chapters, so `at most 1` passes over two as it did before;
+  a value binding to one is compared, and the mismatch named at the target's line; a malformed
+  binding into one is the `invalid value binding` the scanned tree reports, and
+  `fmt --cross-refs` leaves one aimed at its chapter unlinked; a bare index entry of one is the
+  `unlinked-index-entry` that `fmt` wraps — beside a section the target does not declare, one of
+  a broken stub whose file holds that heading under another ID, one of a target that declares the
+  ID twice, and one of an ID whose two stubs reach two targets, each still `missing section` in
+  the same words
 - declaration-local section coordinates: `show` rejects a numeric heading after
   a body-closing plain chapter, while `check` reports that orphan once in text
   and JSON under `section-outside-declaration`; `--only` retains it and
@@ -213,6 +236,8 @@ can read is the same silence in a new spelling.
 - `show` Rust inline declaration extraction
 - Markdown stub to Rust inline declaration
 - broken Markdown-to-Rust inline stub
+- a stub whose Markdown target declares its ID only inside a fenced block, with the target outside and inside `[scan] include` ([§FS-declarations.checks.broken-stub.2](../../docs/functional-spec/FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing)): `check` reports the broken stub at its line and `show` refuses it as [§FS-show.2.3.4](../../docs/functional-spec/FS-show.md#234-broken-stub) says rather than answering `ID not found`, while a target holding a fenced example beside the real declaration stays healthy in both scopes and `show` reads the real body
+- a stub whose Rust or Markdown target lies outside `[scan] include`, read by its ID rather than at the stub's own line ([§FS-show.2.3.7](../../docs/functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)): the lead, a section, `--toc`, `--format json`, an ambiguous section refused by `show` and by `refs`, an ID the target declares twice refused in text and JSON as `ambiguous ID`, a Markdown target's heading anchors on the lead, a section and each `--toc` entry, and a batch whose one stub sits on the same line as its target and whose others do not
 - Rust source comment to Markdown citation
 - Rust `///` doc-comment declaration and marked citation under strict mode
 - Rust block doc-comment declaration and marked citation under strict mode
@@ -282,6 +307,7 @@ can read is the same silence in a new spelling.
 - `refs --total`, the fold's third rung: the plural and singular clauses, the one JSON object, `not cited` and `{"sites":0,"files":0}` where the two forms deliberately diverge, the [§FS-refs.2.1](../../docs/functional-spec/FS-refs.md#21-an-id-with-no-citations) note now standing beside a non-empty stdout, `--summary` silently subsumed, a workspace object carrying no `project`, the rejection contract inherited unchanged, and — the pair that proves the fold is over the set the invocation listed — one fixture answering `--section` and `--section --descendants` with different numbers ([§FS-refs.3.4](../../docs/functional-spec/FS-refs.md#34---total))
 - the citing site's enclosing unit on both JSON records, over one fixture carrying all four answers in one file: a site under a named section, a site under a numbered section, a site in a declaration's lead above every section, and a site above every declaration — `cover-json-enclosing` asserting the pair after `text`, and `refs-json-enclosing` asserting it there *and* `kind_title` still last ([§FS-cover.3.2](../../docs/functional-spec/FS-cover.md#32---format-json), [§FS-refs.3.2](../../docs/functional-spec/FS-refs.md#32---format-json)). The fixture deliberately carries no declaration-local shorthand, because a file that holds one is classified as a side effect and would answer correctly for a reason the case is not about
 - a chapter declared in a source doc-comment is the same chapter as the same heading in Markdown ([§FS-rules.5.1.1](../../docs/functional-spec/FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote), [grund#351](https://github.com/agent-grounds/grund/issues/351)): the ticket's own four-file tree, where `Each AR must have exactly one Terms chapter.` passes for the Markdown and the doc-comment declaration alike ([§FS-rules.3.1](../../docs/functional-spec/FS-rules.md#31-chapter-presence)) and `list --selector AR.terms --format json` titles both rows `Terms`; the same tree under a rule naming a chapter neither has, which reports both and so shows the source declaration is a subject the rule reaches; and every comment a heading can sit behind — `///`, `//!`, a block comment's ` * `, `#`, `--` and `;`, with a Python docstring and a Markdown file as the controls — passing the same rule and listing the same title, so the comment around a heading is never part of its label
+- a chapter subject's `NAME` is the chapter's whole path ([§FS-rules.2.1](../../docs/functional-spec/FS-rules.md#21-a-chapters-name-is-its-whole-path), [grund#511](https://github.com/agent-grounds/grund/issues/511)): `list --selector FS.requirements.terms`, its sentence form in JSON, `--size=words`, and `FS:requirements.terms` under a `:` separator each list the nested chapter titled `Terms`; `check` evaluates a dotted chapter rule on the chapters that exist — passing where the citation stands, reporting `missing-citation` where it does not, `unreached-declaration` only for the declaration with no chapter at that path, and a dotted prohibition's forbidden site; and a one-component `FS.terms` lists, sizes, and checks only a top-level `terms`, never a nested `requirements.terms`
 
 Warning coverage is partial. The inline-citation-style family pins its warning channel here — the soft-cap overrun and the `inline_note_layout_check = "warn"` case both assert the warning text and the exit code it must not move. Other warning tiers are not covered yet; they are lower priority than the error, retrieval, formatting, and configuration contracts.
 
@@ -295,5 +321,6 @@ manifests together or malformed external argv refuse before copying/spawning.
 Stdin, cwd, goldens, final-tree comparison and refresh remain shared. The recipe's
 Git/process acceptance modules are collected by `tests/integration/test_cochange_recipe.py`.
 `python scripts/run_python_gate.py` provides portable built/released 0.16.1
-inputs for the ordinary Python gate; missing setup is a failure, never a skip
-([§FS-cochange-recipe.examples](../../docs/functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance)).
+inputs for the ordinary Python gate, and the same-source binding oracle built
+from `HEAD`; missing setup is a failure, never a skip
+([§FS-cochange-recipe.examples](../../docs/functional-spec/FS-cochange-recipe.md#examples-maintained-walkthrough-tests-and-opt-in-guidance), [§AR-ci.3.4](../../docs/architecture/AR-ci.md#34-the-python-gates-inputs)).

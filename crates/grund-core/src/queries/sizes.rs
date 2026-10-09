@@ -1,18 +1,17 @@
 use anyhow::{Result, anyhow};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use super::citation_counts::ListCitationCounts;
-use super::selector_refusal::{require_unique_literal, selector_refusal};
-use crate::config::{
-    Config, display_path, measure_point_text, non_citable_kind_error, run_warning_findings,
-};
+use super::list_scope::check_list_scope;
+use super::selector_refusal::require_unique_literal;
+use crate::config::{Config, display_path, measure_point_text, run_warning_findings};
 use crate::grammar::render_id;
 use crate::model::{
     Declaration, Finding, Id, SectionInfo, TextOverlays, format_path, is_stub_for_inline_decl,
     sort_path_key,
 };
-use crate::resolver::{PointBodyCache, WorkspaceContext, load_workspace_context, point_body_pair};
-use crate::rules::sentence::{RuleSubject, RuleVocabulary, parse_selector};
+use crate::resolver::{PointBodyCache, load_workspace_context, point_body_pair};
+use crate::rules::sentence::RuleSubject;
 use crate::scanner::api_scan_error;
 
 pub use super::size_output::{ListSizeEntry, ListSizeMeasurement, ListSizeOpts, ListSizeOutput};
@@ -41,38 +40,13 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
     }
     let context = load_workspace_context(&opts.path, opts.path_provided)?;
     *cautions = run_warning_findings(context.render_config(), context.run_warnings.clone());
-    validate_list_scope_filters(&context, &opts.project_filter, &opts.kind_filter)?;
-    let selected_projects = || {
-        context.projects.iter().filter(|project| {
-            opts.project_filter.is_empty() || opts.project_filter.contains(&project.alias)
-        })
-    };
-    let kinds = selected_projects()
-        .flat_map(|project| project.config.kinds.iter())
-        .filter(|kind| kind.citable)
-        .map(|kind| kind.kind.clone())
-        .collect::<BTreeSet<_>>();
-    let vocabulary = RuleVocabulary {
-        kinds: kinds.clone(),
-        target_kinds: kinds,
-        target_namespaces: BTreeMap::new(),
-        named_sections: selected_projects().all(|project| project.config.named_sections),
-        id_grammars: selected_projects()
-            .map(|project| project.config.grammar.clone())
-            .collect(),
-        section_separators: selected_projects()
-            .map(|project| project.config.section_separator.clone())
-            .collect(),
-    };
-    let selector = opts
-        .selector
-        .as_deref()
-        .map(|raw| {
-            // §FS-rules.8.1: a refusal recovering no kind ends in `known kinds:`.
-            parse_selector(raw, &vocabulary)
-                .map_err(|refusal| selector_refusal(refusal.render(&context.known_kinds_line())))
-        })
-        .transpose()?;
+    // §FS-workspace.8.3.2: the same scope check as `list`, before any row is read.
+    let selector = check_list_scope(
+        &context,
+        &opts.project_filter,
+        &opts.kind_filter,
+        opts.selector.as_deref(),
+    )?;
 
     struct Pending<'a> {
         project_alias: &'a str,
@@ -207,15 +181,10 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             match (subject, row.section) {
                 (RuleSubject::Kind(kind), None) => kind == &row.id.kind,
                 (RuleSubject::ExactDeclaration(literal), None) => literal == &rendered,
-                (RuleSubject::ChapterOfKind { kind, name }, Some((section, _))) => {
-                    kind == &row.id.kind && section.rsplit('.').next() == Some(name.as_str())
+                // §FS-rules.2.1: the whole path, read as `list` reads it (§FS-rules.8).
+                (subject, Some((section, _))) => {
+                    subject.chapter_path(&row.id.kind, &rendered) == Some(section)
                 }
-                (
-                    RuleSubject::ExactChapter {
-                        declaration, path, ..
-                    },
-                    Some((section, _)),
-                ) => declaration == &rendered && path == section,
                 _ => false,
             }
         });
@@ -294,51 +263,4 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         scan_errors,
         warnings: run_warning_findings(render_config, context.run_warnings.clone()),
     })
-}
-
-/// Shared validation for size mode's pre-measurement catalog selectors
-/// (§FS-list.1, §FS-workspace.8.3.2).
-fn validate_list_scope_filters(
-    context: &WorkspaceContext,
-    project_filter: &BTreeSet<String>,
-    kind_filter: &BTreeSet<String>,
-) -> Result<()> {
-    if !project_filter.is_empty() && !context.workspace_loaded {
-        return Err(anyhow!(
-            "--project requires workspace mode (no [workspace] block discovered)"
-        ));
-    }
-    for alias in project_filter {
-        if context.project_by_alias(alias).is_none() {
-            let known = context.aliases().join(", ");
-            return if known.is_empty() {
-                Err(anyhow!("unknown project alias `{alias}`"))
-            } else {
-                Err(anyhow!(
-                    "unknown project alias `{alias}`\nknown aliases: {known}"
-                ))
-            };
-        }
-    }
-    for kind in kind_filter {
-        let matched = context
-            .projects
-            .iter()
-            .filter(|project| project_filter.is_empty() || project_filter.contains(&project.alias))
-            .find_map(|project| {
-                project
-                    .config
-                    .kinds
-                    .iter()
-                    .find(|candidate| &candidate.kind == kind)
-            });
-        if !matches!(matched, Some(candidate) if candidate.citable) {
-            let headline = match matched {
-                Some(candidate) => non_citable_kind_error(candidate),
-                None => format!("unknown kind `{kind}`"),
-            };
-            return Err(anyhow!("{headline}\n{}", context.known_kinds_line()));
-        }
-    }
-    Ok(())
 }

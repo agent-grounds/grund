@@ -1,0 +1,23 @@
+grund_config_version = 1
+project_name = "web"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "WEB"
+folder = "docs/web"
+title = "Web"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/fs"
+title = "Web FS"
+
+[scan]
+include = ["docs"]

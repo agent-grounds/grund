@@ -1,0 +1,10 @@
+docs/functional-spec/FS-login.md:5: error: unmarked heading inside FS-login; number it (## 1. requirements: What login holds to) as FS-login.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/functional-spec/FS-login.md:7: error: unmarked heading inside FS-login; number it (### 1.1. requirements.1: A password is required) as FS-login.1.1, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/functional-spec/FS-login.md:9: error: unmarked heading inside FS-login; number it (### 1.2. requirements.2: A lockout follows five failures) as FS-login.1.2, declare an ID, or use a bold label; this became an error in grund 0.16.0
+docs/rules/RULE-rebuilt.md:1: error: RULE-rebuilt is not a valid rule: named chapter subjects require [id] named_sections = true; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.
+docs/rules/RULE-unrecovered.md:1: error: RULE-unrecovered is not a valid rule: named chapter subjects require [id] named_sections = true
+docs/functional-spec/FS-login.md:1: warning: declared but never cited: FS-login
+docs/goals/GOAL-access.md:1: warning: declared but never cited: GOAL-access
+docs/requirements/REQ-password.md:1: warning: declared but never cited: REQ-password
+docs/rules/RULE-rebuilt.md:1: warning: declared but never cited: RULE-rebuilt
+docs/rules/RULE-unrecovered.md:1: warning: declared but never cited: RULE-unrecovered

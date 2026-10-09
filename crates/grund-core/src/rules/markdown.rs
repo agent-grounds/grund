@@ -5,9 +5,9 @@ use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use crate::config::Config;
 use crate::grammar::{render_id, section_display_name};
-use crate::model::{Findings, Id, is_stub_for_inline_decl};
-use crate::resolver::WorkspaceCheckTarget;
-use std::collections::BTreeMap;
+use crate::model::{Declaration, Findings, Id, is_stub_for_inline_decl};
+use crate::resolver::{SectionHome, WorkspaceCheckTarget, section_home};
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Adapt one standalone project. The producer-neutral schema uses the stable
 /// project name as its selected scope (§AR-rules.3).
@@ -62,6 +62,8 @@ fn adapt_projects(
     };
     let mut declarations: BTreeMap<(String, Id), NodeKey> = BTreeMap::new();
     let mut chapters: BTreeMap<(String, Id, String), NodeKey> = BTreeMap::new();
+    // The IDs whose home outside the walk a citation resolved into, its chapters minted.
+    let mut minted_homes: BTreeSet<(String, Id)> = BTreeSet::new();
 
     for (alias, findings, config) in projects {
         let local = *alias == selected;
@@ -135,19 +137,6 @@ fn adapt_projects(
         }
     }
 
-    // The relation is the chapter tree, not a flattened declaration-to-section
-    // index. This keeps direct-chapter counts direct (§FS-rules.5.1).
-    for ((alias, id, path), chapter) in &chapters {
-        let parent = path
-            .rsplit_once('.')
-            .and_then(|(parent, _)| chapters.get(&(alias.clone(), id.clone(), parent.to_string())))
-            .cloned()
-            .or_else(|| declarations.get(&(alias.clone(), id.clone())).cloned());
-        if let Some(parent) = parent {
-            facts.contains.push((parent, chapter.clone()));
-        }
-    }
-
     for (alias, findings, _) in projects {
         for (ordinal, citation) in findings.citations.iter().enumerate() {
             let Some(source_id) = citation.enclosing_declaration.as_ref() else {
@@ -172,7 +161,7 @@ fn adapt_projects(
             let mut resolved = target_homes
                 .iter()
                 .filter(|home| !is_stub_for_inline_decl(&target_config.root, home, target_homes));
-            let (Some(target_home), None) = (resolved.next(), resolved.next()) else {
+            let (Some(_), None) = (resolved.next(), resolved.next()) else {
                 // Unknown and ambiguous targets retain their ordinary resolver
                 // findings but never become logical edges (§FS-rules.5.1).
                 continue;
@@ -183,15 +172,34 @@ fn adapt_projects(
             else {
                 continue;
             };
-            // §FS-rules.5.1: a resolved section that is no rule unit counts for
-            // its nearest named ancestor chapter, or else its declaration.
+            // §FS-rules.5.1: a resolved section that is no rule unit counts for its nearest
+            // named ancestor chapter, or else its declaration. It resolves where `check`
+            // finds it, a stub's in its target, scanned or not (§FS-check.3.2.1).
             let (target, newly_counted) = match citation.section.as_ref() {
-                Some(section) if !target_home.sections.contains_key(section) => continue,
-                Some(section) => (
-                    nearest_chapter(&chapters, target_alias, &citation.id, section)
-                        .unwrap_or(target_declaration),
-                    !is_rule_unit(section),
-                ),
+                Some(section) => {
+                    let Some(home) =
+                        section_home(target_findings, target_config, &citation.id, section)
+                    else {
+                        continue;
+                    };
+                    // §FS-check.3.2.1: the lookup read the home on this miss; mint from that.
+                    if let SectionHome::Unscanned(home) = home
+                        && minted_homes.insert((target_alias.to_string(), citation.id.clone()))
+                    {
+                        mint_home_chapters(
+                            &mut facts,
+                            &mut chapters,
+                            (target_alias, &citation.id, &target_declaration),
+                            home,
+                            &target_config.section_separator,
+                        );
+                    }
+                    (
+                        nearest_chapter(&chapters, target_alias, &citation.id, section)
+                            .unwrap_or(target_declaration),
+                        !is_rule_unit(section),
+                    )
+                }
                 None => (target_declaration, false),
             };
             // The source side resolves the same way, agreeing with `site_in`.
@@ -231,7 +239,60 @@ fn adapt_projects(
             );
         }
     }
+
+    // The relation is the chapter tree, not a flattened declaration-to-section
+    // index. This keeps direct-chapter counts direct (§FS-rules.5.1). It is drawn
+    // last, so it reaches the chapters a citation minted.
+    for ((alias, id, path), chapter) in &chapters {
+        let parent = path
+            .rsplit_once('.')
+            .and_then(|(parent, _)| chapters.get(&(alias.clone(), id.clone(), parent.to_string())))
+            .cloned()
+            .or_else(|| declarations.get(&(alias.clone(), id.clone())).cloned());
+        if let Some(parent) = parent {
+            facts.contains.push((parent, chapter.clone()));
+        }
+    }
+
     facts
+}
+
+/// The rule units of `home`, the declaration of `id` a stub stands for in a target
+/// the walk did not reach, as nodes under that stub's declaration node `owner`.
+/// The home answers a citation into it and nothing else (§FS-check.3.2.1): the
+/// citation counts for the chapter it names, as on the scanned tree, and with no
+/// `chapter` row no subject or count of chapters reaches the node (§AR-rules.3).
+/// A stub encloses no citation, so minting them part-way through the citations
+/// moves no source side already drawn.
+fn mint_home_chapters(
+    facts: &mut RuleFacts,
+    chapters: &mut BTreeMap<(String, Id, String), NodeKey>,
+    (alias, id, owner): (&str, &Id, &NodeKey),
+    home: &Declaration,
+    separator: &str,
+) {
+    let label = facts.nodes[owner].label.clone();
+    for (section, info) in &home.sections {
+        if !is_rule_unit(section) {
+            continue;
+        }
+        let chapter = NodeKey(format!("{}:home:{section}", owner.0));
+        chapters.insert(
+            (alias.to_string(), id.clone(), section.clone()),
+            chapter.clone(),
+        );
+        facts.nodes.insert(
+            chapter,
+            NodeMeta {
+                label: format!("{label}{separator}{section}"),
+                anchor: RuleAnchor {
+                    path: home.file.to_string_lossy().into_owned(),
+                    line: info.line,
+                    column: None,
+                },
+            },
+        );
+    }
 }
 
 /// A section with an all-digit component is no rule unit (§FS-rules.2).

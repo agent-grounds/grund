@@ -18,8 +18,8 @@ level, rule, grounded).
   about.
 - **selector** — What a subject or target spelling matches: a kind, a named chapter, or one
   exact ID.
-- **chapter** — A rule's unit inside a declaration: one named child heading of it, as against
-  the declaration's whole body. The rule grammar's subject-unit word.
+- **chapter** — A rule's unit inside a declaration: one named heading in its body, direct or
+  nested, as against the declaration's whole body. The rule grammar's subject-unit word.
 - **display name** — The label an author wrote after a chapter's coordinate: `Terms` in
   `## terms: Terms`. What a presence rule names, whatever file the heading is in
   ([§FS-rules.5.1.1](FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)).
@@ -71,14 +71,16 @@ accepts, are:
 |---|---|
 | `Each KIND` | every local declaration of that configured citable kind |
 | `ID` | the one local declaration with that full ID |
-| `The NAME chapter of each KIND` | that named chapter of every local declaration of the kind that has one |
+| `The NAME chapter of each KIND` | the chapter at that whole path of every local declaration of the kind that has one |
 | `ID.NAME[.NAME…]` | the one local named chapter with that exact coordinate |
 | `KIND.NAME[.NAME…]` | selector only: means `The NAME chapter of each KIND`, and a rule sentence refuses it |
 
 In chapter subjects, `NAME` selects the section handle, not its display name.
 For `## goal: Goal and hypothesis`, `The goal chapter of each BENCH` selects
 the `goal` coordinate even though its display name is `Goal and hypothesis`.
-Presence rules compare the other field ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)).
+Presence rules compare the other field ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)). A chapter subject's
+`NAME` is the chapter's whole path from its declaration, never only that
+path's last component ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)).
 
 A token exactly equal to a configured citable kind name is the quantified kind
 selector; any longer token must parse as a full ID under that kind's effective
@@ -117,6 +119,34 @@ Object kind targets use the existing target-entry grammar of
 pinned `alias/KIND` and `*/KIND`. Alternatives joined with `or` are one target
 set. Repeated or differently ordered kinds normalize to the same byte-sorted
 set for meaning and deduplication.
+
+### 2.1 A chapter's NAME is its whole path
+
+A chapter subject's `NAME` is the whole section path from the declaration to
+the chapter, one named component or several. It selects the chapter at exactly
+that path, at whatever depth the chapter is declared, and it is never compared
+with the last component of a path alone. Take `FS-login`, whose
+`## requirements` chapter holds a `### requirements.terms` chapter:
+
+- `FS.requirements.terms` and `The requirements.terms chapter of each FS`
+  select `FS-login.requirements.terms`, the same chapter its exact coordinate
+  selects.
+- `FS.terms` and `The terms chapter of each FS` select a `## terms` chapter
+  directly under `FS-login` where there is one. They never select the nested
+  `requirements.terms`, which only shares its last component.
+- `FS.requirements` selects the `requirements` chapter, whose unit includes
+  `requirements.terms`. It does not select `requirements.terms` as a unit of
+  its own.
+
+The path is the same under any `section_separator`, because the separator
+stands only between a declaration and its first component: with
+`section_separator = ":"` the dotted selector is `FS:requirements.terms`.
+
+So a `NAME` means one thing on every surface that reads a subject: the rule
+families ([§FS-rules.3](FS-rules.md#3-the-five-sentence-families)), the declarations a rule leaves unreached
+([§FS-rules.checks.unreached-declaration](FS-rules.md#checksunreached-declaration-unreached-declaration)), and every `list --selector` mode,
+`--size` included ([§FS-rules.8](FS-rules.md#8-command-surfaces)). A declaration contributes a unit exactly when
+it has a chapter at that path, and it is unreached exactly when it has none.
 
 ## 3. The five sentence families
 
@@ -218,7 +248,9 @@ Every offending physical citation site produces the existing
 
 No paraphrase or unlisted production is accepted. A refusal identifies the
 failed production and gives its canonical accepted rewrite; an ambiguity names
-every candidate and chooses none. The documentation and parser tests carry at
+every candidate and chooses none. The one refusal that gives no rewrite is a
+subject refused for needing named sections from which no configured kind can
+be recovered ([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)). The documentation and parser tests carry at
 least these exact rows:
 
 | Refused sentence | Exact reason and accepted rewrite(s) |
@@ -258,6 +290,89 @@ An empty `NAME` uses the same refusal. This adds guidance without admitting any
 new grammar. An ad-hoc refusal still writes nothing to stdout and exits 2
 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 
+#### 3.5.2 A subject that needs named sections is answered with one they make valid
+
+With `[id] named_sections = false`, a subject refused because named chapter
+subjects require named sections is answered with a subject that turning them on
+makes valid, so a reader who follows the suggestion is not refused again. It is
+built from what was typed and from the configured kinds:
+
+1. The subject is parsed again with named sections on. Where that parse accepts
+   it, the suggestion is the subject as typed.
+2. Otherwise the suggestion is what [§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)'s four steps build for that
+   second refusal, written as a rule subject. `KIND.NAME` is selector-only
+   ([§FS-rules.2](FS-rules.md#2-subject-selectors)), so where a selector would get `KIND.NAME[.NAME…]` the rule gets
+   `The NAME[.NAME…] chapter of each KIND`, and where a selector would get a
+   bare `KIND` the rule gets `Each KIND`.
+3. The label is `accepted form after enabling it:` only where the suggested
+   subject is refused with the configuration as it is, and `accepted form:`
+   where the repository accepts it as configured.
+4. Where no configured kind can be recovered, or a configured ID grammar cannot
+   be compiled with named sections on, nothing is suggested.
+5. The reason stays the one [§FS-rules.3.5](FS-rules.md#35-strict-refusals) gives for the subject as configured,
+   `named chapter subjects require [id] named_sections = true`, and the
+   predicate stays the fixed `must cite at least one REQ.`.
+
+So every sentence offered after `accepted form after enabling it:` is accepted
+by `check --rule` once `named_sections = true`, and every sentence offered after
+a plain `accepted form:` is accepted with the configuration as it is. Accepted
+means not refused before the scan; whether a literal resolves stays the scan's
+question ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
+
+Where nothing is suggested, the two rule surfaces differ, because only one of
+them can print a second line:
+
+- `check --rule` prints the reason alone and then a `known kinds:` line in the
+  form an unknown `--kind` ends in, naming the whole set the subject accepts
+  ([§FS-list.1.1](FS-list.md#11---kind)): the citable kinds of the project whose configuration reads the
+  subject, once each, in configuration order. That is the root project at a
+  workspace root and the member under a member path. In one project these are
+  the two lines `list --selector` prints for the same subject ([§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)).
+  At a workspace root that selector lists every loaded project's kinds
+  ([§FS-list.1.2](FS-list.md#12---project)), and the rule only the root's, because its subject accepts no
+  other. It writes nothing to stdout and exits 2.
+- A configured rule declaration's `invalid-rule` finding is the reason alone,
+  `<RULE-ID> is not a valid rule: <reason>`, because a finding is one message
+  on one line ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
+
+In a repository whose kinds are `FS`, `REQ` and `GOAL`, with named sections off
+and `FS-login` holding a named `requirements` chapter with the sections
+`requirements.1` and `requirements.2`, these are the exact `check --rule`
+refusals. Each `error:` line opens with
+`named chapter subjects require [id] named_sections = true`, and the table
+gives what follows it.
+
+| Refused sentence (`… must cite at least one REQ.`) | After the reason |
+|---|---|
+| `FS-login.requirements` | `; accepted form after enabling it: FS-login.requirements must cite at least one REQ.` |
+| `The requirements chapter of each FS` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
+| `FS-*.requirements` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
+| `FS.requirements` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
+| `The requirements.1 chapter of each FS` | `; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.` |
+| `FS-login.Requirements` | `; accepted form: FS-login must cite at least one REQ.` |
+| `The Requirements chapter of each FS` | `; accepted form: Each FS must cite at least one REQ.` |
+| `The * chapter of each FS` | `; accepted form: Each FS must cite at least one REQ.` |
+| `POLICY.requirements` | nothing on the `error:` line, then the line `known kinds: FS, REQ, GOAL` |
+
+The first two rows are the subjects enabling named sections does make valid,
+and they print what they printed before this point existed; the first is the
+named-sections-off row of [§FS-rules.3.5](FS-rules.md#35-strict-refusals). A subject refused for its own production
+before named sections are asked about, such as `FS-login.*`, `FS-login.2` or
+`Each chapter of each FS`, keeps its [§FS-rules.3.5](FS-rules.md#35-strict-refusals) row. With named sections on,
+nothing here applies. The decision to replace the as-typed suggestion in place
+rather than append to it is
+[§DF-rule-after-enabling-rewrites](../decisions/functional/DF-rule-after-enabling-rewrites.md#df-rule-after-enabling-rewrites-a-rule-subject-that-needs-named-sections-is-answered-with-one-they-make-valid-in-place).
+
+### 3.6 Where a sentence's subject ends
+
+A sentence's subject is the text before its modality. The modality is found in
+a fixed order, not at the earliest position: the first ` must not `, else the
+first ` should not `, else the first ` must `, else the first ` should `. So
+`The should chapter of each FS must cite at least one FS.` has the subject
+`The should chapter of each FS`, because ` must ` is tried before ` should `,
+and `The must chapter of each FS should not cite any AR.` has the subject
+`The must chapter of each FS`, because ` should not ` is tried before ` must `.
+
 ## 4. Validation lifecycle
 
 `config validate` validates only the optional `rules` key and its relationship
@@ -271,7 +386,11 @@ being reported, and no surface silently omits it.
 `check --rule` is different only where a title declaration would have supplied
 a location. Grammar or vocabulary refusal is decided after config selection
 and before scanning, prints `error: <reason>; accepted form: <rewrite>` (or
-`accepted forms:`), writes nothing to stdout, and exits 2. A syntactically valid
+`accepted forms:`, or `accepted form after enabling it:` where the rewrite
+needs `[id] named_sections = true`), writes nothing to stdout, and exits 2. A
+subject refused for needing named sections from which no kind is recovered
+prints `error: <reason>` and then `known kinds: <kinds>` instead
+([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)). A syntactically valid
 unresolved literal requires the catalog, so after scanning it yields an
 `invalid-rule` attributed to `--rule` and the ordinary finding exit 1.
 
@@ -396,9 +515,11 @@ trees that pass without them; those findings warn for one release
 #### 5.1.1 A chapter's display name is the label its author wrote
 
 A `chapter` fact's `display_name` is the label the author wrote after the
-chapter's coordinate: `Terms` in `## terms: Terms`. It is the same label
-whether the declaration's body lives in a Markdown file or in a source
-doc-comment. A heading in a doc-comment sits behind the comment that carries
+chapter's coordinate: `Terms` in `## terms: Terms`. A nested chapter's
+coordinate is its whole path, so `### requirements.terms: Terms` is
+`chapter(c, requirements.terms, Terms)`, and its label is `Terms` as well. It
+is the same label whether the declaration's body lives in a Markdown file or in
+a source doc-comment. A heading in a doc-comment sits behind the comment that carries
 it — `///`, `//!`, a block comment's ` * `, a hash comment's `#`, or any other
 configured prefix
 ([§FS-config.3.5.14](FS-config.md#3514-comment_prefixes-compose-with-extensions))
@@ -446,21 +567,30 @@ A chapter subject `The N chapter of each K` carries a second premise, taken
 over the declarations of the kind rather than over the chapters `S` selected:
 
 ```text
-chapter_handle(c, N) :- chapter(c, q, _), last_component(q) = N.
-chapter_of(d, N)     :- chapter_handle(c, N), decl(d, K), contains(d, c).
+chapter_handle(c, N) :- chapter(c, N, _).
+owns(d, c)           :- decl(d, _), contains(d, c), chapter(c, _, _).
+owns(d, c)           :- owns(d, p), contains(p, c), chapter(c, _, _).
+chapter_of(d, N)     :- chapter_handle(c, N), decl(d, K), owns(d, c).
 unreached(d, N)      :- decl(d, K), not chapter_of(d, N).
 ```
 
 `chapter_handle` is the subject selector of [§FS-rules.2](FS-rules.md#2-subject-selectors) read as a relation. A
-subject's `N` is an accepted section component, so it joins the last component
-of the section path — `chapter`'s second position — and not the display name in
-its third, which is what the presence family's `chapter_count` counts
+subject's `N` is an accepted section path, one named component or several
+([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so it joins the whole of the section path — `chapter`'s
+second position — and neither that path's last component nor the display name
+in its third, which is what the presence family's `chapter_count` counts
 ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)). The two clauses therefore
 join different positions of the same relation, and this one follows the
 selector rather than `chapter_count`: `chapter_of(d, N)` holds exactly when `d`
 owns one of the chapters `S` selected, so contributing no unit and being
 unreached are one set rather than two, and no declaration can both hand a
 relation a unit and be reported as out of the rule's reach.
+
+`owns` follows `contains` from a declaration down through its chapters, so a
+nested chapter belongs to the declaration whose body holds it, not only to the
+chapter directly above it. `contains(d, c)` alone reaches only `d`'s direct
+chapters, which is what presence counts ([§FS-rules.3.1](FS-rules.md#31-chapter-presence)), and is too narrow for
+a path of several components.
 
 The outbound-count, per-target-coverage and inbound-count families report every
 `unreached(d, N)` beside every `not within(n, cardinality)`
@@ -557,7 +687,16 @@ warnings now are those a newly counted section citation alone produces, until
 <RULE-ID> is not a valid rule: <reason>; accepted form: <canonical template>
 ```
 
-An ambiguous production uses `accepted forms:`. A resolution failure is:
+An ambiguous production uses `accepted forms:`, and a rewrite that needs
+`[id] named_sections = true` uses `accepted form after enabling it:`. A parse
+failure that offers no form, a subject refused for needing named sections from
+which no kind is recovered ([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)), is:
+
+```text
+<RULE-ID> is not a valid rule: <reason>
+```
+
+A resolution failure is:
 
 ```text
 <RULE-ID> is not a valid rule: literal subject <selector> does not resolve
@@ -775,8 +914,11 @@ empty report reads like a sentence that found nothing.
 `grund list --selector "<selector>" [<path>]` filters the shared catalog to
 matched declaration and chapter units and composes by intersection with the
 existing path, kind, project, unused, summary, size, top, and format selectors
-where their output modes admit unit rows. Text prints the canonical coordinate,
-two spaces, location, two spaces, and title. A chapter JSON row uses the list
+where their output modes admit unit rows. It selects exactly the units the
+same subject selects in a rule, in every mode, `--size` included, so
+`FS.requirements.terms` lists that nested chapter and `FS.terms` only a `terms`
+chapter directly under its declaration ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)). Text prints the
+canonical coordinate, two spaces, location, two spaces, and title. A chapter JSON row uses the list
 object's existing fields in their existing order, adds `"section"` immediately
 after `"id"`, and puts the declaration ID in `id` and exact component path in
 `section`; a declaration row remains byte-for-byte the ordinary list row. In
@@ -801,12 +943,13 @@ error: <reason>; accepted selector: <selector>
 
 The reason is the one [§FS-rules.3.5](FS-rules.md#35-strict-refusals) gives for the same subject wherever that
 reason is true, so a rule and a selector never disagree about what failed.
-Three refusals name the true failure in place of a grammar or vocabulary
+Four refusals name the true failure in place of a grammar or vocabulary
 mismatch. A numbered component reached through `KIND.NAME` or
 `The NAME chapter of each KIND` gets the numbered reason the ID spelling gets.
 A wildcard component reached the same way gets the wildcard reason.
 `Each chapter of each KIND` gets the chapter-quantified reason, not an unknown
-kind.
+kind. `Each */KIND` gets the namespace reason the rule sentence gets, not an
+unknown kind.
 
 The suggestion is built from what was typed and from the configured kinds,
 never from a fixed template:
@@ -821,38 +964,50 @@ never from a fixed template:
    becomes `KIND[.NAME…]`. `The NAME chapter of each KIND` keeps its spelling
    while a `NAME` survives step 3, and otherwise becomes `Each KIND`.
 
-The refusal for disabled named sections suggests the selector as typed, after
-`accepted selector after enabling it:`, because enabling them is what makes it
-valid.
+With named sections off, a selector refused for needing them is suggested what
+the same selector would be suggested with them on. Where enabling them makes it
+valid, that is the selector as typed. Where it would still be refused, it is
+the selector the four steps build for that refusal, and where no configured
+kind is recovered nothing is suggested. The label says whether pasting it back needs
+the change: `accepted selector after enabling it:` only where the suggestion
+itself needs named sections, and `accepted selector:` where the repository
+accepts it as configured. The reason stays the one [§FS-rules.3.5](FS-rules.md#35-strict-refusals) gives for
+the subject as configured, that named chapter subjects require named sections,
+so these refusals add no breadcrumb.
 
 Where no configured kind can be recovered, nothing is guessed. The reason
 stands alone, and a second line lists the configured citable kinds exactly as
-an unknown `--kind` does ([§FS-list.1.1](FS-list.md#11---kind)):
+an unknown `--kind` does ([§FS-list.1.1](FS-list.md#11---kind)). A refusal that earns the breadcrumb
+below prints it as a third line, after the kinds:
 
 ```text
 error: <reason>
 known kinds: <kinds>
+hint: grund show --batch --toc expands each selected unit into its sections
 ```
 
 A refusal never suggests a rule sentence. A selector that is itself one, a
-subject followed by `must` or `should`, is refused for being one. Its
-suggestion is that subject, the text before the modality, and when the subject
-would itself be refused the refusal is the subject's own.
+subject followed by a modality, is refused for being one. Its subject is the
+one the rule sentence has, ending where [§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends) ends it, so a selector and
+`check --rule` read the same subject from the same sentence. Its suggestion is
+that subject, the text before the modality, and when the subject would itself
+be refused the refusal is the subject's own.
 
 The refusals whose reason names a numbered chapter, a section-component
 wildcard or a chapter quantifier add one stderr breadcrumb
-([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)). The units they reach for are found by expanding the chapter
-the suggestion selects:
+([§FS-errors.1.2](FS-errors.md#12-what-stderr-carries)), whether or not a kind was recovered. The units they reach for are
+found by expanding the chapter the suggestion selects, or, where nothing is
+suggested, the units of a kind the `known kinds:` line names:
 
 ```text
 hint: grund show --batch --toc expands each selected unit into its sections
 ```
 
 In a repository whose one kind is `FS`, with named sections on and `FS-login`
-holding a named `requirements` chapter, these are the exact refusals. A second line marked
-*hint* is the breadcrumb above.
+holding named `requirements` and `should` chapters, these are the exact
+refusals. A line marked *hint* is the breadcrumb above.
 
-| Refused selector | Exact reason and accepted selector | Second line |
+| Refused selector | Exact reason and accepted selector | Lines after it |
 |---|---|---|
 | `FS-*.requirements` | `literal subject "FS-*.requirements" does not match the configured ID grammar; accepted selector: FS.requirements` | none |
 | `FS.requirements.1` | `numbered chapter subjects can detach when headings move; accepted selector: FS.requirements` | hint |
@@ -862,18 +1017,34 @@ holding a named `requirements` chapter, these are the exact refusals. A second l
 | `FS-login.*` | `section-component wildcards are not accepted in phase 1; accepted selector: FS-login` | hint |
 | `Each chapter of each FS` | `chapter-quantified subjects are not accepted in phase 1; accepted selector: Each FS` | hint |
 | `*/FS` | `subject namespaces must be local in phase 1; accepted selector: FS` | none |
+| `Each */FS` | `subject namespaces must be local in phase 1; accepted selector: Each FS` | none |
 | `FS.Requirements` | `named chapter subject "FS.Requirements" does not match the configured section grammar; accepted selector: FS` | none |
-| `FS.requirements` with named sections off | `named chapter subjects require [id] named_sections = true; accepted selector after enabling it: FS.requirements` | none |
 | `Each POLICY` | `unknown kind "POLICY"` | `known kinds: FS` |
 | `POLICY.requirements` | `literal subject "POLICY.requirements" does not match the configured ID grammar` | `known kinds: FS` |
 | `requirements` | `literal subject "requirements" does not match the configured ID grammar` | `known kinds: FS` |
+| `Each chapter of each POLICY` | `chapter-quantified subjects are not accepted in phase 1` | `known kinds: FS`, then hint |
+| `API.requirements.1` | `numbered chapter subjects can detach when headings move` | `known kinds: FS`, then hint |
 | `FS-login must cite at least one GOAL.` | `a rule sentence is not a selector; accepted selector: FS-login` | none |
+| `The should chapter of each FS must cite at least one FS.` | `a rule sentence is not a selector; accepted selector: The should chapter of each FS` | none |
+
+With named sections off in the same repository, these are the exact refusals.
+None of them earns the breadcrumb.
+
+| Refused selector | Exact reason and accepted selector | Lines after it |
+|---|---|---|
+| `FS.requirements` | `named chapter subjects require [id] named_sections = true; accepted selector after enabling it: FS.requirements` | none |
+| `FS-*.requirements` | `named chapter subjects require [id] named_sections = true; accepted selector after enabling it: FS.requirements` | none |
+| `FS.requirements.1` | `named chapter subjects require [id] named_sections = true; accepted selector after enabling it: FS.requirements` | none |
+| `FS.*` | `named chapter subjects require [id] named_sections = true; accepted selector: FS` | none |
+| `The * chapter of each FS` | `named chapter subjects require [id] named_sections = true; accepted selector: Each FS` | none |
+| `POLICY.requirements` | `named chapter subjects require [id] named_sections = true` | `known kinds: FS` |
 
 An exact literal that does not resolve or is ambiguous keeps its refusal,
-which suggests nothing. The rule surfaces do not move: `check --rule` and a
-configured rule declaration keep every byte they print, every row of
-[§FS-rules.3.5](FS-rules.md#35-strict-refusals) included, for the subjects this table refuses as for any other.
-The decision to replace these
+which suggests nothing. The rule surfaces, `check --rule` and a configured rule
+declaration, keep every byte they print, every row of [§FS-rules.3.5](FS-rules.md#35-strict-refusals) included,
+except where a subject is refused for needing named sections. That refusal is
+answered with a rule subject the same four steps build, as
+[§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) says. The decision to replace these
 lines rather than append to them is
 [§DF-selector-refusal-rewrites](../decisions/functional/DF-selector-refusal-rewrites.md#df-selector-refusal-rewrites-a-refused-selector-is-answered-with-a-selector-and-its-old-lines-are-replaced-not-appended-to).
 
@@ -938,8 +1109,9 @@ rather than passes over.
 The guide has a marked `### Chapter rules` writing section. Both repository and
 binary-embedded copies of `skills/grund-init/SKILL.md` contain a marked byte-
 identical copy of that section and remain wholly byte-identical to one another.
-The section includes every accepted family, every [§FS-rules.3.5](FS-rules.md#35-strict-refusals) refusal with its exact
-rewrite, the finding each example produces, and the exact
+The section includes every accepted family, every row of the [§FS-rules.3.5](FS-rules.md#35-strict-refusals) table
+and the [§FS-rules.3.5.1](FS-rules.md#351-presence-name-whitespace-refusal) refusal, each with its exact rewrite, the finding each
+example produces, and the exact
 `unreached-declaration` error a chapter-scoped citation rule produces about a
 declaration that has no such chapter, and the two actions
 that answer it ([§FS-rules.2](FS-rules.md#2-subject-selectors),
@@ -1013,8 +1185,9 @@ A check this specification raises is a section named by its diagnostic code
 
 A declaration of a kind that a chapter-scoped citation rule over that kind
 cannot reach. The rule's subject is `The <NAME> chapter of each <KIND>`, the
-declaration is a local declaration of `<KIND>`, and it has no accepted direct
-chapter named `<NAME>`, so it contributes no unit to the selection
+declaration is a local declaration of `<KIND>`, and it has no accepted
+chapter at the section path `<NAME>` ([§FS-rules.2.1](FS-rules.md#21-a-chapters-name-is-its-whole-path)), so it contributes no unit
+to the selection
 ([§FS-rules.2](FS-rules.md#2-subject-selectors)) and the rule's relation says
 nothing about it.
 

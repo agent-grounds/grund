@@ -1,0 +1,2 @@
+error: named chapter subjects require [id] named_sections = true
+known kinds: FS, REQ, GOAL

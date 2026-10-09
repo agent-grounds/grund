@@ -1,6 +1,7 @@
 //! The controlled-English sentence front end (§FS-rules.2–4, §AR-rules.2).
 
 mod count;
+mod recovery;
 mod selectors;
 mod subjects;
 mod targets;
@@ -9,7 +10,7 @@ use super::RuleAnchor;
 use crate::grammar::Grammar;
 use count::{CountSpelling, count_prefix, positive};
 use std::collections::{BTreeMap, BTreeSet};
-use subjects::parse_subject;
+use subjects::{parse_subject, split_modality};
 use targets::kind_targets;
 
 pub(crate) use selectors::parse_selector;
@@ -27,6 +28,25 @@ pub(crate) enum RuleSubject {
         path: String,
         separator: String,
     },
+}
+
+impl RuleSubject {
+    /// The section path this subject selects in a declaration of `kind`
+    /// rendered as `declaration`, or `None` where it selects no chapter there.
+    /// A chapter-of-kind `NAME` is the whole path, never its last component
+    /// (§FS-rules.2.1), so it is looked up exactly as an exact coordinate's path
+    /// is, and `list` and `list --size` read a subject the same way (§FS-rules.8).
+    pub(crate) fn chapter_path(&self, kind: &str, declaration: &str) -> Option<&str> {
+        match self {
+            Self::ChapterOfKind { kind: wanted, name } if wanted == kind => Some(name),
+            Self::ExactChapter {
+                declaration: wanted,
+                path,
+                ..
+            } if wanted == declaration => Some(path),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -110,6 +130,9 @@ impl RuleVocabulary {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct RuleParseError {
     pub(crate) message: String,
+    /// The refusal offers no form because nothing could be recovered, so
+    /// `check --rule` follows it with the `known kinds:` line (§FS-rules.3.5.2).
+    pub(crate) unrecovered: bool,
 }
 
 impl std::fmt::Display for RuleParseError {
@@ -122,6 +145,7 @@ impl std::error::Error for RuleParseError {}
 fn error(message: impl Into<String>) -> RuleParseError {
     RuleParseError {
         message: message.into(),
+        unrecovered: false,
     }
 }
 
@@ -190,26 +214,16 @@ pub(crate) fn parse_rule(
         ));
     }
     let sentence = &title[..title.len() - 1];
-    let (subject_text, level, polarity, predicate) = if let Some((a, b)) =
-        sentence.split_once(" must not ")
-    {
-        (a, RuleLevel::Required, RulePolarity::Prohibiting, b)
-    } else if let Some((a, b)) = sentence.split_once(" should not ") {
-        (a, RuleLevel::Recommended, RulePolarity::Prohibiting, b)
-    } else if let Some((a, b)) = sentence.split_once(" must ") {
-        (a, RuleLevel::Required, RulePolarity::Positive, b)
-    } else if let Some((a, b)) = sentence.split_once(" should ") {
-        (a, RuleLevel::Recommended, RulePolarity::Positive, b)
-    } else if sentence.contains(" may not ") {
-        return Err(error(
-            "modality \"may not\" is not accepted; accepted form: Each FS must not cite any AR.",
-        ));
-    } else {
-        return Err(error(
-            "rule has no accepted modality; accepted form: Each FS must cite at least one GOAL.",
-        ));
+    // §FS-rules.3.6: the subject ends at the modality found first in a fixed order.
+    let Some((subject_text, level, polarity, predicate)) = split_modality(sentence) else {
+        return Err(error(if sentence.contains(" may not ") {
+            "modality \"may not\" is not accepted; accepted form: Each FS must not cite any AR."
+        } else {
+            "rule has no accepted modality; accepted form: Each FS must cite at least one GOAL."
+        }));
     };
-    let subject = parse_subject(subject_text, vocabulary)?;
+    let subject = parse_subject(subject_text, vocabulary)
+        .map_err(|refusal| refusal.rule_error(vocabulary))?;
     let mut unverifiable = None;
     let (relation, targets, cardinality) =
         parse_predicate(predicate, polarity, vocabulary, &mut unverifiable)?;

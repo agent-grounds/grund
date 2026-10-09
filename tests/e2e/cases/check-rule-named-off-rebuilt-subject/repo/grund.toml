@@ -1,0 +1,27 @@
+grund_config_version = 1
+project_name = "rule-after-enabling"
+
+[reference]
+marker = "§"
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+section_separator = "."
+named_sections = false
+slug_pattern = "[a-z][a-z0-9-]*"
+
+[[kinds]]
+kind = "FS"
+folder = "docs/functional-spec"
+title = "What"
+
+[[kinds]]
+kind = "REQ"
+folder = "docs/requirements"
+title = "Requirements"
+
+[[kinds]]
+kind = "GOAL"
+folder = "docs/goals"
+title = "Goals"
