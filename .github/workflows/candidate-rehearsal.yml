@@ -186,6 +186,8 @@ jobs:
         with:
           python-version: "3.14"
 
+      # pipx is pinned: which backend it picks, and what making its shared venv
+      # fetches, change between releases (candidate_install.py).
       - name: Name the interpreters and install pipx
         if: ${{ matrix.registry }}
         shell: bash
@@ -198,7 +200,7 @@ jobs:
             ${{ steps.py314.outputs.python-path }}
         run: |
           python -c "import os; print('GRUND_REHEARSAL_PYTHONS=' + os.pathsep.join(os.environ['PYTHONS'].split()))" >> "$GITHUB_ENV"
-          python -m pip install --upgrade pipx
+          python -m pip install pipx==1.17.12
 
       # §FS-distribution-candidate.5.4: the same-source oracle, built as ci.yml builds it.
       # The Python corpus reads it from target/debug, the Node one from the environment.
