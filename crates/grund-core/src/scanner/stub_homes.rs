@@ -49,7 +49,7 @@ pub(crate) fn file_declares_inline_home(
         return Ok(false);
     }
     let text = target_text(path, overlays)?;
-    Ok(inline_home_line(&text, path, id, config).is_some())
+    Ok(inline_home_lines(&text, path, id, config).next().is_some())
 }
 
 /// The text of `path`, a stub's target, as a save would write it
@@ -65,49 +65,50 @@ fn target_text<'a>(path: &Path, overlays: &'a TextOverlays) -> std::io::Result<C
     })
 }
 
-/// The first line of `text`, the contents of `path`, that declares `id` and is not
-/// itself a stub link (§FS-declarations.checks.broken-stub, §AR-scanner.4.6).
-/// A Markdown `text` is read the way the scan reads it: fence delimiter lines and
-/// every line inside a fence are skipped first (§AR-scanner.2.3.3), so a heading
-/// shown there as an example declares nothing (§FS-declarations.checks.broken-stub.2).
-fn inline_home_line(text: &str, path: &Path, id: &Id, config: &Config) -> Option<usize> {
+/// Every line of `text`, the contents of `path`, that declares `id` and is not
+/// itself a stub link, in file order (§FS-declarations.checks.broken-stub,
+/// §AR-scanner.4.6): each is a home, so a target that declares the ID twice is two
+/// (§FS-declarations.checks.duplicate.1). The broken-stub rule asks only for the
+/// first. A Markdown `text` is read the way the scan reads it: fence delimiter
+/// lines and every line inside a fence are skipped first (§AR-scanner.2.3.3), so a
+/// heading shown there as an example declares nothing
+/// (§FS-declarations.checks.broken-stub.2).
+fn inline_home_lines<'a>(
+    text: &'a str,
+    path: &Path,
+    id: &'a Id,
+    config: &'a Config,
+) -> impl Iterator<Item = usize> + 'a {
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let mut py_docstring = PythonDocstringScanState::default();
     let mut markdown_fence = None;
-    for (index, line) in text.lines().enumerate() {
+    text.lines().enumerate().filter_map(move |(index, line)| {
         if is_md && markdown_fence_delimiter(&mut markdown_fence, line) {
-            continue;
+            return None;
         }
         if markdown_fence.is_some() {
-            continue;
+            return None;
         }
         let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
         let scan_line = scan.text.as_ref();
-        if let Some((found, token_end)) =
-            declaration_id_on_line(&config.grammar, scan_line, scan.in_py_docstring, is_md)
-            && &found == id
-        {
-            let tail = &scan_line[token_end..];
-            if STUB_LINK_HEADING.is_match(tail) {
-                continue;
-            }
-            return Some(index + 1);
-        }
-    }
-    None
+        let (found, token_end) =
+            declaration_id_on_line(&config.grammar, scan_line, scan.in_py_docstring, is_md)?;
+        (&found == id && !STUB_LINK_HEADING.is_match(&scan_line[token_end..])).then_some(index + 1)
+    })
 }
 
-/// Record on every stub of an ID declared more than once where its home declares
-/// the ID (§AR-scanner.4.6): the record of the ID at the stub's target where the walk
-/// holds one, else the target read as a save would write it, the editor's text in
+/// Record on every stub, a lone one too, every line its home declares the ID on
+/// (§AR-scanner.4.6): the records of the ID at the stub's target where the walk
+/// holds them, else the target read as a save would write it, the editor's text in
 /// `overlays` where it is open and the disk otherwise, once per target however many
-/// stubs and IDs name it. An ID declared once is passed over unresolved, so a lone
-/// stub costs nothing here and stays its own home (§FS-declarations.checks.duplicate.1).
+/// stubs and IDs name it. A lone stub is read because its target may declare the ID
+/// twice, two homes whether or not the walk reached it
+/// (§FS-declarations.checks.duplicate.1); an ID no stub declares is passed over.
 pub(super) fn record_stub_homes(config: &Config, overlays: &TextOverlays, findings: &mut Findings) {
     let mut targets = TargetTexts::new(overlays);
     for (id, decls) in &mut findings.declarations {
-        if decls.len() < 2 || !decls.iter().any(|decl| decl.is_stub) {
+        if !decls.iter().any(|decl| decl.is_stub) {
             continue;
         }
         let homes: Vec<Option<StubHome>> = decls
@@ -139,14 +140,20 @@ fn stub_home(
         return None;
     }
     // Kept where the walk reached the target, so a scope narrowed after it still
-    // pairs the stub (§AR-checker.2.13).
-    if let Some(record) = decls
-        .iter()
-        .find(|other| paths_same_location(&other.file, &resolved) && other.file != decl.file)
-    {
+    // pairs the stub (§AR-checker.2.13), at each of its records there.
+    let at_target = |other: &&Declaration| {
+        paths_same_location(&other.file, &resolved) && other.file != decl.file
+    };
+    if let Some(record) = decls.iter().find(at_target) {
+        let mut lines: Vec<usize> = decls
+            .iter()
+            .filter(at_target)
+            .map(|other| other.line)
+            .collect();
+        lines.sort_unstable();
         return Some(StubHome {
             path: record.file.clone(),
-            line: record.line,
+            lines,
         });
     }
     // §FS-declarations.checks.broken-stub.3: the rule's own gate, a file the scan reads.
@@ -154,11 +161,16 @@ fn stub_home(
         return None;
     }
     // §FS-declarations.checks.duplicate.1: the rule's text, the editor's before the
-    // disk, whether or not the walk reached it (§FS-declarations.checks.broken-stub.1).
-    let line = inline_home_line(targets.read(&resolved)?, &resolved, id, config)?;
+    // disk, whether or not the walk reached it (§FS-declarations.checks.broken-stub.1),
+    // and every line of it that declares the ID, never the first alone.
+    let lines: Vec<usize> =
+        inline_home_lines(targets.read(&resolved)?, &resolved, id, config).collect();
+    if lines.is_empty() {
+        return None;
+    }
     Some(StubHome {
         path: resolved,
-        line,
+        lines,
     })
 }
 

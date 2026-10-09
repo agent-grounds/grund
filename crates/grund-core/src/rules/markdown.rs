@@ -158,9 +158,12 @@ fn adapt_projects(
             let Some(target_homes) = target_findings.declarations.get(&citation.id) else {
                 continue;
             };
+            // A stub whose target declares the ID twice stands for two homes, so its
+            // ID is ambiguous here as it is to `check` (§FS-declarations.checks.duplicate.1).
             let mut resolved = target_homes
                 .iter()
-                .filter(|home| !is_stub_for_inline_decl(&target_config.root, home, target_homes));
+                .filter(|home| !is_stub_for_inline_decl(&target_config.root, home, target_homes))
+                .flat_map(Declaration::home_sites);
             let (Some(_), None) = (resolved.next(), resolved.next()) else {
                 // Unknown and ambiguous targets retain their ordinary resolver
                 // findings but never become logical edges (§FS-rules.5.1).

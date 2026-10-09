@@ -91,7 +91,9 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             homes.sort_by(|a, b| {
                 (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
             });
-            let duplicate_declaration = homes.len() > 1;
+            // §FS-declarations.checks.duplicate.2: a stub whose target declares the ID
+            // twice is one row, and two homes.
+            let duplicate_declaration = homes.iter().flat_map(|home| home.home_sites()).count() > 1;
             for declaration in homes {
                 pending.push(Pending {
                     project_alias: &project.alias,

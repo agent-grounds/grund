@@ -62,19 +62,20 @@ pub(super) fn ambiguous_id_refusal(
     decls: &[Declaration],
     id: &Id,
 ) -> Option<ShowQueryError> {
-    let homes: Vec<&Declaration> = decls
+    // §FS-declarations.checks.duplicate.3: a home a stub stands for is at its target,
+    // at each line there that declares the ID (§FS-declarations.checks.duplicate.1).
+    let homes: Vec<(&Path, usize)> = decls
         .iter()
         .filter(|decl| !is_stub_for_inline_decl(&config.root, decl, decls))
+        .flat_map(Declaration::home_sites)
         .collect();
     if homes.len() <= 1 {
         return None;
     }
-    // §FS-errors.3.1: every site is spelled from the effective report root, and a
-    // home a stub stands for at its target (§FS-declarations.checks.duplicate.3).
+    // §FS-errors.3.1: every site is spelled from the effective report root.
     let mut sites: Vec<(String, String, usize)> = homes
-        .iter()
-        .map(|d| {
-            let (file, line) = d.home_site();
+        .into_iter()
+        .map(|(file, line)| {
             let path = display_path(path_config, file);
             (format!("{path}:{line}"), path, line)
         })

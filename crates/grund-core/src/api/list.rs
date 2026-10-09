@@ -130,7 +130,9 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             homes.sort_by(|a, b| {
                 (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
             });
-            let duplicate = homes.len() > 1;
+            // §FS-declarations.checks.duplicate.2: a stub whose target declares the ID
+            // twice is one row, and two homes.
+            let duplicate = homes.iter().flat_map(|home| home.home_sites()).count() > 1;
             for home in homes {
                 entries.push(Entry {
                     project_alias: project.alias.as_str(),
