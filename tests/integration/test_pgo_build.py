@@ -1,13 +1,17 @@
-"""§FS-distribution-candidate.7.4 — what `scripts/pgo-build.sh` reports about a
-failed build, with Cargo and rustc stood in for.
+"""§FS-distribution-candidate.5.6, §FS-distribution-candidate.7.3,
+§FS-distribution-candidate.7.4 — what `scripts/pgo-build.sh` reports, with Cargo and
+rustc stood in for.
 
 The stand-ins answer as the real tools do on the host the script is told it runs
-on, so the one failure the Windows arm64 row may fall back on is told apart from
-every other failure on every CI host, in seconds and without a profile-guided
-build. The real builds run in the manual rehearsal
+on, so every CI host checks, in seconds and without a profile-guided build, that
+the evidence names files this host's Python opens, and that the one failure the
+Windows arm64 row may fall back on is told apart from every other failure. The
+real builds run in the manual rehearsal
 (`tests/integration/rehearsal/profile_payload_provenance.py`).
 """
 
+import hashlib
+import json
 import os
 import shutil
 import subprocess
@@ -64,8 +68,8 @@ CRASH_LOG = ("   Compiling grund-core v0.16.2-dev\n   Compiling grund v0.16.2-de
              + crashed("grund-core"))
 
 
-class FailureTests(unittest.TestCase):
-    """§FS-distribution-candidate.7.4: only rustc's crash on the Windows arm64 host exits 3."""
+class StandIns(unittest.TestCase):
+    """A scratch root with the stand-in `rustc` and `cargo`, and the script run under them."""
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="grund-pgo-stand-in-")
@@ -85,9 +89,41 @@ class FailureTests(unittest.TestCase):
             path.write_text(log, encoding="utf-8", newline="\n")
             env["FAKE_CARGO_LOG"] = path.as_posix()
         argv = [BASH, "-c", UNDER_STAND_INS, "bash", str(self.root / "tools"), str(PGO),
-                "--target-dir", str(self.root / "target"), "--sha", SHA, *args]
+                "--target-dir", str(self.root / "target"), "--sha", SHA, *map(str, args)]
         return subprocess.run(argv, capture_output=True, text=True, encoding="utf-8",
                               errors="replace", env=env, timeout=600)
+
+
+class EvidenceTests(StandIns):
+    """§FS-distribution-candidate.7.3: `candidate.py build` keeps the payload the
+    evidence names, so on a Windows row it must be a path native Python opens, not
+    Git Bash's `/c/...` (§FS-distribution-candidate.5.6)."""
+
+    def test_the_evidence_names_files_this_host_opens(self):
+        host, artifact = {"nt": ("x86_64-pc-windows-msvc", "grund_node.dll")}.get(
+            os.name, ("x86_64-unknown-linux-gnu", "libgrund_node.so"))
+        key = (f'{{"compiler": "rustc 1.95.0", "target": "{host}", "source_sha": "{SHA}", '
+               '"product": "node-addon", "features": [], "abi": null}')
+        profile = self.root / "node-addon.profdata"
+        profile.write_bytes(b"profile\n")
+        Path(f"{profile}.key").write_text(f"key: {key}\ntraining: [\"stand-in\"]\n"
+                                          "training_sha256: t\ngenerate_sha256: g\n",
+                                          encoding="utf-8", newline="\n")
+        evidence = self.root / "evidence.json"
+        result = self.pgo(host, None, "--product", "node-addon", "--profile", profile,
+                          "--evidence", evidence, artifact=artifact)
+        self.assertEqual(0, result.returncode, result.stderr)
+        record = json.loads(evidence.read_text(encoding="utf-8"))
+        payload = Path(record["payload"])
+        self.assertTrue(payload.is_file(), f"evidence names {record['payload']}")
+        self.assertEqual(artifact, payload.name)
+        self.assertEqual(hashlib.sha256(payload.read_bytes()).hexdigest(), record["build_sha256"])
+        self.assertTrue(Path(record["profile"]).is_file(), f"evidence names {record['profile']}")
+        self.assertTrue(Path(record["profile"]).samefile(profile))
+
+
+class FailureTests(StandIns):
+    """§FS-distribution-candidate.7.4: only rustc's crash on the Windows arm64 host exits 3."""
 
     def test_the_crash_on_the_windows_arm64_host_exits_3(self):
         result = self.pgo(ARM64, CRASH_LOG)
