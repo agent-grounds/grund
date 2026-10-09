@@ -31,7 +31,10 @@ COMPILER_CRASH = "rustc crashed compiling the instrumented build"
 NO_PROFILE = "training produced no profile"
 # Resolved, because on Windows a bare name finds System32's WSL `bash.exe` first.
 BASH = shutil.which("bash") or "bash"
-INSTRUMENTED = (b"__llvm_profile_runtime", b"__llvm_profile_write_file", b"__llvm_prf_cnts", b".lprfc$")
+# ELF and Mach-O keep the profile runtime's symbol and section names; a PE image keeps
+# only its merged `.lprfc` section and the runtime's `LLVM_PROFILE_FILE` lookup.
+INSTRUMENTED = (b"__llvm_profile_runtime", b"__llvm_profile_write_file", b"__llvm_prf_cnts",
+                b".lprfc", b"LLVM_PROFILE_FILE")
 TARGET = {}
 
 
