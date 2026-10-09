@@ -38,7 +38,9 @@ fn rule() -> ParsedRule {
 }
 
 /// §FS-rules.3.5.1, §FS-errors.3: whitespace at any position remains refused,
-/// with the entire released reason followed by actionable guidance.
+/// with the entire released reason followed by actionable guidance. Between
+/// them stands the typed sentence with the `NAME` trimmed, where trimming
+/// leaves a token, and nothing where the `NAME` is empty or holds whitespace.
 #[test]
 fn chapter_diagnostic_parser_refuses_whitespace_anywhere_in_presence_name() {
     let vocabulary = RuleVocabulary {
@@ -49,18 +51,15 @@ fn chapter_diagnostic_parser_refuses_whitespace_anywhere_in_presence_name() {
         id_grammars: Vec::new(),
         section_separators: vec![".".into()],
     };
-    let expected = concat!(
-        "chapter name must be a non-empty NAME with no surrounding whitespace; ",
-        "accepted form: Each FS must have exactly one requirements chapter.",
-        " NAME forbids whitespace anywhere."
-    );
-    for name in [
-        "Goal and hypothesis",
-        "Goal\tand",
-        "Goal\u{a0}and",
-        " goal",
-        "goal ",
-        "",
+    let reason = "chapter name must be a non-empty NAME with no surrounding whitespace; ";
+    let trimmed = "accepted form: Each FS must have exactly one goal chapter. ";
+    for (name, form) in [
+        ("Goal and hypothesis", ""),
+        ("Goal\tand", ""),
+        ("Goal\u{a0}and", ""),
+        (" goal", trimmed),
+        ("goal ", trimmed),
+        ("", ""),
     ] {
         let sentence = format!("Each FS must have exactly one {name} chapter.");
         let refusal = parse_rule(
@@ -70,7 +69,12 @@ fn chapter_diagnostic_parser_refuses_whitespace_anywhere_in_presence_name() {
             &vocabulary,
         )
         .expect_err("presence NAME with whitespace or no token stays refused");
+        let expected = format!("{reason}{form}NAME forbids whitespace anywhere.");
         assert_eq!(refusal.message, expected, "presence NAME {name:?}");
+        assert!(
+            !refusal.unrecovered,
+            "a chapter name is not a kind: {name:?}"
+        );
     }
 }
 

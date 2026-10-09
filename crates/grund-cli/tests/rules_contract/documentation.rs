@@ -149,8 +149,14 @@ fn guide_marked_rows_execute_against_the_released_parser() {
         let sentence = &left[sentence_start..sentence_end];
         let right = &line[arrow + " → ".len()..];
         let reason_start = right.find('`').expect("refusal reason start") + 1;
-        let reason_end = right.rfind('`').expect("refusal reason end");
+        let reason_end =
+            right[reason_start..].find('`').expect("refusal reason end") + reason_start;
         let reason = &right[reason_start..reason_end];
+        // §FS-rules.3.5.4.4: a row that offers no form names the line after it.
+        let after = match right[reason_end + 1..].strip_prefix(", then `") {
+            Some(rest) => format!("{}\n", rest.strip_suffix('`').expect("kinds line end")),
+            None => String::new(),
+        };
         let repo = if left.starts_with("- With named sections off") {
             &named_off
         } else {
@@ -163,7 +169,7 @@ fn guide_marked_rows_execute_against_the_released_parser() {
             "refusal was accepted: {sentence}"
         );
         assert_eq!(text(&output.stdout), "");
-        assert_eq!(text(&output.stderr), format!("error: {reason}\n"));
+        assert_eq!(text(&output.stderr), format!("error: {reason}\n{after}"));
         refused_count += 1;
     }
     assert_eq!(refused_count, 16, "refused guide-row inventory drifted");

@@ -247,13 +247,19 @@ Every offending physical citation site produces the existing
 ### 3.5 Strict refusals
 
 No paraphrase or unlisted production is accepted. A refusal identifies the
-failed production and gives its canonical accepted rewrite; an ambiguity names
-every candidate and chooses none. A chapter subject refused for its chapter
-path names the component that failed, whichever spelling reached it
-([§FS-rules.3.5.3](FS-rules.md#353-a-chapter-path-is-refused-for-the-component-that-failed)). The one refusal that gives no rewrite is a
-subject refused for needing named sections from which no configured kind can
-be recovered ([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)). The documentation and parser tests carry at
-least these exact rows:
+failed production and gives its canonical accepted rewrite: the sentence as
+typed with that production replaced, which is accepted when it is pasted back.
+An ambiguity names every candidate and chooses none. A chapter subject
+refused for its chapter path names the component that failed, whichever
+spelling reached it ([§FS-rules.3.5.3](FS-rules.md#353-a-chapter-path-is-refused-for-the-component-that-failed)). [§FS-rules.3.5.4](FS-rules.md#354-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) builds
+every rewrite, and it names the refusals that offer none because the sentence
+does not say what belongs in their place: a path subject, an object kind that
+is not configured, a subject from which no configured kind can be recovered,
+and a sentence with no modality, verb or accepted count. In a repository whose
+kinds are `GOAL`, `REQ`, `FS`, `AR` and `RULE`, with named sections on, the
+documentation and parser tests carry at least these exact rows. Where a row
+offers no rewrite, `check --rule` prints the reason alone and then the line
+`known kinds: GOAL, REQ, FS, AR, RULE`:
 
 | Refused sentence | Exact reason and accepted rewrite(s) |
 |---|---|
@@ -265,32 +271,47 @@ least these exact rows:
 | `Each FS must cite at least one GOAL and must not cite any AR.` | `conjunctions are not accepted; accepted forms: "Each FS must cite at least one GOAL." and "Each FS must not cite any AR."` |
 | `Each FS must cite at least one GOAL` | `rule must end with "."; accepted form: Each FS must cite at least one GOAL.` |
 | `each FS must cite at least one GOAL.` | `fixed word "Each" is case-sensitive; accepted form: Each FS must cite at least one GOAL.` |
-| `Each file in vendor/ must cite at least one FS.` | `path subjects are not accepted in phase 1; accepted form: Each FS must cite at least one GOAL.` |
+| `Each file in vendor/ must cite at least one FS.` | `path subjects are not accepted in phase 1`, and no rewrite |
 | `Each */FS must cite at least one GOAL.` | `subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one GOAL.` |
-| `FS-login.* must cite at least one REQ.` | `section-component wildcards are not accepted in phase 1; accepted form: FS-login.requirements must cite at least one REQ.` |
-| `Each chapter of each FS must cite at least one REQ.` | `chapter-quantified subjects are not accepted in phase 1; accepted form: The requirements chapter of each FS must cite at least one REQ.` |
-| `FS-login.2 must cite at least one REQ.` | `numbered chapter subjects can detach when headings move; accepted form: FS-login.requirements must cite at least one REQ.` |
+| `FS-login.* must cite at least one REQ.` | `section-component wildcards are not accepted in phase 1; accepted form: FS-login must cite at least one REQ.` |
+| `Each chapter of each FS must cite at least one REQ.` | `chapter-quantified subjects are not accepted in phase 1; accepted form: Each FS must cite at least one REQ.` |
+| `FS-login.2 must cite at least one REQ.` | `numbered chapter subjects can detach when headings move; accepted form: FS-login must cite at least one REQ.` |
 | `FS-login.requirements must cite at least one REQ.` with named sections off | `named chapter subjects require [id] named_sections = true; accepted form after enabling it: FS-login.requirements must cite at least one REQ.` |
-| `Each POLICY must cite at least one GOAL.` | `unknown kind "POLICY"; accepted form: Each FS must cite at least one GOAL.` |
+| `Each POLICY must cite at least one GOAL.` | `unknown kind "POLICY"`, and no rewrite |
 
 `FS-missing must cite at least one GOAL.` is syntactically valid and therefore
 is not a pre-scan refusal. After scanning it produces the exact resolution
 message `literal subject FS-missing does not resolve` ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 
+Five of these rows once printed a fixed rewrite that named a chapter, a
+declaration or a kind the sentence never typed. The decision to replace those
+rewrites in place, and every other fixed rewrite with one built from the
+typed sentence, is
+[§DF-rule-refusal-rewrites](../decisions/functional/DF-rule-refusal-rewrites.md#df-rule-refusal-rewrites-a-refused-rules-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced-in-place).
+
 #### 3.5.1 Presence-name whitespace refusal
 
 A presence `NAME` containing whitespace anywhere, including internal spaces,
-tabs, and Unicode whitespace, remains refused. The whole released reason,
-including its accepted-form example, remains a verbatim contiguous prefix under
-[§FS-errors.3](FS-errors.md#3-message-text); append the explanation:
+tabs, and Unicode whitespace, remains refused. The released reason remains a
+verbatim contiguous prefix under [§FS-errors.3](FS-errors.md#3-message-text), and the explanation
+`NAME forbids whitespace anywhere.` remains the end of the message. Between
+them stands the accepted form [§FS-rules.3.5.4](FS-rules.md#354-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) builds: the sentence as typed with
+the `NAME` trimmed of its surrounding whitespace. An empty `NAME`, or one with
+whitespace inside, leaves no token to keep, so no form is offered and only the
+`; ` that ends every reason stands between them. The first line below refuses
+`Each FS must have exactly one  requirements chapter.`, with two spaces, and
+the second refuses `Each FS must have exactly one Goal and hypothesis chapter.`
+and `Each FS must have exactly one  chapter.`:
 
 ```text
 chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter. NAME forbids whitespace anywhere.
+chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.
 ```
 
 An empty `NAME` uses the same refusal. This adds guidance without admitting any
 new grammar. An ad-hoc refusal still writes nothing to stdout and exits 2
-([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
+([§FS-rules.4](FS-rules.md#4-validation-lifecycle)), and a missing piece here is a chapter name, never a
+kind, so no `known kinds:` line follows it.
 
 #### 3.5.2 A subject that needs named sections is answered with one they make valid
 
@@ -312,8 +333,11 @@ built from what was typed and from the configured kinds:
 4. Where no configured kind can be recovered, or a configured ID grammar cannot
    be compiled with named sections on, nothing is suggested.
 5. The reason stays the one [§FS-rules.3.5](FS-rules.md#35-strict-refusals) gives for the subject as configured,
-   `named chapter subjects require [id] named_sections = true`, and the
-   predicate stays the fixed `must cite at least one REQ.`.
+   `named chapter subjects require [id] named_sections = true`. The modality
+   and predicate are the ones the author typed, rewritten as
+   [§FS-rules.3.5.4](FS-rules.md#354-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) says where they are refused too, and where that point offers
+   no form for them nothing is suggested. The label of step 3 is decided on the
+   whole offered sentence, not on its subject alone.
 
 So every sentence offered after `accepted form after enabling it:` is accepted
 by `check --rule` once `named_sections = true`, and every sentence offered after
@@ -324,7 +348,8 @@ question ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)).
 Where nothing is suggested, the two rule surfaces differ, because only one of
 them can print a second line:
 
-- `check --rule` prints the reason alone and then a `known kinds:` line in the
+- `check --rule` prints the reason alone and then, where what could not be
+  supplied is a kind ([§FS-rules.3.5.4](FS-rules.md#354-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced)), a `known kinds:` line in the
   form an unknown `--kind` ends in, naming the whole set the subject accepts
   ([§FS-list.1.1](FS-list.md#11---kind)): the citable kinds of the project whose configuration reads the
   subject, once each, in configuration order. That is the root project at a
@@ -424,6 +449,136 @@ In the same repository `The requirements chapter of each FS` and
 correct these reasons in place is
 [§DF-rule-refusal-reasons](../decisions/functional/DF-rule-refusal-reasons.md#df-rule-refusal-reasons-a-chapter-path-is-refused-for-the-component-that-failed-corrected-in-place).
 
+#### 3.5.4 An accepted form is the typed sentence with the failed part replaced
+
+Every sentence a rule surface offers after `accepted form:`, `accepted forms:`
+or `accepted form after enabling it:` is the sentence the author typed with the
+production that failed rewritten, and pasting it back to `check --rule` is not
+refused, in every repository and not only in one that happens to configure the
+kinds an example names. Accepted means what it means in [§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid): not
+refused before the scan, so whether a literal subject resolves stays the scan's
+question ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)). The sentence front end that owns the refusals builds the
+form, so `check --rule` and a configured rule declaration's `invalid-rule`
+finding offer the same one. The reason before the `;` is not part of the form
+and does not change with it.
+
+##### 3.5.4.1 Only the failed part is replaced
+
+The subject, modality, count and object kinds that did not fail are kept as
+they were typed, and only the production that failed is spelled canonically. A
+refusal never answers with a sentence about `FS`, `GOAL`, `REQ` or
+`AR-overview.system-overview` that the author did not write.
+
+##### 3.5.4.2 Only what can be recovered is supplied
+
+A refused subject is rebuilt with [§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)'s four steps and written as a rule
+subject, the way [§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) step 2 writes one: where a selector would get
+`KIND.NAME[.NAME…]` the rule gets `The NAME[.NAME…] chapter of each KIND`, and
+where a selector would get a bare `KIND` the rule gets `Each KIND`. An object
+kind is never guessed. A chapter name is never invented: the front end reads
+the configuration and not the scan, so a subject keeps the named components
+typed before the refused one, and where none was typed it falls back to its
+declaration or to `Each KIND`.
+
+##### 3.5.4.3 A form is parsed before it is offered
+
+The form is parsed again with the same vocabulary. Where another part of it is
+refused, that part is replaced the same way and the form is parsed again. Each
+pass replaces one refused production, so the passes end within the number of
+productions a sentence has, and a pass that would leave the sentence as it was
+ends them with no form. A form is offered only once the parser accepts it.
+Where a pass has nothing to put in, or more than one candidate, no form is
+offered. A two-form refusal offers its pair only where both forms are accepted.
+
+##### 3.5.4.4 Where no form is offered
+
+Where no form is offered, the refusal is its reason alone. On `check --rule`,
+the `known kinds:` line [§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) prints follows the reason where what
+could not be supplied is a kind, a subject's or an object's, naming the same
+set; it writes nothing to stdout and exits 2. Where what could not be supplied
+is anything else, nothing follows the reason. A configured rule declaration's
+`invalid-rule` finding ends at the reason either way ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
+
+##### 3.5.4.5 The rewrite each refusal makes
+
+| Refusal | What the form replaces | No form when |
+|---|---|---|
+| modality `may not` | `must not` | — |
+| `cite no` | `<modality> not cite any` | — |
+| lowercase `each` | `Each` | — |
+| no terminal `.` | appends `.` | — |
+| numeric `at least 1`, `exactly 1` | `at least one`, `exactly one` | — |
+| numeric `at least 1 times`, `exactly 1 times` | `at least once`, `exactly once` | — |
+| a per-target count without `times` | the count typed after the bound, then `times` | that count is not a numeral |
+| a count with leading zeros | the count without them | the count is zero or is not a numeral |
+| quantifier `a` | two forms, `at least one` and `exactly one` | either form is refused |
+| the documented conjunction | two forms, one per clause | either form is refused |
+| a prohibition without `cite any` | `cite [count] KINDS` becomes `cite any KINDS` | the predicate is anything else |
+| a presence object not ending in `chapter` | its last word becomes `chapter` or `chapters`, as the count takes | no word precedes it |
+| a presence noun of the wrong number | `chapter` or `chapters`, as the count takes | — |
+| a presence `NAME` with whitespace ([§FS-rules.3.5.1](FS-rules.md#351-presence-name-whitespace-refusal)) | the `NAME` trimmed of its surrounding whitespace | the `NAME` is empty or has whitespace inside |
+| a chapter subject in a presence rule | the subject's declaration, or `Each KIND` | — |
+| a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rules.3.5.4.2](FS-rules.md#3542-only-what-can-be-recovered-is-supplied) says | no configured kind is recovered; `known kinds:` follows |
+| a path subject, `Each file in …` | — | always; `known kinds:` follows |
+| an unknown or malformed object kind | — | always; `known kinds:` follows |
+| no modality, an unknown verb, a count that is not accepted, a count with no object | — | always |
+
+Every row keeps the subject and modality as typed, so the presence, per-target
+and count refusals no longer answer with `Each FS must` or
+`AR-overview.system-overview` whatever was typed. A refusal whose reason
+appends guidance keeps it where no form is offered: `count is not accepted`
+keeps its list of the canonical counts, and the [§FS-rules.3.5.1](FS-rules.md#351-presence-name-whitespace-refusal) refusal keeps
+`NAME forbids whitespace anywhere.`.
+
+##### 3.5.4.6 Exact rows where `FS` is the only kind
+
+In the repository of [§FS-rules.8.1](FS-rules.md#81-a-refused-selector-is-answered-with-a-selector)'s first table, whose one kind is `FS`, with
+named sections on and `FS-login` holding named `requirements` and `should`
+chapters, these are the exact `check --rule` refusals. Each exits 2 with
+nothing on stdout, and its `error:` line is the reason and what follows it. A
+configured rule declaration's finding carries the same text after
+`is not a valid rule: `, and never the line after it.
+
+| Refused sentence | Exact reason and accepted form(s) | Line after it |
+|---|---|---|
+| `Each FS may not cite any FS.` | `modality "may not" is not accepted; accepted form: Each FS must not cite any FS.` | none |
+| `Each FS should cite no FS.` | `"cite no" is not accepted; accepted form: Each FS should not cite any FS.` | none |
+| `each FS must cite at least one FS.` | `fixed word "Each" is case-sensitive; accepted form: Each FS must cite at least one FS.` | none |
+| `Each FS must cite at least 1 FS` | `rule must end with "."; accepted form: Each FS must cite at least one FS.` | none |
+| `Each FS must cite at least 1 FS.` | `numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one FS.` | none |
+| `Each FS should be cited by exactly 1 FS.` | `numeric "exactly 1" is not canonical; accepted form: Each FS should be cited by exactly one FS.` | none |
+| `FS-login.requirements must cite each FS at least 1 times.` | `numeric "at least 1 times" is not canonical; accepted form: FS-login.requirements must cite each FS at least once.` | none |
+| `FS-login must cite each FS exactly 2.` | `per-target counts must end in "times"; accepted form: FS-login must cite each FS exactly 2 times.` | none |
+| `Each FS must cite exactly 02 FS.` | `count must be a canonical positive base-10 integer; accepted form: Each FS must cite exactly 2 FS.` | none |
+| `Each FS must cite a FS.` | `quantifier "a" is ambiguous; accepted forms: "Each FS must cite at least one FS." or "Each FS must cite exactly one FS."` | none |
+| `Each FS must cite at least one GOAL and must not cite any AR.` | `conjunctions are not accepted` | `known kinds: FS` |
+| `Each FS should not cite at least one FS.` | `a prohibition must use "cite any"; accepted form: Each FS should not cite any FS.` | none |
+| `FS-login must have exactly one requirements section.` | `chapter presence must end in "chapter"; accepted form: FS-login must have exactly one requirements chapter.` | none |
+| `FS-login should have at most 2 requirements chapter.` | `chapter count has the wrong singular/plural spelling; accepted form: FS-login should have at most 2 requirements chapters.` | none |
+| `FS-login must have exactly one  requirements chapter.` | `chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: FS-login must have exactly one requirements chapter. NAME forbids whitespace anywhere.` | none |
+| `FS-login must have exactly one Goal and hypothesis chapter.` | `chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.` | none |
+| `FS-login.requirements must have exactly one should chapter.` | `chapter subjects cannot have chapters; accepted form: FS-login must have exactly one should chapter.` | none |
+| `The requirements chapter of each FS should have at least one should chapter.` | `chapter subjects cannot have chapters; accepted form: Each FS should have at least one should chapter.` | none |
+| `FS-*.requirements must cite at least one FS.` | `literal subject "FS-*.requirements" does not match the configured ID grammar; accepted form: The requirements chapter of each FS must cite at least one FS.` | none |
+| `FS.* must cite at least one FS.` | `section-component wildcards are not accepted in phase 1; accepted form: Each FS must cite at least one FS.` | none |
+| `FS-login.2 should cite at most 2 FS.` | `numbered chapter subjects can detach when headings move; accepted form: FS-login should cite at most 2 FS.` | none |
+| `Each chapter of each FS must be cited by at least one FS.` | `chapter-quantified subjects are not accepted in phase 1; accepted form: Each FS must be cited by at least one FS.` | none |
+| `Each */FS must cite at least one FS.` | `subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one FS.` | none |
+| `Each POLICY must cite at least one FS.` | `unknown kind "POLICY"` | `known kinds: FS` |
+| `Each file in vendor/ must cite at least one FS.` | `path subjects are not accepted in phase 1` | `known kinds: FS` |
+| `Each FS must cite at least one POLICY.` | `unknown kind "POLICY"` | `known kinds: FS` |
+| `FS-*.requirements must cite at least one GOAL.` | `literal subject "FS-*.requirements" does not match the configured ID grammar` | `known kinds: FS` |
+| `Each FS cites at least one FS.` | `rule has no accepted modality` | none |
+| `Each FS must reference at least one FS.` | `verb is not accepted` | none |
+| `Each FS must cite some FS.` | `count is not accepted; the canonical counts are "at least one", "at least N", "at most N", "exactly one" and "exactly N" for a base-10 N` | none |
+| `Each FS must cite at least two FS.` | `count must be a canonical positive base-10 integer` | none |
+
+The fourth row is offered a form only after a second pass: appending the `.`
+leaves `at least 1`, which the next pass rewrites. The conjunction and the last
+`FS-*.requirements` row are offered none for the opposite reason: the first
+pass rebuilds what failed, and the form it leaves names a kind this repository
+does not configure, which no pass may guess.
+
 ### 3.6 Where a sentence's subject ends
 
 A sentence's subject is the text before its modality. The modality is found in
@@ -449,9 +604,9 @@ a location. Grammar or vocabulary refusal is decided after config selection
 and before scanning, prints `error: <reason>; accepted form: <rewrite>` (or
 `accepted forms:`, or `accepted form after enabling it:` where the rewrite
 needs `[id] named_sections = true`), writes nothing to stdout, and exits 2. A
-subject refused for needing named sections from which no kind is recovered
-prints `error: <reason>` and then `known kinds: <kinds>` instead
-([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)). A syntactically valid
+refusal that offers no form ([§FS-rules.3.5.4](FS-rules.md#354-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced)) prints `error: <reason>` alone,
+and then `known kinds: <kinds>` where what it could not supply is a kind
+([§FS-rules.3.5.4.4](FS-rules.md#3544-where-no-form-is-offered)). A syntactically valid
 unresolved literal requires the catalog, so after scanning it yields an
 `invalid-rule` attributed to `--rule` and the ordinary finding exit 1.
 
@@ -745,13 +900,14 @@ warnings now are those a newly counted section citation alone produces, until
 `invalid-rule` is located at the rule heading. A configured parse failure is:
 
 ```text
-<RULE-ID> is not a valid rule: <reason>; accepted form: <canonical template>
+<RULE-ID> is not a valid rule: <reason>; accepted form: <rewrite>
 ```
 
-An ambiguous production uses `accepted forms:`, and a rewrite that needs
-`[id] named_sections = true` uses `accepted form after enabling it:`. A parse
-failure that offers no form, a subject refused for needing named sections from
-which no kind is recovered ([§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid)), is:
+The rewrite is the sentence as authored with the failed production replaced
+([§FS-rules.3.5.4](FS-rules.md#354-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced)). An ambiguous production uses `accepted forms:`, and a rewrite
+that needs `[id] named_sections = true` uses `accepted form after enabling it:`.
+A parse failure that offers no form, every refusal [§FS-rules.3.5.4.5](FS-rules.md#3545-the-rewrite-each-refusal-makes) says
+offers none, is:
 
 ```text
 <RULE-ID> is not a valid rule: <reason>
@@ -1105,14 +1261,17 @@ None of them earns the breadcrumb.
 
 An exact literal that does not resolve or is ambiguous keeps its refusal,
 which suggests nothing. The rule surfaces, `check --rule` and a configured rule
-declaration, keep every byte they print, every row of [§FS-rules.3.5](FS-rules.md#35-strict-refusals) included,
-with two exceptions. A subject refused for needing named sections is
-answered with a rule subject the same four steps build, as
-[§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) says. A chapter subject refused for a component of its path
-opens with the reason a selector gets for the same component, as
-[§FS-rules.3.5.3](FS-rules.md#353-a-chapter-path-is-refused-for-the-component-that-failed) says, and keeps every byte after that reason. The decision to
-replace the selector's lines rather than append to them is
-[§DF-selector-refusal-rewrites](../decisions/functional/DF-selector-refusal-rewrites.md#df-selector-refusal-rewrites-a-refused-selector-is-answered-with-a-selector-and-its-old-lines-are-replaced-not-appended-to).
+declaration, answer a refused subject with a rule subject the same four steps
+build, under the modality and predicate the author typed
+([§FS-rules.3.5.4.2](FS-rules.md#3542-only-what-can-be-recovered-is-supplied)), and with named sections off as [§FS-rules.3.5.2](FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid) says. A
+chapter subject refused for a component of its path opens with the reason a
+selector gets for the same component, as [§FS-rules.3.5.3](FS-rules.md#353-a-chapter-path-is-refused-for-the-component-that-failed) says. So a
+selector and a rule refused for the same subject suggest the same units, each
+in its own spelling: `FS-*.requirements` is answered with `FS.requirements` as
+a selector and with `The requirements chapter of each FS` in a rule. The
+decision to replace these lines rather than append to them is
+[§DF-selector-refusal-rewrites](../decisions/functional/DF-selector-refusal-rewrites.md#df-selector-refusal-rewrites-a-refused-selector-is-answered-with-a-selector-and-its-old-lines-are-replaced-not-appended-to), and for the rule surfaces
+[§DF-rule-refusal-rewrites](../decisions/functional/DF-rule-refusal-rewrites.md#df-rule-refusal-rewrites-a-refused-rules-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced-in-place).
 
 ## 9. Managed guidance and editor parity
 
@@ -1176,8 +1335,9 @@ The guide has a marked `### Chapter rules` writing section. Both repository and
 binary-embedded copies of `skills/grund-init/SKILL.md` contain a marked byte-
 identical copy of that section and remain wholly byte-identical to one another.
 The section includes every accepted family, every row of the [§FS-rules.3.5](FS-rules.md#35-strict-refusals) table
-and the [§FS-rules.3.5.1](FS-rules.md#351-presence-name-whitespace-refusal) refusal, each with its exact rewrite, the finding each
-example produces, and the exact
+and the [§FS-rules.3.5.1](FS-rules.md#351-presence-name-whitespace-refusal) refusal, each with its exact rewrite or, where it offers
+none, the `known kinds:` line `check --rule` prints after the reason
+([§FS-rules.3.5.4.4](FS-rules.md#3544-where-no-form-is-offered)), the finding each example produces, and the exact
 `unreached-declaration` error a chapter-scoped citation rule produces about a
 declaration that has no such chapter, and the two actions
 that answer it ([§FS-rules.2](FS-rules.md#2-subject-selectors),
@@ -1202,8 +1362,8 @@ Five independent pins prevent drift:
 
 1. `examples/rules/expected.*` run through the shared e2e runner.
 2. A marked-row extraction test submits every accepted/refused guide row to the
-   released parser and asserts acceptance or exact refusal, rewrite, code, and
-   channel.
+   released parser and asserts acceptance or exact refusal, rewrite,
+   `known kinds:` line, code, and channel.
 3. Asset-sync tests compare guide section to repository skill and whole
    repository skill to the embedded copy.
 4. The managed block's existing re-render byte comparison checks generated

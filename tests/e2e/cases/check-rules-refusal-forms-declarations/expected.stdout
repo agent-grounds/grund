@@ -1,0 +1,6 @@
+docs/rules/RULE-cite-no.md:1: error: RULE-cite-no is not a valid rule: "cite no" is not accepted; accepted form: Each FS should not cite any FS.
+docs/rules/RULE-id-grammar.md:1: error: RULE-id-grammar is not a valid rule: literal subject "FS-*.requirements" does not match the configured ID grammar; accepted form: The requirements chapter of each FS must cite at least one FS.
+docs/rules/RULE-numeric.md:1: error: RULE-numeric is not a valid rule: numeric "at least 1" is not canonical; accepted form: Each FS must cite at least one FS.
+docs/rules/RULE-unknown-object.md:1: error: RULE-unknown-object is not a valid rule: unknown kind "POLICY"
+docs/rules/RULE-whitespace.md:1: error: RULE-whitespace is not a valid rule: chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.
+docs/rules/RULE-wildcard.md:1: error: RULE-wildcard is not a valid rule: section-component wildcards are not accepted in phase 1; accepted form: Each FS must cite at least one FS.

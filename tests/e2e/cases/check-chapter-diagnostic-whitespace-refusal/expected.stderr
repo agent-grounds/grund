@@ -1,1 +1,1 @@
-error: chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter. NAME forbids whitespace anywhere.
+error: chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.
