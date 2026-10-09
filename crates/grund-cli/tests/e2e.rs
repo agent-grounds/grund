@@ -229,6 +229,32 @@ fn a_bare_id_through_a_stub_links_the_targets_heading() {
     assert_every_case_passed("bare ID through a stub", &outcomes);
 }
 
+/// §FS-fmt.6.4.1: grund.94's trees, a citation of a section its declaration lacks
+/// where the link would take no heading anchor: a source-file home behind a stub,
+/// walked or not, and a Markdown home under the `none` profile. `fmt` links nothing,
+/// and on the same homes the section the declaration has and the bare ID still link.
+#[test]
+fn a_missing_section_is_not_linked_where_the_link_takes_no_anchor() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = [
+        "fmt-cross-refs-source-home-section-skipped",
+        "fmt-cross-refs-source-home-section-skipped-write",
+        "fmt-cross-refs-source-home-walked-section-skipped",
+        "fmt-cross-refs-source-home-walked-section-skipped-write",
+        "fmt-cross-refs-anchor-none-section-skipped",
+        "fmt-cross-refs-anchor-none-section-skipped-write",
+        "fmt-cross-refs-anchor-none-closed-body-section-skipped",
+        "fmt-cross-refs-source-home-section-linked",
+        "fmt-cross-refs-source-home-walked-section-linked",
+        "fmt-cross-refs-anchor-none-section-linked",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &cases.join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("no-anchor missing section", &outcomes);
+}
+
 /// Completion scripts participate in the same two independent runs as every
 /// immutable case, so their bytes are stable across invocations (§FS-completions.3).
 #[test]
