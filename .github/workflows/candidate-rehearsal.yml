@@ -153,29 +153,41 @@ jobs:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           components: llvm-tools-preview
 
-      # §FS-distribution-candidate.1.2: CPython 3.10 through 3.14, every one named.
+      # §FS-distribution-candidate.1.2: CPython 3.10 through 3.14, every one named, on
+      # the registry rows that promise them. The archive row promises none, and no
+      # CPython 3.10 is built for Windows arm64, so it runs the harness on one.
       - uses: actions/setup-python@v6
+        if: ${{ ! matrix.registry }}
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-python@v6
+        if: ${{ matrix.registry }}
         id: py310
         with:
           python-version: "3.10"
       - uses: actions/setup-python@v6
+        if: ${{ matrix.registry }}
         id: py311
         with:
           python-version: "3.11"
       - uses: actions/setup-python@v6
+        if: ${{ matrix.registry }}
         id: py312
         with:
           python-version: "3.12"
       - uses: actions/setup-python@v6
+        if: ${{ matrix.registry }}
         id: py313
         with:
           python-version: "3.13"
       - uses: actions/setup-python@v6
+        if: ${{ matrix.registry }}
         id: py314
         with:
           python-version: "3.14"
 
       - name: Name the interpreters and install pipx
+        if: ${{ matrix.registry }}
         shell: bash
         env:
           PYTHONS: >-
