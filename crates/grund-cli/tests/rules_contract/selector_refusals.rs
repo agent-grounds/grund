@@ -1,8 +1,7 @@
 //! A refused `list --selector` is answered with a selector a reader can paste
-//! back, never with a rule sentence (§FS-rules.8.1), while `check --rule` keeps
-//! every byte it printed (§FS-rules.3.5) but where a subject needs named
-//! sections, which §FS-rules.3.5.2 answers, and the reason a chapter path is
-//! refused for, which names the same component a selector's does
+//! back, never with a rule sentence (§FS-rules.8.1), and `check --rule` answers
+//! the same subject with the same recovery written as a rule subject
+//! (§FS-rules.3.5.4.2), after the reason a selector gets for the same component
 //! (§FS-rules.3.5.3). The fixture is the repository
 //! the `list-selector-refused-*` e2e cases share: one kind, `FS`, and `FS-login`
 //! with a named `requirements` chapter holding two numbered sections and a named
@@ -291,29 +290,61 @@ fn every_suggested_selector_lists_units() {
     }
 }
 
-/// A rule sentence reaching the same subjects keeps the released accepted forms
-/// of §FS-rules.3.5, so the selector rewrite cannot leak into `check --rule`
-/// after the reason. The reason is the one a selector gets for the same
-/// component (§FS-rules.3.5.3), so `requirements.1` is numbered on both.
-#[test]
-fn the_rule_side_keeps_its_released_refusals() {
-    for (sentence, stderr) in [
-        (
-            "FS-*.requirements must cite at least one REQ.",
-            "error: literal subject \"FS-*.requirements\" does not match the configured ID grammar; accepted form: FS-login must cite at least one GOAL.\n",
-        ),
-        (
-            "The requirements.1 chapter of each FS must cite at least one REQ.",
-            "error: numbered chapter subjects can detach when headings move; accepted form: FS-login.requirements must cite at least one REQ.\n",
-        ),
-        (
-            "Each */FS must cite at least one FS.",
-            "error: subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one GOAL.\n",
-        ),
-    ] {
-        let output = run(&repo(), &["check", ".", "--rule", sentence]);
-        assert_run(&output, 2, "", stderr);
+/// The rule subject the selector `selector` names: `KIND.NAME[.NAME…]` is
+/// selector-only, so it becomes `The NAME[.NAME…] chapter of each KIND`, and a
+/// bare `KIND` becomes `Each KIND` (§FS-rules.3.5.4.2).
+fn as_rule_subject(selector: &str) -> String {
+    match selector.split_once('.') {
+        Some(("FS", names)) => format!("The {names} chapter of each FS"),
+        None if selector == "FS" => "Each FS".into(),
+        _ => selector.into(),
     }
+}
+
+/// §FS-rules.8.1, §FS-rules.3.5.4.2: a rule sentence over a refused subject is
+/// answered with the subject `list --selector` gives it, written as a rule
+/// subject under the typed predicate, and with no form and `known kinds:` where
+/// the selector has none. Only what follows the reason is compared, because the
+/// reasons are agent-grounds/grund#507's to correct.
+#[test]
+fn the_rule_side_answers_a_refused_subject_as_the_selector_does() {
+    let predicate = "must cite at least one FS.";
+    let mut wrong = Vec::new();
+    for subject in [
+        "FS-*.requirements",
+        "The requirements.1 chapter of each FS",
+        "Each */FS",
+        "FS.*",
+        "FS-login.*",
+        "Each chapter of each FS",
+        "FS-login.requirements.1",
+        "FS.requirements.1",
+        "Each POLICY",
+        "Each chapter of each POLICY",
+        "FSbogus",
+    ] {
+        let listed = text(&run(&repo(), &["list", ".", "--selector", subject]).stderr);
+        let first = listed.lines().next().unwrap_or_default();
+        let expected = match first.split_once("; accepted selector: ") {
+            Some((_, selector)) => {
+                format!(
+                    "; accepted form: {} {predicate}\n",
+                    as_rule_subject(selector)
+                )
+            }
+            None => "\nknown kinds: FS\n".into(),
+        };
+        let sentence = format!("{subject} {predicate}");
+        let output = run(&repo(), &["check", ".", "--rule", &sentence]);
+        let stderr = text(&output.stderr);
+        let after = stderr.find([';', '\n']).map_or("", |at| &stderr[at..]);
+        if output.status.code() != Some(2) || after != expected {
+            wrong.push(format!(
+                "--rule {sentence:?}: {stderr:?}\n  expected after the reason {expected:?}"
+            ));
+        }
+    }
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
 /// Guard, green before and after §FS-rules.8.1: the sentence a selector now
