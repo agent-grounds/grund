@@ -224,7 +224,8 @@ pub(crate) const INDEX_RULE_RELEASE: &str = "0.12.0";
 /// §AR-checker.2.16 — the kind-index rule (§FS-check.3.18, §FS-check.3.17). One
 /// pass per configured index: read the file once, classify the citations the
 /// scanner already recorded in it, then judge each declaration the index owns.
-/// The index file is the only thing re-read here (§AR-checker.placement).
+/// It re-reads the index file, and a stub's target the walk did not reach where an
+/// entry cites a section no recorded declaration holds (§AR-checker.placement).
 ///
 /// Why the run's own scan decides which indexes are judged: a run that cannot see
 /// the index does not get to judge it — a narrowed `grund check <one-file>`, or an

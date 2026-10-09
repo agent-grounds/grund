@@ -18,8 +18,10 @@ use std::path::{Path, PathBuf};
 /// (§FS-check.6.1.1) or the standard library's, and the calls a rule reaches such
 /// a read through in another file — the scanner's reading of a stub's target
 /// (§AR-scanner.4.6) and its listing of agent-entrypoint companions, which reads
-/// a companion's text, the resolver's point-body slicer, and the kind-index
-/// membership derivation, which reads every configured index.
+/// a companion's text, the resolver's point-body slicer, the kind-index
+/// membership derivation, which reads every configured index, and the resolver's
+/// lookup of a stub's target the walk did not reach (§AR-resolver.5), asked for a
+/// section, for a value's home, or by the chapter-rule fact adapter.
 const READ_CALLS: &[&str] = &[
     "input_read_to_string",
     "read_to_string",
@@ -29,6 +31,12 @@ const READ_CALLS: &[&str] = &[
     "companion_agent_entrypoints",
     "point_body_pair",
     "KindIndexEntries::new",
+    "section_resolves",
+    "section_home",
+    "home_as_scanned",
+    "target_records",
+    "adapt_markdown",
+    "adapt_workspace",
 ];
 
 /// Which point owns the reads each checker file makes, by the call it makes them
@@ -56,6 +64,18 @@ const READERS: &[(&str, &str, &str)] = &[
         "point_body_pair",
         "FS-declarations.checks.oversized-lead",
     ),
+    // A stub's target outside the walk, read for a cited section: the missing
+    // section, and the `grund fmt --write` clause of a local section citation.
+    ("references.rs", "section_resolves", "AR-checker.2.4"),
+    ("references.rs", "section_resolves", "FS-check.3.24.1"),
+    ("index.rs", "section_resolves", "AR-checker.2.16"),
+    // A stub's target outside the walk, read for a value binding's home.
+    ("values.rs", "home_as_scanned", "AR-checker.2.18"),
+    // The chapter-rule facts, whose `cites` reads a stub's target for a section,
+    // built for the rules themselves and for the rules section of an entrypoint.
+    ("chapter_rules.rs", "adapt_markdown", "AR-rules.3"),
+    ("chapter_rules.rs", "adapt_workspace", "AR-rules.3"),
+    ("chapter_rules.rs", "adapt_markdown", "AR-checker.2.7"),
 ];
 
 fn component_dir() -> PathBuf {
