@@ -20,11 +20,12 @@
 # (§FS-distribution-candidate.7.2): the key is written beside the merged profile,
 # and `--profile` uses an existing one only when its key is this build's.
 # `--evidence` writes the generate, train, merge and use record the candidate's
-# manifest carries (§FS-distribution-candidate.7.3). On aarch64-pc-windows-msvc,
-# rustc crashing while it compiles the instrumented build exits 3 and says so;
-# every other failure exits otherwise, a training run that writes no profile
-# with 1, so a caller can tell the one failure §FS-distribution-candidate.7.4
-# lets the Windows arm64 row fall back on from all the rest.
+# manifest carries (§FS-distribution-candidate.7.3), its paths as the host's native
+# programs read them. On aarch64-pc-windows-msvc, rustc crashing while it compiles
+# the instrumented build exits 3 and says so; every other failure exits otherwise,
+# a training run that writes no profile with 1, so a caller can tell the one
+# failure §FS-distribution-candidate.7.4 lets the Windows arm64 row fall back on
+# from all the rest.
 #
 # `--container IMAGE` runs the Cargo builds and the merge in that image (the
 # pinned manylinux2014 image of §FS-distribution.4.8) with this repository and
@@ -117,7 +118,9 @@ fi
 host="$(printf '%s\n' "$rustc_version" | awk '/^host:/ { print $2 }')"
 compiler="rustc $(printf '%s\n' "$rustc_version" | awk '/^release:/ { print $2 }')"
 
-rustc_path() {
+# A path as a native Windows program reads it — rustc's flags, and the evidence's
+# readers (§FS-distribution-candidate.5.6) — rather than Git Bash's `/d/a/...`.
+native_path() {
   local path="$1"
   if [[ "$host" == *windows* ]] && command -v cygpath >/dev/null 2>&1; then
     cygpath -m "$path"
@@ -227,7 +230,7 @@ else
   mkdir -p "$raw"
 
   echo "==> 1/3  build instrumented $product (-Cprofile-generate)"
-  build_instrumented "-Cprofile-generate=$(rustc_path "$raw")"
+  build_instrumented "-Cprofile-generate=$(native_path "$raw")"
   # Build scripts are instrumented too; only the training run's profiles count.
   rm -rf "$raw"
   mkdir -p "$raw"
@@ -294,7 +297,7 @@ if [ -z "$profile" ]; then
 fi
 
 echo "==> 3/3  rebuild optimized $product (-Cprofile-use)"
-build "-Cprofile-use=$(rustc_path "$profdata") -Cllvm-args=-pgo-warn-missing-function"
+build "-Cprofile-use=$(native_path "$profdata") -Cllvm-args=-pgo-warn-missing-function"
 
 if [ -n "$evidence" ]; then
   field() { sed -n "s/^$1: //p" "$profdata.key"; }
@@ -306,9 +309,9 @@ if [ -n "$evidence" ]; then
   "training": $(field training),
   "training_sha256": "$(field training_sha256)",
   "generate_sha256": "$(field generate_sha256)",
-  "profile": "$profdata",
+  "profile": "$(native_path "$profdata")",
   "profile_sha256": "$(sha256 "$profdata")",
-  "payload": "$payload",
+  "payload": "$(native_path "$payload")",
   "build_sha256": "$(sha256 "$payload")"
 }
 EOF
