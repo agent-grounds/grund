@@ -113,6 +113,8 @@ mod tests_link_target_body_end;
 #[cfg(test)]
 mod tests_link_target_fences;
 #[cfg(test)]
+mod tests_link_target_no_anchor;
+#[cfg(test)]
 mod tests_shorthand_numeric_run;
 #[cfg(test)]
 mod tests_shorthand_rewrite;
