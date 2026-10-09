@@ -18,8 +18,8 @@ use std::path::Path;
 
 use crate::config::Config;
 use crate::grammar::{
-    PythonDocstringScanState, anchor_slug, declaration_id_on_line, reduce_heading_text, render_id,
-    section_anchor_text, section_path, source_scan_line,
+    PythonDocstringScanState, anchor_slug, declaration_id_on_line, markdown_fence_delimiter,
+    reduce_heading_text, render_id, section_anchor_text, section_path, source_scan_line,
 };
 use crate::model::{
     Declaration, Findings, Id, SectionInfo, is_stub_for_inline_decl, resolve_stub_target,
@@ -203,7 +203,11 @@ fn path_components(path: &Path) -> Vec<String> {
 /// Re-read a home file to find the heading text of a cited section — the fallback
 /// when the section isn't already in the declaration's section map, so a link
 /// anchor is always re-derived from the current heading (§FS-fmt.6.3,
-/// §DF-md-link-anchor-strategy).
+/// §DF-md-link-anchor-strategy). A Markdown home is read the way the scan reads it:
+/// fence delimiter lines and every line inside a fence are skipped before
+/// declaration and section detection (§AR-scanner.2.3.3), so a fenced heading
+/// neither opens the declaration nor names its section, and a section the
+/// declaration does not have gets no anchor (§FS-fmt.6.4.1).
 fn section_heading_text(
     path: &Path,
     id: &Id,
@@ -217,7 +221,14 @@ fn section_heading_text(
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let mut in_decl = false;
     let mut py_docstring = PythonDocstringScanState::default();
+    let mut markdown_fence = None;
     for line in text.lines() {
+        if is_md && markdown_fence_delimiter(&mut markdown_fence, line) {
+            continue;
+        }
+        if markdown_fence.is_some() {
+            continue;
+        }
         let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
         let scan_line = scan.text.as_ref();
         if let Some((found, _)) =
