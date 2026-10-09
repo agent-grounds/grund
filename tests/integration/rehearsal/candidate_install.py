@@ -99,7 +99,10 @@ class PythonInstallTests(Rehearsed):
         for dist, (product, _) in DISTS.items():
             with self.subTest(dist=dist):
                 home = keep("grund-pipx-")
-                env = fresh_env(home / "home")
+                # pipx's pip backend, as on a host without uv. Making its shared venv
+                # reinstalls pip from an index, so that is off; the wheel installs with none.
+                env = fresh_env(home / "home", PIPX_DEFAULT_BACKEND="pip",
+                                PIPX_DISABLE_SHARED_LIBS_AUTO_UPGRADE="1")
                 pipx = shutil.which("pipx")
                 self.assertTrue(pipx, "environment prerequisite missing: pipx")
                 run_checked([pipx, "install", "--python", pythons()[0],
