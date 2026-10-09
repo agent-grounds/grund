@@ -80,8 +80,8 @@ fn check_oversized_lead_site(
     report: &mut CheckReport,
 ) {
     let Ok(Some((lead, _))) = point_body_pair(cache, config, id, declaration, section) else {
-        // A retained stub is broken and intentionally has no measurement. Any
-        // concurrent read failure was already represented by the scan result.
+        // A stub is broken or has its home outside the scan, unjudged either way
+        // (§FS-declarations.checks.oversized-lead.4). A read failure is the scan's.
         return;
     };
     let actual = measure_point_text(&lead, warning.unit);

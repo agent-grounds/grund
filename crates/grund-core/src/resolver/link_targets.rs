@@ -4,23 +4,21 @@
 //!
 //! A function of the loaded findings rather than of a rule or a write: it
 //! resolves the ID against the whole project's declarations, follows a stub to
-//! the file that really declares it, and re-reads a home file when the cited
-//! section is not already in the section map (§AR-resolver.placement). Two components
-//! ask it for the same answer — `grund fmt --cross-refs` for the link it writes
-//! (§FS-fmt.6) and the checker's index-entry rule for the link it compares
-//! against (§FS-check.3.18.5) — so it sat in `writers/fmt_link_targets.rs` while
-//! the checker read it upward out of a component above it (§AR-system.4). The
-//! derivation of an anchor *from* heading text is the lexical half and is
-//! `grammar/anchors.rs`.
+//! the file that really declares it, and takes the declaration's own heading and
+//! a cited section's from the scanner's record of the home, a stub's target's
+//! where the walk did not reach it (§FS-fmt.6.2.1.1, §AR-resolver.placement,
+//! §AR-resolver.5). Two components ask it for the same answer —
+//! `grund fmt --cross-refs` for the link it writes (§FS-fmt.6) and the checker's
+//! index-entry rule for the link it compares against (§FS-check.3.18.5) — so it
+//! sat in `writers/fmt_link_targets.rs` while the checker read it upward out of a
+//! component above it (§AR-system.4). The derivation of an anchor *from* heading
+//! text is the lexical half and is `grammar/anchors.rs`.
 
-use anyhow::{Context, Result};
 use std::path::Path;
 
+use super::stub_home::home_as_scanned;
 use crate::config::Config;
-use crate::grammar::{
-    PythonDocstringScanState, anchor_slug, declaration_id_on_line, reduce_heading_text, render_id,
-    section_anchor_text, section_path, source_scan_line,
-};
+use crate::grammar::{anchor_slug, reduce_heading_text, render_id};
 use crate::model::{
     Declaration, Findings, Id, SectionInfo, is_stub_for_inline_decl, resolve_stub_target,
 };
@@ -74,7 +72,10 @@ pub(crate) fn markdown_link_target_with_root(
     if !takes_heading_anchor(&home, config) {
         return Some(rel);
     }
-    let anchor = heading_anchor(&home, home_decl, id, section, config)?;
+    // §FS-fmt.6.2.1.1, §FS-fmt.6.4.1: the declaration's heading and a cited section are the
+    // ones the scan records, in a stub's target outside the walk too (§FS-check.3.2.1).
+    let anchor_decl = home_as_scanned(findings, config, id, home_decl);
+    let anchor = heading_anchor(anchor_decl, section, config)?;
     Some(format!("{}#{}", rel, anchor))
 }
 
@@ -87,26 +88,26 @@ pub(crate) fn takes_heading_anchor(home: &Path, config: &Config) -> bool {
         && config.cross_ref_anchor_format != "none"
 }
 
-/// The heading anchor, without its `#`, of `decl` in its Markdown `home`: the
+/// The heading anchor, without its `#`, of `decl` in its Markdown home: the
 /// cited section's heading for a `.<section>` coordinate, the declaration's own
 /// heading for a bare ID (§FS-fmt.6.2, §DF-md-link-anchor-strategy,
 /// §DF-declaration-anchor). The one derivation `fmt --cross-refs` writes and
 /// `show --format=json` reports, so the two cannot drift (§FS-show.3.1.3.1).
-/// `None` when the section's heading cannot be found. The caller has already
-/// checked `takes_heading_anchor`.
+/// It reads the heading out of the current scan's record on every call, so each
+/// pass re-derives the anchor from the heading as it now stands (§FS-fmt.6.3).
+///
+/// `None` when `decl`'s section map holds no section at that path: which headings
+/// are sections, and where the body ends, are the scan's answer, the one `check`
+/// reports against, so a heading the scan leaves out of the body gives no anchor
+/// (§FS-fmt.6.4.1, §AR-scanner.2.4.1). The caller has already checked
+/// `takes_heading_anchor` and passes the record the scan made of the home.
 pub(crate) fn heading_anchor(
-    home: &Path,
     decl: &Declaration,
-    id: &Id,
     section: Option<&str>,
     config: &Config,
 ) -> Option<String> {
     let heading = match section {
-        Some(sec) => decl
-            .sections
-            .get(sec)
-            .map(|section| section.title.clone())
-            .or_else(|| section_heading_text(home, id, sec, config).ok().flatten())?,
+        Some(sec) => decl.sections.get(sec)?.title.clone(),
         // §DF-declaration-anchor: a bare-ID citation to a Markdown home links to
         // that declaration's own heading anchor, not just the file.
         None => declaration_heading_text(decl, config),
@@ -198,47 +199,4 @@ fn path_components(path: &Path) -> Vec<String> {
             _ => None,
         })
         .collect()
-}
-
-/// Re-read a home file to find the heading text of a cited section — the fallback
-/// when the section isn't already in the declaration's section map, so a link
-/// anchor is always re-derived from the current heading (§FS-fmt.6.3,
-/// §DF-md-link-anchor-strategy).
-fn section_heading_text(
-    path: &Path,
-    id: &Id,
-    section: &str,
-    config: &Config,
-) -> Result<Option<String>> {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let text = crate::config::input_read_to_string(path)
-        .with_context(|| format!("read {}", path.display()))?;
-    let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
-    let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
-    let mut in_decl = false;
-    let mut py_docstring = PythonDocstringScanState::default();
-    for line in text.lines() {
-        let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
-        let scan_line = scan.text.as_ref();
-        if let Some((found, _)) =
-            declaration_id_on_line(&config.grammar, scan_line, scan.in_py_docstring, is_md)
-        {
-            if in_decl && &found != id {
-                break;
-            }
-            if &found == id {
-                in_decl = true;
-                continue;
-            }
-        }
-        if !in_decl {
-            continue;
-        }
-        if let Some(caps) = config.grammar.section_re.captures(scan_line)
-            && section_path(&caps).is_some_and(|found| found == section)
-        {
-            return Ok(Some(section_anchor_text(scan_line, section)));
-        }
-    }
-    Ok(None)
 }

@@ -235,9 +235,19 @@ count of chapters reaches them ([§FS-check.3.2.1](../functional-spec/FS-check.m
 binding compares against `home_as_scanned` instead, the target's declaration in
 place of the stub, so a mismatch names the target's line ([§FS-values.5.1](../functional-spec/FS-values.md#51-resolve-before-comparison)). The value
 authority a malformed binding is refused by, and that `fmt --cross-refs` protects, is
-read through it too, in the one predicate both share ([§FS-values.3.1.1](../functional-spec/FS-values.md#311-invalid-attempts-and-non-attempts), [§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). A
+read through it too, in the one predicate both share ([§FS-values.3.1.1](../functional-spec/FS-values.md#311-invalid-attempts-and-non-attempts), [§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). So
+is the heading a link anchors on, the declaration's own for a bare ID as much as a
+`.<section>`'s: where the target declares the ID once, `fmt --cross-refs` reads it out
+of the target's record, the one `show` anchors on, not off the stub's title-less line
+([§FS-fmt.6.2.1.1](../functional-spec/FS-fmt.md#6211-through-a-stub-the-declarations-heading-is-the-targets)), and a
+heading that record leaves out of the body gives a section no anchor
+([§FS-fmt.6.4.1](../functional-spec/FS-fmt.md#641-a-section-the-declaration-does-not-have-is-not-wrapped)). A
 workspace citation asks with the target project's `Config`, out of section 1,
-because the stub's link resolves against that project's root.
+because the stub's link resolves against that project's root. Outside `check`, the
+size catalog of `list --size` puts each retained stub through `home_as_scanned`, so
+a healthy stub whose target the walk missed is measured at that home, with its
+sections ([§FS-list.3.4.6](../functional-spec/FS-list.md#346-a-home-outside-the-scan)). `check`'s lead
+budget does not: it judges scanned sites only ([§FS-declarations.checks.oversized-lead.4](../functional-spec/FS-declarations.md#checksoversized-lead4-which-sites-it-judges)).
 
 Three properties hold the read to what a scan of the target would be:
 
@@ -257,4 +267,4 @@ Three properties hold the read to what a scan of the target would be:
 
 What stays in [§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk) is recording. Its post-walk pass records a home only
 for an ID declared more than once; a lone stub's target is read here, and only when
-a section asks.
+a reader asks for what it declares.

@@ -221,7 +221,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     promote_local_legacy_citations(config, &mut findings);
     resolve_shorthand_citations(&config.grammar, &mut findings);
     // §AR-scanner.4.6: a stub's home is known only once every declaration is in.
-    record_stub_homes(config, &mut findings);
+    record_stub_homes(config, overlays, &mut findings);
     Ok((findings, errors))
 }
 

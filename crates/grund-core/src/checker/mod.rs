@@ -1,8 +1,9 @@
 //! The checker component (§AR-system.2.6): the `Report` a run's `Findings`
 //! produce — errors, warnings and suggestions, each rule one pass over part of
-//! the findings (§FS-check). It consumes `Findings`, reads no file except in the
-//! two rules that must, and knows no frontend. Design: §AR-checker, declared in
-//! `report.rs` on the entry point the whole component exists to answer.
+//! the findings (§FS-check). It consumes `Findings`, reads a file's text after
+//! the scan only in the rules §AR-checker.placement lists, and knows no frontend.
+//! Design: §AR-checker, declared in `report.rs` on the entry point the whole
+//! component exists to answer.
 //!
 //! The module boundary is what §AR-system.4 asks for: an item another component
 //! reads is re-exported below, and everything else is the component's own
@@ -129,6 +130,8 @@ mod tests_local_section_citations;
 mod tests_managed_block_drift;
 #[cfg(test)]
 mod tests_nothing_recognized;
+#[cfg(test)]
+mod tests_post_scan_readers;
 #[cfg(test)]
 mod tests_shorthand;
 #[cfg(test)]

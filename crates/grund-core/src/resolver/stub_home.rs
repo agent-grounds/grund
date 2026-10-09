@@ -3,7 +3,8 @@
 //! that file records them. `show` reads a stub's body and sections out of this
 //! reading (§FS-show.2.3.7), and every reader in `check` asks it for a section the
 //! recorded declarations do not hold (§FS-check.3.2.1), so the two commands count
-//! one section set (§FS-show.2.2.2.2).
+//! one section set (§FS-show.2.2.2.2). `list --size` measures the home it finds, and
+//! that home's sections (§FS-list.3.4.6).
 
 use std::path::{Path, PathBuf};
 
@@ -92,7 +93,8 @@ pub(crate) fn unscanned_stub_home<'a>(
 
 /// `home` itself, or where it is a stub with a home outside the walk, the
 /// declaration of `id` there: the record a reader in `check` reads a value or a
-/// value's authority from, as it would were the target scanned (§FS-check.3.2.1).
+/// value's authority from, as it would were the target scanned (§FS-check.3.2.1),
+/// and the home the size catalog measures (§FS-list.3.4.6).
 pub(crate) fn home_as_scanned<'a>(
     findings: &'a Findings,
     config: &Config,

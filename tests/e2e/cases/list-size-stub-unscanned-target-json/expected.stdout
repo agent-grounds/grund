@@ -1,0 +1,4 @@
+{"id":"FS-first","section":null,"kind":"FS","path":"source.rs","line":1,"stub":false,"defines":null,"duplicate":false,"lead_words":2,"full_words":2}
+{"id":"FS-second","section":null,"kind":"FS","path":"source.rs","line":6,"stub":false,"defines":null,"duplicate":false,"lead_words":2,"full_words":7}
+{"id":"FS-second","section":"1","kind":"FS","path":"source.rs","line":10,"stub":false,"defines":null,"duplicate":false,"lead_words":5,"full_words":5}
+{"id":"FS-third","section":null,"kind":"FS","path":"source.rs","line":15,"stub":false,"defines":null,"duplicate":false,"lead_words":2,"full_words":2}
