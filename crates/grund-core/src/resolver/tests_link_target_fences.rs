@@ -4,9 +4,9 @@
 //! `show --format=json` reports (§FS-fmt.6.2.1).
 //!
 //! Each case states its premise first: whether the scan records the cited
-//! section. A section it does not record is read again from the home file, and
-//! that re-read is what these cases pin; a case the scan reads differently is
-//! about the scanner, not about the anchor.
+//! section. A section it does not record gives no anchor, and that is what these
+//! cases pin; a case the scan reads differently is about the scanner, not about
+//! the anchor.
 
 use super::heading_anchor;
 use crate::config::load_config;
@@ -41,10 +41,7 @@ fn anchor_of_a_1(name: &str, home: &str) -> (bool, Option<String>) {
     assert_eq!(decls.len(), 1, "one declaration of FS-a: {decls:?}");
     let decl = &decls[0];
     let recorded = decl.sections.contains_key("1");
-    (
-        recorded,
-        heading_anchor(&decl.file, decl, &id, Some("1"), &config),
-    )
+    (recorded, heading_anchor(decl, Some("1"), &config))
 }
 
 fn assert_no_anchor(name: &str, home: &str) {

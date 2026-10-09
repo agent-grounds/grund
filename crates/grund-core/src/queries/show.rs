@@ -223,7 +223,7 @@ pub(crate) fn render_show_output_json(
     if let Some(json) = &output.json {
         return json.clone();
     }
-    let anchors = ShowAnchors::of(config, home, id, section, output);
+    let anchors = ShowAnchors::of(config, home, section, output);
     let mut extra = String::new();
     if matches!(mode, ShowRenderMode::Toc) {
         extra.push_str(",\"sections\":[");
@@ -295,13 +295,7 @@ struct ShowAnchors {
 }
 
 impl ShowAnchors {
-    fn of(
-        config: &Config,
-        decl: &Declaration,
-        id: &Id,
-        section: Option<&str>,
-        output: &ShowOutput,
-    ) -> Self {
+    fn of(config: &Config, decl: &Declaration, section: Option<&str>, output: &ShowOutput) -> Self {
         let none = || Self {
             selected: None,
             sections: vec![None; output.sections.len()],
@@ -346,7 +340,7 @@ impl ShowAnchors {
             })
             .collect();
         Self {
-            selected: heading_anchor(&output.path, decl, id, section, config),
+            selected: heading_anchor(decl, section, config),
             sections,
         }
     }

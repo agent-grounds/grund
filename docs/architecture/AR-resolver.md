@@ -235,7 +235,10 @@ count of chapters reaches them ([§FS-check.3.2.1](../functional-spec/FS-check.m
 binding compares against `home_as_scanned` instead, the target's declaration in
 place of the stub, so a mismatch names the target's line ([§FS-values.5.1](../functional-spec/FS-values.md#51-resolve-before-comparison)). The value
 authority a malformed binding is refused by, and that `fmt --cross-refs` protects, is
-read through it too, in the one predicate both share ([§FS-values.3.1.1](../functional-spec/FS-values.md#311-invalid-attempts-and-non-attempts), [§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). A
+read through it too, in the one predicate both share ([§FS-values.3.1.1](../functional-spec/FS-values.md#311-invalid-attempts-and-non-attempts), [§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). So
+is the heading a `.<section>` link anchors on: `fmt --cross-refs` reads a stub's
+section out of the record `check` finds it in, and a heading that record leaves out
+of the body gives no anchor ([§FS-fmt.6.4.1](../functional-spec/FS-fmt.md#641-a-section-the-declaration-does-not-have-is-not-wrapped)). A
 workspace citation asks with the target project's `Config`, out of section 1,
 because the stub's link resolves against that project's root.
 
