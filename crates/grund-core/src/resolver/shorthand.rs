@@ -23,7 +23,7 @@ use std::collections::BTreeMap;
 use super::context::{WorkspaceContext, WorkspaceProject};
 use crate::config::{Compiled, Frame, Schema, ShorthandPolicy};
 use crate::grammar::{
-    DocstringContent, ParsedId, QUALIFIED_CITATION_PREFIX, ShorthandIndex,
+    CandidateReading, DocstringContent, ParsedId, QUALIFIED_CITATION_PREFIX, ShorthandIndex,
     never_rewrite_context_in, parse_id, parse_id_arg, parse_id_arg_with_shorthand, render_id,
     shorthand_names,
 };
@@ -235,6 +235,14 @@ pub(crate) fn expand_shorthand_citations_with_origins(
         // the start, so rewriting `§FS-042-User-Login` on its `FS-042` prefix would
         // corrupt the file — see the gate order above.
         if !target_grammar.id_token_ends_cleanly(tail, match_end) {
+            continue;
+        }
+        // §FS-check.1.1.11: a pattern's shorthand prefix is never expanded — the
+        // reading the scanner and the link pass ask, so all three agree on `§FS-001-*`.
+        if matches!(
+            target_grammar.read_candidate(tail, match_end),
+            CandidateReading::Pattern(_)
+        ) {
             continue;
         }
         // §FS-fmt.2.4.1.1: `§SPEC-001→SPEC-003` is a renumbering table, not a citation.

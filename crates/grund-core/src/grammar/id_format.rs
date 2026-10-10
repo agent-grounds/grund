@@ -542,6 +542,13 @@ pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Optio
         .filter(|found| grammar.id_token_ends_cleanly(rest, found.end()))
         .filter(|found| !grammar.has_reserved_named_tail(rest, found.end()))
         .max_by_key(|found| found.end())
+        // §FS-check.1.1.11: nor does a pattern on a shorthand prefix (`$$FS-001-*`).
+        .filter(|found| {
+            !matches!(
+                grammar.read_qualified_candidate(rest, found.end()),
+                CandidateReading::Pattern(_)
+            )
+        })
         .map(|found| at + found.end())
 }
 
