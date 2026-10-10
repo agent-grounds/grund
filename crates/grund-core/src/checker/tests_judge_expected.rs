@@ -14,9 +14,9 @@ use super::report::check_on_disk;
 use super::support::sort_diagnostics;
 use crate::config::{Config, load_config};
 use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
-use crate::testing::{
-    drifted_include_repo, kind_index_repo, linked_repo, scan_tree, test_root, write,
-};
+#[cfg(unix)]
+use crate::testing::linked_repo;
+use crate::testing::{drifted_include_repo, kind_index_repo, scan_tree, test_root, write};
 use crate::writers::expected;
 
 type Line = (&'static str, Option<PathBuf>, Option<usize>, String);
@@ -145,6 +145,8 @@ fn each_entrypoint_is_compared_against_its_own_bytes_and_a_probe_error_is_an_io_
         return;
     };
     let (config, catalog) = loaded(&root);
+    // The loaded root, not the logical one: macOS's temp dir is behind a symlink.
+    let root = config.frame().root().to_path_buf();
     let rendered = expected(&catalog, &config, &BTreeMap::new());
     let paths = rendered
         .entrypoints
@@ -282,9 +284,10 @@ fn the_merge_has_no_cross_half_tie_and_is_the_stable_sort_of_both_halves() {
     let mut roots = vec![
         external_index_repo("merge_external_index"),
         kind_index_repo("merge_kind_index"),
-        linked_repo("merge_linked"),
         drifted_include_repo("merge_drifted_include"),
     ];
+    #[cfg(unix)]
+    roots.push(linked_repo("merge_linked"));
     roots.extend(presentation_fixture("merge_presentation"));
     for root in roots {
         let (config, catalog) = loaded(&root);
