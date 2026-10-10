@@ -695,15 +695,15 @@ Every surface this plan deprecates has one row in the table below: the surface, 
 
 | Surface | Notice | Removal | Status |
 |---|---|---|---|
-| `Config`, `KindConfig`, `CitationRules` and `Findings` at the `grund-core` root ([§DISC-core-concerns.5.4](2026-09-30-core-concerns.md#54-the-public-surface)), beside the engine records of `agent-grounds/grund#453` | `0.17.0` | `0.19.0` | planned |
-| the integrations names [§DISC-grund-core-public-surface.6.4](2026-09-22-grund-core-public-surface.md#64-the-releases) deprecates, behind their facade, as `agent-grounds/grund#466` refreshes their membership | `0.17.0` | `0.19.0` | planned |
+| `Config`, `KindConfig`, `CitationRules` and `Findings` at the `grund-core` root ([§DISC-core-concerns.5.4](2026-09-30-core-concerns.md#54-the-public-surface)), beside the engine records of `agent-grounds/grund#453` | `0.17.0` | `0.19.0` | shipped |
+| the integrations names [§DISC-grund-core-public-surface.6.4](2026-09-22-grund-core-public-surface.md#64-the-releases) deprecates, behind their facade, as `agent-grounds/grund#466` refreshes their membership | `0.18.0` | `0.20.0` | planned |
 
-No row is shipped yet, and no notice from this plan has appeared in any release. The releases those rows sit in, with what else each carries:
+The first row shipped in `0.17.0`: `agent-grounds/grund#453` put a note naming `0.19.0` on each of those root names. The second did not, because `agent-grounds/grund#466` had not landed when `0.17.0` was cut, so its notice and its removal each move one minor ([§DISC-core-concerns.9.7](2026-09-30-core-concerns.md#97-what-a-deprecation-note-may-name)). The releases those rows sit in, with what else each carries:
 
 | Release | What it carries |
 |---|---|
 | `0.16.x` patches | No notice from this plan. |
-| `0.17.0` — notice | The engine records (`agent-grounds/grund#453`, `agent-grounds/grund#454`) ship beside the old names, and the refreshed integrations names get their facade (`agent-grounds/grund#466`). Every old name carries a note naming `0.19.0`. |
+| `0.17.0` — notice | Shipped. The engine records (`agent-grounds/grund#453`) ship beside the old names, and every old root name carries a note naming `0.19.0`. The integrations facade (`agent-grounds/grund#466`) did not ship. |
 | `0.18.0` — v2 | The v2 reader and its semantics (`agent-grounds/grund#455` to `agent-grounds/grund#459`), guidance (`agent-grounds/grund#460`), `migrate` (`agent-grounds/grund#461`) and `init` (`agent-grounds/grund#462`). A v1 config gets a caution naming `migrate` and no release. The section-citation ramp `0.16.1` named closes here too. |
 | `0.18.x` — adoption | `grund` adopts v2 (`agent-grounds/grund#464`), then rhei, ephor and fissile move their pins (`agent-grounds/grund#465`). A status ramp adoption chooses names a release no earlier than the minor after its notice. |
 | `0.19.0` — retirement | Every surface noticed in `0.17.0` is removed (`agent-grounds/grund#466`). |
