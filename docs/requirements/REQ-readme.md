@@ -16,7 +16,8 @@ from scaffolding new ones.
 ### 1.1 The loop
 
 Declare and cite sit side by side, with check spanning the row below. Each card names
-its step, says what it does, and carries one excerpt from a committed runnable example
+its step in equally wide, top-aligned columns, with matching excerpt heights. It says
+what it does and carries one excerpt from a committed runnable example
 ([§REQ-readme.2](REQ-readme.md#2-every-example-is-real)): a short requirement, the code that cites it, and
 `grund check` failing once that section is renumbered. The check card names the
 renumbering before showing its result. The HTML table keeps the excerpts readable

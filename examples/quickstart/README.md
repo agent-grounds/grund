@@ -29,9 +29,7 @@ an ID and a numbered section:
 
 ```markdown
 # FS-name: Display names
-
 ## 1. Trim whitespace
-
 Trim surrounding whitespace.
 ```
 
@@ -48,7 +46,6 @@ def clean_name(name):
 ```console
 $ grund FS-name.1
 ## 1. Trim whitespace
-
 Trim surrounding whitespace.
 $ grund check
 success
