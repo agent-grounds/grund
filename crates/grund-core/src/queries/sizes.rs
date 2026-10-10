@@ -7,7 +7,8 @@ use super::selector_refusal::require_unique_literal;
 use crate::config::{Config, display_path, measure_point_text, run_warning_findings};
 use crate::grammar::render_id;
 use crate::model::{
-    Declaration, Finding, Id, SectionInfo, TextOverlays, format_path, id_homes, sort_path_key,
+    Declaration, Finding, Id, SectionInfo, TextOverlays, format_path, paired_declarations,
+    sort_path_key,
 };
 use crate::resolver::{PointBodyCache, load_workspace_context, point_body_pair};
 use crate::rules::sentence::RuleSubject;
@@ -81,13 +82,13 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             if opts.unused_only && id.kind == "E2E" && !opts.kind_filter.contains("E2E") {
                 continue;
             }
-            // §FS-list.3.4.6: one row per home, at its record, so a healthy stub whose
-            // home is outside the walk is that home, and a target declaring the ID
-            // twice is two rows (§FS-declarations.checks.broken-stub.4).
-            let homes = id_homes(declarations);
-            let duplicate_declaration = homes.len() > 1;
-            for home in homes.iter() {
-                let declaration = home.record;
+            // §FS-list.3.4.6: one row per declaration, at its record, so a healthy stub
+            // whose target is outside the walk is measured there, and a target declaring
+            // the ID twice is two rows (§FS-declarations.stubs.verdict).
+            let paired = paired_declarations(declarations);
+            let duplicate_declaration = paired.len() > 1;
+            for one in paired.iter() {
+                let declaration = one.record;
                 pending.push(Pending {
                     project_alias: &project.alias,
                     project_config: &project.config,
@@ -95,7 +96,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                     declaration,
                     section: None,
                     duplicate: duplicate_declaration,
-                    broken_stub: home.is_broken_stub(),
+                    broken_stub: one.is_broken_stub(),
                 });
 
                 let mut section_sites: BTreeMap<&str, Vec<&SectionInfo>> = BTreeMap::new();

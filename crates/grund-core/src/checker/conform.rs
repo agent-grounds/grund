@@ -10,8 +10,8 @@ use super::sizes::check_oversized_leads;
 use crate::config::{Frame, Schema};
 use crate::grammar::render_id;
 use crate::model::{
-    Catalog, CheckReport, Diagnostic, Site, StubResolution, TextOverlays, format_path, id_homes,
-    sort_path_key,
+    Catalog, CheckReport, Diagnostic, Site, StubResolution, TextOverlays, format_path,
+    paired_declarations, sort_path_key,
 };
 
 /// §AR-checker.1.1: duplicate, misplaced-declaration, broken-stub and
@@ -47,17 +47,19 @@ pub(crate) fn conform(
 }
 
 /// §FS-declarations.checks.duplicate: an ID with more than one non-stub home is a duplicate.
+/// Its declarations are counted once its stubs are paired by their verdicts
+/// (§FS-declarations.stubs.verdict).
 fn check_duplicates(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
     for (id, decls) in &findings.declarations {
         // §FS-declarations.checks.duplicate.3: a stub's home is named at its target, at
         // each line there that declares the ID (§FS-declarations.checks.duplicate.1).
-        let homes = id_homes(decls);
-        if homes.len() > 1 {
-            let mut sites: Vec<Site> = homes
+        let paired = paired_declarations(decls);
+        if paired.len() > 1 {
+            let mut sites: Vec<Site> = paired
                 .iter()
-                .map(|home| Site {
-                    path: home.record.file.clone(),
-                    line: home.record.line,
+                .map(|declaration| Site {
+                    path: declaration.record.file.clone(),
+                    line: declaration.record.line,
                 })
                 .collect();
             sites.sort_by(|a, b| {
@@ -161,8 +163,8 @@ fn check_misplaced(
 }
 
 /// §FS-declarations.checks.broken-stub: the verdict the scan recorded on each stub
-/// (§FS-declarations.checks.broken-stub.4), its target missing or declaring no home
-/// (§AR-checker.2.5).
+/// (§FS-declarations.stubs.verdict), its target missing, not read, or not declaring
+/// the ID (§AR-checker.2.5).
 fn check_broken_stubs(findings: &Catalog, frame: Frame<'_>, report: &mut CheckReport) {
     for (id, decls) in &findings.declarations {
         for decl in decls {
@@ -178,7 +180,7 @@ fn check_broken_stubs(findings: &Catalog, frame: Frame<'_>, report: &mut CheckRe
                     render_id(frame.grammar(), id),
                     format_path(target)
                 ),
-                StubResolution::OwnFile | StubResolution::Homes(_) => continue,
+                StubResolution::OwnFile | StubResolution::Declares(_) => continue,
             };
             report.errors.push(Diagnostic {
                 code: "broken-stub",

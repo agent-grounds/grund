@@ -34,8 +34,9 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 /// a probe for whether a path exists or a scope path made canonical never reads —
 /// and `tests_post_scan_readers.rs` holds the list to the code. A stub's target is
 /// not among them: the scan reads it once and records its verdict on the stub
-/// (§AR-scanner.4.6), so the broken-stub rule, a cited section, a value's home and
-/// a rule's `cites` fact read that record instead of the file (§AR-resolver.5):
+/// (§AR-scanner.4.6), so the broken-stub rule, a cited section, a value binding's
+/// target and a rule's `cites` fact read that record instead of the file
+/// (§AR-resolver.5):
 ///
 /// - §AR-checker.2.3's hint: the line of a dangling Markdown citation, from disk.
 /// - §AR-checker.2.6: every configured kind index, from disk, through
@@ -135,12 +136,13 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 /// For each ID with more than one declaration, emit one error anchored at the
 /// lexicographically-first site (sort by `path`, then `line`); list every other
 /// site parenthetically in the message. This keeps the report's `path:line:`
-/// prefix invariant (§AR-checker.3, §FS-check.2.1) while still naming all sites. The homes
-/// are the ones `id_homes` derives from each stub's verdict (§AR-scanner.4.6): a stub and the
-/// inline declaration it points at count as one home, not two — whether or not the walk
-/// reached that declaration, and however many stubs point at it — and a home a stub stands for
-/// is named at its target's declaration (§FS-declarations.checks.duplicate.1,
-/// §FS-declarations.checks.duplicate.2, §FS-declarations.checks.duplicate.3).
+/// prefix invariant (§AR-checker.3, §FS-check.2.1) while still naming all sites. The
+/// declarations are the ones `paired_declarations` derives from each stub's verdict
+/// (§FS-declarations.stubs.verdict, §AR-scanner.4.6): a stub and the inline declaration it
+/// points at count as one, not two — whether or not the walk reached that declaration, and
+/// however many stubs point at it — and a declaration a stub stands for is named at its
+/// target (§FS-declarations.checks.duplicate.1, §FS-declarations.checks.duplicate.2,
+/// §FS-declarations.checks.duplicate.3).
 ///
 /// ### 2.2 Misplaced declarations (§FS-declarations.checks.misplaced-declaration)
 ///
@@ -167,17 +169,19 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 ///
 /// For each citation with a section path, look up the section in the matching
 /// declaration's recorded sections. Where the walk recorded only a stub of the ID,
-/// the lookup goes on to the stub's target, scanned or not, through the target's
-/// record the scan kept on the stub (§FS-check.3.2.1, §AR-resolver.5). Missing →
-/// one error at the citation site.
+/// the lookup goes on to the stub's target, scanned or not (§FS-check.3.2.1),
+/// through the target's record the stub's verdict holds
+/// (§FS-declarations.stubs.verdict, §AR-resolver.5). Missing → one error at the
+/// citation site.
 ///
 /// ### 2.5 Broken inline-spec stubs (§FS-declarations.checks.broken-stub)
 ///
 /// For each declaration whose H1 has the stub shape `# <ID>: [<text>](<path>)`
 /// (description after the colon is a single bare markdown link), report the verdict
-/// the scan recorded on the stub (§AR-scanner.4.6): a target that is missing draws
-/// `stub link target missing`, and one the scan does not read, or that declares no
-/// home of the ID, draws `stub link target lacks <ID>` — one error at the stub site.
+/// the scan recorded on the stub (§FS-declarations.stubs.verdict, §AR-scanner.4.6): a
+/// target that is missing draws `stub link target missing`, and one the scan does not
+/// read, or that does not declare the ID, draws `stub link target lacks <ID>` — one
+/// error at the stub site.
 /// The rule reads no file and decides nothing of its own, so the stub it reports is
 /// exactly the stub `show` refuses, `list --size` labels and `fmt` will not link
 /// through (§FS-declarations.checks.broken-stub.4), and the verdict is the one a save

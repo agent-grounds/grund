@@ -13,7 +13,7 @@ use std::path::PathBuf;
 
 use crate::config::{Config, KindConfig, display_path};
 use crate::grammar::{render_id, section_display_name};
-use crate::model::{Declaration, Finding, Id, format_path, id_homes, sort_path_key};
+use crate::model::{Declaration, Finding, Id, format_path, paired_declarations, sort_path_key};
 use crate::queries::{ListCitationCounts, check_list_scope, require_unique_literal};
 use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::rules::sentence::RuleSubject;
@@ -122,16 +122,16 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             if opts.unused_only && id.kind == "E2E" && !opts.kind_filter.contains("E2E") {
                 continue;
             }
-            // §FS-declarations.checks.broken-stub.4: the homes every command counts. A stub
-            // whose target declares the ID twice is one row, and two homes
+            // §FS-declarations.stubs.verdict: the declarations every command counts. A
+            // stub whose target declares the ID twice is one row, and two declarations
             // (§FS-declarations.checks.duplicate.2).
-            let id_homes = id_homes(decls);
-            let duplicate = id_homes.len() > 1;
-            let mut homes: Vec<&Declaration> = id_homes.stand_ins().collect();
-            homes.sort_by(|a, b| {
+            let paired = paired_declarations(decls);
+            let duplicate = paired.len() > 1;
+            let mut stand_ins: Vec<&Declaration> = paired.stand_ins().collect();
+            stand_ins.sort_by(|a, b| {
                 (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
             });
-            for home in homes {
+            for home in stand_ins {
                 entries.push(Entry {
                     project_alias: project.alias.as_str(),
                     project_config: &project.config,

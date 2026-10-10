@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use crate::model::{
     Citation, Declaration, DeclarationSource, SectionInfo, StubResolution, TextOverlays,
-    canonicalize_existing_prefix, id_homes,
+    canonicalize_existing_prefix, paired_declarations,
 };
 use crate::resolver::{WorkspaceContext, WorkspaceProject};
 use crate::scanner::{EMBEDDED_VALUE_MARKER, overlay_text};
@@ -54,21 +54,21 @@ pub(super) fn lsp_target_for_citation(
     if citation.local_section && citation.section.is_some() {
         return None;
     }
-    // §FS-declarations.checks.broken-stub.4: the first home's record, where the
+    // §FS-declarations.stubs.verdict: the first declaration's record, where the
     // scan found it, whether or not the walk reached its file.
-    let home = id_homes(decls).iter().next()?.record;
-    Some((home.file.clone(), home.line))
+    let first = paired_declarations(decls).iter().next()?.record;
+    Some((first.file.clone(), first.line))
 }
 
 /// Where a stub navigates: the first record its verdict found at the target
-/// (§FS-declarations.checks.broken-stub.4); a stub with no home there has no
+/// (§FS-declarations.stubs.verdict); a stub whose verdict holds no record has no
 /// destination.
 pub(super) fn lsp_target_for_stub(stub: &Declaration) -> Option<(PathBuf, usize)> {
-    let Some(StubResolution::Homes(records)) = &stub.stub_resolution else {
+    let Some(StubResolution::Declares(records)) = &stub.stub_resolution else {
         return None;
     };
-    let home = records.first()?;
-    Some((home.file.clone(), home.line))
+    let first = records.first()?;
+    Some((first.file.clone(), first.line))
 }
 
 pub(super) fn declaration_range_parts(

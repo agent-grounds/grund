@@ -4,13 +4,14 @@
 //! Each row of the table is one tree around the stub `docs/a.md` →
 //! `notes/<target>` and the citation `docs/uses.md`; each column is a command
 //! that reads the stub. On every row the columns must agree with the row's one
-//! verdict: whether `check` reports the stub broken
-//! (§FS-declarations.checks.broken-stub.3), and the homes of `FS-a`
-//! (§FS-declarations.checks.duplicate.1). So `show` and `refs` refuse exactly
-//! the IDs `check` reports a duplicate, at the same sites (§FS-show.2.2.1,
-//! §FS-refs.4.1); `list --size` measures every home and only the healthy ones
-//! (§FS-list.3.4.6); `fmt` links only an ID with one home that is not a broken
-//! stub (§FS-fmt.6.4.2); and the editor snapshot reports and navigates the same
+//! verdict (§FS-declarations.stubs.verdict): whether `check` reports the stub
+//! broken (§FS-declarations.checks.broken-stub.3), and the declarations of
+//! `FS-a` once its stub is paired (§FS-declarations.checks.duplicate.1). So
+//! `show` and `refs` refuse exactly the IDs `check` reports a duplicate, at the
+//! same sites (§FS-show.2.2.1, §FS-refs.4.1); `list --size` measures every
+//! declaration and only those that are not broken stubs (§FS-list.3.4.6); `fmt`
+//! links only an ID with one declaration that is not a broken stub
+//! (§FS-fmt.6.4.2); and the editor snapshot reports and navigates the same
 //! way, its unsaved text answering what the saved text does
 //! (§FS-declarations.checks.broken-stub.1).
 
@@ -47,7 +48,7 @@ const fn row(name: &'static str, include: &'static [&'static str], target: &'sta
         links: &[],
         editor: &[],
         broken: false,
-        homes: TARGET,
+        declarations: TARGET,
     }
 }
 
@@ -58,7 +59,7 @@ const DISK_ROWS: &[Row] = &[
     },
     Row {
         broken: true,
-        homes: STUB,
+        declarations: STUB,
         ..row("missing", SCANNED, "a.md")
     },
     Row {
@@ -68,35 +69,35 @@ const DISK_ROWS: &[Row] = &[
     Row {
         files: &[("notes/.a.md", ONCE)],
         broken: true,
-        homes: STUB,
+        declarations: STUB,
         ..row("hidden-name", SCANNED, ".a.md")
     },
     Row {
         files: &[("notes/a.zz", ONCE)],
         broken: true,
-        homes: STUB,
+        declarations: STUB,
         ..row("unlisted-extension", SCANNED, "a.zz")
     },
     Row {
         files: &[("notes/a.md", FENCED)],
         broken: true,
-        homes: STUB,
+        declarations: STUB,
         ..row("fenced-heading-scanned", SCANNED, "a.md")
     },
     Row {
         files: &[("notes/a.md", FENCED)],
         broken: true,
-        homes: STUB,
+        declarations: STUB,
         ..row("fenced-heading-outside", OUTSIDE, "a.md")
     },
     Row {
         files: &[("notes/a.md", TWICE)],
-        homes: TARGET_TWICE,
+        declarations: TARGET_TWICE,
         ..row("declared-twice-scanned", SCANNED, "a.md")
     },
     Row {
         files: &[("notes/a.md", TWICE)],
-        homes: TARGET_TWICE,
+        declarations: TARGET_TWICE,
         ..row("declared-twice-outside", OUTSIDE, "a.md")
     },
 ];
@@ -109,21 +110,21 @@ const LINK_ROWS: &[Row] = &[
         files: &[("notes/a.md", ONCE)],
         links: &[("notes/.a.md", "a.md")],
         broken: true,
-        homes: STUB_AND_TARGET,
+        declarations: STUB_AND_TARGET,
         ..row("hidden-symlink-scanned", SCANNED, ".a.md")
     },
     Row {
         files: &[("notes/a.md", ONCE)],
         links: &[("notes/.a.md", "a.md")],
         broken: true,
-        homes: STUB,
+        declarations: STUB,
         ..row("hidden-symlink-outside", OUTSIDE, ".a.md")
     },
     Row {
         files: &[("notes/a.md", ONCE)],
         links: &[("notes/a.zz", "a.md")],
         broken: true,
-        homes: STUB_AND_TARGET,
+        declarations: STUB_AND_TARGET,
         ..row("unlisted-symlink-scanned", SCANNED, "a.zz")
     },
 ];
@@ -135,26 +136,26 @@ const EDITOR_ROWS: &[Row] = &[
         files: &[("notes/a.md", ONCE)],
         editor: &[("notes/a.md", NONE)],
         broken: true,
-        homes: STUB,
+        declarations: STUB,
         ..row("unsaved-removal-scanned", SCANNED, "a.md")
     },
     Row {
         files: &[("notes/a.md", ONCE)],
         editor: &[("notes/a.md", NONE)],
         broken: true,
-        homes: STUB,
+        declarations: STUB,
         ..row("unsaved-removal-outside", OUTSIDE, "a.md")
     },
     Row {
         files: &[("notes/a.md", NONE)],
         editor: &[("notes/a.md", TWICE)],
-        homes: TARGET_TWICE,
+        declarations: TARGET_TWICE,
         ..row("unsaved-second-declaration-scanned", SCANNED, "a.md")
     },
     Row {
         files: &[("notes/a.md", NONE)],
         editor: &[("notes/a.md", TWICE)],
-        homes: TARGET_TWICE,
+        declarations: TARGET_TWICE,
         ..row("unsaved-second-declaration-outside", OUTSIDE, "a.md")
     },
 ];

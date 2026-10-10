@@ -18,7 +18,7 @@ use crate::grammar::{
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, Id, configured_home_path_key,
-    id_homes, physical_path_key, scanned_decl_relative_path, scanned_path_key,
+    paired_declarations, physical_path_key, scanned_decl_relative_path, scanned_path_key,
 };
 use crate::resolver::section_resolves;
 
@@ -175,9 +175,9 @@ impl IndexEntryState {
 
 /// The declaration a finding about `id` points at — the same home `grund list`
 /// and the unused warning pick, so a collapsed stub-and-inline pair is named at
-/// the body rather than twice (§FS-list.2.5, §DF-index-entry-form.2.5).
+/// the body rather than twice (§FS-declarations.stubs.verdict, §DF-index-entry-form.2.5).
 fn index_home_declaration(decls: &[Declaration]) -> Option<&Declaration> {
-    id_homes(decls).stand_ins().next()
+    paired_declarations(decls).stand_ins().next()
 }
 
 /// Whether any of `decls` sits under `folder_key` — the recursive membership

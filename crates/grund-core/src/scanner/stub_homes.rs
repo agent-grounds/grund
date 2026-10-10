@@ -2,9 +2,9 @@
 //! file a stub points at is there, whether the scan reads it, and which of its
 //! records declare the stub's ID, read through the walk's own pass on the text a
 //! save would write (§FS-declarations.checks.broken-stub.1). Every command reads
-//! the verdict recorded on the stub, so the stub's health and the count of homes
-//! agree whether or not the walk reached the target, and whether or not an edit to
-//! it is saved (§FS-declarations.checks.broken-stub.4).
+//! the verdict recorded on the stub, so the stub's health and the count of the ID's
+//! declarations agree whether or not the walk reached the target, and whether or not
+//! an edit to it is saved (§FS-declarations.stubs.verdict).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -19,7 +19,7 @@ use crate::model::{
 
 /// Reach every stub's verdict once, after the walk, and record it on the stub
 /// (§AR-scanner.4.6): every command reads it from there and none reaches its own
-/// (§FS-declarations.checks.broken-stub.4). A target the walk did not record the ID
+/// (§FS-declarations.stubs.verdict). A target the walk did not record the ID
 /// in is read through the walk's own pass over one file, on the text a save would
 /// write (§FS-declarations.checks.broken-stub.1), once per target however many
 /// stubs and IDs name it. An ID no stub declares is passed over.
@@ -89,7 +89,7 @@ fn resolve_stub(
     Some(if walked.is_empty() {
         StubResolution::LacksId
     } else {
-        StubResolution::Homes(walked)
+        StubResolution::Declares(walked)
     })
 }
 

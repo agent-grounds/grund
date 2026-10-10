@@ -15,7 +15,7 @@ use super::references::{ReferenceTier, check_citation_resolution};
 use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
 use crate::grammar::{render_id, render_qualified_id};
-use crate::model::{Catalog, CheckReport, Diagnostic, Expected, Id, id_homes};
+use crate::model::{Catalog, CheckReport, Diagnostic, Expected, Id, paired_declarations};
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 
 /// The workspace a project is judged in (§FS-workspace.4): every loaded
@@ -152,6 +152,8 @@ pub(crate) fn judge(
 /// §FS-check.4.1: a declaration nothing cites is a warning, not an error —
 /// except E2E cases, which are proof artifacts, not citation targets. An
 /// index entry is not an inbound citation (§DF-index-not-an-inbound-citation).
+/// The warning sits at the first stand-in of the ID's declarations once its stubs
+/// are paired by their verdicts (§FS-declarations.stubs.verdict).
 fn check_unused(
     findings: &Catalog,
     schema: &Schema,
@@ -184,7 +186,7 @@ fn check_unused(
             continue;
         }
         if !cited.contains(id)
-            && let Some(decl) = id_homes(decls).stand_ins().next()
+            && let Some(decl) = paired_declarations(decls).stand_ins().next()
         {
             report.warnings.push(Diagnostic {
                 code: "unused",

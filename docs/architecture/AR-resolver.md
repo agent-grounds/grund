@@ -211,8 +211,8 @@ which has no sections of its own, and a lookup that stopped at the walk's record
 would report a section the target plainly declares. It does not stop there, and it
 reads nothing: the scanner already put the target through its own pass when it
 reached the stub's verdict, and kept the target's records of the ID on the stub
-([§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk)). The home a stub stands for is one of those records, paired by
-`id_homes`, so `show` slices its body out of the record `check` resolves its
+([§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk)). The declaration a stub stands for is one of those records, paired by
+`paired_declarations` ([§FS-declarations.stubs.verdict](../functional-spec/FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)), so `show` slices its body out of the record `check` resolves its
 sections against, and the two count one section set ([§FS-show.2.2.2.2](../functional-spec/FS-show.md#2222-the-headings-check-counts)).
 
 `section_home` in `resolver/citation_target.rs` is the one test, and
@@ -222,26 +222,26 @@ finding carries ([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-rel
 place of a full citation of a section its owner lacks ([§FS-check.3.24.3](../functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)), the bare
 index entry the index rule admits ([§FS-check.3.17.4](../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), the local-section expansion
 `fmt` writes ([§FS-fmt.2.4.6](../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the `cites` fact a rule reads ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)).
-Where no recorded declaration holds the path, it answers from the ID's one home
-where a stub stands for it: the record of the target that home is. A broken stub
-pairs with no record and gains no section, and an ID with more than one home lends
-none, as `show` refuses it ([§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id)). Where the section was
-found in such a home, the rule adapter mints that home's chapters as nodes, from the
-record the lookup returned, so the fact's target is the chapter the citation names,
+Where no recorded declaration holds the path, it answers from the ID's one
+declaration where a stub stands for it: the target's record of it. A broken stub
+pairs with no record and gains no section, and an ID with more than one declaration
+lends none, as `show` refuses it ([§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id)). Where the section was
+found in such a record, the rule adapter mints that declaration's chapters as nodes,
+from the record the lookup returned, so the fact's target is the chapter the citation names,
 as on the scanned tree. They carry no `chapter` fact, so no subject or count of
 chapters reaches them ([§FS-check.3.2.1](../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [§AR-rules.3](AR-rules.md#3-rulefacts)).
 
-The other readers take the same homes. A value binding compares against its ID's
-one home's record, the target's declaration in place of the stub, so a mismatch
+The other readers take the same declarations. A value binding compares against the
+record of its ID's one declaration, the target's in place of the stub, so a mismatch
 names the target's line ([§FS-values.5.1](../functional-spec/FS-values.md#51-resolve-before-comparison)); the value authority a malformed binding is
-refused by, and that `fmt --cross-refs` protects, is read off every home's record,
+refused by, and that `fmt --cross-refs` protects, is read off every declaration's record,
 in the one predicate both share ([§FS-values.3.1.1](../functional-spec/FS-values.md#311-invalid-attempts-and-non-attempts), [§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). So is the heading
 a link anchors on, the declaration's own for a bare ID as much as a `.<section>`'s:
-`fmt --cross-refs` reads it out of the one home's record, the one `show` anchors on,
+`fmt --cross-refs` reads it out of the one declaration's record, the one `show` anchors on,
 not off the stub's title-less line ([§FS-fmt.6.2.1.1](../functional-spec/FS-fmt.md#6211-through-a-stub-the-declarations-heading-is-the-targets)), and a heading that record
 leaves out of the body gives a section no anchor ([§FS-fmt.6.4.1](../functional-spec/FS-fmt.md#641-a-section-the-declaration-does-not-have-is-not-wrapped)). The size catalog
-of `list --size` measures each home's record, so a healthy stub whose target the
-walk missed is measured at that home, with its sections, and a target declaring the
+of `list --size` measures each declaration's record, so a healthy stub whose target
+the walk missed is measured at the target's declaration, with its sections, and a target declaring the
 ID twice at both ([§FS-list.3.4.6](../functional-spec/FS-list.md#346-a-home-outside-the-scan)). `check`'s lead budget does not: it judges
 scanned sites only ([§FS-declarations.checks.oversized-lead.4](../functional-spec/FS-declarations.md#checksoversized-lead4-which-sites-it-judges)).
 
@@ -257,7 +257,7 @@ input, or carries the editor's text: the one read of a target, its observation
 `resolver/link_targets.rs` stays the one function that builds the canonical link
 target a citation's ID resolves to ([§FS-fmt.6.2](../functional-spec/FS-fmt.md#62-form)). The anchor profile is
 presentation's, so it is passed in as that record; the root and the grammar come
-from the run's frame, and the home from the verdict the scan recorded on each stub
+from the run's frame, and the declaration from the verdict the scan recorded on each stub
 ([§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk)), so it reads no file and is handed no schema. It is one of the two
 places below the writers that name `Presentation` ([§AR-system.4](README.md#4-dependency-direction)). The checker never
 calls it: the canonical target of an index entry reaches the checker already built,

@@ -6,14 +6,16 @@ use crate::config::{Frame, Schema, kind_uses_values, kind_value_chapter};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, ValueBinding,
-    id_homes, value_binding_section_ends_in_coordinate, value_components_equal,
+    paired_declarations, value_binding_section_ends_in_coordinate, value_components_equal,
 };
 use crate::resolver::WorkspaceCheckTarget;
 
 /// The independent explicit-value checker pass (§AR-checker.2.18,
 /// §FS-values.5). It consumes scanner records, resolves through the same
 /// workspace catalog as ordinary citations, and compares only one valid,
-/// unique target: a numbered component, or a root's whole component run.
+/// unique target: a numbered component, or a root's whole component run. A target
+/// is unique where its ID has one declaration once its stubs are paired by their
+/// verdicts (§FS-declarations.stubs.verdict).
 pub(super) fn check_values(
     findings: &Catalog,
     schema: &Schema,
@@ -26,7 +28,7 @@ pub(super) fn check_values(
             findings
                 .declarations
                 .get(id)
-                .is_some_and(|decls| id_homes(decls).len() > 1)
+                .is_some_and(|decls| paired_declarations(decls).len() > 1)
         }) {
             continue;
         }
@@ -152,7 +154,8 @@ pub(super) fn binding_aim<'a>(
     schema: &Schema,
     binding: &'a ValueBinding,
 ) -> BindingAim<'a> {
-    // §FS-values.5.1: compared as if a stub's target were scanned (§FS-check.3.2.1).
+    // §FS-values.5.1: compared as if a stub's target were scanned
+    // (§FS-declarations.stubs.verdict).
     let homes = declarations_as_scanned(findings, &binding.id);
     let declaration = match homes[..] {
         [home] => Some(home),
@@ -370,15 +373,21 @@ pub(crate) fn binding_target_has_any_value_authority(
         })
 }
 
-/// The record of every home of `id`, a stub's read from its target outside the
-/// walk: the value authority an attempt is classified by and `fmt` protects, as it
-/// would be were the target scanned (§FS-check.3.2.1, §FS-values.3.1.1,
+/// The record of every declaration of `id` once its stubs are paired by their
+/// verdicts, a stub's read from its target outside the walk
+/// (§FS-declarations.stubs.verdict): the value authority an attempt is classified by
+/// and `fmt` protects, as it would be were the target scanned (§FS-values.3.1.1,
 /// §FS-values.8).
 fn declarations_as_scanned<'a>(findings: &'a Catalog, id: &Id) -> Vec<&'a Declaration> {
     findings
         .declarations
         .get(id)
-        .map(|decls| id_homes(decls).iter().map(|home| home.record).collect())
+        .map(|decls| {
+            paired_declarations(decls)
+                .iter()
+                .map(|paired| paired.record)
+                .collect()
+        })
         .unwrap_or_default()
 }
 

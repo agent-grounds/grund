@@ -1,7 +1,7 @@
 //! The columns of the stub-verdict agreement table
 //! (§FS-declarations.checks.broken-stub.4): the fixture tree each row builds,
 //! and how each command's answer is read off it and compared with the row's
-//! verdict.
+//! verdict (§FS-declarations.stubs.verdict).
 
 use grund_core::{LspSnapshotOpts, ShowOpts, lsp_snapshot, show_with_overlays};
 use serde_json::Value;
@@ -35,37 +35,37 @@ pub struct Row {
     pub editor: &'static [(&'static str, &'static str)],
     /// `check` reports the stub broken.
     pub broken: bool,
-    /// The homes of `FS-a`, in `path:line` order.
-    pub homes: &'static [(&'static str, usize)],
+    /// The declarations of `FS-a`, its stubs paired, in `path:line` order.
+    pub declarations: &'static [(&'static str, usize)],
 }
 
 impl Row {
-    fn homes(&self) -> Vec<Site> {
-        self.homes
+    fn declarations(&self) -> Vec<Site> {
+        self.declarations
             .iter()
             .map(|(path, line)| (path.to_string(), *line))
             .collect()
     }
 
-    /// The duplicate findings `check` must report: one, at every home, or none.
+    /// The duplicate findings `check` must report: one, at every declaration, or none.
     fn duplicates(&self) -> Vec<Vec<Site>> {
-        if self.homes.len() > 1 {
-            vec![self.homes()]
+        if self.declarations.len() > 1 {
+            vec![self.declarations()]
         } else {
             Vec::new()
         }
     }
 
-    /// The home `show` answers, the refusal it gives, or the link `fmt` writes.
+    /// The declaration `show` answers, the refusal it gives, or the link `fmt` writes.
     fn shown(&self) -> Shown {
-        match (self.homes(), self.broken) {
-            (homes, _) if homes.len() > 1 => Shown::Ambiguous(homes),
+        match (self.declarations(), self.broken) {
+            (declarations, _) if declarations.len() > 1 => Shown::Ambiguous(declarations),
             (_, true) => Shown::Broken,
-            (homes, false) => Shown::Body(homes[0].clone()),
+            (declarations, false) => Shown::Body(declarations[0].clone()),
         }
     }
 
-    fn is_broken_home(&self, site: &Site) -> bool {
+    fn is_broken_stub(&self, site: &Site) -> bool {
         self.broken && site.0 == "docs/a.md" && site.1 == 1
     }
 }
@@ -222,8 +222,8 @@ fn sorted_sites(value: &Value) -> Vec<Site> {
     sites
 }
 
-fn ambiguity(homes: &[Site]) -> String {
-    let sites: Vec<String> = homes
+fn ambiguity(declarations: &[Site]) -> String {
+    let sites: Vec<String> = declarations
         .iter()
         .map(|(path, line)| format!("{path}:{line}"))
         .collect();
@@ -282,8 +282,8 @@ fn refs_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
             .unwrap_or_default()
             .to_string())
     };
-    let want = match row.homes() {
-        homes if homes.len() > 1 => Err(ambiguity(&homes)),
+    let want = match row.declarations() {
+        declarations if declarations.len() > 1 => Err(ambiguity(&declarations)),
         _ => Ok(vec!["docs/uses.md:1: \u{a7}FS-a".to_string()]),
     };
     out.expect(row, "refs", got, want);
@@ -295,7 +295,7 @@ fn list_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
         .iter()
         .filter(|entry| entry["id"] == "FS-a")
         .collect();
-    let duplicate = row.homes.len() > 1;
+    let duplicate = row.declarations.len() > 1;
     let flags: Vec<bool> = rows
         .iter()
         .map(|entry| entry["duplicate"] == true)
@@ -309,12 +309,12 @@ fn list_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
     if row.broken {
         let stub_row = rows
             .iter()
-            .any(|entry| row.is_broken_home(&site(entry)) && entry["stub"] == true);
+            .any(|entry| row.is_broken_stub(&site(entry)) && entry["stub"] == true);
         out.expect(row, "list broken stub row", stub_row, true);
     }
 }
 
-/// `list --size`: one row per home, the broken stub's unmeasured and labelled.
+/// `list --size`: one row per declaration, the broken stub's unmeasured and labelled.
 fn sizes_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
     let listed = json_lines(&text(
         &grund(&repo.0, &["list", "--size", "--format", "json"]).stdout,
@@ -333,13 +333,13 @@ fn sizes_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
         })
         .collect();
     got.sort();
-    let duplicate = row.homes.len() > 1;
+    let duplicate = row.declarations.len() > 1;
     let want: Vec<(Site, bool, bool, bool)> = row
-        .homes()
+        .declarations()
         .into_iter()
-        .map(|home| {
-            let broken = row.is_broken_home(&home);
-            (home, broken, !broken, duplicate)
+        .map(|declaration| {
+            let broken = row.is_broken_stub(&declaration);
+            (declaration, broken, !broken, duplicate)
         })
         .collect();
     out.expect(
@@ -350,7 +350,7 @@ fn sizes_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
     );
 }
 
-/// `fmt --write` links the citation only to an ID's one healthy home.
+/// `fmt --write` links the citation only to an ID's one declaration, not a broken stub.
 fn fmt_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
     grund(&repo.0, &["fmt", "--write"]);
     let written = fs::read_to_string(repo.0.join("docs/uses.md")).expect("read docs/uses.md");
@@ -370,7 +370,7 @@ fn fmt_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
 }
 
 /// The editor snapshot: its diagnostics are `check`'s, and a citation of an ID
-/// with one home navigates to that home's record.
+/// with one declaration navigates to that declaration's record.
 fn lsp_column(repo: &Repo, row: &Row, column: &str, out: &mut Disagreements) {
     let snapshot = lsp_snapshot(LspSnapshotOpts {
         path: repo.0.clone(),
@@ -386,7 +386,7 @@ fn lsp_column(repo: &Repo, row: &Row, column: &str, out: &mut Disagreements) {
         )
     };
     let broken = errors.iter().any(|finding| {
-        finding.code == "broken-stub" && row.is_broken_home(&located(&finding.path, finding.line))
+        finding.code == "broken-stub" && row.is_broken_stub(&located(&finding.path, finding.line))
     });
     out.expect(row, &format!("{column} broken-stub"), broken, row.broken);
     let duplicates: Vec<Vec<Site>> = errors
@@ -420,14 +420,16 @@ fn lsp_column(repo: &Repo, row: &Row, column: &str, out: &mut Disagreements) {
                 citation.target_line?,
             ))
         });
-    let homes = row.homes();
-    let lands = target.as_ref().is_some_and(|site| match homes.len() {
-        1 => *site == homes[0],
-        _ => homes.contains(site),
-    });
+    let declarations = row.declarations();
+    let lands = target
+        .as_ref()
+        .is_some_and(|site| match declarations.len() {
+            1 => *site == declarations[0],
+            _ => declarations.contains(site),
+        });
     out.expect(
         row,
-        &format!("{column} citation target {target:?} is a home"),
+        &format!("{column} citation target {target:?} is one of the ID's declarations"),
         lands,
         true,
     );
@@ -443,8 +445,10 @@ fn show_api_column(repo: &Repo, row: &Row, out: &mut Disagreements) {
         Ok(shown) => Shown::Body((repo.relative(&shown.path), shown.line)),
         Err(error) => {
             let message = error.to_string();
-            match row.homes() {
-                homes if message == ambiguity(&homes) => Shown::Ambiguous(homes),
+            match row.declarations() {
+                declarations if message == ambiguity(&declarations) => {
+                    Shown::Ambiguous(declarations)
+                }
                 _ if message.starts_with("broken stub: FS-a ") => Shown::Broken,
                 _ => Shown::Other(message),
             }
