@@ -54,6 +54,44 @@ fn word_character_marker_cli_contract() {
     assert_every_case_passed("configured marker graph", &outcomes);
 }
 
+/// §FS-config-v2: the version-2 reader's contract, run alone. Every case is also
+/// in the full pass; the two `config-v1-*` cases are the v1 halves that must not move.
+#[test]
+fn v2_config_reader_contract() {
+    let root = repo_root();
+    let cases = root.join("tests/e2e/cases");
+    let outcomes = [
+        "config-unsupported-version",
+        "config-v2-citation-warn",
+        "config-v2-citation-warn-json",
+        "config-v2-citation-warn-cleared",
+        "config-v2-validate-worked-example",
+        "config-v2-citation-must",
+        "config-v2-citation-should",
+        "config-v2-citation-may",
+        "config-v2-citation-any-of",
+        "config-v2-citation-prohibitions",
+        "config-v2-citation-default-must-refused",
+        "config-v1-citation-default-must-loads",
+        "config-v2-resolution-warn",
+        "config-v2-resolution-without-fetch-refused",
+        "config-v2-grounding-ladder-replaced-whole",
+        "config-v1-grounding-keys-inherited-independently",
+        "config-v2-grounding-ladder-order-refused",
+        "config-v2-unsupported-clause-refused",
+        "config-v2-languages-omitted-refused",
+        "config-v2-repeated-table-refused",
+        "config-v2-v1-key-refused",
+        "config-v2-strength-table-collision-refused",
+        "config-v2-defaults-epoch",
+        "config-v2-workspace-configless-member-keeps-v1",
+    ]
+    .iter()
+    .map(|name| run_case(&root, &cases.join(name), E2e))
+    .collect::<Vec<_>>();
+    assert_every_case_passed("v2 config reader", &outcomes);
+}
+
 /// §FS-show.3.5.2: the check breadcrumb belongs only to the existing-path
 /// migration case. Port grund.33's clean-check and resolving-ID controls before
 /// comparing the malformed coordinate and both non-path alias refusals.

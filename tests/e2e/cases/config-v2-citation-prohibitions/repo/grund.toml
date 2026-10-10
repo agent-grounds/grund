@@ -1,0 +1,16 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.FS]
+files = ["requirements.md"]
+[schema.kinds.GOAL]
+files = ["docs/goals.md"]
+[schema.kinds.AR]
+files = ["docs/architecture.md"]
+[schema.kinds.DF]
+files = ["docs/decisions.md"]
+[rules.citations.FS]
+must-not = ["AR"]
+warn-not = ["DF"]
+should-not = ["GOAL"]

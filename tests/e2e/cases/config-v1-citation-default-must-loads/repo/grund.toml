@@ -1,0 +1,11 @@
+project_name = "example"
+[id]
+format = "{kind}-{slug}"
+[[kinds]]
+kind = "FS"
+file = "requirements.md"
+[[kinds]]
+kind = "GOAL"
+file = "docs/goals.md"
+[citations]
+default = "must"

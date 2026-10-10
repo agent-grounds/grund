@@ -158,6 +158,8 @@ mod tests_scan_exclude;
 #[cfg(test)]
 mod tests_slots;
 #[cfg(test)]
+mod tests_v2_reader;
+#[cfg(test)]
 mod tests_validation;
 
 // §FS-distribution.3.3.3: explicit embedding roots never change process cwd.

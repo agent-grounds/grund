@@ -1,0 +1,3 @@
+docs/goals.md:3: warning: declared but never cited: GOAL-purpose
+requirements.md:3: warning: FS-example must cite GOAL (citation direction)
+requirements.md:3: warning: declared but never cited: FS-example
