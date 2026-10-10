@@ -206,71 +206,50 @@ index, and which project to read it in out of section 1.
 A stub stands for its target's declaration, so a citation of one of its sections
 resolves where the target declares that section, scanned or not
 ([§FS-check.3.2.1](../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not)). Where the walk reached the target, the target's record is among
-the `Catalog` and nothing is read. Where it did not, the only record of the ID is
-the stub, which has no sections of its own, and a lookup that stopped at the
-records would report a section the target plainly declares. So the lookup goes on
-to `resolver/stub_home.rs`: the reading `show` already made of a target outside the
-walk ([§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id)), moved down out of `queries/` so that both commands answer
-from one record and count one section set ([§FS-show.2.2.2.2](../functional-spec/FS-show.md#2222-the-headings-check-counts)).
+the `Catalog`. Where it did not, the only record of the ID the walk holds is the stub,
+which has no sections of its own, and a lookup that stopped at the walk's records
+would report a section the target plainly declares. It does not stop there, and it
+reads nothing: the scanner already put the target through its own pass when it
+reached the stub's verdict, and kept the target's records of the ID on the stub
+([§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk)). The home a stub stands for is one of those records, paired by
+`id_homes`, so `show` slices its body out of the record `check` resolves its
+sections against, and the two count one section set ([§FS-show.2.2.2.2](../functional-spec/FS-show.md#2222-the-headings-check-counts)).
 
-That reading is the scanner's own pass over the target, `scan_unwalked_file`, kept
-to the declarations of the ID that are not themselves stubs. It reads the
-declaration of the ID and never the file's headings, so a broken stub, whose target
-declares no home of the ID, gains no section and stays a broken stub. It reads only
-where the broken-stub rule reads ([§AR-checker.2.5](../../crates/grund-core/src/checker/report.rs)): a scannable file other than the
-stub's own, at which no record of the ID already sits. And it lends nothing where `show`
-refuses the ID as ambiguous: a target that declares the ID twice, and every target of an ID
-with more than one home ([§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id)). So `unscanned_stub_home`
-answers one declaration or none, and every reader falls back to the stub's own record.
+`section_home` in `resolver/citation_target.rs` is the one test, and
+`section_resolves` asks it as a yes or no. Every reader in `check` asks it: the
+missing-section finding ([§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs)), the `grund fmt --write` clause that
+finding carries ([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)), the escape a local section citation offers in
+place of a full citation of a section its owner lacks ([§FS-check.3.24.3](../functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)), the bare
+index entry the index rule admits ([§FS-check.3.17.4](../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), the local-section expansion
+`fmt` writes ([§FS-fmt.2.4.6](../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the `cites` fact a rule reads ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)).
+Where no recorded declaration holds the path, it answers from the ID's one home
+where a stub stands for it: the record of the target that home is. A broken stub
+pairs with no record and gains no section, and an ID with more than one home lends
+none, as `show` refuses it ([§FS-show.2.3.7](../functional-spec/FS-show.md#237-a-stubs-target-is-found-by-its-id), [§FS-show.2.2.1](../functional-spec/FS-show.md#221-ambiguous-id)). Where the section was
+found in such a home, the rule adapter mints that home's chapters as nodes, from the
+record the lookup returned, so the fact's target is the chapter the citation names,
+as on the scanned tree. They carry no `chapter` fact, so no subject or count of
+chapters reaches them ([§FS-check.3.2.1](../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [§AR-rules.3](AR-rules.md#3-rulefacts)).
 
-`section_resolves` in `resolver/citation_target.rs` is the one test, and every
-reader in `check` asks it: the missing-section finding ([§AR-checker.2.4](../../crates/grund-core/src/checker/report.rs)), the
-`grund fmt --write` clause that finding carries ([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)), the escape a local section
-citation offers in place of a full citation of a section its owner lacks ([§FS-check.3.24.3](../functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)), the bare index
-entry the index rule admits ([§FS-check.3.17.4](../functional-spec/FS-check.md#3174-only-a-citation-fmt-would-wrap-reaches-this-rule)), the local-section expansion `fmt`
-writes ([§FS-fmt.2.4.6](../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)), and the `cites` fact a rule reads ([§FS-rules.5.1](../functional-spec/FS-rules.md#51-facts-and-identity)). That last one
-asks `section_home`, the same test answering where the section was found: where it was
-found in a home outside the walk, the rule adapter mints that home's chapters as nodes on
-this miss, from the record the lookup returned, so the fact's target is the chapter the
-citation names, as on the scanned tree. They carry no `chapter` fact, so no subject or
-count of chapters reaches them ([§FS-check.3.2.1](../functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [§AR-rules.3](AR-rules.md#3-rulefacts)). A value
-binding compares against `home_as_scanned` instead, the target's declaration in
-place of the stub, so a mismatch names the target's line ([§FS-values.5.1](../functional-spec/FS-values.md#51-resolve-before-comparison)). The value
-authority a malformed binding is refused by, and that `fmt --cross-refs` protects, is
-read through it too, in the one predicate both share ([§FS-values.3.1.1](../functional-spec/FS-values.md#311-invalid-attempts-and-non-attempts), [§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). So
-is the heading a link anchors on, the declaration's own for a bare ID as much as a
-`.<section>`'s: where the target declares the ID once, `fmt --cross-refs` reads it out
-of the target's record, the one `show` anchors on, not off the stub's title-less line
-([§FS-fmt.6.2.1.1](../functional-spec/FS-fmt.md#6211-through-a-stub-the-declarations-heading-is-the-targets)), and a
-heading that record leaves out of the body gives a section no anchor
-([§FS-fmt.6.4.1](../functional-spec/FS-fmt.md#641-a-section-the-declaration-does-not-have-is-not-wrapped)). A
-workspace citation asks with the target project's `Config`, out of section 1,
-because the stub's link resolves against that project's root. Outside `check`, the
-size catalog of `list --size` puts each retained stub through `home_as_scanned`, so
-a healthy stub whose target the walk missed is measured at that home, with its
-sections ([§FS-list.3.4.6](../functional-spec/FS-list.md#346-a-home-outside-the-scan)). `check`'s lead
-budget does not: it judges scanned sites only ([§FS-declarations.checks.oversized-lead.4](../functional-spec/FS-declarations.md#checksoversized-lead4-which-sites-it-judges)).
+The other readers take the same homes. A value binding compares against its ID's
+one home's record, the target's declaration in place of the stub, so a mismatch
+names the target's line ([§FS-values.5.1](../functional-spec/FS-values.md#51-resolve-before-comparison)); the value authority a malformed binding is
+refused by, and that `fmt --cross-refs` protects, is read off every home's record,
+in the one predicate both share ([§FS-values.3.1.1](../functional-spec/FS-values.md#311-invalid-attempts-and-non-attempts), [§FS-values.8](../functional-spec/FS-values.md#8-formatting-stability)). So is the heading
+a link anchors on, the declaration's own for a bare ID as much as a `.<section>`'s:
+`fmt --cross-refs` reads it out of the one home's record, the one `show` anchors on,
+not off the stub's title-less line ([§FS-fmt.6.2.1.1](../functional-spec/FS-fmt.md#6211-through-a-stub-the-declarations-heading-is-the-targets)), and a heading that record
+leaves out of the body gives a section no anchor ([§FS-fmt.6.4.1](../functional-spec/FS-fmt.md#641-a-section-the-declaration-does-not-have-is-not-wrapped)). The size catalog
+of `list --size` measures each home's record, so a healthy stub whose target the
+walk missed is measured at that home, with its sections, and a target declaring the
+ID twice at both ([§FS-list.3.4.6](../functional-spec/FS-list.md#346-a-home-outside-the-scan)). `check`'s lead budget does not: it judges
+scanned sites only ([§FS-declarations.checks.oversized-lead.4](../functional-spec/FS-declarations.md#checksoversized-lead4-which-sites-it-judges)).
 
-Three properties hold the read to what a scan of the target would be:
-
-- **Once, on a miss.** `Catalog::stub_targets` keeps one slot per stub target,
-  filled the first time a reader misses there and borrowed for the rest of the
-  run. A section a record holds reads nothing, and a target many IDs and sections
-  ask about is read once. A `--full` run narrows its findings after the slots are
-  made ([§AR-resolver.3.3](AR-resolver.md#33-two-scopes-and-which-narrowness-a-narrow-scope-keeps)), which changes nothing a slot holds: whether a record
-  sits at the target is asked of the current records on every lookup.
-- **Observed.** The read goes through the input observation of [§FS-check.6.1.1](../functional-spec/FS-check.md#611-subscribe-before-reading), so
-  a watching run re-checks when the target changes. The slots belong to the
-  `Catalog` a scan produced, so the next run starts from empty ones and reads the
-  target again.
-- **The editor's text.** The slots carry the overlays the walk was given, so a
-  target open in an editor answers as a save would ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)). `show` passes
-  the overlays it was given straight to the same reading instead.
-
-What stays in [§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk) is recording. Its post-walk pass records on every stub the
-lines its home declares the ID on, a lone stub's too, which is all the count of homes
-needs; what the target declares beyond that is read here, and only when a reader asks
-for it.
+Nothing here is read after the scan, so nothing here keeps slots, observes an
+input, or carries the editor's text: the one read of a target, its observation
+([§FS-check.6.1.1](../functional-spec/FS-check.md#611-subscribe-before-reading)) and the overlays it takes ([§FS-lsp.1.1](../functional-spec/FS-lsp.md#11-diagnostics)) are the scanner's
+([§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk)). A `--full` run narrows its findings after the scan
+([§AR-resolver.3.3](AR-resolver.md#33-two-scopes-and-which-narrowness-a-narrow-scope-keeps)), which changes nothing a stub's verdict holds.
 
 ## 6. A link target is handed presentation
 

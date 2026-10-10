@@ -330,7 +330,7 @@ broken stub: <ID> (stub at <path>:<line> points at <target>, which does not exis
 broken stub: <ID> (stub at <path>:<line> points at <target>, which contains no inline declaration of <ID>)
 ```
 
-This is the same "found something other than exactly one body" family as `ID not found` and `ambiguous ID` ([§FS-show.3](FS-show.md#3-outputs)). Run `grund check` to see the error in located form; fix the stub or the target before `show` will return a body.
+This is the same "found something other than exactly one body" family as `ID not found` and `ambiguous ID` ([§FS-show.3](FS-show.md#3-outputs)). Run `grund check` to see the error in located form; fix the stub or the target before `show` will return a body. Which stubs are broken, and which of the two lines a broken one draws, is the verdict `check` reports, the one every command reads ([§FS-declarations.checks.broken-stub.4](FS-declarations.md#checksbroken-stub4-one-verdict-per-stub-read-by-every-command)): the first line for a target that is missing, the second for every other broken stub.
 
 #### 2.3.5 The doc-comment forms
 

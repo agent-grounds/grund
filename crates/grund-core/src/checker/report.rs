@@ -150,12 +150,12 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 /// For each ID with more than one declaration, emit one error anchored at the
 /// lexicographically-first site (sort by `path`, then `line`); list every other
 /// site parenthetically in the message. This keeps the report's `path:line:`
-/// prefix invariant (§AR-checker.3, §FS-check.2.1) while still naming all sites. A stub and
-/// the inline declaration it points at count as one home, not two — whether or not the walk
+/// prefix invariant (§AR-checker.3, §FS-check.2.1) while still naming all sites. The homes
+/// are the ones `id_homes` derives from each stub's verdict (§AR-scanner.4.6): a stub and the
+/// inline declaration it points at count as one home, not two — whether or not the walk
 /// reached that declaration, and however many stubs point at it — and a home a stub stands for
-/// is named at its target's declaration, from the record §AR-scanner.4.6 leaves on the stub
-/// (§FS-declarations.checks.duplicate.1, §FS-declarations.checks.duplicate.2,
-/// §FS-declarations.checks.duplicate.3).
+/// is named at its target's declaration (§FS-declarations.checks.duplicate.1,
+/// §FS-declarations.checks.duplicate.2, §FS-declarations.checks.duplicate.3).
 ///
 /// ### 2.2 Misplaced declarations (§FS-declarations.checks.misplaced-declaration)
 ///
@@ -182,31 +182,23 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 ///
 /// For each citation with a section path, look up the section in the matching
 /// declaration's recorded sections. Where the walk recorded only a stub of the ID,
-/// the lookup goes on to the stub's target, scanned or not, and reads its
-/// declaration of the ID once per run (§FS-check.3.2.1, §AR-resolver.5). Missing →
+/// the lookup goes on to the stub's target, scanned or not, through the target's
+/// record the scan kept on the stub (§FS-check.3.2.1, §AR-resolver.5). Missing →
 /// one error at the citation site.
 ///
 /// ### 2.5 Broken inline-spec stubs (§FS-declarations.checks.broken-stub)
 ///
 /// For each declaration whose H1 has the stub shape `# <ID>: [<text>](<path>)`
-/// (description after the colon is a single bare markdown link), extract the link
-/// target, resolve it against the repo root, verify the path exists, then re-scan
-/// that file for an inline declaration of the same ID. A target the scan does not
-/// read — not a file, a name that begins with `.`, or an extension outside
-/// `[scan] extensions` — holds none and is not read
-/// (§FS-declarations.checks.broken-stub.3), a gate the scanner's reader carries, so
-/// `show` refuses every stub this rule reports. The re-read takes the
-/// editor's overlay text first and the disk second, as the scanner does, so the
-/// verdict is the one a save would give (§FS-declarations.checks.broken-stub.1),
-/// and it reads that text as the scanner does too: in a Markdown target, fence
-/// delimiter lines and every line while a fence is open are skipped through the
-/// scanner's own fence reader (§AR-scanner.2.3.3), so a fenced example heading of
-/// the ID is not its declaration (§FS-declarations.checks.broken-stub.2). Either
-/// failure → one error at the stub site. The target's text is read after the scan
-/// (§AR-checker.placement), not taken from `findings`. The reading is the scanner's
-/// (§AR-scanner.4.6), so the stub this rule accepts is the stub the count of homes
-/// pairs with its target, and the one whose sections §AR-checker.2.4's lookup reads
-/// (§AR-resolver.5).
+/// (description after the colon is a single bare markdown link), report the verdict
+/// the scan recorded on the stub (§AR-scanner.4.6): a target that is missing draws
+/// `stub link target missing`, and one the scan does not read, or that declares no
+/// home of the ID, draws `stub link target lacks <ID>` — one error at the stub site.
+/// The rule reads no file and decides nothing of its own, so the stub it reports is
+/// exactly the stub `show` refuses, `list --size` labels and `fmt` will not link
+/// through (§FS-declarations.checks.broken-stub.4), and the verdict is the one a save
+/// would give, a hidden or unlisted name judged as the stub wrote it and a fenced
+/// heading declaring nothing (§FS-declarations.checks.broken-stub.1,
+/// §FS-declarations.checks.broken-stub.2, §FS-declarations.checks.broken-stub.3).
 ///
 /// ### 2.6 Unused declarations (§FS-check.4.1)
 ///
@@ -406,10 +398,10 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 /// ### 2.18 Explicit values (§FS-values.5, §DA-explicit-value-bindings)
 ///
 /// A focused `checker_values` pass consumes the scanner's declarations,
-/// components, bindings, and exact spans, and reads a file only where a binding's
-/// home is a stub whose target the walk did not reach (§AR-checker.placement). It
-/// routes the binding citation through the same local/workspace resolver as every
-/// citation.
+/// components, bindings, and exact spans, and reads no file: where a binding's
+/// home is a stub whose target the walk did not reach, it compares against the
+/// target's record the scan kept on the stub (§AR-resolver.5). It routes the
+/// binding citation through the same local/workspace resolver as every citation.
 /// For an embedded binding, the longest marked parent path owns the site; an
 /// invalid immediate parent suppresses comparison and secondary binding errors,
 /// while a binding to the root or below a component remains invalid. Config,
