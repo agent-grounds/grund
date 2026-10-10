@@ -89,6 +89,31 @@ and the short form is opaque until resolved.
 
 The marker is the whole signal: a `§`-prefixed token is a live, checked citation wherever it appears — including inside Markdown backticks — except in a simple top-level Python assignment whose value is triple-quoted runtime data ([§FS-check.1.1.3.1](../functional-spec/FS-check.md#1131-assigned-python-triple-quoted-data)). To show an *example* ID that shouldn't resolve, write it without the marker (`FS-user-login`), inside a fenced code block (which is how the two citations above are written), or with the marker bracketed (`<§>FS-user-login`) — the escape `grund check` names in its own hint when a citation resolves to nothing, and the one form that is inert under both strict modes ([§FS-check.1.1.9](../functional-spec/FS-check.md#119-an-id-in-an-escape-position)). Put an intentional citation near assigned Python data in a `#` comment or a real docstring.
 
+**Write section citations with their full ID.** This input inside an
+`FS-check` declaration body contains a live local section citation:
+
+```text
+See §2.1.
+```
+
+When section 2.1 exists, the citation remains navigable, but `grund check` reports:
+
+```text
+local section citation §2.1; write §FS-check.2.1 — unchecked in grund 0.13.1, an error in 0.14.0; run `grund fmt --write`
+```
+
+Every form of the finding ends by naming the two releases its verdict moved between, and
+an owned site the formatter would actually write also names the command that clears it
+([§FS-check.3.24.1](../functional-spec/FS-check.md#3241-the-release-attribution-and-where-the-command-clause-is-withheld)) — so one line separates *this tree predates the binary running over
+it* from *this citation is wrong*. `grund fmt --write` expands safe owned sites;
+protected sites need manual replacement and are not offered the command.
+Where the owner lacks the section, the finding names the absence and offers a full citation or the escape instead ([§FS-check.3.24.3](../functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape)), the ordinary missing-section error
+fires beside it, and the formatter leaves that site alone and does not offer the command ([§FS-fmt.2.4.6](../functional-spec/FS-fmt.md#246-an-absent-target-section-withholds-this-rewrite-and-only-this-one)). A site outside
+a declaration is diagnosed without a guessed target and needs a full citation or an
+escape: `<§>2.1` is an inert illustration, with no citation diagnostic or navigation.
+This is intentionally newly loud compatibility behavior for a
+form that older releases silently skipped ([§FS-check.3.24](../functional-spec/FS-check.md#324-declaration-local-section-citation), [§FS-fmt.2.4](../functional-spec/FS-fmt.md#24-shorthand-to-canonical)).
+
 **Specs can live inline in source.** Declare the spec in a class or module doc-comment, then enroll it from the configured kind index with the canonical bare-ID link `grund fmt --cross-refs` writes — no stub file is required:
 
 ```rust

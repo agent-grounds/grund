@@ -162,6 +162,19 @@ $ grund refs FS-show.1.8 --format json | head -1
 {"path":"crates/grund-cli/src/cli_show.rs","line":20,"column":6,"id":"FS-show","section":"1.8","marker":true,"text":"§FS-show.1.8","enclosing_declaration":null,"enclosing_section":null,"kind_title":"What: behavior, requirements, and constraints"}
 ```
 
+`--total` sizes the blast radius in one line, before any listing:
+
+```console
+$ grund refs FS-show.1.8 --total
+cited at 8 sites across 8 files
+```
+
+For scripts, exit `0` is a completed `refs` answer even when it is empty. Exit
+`1` means the selected repository grammar rejected the ID or its number-only
+shorthand was ambiguous; route that status to ID repair, and reserve exit `2`
+for setup, configuration, I/O, or incomplete-scan failure
+([§FS-refs.4](../functional-spec/FS-refs.md#4-exit-codes)).
+
 [Reviewing code](reviewing.md) walks through using these before a move,
 rename or delete.
 

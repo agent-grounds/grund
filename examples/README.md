@@ -23,7 +23,7 @@ examples tree should not grow a parallel test harness.
 | [`scheme-slug/`](scheme-slug/)                               | `{kind}-{slug}`           | `FS-login`, `AR-event-bus` |
 
 Each subfolder's `README.md` lists the trade-offs for that scheme. The
-top-level project [README](../README.md#4-the-structure-that-gets-cited)
+[structure guide](../docs/user-facing/structure.md)
 summarizes when to reach for each.
 
 ## Workflows
