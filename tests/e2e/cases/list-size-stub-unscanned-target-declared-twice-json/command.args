@@ -1,0 +1,1 @@
+list {repo} --size --format json
