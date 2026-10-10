@@ -319,6 +319,8 @@ fn the_rule_side_answers_a_refused_subject_as_the_selector_does() {
         "Each chapter of each FS",
         "FS-login.requirements.1",
         "FS.requirements.1",
+        "FS-login.requirements.",
+        "FS-login..requirements",
         "Each POLICY",
         "Each chapter of each POLICY",
         "FSbogus",

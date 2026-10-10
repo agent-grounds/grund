@@ -1,7 +1,7 @@
-docs/rules/RULE-doubled.md:1: error: RULE-doubled is not a valid rule: named chapter subject "FS-login..requirements" does not match the configured section grammar; accepted form: FS-login.requirements must cite at least one REQ.
-docs/rules/RULE-numbered.md:1: error: RULE-numbered is not a valid rule: numbered chapter subjects can detach when headings move; accepted form: FS-login.requirements must cite at least one REQ.
+docs/rules/RULE-doubled.md:1: error: RULE-doubled is not a valid rule: named chapter subject "FS-login..requirements" does not match the configured section grammar; accepted form: FS-login must cite at least one REQ.
+docs/rules/RULE-numbered.md:1: error: RULE-numbered is not a valid rule: numbered chapter subjects can detach when headings move; accepted form: The requirements chapter of each FS must cite at least one REQ.
 docs/rules/RULE-trailing.md:1: error: RULE-trailing is not a valid rule: named chapter subject "FS-login.requirements." does not match the configured section grammar; accepted form: FS-login.requirements must cite at least one REQ.
-docs/rules/RULE-wildcard.md:1: error: RULE-wildcard is not a valid rule: section-component wildcards are not accepted in phase 1; accepted form: FS-login.requirements must cite at least one REQ.
+docs/rules/RULE-wildcard.md:1: error: RULE-wildcard is not a valid rule: section-component wildcards are not accepted in phase 1; accepted form: The requirements chapter of each FS must cite at least one REQ.
 docs/functional-spec/FS-login.md:1: warning: declared but never cited: FS-login
 docs/rules/RULE-doubled.md:1: warning: declared but never cited: RULE-doubled
 docs/rules/RULE-exact.md:1: warning: declared but never cited: RULE-exact
