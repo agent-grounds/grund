@@ -14,7 +14,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use super::after_pass::AfterPass;
-use super::chapter_values::validate_declared_value_chapters;
 use super::citation_line::CitationLine;
 use super::citations::{
     scan_escaped_citations, scan_legacy_citation_candidates, scan_local_section_candidates,
@@ -28,7 +27,6 @@ use super::embedded_value_context::{
     EMBEDDED_VALUE_MARKER, authored_heading_level, embedded_value_marker_for_line,
     push_invalid_embedded_marker,
 };
-use super::embedded_values::validate_embedded_value_roots;
 use super::qualified_citations::{
     scan_fallback_qualified_citations, scan_workspace_qualified_pass,
 };
@@ -38,7 +36,7 @@ use super::units::{heading_text, record_file_structure};
 use super::unmarked_headings::assign_unmarked_heading_owners;
 use super::value_binding_split::scan_split_binding;
 use super::value_context::recognized_source_value_contexts;
-use super::values::{scan_value_bindings, validate_markdown_value_declarations};
+use super::values::scan_value_bindings;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
     DocstringContent, MarkdownBlocks, MarkdownLine, PythonDocstringScanState, STUB_LINK_HEADING,
@@ -587,33 +585,16 @@ pub(super) fn scan_file_text(
             total_lines,
         );
     }
-    if due.value_declarations {
-        validate_markdown_value_declarations(path, &text, is_md, schema, frame, findings);
-    }
-    if due.declared_chapters {
-        validate_declared_value_chapters(
-            path,
-            &text,
-            is_md,
-            is_py,
-            schema,
-            frame,
-            value_line_contexts.as_deref(),
-            findings,
-        );
-    }
-    if due.embedded_roots {
-        validate_embedded_value_roots(
-            path,
-            &text,
-            is_md,
-            is_py,
-            schema,
-            frame,
-            value_line_contexts.as_deref(),
-            findings,
-        );
-    }
+    due.validate_values(
+        path,
+        text,
+        is_md,
+        is_py,
+        schema,
+        frame,
+        value_line_contexts.as_deref(),
+        findings,
+    );
     resolve_citation_owners(
         findings,
         schema,

@@ -345,9 +345,8 @@ pub(super) fn check_kind_indexes(
             let Some(line) = lines.get(citation.line.saturating_sub(1)) else {
                 continue;
             };
-            // §FS-fmt.6.4: `fmt` leaves a declaration heading alone, so a citation
-            // riding on one is no more repairable than one in inline code. Fenced
-            // blocks need no test here — the scanner records no citation inside one —
+            // §FS-fmt.6.4: `fmt` leaves a declaration heading alone, so a citation on one
+            // is no more repairable than one in inline code. A fence records no citation
             // and a raw-text HTML block holds no heading (§FS-check.1.1.5.1).
             let heading_position = kinds
                 .get(citation.line.saturating_sub(1))
