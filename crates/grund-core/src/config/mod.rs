@@ -95,6 +95,7 @@ pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolic
 pub use rows::{Extent, Form, Kind, Nesting, Origin, Place, Row};
 #[allow(unused_imports)]
 pub use run::{Run, RunScope, RunWorkspace};
+#[allow(unused_imports)]
 pub use slots::{Content, Handle, Presence, Slot};
 
 // What the other components read, each by this module's path (§AR-system.4):
