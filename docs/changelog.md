@@ -20,17 +20,172 @@ A compatibility notice says what a verdict change breaks and for whom. It is wri
 
 Only the **most recent release** is inline. When a new release ships, its generated section takes the inline place, the previous "latest" section is moved verbatim to `docs/changelog/<version>.md`, and a one-line link counting what it held is added under [section 3, Older releases](#3-older-releases) ([§FS-distribution.4.5](functional-spec/FS-distribution.md#45-what-the-version-bump-includes)). The most recent release stays inline so the common reader and agent path — "what changed lately?" — is one file deep.
 
-## 2. [0.16.1] — 2026-10-05
+## 2. [0.17.0] — 2026-10-10
 
-- [Count a resolved section citation in chapter rules](https://github.com/agent-grounds/grund/pull/450) (PR #450)
-- [Explain chapter display names and handles in rule diagnostics](https://github.com/agent-grounds/grund/pull/448) (PR #448)
+- [Introduce Project, Run, Compiled and Catalog with a lossless v1 reader](https://github.com/agent-grounds/grund/pull/501) (PR #501)
+- [Answer a local section citation whose owner lacks the section with the escape, not a full citation check reports missing](https://github.com/agent-grounds/grund/pull/560) (PR #560)
+- [Count every line a stub's target declares its ID on as a home, a lone stub's too, so check reports the duplicate a scanned target gives](https://github.com/agent-grounds/grund/pull/559) (PR #559)
+- [Read a stub's target only where the scan would read it, so show refuses a hidden or unlisted-extension target check reports broken](https://github.com/agent-grounds/grund/pull/558) (PR #558)
+- [Restate grund's why as the two things that make structure hard](https://github.com/agent-grounds/grund/pull/517) (PR #517)
+- [Build and rehearse npm and PyPI packages locally without publishing them, and attach grund-lsp archives to releases](https://github.com/agent-grounds/grund/pull/516) (PR #516)
+- [Ask whether a cited section exists even where the link takes no heading anchor, so fmt no longer links a section check reports missing](https://github.com/agent-grounds/grund/pull/551) (PR #551)
+- [Measure a healthy stub at its home outside the scan in list --size, so it is no longer called broken](https://github.com/agent-grounds/grund/pull/555) (PR #555)
+- [Take a bare ID's heading from the stub target's record, so fmt links the anchor show reports](https://github.com/agent-grounds/grund/pull/554) (PR #554)
+- [Read a stub's target as a save would write it when counting its ID's homes, so the editor reports the duplicate a save would](https://github.com/agent-grounds/grund/pull/548) (PR #548)
+- [Take a cited section's heading from the scan's record, so fmt no longer links a heading after a declaration's body has closed](https://github.com/agent-grounds/grund/pull/547) (PR #547)
+- [Skip fenced lines when fmt looks for a cited section's heading, so a heading inside a Markdown fence no longer gets a link](https://github.com/agent-grounds/grund/pull/545) (PR #545)
+- [List every checker rule that reads a file after the scan in one place, held to the code by a test, and drop every count of them](https://github.com/agent-grounds/grund/pull/543) (PR #543)
+- [Read a stub's sections from its target outside the scan, so check resolves them as it does with the target scanned](https://github.com/agent-grounds/grund/pull/538) (PR #538)
+- [Fail the pull request that writes a release note the next release bump would refuse](https://github.com/agent-grounds/grund/pull/542) (PR #542)
+- [Read a stub's Markdown target as the scan does, so a heading inside a fence no longer declares its ID](https://github.com/agent-grounds/grund/pull/537) (PR #537)
+- [Judge a stub's target on the editor's unsaved text, so show and the broken-stub diagnostic answer as a save would](https://github.com/agent-grounds/grund/pull/535) (PR #535)
+- [Pair a stub with a target outside the scan, so stubs to one file are one home, named at the target's line](https://github.com/agent-grounds/grund/pull/533) (PR #533)
+- [Refuse a bare refs \<ID\> whose unscanned stub target declares the ID twice, as show does](https://github.com/agent-grounds/grund/pull/534) (PR #534)
+- [Find a stub's target by its ID in show, so a target outside the scan reads as if it were scanned](https://github.com/agent-grounds/grund/pull/527) (PR #527)
+- [Build the same-source binding oracle in the local Python gate when it is not given one](https://github.com/agent-grounds/grund/pull/526) (PR #526)
+- [Select a chapter subject's NAME by its whole path, so FS.requirements.terms reaches its nested chapter](https://github.com/agent-grounds/grund/pull/523) (PR #523)
+- [Answer a rule subject that needs named sections with one they make valid](https://github.com/agent-grounds/grund/pull/521) (PR #521)
+- [Accept a --kind any selected workspace project has citable, in list and list --size](https://github.com/agent-grounds/grund/pull/524) (PR #524)
+- [Name only the selected projects' kinds in a list --project refusal](https://github.com/agent-grounds/grund/pull/519) (PR #519)
+- [Read a refused list --selector as check --rule does, and suggest only selectors that paste back](https://github.com/agent-grounds/grund/pull/518) (PR #518)
+- [Add the Node Promise API and source-buildable grund-cli package](https://github.com/agent-grounds/grund/pull/481) (PR #481)
+- [Answer a refused list --selector with a selector, not a rule sentence](https://github.com/agent-grounds/grund/pull/509) (PR #509)
+- [Honor configured slug punctuation in show, refs and check](https://github.com/agent-grounds/grund/pull/506) (PR #506)
+- [Add --path-base=project|invocation and answer a bad report flag before loading](https://github.com/agent-grounds/grund/pull/502) (PR #502)
+- [Expose configured heading anchors in show JSON](https://github.com/agent-grounds/grund/pull/500) (PR #500)
+- [Specify remote projects: cite another repository's declarations offline](https://github.com/agent-grounds/grund/pull/499) (PR #499)
+- [Report an unknown alias in a workspace run whatever kind its tail names](https://github.com/agent-grounds/grund/pull/498) (PR #498)
+- [Teach grund's structural queries in a Querying grund guide, the grund-init skill and the managed block](https://github.com/agent-grounds/grund/pull/493) (PR #493)
+- [Answer which declaration and section own each line of a cover --lines range](https://github.com/agent-grounds/grund/pull/492) (PR #492)
+- [Say what a deprecation note may name, and pin the 1.0 ledger it owes](https://github.com/agent-grounds/grund/pull/494) (PR #494)
+- [Avoid executing freshly written cleanup fixtures](https://github.com/agent-grounds/grund/pull/488) (PR #488)
+- [Refuse a \[scan\] exclude entry containing / as a located config error](https://github.com/agent-grounds/grund/pull/486) (PR #486)
+- [Add an opt-in Git recipe for related spec and test edits](https://github.com/agent-grounds/grund/pull/479) (PR #479)
+- [Add grund check --watch, a terminal feedback loop over the ordinary check](https://github.com/agent-grounds/grund/pull/478) (PR #478)
+- [Add the Python API over grund-core and prove binding parity](https://github.com/agent-grounds/grund/pull/480) (PR #480)
+- [Resolve colon-format IDs discovered by list](https://github.com/agent-grounds/grund/pull/485) (PR #485)
+- [Recognize citations with word-character markers](https://github.com/agent-grounds/grund/pull/484) (PR #484)
+- [Complete LSP citation authoring with ID completion](https://github.com/agent-grounds/grund/pull/477) (PR #477)
+- [Clarify factual positioning and performance evidence](https://github.com/agent-grounds/grund/pull/476) (PR #476)
 
 ### Compatibility notices
 
-- [§FS-rules.5.1](functional-spec/FS-rules.md#51-facts-and-identity), [§FS-rules.3.4](functional-spec/FS-rules.md#34-inbound-citation-count-and-prohibition), [§FS-rules.7.8](functional-spec/FS-rules.md#78-a-newly-counted-section-citation-warns-until-0180), [§REQ-backwards-compatibility.2](requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **a resolved citation to a numbered section now counts in chapter rules.** `GOAL-x.4` counts as a citation of `GOAL-x`, and `GOAL-x.outcome.2` as one of the `outcome` chapter, in every rule family, as `[citations.KIND]` already counted them. A chapter rule that failed only because such a citation was ignored now passes. A finding the newly counted citation alone produces — a `must not cite` prohibition, or an `at most N` or `exactly N` count it pushes out of bounds — is a warning in this release, carrying the code it will carry as an error and ending `; a citation to a numbered section now counts, and this warning becomes an error in grund 0.18.0`; the exit code does not move until then. **Who this breaks, from 0.18.0:** a repository whose prohibition or upper-bound rule a section citation silently evaded, most widely one with `named_sections` off. The escapes are to remove or move the citation, loosen the rule's count, or pass `--ignore` on the finding's code. (agent-grounds/grund#449)
+- [§DA-config-concern-records](decisions/architectural/DA-config-concern-records.md#da-config-concern-records-the-configuration-becomes-three-concern-records-inside-an-envelope-and-the-checker-splits-in-two), [§AR-config](architecture/AR-config.md#ar-config-one-project-per-project-read-by-one-reader-per-version-and-lowered-losslessly), [§FS-distribution.3.1](functional-spec/FS-distribution.md#31-rust-grund-core-crate), [§REQ-backwards-compatibility.2](requirements/REQ-backwards-compatibility.md#2-the-deprecation-path): **`grund-core` deprecates `Findings`, `Config`, `KindConfig` and `CitationRules` at its root, to be removed in `0.19.0`.** The engine now reads a `grund.toml` into `Project` (its `schema`, `rules` and `presentation`, inside an envelope of name, version and workspace), `Run` and `Compiled`, and the scan returns a `Catalog`. All four are public beside the old names. `Findings` is now an alias of `Catalog`, and `Config` is a façade built from the records. Code that names an old type still compiles, with a deprecation warning that names the replacement. Only a build with `-D warnings` fails. No `grund` command, LSP response, JSON report or written file changes, for any v1 config. Closes [issue #453](https://github.com/agent-grounds/grund/issues/453). (PR #501)
+- [§FS-init.2.3.4.3.1](functional-spec/FS-init.md#23431-structural-queries), [§FS-init.2.3.7.1](functional-spec/FS-init.md#2371-the-current-version): **the managed `AGENTS.md` block moves v12 → v14, and v13 → v15 where a rule kind is enabled.** It gains one bullet teaching `grund list --selector "<selector>" --format json | jq -c '{id,section}' | grund show --batch --toc --format json` and linking the new [Querying grund](user-facing/querying.md) guide. **Who this breaks:** every repository with a grund block — `grund check` reports it outdated until it is re-rendered. Migration: run `grund init`. (agent-grounds/grund#491)
+- [§DF-canonical-slug-declarations](decisions/functional/DF-canonical-slug-declarations.md#df-canonical-slug-declarations-configured-slug-punctuation-retains-its-canonical-declaration-identity), [§REQ-backwards-compatibility.5](requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-wrong-citation.2](requirements/REQ-no-wrong-citation.md#2-no-false-alarms), [§FS-declarations.line.configured-slug](functional-spec/FS-declarations.md#lineconfigured-slug-characters-admitted-by-the-slug-pattern-belong-to-the-canonical-id): **configured slug punctuation retains its canonical declaration identity.**
+  Before the correction, a valid repository declaring and citing `FS-*` or `FS-tail*`,
+  with Markdown-link index entries, failed `check` at exit `1` with off-format,
+  unknown-reference and missing-index-entry errors. After the correction it prints
+  `success` at exit `0`; explicit and bare `show` return the actual lead, and
+  declaration-only `refs` no longer emits the typo note.
+  No repository edit or migration is required. Consumers expecting the erroneous
+  findings must accept their removal; genuinely off-grammar tokens and unresolved
+  citations retain their findings.
+  The verdict changes from failure to success for the valid fixture; every finding
+  that remains keeps its location and corrective action.
+- [§FS-rules.2.1](functional-spec/FS-rules.md#21-a-chapters-name-is-its-whole-path), [§FS-rules.5.2](functional-spec/FS-rules.md#52-family-clauses), [§FS-rules.8](functional-spec/FS-rules.md#8-command-surfaces): **a chapter subject's `NAME` is the
+  chapter's whole path.** `grund list --selector FS.requirements.terms`, the
+  sentence `The requirements.terms chapter of each FS`, `--size`, and
+  `FS:requirements.terms` under a `:` separator list the nested
+  `requirements.terms` chapter where they listed nothing, and `check` evaluates
+  a rule over that subject on the chapters that exist where it reported every
+  FS `has no requirements.terms chapter`. A one-component `NAME` selects only a
+  chapter directly under its declaration in `list`, as it already did in
+  `check`: `list --selector FS.terms` no longer lists a nested
+  `requirements.terms`. A nested chapter's row is titled by its display name,
+  `Terms`, where an exact `FS-login.requirements.terms` row repeated the
+  heading's `requirements.terms:` coordinate
+  ([§FS-rules.5.1.1](functional-spec/FS-rules.md#511-a-chapters-display-name-is-the-label-its-author-wrote)). **Who this breaks:** a script that read nested chapters
+  through a one-component `list --selector` or `--size` `NAME`, or matched a
+  nested chapter row's title; a dotted
+  prohibition such as `The requirements.terms chapter of each FS must not cite
+  any AR.`, which passed without reading a chapter and now reports the sites it
+  forbids; a run that ignored `unreached-declaration` over a dotted positive
+  rule, which now reports the chapters that miss their citation; and a run that
+  ignored `orphan-section` over a heading nested without its parent, such as
+  `### extra.terms: Terms` with no `extra`. There
+  `The terms chapter of each FS must cite at least one AR.` took the orphan for
+  its `terms` chapter and no longer does, and
+  `Each FS must have at most 1 Terms chapter.` now counts it by its display name
+  `Terms`. No deprecation window is owed
+  ([§REQ-backwards-compatibility.4](requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise)).
+  The dotted subject had no defined meaning, and the only `must` runs it let
+  pass are the dotted prohibition and the dotted positive rule with
+  `unreached-declaration` ignored, which read no chapter at all. An orphan's
+  standing as a chapter had no defined meaning either, because
+  [§FS-declarations.checks.orphan-section](functional-spec/FS-declarations.md#checksorphan-section-orphan-name-bearing-section-path)
+  addresses a name-bearing descendant only once every proper prefix is
+  recorded, and plain `check` refuses that tree as an error. Closes [issue #511](https://github.com/agent-grounds/grund/issues/511). (PR #523)
+- [§FS-check.3.24.3](functional-spec/FS-check.md#3243-an-absent-target-section-is-answered-with-the-escape): **where a declaration-local section citation names a section
+  its owner does not have, the finding says so and offers the escape.** Inside a
+  declaration whose sections stop at 2, a marked `5.1` used to be told to write
+  the owner's full citation of section 5.1, which the same run reports as
+  `missing section` on the same line. Its `local-section-citation` finding now
+  reads `local section citation <token>; <owner> has no section 5.1, so write a
+  full citation or <§>5.1 to show the shape without citing it`, followed by the
+  same release attribution and never by the `grund fmt --write` clause. A site
+  whose section exists keeps every byte, the command clause included. **Who
+  this breaks:** a script matching the exact `message` of a
+  `local-section-citation` finding, in text or JSON, from `check` or the
+  language server, at an owned site whose section is absent, including one that
+  extracts `write <citation>` from it to apply. The code, severity, location,
+  count, exit code, the text through `local section citation <token>; ` and the
+  attribution at the end do not move, and `missing section` does not change.
+  Closes [issue #515](https://github.com/agent-grounds/grund/issues/515).
+- [§FS-rules.3.5.2](functional-spec/FS-rules.md#352-a-subject-that-needs-named-sections-is-answered-with-one-they-make-valid): **with named sections off, a rule subject that needs them
+  is answered with one they make valid.** `grund check --rule` and a configured
+  rule declaration's `invalid-rule` finding no longer suggest the subject as
+  typed after `accepted form after enabling it:` when enabling named sections
+  would refuse it again. `FS-*.requirements` and `FS.requirements` are answered
+  with `The requirements chapter of each FS`, and `FS-login.Requirements` with
+  `FS-login` under a plain `accepted form:`, because the repository accepts that
+  as configured. Where no configured kind can be recovered, as with
+  `POLICY.requirements`, nothing is suggested: `check --rule` prints the reason
+  and then `known kinds: …`, and the finding ends at the reason. **Who this
+  breaks:** a script matching the exact stderr of `check --rule`, the exact
+  `message` of an `invalid-rule` finding, or the exact failure message of the
+  Python `check(rule=…)` or Node `check(root, { rule })`, for such a subject.
+  That failure message changes as `check --rule`'s stderr does, and where no
+  kind is recovered it gains the `known kinds:` line as a second line. Exit
+  codes, stdout, the finding code and location, and every documented refusal
+  row do not move. Closes [issue #520](https://github.com/agent-grounds/grund/issues/520).
+- [§FS-config.3.5.16](functional-spec/FS-config.md#3516-an-exclude-entry-containing--is-refused), [§FS-config.requirements.5](functional-spec/FS-config.md#requirements5-a-mistake-in-the-config-fails-loudly--realized-one-case-deferred), [§REQ-backwards-compatibility.4](requirements/REQ-backwards-compatibility.md#4-what-was-never-a-promise): **a `[scan] exclude` entry containing `/` is now a config error.** `exclude = ["docs/plans"]` was accepted and excluded nothing, because an entry is one directory name; it now fails the config load at its line — ``error: grund.toml:4: [scan] exclude entry `docs/plans` contains `/`, not a directory name; remove it to keep the scan unchanged, or use `plans` to exclude that name at any depth`` — with `check` exiting `2` and `config validate` exiting `1`, nothing on stdout. **Who this breaks:** a config holding such an entry, on every command that loads it. **The two repairs are not the same:** removing the entry keeps exactly the scan you had, while writing `plans` excludes every directory of that name at every depth. A path-specific exclusion has no v1 spelling. Well-formed names and `[fmt] exclude` globs are unchanged. (PR #486)
+- [§FS-rules.8.1](functional-spec/FS-rules.md#81-a-refused-selector-is-answered-with-a-selector): **a refused `grund list --selector` is answered with a selector,
+  not a rule sentence.** Every refused selector's `accepted form: <rule
+  sentence>` tail becomes `accepted selector: <selector>`, built from what was
+  typed and the configured kinds, or a line `known kinds: …` where no kind can
+  be recovered. `FS.requirements.1` and
+  `The requirements.1 chapter of each FS` are refused for being numbered, `FS.*`
+  for its wildcard and `Each chapter of each FS` for its quantifier, and each of
+  those adds a `hint: grund show --batch --toc …` line, after `known kinds:`
+  where no kind is recovered. `Each */FS` is refused for its namespace. A pasted
+  rule sentence is answered with the subject `check --rule` reads from it. With
+  named sections off, the suggestion is one that `--selector` accepts once they
+  are on, and is labelled `accepted selector after enabling it:` only when it
+  needs them. **Who this breaks:** a script matching a refused
+  selector's exact stderr, or its text after `accepted form:`. Exit codes,
+  stdout and the accepted selectors do not move, and `check --rule` prints
+  every byte it did. Closes [issue #505](https://github.com/agent-grounds/grund/issues/505). (PR #509)
+- [§FS-show.3.1.3.1](functional-spec/FS-show.md#3131-the-heading-anchor), [§FS-output-shapes.4](functional-spec/FS-output-shapes.md#4-show---formatjson), [§DF-show-anchor-data](decisions/functional/DF-show-anchor-data.md#df-show-anchor-data-show-json-carries-the-heading-anchor-grund-already-derives): every successful `show --format=json` object, single or `--batch`, now carries `anchor`, the heading fragment `grund fmt --cross-refs` derives for it, between `kind_title` and the closing `path`, `line` pair, and each `--toc` section entry carries its own after `depth`. It is `null` where there is no heading anchor: the `none` profile, source homes, JSON values and E2E manifests. Readers that ignore unknown keys are unaffected; a strict decoder or a whole-output snapshot must accept the new key. Closes [issue #497](https://github.com/agent-grounds/grund/issues/497). (PR #500)
+- [§FS-fmt.6.2.1.1](functional-spec/FS-fmt.md#6211-through-a-stub-the-declarations-heading-is-the-targets), [§DF-stub-heading-from-unscanned-target](decisions/functional/DF-stub-heading-from-unscanned-target.md#df-stub-heading-from-unscanned-target-a-bare-id-link-through-a-stub-anchors-on-its-targets-heading-whether-or-not-the-scan-reaches-it), [§REQ-backwards-compatibility.5](requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-wrong-citation.3](requirements/REQ-no-wrong-citation.md#3-no-wrong-write): **a bare-ID link through a stub anchors on its target's heading whether or not `[scan] include` reaches it.** `grund fmt --write` linked a bare citation whose stub points at a Markdown file the scan does not reach to an anchor built from the stub's own line, `#fs-a` where the target opens `# FS-a: A`, which no heading in that file carries. It now links the target's heading, `#fs-a-a`, as it did with the target scanned and as `grund show <ID> --format=json` reports. A target that declares the ID more than once and a broken stub link as before. **Who this breaks:** the verdict moves from passing to failing for `grund fmt --check` on a tree an older grund formatted: each such link is a `markdown link` row at its line, and `grund fmt --write` repairs it. A link that already carries the target's anchor moves the other way and now passes. `grund check` and the editor's diagnostics do not move. Every finding that replaces the old verdict names its location and the action to take: run `grund fmt --write`. Closes [issue #549](https://github.com/agent-grounds/grund/issues/549). (PR #554)
+- [§FS-declarations.checks.duplicate.1](functional-spec/FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), [§FS-declarations.checks.duplicate.2](functional-spec/FS-declarations.md#checksduplicate2-stubs-to-one-target-are-one-home), [§FS-declarations.checks.duplicate.3](functional-spec/FS-declarations.md#checksduplicate3-a-home-reached-through-stubs-is-named-at-its-target), [§DF-stub-pairs-with-unscanned-target](decisions/functional/DF-stub-pairs-with-unscanned-target.md#df-stub-pairs-with-unscanned-target-a-stub-pairs-with-its-target-whether-or-not-the-scan-reaches-it), [§REQ-backwards-compatibility.5](requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-wrong-citation.1](requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution): **a stub pairs with its target whether or not `[scan] include` reaches it.** Stubs of one ID that point at one file outside the scan are one home, so `check` no longer reports a `duplicate declaration`, `show` no longer refuses an `ambiguous ID`, and `list` no longer tags them; a duplicate or ambiguity that involves such a home names the target's `path:line`, never the stub's. **Who this breaks:** the verdict moves both ways for a run that leaves the old false duplicate out of its report, by a path such as `grund check docs/fs` or by a selection: `--only` with a code a rule produces, such as `forbidden-citation`, `--ignore duplicate`, or a trial `--rule "<sentence>" --only-rule`. Such a run now counts the edge to a citation of such an ID, so a prohibition or an `at most` or `exactly` count can fail where the run exited 0, and an `at least` count can pass; where a duplicate's sites have moved out of the path, the run can pass. Every finding that replaces the old verdict is a rule's existing error, naming its location and the action to take, and a plain `grund check`, with no path and no selection, already failed over the same tree. Closes [issue #532](https://github.com/agent-grounds/grund/issues/532). (PR #533)
+- [§FS-check.3.2.1](functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [§DF-stub-sections-from-unscanned-target](decisions/functional/DF-stub-sections-from-unscanned-target.md#df-stub-sections-from-unscanned-target-a-stubs-sections-are-its-targets-whether-or-not-the-scan-reaches-it), [§REQ-backwards-compatibility.5](requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-wrong-citation.1](requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution): **a stub's sections are its target's whether or not `[scan] include` reaches it.** A citation of a section the target declares is no longer `missing section` (or `section not found`) when the target lies outside the scan, as it never was with the target scanned; rules count it, a value binding to it is compared, a malformed binding into a value it declares is the `invalid value binding` the scanned tree reports, which `grund fmt --cross-refs` now leaves unlinked as it does there, and a bare index entry of it is the `unlinked-index-entry` that `grund fmt --write` repairs rather than `missing-index-entry`. A section the target does not declare is reported in the same words as before. **Who this breaks:** the verdict moves both ways for a run that leaves the old false finding out of its report: `--only unlinked-index-entry`, `--ignore missing-section` or `--only value-mismatch` over a binding of the wrong value, `--ignore missing-section` or `--only invalid-value-binding` over a malformed binding, or a rule reached by `--ignore missing-section`, by `--only` with a code a rule produces such as `forbidden-citation`, by a trial `--rule "<sentence>" --only-rule`, or by a path that holds what an inbound count judges but not the citation. Such a run now counts the citation, so a prohibition or an `at most` or `exactly` count can fail where the run exited 0, a numbered section warning until grund 0.18.0, and an `at least` count can pass. Every finding that replaces the old verdict is an existing error naming its location and the action to take, and a plain `grund check`, with no selection, already failed over the same tree. Closes [issue #529](https://github.com/agent-grounds/grund/issues/529).
+- [§FS-declarations.checks.duplicate.1](functional-spec/FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), [§FS-declarations.checks.duplicate.3](functional-spec/FS-declarations.md#checksduplicate3-a-home-reached-through-stubs-is-named-at-its-target), [§DF-stub-target-declared-twice](decisions/functional/DF-stub-target-declared-twice.md#df-stub-target-declared-twice-a-stubs-target-that-declares-its-id-twice-is-two-homes-scanned-or-not), [§REQ-backwards-compatibility.5](requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§REQ-no-wrong-citation.1](requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution): **a stub's target that declares its ID twice is two homes, whether or not `[scan] include` reaches it.** A plain `grund check` over a tree where a stub points outside the scan at a file that declares the stub's ID twice no longer passes: it reports the `duplicate declaration` the same tree with the target scanned reports, named at both of the target's lines, where `show` and `refs` already refused the ID as ambiguous; `list` tags the stub, and the editor reports the duplicate from the target's unsaved text. A duplicate that already involved such a target now names each of its declarations rather than the first. **Who this breaks:** the verdict moves from pass to fail for a plain `grund check` over such a tree, and both ways for a run that leaves the new duplicate out of its report while it reads a citation of the ID, by a path or by a selection: `--ignore duplicate`, `--only` with a code a rule produces such as `citation-cardinality`, or a trial `--rule "<sentence>" --only-rule`. Such a run now reads the citation as ambiguous and counts no edge to it, so an `at least` count can fail where the run exited 0, and a prohibition or an `at most` or `exactly` count can pass. Every finding that replaces the old verdict is an existing error naming its location and the action to take. Closes [issue #556](https://github.com/agent-grounds/grund/issues/556). (PR #559)
+- [§FS-declarations.checks.broken-stub.2](functional-spec/FS-declarations.md#checksbroken-stub2-a-heading-inside-a-fence-of-the-target-declares-nothing), [§REQ-no-wrong-citation.1](requirements/REQ-no-wrong-citation.md#1-no-wrong-resolution), [§REQ-backwards-compatibility.5](requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), [§DF-stub-target-fenced-heading](decisions/functional/DF-stub-target-fenced-heading.md#df-stub-target-fenced-heading-a-heading-inside-a-fence-of-a-stubs-target-does-not-declare-its-id): a heading inside a fenced code block of a stub's Markdown target no longer counts as the target's declaration of the stub's ID, as the scan never counted it. The broken-stub test read every line of the target, fenced or not, so a stub whose target declared its ID only in a fenced example passed `grund check` with no body behind it, and `grund show <ID>` answered `ID not found` for an ID `grund list` names. The verdict changes from passing to failing on such a tree, whether or not the target is inside `[scan] include`: `check` reports `stub link target lacks <ID>: <path>` at the stub's line, and `show` refuses with the `broken stub:` line instead of `ID not found`. A target that holds a fenced example beside the real declaration stays healthy. Every finding that replaces the old verdict names its location and the action to take: point the stub at the file that holds the real declaration, or move the declaration out of the fence. Closes [issue #536](https://github.com/agent-grounds/grund/issues/536). (PR #537)
+- `grund check --watch [<path>]` now checks immediately and stays resident, rechecking effective local inputs after saves. Ctrl-C returns the last completed status; interruption before any completion and fatal watcher errors return 2. Previously this flag was rejected. Ordinary one-shot reports and verdicts remain unchanged. Eligible text terminals use an alternate screen restored on exit; redirected output appends. JSON remains finding-only NDJSON with invisible clean runs. Native notifications are required; notification-silent mounts have no polling fallback ([§FS-check.6](functional-spec/FS-check.md#6-watch-mode---watch)).
+- Configured markers ending in word characters, such as `_`, now recognize unqualified full-ID
+  citations. `refs`, `cover`, and editor definition navigation recover the missing edges, and
+  `check` stops calling their targets unused. Repositories using such markers may now fail
+  existing dangling, missing-section, or citation-policy checks for citations previously missed.
+  Follow the located finding to correct or declare the target, or escape an illustration with
+  the configured marker wrapped in angle brackets, such as `<_>FS_login`.
+  This verdict change is the correction recorded in [§DF-word-character-citation-markers.2](decisions/functional/DF-word-character-citation-markers.md#2-verdict-correction-and-compatibility), under [§REQ-backwards-compatibility.5](requirements/REQ-backwards-compatibility.md#5-correcting-a-verdict-another-requirement-forbids), for the prior violation of [§REQ-no-missed-citation.2](requirements/REQ-no-missed-citation.md#2-every-blind-spot-is-declared-and-bounded).
+  Every finding names its location and an action the maintainer can take; the existing remedies
+  apply to recovered citations.
 
 ## 3. Older releases
 
+- [0.16.1](changelog/0.16.1.md) — 2026-10-05: 2 pull requests, 1 compatibility notice.
 - [0.16.0](changelog/0.16.0.md) — 2026-10-04: 42 pull requests, 8 compatibility notices.
 - [0.15.0](changelog/0.15.0.md) — 2026-10-01: 47 pull requests, 0 compatibility notices.
 - [0.14.1](changelog/0.14.1.md) — 2026-09-21: - [§FS-check.4.7.9](functional-spec/FS-check.md#479-a-later-expansion-refusal-does-not-discard-it), [§FS-check.4.10.8](functional-spec/FS-check.md#4108-a-failed-workspace-expansion-withholds-it), [§FS-distribution.3.1](functional-spec/FS-distribution.md#31-rust-grund-core-crate): preserve warnings already settled or answerable at the run root when a later workspace-member expansion refuses, and render them once before the unchanged config error.
