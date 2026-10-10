@@ -1,0 +1,2 @@
+docs/pre.md:2: error: invalid value binding: value binding must be on one physical line; join the literal and its citation
+docs/pre.md:7: error: invalid value binding: value binding must be on one physical line; join the literal and its citation

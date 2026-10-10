@@ -499,6 +499,7 @@ pub(super) fn scan_file_text(
             schema,
             frame,
             is_md,
+            may_be_heading: heading_position,
             value_comment: source_value_context,
             inline_sites: &inline_sites,
             inline_block_lines: &inline_block_lines,

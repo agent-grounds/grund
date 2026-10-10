@@ -27,6 +27,9 @@ pub(super) struct CitationLine<'a> {
     pub(super) schema: &'a Schema,
     pub(super) frame: Frame<'a>,
     pub(super) is_md: bool,
+    /// Whether this line may be a heading: false inside a raw-text HTML block,
+    /// whose lines are never headings (§FS-check.1.1.5.1).
+    pub(super) may_be_heading: bool,
     /// The bytes on this physical source line that the scanner's shared block
     /// walk recognizes as comment content, and the block they belong to.
     /// Markdown and Python docstrings use their already-normalized `scan_line`
