@@ -5,7 +5,7 @@ build-backend = "maturin"
 
 [project]
 name = "grund"
-version = "0.17.0"
+version = "0.17.1.dev0"
 requires-python = ">=3.10"
 description = "Embed the grund documentation grounding engine in Python"
 readme = "crates/grund-py/README.md"
