@@ -22,30 +22,31 @@ Agents retrieve the section they need before editing ([§GRUND-grund](docs/grund
 Give a requirement an ID<br>
 <code>requirements.md</code>
 <pre>
-&#35; FS-name: Display names
-&#35;&#35; 1. Trim whitespace
+&#35; FS-login: Login
+&#35;&#35; format: Formatting
+&#35;&#35;&#35; format.1: Username
 Trim surrounding whitespace.
 </pre>
 </td>
 <td valign="top" width="360">
 <b>2 · Cite</b><br>
 Cite it from code<br>
-<code>src/name.py</code>
+<code>src/login.py</code>
 <pre>
-def clean_name(name):
-    """&#167;FS-name.1"""
-    return name.strip()
+def clean_username(username):
+    """&#167;FS-login.format.1"""&#10;
+    return username.strip()
 </pre>
 </td>
 </tr>
 <tr>
 <td colspan="2" valign="top">
 <b>3 · Check</b><br>
-Rename section <b>1 → 2</b> without updating the citation.<br>
+Rename section <b>format.1 → format.2</b> without updating the citation.<br>
 CI catches the broken reference:
 <pre>
 $ grund check
-src/name.py:2: error: missing section FS-name.1
+src/login.py:2: error: section not found: FS-login.format.1; …
 </pre>
 </td>
 </tr>
@@ -54,11 +55,11 @@ src/name.py:2: error: missing section FS-name.1
 
 From the [runnable example](examples/quickstart/):
 [requirement](examples/quickstart/repo/requirements.md),
-[code](examples/quickstart/repo/src/name.py), and captured failure output.
+[code](examples/quickstart/repo/src/login.py), and captured failure output (hint elided).
 Its citations are checked inside that example's own repository.
 
 **A valid citation does not prove the code implements the requirement.** Returning
-`name` unchanged while keeping the citation would still pass this check; tests and review
+`username` unchanged while keeping the citation would still pass this check; tests and review
 verify behavior. Grund checks citation targets and declared structural rules.
 [Lychee](https://lychee.cli.rs/) checks ordinary links; both belong in CI
 ([§GRUND-links.2](docs/grund.md#2-holding-every-edit-to-them)). The
@@ -70,8 +71,8 @@ sets `grund` beside the tools it descends from.
 Before editing, an agent retrieves the cited requirement. Inside the example:
 
 ```console
-$ grund FS-name.1
-## 1. Trim whitespace
+$ grund FS-login.format.1
+### format.1: Username
 Trim surrounding whitespace.
 ```
 
@@ -117,7 +118,7 @@ and the `[citations]` grammar in [citation directions](docs/user-facing/citation
 cargo install grund
 ```
 
-First, [try the display-name example](examples/quickstart/): retrieve its
+First, [try the login example](examples/quickstart/): retrieve its
 requirement, get a passing check, then break and repair the citation in a temporary copy.
 
 For your own project, run the following **inside its repository** if you are

@@ -1,11 +1,11 @@
 # Declare, cite, check
 
-A small display-name example of declarations, section retrieval and broken
+A small login example of declarations, section retrieval and broken
 citations ([§FS-examples.2](../../docs/functional-spec/FS-examples.md#2-canonical-use-cases),
 [§FS-show.2.1.5](../../docs/functional-spec/FS-show.md#215-a-sections-lead),
 [§FS-check.3.2](../../docs/functional-spec/FS-check.md#32-missing-section)).
-The fixture's own `grund.toml` maps the `FS` kind to `requirements.md` and scans
-`src/`. Its IDs belong to that mini-repository.
+The fixture's own `grund.toml` maps the `FS` kind to `requirements.md`, enables
+`[id] named_sections = true`, and scans `src/`. Its IDs belong to that mini-repository.
 
 ## Try it
 
@@ -25,27 +25,29 @@ If you have no checkout yet, get one with
 ## Declare and cite
 
 The declaration in [`requirements.md`](repo/requirements.md) gives the requirement
-an ID and a numbered section:
+an ID, a named `format` chapter, and a numbered point within that chapter:
 
 ```markdown
-# FS-name: Display names
-## 1. Trim whitespace
+# FS-login: Login
+## format: Formatting
+### format.1: Username
 Trim surrounding whitespace.
 ```
 
-[`src/name.py`](repo/src/name.py) cites that section in its docstring:
+[`src/login.py`](repo/src/login.py) cites that point in its docstring:
 
 ```python
-def clean_name(name):
-    """§FS-name.1"""
-    return name.strip()
+def clean_username(username):
+    """§FS-login.format.1"""
+
+    return username.strip()
 ```
 
 ## Read and check
 
 ```console
-$ grund FS-name.1
-## 1. Trim whitespace
+$ grund FS-login.format.1
+### format.1: Username
 Trim surrounding whitespace.
 $ grund check
 success
@@ -53,19 +55,19 @@ success
 
 ## Break and repair
 
-In the temporary copy's `requirements.md`, change `## 1. Trim whitespace` to
-`## 2. Trim whitespace`, leaving the code's citation unchanged. Run the check again:
+In the temporary copy's `requirements.md`, change `### format.1: Username` to
+`### format.2: Username`, leaving the code's citation unchanged. Run the check again:
 
 ```console
 $ grund check
-src/name.py:2: error: missing section FS-name.1
+src/login.py:2: error: section not found: FS-login.format.1; write <§> before it to show the shape without citing it
 ```
 
 The command exits `1`: the declaration still exists, but the section the code
-names does not. Change the heading back to `## 1. Trim whitespace` and rerun
+names does not. Change the heading back to `### format.1: Username` and rerun
 `grund check`; it prints `success` and exits `0` again.
 
-Returning `name` unchanged in the Python code would still pass the citation check.
+Returning `username` unchanged in the Python code would still pass the citation check.
 Grund checks whether the reference resolves; tests and review establish whether
 the code satisfies the requirement.
 
