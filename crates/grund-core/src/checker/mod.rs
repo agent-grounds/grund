@@ -130,6 +130,8 @@ mod tests_grounding_style;
 #[cfg(test)]
 mod tests_inline_note_layout;
 #[cfg(test)]
+mod tests_judge_expected;
+#[cfg(test)]
 mod tests_kind_index;
 #[cfg(test)]
 mod tests_kind_index_enrollment;
