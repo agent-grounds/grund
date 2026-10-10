@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use super::tree::ScanError;
 use super::walk_boundaries::is_scannable;
-use crate::config::{Config, display_path};
+use crate::config::{Frame, Schema};
 use crate::model::is_hidden;
 
 /// The per-file scan failure a walker error becomes (§FS-check.2.4), or `None` when
@@ -32,7 +32,8 @@ use crate::model::is_hidden;
 /// §REQ-no-missed-citation.1 rules out.
 pub(super) fn walk_error_report(
     err: &ignore::Error,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scan_root: &Path,
 ) -> Option<ScanError> {
     if let Some((child, ancestor)) = walk_error_loop(err) {
@@ -44,13 +45,13 @@ pub(super) fn walk_error_report(
         // nothing when the ancestor *is* the link: the target then reaches back
         // over the walk root, which no in-tree name below it describes.
         let ancestor = (!ancestor.starts_with(&link)).then_some(ancestor);
-        return symlink_loop_report(&link, ancestor, config);
+        return symlink_loop_report(&link, ancestor, schema, frame);
     }
     let path = walk_error_path(err).unwrap_or(scan_root);
     if !fs::symlink_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
         return Some((path.to_path_buf(), walk_error_reason(err)));
     }
-    if !is_scannable(path, config) || !walk_would_have_read(path, config) {
+    if !is_scannable(path, schema) || !walk_would_have_read(path, schema) {
         return None;
     }
     let reason = match err.io_error().map(std::io::Error::kind) {
@@ -81,12 +82,13 @@ pub(super) fn walk_error_report(
 pub(super) fn symlink_loop_report(
     link: &Path,
     ancestor: Option<&Path>,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
 ) -> Option<ScanError> {
     let name = link.file_name().and_then(|name| name.to_str())?;
     if is_hidden(link)
-        || config.exclude.iter().any(|item| item == name)
-        || !walk_would_have_read(link, config)
+        || schema.sources.exclude.iter().any(|item| item == name)
+        || !walk_would_have_read(link, schema)
     {
         return None;
     }
@@ -94,7 +96,7 @@ pub(super) fn symlink_loop_report(
     // only where that directory has a name *in the report* — the config root
     // renders as nothing at all (§FS-config.3.6).
     let ancestor = ancestor
-        .map(|ancestor| display_path(config, ancestor))
+        .map(|ancestor| frame.display_path(ancestor))
         .filter(|name| !name.is_empty());
     let reason = match ancestor {
         Some(name) => format!("symlink loop: the target is the ancestor directory {name}"),
@@ -150,8 +152,8 @@ fn link_identity(path: &Path) -> Option<PathBuf> {
 /// out" suppresses the report — an unreadable parent or no parent at all reports,
 /// because a silent skip is the failure §REQ-no-missed-citation.1 rules out. The
 /// cost is one directory read, and only for a link that is already broken.
-fn walk_would_have_read(path: &Path, config: &Config) -> bool {
-    if !config.respect_gitignore {
+fn walk_would_have_read(path: &Path, schema: &Schema) -> bool {
+    if !schema.sources.respect_gitignore {
         return true;
     }
     let Some(parent) = path.parent() else {

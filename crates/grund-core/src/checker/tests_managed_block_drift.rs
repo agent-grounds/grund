@@ -6,9 +6,8 @@ use super::agents::section_in_block;
 use super::*;
 use crate::config::{Config, load_config};
 use crate::model::CheckReport;
-use crate::scanner::scan_tree;
 use crate::templates::{ConversationSurface, citation_directions_section};
-use crate::testing::{current_block, test_root, write};
+use crate::testing::{current_block, scan_tree, test_root, write};
 use crate::writers::{
     BlockOutcome, ConversationRendering, ConversationTarget, install_agent_guidance_block,
     render_agents_append_block_at,

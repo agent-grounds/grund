@@ -4,7 +4,7 @@ use std::path::Path;
 
 use super::line_owners::{LineOwners, resolve_requested_lines};
 use super::unmarked_headings::markdown_declaration_body_end;
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::{
     AliasGrammar, CommentBlockKind, DocCommentRule, block_declares_id, block_is_doc_comment,
     comment_blocks, doc_comment_rule, first_content_line, inline_note_verdicts,
@@ -90,7 +90,8 @@ pub(super) fn assign_declaration_bodies(
     findings: &mut Catalog,
     is_md: bool,
     is_py: bool,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     text: &str,
     md_headings: &[(usize, usize)],
     total_lines: usize,
@@ -105,7 +106,7 @@ pub(super) fn assign_declaration_bodies(
         .collect();
     decl_lines.sort_unstable();
 
-    let code_blocks = (!is_md).then(|| comment_block_ranges(text, is_py, config));
+    let code_blocks = (!is_md).then(|| comment_block_ranges(text, is_py, schema, frame));
 
     for decl in findings.declarations.values_mut().flatten() {
         decl.body_start = decl.line;
@@ -146,9 +147,14 @@ pub(super) fn assign_declaration_bodies(
 /// source file (§AR-scanner.2.4.1) — the shared block walk of `comment_block.rs`
 /// without the declares-an-ID filtering, so a declaration's body can be bounded
 /// by the block that hosts it.
-fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize, usize)> {
+fn comment_block_ranges(
+    text: &str,
+    is_py: bool,
+    schema: &Schema,
+    frame: Frame<'_>,
+) -> Vec<(usize, usize)> {
     let lines = text.lines().collect::<Vec<_>>();
-    comment_blocks(&lines, is_py, config.lexical())
+    comment_blocks(&lines, is_py, frame.compiled.lexical(schema))
         .into_iter()
         .map(|(start, end, _)| (start + 1, end + 1))
         .collect()
@@ -162,24 +168,25 @@ fn comment_block_ranges(text: &str, is_py: bool, config: &Config) -> Vec<(usize,
 /// the heading stack is still held (§FS-cover.6.2, §AR-scanner.2.4.4).
 pub(super) fn resolve_citation_owners(
     findings: &mut Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     path: &Path,
     md_headings: &[(usize, usize)],
     total_lines: usize,
     classify: bool,
 ) {
-    if !config.owner_lines.is_empty() {
+    if !frame.run.scope.owner_lines.is_empty() {
         resolve_requested_lines(
             findings,
             path,
             md_headings,
             total_lines,
-            &config.owner_lines,
+            &frame.run.scope.owner_lines,
         );
     }
     let has_local_candidates = !findings.local_section_citation_candidates.is_empty();
     if classify || has_local_candidates {
-        classify_citation_sources(findings, config, path, md_headings);
+        classify_citation_sources(findings, schema, frame, path, md_headings);
     }
     if has_local_candidates {
         promote_local_section_citations(findings);
@@ -193,7 +200,8 @@ pub(super) fn resolve_citation_owners(
 /// (§FS-config.3.9.2.2).
 fn classify_citation_sources(
     findings: &mut Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     path: &Path,
     md_headings: &[(usize, usize)],
 ) {
@@ -201,7 +209,7 @@ fn classify_citation_sources(
     // §FS-config.3.9.2.2: step 3 of the fallback is the homeless kind, whose name
     // is `code` only where the project did not name it something truer.
     let unowned_kind =
-        file_home_kind(path, config).unwrap_or_else(|| config.homeless_kind().to_string());
+        file_home_kind(path, schema, frame).unwrap_or_else(|| schema.complement_name().to_string());
     let settle = |line: usize| match owners.owner_at(line) {
         Some((id, section)) => (id.kind.clone(), Some(id.clone()), section),
         None => (unowned_kind.clone(), None, None),
@@ -276,7 +284,7 @@ fn promote_local_section_citations(findings: &mut Catalog) {
 /// The kind whose configured home (`[[kinds]] folder` / `file`, §FS-config.3.4)
 /// uniquely contains `path` — step 2 of §AR-scanner.2.4.2. `None` when no home or
 /// more than one home matches, so the citation falls through to `code`.
-pub(crate) fn file_home_kind(path: &Path, config: &Config) -> Option<String> {
+pub(crate) fn file_home_kind(path: &Path, schema: &Schema, frame: Frame<'_>) -> Option<String> {
     // Walked file paths are canonicalized against the scan root (`scan_roots`
     // resolves an explicit scope), while `config.root` is the configured,
     // possibly-symlinked root — so on macOS a temp dir resolves through
@@ -284,21 +292,22 @@ pub(crate) fn file_home_kind(path: &Path, config: &Config) -> Option<String> {
     // `strip_prefix(config.root)` misses. Reuse the checker's reverse-home
     // helper, which strips against the physical root first, then the configured
     // one, so the lookup is identical to the declaration-home lookup.
-    let physical_root = fs::canonicalize(&config.root).unwrap_or_else(|_| config.root.clone());
-    let relative = scanned_decl_relative_path(path, &config.root, &physical_root)?;
+    let physical_root =
+        fs::canonicalize(frame.root()).unwrap_or_else(|_| frame.root().to_path_buf());
+    let relative = scanned_decl_relative_path(path, frame.root(), &physical_root)?;
     let relative = relative.as_ref();
     let mut matched: Option<&str> = None;
-    for kind in &config.kinds {
-        let hit = match (kind.file.as_deref(), kind.folder.as_deref()) {
+    for row in &schema.rows {
+        let hit = match (row.file(), row.folder()) {
             (Some(file), _) => relative == scanned_path_key(Path::new(file)).as_path(),
             (_, Some(folder)) => relative.starts_with(scanned_path_key(Path::new(folder))),
             _ => false,
         };
         if hit {
-            if matched.is_some_and(|prev| prev != kind.kind.as_str()) {
+            if matched.is_some_and(|prev| prev != row.name.as_str()) {
                 return None;
             }
-            matched = Some(kind.kind.as_str());
+            matched = Some(row.name.as_str());
         }
     }
     matched.map(str::to_string)
@@ -317,7 +326,7 @@ fn lexical_targets(targets: &[WorkspaceCitationTarget]) -> Vec<AliasGrammar<'_>>
         .iter()
         .map(|target| AliasGrammar {
             alias: &target.alias,
-            grammar: &target.config.grammar,
+            grammar: &target.compiled.grammar,
         })
         .collect()
 }
@@ -332,7 +341,8 @@ pub(super) fn inline_citation_sites(
     text: &str,
     is_md: bool,
     is_py: bool,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> (
     BTreeMap<usize, InlineCitationSite>,
@@ -359,7 +369,7 @@ pub(super) fn inline_citation_sites(
         DocCommentRule::Position(_) => first_content_line(&lines),
         _ => 0,
     };
-    for (start, end, kind) in comment_blocks(&lines, is_py, config.lexical()) {
+    for (start, end, kind) in comment_blocks(&lines, is_py, frame.compiled.lexical(schema)) {
         let block = &lines[start..=end];
         // §FS-inline-citation-style.1.1: a doc comment hosts no site — the same
         // skip a block that *declares* an ID already earned, and for the same
@@ -375,14 +385,18 @@ pub(super) fn inline_citation_sites(
             && !block_declares_id(
                 block,
                 matches!(kind, CommentBlockKind::PythonDocstring),
-                config.lexical(),
+                frame.compiled.lexical(schema),
             )
         {
             // §FS-inline-citation-style.3.3: both verdicts are taken here, while
             // the block's lines are in hand, so the checker never re-reads one
             // (§AR-scanner.3.2).
-            let (has_note, layout_violations) =
-                inline_note_verdicts(block, start + 1, config.lexical(), &alias_grammars);
+            let (has_note, layout_violations) = inline_note_verdicts(
+                block,
+                start + 1,
+                frame.compiled.lexical(schema),
+                &alias_grammars,
+            );
             let site = InlineCitationSite {
                 first_line: start + 1,
                 last_line: end + 1,
@@ -398,8 +412,10 @@ pub(super) fn inline_citation_sites(
             };
             // Only a marker-prefixed rejected candidate can need post-catalog
             // reconciliation. Ordinary comment blocks retain no source copy.
-            let block_lines = (!config.marker.is_empty()
-                && block.iter().any(|line| line.contains(&config.marker)))
+            let block_lines = (!schema.citation.marker.is_empty()
+                && block
+                    .iter()
+                    .any(|line| line.contains(&schema.citation.marker)))
             .then(|| {
                 std::sync::Arc::<[String]>::from(
                     block

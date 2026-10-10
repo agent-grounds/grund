@@ -7,9 +7,8 @@ use std::path::{Path, PathBuf};
 use super::*;
 use crate::config::{Config, Project, load_config};
 use crate::model::Diagnostic;
-use crate::scanner::scan_tree;
 use crate::templates::inline_citation_style_sentence;
-use crate::testing::{layout_config, legacy_fs_folder_config, test_root, write};
+use crate::testing::{layout_config, legacy_fs_folder_config, scan_tree, test_root, write};
 
 fn layout_fixture(name: &str) -> PathBuf {
     let root = test_root(name);

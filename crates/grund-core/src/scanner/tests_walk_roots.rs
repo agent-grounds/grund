@@ -5,9 +5,8 @@
 //! a root written *below* one is canonicalized before the walk begins and is
 //! ordinary scope (§DF-undeclared-blind-spots).
 
-use super::*;
 use crate::testing::{
-    canonical_test_path, legacy_fs_folder_config, scanned, symlink, test_root, write,
+    canonical_test_path, legacy_fs_folder_config, scan_tree, scanned, symlink, test_root, write,
 };
 
 /// §AR-scanner.1.6 skips a canonical root outside the project "when the written

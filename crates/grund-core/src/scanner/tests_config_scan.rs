@@ -7,14 +7,13 @@ use std::path::Path;
 use rayon::prelude::*;
 
 use super::tree::scan_tree_with_workspace_threshold;
-use super::*;
 use crate::checker::{check_findings, dangling_message};
 use crate::config::{Config, load_config_at_with_report_base};
 #[cfg(unix)]
 use crate::model::{Catalog, Declaration, DeclarationSource};
 use crate::model::{Id, TextOverlays, format_path};
 use crate::testing::{
-    findings_signature, legacy_fs_folder_config, scan_errors_signature, test_root, write,
+    findings_signature, legacy_fs_folder_config, scan_errors_signature, scan_tree, test_root, write,
 };
 use crate::workspace::{
     WorkspaceCitationTarget, expand_workspace_members, resolve_workspace_config,
@@ -56,7 +55,8 @@ fn parallel_file_scan_matches_sequential_scan() {
 
     let config = legacy_fs_folder_config(root.clone());
     let (sequential, sequential_errors) = scan_tree_with_workspace_threshold(
-        &config,
+        config.schema(),
+        config.frame(),
         Some(&root),
         true,
         &[],
@@ -65,7 +65,8 @@ fn parallel_file_scan_matches_sequential_scan() {
     )
     .expect("sequential scan");
     let (parallel, parallel_errors) = scan_tree_with_workspace_threshold(
-        &config,
+        config.schema(),
+        config.frame(),
         Some(&root),
         true,
         &[],
@@ -128,17 +129,15 @@ members = ["packages/*"]
     }
     let targets = entries
         .iter()
-        .map(|(alias, config)| WorkspaceCitationTarget {
-            alias: alias.clone(),
-            config: config.clone(),
-        })
+        .map(|(alias, config)| WorkspaceCitationTarget::of(alias.clone(), config))
         .collect::<Vec<_>>();
 
     let sequential = entries
         .iter()
         .map(|(alias, config)| {
             let (findings, errors) = scan_tree_with_workspace_threshold(
-                config,
+                config.schema(),
+                config.frame(),
                 Some(&config.root),
                 true,
                 &targets,
@@ -157,7 +156,8 @@ members = ["packages/*"]
         .into_par_iter()
         .map(|(alias, config)| {
             let (findings, errors) = scan_tree_with_workspace_threshold(
-                &config,
+                config.schema(),
+                config.frame(),
                 Some(&config.root),
                 true,
                 &targets,

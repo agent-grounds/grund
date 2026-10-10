@@ -1,9 +1,8 @@
 //! Scanner ownership and grammar boundaries for declaration-local numeric citations
 //! (§FS-check.1.1.8, §AR-scanner.2.3, §AR-scanner.2.4).
 
-use super::*;
 use crate::model::{Catalog, Citation, Id};
-use crate::testing::{numbered_config, test_root, write};
+use crate::testing::{numbered_config, scan_tree, test_root, write};
 
 fn local_citations(findings: &Catalog) -> Vec<&Citation> {
     findings

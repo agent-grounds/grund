@@ -30,8 +30,9 @@ pub(super) fn show_opts(r: &EmbeddingRequest) -> ShowOpts {
 pub(super) fn scan_data(r: &EmbeddingRequest) -> Result<Value, Value> {
     let config =
         crate::workspace::resolve_workspace_config(&r.root).map_err(|e| error_data(e, &[]))?;
-    let (findings, errors) = crate::scanner::scan_tree(&config, Some(&r.root), true)
-        .map_err(|e| error_data(e, &config_run_warnings(&config)))?;
+    let (findings, errors) =
+        crate::scanner::scan_tree(config.schema(), config.frame(), Some(&r.root), true)
+            .map_err(|e| error_data(e, &config_run_warnings(&config)))?;
     let catalog = findings.declarations.iter().flat_map(|(id, decls)| {
         decls.iter().map(|d| json!({"id": crate::grammar::render_id(&config.grammar, id),
             "path": display_path(&config, &d.file), "line": d.line,

@@ -8,7 +8,7 @@ use super::*;
 use crate::config::Config;
 use crate::grammar::render_id;
 use crate::model::{Catalog, CheckReport, Citation, Id};
-use crate::scanner::scan_tree;
+use crate::testing::scan_tree;
 use crate::testing::{legacy_fs_folder_config, numbered_config, scan_findings, test_root, write};
 
 fn messages(report: &CheckReport) -> Vec<String> {

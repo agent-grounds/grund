@@ -99,6 +99,16 @@ impl Schema {
             .filter_map(|row| row.kind.as_ref().map(|kind| (row.name.as_str(), kind)))
     }
 
+    /// §FS-values.2: the rows declared `values = true` — value kinds with no
+    /// named chapter, whose homes hold the values themselves.
+    pub fn value_rows(&self) -> impl Iterator<Item = &Row> {
+        self.rows.iter().filter(|row| {
+            row.kind
+                .as_ref()
+                .is_some_and(|kind| kind.form == Form::Value { chapter: None })
+        })
+    }
+
     /// The name of the complement (§FS-config.3.9.2): the row whose place is
     /// `Complement` when one is written, else `code` with no row added
     /// (§AR-config.3.2).
@@ -126,6 +136,14 @@ impl Row {
         }
     }
 
+    /// The file this row's first place names, if it names one (§AR-config.1.3).
+    pub fn file(&self) -> Option<&str> {
+        match &self.places.first()?.extent {
+            Extent::File(path) => Some(path),
+            Extent::Folder(_) | Extent::Complement => None,
+        }
+    }
+
     /// The index file a citable folder row keeps, relative to the config root
     /// (§FS-config.3.4): `None` for a row with no kind, no folder, or
     /// `index = false`.
@@ -136,6 +154,20 @@ impl Row {
             KindIndex::Named(name) => name.as_str(),
         };
         Some(Path::new(self.folder()?).join(name))
+    }
+}
+
+impl Kind {
+    /// Whether this kind's declarations carry values: a value kind, or a rule
+    /// kind that names a value chapter (§FS-values.1, §FS-values.2.5).
+    pub fn has_values(&self) -> bool {
+        matches!(
+            self.form,
+            Form::Value { .. }
+                | Form::Rule {
+                    value_chapter: Some(_)
+                }
+        )
     }
 }
 

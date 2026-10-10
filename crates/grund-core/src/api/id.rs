@@ -115,7 +115,12 @@ fn propose_id_run(
             message: format!("title produces empty slug after normalization: \"{title}\""),
         });
     }
-    let findings = scan_tree_strict(&config, Some(&opts.path), opts.path_provided)?;
+    let findings = scan_tree_strict(
+        config.schema(),
+        config.frame(),
+        Some(&opts.path),
+        opts.path_provided,
+    )?;
     let kind_format = kind_config.effective_format(&config);
     let uses_number = kind_format.contains("{number}");
     let number = if uses_number {
@@ -167,7 +172,7 @@ fn propose_id_run(
             == 1
     });
     Ok(IdProposalOutcome::Proposed(IdProposal {
-        e2e_case_dir: (kind == "E2E").then(|| e2e_case_dir_name(&config, &rendered)),
+        e2e_case_dir: (kind == "E2E").then(|| e2e_case_dir_name(config.schema(), &rendered)),
         file_holds_single_declaration,
         id: rendered,
         kind: kind.to_string(),

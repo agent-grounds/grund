@@ -105,10 +105,9 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
         // §FS-workspace.8.7.3: rendered against the run's config, like the entries
         // below, not the scanning project's — the same spelling `check` uses.
         scan_errors.extend(
-            project
-                .scan_errors
-                .iter()
-                .map(|(file, message)| api_scan_error(context.render_config(), file, message)),
+            project.scan_errors.iter().map(|(file, message)| {
+                api_scan_error(context.render_config().frame(), file, message)
+            }),
         );
         let ref_counts = counts.refs_for(project.alias.as_str());
         let used_counts = counts.used_for(project.alias.as_str());

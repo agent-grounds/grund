@@ -8,9 +8,9 @@
 //! question; they read a path and the `[scan]` table and nothing of a line.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use crate::config::Config;
+use crate::config::Schema;
 use crate::model::is_hidden;
 
 /// Whether a canonical path belongs to a project of this run that is **not** the
@@ -20,9 +20,12 @@ use crate::model::is_hidden;
 /// ownership boundary; the canonical project-root fence is answered separately
 /// by the caller (§FS-config.3.5.1). Empty list — every run that loaded no
 /// workspace — answers `false` without a comparison.
-pub(super) fn owned_by_another_project(config: &Config, own_root: &Path, canonical: &Path) -> bool {
-    config
-        .workspace_project_roots
+pub(super) fn owned_by_another_project(
+    project_roots: &[PathBuf],
+    own_root: &Path,
+    canonical: &Path,
+) -> bool {
+    project_roots
         .iter()
         .filter(|root| canonical.starts_with(root))
         .max_by_key(|root| root.components().count())
@@ -58,10 +61,14 @@ pub(super) fn is_directory_symlink(path: &Path) -> bool {
 
 /// Whether a file is one the scanner reads: a non-hidden name with an extension in
 /// `[scan] extensions` (§FS-config.3.5, §AR-scanner.1).
-pub(crate) fn is_scannable(path: &Path, config: &Config) -> bool {
+pub(crate) fn is_scannable(path: &Path, schema: &Schema) -> bool {
     if is_hidden(path) {
         return false;
     }
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-    config.extensions.iter().any(|allowed| allowed == ext)
+    schema
+        .sources
+        .extensions
+        .iter()
+        .any(|allowed| allowed == ext)
 }

@@ -56,7 +56,14 @@ pub(crate) fn configured_scope(
     if !full {
         return Ok(None);
     }
-    let mut roots = scan_roots_for(config, Some(path), path_provided, false, false)?;
+    let mut roots = scan_roots_for(
+        config.schema(),
+        config.frame(),
+        Some(path),
+        path_provided,
+        false,
+        false,
+    )?;
     let canonical = roots
         .iter()
         .filter_map(|root| fs::canonicalize(root).ok())
@@ -66,7 +73,7 @@ pub(crate) fn configured_scope(
     roots.dedup();
     // Both spellings again, for the same reason the roots carry both: a finding
     // is recorded under the path the walk reached it by (§FS-config.3.5.2.1).
-    let mut unwalked = unwalked_home_roots(config);
+    let mut unwalked = unwalked_home_roots(config.schema(), &config.root);
     let canonical = unwalked
         .iter()
         .filter_map(|home| fs::canonicalize(home).ok())
@@ -97,7 +104,14 @@ pub(crate) fn path_report_scope(
     if scope_is_config_root(config, path, path_provided) {
         return Ok(None);
     }
-    let mut roots = scan_roots_for(config, Some(path), path_provided, false, false)?;
+    let mut roots = scan_roots_for(
+        config.schema(),
+        config.frame(),
+        Some(path),
+        path_provided,
+        false,
+        false,
+    )?;
     let canonical = roots
         .iter()
         .filter_map(|root| fs::canonicalize(root).ok())

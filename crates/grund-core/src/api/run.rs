@@ -119,7 +119,8 @@ pub(super) fn run_check_with_run_warnings(
         .map(|sentence| parse_ad_hoc(&config, sentence))
         .transpose()?;
 
-    let (mut findings, mut scan_errors) = scan_tree(&config, Some(path), path_provided)?;
+    let (mut findings, mut scan_errors) =
+        scan_tree(config.schema(), config.frame(), Some(path), path_provided)?;
     // §FS-check.1.3.6.1: exactly the path, and `None` over the config root.
     let report_scope = path_report_scope(&config, path, path_provided)?;
     // §FS-check.1.3 / §FS-check.3.14: read the out-of-scope tier off the whole

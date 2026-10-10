@@ -2,8 +2,7 @@
 
 use super::*;
 use crate::config::Config;
-use crate::scanner::scan_tree;
-use crate::testing::{canonical_test_path, test_root, write};
+use crate::testing::{canonical_test_path, scan_tree, test_root, write};
 
 #[test]
 fn require_grounding_off_by_default() {

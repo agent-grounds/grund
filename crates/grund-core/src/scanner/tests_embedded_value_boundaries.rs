@@ -2,9 +2,8 @@
 //! enrollment, and overlapping root authority (§FS-values.2.4, §FS-values.5.1,
 //! §FS-values.9).
 
-use crate::testing::{embedded_value_config, scan_embedded_value, test_root, write};
+use crate::testing::{embedded_value_config, scan_embedded_value, scan_tree, test_root, write};
 
-use super::*;
 use crate::api::{ListOpts, list};
 use crate::checker::check_findings;
 

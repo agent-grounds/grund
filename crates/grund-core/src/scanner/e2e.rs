@@ -3,8 +3,8 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::config::{Config, root_scope_roots};
-use crate::grammar::{literal_after_kind_placeholder, parse_id_arg};
+use crate::config::{Frame, Schema, root_scope_roots};
+use crate::grammar::{Grammar, literal_after_kind_placeholder, parse_id_arg};
 use crate::model::{Catalog, Declaration, DeclarationSource, E2eCase, E2eSpecRef, Id};
 use crate::model::{format_path, sort_path_key};
 
@@ -20,35 +20,40 @@ use crate::model::{format_path, sort_path_key};
 /// cases root as unwalked wherever `include` did not happen to name it, and so made
 /// a `§E2E-…` citation dangle under a path scope that `grund check .` resolves —
 /// this ticket's own defect inside the line that decides the widening.
-fn cases_root_in_ordinary_scope(config: &Config, cases_root: &Path) -> bool {
-    root_scope_roots(config, false).iter().any(|root| {
-        // The caller canonicalizes the cases root (§AR-scanner.6.2), so the compare
-        // has to meet it there; a root that does not exist yet keeps its own spelling.
-        let root = fs::canonicalize(root).unwrap_or_else(|_| root.clone());
-        cases_root.starts_with(&root) || root.starts_with(cases_root)
-    })
+fn cases_root_in_ordinary_scope(schema: &Schema, frame: Frame<'_>, cases_root: &Path) -> bool {
+    root_scope_roots(schema, frame.root(), false)
+        .iter()
+        .any(|root| {
+            // The caller canonicalizes the cases root (§AR-scanner.6.2), so the compare
+            // has to meet it there; a root that does not exist yet keeps its own spelling.
+            let root = fs::canonicalize(root).unwrap_or_else(|_| root.clone());
+            cases_root.starts_with(&root) || root.starts_with(cases_root)
+        })
+}
+
+/// The folder a citable `E2E` kind keeps its cases in (§AR-scanner.6).
+pub(super) fn e2e_cases_folder(schema: &Schema) -> Option<&str> {
+    schema
+        .rows
+        .iter()
+        .find(|row| row.name == "E2E" && row.kind.is_some())
+        .and_then(|row| row.folder())
 }
 
 /// Discover `e2e/cases/<name>/` directories and register each as an `E2E-<name>`
 /// declaration whose body is the case manifest (§AR-scanner.6, §FS-show.2.4) — so
 /// `grund check` sees `§E2E-…` citations resolve and `grund refs` finds e2e tests.
 pub(super) fn scan_e2e_cases(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
     findings: &mut Catalog,
 ) -> Result<()> {
-    let Some(kind) = config
-        .kinds
-        .iter()
-        .find(|kind| kind.kind == "E2E" && kind.citable)
-    else {
+    let Some(folder) = e2e_cases_folder(schema) else {
         return Ok(());
     };
-    let Some(folder) = kind.folder.as_deref() else {
-        return Ok(());
-    };
-    let cases_root = config.root.join(folder);
+    let cases_root = frame.root().join(folder);
     if !cases_root.exists() || !cases_root.is_dir() {
         return Ok(());
     }
@@ -59,7 +64,8 @@ pub(super) fn scan_e2e_cases(
     // the whole root, the report filter narrowing afterwards. Only a cases root the
     // ordinary scope misses is read through the path alone, which is the branch below.
     let narrowed_to_path = explicit_scope
-        && !(config.scan_resolution_wide && cases_root_in_ordinary_scope(config, &cases_root));
+        && !(frame.run.scope.resolution_wide
+            && cases_root_in_ordinary_scope(schema, frame, &cases_root));
     if narrowed_to_path {
         let scope = scope.unwrap_or(Path::new("."));
         if scope.is_file() {
@@ -71,7 +77,7 @@ pub(super) fn scan_e2e_cases(
         } else if !cases_root.starts_with(&scope) {
             return Ok(());
         }
-    } else if !config.scan_full && !cases_root_in_ordinary_scope(config, &cases_root) {
+    } else if !frame.run.scope.full && !cases_root_in_ordinary_scope(schema, frame, &cases_root) {
         // §FS-check.1.3: `--full` cancels `include`, so the e2e cases are in the
         // walk whether or not `include` happens to name their folder.
         return Ok(());
@@ -96,10 +102,10 @@ pub(super) fn scan_e2e_cases(
         let Some(name) = dir.file_name().and_then(|name| name.to_str()) else {
             continue;
         };
-        let Some(id) = e2e_id_from_case_dir_name(config, name) else {
+        let Some(id) = e2e_id_from_case_dir_name(&schema.ids.format, frame.grammar(), name) else {
             continue;
         };
-        let case = read_e2e_case(config, &dir)?;
+        let case = read_e2e_case(schema, frame, &dir)?;
         findings
             .declarations
             .entry(id.clone())
@@ -130,10 +136,14 @@ pub(super) fn scan_e2e_cases(
 
 /// Map an `e2e/cases/<name>/` directory name to its `E2E-<name>` `Id` under the
 /// repo's `[id] format` (§AR-scanner.6.1, §FS-config.3.4).
-pub(super) fn e2e_id_from_case_dir_name(config: &Config, name: &str) -> Option<Id> {
-    let after_kind_literal = literal_after_kind_placeholder(&config.id_format)?;
+pub(super) fn e2e_id_from_case_dir_name(
+    id_format: &str,
+    grammar: &Grammar,
+    name: &str,
+) -> Option<Id> {
+    let after_kind_literal = literal_after_kind_placeholder(id_format)?;
     let raw = format!("E2E{after_kind_literal}{name}");
-    let (id, section) = parse_id_arg(&raw, &config.grammar).ok()?;
+    let (id, section) = parse_id_arg(&raw, grammar).ok()?;
     if section.is_none() && id.kind == "E2E" {
         Some(id)
     } else {
@@ -144,10 +154,10 @@ pub(super) fn e2e_id_from_case_dir_name(config: &Config, name: &str) -> Option<I
 /// Inverse of `e2e_id_from_case_dir_name`: strip the `E2E` prefix off a rendered ID
 /// to get the `e2e/cases/<name>/` directory `grund id` tells the author to create
 /// (§FS-id.2, §AR-scanner.6.1).
-pub(crate) fn e2e_case_dir_name(config: &Config, rendered: &str) -> String {
+pub(crate) fn e2e_case_dir_name(schema: &Schema, rendered: &str) -> String {
     let prefix = format!(
         "E2E{}",
-        literal_after_kind_placeholder(&config.id_format).unwrap_or("-")
+        literal_after_kind_placeholder(&schema.ids.format).unwrap_or("-")
     );
     rendered
         .strip_prefix(&prefix)
@@ -158,7 +168,7 @@ pub(crate) fn e2e_case_dir_name(config: &Config, rendered: &str) -> String {
 /// Read one e2e case directory into an `E2eCase` — `command.args` (defaulting to
 /// `check`), `expected.exit`, `spec.refs`, and the recursive fixture file list —
 /// the data `grund E2E-<name>` renders or checks (§FS-show.2.4, §FS-config.3.9).
-fn read_e2e_case(config: &Config, dir: &Path) -> Result<E2eCase> {
+fn read_e2e_case(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<E2eCase> {
     let command_args = dir.join("command.args");
     let args = if command_args.is_file() {
         // §FS-check.6.1.1: cover this effective input before its shared read.
@@ -177,7 +187,7 @@ fn read_e2e_case(config: &Config, dir: &Path) -> Result<E2eCase> {
     let mut fixtures = Vec::new();
     collect_relative_fixture_files(dir, dir, &mut fixtures)?;
     fixtures.sort_by_key(|path| sort_path_key(path));
-    let spec_refs = read_e2e_spec_refs(config, dir)?;
+    let spec_refs = read_e2e_spec_refs(schema, frame, dir)?;
     Ok(E2eCase {
         dir: dir.to_path_buf(),
         args,
@@ -187,7 +197,7 @@ fn read_e2e_case(config: &Config, dir: &Path) -> Result<E2eCase> {
     })
 }
 
-fn read_e2e_spec_refs(config: &Config, dir: &Path) -> Result<Vec<E2eSpecRef>> {
+fn read_e2e_spec_refs(schema: &Schema, frame: Frame<'_>, dir: &Path) -> Result<Vec<E2eSpecRef>> {
     let path = dir.join("spec.refs");
     if !path.is_file() {
         return Ok(Vec::new());
@@ -196,16 +206,16 @@ fn read_e2e_spec_refs(config: &Config, dir: &Path) -> Result<Vec<E2eSpecRef>> {
     let text = crate::config::input_read_to_string(path)?;
     Ok(text
         .lines()
-        .filter_map(|line| e2e_spec_ref_from_line(config, line.trim()))
+        .filter_map(|line| e2e_spec_ref_from_line(schema, frame, line.trim()))
         .collect())
 }
 
-fn e2e_spec_ref_from_line(config: &Config, line: &str) -> Option<E2eSpecRef> {
+fn e2e_spec_ref_from_line(schema: &Schema, frame: Frame<'_>, line: &str) -> Option<E2eSpecRef> {
     let token = line.split_whitespace().next()?;
     if token.is_empty() {
         return None;
     }
-    let token = token.strip_prefix(&config.marker).unwrap_or(token);
+    let token = token.strip_prefix(&schema.citation.marker).unwrap_or(token);
     // §FS-workspace.6.1: an alias path may carry slashes, and an ID never does,
     // so the last separator is the boundary — the same split every other
     // consumer of a qualified token makes.
@@ -215,7 +225,7 @@ fn e2e_spec_ref_from_line(config: &Config, line: &str) -> Option<E2eSpecRef> {
         }
         _ => (None, token),
     };
-    if let Ok((id, _section)) = parse_id_arg(id_text, &config.grammar) {
+    if let Ok((id, _section)) = parse_id_arg(id_text, frame.grammar()) {
         return Some(E2eSpecRef {
             namespace,
             kind: id.kind,

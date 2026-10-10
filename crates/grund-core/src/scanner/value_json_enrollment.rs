@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use super::json::{JsonMember, JsonNode, JsonSpan, json_line_column};
-use crate::config::{Config, KindConfig};
+use crate::config::Frame;
 use crate::grammar::parse_id_arg;
 use crate::model::{
     Catalog, Declaration, DeclarationSource, Id, InvalidValueSite, SectionInfo, ValueComponent,
@@ -13,14 +13,14 @@ use crate::model::{
 };
 
 pub(super) fn enroll_json_member(
-    config: &Config,
+    frame: Frame<'_>,
     path: &Path,
-    owners: &[&KindConfig],
+    owners: &[&str],
     text: &str,
     member: JsonMember,
     findings: &mut Catalog,
 ) {
-    let parsed = parse_id_arg(&member.key.decoded, &config.grammar);
+    let parsed = parse_id_arg(&member.key.decoded, frame.grammar());
     let Ok((id, None)) = parsed else {
         push_json_invalid(
             findings,
@@ -32,10 +32,10 @@ pub(super) fn enroll_json_member(
         );
         return;
     };
-    if !owners.iter().any(|owner| id.kind == owner.kind) {
+    if !owners.contains(&id.kind.as_str()) {
         let expected = owners
             .iter()
-            .map(|owner| format!("`{}`", owner.kind))
+            .map(|owner| format!("`{owner}`"))
             .collect::<Vec<_>>()
             .join(" or ");
         push_json_invalid(

@@ -9,8 +9,7 @@ use std::path::{Path, PathBuf};
 
 use super::*;
 use crate::api::config_warnings;
-use crate::scanner::scan_tree;
-use crate::testing::{canonical_test_path, test_root, uncovered_base, write};
+use crate::testing::{canonical_test_path, scan_tree, test_root, uncovered_base, write};
 use crate::writers::{InitOpts, init};
 
 const MARKER_AT: &str = "[reference]\nmarker = \"@\"\n";

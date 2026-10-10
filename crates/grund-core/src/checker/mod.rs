@@ -46,6 +46,7 @@ mod index_entries;
 mod index_mention;
 mod inline_style;
 mod near_miss;
+mod obligation_units;
 mod reference_scope;
 mod references;
 mod report;
@@ -115,6 +116,8 @@ mod tests_citation_levels;
 mod tests_declaration_near_miss;
 #[cfg(test)]
 mod tests_duplicate_sections;
+#[cfg(test)]
+mod tests_empty_folder_obligations;
 #[cfg(test)]
 mod tests_finding_selection;
 #[cfg(test)]

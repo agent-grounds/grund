@@ -44,8 +44,8 @@ pub(crate) fn promote_qualified_legacy_citations(projects: &mut [WorkspaceProjec
                 continue;
             };
             promote_legacy_candidate(
-                &project.config,
-                target_config,
+                (project.config.schema(), project.config.frame()),
+                (target_config.schema(), target_config.frame()),
                 configured_catalog,
                 catalog,
                 candidate,

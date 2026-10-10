@@ -717,7 +717,9 @@ pub(crate) fn check_with_workspace_and_overlays(
             }
             // §FS-declarations.checks.broken-stub.1, §FS-declarations.checks.broken-stub.3:
             // the editor's text first, of a file the scan reads, the reader `show` takes.
-            if !file_declares_inline_home(&resolved, id, config, overlays).unwrap_or(false) {
+            if !file_declares_inline_home(&resolved, id, config.schema(), config.frame(), overlays)
+                .unwrap_or(false)
+            {
                 report.errors.push(Diagnostic {
                     code: "broken-stub",
                     path: Some(decl.file.clone()),

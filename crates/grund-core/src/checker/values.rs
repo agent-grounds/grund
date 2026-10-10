@@ -316,7 +316,7 @@ fn binding_target_reports_invalid_attempt(
     id: &Id,
     section: Option<&str>,
 ) -> bool {
-    if kind_uses_values(config, &id.kind) {
+    if kind_uses_values(config.schema(), &id.kind) {
         return true;
     }
     let Some(section) = section else { return false };
@@ -334,7 +334,7 @@ fn binding_aims_at_declared_chapter(
     declaration: &Declaration,
     section: &str,
 ) -> bool {
-    kind_value_chapter(config, &id.kind) == Some(section)
+    kind_value_chapter(config.schema(), &id.kind) == Some(section)
         && declaration.sections.contains_key(section)
 }
 
@@ -372,7 +372,7 @@ pub(crate) fn binding_target_has_any_value_authority(
     id: &Id,
     section: Option<&str>,
 ) -> bool {
-    kind_uses_values(config, &id.kind)
+    kind_uses_values(config.schema(), &id.kind)
         || section.is_some_and(|section| {
             declarations_as_scanned(findings, config, id)
                 .any(|declaration| embedded_root_for_binding(declaration, section).is_some())

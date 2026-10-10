@@ -26,10 +26,10 @@ pub(crate) fn target_records(
     config: &Config,
     overlays: &TextOverlays,
 ) -> TargetRecords {
-    if !scan_reads_target(file, config) {
+    if !scan_reads_target(file, config.schema()) {
         return TargetRecords::new();
     }
-    let Ok(findings) = scan_unwalked_file(file, config, overlays) else {
+    let Ok(findings) = scan_unwalked_file(file, config.schema(), config.frame(), overlays) else {
         return TargetRecords::new();
     };
     findings
@@ -78,7 +78,7 @@ pub(crate) fn unscanned_stub_home<'a>(
         return None;
     }
     // §FS-declarations.checks.broken-stub.3: the rule's own gate, before a slot is read.
-    if !scan_reads_target(&resolved, config) {
+    if !scan_reads_target(&resolved, config.schema()) {
         return None;
     }
     match findings

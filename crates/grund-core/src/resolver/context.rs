@@ -286,8 +286,14 @@ fn single_project_context(
     path_provided: bool,
     overlays: &TextOverlays,
 ) -> Result<WorkspaceContext> {
-    let (findings, scan_errors) =
-        scan_tree_with_workspace_overlays(&config, Some(path), path_provided, &[], overlays)?;
+    let (findings, scan_errors) = scan_tree_with_workspace_overlays(
+        config.schema(),
+        config.frame(),
+        Some(path),
+        path_provided,
+        &[],
+        overlays,
+    )?;
     let render_root = config.root.clone();
     let render_config = config.clone();
     // §FS-check.3.29: the same finding for the runs that loaded one project — a
@@ -402,10 +408,7 @@ fn load_workspace_projects_with_overlays(
     // no second disk pass (§FS-workspace.1.2, §AR-workspace.2).
     let targets = entries
         .iter()
-        .map(|entry| WorkspaceCitationTarget {
-            alias: entry.alias.clone(),
-            config: entry.config.clone(),
-        })
+        .map(|entry| WorkspaceCitationTarget::of(entry.alias.clone(), &entry.config))
         .collect::<Vec<_>>();
 
     // Stage 3: scan every project under its own config, with the workspace
@@ -457,8 +460,14 @@ fn load_workspace_project(
     targets: &[WorkspaceCitationTarget],
     overlays: &TextOverlays,
 ) -> Result<WorkspaceProject> {
-    let (findings, scan_errors) =
-        scan_tree_with_workspace_overlays(&config, Some(&config.root), true, targets, overlays)?;
+    let (findings, scan_errors) = scan_tree_with_workspace_overlays(
+        config.schema(),
+        config.frame(),
+        Some(&config.root),
+        true,
+        targets,
+        overlays,
+    )?;
     Ok(WorkspaceProject {
         alias,
         config,

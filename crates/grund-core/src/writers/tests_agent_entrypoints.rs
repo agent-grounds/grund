@@ -10,9 +10,9 @@ use crate::checker::check_findings;
 use crate::config::Config;
 use crate::scanner::{
     AgentEntrypoint, CanonicalSurfaceReach, InitCompanionAgentEntrypoint,
-    agents_with_own_entrypoint, companion_agent_entrypoints, scan_tree,
+    agents_with_own_entrypoint, companion_agent_entrypoints,
 };
-use crate::testing::{current_block, test_root, write};
+use crate::testing::{current_block, scan_tree, test_root, write};
 
 #[test]
 fn discovers_known_companion_agent_entrypoints() {

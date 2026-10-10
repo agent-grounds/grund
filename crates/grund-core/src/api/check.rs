@@ -71,7 +71,7 @@ pub struct CheckOutput {
 /// embedding surface later frontends share instead of re-reading files.
 pub fn scan(path: &Path) -> Result<Catalog> {
     let config = resolve_workspace_config(path)?;
-    scan_tree_strict(&config, Some(path), true)
+    scan_tree_strict(config.schema(), config.frame(), Some(path), true)
 }
 
 /// Programmatic `check`: load config, scan, and return structured findings

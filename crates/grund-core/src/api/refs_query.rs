@@ -90,16 +90,19 @@ pub(super) fn refs_impl_with_details(
         .projects
         .iter()
         .flat_map(|project| {
-            project
-                .scan_errors
-                .iter()
-                .map(|(file, message)| api_scan_error(context.render_config(), file, message))
+            project.scan_errors.iter().map(|(file, message)| {
+                api_scan_error(context.render_config().frame(), file, message)
+            })
         })
         .collect::<Vec<_>>();
     // §FS-refs.4: the `[id] format` hint is for an argument that does not match
     // it; an ambiguous shorthand did match and lists its candidates instead.
-    let (id, inline_section) = match resolve_id_arg(raw_id, render_config, &target_project.findings)
-    {
+    let (id, inline_section) = match resolve_id_arg(
+        raw_id,
+        render_config.schema(),
+        render_config.frame(),
+        &target_project.findings,
+    ) {
         Ok(resolved) => resolved,
         Err(error) => {
             // §FS-distribution.3.3.2: retain original resolver data.

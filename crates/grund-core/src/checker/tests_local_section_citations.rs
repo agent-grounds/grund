@@ -8,8 +8,9 @@ use super::references::{LOCAL_SECTION_RULE_PRIOR_RELEASE, LOCAL_SECTION_RULE_REL
 use super::*;
 use crate::api::CheckRun;
 use crate::config::{display_path, load_config};
-use crate::scanner::scan_tree;
-use crate::testing::{check_run, located_diagnostics, numbered_config, test_root, write};
+use crate::testing::{
+    check_run, located_diagnostics, numbered_config, scan_tree, test_root, write,
+};
 
 #[test]
 fn local_section_findings_are_actionable_and_missing_is_independent() {

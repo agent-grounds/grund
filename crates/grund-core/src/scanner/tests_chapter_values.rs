@@ -5,11 +5,10 @@
 
 use std::path::PathBuf;
 
-use super::*;
 use crate::api::check;
 use crate::config::Config;
 use crate::model::{Catalog, ValueRootOrigin};
-use crate::testing::{embedded_value_config, test_root, write};
+use crate::testing::{embedded_value_config, scan_tree, test_root, write};
 
 /// `AR` declarations under `docs/`, with `values` as the declared chapter and
 /// named sections on, which the key requires (§FS-config.3.4.13).

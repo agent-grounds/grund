@@ -10,7 +10,7 @@ use super::tree::ScanError;
 use super::walk::{scan_roots, scannable_walker};
 use super::walk_boundaries::{is_scannable, outward_directory_link_root, owned_by_another_project};
 use super::walk_errors::{symlink_loop_report, walk_error_report};
-use crate::config::{Config, canonical_config_root};
+use crate::config::{Frame, Schema, canonical_config_root};
 use crate::model::{physical_path_key, sort_path_key};
 
 /// The tree walk for the callers that ask a yes/no question about the tree and
@@ -27,11 +27,12 @@ use crate::model::{physical_path_key, sort_path_key};
 /// that one is a line-by-line pass over a file's text, this one is a directory
 /// traversal — and they meet only at the file list one hands the other.
 pub(crate) fn walk_scannable_files(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
 ) -> Result<Vec<PathBuf>> {
-    Ok(walk_scannable_files_reporting(config, scope, explicit_scope)?.files)
+    Ok(walk_scannable_files_reporting(schema, frame, scope, explicit_scope)?.files)
 }
 
 /// What one walk of the tree produced (§AR-scanner.1).
@@ -84,23 +85,25 @@ pub(crate) struct WalkedTree {
 /// through a link contains none of the paths its own files resolve to, and
 /// `fmt --write` would then refuse to rewrite the whole repository.
 pub(crate) fn walk_scannable_files_reporting(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
 ) -> Result<WalkedTree> {
-    walk_scannable_files_with_sources(config, scope, explicit_scope, &mut |_, _| {})
+    walk_scannable_files_with_sources(schema, frame, scope, explicit_scope, &mut |_, _| {})
 }
 
 /// The same reporting walk, retaining each admitted error's original source
 /// beside its unchanged scan record (§FS-distribution.3.3.2). The callback runs
 /// before sorting/deduplication; callers match sources by the complete record.
 pub(crate) fn walk_scannable_files_with_sources(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
     on_error: &mut dyn FnMut(&ScanError, ignore::Error),
 ) -> Result<WalkedTree> {
-    let roots = scan_roots(config, scope, explicit_scope)?;
+    let roots = scan_roots(schema, frame, scope, explicit_scope)?;
     // §FS-config.3.5.4: an aliased root, or a symlink met on the way down, is what
     // hands the same file to the walk under two spellings — nothing else does, so
     // a tree with neither never pays for the identity pass (§GOAL-fast-feedback).
@@ -114,7 +117,7 @@ pub(crate) fn walk_scannable_files_with_sources(
     // Where this project physically is, for every comparison below that reads a
     // resolved path. Equal to `config.root` for the roots `grund` discovers, which
     // are canonical already (§FS-config.1) — one `stat` per run either way.
-    let physical_root = canonical_config_root(config);
+    let physical_root = canonical_config_root(frame.root());
     for scan_root in roots {
         // §FS-check.6.1.1: the actual walk roots are covered before traversal.
         if !crate::config::observe_input(&scan_root, true) {
@@ -132,11 +135,17 @@ pub(crate) fn walk_scannable_files_with_sources(
         // included path at or below a member boundary belongs to the member scan,
         // and one in another project belongs there (§FS-workspace.6.2).
         if outward_directory_link_root(&scan_root, &canonical_scan_root, &physical_root)
-            || config
-                .workspace_boundary_roots
+            || frame
+                .run
+                .workspace
+                .boundary_roots
                 .iter()
                 .any(|root| canonical_scan_root.starts_with(root))
-            || owned_by_another_project(config, &physical_root, &canonical_scan_root)
+            || owned_by_another_project(
+                &frame.run.workspace.project_roots,
+                &physical_root,
+                &canonical_scan_root,
+            )
         {
             continue;
         }
@@ -144,7 +153,7 @@ pub(crate) fn walk_scannable_files_with_sources(
         // spelling that is not the file's own, so all of them can alias (§FS-check.1.3.2).
         let root_is_aliased = canonical_scan_root != scan_root;
         if scan_root.is_file() {
-            if is_scannable(&scan_root, config) {
+            if is_scannable(&scan_root, schema) {
                 // §FS-check.1.3.6.1: a file handed as the path is walked beside roots
                 // that reach it under its own name, so a link's spelling has to
                 // resolve to the same one read (§FS-config.3.5.4).
@@ -164,7 +173,8 @@ pub(crate) fn walk_scannable_files_with_sources(
         // notice them (§AR-scanner.1.9).
         let looping_links = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
         let walker = scannable_walker(
-            config,
+            schema,
+            frame,
             &scan_root,
             &canonical_scan_root,
             &physical_root,
@@ -179,7 +189,7 @@ pub(crate) fn walk_scannable_files_with_sources(
                 // cannot read — reported at its own path, the walk continuing past it
                 // (§FS-check.2.4). Failing the scan would let it take the whole report.
                 Err(err) => {
-                    if let Some(report) = walk_error_report(&err, config, &scan_root) {
+                    if let Some(report) = walk_error_report(&err, schema, frame, &scan_root) {
                         on_error(&report, err);
                         errors.push(report);
                     }
@@ -198,7 +208,7 @@ pub(crate) fn walk_scannable_files_with_sources(
             if !entry
                 .file_type()
                 .is_some_and(|file_type| file_type.is_file())
-                || !is_scannable(entry.path(), config)
+                || !is_scannable(entry.path(), schema)
             {
                 continue;
             }
@@ -221,7 +231,12 @@ pub(crate) fn walk_scannable_files_with_sources(
                 .strip_prefix(&canonical_scan_root)
                 .ok()
                 .map(|rest| scan_root.join(rest));
-            errors.extend(symlink_loop_report(&link, ancestor.as_deref(), config));
+            errors.extend(symlink_loop_report(
+                &link,
+                ancestor.as_deref(),
+                schema,
+                frame,
+            ));
         }
         // §FS-errors.4.1: within one root the order is the filesystem's, and the
         // first-seen rule below turns that into a choice of *spelling*. Sorting each
@@ -236,11 +251,15 @@ pub(crate) fn walk_scannable_files_with_sources(
     // §FS-workspace.6.2: the directory filter stops a *directory* link at another
     // project's root, and a link straight onto one of its files is the same
     // crossing one entry lower down.
-    if !config.workspace_project_roots.is_empty() {
+    if !frame.run.workspace.project_roots.is_empty() {
         files.retain(|file| {
-            !resolved
-                .get(file.as_path())
-                .is_some_and(|physical| owned_by_another_project(config, &physical_root, physical))
+            !resolved.get(file.as_path()).is_some_and(|physical| {
+                owned_by_another_project(
+                    &frame.run.workspace.project_roots,
+                    &physical_root,
+                    physical,
+                )
+            })
         });
     }
     if !resolved.is_empty() {

@@ -6,8 +6,7 @@
 use super::*;
 use crate::config::load_config;
 use crate::model::{Id, ShowRenderMode, TextOverlays};
-use crate::scanner::scan_tree;
-use crate::testing::{test_root, write};
+use crate::testing::{scan_tree, test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\n[reference]\nstrict = true\n\n\
 [id]\nformat = \"{kind}-{slug}\"\n\n[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n\

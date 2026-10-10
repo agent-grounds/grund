@@ -51,6 +51,7 @@
 //! §AR-core-module-layout.2, so `lib.rs` re-exports `ApiScanError` explicitly
 //! beside the component's otherwise `pub(crate)` glob.
 
+mod after_pass;
 mod agent_entrypoints;
 mod chapter_values;
 mod citation_line;
@@ -65,6 +66,7 @@ mod legacy;
 mod legacy_inline;
 mod line_owners;
 mod merge;
+mod qualified_citations;
 mod scan_error;
 mod scope_probe;
 mod section_record;

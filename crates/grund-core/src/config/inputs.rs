@@ -31,7 +31,7 @@ pub(crate) fn observe_config(config: &super::Config) {
         return;
     }
     observe_config_candidates(&config.root);
-    for root in super::root_scope_roots(config, config.scan_full) {
+    for root in super::root_scope_roots(config.schema(), &config.root, config.scan_full) {
         observe_input(&root, true);
     }
     for kind in &config.kinds {

@@ -17,7 +17,7 @@ fn effective_scope_recognizes_include_and_kind_home_files() {
     include_config.include = Some(vec!["notes".to_string()]);
 
     assert!(
-        effective_scope_reads_any_file(&include_config),
+        effective_scope_reads_any_file(include_config.schema(), include_config.frame()),
         "§FS-config.3.5: a configured include file is readable"
     );
 
@@ -27,7 +27,7 @@ fn effective_scope_recognizes_include_and_kind_home_files() {
     home_config.include = Some(Vec::new());
 
     assert!(
-        effective_scope_reads_any_file(&home_config),
+        effective_scope_reads_any_file(home_config.schema(), home_config.frame()),
         "§FS-config.3.5.8: a walked kind file home is readable even outside includes"
     );
 }
@@ -71,7 +71,7 @@ fn effective_scope_rejects_files_the_scanner_skips() {
     fs.scan = false;
 
     assert!(
-        !effective_scope_reads_any_file(&config),
+        !effective_scope_reads_any_file(config.schema(), config.frame()),
         "§FS-init.2.2.2: existence is insufficient when scanner policy skips every file"
     );
 }
@@ -83,10 +83,11 @@ fn effective_scope_stops_after_the_first_readable_root() {
     config.include = Some(vec!["first".to_string(), "second".to_string()]);
     let mut visited = Vec::new();
 
-    let reads_any = effective_scope_reads_any_file_with(&config, |candidate| {
-        visited.push(candidate.to_path_buf());
-        candidate == root.join("first")
-    });
+    let reads_any =
+        effective_scope_reads_any_file_with(config.schema(), config.frame(), |candidate| {
+            visited.push(candidate.to_path_buf());
+            candidate == root.join("first")
+        });
 
     assert!(reads_any);
     assert_eq!(

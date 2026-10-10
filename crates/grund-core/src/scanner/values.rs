@@ -11,20 +11,24 @@ use super::value_binding_attempts::{
     invalid_value_binding_site, scan_noncanonical_value_binding_attempts,
 };
 use super::value_context::{binding_span_is_inside, value_binding_context};
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::model::{
     Catalog, Id, InvalidValueSite, ValueBinding, authored_component, component_text_is_valid,
     paths_same_location, value_binding_section_shape_is_valid,
 };
 use crate::workspace::WorkspaceCitationTarget;
 
-pub(super) fn value_declaration_is_in_home(config: &Config, path: &Path, id: &Id) -> bool {
-    config.kinds.iter().any(|kind| {
-        kind.values
-            && kind.kind == id.kind
-            && match (kind.file.as_deref(), kind.folder.as_deref()) {
-                (Some(file), _) => paths_same_location(path, &config.root.join(file)),
-                (_, Some(folder)) => path_starts_with(path, &config.root.join(folder)),
+pub(super) fn value_declaration_is_in_home(
+    schema: &Schema,
+    frame: Frame<'_>,
+    path: &Path,
+    id: &Id,
+) -> bool {
+    schema.value_rows().any(|row| {
+        row.name == id.kind
+            && match (row.file(), row.folder()) {
+                (Some(file), _) => paths_same_location(path, &frame.root().join(file)),
+                (_, Some(folder)) => path_starts_with(path, &frame.root().join(folder)),
                 _ => false,
             }
     })
@@ -37,17 +41,18 @@ pub(super) fn validate_markdown_value_declarations(
     path: &Path,
     text: &str,
     is_md: bool,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     findings: &mut Catalog,
 ) {
-    if !config.kinds.iter().any(|kind| kind.values) {
+    if schema.value_rows().next().is_none() {
         return;
     }
     let lines = text.lines().collect::<Vec<_>>();
     let mut invalid = Vec::new();
     for decl in findings.declarations.values_mut().flatten().filter(|decl| {
         paths_same_location(&decl.file, path)
-            && value_declaration_is_in_home(config, path, &decl.id)
+            && value_declaration_is_in_home(schema, frame, path, &decl.id)
     }) {
         let invalid_id = decl.id.clone();
         let invalid_file = decl.file.clone();
@@ -73,7 +78,7 @@ pub(super) fn validate_markdown_value_declarations(
         for line_no in decl.body_start.saturating_add(1)..=decl.body_end {
             if lines
                 .get(line_no.saturating_sub(1))
-                .is_some_and(|line| empty_citable_value_heading(line, decl.heading_level, config))
+                .is_some_and(|line| empty_citable_value_heading(line, decl.heading_level, frame))
             {
                 valid = false;
                 invalid.push(invalid_for(
@@ -111,7 +116,7 @@ pub(super) fn validate_markdown_value_declarations(
                 valid = false;
                 continue;
             };
-            match markdown_component(line, config) {
+            match markdown_component(line, frame) {
                 Some((component, column)) if component_text_is_valid(component) => {
                     info.value = Some(authored_component(component, column));
                 }
@@ -140,7 +145,7 @@ pub(super) fn validate_markdown_value_declarations(
     findings.invalid_value_declarations.extend(invalid);
 }
 
-fn empty_citable_value_heading(line: &str, declaration_level: usize, config: &Config) -> bool {
+fn empty_citable_value_heading(line: &str, declaration_level: usize, frame: Frame<'_>) -> bool {
     let trimmed = line.trim_start();
     let level = trimmed.bytes().take_while(|byte| *byte == b'#').count();
     if level <= declaration_level
@@ -158,7 +163,7 @@ fn empty_citable_value_heading(line: &str, declaration_level: usize, config: &Co
         .unwrap_or(token)
         .split('.')
         .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()));
-    let named = config.grammar.named_sections
+    let named = frame.grammar().named_sections
         && token.strip_suffix(':').is_some_and(|coordinate| {
             coordinate.split('.').all(|part| {
                 !part.is_empty()
@@ -170,8 +175,8 @@ fn empty_citable_value_heading(line: &str, declaration_level: usize, config: &Co
     (numeric || named) && rest[token.len()..].trim().is_empty()
 }
 
-pub(crate) fn markdown_component<'a>(line: &'a str, config: &Config) -> Option<(&'a str, usize)> {
-    let captures = config.grammar.section_re.captures(line)?;
+pub(crate) fn markdown_component<'a>(line: &'a str, frame: Frame<'_>) -> Option<(&'a str, usize)> {
+    let captures = frame.grammar().section_re.captures(line)?;
     let coordinate = captures.name("sec")?;
     // Numeric heading punctuation is optional and intentionally sits outside
     // the `sec` capture; it delimits the title but is not part of it

@@ -9,17 +9,50 @@ use std::sync::OnceLock;
 use crate::api::{CheckRun, run_check};
 use std::collections::BTreeMap;
 
+use anyhow::Result;
+
 use crate::checker::{check_on_disk, diagnostic_cmp};
 use crate::config::{Config, KindIndex, config_file_in, display_path};
 use crate::grammar::render_id;
 use crate::model::{Catalog, CheckReport, Diagnostic, format_path, sort_path_key};
 use crate::resolver::WorkspaceCheckTarget;
-use crate::scanner::{ScanError, scan_tree};
+use crate::scanner::ScanError;
 use crate::templates::ConversationSurface;
+use crate::workspace::WorkspaceCitationTarget;
 use crate::writers::{block_version, expected, expected_entrypoint, render_agents_append_block_at};
 // The embedded `grund-open` script, read only by the harness that runs it.
 #[cfg(unix)]
 use crate::writers::GRUND_OPEN_RESOLVER;
+
+// The stages' entry points as a case with only a façade calls them: a stage
+// below the writers is handed concerns and a `Frame` rather than `Config`
+// (§AR-checker.1), and a façade a case edited hands back what it shows
+// (§AR-config.5), so the cases keep the shape they were written in.
+
+/// `scanner::scan_tree` over a façade's schema and frame (§AR-scanner.1).
+pub(crate) fn scan_tree(
+    config: &Config,
+    scope: Option<&Path>,
+    explicit_scope: bool,
+) -> Result<(Catalog, Vec<ScanError>)> {
+    crate::scanner::scan_tree(config.schema(), config.frame(), scope, explicit_scope)
+}
+
+/// `scanner::scan_tree_with_workspace` over a façade (§FS-workspace.1.2).
+pub(crate) fn scan_tree_with_workspace(
+    config: &Config,
+    scope: Option<&Path>,
+    explicit_scope: bool,
+    workspace_targets: &[WorkspaceCitationTarget],
+) -> Result<(Catalog, Vec<ScanError>)> {
+    crate::scanner::scan_tree_with_workspace(
+        config.schema(),
+        config.frame(),
+        scope,
+        explicit_scope,
+        workspace_targets,
+    )
+}
 
 /// The checker over one project as the api drives it, `Expected` rendered by
 /// the writers first (§AR-checker.1.3): what a case that only has a façade and

@@ -4,10 +4,9 @@
 use std::path::{Path, PathBuf};
 
 use super::json::{JsonNode, JsonReader};
-use super::scan_tree;
 use crate::config::load_config;
 use crate::model::{Catalog, DeclarationSource, ValueComponentKind};
-use crate::testing::{test_root, write};
+use crate::testing::{scan_tree, test_root, write};
 
 fn value_root(name: &str, kinds: &str) -> PathBuf {
     let root = test_root(name)

@@ -19,6 +19,8 @@ use super::citations::CitationRules;
 use super::facade::Records;
 use super::kind::KindConfig;
 use super::point_sizes::LeadSizeWarning;
+use super::project::Schema;
+use super::rows::Form;
 use super::run_warnings::RunWarning;
 use super::v1;
 #[cfg(test)]
@@ -313,6 +315,7 @@ impl Config {
             self.named_sections,
             &self.comment_prefixes,
         )?;
+        std::sync::Arc::make_mut(&mut self.records.compiled).grammar = self.grammar.clone();
         Ok(())
     }
 
@@ -425,23 +428,24 @@ pub(super) fn declared_homeless_kind(kinds: &[KindConfig]) -> Option<&KindConfig
 }
 
 /// Whether a `[[kinds]]` row opted its home into first-class values
-/// (§FS-values.2, §FS-config.3.4). A `[[kinds]]` lookup like the three above,
-/// so it sits with them rather than with the value records it gates.
-pub(crate) fn kind_uses_values(config: &Config, kind: &str) -> bool {
-    config
-        .kinds
-        .iter()
-        .any(|configured| configured.kind == kind && configured.values)
+/// (§FS-values.2, §FS-config.3.4): its form is a value form (§AR-config.1.3).
+pub(crate) fn kind_uses_values(schema: &Schema, kind: &str) -> bool {
+    schema.kinds().any(|(name, configured)| {
+        name == kind && matches!(configured.form, Form::Value { chapter: None })
+    })
 }
 
 /// The chapter a `[[kinds]]` row declared its values under, if any
-/// (§FS-config.3.4.13, §FS-values.2.5). The same `[[kinds]]` lookup as
+/// (§FS-config.3.4.13, §FS-values.2.5). The same row lookup as
 /// `kind_uses_values` above, and the only thing that turns a named section into
 /// a value root.
-pub(crate) fn kind_value_chapter<'a>(config: &'a Config, kind: &str) -> Option<&'a str> {
-    config
-        .kinds
-        .iter()
-        .find(|configured| configured.kind == kind)
-        .and_then(|configured| configured.value_chapter.as_deref())
+pub(crate) fn kind_value_chapter<'a>(schema: &'a Schema, kind: &str) -> Option<&'a str> {
+    schema
+        .kinds()
+        .find(|(name, _)| *name == kind)
+        .and_then(|(_, configured)| match &configured.form {
+            Form::Value { chapter } => chapter.as_deref(),
+            Form::Rule { value_chapter } => value_chapter.as_deref(),
+            Form::Prose => None,
+        })
 }

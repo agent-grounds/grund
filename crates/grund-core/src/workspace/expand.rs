@@ -23,7 +23,9 @@ use super::scope::{
     project_name_error, workspace_members_error,
 };
 use crate::config::display_path;
-use crate::config::{AbsentOptionalNamespace, Config, RunWarning, load_config_at_with_report_base};
+use crate::config::{
+    AbsentOptionalNamespace, Compiled, Config, RunWarning, Schema, load_config_at_with_report_base,
+};
 
 /// One project of the run a qualified citation can name, as the scanner needs
 /// it: the alias the citation writes and the whole `Config` its ID is parsed and
@@ -41,7 +43,20 @@ use crate::config::{AbsentOptionalNamespace, Config, RunWarning, load_config_at_
 #[derive(Clone)]
 pub(crate) struct WorkspaceCitationTarget {
     pub(crate) alias: String,
-    pub(crate) config: Config,
+    pub(crate) schema: Schema,
+    pub(crate) compiled: Compiled,
+}
+
+impl WorkspaceCitationTarget {
+    /// The target `config` spells its IDs with (§FS-workspace.1.2): its schema
+    /// and compiled grammar, which is all a scan reads of another project.
+    pub(crate) fn of(alias: String, config: &Config) -> Self {
+        Self {
+            alias,
+            schema: config.schema().clone(),
+            compiled: config.compiled().clone(),
+        }
+    }
 }
 
 /// One project the workspace walk reached: the alias path qualified citations

@@ -2,8 +2,7 @@
 
 use super::check_findings;
 use crate::config::load_config;
-use crate::scanner::scan_tree;
-use crate::testing::{test_root, write};
+use crate::testing::{scan_tree, test_root, write};
 
 #[test]
 fn every_json_duplicate_shape_reports_all_sites_without_comparing_a_winner() {

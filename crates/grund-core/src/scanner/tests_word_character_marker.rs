@@ -1,9 +1,8 @@
 //! Shared recognition contract (§AR-scanner.2.3, §FS-check.1.1.10).
 
-use super::scan_tree;
 use crate::checker::check_findings;
 use crate::config::Config;
-use crate::testing::{legacy_fs_folder_config, test_root, write};
+use crate::testing::{legacy_fs_folder_config, scan_tree, test_root, write};
 
 fn config(name: &str, marker: &str, strict: bool) -> Config {
     let root = test_root(name);

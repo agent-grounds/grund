@@ -4,7 +4,7 @@
 use std::path::Path;
 
 use super::value_context::SourceValueLineContext;
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::{PythonDocstringScanState, source_scan_line};
 use crate::model::{Catalog, DeclarationSource, Id, InvalidValueSite, named_section_component};
 
@@ -65,14 +65,19 @@ pub(super) fn embedded_value_marker_for_line(
 pub(super) fn normalized_value_lines(
     text: &str,
     is_py: bool,
-    config: &Config,
+    schema: &Schema,
     source_contexts: Option<&[Option<SourceValueLineContext>]>,
 ) -> Vec<(String, usize, bool, bool)> {
     let mut py_docstring = PythonDocstringScanState::default();
     text.lines()
         .enumerate()
         .map(|(index, line)| {
-            let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
+            let scan = source_scan_line(
+                line,
+                is_py,
+                schema.sources.docstring_python,
+                &mut py_docstring,
+            );
             (
                 scan.text.to_string(),
                 scan.column_offset,
@@ -118,7 +123,7 @@ pub(super) fn authored_heading_level(
     line: &str,
     markdown: bool,
     block_comment: bool,
-    config: &Config,
+    schema: &Schema,
 ) -> Option<usize> {
     // Strip a source wrapper—including `#`—before authored heading hashes;
     // Python docstrings arrive as Markdown after quote normalization
@@ -126,7 +131,7 @@ pub(super) fn authored_heading_level(
     let content = if markdown {
         line.trim_start()
     } else {
-        semantic_comment_content(line, false, block_comment, config).trim_start()
+        semantic_comment_content(line, false, block_comment, schema).trim_start()
     };
     let level = content.bytes().take_while(|byte| *byte == b'#').count();
     (level > 0
@@ -151,12 +156,13 @@ pub(super) fn authored_heading_path(
     markdown: bool,
     block_comment: bool,
     named: bool,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
 ) -> Option<String> {
     let content = if markdown {
         line.trim_start()
     } else {
-        semantic_comment_content(line, false, block_comment, config).trim_start()
+        semantic_comment_content(line, false, block_comment, schema).trim_start()
     };
     let level = content.bytes().take_while(|byte| *byte == b'#').count();
     let rest = content.get(level..)?;
@@ -166,7 +172,7 @@ pub(super) fn authored_heading_path(
     let token = rest.trim_start().split_whitespace().next()?;
     // §FS-config.3.3.1: a numeric heading's full stop is optional punctuation
     // and a name-bearing one's colon is mandatory; neither is part of the path.
-    if let Some(coordinate) = (named && config.grammar.named_sections)
+    if let Some(coordinate) = (named && frame.grammar().named_sections)
         .then(|| token.strip_suffix(':'))
         .flatten()
     {
@@ -192,7 +198,7 @@ pub(super) fn semantic_comment_content<'a>(
     line: &'a str,
     markdown: bool,
     block_comment: bool,
-    config: &Config,
+    schema: &Schema,
 ) -> &'a str {
     let mut content = line.trim();
     if markdown {
@@ -201,12 +207,18 @@ pub(super) fn semantic_comment_content<'a>(
     if matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
         return "";
     }
-    let mut prefixes = config
+    let mut prefixes = schema
+        .sources
         .comment_prefixes
         .iter()
         .map(String::as_str)
         .collect::<Vec<_>>();
-    if config.comment_prefixes.iter().any(|prefix| prefix == "//") {
+    if schema
+        .sources
+        .comment_prefixes
+        .iter()
+        .any(|prefix| prefix == "//")
+    {
         prefixes.extend(["///", "//!", "//"]);
     }
     prefixes.sort_by_key(|prefix| std::cmp::Reverse(prefix.len()));

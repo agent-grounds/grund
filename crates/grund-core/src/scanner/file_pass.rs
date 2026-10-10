@@ -13,11 +13,12 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+use super::after_pass::AfterPass;
 use super::chapter_values::validate_declared_value_chapters;
 use super::citation_line::CitationLine;
 use super::citations::{
-    scan_escaped_citations, scan_fallback_qualified_citations, scan_legacy_citation_candidates,
-    scan_local_section_candidates, scan_shorthand_citations, scan_workspace_qualified_pass,
+    scan_escaped_citations, scan_legacy_citation_candidates, scan_local_section_candidates,
+    scan_shorthand_citations,
 };
 use super::context::{
     assign_declaration_bodies, inline_citation_sites, markdown_heading_level,
@@ -28,6 +29,9 @@ use super::embedded_value_context::{
     push_invalid_embedded_marker,
 };
 use super::embedded_values::validate_embedded_value_roots;
+use super::qualified_citations::{
+    scan_fallback_qualified_citations, scan_workspace_qualified_pass,
+};
 use super::section_record::record_section_heading;
 use super::tree::heading_level_for_line;
 use super::units::{heading_text, record_file_structure};
@@ -35,7 +39,7 @@ use super::unmarked_headings::assign_unmarked_heading_owners;
 use super::value_binding_split::scan_split_binding;
 use super::value_context::recognized_source_value_contexts;
 use super::values::{scan_value_bindings, validate_markdown_value_declarations};
-use crate::config::{Config, KindConfig, kind_uses_values, kind_value_chapter};
+use crate::config::{Frame, Schema};
 use crate::grammar::{
     DocstringContent, PythonDocstringScanState, STUB_LINK_HEADING,
     bare_token_in_never_rewrite_zone, declaration_captures, markdown_fence_delimiter,
@@ -71,13 +75,14 @@ use crate::workspace::WorkspaceCitationTarget;
 /// parser used by member-local scans (§FS-workspace.5.2).
 pub(super) fn scan_file(
     path: &Path,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     findings: &mut Catalog,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<()> {
     // §FS-check.6.1.1: cover this effective input before its shared read.
     let text = crate::config::input_read_to_string(path)?;
-    scan_file_text(path, &text, config, findings, workspace_targets)
+    scan_file_text(path, &text, schema, frame, findings, workspace_targets)
 }
 
 /// Scan one file's already-read text into `findings`: declarations, their section
@@ -103,14 +108,17 @@ pub(super) fn scan_file(
 pub(super) fn scan_file_text(
     path: &Path,
     text: &str,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     findings: &mut Catalog,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<()> {
+    let grammar = frame.grammar();
+    let marker = &schema.citation.marker;
     let is_md = path.extension().and_then(|e| e.to_str()) == Some("md");
     let is_py = path.extension().and_then(|e| e.to_str()) == Some("py");
     let (inline_sites, inline_block_lines) =
-        inline_citation_sites(path, &text, is_md, is_py, config, workspace_targets);
+        inline_citation_sites(path, &text, is_md, is_py, schema, frame, workspace_targets);
     let in_docs = path.components().any(|c| c.as_os_str() == "docs");
     let mut markdown_fence = None;
     let mut py_docstring = PythonDocstringScanState::default();
@@ -118,19 +126,19 @@ pub(super) fn scan_file_text(
     // A marker enables value authority in any scanned document (§FS-values.1),
     // and a declared chapter is recognized in the same source doc-comments
     // (§FS-values.2.5); unopted trees gain no extra read (§FS-values.9).
-    let value_kind = |kind: &KindConfig| kind.values || kind.value_chapter.is_some();
+    let value_kind = |schema: &Schema| schema.kinds().any(|(_, kind)| kind.has_values());
     let scan_values = text.contains(EMBEDDED_VALUE_MARKER)
-        || config.kinds.iter().any(value_kind)
+        || value_kind(schema)
         || workspace_targets
             .iter()
-            .any(|target| target.config.kinds.iter().any(value_kind));
-    let has_binding_candidate = text.contains('`') && text.contains(&config.marker);
+            .any(|target| value_kind(&target.schema));
+    let has_binding_candidate = text.contains('`') && text.contains(marker);
     let value_line_contexts = ((scan_values || has_binding_candidate) && !is_md)
-        .then(|| recognized_source_value_contexts(&text, is_py, config));
+        .then(|| recognized_source_value_contexts(&text, is_py, schema, frame));
     // §AR-scanner.2.4.2: citing-side classification feeds citation-direction and chapter
     // rules, so the caller asks for it: `check`, the LSP, `cover` and `refs` pass `true`;
     // `list`, `show`, `fmt`, ID completion, `sizes` and `batch` pass `false`.
-    let classify = config.classify_citation_sources;
+    let classify = frame.run.scope.classify_citation_sources;
     // §AR-scanner.2.4.1: every Markdown heading (line, level) outside a fence — a
     // declaration body runs until the next heading at the same or higher level.
     let mut md_headings: Vec<(usize, usize)> = Vec::new();
@@ -157,7 +165,12 @@ pub(super) fn scan_file_text(
         if is_md && let Some(level) = markdown_heading_level(line) {
             md_headings.push((lineno, level));
         }
-        let scan = source_scan_line(line, is_py, config.docstring_python, &mut py_docstring);
+        let scan = source_scan_line(
+            line,
+            is_py,
+            schema.sources.docstring_python,
+            &mut py_docstring,
+        );
         let scan_line = scan.text.as_ref();
         let source_value_context = value_line_contexts
             .as_ref()
@@ -169,9 +182,8 @@ pub(super) fn scan_file_text(
             source_value_context,
         );
 
-        if let Some(caps) =
-            declaration_captures(&config.grammar, scan_line, scan.in_py_docstring, is_md)
-            && let Some(id) = parse_id(&caps, &config.grammar)
+        if let Some(caps) = declaration_captures(grammar, scan_line, scan.in_py_docstring, is_md)
+            && let Some(id) = parse_id(&caps, grammar)
         {
             if let Some(prev) = current.take() {
                 findings
@@ -242,7 +254,7 @@ pub(super) fn scan_file_text(
         // near-miss pattern whether it looked like one, here rather than in a second read of the
         // tree — the scan has the line, the position rules and the fence/docstring state.
         if let Some((text, format, kind)) =
-            near_miss_heading(&config.grammar, scan_line, scan.in_py_docstring, is_md)
+            near_miss_heading(grammar, scan_line, scan.in_py_docstring, is_md)
         {
             if let Some(prev) = current.take() {
                 findings
@@ -311,7 +323,7 @@ pub(super) fn scan_file_text(
             continue;
         }
 
-        let section_caps = config.grammar.section_re.captures(scan_line);
+        let section_caps = grammar.section_re.captures(scan_line);
         let recognized_section = section_caps.as_ref().and_then(section_path).is_some();
         let mut embedded_marker_attached = false;
         if let Some(caps) = section_caps
@@ -327,7 +339,7 @@ pub(super) fn scan_file_text(
                 is_md,
                 lineno,
                 embedded_marker,
-                config,
+                schema,
                 path,
                 findings,
             );
@@ -354,7 +366,7 @@ pub(super) fn scan_file_text(
                 scan_line,
                 is_md || scan.in_py_docstring,
                 source_value_context.is_some_and(|context| context.block_comment),
-                config,
+                schema,
             )
             .is_some()
         {
@@ -377,26 +389,26 @@ pub(super) fn scan_file_text(
         // (§DF-number-only-citation-shorthand.2.6), so the full ID always wins.
         let mut claimed_markers: Vec<usize> = Vec::new();
         // §FS-check.1.1.10: explicit-marker and bare starts share the same policy gates.
-        for (offset, caps) in config.grammar.citation_captures(scan_line, &config.marker) {
+        for (offset, caps) in grammar.citation_captures(scan_line, marker) {
             let Some(full) = caps.get(0) else { continue };
             let token_start = offset + full.start();
             let token_end = offset + full.end();
             let namespace = caps.name("namespace").map(|m| m.as_str().to_string());
-            let has_marker = scan_line[..token_start].ends_with(&config.marker);
+            let has_marker = scan_line[..token_start].ends_with(marker);
             if has_marker {
-                claimed_markers.push(token_start - config.marker.len());
+                claimed_markers.push(token_start - marker.len());
             }
             // §FS-check.1.1.2 / §AR-scanner.2.3.4: a reserved `number.name`
             // candidate is consumed as one rejected token, never shortened to
             // the valid numeric prefix the regex necessarily matched.
-            if config.grammar.has_reserved_named_tail(scan_line, token_end) {
+            if grammar.has_reserved_named_tail(scan_line, token_end) {
                 continue;
             }
             // §FS-check.1.1.9 / §AR-scanner.2.3.1: the never-rewrite zones are asked
             // before the unmarked-`alias/ID` rule and the strict gate, so the escape
             // is what exempts `<§>ID` and `<§>alias/ID` alike, in both modes.
             let bare_zone = !has_marker
-                && bare_token_in_never_rewrite_zone(scan_line, is_md, token_start, &config.marker);
+                && bare_token_in_never_rewrite_zone(scan_line, is_md, token_start, marker);
             if bare_zone {
                 continue;
             }
@@ -412,23 +424,19 @@ pub(super) fn scan_file_text(
             if namespace.is_some() && !has_marker {
                 continue;
             }
-            if config.strict && !has_marker {
+            if schema.citation.strict && !has_marker {
                 continue;
             }
             // In an opted-in repository an unmarked name tail is prose as one
             // whole token, even in compatibility scanning mode (§FS-check.1.1.2).
-            if !has_marker
-                && config
-                    .grammar
-                    .is_named_section(caps.name("sec").map(|sec| sec.as_str()))
-            {
+            if !has_marker && grammar.is_named_section(caps.name("sec").map(|sec| sec.as_str())) {
                 continue;
             }
-            let Some(id) = parse_id(&caps, &config.grammar) else {
+            let Some(id) = parse_id(&caps, grammar) else {
                 continue;
             };
             let start = if has_marker {
-                token_start.saturating_sub(config.marker.len())
+                token_start.saturating_sub(marker.len())
             } else {
                 token_start
             };
@@ -475,7 +483,8 @@ pub(super) fn scan_file_text(
             column_offset: scan.column_offset,
             lineno,
             path,
-            config,
+            schema,
+            frame,
             is_md,
             value_comment: source_value_context,
             inline_sites: &inline_sites,
@@ -529,53 +538,30 @@ pub(super) fn scan_file_text(
     // §AR-scanner.2.4: now that every declaration and (for Markdown) every heading
     // on the file is known, fix each declaration's body span and classify each
     // citation's citing side — off the hot path either way (§AR-benchmarks).
-    let has_text_sections = findings
-        .declarations
-        .values()
-        .flatten()
-        .any(|decl| !decl.sections.is_empty() || !decl.duplicate_sections.is_empty());
-    let has_embedded_roots = findings
-        .declarations
-        .values()
-        .flatten()
-        .flat_map(|decl| decl.sections.values())
-        .any(|section| section.value_root.is_some());
-    // §FS-values.2.5: the declared chapter is strict at its own level whether or
-    // not it managed to hold a single root, so this is asked of the kind rather
-    // than of what enrollment found.
-    let has_declared_chapters = findings
-        .declarations
-        .values()
-        .flatten()
-        .any(|decl| kind_value_chapter(config, &decl.id.kind).is_some());
-    let has_value_declarations = scan_values
-        && findings
-            .declarations
-            .values()
-            .flatten()
-            .any(|decl| kind_uses_values(config, &decl.id.kind));
+    let due = AfterPass::of(findings, schema, scan_values);
     let has_unmarked_headings = !unmarked_heading_candidates.is_empty();
     let has_local_section_candidates = !findings.local_section_citation_candidates.is_empty();
     if classify
         // §FS-cover.6.2: a `cover --lines` request reads the body spans too.
-        || !config.owner_lines.is_empty()
-        || has_text_sections
-        || has_value_declarations
-        || has_embedded_roots
-        || has_declared_chapters
+        || !frame.run.scope.owner_lines.is_empty()
+        || due.text_sections
+        || due.value_declarations
+        || due.embedded_roots
+        || due.declared_chapters
         || has_local_section_candidates
     {
         assign_declaration_bodies(
             findings,
             is_md,
             is_py,
-            config,
+            schema,
+            frame,
             &text,
             &md_headings,
             total_lines,
         );
     }
-    if has_text_sections {
+    if due.text_sections {
         retain_in_body_sections(findings);
     }
     if has_unmarked_headings {
@@ -586,35 +572,45 @@ pub(super) fn scan_file_text(
             total_lines,
         );
     }
-    if has_value_declarations {
-        validate_markdown_value_declarations(path, &text, is_md, config, findings);
+    if due.value_declarations {
+        validate_markdown_value_declarations(path, &text, is_md, schema, frame, findings);
     }
-    if has_declared_chapters {
+    if due.declared_chapters {
         validate_declared_value_chapters(
             path,
             &text,
             is_md,
             is_py,
-            config,
+            schema,
+            frame,
             value_line_contexts.as_deref(),
             findings,
         );
     }
-    if has_embedded_roots {
+    if due.embedded_roots {
         validate_embedded_value_roots(
             path,
             &text,
             is_md,
             is_py,
-            config,
+            schema,
+            frame,
             value_line_contexts.as_deref(),
             findings,
         );
     }
-    resolve_citation_owners(findings, config, path, &md_headings, total_lines, classify);
+    resolve_citation_owners(
+        findings,
+        schema,
+        frame,
+        path,
+        &md_headings,
+        total_lines,
+        classify,
+    );
     // §AR-scanner.2.7.1: the headings and doc-comment blocks a grounding unit finer
     // than the file is cut out of — recorded only where the file's own row asks
     // for one, so a level-1 tree pays nothing (§FS-config.3.4.8.2).
-    record_file_structure(path, text, config, findings);
+    record_file_structure(path, text, schema, frame, findings);
     Ok(())
 }

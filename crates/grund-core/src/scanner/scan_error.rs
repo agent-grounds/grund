@@ -11,7 +11,7 @@
 
 use std::path::Path;
 
-use crate::config::{Config, display_path};
+use crate::config::Frame;
 
 /// One file the walk could not read, as a caller of the embedding API sees it:
 /// the path rendered against the run's report base (§FS-config.3.6) and the
@@ -25,9 +25,9 @@ pub struct ApiScanError {
 /// Render one [`ScanError`](super::tree::ScanError) for a caller: the same path
 /// spelling `check` prints, so an embedder and the terminal name one file the
 /// same way (§FS-errors.4).
-pub(crate) fn api_scan_error(config: &Config, path: &Path, message: &str) -> ApiScanError {
+pub(crate) fn api_scan_error(frame: Frame<'_>, path: &Path, message: &str) -> ApiScanError {
     ApiScanError {
-        path: display_path(config, path),
+        path: frame.display_path(path),
         message: message.to_string(),
     }
 }

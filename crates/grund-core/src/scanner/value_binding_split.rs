@@ -119,7 +119,7 @@ fn text_run<'a>(line: &CitationLine<'a>, context: (usize, usize)) -> Option<(Tex
         return Some((TextRun::Docstring, content));
     }
     let comment = line.value_comment?;
-    let text = semantic_comment_content(content, false, comment.block_comment, line.config);
+    let text = semantic_comment_content(content, false, comment.block_comment, line.schema);
     Some((
         TextRun::Comment {
             block: comment.block,
@@ -148,8 +148,11 @@ fn opening_value_citation(
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Option<AttemptedValueTarget> {
     let text = text.trim_start();
-    if !text.strip_prefix('(')?.starts_with(&line.config.marker) {
+    if !text
+        .strip_prefix('(')?
+        .starts_with(&line.schema.citation.marker)
+    {
         return None;
     }
-    attempted_value_target(text, line.config, workspace_targets)
+    attempted_value_target(text, line.schema, line.frame, workspace_targets)
 }

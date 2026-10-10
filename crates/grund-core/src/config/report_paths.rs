@@ -15,7 +15,7 @@ use std::path::Path;
 
 use super::call_scope::PathBase;
 use super::record::Config;
-use crate::model::{Diagnostic, Finding, format_path, relative_from_base};
+use crate::model::{Diagnostic, Finding};
 
 impl Config {
     /// Whether this run spells report paths from the config root: the run's
@@ -44,18 +44,7 @@ impl Config {
 /// `[output] relative_paths = false` (§FS-config.3.6.1 — an in-root target
 /// outside that base uses bounded `..`).
 pub(crate) fn display_path(config: &Config, path: &Path) -> String {
-    let base = config.report_base();
-    let relative = path
-        .strip_prefix(base)
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|_| {
-            if !config.reports_from_root() && path.starts_with(&config.root) {
-                relative_from_base(base, path)
-            } else {
-                path.to_path_buf()
-            }
-        });
-    format_path(&relative)
+    config.display().path(path)
 }
 
 /// The run's `[workspace]` warnings in the published shape (§FS-distribution.3.1):

@@ -12,8 +12,9 @@ pub(super) fn scan(r: &EmbeddingRequest) -> Result<Value, Value> {
     let config =
         crate::workspace::resolve_workspace_config(&r.root).map_err(|e| error_data(e, &[]))?;
     let cautions = config_run_warnings(&config);
-    let (findings, errors) = crate::scanner::scan_tree(&config, Some(&r.root), true)
-        .map_err(|e| error_data(e, &cautions))?;
+    let (findings, errors) =
+        crate::scanner::scan_tree(config.schema(), config.frame(), Some(&r.root), true)
+            .map_err(|e| error_data(e, &cautions))?;
     let snapshot = snapshot(&config, &findings);
     if !errors.is_empty() {
         let mut f = failure("io", "filesystem", errors[0].1.clone(), &cautions);

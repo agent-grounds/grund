@@ -47,12 +47,8 @@ impl ScanDemand {
 impl Compiled {
     /// The lexical settings of `project` under this grammar — what a scan and a
     /// rendered note sentence read, without the façade (§AR-config.5).
-    pub(crate) fn lexical<'a>(&'a self, project: &'a Project) -> LexicalSettings<'a> {
-        let (citation, sources, notes) = (
-            &project.schema.citation,
-            &project.schema.sources,
-            &project.schema.notes,
-        );
+    pub(crate) fn lexical<'a>(&'a self, schema: &'a Schema) -> LexicalSettings<'a> {
+        let (citation, sources, notes) = (&schema.citation, &schema.sources, &schema.notes);
         LexicalSettings {
             grammar: &self.grammar,
             marker: &citation.marker,
@@ -103,7 +99,7 @@ fn grammar_kinds(rows: &[Row]) -> Vec<GrammarKind> {
 /// effective level is finer than the file — read through the one
 /// `grounding_level_for_kind` the checker cuts units with (§AR-checker.2.8), so
 /// what the scanner records and what the checker cuts stay one rule.
-fn scan_demand(project: &Project) -> ScanDemand {
+pub(super) fn scan_demand(project: &Project) -> ScanDemand {
     let (schema, rules) = (&project.schema, &project.rules);
     let structure_rows = row_names(schema)
         .filter(|row| grounding_level_for_kind(schema, rules, row) > DEFAULT_GROUNDING_LEVEL)

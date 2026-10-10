@@ -8,8 +8,8 @@ use std::path::Path;
 
 use super::citation_line::CitationLine;
 use super::value_context::binding_span_is_inside;
-use crate::config::Config;
-use crate::grammar::{QUALIFIED_CITATION_PREFIX, parse_id_arg, parse_longest_id_prefix};
+use crate::config::{Frame, Schema};
+use crate::grammar::{Grammar, QUALIFIED_CITATION_PREFIX, parse_id_arg, parse_longest_id_prefix};
 use crate::model::{DeclarationSource, Id, InvalidValueSite};
 use crate::workspace::WorkspaceCitationTarget;
 
@@ -32,7 +32,8 @@ pub(super) fn scan_noncanonical_value_binding_attempts(
         let Some(tail) = line.scan_line.get(close_tick + 1..context.1) else {
             continue;
         };
-        let Some(target) = attempted_value_target(tail, line.config, workspace_targets) else {
+        let Some(target) = attempted_value_target(tail, line.schema, line.frame, workspace_targets)
+        else {
             continue;
         };
         // Without an opener on this physical line, this is the closing half of
@@ -107,7 +108,8 @@ pub(super) struct AttemptedValueTarget {
 
 pub(super) fn attempted_value_target(
     tail: &str,
-    local: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Option<AttemptedValueTarget> {
     let mut rest = tail;
@@ -118,7 +120,7 @@ pub(super) fn attempted_value_target(
         rest = trimmed;
     }
     rest = rest.trim_start_matches(|ch: char| ch.is_whitespace());
-    rest = rest.strip_prefix(&local.marker).unwrap_or(rest);
+    rest = rest.strip_prefix(&schema.citation.marker).unwrap_or(rest);
 
     if let Some(prefix) = QUALIFIED_CITATION_PREFIX.captures(rest) {
         let alias = prefix.name("namespace")?.as_str();
@@ -126,7 +128,7 @@ pub(super) fn attempted_value_target(
             .iter()
             .find(|target| target.alias == alias)?;
         let id_rest = &rest[prefix.get(0)?.end()..];
-        let (id, section) = attempted_value_id(id_rest, &target.config)?;
+        let (id, section) = attempted_value_id(id_rest, &target.schema, &target.compiled.grammar)?;
         return Some(AttemptedValueTarget {
             namespace: Some(alias.to_string()),
             id,
@@ -134,7 +136,7 @@ pub(super) fn attempted_value_target(
         });
     }
 
-    let (id, section) = attempted_value_id(rest, local)?;
+    let (id, section) = attempted_value_id(rest, schema, frame.grammar())?;
     Some(AttemptedValueTarget {
         namespace: None,
         id,
@@ -142,19 +144,23 @@ pub(super) fn attempted_value_target(
     })
 }
 
-fn attempted_value_id(raw: &str, config: &Config) -> Option<(Id, Option<String>)> {
-    if let Some(parsed) = parse_longest_id_prefix(raw, &config.grammar) {
+fn attempted_value_id(
+    raw: &str,
+    schema: &Schema,
+    grammar: &Grammar,
+) -> Option<(Id, Option<String>)> {
+    if let Some(parsed) = parse_longest_id_prefix(raw, grammar) {
         return Some((parsed.id, parsed.section));
     }
     // A named address is deliberately outside the ordinary numeric-only
     // grammar, so recover only the complete ID before the separator to classify
     // the delimited form as an attempted value binding (§FS-values.3.1.1).
-    raw.match_indices(&config.section_separator)
+    raw.match_indices(&schema.ids.section_separator)
         .map(|(index, _)| index)
         .collect::<Vec<_>>()
         .into_iter()
         .rev()
-        .find_map(|index| match parse_id_arg(&raw[..index], &config.grammar) {
+        .find_map(|index| match parse_id_arg(&raw[..index], grammar) {
             Ok((id, None)) => Some((id, None)),
             _ => None,
         })

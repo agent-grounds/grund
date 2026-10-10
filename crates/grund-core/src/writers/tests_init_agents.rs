@@ -8,9 +8,8 @@ use super::init_render::render_agents_md;
 use super::*;
 use crate::checker::check_findings;
 use crate::config::{Config, load_config};
-use crate::scanner::scan_tree;
 use crate::templates::{AGENT_SETUP_INSTRUCTIONS, canonical_template_text, render_grund_toml};
-use crate::testing::{current_block, current_marker, test_root, write};
+use crate::testing::{current_block, current_marker, scan_tree, test_root, write};
 
 /// §FS-init.5.3: the distributable skill and the binary-embedded copy the CLI
 /// prints must be byte-identical, and a release that edits one surface

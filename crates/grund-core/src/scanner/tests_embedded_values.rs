@@ -6,12 +6,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::testing::{
-    embedded_value_config as embedded_config, scan_embedded_value as scan_embedded, test_root,
-    write,
+    embedded_value_config as embedded_config, scan_embedded_value as scan_embedded, scan_tree,
+    test_root, write,
 };
 
 use super::embedded_value_context::exact_embedded_value_marker;
-use super::*;
 use crate::api::{FmtOpts, check, format_references};
 use crate::checker::check_findings;
 

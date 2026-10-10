@@ -8,9 +8,8 @@ use super::inline_note_layout::{
 use super::*;
 use crate::checker::check_findings;
 use crate::config::Config;
-use crate::scanner::scan_tree;
 use crate::testing::{
-    checked_layout_config, layout_config, legacy_fs_folder_config, test_root, write,
+    checked_layout_config, layout_config, legacy_fs_folder_config, scan_tree, test_root, write,
 };
 
 fn conforms(config: &Config, line: &str) -> bool {
