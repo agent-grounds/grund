@@ -15,7 +15,7 @@
 use std::path::Path;
 
 use super::context::{file_home_kind, markdown_heading_level};
-use crate::config::{Config, DEFAULT_GROUNDING_LEVEL, grounding_level_for_kind};
+use crate::config::Config;
 use crate::grammar::{
     DocCommentRule, block_is_doc_comment, comment_blocks, doc_comment_rule, first_content_line,
     markdown_fence_delimiter,
@@ -32,10 +32,11 @@ pub(super) fn record_file_structure(
     config: &Config,
     findings: &mut Catalog,
 ) {
-    // The project-wide answer first: one field read exempts every file of a
-    // level-1 tree — every configuration written before the keys existed — from
-    // the per-file lookup below (§GOAL-fast-feedback).
-    if !config.grounding_units || file_grounding_level(path, config) <= DEFAULT_GROUNDING_LEVEL {
+    // §AR-scanner.2.7.3: the project-wide answer first — one field read exempts
+    // every file of a level-1 tree, every configuration written before the keys
+    // existed, from the per-file lookup below (§GOAL-fast-feedback).
+    let demand = &config.compiled().demand;
+    if demand.is_empty() || !demand.records_structure(&file_row(path, config)) {
         return;
     }
     let extension = path.extension().and_then(|ext| ext.to_str());
@@ -49,19 +50,19 @@ pub(super) fn record_file_structure(
         .insert(path.to_path_buf(), structure);
 }
 
-/// The effective `grounding_level` of the row `path` belongs to (§AR-scanner.2.7.1)
-/// — its home kind's, or the homeless kind's where no single home claims it
-/// (§AR-scanner.2.4.2). That lookup is the one §FS-check.3.6.1 defers to for which
-/// row governs a file, and the level it feeds is the checker's own, so what is
-/// recorded here and what is cut out of it later are one rule.
+/// The row `path` belongs to (§AR-scanner.2.7.1) — its home kind, or the
+/// homeless kind where no single home claims it (§AR-scanner.2.4.2). That lookup
+/// is the one §FS-check.3.6.1 defers to for which row governs a file, and whether
+/// the row asks for structure is the demand config computed with the checker's
+/// own level rule (§AR-config.6.1), so what is recorded here and what is cut out
+/// of it later are one rule.
 ///
 /// A Markdown document in a *citable* home is recorded when its row asks for a
 /// finer unit, though §FS-check.3.6 will not ask for its units: the row's level
 /// is a statement about the place, and erring toward having the structure costs
 /// one description, while a second home rule here could disagree with that one.
-fn file_grounding_level(path: &Path, config: &Config) -> usize {
-    let home = file_home_kind(path, config);
-    grounding_level_for_kind(config, home.as_deref().unwrap_or(config.homeless_kind()))
+fn file_row(path: &Path, config: &Config) -> String {
+    file_home_kind(path, config).unwrap_or_else(|| config.homeless_kind().to_string())
 }
 
 /// Every heading outside a fenced block, with its text (§AR-scanner.2.7). The

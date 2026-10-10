@@ -2,9 +2,12 @@
 //! the demand that tells the scanner what to record. `compile` is the one place
 //! either is built, so a grammar cannot disagree with the schema it came from.
 
+use std::collections::BTreeSet;
+
 use anyhow::Result;
 
-use super::project::Project;
+use super::grounding::grounding_level_for_kind;
+use super::project::{Project, Schema};
 use super::record::DEFAULT_GROUNDING_LEVEL;
 use super::rows::Row;
 use crate::grammar::{Grammar, GrammarKind, LexicalSettings};
@@ -16,14 +19,29 @@ pub struct Compiled {
     pub demand: ScanDemand,
 }
 
-/// §AR-config.1.5: what the scanner must record beyond the catalog.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+/// §AR-config.6.1: what the scanner must record beyond the catalog — the rows
+/// whose effective `grounding_level` is finer than the file, the complement's
+/// included, so the scanner records per-file structure for their files alone
+/// (§AR-scanner.2.7.3). A level-1 tree — every config written before the keys
+/// existed — names no row and pays nothing (§GOAL-fast-feedback).
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ScanDemand {
-    /// Whether any row's effective `grounding_level` is finer than the file, so
-    /// the scanner records per-file structure (§AR-scanner.2.7). A level-1
-    /// tree — every config written before the keys existed — pays nothing
-    /// (§GOAL-fast-feedback).
-    pub grounding_units: bool,
+    structure_rows: BTreeSet<String>,
+}
+
+impl ScanDemand {
+    /// §AR-config.6.1: whether no row asks for structure — the one-field answer
+    /// that excuses every file of a level-1 tree from the per-file lookup.
+    pub fn is_empty(&self) -> bool {
+        self.structure_rows.is_empty()
+    }
+
+    /// §AR-config.6.1: whether the files of the row named `row` record their
+    /// grounding structure — the homeless kind's name for a file no single home
+    /// claims (§AR-scanner.2.7.1).
+    pub fn records_structure(&self, row: &str) -> bool {
+        self.structure_rows.contains(row)
+    }
 }
 
 impl Compiled {
@@ -62,9 +80,7 @@ pub(crate) fn compile(project: &Project) -> Result<Compiled> {
     )?;
     Ok(Compiled {
         grammar,
-        demand: ScanDemand {
-            grounding_units: grounding_units(project),
-        },
+        demand: scan_demand(project),
     })
 }
 
@@ -83,27 +99,25 @@ fn grammar_kinds(rows: &[Row]) -> Vec<GrammarKind> {
         .collect()
 }
 
-/// §FS-config.3.4.8: whether the complement or any row resolves to a level
-/// finer than the file, each row's own level over the `[reference]` default.
-fn grounding_units(project: &Project) -> bool {
-    let grounding = &project.rules.grounding;
-    let level = |name: &str| {
-        grounding
-            .kinds
-            .get(name)
-            .and_then(|kind| kind.level)
-            .unwrap_or(grounding.level)
-    };
-    let complement_level = project
-        .schema
+/// §AR-config.6.1: every row, and the complement under its name, whose
+/// effective level is finer than the file — read through the one
+/// `grounding_level_for_kind` the checker cuts units with (§AR-checker.2.8), so
+/// what the scanner records and what the checker cuts stay one rule.
+fn scan_demand(project: &Project) -> ScanDemand {
+    let (schema, rules) = (&project.schema, &project.rules);
+    let structure_rows = row_names(schema)
+        .filter(|row| grounding_level_for_kind(schema, rules, row) > DEFAULT_GROUNDING_LEVEL)
+        .map(str::to_string)
+        .collect();
+    ScanDemand { structure_rows }
+}
+
+/// Every row name a file can belong to: each row, and the complement's name
+/// where no row is the complement (§FS-config.3.9.2).
+fn row_names(schema: &Schema) -> impl Iterator<Item = &str> {
+    schema
         .rows
         .iter()
-        .find(|row| row.is_complement())
-        .map_or(grounding.level, |row| level(&row.name));
-    complement_level > DEFAULT_GROUNDING_LEVEL
-        || project
-            .schema
-            .rows
-            .iter()
-            .any(|row| level(&row.name) > DEFAULT_GROUNDING_LEVEL)
+        .map(|row| row.name.as_str())
+        .chain(std::iter::once(schema.complement_name()))
 }

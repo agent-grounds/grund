@@ -343,7 +343,7 @@ pub struct Catalog {
     pub walked_dirs: Vec<PathBuf>,
     /// Per-file heading and doc-comment structure, for the files a grounding
     /// unit finer than the file is asked of (§AR-scanner.2.7, §FS-check.3.6.2).
-    /// Empty — and never collected — unless `Config::grounding_units` is set.
+    /// Empty — and never collected — unless `ScanDemand` names a row (§AR-config.6.1).
     pub file_structure: BTreeMap<PathBuf, FileStructure>,
     /// `<§>`-escaped citation illustrations (§AR-scanner.2.5): the schematic
     /// `<§>[alias/]ID[.section]` shape the detection passes deliberately skip
