@@ -68,7 +68,7 @@ A key a v2 file omits takes the value below. These are the v2 epoch, and no late
 | `[rules.citations] default` | `may` | no default level |
 | Languages | the epoch set of #456's approved proposal | `[scan] extensions` and `comment_prefixes` |
 
-The marker, `shorthand`, `section_separator` and `number_pattern` keep their v1 defaults. A v2 file that declares no `[schema.kinds]` row has no kinds: v1's built-in kind list belongs to v1.
+The marker, `shorthand`, `section_separator` and `number_pattern` keep their v1 defaults. A v2 file that declares no `[schema.kinds]` row, or only rows with `citable = false`, has no kinds and still loads: it declares no IDs, and v1's built-in kind list and v1's refusal of a table with no citable kind belong to v1.
 
 ### defaults.2: The language set is fixed before it is executed
 
@@ -133,7 +133,7 @@ Every constraint takes one strength, and the strength names its channel:
 
 `[rules.citations.grounding]` is the project's ladder and `[rules.citations.<PLACE>.grounding]` a row's. A ladder's keys are the positive strengths and its values are units: `"file"`, or `"h2"` to `"h6"`, the heading levels of [§FS-check.3.6.2](FS-check.md#362-the-unit). Each rung asks that every unit of that size in a governed file be grounded, and reports an ungrounded one on its strength's channel ([§FS-check.3.6](FS-check.md#36-ungrounded-unit-opt-in)). A row's files are governed as [§FS-check.3.6.1](FS-check.md#361-which-files-a-row-governs) says. A stronger rung never uses a finer unit: `must = "h2"` beside `warn = "file"` is refused at the stronger key: ``grounding ladder: `must` (h2) is finer than `warn` (file); a stronger rung never uses a finer unit``.
 
-A ladder is one setting. A row that writes a ladder replaces the project's ladder whole, and a rung the row leaves out is not inherited. This is [§FS-config.principle.unit](FS-config.md#principleunit-one-leaf-key-overrides-and-one-value-is-whole)'s whole-value rule, applied to a setting v1 spelled as two independent keys. `grund check --require-grounding` supplies the project ladder `must = "file"`, and an explicit row ladder still wins whole ([§FS-config.principle.cli](FS-config.md#principlecli-a-cli-input-enters-at-the-scope-its-flag-spells)).
+A ladder is one setting. A row that writes a ladder replaces the project's ladder whole, and a rung the row leaves out is not inherited. This is [§FS-config.principle.unit](FS-config.md#principleunit-one-leaf-key-overrides-and-one-value-is-whole)'s whole-value rule, applied to a setting v1 spelled as two independent keys. `grund check --require-grounding` supplies the project ladder's `must` rung at `"file"` unless the project ladder already writes a `must` rung; the project ladder's other rungs remain, and a row that writes its own ladder still replaces the project's whole ([§FS-config.principle.cli](FS-config.md#principlecli-a-cli-input-enters-at-the-scope-its-flag-spells)).
 
 ### rules.resolution: `[rules.resolution]`
 

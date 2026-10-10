@@ -12,7 +12,7 @@
 //! [`LexicalSettings`] rather than beside it, so a reader cannot pair one
 //! project's compiled patterns with another project's keys.
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 use super::compiled::Grammar;
 
@@ -100,4 +100,13 @@ pub(crate) struct LexicalSettings<'a> {
 pub(crate) struct AliasGrammar<'a> {
     pub(crate) alias: &'a str,
     pub(crate) grammar: &'a Grammar,
+}
+
+/// §FS-config.3.4: a v1 table must leave at least one citable kind for the ID
+/// grammar to recognize. A v2 file may have none (§FS-config-v2.defaults.1).
+pub(crate) fn require_kinds(kinds: &[GrammarKind]) -> Result<()> {
+    if kinds.is_empty() {
+        return Err(anyhow!("[id] grammar needs at least one [[kinds]] entry"));
+    }
+    Ok(())
 }

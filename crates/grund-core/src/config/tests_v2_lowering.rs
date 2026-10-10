@@ -227,3 +227,50 @@ fn v2_show_round_trips() {
         "a v1 config keeps its own bytes"
     );
 }
+
+/// §FS-config-v2.defaults.1: a v2 file with no citable row has no kinds and
+/// still loads, where v1 refuses a table with no citable kind.
+#[test]
+fn v2_a_file_with_no_citable_row_loads() {
+    let bare = load("v2_no_rows", HEAD).unwrap_or_else(|err| panic!("{err:#}"));
+    assert!(bare.kinds.iter().all(|kind| !kind.citable));
+    let test_row = "[schema.kinds.test]\ncitable = false\nfolders = [\"tests\"]\n";
+    let config = load("v2_no_citable_row", &format!("{HEAD}{test_row}"))
+        .unwrap_or_else(|err| panic!("{err:#}"));
+    assert!(config.kinds.iter().any(|kind| kind.kind == "test"));
+    assert!(config.grammar.parse_token("FS-foo").is_none());
+}
+
+/// §FS-config-v2.rules.grounding: `--require-grounding` supplies the project
+/// ladder's `must` rung at file level unless it writes one, keeps its other
+/// rungs, and a row's own ladder still replaces the project's whole.
+#[test]
+fn v2_require_grounding_fills_the_project_must_rung() {
+    let test_row = "[schema.kinds.test]\ncitable = false\nfolders = [\"tests\"]\n";
+    let flagged = |name: &str, ladders: &str| {
+        let mut config = load(name, &format!("{HEAD}{FS_GOAL}{test_row}{ladders}"))
+            .unwrap_or_else(|err| panic!("{err:#}"));
+        config.force_require_grounding();
+        let kind = config
+            .kinds
+            .iter()
+            .find(|kind| kind.kind == "test")
+            .expect("row");
+        (
+            config.kind_grounding(kind),
+            config.soft_grounding_rungs("test"),
+        )
+    };
+    let warn = "[rules.citations.grounding]\nwarn = \"h2\"\n";
+    assert_eq!(
+        flagged("v2_flag_beside_warn", warn),
+        ((true, 1), vec![(Strength::Warn, 2)])
+    );
+    let must = "[rules.citations.grounding]\nmust = \"h2\"\n";
+    assert_eq!(flagged("v2_flag_beside_must", must), ((true, 2), vec![]));
+    let row = format!("{warn}[rules.citations.test.grounding]\nshould = \"file\"\n");
+    assert_eq!(
+        flagged("v2_flag_beside_row_ladder", &row),
+        ((false, 1), vec![(Strength::Should, 1)])
+    );
+}

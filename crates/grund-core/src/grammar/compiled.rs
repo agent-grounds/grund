@@ -110,7 +110,9 @@ pub struct Grammar {
 }
 
 impl Grammar {
-    /// Compile the four regexes from the effective config. The validation rejections
+    /// Compile the four regexes from the effective config. An empty `kinds` compiles
+    /// a grammar that recognizes no ID; refusing that is the v1 reader's call
+    /// ([`super::require_kinds`]). The validation rejections
     /// here (`{kind}` required, at least one of `{number}`/`{slug}`, separator must be
     /// lexically distinct) are §FS-config.3.2; the optional `§`-marker prefix on a
     /// citation is §FS-config.3.1 / §DF-reference-marker; the comment-prefix wrapper
@@ -138,9 +140,6 @@ impl Grammar {
         named_sections: bool,
         comment_prefixes: &[String],
     ) -> Result<Self> {
-        if kinds.is_empty() {
-            return Err(anyhow!("[id] grammar needs at least one [[kinds]] entry"));
-        }
         // §FS-config.3.2.3: the "an ID never contains `/`" invariant, enforced over
         // every component an ID is built from. `config/v1/parse.rs` rejects each key at its
         // own line first; this is the backstop for a `Config` assembled in code.
@@ -198,7 +197,14 @@ impl Grammar {
                 overridden_kinds.insert(kind.name.clone());
             }
         }
-        let id_pat = format!("(?P<id>(?:{}))", detection_patterns.join("|"));
+        // §FS-config-v2.defaults.1: a v2 file with no citable row has no kinds, so
+        // its ID pattern is one that never matches (`\b\B`), not an empty one.
+        let detection = if detection_patterns.is_empty() {
+            r"\b\B".to_string()
+        } else {
+            detection_patterns.join("|")
+        };
+        let id_pat = format!("(?P<id>(?:{detection}))");
         let literals: Vec<&String> = elements
             .iter()
             .filter_map(|element| match element {
