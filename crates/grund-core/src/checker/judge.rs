@@ -6,7 +6,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agents::check_agents_block_version;
-use super::citations::{check_citation_obligations, check_citation_prohibitions};
+use super::citation_prohibitions::check_citation_prohibitions;
+use super::citations::check_citation_obligations;
 use super::grounding::check_grounding;
 use super::homes::KindHomeIndex;
 use super::index::check_kind_indexes;

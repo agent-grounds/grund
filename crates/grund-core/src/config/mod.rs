@@ -62,6 +62,7 @@ mod run_warnings;
 mod scope_roots;
 mod slots;
 mod v1;
+mod v2;
 mod validate;
 mod workspace_block;
 
@@ -88,7 +89,8 @@ pub use point_sizes::{LeadSizeWarning, PointSizeUnit};
 #[allow(unused_imports)]
 pub use project::{
     CitationSyntax, Citations, FmtPresentation, Grounding, IdGrammar, KindGrounding, Members,
-    NoteStyle, OutputPresentation, Presentation, Project, Rules, Schema, Sources,
+    NoteStyle, OutputPresentation, Presentation, Project, Rules, Rung, Schema, Sources, Strength,
+    Threshold,
 };
 pub use record::{AbsentOptionalNamespace, Config, ConfigLocation, ShorthandPolicy};
 #[allow(unused_imports)]
@@ -108,6 +110,7 @@ pub(crate) use discovery::{
 pub(crate) use fmt_block::fmt_excluded;
 pub(crate) use grounding::{
     any_place_grounded, grounding_level_for_kind, homeless_row_grounding, row_grounding,
+    soft_grounding_rungs,
 };
 pub(crate) use kind::escape_toml_basic;
 pub(crate) use point_sizes::measure_point_text;
@@ -157,6 +160,8 @@ mod tests_scan_demand;
 mod tests_scan_exclude;
 #[cfg(test)]
 mod tests_slots;
+#[cfg(test)]
+mod tests_v2_lowering;
 #[cfg(test)]
 mod tests_v2_reader;
 #[cfg(test)]

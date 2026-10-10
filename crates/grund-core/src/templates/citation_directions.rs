@@ -184,6 +184,14 @@ fn citation_direction_clauses(project: &Project, rules: &KindCitationRules) -> O
     if !rules.must.is_empty() {
         clauses.push(format!("must cite {}", citation_rule_targets(&rules.must)));
     }
+    // §FS-config-v2.rules.strengths: `warn` is the `must` obligation on the
+    // warning channel, so it is rendered as one, marked with its channel.
+    if !rules.warn.is_empty() {
+        clauses.push(format!(
+            "must cite {} (a warning)",
+            citation_rule_targets(&rules.warn)
+        ));
+    }
     if !rules.should.is_empty() {
         clauses.push(format!(
             "should cite {}",
@@ -207,6 +215,17 @@ fn citation_direction_clauses(project: &Project, rules: &KindCitationRules) -> O
             "never cite"
         };
         clauses.push(format!("{verb} {}", citation_rule_targets(&rules.must_not)));
+    }
+    if !rules.warn_not.is_empty() {
+        let verb = if clauses.is_empty() {
+            "must not cite"
+        } else {
+            "never cite"
+        };
+        clauses.push(format!(
+            "{verb} {} (a warning)",
+            citation_rule_targets(&rules.warn_not)
+        ));
     }
     if !rules.should_not.is_empty() {
         let verb = if clauses.is_empty() {
@@ -237,6 +256,7 @@ fn citation_permission_is_closed(rules: &KindCitationRules) -> bool {
     rules.default == Some(CitationLevel::MustNot)
         && !rules.may.is_empty()
         && rules.must.is_empty()
+        && rules.warn.is_empty()
         && rules.should.is_empty()
 }
 
@@ -258,7 +278,9 @@ fn citation_default_clause(
         CitationLevel::MustNot => Some(format!("never cite {anything}")),
         CitationLevel::ShouldNot if first => Some(format!("should not cite {anything}")),
         CitationLevel::ShouldNot => Some(format!("avoid citing {anything}")),
-        CitationLevel::May | CitationLevel::Must | CitationLevel::Should => {
+        CitationLevel::WarnNot if first => Some(format!("must not cite {anything} (a warning)")),
+        CitationLevel::WarnNot => Some(format!("never cite {anything} (a warning)")),
+        CitationLevel::May | CitationLevel::Must | CitationLevel::Warn | CitationLevel::Should => {
             citation_default_is_closed(project.rules.citations.global_default)
                 .then(|| format!("may cite {anything}"))
         }
@@ -275,6 +297,9 @@ fn citation_closing_line(global_default: Option<CitationLevel>) -> String {
         Some(CitationLevel::ShouldNot) => {
             "Any citation not listed above is discouraged.".to_string()
         }
+        Some(CitationLevel::WarnNot) => {
+            "Any citation not listed above is reported as a warning.".to_string()
+        }
         _ => "Anything not listed above is allowed.".to_string(),
     }
 }
@@ -284,7 +309,7 @@ fn citation_closing_line(global_default: Option<CitationLevel>) -> String {
 fn citation_default_is_closed(level: Option<CitationLevel>) -> bool {
     matches!(
         level,
-        Some(CitationLevel::MustNot | CitationLevel::ShouldNot)
+        Some(CitationLevel::MustNot | CitationLevel::WarnNot | CitationLevel::ShouldNot)
     )
 }
 

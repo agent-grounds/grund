@@ -15,8 +15,8 @@ use std::path::Path;
 use super::homes::{DeclarationHome, KindHomeIndex};
 use super::obligation_units::ObligationUnit;
 use crate::config::{
-    DEFAULT_GROUNDING_LEVEL, Frame, Row, Rules, Schema, any_place_grounded,
-    grounding_level_for_kind, homeless_row_grounding, row_grounding,
+    DEFAULT_GROUNDING_LEVEL, Frame, Row, Rules, Schema, Strength, any_place_grounded,
+    grounding_level_for_kind, homeless_row_grounding, row_grounding, soft_grounding_rungs,
 };
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, FileStructure};
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
@@ -90,11 +90,8 @@ pub(super) fn check_grounding(
 
     for file in &findings.scanned_files {
         let home = kind_homes.unique_decl_home_for_file(file);
-        let Some((require, level)) = governing_grounding(rules, schema, frame, home.as_ref(), file)
-        else {
-            continue;
-        };
-        if !require {
+        let rungs = governing_rungs(rules, schema, frame, home.as_ref(), file);
+        if rungs.is_empty() {
             continue;
         }
         let place = home
@@ -110,50 +107,85 @@ pub(super) fn check_grounding(
             Some(_) => none,
             None => declared.get(file.as_path()).map_or(none, Vec::as_slice),
         };
-        for unit in grounding_units(findings.file_structure.get(file), level) {
-            if cited_lines
-                .iter()
-                .chain(declared_lines)
-                .any(|line| unit.start <= *line && *line <= unit.end)
-            {
-                continue;
+        // §FS-config-v2.rules.grounding: rungs run strongest first, and a unit a
+        // stronger rung already reported is not reported again by a finer one.
+        let mut reported: Vec<(usize, usize)> = Vec::new();
+        for (channel, level) in rungs {
+            for unit in grounding_units(findings.file_structure.get(file), level) {
+                if reported.contains(&(unit.start, unit.end))
+                    || cited_lines
+                        .iter()
+                        .chain(declared_lines)
+                        .any(|line| unit.start <= *line && *line <= unit.end)
+                {
+                    continue;
+                }
+                reported.push((unit.start, unit.end));
+                let target = match channel {
+                    Strength::Must => &mut report.errors,
+                    Strength::Warn => &mut report.warnings,
+                    _ => &mut report.suggestions,
+                };
+                target.push(Diagnostic {
+                    code: "ungrounded",
+                    path: Some(file.clone()),
+                    line: Some(unit.start),
+                    column: None,
+                    message: format!(
+                        "{}: no {} citation to a declared ID",
+                        ungrounded_subject(&unit, place.as_deref()),
+                        schema.citation.marker
+                    ),
+                    sites: Vec::new(),
+                    authority: Vec::new(),
+                });
             }
-            report.errors.push(Diagnostic {
-                code: "ungrounded",
-                path: Some(file.clone()),
-                line: Some(unit.start),
-                column: None,
-                message: format!(
-                    "{}: no {} citation to a declared ID",
-                    ungrounded_subject(&unit, place.as_deref()),
-                    schema.citation.marker
-                ),
-                sites: Vec::new(),
-                authority: Vec::new(),
-            });
         }
     }
 }
 
-/// The effective `(require_grounding, grounding_level)` for the row that governs
-/// `file`, or `None` when no row does (§FS-check.3.6.1). Three predicates, which
-/// are §FS-check.3.6's own: a non-citable home governs every scanned file in it,
-/// a citable folder home governs the source files in it, and the homeless kind
-/// governs the source files no single home claims.
-fn governing_grounding(
+/// The rungs that ask `file` for citations, strongest first: the governing
+/// row's effective pair as the `must` rung where it requires grounding, then
+/// the v2 rungs below it (§FS-config-v2.rules.grounding). Empty where no row
+/// governs the file or nothing grounds it; a v1 config has the pair alone.
+fn governing_rungs(
     rules: &Rules,
     schema: &Schema,
     frame: Frame<'_>,
     home: Option<&DeclarationHome<'_>>,
     file: &Path,
-) -> Option<(bool, usize)> {
+) -> Vec<(Strength, usize)> {
+    let Some((name, (require, level))) = governing_grounding(rules, schema, frame, home, file)
+    else {
+        return Vec::new();
+    };
+    require
+        .then_some((Strength::Must, level))
+        .into_iter()
+        .chain(soft_grounding_rungs(rules, name))
+        .collect()
+}
+
+/// The row that governs `file`, by name, and its effective
+/// `(require_grounding, grounding_level)`, or `None` when no row does
+/// (§FS-check.3.6.1). Three predicates, which are §FS-check.3.6's own: a
+/// non-citable home governs every scanned file in it, a citable folder home
+/// governs the source files in it, and the homeless kind governs the source
+/// files no single home claims.
+fn governing_grounding<'a>(
+    rules: &Rules,
+    schema: &'a Schema,
+    frame: Frame<'_>,
+    home: Option<&DeclarationHome<'_>>,
+    file: &Path,
+) -> Option<(&'a str, (bool, usize))> {
     let is_markdown = file.extension().and_then(|ext| ext.to_str()) == Some("md");
     let row_of = |kind: &str| {
         schema
             .rows
             .iter()
             .find(|row| row.name == kind)
-            .map(|row| row_grounding(rules, frame.run, &row.name))
+            .map(|row| (row.name.as_str(), row_grounding(rules, frame.run, &row.name)))
     };
     match home {
         Some(home) if !home.citable => row_of(home.kind),
@@ -162,7 +194,10 @@ fn governing_grounding(
         // rather than an extension.
         _ if is_markdown => None,
         Some(home) => row_of(home.kind),
-        None => Some(homeless_row_grounding(schema, rules, frame.run)),
+        None => Some((
+            schema.complement_name(),
+            homeless_row_grounding(schema, rules, frame.run),
+        )),
     }
 }
 

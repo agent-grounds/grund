@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use super::compiled::compile;
 use super::record::Config;
 use super::run::Run;
-use super::{v1, validate};
+use super::{v1, v2, validate};
 use crate::model::{format_path, relative_from_base};
 
 /// The two names one directory may hold its config under, in probe order
@@ -220,14 +220,26 @@ fn defaults_under(run: &Run) -> Config {
 /// of the version that spelled it, judged once (§AR-config.4), and compiled
 /// (§AR-config.1.5). `report_path` is the path every error names.
 ///
-/// The steps interleave in v1's order, so a file with several errors reports
-/// the first one it always did (§AR-config.4): the `[reference]` meanings, then
-/// the `[[kinds]]` refusals and the kind table, then the grammar, then the
-/// member lists and `[citations]`.
+/// The file's own `grund_config_version` selects its reader (§FS-config.5):
+/// an explicit `2` the v2 reader, anything else v1, which refuses a version it
+/// does not know. The steps interleave in v1's order, so a file with several
+/// errors reports the first one it always did (§AR-config.4): the `[reference]`
+/// meanings, then the `[[kinds]]` refusals and the kind table, then the grammar,
+/// then the member lists and `[citations]`. The v2 reader has refused every
+/// spelling before the shared judgement starts (§FS-config-v2.reader.4).
 fn read_config(read_path: &Path, report_path: &Path, root: &Path, run: &Run) -> Result<Config> {
-    let read = v1::read_sections(read_path, report_path)?;
-    validate::reference(report_path, &read.project)?;
-    let project = read.lower_kinds(report_path, root)?;
+    // §FS-check.6.1.1: cover this effective input before its shared read.
+    let text = super::input_read_to_string(read_path)
+        .with_context(|| format!("read {}", format_path(report_path)))?;
+    let project = if v2::selects(&text) {
+        let project = v2::read(&text, report_path)?;
+        validate::reference(report_path, &project)?;
+        project
+    } else {
+        let read = v1::read_sections(&text, report_path)?;
+        validate::reference(report_path, &read.project)?;
+        read.lower_kinds(report_path, root)?
+    };
     validate::kinds(report_path, &project)?;
     let compiled = compile(&project)
         .with_context(|| format!("{}: invalid [id] grammar", format_path(report_path)))?;

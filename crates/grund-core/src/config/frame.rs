@@ -27,6 +27,10 @@ pub struct Frame<'a> {
     /// The alias a workspace run checks this project under, `None` outside one
     /// (§FS-workspace.8.1): a finding spells its own coordinate qualified by it.
     pub alias: Option<&'a str>,
+    /// The format version that spelled the project's file (§FS-config.5): a
+    /// finding that names a config table spells it the way that file does
+    /// (§FS-config-v2.rules.citations).
+    pub version: u32,
     /// How this run's report spells a path — the report root's, which in a
     /// workspace is not this project's (§FS-workspace.8.1).
     pub display: Display<'a>,

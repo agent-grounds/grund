@@ -21,14 +21,34 @@ use super::workspace_block::{INVALID_ALIAS_PATH_EXPECTED, invalid_alias_path_seg
 use crate::model::format_path;
 
 /// One RFC-2119 level a `[citations]` rule entry can carry (§FS-config.3.9.1,
-/// §DF-citation-directions.2.1).
+/// §DF-citation-directions.2.1). `Warn` and `WarnNot` are v2's: the `must`
+/// and `must-not` findings on the warning channel (§FS-config-v2.rules.strengths),
+/// which the v1 reader never produces.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum CitationLevel {
     Must,
+    Warn,
     Should,
     May,
     ShouldNot,
+    WarnNot,
     MustNot,
+}
+
+impl CitationLevel {
+    /// The key the level is written as, in either version (§FS-config.3.9.1,
+    /// §FS-config-v2.rules.citations).
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Must => "must",
+            Self::Warn => "warn",
+            Self::Should => "should",
+            Self::May => "may",
+            Self::ShouldNot => "should-not",
+            Self::WarnNot => "warn-not",
+            Self::MustNot => "must-not",
+        }
+    }
 }
 
 /// How a rule entry's namespace qualifier matches a citation's namespace
@@ -63,10 +83,30 @@ pub struct CitationDisjunction {
 pub struct KindCitationRules {
     pub default: Option<CitationLevel>,
     pub must: Vec<CitationDisjunction>,
+    /// v2's `warn` list (§FS-config-v2.rules.citations); empty in v1.
+    pub warn: Vec<CitationDisjunction>,
     pub should: Vec<CitationDisjunction>,
     pub may: Vec<CitationDisjunction>,
     pub should_not: Vec<CitationDisjunction>,
+    /// v2's `warn-not` list (§FS-config-v2.rules.citations); empty in v1.
+    pub warn_not: Vec<CitationDisjunction>,
     pub must_not: Vec<CitationDisjunction>,
+}
+
+impl KindCitationRules {
+    /// Every list with its level, strongest obligation first — the order a
+    /// citation site is matched in (§FS-config.3.9.4).
+    pub fn lists(&self) -> [(CitationLevel, &[CitationDisjunction]); 7] {
+        [
+            (CitationLevel::Must, &self.must),
+            (CitationLevel::Warn, &self.warn),
+            (CitationLevel::Should, &self.should),
+            (CitationLevel::May, &self.may),
+            (CitationLevel::ShouldNot, &self.should_not),
+            (CitationLevel::WarnNot, &self.warn_not),
+            (CitationLevel::MustNot, &self.must_not),
+        ]
+    }
 }
 
 /// The parsed `[citations]` section (§FS-config.3.9): the global default level
@@ -137,8 +177,11 @@ fn invalid_citation_target_message(token: &str, qualifier: &str, kind: &str) -> 
 /// (§FS-config.3.9.5): every citing kind is a configured kind or `code`, every
 /// target names a *citable* configured kind, and no two targets of the same
 /// cited kind whose namespace matchers overlap sit at different levels.
+/// `table` is the spelling the messages name the rules by: `citations` in v1,
+/// `rules.citations` in v2 (§FS-config-v2.rules.citations).
 pub(super) fn validate_citation_rules(
     path: &Path,
+    table: &str,
     kinds: &[KindConfig],
     citations: &CitationRules,
 ) -> Result<()> {
@@ -154,7 +197,7 @@ pub(super) fn validate_citation_rules(
     for (citing, rules) in &citations.per_kind {
         if !citing_known.contains(citing.as_str()) {
             return Err(anyhow!(
-                "{}: [citations.{citing}] names an unknown kind `{citing}`",
+                "{}: [{table}.{citing}] names an unknown kind `{citing}`",
                 format_path(path)
             ));
         }
@@ -163,21 +206,15 @@ pub(super) fn validate_citation_rules(
         // level up — so the config is refused where it makes the promise.
         if kinds.iter().any(|k| k.kind == *citing && !k.scan) {
             return Err(anyhow!(
-                "{}: [citations.{citing}] names an unwalked kind `{citing}` (its home is `scan = false`, so no file in it is checked and the rule could never fire)",
+                "{}: [{table}.{citing}] names an unwalked kind `{citing}` (its home is `scan = false`, so no file in it is checked and the rule could never fire)",
                 format_path(path)
             ));
         }
         // Flatten every target with the level it was declared at, rejecting any
         // that names an unconfigured kind on the way.
         let mut targets: Vec<(&'static str, &CitationTarget)> = Vec::new();
-        let levels: [(&'static str, &[CitationDisjunction]); 5] = [
-            ("must", &rules.must),
-            ("should", &rules.should),
-            ("may", &rules.may),
-            ("should-not", &rules.should_not),
-            ("must-not", &rules.must_not),
-        ];
-        for (level_name, disjunctions) in levels {
+        for (level, disjunctions) in rules.lists() {
+            let level_name = level.as_str();
             for disjunction in disjunctions {
                 for target in &disjunction.targets {
                     if !known.contains(target.kind.as_str()) {
@@ -190,7 +227,7 @@ pub(super) fn validate_citation_rules(
                             "an unknown target kind"
                         };
                         return Err(anyhow!(
-                            "{}: [citations.{citing}] {level_name} names {why} `{}`",
+                            "{}: [{table}.{citing}] {level_name} names {why} `{}`",
                             format_path(path),
                             target.kind
                         ));
@@ -209,7 +246,7 @@ pub(super) fn validate_citation_rules(
                     && namespaces_overlap(&a.namespace, &b.namespace)
                 {
                     return Err(anyhow!(
-                        "{}: [citations.{citing}] `{}` ({level_a}) and `{}` ({level_b}) overlap (a citation matching both has no single level)",
+                        "{}: [{table}.{citing}] `{}` ({level_a}) and `{}` ({level_b}) overlap (a citation matching both has no single level)",
                         format_path(path),
                         render_citation_target(a),
                         render_citation_target(b)
@@ -226,7 +263,7 @@ pub(super) fn validate_citation_rules(
 /// two matchers overlap only when identical — both local, or the same pinned
 /// alias. A local matcher and a pinned-alias matcher are disjoint, so permitting
 /// a local kind while forbidding one member's same kind is allowed.
-fn namespaces_overlap(a: &NamespaceMatch, b: &NamespaceMatch) -> bool {
+pub(super) fn namespaces_overlap(a: &NamespaceMatch, b: &NamespaceMatch) -> bool {
     match (a, b) {
         (NamespaceMatch::Any, _) | (_, NamespaceMatch::Any) => true,
         (NamespaceMatch::Local, NamespaceMatch::Local) => true,

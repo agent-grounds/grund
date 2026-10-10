@@ -67,7 +67,7 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 ///
 /// - Input: the loaded `Catalog` from the resolver, the `Schema` and `Rules`
 ///   records of §AR-config.1.2, the `Expected` bytes of §AR-checker.1.3, and a
-///   `Frame { run, compiled, name, alias, display }` carrying the `Run` and `Compiled`
+///   `Frame { run, compiled, name, alias, version, display }` carrying the `Run` and `Compiled`
 ///   of §AR-config.1.5, which are not concerns. Chapter-rule `Diagnostic`s
 ///   arrive from §AR-rules after the driver. No input is the `Config` façade
 ///   (§AR-config.5) and none is `Presentation`.

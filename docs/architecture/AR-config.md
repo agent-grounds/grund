@@ -309,3 +309,69 @@ and a `Value` kind yields one — its value chapter as a `Named` handle with
 kind's value shape through `slots()` ([§AR-checker.1.1](../../crates/grund-core/src/checker/report.rs)), and a field model added to
 the kind is yielded by the same method in the order it was declared, so the
 checks and a schema view read one sequence.
+
+## 7. The v2 reader
+
+`config/v2/` reads a file that writes `grund_config_version = 2`
+([§FS-config-v2](../functional-spec/FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults)) and lowers it into the same `Project`, so nothing above
+`config/` learns there is a second spelling. Discovery reads the text once and
+asks `v2::selects` whether it writes version 2 before any table; the v2 reader
+and the v1 reader then share only what runs after lowering: `validate`,
+`compile` and the façade (section 4). The v2 reader shares no spelling check
+with v1, because its keys, tables and messages are its own ([§FS-config-v2.reader](../functional-spec/FS-config-v2.md#reader-the-reader)).
+
+### 7.1 One walk, one concern per file
+
+The reader is a single pass over the lines, in `walk.rs`. A header opens the
+table `tables.rs` names, or is refused there: an unknown table, an array of
+tables, a strength key written as a table ([§FS-config-v2.reader.3](../functional-spec/FS-config-v2.md#reader3-one-setting-one-form)), or a clause
+this grund does not execute yet ([§FS-config-v2.rollout](../functional-spec/FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses)). A key is read the
+moment it is met, by the file of its concern: `schema.rs` and `measures.rs`
+for `[schema.*]`, `rules.rs` for `[rules.*]`, and `presentation.rs` for
+`[presentation.*]` and `[workspace]`. A key the table's handler does not admit
+is `unknown key`, and a repeated header or key is refused at its second line
+([§FS-config-v2.reader.1](../functional-spec/FS-config-v2.md#reader1-tables-and-keys-are-closed), [§FS-config-v2.reader.2](../functional-spec/FS-config-v2.md#reader2-every-row-and-field-is-written-under-its-own-header)). Because every key is judged
+where it is written, the first refusal reported is the first one in the file
+([§FS-config-v2.reader.4](../functional-spec/FS-config-v2.md#reader4-order-and-location-are-kept)).
+
+### 7.2 What waits for a table, and what waits for the file
+
+A check that reads several keys of one table runs when the table closes: a
+measure's thresholds ordered against each other and against the epoch's `must`
+([§FS-config-v2.schema.measures](../functional-spec/FS-config-v2.md#schemameasures-measures-are-tables-strengths-are-keys)), a ladder's rungs ([§FS-config-v2.rules.grounding](../functional-spec/FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole)),
+and two citation lists that can match one citation
+([§FS-config-v2.rules.citations](../functional-spec/FS-config-v2.md#rulescitations-rulescitations)). A check that reads several tables runs in
+`finish.rs` once the walk ends: a row's keys together, one row's place inside
+another's, a ladder, resolution entry or title naming its row, and the omitted
+language set ([§FS-config-v2.defaults.2](../functional-spec/FS-config-v2.md#defaults2-the-language-set-is-fixed-before-it-is-executed)). Each is kept with the line it is
+about, and the earliest is reported.
+
+### 7.3 The lowering
+
+The v2 epoch is a literal `Project` in `defaults.rs`, written out rather than
+inherited from v1 ([§FS-config-v2.defaults.1](../functional-spec/FS-config-v2.md#defaults1-what-v2-fixes)). Each key overwrites the field
+section 3.1 names for its v1 counterpart, and `warn` and `warn-not` fill the
+fields the warning channel reads, beside `must` and `should`
+([§FS-config-v2.rules.strengths](../functional-spec/FS-config-v2.md#rulesstrengths-one-strength-vocabulary-two-severities)):
+
+| v2 spelling | Record |
+|---|---|
+| `[schema.kinds.<NAME>]` | one `Row`, in authored order; `citable = false` leaves `kind` empty |
+| the rows' scanned places | `schema.sources.include`, or the config root when no row has a place |
+| `[schema.notes.lines]` | `must` → `max_lines`; the weakest softer threshold → `suggested_lines`, warning when it is `warn`; the rest kept as thresholds |
+| `[schema.notes.columns]` | `must` → `max_columns`; the rest kept as thresholds |
+| `[schema.leads.words]` | `warn` → `leads`; the rest kept as thresholds |
+| `[rules.citations.<KIND>]` | the seven lists of `KindCitationRules`, `warn` and `warn-not` included |
+| `[rules.citations.grounding]`, `[rules.citations.<NAME>.grounding]` | the ladder, whole; its `must` rung is the effective `require` and `level` pair |
+| `fetch`, `[rules.resolution]` | `Origin::External`, and the kind's resolution, `must` unless `warn` |
+
+A state version 2 does not spell keeps its v1 record value, so a v1 file means
+what it meant ([§FS-config-v2.mapping](../functional-spec/FS-config-v2.md#mapping-what-the-records-keep-apart)).
+
+### 7.4 Writing it back
+
+`Project::v2_toml` in `render.rs` is what `grund config show` prints for a v2
+project: every effective value under the table of its concern, in a fixed
+order, which loads back as v2 to the same records ([§FS-config.4.2](../functional-spec/FS-config.md#42-grund-config-show-path)). It returns
+nothing for a v1 project, whose output stays the bytes it always was; writing a
+v1 file in v2 spelling is migration and not this reader's.

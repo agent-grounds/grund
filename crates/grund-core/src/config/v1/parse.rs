@@ -11,7 +11,7 @@
 //! (§AR-core-module-layout.1). Only spelling is refused here; what a lowered
 //! project means is judged once, in `config/validate.rs` (§AR-config.4).
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::path::Path;
 
 use super::citations::parse_citation_entry;
@@ -34,13 +34,10 @@ use crate::model::format_path;
 /// declared no table, so their refusals keep v1's place in the error order
 /// (§AR-config.4).
 pub(super) fn parse_config_file(
-    read_path: &Path,
+    text: &str,
     report_path: &Path,
     project: &mut Project,
 ) -> Result<Option<Vec<ParsedKind>>> {
-    // §FS-check.6.1.1: cover this effective input before its shared read.
-    let text = crate::config::input_read_to_string(read_path)
-        .with_context(|| format!("read {}", format_path(report_path)))?;
     // Everything below reports problems against the stable relative path.
     let path = report_path;
     let mut section = String::new();
@@ -124,7 +121,7 @@ pub(super) fn parse_config_file(
                         line_no,
                         format!(
                             "unsupported config version `{value}` \
-                             (this grund understands grund_config_version = 1; \
+                             (this grund understands grund_config_version = 1 or 2; \
                              upgrade grund if the config is newer)"
                         ),
                     )?;

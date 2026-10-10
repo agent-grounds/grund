@@ -12,6 +12,21 @@ five levels use two rule classes and two enforcement surfaces, as specified by
 | `should-not` | prohibition | citation site | `--suggestions` and the generated entrypoint |
 | `must-not` | prohibition | citation site | `grund check` error, and the generated entrypoint |
 
+A version-2 config ([the v2 rules concern](https://github.com/agent-grounds/grund/blob/main/docs/functional-spec/FS-config-v2.md#rules-the-rules-concern))
+writes the same lists under `[rules.citations.<KIND>]`, with two more levels:
+`warn` is the `must` obligation and `warn-not` the `must-not` prohibition,
+each reported as a standing warning that leaves the exit code at 0. A v2
+`default` may forbid, as `should-not`, `warn-not` or `must-not`, but never
+obliges: `default = "must"` is refused.
+
+```toml
+grund_config_version = 2
+
+[rules.citations.FS]
+warn = ["GOAL|FS"]
+must-not = ["AR"]
+```
+
 The grammar is: entries in one array are all required, while `|` inside one
 entry means any one of its alternatives. Therefore `must = ["FS|GOAL"]`
 requires a citation to either `FS` or `GOAL`, whereas `must = ["FS", "GOAL"]`

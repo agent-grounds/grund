@@ -114,3 +114,38 @@ snapshot is a warning with the fetch command, while `must` remains an error.
 See the [external facts guide](../user-facing/external-facts.md) and runnable
 [`examples/external-tickets/`](../../examples/external-tickets/) repository
 ([§FS-fetch](../functional-spec/FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot)).
+
+## Write the config in version 2
+
+A `grund.toml` that writes `grund_config_version = 2` is spelled by concern:
+`[schema]` says what exists, `[rules]` how it must relate, and `[presentation]`
+which bytes `grund` writes. Every constraint takes one strength from `must`,
+`warn`, `should` and `may`, so a rule can be adopted as a standing warning and
+promoted to an error later without changing its spelling:
+
+```toml
+grund_config_version = 2
+project_name = "example"
+
+[schema.sources]
+languages = ["markdown"]
+
+[schema.kinds.FS]
+files = ["requirements.md"]
+
+[schema.kinds.GOAL]
+files = ["docs/goals.md"]
+
+[rules.citations.FS]
+warn = ["GOAL"]
+
+[rules.citations.grounding]
+warn = "file"
+```
+
+Each row is its own `[schema.kinds.<NAME>]` table, and a key is read only in
+the table written above it. Its defaults are fixed by the version rather than
+by the binary, and a version-1 file keeps its meaning unchanged.
+`grund config show` prints a version-2 file back in version-2 spelling. What
+this release reads, and the clauses it still refuses, are in
+[§FS-config-v2](../functional-spec/FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults).

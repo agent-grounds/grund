@@ -114,3 +114,14 @@ pub(crate) fn id_grammar_key_slash_error(key: &str, value: &str) -> Option<Strin
         _ => None,
     }
 }
+
+/// §FS-config-v2.schema.1: the same `/` rule for the v2 `[schema]` grammar keys,
+/// each named the way v2 spells it, so a v2 refusal never names a v1 table.
+pub(crate) fn id_grammar_v2_slash_error(key: &str, value: &str) -> Option<String> {
+    let label = format!("[schema] {key}");
+    match key {
+        "id_format" | "section_separator" => id_grammar_literal_slash_error(&label, value),
+        "number_pattern" | "slug_pattern" => id_grammar_pattern_slash_error(&label, value),
+        _ => None,
+    }
+}

@@ -98,6 +98,8 @@ fn section_heading_note(project: &Project, marker: &str) -> String {
         let verdict = match ids.section_heading_levels.as_str() {
             "strict" => "an error",
             "warn" => "a warning",
+            // §FS-config-v2.schema.1: `heading_depth = "should"`.
+            "suggest" => "a suggestion",
             _ => "recommended for readability",
         };
         return format!(

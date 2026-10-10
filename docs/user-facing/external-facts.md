@@ -49,6 +49,24 @@ Omitting `resolve` from a fetch-enabled kind means `must`; `resolve` without
 `fetch` and `resolve = "may"` are invalid. No check or editor action fetches
 implicitly ([§FS-check.4.12](../functional-spec/FS-check.md#412-missing-snapshot)).
 
+A version-2 config spells the same kind as a row and its resolution as a rule
+([§FS-config-v2.rules.resolution](../functional-spec/FS-config-v2.md#rulesresolution-rulesresolution)).
+A fetched kind is `must` unless `[rules.resolution]` says `warn`, which is the
+version-1 `should`:
+
+```toml
+[schema.kinds.TICKET]
+files = ["docs/tickets.md"]
+id_format = "{kind}-{number}"
+fetch = "scripts/fetch-ticket"
+
+[rules.resolution]
+TICKET = "warn"
+
+[presentation.kinds.TICKET]
+title = "External tickets (generated snapshots)"
+```
+
 In a workspace, qualify the ID to select the owning project:
 
 ```sh
