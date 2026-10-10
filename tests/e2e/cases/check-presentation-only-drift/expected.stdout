@@ -1,0 +1,7 @@
+AGENTS.md:3: error: repo maintenance: stale grund init block: chapter rules differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
+CLAUDE.md:3: error: repo maintenance: stale grund init block: chapter rules differ from grund.toml — run `grund init` to refresh (does not affect citation validity)
+docs/functional-spec/FS-signin.md:3: error: unknown reference GOAL-missing
+docs/functional-spec/FS-signout.md:1: error: FS-signout has 0 Terms chapters; RULE-glossary-chapter requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none
+src/parse.rs:1: error: FS-token-parse has 0 Terms chapters; RULE-glossary-chapter requires exactly one; expected display name "Terms" (case-insensitive, not section handle); observed direct chapters: none
+docs/functional-spec/FS-signout.md:1: warning: declared but never cited: FS-signout
+docs/rules/RULE-glossary-chapter.md:1: warning: declared but never cited: RULE-glossary-chapter

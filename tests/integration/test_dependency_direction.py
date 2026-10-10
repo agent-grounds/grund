@@ -65,14 +65,29 @@ RECORDED_DEBT = {}
 # and one that stops naming it leaves the list, so the list only shrinks.
 CONFIG_FACADE = {
     "api",
-    "checker",
     "config",
     "queries",
-    "resolver",
-    "scanner",
     "workspace",
     "writers",
 }
+
+# agent-grounds/grund#454: off CONFIG_FACADE once the checker splits (§AR-config.5).
+# Until then the list tests read them as on it; the change that takes them off
+# deletes this set and the expectedFailure on the test that says they are off.
+LEAVING_WITH_454 = {"checker", "resolver", "scanner"}
+
+# §AR-system.4's concern ledger: `Rules` in no scanner or node-local checker file
+# (§AR-checker.1.1); `Presentation` in no checker file, and in the scanner and the
+# resolver only in the two files handed it explicitly.
+RULES_NAME = re.compile(r"\bRules\b")
+PRESENTATION_NAME = re.compile(r"\bPresentation\b")
+CONFORM_FILES = (
+    "checker/inline_style.rs",
+    "checker/near_miss.rs",
+    "checker/sections.rs",
+    "checker/sizes.rs",
+)
+PRESENTATION_HANDED = ("resolver/link_targets.rs", "scanner/agent_entrypoints.rs")
 
 # The façade by name: the type, not `KindConfig` or a word inside a longer one.
 CONFIG_NAME = re.compile(r"\bConfig\b")
@@ -262,11 +277,17 @@ class ConfigFacadeTests(unittest.TestCase):
         )
 
     def test_no_component_off_the_list_names_config(self):
-        self.assertEqual([], sorted(components_naming_config() - CONFIG_FACADE))
+        self.assertEqual([], sorted(components_naming_config() - CONFIG_FACADE - LEAVING_WITH_454))
 
     def test_every_component_on_the_list_still_names_config(self):
         """Remove a component from CONFIG_FACADE in the change that moves it off."""
         self.assertEqual([], sorted(CONFIG_FACADE - components_naming_config()))
+
+    # agent-grounds/grund#454: lands failing, one commit before the split.
+    @unittest.expectedFailure
+    def test_the_checker_resolver_and_scanner_name_no_config(self):
+        """§AR-config.5: the split hands each of them records, not the façade."""
+        self.assertEqual([], sorted(components_naming_config() & LEAVING_WITH_454))
 
     def test_no_config_field_is_written_outside_config(self):
         """A per-run change is made to the `Run`, and the façade is rebuilt from it."""
@@ -279,6 +300,77 @@ class ConfigFacadeTests(unittest.TestCase):
                 relative = path.relative_to(CORE).as_posix()
                 writes.extend(f"{relative}:{line} writes {write}" for line, write in config_writes(_code(path), fields))
         self.assertEqual([], writes)
+
+
+def _names(pattern, component, skip=()):
+    """`file:line` for every code line of `component` naming `pattern`."""
+    hits = []
+    for path in _implementation_files(component):
+        relative = path.relative_to(CORE).as_posix()
+        if relative in skip:
+            continue
+        for number, line in enumerate(_code(path).splitlines(), 1):
+            if pattern.search(line):
+                hits.append(f"{relative}:{number}")
+    return hits
+
+
+def _signature(name):
+    """The parameter list of `fn <name>(…)` under checker/, or None."""
+    for path in _implementation_files("checker"):
+        match = re.search(rf"\bfn {name}\s*(?:<[^>]*>)?\(([^)]*)\)", _code(path), re.S)
+        if match:
+            return match.group(1)
+    return None
+
+
+class ConcernLedgerTests(unittest.TestCase):
+    """§AR-system.4: a stage that is not handed a concern cannot read it
+    (§DA-config-concern-records.2.3)."""
+
+    maxDiff = None
+
+    def test_the_scanner_names_no_rules(self):
+        self.assertEqual([], _names(RULES_NAME, "scanner"))
+
+    def test_the_node_local_checks_name_no_rules(self):
+        hits = []
+        for file in CONFORM_FILES:
+            path = CORE / file
+            hits.extend(f"{file}:{n}" for n, line in enumerate(_code(path).splitlines(), 1) if RULES_NAME.search(line))
+        self.assertEqual([], hits)
+
+    def test_the_checker_names_no_presentation(self):
+        self.assertEqual([], _names(PRESENTATION_NAME, "checker"))
+
+    def test_presentation_is_named_below_the_writers_only_where_handed(self):
+        hits = _names(PRESENTATION_NAME, "scanner", PRESENTATION_HANDED)
+        hits += _names(PRESENTATION_NAME, "resolver", PRESENTATION_HANDED)
+        self.assertEqual([], hits)
+
+    # agent-grounds/grund#454: lands failing, one commit before the split.
+    @unittest.expectedFailure
+    def test_link_targets_and_surface_reach_are_handed_presentation(self):
+        """§AR-resolver.6, §AR-scanner.7: each takes `&Presentation` explicitly."""
+        missing = [file for file in PRESENTATION_HANDED if not PRESENTATION_NAME.search(_code(CORE / file))]
+        self.assertEqual([], missing)
+
+    # agent-grounds/grund#454: lands failing, one commit before the split.
+    @unittest.expectedFailure
+    def test_conform_and_judge_are_handed_their_concerns_only(self):
+        """§AR-checker.1.1, §AR-checker.1.2: conform names no `Rules` and no
+        `Presentation`; judge names `Rules`, `Schema` and `Expected`, and no
+        `Presentation`."""
+        conform, judge = _signature("conform"), _signature("judge")
+        self.assertIsNotNone(conform, "no `fn conform(` under checker/")
+        self.assertIsNotNone(judge, "no `fn judge(` under checker/")
+        self.assertIn("Schema", conform)
+        for name in ("Rules", "Presentation", "Config"):
+            self.assertNotRegex(conform, rf"\b{name}\b")
+        for name in ("Rules", "Schema", "Expected"):
+            self.assertRegex(judge, rf"\b{name}\b")
+        for name in ("Presentation", "Config"):
+            self.assertNotRegex(judge, rf"\b{name}\b")
 
 
 if __name__ == "__main__":

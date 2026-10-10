@@ -33,14 +33,16 @@ use crate::scanner::file_declares_inline_home;
 /// ## placement: Where the checker sits
 ///
 /// ```text
-/// resolver ─► loaded Catalog ─┐
-/// rules ─► Diagnostic ─────────┼─► [ checker ] ─► Report ─► api ─► cli, lsp
-/// config ──────────────────────┘
+/// resolver ─► loaded Catalog ──┐
+/// rules ─► Diagnostic ──────────┤
+/// config ─► Schema, Rules ──────┼─► [ conform + judge ] ─► Report ─► api ─► cli, lsp
+/// writers ─► Expected ──────────┘
 /// ```
 ///
 /// The sixth box of the pipeline (§AR-system.2.6). It takes `Catalog` from the
-/// resolver (§AR-system.2.10), rule diagnostics from §AR-system.2.12, and the
-/// config it needs to judge them, and gives one `Report` to the api
+/// resolver (§AR-system.2.10), rule diagnostics from §AR-system.2.12, the
+/// schema and rules it judges by, and the expected bytes the writers rendered
+/// (§AR-checker.1.3), and gives one `Report` to the api
 /// (§AR-system.2.9), which every frontend renders unchanged. It knows no
 /// frontend. Chapter-rule sentence parsing, fact adaptation, evaluation, and
 /// semantic deduplication stay in §AR-rules; this component only sequences them
@@ -90,14 +92,70 @@ use crate::scanner::file_declares_inline_home;
 ///
 /// ## 1. Inputs and outputs
 ///
-/// - Input: loaded `Catalog` from the resolver, chapter-rule `Diagnostic`s
-///   from §AR-rules, plus the repo root and config (needed to resolve stub-link
-///   paths, to read managed agent-entrypoint init blocks, and to know whether
-///   `[reference] require_grounding` is on).
+/// The checker is two functions and a merge, and what each is handed is the cut
+/// §DA-config-concern-records.2.3 makes (§FS-config.concerns): a stage that is
+/// not handed a concern cannot read it, so the compiler holds the line.
+///
+/// - Input: the loaded `Catalog` from the resolver, the `Schema` and `Rules`
+///   records of §AR-config.1.2, the `Expected` bytes of §AR-checker.1.3, and a
+///   `Frame { run, compiled, display_root }` carrying the `Run` and `Compiled`
+///   of §AR-config.1.5, which are not concerns. Chapter-rule `Diagnostic`s
+///   arrive from §AR-rules after the driver. No input is the `Config` façade
+///   (§AR-config.5) and none is `Presentation`.
 /// - Output: a `CheckReport` containing three channel partitions: `errors`,
 ///   `warnings`, and opt-in `suggestions`. Each partition is deterministic; the
 ///   CLI renderer groups text by channel while preserving JSON's global order
 ///   (§FS-errors.4.1, §FS-non-goals.9) for §GOAL-friendliness-first.
+///
+/// ### 1.1 `conform`: the node-local half
+///
+/// `conform(schema, catalog, frame, overlays)` judges each declaration and
+/// heading against its own kind's shape and nothing else: duplicate,
+/// misplaced-declaration, broken-stub and declaration-near-miss
+/// (§FS-declarations.checks), the section family of `sections.rs` (heading
+/// level, duplicate and orphan section, section outside a declaration, unmarked
+/// heading), inline citation style (§AR-checker.2.14) and the opt-in lead budget
+/// (§FS-declarations.checks.oversized-lead). It is handed no `Rules` and no
+/// `Presentation`. Where it reads a kind's value shape it reads it through the
+/// kind's slots (§AR-config.6.2), so a field model added to the kind reaches it
+/// without a second reader.
+///
+/// ### 1.2 `judge`: the relational half
+///
+/// `judge(rules, schema, catalog, expected, frame, workspace)` judges what one
+/// fact says about another: resolution (§AR-checker.2.3, §AR-checker.2.12),
+/// explicit values (§AR-checker.2.18, after resolution), escaped citations that
+/// resolve, kind indexes, unused declarations, grounding, citation directions,
+/// and the managed-block comparison (§AR-checker.2.7). The chapter-rule pass is
+/// on this side too, called where the api calls it after the driver, because the
+/// ad-hoc sentence and the resolution-completeness flag are run facts that
+/// arrive there. `judge` reads `Schema` read-only because a rule is written in
+/// its vocabulary — it names kinds and places, and an index is spelled on its
+/// kind's row (§AR-config.1.4). It is handed no `Presentation`: where a verdict
+/// depends on bytes presentation decides, it compares `Expected` and renders
+/// nothing.
+///
+/// ### 1.3 `Expected`: what presentation decided, as bytes
+///
+/// `Expected` is plain data in `model/`, built by the writers before `judge`
+/// runs (§AR-system.2.11): the managed-block version, every agent entrypoint
+/// with the config-derived sections it should carry, each rendered for its own
+/// conversation surface (§FS-init.2.3.6.1) in today's comparison order, the
+/// entrypoint probe's io error kept as data, and the canonical link target of
+/// each index-file citation that external enrollment inspects
+/// (§FS-check.3.18.3). The chapter-rule section is rendered from the check run's
+/// own catalog, so building it adds no walk (§FS-init.2.3.4.15). A
+/// presentation-only change can therefore move a drift finding through these
+/// bytes, and cannot move any other verdict.
+///
+/// ### 1.4 The merge and its order
+///
+/// Per channel, `conform`'s findings are appended, then `judge`'s, then the one
+/// stable `sort_diagnostics` (path, line, message) runs, as it did over the
+/// single driver. Inside each half the passes keep their relative order, so
+/// ties inside a pass come out as before; a tie across the halves would need one
+/// path, line and message from two codes, and a debug assertion in the merge
+/// holds that it never happens (§REQ-deterministic-output).
 ///
 /// ## 2. Rules
 ///
@@ -182,15 +240,17 @@ use crate::scanner::file_declares_inline_home;
 /// that already contain a managed block and leave project-owned unmanaged files
 /// alone.
 ///
-/// The text a current block is compared against is not this rule's to know. What
-/// a managed block should say is a function of config alone, so the two
-/// config-derived sections are re-rendered from `templates/` — the same
-/// renderers `grund init` writes through (§AR-system.2.11) — and compared byte
-/// for byte; and which companion files count as entrypoints is the one
-/// entrypoint walk in `scanner/agent_entrypoints.rs`, which `init`'s own
-/// selection is derived from. Both are read downward, so this rule cannot
-/// disagree with the command that is supposed to clear it (§FS-init.2.1,
-/// §FS-init.2.3).
+/// The text a current block is compared against is not this rule's to know, and
+/// this rule renders nothing. What a managed block should say is a function of
+/// config and of the run's own catalog, so the writers render each entrypoint's
+/// config-derived sections through the same renderers `grund init` writes
+/// through (§AR-system.2.11) and hand them over as `Expected`
+/// (§AR-checker.1.3); this rule compares those bytes with disk, byte for byte,
+/// and never reads a presentation key. Which companion files count as
+/// entrypoints is the one entrypoint walk in `scanner/agent_entrypoints.rs`,
+/// which `init`'s own selection is derived from, and whose surface reach takes
+/// `&Presentation` explicitly (§AR-scanner.7). So this rule cannot disagree
+/// with the command that is supposed to clear it (§FS-init.2.1, §FS-init.2.3).
 ///
 /// ### 2.8 Ungrounded units — opt-in (§FS-check.3.6, §DF-require-grounding)
 ///
@@ -204,6 +264,9 @@ use crate::scanner::file_declares_inline_home;
 /// for a source one (§AR-scanner.2.7), each finding anchored at its own unit. The
 /// pass is `grounding.rs`; `[citations]` obligations read the same cut
 /// (§AR-checker.2.9), so *whether* and *what* are asked of one thing.
+/// Whether the scanner recorded the structure a row's units are cut from is
+/// the `ScanDemand` config computed with the same level rule (§AR-config.6.1),
+/// so what was recorded and what is cut stay one rule.
 ///
 /// ### 2.9 Citation-direction obligations (§FS-check.3.11, §FS-config.3.9, §DF-citation-directions)
 ///
@@ -331,7 +394,9 @@ use crate::scanner::file_declares_inline_home;
 /// enrollment's exact destination are facts about the line, not the citation
 /// record. Ordinary in-folder entries still require only the wrapper shape; only
 /// external enrollment compares the destination to the one `fmt` derives
-/// (§FS-fmt.6.2, §DF-index-entry-form.2.7).
+/// (§FS-fmt.6.2, §DF-index-entry-form.2.7), and that destination arrives as
+/// `Expected`'s index target for the (index file, ID) pair (§AR-checker.1.3):
+/// the anchor profile is presentation's, and this pass only looks it up.
 ///
 /// Both halves of the entry contract are errors, each anchored where its own fix
 /// is: a missing entry at the declaration, a bare one at its line in the index.

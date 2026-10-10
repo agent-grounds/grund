@@ -101,8 +101,8 @@ flags, the citing-side classification switch and the `cover --lines` ranges; its
 optional members. No `Run` field is read from a file. A command-line override of
 a file's value, such as `--require-grounding`, is a `Run` fact the façade applies
 over the `Project` value. `Compiled { grammar, demand }` is `compile(&Project)`:
-the ID grammar, and the `ScanDemand` that tells the scanner whether to record
-grounding units. It replaces `rebuild_grammar`.
+the ID grammar, and the `ScanDemand` that tells the scanner which rows' files
+to record grounding structure for ([§AR-config.6.1](AR-config.md#61-scandemand-names-the-rows-that-record-structure)). It replaces `rebuild_grammar`.
 
 ## 2. The v1 reader and its isolation
 
@@ -275,3 +275,37 @@ The list starts as `api`, `checker`, `config`, `queries`, `resolver`,
 `scanner`, `workspace` and `writers`. `model` and `grammar` never named
 `Config`, and `templates` and `rules` leave the list with this change:
 `templates` renders from `&Project` and `&Compiled`.
+
+`checker`, `resolver` and `scanner` leave the list when the checker splits
+([§AR-checker.1](../../crates/grund-core/src/checker/report.rs)): each is handed the records it reads, and a `WorkspaceCheckTarget`
+holds a member's `{ catalog, schema, compiled, run }` rather than a `Config`. The
+resolver leaves with them because the checker and the scanner call into it and
+could not leave while it stayed. `config`, `workspace`, `queries`, `writers` and
+`api` remain.
+
+## 6. What `compile` derives for the scanner and the shape views
+
+### 6.1 `ScanDemand` names the rows that record structure
+
+`ScanDemand { structure_rows }` is the set of rows whose effective
+`grounding_level` is finer than the file ([§FS-config.3.4.8](../functional-spec/FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)), the complement's
+row included. `compile` fills it through the same `grounding_level_for_kind` the
+checker cuts units with ([§AR-checker.2.8](../../crates/grund-core/src/checker/report.rs)), so what is recorded and what is cut
+stay one rule. `is_empty()` is the single-field answer a level-1 tree — every
+configuration written before the keys existed — is excused by
+([§GOAL-fast-feedback](../goals.md#goal-fast-feedback-grund-must-be-as-fast-as-possible)), and `records_structure(row)` is the per-file question the
+scanner asks of the row it already looked up ([§AR-scanner.2.7.3](AR-scanner.md#273-demand-arrives-as-scandemand)). It extends the
+global `grounding_units` flag rather than adding a second type beside it, so the
+scanner reads no grounding key at all.
+
+### 6.2 A kind's shape is a sequence of slots, derived from its form
+
+`Kind::slots()` yields the kind's slots in declared order, each
+`Slot { handle: Named | Numbered, presence, content: Prose | Values | OneOf }`.
+It is a method over the `form` of [§AR-config.1.3](AR-config.md#13-rows-places-and-kinds-over-one-vector), not stored data, so there is no
+second hand-maintained model of fields: a `Prose` or `Rule` kind yields no slot,
+and a `Value` kind yields one — its value chapter as a `Named` handle with
+`Values` content, or `Numbered` when it has no chapter. Conformance reads a
+kind's value shape through `slots()` ([§AR-checker.1.1](../../crates/grund-core/src/checker/report.rs)), and a field model added to
+the kind is yielded by the same method in the order it was declared, so the
+checks and a schema view read one sequence.

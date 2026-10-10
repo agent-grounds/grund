@@ -1,0 +1,63 @@
+# pod — agent instructions
+
+<!-- BEGIN GRUND MANAGED BLOCK -->
+## Grounding with grund (v15)
+
+This project uses [`grund`](https://github.com/agent-grounds/grund): every spec, goal, decision, and end-to-end test has a stable ID `<KIND>-<slug>[.<section>]` (`KIND ∈ {GOAL, FS, RULE}`), cited with the marker `§` — e.g. `<§>FS-user-login.3.1`, where the ID is a shape illustration rather than a real one in this repo, which is what the `<§>` escape says. Type `$$` in a grund-aware editor and it becomes `§`. Bare ID-shaped tokens are ignored — `[reference] strict = true` is set in `grund.toml`, so only `§`-prefixed citations are checked.
+
+### Grounding from a citation
+
+A `§<ID>` is a pointer to a fact, not a file path. Resolve it with `grund` and climb only as far as needed:
+
+- `grund <ID>` — the lead (heading-less, cut at the first child section). The cheap first read for a bare `§<ID>` citation.
+- `grund <ID> --toc` — the lead plus the nested section map. Use to choose which subsection to fetch next.
+- `grund <ID> --full` — the entire body. Escalate to this when narrower reads aren't enough.
+- `grund <ID> --brief` — heading + first paragraph only.
+- `grund refs <ID>` — every site that cites the ID; add `--summary` for one line per file. Run before renaming or moving a declaration.
+- `grund list` / `grund list --kind FS,AR` — discover IDs if you get lost
+- `grund list --size=words --top 10` — find heavy leads and move detail into citable child points before reading them in full
+- `grund list --selector "<selector>" --format json | jq -c '{id,section}' | grund show --batch --toc --format json` — select units by a rule subject (`<KIND>.<chapter>`, or a sentence such as `"The requirements chapter of each FS"`) and expand each one's subpoints from `.result.sections[]` (`path`, `title`, `depth`). More recipes: [Querying grund](https://github.com/agent-grounds/grund/blob/main/docs/user-facing/querying.md).
+
+### Project map
+
+- [GOAL](docs/goals): Declaration
+- [FS](docs/functional-spec): Declaration
+- [RULE](docs/rules): Declaration
+
+### Project namespaces
+
+A namespace is a project boundary, not a docs folder. The current project is the local namespace: cite its IDs as `§<ID>`.
+
+Create or use a separate namespace when work introduces an independently checked app, package, service, or subproject. Give that project its own `grund.toml`, add it to the workspace root's `[workspace] members`, run `grund init` there, and set a stable `project_name`.
+
+Do not create a namespace for a regular module or component that still belongs to this project. Cite across namespaces as `§alias/<ID>` and run `grund check` from the workspace root.
+
+### Declarations and citations
+
+Declarations are heading lines `# <ID>: …` in markdown. In a code doc-comment (Rustdoc, Javadoc, JSDoc, Python docstring, Go `//`, …) drop the `#` — write `/// <ID>: …` directly. Named sections are enabled: use explicit complete paths (`## goals: Goals`, `### goals.performance: Performance`, `### goals.3: Ordered child`) so `§<ID>.goals.performance` resolves; handles are letter-first lowercase names, `name.number` is legal, and `number.name` is reserved. Heading depth must match each path component (an error). Purely numbered headings remain citable. Every non-declaration heading inside a Markdown declaration body must carry a numbered or enabled named section path; file titles, headings that close the body, fenced examples, non-ATX text, and source doc-comments stay exempt, while bold labels remain the non-citable alternative. One doc-comment may declare multiple IDs (e.g. an `AR-` and an `FS-` on the same class) — each gets its own body. An inline source declaration is reachable from the configured kind home via a one-line stub: `# <ID>: [<path>](<path>)`.
+
+### Rules
+
+- **Spec first.** For behavior or design changes, write or update the most-specific spec point before code.
+- **Cite as you write.** Place `§<ID>` at the point a claim or behavior is made — on the doc-comment for a whole behavior, inline beside the clause it enforces.
+- **Marker = live citation.** A `§`-prefixed token resolves and is checked wherever it appears — including inside Markdown backticks. To mention an ID without citing it, write `<§><ID>`, omit the marker, or use a fenced code block.
+- **Inline citation style.** Inline notes: ≤ 1 line preferred, hard cap 3 lines; ≤ 100 columns. A note is one comment block: a blank line splits it, an empty comment line does not. Doc-comments (`///`, `//!`, `/** */`, a docstring, a Go, Ruby, shell or SQL comment right above a definition) are documentation, not notes: they are never measured, so cite in-sentence there.
+- **Always cite the most-specific point.**
+
+### Citation directions
+
+`must`/`never` are `grund check` errors; `should`/`avoid` are suggestions (`grund check --suggestions`).
+
+- Each **FS** declaration should cite GOAL.
+Anything not listed above is allowed.
+
+### Chapter rules
+
+`must`/`must not` are `grund check` errors; `should`/`should not` are suggestions (`grund check --suggestions`).
+
+- Each FS must have exactly one Terms chapter. [§RULE-glossary-chapter](docs/rules/RULE-glossary-chapter.md#rule-glossary-chapter-each-fs-must-have-exactly-one-terms-chapter)
+
+### Clickable citations
+
+On repository web surfaces, link `§<ID>` to the PR branch in PR bodies, the reviewed commit in reviews, an exact commit for permalinks, and the default branch otherwise; fall back to plain when unsure.
+<!-- END GRUND MANAGED BLOCK -->
