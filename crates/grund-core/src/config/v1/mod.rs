@@ -26,7 +26,7 @@ use super::project::Project;
 use kind_table::ParsedKind;
 
 pub(super) use defaults::default_project;
-pub(super) use parse::{bail_config, parse_string, parse_usize};
+pub(super) use parse::{bail_config, parse_bool, parse_string, parse_usize};
 pub(crate) use parse::{parse_string_list, strip_comment};
 
 /// A v1 file read, its `[[kinds]]` table not yet lowered (§AR-config.2).
@@ -38,14 +38,14 @@ pub(super) struct Read {
     kinds: Option<Vec<ParsedKind>>,
 }
 
-/// §AR-config.2: lower the v1 file at `read_path` into a `Project`, starting
+/// §AR-config.2: lower the v1 file's `text` into a `Project`, starting
 /// from what an already-authored v1 file means before it says anything
 /// (§AR-config.3.2), all but its `[[kinds]]` table, which [`Read::lower_kinds`]
 /// lowers. `report_path` is the path every error names. Only spelling is refused
 /// here; the lowered project is judged by `config/validate.rs`.
-pub(super) fn read_sections(read_path: &Path, report_path: &Path) -> Result<Read> {
+pub(super) fn read_sections(text: &str, report_path: &Path) -> Result<Read> {
     let mut project = default_project(true);
-    let kinds = parse::parse_config_file(read_path, report_path, &mut project)?;
+    let kinds = parse::parse_config_file(text, report_path, &mut project)?;
     Ok(Read { project, kinds })
 }
 
@@ -65,5 +65,6 @@ impl Read {
 /// The whole v1 file as a `Project`, unjudged: both steps of [`Read`] in turn.
 #[cfg(test)]
 pub(super) fn read(read_path: &Path, report_path: &Path, root: &Path) -> Result<Project> {
-    read_sections(read_path, report_path)?.lower_kinds(report_path, root)
+    let text = std::fs::read_to_string(read_path)?;
+    read_sections(&text, report_path)?.lower_kinds(report_path, root)
 }

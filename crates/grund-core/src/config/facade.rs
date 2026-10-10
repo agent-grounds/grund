@@ -146,6 +146,7 @@ impl Config {
             compiled: &records.compiled,
             name: records.project.name.as_deref(),
             alias: None,
+            version: records.project.version,
             display: self.display(),
         }
     }

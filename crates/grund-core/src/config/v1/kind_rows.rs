@@ -202,6 +202,7 @@ fn lower_rows(path: &Path, parsed: &[ParsedKind], project: &mut Project) {
                         require_source: at(entry.grounding.require_line),
                         level: k.grounding_level,
                         level_source: at(entry.grounding.level_line),
+                        ladder: None,
                     });
             }
             let resolve = k

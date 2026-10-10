@@ -58,12 +58,16 @@ impl InlineNoteLayout {
 pub(crate) enum LayoutChannel {
     Warn,
     Error,
+    /// v2's `[schema.notes.layout] should` (§FS-config-v2.schema.measures),
+    /// which no v1 value selects.
+    Suggest,
 }
 
 pub(crate) fn layout_channel(lexical: LexicalSettings<'_>) -> Option<LayoutChannel> {
     match lexical.inline_note_layout_check {
         "warn" => Some(LayoutChannel::Warn),
         "error" => Some(LayoutChannel::Error),
+        "suggest" => Some(LayoutChannel::Suggest),
         _ => None,
     }
 }

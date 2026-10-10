@@ -58,7 +58,12 @@ fn command_config(args: &[String]) -> ExitCode {
                 // Before the TOML, so "why is this key not taking effect" is
                 // answered next to the effective value (§FS-config.4.2).
                 print_config_warnings(&config);
-                print_effective_config(&config);
+                // §FS-config.4.2: a v2 config prints in v2 spelling, which the
+                // engine writes from the `Project`; a v1 config keeps its bytes.
+                match effective_project(&path).map(|project| project.v2_toml()) {
+                    Ok(Some(toml)) => print!("{toml}"),
+                    _ => print_effective_config(&config),
+                }
                 ExitCode::SUCCESS
             }
             Err(err) => {
@@ -331,13 +336,7 @@ fn citation_namespace_label(namespace: &NamespaceMatch) -> String {
 }
 
 fn citation_level_str(level: CitationLevel) -> &'static str {
-    match level {
-        CitationLevel::Must => "must",
-        CitationLevel::Should => "should",
-        CitationLevel::May => "may",
-        CitationLevel::ShouldNot => "should-not",
-        CitationLevel::MustNot => "must-not",
-    }
+    level.as_str()
 }
 
 fn format_toml_string_list(values: &[String]) -> String {

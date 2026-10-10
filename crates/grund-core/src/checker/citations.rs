@@ -1,10 +1,10 @@
 //! The citation-direction half of the checker (§FS-config.3.9), in a file of its
 //! own beside `references.rs` and `sections.rs`
-//! (§AR-core-module-layout.1): the obligation pass (§FS-check.3.11), the
-//! prohibition pass (§FS-check.3.12), and the two questions both of them ask —
-//! what kind of place a citation sits in, and whether it matches a rule's
-//! target. `report.rs` keeps the declaration-shape rules and the diagnostic
-//! helpers they share.
+//! (§AR-core-module-layout.1): the obligation pass (§FS-check.3.11) and the
+//! two questions it shares with the prohibition pass of
+//! `citation_prohibitions.rs` (§FS-check.3.12) — what kind of place a citation
+//! sits in, and whether it matches a rule's target. `report.rs` keeps the
+//! declaration-shape rules and the diagnostic helpers they share.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -13,12 +13,11 @@ use super::obligation_units::{
     ObligationUnit, file_is_obligation_unit, non_citable_kind_names, obligation_units,
 };
 use crate::config::{
-    CitationDisjunction, CitationLevel, CitationTarget, Frame, KindCitationRules, NamespaceMatch,
-    Row, Rules, Schema, render_citation_target, row_grounding,
+    CitationDisjunction, CitationTarget, Frame, KindCitationRules, NamespaceMatch, Row, Rules,
+    Schema, render_citation_target, row_grounding,
 };
 use crate::model::{
-    CITATION_DIRECTION_REPAIR, Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id,
-    paths_same_location,
+    Catalog, CheckReport, Citation, Diagnostic, E2eSpecRef, Id, paths_same_location,
 };
 use crate::scanner::file_home_kind;
 
@@ -27,7 +26,7 @@ use crate::scanner::file_home_kind;
 /// non-citable one by its home, which is all a reader of the message could go
 /// and look at. `code` keeps its own name — it is the one non-citable kind with
 /// no place, being the complement of every home there is.
-fn citing_side_label(schema: &Schema, kind: &str) -> String {
+pub(super) fn citing_side_label(schema: &Schema, kind: &str) -> String {
     schema
         .rows
         .iter()
@@ -95,7 +94,8 @@ pub(super) fn check_citation_obligations(
     }
 
     for (citing_kind, kind_rules) in &rules.citations.per_kind {
-        if kind_rules.must.is_empty() && kind_rules.should.is_empty() {
+        if kind_rules.must.is_empty() && kind_rules.warn.is_empty() && kind_rules.should.is_empty()
+        {
             continue;
         }
         let units = obligation_units(
@@ -125,6 +125,19 @@ pub(super) fn check_citation_obligations(
             for entry in &kind_rules.must {
                 if !entry.targets.iter().any(|t| unit.satisfies(t)) {
                     report.errors.push(obligation_diagnostic(
+                        "missing-citation",
+                        frame,
+                        &unit,
+                        entry,
+                        "must",
+                    ));
+                }
+            }
+            // §FS-config-v2.rules.strengths: `warn` is the `must` finding, code
+            // and message, on the warning channel.
+            for entry in &kind_rules.warn {
+                if !entry.targets.iter().any(|t| unit.satisfies(t)) {
+                    report.warnings.push(obligation_diagnostic(
                         "missing-citation",
                         frame,
                         &unit,
@@ -173,15 +186,20 @@ fn empty_citation_obligation_warning(
         return None;
     }
 
-    let level = if kind_rules.must.is_empty() {
-        "should"
-    } else {
+    let level = if !kind_rules.must.is_empty() {
         "must"
+    } else if !kind_rules.warn.is_empty() {
+        "warn"
+    } else {
+        "should"
     };
     let place = format!("{folder}/");
+    // §FS-config-v2.rules.citations: v2 names the table, and the row key, its own way.
+    let v2 = frame.version == 2;
+    let table = if v2 { "rules.citations" } else { "citations" };
     let message = if row.kind.is_some() {
         format!(
-            "[citations.{citing_kind}] {level} applies to nothing — {place} declares no {citing_kind} ID; did you mean `citable = false`?"
+            "[{table}.{citing_kind}] {level} applies to nothing — {place} declares no {citing_kind} ID; did you mean `citable = false`?"
         )
     } else {
         // §FS-check.2.2.1.2: the row-key half is advice, so it is given only where it is
@@ -189,11 +207,15 @@ fn empty_citation_obligation_warning(
         // setting, and this run is already reporting what it caught (§FS-check.3.6).
         let tail = if row_grounding(rules, frame.run, &row.name).0 {
             String::new()
+        } else if v2 {
+            format!(
+                "; set `must = \"file\"` in [rules.citations.{citing_kind}.grounding] to make that an error"
+            )
         } else {
             format!("; set require_grounding = true on the {place} row to make that an error")
         };
         format!(
-            "[citations.{citing_kind}] {level} applies to nothing — no scanned file in {place} carries a citation{tail}"
+            "[{table}.{citing_kind}] {level} applies to nothing — no scanned file in {place} carries a citation{tail}"
         )
     };
     Some(Diagnostic {
@@ -240,99 +262,6 @@ fn obligation_diagnostic(
         sites: Vec::new(),
         authority: Vec::new(),
     }
-}
-
-/// §AR-checker.2.10 / §FS-check.3.12: a citation site whose citing kind prohibits
-/// its target is a `forbidden-citation` error (`must-not`) or a
-/// `discouraged-citation` suggestion (`should-not`). The error carries
-/// §FS-check.3.12's repair suffix; the suggestion does not (§FS-check.2.3).
-pub(super) fn check_citation_prohibitions(
-    findings: &Catalog,
-    rules: &Rules,
-    schema: &Schema,
-    report: &mut CheckReport,
-) {
-    for cite in &findings.citations {
-        match citation_site_level(rules, cite) {
-            Some(CitationLevel::MustNot) => report.errors.push(prohibition_diagnostic(
-                "forbidden-citation",
-                schema,
-                cite,
-                "must not",
-                CITATION_DIRECTION_REPAIR,
-            )),
-            Some(CitationLevel::ShouldNot) => report.suggestions.push(prohibition_diagnostic(
-                "discouraged-citation",
-                schema,
-                cite,
-                "should not",
-                "",
-            )),
-            _ => {}
-        }
-    }
-}
-
-fn prohibition_diagnostic(
-    code: &'static str,
-    schema: &Schema,
-    cite: &Citation,
-    verb: &str,
-    repair: &str,
-) -> Diagnostic {
-    let target = CitationTarget {
-        namespace: match &cite.namespace {
-            None => NamespaceMatch::Local,
-            Some(alias) => NamespaceMatch::Alias(alias.clone()),
-        },
-        kind: cite.id.kind.clone(),
-    };
-    Diagnostic {
-        code,
-        path: Some(cite.file.clone()),
-        line: Some(cite.line),
-        column: Some(cite.column),
-        message: format!(
-            "{} {verb} cite {} (citation direction){repair}",
-            // §FS-check.3.12.1: a non-citable citing kind is named by its place —
-            // the same label §FS-check.3.11.2 and the generated directions use,
-            // because its name is a config handle and not a thing to read.
-            citing_side_label(schema, &cite.source_kind),
-            render_citation_target(&target)
-        ),
-        sites: Vec::new(),
-        authority: Vec::new(),
-    }
-}
-
-/// The direction level a citation site resolves to (§FS-config.3.9.4): the
-/// explicit list it matches under its citing kind's rules, else the per-kind
-/// `default`, else the global `default`, else `may`.
-fn citation_site_level(rules: &Rules, cite: &Citation) -> Option<CitationLevel> {
-    if let Some(kind_rules) = rules.citations.per_kind.get(&cite.source_kind) {
-        let lists = [
-            (CitationLevel::Must, &kind_rules.must),
-            (CitationLevel::Should, &kind_rules.should),
-            (CitationLevel::May, &kind_rules.may),
-            (CitationLevel::ShouldNot, &kind_rules.should_not),
-            (CitationLevel::MustNot, &kind_rules.must_not),
-        ];
-        for (level, disjunctions) in lists {
-            for disjunction in disjunctions {
-                if disjunction
-                    .targets
-                    .iter()
-                    .any(|target| citation_matches_target(cite, target))
-                {
-                    return Some(level);
-                }
-            }
-        }
-        if let Some(default) = kind_rules.default {
-            return Some(default);
-        }
-    }
-    rules.citations.global_default
 }
 
 /// Whether a citation matches a rule target: same cited kind, and a namespace

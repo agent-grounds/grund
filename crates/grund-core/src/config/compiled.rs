@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 
 use anyhow::Result;
 
-use super::grounding::grounding_level_for_kind;
+use super::grounding::finest_grounding_level_for_kind;
 use super::project::{Project, Schema};
 use super::record::DEFAULT_GROUNDING_LEVEL;
 use super::rows::Row;
@@ -98,11 +98,12 @@ fn grammar_kinds(rows: &[Row]) -> Vec<GrammarKind> {
 /// §AR-config.6.1: every row, and the complement under its name, whose
 /// effective level is finer than the file — read through the one
 /// `grounding_level_for_kind` the checker cuts units with (§AR-checker.2.8), so
-/// what the scanner records and what the checker cuts stay one rule.
+/// what the scanner records and what the checker cuts stay one rule. A v2 rung
+/// below `must` finer than the file asks too (§FS-config-v2.rules.grounding).
 pub(super) fn scan_demand(project: &Project) -> ScanDemand {
     let (schema, rules) = (&project.schema, &project.rules);
     let structure_rows = row_names(schema)
-        .filter(|row| grounding_level_for_kind(schema, rules, row) > DEFAULT_GROUNDING_LEVEL)
+        .filter(|row| finest_grounding_level_for_kind(schema, rules, row) > DEFAULT_GROUNDING_LEVEL)
         .map(str::to_string)
         .collect();
     ScanDemand { structure_rows }

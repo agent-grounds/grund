@@ -15,7 +15,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use crate::config::{Frame, Schema};
+use crate::config::{Frame, Schema, Strength, Threshold};
 use crate::grammar::{CITATION_RUN_SEPARATOR, LayoutChannel, layout_channel};
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, InlineCitationSite, plural};
 
@@ -78,6 +78,16 @@ pub(super) fn check_inline_citation_style(
     let mut seen = BTreeSet::new();
     let layout_message = layout_violation_message(schema);
     let citation_texts = site_citation_texts(findings);
+    // §FS-inline-citation-style.4.2: v1's opted-in soft cap is a `warn` budget;
+    // v2 adds its own `warn` and `should` budgets (§FS-config-v2.schema.measures).
+    let notes = &schema.notes;
+    let mut soft_lines: Vec<(Strength, usize)> = notes
+        .warn_on_suggested
+        .then_some((Strength::Warn, notes.suggested_lines))
+        .into_iter()
+        .collect();
+    soft_lines.extend(soft_thresholds(&notes.extra_lines));
+    let soft_columns = soft_thresholds(&notes.extra_columns);
     for cite in &findings.citations {
         let Some(site) = &cite.inline_site else {
             continue;
@@ -122,7 +132,8 @@ pub(super) fn check_inline_citation_style(
                         sites: Vec::new(),
                     authority: Vec::new(),});
                 }
-                if site.max_columns > schema.notes.max_columns {
+                let columns_over_cap = site.max_columns > schema.notes.max_columns;
+                if columns_over_cap {
                     report.errors.push(Diagnostic {
                         code: "inline-citation-style",
                         path: Some(cite.file.clone()),
@@ -141,11 +152,10 @@ pub(super) fn check_inline_citation_style(
                         authority: Vec::new(),
                     });
                 }
-                if schema.notes.warn_on_suggested
-                    && lines > schema.notes.suggested_lines
-                    && lines <= schema.notes.max_lines
+                if lines <= schema.notes.max_lines
+                    && let Some((channel, limit)) = soft_limit_crossed(&soft_lines, lines)
                 {
-                    report.warnings.push(Diagnostic {
+                    channel_of(report, channel).push(Diagnostic {
                         code: "inline-citation-style",
                         path: Some(cite.file.clone()),
                         line: Some(site.first_line),
@@ -153,17 +163,70 @@ pub(super) fn check_inline_citation_style(
                         // §FS-inline-citation-style.4.2: names the measured size,
                         // the site, and the block-splitting rule
                         message: format!(
-                            "inline note is {lines} line{}, over the {}-line preferred limit: {}{BLOCK_SPLIT_CLAUSE}",
+                            "inline note is {lines} line{}, over the {limit}-line preferred limit: {}{BLOCK_SPLIT_CLAUSE}",
                             plural(lines),
-                            schema.notes.suggested_lines,
                             site_clause(site.first_line, site.last_line, citations),
                         ),
                         sites: Vec::new(),
                     authority: Vec::new(),});
                 }
+                // §FS-config-v2.schema.measures: a v2 column budget below the cap is
+                // the cap's finding on its own strength's channel.
+                if !columns_over_cap
+                    && let Some((channel, limit)) =
+                        soft_limit_crossed(&soft_columns, site.max_columns)
+                {
+                    channel_of(report, channel).push(Diagnostic {
+                        code: "inline-citation-style",
+                        path: Some(cite.file.clone()),
+                        line: Some(site.first_line),
+                        column: None,
+                        message: format!(
+                            "inline note is {} column{}, over the {limit}-column maximum: {}",
+                            site.max_columns,
+                            plural(site.max_columns),
+                            site_clause(site.first_line, site.last_line, citations),
+                        ),
+                        sites: Vec::new(),
+                        authority: Vec::new(),
+                    });
+                }
                 report_layout_deviations(cite, site, schema, frame, &layout_message, report);
             }
         }
+    }
+}
+
+/// The `warn` and `should` thresholds of one v2 measure (§FS-config-v2.schema.measures);
+/// `must` is the cap the caller already reads, and `may` checks nothing.
+fn soft_thresholds(thresholds: &[Threshold]) -> Vec<(Strength, usize)> {
+    thresholds
+        .iter()
+        .filter(|threshold| matches!(threshold.strength, Strength::Warn | Strength::Should))
+        .map(|threshold| (threshold.strength, threshold.value))
+        .collect()
+}
+
+/// The strongest soft budget `measured` is over, with its threshold: one finding
+/// per site, on the strongest channel it reaches (§FS-config-v2.rules.strengths).
+fn soft_limit_crossed(limits: &[(Strength, usize)], measured: usize) -> Option<(Strength, usize)> {
+    [Strength::Warn, Strength::Should]
+        .into_iter()
+        .find_map(|strength| {
+            limits
+                .iter()
+                .filter(|(at, limit)| *at == strength && measured > *limit)
+                .map(|(_, limit)| (strength, *limit))
+                .max_by_key(|(_, limit)| *limit)
+        })
+}
+
+/// The report channel a strength reaches (§FS-config-v2.rules.strengths).
+fn channel_of(report: &mut CheckReport, strength: Strength) -> &mut Vec<Diagnostic> {
+    match strength {
+        Strength::Must => &mut report.errors,
+        Strength::Warn => &mut report.warnings,
+        Strength::Should | Strength::May => &mut report.suggestions,
     }
 }
 
@@ -183,6 +246,8 @@ fn report_layout_deviations(
     let channel = match layout_channel(frame.compiled.lexical(schema)) {
         Some(LayoutChannel::Warn) => &mut report.warnings,
         Some(LayoutChannel::Error) => &mut report.errors,
+        // §FS-config-v2.schema.measures: `[schema.notes.layout] should`.
+        Some(LayoutChannel::Suggest) => &mut report.suggestions,
         None => return,
     };
     for line in &site.layout_violations {

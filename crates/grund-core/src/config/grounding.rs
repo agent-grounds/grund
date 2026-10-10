@@ -13,7 +13,7 @@
 //! being written twice.
 
 use super::kind::KindConfig;
-use super::project::{Rules, Schema};
+use super::project::{Grounding, Rules, Rung, Schema, Strength};
 use super::record::Config;
 use super::run::Run;
 
@@ -37,12 +37,13 @@ pub(crate) fn grounding_level_for_kind(schema: &Schema, rules: &Rules, kind: &st
     if schema.rows.iter().any(|row| row.name == kind) {
         return level(kind);
     }
-    // §FS-config.3.9.2.3: the homeless kind's declared row, else the default.
+    // §FS-config.3.9.2.3: the homeless kind's declared row, else the default — or
+    // the ladder v2 writes for the undeclared complement by name.
     schema
         .rows
         .iter()
         .find(|row| row.is_complement())
-        .map_or(grounding.level, |row| level(&row.name))
+        .map_or_else(|| level(schema.complement_name()), |row| level(&row.name))
 }
 
 /// The effective `require_grounding` default (§FS-config.3.4.8.3): the
@@ -66,19 +67,18 @@ pub(crate) fn row_grounding(rules: &Rules, run: &Run, kind: &str) -> (bool, usiz
 }
 
 /// The effective pair for the homeless kind (§FS-config.3.9.2.3) — its declared
-/// row when the schema has one, else the defaults.
+/// row when the schema has one, else the defaults. A v2 ladder written for the
+/// undeclared complement by name is its row's word (§FS-config-v2.rules.grounding).
 pub(crate) fn homeless_row_grounding(schema: &Schema, rules: &Rules, run: &Run) -> (bool, usize) {
     match schema.rows.iter().find(|row| row.is_complement()) {
         Some(row) => row_grounding(rules, run, &row.name),
-        None => (
-            requires_grounding_by_default(rules, run),
-            rules.grounding.level,
-        ),
+        None => row_grounding(rules, run, schema.complement_name()),
     }
 }
 
 /// Whether any place is grounded at all (§FS-check.3.6): the records' reading of
-/// `Config::grounding_enabled`.
+/// `Config::grounding_enabled`. A v2 ladder rung below `must` grounds too
+/// (§FS-config-v2.rules.grounding).
 pub(crate) fn any_place_grounded(schema: &Schema, rules: &Rules, run: &Run) -> bool {
     requires_grounding_by_default(rules, run)
         || schema.rows.iter().any(|row| {
@@ -89,6 +89,59 @@ pub(crate) fn any_place_grounded(schema: &Schema, rules: &Rules, run: &Run) -> b
                 .and_then(|row| row.require)
                 == Some(true)
         })
+        || homeless_row_grounding(schema, rules, run).0
+        || soft_rungs_written(&rules.grounding)
+}
+
+/// Whether any v2 ladder rung below `must` asks for citations
+/// (§FS-config-v2.rules.grounding); never in v1, whose grounding is the pair alone.
+fn soft_rungs_written(grounding: &Grounding) -> bool {
+    ladders(grounding).any(|rung| matches!(rung.strength, Strength::Warn | Strength::Should))
+}
+
+/// The finest unit any rung governing the row named `kind` asks for: its
+/// grounding level, or a finer v2 rung below `must` (§FS-config-v2.rules.grounding).
+/// What the scanner records structure to (§AR-scanner.2.7.1).
+pub(crate) fn finest_grounding_level_for_kind(schema: &Schema, rules: &Rules, kind: &str) -> usize {
+    soft_grounding_rungs(rules, kind)
+        .into_iter()
+        .map(|(_, level)| level)
+        .fold(grounding_level_for_kind(schema, rules, kind), usize::max)
+}
+
+/// The rungs below `must` that govern the files of the row named `kind`
+/// (§FS-config-v2.rules.grounding): the row's own ladder where it wrote one,
+/// which replaces the project's whole, else the project's. The `must` rung is
+/// the pair [`row_grounding`] answers; a `may` rung checks nothing. Empty for
+/// every v1 config, whose grounding is the pair alone.
+pub(crate) fn soft_grounding_rungs(rules: &Rules, kind: &str) -> Vec<(Strength, usize)> {
+    let grounding = &rules.grounding;
+    let ladder = grounding
+        .kinds
+        .get(kind)
+        .and_then(|row| row.ladder.as_ref())
+        .or(grounding.ladder.as_ref());
+    ladder
+        .into_iter()
+        .flatten()
+        .filter(|rung| matches!(rung.strength, Strength::Warn | Strength::Should))
+        .map(|rung| (rung.strength, rung.level))
+        .collect()
+}
+
+/// Every v2 ladder rung the project wrote, the project's and each row's
+/// (§FS-config-v2.rules.grounding).
+fn ladders(grounding: &Grounding) -> impl Iterator<Item = &Rung> {
+    grounding
+        .ladder
+        .iter()
+        .chain(
+            grounding
+                .kinds
+                .values()
+                .filter_map(|row| row.ladder.as_ref()),
+        )
+        .flatten()
 }
 
 impl Config {
@@ -104,13 +157,23 @@ impl Config {
     }
 
     /// Whether any place is grounded at all — the early out that keeps the whole
-    /// pass off a tree that asked for none (§FS-check.3.6).
+    /// pass off a tree that asked for none (§FS-check.3.6). A v2 ladder rung
+    /// below `must` grounds too (§FS-config-v2.rules.grounding).
     pub fn grounding_enabled(&self) -> bool {
         self.require_grounding
             || self
                 .kinds
                 .iter()
                 .any(|kind| kind.require_grounding == Some(true))
+            || homeless_row_grounding(self.schema(), self.rules(), self.run()).0
+            || soft_rungs_written(&self.rules().grounding)
+    }
+
+    /// The rungs below `must` for the row named `kind`: [`soft_grounding_rungs`]
+    /// read through the façade, for the lowering cases.
+    #[cfg(test)]
+    pub(crate) fn soft_grounding_rungs(&self, kind: &str) -> Vec<(Strength, usize)> {
+        soft_grounding_rungs(self.rules(), kind)
     }
 
     /// The `[[kinds]]` grounding lines `grund config show` prints for one row

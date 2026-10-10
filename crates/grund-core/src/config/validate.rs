@@ -68,7 +68,18 @@ pub(super) fn lists(path: &Path, project: &Project) -> Result<()> {
     validate_workspace_lists(&project.workspace)?;
     // §FS-config.3.9.5: validate `[citations]` against the final kind set.
     if project.rules.citations.declared {
-        validate_citation_rules(path, &project.kind_configs(), &project.rules.citations)?;
+        // §FS-config-v2.rules.citations: each version names the rules its own way.
+        let table = if project.version == 2 {
+            "rules.citations"
+        } else {
+            "citations"
+        };
+        validate_citation_rules(
+            path,
+            table,
+            &project.kind_configs(),
+            &project.rules.citations,
+        )?;
     }
     Ok(())
 }

@@ -62,13 +62,7 @@ pub(super) fn config(r: &EmbeddingRequest) -> Result<Value, Value> {
 }
 
 fn level(v: CitationLevel) -> &'static str {
-    match v {
-        CitationLevel::Must => "must",
-        CitationLevel::Should => "should",
-        CitationLevel::May => "may",
-        CitationLevel::ShouldNot => "should-not",
-        CitationLevel::MustNot => "must-not",
-    }
+    v.as_str()
 }
 fn disjunctions(values: &[CitationDisjunction]) -> Vec<String> {
     values
@@ -96,11 +90,19 @@ pub(super) fn schema(c: &Config) -> Value {
         json!(c.citations.global_default.map(level)),
     );
     for (kind, r) in &c.citations.per_kind {
-        citations.insert(kind.clone(),json!({
+        let mut rules = json!({
         "default":r.default.map(level), "must":disjunctions(&r.must),"should":disjunctions(&r.should),
-        "may":disjunctions(&r.may),"should_not":disjunctions(&r.should_not),"must_not":disjunctions(&r.must_not)}));
+        "may":disjunctions(&r.may),"should_not":disjunctions(&r.should_not),"must_not":disjunctions(&r.must_not)});
+        // §FS-config-v2.rules.citations: v2's warning lists, present only where
+        // written, so a v1 config's schema keeps its bytes.
+        for (key, list) in [("warn", &r.warn), ("warn_not", &r.warn_not)] {
+            if !list.is_empty() {
+                rules[key] = json!(disjunctions(list));
+            }
+        }
+        citations.insert(kind.clone(), rules);
     }
-    json!({"grund_config_version":1,"project_name":c.project_name,"project_description":c.project_description,
+    json!({"grund_config_version":c.project().version,"project_name":c.project_name,"project_description":c.project_description,
         "reference": {"marker":c.marker,"trigger":c.trigger,"strict":c.strict,
             "shorthand":c.shorthand.as_str(),"require_grounding":c.require_grounding,
             "grounding_level":c.grounding_level,"conversation":c.conversation,

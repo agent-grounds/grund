@@ -61,6 +61,9 @@ pub struct Schema {
     pub sources: Sources,
     pub notes: NoteStyle,
     pub leads: Option<LeadSizeWarning>,
+    /// The v2 lead thresholds `leads` cannot hold: `must`, `should` and `may`
+    /// on `[schema.leads.words]` (§FS-config-v2.schema.measures).
+    pub lead_thresholds: Vec<Threshold>,
     pub rows: Vec<Row>,
     pub nesting: Nesting,
 }
@@ -108,6 +111,61 @@ pub struct NoteStyle {
     pub layout: String,
     pub layout_check: String,
     pub warn_on_suggested: bool,
+    /// The v2 line thresholds the fields above cannot hold: a `should` budget,
+    /// and a `warn` budget beside a tighter guidance one
+    /// (§FS-config-v2.schema.measures). Empty for every v1 file.
+    pub extra_lines: Vec<Threshold>,
+    /// The v2 column thresholds below the `must` cap (§FS-config-v2.schema.measures).
+    pub extra_columns: Vec<Threshold>,
+}
+
+/// §FS-config-v2.rules.strengths: one strength, which names a finding's
+/// channel. A prohibition is a citation level (`CitationLevel`), never this.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Strength {
+    Must,
+    Warn,
+    Should,
+    May,
+}
+
+impl Strength {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Must => "must",
+            Self::Warn => "warn",
+            Self::Should => "should",
+            Self::May => "may",
+        }
+    }
+
+    pub(crate) fn parse(value: &str) -> Option<Self> {
+        match value {
+            "must" => Some(Self::Must),
+            "warn" => Some(Self::Warn),
+            "should" => Some(Self::Should),
+            "may" => Some(Self::May),
+            _ => None,
+        }
+    }
+}
+
+/// §FS-config-v2.schema.measures: one strength key of a measure table and the
+/// threshold it was written with, at its line.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Threshold {
+    pub strength: Strength,
+    pub value: usize,
+    pub source: Option<ConfigLocation>,
+}
+
+/// §FS-config-v2.rules.grounding: one rung of a grounding ladder — a strength
+/// and a unit, `1` for the file and `2..=6` for a heading level.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Rung {
+    pub strength: Strength,
+    pub level: usize,
+    pub source: Option<ConfigLocation>,
 }
 
 /// §AR-config.1.2: how things relate — the citation directions, the grounding
@@ -130,6 +188,10 @@ pub struct Grounding {
     /// Where `[reference] grounding_level` was written (§FS-config.3.4.8.5).
     pub level_source: Option<ConfigLocation>,
     pub kinds: BTreeMap<String, KindGrounding>,
+    /// The project's v2 ladder as written, `None` in v1 and where v2 wrote none
+    /// (§FS-config-v2.rules.grounding). Its `must` rung is also `require` and
+    /// `level` above, the pair v1 resolves (§FS-config-v2.mapping).
+    pub ladder: Option<Vec<Rung>>,
 }
 
 /// One row's grounding keys, as written, each with its line (§FS-config.3.4.8).
@@ -139,6 +201,9 @@ pub struct KindGrounding {
     pub require_source: Option<ConfigLocation>,
     pub level: Option<usize>,
     pub level_source: Option<ConfigLocation>,
+    /// The row's v2 ladder, which replaces the project's whole
+    /// (§FS-config-v2.rules.grounding); `None` for every v1 row.
+    pub ladder: Option<Vec<Rung>>,
 }
 
 /// §AR-config.1.2: what bytes get written — the formatter, the titles, the

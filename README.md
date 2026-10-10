@@ -199,6 +199,7 @@ repository verdict ([§FS-check.2](docs/functional-spec/FS-check.md#2-outputs)).
 - [Workspaces and sub-projects](docs/user-facing/repository-options.md#workspaces-and-sub-projects)
 - [Keep shared values consistent](docs/user-facing/repository-options.md#keep-shared-values-consistent)
 - [Cite external facts offline](docs/user-facing/repository-options.md#cite-external-facts-without-making-checks-depend-on-the-network)
+- [Write the config in version 2](docs/user-facing/repository-options.md#write-the-config-in-version-2)
 
 ## 4. The structure that gets cited
 

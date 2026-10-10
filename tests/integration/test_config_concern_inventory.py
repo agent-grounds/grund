@@ -12,6 +12,10 @@ The classification is also held to the signatures that consume it
 checker's two halves and the scanner name is derived from their code and
 compared with what each stage is handed, so a concern the inventory assigns
 reaches a stage only as the record that stage takes.
+
+A v2 file (§FS-config-v2) is spelled by concern, so its inventory is the
+tables its reader's handlers read: each key's table names its concern, and the
+same derivation holds every key of the v2 reader to exactly one of them.
 """
 
 import re
@@ -286,6 +290,140 @@ class ConfigConcernInventoryTests(unittest.TestCase):
         assigned = {c for _, c in inventory_rows() if c in RECORD}
         reached = set().union(*STAGE_CONCERNS.values())
         self.assertEqual(set(), assigned - reached)
+
+
+# §FS-config-v2: each `config/v2/` handler and the table(s) it reads, as written.
+# Its keys are read from the handler, so a table's first segment is the concern.
+V2 = CONFIG / "v2"
+V2_HANDLERS = {
+    "envelope_key": ("", "arms"),
+    "workspace_key": ("workspace", "arms"),
+    "schema_key": ("schema", "arms"),
+    "sources_key": ("schema.sources", "arms"),
+    "row_key": ("schema.kinds.<NAME>", "arms"),
+    "measure_key": ("schema.notes.lines|schema.notes.columns|schema.leads.words", "strength"),
+    "text_key": ("schema.notes.text", "single"),
+    "layout_key": ("schema.notes.layout", "strength"),
+    "citations_key": ("rules.citations", "single"),
+    "citation_kind_key": ("rules.citations.<KIND>", "arms"),
+    "ladder_key": ("rules.citations.grounding|rules.citations.<NAME>.grounding", "strength"),
+    "resolution_key": ("rules.resolution", "kind"),
+    "presentation_key": ("presentation", "arms"),
+    "kind_key": ("presentation.kinds.<KIND>", "single"),
+    "fmt_key": ("presentation.fmt", "arms"),
+}
+# The envelope's tables (§FS-config.concerns): read inside the concerns, never one.
+V2_ENVELOPE = ("", "workspace")
+V2_HANDLER = re.compile(r"^( *)(?:pub\(super\) )?fn ([a-z_]+_key)\(", re.MULTILINE)
+V2_SINGLE = re.compile(r'if key != "([a-z_-]+)"')
+V2_SPINE = (
+    "grund_config_version",
+    "[workspace] members",
+    "[schema] marker",
+    "[schema.sources] languages",
+    "[schema.kinds.<NAME>] folders",
+    "[schema.notes.lines] warn",
+    "[schema.notes.text] must",
+    "[rules.citations] default",
+    "[rules.citations.<KIND>] warn-not",
+    "[rules.citations.grounding] must",
+    "[rules.resolution] <KIND>",
+    "[presentation.kinds.<KIND>] title",
+    "[presentation.fmt] exclude",
+)
+
+
+def _v2_handlers():
+    """Every `*_key` handler under `config/v2/`, with its body and indentation:
+    `read_key`, which dispatches to them, reads no key of its own."""
+    found = {}
+    for path in sorted(V2.glob("*.rs")):
+        source = _source(path)
+        for match in V2_HANDLER.finditer(source):
+            indent, name = match.groups()
+            if name == "read_key":
+                continue
+            rest = source[match.start():]
+            end = re.search(rf"^{indent}\}}", rest, re.MULTILINE)
+            found[name] = (path, indent, rest[: end.end()])
+    return found
+
+
+def _strengths():
+    """The positive strengths `Strength::parse` admits as a key."""
+    body = _function(CONFIG / "project.rs", "parse")
+    return re.findall(r'^\s*"([a-z]+)" => Some\(Self::', body, re.MULTILINE)
+
+
+def v2_keys():
+    """Every `(table, key)` the v2 reader admits, read from its handlers."""
+    handlers = _v2_handlers()
+    keys = []
+    for name, (tables, mode) in V2_HANDLERS.items():
+        _, indent, body = handlers[name]
+        if mode == "arms":
+            # The handler's own `match key` arms, one level inside its body.
+            arm = re.compile(
+                rf'^ {{{len(indent) + 8}}}("[a-z_-]+"(?: \| "[a-z_-]+")*) =>', re.MULTILINE
+            )
+            names = [key for arm_text in arm.findall(body) for key in LITERAL.findall(arm_text)]
+        elif mode == "single":
+            names = V2_SINGLE.findall(body)
+        elif mode == "strength":
+            names = _strengths() if "Strength::parse(key)" in body else []
+        else:
+            names = ["<KIND>"]
+        keys.extend((table, key) for table in tables.split("|") for key in names)
+    return keys
+
+
+def _spell(table, key):
+    return key if table == "" else f"[{table}] {key}"
+
+
+class V2ConfigConcernInventoryTests(unittest.TestCase):
+    """§FS-config-v2: every v2 key is written under the concern it belongs to."""
+
+    def test_every_v2_handler_is_named_and_dispatched(self):
+        handlers = _v2_handlers()
+        self.assertEqual(sorted(V2_HANDLERS), sorted(handlers), "v2 `*_key` handlers")
+        walk = _source(V2 / "walk.rs")
+        body = walk[walk.index("fn read_key(") :]
+        undispatched = [
+            name for name in handlers if not re.search(rf"[:.]{name}\(", body)
+        ]
+        self.assertEqual([], undispatched, "handlers `read_key` never calls")
+
+    def test_the_v2_handlers_still_read_as_key_literals(self):
+        keys = {_spell(table, key) for table, key in v2_keys()}
+        missing = [key for key in V2_SPINE if key not in keys]
+        self.assertEqual([], missing, f"keys {V2.relative_to(REPO_ROOT)} no longer spells")
+
+    def test_every_v2_key_sits_under_exactly_one_concern(self):
+        wrong = {
+            _spell(table, key)
+            for table, key in v2_keys()
+            if table not in V2_ENVELOPE and table.split(".")[0] not in CLASSIFICATIONS[:3]
+        }
+        self.assertEqual("", _sample(wrong), "v2 keys outside schema, rules and presentation")
+
+    def test_no_v2_key_is_admitted_twice(self):
+        counted = {}
+        for table, key in v2_keys():
+            counted[(table, key)] = counted.get((table, key), 0) + 1
+        duplicated = {_spell(*pair) for pair, count in counted.items() if count > 1}
+        self.assertEqual("", _sample(duplicated), "v2 keys two arms admit")
+
+    def test_a_project_setting_is_written_again_on_the_kind(self):
+        """§FS-config.principle: a narrower scope writes the same key, in its own table."""
+        keys = {_spell(table, key) for table, key in v2_keys()}
+        pairs = (
+            ("[schema] id_format", "[schema.kinds.<NAME>] id_format"),
+            ("[rules.citations] default", "[rules.citations.<KIND>] default"),
+            ("[rules.citations.grounding] must", "[rules.citations.<NAME>.grounding] must"),
+        )
+        missing = [key for pair in pairs for key in pair if key not in keys]
+        self.assertEqual([], missing, "a scope the v2 reader no longer admits")
 
 
 if __name__ == "__main__":

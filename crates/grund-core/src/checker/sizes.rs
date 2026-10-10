@@ -1,4 +1,6 @@
-use crate::config::{Frame, LeadSizeWarning, Schema, measure_point_text};
+use crate::config::{
+    Frame, LeadSizeWarning, PointSizeUnit, Schema, Strength, measure_point_text,
+};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, TextOverlays,
@@ -20,9 +22,31 @@ pub(super) fn check_oversized_leads(
     overlays: &TextOverlays,
     report: &mut CheckReport,
 ) {
-    let Some(warning) = schema.leads else {
+    // §FS-declarations.checks.oversized-lead: v1's one budget is a warning; v2's
+    // `[schema.leads.words]` puts one on each strength's channel, strongest first.
+    let mut budgets: Vec<(Strength, LeadSizeWarning)> = schema
+        .leads
+        .map(|warning| (Strength::Warn, warning))
+        .into_iter()
+        .collect();
+    budgets.extend(
+        schema
+            .lead_thresholds
+            .iter()
+            .filter(|threshold| threshold.strength != Strength::May)
+            .map(|threshold| {
+                let budget = LeadSizeWarning {
+                    max: threshold.value,
+                    unit: PointSizeUnit::Words,
+                };
+                (threshold.strength, budget)
+            }),
+    );
+    budgets.sort_by_key(|(strength, _)| *strength as u8);
+    if budgets.is_empty() {
         return;
-    };
+    }
+    let budgets = budgets.as_slice();
     let mut cache = PointBodyCache::new(overlays);
     for (id, declarations) in &findings.declarations {
         // §FS-declarations.checks.oversized-lead.4: the scanned sites, so a stub that
@@ -36,7 +60,7 @@ pub(super) fn check_oversized_leads(
                 id,
                 declaration,
                 None,
-                warning,
+                budgets,
                 report,
             );
 
@@ -48,7 +72,7 @@ pub(super) fn check_oversized_leads(
                     id,
                     declaration,
                     Some((section.as_str(), info)),
-                    warning,
+                    budgets,
                     report,
                 );
             }
@@ -60,7 +84,7 @@ pub(super) fn check_oversized_leads(
                     id,
                     declaration,
                     Some((section.as_str(), info)),
-                    warning,
+                    budgets,
                     report,
                 );
             }
@@ -78,7 +102,7 @@ fn check_oversized_lead_site(
     id: &Id,
     declaration: &Declaration,
     section: Option<(&str, &SectionInfo)>,
-    warning: LeadSizeWarning,
+    budgets: &[(Strength, LeadSizeWarning)],
     report: &mut CheckReport,
 ) {
     let Ok(Some((lead, _))) = point_body_pair(cache, schema, frame, id, declaration, section)
@@ -87,10 +111,13 @@ fn check_oversized_lead_site(
         // (§FS-declarations.checks.oversized-lead.4). A read failure is the scan's.
         return;
     };
-    let actual = measure_point_text(&lead, warning.unit);
-    if actual <= warning.max {
+    // The strongest budget the lead is over: one finding, on its channel.
+    let Some((strength, warning, actual)) = budgets.iter().find_map(|(strength, warning)| {
+        let actual = measure_point_text(&lead, warning.unit);
+        (actual > warning.max).then_some((*strength, *warning, actual))
+    }) else {
         return;
-    }
+    };
     let mut coordinate = render_id(frame.grammar(), id);
     if let Some((section, _)) = section {
         coordinate.push_str(&schema.ids.section_separator);
@@ -99,7 +126,12 @@ fn check_oversized_lead_site(
     if let Some(alias) = frame.alias {
         coordinate = format!("{alias}/{coordinate}");
     }
-    report.warnings.push(Diagnostic {
+    let channel = match strength {
+        Strength::Must => &mut report.errors,
+        Strength::Warn => &mut report.warnings,
+        Strength::Should | Strength::May => &mut report.suggestions,
+    };
+    channel.push(Diagnostic {
         code: "oversized-lead",
         path: Some(declaration.file.clone()),
         line: Some(

@@ -100,14 +100,16 @@ pub(super) fn check_section_headings(
     // §FS-declarations.checks.section-heading-level / §FS-config.3.3.2: in strict mode, the
     // Markdown heading level must mirror the dotted section depth so `## 1`, `### 1.1`, ...
     // communicate the same tree that `§ID.1.1` addresses.
+
+    // §FS-config-v2.schema.1: v2's `heading_depth = "should"` is the `suggest` mode.
     if matches!(
         schema.ids.section_heading_levels.as_str(),
-        "strict" | "warn"
+        "strict" | "warn" | "suggest"
     ) {
-        let target = if schema.ids.section_heading_levels == "strict" {
-            &mut report.errors
-        } else {
-            &mut report.warnings
+        let target = match schema.ids.section_heading_levels.as_str() {
+            "strict" => &mut report.errors,
+            "warn" => &mut report.warnings,
+            _ => &mut report.suggestions,
         };
         for (id, decls) in &findings.declarations {
             for decl in decls {
