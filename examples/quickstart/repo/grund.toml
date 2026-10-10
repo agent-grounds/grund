@@ -2,6 +2,7 @@ grund_config_version = 1
 
 [id]
 format = "{kind}-{slug}"
+named_sections = true
 
 [[kinds]]
 kind = "FS"

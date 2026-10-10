@@ -23,6 +23,8 @@ what it does and carries one excerpt from a committed runnable example
 renumbering before showing its result. The HTML table keeps the excerpts readable
 as text in either theme. The example has its own configuration and checked citations;
 its IDs are escaped in the root README and linked to their example files.
+The example opts into named sections and cites a numbered point under a named
+chapter, so the coordinate identifies both the topic and the specific requirement.
 
 ### 1.2 The read ladder
 
