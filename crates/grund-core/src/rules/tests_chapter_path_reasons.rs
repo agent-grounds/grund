@@ -13,8 +13,11 @@ use std::path::PathBuf;
 
 const NUMBERED: &str = "numbered chapter subjects can detach when headings move";
 const WILDCARD: &str = "section-component wildcards are not accepted in phase 1";
-/// The accepted form a `The PATH chapter of each KIND` path refusal gives.
-const LOGIN: &str = "; accepted form: FS-login.requirements must cite at least one REQ.";
+/// What follows a reason whose accepted form has the subject `subject`
+/// (§FS-rules.3.5.4.2).
+fn form(subject: &str) -> String {
+    format!("; accepted form: {subject} must cite at least one REQ.")
+}
 
 /// Kinds `FS` and `REQ` under `{kind}-{slug}`, named sections as given.
 fn vocabulary(named_sections: bool) -> RuleVocabulary {
@@ -77,26 +80,28 @@ fn assert_rows(rows: &[(&str, String)], vocabulary: &RuleVocabulary) {
 /// §FS-rules.3.5.3: the exact table. A numbered or wildcard component in
 /// `The PATH chapter of each KIND` gets the reason its literal spelling gets,
 /// and an empty component is refused off the section grammar, not as numbered.
+/// The form keeps the named components typed before it (§FS-rules.3.5.4.2).
 #[test]
 fn a_chapter_path_is_refused_for_the_component_that_failed() {
+    let chapter = form("The requirements chapter of each FS");
     let rows = [
         (
             "The requirements.1 chapter of each FS",
-            format!("{NUMBERED}{LOGIN}"),
+            format!("{NUMBERED}{chapter}"),
         ),
         (
             "The requirements.* chapter of each FS",
-            format!("{WILDCARD}{LOGIN}"),
+            format!("{WILDCARD}{chapter}"),
         ),
         (
             "FS-login.requirements.",
-            format!("{}{LOGIN}", grammar("FS-login.requirements.")),
+            grammar("FS-login.requirements.") + &form("FS-login.requirements"),
         ),
         (
             "FS-login..requirements",
-            format!("{}{LOGIN}", grammar("FS-login..requirements")),
+            grammar("FS-login..requirements") + &form("FS-login"),
         ),
-        ("FS-login.", format!("{}{LOGIN}", grammar("FS-login."))),
+        ("FS-login.", grammar("FS-login.") + &form("FS-login")),
     ];
     assert_rows(&rows, &vocabulary(true));
 }
@@ -107,46 +112,39 @@ fn a_chapter_path_is_refused_for_the_component_that_failed() {
 #[test]
 fn the_first_refused_component_decides_the_reason() {
     let rows = [
-        ("FS-login..1", format!("{}{LOGIN}", grammar("FS-login..1"))),
-        ("FS-login.1.", format!("{NUMBERED}{LOGIN}")),
+        ("FS-login..1", grammar("FS-login..1") + &form("FS-login")),
+        ("FS-login.1.", format!("{NUMBERED}{}", form("FS-login"))),
         (
             "The 1.requirements chapter of each FS",
-            format!("{NUMBERED}{LOGIN}"),
+            format!("{NUMBERED}{}", form("Each FS")),
         ),
         (
             "The requirements..1 chapter of each FS",
-            format!(
-                "{}{LOGIN}",
-                grammar("The requirements..1 chapter of each FS")
-            ),
+            grammar("The requirements..1 chapter of each FS")
+                + &form("The requirements chapter of each FS"),
         ),
         (
             "The Requirements.1 chapter of each FS",
-            format!(
-                "{}{LOGIN}",
-                grammar("The Requirements.1 chapter of each FS")
-            ),
+            grammar("The Requirements.1 chapter of each FS") + &form("Each FS"),
         ),
     ];
     assert_rows(&rows, &vocabulary(true));
 }
 
-/// §FS-rules.3.5.3: only the reason follows the component. A literal subject
-/// refused for an empty component is offered its own declaration's chapter, as
-/// a numbered literal is.
+/// §FS-rules.3.5.4.2: a literal keeps its own declaration and the named
+/// components typed before the one that failed, whichever component failed.
 #[test]
-fn an_empty_literal_component_keeps_its_declarations_accepted_form() {
-    let demo = "; accepted form: FS-demo.requirements must cite at least one REQ.";
+fn a_literal_keeps_its_declaration_and_the_components_before_the_failed_one() {
     let rows = [
         (
             "FS-demo.requirements.",
-            format!("{}{demo}", grammar("FS-demo.requirements.")),
+            grammar("FS-demo.requirements.") + &form("FS-demo.requirements"),
         ),
         (
             "FS-demo..requirements",
-            format!("{}{demo}", grammar("FS-demo..requirements")),
+            grammar("FS-demo..requirements") + &form("FS-demo"),
         ),
-        ("FS-demo.2", format!("{NUMBERED}{demo}")),
+        ("FS-demo.2", format!("{NUMBERED}{}", form("FS-demo"))),
     ];
     assert_rows(&rows, &vocabulary(true));
 }
@@ -154,19 +152,20 @@ fn an_empty_literal_component_keeps_its_declarations_accepted_form() {
 /// §FS-rules.3.5.3: the literal spelling judges its path before it asks about
 /// named sections, so an empty component is refused off the section grammar
 /// with them off too, while the chapter spelling, which asks first, keeps its
-/// named-sections-off refusal (§FS-rules.3.5.2).
+/// named-sections-off refusal (§FS-rules.3.5.2). With them off the literal is
+/// offered `FS-login`, the subject `list --selector` gives it then too.
 #[test]
 fn an_empty_literal_component_is_judged_before_named_sections_are_asked_about() {
     let rows = [
         (
             "FS-login.requirements.",
-            format!("{}{LOGIN}", grammar("FS-login.requirements.")),
+            grammar("FS-login.requirements.") + &form("FS-login"),
         ),
         (
             "FS-login..requirements",
-            format!("{}{LOGIN}", grammar("FS-login..requirements")),
+            grammar("FS-login..requirements") + &form("FS-login"),
         ),
-        ("FS-login.2", format!("{NUMBERED}{LOGIN}")),
+        ("FS-login.2", format!("{NUMBERED}{}", form("FS-login"))),
         (
             "The requirements.1 chapter of each FS",
             "named chapter subjects require [id] named_sections = true; accepted form after enabling it: The requirements chapter of each FS must cite at least one REQ.".into(),
