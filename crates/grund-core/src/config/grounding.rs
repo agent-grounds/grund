@@ -13,22 +13,35 @@
 //! being written twice.
 
 use super::kind::KindConfig;
+use super::project::{Rules, Schema};
 use super::record::{Config, declared_homeless_kind};
 
 /// The effective grounding level of the row named `kind` (§FS-config.3.4.8) —
 /// including the homeless kind, whose row a config need not have declared.
 ///
-/// A `[[kinds]]` lookup over the pair below, and the one reading of it a caller
-/// does by kind name rather than by row: the scanner asks it per file
-/// (§AR-scanner.2.7.1) and the checker per citing kind (§FS-check.3.11.3), which is
-/// why it sits with the keys rather than with either of them.
-pub(crate) fn grounding_level_for_kind(config: &Config, kind: &str) -> usize {
-    config
-        .kinds
+/// A lookup over the schema's rows and the rules' grounding pair, and the one
+/// reading of it a caller does by kind name rather than by row: `compile` asks
+/// it per row for the scan demand (§AR-config.6.1) and the checker per citing
+/// kind (§FS-check.3.11.3), which is why it sits with the keys rather than with
+/// either of them.
+pub(crate) fn grounding_level_for_kind(schema: &Schema, rules: &Rules, kind: &str) -> usize {
+    let grounding = &rules.grounding;
+    let level = |name: &str| {
+        grounding
+            .kinds
+            .get(name)
+            .and_then(|row| row.level)
+            .unwrap_or(grounding.level)
+    };
+    if schema.rows.iter().any(|row| row.name == kind) {
+        return level(kind);
+    }
+    // §FS-config.3.9.2.3: the homeless kind's declared row, else the default.
+    schema
+        .rows
         .iter()
-        .find(|configured| configured.kind == kind)
-        .map(|configured| config.kind_grounding(configured).1)
-        .unwrap_or_else(|| config.homeless_grounding().1)
+        .find(|row| row.is_complement())
+        .map_or(grounding.level, |row| level(&row.name))
 }
 
 impl Config {

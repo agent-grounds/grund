@@ -54,7 +54,7 @@ impl Config {
             shorthand: schema.citation.shorthand,
             require_grounding: project.rules.grounding.require || run.scope.require_grounding,
             grounding_level: project.rules.grounding.level,
-            grounding_units: compiled.demand.grounding_units,
+            grounding_units: !compiled.demand.is_empty(),
             conversation: presentation.conversation.clone(),
             lead_size_warning: schema.leads.clone(),
             inline_style: notes.inline_style.clone(),

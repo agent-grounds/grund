@@ -120,11 +120,10 @@ pub struct Config {
     /// default unit inside each governed file, in Markdown heading levels, for
     /// every `[[kinds]]` row that does not set its own. `1` is the file.
     pub grounding_level: usize,
-    /// Whether any row's effective `grounding_level` is finer than the file
-    /// (§AR-scanner.2.7). Derived from the two keys once the config is read, so
-    /// the scanner records per-file structure only where a row asks for it and a
-    /// level-1 tree — which is every config written before the keys existed —
-    /// pays nothing (§GOAL-fast-feedback).
+    /// Whether any row's effective `grounding_level` is finer than the file:
+    /// the façade's view of a non-empty `ScanDemand` (§AR-config.6.1), which the
+    /// scanner reads instead, so it records per-file structure only where a row
+    /// asks for it and a level-1 tree pays nothing (§GOAL-fast-feedback).
     pub grounding_units: bool,
     /// `[reference] conversation` (§FS-config.3.1.3, §DF-repo-conversation-opinion) —
     /// the repository's committed conversation-rendering opinion. `None` means no

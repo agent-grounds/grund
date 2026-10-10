@@ -141,6 +141,8 @@ mod tests_records;
 #[cfg(test)]
 mod tests_report_paths;
 #[cfg(test)]
+mod tests_scan_demand;
+#[cfg(test)]
 mod tests_scan_exclude;
 #[cfg(test)]
 mod tests_validation;

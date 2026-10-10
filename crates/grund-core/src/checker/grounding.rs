@@ -239,7 +239,8 @@ pub(super) fn file_obligation_units<'a>(
         .iter()
         .find(|kind| kind.kind == citing_kind)
         .and_then(KindConfig::place_label);
-    let level = grounding_level_for_kind(config, citing_kind);
+    let project = config.project();
+    let level = grounding_level_for_kind(&project.schema, &project.rules, citing_kind);
     by_file
         .iter()
         .filter(|((kind, _), _)| *kind == citing_kind)
