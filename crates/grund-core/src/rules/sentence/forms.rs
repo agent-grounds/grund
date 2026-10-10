@@ -55,6 +55,13 @@ impl Refusal {
         self
     }
 
+    /// The same refusal offering no form, `kind` saying whether what is missing
+    /// is a kind (§FS-rules.3.5.4.4).
+    pub(super) fn offering_none(mut self, kind: bool) -> Self {
+        self.form = Form::None { kind };
+        self
+    }
+
     /// The same refusal, its form read with named sections on where `enabling`.
     pub(super) fn enabling(mut self, enabling: bool) -> Self {
         self.enabling = enabling;
@@ -98,18 +105,17 @@ impl Refusal {
             }
             Form::None { kind } => Err(kind),
         };
+        let alone = |kind: bool| RuleParseError {
+            message: match trailer {
+                Some(trailer) => format!("{reason}; {trailer}"),
+                None => reason.clone(),
+            },
+            unrecovered: kind,
+        };
         let (first, enabled, second) = match offered {
             Ok(offered) => offered,
             // §FS-rules.3.5.4.4: the reason alone, and the kinds where one is missing.
-            Err(kind) => {
-                return RuleParseError {
-                    message: match trailer {
-                        Some(trailer) => format!("{reason}; {trailer}"),
-                        None => reason,
-                    },
-                    unrecovered: kind,
-                };
-            }
+            Err(kind) => return alone(kind),
         };
         let forms = [Some(&first), second.as_ref().map(|(_, second)| second)];
         // §FS-rules.3.5.2 step 3: the label is decided on the whole offered sentence.
@@ -118,6 +124,10 @@ impl Refusal {
                 .into_iter()
                 .flatten()
                 .any(|form| read(form, vocabulary).is_some());
+        // §FS-rules.3.5.2 step 3: only a reason about named sections may carry the label.
+        if after && !enabling {
+            return alone(false);
+        }
         let (plural, forms) = match second {
             None => ("", first),
             Some((joiner, second)) => ("s", format!("\"{first}\" {joiner} \"{second}\"")),
