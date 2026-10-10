@@ -9,8 +9,7 @@ use std::sync::{Arc, Mutex};
 use super::*;
 use crate::config::{Config, load_config};
 use crate::model::{Catalog, CheckInput, Id, normalize_path_lexically, with_check_input_observer};
-use crate::scanner::scan_tree;
-use crate::testing::{test_root, write};
+use crate::testing::{scan_tree, test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\n[reference]\nstrict = true\n\
 require_grounding = false\n\n[id]\nformat = \"{kind}-{slug}\"\n\n[[kinds]]\n\

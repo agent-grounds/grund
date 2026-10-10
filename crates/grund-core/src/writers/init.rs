@@ -159,7 +159,13 @@ fn init_run(
     // any entrypoint write, then reuse their exact titles in managed guidance.
     let rule_kind_enabled = init_config.kinds.iter().any(|kind| kind.rules);
     let (rule_rows, rule_errors, rule_findings) = if rule_kind_enabled {
-        let (findings, errors) = scan_tree(&init_config, Some(&target), true).map_err(|err| {
+        let (findings, errors) = scan_tree(
+            init_config.schema(),
+            init_config.frame(),
+            Some(&target),
+            true,
+        )
+        .map_err(|err| {
             let message = err.to_string();
             *diagnostic = Some(err);
             InitError::new(message)
@@ -460,7 +466,8 @@ fn init_run(
     let next = (any_change && !refresh_of_complete_setup).then(|| {
         // §FS-init.2.2.2: only no-`--docs` guidance asks this question. The probe
         // uses the effective config selected above and exits on its first file.
-        let scan_reads_file = !docs && effective_scope_reads_any_file(&init_config);
+        let scan_reads_file =
+            !docs && effective_scope_reads_any_file(init_config.schema(), init_config.frame());
         InitNext {
             docs,
             entrypoint: workflow_entrypoint

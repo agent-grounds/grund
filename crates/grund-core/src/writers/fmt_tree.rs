@@ -36,9 +36,11 @@ fn scope_contains_markdown(
     scope: Option<&Path>,
     explicit_scope: bool,
 ) -> Result<bool> {
-    Ok(walk_scannable_files(config, scope, explicit_scope)?
-        .iter()
-        .any(|path| path.extension().and_then(|ext| ext.to_str()) == Some("md")))
+    Ok(
+        walk_scannable_files(config.schema(), config.frame(), scope, explicit_scope)?
+            .iter()
+            .any(|path| path.extension().and_then(|ext| ext.to_str()) == Some("md")),
+    )
 }
 
 /// What one `fmt` walk produced (§FS-fmt.3). Every path here is already rendered
@@ -132,7 +134,8 @@ pub(crate) fn fmt_tree(
     // §FS-fmt.6.3: the link pass needs the whole project's declarations, because
     // a wrap's URL comes from a home file that may sit outside the rewrite scope.
     // §FS-fmt.2.4.5's scan is deferred instead, to the first shorthand candidate.
-    let walked = walk_scannable_files_reporting(config, scope, explicit_scope)?;
+    let walked =
+        walk_scannable_files_reporting(config.schema(), config.frame(), scope, explicit_scope)?;
     // §FS-fmt.2.5.1: the files this config takes out of every rewrite. The walk
     // above is untouched — only what happens to each file's bytes changes.
     let excluded = fmt_excluded(config)?;
@@ -174,7 +177,7 @@ pub(crate) fn fmt_tree(
     let scan_errors: Vec<ApiScanError> = walked
         .errors
         .iter()
-        .map(|(file, message)| api_scan_error(opts.render, file, message))
+        .map(|(file, message)| api_scan_error(opts.render.frame(), file, message))
         .collect();
     for path in walked.files {
         // §FS-fmt.2.3.2: this file was reached through a link that leaves the

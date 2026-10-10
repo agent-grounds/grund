@@ -231,14 +231,19 @@ pub(super) fn write_folder_home(
         // §FS-fetch.5: discovery uses the scanner's recursive folder traversal,
         // including its ignore, exclusion, hidden-file, and symlink semantics.
         let mut sources = std::collections::BTreeMap::new();
-        let walked =
-            walk_scannable_files_with_sources(config, Some(folder), true, &mut |report, error| {
+        let walked = walk_scannable_files_with_sources(
+            config.schema(),
+            config.frame(),
+            Some(folder),
+            true,
+            &mut |report, error| {
                 sources.entry(report.clone()).or_insert(error);
-            })
-            .map_err(|err| {
-                let message = format!("cannot read snapshot folder {}: {err:#}", folder.display());
-                fetch_walk_failure(diagnostic, folder, err, message)
-            })?;
+            },
+        )
+        .map_err(|err| {
+            let message = format!("cannot read snapshot folder {}: {err:#}", folder.display());
+            fetch_walk_failure(diagnostic, folder, err, message)
+        })?;
         if let Some(report @ (path, message)) = walked.errors.first() {
             let message = format!(
                 "cannot read snapshot folder {} at {}: {message}",

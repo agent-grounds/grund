@@ -93,7 +93,7 @@ pub(crate) fn block_scope_roots<'a>(
     config: &Config,
     members: &'a [WorkspaceMember],
 ) -> Vec<(PathBuf, Option<&'a WorkspaceMember>)> {
-    root_scope_roots(config, false)
+    root_scope_roots(config.schema(), &config.root, false)
         .into_iter()
         .filter(|root| root.exists())
         .map(|root| {
@@ -163,7 +163,7 @@ pub(crate) fn reject_absorbed_scan(config: &Config, members: &[WorkspaceMember])
 /// answer is a `Config` with its boundary set and nothing else
 /// (§DA-engine-renders-nothing).
 pub(crate) fn uncovered_block_scope_roots(config: &Config) -> Vec<PathBuf> {
-    root_scope_roots(config, false)
+    root_scope_roots(config.schema(), &config.root, false)
         .into_iter()
         .filter(|root| root.exists())
         .filter(|root| {

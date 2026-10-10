@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use super::value_context::SourceValueLineContext;
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::DocstringContent;
 use crate::model::InlineCitationSite;
 
@@ -24,7 +24,8 @@ pub(super) struct CitationLine<'a> {
     pub(super) column_offset: usize,
     pub(super) lineno: usize,
     pub(super) path: &'a Path,
-    pub(super) config: &'a Config,
+    pub(super) schema: &'a Schema,
+    pub(super) frame: Frame<'a>,
     pub(super) is_md: bool,
     /// The bytes on this physical source line that the scanner's shared block
     /// walk recognizes as comment content, and the block they belong to.

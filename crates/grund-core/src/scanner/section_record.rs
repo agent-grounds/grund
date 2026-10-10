@@ -7,7 +7,7 @@ use std::path::Path;
 
 use super::embedded_value_context::push_invalid_embedded_marker;
 use super::tree::heading_level_for_line;
-use crate::config::{Config, kind_value_chapter};
+use crate::config::{Schema, kind_value_chapter};
 use crate::grammar::{SourceScanLine, section_anchor_text, strip_block_closer};
 use crate::model::{
     Catalog, Declaration, EmbeddedValueRoot, SectionInfo, ValueRootOrigin, named_section_component,
@@ -25,7 +25,7 @@ pub(super) fn record_section_heading(
     is_md: bool,
     lineno: usize,
     embedded_marker: Option<usize>,
-    config: &Config,
+    schema: &Schema,
     path: &Path,
     findings: &mut Catalog,
 ) -> bool {
@@ -41,7 +41,7 @@ pub(super) fn record_section_heading(
     // §FS-values.2.5 / §AR-scanner.2.2.8: the second enrollment route. A named
     // direct child of the declaration's direct chapter is a root by schema,
     // with no marker to carry; the marker route stays numeric-only.
-    let chapter_root = section_is_chapter_value_root(config, &decl.id.kind, sec);
+    let chapter_root = section_is_chapter_value_root(schema, &decl.id.kind, sec);
     // §FS-rules.5.1.1: a source heading is titled from its own `#` run up to any
     // closing `*/`, so the comment around it never joins the label.
     // Markdown and docstring lines stay as is.
@@ -99,8 +99,8 @@ pub(super) fn record_section_heading(
 /// `<name>` is one named component. Two components is what makes the chapter
 /// *direct* and the root its *direct child*, so a same-named chapter nested
 /// deeper (`subsystems.pump.values`) gains nothing.
-pub(super) fn section_is_chapter_value_root(config: &Config, kind: &str, section: &str) -> bool {
-    let Some(chapter) = kind_value_chapter(config, kind) else {
+pub(super) fn section_is_chapter_value_root(schema: &Schema, kind: &str, section: &str) -> bool {
+    let Some(chapter) = kind_value_chapter(schema, kind) else {
         return false;
     };
     let mut parts = section.split('.');

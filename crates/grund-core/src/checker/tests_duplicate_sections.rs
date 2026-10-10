@@ -11,10 +11,9 @@ use crate::config::Config;
 use crate::model::{Diagnostic, Id, ShowRenderMode};
 use crate::queries::show_declaration;
 use crate::resolver::WorkspaceCheckTarget;
-use crate::scanner::scan_tree;
 use crate::testing::{
     canonical_test_path, error_codes, legacy_fs_folder_config, located_diagnostics, scan_findings,
-    test_root, write,
+    scan_tree, test_root, write,
 };
 
 fn alpha() -> Id {

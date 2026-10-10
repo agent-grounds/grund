@@ -1,12 +1,13 @@
 //! Test module: scanner comment handling, stubs, and anchors (§AR-scanner)
 
-use super::*;
 use crate::checker::check_findings;
 use crate::config::{Config, load_config};
 use crate::grammar::{anchor_slug_github, reduce_heading_text, section_anchor_text};
 use crate::model::{Id, ShowRenderMode};
 use crate::queries::show_declaration;
-use crate::testing::{canonical_test_path, numbered_config, scan_findings, test_root, write};
+use crate::testing::{
+    canonical_test_path, numbered_config, scan_findings, scan_tree, test_root, write,
+};
 
 /// §FS-check.1.1.5: a fenced code block is read as neither prose nor code, so
 /// nothing inside it is a citation. A fence opens with at most three leading

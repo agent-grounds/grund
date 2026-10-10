@@ -12,8 +12,7 @@ use crate::config::{Config, load_config};
 use crate::resolver::load_workspace_projects;
 use crate::rules::RuleAnchor;
 use crate::rules::sentence::parse_rule;
-use crate::scanner::scan_tree;
-use crate::testing::{test_root, write};
+use crate::testing::{scan_tree, test_root, write};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 

@@ -18,8 +18,7 @@ use crate::config::Config;
 use crate::grammar::DocstringContent;
 use crate::model::{Catalog, CheckReport};
 use crate::queries::{DeclaredId, on_type_line_edits};
-use crate::scanner::scan_tree;
-use crate::testing::{numbered_config, test_root, write};
+use crate::testing::{numbered_config, scan_tree, test_root, write};
 
 fn check_tree(config: &Config, root: &Path) -> (Catalog, CheckReport) {
     let (findings, errors) = scan_tree(config, Some(root), true).expect("scan");

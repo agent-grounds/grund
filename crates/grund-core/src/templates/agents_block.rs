@@ -167,7 +167,7 @@ pub(crate) fn inline_citation_style_sentence(project: &Project, compiled: &Compi
     // renders the byte-identical block it rendered before that key existed.
     format!(
         "{budgets}{BLOCK_SENTENCE}{}{DOC_COMMENT_SENTENCE}",
-        inline_note_layout_sentence(compiled.lexical(project))
+        inline_note_layout_sentence(compiled.lexical(&project.schema))
     )
 }
 

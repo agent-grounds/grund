@@ -8,8 +8,7 @@ use crate::config::Config;
 use crate::grammar::parse_id_arg;
 use crate::model::ShowRenderMode;
 use crate::queries::show_declaration;
-use crate::scanner::{scan_tree, scan_tree_with_workspace};
-use crate::testing::{canonical_test_path, test_root, write};
+use crate::testing::{canonical_test_path, scan_tree, scan_tree_with_workspace, test_root, write};
 use crate::workspace::{WorkspaceCitationTarget, split_qualified_id_arg};
 use crate::writers::wrap_markdown_links;
 
@@ -118,14 +117,8 @@ fn workspace_qualified_citation_uses_target_id_grammar() {
     let api_config = Config::default_for(root.join("apps/api"));
 
     let targets = vec![
-        WorkspaceCitationTarget {
-            alias: "root".to_string(),
-            config: root_config.clone(),
-        },
-        WorkspaceCitationTarget {
-            alias: "api".to_string(),
-            config: api_config.clone(),
-        },
+        WorkspaceCitationTarget::of("root".to_string(), &root_config),
+        WorkspaceCitationTarget::of("api".to_string(), &api_config),
     ];
     let (root_findings, _) =
         scan_tree_with_workspace(&root_config, Some(&root), true, &targets).expect("scan root");
@@ -247,14 +240,8 @@ fn workspace_qualified_dangling_diagnostic_uses_target_id_grammar() {
     let api_config = Config::default_for(root.join("apps/api"));
 
     let targets = vec![
-        WorkspaceCitationTarget {
-            alias: "root".to_string(),
-            config: root_config.clone(),
-        },
-        WorkspaceCitationTarget {
-            alias: "api".to_string(),
-            config: api_config.clone(),
-        },
+        WorkspaceCitationTarget::of("root".to_string(), &root_config),
+        WorkspaceCitationTarget::of("api".to_string(), &api_config),
     ];
     let (root_findings, _) =
         scan_tree_with_workspace(&root_config, Some(&root), true, &targets).expect("scan root");

@@ -14,7 +14,8 @@ use std::sync::Arc;
 use anyhow::Result;
 
 use super::compiled::{Compiled, compile};
-use super::project::Project;
+use super::frame::{Display, Frame};
+use super::project::{Project, Rules, Schema};
 use super::record::{AbsentOptionalNamespace, Config};
 use super::run::Run;
 use super::run_warnings::RunWarning;
@@ -112,17 +113,60 @@ impl Config {
 
     /// The project this façade shows (§AR-config.1.1).
     pub(crate) fn project(&self) -> &Project {
-        &self.records.project
+        &self.records().project
     }
 
     /// The invocation's facts this façade shows (§AR-config.1.5).
     pub(crate) fn run(&self) -> &Run {
-        &self.records.run
+        &self.records().run
     }
 
     /// What was derived from the project once (§AR-config.1.5).
     pub(crate) fn compiled(&self) -> &Compiled {
-        &self.records.compiled
+        &self.records().compiled
+    }
+
+    /// The schema a stage below the writers is handed (§AR-config.1.2,
+    /// §AR-checker.1).
+    pub(crate) fn schema(&self) -> &Schema {
+        &self.project().schema
+    }
+
+    /// The rules the checker's relational half is handed (§AR-checker.1.2).
+    pub(crate) fn rules(&self) -> &Rules {
+        &self.project().rules
+    }
+
+    /// The frame a stage runs in, its report spelled from this project
+    /// (§AR-checker.1, §FS-config.3.6).
+    pub(crate) fn frame(&self) -> Frame<'_> {
+        let records = self.records();
+        Frame {
+            run: &records.run,
+            compiled: &records.compiled,
+            name: records.project.name.as_deref(),
+            members: &records.project.workspace,
+            display: self.display(),
+        }
+    }
+
+    /// How this run's report spells a path from this project: the run's
+    /// `--path-base` over `[output] relative_paths` (§FS-cli.3.4), settled here so
+    /// a stage reads no presentation key (§AR-config.5).
+    pub(crate) fn display(&self) -> Display<'_> {
+        Display {
+            root: &self.root,
+            cli_base: &self.cli_base,
+            from_root: self.reports_from_root(),
+        }
+    }
+
+    /// The records behind the façade. A test may still set a façade field
+    /// directly, so under test they are read back from the fields
+    /// (`facade_sync.rs`); nothing else writes a field outside a setter.
+    #[cfg(not(test))]
+    fn records(&self) -> &Records {
+        &self.records
     }
 
     /// Re-roots the run at `root`, the canonical config root a workspace walk

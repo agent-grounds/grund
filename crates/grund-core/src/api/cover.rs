@@ -260,7 +260,7 @@ pub(super) fn cover_scan_errors(context: &WorkspaceContext) -> Vec<ApiScanError>
     errors.sort_by_key(|(path, message)| (sort_path_key(path), message.clone()));
     errors
         .into_iter()
-        .map(|(path, message)| api_scan_error(config, path, message))
+        .map(|(path, message)| api_scan_error(config.frame(), path, message))
         .collect()
 }
 

@@ -71,12 +71,12 @@ mod complete_findings {
         /// itself wherever the scope holds Markdown (§FS-fmt.6.6). Paths are
         /// rendered against the run's config, like every other path `fmt` prints.
         pub(crate) fn of_tree_or_abort(config: &Config, render: &Config) -> Result<Self> {
-            let (findings, errors) = scan_tree(config, None, false)?;
+            let (findings, errors) = scan_tree(config.schema(), config.frame(), None, false)?;
             if !errors.is_empty() {
                 return Err(FmtScanAbort {
                     scan_errors: errors
                         .into_iter()
-                        .map(|(path, message)| api_scan_error(render, &path, &message))
+                        .map(|(path, message)| api_scan_error(render.frame(), &path, &message))
                         .collect::<Vec<ApiScanError>>(),
                 }
                 .into());

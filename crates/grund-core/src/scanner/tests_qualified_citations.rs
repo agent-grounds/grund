@@ -1,8 +1,7 @@
 //! Test module: qualified-citation recognition (§AR-core-module-layout.1.5)
 
-use super::scan_tree;
 use crate::config::Config;
-use crate::testing::{test_root, write};
+use crate::testing::{scan_tree, test_root, write};
 
 /// §FS-workspace.1.3, §AR-workspace.3.1: a marker-prefixed qualified
 /// citation (`<§>alias/<ID>`) is recognised; an unmarked `alias/<ID>` in

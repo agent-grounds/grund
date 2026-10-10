@@ -14,8 +14,7 @@ use super::*;
 use crate::api::{FmtOpts, format_references};
 use crate::grammar::{DocstringContent, DocstringCursor};
 use crate::queries::{DeclaredId, on_type_line_edits};
-use crate::scanner::scan_tree;
-use crate::testing::{numbered_config, test_root, write};
+use crate::testing::{numbered_config, scan_tree, test_root, write};
 use crate::writers::{FmtLineOpts, fmt_line};
 
 // §FS-fmt.2.4: `fmt` expands what resolves and leaves what does not, and the

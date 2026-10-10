@@ -11,7 +11,7 @@ use super::embedded_value_context::{
 };
 use super::value_context::SourceValueLineContext;
 use super::values::{markdown_component, value_declaration_is_in_home};
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::model::{
     Catalog, EmbeddedValueRoot, InvalidValueSite, ValueRootOrigin, authored_component,
     component_text_is_valid, paths_same_location,
@@ -25,11 +25,12 @@ pub(super) fn validate_embedded_value_roots(
     text: &str,
     is_md: bool,
     is_py: bool,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     source_contexts: Option<&[Option<SourceValueLineContext>]>,
     findings: &mut Catalog,
 ) {
-    let normalized = normalized_value_lines(text, is_py, config, source_contexts);
+    let normalized = normalized_value_lines(text, is_py, schema, source_contexts);
 
     let mut invalid = Vec::new();
     for decl in findings
@@ -119,7 +120,7 @@ pub(super) fn validate_embedded_value_roots(
 
         // A whole-declaration authority owns its complete section tree; an
         // embedded mark inside it is invalid and never competes for ownership.
-        let whole_value = value_declaration_is_in_home(config, path, &decl.id);
+        let whole_value = value_declaration_is_in_home(schema, frame, path, &decl.id);
         for (root_path, root_line) in roots {
             let mut reasons: Vec<(usize, Option<usize>, String)> = Vec::new();
             if whole_value {
@@ -176,7 +177,7 @@ pub(super) fn validate_embedded_value_roots(
             let root_title_valid = normalized
                 .get(root_line.saturating_sub(1))
                 .and_then(|(line, _, _, block_comment)| {
-                    markdown_component(line, config)
+                    markdown_component(line, frame)
                         .map(|(title, column)| (title, column, *block_comment))
                 })
                 .and_then(|(title, _, block_comment)| {
@@ -211,7 +212,7 @@ pub(super) fn validate_embedded_value_roots(
                                 line,
                                 is_md || *docstring,
                                 *block_comment,
-                                config,
+                                schema,
                             )
                         })
                         .is_some_and(|level| level <= root_level)
@@ -235,13 +236,19 @@ pub(super) fn validate_embedded_value_roots(
                     continue;
                 };
                 let markdown = is_md || *docstring;
-                let content = semantic_comment_content(line, markdown, *block_comment, config);
+                let content = semantic_comment_content(line, markdown, *block_comment, schema);
                 if content.is_empty() || matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
                     continue;
                 }
-                let child =
-                    authored_heading_path(line, markdown, *block_comment, chapter_root, config);
-                let level = authored_heading_level(line, markdown, *block_comment, config);
+                let child = authored_heading_path(
+                    line,
+                    markdown,
+                    *block_comment,
+                    chapter_root,
+                    schema,
+                    frame,
+                );
+                let level = authored_heading_level(line, markdown, *block_comment, schema);
                 let expected_path = format!("{root_path}.{expected}");
                 let immediate_numeric = child.as_deref().is_some_and(|path| {
                     path.strip_prefix(&format!("{root_path}."))
@@ -285,7 +292,7 @@ pub(super) fn validate_embedded_value_roots(
                             .to_string(),
                     ));
                 }
-                let Some((component, column)) = markdown_component(line, config) else {
+                let Some((component, column)) = markdown_component(line, frame) else {
                     reasons.push((
                         line_no,
                         None,

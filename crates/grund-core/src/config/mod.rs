@@ -44,7 +44,10 @@ mod citations;
 mod compiled;
 mod discovery;
 mod facade;
+#[cfg(test)]
+mod facade_sync;
 mod fmt_block;
+mod frame;
 mod grounding;
 mod inputs;
 mod kind;
@@ -67,6 +70,7 @@ pub use citations::{
 };
 pub(crate) use citations::{parse_citation_target_entry, render_citation_target};
 pub use compiled::Compiled;
+pub use frame::Frame;
 // The parts of the records (§AR-config.1): an embedder reaches them through the
 // public fields of `Project`, `Run` and `Compiled`, and this component's tests
 // name them here.

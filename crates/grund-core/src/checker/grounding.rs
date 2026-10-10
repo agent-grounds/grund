@@ -12,8 +12,8 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use super::citations::ObligationUnit;
 use super::homes::{DeclarationHome, KindHomeIndex};
+use super::obligation_units::ObligationUnit;
 use crate::config::{Config, DEFAULT_GROUNDING_LEVEL, KindConfig, grounding_level_for_kind};
 use crate::model::{Catalog, CheckReport, Citation, Diagnostic, FileStructure};
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};

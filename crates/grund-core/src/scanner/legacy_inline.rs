@@ -5,7 +5,7 @@
 
 use std::path::Path;
 
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::{
     BlockCitations, block_has_inline_note_memoized, comment_strip_prefixes,
     inline_layout_violations, layout_pass_enabled, line_says_something,
@@ -17,7 +17,8 @@ use crate::model::{Citation, InlineCitationSite};
 /// block, so overlays and LSP scans use the same bytes and promotion never
 /// re-reads the filesystem.
 pub(super) fn reconcile_promoted_inline_site(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     citations: &mut [Citation],
     file: &Path,
     mut site: InlineCitationSite,
@@ -44,7 +45,7 @@ pub(super) fn reconcile_promoted_inline_site(
     }
     let lines = block_lines.iter().map(String::as_str).collect::<Vec<_>>();
     let (has_note, layout_violations) =
-        inline_note_verdicts_from_ranges(&lines, site.first_line, config, ranges);
+        inline_note_verdicts_from_ranges(&lines, site.first_line, schema, frame, ranges);
     site.has_note = has_note;
     site.layout_violations = layout_violations;
     for citation in citations.iter_mut() {
@@ -62,11 +63,12 @@ pub(super) fn reconcile_promoted_inline_site(
 fn inline_note_verdicts_from_ranges(
     lines: &[&str],
     first_line: usize,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     ranges: Vec<Vec<(usize, usize)>>,
 ) -> (bool, Vec<usize>) {
-    let prefixes = comment_strip_prefixes(config.lexical());
-    if !layout_pass_enabled(config.lexical()) {
+    let prefixes = comment_strip_prefixes(frame.compiled.lexical(schema));
+    if !layout_pass_enabled(frame.compiled.lexical(schema)) {
         let has_note = lines
             .iter()
             .zip(&ranges)
@@ -75,7 +77,7 @@ fn inline_note_verdicts_from_ranges(
     }
     let mut block = BlockCitations {
         lines,
-        lexical: config.lexical(),
+        lexical: frame.compiled.lexical(schema),
         alias_grammars: &[],
         ranges: ranges.into_iter().map(Some).collect(),
     };

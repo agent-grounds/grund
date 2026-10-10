@@ -12,7 +12,7 @@ use super::embedded_value_context::{
 };
 use super::section_record::section_is_chapter_value_root;
 use super::value_context::SourceValueLineContext;
-use crate::config::{Config, kind_value_chapter};
+use crate::config::{Frame, Schema, kind_value_chapter};
 use crate::model::{Catalog, InvalidValueSite, paths_same_location};
 
 /// What a declared chapter may not hold. One message for every shape, because
@@ -30,11 +30,12 @@ pub(super) fn validate_declared_value_chapters(
     text: &str,
     is_md: bool,
     is_py: bool,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     source_contexts: Option<&[Option<SourceValueLineContext>]>,
     findings: &mut Catalog,
 ) {
-    let normalized = normalized_value_lines(text, is_py, config, source_contexts);
+    let normalized = normalized_value_lines(text, is_py, schema, source_contexts);
     let mut invalid = Vec::new();
     for decl in findings
         .declarations
@@ -42,7 +43,7 @@ pub(super) fn validate_declared_value_chapters(
         .flatten()
         .filter(|decl| paths_same_location(&decl.file, path))
     {
-        let Some(chapter) = kind_value_chapter(config, &decl.id.kind) else {
+        let Some(chapter) = kind_value_chapter(schema, &decl.id.kind) else {
             continue;
         };
         let Some(chapter_info) = decl.sections.get(chapter) else {
@@ -55,7 +56,7 @@ pub(super) fn validate_declared_value_chapters(
                 continue;
             };
             let markdown = is_md || *docstring;
-            let level = authored_heading_level(line, markdown, *block_comment, config);
+            let level = authored_heading_level(line, markdown, *block_comment, schema);
             // The chapter ends at the next heading of its own depth or above;
             // everything from there is another chapter's business.
             if level.is_some_and(|found| found <= chapter_level) {
@@ -74,15 +75,17 @@ pub(super) fn validate_declared_value_chapters(
                     chapter_level + 1,
                     decl.body_end,
                     is_md,
-                    config,
+                    schema,
                 );
-                if authored_heading_path(line, markdown, *block_comment, true, config).is_some_and(
-                    |found| section_is_chapter_value_root(config, &decl.id.kind, &found),
-                ) {
+                if authored_heading_path(line, markdown, *block_comment, true, schema, frame)
+                    .is_some_and(|found| {
+                        section_is_chapter_value_root(schema, &decl.id.kind, &found)
+                    })
+                {
                     continue;
                 }
             } else {
-                let content = semantic_comment_content(line, markdown, *block_comment, config);
+                let content = semantic_comment_content(line, markdown, *block_comment, schema);
                 if content.is_empty() || matches!(content, "/*" | "/**" | "/*!" | "*" | "*/") {
                     continue;
                 }
@@ -109,14 +112,14 @@ fn child_subtree_end(
     level: usize,
     body_end: usize,
     is_md: bool,
-    config: &Config,
+    schema: &Schema,
 ) -> usize {
     ((line_no + 1)..=body_end)
         .find(|candidate| {
             normalized
                 .get(candidate.saturating_sub(1))
                 .and_then(|(line, _, docstring, block_comment)| {
-                    authored_heading_level(line, is_md || *docstring, *block_comment, config)
+                    authored_heading_level(line, is_md || *docstring, *block_comment, schema)
                 })
                 .is_some_and(|found| found <= level)
         })

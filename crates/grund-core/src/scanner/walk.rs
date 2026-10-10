@@ -3,12 +3,13 @@ use ignore::WalkBuilder;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::e2e::e2e_id_from_case_dir_name;
+use super::e2e::{e2e_cases_folder, e2e_id_from_case_dir_name};
 use super::walk_boundaries::{
     is_directory_symlink, is_scannable, outward_directory_link_root, owned_by_another_project,
 };
 pub(super) use super::walk_reporting::walk_scannable_files_reporting;
-use crate::config::{Config, canonical_config_root, root_scope_roots, unwalked_homes};
+use crate::config::{Frame, Schema, canonical_config_root, root_scope_roots, unwalked_homes};
+use crate::grammar::Grammar;
 use crate::model::{
     configured_home_path_key, is_hidden, normalize_path_lexically, scanned_decl_relative_path,
 };
@@ -27,7 +28,8 @@ use crate::model::{
 /// `link_roots` and `looping_links` are the filter's two outputs and belong to the
 /// caller, because the reporting walk reads both after the traversal.
 pub(super) fn scannable_walker(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scan_root: &Path,
     canonical_scan_root: &Path,
     physical_root: &Path,
@@ -35,7 +37,7 @@ pub(super) fn scannable_walker(
     looping_links: &std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
 ) -> Result<ignore::Walk> {
     // §FS-check.6.1.3: include ignore discovery outside the source roots.
-    if config.respect_gitignore && !crate::config::observe_ignore_inputs(scan_root) {
+    if schema.sources.respect_gitignore && !crate::config::observe_ignore_inputs(scan_root) {
         return Err(anyhow!("watch ignore coverage failed"));
     }
     let mut builder = WalkBuilder::new(scan_root);
@@ -44,7 +46,7 @@ pub(super) fn scannable_walker(
     // the walk reads through it — a linked file as the file, a linked directory by
     // descending; the entry keeps its in-tree path either way.
     builder.follow_links(true);
-    if !config.respect_gitignore {
+    if !schema.sources.respect_gitignore {
         builder
             .ignore(false)
             .git_ignore(false)
@@ -55,8 +57,10 @@ pub(super) fn scannable_walker(
     // §AR-workspace.6: precompute the boundary path components once, expressed
     // relative to the canonical scan root, so the walker filter is a single
     // component-suffix compare — no per-entry `canonicalize`, no allocation.
-    let boundary_suffixes: Vec<PathBuf> = config
-        .workspace_boundary_roots
+    let boundary_suffixes: Vec<PathBuf> = frame
+        .run
+        .workspace
+        .boundary_roots
         .iter()
         .filter_map(|root| root.strip_prefix(canonical_scan_root).ok())
         .map(Path::to_path_buf)
@@ -65,17 +69,15 @@ pub(super) fn scannable_walker(
         scan_root: scan_root.to_path_buf(),
         canonical_scan_root: canonical_scan_root.to_path_buf(),
         boundary_suffixes,
-        boundary_roots: config.workspace_boundary_roots.clone(),
-        excluded: config.exclude.clone(),
-        e2e_cases_root: config
-            .kinds
-            .iter()
-            .find(|kind| kind.kind == "E2E" && kind.citable)
-            .and_then(|kind| kind.folder.as_deref())
-            .map(|folder| config.root.join(folder)),
+        boundary_roots: frame.run.workspace.boundary_roots.clone(),
+        excluded: schema.sources.exclude.clone(),
+        e2e_cases_root: e2e_cases_folder(schema).map(|folder| frame.root().join(folder)),
         physical_root: physical_root.to_path_buf(),
-        unwalked_homes: walk_pruned_home_keys(config, scan_root, physical_root),
-        config: config.clone(),
+        unwalked_homes: walk_pruned_home_keys(schema, frame, scan_root, physical_root),
+        root: frame.root().to_path_buf(),
+        project_roots: frame.run.workspace.project_roots.clone(),
+        id_format: schema.ids.format.clone(),
+        grammar: frame.grammar().clone(),
         link_roots: std::sync::Arc::clone(link_roots),
         looping_links: std::sync::Arc::clone(looping_links),
     };
@@ -111,32 +113,39 @@ pub(super) fn scannable_walker(
 /// [`walk_scannable_files_reporting`]: no run is scanning this tree, so there is no
 /// report to raise it into, and the question — would a project have read something
 /// — is answered by the files that can be read.
-pub(crate) fn walk_reads_any_file(config: &Config, scan_root: &Path) -> bool {
+pub(crate) fn walk_reads_any_file(schema: &Schema, frame: Frame<'_>, scan_root: &Path) -> bool {
     if !scan_root.exists() {
         return false;
     }
     let canonical_scan_root =
         fs::canonicalize(scan_root).unwrap_or_else(|_| scan_root.to_path_buf());
-    let physical_root = canonical_config_root(config);
+    let physical_root = canonical_config_root(frame.root());
     // §FS-config.3.5.1, §FS-workspace.6: the reporting walk's own scan-root
     // gates, ahead of the branch below, because neither a file root nor a walk
     // root ever reaches the filter.
     if outward_directory_link_root(scan_root, &canonical_scan_root, &physical_root)
-        || config
-            .workspace_boundary_roots
+        || frame
+            .run
+            .workspace
+            .boundary_roots
             .iter()
             .any(|root| canonical_scan_root.starts_with(root))
-        || owned_by_another_project(config, &physical_root, &canonical_scan_root)
+        || owned_by_another_project(
+            &frame.run.workspace.project_roots,
+            &physical_root,
+            &canonical_scan_root,
+        )
     {
         return false;
     }
     if scan_root.is_file() {
-        return is_scannable(scan_root, config);
+        return is_scannable(scan_root, schema);
     }
     let link_roots = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
     let looping_links = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
     let Ok(walker) = scannable_walker(
-        config,
+        schema,
+        frame,
         scan_root,
         &canonical_scan_root,
         &physical_root,
@@ -149,7 +158,7 @@ pub(crate) fn walk_reads_any_file(config: &Config, scan_root: &Path) -> bool {
         entry
             .file_type()
             .is_some_and(|file_type| file_type.is_file())
-            && is_scannable(entry.path(), config)
+            && is_scannable(entry.path(), schema)
     })
 }
 
@@ -187,7 +196,13 @@ struct WalkDirFilter {
     /// test below (§GOAL-fast-feedback).
     unwalked_homes: Vec<PathBuf>,
     e2e_cases_root: Option<PathBuf>,
-    config: Config,
+    /// The config root, the run's other project roots, and the ID shape an E2E
+    /// case directory is read with: the frame's, owned, because the filter
+    /// outlives the walk's borrow of it (§AR-scanner.1).
+    root: PathBuf,
+    project_roots: Vec<PathBuf>,
+    id_format: String,
+    grammar: Grammar,
     link_roots: std::sync::Arc<std::sync::Mutex<Vec<PathBuf>>>,
     looping_links: std::sync::Arc<std::sync::Mutex<Vec<(PathBuf, PathBuf)>>>,
 }
@@ -233,7 +248,7 @@ impl WalkDirFilter {
         // §AR-scanner.2.4.2 decides which home a file is in (§GOAL-fast-feedback).
         if !self.unwalked_homes.is_empty()
             && let Some(relative) =
-                scanned_decl_relative_path(entry.path(), &self.config.root, &self.physical_root)
+                scanned_decl_relative_path(entry.path(), &self.root, &self.physical_root)
             && self
                 .unwalked_homes
                 .iter()
@@ -318,12 +333,17 @@ impl WalkDirFilter {
                     .boundary_roots
                     .iter()
                     .any(|root| resolved.starts_with(root))
-                || owned_by_another_project(&self.config, &self.physical_root, resolved)
+                || owned_by_another_project(&self.project_roots, &self.physical_root, resolved)
         })
     }
 
     fn is_e2e_case_dir(&self, path: &Path) -> bool {
-        is_direct_e2e_case_dir(path, self.e2e_cases_root.as_deref(), &self.config)
+        is_direct_e2e_case_dir(
+            path,
+            self.e2e_cases_root.as_deref(),
+            &self.id_format,
+            &self.grammar,
+        )
     }
 }
 
@@ -332,7 +352,8 @@ impl WalkDirFilter {
 pub(super) fn is_direct_e2e_case_dir(
     path: &Path,
     cases_root: Option<&Path>,
-    config: &Config,
+    id_format: &str,
+    grammar: &Grammar,
 ) -> bool {
     let Some(cases_root) = cases_root else {
         return false;
@@ -342,7 +363,7 @@ pub(super) fn is_direct_e2e_case_dir(
     }
     path.file_name()
         .and_then(|name| name.to_str())
-        .and_then(|name| e2e_id_from_case_dir_name(config, name))
+        .and_then(|name| e2e_id_from_case_dir_name(id_format, grammar, name))
         .is_some()
 }
 
@@ -352,16 +373,18 @@ pub(super) fn is_direct_e2e_case_dir(
 /// path narrows the report and not the walk (§FS-config.3.5.7, §AR-scanner.1.6,
 /// §FS-check.1.3.6.1).
 pub(super) fn scan_roots(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
 ) -> Result<Vec<PathBuf>> {
     scan_roots_for(
-        config,
+        schema,
+        frame,
         scope,
         explicit_scope,
-        config.scan_full,
-        config.scan_resolution_wide,
+        frame.run.scope.full,
+        frame.run.scope.resolution_wide,
     )
 }
 
@@ -378,7 +401,8 @@ pub(super) fn scan_roots(
 /// layers ask with `widen = false`, because each wants the path as the *bound* it
 /// is to them rather than as the walk's extra root (§AR-resolver.3.3).
 pub(crate) fn scan_roots_for(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
     full: bool,
@@ -400,25 +424,25 @@ pub(crate) fn scan_roots_for(
         // §FS-config.3.5.1, §FS-config.3.5.2.1: keep the lexical spelling for an
         // in-tree link and an external directory-link root; resolve other roots.
         let scope =
-            if lexical_scope.starts_with(&config.root) || is_directory_symlink(&lexical_scope) {
+            if lexical_scope.starts_with(frame.root()) || is_directory_symlink(&lexical_scope) {
                 lexical_scope
             } else {
-                walk_root_under_config_root(config, &resolved)
+                walk_root_under_config_root(frame, &resolved)
             };
-        if resolved == canonical_config_root(config) {
-            return Ok(root_scope_roots(config, full));
+        if resolved == canonical_config_root(frame.root()) {
+            return Ok(root_scope_roots(schema, frame.root(), full));
         }
         // §FS-check.1.3.6.1: the ordinary roots union the path, the path first so its
         // spelling wins for the files it names (§FS-check.1.3.2). `full` is no part of
         // it — an explicit path leaves the flag nothing to cancel (§FS-check.1.3.6).
         if widen {
             let mut roots = vec![scope];
-            roots.extend(root_scope_roots(config, false));
+            roots.extend(root_scope_roots(schema, frame.root(), false));
             return Ok(roots);
         }
         return Ok(vec![scope]);
     }
-    Ok(root_scope_roots(config, full))
+    Ok(root_scope_roots(schema, frame.root(), full))
 }
 
 /// A resolved scope re-expressed under the spelling `config.root` wears
@@ -430,13 +454,13 @@ pub(crate) fn scan_roots_for(
 /// not strip a root those paths no longer begin with (§FS-config.3.6). A root
 /// that is already canonical — every root `grund` discovers for itself — takes
 /// the first branch and the whole question costs one `stat` per run.
-fn walk_root_under_config_root(config: &Config, resolved: &Path) -> PathBuf {
-    let canonical_root = canonical_config_root(config);
-    if canonical_root == config.root {
+fn walk_root_under_config_root(frame: Frame<'_>, resolved: &Path) -> PathBuf {
+    let canonical_root = canonical_config_root(frame.root());
+    if canonical_root == frame.root() {
         return resolved.to_path_buf();
     }
     match resolved.strip_prefix(&canonical_root) {
-        Ok(rest) => config.root.join(rest),
+        Ok(rest) => frame.root().join(rest),
         Err(_) => resolved.to_path_buf(),
     }
 }
@@ -452,14 +476,19 @@ fn walk_root_under_config_root(config: &Config, resolved: &Path) -> PathBuf {
 /// — which reads the directory it names the way an explicit argument already
 /// reads past `[scan] include` (§FS-config.3.4.7.3); the key describes the default
 /// scope, and `grund check .` resolves to that scope rather than to this branch.
-fn walk_pruned_home_keys(config: &Config, scan_root: &Path, physical_root: &Path) -> Vec<PathBuf> {
-    if config.scan_full {
+fn walk_pruned_home_keys(
+    schema: &Schema,
+    frame: Frame<'_>,
+    scan_root: &Path,
+    physical_root: &Path,
+) -> Vec<PathBuf> {
+    if frame.run.scope.full {
         return Vec::new();
     }
-    let homes = unwalked_homes(config)
+    let homes = unwalked_homes(schema)
         .map(configured_home_path_key)
         .collect::<Vec<_>>();
-    let asked_for_one = scanned_decl_relative_path(scan_root, &config.root, physical_root)
+    let asked_for_one = scanned_decl_relative_path(scan_root, frame.root(), physical_root)
         .is_some_and(|relative| homes.iter().any(|home| relative.starts_with(home)));
     if asked_for_one { Vec::new() } else { homes }
 }

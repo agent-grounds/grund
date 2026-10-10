@@ -2,7 +2,7 @@ use anyhow::{Result, anyhow};
 use rayon::prelude::*;
 use std::path::{Component, Path, PathBuf};
 
-use super::e2e::scan_e2e_cases;
+use super::e2e::{e2e_cases_folder, scan_e2e_cases};
 use super::file_pass::{scan_file, scan_file_text};
 use super::legacy::promote_local_legacy_citations;
 use super::merge::merge_findings;
@@ -10,8 +10,7 @@ use super::stub_homes::record_stub_homes;
 use super::value_json::{scan_value_json_sources, value_json_sources};
 use super::walk::{is_direct_e2e_case_dir, scan_roots, walk_scannable_files_reporting};
 use super::walk_boundaries::is_scannable;
-use crate::config::Config;
-use crate::config::display_path;
+use crate::config::{Frame, Schema};
 use crate::grammar::resolve_shorthand_citations;
 use crate::model::{
     Catalog, StubTargets, TextOverlays, canonicalize_existing_prefix, normalize_path_lexically,
@@ -56,15 +55,16 @@ type FileScanResult = (PathBuf, std::result::Result<Catalog, String>);
 
 fn scan_one_file(
     file: &Path,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
     overlays: &TextOverlays,
 ) -> FileScanResult {
     let mut findings = Catalog::default();
     let result = if let Some(text) = overlay_text(overlays, file) {
-        scan_file_text(file, text, config, &mut findings, workspace_targets)
+        scan_file_text(file, text, schema, frame, &mut findings, workspace_targets)
     } else {
-        scan_file(file, config, &mut findings, workspace_targets)
+        scan_file(file, schema, frame, &mut findings, workspace_targets)
     };
     match result {
         Ok(()) => {
@@ -80,16 +80,18 @@ fn scan_one_file(
 /// outside scan scope and still reads as the scanned file would (§FS-show.2.3.7).
 pub(crate) fn scan_unwalked_file(
     file: &Path,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     overlays: &TextOverlays,
 ) -> Result<Catalog> {
-    let (_, result) = scan_one_file(file, config, &[], overlays);
+    let (_, result) = scan_one_file(file, schema, frame, &[], overlays);
     result.map_err(|message| anyhow!(message))
 }
 
 fn scan_file_results(
     files: &[PathBuf],
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     workspace_targets: &[WorkspaceCitationTarget],
     overlays: &TextOverlays,
 ) -> Vec<FileScanResult> {
@@ -99,7 +101,7 @@ fn scan_file_results(
         .par_iter()
         .map(|file| {
             crate::config::with_check_input_observer(observer.clone(), || {
-                scan_one_file(file, config, workspace_targets, overlays)
+                scan_one_file(file, schema, frame, workspace_targets, overlays)
             })
         })
         .collect::<Vec<_>>()
@@ -111,11 +113,12 @@ fn scan_file_results(
 /// the workspace-aware variant with no targets — single-project scans and
 /// member-local scans share this path.
 pub(crate) fn scan_tree(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
 ) -> Result<(Catalog, Vec<ScanError>)> {
-    scan_tree_with_workspace(config, scope, explicit_scope, &[])
+    scan_tree_with_workspace(schema, frame, scope, explicit_scope, &[])
 }
 
 /// Workspace-aware tree walk: `§<alias>/<ID>` citations parse with each
@@ -123,13 +126,15 @@ pub(crate) fn scan_tree(
 /// §AR-workspace.2) never needs to re-read the files the initial scan
 /// already read.
 pub(crate) fn scan_tree_with_workspace(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
     workspace_targets: &[WorkspaceCitationTarget],
 ) -> Result<(Catalog, Vec<ScanError>)> {
     scan_tree_with_workspace_threshold(
-        config,
+        schema,
+        frame,
         scope,
         explicit_scope,
         workspace_targets,
@@ -139,7 +144,8 @@ pub(crate) fn scan_tree_with_workspace(
 }
 
 pub(crate) fn scan_tree_with_workspace_threshold(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
     workspace_targets: &[WorkspaceCitationTarget],
@@ -148,7 +154,7 @@ pub(crate) fn scan_tree_with_workspace_threshold(
 ) -> Result<(Catalog, Vec<ScanError>)> {
     // §FS-config.3.5: a link the walk could not resolve is already a scan failure
     // before a single file is opened — it joins the per-file ones (§FS-check.2.4).
-    let walked = walk_scannable_files_reporting(config, scope, explicit_scope)?;
+    let walked = walk_scannable_files_reporting(schema, frame, scope, explicit_scope)?;
     // §FS-check.3.29.11: the walk's directories travel with its files, for the rule that
     // asks which of them holds a `[workspace]` block nothing claims. Carried, not
     // judged: the scanner never asks that question itself (§AR-workspace.1).
@@ -159,11 +165,11 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         ..Catalog::default()
     };
     let (mut files, mut errors) = (walked.files, walked.errors);
-    add_overlay_scan_files(config, scope, explicit_scope, overlays, &mut files)?;
+    add_overlay_scan_files(schema, frame, scope, explicit_scope, overlays, &mut files)?;
     // §FS-values.2.2: home JSON is a declaration input, never a general text
     // scan input even when a repository adds `json` to `[scan].extensions`.
-    if config.kinds.iter().any(|kind| kind.values) {
-        let home_json = value_json_sources(config, overlays)
+    if schema.value_rows().next().is_some() {
+        let home_json = value_json_sources(schema, frame, overlays)
             .map(|sources| {
                 sources
                     .into_iter()
@@ -178,7 +184,8 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         });
     }
     if files.len() >= parallel_min_files {
-        for (file, result) in scan_file_results(&files, config, workspace_targets, overlays) {
+        for (file, result) in scan_file_results(&files, schema, frame, workspace_targets, overlays)
+        {
             match result {
                 Ok(file_findings) => merge_findings(&mut findings, file_findings),
                 Err(message) => errors.push((file, message)),
@@ -186,16 +193,16 @@ pub(crate) fn scan_tree_with_workspace_threshold(
         }
     } else {
         for file in files {
-            match scan_one_file(&file, config, workspace_targets, overlays) {
+            match scan_one_file(&file, schema, frame, workspace_targets, overlays) {
                 (_, Ok(file_findings)) => merge_findings(&mut findings, file_findings),
                 (_, Err(message)) => errors.push((file, message)),
             }
         }
     }
-    if let Err(err) = scan_e2e_cases(config, scope, explicit_scope, &mut findings) {
-        errors.push((config.root.join("e2e/cases"), format!("{err:#}")));
+    if let Err(err) = scan_e2e_cases(schema, frame, scope, explicit_scope, &mut findings) {
+        errors.push((frame.root().join("e2e/cases"), format!("{err:#}")));
     }
-    scan_value_json_sources(config, overlays, &mut findings, &mut errors);
+    scan_value_json_sources(schema, frame, overlays, &mut findings, &mut errors);
     // §FS-workspace.1.2: when the citing-grammar pass and the target-grammar pass both
     // fire on the same line they emit in source order *per pass*; one sort at the end
     // keeps a workspace scan's per-line order the single-project scan's left-to-right one.
@@ -218,22 +225,24 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     // §AR-scanner.2.6.6: shorthand citations name a declaration that may live in
     // any file, so they can only be resolved once the whole walk (including the
     // E2E cases above) has produced the declaration set.
-    promote_local_legacy_citations(config, &mut findings);
-    resolve_shorthand_citations(&config.grammar, &mut findings);
+    promote_local_legacy_citations(schema, frame, &mut findings);
+    resolve_shorthand_citations(frame.grammar(), &mut findings);
     // §AR-scanner.4.6: a stub's home is known only once every declaration is in.
-    record_stub_homes(config, overlays, &mut findings);
+    record_stub_homes(schema, frame, overlays, &mut findings);
     Ok((findings, errors))
 }
 
 pub(crate) fn scan_tree_with_workspace_overlays(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
     workspace_targets: &[WorkspaceCitationTarget],
     overlays: &TextOverlays,
 ) -> Result<(Catalog, Vec<ScanError>)> {
     scan_tree_with_workspace_threshold(
-        config,
+        schema,
+        frame,
         scope,
         explicit_scope,
         workspace_targets,
@@ -243,7 +252,8 @@ pub(crate) fn scan_tree_with_workspace_overlays(
 }
 
 fn add_overlay_scan_files(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
     overlays: &TextOverlays,
@@ -252,9 +262,9 @@ fn add_overlay_scan_files(
     if overlays.is_empty() {
         return Ok(());
     }
-    let roots = scan_roots(config, scope, explicit_scope)?;
+    let roots = scan_roots(schema, frame, scope, explicit_scope)?;
     for path in overlays.keys() {
-        if !is_scannable(path, config) {
+        if !is_scannable(path, schema) {
             continue;
         }
         let path = normalize_path_lexically(path);
@@ -264,7 +274,7 @@ fn add_overlay_scan_files(
         if files.iter().any(|file| paths_same_location(file, &path)) {
             continue;
         }
-        if path.exists() || !new_overlay_file_passes_walk_filters(config, &roots, &path) {
+        if path.exists() || !new_overlay_file_passes_walk_filters(schema, frame, &roots, &path) {
             continue;
         }
         files.push(path);
@@ -273,15 +283,22 @@ fn add_overlay_scan_files(
     Ok(())
 }
 
-fn new_overlay_file_passes_walk_filters(config: &Config, roots: &[PathBuf], path: &Path) -> bool {
+fn new_overlay_file_passes_walk_filters(
+    schema: &Schema,
+    frame: Frame<'_>,
+    roots: &[PathBuf],
+    path: &Path,
+) -> bool {
     roots.iter().any(|root| {
         let root = canonicalize_existing_prefix(root);
         let path = canonicalize_existing_prefix(path);
         if path == root || !path.starts_with(&root) {
             return false;
         }
-        if config
-            .workspace_boundary_roots
+        if frame
+            .run
+            .workspace
+            .boundary_roots
             .iter()
             .any(|boundary| path_starts_with(&path, boundary))
         {
@@ -306,32 +323,38 @@ fn new_overlay_file_passes_walk_filters(config: &Config, roots: &[PathBuf], path
         if components
             .iter()
             .take(components.len().saturating_sub(1))
-            .any(|component| config.exclude.iter().any(|excluded| excluded == component))
+            .any(|component| {
+                schema
+                    .sources
+                    .exclude
+                    .iter()
+                    .any(|excluded| excluded == component)
+            })
         {
             return false;
         }
-        let e2e_cases_root = config
-            .kinds
-            .iter()
-            .find(|kind| kind.kind == "E2E" && kind.citable)
-            .and_then(|kind| kind.folder.as_deref())
-            .map(|folder| config.root.join(folder));
+        let e2e_cases_root = e2e_cases_folder(schema).map(|folder| frame.root().join(folder));
         let mut ancestor = path.parent();
         while let Some(dir) = ancestor {
             if dir == root {
                 break;
             }
-            if is_direct_e2e_case_dir(dir, e2e_cases_root.as_deref(), config) {
+            if is_direct_e2e_case_dir(
+                dir,
+                e2e_cases_root.as_deref(),
+                &schema.ids.format,
+                frame.grammar(),
+            ) {
                 return false;
             }
             ancestor = dir.parent();
         }
-        !path_ignored_by_gitignore(config, &root, &path)
+        !path_ignored_by_gitignore(schema, &root, &path)
     })
 }
 
-fn path_ignored_by_gitignore(config: &Config, root: &Path, path: &Path) -> bool {
-    if !config.respect_gitignore {
+fn path_ignored_by_gitignore(schema: &Schema, root: &Path, path: &Path) -> bool {
+    if !schema.sources.respect_gitignore {
         return false;
     }
     let Some(parent) = path.parent() else {
@@ -387,13 +410,14 @@ pub(crate) fn overlay_text<'a>(overlays: &'a TextOverlays, path: &Path) -> Optio
 /// is fatal — a partial view of the tree could miss the declaration entirely or
 /// allocate a colliding number (§FS-show.3, §FS-id.4).
 pub(crate) fn scan_tree_strict(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     scope: Option<&Path>,
     explicit_scope: bool,
 ) -> Result<Catalog> {
-    let (findings, errors) = scan_tree(config, scope, explicit_scope)?;
+    let (findings, errors) = scan_tree(schema, frame, scope, explicit_scope)?;
     if let Some((path, message)) = errors.into_iter().next() {
-        return Err(anyhow!("{}: {}", display_path(config, &path), message));
+        return Err(anyhow!("{}: {}", frame.display_path(&path), message));
     }
     Ok(findings)
 }

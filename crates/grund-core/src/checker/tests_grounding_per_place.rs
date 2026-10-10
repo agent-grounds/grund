@@ -7,8 +7,7 @@ use std::path::PathBuf;
 
 use crate::api::{CheckRun, run_check};
 use crate::config::load_config;
-use crate::scanner::scan_tree;
-use crate::testing::{check_run, findings, test_root, write};
+use crate::testing::{check_run, findings, scan_tree, test_root, write};
 
 /// A repo with three places: an `FS` home, a non-citable `skills/` home, and
 /// a `src/` tree outside every home, which is the homeless kind's complement

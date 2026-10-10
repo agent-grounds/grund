@@ -6,12 +6,11 @@
 
 use std::path::Path;
 
-use super::*;
 use crate::config::Config;
 use crate::model::Catalog;
 use crate::testing::{
     canonical_test_path, check_run, findings, legacy_fs_folder_config, linked_repo,
-    located_diagnostics, scan_errors, scanned, symlink, test_root, write,
+    located_diagnostics, scan_errors, scan_tree, scanned, symlink, test_root, write,
 };
 
 #[test]

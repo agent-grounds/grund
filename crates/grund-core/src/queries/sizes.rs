@@ -66,10 +66,9 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             continue;
         }
         scan_errors.extend(
-            project
-                .scan_errors
-                .iter()
-                .map(|(file, message)| api_scan_error(context.render_config(), file, message)),
+            project.scan_errors.iter().map(|(file, message)| {
+                api_scan_error(context.render_config().frame(), file, message)
+            }),
         );
         let used_counts = counts.used_for(project.alias.as_str());
         for (id, declarations) in &project.findings.declarations {

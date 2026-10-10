@@ -7,37 +7,38 @@ use std::path::{Path, PathBuf};
 use super::json::{JsonNode, JsonReader};
 use super::tree::{ScanError, overlay_text};
 use super::value_json_enrollment::{enroll_json_member, push_json_invalid};
-use crate::config::{Config, KindConfig};
+use crate::config::{Frame, Schema};
 use crate::model::{Catalog, DeclarationSource, TextOverlays, normalize_path_lexically};
 use crate::model::{paths_same_location, physical_path_key, sort_path_key};
 
 pub(super) fn scan_value_json_sources(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     overlays: &TextOverlays,
     findings: &mut Catalog,
     errors: &mut Vec<ScanError>,
 ) {
-    let sources = match value_json_sources(config, overlays) {
+    let sources = match value_json_sources(schema, frame, overlays) {
         Ok(sources) => sources,
         Err((path, message)) => {
             errors.push((path, message));
             return;
         }
     };
-    let mut grouped = BTreeMap::<PathBuf, (Vec<PathBuf>, Vec<&KindConfig>)>::new();
+    let mut grouped = BTreeMap::<PathBuf, (Vec<PathBuf>, Vec<&str>)>::new();
     for (path, kind) in sources {
         let (paths, owners) = grouped.entry(physical_path_key(&path)).or_default();
         if !paths.contains(&path) {
             paths.push(path);
         }
-        if !owners.iter().any(|owner| owner.kind == kind.kind) {
+        if !owners.contains(&kind) {
             owners.push(kind);
         }
     }
     let mut grouped = grouped.into_values().collect::<Vec<_>>();
     for (paths, owners) in &mut grouped {
         paths.sort_by_key(|path| sort_path_key(path));
-        owners.sort_by(|left, right| left.kind.cmp(&right.kind));
+        owners.sort();
     }
     grouped.sort_by_key(|(paths, _)| sort_path_key(&paths[0]));
     for (paths, owners) in grouped {
@@ -60,7 +61,7 @@ pub(super) fn scan_value_json_sources(
             },
         };
         match JsonReader::parse(&text) {
-            Ok(root) => enroll_json_root(config, path, &owners, &text, root, findings),
+            Ok(root) => enroll_json_root(frame, path, &owners, &text, root, findings),
             Err(message) => errors.push((path.clone(), format!("invalid JSON: {message}"))),
         }
         if owners.len() > 1 {
@@ -93,20 +94,22 @@ pub(super) fn scan_value_json_sources(
 }
 
 pub(super) fn value_json_sources<'a>(
-    config: &'a Config,
+    schema: &'a Schema,
+    frame: Frame<'a>,
     overlays: &TextOverlays,
-) -> std::result::Result<Vec<(PathBuf, &'a KindConfig)>, (PathBuf, String)> {
+) -> std::result::Result<Vec<(PathBuf, &'a str)>, (PathBuf, String)> {
     let mut sources = Vec::new();
-    for kind in config.kinds.iter().filter(|kind| kind.values) {
-        if let Some(file) = &kind.file {
-            let path = normalize_path_lexically(&config.root.join(file));
+    for row in schema.value_rows() {
+        let kind = row.name.as_str();
+        if let Some(file) = row.file() {
+            let path = normalize_path_lexically(&frame.root().join(file));
             if path.extension().and_then(|extension| extension.to_str()) == Some("json") {
                 sources.push((path, kind));
             }
             continue;
         }
-        let Some(folder) = &kind.folder else { continue };
-        let folder = normalize_path_lexically(&config.root.join(folder));
+        let Some(folder) = row.folder() else { continue };
+        let folder = normalize_path_lexically(&frame.root().join(folder));
         // §FS-check.6.1.1: cover this effective input before its shared read.
         let entries = crate::config::input_read_dir(&folder)
             .map_err(|error| (folder.clone(), format!("read value home: {error}")))?;
@@ -131,16 +134,16 @@ pub(super) fn value_json_sources<'a>(
         }
     }
     sources.sort_by(|(left, left_kind), (right, right_kind)| {
-        (sort_path_key(left), &left_kind.kind).cmp(&(sort_path_key(right), &right_kind.kind))
+        (sort_path_key(left), left_kind).cmp(&(sort_path_key(right), right_kind))
     });
-    sources.dedup_by(|left, right| left.0 == right.0 && left.1.kind == right.1.kind);
+    sources.dedup_by(|left, right| left.0 == right.0 && left.1 == right.1);
     Ok(sources)
 }
 
 fn enroll_json_root(
-    config: &Config,
+    frame: Frame<'_>,
     path: &Path,
-    owners: &[&KindConfig],
+    owners: &[&str],
     text: &str,
     root: JsonNode,
     findings: &mut Catalog,
@@ -168,6 +171,6 @@ fn enroll_json_root(
         );
     }
     for member in members {
-        enroll_json_member(config, path, owners, text, member, findings);
+        enroll_json_member(frame, path, owners, text, member, findings);
     }
 }

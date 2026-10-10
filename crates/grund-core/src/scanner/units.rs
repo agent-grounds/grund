@@ -15,7 +15,7 @@
 use std::path::Path;
 
 use super::context::{file_home_kind, markdown_heading_level};
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::{
     DocCommentRule, block_is_doc_comment, comment_blocks, doc_comment_rule, first_content_line,
     markdown_fence_delimiter,
@@ -29,21 +29,22 @@ use crate::model::{Catalog, DocCommentBlock, FileHeading, FileStructure};
 pub(super) fn record_file_structure(
     path: &Path,
     text: &str,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     findings: &mut Catalog,
 ) {
     // §AR-scanner.2.7.3: the project-wide answer first — one field read exempts
     // every file of a level-1 tree, every configuration written before the keys
     // existed, from the per-file lookup below (§GOAL-fast-feedback).
-    let demand = &config.compiled().demand;
-    if demand.is_empty() || !demand.records_structure(&file_row(path, config)) {
+    let demand = &frame.compiled.demand;
+    if demand.is_empty() || !demand.records_structure(&file_row(path, schema, frame)) {
         return;
     }
     let extension = path.extension().and_then(|ext| ext.to_str());
     let structure = if extension == Some("md") {
         markdown_structure(text)
     } else {
-        source_structure(path, text, extension == Some("py"), config)
+        source_structure(path, text, extension == Some("py"), schema, frame)
     };
     findings
         .file_structure
@@ -61,8 +62,8 @@ pub(super) fn record_file_structure(
 /// finer unit, though §FS-check.3.6 will not ask for its units: the row's level
 /// is a statement about the place, and erring toward having the structure costs
 /// one description, while a second home rule here could disagree with that one.
-fn file_row(path: &Path, config: &Config) -> String {
-    file_home_kind(path, config).unwrap_or_else(|| config.homeless_kind().to_string())
+fn file_row(path: &Path, schema: &Schema, frame: Frame<'_>) -> String {
+    file_home_kind(path, schema, frame).unwrap_or_else(|| schema.complement_name().to_string())
 }
 
 /// Every heading outside a fenced block, with its text (§AR-scanner.2.7). The
@@ -114,7 +115,13 @@ pub(super) fn heading_text(trimmed: &str, level: usize) -> String {
 /// applied to each block with one comparison — the same call the inline-site pass
 /// makes, so a block cannot be a doc comment for one rule and a note for the
 /// other.
-fn source_structure(path: &Path, text: &str, is_py: bool, config: &Config) -> FileStructure {
+fn source_structure(
+    path: &Path,
+    text: &str,
+    is_py: bool,
+    schema: &Schema,
+    frame: Frame<'_>,
+) -> FileStructure {
     let lines = text.lines().collect::<Vec<_>>();
     let doc_rule = doc_comment_rule(path);
     let leading_limit = match doc_rule {
@@ -125,7 +132,7 @@ fn source_structure(path: &Path, text: &str, is_py: bool, config: &Config) -> Fi
         total_lines: lines.len(),
         ..FileStructure::default()
     };
-    for (start, end, kind) in comment_blocks(&lines, is_py, config.lexical()) {
+    for (start, end, kind) in comment_blocks(&lines, is_py, frame.compiled.lexical(schema)) {
         let block = &lines[start..=end];
         if block_is_doc_comment(
             doc_rule,

@@ -12,8 +12,8 @@ use super::*;
 use crate::grammar::render_id;
 use crate::model::Id;
 use crate::queries::{LspSnapshotOpts, ShowFormat, ShowOpts, ShowQueryError};
-use crate::scanner::{resolve_id_arg, scan_tree};
-use crate::testing::{canonical_test_path, numbered_config, test_root, write};
+use crate::scanner::resolve_id_arg;
+use crate::testing::{canonical_test_path, numbered_config, scan_tree, test_root, write};
 use crate::writers::{ITERM2_SNIPPET, KITTY_SNIPPET, VSCODE_EXTENSION_JS, WEZTERM_SNIPPET};
 use regex::Regex;
 
@@ -55,17 +55,20 @@ fn shorthand_resolves_as_a_query_argument() {
     let config = numbered_config(root.clone());
     let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan");
 
-    let (id, section) = resolve_id_arg("FS-042", &config, &findings).expect("resolve");
+    let (id, section) =
+        resolve_id_arg("FS-042", config.schema(), config.frame(), &findings).expect("resolve");
     assert_eq!(render_id(&config.grammar, &id), "FS-042-user-login");
     assert_eq!(section, None);
 
-    let (id, section) = resolve_id_arg("FS-042.1", &config, &findings).expect("resolve");
+    let (id, section) =
+        resolve_id_arg("FS-042.1", config.schema(), config.frame(), &findings).expect("resolve");
     assert_eq!(render_id(&config.grammar, &id), "FS-042-user-login");
     assert_eq!(section.as_deref(), Some("1"));
 
     // A full ID is unaffected, and an unknown shorthand keeps its written
     // form so the caller's own "not found" path names what was asked for.
-    let (id, _) = resolve_id_arg("FS-999", &config, &findings).expect("resolve");
+    let (id, _) =
+        resolve_id_arg("FS-999", config.schema(), config.frame(), &findings).expect("resolve");
     assert_eq!(render_id(&config.grammar, &id), "FS-999");
 }
 
@@ -85,7 +88,8 @@ fn ambiguous_shorthand_argument_lists_every_candidate() {
     let config = numbered_config(root.clone());
     let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan");
 
-    let err = resolve_id_arg("FS-042", &config, &findings).expect_err("ambiguous");
+    let err = resolve_id_arg("FS-042", config.schema(), config.frame(), &findings)
+        .expect_err("ambiguous");
     assert_eq!(
         format!("{err:#}"),
         "ambiguous ID: FS-042 (matches FS-042-user-login, FS-042-user-logout)"

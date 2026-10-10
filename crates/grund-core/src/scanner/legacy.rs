@@ -11,7 +11,7 @@ use anyhow::anyhow;
 use std::collections::BTreeMap;
 
 use super::legacy_inline::reconcile_promoted_inline_site;
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::{
     IdArgError, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, is_inside_inline_code,
     parse_id_arg, parse_id_arg_with_shorthand, render_id, shorthand_candidates, shorthand_names,
@@ -23,15 +23,16 @@ use crate::model::{Catalog, Citation, Declaration, Id, LegacyCitationCandidate};
 /// catalog compatibility with number shorthand (§FS-config.3.2.6, §FS-show.1).
 pub(crate) fn resolve_id_arg(
     raw: &str,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     findings: &Catalog,
 ) -> std::result::Result<(Id, Option<String>), IdArgError> {
-    if let Ok(parsed) = parse_id_arg(raw, &config.grammar) {
+    if let Ok(parsed) = parse_id_arg(raw, frame.grammar()) {
         return Ok(parsed);
     }
     let legacy_catalog = legacy_catalog_ids(&findings.declarations);
-    let legacy = match_legacy_tail(raw, config, &legacy_catalog);
-    let parsed = parse_id_arg_with_shorthand(raw, &config.grammar);
+    let legacy = match_legacy_tail(raw, schema, frame, &legacy_catalog);
+    let parsed = parse_id_arg_with_shorthand(raw, frame.grammar());
     let shorthand = parsed.as_ref().ok().filter(|parsed| parsed.shorthand);
     let mut targets = Vec::<(Id, Option<String>)>::new();
     if let Some((id, section, consumed)) = legacy
@@ -56,7 +57,7 @@ pub(crate) fn resolve_id_arg(
             // §FS-distribution.3.3.2: candidates are resolver data, not parsed prose.
             let candidates = many
                 .iter()
-                .map(|(id, _)| render_id(&config.grammar, id))
+                .map(|(id, _)| render_id(frame.grammar(), id))
                 .collect::<Vec<_>>();
             let mut diagnostic = crate::model::OperationDiagnostic::new(
                 "query",
@@ -73,7 +74,11 @@ pub(crate) fn resolve_id_arg(
 /// by the same tree scan (§FS-config.3.2.6, §FS-check.1.1.1). This is deliberately
 /// a catalog operation: the authoring regex stays strict, and no unbacked token
 /// can become a citation.
-pub(super) fn promote_local_legacy_citations(config: &Config, findings: &mut Catalog) {
+pub(super) fn promote_local_legacy_citations(
+    schema: &Schema,
+    frame: Frame<'_>,
+    findings: &mut Catalog,
+) {
     let catalog = legacy_catalog_ids(&findings.declarations);
     let configured_catalog = configured_catalog_ids(&findings.declarations);
     let candidates = std::mem::take(&mut findings.legacy_citation_candidates);
@@ -83,8 +88,8 @@ pub(super) fn promote_local_legacy_citations(config: &Config, findings: &mut Cat
             continue;
         }
         promote_legacy_candidate(
-            config,
-            config,
+            (schema, frame),
+            (schema, frame),
             &configured_catalog,
             &catalog,
             candidate,
@@ -125,14 +130,15 @@ pub(crate) fn configured_catalog_ids(declarations: &BTreeMap<Id, Vec<Declaration
 /// halves of this pass share, the local one above and the qualified one in
 /// `resolver/legacy_promotion.rs` (§AR-resolver.placement).
 pub(crate) fn promote_legacy_candidate(
-    source_config: &Config,
-    target_config: &Config,
+    (source_schema, source_frame): (&Schema, Frame<'_>),
+    (target_schema, target_frame): (&Schema, Frame<'_>),
     configured_catalog: &[Id],
     catalog: &[Id],
     candidate: LegacyCitationCandidate,
     citations: &mut Vec<Citation>,
 ) {
-    let Some((id, section, consumed)) = match_legacy_tail(&candidate.tail, target_config, catalog)
+    let Some((id, section, consumed)) =
+        match_legacy_tail(&candidate.tail, target_schema, target_frame, catalog)
     else {
         return;
     };
@@ -143,7 +149,7 @@ pub(crate) fn promote_legacy_candidate(
         .unwrap_or_default();
     let text = format!(
         "{}{}{}",
-        source_config.marker,
+        source_schema.citation.marker,
         qualified,
         &candidate.tail[..consumed]
     );
@@ -189,7 +195,14 @@ pub(crate) fn promote_legacy_candidate(
         enclosing_section: candidate.enclosing_section,
     });
     if let (Some(site), Some(block_lines)) = (site, block_lines) {
-        reconcile_promoted_inline_site(source_config, citations, &file, site, &block_lines);
+        reconcile_promoted_inline_site(
+            source_schema,
+            source_frame,
+            citations,
+            &file,
+            site,
+            &block_lines,
+        );
     }
 }
 
@@ -198,7 +211,8 @@ pub(crate) fn promote_legacy_candidate(
 /// instead of selecting a declaration by iteration order.
 pub(crate) fn match_legacy_tail(
     tail: &str,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     catalog: &[Id],
 ) -> Option<(Id, Option<String>, usize)> {
     let mut exact = catalog
@@ -206,7 +220,7 @@ pub(crate) fn match_legacy_tail(
         .filter_map(|id| {
             let spelling = id.legacy_spelling()?;
             let rest = tail.strip_prefix(spelling)?;
-            exact_token_boundary(rest, config).then_some((id, spelling.len()))
+            exact_token_boundary(rest, schema, frame).then_some((id, spelling.len()))
         })
         .collect::<Vec<_>>();
     exact.sort_by_key(|(_, len)| std::cmp::Reverse(*len));
@@ -219,12 +233,12 @@ pub(crate) fn match_legacy_tail(
         .filter_map(|id| {
             let spelling = id.legacy_spelling()?;
             let rest = tail.strip_prefix(spelling)?;
-            let rest = rest.strip_prefix(&config.section_separator)?;
-            let (section, section_len) = longest_section_prefix(rest, config)?;
+            let rest = rest.strip_prefix(&schema.ids.section_separator)?;
+            let (section, section_len) = longest_section_prefix(rest, frame)?;
             Some((
                 id.clone(),
                 section,
-                spelling.len() + config.section_separator.len() + section_len,
+                spelling.len() + schema.ids.section_separator.len() + section_len,
             ))
         })
         .collect::<Vec<_>>();
@@ -236,12 +250,12 @@ pub(crate) fn match_legacy_tail(
     }
 }
 
-fn exact_token_boundary(rest: &str, config: &Config) -> bool {
+fn exact_token_boundary(rest: &str, schema: &Schema, frame: Frame<'_>) -> bool {
     if rest.is_empty() {
         return true;
     }
-    if let Some(after_separator) = rest.strip_prefix(&config.section_separator)
-        && longest_section_prefix(after_separator, config).is_some()
+    if let Some(after_separator) = rest.strip_prefix(&schema.ids.section_separator)
+        && longest_section_prefix(after_separator, frame).is_some()
     {
         return false;
     }
@@ -254,12 +268,12 @@ fn exact_token_boundary(rest: &str, config: &Config) -> bool {
     })
 }
 
-fn longest_section_prefix<'a>(tail: &'a str, config: &Config) -> Option<(&'a str, usize)> {
+fn longest_section_prefix<'a>(tail: &'a str, frame: Frame<'_>) -> Option<(&'a str, usize)> {
     tail.char_indices()
         .map(|(index, ch)| index + ch.len_utf8())
         .filter_map(|end| {
             let section = &tail[..end];
-            if !config.grammar.is_section_path(section) {
+            if !frame.grammar().is_section_path(section) {
                 return None;
             }
             let rest = &tail[end..];
@@ -299,29 +313,30 @@ pub(crate) fn sort_citations(citations: &mut [Citation]) {
 /// declaration-backed boundary as scanner promotion, never a relaxed parser.
 pub(crate) fn collect_local_legacy_markdown_citations(
     line: &str,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     findings: &Catalog,
     citations: &mut Vec<MarkdownLineCitation>,
 ) {
     let catalog = legacy_catalog_ids(&findings.declarations);
-    for (marker_start, _) in line.match_indices(&config.marker) {
+    for (marker_start, _) in line.match_indices(&schema.citation.marker) {
         if is_inside_inline_code(line, marker_start) {
             continue;
         }
-        let token_start = marker_start + config.marker.len();
+        let token_start = marker_start + schema.citation.marker.len();
         let Some(rest) = line.get(token_start..) else {
             continue;
         };
         if QUALIFIED_CITATION_PREFIX.is_match(rest) {
             continue;
         }
-        let Some((id, section, consumed)) = match_legacy_tail(rest, config, &catalog) else {
+        let Some((id, section, consumed)) = match_legacy_tail(rest, schema, frame, &catalog) else {
             continue;
         };
         // §FS-config.3.2.6 / §FS-fmt.6: do not linkify a shorthand-shaped legacy
         // ID when conforming declarations share its number. The scanner reports
         // the combined target set; formatting leaves the same bytes untouched.
-        if parse_id_arg_with_shorthand(&rest[..consumed], &config.grammar).is_ok_and(|parsed| {
+        if parse_id_arg_with_shorthand(&rest[..consumed], frame.grammar()).is_ok_and(|parsed| {
             parsed.shorthand && !shorthand_candidates(&parsed.id, &findings.declarations).is_empty()
         }) {
             continue;

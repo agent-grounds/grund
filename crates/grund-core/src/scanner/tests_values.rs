@@ -13,10 +13,16 @@ use crate::testing::{check_run, codes, scan_findings, test_root, write};
 fn markdown_component_excludes_the_complete_numeric_coordinate_delimiter() {
     let config = Config::default_for(PathBuf::from("."));
 
-    assert_eq!(markdown_component("## 1. 1200", &config), Some(("1200", 7)));
-    assert_eq!(markdown_component("## 1 USD", &config), Some(("USD", 6)));
     assert_eq!(
-        markdown_component("### 1.2. low / base / high", &config),
+        markdown_component("## 1. 1200", config.frame()),
+        Some(("1200", 7))
+    );
+    assert_eq!(
+        markdown_component("## 1 USD", config.frame()),
+        Some(("USD", 6))
+    );
+    assert_eq!(
+        markdown_component("### 1.2. low / base / high", config.frame()),
         Some(("low / base / high", 10))
     );
 }

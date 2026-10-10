@@ -148,8 +148,9 @@ fn show_run(
         return Err(failure.into());
     }
     let config = &project.config;
-    let (id, inline_section) = resolve_id_arg(raw_id, config, &project.findings)
-        .map_err(|error| anyhow::Error::new(error.diagnostic()))?;
+    let (id, inline_section) =
+        resolve_id_arg(raw_id, config.schema(), config.frame(), &project.findings)
+            .map_err(|error| anyhow::Error::new(error.diagnostic()))?;
     if opts.section.is_some() && inline_section.is_some() {
         return Err(anyhow!(crate::model::OperationDiagnostic::new(
             "query",

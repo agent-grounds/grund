@@ -3,10 +3,9 @@ use std::collections::BTreeSet;
 use super::citation_line::CitationLine;
 use crate::grammar::{
     QUALIFIED_CITATION_PREFIX, never_rewrite_context_in, parse_id, parse_longest_id_prefix,
-    parse_qualified_id_prefix, qualified_suppressed_in_source,
+    qualified_suppressed_in_source,
 };
 use crate::model::{Catalog, Citation, LegacyCitationCandidate, LocalSectionCitationCandidate};
-use crate::workspace::WorkspaceCitationTarget;
 
 /// Whether `fmt` may rewrite the citation whose marker starts at `marker_start` —
 /// a **`scan_line`** offset, which is what every pass below holds — on the line
@@ -14,7 +13,7 @@ use crate::workspace::WorkspaceCitationTarget;
 /// qualified pass, the unqualified one and the shorthand pass can never reach
 /// different verdicts about one site; the recorded column stays a raw-file column
 /// either way (§AR-scanner.2.6.10).
-fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> bool {
+pub(super) fn scanned_citation_rewritable(line: &CitationLine<'_>, marker_start: usize) -> bool {
     !never_rewrite_context_in(
         line.docstring,
         line.raw_line,
@@ -34,10 +33,10 @@ pub(super) fn scan_local_section_candidates(
     qualified_claimed: &BTreeSet<usize>,
     findings: &mut Catalog,
 ) {
-    if line.config.marker.is_empty() {
+    if line.schema.citation.marker.is_empty() {
         return;
     }
-    for (marker_start, _) in line.scan_line.match_indices(&line.config.marker) {
+    for (marker_start, _) in line.scan_line.match_indices(&line.schema.citation.marker) {
         if claimed_markers.contains(&marker_start) || qualified_claimed.contains(&marker_start) {
             continue;
         }
@@ -50,7 +49,7 @@ pub(super) fn scan_local_section_candidates(
             // full-ID pass does (§FS-check.1.1.8).
             continue;
         }
-        let token_start = marker_start + line.config.marker.len();
+        let token_start = marker_start + line.schema.citation.marker.len();
         let Some(rest) = line.scan_line.get(token_start..) else {
             continue;
         };
@@ -95,202 +94,19 @@ pub(super) fn scan_local_section_candidates(
     }
 }
 
-/// §FS-workspace.5.2: a member-local scan must still recognize marker-qualified
-/// citations before the member's own ID grammar is applied. Without this
-/// fallback, `§root/FS-root` in a default member can disappear just because the
-/// root uses `{kind}-{slug}`.
-///
-/// The fallback reads the ID tail with the conventional `KIND[-NUM]-SLUG`
-/// shape, not the citing or any target project's configured `[id] format`:
-/// member-local scans have no workspace catalogue, so the target's grammar is
-/// unreachable here. That shape decides how the tail is *read* and never
-/// whether the citation is *recognized* (§FS-workspace.5.2) — the unknown
-/// thing is the alias, which needs no tail grammar, so a tail outside the
-/// shape (lowercase kinds, slug-only grammars that don't split on `-`/`_`,
-/// kinds with characters outside `[A-Z0-9]`) is reported here rather than
-/// falling through to the workspace-root run. Workspace-root and
-/// workspace-aware paths use the target's actual grammar via
-/// `scan_workspace_qualified_pass`, which is the one place the tail itself is
-/// judged — for a known alias; an unknown one has no target there either, and
-/// is read with this same shape (§FS-workspace.1.2.1).
-///
-/// `qualified_claimed` carries the marker offsets a qualified citation already
-/// exists at — the full-ID pass's on entry, this pass's own on return. The
-/// shorthand pass reads the union to decide whether a qualified marker is
-/// already spoken for (§AR-scanner.2.6.1.1).
-pub(super) fn scan_fallback_qualified_citations(
-    line: &CitationLine<'_>,
-    qualified_claimed: &mut BTreeSet<usize>,
-    findings: &mut Catalog,
-) {
-    if line.config.marker.is_empty() {
-        return;
-    }
-    for (marker_start, _) in line.scan_line.match_indices(&line.config.marker) {
-        if qualified_claimed.contains(&marker_start) {
-            continue;
-        }
-        if qualified_suppressed_in_source(line.scan_line, line.is_md, marker_start) {
-            continue;
-        }
-        let token_start = marker_start + line.config.marker.len();
-        let Some(rest) = line.scan_line.get(token_start..) else {
-            continue;
-        };
-        let Some(prefix) = QUALIFIED_CITATION_PREFIX.captures(rest) else {
-            continue;
-        };
-        let Some(alias) = prefix.name("namespace").map(|m| m.as_str()) else {
-            continue;
-        };
-        let id_start = token_start + prefix.get(0).unwrap().end();
-        if push_fallback_qualified_citation(line, marker_start, alias, id_start, findings) {
-            qualified_claimed.insert(marker_start);
-        }
-    }
-}
-
-/// Push the qualified citation at `marker_start` whose tail, starting at
-/// `id_start`, is read with the loose `KIND[-NUM]-SLUG` shape rather than any
-/// project's grammar. Both runs that have no target to read a tail with use it:
-/// a run that loads no workspace (§FS-workspace.5.2), and a workspace run whose
-/// alias names no loaded project (§FS-workspace.1.2.1). Returns whether a
-/// citation was pushed.
-fn push_fallback_qualified_citation(
-    line: &CitationLine<'_>,
-    marker_start: usize,
-    alias: &str,
-    id_start: usize,
-    findings: &mut Catalog,
-) -> bool {
-    let Some(id_rest) = line.scan_line.get(id_start..) else {
-        return false;
-    };
-    // §FS-workspace.5.2: the tail grammar does not decide recognition — a
-    // tail outside `KIND[-NUM]-SLUG` is an `unknown project alias` error
-    // all the same, at its own site.
-    let Some((id, section, id_len)) = parse_qualified_id_prefix(id_rest) else {
-        return false;
-    };
-    let token_end = id_start + id_len;
-    findings.citations.push(Citation {
-        namespace: Some(alias.to_string()),
-        id,
-        section,
-        file: line.path.to_path_buf(),
-        line: line.lineno,
-        column: line.column_offset + marker_start + 1,
-        has_marker: true,
-        // The loose parser has no target grammar to derive a shorthand from,
-        // so a fallback-parsed qualified citation is never one (§AR-scanner.2.6).
-        shorthand: false,
-        local_section: false,
-        shorthand_rewritable: true,
-        numeric_run: false,
-        text: line.scan_line[marker_start..token_end].to_string(),
-        inline_site: line.inline_sites.get(&line.lineno).cloned(),
-        // §AR-scanner.2.4: classified in the post-pass in `scan_file`.
-        source_kind: String::new(),
-        enclosing_declaration: None,
-        enclosing_section: None,
-    });
-    true
-}
-
-/// One line's worth of marker-qualified workspace citations: a `§<alias>/<ID>`
-/// token whose ID tail parses with the target project's grammar
-/// (§FS-workspace.1.2, §AR-workspace.2), or whose alias names no loaded project
-/// and whose tail is read with the fallback shape (§FS-workspace.1.2.1). Runs
-/// inline during `scan_file` in workspace mode so the file is read once, not twice.
-pub(super) fn scan_workspace_qualified_pass(
-    line: &CitationLine<'_>,
-    targets: &[WorkspaceCitationTarget],
-    findings: &mut Catalog,
-) {
-    if line.config.marker.is_empty() || targets.is_empty() {
-        return;
-    }
-    for (marker_start, _) in line.scan_line.match_indices(&line.config.marker) {
-        if qualified_suppressed_in_source(line.scan_line, line.is_md, marker_start) {
-            continue;
-        }
-        let token_start = marker_start + line.config.marker.len();
-        let Some(rest) = line.scan_line.get(token_start..) else {
-            continue;
-        };
-        let Some(prefix) = QUALIFIED_CITATION_PREFIX.captures(rest) else {
-            continue;
-        };
-        let Some(alias) = prefix.name("namespace").map(|m| m.as_str()) else {
-            continue;
-        };
-        let id_start = token_start + prefix.get(0).unwrap().end();
-        // §FS-workspace.1.2.1: an alias naming no loaded project has no target, so
-        // no loaded grammar reads its tail — the fallback shape does, whatever kind
-        // it names, and the resolver reports the alias at this site.
-        let Some(target) = targets.iter().find(|target| target.alias == alias) else {
-            push_fallback_qualified_citation(line, marker_start, alias, id_start, findings);
-            continue;
-        };
-        let Some(id_rest) = line.scan_line.get(id_start..) else {
-            continue;
-        };
-        // §FS-fmt.2.4.1 asks the numeric-run question with the *target's* number
-        // shape, the same grammar that claimed the token.
-        let target_config = &target.config;
-        let Some(parsed) = parse_longest_id_prefix(id_rest, &target_config.grammar) else {
-            continue;
-        };
-        if target_config
-            .grammar
-            .has_reserved_named_tail(id_rest, parsed.len)
-        {
-            continue;
-        }
-        let token_end = id_start + parsed.len;
-        findings.citations.push(Citation {
-            namespace: Some(alias.to_string()),
-            id: parsed.id,
-            section: parsed.section,
-            file: line.path.to_path_buf(),
-            line: line.lineno,
-            column: line.column_offset + marker_start + 1,
-            has_marker: true,
-            // §FS-fmt.2.3 / §FS-check.3.13.1: a qualified shorthand is rewritable
-            // wherever an unqualified one is — the workspace pass reaches the aliased
-            // project's declarations, so `fmt` can name the canonical form here too.
-            shorthand_rewritable: scanned_citation_rewritable(line, marker_start),
-            shorthand: parsed.shorthand,
-            local_section: false,
-            // §FS-fmt.2.4.1: the marker is the citing project's, the number shape
-            // the target's — the same split the rewrite itself uses.
-            numeric_run: parsed.shorthand
-                && target_config.grammar.shorthand_sits_in_numeric_run(
-                    &line.config.marker,
-                    id_rest,
-                    parsed.len,
-                ),
-            text: line.scan_line[marker_start..token_end].to_string(),
-            inline_site: line.inline_sites.get(&line.lineno).cloned(),
-            // §AR-scanner.2.4: classified in the post-pass in `scan_file`.
-            source_kind: String::new(),
-            enclosing_declaration: None,
-            enclosing_section: None,
-        });
-    }
-}
-
 /// Retain marker-prefixed tokens that the configured grammar may have rejected;
 /// catalog reconciliation promotes only exact declaration-backed spellings
 /// (§FS-check.1.1.1, §FS-config.3.2.6). The remainder of the already-read line is
 /// enough to defer token/section precedence without a second file read.
 pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings: &mut Catalog) {
-    if line.config.marker.is_empty() || !line.scan_line.contains(&line.config.marker) {
+    if line.schema.citation.marker.is_empty()
+        || !line.scan_line.contains(&line.schema.citation.marker)
+    {
         return;
     }
-    for (marker_start, _) in line.scan_line.match_indices(&line.config.marker) {
+    for (marker_start, _) in line.scan_line.match_indices(&line.schema.citation.marker) {
         let column = line.column_offset + marker_start + 1;
-        let token_start = marker_start + line.config.marker.len();
+        let token_start = marker_start + line.schema.citation.marker.len();
         let Some(rest) = line.scan_line.get(token_start..) else {
             continue;
         };
@@ -334,10 +150,10 @@ pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings:
 /// the citing project's grammar; a cross-namespace target with an exotic grammar
 /// may be missed, which only ever costs a suggestion, never a false error.
 pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Catalog) {
-    if line.config.marker.is_empty() {
+    if line.schema.citation.marker.is_empty() {
         return;
     }
-    let escape = format!("<{}>", line.config.marker);
+    let escape = format!("<{}>", line.schema.citation.marker);
     if !line.scan_line.contains(&escape) {
         return;
     }
@@ -359,7 +175,7 @@ pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Cat
                 }
                 None => (None, rest, 0),
             };
-        let Some(parsed) = parse_longest_id_prefix(id_rest, &line.config.grammar) else {
+        let Some(parsed) = parse_longest_id_prefix(id_rest, line.frame.grammar()) else {
             continue;
         };
         let token_end = token_start + alias_len + parsed.len;
@@ -424,41 +240,46 @@ pub(super) fn scan_shorthand_citations(
     qualified_claimed: &BTreeSet<usize>,
     findings: &mut Catalog,
 ) {
-    if line.config.marker.is_empty() {
+    if line.schema.citation.marker.is_empty() {
         return;
     }
-    for (marker_start, _) in line.scan_line.match_indices(&line.config.marker) {
+    for (marker_start, _) in line.scan_line.match_indices(&line.schema.citation.marker) {
         // §DF-number-only-citation-shorthand.2.6: the full-ID pass owns every token
         // it can claim, and `claimed_markers` is the record of what it claimed on
         // this line — tested before the regex (§GOAL-fast-feedback).
         if claimed_markers.contains(&marker_start) {
             continue;
         }
-        let token_start = marker_start + line.config.marker.len();
+        let token_start = marker_start + line.schema.citation.marker.len();
         let Some(rest) = line.scan_line.get(token_start..) else {
             continue;
         };
-        let Some(shorthand) = line.config.grammar.shorthand_for(rest) else {
+        let Some(shorthand) = line.frame.grammar().shorthand_for(rest) else {
             continue;
         };
         let Some(caps) = shorthand.prefix_re().captures(rest) else {
             continue;
         };
         let match_end = caps.get(0).map_or(0, |found| found.end());
-        if line.config.grammar.has_reserved_named_tail(rest, match_end) {
+        if line
+            .frame
+            .grammar()
+            .has_reserved_named_tail(rest, match_end)
+        {
             continue;
         }
         // §DF-number-only-citation-shorthand.2.6: the pattern is anchored only at
         // the start, so without this the `FS-042` inside the rejected full ID
         // `§FS-042-User-Login` would be reported as a token the file does not hold.
-        if !line.config.grammar.id_token_ends_cleanly(rest, match_end) {
+        if !line.frame.grammar().id_token_ends_cleanly(rest, match_end) {
             continue;
         }
         // §FS-fmt.2.4.1.1: the token ended, which does not make it a citation.
-        let numeric_run =
-            line.config
-                .grammar
-                .shorthand_sits_in_numeric_run(&line.config.marker, rest, match_end);
+        let numeric_run = line.frame.grammar().shorthand_sits_in_numeric_run(
+            &line.schema.citation.marker,
+            rest,
+            match_end,
+        );
         // §AR-scanner.2.6.1.1: a qualified marker a qualified pass already claimed —
         // the workspace one, or the loose fallback (§FS-workspace.5.2) — belongs to
         // that pass alone (§REQ-no-missed-citation.1, §AR-scanner.2.3.2).
@@ -470,7 +291,7 @@ pub(super) fn scan_shorthand_citations(
         {
             continue;
         }
-        let Some(id) = parse_id(&caps, &line.config.grammar) else {
+        let Some(id) = parse_id(&caps, line.frame.grammar()) else {
             continue;
         };
         let token_end = token_start + match_end;

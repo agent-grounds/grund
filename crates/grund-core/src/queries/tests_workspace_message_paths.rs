@@ -17,9 +17,8 @@ use crate::checker::check_with_workspace;
 use crate::config::Config;
 use crate::model::{Catalog, FindingSite, Id, ShowRenderMode};
 use crate::resolver::WorkspaceCheckTarget;
-use crate::scanner::scan_tree;
 use crate::testing::{
-    canonical_test_path, legacy_fs_folder_config, located_diagnostics, test_root, write,
+    canonical_test_path, legacy_fs_folder_config, located_diagnostics, scan_tree, test_root, write,
 };
 
 fn alpha() -> Id {

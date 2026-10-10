@@ -186,7 +186,13 @@ fn markdown_link_citations(
         shorthand_targets.local.as_ref(),
         &mut citations,
     );
-    collect_local_legacy_markdown_citations(line, config, findings, &mut citations);
+    collect_local_legacy_markdown_citations(
+        line,
+        config.schema(),
+        config.frame(),
+        findings,
+        &mut citations,
+    );
     citations.sort_by(|a, b| {
         (a.marker_start, std::cmp::Reverse(a.token_end))
             .cmp(&(b.marker_start, std::cmp::Reverse(b.token_end)))
@@ -247,7 +253,13 @@ fn collect_workspace_markdown_link_citations(
             Some(parsed) => Some((parsed.id, parsed.section, parsed.len)),
             None => {
                 let catalog = legacy_catalog_ids(&target_project.findings.declarations);
-                match_legacy_tail(id_rest, &target_project.config, &catalog).or_else(|| {
+                match_legacy_tail(
+                    id_rest,
+                    target_project.config.schema(),
+                    target_project.config.frame(),
+                    &catalog,
+                )
+                .or_else(|| {
                     accepted_shorthand_link(
                         id_rest,
                         config,

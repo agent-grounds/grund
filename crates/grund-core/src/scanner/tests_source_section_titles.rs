@@ -11,10 +11,9 @@
 
 use std::path::PathBuf;
 
-use super::*;
 use crate::config::Config;
 use crate::model::Catalog;
-use crate::testing::{embedded_value_config, test_root, write};
+use crate::testing::{embedded_value_config, scan_tree, test_root, write};
 
 /// One declaration per way a heading can be carried in source, each beside the
 /// envelope its headings sit behind. The Python docstring is the control: its
