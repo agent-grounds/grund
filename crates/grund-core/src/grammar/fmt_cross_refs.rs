@@ -68,10 +68,9 @@ pub(crate) fn flatten_cross_ref_links(
     let mut out = String::with_capacity(body.len());
     let mut markdown_blocks = MarkdownBlocks::default();
     for line in body.split_inclusive('\n') {
-        // §FS-check.1.1.5: use the established opener/closer grammar; a
-        // delimiter or fenced content is verbatim, and ordinary prose resumes
-        // after the valid closer. A raw-text HTML block is flattened like prose,
-        // and a fence opener inside one opens nothing (§FS-check.1.1.5.1).
+        // A fence delimiter or fenced content is verbatim (§FS-check.1.1.5); a
+        // raw-text HTML block is flattened like prose, and a fence opener inside
+        // one opens nothing (§FS-check.1.1.5.1).
         let fence_line = line.strip_suffix('\n').unwrap_or(line);
         let fence_line = fence_line.strip_suffix('\r').unwrap_or(fence_line);
         if markdown_body && markdown_blocks.line(fence_line).in_fence() {
