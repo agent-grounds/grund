@@ -103,6 +103,11 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
             kinds,
         ),
         (
+            "Each FS must cite at least one FS and must not cite any FS.",
+            "unknown kind \"FS must cite at least one FS and\"",
+            kinds,
+        ),
+        (
             "Each FS should not cite at least one FS.",
             "a prohibition must use \"cite any\"; accepted form: Each FS should not cite any FS.",
             "",
@@ -293,4 +298,41 @@ fn a_named_off_subject_keeps_the_typed_predicate() {
         rows.len(),
         wrong.join("\n")
     );
+}
+
+/// §FS-rules.3.5.2 step 3: only a reason about named sections may carry the
+/// `after enabling it` label. Where another part is refused first and only its
+/// form would need named sections, the refusal is the reason alone.
+#[test]
+fn only_a_named_sections_reason_carries_the_after_enabling_label() {
+    let rows = [
+        (
+            "FS-login.requirements may not cite any REQ.",
+            "modality \"may not\" is not accepted",
+            "",
+        ),
+        (
+            "FS-login.requirements must cite each REQ exactly 1 times",
+            "rule must end with \".\"",
+            "",
+        ),
+    ];
+    let wrong = wrong_rows(&named_off(), &rows);
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+}
+
+/// §FS-rules.3.5.4.2: a refused subject holding a clause of its own, an
+/// undocumented conjunction split at its second modality, is offered no form,
+/// never one that drops the first clause.
+#[test]
+fn a_subject_holding_a_clause_is_offered_no_form() {
+    let rows: Vec<_> = fs_only_rows()
+        .into_iter()
+        .filter(|(sentence, ..)| {
+            *sentence == "Each FS must cite at least one FS and must not cite any FS."
+        })
+        .collect();
+    assert_eq!(rows.len(), 1, "the clause row is in the table");
+    let wrong = wrong_rows(&repo(), &rows);
+    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }

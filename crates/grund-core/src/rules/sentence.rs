@@ -174,6 +174,20 @@ pub(crate) fn parse_rule(
     })
 }
 
+/// Whether `subject` holds a modality followed by a verb, the clause of a
+/// conjunction the modality split read as part of the subject (§FS-rules.3.6).
+fn holds_clause(subject: &str) -> bool {
+    [" must ", " should "].iter().any(|modality| {
+        subject.match_indices(modality).any(|(at, modality)| {
+            let rest = &subject[at + modality.len()..];
+            let rest = rest.strip_prefix("not ").unwrap_or(rest);
+            ["cite ", "be cited by ", "have "]
+                .iter()
+                .any(|verb| rest.starts_with(verb))
+        })
+    })
+}
+
 /// Read a sentence, or refuse it with what its refusing production offers in
 /// place of what it read, wrapped back into the whole sentence
 /// (§FS-rules.3.5.4.1).
@@ -228,6 +242,10 @@ fn read(
     let before_predicate = &sentence[..sentence.len() - predicate.len()];
     let subject = parse_subject(subject_text, vocabulary).map_err(|refusal| {
         let refusal = refusal.rule_refusal(vocabulary);
+        // §FS-rules.3.5.4.2: a subject holding a clause of its own is two rules.
+        if holds_clause(subject_text) {
+            return refusal.offering_none(true);
+        }
         refusal.within(|subject| format!("{subject}{after_subject}"))
     })?;
     let mut unverifiable = None;
