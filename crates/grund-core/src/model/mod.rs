@@ -30,6 +30,7 @@
 
 mod check_inputs;
 mod e2e;
+mod expected;
 mod failure;
 mod headings;
 mod line_owners;
@@ -42,6 +43,7 @@ mod values;
 
 pub use check_inputs::{CheckInput, CheckInputObserver, with_check_input_observer};
 pub use e2e::{E2eCase, E2eSpecRef};
+pub use expected::{Expected, ExpectedEntrypoint, ExpectedSection};
 pub(crate) use failure::OperationContext;
 pub use failure::OperationDiagnostic;
 pub use headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};

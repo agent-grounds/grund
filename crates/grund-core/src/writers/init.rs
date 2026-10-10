@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 
+use super::expected::chapter_rules_section;
 use super::init_block::write_or_update_canonical_agent_entrypoint;
 pub(crate) use super::init_guidance::init_fs_home;
 use super::init_guidance::{InitNext, docs_scaffold_for_config};
@@ -8,9 +9,7 @@ use super::init_notes::{duplicate_agent_entrypoint_notes, shadowed_claude_entryp
 use super::init_plan::selected_init_agent_entrypoints;
 use super::init_render::{agents_workspace_members_section, init_pending_effective_config};
 use super::init_target::{refuse_init_global_instruction_paths, refuse_init_target};
-use crate::checker::{
-    chapter_rules_section, configured_rule_sentences, declared_workspace_vocabulary,
-};
+use crate::checker::{configured_rule_sentences, declared_workspace_vocabulary};
 use crate::config::{Config, config_file_in, display_path};
 use crate::model::{Catalog, Diagnostic, Finding, FindingSite, format_path};
 use crate::scanner::{

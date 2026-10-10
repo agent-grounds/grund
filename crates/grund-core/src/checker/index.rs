@@ -252,6 +252,7 @@ pub(super) fn check_kind_indexes(
     findings: &Catalog,
     config: &Config,
     path_config: &Config,
+    index_targets: &BTreeMap<(PathBuf, Id), String>,
     report: &mut CheckReport,
 ) {
     let targets = kind_index_targets(config);
@@ -263,7 +264,7 @@ pub(super) fn check_kind_indexes(
     // §FS-check.3.18: folder declarations plus the external inline declarations
     // their canonical index links enroll. `KindIndexEntries` is also what `fmt`
     // and the unused-accounting surfaces read, so membership has one derivation.
-    let index_entries = KindIndexEntries::new(findings, config);
+    let index_entries = KindIndexEntries::new(findings, config, index_targets);
 
     // One pass over the citations, bucketed by index file, so the per-kind loop
     // below is a lookup rather than another walk of the whole citation list

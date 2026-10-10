@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::checker::KindIndexEntries;
 use crate::model::Id;
-use crate::resolver::WorkspaceContext;
+use crate::resolver::{WorkspaceContext, index_link_targets};
 
 /// The two per-target-alias citation counts `grund list` needs, built in one
 /// pass (§FS-list.3.2.1, §DF-index-not-an-inbound-citation).
@@ -35,7 +35,14 @@ impl<'a> ListCitationCounts<'a> {
             empty: BTreeMap::new(),
         };
         for source in &context.projects {
-            let index_entries = KindIndexEntries::new(&source.findings, &source.config);
+            // §AR-checker.2.16: the enrollment destination, as `Expected` carries it.
+            let index_targets = index_link_targets(
+                &source.config.project().presentation,
+                &source.config,
+                &source.findings,
+            );
+            let index_entries =
+                KindIndexEntries::new(&source.findings, &source.config, &index_targets);
             for citation in &source.findings.citations {
                 let target_alias: &str = match &citation.namespace {
                     Some(ns) => ns.as_str(),

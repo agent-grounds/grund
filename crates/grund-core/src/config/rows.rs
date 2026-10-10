@@ -9,7 +9,9 @@
 //! row and the per-kind facts the other two concerns hold, in `kind_config`
 //! below — the one place that knows how the two shapes meet (§AR-config.5).
 
-use super::kind::{KindConfig, KindIndex};
+use std::path::{Path, PathBuf};
+
+use super::kind::{DEFAULT_KIND_INDEX, KindConfig, KindIndex};
 use super::project::{Project, Schema};
 use super::record::CODE_SOURCE_KIND;
 
@@ -114,6 +116,26 @@ impl Row {
         self.places
             .iter()
             .any(|place| place.extent == Extent::Complement)
+    }
+
+    /// The folder this row's first place names, if it names one (§AR-config.1.3).
+    pub fn folder(&self) -> Option<&str> {
+        match &self.places.first()?.extent {
+            Extent::Folder(path) => Some(path),
+            Extent::File(_) | Extent::Complement => None,
+        }
+    }
+
+    /// The index file a citable folder row keeps, relative to the config root
+    /// (§FS-config.3.4): `None` for a row with no kind, no folder, or
+    /// `index = false`.
+    pub fn index_path(&self) -> Option<PathBuf> {
+        let name = match &self.kind.as_ref()?.index {
+            KindIndex::Disabled => return None,
+            KindIndex::Default => DEFAULT_KIND_INDEX,
+            KindIndex::Named(name) => name.as_str(),
+        };
+        Some(Path::new(self.folder()?).join(name))
     }
 }
 

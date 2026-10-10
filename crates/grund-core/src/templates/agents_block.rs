@@ -3,9 +3,10 @@
 //! scaffolding line a fresh repository's file carries above it.
 //!
 //! What a managed block *should say*, as a function of config alone
-//! (§AR-system.2.11). That is what lets `init` write the block and `check`
-//! re-render two of its sections and byte-compare them for drift
-//! (§FS-check.3.5): rendering is deterministic, so a fresh render is the hash.
+//! (§AR-system.2.11). That is what lets `init` write the block and the writers
+//! render its config-derived sections into `Expected`, which `check` byte-compares
+//! for drift (§FS-check.3.5): rendering is deterministic, so a fresh render is
+//! the hash.
 //! Nothing here reads the tree — the one section that does, the workspace
 //! members of §FS-init.2.3.4.15, arrives already rendered from the run that
 //! walked for it (`writers/init_render.rs`).

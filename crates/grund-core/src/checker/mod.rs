@@ -63,13 +63,14 @@ pub use selection::{CHECK_FINDING_CODES, CheckFindingSelection};
 // What the other components read, each by this module's path (§AR-system.4):
 // the whole of what crosses this boundary, and the only thing outside the
 // directory that can name any of it.
-pub(crate) use agents::chapter_rules_section;
 pub(crate) use chapter_rules::{
     check_chapter_rules, configured_rule_sentences, declared_workspace_vocabulary, parse_ad_hoc,
     parse_ad_hoc_with_workspace, workspace_vocabulary,
 };
 // The rules component's own tests build the adapter's view the way the checker
 // does (§AR-core-module-layout.1.3).
+#[cfg(test)]
+pub(crate) use crate::testing::{check_findings, check_with_workspace};
 #[cfg(test)]
 pub(crate) use chapter_rules::markdown_project;
 pub(crate) use index::KindIndexFiles;
@@ -79,7 +80,7 @@ pub(crate) use reference_scope::{
     retain_diagnostics_in_report_scope, retain_findings_in_scope, scope_read_any_file,
     workspace_out_of_scope_references,
 };
-pub(crate) use report::{check_findings, check_with_workspace, check_with_workspace_and_overlays};
+pub(crate) use report::{check_on_disk, check_with_workspace_and_overlays};
 pub(crate) use sections::{out_of_scope_section_headings, workspace_out_of_scope_section_headings};
 pub(crate) use support::sort_diagnostics;
 pub(crate) use values::{
@@ -90,7 +91,9 @@ pub(crate) use values::{
 // block path the drift cases drive, and the dangling sentence the scanner's
 // config cases compare against; the rest went beside their own cases.
 #[cfg(test)]
-pub(crate) use agents::check_agent_block_path;
+pub(crate) use crate::testing::check_agent_block_path;
+#[cfg(test)]
+pub(crate) use agents::check_agent_block_path as compare_agent_block;
 #[cfg(test)]
 pub(crate) use support::dangling_message;
 #[cfg(test)]
