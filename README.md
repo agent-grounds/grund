@@ -17,19 +17,19 @@ Agents retrieve the section they need before editing ([§GRUND-grund](docs/grund
 <!-- grund:fmt off -->
 <table>
 <tr>
-<td valign="top" width="50%">
+<td valign="top" width="360">
 <b>1 · Declare</b><br>
 Give a requirement an ID<br>
 <code>requirements.md</code>
 <pre>
-&#35; FS-name: Display names&#10;
-&#35;&#35; 1. Trim whitespace&#10;
+&#35; FS-name: Display names
+&#35;&#35; 1. Trim whitespace
 Trim surrounding whitespace.
 </pre>
 </td>
-<td valign="top" width="50%">
+<td valign="top" width="360">
 <b>2 · Cite</b><br>
-Point code at that requirement<br>
+Cite it from code<br>
 <code>src/name.py</code>
 <pre>
 def clean_name(name):
@@ -39,7 +39,7 @@ def clean_name(name):
 </td>
 </tr>
 <tr>
-<td colspan="2">
+<td colspan="2" valign="top">
 <b>3 · Check</b><br>
 Rename section <b>1 → 2</b> without updating the citation.<br>
 CI catches the broken reference:
@@ -72,7 +72,6 @@ Before editing, an agent retrieves the cited requirement. Inside the example:
 ```console
 $ grund FS-name.1
 ## 1. Trim whitespace
-
 Trim surrounding whitespace.
 ```
 
