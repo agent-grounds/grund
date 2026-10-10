@@ -144,6 +144,15 @@ impl Row {
         }
     }
 
+    /// How this row's place is named in a finding: `<folder>/`, or its file
+    /// (§FS-check.3.11); `None` for a row with no place to look at.
+    pub fn place_label(&self) -> Option<String> {
+        if let Some(folder) = self.folder() {
+            return Some(format!("{folder}/"));
+        }
+        self.file().map(str::to_string)
+    }
+
     /// The index file a citable folder row keeps, relative to the config root
     /// (§FS-config.3.4): `None` for a row with no kind, no folder, or
     /// `index = false`.

@@ -3,7 +3,7 @@ use std::path::Path;
 
 use super::value_mismatch::{rendered_value_path, value_mismatch};
 use super::value_roots::root_binding_finding;
-use crate::config::{Config, kind_uses_values, kind_value_chapter};
+use crate::config::{Frame, Schema, kind_uses_values, kind_value_chapter};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, ValueBinding,
@@ -17,8 +17,8 @@ use crate::resolver::{WorkspaceCheckTarget, home_as_scanned};
 /// unique target: a numbered component, or a root's whole component run.
 pub(super) fn check_values(
     findings: &Catalog,
-    config: &Config,
-    path_config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     report: &mut CheckReport,
 ) {
@@ -27,7 +27,7 @@ pub(super) fn check_values(
             findings
                 .declarations
                 .get(id)
-                .is_some_and(|decls| value_homes(decls, &config.root).len() > 1)
+                .is_some_and(|decls| value_homes(decls, frame.root()).len() > 1)
         }) {
             continue;
         }
@@ -39,7 +39,7 @@ pub(super) fn check_values(
             message: match &site.id {
                 Some(id) => format!(
                     "invalid value declaration for {}: {}",
-                    render_id(&config.grammar, id),
+                    render_id(frame.grammar(), id),
                     site.message
                 ),
                 None => format!("invalid value declaration: {}", site.message),
@@ -50,17 +50,15 @@ pub(super) fn check_values(
     }
     for site in &findings.invalid_value_bindings {
         let target = match site.binding_namespace.as_deref() {
-            Some(alias) => workspace.get(alias).map(|target| WorkspaceCheckTarget {
-                findings: target.findings,
-                config: target.config,
-            }),
-            None => Some(WorkspaceCheckTarget { findings, config }),
+            Some(alias) => workspace.get(alias).copied(),
+            None => Some(WorkspaceCheckTarget::of(findings, schema, frame)),
         };
         if site.id.as_ref().is_some_and(|id| {
             !target.is_some_and(|target| {
                 binding_target_reports_invalid_attempt(
-                    target.findings,
-                    target.config,
+                    target.catalog,
+                    target.schema,
+                    target.frame(),
                     id,
                     site.binding_section.as_deref(),
                 )
@@ -80,14 +78,13 @@ pub(super) fn check_values(
     }
     for binding in &findings.value_bindings {
         let target = match binding.namespace.as_deref() {
-            Some(alias) => workspace.get(alias).map(|target| WorkspaceCheckTarget {
-                findings: target.findings,
-                config: target.config,
-            }),
-            None => Some(WorkspaceCheckTarget { findings, config }),
+            Some(alias) => workspace.get(alias).copied(),
+            None => Some(WorkspaceCheckTarget::of(findings, schema, frame)),
         };
         let Some(target) = target else { continue };
-        match binding_aim(target.findings, target.config, binding) {
+        // The target spells the coordinate; the report spells the paths (§FS-workspace.8.1).
+        let target_frame = target.frame().displayed_by(frame.display);
+        match binding_aim(target.catalog, target.schema, target_frame, binding) {
             BindingAim::Component {
                 declaration,
                 section,
@@ -103,22 +100,22 @@ pub(super) fn check_values(
                 }
                 report.errors.push(value_mismatch(
                     binding,
-                    &rendered_value_path(target.config, binding, Some(section)),
+                    &rendered_value_path(target.schema, target_frame, binding, Some(section)),
                     &binding.authored,
                     declared,
                     Site {
                         path: declaration.file.clone(),
                         line: info.line,
                     },
-                    path_config,
+                    frame.display,
                 ));
             }
             BindingAim::Root { declaration, path } => report.errors.extend(root_binding_finding(
                 binding,
-                target.config,
+                target.schema,
+                target_frame,
                 declaration,
                 path,
-                path_config,
             )),
             BindingAim::Refused => report.errors.push(invalid_binding_diagnostic(binding)),
             BindingAim::Inert => {}
@@ -154,17 +151,18 @@ pub(super) enum BindingAim<'a> {
 /// that owns it, so it is `Inert` here.
 pub(super) fn binding_aim<'a>(
     findings: &'a Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     binding: &'a ValueBinding,
 ) -> BindingAim<'a> {
     // §FS-values.5.1: compared as if a stub's target were scanned (§FS-check.3.2.1).
     let homes: Vec<&Declaration> = findings
         .declarations
         .get(&binding.id)
-        .map(|decls| value_homes(decls, &config.root))
+        .map(|decls| value_homes(decls, frame.root()))
         .unwrap_or_default()
         .into_iter()
-        .map(|home| home_as_scanned(findings, config, &binding.id, home))
+        .map(|home| home_as_scanned(findings, schema, frame, &binding.id, home))
         .collect();
     let declaration = match homes[..] {
         [home] => Some(home),
@@ -195,7 +193,8 @@ pub(super) fn binding_aim<'a>(
             }
             _ if binding_target_reports_invalid_attempt(
                 findings,
-                config,
+                schema,
+                frame,
                 &binding.id,
                 Some(section),
             ) =>
@@ -312,29 +311,30 @@ fn embedded_root_for_binding<'a>(
 
 fn binding_target_reports_invalid_attempt(
     findings: &Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     id: &Id,
     section: Option<&str>,
 ) -> bool {
-    if kind_uses_values(config.schema(), &id.kind) {
+    if kind_uses_values(schema, &id.kind) {
         return true;
     }
     let Some(section) = section else { return false };
     // §FS-values.3.1.1: one predicate, so check's refusal set and the set
     // fmt protects (§FS-values.8) cannot drift apart.
-    binding_aims_at_embedded_value_authority(findings, config, id, section)
+    binding_aims_at_embedded_value_authority(findings, schema, frame, id, section)
 }
 
 /// Whether `section` is the declaration's own declared value chapter
 /// (§FS-values.2.5). A same-named chapter nested deeper is not one, because the
 /// path the key names is the declaration's direct chapter and nothing else.
 fn binding_aims_at_declared_chapter(
-    config: &Config,
+    schema: &Schema,
     id: &Id,
     declaration: &Declaration,
     section: &str,
 ) -> bool {
-    kind_value_chapter(config.schema(), &id.kind) == Some(section)
+    kind_value_chapter(schema, &id.kind) == Some(section)
         && declaration.sections.contains_key(section)
 }
 
@@ -350,12 +350,13 @@ fn binding_aims_at_declared_chapter(
 /// below a component.
 pub(crate) fn binding_aims_at_embedded_value_authority(
     findings: &Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     id: &Id,
     section: &str,
 ) -> bool {
-    declarations_as_scanned(findings, config, id).any(|declaration| {
-        binding_aims_at_declared_chapter(config, id, declaration, section)
+    declarations_as_scanned(findings, schema, frame, id).any(|declaration| {
+        binding_aims_at_declared_chapter(schema, id, declaration, section)
             || embedded_root_for_binding(declaration, section).is_some_and(|(_, relation)| {
                 !matches!(relation, EmbeddedBindingRelation::InvalidImmediateComponent)
             })
@@ -368,13 +369,14 @@ pub(crate) fn binding_aims_at_embedded_value_authority(
 /// §FS-values.2.5).
 pub(crate) fn binding_target_has_any_value_authority(
     findings: &Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     id: &Id,
     section: Option<&str>,
 ) -> bool {
-    kind_uses_values(config.schema(), &id.kind)
+    kind_uses_values(schema, &id.kind)
         || section.is_some_and(|section| {
-            declarations_as_scanned(findings, config, id)
+            declarations_as_scanned(findings, schema, frame, id)
                 .any(|declaration| embedded_root_for_binding(declaration, section).is_some())
         })
 }
@@ -384,7 +386,8 @@ pub(crate) fn binding_target_has_any_value_authority(
 /// were the target scanned (§FS-check.3.2.1, §FS-values.3.1.1, §FS-values.8).
 fn declarations_as_scanned<'a>(
     findings: &'a Catalog,
-    config: &'a Config,
+    schema: &'a Schema,
+    frame: Frame<'a>,
     id: &'a Id,
 ) -> impl Iterator<Item = &'a Declaration> {
     findings
@@ -392,7 +395,7 @@ fn declarations_as_scanned<'a>(
         .get(id)
         .into_iter()
         .flatten()
-        .map(move |declaration| home_as_scanned(findings, config, id, declaration))
+        .map(move |declaration| home_as_scanned(findings, schema, frame, id, declaration))
 }
 
 fn invalid_binding_diagnostic(binding: &ValueBinding) -> Diagnostic {

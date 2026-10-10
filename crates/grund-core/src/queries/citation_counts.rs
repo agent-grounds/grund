@@ -38,11 +38,16 @@ impl<'a> ListCitationCounts<'a> {
             // §AR-checker.2.16: the enrollment destination, as `Expected` carries it.
             let index_targets = index_link_targets(
                 &source.config.project().presentation,
-                &source.config,
+                source.config.schema(),
+                source.config.frame(),
                 &source.findings,
             );
-            let index_entries =
-                KindIndexEntries::new(&source.findings, &source.config, &index_targets);
+            let index_entries = KindIndexEntries::new(
+                &source.findings,
+                source.config.schema(),
+                source.config.frame(),
+                &index_targets,
+            );
             for citation in &source.findings.citations {
                 let target_alias: &str = match &citation.namespace {
                     Some(ns) => ns.as_str(),

@@ -222,7 +222,8 @@ fn fmt_line_at(
     let expansion = expand_shorthand_citations_with_origins(
         &marked,
         docstrings.peek(&marked),
-        config,
+        config.schema(),
+        config.frame(),
         is_md,
         opts.shorthand_targets,
         &trigger_marker_starts,

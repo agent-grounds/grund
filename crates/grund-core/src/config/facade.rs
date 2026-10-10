@@ -145,7 +145,7 @@ impl Config {
             run: &records.run,
             compiled: &records.compiled,
             name: records.project.name.as_deref(),
-            members: &records.project.workspace,
+            alias: None,
             display: self.display(),
         }
     }

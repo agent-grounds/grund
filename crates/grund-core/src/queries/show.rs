@@ -76,7 +76,14 @@ pub(crate) fn show_declaration_with_overlays<'a>(
         return Ok((output, Cow::Borrowed(decl)));
     }
     if let Some(case) = &decl.e2e_case {
-        let output = show_e2e_case(config, path_config, id, case, section, mode)?;
+        // §FS-show.2.4: the kind's title is presentation's, read here.
+        let title = config
+            .kinds
+            .iter()
+            .find(|kind| kind.kind == id.kind)
+            .and_then(|kind| kind.title.as_deref());
+        let frame = config.frame().displayed_by(path_config.display());
+        let output = show_e2e_case(config.schema(), frame, title, id, case, section, mode)?;
         return Ok((output, Cow::Borrowed(decl)));
     }
     let file = if let Some(target) = &decl.defined_in {
@@ -146,7 +153,8 @@ pub(crate) fn show_declaration_with_overlays<'a>(
         section,
         mode,
         include_heading,
-        config,
+        config.schema(),
+        config.frame(),
         overlays,
     )?;
     Ok((output, body_decl))
@@ -344,7 +352,7 @@ impl ShowAnchors {
             })
             .collect();
         Self {
-            selected: heading_anchor(decl, section, presentation, config),
+            selected: heading_anchor(decl, section, presentation, config.frame()),
             sections,
         }
     }

@@ -143,7 +143,7 @@ pub(crate) fn fmt_tree(
     // run that could need it, since §FS-fmt.2.5.3 makes it outrank a suppressed
     // scope too — a handful of configured paths, so nothing is deferred here.
     let index_files = if opts.index_cross_refs {
-        KindIndexFiles::new(config)
+        KindIndexFiles::new(config.schema(), config.frame())
     } else {
         KindIndexFiles::empty()
     };
@@ -170,7 +170,7 @@ pub(crate) fn fmt_tree(
     let mut shorthand_findings: Option<CompleteScan> = None;
     // §FS-fmt.2.4.5: built once for the whole walk, not once per line — see
     // `ShorthandTargets`. Rebuilt at most once, when the deferred scan lands.
-    let mut shorthand_targets = ShorthandTargets::new(config, findings, workspace);
+    let mut shorthand_targets = ShorthandTargets::new(config.frame(), findings, workspace);
     // §FS-fmt.3.1: the paths this walk could not read, rendered here while the
     // config that names them is at hand — the same account `check` owes of the
     // tree it walks (§FS-check.2.4).
@@ -213,9 +213,18 @@ pub(crate) fn fmt_tree(
             && let Some(findings) = findings
         {
             // §AR-checker.2.16: the enrollment destination, as `Expected` carries it.
-            let index_targets =
-                index_link_targets(&config.project().presentation, config, findings);
-            index_entries = Some(KindIndexEntries::new(findings, config, &index_targets));
+            let index_targets = index_link_targets(
+                &config.project().presentation,
+                config.schema(),
+                config.frame(),
+                findings,
+            );
+            index_entries = Some(KindIndexEntries::new(
+                findings,
+                config.schema(),
+                config.frame(),
+                &index_targets,
+            ));
         }
         let index_entry_ids = carve_out
             .then(|| index_entries.as_ref().and_then(|it| it.entries_in(&path)))
@@ -244,7 +253,7 @@ pub(crate) fn fmt_tree(
         if rewritten.saw_shorthand_candidate && findings.is_none() {
             shorthand_findings = Some(CompleteScan::of_tree_or_abort(config, opts.render)?);
             findings = shorthand_findings.as_ref().map(CompleteScan::findings);
-            shorthand_targets = ShorthandTargets::new(config, findings, workspace);
+            shorthand_targets = ShorthandTargets::new(config.frame(), findings, workspace);
             changes.truncate(file_changes_start);
             rewritten = rewrite_file(
                 &original,

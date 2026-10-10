@@ -5,6 +5,7 @@
 use super::facts::{NodeKey, RuleFacts};
 use super::markdown::adapt_markdown;
 use crate::checker::markdown_project;
+use crate::resolver::WorkspaceCheckTarget;
 use crate::testing::{numbered_config, scan_findings, test_root, write};
 
 /// `FS-002-target` has a numbered section `.4` and a named `outcome` chapter
@@ -34,7 +35,14 @@ fn facts(name: &str, source_body: &str) -> RuleFacts {
     config.named_sections = true;
     config.rebuild_grammar().expect("rebuild named grammar");
     let findings = scan_findings(&config, &root);
-    adapt_markdown(&findings, markdown_project(&config), true)
+    adapt_markdown(
+        &findings,
+        markdown_project(
+            config.frame().name,
+            &WorkspaceCheckTarget::of(&findings, config.schema(), config.frame()),
+        ),
+        true,
+    )
 }
 
 fn label(facts: &RuleFacts, node: &NodeKey) -> String {

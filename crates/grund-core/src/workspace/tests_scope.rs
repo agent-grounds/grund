@@ -15,10 +15,10 @@ fn workspace_root_scope_requires_canonical_root_for_explicit_path() {
     std::fs::create_dir_all(&subdir).expect("create subdir");
     let config = Config::default_for(root.clone());
 
-    assert!(scope_is_config_root(&config, Path::new("."), false));
-    assert!(scope_is_config_root(&config, &root, true));
+    assert!(scope_is_config_root(&config.root, Path::new("."), false));
+    assert!(scope_is_config_root(&config.root, &root, true));
     assert!(
-        !scope_is_config_root(&config, &subdir, true),
+        !scope_is_config_root(&config.root, &subdir, true),
         "an explicit subdirectory scope must not be promoted to workspace root"
     );
 }

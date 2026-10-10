@@ -22,6 +22,7 @@ use super::point_sizes::LeadSizeWarning;
 use super::project::Schema;
 use super::rows::Form;
 use super::run_warnings::RunWarning;
+use super::slots::{Content, Handle, Slot};
 use super::v1;
 #[cfg(test)]
 use crate::grammar::GrammarKind;
@@ -296,6 +297,7 @@ impl Config {
     /// The homeless kind for this config (§FS-config.3.9.2) — the citing kind
     /// every site outside every configured home resolves to. The declared entry
     /// when the table has one, else the reserved `code`.
+    #[cfg(test)]
     pub(crate) fn homeless_kind(&self) -> &str {
         declared_homeless_kind(&self.kinds).map_or(CODE_SOURCE_KIND, |kind| kind.kind.as_str())
     }
@@ -377,13 +379,12 @@ pub(crate) fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
 /// The `known kinds:` line that ends an unknown `--kind` (§FS-list.1.1), a
 /// `--selector` refusal that recovers no kind (§FS-rules.8.1), and a
 /// `check --rule` refusal that offers no form (§FS-rules.3.5.2): every citable
-/// kind of `kinds`, once, in configuration order.
-pub(crate) fn known_kinds_line<'a>(kinds: impl IntoIterator<Item = &'a KindConfig>) -> String {
+/// kind named in `citable`, once, in configuration order.
+pub(crate) fn known_kinds_line<'a>(citable: impl IntoIterator<Item = &'a str>) -> String {
     let mut seen = std::collections::BTreeSet::new();
-    let known = kinds
+    let known = citable
         .into_iter()
-        .filter(|kind| kind.citable && seen.insert(kind.kind.as_str()))
-        .map(|kind| kind.kind.as_str())
+        .filter(|kind| seen.insert(*kind))
         .collect::<Vec<_>>();
     format!("known kinds: {}", known.join(", "))
 }
@@ -430,8 +431,12 @@ pub(super) fn declared_homeless_kind(kinds: &[KindConfig]) -> Option<&KindConfig
 /// Whether a `[[kinds]]` row opted its home into first-class values
 /// (§FS-values.2, §FS-config.3.4): its form is a value form (§AR-config.1.3).
 pub(crate) fn kind_uses_values(schema: &Schema, kind: &str) -> bool {
+    // §AR-config.6.2: the value shape is read through the kind's slots.
     schema.kinds().any(|(name, configured)| {
-        name == kind && matches!(configured.form, Form::Value { chapter: None })
+        name == kind
+            && configured
+                .slots()
+                .any(|slot| slot.handle == Handle::Numbered && slot.content == Content::Values)
     })
 }
 
@@ -444,7 +449,16 @@ pub(crate) fn kind_value_chapter<'a>(schema: &'a Schema, kind: &str) -> Option<&
         .kinds()
         .find(|(name, _)| *name == kind)
         .and_then(|(_, configured)| match &configured.form {
-            Form::Value { chapter } => chapter.as_deref(),
+            // §AR-config.6.2: a value kind's chapter is its one named values slot.
+            Form::Value { .. } => configured.slots().find_map(|slot| match slot {
+                Slot {
+                    handle: Handle::Named(chapter),
+                    content: Content::Values,
+                    ..
+                } => Some(chapter),
+                _ => None,
+            }),
+            // A rule kind yields no slot, so its v1 value chapter is read off the form.
             Form::Rule { value_chapter } => value_chapter.as_deref(),
             Form::Prose => None,
         })

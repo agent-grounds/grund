@@ -6,7 +6,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::config::Config;
+use crate::config::Frame;
 use crate::grammar::{declaration_id_on_line, markdown_fence_delimiter, parse_id};
 use crate::model::{Declaration, Id};
 
@@ -55,7 +55,7 @@ fn line_names_file(line: &str, file_name: &str) -> bool {
 /// least one finding, so an index whose declarations are all entered — every
 /// index in a green repository — pays nothing (§GOAL-fast-feedback).
 pub(super) fn index_mentions<'a>(
-    config: &Config,
+    frame: Frame<'_>,
     lines: &[&str],
     unentered: &[(&'a Id, &'a Declaration)],
 ) -> BTreeSet<&'a Id> {
@@ -65,15 +65,15 @@ pub(super) fn index_mentions<'a>(
         if markdown_fence_delimiter(&mut fence, line) || fence.is_some() {
             continue;
         }
-        if declaration_id_on_line(&config.grammar, line, false, true).is_some() {
+        if declaration_id_on_line(frame.grammar(), line, false, true).is_some() {
             continue;
         }
         // The grammar's own notion of an ID-shaped token, parsed the way the
         // scanner parses one: a longer ID containing this one parses as itself
         // and is therefore not a mention of it, while a namespaced or
         // section-suffixed occurrence counts as one of the ID it names.
-        for caps in config.grammar.citation_re.captures_iter(line) {
-            let Some(found) = parse_id(&caps, &config.grammar) else {
+        for caps in frame.grammar().citation_re.captures_iter(line) {
+            let Some(found) = parse_id(&caps, frame.grammar()) else {
                 continue;
             };
             for (id, _) in unentered {

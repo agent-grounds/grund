@@ -1,4 +1,4 @@
-use crate::config::{Config, LeadSizeWarning, measure_point_text};
+use crate::config::{Frame, LeadSizeWarning, Schema, measure_point_text};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, TextOverlays,
@@ -13,24 +13,24 @@ use crate::resolver::{PointBodyCache, point_body_pair};
 /// warning, keeping CLI and LSP on the same checker path.
 pub(super) fn check_oversized_leads(
     findings: &Catalog,
-    config: &Config,
-    current_alias: Option<&str>,
+    schema: &Schema,
+    frame: Frame<'_>,
     overlays: &TextOverlays,
     report: &mut CheckReport,
 ) {
-    let Some(warning) = config.lead_size_warning else {
+    let Some(warning) = schema.leads else {
         return;
     };
     let mut cache = PointBodyCache::new(overlays);
     for (id, declarations) in &findings.declarations {
         let homes = declarations
             .iter()
-            .filter(|decl| !is_stub_for_inline_decl(&config.root, decl, declarations));
+            .filter(|decl| !is_stub_for_inline_decl(frame.root(), decl, declarations));
         for declaration in homes {
             check_oversized_lead_site(
                 &mut cache,
-                config,
-                current_alias,
+                schema,
+                frame,
                 id,
                 declaration,
                 None,
@@ -41,8 +41,8 @@ pub(super) fn check_oversized_leads(
             for (section, info) in &declaration.sections {
                 check_oversized_lead_site(
                     &mut cache,
-                    config,
-                    current_alias,
+                    schema,
+                    frame,
                     id,
                     declaration,
                     Some((section.as_str(), info)),
@@ -53,8 +53,8 @@ pub(super) fn check_oversized_leads(
             for (section, info) in &declaration.duplicate_sections {
                 check_oversized_lead_site(
                     &mut cache,
-                    config,
-                    current_alias,
+                    schema,
+                    frame,
                     id,
                     declaration,
                     Some((section.as_str(), info)),
@@ -71,15 +71,16 @@ pub(super) fn check_oversized_leads(
 #[allow(clippy::too_many_arguments)]
 fn check_oversized_lead_site(
     cache: &mut PointBodyCache<'_>,
-    config: &Config,
-    current_alias: Option<&str>,
+    schema: &Schema,
+    frame: Frame<'_>,
     id: &Id,
     declaration: &Declaration,
     section: Option<(&str, &SectionInfo)>,
     warning: LeadSizeWarning,
     report: &mut CheckReport,
 ) {
-    let Ok(Some((lead, _))) = point_body_pair(cache, config, id, declaration, section) else {
+    let Ok(Some((lead, _))) = point_body_pair(cache, schema, frame, id, declaration, section)
+    else {
         // A stub is broken or has its home outside the scan, unjudged either way
         // (§FS-declarations.checks.oversized-lead.4). A read failure is the scan's.
         return;
@@ -88,12 +89,12 @@ fn check_oversized_lead_site(
     if actual <= warning.max {
         return;
     }
-    let mut coordinate = render_id(&config.grammar, id);
+    let mut coordinate = render_id(frame.grammar(), id);
     if let Some((section, _)) = section {
-        coordinate.push_str(&config.section_separator);
+        coordinate.push_str(&schema.ids.section_separator);
         coordinate.push_str(section);
     }
-    if let Some(alias) = current_alias {
+    if let Some(alias) = frame.alias {
         coordinate = format!("{alias}/{coordinate}");
     }
     report.warnings.push(Diagnostic {

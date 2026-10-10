@@ -12,8 +12,8 @@ use std::path::{Path, PathBuf};
 use super::run::unread_resolution_source_cautions;
 use super::scope_cautions::scan_scope_caution;
 use crate::checker::{
-    ScanScope, check_chapter_rules, check_with_workspace_and_overlays, path_report_scope,
-    retain_diagnostics_in_report_scope, sort_diagnostics,
+    CheckWorkspace, ScanScope, check_chapter_rules, check_with_workspace_and_overlays,
+    path_report_scope, retain_diagnostics_in_report_scope, sort_diagnostics,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Diagnostic, TextOverlays};
@@ -39,11 +39,11 @@ pub(super) fn widen_for_path_anchor(
     path: &Path,
     path_provided: bool,
 ) -> Result<Option<ScanScope>> {
-    if config.workspace_declared || scope_is_config_root(config, path, path_provided) {
+    if config.workspace_declared || scope_is_config_root(&config.root, path, path_provided) {
         return Ok(None);
     }
     config.set_scan_resolution_wide(true);
-    path_report_scope(config, path, path_provided)
+    path_report_scope(config.schema(), config.frame(), path, path_provided)
 }
 
 /// §AR-lsp.5.1.1: the snapshot's report — every rule run over the resolution scope,
@@ -88,13 +88,22 @@ fn check_workspace_context(
         .map(|project| {
             (
                 project.alias.clone(),
-                WorkspaceCheckTarget {
-                    findings: &project.findings,
-                    config: &project.config,
-                },
+                WorkspaceCheckTarget::of(
+                    &project.findings,
+                    project.config.schema(),
+                    project.config.frame(),
+                ),
             )
         })
         .collect::<BTreeMap<_, _>>();
+    // §FS-check.4.12: a qualified citation's `resolve` policy is its target's rule.
+    let check_workspace = CheckWorkspace::new(
+        &workspace,
+        context
+            .projects
+            .iter()
+            .map(|project| (project.alias.as_str(), project.config.rules())),
+    );
     let mut report = CheckReport::default();
     let rules_complete = context
         .projects
@@ -110,33 +119,39 @@ fn check_workspace_context(
         let mut project_report = if context.workspace_loaded {
             // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
             let expected = expected(&project.findings, &config, &workspace);
+            // §FS-workspace.8.1: paths inside a message are spelled from the
+            // render root, like the anchors beside them.
+            let frame = config
+                .frame()
+                .displayed_by(context.render_config().frame().display)
+                .checked_as(Some(&project.alias));
             check_with_workspace_and_overlays(
+                config.rules(),
+                config.schema(),
                 &project.findings,
-                &config,
-                // §FS-workspace.8.1: paths inside a message are spelled from the
-                // render root, like the anchors beside them.
-                context.render_config(),
-                Some(&project.alias),
-                &workspace,
-                overlays,
                 &expected,
+                frame,
+                &check_workspace,
+                overlays,
             )
         } else {
             let no_workspace = BTreeMap::new();
             let expected = expected(&project.findings, &config, &no_workspace);
             check_with_workspace_and_overlays(
+                config.rules(),
+                config.schema(),
                 &project.findings,
-                &config,
-                &config,
-                None,
-                &no_workspace,
-                overlays,
                 &expected,
+                config.frame(),
+                &CheckWorkspace::alone(&no_workspace),
+                overlays,
             )
         };
         check_chapter_rules(
             &project.findings,
-            &config,
+            config.rules(),
+            config.schema(),
+            config.frame(),
             rules_complete,
             None,
             context
@@ -153,7 +168,11 @@ fn check_workspace_context(
             .partition(|(file, _)| report_scope.is_none_or(|scope| scope.contains(file)));
         append_lsp_scan_errors(&mut project_report, inside);
         for channel in [&mut project_report.errors, &mut project_report.warnings] {
-            retain_diagnostics_in_report_scope(channel, context.render_config(), report_scope);
+            retain_diagnostics_in_report_scope(
+                channel,
+                context.render_config().frame(),
+                report_scope,
+            );
         }
         let report_is_silent =
             project_report.errors.is_empty() && project_report.warnings.is_empty();
@@ -193,7 +212,11 @@ fn check_workspace_context(
         );
         // §FS-check.1.3.6.1: a block the wider walk met outside the anchor is not this
         // report's to make.
-        retain_diagnostics_in_report_scope(&mut unlisted, context.render_config(), report_scope);
+        retain_diagnostics_in_report_scope(
+            &mut unlisted,
+            context.render_config().frame(),
+            report_scope,
+        );
         report.errors.extend(unlisted);
     }
     // §FS-check.4.9, §FS-check.2.2: the announcements and the caution — see this

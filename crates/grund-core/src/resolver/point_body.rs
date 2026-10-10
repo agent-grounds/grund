@@ -19,7 +19,7 @@ use anyhow::Result;
 
 use super::body::{PointBodyCache, PointBodySite, extract_declaration_body_cached};
 use super::e2e_body::show_e2e_case;
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::flatten_cross_ref_links;
 use crate::model::{Declaration, DeclarationSource, Id, SectionInfo, ShowRenderMode};
 
@@ -32,7 +32,8 @@ use crate::model::{Declaration, DeclarationSource, Id, SectionInfo, ShowRenderMo
 /// such a stub's home instead (§FS-list.3.4.6).
 pub(crate) fn point_body_pair(
     cache: &mut PointBodyCache<'_>,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     id: &Id,
     declaration: &Declaration,
     section: Option<(&str, &SectionInfo)>,
@@ -55,8 +56,9 @@ pub(crate) fn point_body_pair(
         return Ok(Some((body.clone(), body)));
     }
     if let Some(case) = &declaration.e2e_case {
-        let lead = show_e2e_case(config, config, id, case, None, ShowRenderMode::Default)?.body;
-        let full = show_e2e_case(config, config, id, case, None, ShowRenderMode::Full)?.body;
+        let lead =
+            show_e2e_case(schema, frame, None, id, case, None, ShowRenderMode::Default)?.body;
+        let full = show_e2e_case(schema, frame, None, id, case, None, ShowRenderMode::Full)?.body;
         return Ok(Some((lead, full)));
     }
 
@@ -74,7 +76,8 @@ pub(crate) fn point_body_pair(
         section_path,
         ShowRenderMode::Default,
         false,
-        config,
+        schema,
+        frame,
         Some(site),
     )?
     .body;
@@ -85,7 +88,8 @@ pub(crate) fn point_body_pair(
         section_path,
         ShowRenderMode::Full,
         false,
-        config,
+        schema,
+        frame,
         Some(site),
     )?
     .body;
@@ -93,7 +97,7 @@ pub(crate) fn point_body_pair(
     // those same bytes (§FS-show.3.2.2, §FS-list.3.4.1). Markdown measurements retain
     // authored destination bytes inside fences.
     let markdown_body = declaration.file.extension().and_then(|ext| ext.to_str()) == Some("md");
-    lead = flatten_cross_ref_links(&lead, config.lexical(), markdown_body);
-    full = flatten_cross_ref_links(&full, config.lexical(), markdown_body);
+    lead = flatten_cross_ref_links(&lead, frame.compiled.lexical(schema), markdown_body);
+    full = flatten_cross_ref_links(&full, frame.compiled.lexical(schema), markdown_body);
     Ok(Some((lead, full)))
 }

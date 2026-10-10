@@ -55,7 +55,7 @@ pub(super) fn stub_home<'a>(
         return Ok(Cow::Borrowed(scanned));
     }
     // §FS-show.2.2.2.2: the reading `check` takes a stub's sections from (§FS-check.3.2.1).
-    let mut homes = target_records(file, config, overlays)
+    let mut homes = target_records(file, config.schema(), config.frame(), overlays)
         .remove(id)
         .unwrap_or_default();
     // §FS-show.2.3.7, §FS-show.2.2.1: two homes in the target refuse as if scanned.

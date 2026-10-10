@@ -45,8 +45,8 @@ pub(crate) fn expected(
         .iter()
         .any(|kind| kind.rules)
         .then(|| {
-            let vocab = workspace_vocabulary(config, workspace);
-            configured_rule_sentences(findings, config, &vocab).ok()
+            let vocab = workspace_vocabulary(config.schema(), config.frame(), workspace);
+            configured_rule_sentences(findings, config.schema(), config.frame(), &vocab).ok()
         })
         .flatten()
         .map(|rules| rules.rows);
@@ -71,7 +71,12 @@ pub(crate) fn expected(
         block_version: block_version(config),
         entrypoints,
         entrypoint_probe_error,
-        index_targets: index_link_targets(&config.project().presentation, config, findings),
+        index_targets: index_link_targets(
+            &config.project().presentation,
+            config.schema(),
+            config.frame(),
+            findings,
+        ),
     }
 }
 
@@ -149,7 +154,8 @@ pub(crate) fn chapter_rules_section(
                     &id,
                     None,
                     &config.project().presentation,
-                    config,
+                    config.schema(),
+                    config.frame(),
                     findings,
                 )
             })

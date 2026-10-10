@@ -39,12 +39,14 @@
 mod agents;
 mod chapter_rules;
 mod citations;
+mod conform;
 mod grounding;
 mod homes;
 mod index;
 mod index_entries;
 mod index_mention;
 mod inline_style;
+mod judge;
 mod near_miss;
 mod obligation_units;
 mod reference_scope;
@@ -76,6 +78,7 @@ pub(crate) use crate::testing::{check_findings, check_with_workspace};
 pub(crate) use chapter_rules::markdown_project;
 pub(crate) use index::KindIndexFiles;
 pub(crate) use index_entries::KindIndexEntries;
+pub(crate) use judge::CheckWorkspace;
 pub(crate) use reference_scope::{
     ScanScope, configured_scope, out_of_scope_references, path_report_scope,
     retain_diagnostics_in_report_scope, retain_findings_in_scope, scope_read_any_file,

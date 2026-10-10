@@ -24,7 +24,7 @@ use crate::workspace::{expand_workspace_tree, resolve_workspace_config};
 /// (§FS-config.4.1.1) — needs no channel of its own.
 #[doc(hidden)]
 pub fn config_run_warnings(config: &Config) -> Vec<Finding> {
-    public_run_warnings(config, settled_run_warnings(config))
+    public_run_warnings(config, settled_run_warnings(config.run()))
 }
 
 pub fn effective_config(path: &Path) -> Result<Config> {

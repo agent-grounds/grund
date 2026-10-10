@@ -18,7 +18,7 @@ use crate::scanner::{
 use crate::templates::{
     ConversationSurface, render_agents_append_block, render_agents_md_from_block, render_grund_toml,
 };
-use crate::workspace::populate_workspace_boundary;
+use crate::workspace::{declared_member_schemas, populate_workspace_boundary};
 
 pub use super::init_output::{InitError, InitEvent, InitOpts, InitOutput};
 
@@ -184,8 +184,17 @@ fn init_run(
         // §FS-rules.4.1: the workspace this project's own config declares, which
         // is the one `check` in this same directory resolves against — never the
         // one climbed to above, which is teaching rather than judging.
-        let vocab = declared_workspace_vocabulary(&init_config);
-        match configured_rule_sentences(&findings, &init_config, &vocab) {
+        let vocab = declared_workspace_vocabulary(
+            init_config.schema(),
+            init_config.frame(),
+            &declared_member_schemas(&init_config),
+        );
+        match configured_rule_sentences(
+            &findings,
+            init_config.schema(),
+            init_config.frame(),
+            &vocab,
+        ) {
             Ok(rules) => (
                 rules.rows,
                 rules

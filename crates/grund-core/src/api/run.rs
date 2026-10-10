@@ -14,12 +14,12 @@ use super::config_findings::config_diagnostics;
 use super::report::public_run_warnings;
 use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
 use crate::checker::{
-    check_chapter_rules, check_on_disk, configured_scope, out_of_scope_references,
+    CheckWorkspace, check_chapter_rules, check_on_disk, configured_scope, out_of_scope_references,
     out_of_scope_section_headings, parse_ad_hoc, parse_ad_hoc_with_workspace, path_report_scope,
     retain_diagnostics_in_report_scope, retain_findings_in_scope, sort_diagnostics,
     workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
-use crate::config::Config;
+use crate::config::{Config, ProjectRecords};
 use crate::model::{CheckReport, Diagnostic, Finding};
 use crate::resolver::{WorkspaceCheckTarget, load_workspace_projects, settled_run_warnings};
 use crate::scanner::scan_tree;
@@ -93,7 +93,7 @@ pub(super) fn run_check_with_run_warnings(
     // §FS-check.4.10.8: root boundary population has answered
     // everything a failed expansion is allowed to carry. Capture it before a
     // nested member can refuse; questions below the root do not exist yet.
-    *run_warnings = public_run_warnings(&config, settled_run_warnings(&config));
+    *run_warnings = public_run_warnings(&config, settled_run_warnings(config.run()));
     // §FS-rules.4: ad-hoc grammar/vocabulary refusals happen before scanning.
     // §FS-check.1.3: `--full` cancels `[scan] include` for the walk. It is a
     // per-run flag, never a config key (§DF-check-full-scope.2.5).
@@ -101,28 +101,28 @@ pub(super) fn run_check_with_run_warnings(
     // §FS-check.1.3.6.1: the path is the report scope, so the walk reads the
     // ordinary roots too. On the config for the reason `scan_full` is — the
     // scanner asks for it four frames below the run that decided it.
-    config.set_scan_resolution_wide(!scope_is_config_root(&config, path, path_provided));
+    config.set_scan_resolution_wide(!scope_is_config_root(&config.root, path, path_provided));
     // §FS-check.1: the flag and `[reference] require_grounding` are one knob, so
     // it sets the same global default — it never turns the key off, and a
     // `[[kinds]]` row that says `false` stays exempt under it (§FS-config.3.4.8.3).
     if force_require_grounding {
         config.force_require_grounding();
     }
-    if config.workspace_declared && scope_is_config_root(&config, path, path_provided) {
+    if config.workspace_declared && scope_is_config_root(&config.root, path, path_provided) {
         let run = run_workspace_check(config, force_require_grounding, full, ad_hoc_sentence)?;
         // §FS-check.4.10.8: successful expansion may settle more
         // blocks, so the successful side channel is the complete ordered set.
-        *run_warnings = public_run_warnings(&run.config, settled_run_warnings(&run.config));
+        *run_warnings = public_run_warnings(&run.config, settled_run_warnings(run.config.run()));
         return Ok(run);
     }
     let ad_hoc = ad_hoc_sentence
-        .map(|sentence| parse_ad_hoc(&config, sentence))
+        .map(|sentence| parse_ad_hoc(config.schema(), config.frame(), sentence))
         .transpose()?;
 
     let (mut findings, mut scan_errors) =
         scan_tree(config.schema(), config.frame(), Some(path), path_provided)?;
     // §FS-check.1.3.6.1: exactly the path, and `None` over the config root.
-    let report_scope = path_report_scope(&config, path, path_provided)?;
+    let report_scope = path_report_scope(config.schema(), config.frame(), path, path_provided)?;
     // §FS-check.1.3 / §FS-check.3.14: read the out-of-scope tier off the whole
     // `--full` walk first, then narrow the findings back to the configured scope
     // so every other rule reports exactly what a run without the flag reports.
@@ -132,10 +132,15 @@ pub(super) fn run_check_with_run_warnings(
     // made the walk wider than the report.
     let scope = match report_scope {
         Some(_) => None,
-        None => configured_scope(&config, path, path_provided, full)?,
+        None => configured_scope(config.schema(), config.frame(), path, path_provided, full)?,
     };
-    let mut out_of_scope =
-        out_of_scope_references(&findings, &config, &BTreeMap::new(), scope.as_ref());
+    let mut out_of_scope = out_of_scope_references(
+        &findings,
+        config.schema(),
+        config.frame(),
+        &BTreeMap::new(),
+        scope.as_ref(),
+    );
     out_of_scope.extend(out_of_scope_section_headings(&findings, scope.as_ref()));
     retain_findings_in_scope(&mut findings, scope.as_ref());
     // §FS-check.1.3.6.1: a file the wider walk could not read is outside the report
@@ -156,10 +161,19 @@ pub(super) fn run_check_with_run_warnings(
     // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
     let no_workspace = BTreeMap::new();
     let expected = expected(&findings, &config, &no_workspace);
-    let mut report = check_on_disk(&findings, &config, &config, None, &no_workspace, &expected);
+    let mut report = check_on_disk(
+        config.rules(),
+        config.schema(),
+        &findings,
+        &expected,
+        config.frame(),
+        &CheckWorkspace::alone(&no_workspace),
+    );
     check_chapter_rules(
         &findings,
-        &config,
+        config.rules(),
+        config.schema(),
+        config.frame(),
         resolution_was_complete,
         ad_hoc,
         None,
@@ -168,9 +182,13 @@ pub(super) fn run_check_with_run_warnings(
     let had_scan_errors = append_scan_errors(&mut report, scan_errors);
     // §FS-check.1.3.6.1: every rule has run over the resolution scope, so the report
     // narrows to the path — the second stage, after the rules (§AR-resolver.3.3).
-    retain_diagnostics_in_report_scope(&mut report.errors, &config, report_scope.as_ref());
-    retain_diagnostics_in_report_scope(&mut report.warnings, &config, report_scope.as_ref());
-    retain_diagnostics_in_report_scope(&mut report.suggestions, &config, report_scope.as_ref());
+    retain_diagnostics_in_report_scope(&mut report.errors, config.frame(), report_scope.as_ref());
+    retain_diagnostics_in_report_scope(&mut report.warnings, config.frame(), report_scope.as_ref());
+    retain_diagnostics_in_report_scope(
+        &mut report.suggestions,
+        config.frame(),
+        report_scope.as_ref(),
+    );
     // §FS-check.2.2 / §FS-check.4.5: a walk that read no files, or read them and
     // recognized nothing in them, is almost always a misconfigured scope rather
     // than a clean repo — say so on stderr instead of exiting 0 in silence.
@@ -209,7 +227,7 @@ pub(super) fn run_check_with_run_warnings(
         unlisted_workspace_block_errors(&config, &config, None, &findings.walked_dirs);
     // §FS-check.1.3.6.1: the wider walk met directories the path does not name, and
     // a block out there is not this run's report to make.
-    retain_diagnostics_in_report_scope(&mut unlisted, &config, report_scope.as_ref());
+    retain_diagnostics_in_report_scope(&mut unlisted, config.frame(), report_scope.as_ref());
     report.errors.extend(unlisted);
     // §FS-check.3.14, after the scope caution above (§FS-check.2.2, §FS-check.4.5):
     // a `--full` run whose *configured* scope read or recognized nothing still earns
@@ -222,7 +240,7 @@ pub(super) fn run_check_with_run_warnings(
         report,
         had_scan_errors,
     };
-    *run_warnings = public_run_warnings(&run.config, settled_run_warnings(&run.config));
+    *run_warnings = public_run_warnings(&run.config, settled_run_warnings(run.config.run()));
     Ok(run)
 }
 
@@ -244,11 +262,12 @@ pub(super) fn run_check_with_run_warnings(
 /// `check_workspace_context`, which is the same decision made from the same place
 /// (§FS-lsp.4.1).
 fn run_workspace_check(
-    mut root_config: Config,
+    root_config: Config,
     force_require_grounding: bool,
     full: bool,
     ad_hoc_sentence: Option<&str>,
 ) -> Result<CheckRun> {
+    let mut root_config = ProjectRecords::of(root_config);
     let mut projects = load_workspace_projects(&mut root_config)?;
     // §FS-check.3.5: `--require-grounding` propagates to every member's
     // config. The flag only affects checking, not scanning, so applying it
@@ -262,7 +281,15 @@ fn run_workspace_check(
     // walk is widened past its own and tiered against its own configured scope.
     let scopes = projects
         .iter()
-        .map(|project| configured_scope(&project.config, &project.config.root, true, full))
+        .map(|project| {
+            configured_scope(
+                project.config.schema(),
+                project.config.frame(),
+                &project.config.root,
+                true,
+                full,
+            )
+        })
         .collect::<Result<Vec<_>>>()?;
     let mut out_of_scope = workspace_out_of_scope_references(&projects, &scopes);
     out_of_scope.extend(workspace_out_of_scope_section_headings(&projects, &scopes));
@@ -278,33 +305,55 @@ fn run_workspace_check(
         .map(|project| {
             (
                 project.alias.clone(),
-                WorkspaceCheckTarget {
-                    findings: &project.findings,
-                    config: &project.config,
-                },
+                WorkspaceCheckTarget::of(
+                    &project.findings,
+                    project.config.schema(),
+                    project.config.frame(),
+                ),
             )
         })
         .collect::<BTreeMap<_, _>>();
     let ad_hoc = ad_hoc_sentence
-        .map(|sentence| parse_ad_hoc_with_workspace(&root_config, sentence, &workspace))
+        .map(|sentence| {
+            parse_ad_hoc_with_workspace(
+                root_config.schema(),
+                root_config.frame(),
+                sentence,
+                &workspace,
+            )
+        })
         .transpose()?;
+    // §FS-check.4.12: a qualified citation's `resolve` policy is its target's rule.
+    let check_workspace = CheckWorkspace::new(
+        &workspace,
+        projects
+            .iter()
+            .map(|project| (project.alias.as_str(), project.config.rules())),
+    );
     let mut report = CheckReport::default();
     let mut had_scan_errors = false;
     for project in &projects {
         let expected = expected(&project.findings, &project.config, &workspace);
+        // §FS-workspace.8.1: the report is rendered from the workspace root,
+        // so a path a member's message names is spelled from there too.
+        let frame = project
+            .config
+            .frame()
+            .displayed_by(root_config.display())
+            .checked_as(Some(&project.alias));
         let mut project_report = check_on_disk(
+            project.config.rules(),
+            project.config.schema(),
             &project.findings,
-            &project.config,
-            // §FS-workspace.8.1: the report is rendered from the workspace root,
-            // so a path a member's message names is spelled from there too.
-            &root_config,
-            Some(&project.alias),
-            &workspace,
             &expected,
+            frame,
+            &check_workspace,
         );
         check_chapter_rules(
             &project.findings,
-            &project.config,
+            project.config.rules(),
+            project.config.schema(),
+            frame,
             rules_complete,
             ad_hoc.clone(),
             Some((&project.alias, &workspace)),
@@ -365,7 +414,7 @@ fn run_workspace_check(
     sort_diagnostics(&mut report.suggestions);
 
     Ok(CheckRun {
-        config: root_config,
+        config: root_config.into_facade(),
         report,
         had_scan_errors,
     })

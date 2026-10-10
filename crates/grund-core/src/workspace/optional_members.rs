@@ -24,7 +24,7 @@ use super::expand::qualify_alias;
 use super::members::{WorkspaceMember, canonical_workspace_path, workspace_member_root};
 use super::scope::{config_location_error, duplicate_alias_sites};
 use crate::config::{
-    AbsentOptionalNamespace, Config, both_member_lists_message, optional_member_alias_segment,
+    AbsentOptionalNamespace, Config, Run, both_member_lists_message, optional_member_alias_segment,
 };
 use crate::model::Diagnostic;
 
@@ -305,8 +305,8 @@ pub(crate) fn absent_only_workspace_caution(
 /// `[workspace]` and the run cannot know how many levels it had or what they were
 /// called (§FS-workspace.2.2.2.3) — `hardware/AR-bus` and `hardware/sprayer/FS-nozzle`
 /// alike when `hardware` is the absent entry.
-pub(crate) fn namespace_is_unverified(config: &Config, namespace: &str) -> bool {
-    config.workspace_absent_optional.iter().any(|absent| {
+pub(crate) fn namespace_is_unverified(run: &Run, namespace: &str) -> bool {
+    run.workspace.absent_optional.iter().any(|absent| {
         namespace == absent.alias_path
             || namespace
                 .strip_prefix(&absent.alias_path)

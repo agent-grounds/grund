@@ -326,10 +326,7 @@ fn a_workspace_names_the_other_heading_from_the_workspace_root() {
         scan_tree(&api_config, Some(&api_config.root), true).expect("scan member");
     let workspace = BTreeMap::from([(
         "api".to_string(),
-        WorkspaceCheckTarget {
-            findings: &api_findings,
-            config: &api_config,
-        },
+        WorkspaceCheckTarget::of(&api_findings, api_config.schema(), api_config.frame()),
     )]);
 
     let report = check_with_workspace(

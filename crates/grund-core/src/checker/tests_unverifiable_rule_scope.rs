@@ -8,11 +8,12 @@
 //! alias set `init` resolves against being the one `check` loads.
 
 use super::chapter_rules::{configured_rule_sentences, declared_workspace_vocabulary, vocabulary};
-use crate::config::{Config, load_config};
+use crate::config::{Config, ProjectRecords, load_config};
 use crate::resolver::load_workspace_projects;
 use crate::rules::RuleAnchor;
-use crate::rules::sentence::parse_rule;
+use crate::rules::sentence::{RuleVocabulary, parse_rule};
 use crate::testing::{scan_tree, test_root, write};
+use crate::workspace::declared_member_schemas;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -76,11 +77,20 @@ fn workshop(root: &Path) {
     );
 }
 
+/// The vocabulary `init` resolves `config`'s rules against (§FS-rules.4.1).
+fn declared(config: &Config) -> RuleVocabulary {
+    declared_workspace_vocabulary(
+        config.schema(),
+        config.frame(),
+        &declared_member_schemas(config),
+    )
+}
+
 /// Whether `sentence` resolves, and when it does not, whether it is
 /// §FS-rules.4.1's unverifiable case (`Err(true)`) or an invalid rule
 /// (`Err(false)`).
 fn verdict(config: &Config, sentence: &str) -> Result<(), bool> {
-    let vocab = declared_workspace_vocabulary(config);
+    let vocab = declared(config);
     match parse_rule(
         sentence,
         "RULE-ops".into(),
@@ -130,7 +140,7 @@ fn only_a_scope_holding_no_namespace_makes_an_object_kind_unverifiable() {
             verdict(config, &format!("{each} {object}.")),
             expected,
             "{object} with workspace_in_scope={}",
-            declared_workspace_vocabulary(config).workspace_in_scope()
+            declared(config).workspace_in_scope()
         );
     }
 }
@@ -143,8 +153,9 @@ fn an_unverifiable_rule_keeps_its_row_and_its_authored_sentence() {
     let root = project("rule-scope-row", "", PINNED);
     let config = load_config(&root).expect("load standalone config");
     let (findings, _) = scan_tree(&config, Some(&root), true).expect("scan");
-    let vocab = declared_workspace_vocabulary(&config);
-    let Ok(rules) = configured_rule_sentences(&findings, &config, &vocab) else {
+    let vocab = declared(&config);
+    let Ok(rules) = configured_rule_sentences(&findings, config.schema(), config.frame(), &vocab)
+    else {
         panic!("an unverifiable rule is not an invalid one");
     };
 
@@ -178,7 +189,7 @@ fn an_unverifiable_rule_keeps_its_row_and_its_authored_sentence() {
     );
     let (findings, _) = scan_tree(&config, Some(&root), true).expect("rescan");
     assert!(
-        configured_rule_sentences(&findings, &config, &vocab).is_err(),
+        configured_rule_sentences(&findings, config.schema(), config.frame(), &vocab).is_err(),
         "an invalid rule beside an unverifiable one is still a refusal"
     );
 }
@@ -224,8 +235,8 @@ fn the_declared_vocabulary_holds_the_aliases_the_workspace_load_yields() {
     );
 
     let config = load_config(&root).expect("load workspace config");
-    let vocab = declared_workspace_vocabulary(&config);
-    let mut loaded = config.clone();
+    let vocab = declared(&config);
+    let mut loaded = ProjectRecords::of(config.clone());
     let loaded = load_workspace_projects(&mut loaded)
         .expect("load the workspace the way `check` does")
         .into_iter()
@@ -262,13 +273,13 @@ fn a_declared_workspace_holds_its_own_namespace_even_when_the_members_do_not_exp
         PINNED,
     );
     let config = load_config(&root).expect("load workspace config");
-    let mut expanding = config.clone();
+    let mut expanding = ProjectRecords::of(config.clone());
     assert!(
         load_workspace_projects(&mut expanding).is_err(),
         "the fixture's workspace really does fail to expand"
     );
 
-    let vocab = declared_workspace_vocabulary(&config);
+    let vocab = declared(&config);
     assert!(
         vocab.workspace_in_scope(),
         "a declared workspace is in scope whatever became of its members"
@@ -280,7 +291,7 @@ fn a_declared_workspace_holds_its_own_namespace_even_when_the_members_do_not_exp
     );
     assert_eq!(
         vocab.target_kinds,
-        vocabulary(&config).target_kinds,
+        vocabulary(config.schema(), config.frame()).target_kinds,
         "the local kinds are unaffected"
     );
     assert_eq!(

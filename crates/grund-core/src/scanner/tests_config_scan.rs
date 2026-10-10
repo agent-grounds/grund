@@ -481,7 +481,8 @@ fn dangling_hint_combines_near_id_and_inline_code_escape() {
         num: Some(999),
         slug: Some("zzz".to_string()),
     };
-    let msg = |id, inline| dangling_message(&config, None, &findings, id, inline);
+    let msg =
+        |id, inline| dangling_message(config.schema(), config.frame(), None, &findings, id, inline);
 
     // near ID, plain prose: only the "did you mean?" nudge.
     assert_eq!(

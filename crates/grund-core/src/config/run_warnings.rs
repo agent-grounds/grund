@@ -18,6 +18,7 @@
 
 use std::path::PathBuf;
 
+use super::project_records::ProjectRecords;
 use super::record::Config;
 use crate::model::Diagnostic;
 
@@ -32,10 +33,10 @@ pub(crate) enum RunWarning {
     /// run's other project roots until a walker can be asked whether the block's
     /// own tree holds a file a scan would have read.
     UnreadBlock {
-        /// The block's own config, its member boundary already populated, so the
-        /// probe prunes exactly as the block's own scan would have
+        /// The block's own records, its member boundary already populated, so
+        /// the probe prunes exactly as the block's own scan would have
         /// (§FS-workspace.6).
-        config: Box<Config>,
+        block: Box<ProjectRecords>,
         /// Where the *rest* of this run's projects are — the other half of the
         /// counterfactual (§FS-check.4.10.2). Empty for the block the run is
         /// rooted at, whose own member boundary is already the whole prune.
@@ -63,7 +64,7 @@ impl RunWarning {
         let mut held = config.clone();
         held.clear_run_warnings();
         Some(Self::UnreadBlock {
-            config: Box::new(held),
+            block: Box::new(ProjectRecords::of(held)),
             project_roots,
         })
     }

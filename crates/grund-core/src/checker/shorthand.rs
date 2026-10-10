@@ -13,7 +13,7 @@
 use std::collections::BTreeMap;
 
 use super::references::ReferenceTier;
-use crate::config::{Config, ShorthandPolicy};
+use crate::config::{Schema, ShorthandPolicy};
 use crate::grammar::{ShorthandIndex, render_id, render_qualified_id};
 use crate::model::{CheckReport, Citation, Diagnostic, Id};
 use crate::resolver::WorkspaceCheckTarget;
@@ -37,9 +37,9 @@ use crate::resolver::WorkspaceCheckTarget;
 /// tier of `check --full` withholds it for the same reason: `fmt` scopes by
 /// `[scan] include` too (§FS-check.3.14.4).
 fn shorthand_diagnostic(
-    config: &Config,
+    schema: &Schema,
     cite: &Citation,
-    target_config: &Config,
+    target: &WorkspaceCheckTarget<'_>,
     tier: ReferenceTier,
     candidates: &[&Id],
 ) -> Option<Diagnostic> {
@@ -60,12 +60,12 @@ fn shorthand_diagnostic(
             let section = cite
                 .section
                 .as_ref()
-                .map(|section| format!("{}{}", target_config.section_separator, section))
+                .map(|section| format!("{}{}", target.schema.ids.section_separator, section))
                 .unwrap_or_default();
             let canonical = format!(
                 "{}{}{}",
-                config.marker,
-                render_qualified_id(&target_config.grammar, cite.namespace.as_deref(), unique),
+                schema.citation.marker,
+                render_qualified_id(&target.compiled.grammar, cite.namespace.as_deref(), unique),
                 section
             );
             // §FS-check.3.15.1: the same site, a different verdict — `fmt` will not
@@ -80,9 +80,9 @@ fn shorthand_diagnostic(
                     message: format!(
                         "shorthand {written} sits in a numeric run and was not rewritten; \
                          write {canonical}, or <{}>{} if these are old numbers",
-                        config.marker,
+                        schema.citation.marker,
                         written
-                            .strip_prefix(config.marker.as_str())
+                            .strip_prefix(schema.citation.marker.as_str())
                             .unwrap_or(written),
                     ),
                     sites: Vec::new(),
@@ -92,7 +92,7 @@ fn shorthand_diagnostic(
             // §FS-check.3.13 / §FS-workspace.4.2: only the unique persisted-form
             // finding is policy-gated, and the policy belongs to the project
             // whose catalog resolved the shorthand.
-            if target_config.shorthand == ShorthandPolicy::Accepted {
+            if target.schema.citation.shorthand == ShorthandPolicy::Accepted {
                 return None;
             }
             format!("shorthand citation {written}; write {canonical}")
@@ -100,7 +100,7 @@ fn shorthand_diagnostic(
         many => format!(
             "shorthand citation {written} is ambiguous: {}",
             many.iter()
-                .map(|id| render_id(&target_config.grammar, id))
+                .map(|id| render_id(&target.compiled.grammar, id))
                 .collect::<Vec<_>>()
                 .join(", ")
         ),
@@ -142,18 +142,18 @@ pub(super) type ShorthandIndexes<'a> = BTreeMap<Option<String>, ShorthandIndex<'
 /// (§GOAL-fast-feedback).
 pub(super) fn report_shorthand_citation<'a>(
     cite: &Citation,
-    config: &Config,
+    schema: &Schema,
     target: &WorkspaceCheckTarget<'a>,
     tier: ReferenceTier,
     indexes: &mut ShorthandIndexes<'a>,
     report: &mut CheckReport,
 ) -> bool {
     let index = indexes.entry(cite.namespace.clone()).or_insert_with(|| {
-        ShorthandIndex::build(&target.config.grammar, target.findings.declarations.keys())
+        ShorthandIndex::build(&target.compiled.grammar, target.catalog.declarations.keys())
     });
     let candidates = index.candidates(&cite.id);
     let resolved = cite.id.slug.is_some() && candidates.len() == 1;
-    if let Some(diagnostic) = shorthand_diagnostic(config, cite, target.config, tier, candidates) {
+    if let Some(diagnostic) = shorthand_diagnostic(schema, cite, target, tier, candidates) {
         report.errors.push(diagnostic);
     }
     !resolved

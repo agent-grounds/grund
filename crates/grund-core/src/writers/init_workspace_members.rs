@@ -68,7 +68,7 @@ fn find_init_workspace_context(
     // members section itself can be rendered (§FS-distribution.3.1).
     run_warnings.extend(run_warning_findings(
         &root_config,
-        settled_run_warnings(&root_config),
+        settled_run_warnings(root_config.run()),
     ));
     for entry in expanded.ok()? {
         let mut alias = entry.alias;

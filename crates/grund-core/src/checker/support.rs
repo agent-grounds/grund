@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::grammar::{is_inside_inline_code, render_id, render_qualified_id};
 use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
 
@@ -8,15 +8,16 @@ use crate::model::{Catalog, Citation, Diagnostic, Id, sort_path_key};
 /// match. Outside inline code the escape hint is withheld so a prose typo is
 /// nudged toward the near ID, not toward escaping.
 pub(crate) fn dangling_message(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     namespace: Option<&str>,
     findings: &Catalog,
     missing: &Id,
     in_inline_code: bool,
 ) -> String {
-    let unknown = render_qualified_id(&config.grammar, namespace, missing);
-    let near = nearest_declared_id(config, namespace, findings, missing);
-    let escape = in_inline_code.then(|| format!("<{}>{unknown}", config.marker));
+    let unknown = render_qualified_id(frame.grammar(), namespace, missing);
+    let near = nearest_declared_id(frame, namespace, findings, missing);
+    let escape = in_inline_code.then(|| format!("<{}>{unknown}", schema.citation.marker));
     match (near, escape) {
         (Some(near), Some(escape)) => format!(
             "unknown reference {unknown}; did you mean {near}? (or write {escape} if this is an illustration)"
@@ -33,7 +34,8 @@ pub(crate) fn dangling_message(
 /// home. Existing typo/illustration hints replace the fetch action while the
 /// snapshot-specific base and fixed finding class remain.
 pub(super) fn missing_snapshot_message(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     namespace: Option<&str>,
     findings: &Catalog,
     missing: &Id,
@@ -41,14 +43,14 @@ pub(super) fn missing_snapshot_message(
     home: &str,
     must: bool,
 ) -> String {
-    let rendered = render_qualified_id(&config.grammar, namespace, missing);
+    let rendered = render_qualified_id(frame.grammar(), namespace, missing);
     let base = if must {
         format!("unknown reference {rendered}; no snapshot in {home}")
     } else {
         format!("no snapshot for {rendered} in {home}")
     };
-    let near = nearest_declared_id(config, namespace, findings, missing);
-    let escape = in_inline_code.then(|| format!("<{}>{rendered}", config.marker));
+    let near = nearest_declared_id(frame, namespace, findings, missing);
+    let escape = in_inline_code.then(|| format!("<{}>{rendered}", schema.citation.marker));
     match (near, escape) {
         (Some(near), Some(escape)) => {
             format!("{base}; did you mean {near}? (or write {escape} if this is an illustration)")
@@ -80,18 +82,18 @@ pub(super) fn citation_in_markdown_inline_code(cite: &Citation) -> bool {
 }
 
 fn nearest_declared_id(
-    config: &Config,
+    frame: Frame<'_>,
     namespace: Option<&str>,
     findings: &Catalog,
     missing: &Id,
 ) -> Option<String> {
-    let missing_text = render_id(&config.grammar, missing);
+    let missing_text = render_id(frame.grammar(), missing);
     let mut best: Option<(usize, String)> = None;
     for candidate in findings.declarations.keys() {
         if candidate.kind != missing.kind {
             continue;
         }
-        let candidate_text = render_id(&config.grammar, candidate);
+        let candidate_text = render_id(frame.grammar(), candidate);
         let distance = edit_distance(&missing_text, &candidate_text);
         if !close_enough_for_hint(
             distance,
@@ -100,7 +102,7 @@ fn nearest_declared_id(
         ) {
             continue;
         }
-        let rendered = render_qualified_id(&config.grammar, namespace, candidate);
+        let rendered = render_qualified_id(frame.grammar(), namespace, candidate);
         match &best {
             Some((best_distance, best_rendered))
                 if distance > *best_distance

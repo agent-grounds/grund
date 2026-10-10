@@ -26,10 +26,10 @@ use crate::model::format_path;
 /// (§FS-check.1.3.6). It is also what decides a workspace-wide run
 /// (§FS-workspace.5): both questions are "did the caller ask for the whole
 /// project, however they spelled it?".
-pub(crate) fn scope_is_config_root(config: &Config, path: &Path, path_provided: bool) -> bool {
+pub(crate) fn scope_is_config_root(root: &Path, path: &Path, path_provided: bool) -> bool {
     !path_provided
         || fs::canonicalize(path)
-            .map(|path| path == config.root)
+            .map(|path| path == root)
             .unwrap_or(false)
 }
 

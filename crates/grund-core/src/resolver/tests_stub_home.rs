@@ -66,8 +66,15 @@ fn rescan(root: &Path) -> (Config, Catalog) {
 #[test]
 fn a_target_is_read_on_a_miss_and_once_per_run() {
     let (config, findings) = stub_repo("stub_home_read_once");
-    let resolves =
-        |slug: &str, section: &str| section_resolves(&findings, &config, &id(slug), section);
+    let resolves = |slug: &str, section: &str| {
+        section_resolves(
+            &findings,
+            config.schema(),
+            config.frame(),
+            &id(slug),
+            section,
+        )
+    };
     let reads = || findings.stub_targets.read_count();
 
     assert!(resolves("first", "1"), "a recorded section resolves");
@@ -99,7 +106,13 @@ fn a_target_is_read_on_a_miss_and_once_per_run() {
     );
     let (config, findings) = rescan(&config.root);
     assert!(
-        !section_resolves(&findings, &config, &id("second"), "1"),
+        !section_resolves(
+            &findings,
+            config.schema(),
+            config.frame(),
+            &id("second"),
+            "1"
+        ),
         "the next run, as `--watch` makes one, reads the target again"
     );
 }
@@ -119,7 +132,13 @@ fn the_target_read_is_observed_before_it_is_made() {
             covered
         });
         let resolved = with_check_input_observer(Some(observer), || {
-            section_resolves(&findings, &config, &id("second"), "1")
+            section_resolves(
+                &findings,
+                config.schema(),
+                config.frame(),
+                &id("second"),
+                "1",
+            )
         });
         let observed = seen
             .lock()

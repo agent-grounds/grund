@@ -70,7 +70,7 @@ pub(super) fn scan_scope_caution(
     // §FS-check.4.5.4: only a run over the whole project makes the claim. A narrowed
     // `grund check <dir>` is a slice the caller chose, and a slice with no
     // declarations and no citations is an answer, not a misconfiguration.
-    (nothing_recognized(findings) && scope_is_config_root(config, path, path_provided))
+    (nothing_recognized(findings) && scope_is_config_root(&config.root, path, path_provided))
         .then(|| nothing_recognized_warning(config, findings.scanned_files.len()))
 }
 
@@ -210,7 +210,7 @@ pub(super) fn full_scope_ignored_warning(
     path_provided: bool,
     full: bool,
 ) -> Option<Diagnostic> {
-    if !full || scope_is_config_root(config, path, path_provided) {
+    if !full || scope_is_config_root(&config.root, path, path_provided) {
         return None;
     }
     // §FS-config.3.5.2 / §FS-config.3.6: the warning reports the explicit

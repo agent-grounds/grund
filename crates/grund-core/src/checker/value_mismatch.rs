@@ -2,7 +2,7 @@
 //! text, and the kind clause a mixed-kind pair appends (§FS-values.5.2,
 //! §FS-values.5.2.1, §FS-values.5.2.2).
 
-use crate::config::{Config, display_path};
+use crate::config::{Display, Frame, Schema};
 use crate::grammar::render_qualified_id;
 use crate::model::{Diagnostic, Site, ValueBinding, ValueComponent, ValueComponentKind};
 
@@ -10,13 +10,14 @@ use crate::model::{Diagnostic, Site, ValueBinding, ValueComponent, ValueComponen
 /// separator and the section path when there is one (§FS-values.3.1.2,
 /// §FS-values.5.2).
 pub(super) fn rendered_value_path(
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     binding: &ValueBinding,
     path: Option<&str>,
 ) -> String {
-    let id = render_qualified_id(&config.grammar, binding.namespace.as_deref(), &binding.id);
+    let id = render_qualified_id(frame.grammar(), binding.namespace.as_deref(), &binding.id);
     match path {
-        Some(path) => format!("{id}{}{path}", config.section_separator),
+        Some(path) => format!("{id}{}{path}", schema.ids.section_separator),
         None => id,
     }
 }
@@ -31,7 +32,7 @@ pub(super) fn value_mismatch(
     bound: &ValueComponent,
     declared: &ValueComponent,
     site: Site,
-    path_config: &Config,
+    display: Display<'_>,
 ) -> Diagnostic {
     let kinds = mixed_kind_clause(bound.kind, declared.kind);
     value_mismatch_text(
@@ -41,7 +42,7 @@ pub(super) fn value_mismatch(
         &declared.decoded,
         &kinds,
         site,
-        path_config,
+        display,
     )
 }
 
@@ -54,9 +55,9 @@ pub(super) fn value_mismatch_text(
     declared: &str,
     kinds: &str,
     site: Site,
-    path_config: &Config,
+    display: Display<'_>,
 ) -> Diagnostic {
-    let declared_site = format!("{}:{}", display_path(path_config, &site.path), site.line);
+    let declared_site = format!("{}:{}", display.path(&site.path), site.line);
     Diagnostic {
         code: "value-mismatch",
         path: Some(binding.file.clone()),

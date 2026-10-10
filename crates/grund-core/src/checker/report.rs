@@ -1,27 +1,8 @@
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
-
-use super::agents::check_agents_block_version;
-use super::citations::{check_citation_obligations, check_citation_prohibitions};
-use super::grounding::check_grounding;
-use super::homes::{KindHomeIndex, paths_same_location_key};
-use super::index::check_kind_indexes;
-use super::index_entries::KindIndexEntries;
-use super::inline_style::check_inline_citation_style;
-use super::near_miss::check_declaration_near_misses;
-use super::references::{ReferenceTier, check_citation_resolution};
-use super::sections::check_section_headings;
-use super::sizes::check_oversized_leads;
+use super::conform::conform;
+use super::judge::{CheckWorkspace, judge};
 use super::support::sort_diagnostics;
-use super::values::check_values;
-use crate::config::{Config, display_path};
-use crate::grammar::{render_id, render_qualified_id};
-use crate::model::{
-    Catalog, CheckReport, Declaration, Diagnostic, Expected, Id, Site, TextOverlays, format_path,
-    is_stub_for_inline_decl, resolve_stub_target, sort_path_key,
-};
-use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
-use crate::scanner::file_declares_inline_home;
+use crate::config::{Frame, Rules, Schema};
+use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 
 /// AR-checker: how grund validates the scanner's findings
 ///
@@ -98,7 +79,7 @@ use crate::scanner::file_declares_inline_home;
 ///
 /// - Input: the loaded `Catalog` from the resolver, the `Schema` and `Rules`
 ///   records of §AR-config.1.2, the `Expected` bytes of §AR-checker.1.3, and a
-///   `Frame { run, compiled, display_root }` carrying the `Run` and `Compiled`
+///   `Frame { run, compiled, name, alias, display }` carrying the `Run` and `Compiled`
 ///   of §AR-config.1.5, which are not concerns. Chapter-rule `Diagnostic`s
 ///   arrive from §AR-rules after the driver. No input is the `Config` façade
 ///   (§AR-config.5) and none is `Presentation`.
@@ -473,33 +454,33 @@ use crate::scanner::file_declares_inline_home;
 ///   dangling references on the active file's citations) against a cached scan.
 /// - Tests can feed synthetic `Catalog` directly to the checker without disk I/O.
 pub(crate) fn check_on_disk(
-    findings: &Catalog,
-    config: &Config,
-    path_config: &Config,
-    current_alias: Option<&str>,
-    workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
+    rules: &Rules,
+    schema: &Schema,
+    catalog: &Catalog,
     expected: &Expected,
+    frame: Frame<'_>,
+    workspace: &CheckWorkspace<'_>,
 ) -> CheckReport {
     check_with_workspace_and_overlays(
-        findings,
-        config,
-        path_config,
-        current_alias,
+        rules,
+        schema,
+        catalog,
+        expected,
+        frame,
         workspace,
         &TextOverlays::new(),
-        expected,
     )
 }
 
 /// The driver over editor overlays too, so §FS-declarations.checks.oversized-lead
 /// measures the live text; `check_on_disk` is it with none.
 ///
-/// `path_config` is the config the finished report renders paths against
-/// (§FS-workspace.8.1) — the workspace root's in workspace mode, `config` itself
-/// otherwise. A path baked *into* a message must use it, or in a workspace it
-/// would be spelled from the member's root while the finding's own anchor is
-/// spelled from the workspace's, and neither the reader nor an editor could
-/// follow it (§FS-config.3.6).
+/// `frame` is displayed by the report's root (§FS-workspace.8.1) — the workspace
+/// root's in workspace mode, the project's own otherwise — and checked as the
+/// member's alias. A path baked *into* a message is spelled through it, or in a
+/// workspace it would be spelled from the member's root while the finding's own
+/// anchor is spelled from the workspace's, and neither the reader nor an editor
+/// could follow it (§FS-config.3.6).
 ///
 /// Why the escaped-citation finding is only a suggestion: illustrating a real ID
 /// in prose is legitimate, so a resolving escape is never an error — it is
@@ -517,301 +498,47 @@ pub(crate) fn check_on_disk(
 /// would make the rule inert exactly where it was asked for. Which place is
 /// asked, and how finely, is a `[[kinds]]` row's to say (§FS-config.3.4.8).
 pub(crate) fn check_with_workspace_and_overlays(
-    findings: &Catalog,
-    config: &Config,
-    path_config: &Config,
-    current_alias: Option<&str>,
-    workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
-    overlays: &TextOverlays,
+    rules: &Rules,
+    schema: &Schema,
+    catalog: &Catalog,
     expected: &Expected,
+    frame: Frame<'_>,
+    workspace: &CheckWorkspace<'_>,
+    overlays: &TextOverlays,
 ) -> CheckReport {
-    let mut report = CheckReport::default();
-    let kind_homes = KindHomeIndex::new(config);
-    // §FS-check.3.5: managed agent-entrypoint blocks that are out of date (or
-    // newer than this binary), or whose generated sections have drifted from
-    // `Expected`'s bytes (§AR-checker.2.7), are check errors.
-    check_agents_block_version(expected, &mut report);
+    let conformed = conform(schema, catalog, frame, overlays);
+    let judged = judge(rules, schema, catalog, expected, frame, workspace);
+    merge(conformed, judged)
+}
 
-    // §FS-declarations.checks.duplicate: an ID with more than one non-stub home is a duplicate.
-    for (id, decls) in &findings.declarations {
-        // §FS-declarations.checks.duplicate.3: a stub's home is named at its target, at
-        // each line there that declares the ID (§FS-declarations.checks.duplicate.1).
-        let home_sites: Vec<(&Path, usize)> = decls
-            .iter()
-            .filter(|decl| !is_stub_for_inline_decl(&config.root, decl, decls))
-            .flat_map(Declaration::home_sites)
-            .collect();
-        if home_sites.len() > 1 {
-            let mut sites: Vec<Site> = home_sites
-                .into_iter()
-                .map(|(path, line)| Site {
-                    path: path.to_path_buf(),
-                    line,
-                })
-                .collect();
-            sites.sort_by(|a, b| {
-                (sort_path_key(&a.path), a.line).cmp(&(sort_path_key(&b.path), b.line))
-            });
-            let primary = sites[0].clone();
-            let others = sites[1..]
-                .iter()
-                // §FS-errors.3.1 / §FS-workspace.8.1: `path_config`, not `config`
-                // — the printer anchors this finding from the report root, so
-                // the sites named inside its message come from there too.
-                .map(|site| format!("{}:{}", display_path(path_config, &site.path), site.line))
-                .collect::<Vec<_>>();
-            let suffix = if others.is_empty() {
-                String::new()
-            } else {
-                format!(" (also declared at {})", others.join(", "))
-            };
-            report.errors.push(Diagnostic {
-                code: "duplicate",
-                path: Some(primary.path),
-                line: Some(primary.line),
-                column: None,
-                message: format!(
-                    "duplicate declaration of {}{suffix}",
-                    render_id(&config.grammar, id)
-                ),
-                sites,
-                authority: Vec::new(),
-            });
-        }
+/// §AR-checker.1.4: per channel, `conform`'s findings then `judge`'s, then the one
+/// stable sort the single driver ran. A tie across the halves would make the
+/// order depend on which half ran first, so none may exist (§REQ-deterministic-output).
+fn merge(conformed: CheckReport, judged: CheckReport) -> CheckReport {
+    CheckReport {
+        errors: merge_channel(conformed.errors, judged.errors),
+        warnings: merge_channel(conformed.warnings, judged.warnings),
+        suggestions: merge_channel(conformed.suggestions, judged.suggestions),
     }
+}
 
-    // §FS-declarations.checks.misplaced-declaration: declarations must respect configured kind
-    // homes. A single-file kind must live in its exact `file`; any declaration inside a unique
-    // configured home must match that home's kind.
-    for (id, decls) in &findings.declarations {
-        for decl in decls {
-            if let Some(expected) = kind_homes.single_file_for_kind(&id.kind)
-                && !decl.is_stub
-                && !paths_same_location_key(&decl.file, &expected.physical_path)
-            {
-                report.errors.push(Diagnostic {
-                    code: "misplaced-declaration",
-                    path: Some(decl.file.clone()),
-                    line: Some(decl.line),
-                    column: None,
-                    message: format!(
-                        "{} must be declared in {} (single-file kind)",
-                        render_id(&config.grammar, id),
-                        expected.path
-                    ),
-                    sites: Vec::new(),
-                    authority: Vec::new(),
-                });
-                continue;
-            }
-
-            let Some(home) = kind_homes.unique_decl_home_for_file(&decl.file) else {
-                continue;
-            };
-            if home.kind != id.kind {
-                // §FS-declarations.checks.misplaced-declaration.3: a non-citable home has no kind
-                // an author could have declared instead, so the message names the place and says
-                // why, rather than pointing at a kind that does not exist.
-                let message = if home.citable {
-                    format!(
-                        "{} declares kind {} inside {} home {}",
-                        render_id(&config.grammar, id),
-                        id.kind,
-                        home.kind,
-                        home.path
-                    )
-                } else {
-                    format!(
-                        "{} must not be declared in {} (not a citable home)",
-                        render_id(&config.grammar, id),
-                        home.place()
-                    )
-                };
-                report.errors.push(Diagnostic {
-                    code: "misplaced-declaration",
-                    path: Some(decl.file.clone()),
-                    line: Some(decl.line),
-                    column: None,
-                    message,
-                    sites: Vec::new(),
-                    authority: Vec::new(),
-                });
-            }
-        }
-    }
-
-    // §FS-check.3.1 / §FS-check.3.2 / §FS-check.3.8 / §FS-check.3.13: the
-    // reference-resolution family, in `references.rs` (§AR-checker.2.13,
-    // §FS-check.3.14) because `check --full` reruns it outside `[scan] include`.
-    check_citation_resolution(
-        findings,
-        config,
-        path_config,
-        workspace,
-        ReferenceTier::Configured,
-        None,
-        &mut report,
+fn merge_channel(mut conformed: Vec<Diagnostic>, judged: Vec<Diagnostic>) -> Vec<Diagnostic> {
+    debug_assert!(
+        no_cross_half_tie(&conformed, &judged),
+        "a conform finding and a judge finding share path, line and message"
     );
-    // §AR-checker.2.18 / §FS-values.5: ordinary resolution runs first and the
-    // focused pass suppresses comparison at every unresolved or ambiguous site.
-    check_values(findings, config, path_config, workspace, &mut report);
+    conformed.extend(judged);
+    sort_diagnostics(&mut conformed);
+    conformed
+}
 
-    // §FS-check.2.3.1 / §AR-checker.2.11: a `<§>`-escaped illustration whose ID
-    // resolves to a real declaration is likely a live citation someone bracketed
-    // by mistake — the escape silently makes it inert.
-    for esc in &findings.escaped_citations {
-        if citation_resolves(esc, findings, config, workspace) {
-            report.suggestions.push(Diagnostic {
-                code: "escaped-citation-resolves",
-                path: Some(esc.file.clone()),
-                line: Some(esc.line),
-                column: Some(esc.column),
-                message: format!(
-                    "escaped citation {} resolves to a declaration; write {}{} for a live citation, or leave it escaped if it is only an illustration",
-                    esc.text.trim(),
-                    config.marker,
-                    render_qualified_id(&config.grammar, esc.namespace.as_deref(), &esc.id)
-                ),
-                sites: Vec::new(),
-            authority: Vec::new(),});
-        }
-    }
-
-    // §FS-declarations.checks.section-heading-level / §FS-declarations.checks.duplicate-section:
-    // the depth a declaration's own section headings write, and whether two claim one path. One
-    // file per invariant family in `sections.rs` (§AR-checker.2.15, §AR-core-module-layout.1).
-    check_section_headings(findings, config, path_config, &mut report);
-
-    // §FS-inline-citation-style.4: inline source-comment citation sites are
-    // checked from scanner-provided site metadata; Markdown citations and
-    // declaration bodies carry no site and are ignored here.
-    check_inline_citation_style(findings, config, &mut report);
-
-    // §FS-declarations.checks.oversized-lead: an absent key stops before any body read; an opted-in
-    // project judges only the already-scoped scanner sites, including duplicate
-    // claimants, through the shared show slicer. Warnings never affect exit.
-    check_oversized_leads(findings, config, current_alias, overlays, &mut report);
-
-    // §FS-declarations.checks.broken-stub: a `# <ID>: [text](path)` stub is broken if `path` does
-    // not exist, or exists but does not itself declare `<ID>` inline (§AR-checker.2.4).
-    for (id, decls) in &findings.declarations {
-        for decl in decls {
-            if !decl.is_stub {
-                continue;
-            }
-            let Some(target) = &decl.defined_in else {
-                continue;
-            };
-            let resolved = resolve_stub_target(&config.root, &decl.file, target);
-            if !resolved.exists() {
-                report.errors.push(Diagnostic {
-                    code: "broken-stub",
-                    path: Some(decl.file.clone()),
-                    line: Some(decl.line),
-                    column: None,
-                    message: format!("stub link target missing: {}", format_path(target)),
-                    sites: Vec::new(),
-                    authority: Vec::new(),
-                });
-                continue;
-            }
-            // §FS-declarations.checks.broken-stub.1, §FS-declarations.checks.broken-stub.3:
-            // the editor's text first, of a file the scan reads, the reader `show` takes.
-            if !file_declares_inline_home(&resolved, id, config.schema(), config.frame(), overlays)
-                .unwrap_or(false)
-            {
-                report.errors.push(Diagnostic {
-                    code: "broken-stub",
-                    path: Some(decl.file.clone()),
-                    line: Some(decl.line),
-                    column: None,
-                    message: format!(
-                        "stub link target lacks {}: {}",
-                        render_id(&config.grammar, id),
-                        format_path(target)
-                    ),
-                    sites: Vec::new(),
-                    authority: Vec::new(),
-                });
-            }
-        }
-    }
-
-    // §FS-check.3.18 / §FS-check.3.17: a kind's index must list every declaration
-    // in its folder, as a full link. In `index.rs` — one file per
-    // invariant family, the arrangement §AR-checker.2.15's section rules already use.
-    check_kind_indexes(
-        findings,
-        config,
-        path_config,
-        &expected.index_targets,
-        &mut report,
-    );
-
-    // §FS-check.4.1: a declaration nothing cites is a warning, not an error —
-    // except E2E cases, which are proof artifacts, not citation targets. An
-    // index entry is not an inbound citation (§DF-index-not-an-inbound-citation).
-    let index_entries = KindIndexEntries::new(findings, config, &expected.index_targets);
-    let mut cited: BTreeSet<&Id> = findings
-        .citations
+/// Whether no finding of one half sorts equal to one of the other (§AR-checker.1.4).
+fn no_cross_half_tie(conformed: &[Diagnostic], judged: &[Diagnostic]) -> bool {
+    let keys = conformed
         .iter()
-        .filter(|cite| cite.namespace.is_none() && !index_entries.is_index_entry(cite))
-        .map(|c| &c.id)
-        .collect();
-    if let Some(alias) = current_alias {
-        for target in workspace.values() {
-            cited.extend(
-                target
-                    .findings
-                    .citations
-                    .iter()
-                    .filter(|cite| cite.namespace.as_deref() == Some(alias))
-                    .map(|cite| &cite.id),
-            );
-        }
-    }
-    for (id, decls) in &findings.declarations {
-        if id.kind == "E2E" {
-            continue;
-        }
-        if !cited.contains(id)
-            && let Some(decl) = decls
-                .iter()
-                .find(|decl| !is_stub_for_inline_decl(&config.root, decl, decls))
-                .or_else(|| decls.first())
-        {
-            report.warnings.push(Diagnostic {
-                code: "unused",
-                path: Some(decl.file.clone()),
-                line: Some(decl.line),
-                column: None,
-                message: format!(
-                    "declared but never cited: {}",
-                    render_id(&config.grammar, id)
-                ),
-                sites: Vec::new(),
-                authority: Vec::new(),
-            });
-        }
-    }
-
-    // §FS-check.3.6 / §DF-require-grounding: the grounding pass, per `[[kinds]]`
-    // row and per unit, in `grounding.rs` (§AR-checker.2.8).
-    check_grounding(findings, config, &kind_homes, workspace, &mut report);
-
-    // §FS-declarations.checks.declaration-near-miss: headings that open like a declaration and
-    // parse as none.
-    check_declaration_near_misses(findings, &mut report);
-
-    // §FS-config.3.9 / §FS-check.3.11 / §FS-check.3.12: citation-direction
-    // obligations and prohibitions, when the project declares `[citations]`.
-    if config.citations.declared {
-        check_citation_obligations(findings, config, &mut report);
-        check_citation_prohibitions(findings, config, &mut report);
-    }
-
-    sort_diagnostics(&mut report.errors);
-    sort_diagnostics(&mut report.warnings);
-    sort_diagnostics(&mut report.suggestions);
-    report
+        .map(|d| (d.path.as_deref(), d.line, d.message.as_str()))
+        .collect::<std::collections::BTreeSet<_>>();
+    judged
+        .iter()
+        .all(|d| !keys.contains(&(d.path.as_deref(), d.line, d.message.as_str())))
 }

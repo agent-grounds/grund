@@ -8,7 +8,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::config::Config;
+use crate::config::{Frame, Schema};
 use crate::model::{
     Catalog, Declaration, Id, TargetRecords, TextOverlays, is_stub_for_inline_decl,
     paths_same_location, physical_path_key, resolve_stub_target,
@@ -23,13 +23,14 @@ use crate::scanner::{scan_reads_target, scan_unwalked_file};
 /// (§FS-declarations.checks.broken-stub.3).
 pub(crate) fn target_records(
     file: &Path,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     overlays: &TextOverlays,
 ) -> TargetRecords {
-    if !scan_reads_target(file, config.schema()) {
+    if !scan_reads_target(file, schema) {
         return TargetRecords::new();
     }
-    let Ok(findings) = scan_unwalked_file(file, config.schema(), config.frame(), overlays) else {
+    let Ok(findings) = scan_unwalked_file(file, schema, frame, overlays) else {
         return TargetRecords::new();
     };
     findings
@@ -56,14 +57,15 @@ pub(crate) fn target_records(
 /// `show` refuses as ambiguous rather than read (§FS-show.2.3.7, §FS-show.2.2.1).
 pub(crate) fn unscanned_stub_home<'a>(
     findings: &'a Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     id: &Id,
     stub: &Declaration,
 ) -> Option<&'a Declaration> {
     let target = stub.defined_in.as_ref().filter(|_| stub.is_stub)?;
-    let resolved = resolve_stub_target(&config.root, &stub.file, target);
+    let resolved = resolve_stub_target(frame.root(), &stub.file, target);
     let recorded = findings.declarations.get(id).map_or(&[][..], Vec::as_slice);
-    if paths_same_location(&config.root.join(&stub.file), &resolved)
+    if paths_same_location(&frame.root().join(&stub.file), &resolved)
         || recorded
             .iter()
             .any(|decl| paths_same_location(&decl.file, &resolved))
@@ -73,20 +75,20 @@ pub(crate) fn unscanned_stub_home<'a>(
     // §FS-check.3.2.1: an ambiguous ID lends no section, as `show` reads none.
     let mut homes = recorded
         .iter()
-        .filter(|decl| !is_stub_for_inline_decl(&config.root, decl, recorded));
+        .filter(|decl| !is_stub_for_inline_decl(frame.root(), decl, recorded));
     if homes.next().is_some() && homes.next().is_some() {
         return None;
     }
     // §FS-declarations.checks.broken-stub.3: the rule's own gate, before a slot is read.
-    if !scan_reads_target(&resolved, config.schema()) {
+    if !scan_reads_target(&resolved, schema) {
         return None;
     }
     match findings
         .stub_targets
         .records(
             &physical_path_key(&resolved),
-            || stub_target_keys(findings, config),
-            || target_records(&resolved, config, findings.stub_targets.overlays()),
+            || stub_target_keys(findings, frame),
+            || target_records(&resolved, schema, frame, findings.stub_targets.overlays()),
         )?
         .get(id)?
         .as_slice()
@@ -102,16 +104,17 @@ pub(crate) fn unscanned_stub_home<'a>(
 /// and the home the size catalog measures (§FS-list.3.4.6).
 pub(crate) fn home_as_scanned<'a>(
     findings: &'a Catalog,
-    config: &Config,
+    schema: &Schema,
+    frame: Frame<'_>,
     id: &Id,
     home: &'a Declaration,
 ) -> &'a Declaration {
-    unscanned_stub_home(findings, config, id, home).unwrap_or(home)
+    unscanned_stub_home(findings, schema, frame, id, home).unwrap_or(home)
 }
 
 /// Every stub's target, by physical location: the slots one run keeps, resolved
 /// once, on the first section a recorded declaration does not hold.
-fn stub_target_keys(findings: &Catalog, config: &Config) -> Vec<PathBuf> {
+fn stub_target_keys(findings: &Catalog, frame: Frame<'_>) -> Vec<PathBuf> {
     findings
         .declarations
         .values()
@@ -119,7 +122,7 @@ fn stub_target_keys(findings: &Catalog, config: &Config) -> Vec<PathBuf> {
         .filter(|decl| decl.is_stub)
         .filter_map(|decl| {
             let target = decl.defined_in.as_ref()?;
-            let resolved = resolve_stub_target(&config.root, &decl.file, target);
+            let resolved = resolve_stub_target(frame.root(), &decl.file, target);
             Some(physical_path_key(&resolved))
         })
         .collect()
