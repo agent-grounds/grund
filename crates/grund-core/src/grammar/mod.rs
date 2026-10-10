@@ -104,7 +104,7 @@ pub(crate) use compiled::{
 pub(crate) use fence::markdown_fence_delimiter;
 pub(crate) use fmt_cross_refs::flatten_cross_ref_links;
 pub(crate) use fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
-pub(crate) use glob_candidate::CandidateReading;
+pub(crate) use glob_candidate::{CandidateReading, read_loose_candidate};
 pub(crate) use heading_text::reduce_heading_text;
 pub(crate) use id_format::{
     id_shape, id_token_end_at, literal_after_kind_placeholder, parse_longest_id_prefix,

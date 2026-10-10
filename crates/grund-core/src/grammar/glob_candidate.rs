@@ -8,7 +8,7 @@
 
 use std::ops::Range;
 
-use super::compiled::Grammar;
+use super::compiled::{Grammar, QUALIFIED_CITATION_PREFIX};
 use super::id_format::literal_after_kind_placeholder;
 
 /// How a candidate that starts where a citation could start is read.
@@ -37,7 +37,8 @@ impl Grammar {
     /// candidate holding no operator is ordinary; one the grammar accepts whole is
     /// an address; any other is a pattern, provided the operator opens or sits
     /// inside a component of something the grammar was reading — after a matched
-    /// prefix, or directly after a kind and the literal its format puts next.
+    /// prefix, the number-only shorthand's included, or directly after a kind and
+    /// the literal its format puts next.
     pub(crate) fn read_candidate(&self, rest: &str, prefix_len: usize) -> CandidateReading {
         let separator = self.source.section_separator.as_str();
         let Some((len, first_operator)) = candidate_extent(rest, separator) else {
@@ -49,10 +50,39 @@ impl Grammar {
         if self.citation_whole_re.is_match(&rest[..len]) {
             return CandidateReading::Address(len);
         }
-        if prefix_len > 0 || self.opens_after_kind(&rest[..first_operator]) {
+        if prefix_len > 0
+            || self.opens_after_kind(&rest[..first_operator])
+            || self.shorthand_reads(&rest[..first_operator])
+        {
             return CandidateReading::Pattern(len);
         }
         CandidateReading::Ordinary
+    }
+
+    /// `read_candidate` for a token that may open with `<alias>/`: the tail after
+    /// the alias is read whole, and the lengths stay measured from `rest`.
+    pub(crate) fn read_qualified_candidate(
+        &self,
+        rest: &str,
+        prefix_len: usize,
+    ) -> CandidateReading {
+        let Some(alias) = QUALIFIED_CITATION_PREFIX.find(rest) else {
+            return self.read_candidate(rest, prefix_len);
+        };
+        let at = alias.end();
+        match self.read_candidate(&rest[at..], prefix_len.saturating_sub(at)) {
+            CandidateReading::Ordinary => CandidateReading::Ordinary,
+            CandidateReading::Address(len) => CandidateReading::Address(at + len),
+            CandidateReading::Pattern(len) => CandidateReading::Pattern(at + len),
+        }
+    }
+
+    /// Whether a number-only shorthand reads a prefix of `head`, so an operator
+    /// after `FS-001-` or inside `FS-0*1` sits in a component the grammar began
+    /// (§FS-check.1.1.11 rule 3); only asked once an operator was found.
+    fn shorthand_reads(&self, head: &str) -> bool {
+        self.shorthands()
+            .any(|shorthand| shorthand.unqualified_prefix_re().is_match(head))
     }
 
     /// Whether `head` is a configured kind, alone or followed by exactly the
@@ -65,6 +95,20 @@ impl Grammar {
             let format = kind.format.as_deref().unwrap_or(&self.source.format);
             tail.is_empty() || literal_after_kind_placeholder(format) == Some(tail)
         })
+    }
+}
+
+/// §FS-check.1.1.11 for a qualified tail no loaded grammar reads
+/// (§FS-workspace.5.2): with no format to accept it whole, an operator past the
+/// `prefix_len` bytes the loose shape read, after anything at all, is a pattern.
+pub(crate) fn read_loose_candidate(rest: &str, prefix_len: usize) -> CandidateReading {
+    match candidate_extent(rest, ".") {
+        Some((len, first_operator))
+            if len > prefix_len && (prefix_len > 0 || first_operator > 0) =>
+        {
+            CandidateReading::Pattern(len)
+        }
+        _ => CandidateReading::Ordinary,
     }
 }
 

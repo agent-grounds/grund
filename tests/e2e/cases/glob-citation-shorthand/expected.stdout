@@ -1,0 +1,3 @@
+docs/cites.md:3: warning: glob citation §FS-001-*: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-001-*; this warning becomes an error in grund 0.19.0
+docs/cites.md:4: warning: glob citation §FS-0*1-login: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-0*1-login; this warning becomes an error in grund 0.19.0
+docs/cites.md:5: warning: glob citation §FS-*-login: a citation names one exact point, not a pattern; cite the point, or escape it as <§>FS-*-login; this warning becomes an error in grund 0.19.0

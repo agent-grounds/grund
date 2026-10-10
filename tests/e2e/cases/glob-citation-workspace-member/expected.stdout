@@ -1,0 +1,5 @@
+docs/FS-log.md:3: error: unknown project alias root
+docs/FS-m.md:3: error: unknown project alias root
+docs/FS-m.md:1: warning: declared but never cited: FS-m
+docs/FS-m.md:5: warning: glob citation §root/FS-ro*t.x: a citation names one exact point, not a pattern; cite the point, or escape it as <§>root/FS-ro*t.x; this warning becomes an error in grund 0.19.0
+docs/FS-m.md:7: warning: glob citation §root/FS-*.x: a citation names one exact point, not a pattern; cite the point, or escape it as <§>root/FS-*.x; this warning becomes an error in grund 0.19.0
