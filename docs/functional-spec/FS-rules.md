@@ -329,7 +329,13 @@ built from what was typed and from the configured kinds:
    bare `KIND` the rule gets `Each KIND`.
 3. The label is `accepted form after enabling it:` only where the suggested
    subject is refused with the configuration as it is, and `accepted form:`
-   where the repository accepts it as configured.
+   where the repository accepts it as configured. Only a refusal whose reason
+   is the named-sections one may carry the label. Where another part of the
+   sentence is refused first and only the form built for it would need named
+   sections, nothing is suggested, because the label would name nothing that
+   reason asked to enable: with named sections off,
+   `FS-login.requirements may not cite any AR.` is refused with
+   `modality "may not" is not accepted` alone.
 4. Where no configured kind can be recovered, or a configured ID grammar cannot
    be compiled with named sections on, nothing is suggested.
 5. The reason stays the one [§FS-rules.3.5](FS-rules.md#35-strict-refusals) gives for the subject as configured,
@@ -455,7 +461,9 @@ refused before the scan, so whether a literal subject resolves stays the scan's
 question ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)). The sentence front end that owns the refusals builds the
 form, so `check --rule` and a configured rule declaration's `invalid-rule`
 finding offer the same one. The reason before the `;` is not part of the form
-and does not change with it.
+and does not change with it. A form keeps a namespaced object kind as typed, so
+in a member with no workspace in scope it may be unverifiable here
+([§FS-rules.4.1](FS-rules.md#41-a-rule-this-scope-cannot-verify)), which is not a refusal of the form.
 
 ##### 3.5.4.1 Only the failed part is replaced
 
@@ -476,7 +484,10 @@ typed before the refused one, and where none was typed it falls back to its
 declaration or to `Each KIND`. So an empty component keeps what was typed
 before it and nothing after it, as `list --selector` does: `FS-login..requirements`
 is offered `FS-login` and `FS-login.requirements.` is offered
-`FS-login.requirements`.
+`FS-login.requirements`. A refused subject that holds a modality followed
+by a verb is the first clause of a conjunction that the modality split read
+into the subject ([§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends)), so it is not rebuilt: a form built from it would
+drop a clause. No form is offered, and `known kinds:` follows.
 
 ##### 3.5.4.3 A form is parsed before it is offered
 
@@ -516,7 +527,7 @@ is anything else, nothing follows the reason. A configured rule declaration's
 | a presence noun of the wrong number | `chapter` or `chapters`, as the count takes | — |
 | a presence `NAME` with whitespace ([§FS-rules.3.5.1](FS-rules.md#351-presence-name-whitespace-refusal)) | the `NAME` trimmed of its surrounding whitespace | the `NAME` is empty or has whitespace inside |
 | a chapter subject in a presence rule | the subject's declaration, or `Each KIND` | — |
-| a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rules.3.5.4.2](FS-rules.md#3542-only-what-can-be-recovered-is-supplied) says | no configured kind is recovered; `known kinds:` follows |
+| a refused subject: an unknown kind, `*/`, a section-component wildcard, a numbered chapter, the section grammar, the ID grammar, `Each chapter of each` | the subject, rebuilt as [§FS-rules.3.5.4.2](FS-rules.md#3542-only-what-can-be-recovered-is-supplied) says | no configured kind is recovered, or the subject holds a clause; `known kinds:` follows |
 | a path subject, `Each file in …` | — | always; `known kinds:` follows |
 | an unknown or malformed object kind | — | always; `known kinds:` follows |
 | no modality, an unknown verb, a count that is not accepted, a count with no object | — | always |
@@ -550,6 +561,7 @@ configured rule declaration's finding carries the same text after
 | `Each FS must cite exactly 02 FS.` | `count must be a canonical positive base-10 integer; accepted form: Each FS must cite exactly 2 FS.` | none |
 | `Each FS must cite a FS.` | `quantifier "a" is ambiguous; accepted forms: "Each FS must cite at least one FS." or "Each FS must cite exactly one FS."` | none |
 | `Each FS must cite at least one GOAL and must not cite any AR.` | `conjunctions are not accepted` | `known kinds: FS` |
+| `Each FS must cite at least one FS and must not cite any FS.` | `unknown kind "FS must cite at least one FS and"` | `known kinds: FS` |
 | `Each FS should not cite at least one FS.` | `a prohibition must use "cite any"; accepted form: Each FS should not cite any FS.` | none |
 | `FS-login must have exactly one requirements section.` | `chapter presence must end in "chapter"; accepted form: FS-login must have exactly one requirements chapter.` | none |
 | `FS-login should have at most 2 requirements chapter.` | `chapter count has the wrong singular/plural spelling; accepted form: FS-login should have at most 2 requirements chapters.` | none |

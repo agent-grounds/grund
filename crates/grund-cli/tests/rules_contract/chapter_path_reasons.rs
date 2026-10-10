@@ -42,12 +42,18 @@ fn rows() -> Vec<(&'static str, &'static str, String)> {
         (
             "RULE-numbered",
             "The requirements.1 chapter of each FS",
-            refusal("numbered chapter subjects can detach when headings move", chapter),
+            refusal(
+                "numbered chapter subjects can detach when headings move",
+                chapter,
+            ),
         ),
         (
             "RULE-wildcard",
             "The requirements.* chapter of each FS",
-            refusal("section-component wildcards are not accepted in phase 1", chapter),
+            refusal(
+                "section-component wildcards are not accepted in phase 1",
+                chapter,
+            ),
         ),
         (
             "RULE-trailing",
