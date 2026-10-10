@@ -4,7 +4,7 @@
 use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use crate::grammar::{Grammar, render_id, section_display_name};
-use crate::model::{Catalog, Declaration, Id, id_homes};
+use crate::model::{Catalog, Declaration, Id, paired_declarations};
 use crate::resolver::{SectionHome, section_home};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -39,7 +39,9 @@ pub(crate) fn adapt_markdown(
 /// Adapt the complete resolved workspace while keeping the selected member's
 /// subjects local. External declarations carry qualified kind/labels, so the
 /// same engine handles local, pinned, and any-member object selectors without
-/// learning resolver records (§FS-rules.2, §AR-rules.3).
+/// learning resolver records (§FS-rules.2, §AR-rules.3). An ID's declarations, its
+/// nodes, the edges into it and the sections a citation of it reaches are read off
+/// each stub's verdict (§FS-declarations.stubs.verdict).
 pub(crate) fn adapt_workspace(
     selected: &str,
     projects: &[(&str, &Catalog, MarkdownProject<'_>)],
@@ -78,11 +80,11 @@ pub(crate) fn adapt_workspace(
             } else {
                 format!("{alias}/{bare_label}")
             };
-            // A healthy Markdown stub and its inline declaration are one catalog home.
-            // Canonicalize before minting keys so relations share a node (§FS-rules.5.1,
-            // §FS-list.2.5).
-            let id_homes = id_homes(homes);
-            for (ordinal, home) in id_homes.stand_ins().enumerate() {
+            // A healthy Markdown stub and its inline declaration are one declaration once
+            // paired (§FS-declarations.stubs.verdict): one node, so relations share it
+            // (§FS-rules.5.1).
+            let paired = paired_declarations(homes);
+            for (ordinal, home) in paired.stand_ins().enumerate() {
                 let key = NodeKey(format!(
                     "{selected}:markdown:{alias}:decl:{bare_label}:{ordinal}"
                 ));
@@ -159,9 +161,9 @@ pub(crate) fn adapt_workspace(
             let Some(target_homes) = target_findings.declarations.get(&citation.id) else {
                 continue;
             };
-            // A stub whose target declares the ID twice stands for two homes, so its
-            // ID is ambiguous here as it is to `check` (§FS-declarations.checks.duplicate.1).
-            if id_homes(target_homes).len() != 1 {
+            // A stub whose target declares the ID twice stands for two declarations, so
+            // its ID is ambiguous here as it is to `check` (§FS-declarations.stubs.verdict).
+            if paired_declarations(target_homes).len() != 1 {
                 // Unknown and ambiguous targets retain their ordinary resolver
                 // findings but never become logical edges (§FS-rules.5.1).
                 continue;
@@ -174,13 +176,13 @@ pub(crate) fn adapt_workspace(
             };
             // §FS-rules.5.1: a resolved section that is no rule unit counts for its nearest
             // named ancestor chapter, or else its declaration. It resolves where `check`
-            // finds it, a stub's in its target, scanned or not (§FS-check.3.2.1).
+            // finds it, a stub's in its target, scanned or not (§FS-declarations.stubs.verdict).
             let (target, newly_counted) = match citation.section.as_ref() {
                 Some(section) => {
                     let Some(home) = section_home(target_findings, &citation.id, section) else {
                         continue;
                     };
-                    // §FS-check.3.2.1: the lookup read the home on this miss; mint from that.
+                    // §FS-declarations.stubs.verdict: mint from the record the verdict holds.
                     if let SectionHome::Unscanned(home) = home
                         && minted_homes.insert((target_alias.to_string(), citation.id.clone()))
                     {

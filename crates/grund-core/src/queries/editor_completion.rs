@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use super::editor_on_type::{docstring_content_at, line_is_rewritable};
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::{in_escape_position, never_rewrite_context_in, parse_id_arg, render_id};
-use crate::model::{canonical_snapshot_path, format_path, id_homes, relative_from_base};
+use crate::model::{canonical_snapshot_path, format_path, paired_declarations, relative_from_base};
 use crate::resolver::WorkspaceContext;
 
 #[path = "editor_completion_token.rs"]
@@ -52,7 +52,9 @@ struct Candidate {
 
 impl LspCompletionContext {
     /// Cache uniquely resolving declared spellings and formatter file scopes in
-    /// the snapshot's existing scan (§FS-lsp.1.6.2, §FS-lsp.1.6.4).
+    /// the snapshot's existing scan (§FS-lsp.1.6.2, §FS-lsp.1.6.4). An ID resolves
+    /// uniquely where it has one declaration once its stubs are paired by their
+    /// verdicts (§FS-declarations.stubs.verdict).
     pub(crate) fn from_workspace(context: &WorkspaceContext) -> Self {
         let projects = context
             .projects
@@ -73,10 +75,10 @@ impl LspCompletionContext {
                     .collect();
                 let mut candidates = Vec::new();
                 for (id, decls) in &project.findings.declarations {
-                    let Some(home) = id_homes(decls).sole() else {
+                    let Some(paired) = paired_declarations(decls).sole() else {
                         continue;
                     };
-                    let home = home.stand_in;
+                    let home = paired.stand_in;
                     // §FS-lsp.1.6.2: a stub without its scanned inline home
                     // cannot supply a resolving authoring candidate.
                     if home.is_stub {

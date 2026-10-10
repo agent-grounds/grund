@@ -107,14 +107,14 @@ can read is the same silence in a new spelling.
 - a stub whose target is outside `[scan] include`, counted as the scanned tree counts it
   ([§FS-declarations.checks.duplicate.1](../../docs/functional-spec/FS-declarations.md#checksduplicate1-a-stub-pairs-with-its-target-whether-or-not-the-target-is-scanned), [grund#532](https://github.com/agent-grounds/grund/issues/532)):
   two stubs to one unscanned file are one home in `check`, `list` and `show`
-  ([§FS-declarations.checks.duplicate.2](../../docs/functional-spec/FS-declarations.md#checksduplicate2-stubs-to-one-target-are-one-home)), two stubs to two files that each declare
+  ([§FS-declarations.checks.duplicate.2](../../docs/functional-spec/FS-declarations.md#checksduplicate2-stubs-to-one-target-stand-for-its-declarations-once)), two stubs to two files that each declare
   the ID are still a duplicate, and a duplicate or ambiguity with a real second
   declaration names the target's line rather than the stub's, in text and JSON
-  ([§FS-declarations.checks.duplicate.3](../../docs/functional-spec/FS-declarations.md#checksduplicate3-a-home-reached-through-stubs-is-named-at-its-target)) — beside the one-stub tree and the scanned
+  ([§FS-declarations.checks.duplicate.3](../../docs/functional-spec/FS-declarations.md#checksduplicate3-a-declaration-reached-through-stubs-is-named-at-its-target)) — beside the one-stub tree and the scanned
   controls of both shapes, which read as they always have; and a lone stub to an unscanned
   file that declares the ID twice is two homes ([grund#556](https://github.com/agent-grounds/grund/issues/556)), a duplicate named at both of the
   target's lines in text and JSON, all three lines named beside a scanned second declaration,
-  and the stub's `list` row tagged; `list --size` measures both of those homes at the target's
+  and the stub's `list` row tagged; `list --size` measures both of those declarations at the target's
   lines in text and JSON, as the scanned tree does, rather than one unmeasured `broken stub` row
   at the stub ([§FS-list.3.4.6](../../docs/functional-spec/FS-list.md#346-a-home-outside-the-scan), [grund#565](https://github.com/agent-grounds/grund/issues/565))
 - a stub whose target is a symlink named so the scan does not read it — hidden (`notes/.a.md`) or
@@ -122,10 +122,10 @@ can read is the same silence in a new spelling.
   judged by the name the stub wrote ([§FS-declarations.checks.broken-stub.3](../../docs/functional-spec/FS-declarations.md#checksbroken-stub3-a-target-the-scan-does-not-read-declares-nothing), [grund#567](https://github.com/agent-grounds/grund/issues/567)):
   the stub is broken and pairs with nothing, so `check` reports the duplicate beside it and `refs`
   refuses the ID as ambiguous, exactly as for a regular hidden copy of the file, the control beside them
-- `fmt --cross-refs` links no citation of an ID whose one home is a stub `check` reports broken —
+- `fmt --cross-refs` links no citation of an ID whose one declaration is a stub `check` reports broken —
   its target missing, hidden, of an unlisted extension, declaring the ID only inside a fence, or
   not at all — in check mode or under `--write` ([§FS-fmt.6.4.2](../../docs/functional-spec/FS-fmt.md#642-a-citation-of-a-broken-stub-or-of-an-ambiguous-id-is-not-wrapped), [grund#566](https://github.com/agent-grounds/grund/issues/566)), nor one of
-  an ID with more than one home, whether two declarations or a stub's target that declares it twice
+  an ID with more than one declaration, whether two of its own or a stub's target that declares it twice
 - a section citation of a stub whose target is outside `[scan] include`, resolved in that target
   as the scanned tree resolves it ([§FS-check.3.2.1](../../docs/functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [grund#529](https://github.com/agent-grounds/grund/issues/529)):
   a section the target declares is clean for one stub, for two stubs to the target, and under

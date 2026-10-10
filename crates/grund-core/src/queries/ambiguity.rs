@@ -2,12 +2,14 @@
 //! §FS-show.2.2.1, §FS-show.2.2.2). No body extraction is needed to decide
 //! whether a recorded target has multiple claimants. A stub's homes are found in
 //! its target, scanned or not (§FS-refs.4.1), read off the verdict the scan
-//! recorded on the stub (§FS-declarations.checks.broken-stub.4).
+//! recorded on the stub (§FS-declarations.stubs.verdict).
 
 use super::show_query::ShowQueryError;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
-use crate::model::{Catalog, Declaration, FindingSite, Id, IdHomes, id_homes};
+use crate::model::{
+    Catalog, Declaration, FindingSite, Id, PairedDeclarations, paired_declarations,
+};
 
 /// Refuse only independent homes or the requested section's recorded collision
 /// (§FS-refs.4). Absent declarations and sections remain valid citation queries.
@@ -21,12 +23,12 @@ pub(crate) fn declaration_ambiguity_refusal(
     id: &Id,
     section: Option<&str>,
 ) -> Option<ShowQueryError> {
-    let homes = id_homes(findings.declarations.get(id)?);
-    if let Some(refusal) = ambiguous_id_refusal(config, path_config, &homes, id) {
+    let paired = paired_declarations(findings.declarations.get(id)?);
+    if let Some(refusal) = ambiguous_id_refusal(config, path_config, &paired, id) {
         return Some(refusal);
     }
     // §FS-refs.4.1: refused from the record show would read, before a bare ID returns.
-    let record = homes.sole()?.record;
+    let record = paired.sole()?.record;
     ambiguous_section_refusal(config, path_config, record, id, section?)
 }
 
@@ -35,21 +37,21 @@ pub(crate) fn declaration_ambiguity_refusal(
 pub(super) fn ambiguous_id_refusal(
     config: &Config,
     path_config: &Config,
-    homes: &IdHomes<'_>,
+    paired: &PairedDeclarations<'_>,
     id: &Id,
 ) -> Option<ShowQueryError> {
-    if homes.len() <= 1 {
+    if paired.len() <= 1 {
         return None;
     }
-    // §FS-declarations.checks.duplicate.3: a home a stub stands for is at its target,
-    // at each line there that declares the ID (§FS-declarations.checks.duplicate.1).
+    // §FS-declarations.checks.duplicate.3: a declaration a stub stands for is at its
+    // target, at each line there that declares the ID (§FS-declarations.stubs.verdict).
     // §FS-errors.3.1: every site is spelled from the effective report root.
-    let mut sites: Vec<(String, String, usize)> = homes
+    let mut sites: Vec<(String, String, usize)> = paired
         .iter()
-        .map(|home| {
+        .map(|declaration| {
             let (path, line) = (
-                display_path(path_config, &home.record.file),
-                home.record.line,
+                display_path(path_config, &declaration.record.file),
+                declaration.record.line,
             );
             (format!("{path}:{line}"), path, line)
         })
@@ -77,8 +79,8 @@ pub(super) fn ambiguous_id_refusal(
 
 /// Refuse exactly the requested coordinate's scanner-recorded claims
 /// (§FS-show.2.2.2, §FS-refs.4), before reading a body or filtering citations.
-/// `body_decl` is the ID's one home's record, so a stub's sections are its
-/// inline home's; its own prose declares none
+/// `body_decl` is the record of the ID's one declaration, so a stub's sections are
+/// its inline home's; its own prose declares none
 /// (§FS-declarations.checks.duplicate-section.2, §FS-show.2.3.7). `path_config`
 /// owns report paths.
 pub(super) fn ambiguous_section_refusal(

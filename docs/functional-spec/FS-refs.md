@@ -191,7 +191,7 @@ operand carries a section.
 
 `refs` finds the homes of a stub's ID as `show` does
 ([§FS-show.2.3.7](FS-show.md#237-a-stubs-target-is-found-by-its-id)), from the one verdict the scan reaches on each stub
-([§FS-declarations.checks.broken-stub.4](FS-declarations.md#checksbroken-stub4-one-verdict-per-stub-read-by-every-command)): it reads the stub's
+([§FS-declarations.stubs.verdict](FS-declarations.md#stubsverdict-one-verdict-per-stub-reached-once-per-scan)): it reads the stub's
 target for that ID, and a target outside `[scan] include` answers exactly as it
 would were it scanned. A target that declares the ID twice is an ambiguous ID at
 the target's sites ([§FS-show.2.2.1](FS-show.md#221-ambiguous-id)), refused for a bare `<ID>`

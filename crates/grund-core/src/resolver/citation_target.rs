@@ -18,7 +18,7 @@
 use std::collections::BTreeMap;
 
 use crate::config::{Compiled, Display, Frame, Run, Schema};
-use crate::model::{Catalog, Citation, Declaration, Id, id_homes};
+use crate::model::{Catalog, Citation, Declaration, Id, paired_declarations};
 
 /// One project a citation can resolve against, as a rule needs it: the catalog
 /// the ID is looked up in and the schema and grammar that spell it, because a
@@ -112,12 +112,13 @@ pub(crate) enum SectionHome<'a> {
 }
 
 /// Where `section` of `id` resolves, or `None` where it does not. A stub's sections
-/// are its target's, scanned or not (§FS-check.3.2.1): where no recorded declaration
-/// holds the path, the ID's one home answers from the record the scan kept on the
-/// stub that stands for it (§AR-scanner.4.6); an ID `show` refuses as ambiguous, and
-/// a broken stub, lend no section there. A rule's `cites` fact asks here rather than
-/// `section_resolves`, because a citation into a home outside the walk counts for
-/// that home's chapter (§FS-rules.5.1).
+/// are those of the target's record its verdict holds (§FS-declarations.stubs.verdict),
+/// scanned or not, as `check` reports them (§FS-check.3.2.1): where no recorded
+/// declaration holds the path, the ID's one declaration answers from the record the
+/// scan kept on the stub that stands for it (§AR-scanner.4.6); an ID `show` refuses
+/// as ambiguous, and a broken stub, lend no section there. A rule's `cites` fact asks
+/// here rather than `section_resolves`, because a citation into a home outside the
+/// walk counts for that home's chapter (§FS-rules.5.1).
 pub(crate) fn section_home<'a>(
     findings: &'a Catalog,
     id: &Id,
@@ -127,7 +128,7 @@ pub(crate) fn section_home<'a>(
     if decls.iter().any(|decl| decl.sections.contains_key(section)) {
         return Some(SectionHome::Recorded);
     }
-    let home = id_homes(decls).sole()?;
-    (!std::ptr::eq(home.record, home.stand_in) && home.record.sections.contains_key(section))
-        .then_some(SectionHome::Unscanned(home.record))
+    let sole = paired_declarations(decls).sole()?;
+    (!std::ptr::eq(sole.record, sole.stand_in) && sole.record.sections.contains_key(section))
+        .then_some(SectionHome::Unscanned(sole.record))
 }

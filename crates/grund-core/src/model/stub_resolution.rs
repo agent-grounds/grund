@@ -1,8 +1,8 @@
-//! A stub's verdict and the homes of an ID (§AR-scanner.4.6): what the scan found
-//! at each stub's target, reached once per scan and recorded on the stub, and the
-//! one derivation of an ID's homes from those verdicts. Every command reads both
-//! from here and decides nothing about a stub itself
-//! (§FS-declarations.checks.broken-stub.4).
+//! A stub's verdict and the declarations of an ID once its stubs are paired
+//! (§AR-scanner.4.6): what the scan found at each stub's target, reached once per
+//! scan and recorded on the stub, and the one pairing of an ID's declarations from
+//! those verdicts (§FS-declarations.stubs.verdict). Every command reads both from
+//! here and decides nothing about a stub itself.
 
 use std::cmp::Ordering;
 
@@ -21,17 +21,19 @@ pub(crate) enum StubResolution {
     /// (§FS-declarations.checks.broken-stub.3). Judged on the name the stub wrote.
     NotRead,
     /// The target was read, as the scan reads it on the text a save would write,
-    /// and declares no home of the ID (§FS-declarations.checks.broken-stub.1,
+    /// and does not declare the ID (§FS-declarations.checks.broken-stub.1,
     /// §FS-declarations.checks.broken-stub.2).
     LacksId,
     /// The stub links to the file it sits in, which declares the ID elsewhere. The
-    /// stub pairs with nothing there, so it is a home of its own.
+    /// stub pairs with nothing there, so it is a declaration of its own
+    /// (§FS-declarations.stubs.verdict).
     OwnFile,
     /// The target's records of the ID that are not themselves stubs, ascending by
-    /// line and never empty: each is a home (§FS-declarations.checks.duplicate.1).
-    /// Kept whole, sections and body span included, so a reader answers from the
-    /// record whether or not the walk reached the target.
-    Homes(Vec<Declaration>),
+    /// line and never empty: the stub points at each
+    /// (§FS-declarations.checks.duplicate.1). Kept whole, sections and body span
+    /// included, so a reader answers from the record whether or not the walk
+    /// reached the target.
+    Declares(Vec<Declaration>),
 }
 
 impl StubResolution {
@@ -41,19 +43,19 @@ impl StubResolution {
     }
 }
 
-/// One home of an ID: the record it is, and the declaration of the catalog that
-/// stands for it — the record itself, or the stub that points at a target the
-/// catalog holds no record of.
+/// One declaration of an ID once its stubs are paired: the record it is, and the
+/// declaration of the catalog that stands for it — the record itself, or the stub
+/// that points at a target the catalog holds no record of.
 #[derive(Clone, Copy)]
-pub(crate) struct Home<'a> {
+pub(crate) struct Paired<'a> {
     /// The declaration a body, a section, an anchor or a site is read from.
     pub(crate) record: &'a Declaration,
-    /// The declaration in the catalog that stands for the home.
+    /// The declaration in the catalog that stands for this one.
     pub(crate) stand_in: &'a Declaration,
 }
 
-impl Home<'_> {
-    /// Whether this home is a stub `check` reports broken.
+impl Paired<'_> {
+    /// Whether this declaration is a stub `check` reports broken.
     pub(crate) fn is_broken_stub(&self) -> bool {
         self.record
             .stub_resolution
@@ -62,55 +64,57 @@ impl Home<'_> {
     }
 }
 
-/// The homes of one ID, in `path:line` order of their records.
-pub(crate) struct IdHomes<'a> {
+/// The declarations of one ID once its stubs are paired, in `path:line` order of
+/// their records.
+pub(crate) struct PairedDeclarations<'a> {
     decls: &'a [Declaration],
-    homes: Vec<Home<'a>>,
+    paired: Vec<Paired<'a>>,
 }
 
-impl<'a> IdHomes<'a> {
+impl<'a> PairedDeclarations<'a> {
     pub(crate) fn len(&self) -> usize {
-        self.homes.len()
+        self.paired.len()
     }
 
-    /// Every home, in `path:line` order of its record.
-    pub(crate) fn iter(&self) -> impl Iterator<Item = Home<'a>> + '_ {
-        self.homes.iter().copied()
+    /// Every declaration, in `path:line` order of its record.
+    pub(crate) fn iter(&self) -> impl Iterator<Item = Paired<'a>> + '_ {
+        self.paired.iter().copied()
     }
 
-    /// The one home of an ID that has exactly one: what a link, a body, a section
-    /// and a value read. An ID with more than one is a duplicate, reported rather
-    /// than ranked, so none of them is its home here.
-    pub(crate) fn sole(&self) -> Option<Home<'a>> {
-        match self.homes.as_slice() {
-            [home] => Some(*home),
+    /// The one declaration of an ID that has exactly one: what a link, a body, a
+    /// section and a value read. An ID with more than one is a duplicate, reported
+    /// rather than ranked, so none of them answers here.
+    pub(crate) fn sole(&self) -> Option<Paired<'a>> {
+        match self.paired.as_slice() {
+            [paired] => Some(*paired),
             _ => None,
         }
     }
 
-    /// The declarations of the catalog that stand for a home, each once, in the
-    /// catalog's order. A stub that stands for none is the pointer to a home.
+    /// The declarations of the catalog that stand for one, each once, in the
+    /// catalog's order. A stub that stands for none is the pointer to one.
     pub(crate) fn stand_ins(&self) -> impl Iterator<Item = &'a Declaration> + '_ {
         self.decls.iter().filter(|decl| {
-            self.homes
+            self.paired
                 .iter()
-                .any(|home| std::ptr::eq(home.stand_in, *decl))
+                .any(|paired| std::ptr::eq(paired.stand_in, *decl))
         })
     }
 }
 
-/// The homes of the ID `decls` declares (§AR-scanner.4.6). A declaration that is
-/// not a stub is a home of its own. A stub whose verdict is `Homes` stands for each
-/// record there that no declaration, and no stub before it in `path:line` order,
-/// already stands for, so stubs to one target are one home between them and a
-/// target declaring the ID twice is two (§FS-declarations.checks.duplicate.2). Any
-/// other stub is a home of its own: a broken one, and one that links to its own
-/// file.
-pub(crate) fn id_homes(decls: &[Declaration]) -> IdHomes<'_> {
-    let mut homes: Vec<Home<'_>> = decls
+/// The declarations of the ID `decls` declares, once its stubs are paired by their
+/// verdicts (§FS-declarations.stubs.verdict, §AR-scanner.4.6). A declaration that
+/// is not a stub is one of its own. A stub whose verdict is `Declares` stands for
+/// each record there that no declaration, and no stub before it in `path:line`
+/// order, already stands for, so stubs to one target stand for its declarations
+/// once between them and a target declaring the ID twice is two
+/// (§FS-declarations.checks.duplicate.2). Any other stub is a declaration of its
+/// own: a broken one, and one that links to its own file.
+pub(crate) fn paired_declarations(decls: &[Declaration]) -> PairedDeclarations<'_> {
+    let mut paired: Vec<Paired<'_>> = decls
         .iter()
         .filter(|decl| !decl.is_stub)
-        .map(|decl| Home {
+        .map(|decl| Paired {
             record: decl,
             stand_in: decl,
         })
@@ -118,8 +122,8 @@ pub(crate) fn id_homes(decls: &[Declaration]) -> IdHomes<'_> {
     let mut stubs: Vec<&Declaration> = decls.iter().filter(|decl| decl.is_stub).collect();
     stubs.sort_by(|a, b| site_order(a, b));
     for stub in stubs {
-        let Some(StubResolution::Homes(records)) = &stub.stub_resolution else {
-            homes.push(Home {
+        let Some(StubResolution::Declares(records)) = &stub.stub_resolution else {
+            paired.push(Paired {
                 record: stub,
                 stand_in: stub,
             });
@@ -127,20 +131,20 @@ pub(crate) fn id_homes(decls: &[Declaration]) -> IdHomes<'_> {
         };
         for record in records {
             // The verdict holds clones of the walk's records, or one reading of a
-            // target per scan, so one home is one `file` and `line` here.
-            if !homes
+            // target per scan, so one declaration is one `file` and `line` here.
+            if !paired
                 .iter()
-                .any(|home| home.record.file == record.file && home.record.line == record.line)
+                .any(|seen| seen.record.file == record.file && seen.record.line == record.line)
             {
-                homes.push(Home {
+                paired.push(Paired {
                     record,
                     stand_in: stub,
                 });
             }
         }
     }
-    homes.sort_by(|a, b| site_order(a.record, b.record));
-    IdHomes { decls, homes }
+    paired.sort_by(|a, b| site_order(a.record, b.record));
+    PairedDeclarations { decls, paired }
 }
 
 fn site_order(a: &Declaration, b: &Declaration) -> Ordering {

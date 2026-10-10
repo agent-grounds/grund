@@ -73,9 +73,9 @@ pub struct Declaration {
     pub defined_in: Option<PathBuf>,
     /// On a stub, the verdict the scan reached on its target once the walk was
     /// done (§AR-scanner.4.6): whether the target is missing, not read, lacking the
-    /// ID, or which records of it are the stub's homes. `None` on every other
+    /// ID, or which records of it the stub points at. `None` on every other
     /// declaration. Every command reads it rather than the target
-    /// (§FS-declarations.checks.broken-stub.4).
+    /// (§FS-declarations.stubs.verdict).
     pub(crate) stub_resolution: Option<StubResolution>,
     pub e2e_case: Option<E2eCase>,
     /// Heading text after `<ID>:` — the one-line title an author wrote

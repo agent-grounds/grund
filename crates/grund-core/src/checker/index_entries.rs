@@ -9,8 +9,8 @@ use super::index::{KindIndexTarget, declarations_under_folder, kind_index_target
 use crate::config::{Frame, Schema};
 use crate::grammar::never_rewrite_context;
 use crate::model::{
-    Catalog, Citation, Declaration, Id, id_homes, physical_path_key, scanned_decl_relative_path,
-    scanned_path_key,
+    Catalog, Citation, Declaration, Id, paired_declarations, physical_path_key,
+    scanned_decl_relative_path, scanned_path_key,
 };
 
 /// The IDs each kind index owes an entry for, keyed by the index's
@@ -202,7 +202,9 @@ fn enroll_external_inline_declarations(
 /// The one logical, non-Markdown home an enrollment candidate would add. A
 /// declaration already under the folder is covered by the ordinary rule, and
 /// multiple independent homes remain the duplicate error rather than becoming
-/// an index membership `grund` guessed (§REQ-no-wrong-citation.1).
+/// an index membership `grund` guessed (§REQ-no-wrong-citation.1). The ID has one
+/// only where it has one declaration once its stubs are paired by their verdicts
+/// (§FS-declarations.stubs.verdict).
 fn external_inline_home<'a>(
     decls: &'a [Declaration],
     folder_key: &Path,
@@ -212,7 +214,7 @@ fn external_inline_home<'a>(
     if declarations_under_folder(decls, folder_key, configured_root, physical_root) {
         return None;
     }
-    let home = id_homes(decls).sole()?.stand_in;
+    let home = paired_declarations(decls).sole()?.stand_in;
     if home.is_stub
         || home.e2e_case.is_some()
         || home.file.extension().and_then(|ext| ext.to_str()) == Some("md")

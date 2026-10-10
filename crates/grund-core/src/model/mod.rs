@@ -74,7 +74,7 @@ pub(crate) use records::{
     resolve_stub_target,
 };
 pub(crate) use report::{CheckReport, Diagnostic, LANDED_CLAUSE, Site};
-pub(crate) use stub_resolution::{IdHomes, StubResolution, id_homes};
+pub(crate) use stub_resolution::{PairedDeclarations, StubResolution, paired_declarations};
 pub(crate) use text::{CITATION_DIRECTION_REPAIR, format_list, json_escape, plural};
 pub(crate) use values::{
     JSON_NUMBER_RE, authored_component, component_text_is_valid, first_unequal_component,

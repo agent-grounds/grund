@@ -1,7 +1,8 @@
 use crate::config::{Frame, LeadSizeWarning, Schema, measure_point_text};
 use crate::grammar::render_id;
 use crate::model::{
-    Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, TextOverlays, id_homes,
+    Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, TextOverlays,
+    paired_declarations,
 };
 use crate::resolver::{PointBodyCache, point_body_pair};
 
@@ -9,7 +10,9 @@ use crate::resolver::{PointBodyCache, point_body_pair};
 ///
 /// The scanner owns the site set and `resolver/point_body.rs` owns the slicing. This
 /// pass only applies the configured strict threshold and constructs the fixed
-/// warning, keeping CLI and LSP on the same checker path.
+/// warning, keeping CLI and LSP on the same checker path. The sites are the
+/// stand-ins of each ID's declarations once its stubs are paired by their verdicts
+/// (§FS-declarations.stubs.verdict).
 pub(super) fn check_oversized_leads(
     findings: &Catalog,
     schema: &Schema,
@@ -23,9 +26,9 @@ pub(super) fn check_oversized_leads(
     let mut cache = PointBodyCache::new(overlays);
     for (id, declarations) in &findings.declarations {
         // §FS-declarations.checks.oversized-lead.4: the scanned sites, so a stub that
-        // stands for a home outside the walk is passed over by the slicer.
-        let homes = id_homes(declarations);
-        for declaration in homes.stand_ins() {
+        // stands for a declaration outside the walk is passed over by the slicer.
+        let paired = paired_declarations(declarations);
+        for declaration in paired.stand_ins() {
             check_oversized_lead_site(
                 &mut cache,
                 schema,

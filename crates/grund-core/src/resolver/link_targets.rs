@@ -20,8 +20,8 @@ use std::path::{Path, PathBuf};
 use crate::config::{Frame, Presentation, Schema};
 use crate::grammar::{Grammar, anchor_slug, reduce_heading_text, render_id};
 use crate::model::{
-    Catalog, Declaration, Id, SectionInfo, id_homes, physical_path_key, scanned_decl_relative_path,
-    scanned_path_key,
+    Catalog, Declaration, Id, SectionInfo, paired_declarations, physical_path_key,
+    scanned_decl_relative_path, scanned_path_key,
 };
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
@@ -31,7 +31,8 @@ use crate::model::{
 /// (§FS-fmt.6.2, §DF-md-link-anchor-strategy, §DF-declaration-anchor). A source-file
 /// home (a stub's target) and the `none` profile both get a bare file link.
 /// `None` if the ID does not resolve (§FS-fmt.6.4), `None` for a broken stub and
-/// for an ID with more than one home (§FS-fmt.6.4.2), and `None` for a `.<section>`
+/// for an ID with more than one declaration once its stubs are paired
+/// (§FS-fmt.6.4.2, §FS-declarations.stubs.verdict), and `None` for a `.<section>`
 /// citation of a section the declaration does not have, whether or not the link
 /// takes a heading anchor (§FS-fmt.6.4.1).
 ///
@@ -132,13 +133,13 @@ pub(crate) fn markdown_link_target_with_root(
     findings: &Catalog,
     path_root: Option<&Path>,
 ) -> Option<String> {
-    // §FS-fmt.6.4.2: only an ID with one home that is not a broken stub is linked, read
-    // off the verdict the scan recorded on each stub (§FS-declarations.checks.broken-stub.4).
-    let home = id_homes(findings.declarations.get(id)?).sole()?;
-    if home.is_broken_stub() {
+    // §FS-fmt.6.4.2: only an ID with one declaration, not a broken stub, is linked, read
+    // off the verdict the scan recorded on each stub (§FS-declarations.stubs.verdict).
+    let sole = paired_declarations(findings.declarations.get(id)?).sole()?;
+    if sole.is_broken_stub() {
         return None;
     }
-    let record = home.record;
+    let record = sole.record;
     let rel = match path_root {
         Some(root) => relative_url_under(from_file, &record.file, root),
         None => relative_url(from_file, &record.file, frame.root()),

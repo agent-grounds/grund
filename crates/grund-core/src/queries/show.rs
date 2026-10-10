@@ -3,7 +3,8 @@ use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, Declaration, DeclarationSource, Id, SectionInfo, ShowOutput, ShowRenderMode,
-    StubResolution, TextOverlays, format_path, id_homes, json_escape, paths_same_location,
+    StubResolution, TextOverlays, format_path, json_escape, paired_declarations,
+    paths_same_location,
 };
 use crate::resolver::{
     extract_declaration_body, heading_anchor, section_site_anchor, show_e2e_case,
@@ -47,8 +48,8 @@ pub(crate) fn show_declaration(
 /// `render_show_output_json` derives the heading anchors from.
 ///
 /// Which record that is, and whether the ID is refused instead, is the one
-/// derivation of its homes from the verdict the scan recorded on each stub
-/// (§FS-declarations.checks.broken-stub.4): nothing here reads a stub's target.
+/// pairing of its declarations by the verdict the scan recorded on each stub
+/// (§FS-declarations.stubs.verdict): nothing here reads a stub's target.
 pub(crate) fn show_declaration_with_overlays<'a>(
     config: &Config,
     path_config: &Config,
@@ -67,13 +68,12 @@ pub(crate) fn show_declaration_with_overlays<'a>(
         ))
     };
     let decls = findings.declarations.get(id).ok_or_else(not_found)?;
-    let homes = id_homes(decls);
+    let paired = paired_declarations(decls);
     // §FS-show.2.2.1: share the independent-home refusal with refs (§FS-refs.4).
-    if let Some(refusal) = ambiguous_id_refusal(config, path_config, &homes, id) {
+    if let Some(refusal) = ambiguous_id_refusal(config, path_config, &paired, id) {
         return Err(refusal.into());
     }
-    let home = homes.sole().ok_or_else(not_found)?;
-    let record = home.record;
+    let record = paired.sole().ok_or_else(not_found)?.record;
     if matches!(record.source, DeclarationSource::Json { .. }) {
         let output = show_json_value(config, id, record, section)?;
         return Ok((output, record));
