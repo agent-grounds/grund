@@ -389,6 +389,7 @@ run; `Ramp` is `—` where no promotion is promised, a ramp already spent includ
 | `escaped-citation-resolves` | none — suggestion | — | `--suggestions` | [§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves) |
 | `forbidden-citation` | error | — | a `must-not` entry | [§FS-check.3.12](FS-check.md#312-forbidden-citation) |
 | `full-scope-ignored` | warning | — | `--full` with an explicit path | [§FS-check.1.3.7](FS-check.md#137-a-path-the-flag-cannot-widen-earns-a-caution-not-a-refusal) |
+| `glob-citation` | warning | error in `0.19.0` | — | [§FS-check.checks.glob-citation](FS-check.md#checksglob-citation-glob-citation) |
 | `inline-citation-style` | error; warning for the two opt-in forms | — | `[reference] inline_style`; `warn_on_suggested`; `inline_note_layout_check` | [§FS-check.3.10](FS-check.md#310-inline-citation-style-violation) |
 | `invalid-rule` | error | — | `rules = true` on a kind | [§FS-check.3.25](FS-check.md#325-invalid-rule) |
 | `invalid-value-binding` | error | — | `values = true` on a kind | [§FS-check.3.21](FS-check.md#321-invalid-value-binding) |
