@@ -1,0 +1,9 @@
+The lead.
+
+<pre class="one-line">kept on one line</pre>
+
+## 1. After a one-line block
+## 2. After a tag that only starts like pre
+## 3. After a fence holding an unclosed pre
+## 4. After a pre holding a fence opener
+## 5. After a pre indented four spaces
