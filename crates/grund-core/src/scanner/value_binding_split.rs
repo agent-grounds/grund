@@ -72,8 +72,8 @@ pub(super) fn scan_split_binding(
             ));
     }
     // A heading's literal ends its paragraph rather than running on into the
-    // next line (§FS-values.3.1.1.1).
-    if line.is_md && markdown_heading_level(text).is_some() {
+    // next line (§FS-values.3.1.1.1); a raw-text HTML block holds none (§FS-check.1.1.5.1).
+    if line.is_md && line.may_be_heading && markdown_heading_level(text).is_some() {
         return;
     }
     *held = close_tick.and_then(|close_tick| {
