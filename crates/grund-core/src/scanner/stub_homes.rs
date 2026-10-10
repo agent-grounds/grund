@@ -139,6 +139,11 @@ fn stub_home(
     if paths_same_location(&config.root.join(&decl.file), &resolved) {
         return None;
     }
+    // §FS-declarations.checks.broken-stub.3: the rule's own gate, by the name the stub
+    // wrote, before a record at the path it resolves to can pair it.
+    if !scan_reads_target(&resolved, config) {
+        return None;
+    }
     // Kept where the walk reached the target, so a scope narrowed after it still
     // pairs the stub (§AR-checker.2.13), at each of its records there.
     let at_target = |other: &&Declaration| {
@@ -155,10 +160,6 @@ fn stub_home(
             path: record.file.clone(),
             lines,
         });
-    }
-    // §FS-declarations.checks.broken-stub.3: the rule's own gate, a file the scan reads.
-    if !scan_reads_target(&resolved, config) {
-        return None;
     }
     // §FS-declarations.checks.duplicate.1: the rule's text, the editor's before the
     // disk, whether or not the walk reached it (§FS-declarations.checks.broken-stub.1),

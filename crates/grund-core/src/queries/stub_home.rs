@@ -11,6 +11,7 @@ use super::show_query::ShowQueryError;
 use crate::config::Config;
 use crate::model::{Declaration, Id, TextOverlays, paths_same_location};
 use crate::resolver::target_records;
+use crate::scanner::scan_reads_target;
 
 /// The record whose body, sections and anchors a query on `decl` reads
 /// (§FS-show.2.3.7): `decl` itself unless it is a stub, and otherwise the
@@ -45,7 +46,9 @@ pub(super) fn stub_home<'a>(
     id: &Id,
     overlays: &TextOverlays,
 ) -> Result<Cow<'a, Declaration>, ShowQueryError> {
-    if !decl.is_stub {
+    // §FS-declarations.checks.broken-stub.3: judged by the name the stub wrote, before
+    // a record at the path it resolves to is taken.
+    if !decl.is_stub || !scan_reads_target(file, config) {
         return Ok(Cow::Borrowed(decl));
     }
     if let Some(scanned) = decls

@@ -75,8 +75,9 @@ pub struct Declaration {
     /// on — read after the walk, so a target the walk never reached still has them
     /// (§AR-scanner.4.6), and a target that declares the ID twice has two
     /// (§FS-declarations.checks.duplicate.1). `None` on every other declaration, on
-    /// a stub whose target does not declare the ID, and on one that links to its
-    /// own file.
+    /// a stub whose target does not declare the ID, on one whose target the scan does
+    /// not read by the name the stub wrote, wherever it resolves
+    /// (§FS-declarations.checks.broken-stub.3), and on one that links to its own file.
     pub(crate) stub_home: Option<StubHome>,
     pub e2e_case: Option<E2eCase>,
     /// Heading text after `<ID>:` — the one-line title an author wrote
@@ -410,6 +411,11 @@ pub struct ShowOutput {
 /// stands for its own (§FS-declarations.checks.duplicate.2, §AR-scanner.4.6). The
 /// stub that stands for a target declaring the ID twice stands for both lines,
 /// once, and `Declaration::home_sites` names each.
+///
+/// A stub with no recorded home pairs with nothing, a record at its target or not:
+/// the scanner leaves `stub_home` empty where the scan does not read the target by
+/// the name the stub wrote, wherever that name resolves
+/// (§FS-declarations.checks.broken-stub.3).
 pub(crate) fn is_stub_for_inline_decl(
     root: &Path,
     decl: &Declaration,
@@ -418,7 +424,7 @@ pub(crate) fn is_stub_for_inline_decl(
     if !decl.is_stub {
         return false;
     }
-    let Some(target) = &decl.defined_in else {
+    let (Some(target), Some(home)) = (&decl.defined_in, &decl.stub_home) else {
         return false;
     };
     let resolved = resolve_stub_target(root, &decl.file, target);
@@ -428,9 +434,6 @@ pub(crate) fn is_stub_for_inline_decl(
     {
         return true;
     }
-    let Some(home) = &decl.stub_home else {
-        return false;
-    };
     let site = (sort_path_key(&decl.file), decl.line);
     decls.iter().any(|other| {
         other.is_stub

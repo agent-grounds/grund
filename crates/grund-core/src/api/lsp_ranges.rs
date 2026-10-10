@@ -70,6 +70,8 @@ pub(super) fn lsp_target_for_stub(
     decls: &[Declaration],
 ) -> Option<(PathBuf, usize)> {
     let target = stub.defined_in.as_ref()?;
+    // §FS-declarations.checks.broken-stub.3: no recorded home, no record at its target.
+    let home = stub.stub_home.as_ref()?;
     let resolved = resolve_stub_target(&project.config.root, &stub.file, target);
     if let Some(inline) = decls
         .iter()
@@ -80,7 +82,6 @@ pub(super) fn lsp_target_for_stub(
     // §FS-declarations.checks.duplicate.2: a stub beside the one standing for an
     // unscanned target goes where that one's home is declared, at the first of its
     // lines as at the first record of a scanned target above.
-    let home = stub.stub_home.as_ref()?;
     Some((home.path.clone(), *home.lines.first()?))
 }
 
