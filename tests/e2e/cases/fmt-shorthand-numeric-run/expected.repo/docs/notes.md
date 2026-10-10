@@ -18,6 +18,6 @@ Markdown link with a path: [§FS-042-user-login](docs/functional-spec/FS-042-use
 Footnote reference: §FS-042-user-login[^1]
 Unspaced year: §FS-042-user-login(2024)
 Quoted: "§FS-042-user-login"/2
-Braced: §FS-042-user-login{2}
+Braced: §FS-042{2}
 Path glued to the token: §FS-042-user-login/docs/functional-spec/FS-043-user-logout.md
 A real run inside brackets is still a run: (§FS-042→FS-043)

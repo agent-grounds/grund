@@ -1,0 +1,16 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+shorthand = "canonical"
+
+[id]
+format = "{kind}-{number}-{slug}"
+slug_pattern = "[a-z][a-z0-9-]*"
+named_sections = true
+
+[scan]
+include = ["docs"]
+
+[fmt.cross_refs]
+enabled = false

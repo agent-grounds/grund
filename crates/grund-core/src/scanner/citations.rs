@@ -150,9 +150,10 @@ pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings:
 /// recording each marked candidate they read as a pattern — at its marker's
 /// column and as written after the marker, for §FS-check.checks.glob-citation —
 /// and claiming its marker, so no later pass on the line reads a prefix there.
-/// Outside a workspace this grammar also reads a marked qualified token, so the
-/// tail after its `<alias>/` is read whole too; in a workspace the target's
-/// grammar does that in the qualified pass.
+/// Outside a workspace this grammar also reads a marked qualified token, so a
+/// pattern after its `<alias>/` yields no prefix capture either; the fallback
+/// pass reports its alias, which no run without a workspace knows. In a
+/// workspace the target's grammar reads the tail in the qualified pass.
 pub(super) fn claim_citation_tokens<'a>(
     line: &CitationLine<'a>,
     workspace_mode: bool,
@@ -182,13 +183,15 @@ pub(super) fn claim_citation_tokens<'a>(
             }
             let tail_start = offset + alias.end() + 1;
             let prefix_len = offset + full.end() - tail_start;
-            let CandidateReading::Pattern(len) =
-                grammar.read_candidate(&line.scan_line[tail_start..], prefix_len)
-            else {
+            if !matches!(
+                grammar.read_candidate(&line.scan_line[tail_start..], prefix_len),
+                CandidateReading::Pattern(_)
+            ) {
                 return true;
-            };
+            }
+            // Outside a workspace every alias is unknown, so the fallback pass reports
+            // the alias for the whole token rather than a pattern (§FS-check.3.8).
             claimed_markers.push(marker_start);
-            record_glob_citation(line, marker_start..tail_start + len, findings);
             false
         });
     }

@@ -11,7 +11,7 @@ use crate::grammar::{
     CandidateReading, QUALIFIED_CITATION_PREFIX, parse_longest_id_prefix,
     parse_qualified_id_prefix, qualified_suppressed_in_source, read_loose_candidate,
 };
-use crate::model::{Catalog, Citation};
+use crate::model::{Catalog, Citation, Id};
 use crate::workspace::WorkspaceCitationTarget;
 
 /// §FS-workspace.5.2: a member-local scan must still recognize marker-qualified
@@ -69,12 +69,22 @@ pub(super) fn scan_fallback_qualified_citations(
     }
 }
 
+/// A tail kept whole as one ID: no grammar splits it, so it names no declaration.
+fn opaque_id(tail: &str) -> Id {
+    Id {
+        kind: tail.to_string(),
+        num: None,
+        slug: None,
+    }
+}
+
 /// Push the qualified citation at `marker_start` whose tail, starting at
 /// `id_start`, is read with the loose `KIND[-NUM]-SLUG` shape rather than any
 /// project's grammar. Both runs that have no target to read a tail with use it:
 /// a run that loads no workspace (§FS-workspace.5.2), and a workspace run whose
 /// alias names no loaded project (§FS-workspace.1.2.1). Returns whether the
-/// marker was claimed — by a citation, or by a pattern read whole.
+/// marker was claimed by a citation; a pattern's is the whole token, so the
+/// alias is reported and no prefix recorded (§FS-check.1.1.11).
 fn push_fallback_qualified_citation(
     line: &CitationLine<'_>,
     marker_start: usize,
@@ -89,12 +99,14 @@ fn push_fallback_qualified_citation(
     // tail outside `KIND[-NUM]-SLUG` is an `unknown project alias` error
     // all the same, at its own site.
     let parsed = parse_qualified_id_prefix(id_rest);
-    // §FS-check.1.1.11: a pattern is consumed whole, never read as its prefix.
+    // §FS-check.1.1.11: a pattern is consumed whole, never read as its prefix. With
+    // no target grammar to call it a pattern, it is the alias that is wrong
+    // (§FS-check.3.8): the whole tail stands as one opaque ID that cannot resolve.
     let prefix_len = parsed.as_ref().map_or(0, |(_, _, len)| *len);
-    if let CandidateReading::Pattern(len) = read_loose_candidate(id_rest, prefix_len) {
-        record_glob_citation(line, marker_start..id_start + len, findings);
-        return true;
-    }
+    let parsed = match read_loose_candidate(id_rest, prefix_len) {
+        CandidateReading::Pattern(len) => Some((opaque_id(&id_rest[..len]), None, len)),
+        _ => parsed,
+    };
     let Some((id, section, id_len)) = parsed else {
         return false;
     };
