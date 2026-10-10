@@ -3,16 +3,17 @@
 //!
 //! A refused subject comes back as what the parser read rather than as finished
 //! text: the production that failed, plus the kind, declaration and path it had
-//! read. The rule surfaces render that value to their released bytes
-//! (§FS-rules.3.5), except that a subject needing named sections is answered
-//! with one they make valid (§FS-rules.3.5.2) and a chapter path is refused for
-//! the component that failed (§FS-rules.3.5.3), and `selectors.rs` renders it
-//! as a selector (§FS-rules.8.1). Both surfaces agree on what failed because
-//! only one parser decided it and `SubjectFault::failed` names it for both, and
-//! on what a suggestion recovers because only `recovery.rs` builds it.
+//! read. The rule surfaces answer it with what can be recovered written as a
+//! rule subject (§FS-rules.3.5.4.2), and a subject needing named sections with
+//! one they make valid (§FS-rules.3.5.2); a chapter path is refused for the
+//! component that failed (§FS-rules.3.5.3), and `selectors.rs` renders it as a
+//! selector (§FS-rules.8.1). Both surfaces agree on what failed because only
+//! one parser decided it and `SubjectFault::failed` names it for both, and on
+//! what a suggestion recovers because only `recovery.rs` builds it.
 
-use super::recovery::{Recovered, as_if_enabled};
-use super::{RuleLevel, RuleParseError, RulePolarity, RuleSubject, RuleVocabulary, error};
+use super::forms::{Form, Refusal, refuse};
+use super::recovery::{Recovered, Suggestion, as_if_enabled, recover};
+use super::{RuleLevel, RulePolarity, RuleSubject, RuleVocabulary};
 use crate::grammar::{parse_id_arg, render_id};
 
 /// Which production of a subject failed (§FS-rules.3.5).
@@ -104,68 +105,33 @@ impl SubjectFault {
 }
 
 impl SubjectRefusal {
-    /// The rule surfaces' refusal, byte for byte as released (§FS-rules.3.5)
-    /// but where the subject needs named sections (§FS-rules.3.5.2) and where
-    /// its chapter path failed at a component (§FS-rules.3.5.3), a correction
-    /// §DF-rule-refusal-reasons makes in place. Only the reason names that
-    /// component; the accepted form is chosen by the fault as the parser read
-    /// it and by the spelling.
-    pub(super) fn rule_error(&self, vocabulary: &RuleVocabulary) -> RuleParseError {
-        let reason = self.fault.failed().reason(&self.text);
-        let tail = match &self.fault {
-            SubjectFault::UnknownKind(_) | SubjectFault::Namespace => {
-                "accepted form: Each FS must cite at least one GOAL.".to_string()
-            }
-            SubjectFault::NamedSectionsOff => {
-                return self.after_enabling(reason, vocabulary);
-            }
-            SubjectFault::SectionGrammar(_) if self.spelling != Spelling::Literal => {
-                "accepted form: FS-login.requirements must cite at least one REQ.".into()
-            }
-            // §FS-rules.3.5.3: a literal keeps its own declaration's chapter, whatever failed.
-            SubjectFault::SectionWildcard
-            | SubjectFault::NumberedChapter
-            | SubjectFault::SectionGrammar(_) => format!(
-                "accepted form: {}.requirements must cite at least one REQ.",
-                self.head
-            ),
-            SubjectFault::IdGrammar => {
-                "accepted form: FS-login must cite at least one GOAL.".into()
-            }
-            SubjectFault::ChapterQuantified => {
-                "accepted form: The requirements chapter of each FS must cite at least one REQ."
-                    .into()
-            }
-        };
-        error(format!("{reason}; {tail}"))
-    }
-
-    /// §FS-rules.3.5.2: a subject refused for needing named sections is
-    /// suggested a rule subject that turning them on makes valid, labelled
-    /// `after enabling it` only where the repository refuses it as configured.
-    /// Where nothing is recovered the refusal is the reason alone, marked so
-    /// that `check --rule` lists the known kinds after it.
-    fn after_enabling(&self, reason: String, vocabulary: &RuleVocabulary) -> RuleParseError {
-        let Some(suggested) = as_if_enabled(
-            &self.text,
-            vocabulary,
-            parse_subject,
-            Recovered::rule_subject,
-        ) else {
-            return RuleParseError {
-                message: reason,
-                unrecovered: true,
-            };
-        };
-        let accepted = if suggested.after_enabling {
-            "accepted form after enabling it"
+    /// The rule surfaces' refusal (§FS-rules.3.5): the reason for the component
+    /// that failed (§FS-rules.3.5.3), then a form whose subject is rebuilt from
+    /// what can be recovered (§FS-rules.3.5.4.2), or, where it needs named
+    /// sections, the subject §FS-rules.3.5.2 suggests, read with them on. Where
+    /// no configured kind is recovered there is no form, and what is missing is
+    /// a kind.
+    pub(super) fn rule_refusal(&self, vocabulary: &RuleVocabulary) -> Refusal {
+        let suggested = if self.fault == SubjectFault::NamedSectionsOff {
+            as_if_enabled(
+                &self.text,
+                vocabulary,
+                parse_subject,
+                Recovered::rule_subject,
+            )
         } else {
-            "accepted form"
+            recover(self, vocabulary).map(|recovered| Suggestion {
+                text: recovered.rule_subject(),
+                after_enabling: false,
+            })
         };
-        error(format!(
-            "{reason}; {accepted}: {} must cite at least one REQ.",
-            suggested.text
-        ))
+        let reason = self.fault.failed().reason(&self.text);
+        match suggested {
+            Some(suggested) => {
+                refuse(reason, Form::One(suggested.text)).enabling(suggested.after_enabling)
+            }
+            None => refuse(reason, Form::None { kind: true }),
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 //! Canonical cardinality spellings for controlled-English rules (§FS-rules.3).
 
-use super::{Cardinality, RuleParseError, error};
+use super::Cardinality;
+use super::forms::{Form, Refusal, refuse};
 
 impl Cardinality {
     pub(crate) const AT_LEAST_ONE: Self = Self {
@@ -37,15 +38,17 @@ impl Cardinality {
 pub(super) enum CountSpelling {
     AtLeastOne,
     ExactlyOne,
-    /// §FS-rules.3.1: a floor spelled as a numeral, so `n` is never one.
-    AtLeast(usize),
+    /// §FS-rules.3.1: a floor spelled as a numeral, which is never one.
+    AtLeast,
     AtMost(usize),
-    Exactly(usize),
+    /// An exact count spelled as a numeral, which is never one either.
+    Exactly,
 }
 
-pub(super) fn count_prefix(
-    text: &str,
-) -> Result<(Cardinality, &str, CountSpelling), RuleParseError> {
+/// Read the count `text` opens with. A refusal's form is `text` with the count
+/// written canonically, or none where it does not say which count it meant
+/// (§FS-rules.3.5.4.5).
+pub(super) fn count_prefix(text: &str) -> Result<(Cardinality, &str, CountSpelling), Refusal> {
     if let Some(rest) = text.strip_prefix("at least one ") {
         return Ok((Cardinality::AT_LEAST_ONE, rest, CountSpelling::AtLeastOne));
     }
@@ -61,21 +64,24 @@ pub(super) fn count_prefix(
     }
     for prefix in ["at least ", "at most ", "exactly "] {
         if let Some(rest) = text.strip_prefix(prefix) {
-            let (raw, object) = rest
-                .split_once(' ')
-                .ok_or_else(|| error("count has no object"))?;
-            let n = positive(raw)?;
+            let Some((raw, object)) = rest.split_once(' ') else {
+                return Err(refuse("count has no object", Form::None { kind: false }));
+            };
+            let n = positive(raw)
+                .map_err(|refusal| refusal.within(|n| format!("{prefix}{n} {object}")))?;
             // §FS-rules.3: a floor and an exact count spell one as the word
             // `one`; only a ceiling spells it as the numeral.
             let (card, spelling) = match prefix {
                 "at least " if n == 1 => {
-                    return Err(error(
-                        "numeric \"at least 1\" is not canonical; accepted form: Each FS must cite at least one GOAL.",
+                    return Err(refuse(
+                        "numeric \"at least 1\" is not canonical",
+                        Form::One(format!("at least one {object}")),
                     ));
                 }
                 "exactly " if n == 1 => {
-                    return Err(error(
-                        "numeric \"exactly 1\" is not canonical; accepted form: Each FS must cite exactly one GOAL.",
+                    return Err(refuse(
+                        "numeric \"exactly 1\" is not canonical",
+                        Form::One(format!("exactly one {object}")),
                     ));
                 }
                 "at least " => (
@@ -83,7 +89,7 @@ pub(super) fn count_prefix(
                         minimum: Some(n),
                         maximum: None,
                     },
-                    CountSpelling::AtLeast(n),
+                    CountSpelling::AtLeast,
                 ),
                 "at most " => (
                     Cardinality {
@@ -97,26 +103,39 @@ pub(super) fn count_prefix(
                         minimum: Some(n),
                         maximum: Some(n),
                     },
-                    CountSpelling::Exactly(n),
+                    CountSpelling::Exactly,
                 ),
             };
             return Ok((card, object, spelling));
         }
     }
-    Err(error(
-        "count is not accepted; the canonical counts are \"at least one\", \"at least N\", \"at most N\", \"exactly one\" and \"exactly N\" for a base-10 N; accepted form: Each FS must cite at least one GOAL.",
+    // §FS-rules.3.5.4.5: no count to keep, so the canonical ones are listed alone.
+    Err(refuse(
+        "count is not accepted; the canonical counts are \"at least one\", \"at least N\", \"at most N\", \"exactly one\" and \"exactly N\" for a base-10 N",
+        Form::None { kind: false },
     ))
 }
 
-pub(super) fn positive(raw: &str) -> Result<usize, RuleParseError> {
+/// Whether `raw` is written in base-10 digits alone.
+pub(super) fn numeral(raw: &str) -> bool {
+    !raw.is_empty() && raw.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+/// A positive count. A refusal's form is the count without its leading zeros,
+/// or none where it is zero or no numeral (§FS-rules.3.5.4.5).
+pub(super) fn positive(raw: &str) -> Result<usize, Refusal> {
     let canonical = raw.bytes().all(|byte| byte.is_ascii_digit()) && !raw.starts_with('0');
     canonical
         .then(|| raw.parse::<usize>().ok())
         .flatten()
         .filter(|n| *n > 0)
         .ok_or_else(|| {
-            error(
-                "count must be a canonical positive base-10 integer; accepted form: Each FS must cite exactly 2 GOAL.",
-            )
+            let digits = raw.trim_start_matches('0');
+            let form = if numeral(raw) && !digits.is_empty() && digits != raw {
+                Form::One(digits.into())
+            } else {
+                Form::None { kind: false }
+            };
+            refuse("count must be a canonical positive base-10 integer", form)
         })
 }

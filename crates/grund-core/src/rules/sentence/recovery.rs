@@ -1,5 +1,6 @@
 //! What a refused subject still names, for both surfaces that answer a refusal
-//! with something to paste back (§FS-rules.8.1, §FS-rules.3.5.2).
+//! with something to paste back (§FS-rules.8.1, §FS-rules.3.5.2,
+//! §FS-rules.3.5.4.2).
 //!
 //! §FS-rules.8.1's four steps recover a configured kind, a declaration written
 //! as a valid ID, and the longest run of named chapter components from what was
@@ -44,7 +45,7 @@ impl Recovered {
         self.with_names(base)
     }
 
-    /// The parts as a rule subject (§FS-rules.3.5.2): what the selector would
+    /// The parts as a rule subject (§FS-rules.3.5.4.2): what the selector would
     /// be, with the selector-only `KIND.NAME[.NAME…]` written
     /// `The NAME[.NAME…] chapter of each KIND` and a bare `KIND` `Each KIND`.
     pub(super) fn rule_subject(&self) -> String {
@@ -116,8 +117,9 @@ pub(super) fn as_if_enabled<T>(
 }
 
 /// The vocabulary with named sections on and every grammar compiled that way,
-/// or `None` where a grammar cannot be (§FS-rules.8.1).
-fn enabled(vocabulary: &RuleVocabulary) -> Option<RuleVocabulary> {
+/// or `None` where a grammar cannot be (§FS-rules.8.1). A form suggested after
+/// enabling them is read again with it (§FS-rules.3.5.4.3).
+pub(super) fn enabled(vocabulary: &RuleVocabulary) -> Option<RuleVocabulary> {
     let id_grammars = vocabulary
         .id_grammars
         .iter()
