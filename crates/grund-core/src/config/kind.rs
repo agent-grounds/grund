@@ -84,7 +84,7 @@ pub enum KindIndex {
 }
 
 /// The index file a kind carries when `index` is left unset (§FS-config.3.4).
-const DEFAULT_KIND_INDEX: &str = "README.md";
+pub(super) const DEFAULT_KIND_INDEX: &str = "README.md";
 
 impl KindConfig {
     /// This row's ID template, falling back to the repository default

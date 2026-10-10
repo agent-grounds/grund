@@ -12,7 +12,7 @@ use crate::checker::{KindIndexEntries, KindIndexFiles};
 use crate::config::{Config, display_path, fmt_excluded};
 use crate::grammar::FMT_DIRECTIVE;
 use crate::model::Catalog;
-use crate::resolver::{ShorthandTargets, WorkspaceContext};
+use crate::resolver::{ShorthandTargets, WorkspaceContext, index_link_targets};
 use crate::scanner::{
     ApiScanError, api_scan_error, walk_scannable_files, walk_scannable_files_reporting,
 };
@@ -209,7 +209,10 @@ pub(crate) fn fmt_tree(
             && index_entries.is_none()
             && let Some(findings) = findings
         {
-            index_entries = Some(KindIndexEntries::new(findings, config));
+            // §AR-checker.2.16: the enrollment destination, as `Expected` carries it.
+            let index_targets =
+                index_link_targets(&config.project().presentation, config, findings);
+            index_entries = Some(KindIndexEntries::new(findings, config, &index_targets));
         }
         let index_entry_ids = carve_out
             .then(|| index_entries.as_ref().and_then(|it| it.entries_in(&path)))

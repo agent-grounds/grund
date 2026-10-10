@@ -17,7 +17,7 @@ use super::values::check_values;
 use crate::config::{Config, display_path};
 use crate::grammar::{render_id, render_qualified_id};
 use crate::model::{
-    Catalog, CheckReport, Declaration, Diagnostic, Id, Site, TextOverlays, format_path,
+    Catalog, CheckReport, Declaration, Diagnostic, Expected, Id, Site, TextOverlays, format_path,
     is_stub_for_inline_decl, resolve_stub_target, sort_path_key,
 };
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
@@ -472,18 +472,13 @@ use crate::scanner::file_declares_inline_home;
 /// - The optional LSP server (§AR-lsp) can run a subset of checks (e.g., only
 ///   dangling references on the active file's citations) against a cached scan.
 /// - Tests can feed synthetic `Catalog` directly to the checker without disk I/O.
-pub(crate) fn check_findings(findings: &Catalog, config: &Config) -> CheckReport {
-    check_with_workspace(findings, config, config, None, &BTreeMap::new())
-}
-
-/// Disk-backed compatibility entry for the shared checker; the LSP sibling
-/// below supplies overlays so §FS-declarations.checks.oversized-lead measures the editor's live text.
-pub(crate) fn check_with_workspace(
+pub(crate) fn check_on_disk(
     findings: &Catalog,
     config: &Config,
     path_config: &Config,
     current_alias: Option<&str>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
+    expected: &Expected,
 ) -> CheckReport {
     check_with_workspace_and_overlays(
         findings,
@@ -492,9 +487,13 @@ pub(crate) fn check_with_workspace(
         current_alias,
         workspace,
         &TextOverlays::new(),
+        expected,
     )
 }
 
+/// The driver over editor overlays too, so §FS-declarations.checks.oversized-lead
+/// measures the live text; `check_on_disk` is it with none.
+///
 /// `path_config` is the config the finished report renders paths against
 /// (§FS-workspace.8.1) — the workspace root's in workspace mode, `config` itself
 /// otherwise. A path baked *into* a message must use it, or in a workspace it
@@ -524,13 +523,14 @@ pub(crate) fn check_with_workspace_and_overlays(
     current_alias: Option<&str>,
     workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
     overlays: &TextOverlays,
+    expected: &Expected,
 ) -> CheckReport {
     let mut report = CheckReport::default();
     let kind_homes = KindHomeIndex::new(config);
     // §FS-check.3.5: managed agent-entrypoint blocks that are out of date (or
-    // newer than this binary), or whose generated citation-directions section
-    // has drifted from `[citations]`, are check errors.
-    check_agents_block_version(findings, config, workspace, &mut report);
+    // newer than this binary), or whose generated sections have drifted from
+    // `Expected`'s bytes (§AR-checker.2.7), are check errors.
+    check_agents_block_version(expected, &mut report);
 
     // §FS-declarations.checks.duplicate: an ID with more than one non-stub home is a duplicate.
     for (id, decls) in &findings.declarations {
@@ -738,12 +738,18 @@ pub(crate) fn check_with_workspace_and_overlays(
     // §FS-check.3.18 / §FS-check.3.17: a kind's index must list every declaration
     // in its folder, as a full link. In `index.rs` — one file per
     // invariant family, the arrangement §AR-checker.2.15's section rules already use.
-    check_kind_indexes(findings, config, path_config, &mut report);
+    check_kind_indexes(
+        findings,
+        config,
+        path_config,
+        &expected.index_targets,
+        &mut report,
+    );
 
     // §FS-check.4.1: a declaration nothing cites is a warning, not an error —
     // except E2E cases, which are proof artifacts, not citation targets. An
     // index entry is not an inbound citation (§DF-index-not-an-inbound-citation).
-    let index_entries = KindIndexEntries::new(findings, config);
+    let index_entries = KindIndexEntries::new(findings, config, &expected.index_targets);
     let mut cited: BTreeSet<&Id> = findings
         .citations
         .iter()

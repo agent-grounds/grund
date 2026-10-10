@@ -14,11 +14,10 @@ use super::config_findings::config_diagnostics;
 use super::report::public_run_warnings;
 use super::scope_cautions::{full_scope_ignored_warning, scan_scope_caution};
 use crate::checker::{
-    check_chapter_rules, check_findings, check_with_workspace, configured_scope,
-    out_of_scope_references, out_of_scope_section_headings, parse_ad_hoc,
-    parse_ad_hoc_with_workspace, path_report_scope, retain_diagnostics_in_report_scope,
-    retain_findings_in_scope, sort_diagnostics, workspace_out_of_scope_references,
-    workspace_out_of_scope_section_headings,
+    check_chapter_rules, check_on_disk, configured_scope, out_of_scope_references,
+    out_of_scope_section_headings, parse_ad_hoc, parse_ad_hoc_with_workspace, path_report_scope,
+    retain_diagnostics_in_report_scope, retain_findings_in_scope, sort_diagnostics,
+    workspace_out_of_scope_references, workspace_out_of_scope_section_headings,
 };
 use crate::config::Config;
 use crate::model::{CheckReport, Diagnostic, Finding};
@@ -28,6 +27,7 @@ use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, resolve_workspace_config,
     scope_is_config_root, unlisted_workspace_block_errors,
 };
+use crate::writers::expected;
 
 pub(crate) struct CheckRun {
     pub(crate) config: Config,
@@ -152,7 +152,10 @@ pub(super) fn run_check_with_run_warnings(
     // was read in full. The narrowed list would have a run that could not read half
     // its tree assert the absence facts anyway (§FS-rules.4.1).
     let resolution_was_complete = scan_errors.is_empty() && unread_outside_report_scope.is_empty();
-    let mut report = check_findings(&findings, &config);
+    // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
+    let no_workspace = BTreeMap::new();
+    let expected = expected(&findings, &config, &no_workspace);
+    let mut report = check_on_disk(&findings, &config, &config, None, &no_workspace, &expected);
     check_chapter_rules(
         &findings,
         &config,
@@ -287,7 +290,8 @@ fn run_workspace_check(
     let mut report = CheckReport::default();
     let mut had_scan_errors = false;
     for project in &projects {
-        let mut project_report = check_with_workspace(
+        let expected = expected(&project.findings, &project.config, &workspace);
+        let mut project_report = check_on_disk(
             &project.findings,
             &project.config,
             // §FS-workspace.8.1: the report is rendered from the workspace root,
@@ -295,6 +299,7 @@ fn run_workspace_check(
             &root_config,
             Some(&project.alias),
             &workspace,
+            &expected,
         );
         check_chapter_rules(
             &project.findings,

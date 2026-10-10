@@ -3,8 +3,9 @@
 //! §FS-init.2.3.4.17).
 //!
 //! A function of the config and the entrypoint path and nothing else, which is
-//! what lets `init` write the section and `check` re-render it and compare
-//! bytes: the render *is* the hash (§FS-check.3.5, §AR-system.2.11).
+//! what lets `init` write the section and the writers render it into the
+//! `Expected` bytes `check` compares: the render *is* the hash (§FS-check.3.5,
+//! §AR-system.2.11).
 
 use std::path::Path;
 

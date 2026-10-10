@@ -12,7 +12,6 @@ use crate::model::{
     Catalog, Citation, Declaration, Id, is_stub_for_inline_decl, physical_path_key,
     scanned_decl_relative_path, scanned_path_key,
 };
-use crate::resolver::markdown_link_target;
 
 /// The IDs each kind index owes an entry for, keyed by the index's
 /// config-root-relative path (§FS-check.3.18). `folder_owed` preserves the
@@ -29,7 +28,13 @@ pub(crate) struct KindIndexEntries {
 }
 
 impl KindIndexEntries {
-    pub(crate) fn new(findings: &Catalog, config: &Config) -> Self {
+    /// `index_targets` is `Expected`'s canonical link per (index file, ID), the
+    /// destination an external enrollment is compared against (§AR-checker.2.16).
+    pub(crate) fn new(
+        findings: &Catalog,
+        config: &Config,
+        index_targets: &BTreeMap<(PathBuf, Id), String>,
+    ) -> Self {
         let configured_root = scanned_path_key(&config.root);
         let physical_root = physical_path_key(&config.root);
         let targets = kind_index_targets(config);
@@ -58,6 +63,7 @@ impl KindIndexEntries {
             &targets,
             &configured_root,
             &physical_root,
+            index_targets,
             &mut owed,
         );
         Self {
@@ -114,6 +120,7 @@ fn enroll_external_inline_declarations(
     targets: &[KindIndexTarget<'_>],
     configured_root: &Path,
     physical_root: &Path,
+    index_targets: &BTreeMap<(PathBuf, Id), String>,
     owed: &mut BTreeMap<PathBuf, BTreeSet<Id>>,
 ) -> BTreeMap<PathBuf, BTreeSet<(usize, usize)>> {
     let mut targets_by_index: BTreeMap<&Path, Vec<&KindIndexTarget<'_>>> = BTreeMap::new();
@@ -180,14 +187,10 @@ fn enroll_external_inline_declarations(
         let Some(written_target) = link_target_at_citation(line, citation) else {
             continue;
         };
-        let Some(canonical_target) = markdown_link_target(
-            &target.index_file,
-            &citation.id,
-            None,
-            &config.project().presentation,
-            config,
-            findings,
-        ) else {
+        // §AR-checker.2.16: the destination is `Expected`'s; this pass only looks it up.
+        let Some(canonical_target) =
+            index_targets.get(&(target.index_file.clone(), citation.id.clone()))
+        else {
             continue;
         };
         if written_target != canonical_target {

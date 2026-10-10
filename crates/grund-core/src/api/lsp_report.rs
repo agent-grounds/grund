@@ -22,6 +22,7 @@ use crate::workspace::{
     absent_only_workspace_caution, absent_optional_member_warnings, scope_is_config_root,
     unlisted_workspace_block_errors,
 };
+use crate::writers::expected;
 
 /// §AR-lsp.5.1.1: a snapshot anchored below its config root keeps the two scopes of
 /// §FS-check.1.3.6.1, the way `run_check_with_run_warnings` does for `grund check
@@ -107,6 +108,8 @@ fn check_workspace_context(
             config.force_require_grounding();
         }
         let mut project_report = if context.workspace_loaded {
+            // §AR-checker.1.3: presentation's bytes, rendered before the checker runs.
+            let expected = expected(&project.findings, &config, &workspace);
             check_with_workspace_and_overlays(
                 &project.findings,
                 &config,
@@ -116,15 +119,19 @@ fn check_workspace_context(
                 Some(&project.alias),
                 &workspace,
                 overlays,
+                &expected,
             )
         } else {
+            let no_workspace = BTreeMap::new();
+            let expected = expected(&project.findings, &config, &no_workspace);
             check_with_workspace_and_overlays(
                 &project.findings,
                 &config,
                 &config,
                 None,
-                &BTreeMap::new(),
+                &no_workspace,
                 overlays,
+                &expected,
             )
         };
         check_chapter_rules(

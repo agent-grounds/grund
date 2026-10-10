@@ -14,13 +14,15 @@
 //! component above it (§AR-system.4). The derivation of an anchor *from* heading
 //! text is the lexical half and is `grammar/anchors.rs`.
 
-use std::path::Path;
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 
 use super::stub_home::home_as_scanned;
 use crate::config::{Config, Presentation};
 use crate::grammar::{anchor_slug, reduce_heading_text, render_id};
 use crate::model::{
-    Catalog, Declaration, Id, SectionInfo, is_stub_for_inline_decl, resolve_stub_target,
+    Catalog, Declaration, Id, SectionInfo, is_stub_for_inline_decl, physical_path_key,
+    resolve_stub_target, scanned_decl_relative_path, scanned_path_key,
 };
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
@@ -44,6 +46,75 @@ pub(crate) fn markdown_link_target(
     findings: &Catalog,
 ) -> Option<String> {
     markdown_link_target_with_root(from_file, id, section, presentation, config, findings, None)
+}
+
+/// The canonical bare-ID link of every citation an index file records, keyed by
+/// (index file, ID): what `Expected` hands the kind-index pass so external
+/// enrollment compares a page against `fmt`'s destination without the checker
+/// reading the anchor profile (§AR-checker.1.3, §AR-checker.2.16,
+/// §FS-check.3.18.3). An index is a citable folder row's Markdown `index`, and
+/// a citation is looked up under the first row of its own kind that keeps that
+/// file, as the kind-index pass looks it up.
+pub(crate) fn index_link_targets(
+    presentation: &Presentation,
+    config: &Config,
+    findings: &Catalog,
+) -> BTreeMap<(PathBuf, Id), String> {
+    let mut indexes: BTreeMap<PathBuf, Vec<(&str, PathBuf)>> = BTreeMap::new();
+    for row in &config.project().schema.rows {
+        let Some(index) = row.index_path() else {
+            continue;
+        };
+        if index.extension().and_then(|ext| ext.to_str()) != Some("md") {
+            continue;
+        }
+        indexes
+            .entry(scanned_path_key(&index))
+            .or_default()
+            .push((row.name.as_str(), config.root.join(&index)));
+    }
+    let mut targets = BTreeMap::new();
+    if indexes.is_empty() {
+        return targets;
+    }
+    let configured_root = scanned_path_key(&config.root);
+    let physical_root = physical_path_key(&config.root);
+    for citation in &findings.citations {
+        if citation.namespace.is_some()
+            || citation.section.is_some()
+            || !citation.has_marker
+            || citation.shorthand
+            || !findings.declarations.contains_key(&citation.id)
+        {
+            continue;
+        }
+        let Some(relative) =
+            scanned_decl_relative_path(&citation.file, &configured_root, &physical_root)
+        else {
+            continue;
+        };
+        let Some((_, index_file)) = indexes
+            .get(relative.as_ref())
+            .and_then(|rows| rows.iter().find(|(kind, _)| *kind == citation.id.kind))
+        else {
+            continue;
+        };
+        let key = (index_file.clone(), citation.id.clone());
+        if targets.contains_key(&key) {
+            continue;
+        }
+        if let Some(target) = markdown_link_target(
+            index_file,
+            &citation.id,
+            None,
+            presentation,
+            config,
+            findings,
+        ) {
+            targets.insert(key, target);
+        }
+    }
+    targets
 }
 
 /// §FS-workspace.8.5: same as `markdown_link_target`, but with an explicit

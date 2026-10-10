@@ -7,16 +7,57 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 use crate::api::{CheckRun, run_check};
-use crate::checker::{check_findings, diagnostic_cmp};
+use std::collections::BTreeMap;
+
+use crate::checker::{check_on_disk, diagnostic_cmp};
 use crate::config::{Config, KindIndex, config_file_in, display_path};
 use crate::grammar::render_id;
 use crate::model::{Catalog, CheckReport, Diagnostic, format_path, sort_path_key};
+use crate::resolver::WorkspaceCheckTarget;
 use crate::scanner::{ScanError, scan_tree};
 use crate::templates::ConversationSurface;
-use crate::writers::render_agents_append_block_at;
+use crate::writers::{block_version, expected, expected_entrypoint, render_agents_append_block_at};
 // The embedded `grund-open` script, read only by the harness that runs it.
 #[cfg(unix)]
 use crate::writers::GRUND_OPEN_RESOLVER;
+
+/// The checker over one project as the api drives it, `Expected` rendered by
+/// the writers first (§AR-checker.1.3): what a case that only has a façade and
+/// a scan hands the driver.
+pub(crate) fn check_findings(findings: &Catalog, config: &Config) -> CheckReport {
+    check_with_workspace(findings, config, config, None, &BTreeMap::new())
+}
+
+/// `check_findings` with a report root, an alias and the loaded workspace.
+pub(crate) fn check_with_workspace(
+    findings: &Catalog,
+    config: &Config,
+    path_config: &Config,
+    current_alias: Option<&str>,
+    workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
+) -> CheckReport {
+    let expected = expected(findings, config, workspace);
+    check_on_disk(
+        findings,
+        config,
+        path_config,
+        current_alias,
+        workspace,
+        &expected,
+    )
+}
+
+/// One entrypoint's managed-block comparison, its sections rendered from
+/// `config` without chapter rules (§AR-checker.2.7).
+pub(crate) fn check_agent_block_path(
+    config: &Config,
+    path: &Path,
+    report: &mut CheckReport,
+    require_block: bool,
+) {
+    let entrypoint = expected_entrypoint(config, path.to_path_buf(), require_block, None);
+    crate::checker::compare_agent_block(&entrypoint, block_version(config), report);
+}
 
 /// A fresh fixture root, under a temp directory no config covers at or above it
 /// (§AR-ci.10.3): discovery climbs past the fixture to the filesystem root, so

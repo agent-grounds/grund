@@ -1,16 +1,7 @@
-use std::path::Path;
-
-use crate::config::Config;
 use crate::grammar::{
-    AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block, parse_id_arg,
+    AGENTS_BLOCK_END, AGENTS_BLOCK_VERSION, AgentsBlockLookup, find_agents_block,
 };
-use crate::model::{Catalog, CheckReport, Diagnostic};
-use crate::resolver::{WorkspaceCheckTarget, markdown_link_target};
-use crate::scanner::companion_agent_entrypoints;
-use crate::templates::{
-    ConversationSurface, citation_directions_section, clickable_citations_section,
-};
-use std::collections::BTreeMap;
+use crate::model::{CheckReport, Diagnostic, Expected, ExpectedEntrypoint};
 
 /// One of §FS-errors.3.6.1's five final templates around its `detail`: the
 /// `repo maintenance: ` classification ahead, and the reminder that the finding
@@ -26,104 +17,48 @@ fn agents_init_message(detail: String) -> String {
 /// fatal. `AGENTS.md` is canonical; known companion entrypoints are checked when
 /// present and not symlinked to `AGENTS.md`.
 ///
-/// §FS-check.3.5.4: the `### Chapter rules` section is re-rendered and compared
-/// whether or not every configured rule resolved. A rule this scope cannot
-/// verify still earns its bullet (§FS-rules.4.1.2), so the comparison is dropped
-/// only for a genuinely invalid rule — the one case that already carries its own
-/// located error at the rule's heading. The diagnostics are not re-emitted here:
-/// `check_chapter_rules` reports them at that site.
-///
-/// `findings` is the run's resolution scope (§FS-check.1.3.6.1), never its report
-/// scope, so a path holding no rule declaration still renders every chapter-rule
-/// bullet and a narrowed run compares against the render `grund check .` compares
-/// against (§FS-rules.9.1.1).
-///
-/// `workspace` is the project map the run loaded, which is what lets a run at the
-/// workspace root resolve a member's cross-boundary rule and so catch a member
-/// block missing its bullet (§FS-rules.9.1).
-pub(super) fn check_agents_block_version(
-    findings: &Catalog,
-    config: &Config,
-    workspace: &BTreeMap<String, WorkspaceCheckTarget<'_>>,
-    report: &mut CheckReport,
-) {
-    let rule_rows = config
-        .kinds
-        .iter()
-        .any(|kind| kind.rules)
-        .then(|| {
-            let vocab = super::workspace_vocabulary(config, workspace);
-            super::configured_rule_sentences(findings, config, &vocab).ok()
-        })
-        .flatten()
-        .map(|rules| rules.rows);
-    let root = &config.root;
-    // §FS-init.2.3.5.10: render destinations from the same loaded declarations
-    // that supplied the validated, ordered rule sentences.
-    let rule_guidance = rule_rows.as_deref().map(|rows| (findings, rows));
-    let canonical = root.join("AGENTS.md");
-    let canonical_exists = canonical.exists();
-    if canonical_exists {
-        check_agent_block_path_with_rules(config, &canonical, report, true, rule_guidance);
+/// What each block should say arrives as `Expected` (§AR-checker.1.3): its
+/// version, the entrypoints in comparison order, each one's config-derived
+/// sections rendered for its own surface, and the companion probe's io error.
+/// This rule compares those bytes with disk and renders nothing
+/// (§AR-checker.2.7). §FS-check.3.5.4's chapter-rule section is among them
+/// exactly when the writers could render it, which is every case but a
+/// genuinely invalid rule — and that one carries its own located error at the
+/// rule's heading, from `check_chapter_rules`.
+pub(super) fn check_agents_block_version(expected: &Expected, report: &mut CheckReport) {
+    for entrypoint in &expected.entrypoints {
+        check_agent_block_path(entrypoint, expected.block_version, report);
     }
-    match companion_agent_entrypoints(root) {
-        Ok(companions) => {
-            for companion in companions {
-                check_agent_block_path_with_rules(
-                    config,
-                    &companion,
-                    report,
-                    canonical_exists,
-                    rule_guidance,
-                );
-            }
-        }
-        Err((path, message)) => {
-            report.errors.push(Diagnostic {
-                code: "io",
-                path: Some(path),
-                line: Some(1),
-                column: None,
-                message,
-                sites: Vec::new(),
-                authority: Vec::new(),
-            });
-        }
+    if let Some((path, message)) = &expected.entrypoint_probe_error {
+        report.errors.push(Diagnostic {
+            code: "io",
+            path: Some(path.clone()),
+            line: Some(1),
+            column: None,
+            message: message.clone(),
+            sites: Vec::new(),
+            authority: Vec::new(),
+        });
     }
 }
 
 /// Checks one agent-entrypoint file's managed `grund init` block: present when
-/// required, version supported, and its generated sections still matching config.
+/// required, version supported, and its generated sections still matching the
+/// bytes `Expected` carries for this file.
 ///
-/// Why the generated sections are compared by re-rendering: rendering is
-/// deterministic, so a fresh render is the hash — and what a managed block
-/// should say is a function of config alone, which is why `templates/` holds
-/// both renderers and `init` writes exactly what this compares against
-/// (§AR-system.2.11, §AR-checker.2.7). `\r` is stripped from the block
-/// first, because the managed `AGENTS.md` is not pinned to LF in `.gitattributes`,
-/// so a Windows checkout has CRLF and would read as drift against the LF render.
-///
-/// Why the local-conversation sentence is re-rendered per file: flipping
-/// `[reference] conversation` without re-running `grund init` must surface as
-/// drift, and the sentence also varies by entrypoint — so the comparison derives
-/// the surface from the path, the same way `init` chose it.
-#[cfg(test)]
+/// Why the generated sections are compared rather than re-derived: rendering is
+/// deterministic, so a fresh render is the hash — and the writers render it
+/// through the renderers `init` writes with (§AR-system.2.11, §AR-checker.2.7).
+/// `\r` is stripped from the block first, because the managed `AGENTS.md` is not
+/// pinned to LF in `.gitattributes`, so a Windows checkout has CRLF and would
+/// read as drift against the LF render.
 pub(crate) fn check_agent_block_path(
-    config: &Config,
-    path: &Path,
+    entrypoint: &ExpectedEntrypoint,
+    expected_version: u32,
     report: &mut CheckReport,
-    require_block: bool,
 ) {
-    check_agent_block_path_with_rules(config, path, report, require_block, None);
-}
-
-fn check_agent_block_path_with_rules(
-    config: &Config,
-    path: &Path,
-    report: &mut CheckReport,
-    require_block: bool,
-    rule_guidance: Option<(&Catalog, &[(String, String)])>,
-) {
+    let path = entrypoint.path.as_path();
+    let require_block = entrypoint.require_block;
     // §FS-check.6.1.3: retain this probe when the entrypoint is absent.
     crate::config::observe_input(path, false);
     if !path.exists() {
@@ -165,11 +100,6 @@ fn check_agent_block_path_with_rules(
         AgentsBlockLookup::Found(block) => Some(block),
         AgentsBlockLookup::Absent => None,
     };
-    let expected_version = if config.kinds.iter().any(|kind| kind.rules) {
-        15
-    } else {
-        14
-    };
     if let Some(block) = block {
         let line = line_for_byte_index(&text, block.start);
         if block.version < expected_version {
@@ -199,37 +129,14 @@ fn check_agent_block_path_with_rules(
                 authority: Vec::new(),
             });
         } else {
-            // §FS-check.3.5 / §FS-init.2.3.5.8: citation directions are generated
-            // from `[citations]`, so the version marker alone cannot catch a
-            // config edit that left the block stale. Re-render and byte-compare.
+            // §FS-check.3.5 / §FS-init.2.3.5.8: the generated sections follow
+            // config, so the version marker alone cannot catch a config edit that
+            // left the block stale. Byte-compare each against `Expected`.
             let block_text = text[block.start..block.end].replace('\r', "");
-            let mut generated_sections = vec![
-                (
-                    "### Citation directions",
-                    citation_directions_section(config.project(), config.run()),
-                    "citation directions",
-                ),
-                // §FS-init.2.3.6.1: the local-conversation sentence derives from
-                // `[reference] conversation` and varies by entrypoint
-                // (§FS-init.2.3.4.17.2), so drift re-renders for *this* file's surface.
-                (
-                    "### Clickable citations",
-                    clickable_citations_section(
-                        config.project(),
-                        ConversationSurface::for_entrypoint(path),
-                    ),
-                    "clickable citations",
-                ),
-            ];
-            if let Some((findings, rows)) = rule_guidance {
-                generated_sections.push((
-                    "### Chapter rules",
-                    chapter_rules_section(config, path, findings, rows),
-                    "chapter rules",
-                ));
-            }
-            for (heading, expected, noun) in generated_sections {
-                if section_in_block(&block_text, heading) != Some(expected.trim_end()) {
+            for section in &entrypoint.sections {
+                if section_in_block(&block_text, section.heading) != Some(section.bytes.trim_end())
+                {
+                    let noun = section.noun;
                     report.errors.push(Diagnostic {
                         code: "agents-init",
                         path: Some(path.to_path_buf()),
@@ -239,7 +146,8 @@ fn check_agent_block_path_with_rules(
                             "stale grund init block: {noun} differ from grund.toml — run `grund init` to refresh"
                         )),
                         sites: Vec::new(),
-                    authority: Vec::new(),});
+                        authority: Vec::new(),
+                    });
                 }
             }
         }
@@ -260,44 +168,6 @@ fn check_agent_block_path_with_rules(
         sites: Vec::new(),
         authority: Vec::new(),
     });
-}
-
-/// The shared chapter-rule section for `init` and its exact drift comparison
-/// (§FS-init.2.3.5.10). Preserve ordered authored titles and use the formatter's
-/// destination/anchor resolver for live citations relative to this entrypoint.
-/// Only the citation is rendered; no formatter runs over the authored sentence.
-pub(crate) fn chapter_rules_section(
-    config: &Config,
-    path: &Path,
-    findings: &Catalog,
-    rows: &[(String, String)],
-) -> String {
-    let mut section = String::from(
-        "### Chapter rules\n\n`must`/`must not` are `grund check` errors; `should`/`should not` are suggestions (`grund check --suggestions`).\n\n",
-    );
-    for (origin, sentence) in rows {
-        let citation = format!("{}{origin}", config.marker);
-        let target = config
-            .fmt_cross_refs_enabled
-            .then(|| {
-                let (id, _) = parse_id_arg(origin, &config.grammar).ok()?;
-                markdown_link_target(
-                    path,
-                    &id,
-                    None,
-                    &config.project().presentation,
-                    config,
-                    findings,
-                )
-            })
-            .flatten();
-        let citation = match target {
-            Some(target) => format!("[{citation}]({target})"),
-            None => citation,
-        };
-        section.push_str(&format!("- {sentence} {citation}\n"));
-    }
-    section
 }
 
 /// The text of a `heading`-led section inside the managed block, from the heading
