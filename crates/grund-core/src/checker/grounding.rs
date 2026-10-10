@@ -181,11 +181,12 @@ fn governing_grounding<'a>(
 ) -> Option<(&'a str, (bool, usize))> {
     let is_markdown = file.extension().and_then(|ext| ext.to_str()) == Some("md");
     let row_of = |kind: &str| {
-        schema
-            .rows
-            .iter()
-            .find(|row| row.name == kind)
-            .map(|row| (row.name.as_str(), row_grounding(rules, frame.run, &row.name)))
+        schema.rows.iter().find(|row| row.name == kind).map(|row| {
+            (
+                row.name.as_str(),
+                row_grounding(rules, frame.run, &row.name),
+            )
+        })
     };
     match home {
         Some(home) if !home.citable => row_of(home.kind),

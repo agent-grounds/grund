@@ -1,6 +1,4 @@
-use crate::config::{
-    Frame, LeadSizeWarning, PointSizeUnit, Schema, Strength, measure_point_text,
-};
+use crate::config::{Frame, LeadSizeWarning, PointSizeUnit, Schema, Strength, measure_point_text};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, TextOverlays,
