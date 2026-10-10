@@ -275,3 +275,7 @@ or sleeping until a detached writer finishes does not meet this contract. A
 regression forces a real maintenance threshold and checks both the returned-command
 boundary and strict removal; reading configuration alone is not evidence that the
 tree has no outliving writer.
+
+## 11. A release candidate is dispatched the same CI
+
+Beside push and pull request, the workflow runs on `workflow_dispatch`, and that trigger is the release helpers': each dispatches it on its release commit and on the `-dev` advance built over it, and pushes neither to `main` until both have passed ([§FS-distribution.4.4.1](../functional-spec/FS-distribution.md#441-nothing-reaches-main-that-ci-has-not-passed)). A dispatched run is the same CI a push to `main` gets, not a narrower one, because the commit it judges is about to become `main`. It behaves as a push does: the benchmark job records counts without comparing ([§AR-ci.5.1](AR-ci.md#51-pull-requests-and-pushes)), and the commit-message job, given no `before` to scan from, narrows to the tip commit ([§AR-ci.8.2](AR-ci.md#82-the-scanned-range)). `tests/integration/test_release_candidate_runs.py` holds the trigger to the helpers that use it.

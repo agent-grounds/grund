@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # §FS-distribution.4.4.1: the release helpers run this on their candidate
+  # commits before main moves to them.
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always

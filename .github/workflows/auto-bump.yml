@@ -2,10 +2,12 @@
 name: Auto bump
 
 # Mondays at 09:00 UTC: if main has shipped non-doc changes since the last
-# vX.Y.Z tag and CI on that tip is green, bump the patch version, commit the
-# bump to main, and dispatch release.yml to publish crates + binaries. A
-# GITHUB_TOKEN push does not trigger other workflows, so release.yml is invoked
-# explicitly via `gh workflow run` rather than relying on the tag-push trigger.
+# vX.Y.Z tag and CI on that tip is green, bump the patch version and build the
+# next -dev version over it on candidate branches, push both to main once CI
+# and a release dry run pass on them, and dispatch release.yml to publish
+# crates + binaries. A GITHUB_TOKEN push does not trigger other workflows, so
+# release.yml is invoked explicitly via `gh workflow run` rather than relying
+# on the tag-push trigger.
 # Nothing is written for the release before it runs.
 
 on:
@@ -168,7 +170,39 @@ jobs:
           echo "base_sha=$base_sha" >> "$GITHUB_OUTPUT"
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
-      - name: Dry-run release workflow
+      # §FS-distribution.4.4.1: the -dev advance is built here, over the release
+      # commit, so CI runs on the commit main will hold rather than on one made
+      # after the release. §FS-distribution.4.1: it is pushed only after a release.
+      - name: Commit and push the dev candidate
+        id: dev_candidate
+        if: steps.gate_substantive.outputs.ok == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          released="${{ steps.versions.outputs.next }}"
+          IFS=. read -r major minor patch <<< "$released"
+          dev="${major}.${minor}.$((patch + 1))-dev"
+          branch="${{ steps.candidate.outputs.branch }}-dev"
+          # Without this main keeps the version it just released until the next
+          # bump, so a binary built from main is indistinguishable from the tag it
+          # is ahead of. The suffix is what makes `--version` say which side of
+          # the tag a build came from.
+          git switch -c "$branch"
+          python3 scripts/distribution/candidate.py set-version "$dev"
+          # The version fixture is checked, so a bump that skips it pushes a main
+          # whose own e2e suite fails. The release bump writes the same file.
+          printf 'grund %s\n' "$dev" > tests/e2e/cases/cli-version/expected.stdout
+          git add -A
+          git commit -m "Open ${dev} for development"
+          git push -u origin "$branch"
+
+          echo "dev=$dev" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      # §FS-distribution.4.4.1: main moves only to commits these runs passed - the
+      # dry run on the release commit, and CI on it and on the -dev advance.
+      - name: Dry-run the release and run CI on both candidates
         if: steps.gate_substantive.outputs.ok == 'true'
         shell: bash
         run: |
@@ -176,31 +210,14 @@ jobs:
           next="${{ steps.versions.outputs.next }}"
           branch="${{ steps.candidate.outputs.branch }}"
           sha="${{ steps.candidate.outputs.sha }}"
+          dev_branch="${{ steps.dev_candidate.outputs.branch }}"
+          dev_sha="${{ steps.dev_candidate.outputs.sha }}"
 
-          gh workflow run release.yml \
-            --ref "$branch" \
-            -f version="$next" \
-            -f publish_crates=false \
-            -f create_github_release=false
-
-          run_id=""
-          for _ in $(seq 1 60); do
-            run_id="$(gh run list --workflow=release.yml --branch="$branch" --event=workflow_dispatch --limit=20 \
-              --json databaseId,headSha \
-              | jq -r ".[] | select(.headSha == \"$sha\") | .databaseId" \
-              | head -n1)"
-            if [ -n "$run_id" ]; then
-              break
-            fi
-            sleep 5
-          done
-
-          if [ -z "$run_id" ]; then
-            echo "error: dispatched release dry run for $branch but could not find the run" >&2
-            exit 1
-          fi
-
-          gh run watch "$run_id" --exit-status --interval 30
+          dry_run="$(python3 scripts/candidate_runs.py dispatch release.yml "$branch" "$sha" \
+            version="$next" publish_crates=false create_github_release=false)"
+          release_ci="$(python3 scripts/candidate_runs.py dispatch ci.yml "$branch" "$sha")"
+          dev_ci="$(python3 scripts/candidate_runs.py dispatch ci.yml "$dev_branch" "$dev_sha")"
+          python3 scripts/candidate_runs.py watch "$dry_run" "$release_ci" "$dev_ci"
 
       - name: Publish release commit and dispatch release
         if: steps.gate_substantive.outputs.ok == 'true'
@@ -215,7 +232,7 @@ jobs:
           git fetch origin main
           current_main="$(git rev-parse refs/remotes/origin/main)"
           if [ "$current_main" != "$base_sha" ]; then
-            echo "error: main moved from $base_sha to $current_main while the release dry run was running" >&2
+            echo "error: main moved from $base_sha to $current_main while the candidate runs were running" >&2
             echo "       leaving $branch in place; rerun the patch release from the new main tip" >&2
             exit 1
           fi
@@ -232,27 +249,20 @@ jobs:
             -f create_github_release=true
           git push origin --delete "$branch" || true
 
-      # §FS-distribution.4.1: the advance is the release's last act, so a quiet
-      # run opens no -dev version nothing was released before.
       - name: Advance main to the next dev version
         if: steps.gate_substantive.outputs.ok == 'true'
         shell: bash
         run: |
           set -euo pipefail
           released="${{ steps.versions.outputs.next }}"
-          IFS=. read -r major minor patch <<< "$released"
-          dev="${major}.${minor}.$((patch + 1))-dev"
-          # Without this main keeps the version it just released until the next
-          # bump, so a binary built from main is indistinguishable from the tag it
-          # is ahead of. The suffix is what makes `--version` say which side of
-          # the tag a build came from.
-          git fetch origin main
-          git checkout -B main refs/remotes/origin/main
-          python3 scripts/distribution/candidate.py set-version "$dev"
-          # The version fixture is checked, so a bump that skips it pushes a main
-          # whose own e2e suite fails. The release bump writes the same file.
-          printf 'grund %s\n' "$dev" > tests/e2e/cases/cli-version/expected.stdout
-          git add -A
-          git commit -m "Open ${dev} for development"
-          git push origin main
+          dev="${{ steps.dev_candidate.outputs.dev }}"
+          branch="${{ steps.dev_candidate.outputs.branch }}"
+          sha="${{ steps.dev_candidate.outputs.sha }}"
+          # §FS-distribution.4.4.1: the commit CI passed, not one rebuilt here.
+          if ! git push origin "${sha}:refs/heads/main"; then
+            echo "error: main moved past the v${released} release commit before ${dev} could follow it" >&2
+            echo "       $branch holds the tested advance; open ${dev} from the new main tip by hand" >&2
+            exit 1
+          fi
+          git push origin --delete "$branch" || true
           echo "main now opens ${dev}; release.yml was dispatched for v${released}."
