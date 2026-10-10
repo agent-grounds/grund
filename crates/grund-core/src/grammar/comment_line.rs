@@ -27,7 +27,11 @@ fn citation_token_ranges(
 ) -> Vec<(usize, usize)> {
     let mut ranges = Vec::new();
     // §FS-check.1.1.10: note classification shares the scanner's marked-token starts.
-    for (offset, caps) in lexical.grammar.citation_captures(line, lexical.marker) {
+    for (offset, caps) in lexical
+        .grammar
+        .citation_captures(line, lexical.marker)
+        .captures
+    {
         let Some(full) = caps.get(0) else { continue };
         let token_start = offset + full.start();
         let token_end = offset + full.end();

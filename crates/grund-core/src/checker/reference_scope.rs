@@ -225,6 +225,10 @@ pub(crate) fn retain_findings_in_scope(findings: &mut Catalog, scope: Option<&Sc
     findings
         .escaped_citations
         .retain(|cite| scope.contains(&cite.file));
+    // §FS-check.checks.glob-citation: narrowed to the configured scope like the rest.
+    findings
+        .glob_citations
+        .retain(|pattern| scope.contains(&pattern.file));
     // §FS-declarations.checks.declaration-near-miss asks a question about the configured scope, so
     // a `--full` walk's extra files are dropped with the rest: `--full` widens the *reference* tier
     // (§FS-check.3.14.2) and nothing else.

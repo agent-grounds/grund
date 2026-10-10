@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use regex::Regex;
 
 use super::compiled::Grammar;
+use super::glob_candidate::CandidateReading;
 use super::shorthand::parse_id_arg_with_shorthand;
 use crate::model::Id;
 
@@ -524,6 +525,10 @@ pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Optio
         .filter(|found| found.start() == at)
         .filter(|found| !grammar.has_reserved_named_tail(line, found.end()))
     {
+        // §FS-check.1.1.11: a pattern has no ID to mark, so its trigger stays as written.
+        if let CandidateReading::Pattern(_) = grammar.read_candidate(&line[at..], found.len()) {
+            return None;
+        }
         return Some(found.end());
     }
     let rest = line.get(at..)?;

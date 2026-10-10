@@ -292,6 +292,7 @@ fn issue_49_check_help_exposes_the_sorted_public_code_catalog() {
         "escaped-citation-resolves",
         "forbidden-citation",
         "full-scope-ignored",
+        "glob-citation",
         "inline-citation-style",
         "invalid-rule",
         "invalid-value-binding",

@@ -59,6 +59,7 @@ Supported check finding codes:
   escaped-citation-resolves
   forbidden-citation
   full-scope-ignored
+  glob-citation
   inline-citation-style
   invalid-rule
   invalid-value-binding

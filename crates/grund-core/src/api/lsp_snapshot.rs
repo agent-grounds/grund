@@ -125,6 +125,18 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                 text: heading.heading.clone(),
             }
         }));
+        // §FS-check.checks.glob-citation / §FS-lsp.1.1: a pattern is no citation, so
+        // its warning keeps the candidate's own span, marker included.
+        let marker = &project.config.schema().citation.marker;
+        finding_ranges.extend(project.findings.glob_citations.iter().map(|pattern| {
+            LspFindingRange {
+                code: "glob-citation",
+                path: absolutize_path(&pattern.file),
+                line: pattern.line,
+                column: pattern.column,
+                text: format!("{marker}{}", pattern.token),
+            }
+        }));
         // §FS-lsp.1.1 / §FS-check.3.24: unresolved local-section forms
         // remain outside the navigation graph, but retain their exact authored
         // spans for the shared check diagnostic.

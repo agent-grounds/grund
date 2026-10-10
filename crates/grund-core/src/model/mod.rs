@@ -35,6 +35,7 @@ mod failure;
 mod headings;
 mod line_owners;
 mod paths;
+mod patterns;
 mod records;
 mod report;
 mod stub_resolution;
@@ -69,6 +70,7 @@ pub(crate) use paths::{
     normalize_path_lexically, paths_same_location, physical_path_key, relative_from_base,
     scanned_decl_relative_path, scanned_path_key, sort_path_key,
 };
+pub(crate) use patterns::GlobCitation;
 pub(crate) use records::{
     LegacyCitationCandidate, LocalSectionCitationCandidate, ShowRenderMode, TextOverlays,
     resolve_stub_target,
