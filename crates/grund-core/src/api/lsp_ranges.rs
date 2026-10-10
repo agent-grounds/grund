@@ -11,9 +11,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::model::{
-    Citation, Declaration, DeclarationSource, SectionInfo, TextOverlays,
-    canonicalize_existing_prefix, is_stub_for_inline_decl, paths_same_location,
-    resolve_stub_target, sort_path_key,
+    Citation, Declaration, DeclarationSource, SectionInfo, StubResolution, TextOverlays,
+    canonicalize_existing_prefix, id_homes,
 };
 use crate::resolver::{WorkspaceContext, WorkspaceProject};
 use crate::scanner::{EMBEDDED_VALUE_MARKER, overlay_text};
@@ -55,33 +54,21 @@ pub(super) fn lsp_target_for_citation(
     if citation.local_section && citation.section.is_some() {
         return None;
     }
-    let mut homes: Vec<&Declaration> = decls
-        .iter()
-        .filter(|decl| !is_stub_for_inline_decl(&target_project.config.root, decl, decls))
-        .collect();
-    homes.sort_by(|a, b| (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line)));
-    let home = homes.first().copied().or_else(|| decls.first())?;
+    // §FS-declarations.checks.broken-stub.4: the first home's record, where the
+    // scan found it, whether or not the walk reached its file.
+    let home = id_homes(decls).iter().next()?.record;
     Some((home.file.clone(), home.line))
 }
 
-pub(super) fn lsp_target_for_stub(
-    project: &WorkspaceProject,
-    stub: &Declaration,
-    decls: &[Declaration],
-) -> Option<(PathBuf, usize)> {
-    let target = stub.defined_in.as_ref()?;
-    let resolved = resolve_stub_target(&project.config.root, &stub.file, target);
-    if let Some(inline) = decls
-        .iter()
-        .find(|decl| paths_same_location(&decl.file, &resolved) && decl.file != stub.file)
-    {
-        return Some((inline.file.clone(), inline.line));
-    }
-    // §FS-declarations.checks.duplicate.2: a stub beside the one standing for an
-    // unscanned target goes where that one's home is declared, at the first of its
-    // lines as at the first record of a scanned target above.
-    let home = stub.stub_home.as_ref()?;
-    Some((home.path.clone(), *home.lines.first()?))
+/// Where a stub navigates: the first record its verdict found at the target
+/// (§FS-declarations.checks.broken-stub.4); a stub with no home there has no
+/// destination.
+pub(super) fn lsp_target_for_stub(stub: &Declaration) -> Option<(PathBuf, usize)> {
+    let Some(StubResolution::Homes(records)) = &stub.stub_resolution else {
+        return None;
+    };
+    let home = records.first()?;
+    Some((home.file.clone(), home.line))
 }
 
 pub(super) fn declaration_range_parts(

@@ -1,8 +1,7 @@
 use crate::config::{Frame, LeadSizeWarning, Schema, measure_point_text};
 use crate::grammar::render_id;
 use crate::model::{
-    Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, TextOverlays,
-    is_stub_for_inline_decl,
+    Catalog, CheckReport, Declaration, Diagnostic, Id, SectionInfo, TextOverlays, id_homes,
 };
 use crate::resolver::{PointBodyCache, point_body_pair};
 
@@ -23,10 +22,10 @@ pub(super) fn check_oversized_leads(
     };
     let mut cache = PointBodyCache::new(overlays);
     for (id, declarations) in &findings.declarations {
-        let homes = declarations
-            .iter()
-            .filter(|decl| !is_stub_for_inline_decl(frame.root(), decl, declarations));
-        for declaration in homes {
+        // §FS-declarations.checks.oversized-lead.4: the scanned sites, so a stub that
+        // stands for a home outside the walk is passed over by the slicer.
+        let homes = id_homes(declarations);
+        for declaration in homes.stand_ins() {
             check_oversized_lead_site(
                 &mut cache,
                 schema,

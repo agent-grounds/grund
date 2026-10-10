@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::path::Path;
 
 use super::value_mismatch::{rendered_value_path, value_mismatch};
 use super::value_roots::root_binding_finding;
@@ -7,9 +6,9 @@ use crate::config::{Frame, Schema, kind_uses_values, kind_value_chapter};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, CheckReport, Declaration, Diagnostic, EmbeddedValueRoot, Id, Site, ValueBinding,
-    is_stub_for_inline_decl, value_binding_section_ends_in_coordinate, value_components_equal,
+    id_homes, value_binding_section_ends_in_coordinate, value_components_equal,
 };
-use crate::resolver::{WorkspaceCheckTarget, home_as_scanned};
+use crate::resolver::WorkspaceCheckTarget;
 
 /// The independent explicit-value checker pass (§AR-checker.2.18,
 /// §FS-values.5). It consumes scanner records, resolves through the same
@@ -27,7 +26,7 @@ pub(super) fn check_values(
             findings
                 .declarations
                 .get(id)
-                .is_some_and(|decls| value_homes(decls, frame.root()).len() > 1)
+                .is_some_and(|decls| id_homes(decls).len() > 1)
         }) {
             continue;
         }
@@ -58,7 +57,6 @@ pub(super) fn check_values(
                 binding_target_reports_invalid_attempt(
                     target.catalog,
                     target.schema,
-                    target.frame(),
                     id,
                     site.binding_section.as_deref(),
                 )
@@ -84,7 +82,7 @@ pub(super) fn check_values(
         let Some(target) = target else { continue };
         // The target spells the coordinate; the report spells the paths (§FS-workspace.8.1).
         let target_frame = target.frame().displayed_by(frame.display);
-        match binding_aim(target.catalog, target.schema, target_frame, binding) {
+        match binding_aim(target.catalog, target.schema, binding) {
             BindingAim::Component {
                 declaration,
                 section,
@@ -152,18 +150,10 @@ pub(super) enum BindingAim<'a> {
 pub(super) fn binding_aim<'a>(
     findings: &'a Catalog,
     schema: &Schema,
-    frame: Frame<'_>,
     binding: &'a ValueBinding,
 ) -> BindingAim<'a> {
     // §FS-values.5.1: compared as if a stub's target were scanned (§FS-check.3.2.1).
-    let homes: Vec<&Declaration> = findings
-        .declarations
-        .get(&binding.id)
-        .map(|decls| value_homes(decls, frame.root()))
-        .unwrap_or_default()
-        .into_iter()
-        .map(|home| home_as_scanned(findings, schema, frame, &binding.id, home))
-        .collect();
+    let homes = declarations_as_scanned(findings, &binding.id);
     let declaration = match homes[..] {
         [home] => Some(home),
         _ => None,
@@ -194,7 +184,6 @@ pub(super) fn binding_aim<'a>(
             _ if binding_target_reports_invalid_attempt(
                 findings,
                 schema,
-                frame,
                 &binding.id,
                 Some(section),
             ) =>
@@ -312,7 +301,6 @@ fn embedded_root_for_binding<'a>(
 fn binding_target_reports_invalid_attempt(
     findings: &Catalog,
     schema: &Schema,
-    frame: Frame<'_>,
     id: &Id,
     section: Option<&str>,
 ) -> bool {
@@ -322,7 +310,7 @@ fn binding_target_reports_invalid_attempt(
     let Some(section) = section else { return false };
     // §FS-values.3.1.1: one predicate, so check's refusal set and the set
     // fmt protects (§FS-values.8) cannot drift apart.
-    binding_aims_at_embedded_value_authority(findings, schema, frame, id, section)
+    binding_aims_at_embedded_value_authority(findings, schema, id, section)
 }
 
 /// Whether `section` is the declaration's own declared value chapter
@@ -351,16 +339,17 @@ fn binding_aims_at_declared_chapter(
 pub(crate) fn binding_aims_at_embedded_value_authority(
     findings: &Catalog,
     schema: &Schema,
-    frame: Frame<'_>,
     id: &Id,
     section: &str,
 ) -> bool {
-    declarations_as_scanned(findings, schema, frame, id).any(|declaration| {
-        binding_aims_at_declared_chapter(schema, id, declaration, section)
-            || embedded_root_for_binding(declaration, section).is_some_and(|(_, relation)| {
-                !matches!(relation, EmbeddedBindingRelation::InvalidImmediateComponent)
-            })
-    })
+    declarations_as_scanned(findings, id)
+        .into_iter()
+        .any(|declaration| {
+            binding_aims_at_declared_chapter(schema, id, declaration, section)
+                || embedded_root_for_binding(declaration, section).is_some_and(|(_, relation)| {
+                    !matches!(relation, EmbeddedBindingRelation::InvalidImmediateComponent)
+                })
+        })
 }
 
 /// Whether a binding-shaped citation has value authority behind it: a kind
@@ -370,32 +359,27 @@ pub(crate) fn binding_aims_at_embedded_value_authority(
 pub(crate) fn binding_target_has_any_value_authority(
     findings: &Catalog,
     schema: &Schema,
-    frame: Frame<'_>,
     id: &Id,
     section: Option<&str>,
 ) -> bool {
     kind_uses_values(schema, &id.kind)
         || section.is_some_and(|section| {
-            declarations_as_scanned(findings, schema, frame, id)
+            declarations_as_scanned(findings, id)
+                .into_iter()
                 .any(|declaration| embedded_root_for_binding(declaration, section).is_some())
         })
 }
 
-/// Every declaration of `id`, a stub's read from its target outside the walk: the
-/// value authority an attempt is classified by and `fmt` protects, as it would be
-/// were the target scanned (§FS-check.3.2.1, §FS-values.3.1.1, §FS-values.8).
-fn declarations_as_scanned<'a>(
-    findings: &'a Catalog,
-    schema: &'a Schema,
-    frame: Frame<'a>,
-    id: &'a Id,
-) -> impl Iterator<Item = &'a Declaration> {
+/// The record of every home of `id`, a stub's read from its target outside the
+/// walk: the value authority an attempt is classified by and `fmt` protects, as it
+/// would be were the target scanned (§FS-check.3.2.1, §FS-values.3.1.1,
+/// §FS-values.8).
+fn declarations_as_scanned<'a>(findings: &'a Catalog, id: &Id) -> Vec<&'a Declaration> {
     findings
         .declarations
         .get(id)
-        .into_iter()
-        .flatten()
-        .map(move |declaration| home_as_scanned(findings, schema, frame, id, declaration))
+        .map(|decls| id_homes(decls).iter().map(|home| home.record).collect())
+        .unwrap_or_default()
 }
 
 fn invalid_binding_diagnostic(binding: &ValueBinding) -> Diagnostic {
@@ -407,11 +391,4 @@ fn invalid_binding_diagnostic(binding: &ValueBinding) -> Diagnostic {
         message: "invalid value binding: value binding must be exactly `literal` (marker-prefixed full value ID with one positive numeric field)".to_string(),
         sites: Vec::new(),
     authority: Vec::new(),}
-}
-
-fn value_homes<'a>(decls: &'a [Declaration], root: &Path) -> Vec<&'a Declaration> {
-    decls
-        .iter()
-        .filter(|decl| !is_stub_for_inline_decl(root, decl, decls))
-        .collect()
 }

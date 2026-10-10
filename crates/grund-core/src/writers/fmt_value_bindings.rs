@@ -44,7 +44,6 @@ pub(super) fn markdown_citation_is_value_binding(
     }) && binding_target_has_any_value_authority(
         target_findings,
         target_config.schema(),
-        target_config.frame(),
         &citation.id,
         section,
     );
@@ -53,7 +52,6 @@ pub(super) fn markdown_citation_is_value_binding(
             binding_aims_at_embedded_value_authority(
                 target_findings,
                 target_config.schema(),
-                target_config.frame(),
                 &citation.id,
                 section,
             )

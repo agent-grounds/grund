@@ -104,7 +104,7 @@ pub(super) fn check_citation_resolution(
         // §FS-check.3.24.3: where `missing section` fires beside this site, its full
         // citation would only trade one error for the other; name the absence and the
         // escape instead.
-        let resolves = section_resolves(findings, schema, frame, &cite.id, section);
+        let resolves = section_resolves(findings, &cite.id, section);
         let remedy = if resolves {
             format!(
                 "write {}{owner}{}{section}",
@@ -293,7 +293,7 @@ pub(super) fn check_citation_resolution(
         // cited section path — the lookup §FS-fmt.2.4.6 declines a local rewrite on,
         // which reads a stub's sections from its target, scanned or not (§FS-check.3.2.1).
         if let Some(sec) = &cite.section {
-            if !section_resolves(target.catalog, target.schema, target.frame(), &cite.id, sec) {
+            if !section_resolves(target.catalog, &cite.id, sec) {
                 let coordinate = format!(
                     "{}{}{}",
                     render_qualified_id(

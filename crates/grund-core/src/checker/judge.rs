@@ -15,7 +15,7 @@ use super::references::{ReferenceTier, check_citation_resolution};
 use super::values::check_values;
 use crate::config::{Frame, KindResolution, Rules, Schema};
 use crate::grammar::{render_id, render_qualified_id};
-use crate::model::{Catalog, CheckReport, Diagnostic, Expected, Id, is_stub_for_inline_decl};
+use crate::model::{Catalog, CheckReport, Diagnostic, Expected, Id, id_homes};
 use crate::resolver::{WorkspaceCheckTarget, citation_resolves};
 
 /// The workspace a project is judged in (§FS-workspace.4): every loaded
@@ -184,10 +184,7 @@ fn check_unused(
             continue;
         }
         if !cited.contains(id)
-            && let Some(decl) = decls
-                .iter()
-                .find(|decl| !is_stub_for_inline_decl(frame.root(), decl, decls))
-                .or_else(|| decls.first())
+            && let Some(decl) = id_homes(decls).stand_ins().next()
         {
             report.warnings.push(Diagnostic {
                 code: "unused",

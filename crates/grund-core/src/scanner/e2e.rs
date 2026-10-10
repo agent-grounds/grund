@@ -119,7 +119,7 @@ pub(super) fn scan_e2e_cases(
                 duplicate_sections: Vec::new(),
                 is_stub: false,
                 defined_in: None,
-                stub_home: None,
+                stub_resolution: None,
                 e2e_case: Some(case),
                 title: Some(format!("e2e case `{name}`")),
                 // §AR-scanner.2.4.1: an E2E case spans its manifest line only; its

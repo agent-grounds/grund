@@ -1,18 +1,15 @@
 use super::ambiguity::{ambiguous_id_refusal, ambiguous_section_refusal};
-use super::stub_home::stub_home;
 use crate::config::{Config, display_path};
 use crate::grammar::render_id;
 use crate::model::{
     Catalog, Declaration, DeclarationSource, Id, SectionInfo, ShowOutput, ShowRenderMode,
-    TextOverlays, format_path, json_escape, paths_same_location, resolve_stub_target,
+    StubResolution, TextOverlays, format_path, id_homes, json_escape, paths_same_location,
 };
 use crate::resolver::{
     extract_declaration_body, heading_anchor, section_site_anchor, show_e2e_case,
     takes_heading_anchor,
 };
-use crate::scanner::file_declares_inline_home;
 use anyhow::{Result, anyhow};
-use std::borrow::Cow;
 
 #[cfg(test)]
 pub(crate) fn show_declaration(
@@ -48,6 +45,10 @@ pub(crate) fn show_declaration(
 /// Beside the output it returns the record the body was read out of, a stub's
 /// target declaration rather than the stub (§FS-show.2.3.7), which is the record
 /// `render_show_output_json` derives the heading anchors from.
+///
+/// Which record that is, and whether the ID is refused instead, is the one
+/// derivation of its homes from the verdict the scan recorded on each stub
+/// (§FS-declarations.checks.broken-stub.4): nothing here reads a stub's target.
 pub(crate) fn show_declaration_with_overlays<'a>(
     config: &Config,
     path_config: &Config,
@@ -57,25 +58,27 @@ pub(crate) fn show_declaration_with_overlays<'a>(
     mode: ShowRenderMode,
     include_heading: bool,
     overlays: &TextOverlays,
-) -> Result<(ShowOutput, Cow<'a, Declaration>)> {
-    let root = &config.root;
-    let decls = findings.declarations.get(id).ok_or_else(|| {
+) -> Result<(ShowOutput, &'a Declaration)> {
+    let not_found = || {
         anyhow!(crate::model::OperationDiagnostic::new(
             "query",
             "not-found",
             format!("ID not found: {}", render_id(&config.grammar, id))
         ))
-    })?;
+    };
+    let decls = findings.declarations.get(id).ok_or_else(not_found)?;
+    let homes = id_homes(decls);
     // §FS-show.2.2.1: share the independent-home refusal with refs (§FS-refs.4).
-    if let Some(refusal) = ambiguous_id_refusal(config, path_config, decls, id) {
+    if let Some(refusal) = ambiguous_id_refusal(config, path_config, &homes, id) {
         return Err(refusal.into());
     }
-    let decl = decls.iter().find(|decl| decl.is_stub).unwrap_or(&decls[0]);
-    if matches!(decl.source, DeclarationSource::Json { .. }) {
-        let output = show_json_value(config, id, decl, section)?;
-        return Ok((output, Cow::Borrowed(decl)));
+    let home = homes.sole().ok_or_else(not_found)?;
+    let record = home.record;
+    if matches!(record.source, DeclarationSource::Json { .. }) {
+        let output = show_json_value(config, id, record, section)?;
+        return Ok((output, record));
     }
-    if let Some(case) = &decl.e2e_case {
+    if let Some(case) = &record.e2e_case {
         // §FS-show.2.4: the kind's title is presentation's, read here.
         let title = config
             .kinds
@@ -84,56 +87,35 @@ pub(crate) fn show_declaration_with_overlays<'a>(
             .and_then(|kind| kind.title.as_deref());
         let frame = config.frame().displayed_by(path_config.display());
         let output = show_e2e_case(config.schema(), frame, title, id, case, section, mode)?;
-        return Ok((output, Cow::Borrowed(decl)));
+        return Ok((output, record));
     }
-    let file = if let Some(target) = &decl.defined_in {
-        resolve_stub_target(root, &decl.file, target)
-    } else {
-        decl.file.clone()
-    };
-    if decl.is_stub {
-        if !file.exists() {
-            return Err(anyhow!(crate::model::OperationDiagnostic::new(
-                "query",
-                "broken-stub",
-                format!(
-                    "broken stub: {} (stub at {}:{} points at {}, which does not exist)",
-                    render_id(&config.grammar, id),
-                    display_path(path_config, &decl.file),
-                    decl.line,
-                    format_path(decl.defined_in.as_ref().unwrap())
-                )
-            )));
-        }
-        // §FS-declarations.checks.broken-stub.1, §FS-declarations.checks.broken-stub.3:
-        // judge the text the body is read from, in a file the scan reads, as check does.
-        if !file_declares_inline_home(&file, id, config.schema(), config.frame(), overlays)
-            .unwrap_or(false)
-        {
-            return Err(anyhow!(crate::model::OperationDiagnostic::new(
-                "query",
-                "broken-stub",
-                format!(
-                    "broken stub: {} (stub at {}:{} points at {}, which contains no inline declaration of {})",
-                    render_id(&config.grammar, id),
-                    display_path(path_config, &decl.file),
-                    decl.line,
-                    format_path(decl.defined_in.as_ref().unwrap()),
-                    render_id(&config.grammar, id)
-                )
-            )));
-        }
+    if let (Some(verdict), Some(target)) = (&record.stub_resolution, &record.defined_in)
+        && verdict.is_broken()
+    {
+        // §FS-show.2.3.4: the first line for a missing target, the second for the rest.
+        let rendered = render_id(&config.grammar, id);
+        let reason = match verdict {
+            StubResolution::Missing => "which does not exist".to_string(),
+            _ => format!("which contains no inline declaration of {rendered}"),
+        };
+        return Err(anyhow!(crate::model::OperationDiagnostic::new(
+            "query",
+            "broken-stub",
+            format!(
+                "broken stub: {rendered} (stub at {}:{} points at {}, {reason})",
+                display_path(path_config, &record.file),
+                record.line,
+                format_path(target),
+            )
+        )));
     }
-    // §FS-show.2.3.7: a stub reads its target's declaration, found by the ID.
-    let body_decl = stub_home(config, path_config, decls, decl, &file, id, overlays)?;
     if let Some(section) = section
-        && let Some(refusal) =
-            ambiguous_section_refusal(config, path_config, &body_decl, &file, id, section)
+        && let Some(refusal) = ambiguous_section_refusal(config, path_config, record, id, section)
     {
         return Err(refusal.into());
     }
     if let Some(section) = section
-        && !body_decl.sections.contains_key(section)
+        && !record.sections.contains_key(section)
     {
         return Err(anyhow!(crate::model::OperationDiagnostic::new(
             "query",
@@ -146,10 +128,11 @@ pub(crate) fn show_declaration_with_overlays<'a>(
             )
         )));
     }
+    // §FS-show.2.3.7: a stub reads its target's declaration, found by the ID.
     let output = extract_declaration_body(
-        &file,
+        &record.file,
         id,
-        &body_decl,
+        record,
         section,
         mode,
         include_heading,
@@ -157,7 +140,7 @@ pub(crate) fn show_declaration_with_overlays<'a>(
         config.frame(),
         overlays,
     )?;
-    Ok((output, body_decl))
+    Ok((output, record))
 }
 
 /// JSON values have source slices rather than Markdown bodies. Every show mode

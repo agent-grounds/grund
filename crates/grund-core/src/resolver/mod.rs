@@ -46,19 +46,23 @@
 //!   lexical; only resolving it against every loaded project's declarations had
 //!   the grammar naming records three components above it (§AR-system.4).
 //! - `stub_home.rs` out of `queries/stub_home.rs`, the scanner's pass over a
-//!   stub's target the walk did not reach: `show` reads a stub's body out of it,
-//!   and every reader of a section in `check` and `fmt` asks it as well, so the
-//!   query was answering for its siblings (§FS-check.3.2.1, §AR-resolver.5).
+//!   stub's target the walk did not reach: `show` read a stub's body out of it,
+//!   and every reader of a section in `check` and `fmt` asked it as well, so the
+//!   query was answering for its siblings (§FS-check.3.2.1). It went down again,
+//!   into the scanner, when the scan came to reach every stub's verdict once and
+//!   record the target's declarations on the stub (§AR-scanner.4.6), so no
+//!   reader here reads a target any more (§AR-resolver.5).
 //!
 //! What went the other way, down rather than up, when this component was carved
 //! out: three walk-level facts workspace was reading from the scanner at config
 //! time — `root_scope_roots` and `canonical_config_root` into
 //! `config/scope_roots.rs`, because each reads `[scan] include`, the
 //! `[[kinds]]` table and `config.root` and nothing of a tree, and `is_hidden`
-//! into `model/paths.rs`, a predicate over a `Path` alone. `is_stub_for_inline_decl`
-//! followed them into `model/records.rs` beside `resolve_stub_target`, so the
-//! link target could ask which declaration is a stub without reading the checker
-//! above it. `WorkspaceCitationTarget` and the qualified ID-argument split
+//! into `model/paths.rs`, a predicate over a `Path` alone. The test of which
+//! declaration is a stub's pointer followed them into `model/` beside
+//! `resolve_stub_target`, so the link target could ask it without reading the
+//! checker above it; it is the derivation of an ID's homes from each stub's
+//! recorded verdict now (§AR-scanner.4.6). `WorkspaceCitationTarget` and the qualified ID-argument split
 //! stayed in `workspace/`: both are answers about configs and entry text, with
 //! no scan in them.
 
@@ -73,7 +77,6 @@ mod legacy_promotion;
 mod link_targets;
 mod point_body;
 mod shorthand;
-mod stub_home;
 mod unread_block;
 
 pub use id_candidates::names_member_id_candidate;
@@ -101,7 +104,6 @@ pub(crate) use point_body::point_body_pair;
 pub(crate) use shorthand::{
     ShorthandTargets, expand_shorthand_citations_with_origins, shorthand_token_expansion,
 };
-pub(crate) use stub_home::{home_as_scanned, target_records};
 pub(crate) use unread_block::settled_run_warnings;
 
 // The cases that pin this component, one module per behaviour area

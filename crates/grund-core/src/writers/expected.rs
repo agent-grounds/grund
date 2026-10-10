@@ -154,7 +154,6 @@ pub(crate) fn chapter_rules_section(
                     &id,
                     None,
                     &config.project().presentation,
-                    config.schema(),
                     config.frame(),
                     findings,
                 )

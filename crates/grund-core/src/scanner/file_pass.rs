@@ -224,7 +224,7 @@ pub(super) fn scan_file_text(
                 is_stub,
                 defined_in,
                 // §AR-scanner.4.6: recorded after the walk, once every declaration is in.
-                stub_home: None,
+                stub_resolution: None,
                 e2e_case: None,
                 title,
                 // §AR-scanner.2.4.1: real body span is assigned in the post-pass
@@ -311,7 +311,7 @@ pub(super) fn scan_file_text(
                 duplicate_sections: Vec::new(),
                 is_stub,
                 defined_in,
-                stub_home: None,
+                stub_resolution: None,
                 e2e_case: None,
                 title,
                 body_start: lineno,

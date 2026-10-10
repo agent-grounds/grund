@@ -9,8 +9,8 @@ use super::index::{KindIndexTarget, declarations_under_folder, kind_index_target
 use crate::config::{Frame, Schema};
 use crate::grammar::never_rewrite_context;
 use crate::model::{
-    Catalog, Citation, Declaration, Id, is_stub_for_inline_decl, physical_path_key,
-    scanned_decl_relative_path, scanned_path_key,
+    Catalog, Citation, Declaration, Id, id_homes, physical_path_key, scanned_decl_relative_path,
+    scanned_path_key,
 };
 
 /// The IDs each kind index owes an entry for, keyed by the index's
@@ -60,7 +60,6 @@ impl KindIndexEntries {
         let mut owed = folder_owed.clone();
         let external_sites = enroll_external_inline_declarations(
             findings,
-            frame,
             &targets,
             &configured_root,
             &physical_root,
@@ -117,7 +116,6 @@ impl KindIndexEntries {
 /// solely to inspect the persisted Markdown wrapper and destination.
 fn enroll_external_inline_declarations(
     findings: &Catalog,
-    frame: Frame<'_>,
     targets: &[KindIndexTarget<'_>],
     configured_root: &Path,
     physical_root: &Path,
@@ -168,14 +166,7 @@ fn enroll_external_inline_declarations(
         let Some(decls) = findings.declarations.get(&citation.id) else {
             continue;
         };
-        if external_inline_home(
-            frame,
-            decls,
-            &target.folder_key,
-            configured_root,
-            physical_root,
-        )
-        .is_none()
+        if external_inline_home(decls, &target.folder_key, configured_root, physical_root).is_none()
         {
             continue;
         }
@@ -213,7 +204,6 @@ fn enroll_external_inline_declarations(
 /// multiple independent homes remain the duplicate error rather than becoming
 /// an index membership `grund` guessed (§REQ-no-wrong-citation.1).
 fn external_inline_home<'a>(
-    frame: Frame<'_>,
     decls: &'a [Declaration],
     folder_key: &Path,
     configured_root: &Path,
@@ -222,12 +212,8 @@ fn external_inline_home<'a>(
     if declarations_under_folder(decls, folder_key, configured_root, physical_root) {
         return None;
     }
-    let mut homes = decls
-        .iter()
-        .filter(|decl| !is_stub_for_inline_decl(frame.root(), decl, decls));
-    let home = homes.next()?;
-    if homes.next().is_some()
-        || home.is_stub
+    let home = id_homes(decls).sole()?.stand_in;
+    if home.is_stub
         || home.e2e_case.is_some()
         || home.file.extension().and_then(|ext| ext.to_str()) == Some("md")
     {

@@ -6,14 +6,14 @@ use super::e2e::{e2e_cases_folder, scan_e2e_cases};
 use super::file_pass::{scan_file, scan_file_text};
 use super::legacy::promote_local_legacy_citations;
 use super::merge::merge_findings;
-use super::stub_homes::record_stub_homes;
+use super::stub_homes::resolve_stubs;
 use super::value_json::{scan_value_json_sources, value_json_sources};
 use super::walk::{is_direct_e2e_case_dir, scan_roots, walk_scannable_files_reporting};
 use super::walk_boundaries::is_scannable;
 use crate::config::{Frame, Schema};
 use crate::grammar::resolve_shorthand_citations;
 use crate::model::{
-    Catalog, StubTargets, TextOverlays, canonicalize_existing_prefix, normalize_path_lexically,
+    Catalog, TextOverlays, canonicalize_existing_prefix, normalize_path_lexically,
     paths_same_location, sort_path_key,
 };
 use crate::workspace::WorkspaceCitationTarget;
@@ -78,7 +78,7 @@ fn scan_one_file(
 /// One file's pass outside any walk (§AR-scanner.2), its overlay first: the
 /// records of a file the walk did not reach, for a stub whose target lies
 /// outside scan scope and still reads as the scanned file would (§FS-show.2.3.7).
-pub(crate) fn scan_unwalked_file(
+pub(super) fn scan_unwalked_file(
     file: &Path,
     schema: &Schema,
     frame: Frame<'_>,
@@ -160,8 +160,6 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     // judged: the scanner never asks that question itself (§AR-workspace.1).
     let mut findings = Catalog {
         walked_dirs: walked.dirs,
-        // §FS-check.3.2.1: a stub target read after the walk reads the walk's text.
-        stub_targets: StubTargets::new(overlays),
         ..Catalog::default()
     };
     let (mut files, mut errors) = (walked.files, walked.errors);
@@ -227,8 +225,8 @@ pub(crate) fn scan_tree_with_workspace_threshold(
     // E2E cases above) has produced the declaration set.
     promote_local_legacy_citations(schema, frame, &mut findings);
     resolve_shorthand_citations(frame.grammar(), &mut findings);
-    // §AR-scanner.4.6: a stub's home is known only once every declaration is in.
-    record_stub_homes(schema, frame, overlays, &mut findings);
+    // §AR-scanner.4.6: a stub's verdict is reached only once every declaration is in.
+    resolve_stubs(schema, frame, overlays, &mut findings);
     Ok((findings, errors))
 }
 

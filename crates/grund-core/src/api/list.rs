@@ -13,7 +13,7 @@ use std::path::PathBuf;
 
 use crate::config::{Config, KindConfig, display_path};
 use crate::grammar::{render_id, section_display_name};
-use crate::model::{Declaration, Finding, Id, format_path, is_stub_for_inline_decl, sort_path_key};
+use crate::model::{Declaration, Finding, Id, format_path, id_homes, sort_path_key};
 use crate::queries::{ListCitationCounts, check_list_scope, require_unique_literal};
 use crate::resolver::{WorkspaceProject, load_workspace_context};
 use crate::rules::sentence::RuleSubject;
@@ -122,16 +122,15 @@ fn list_run(opts: ListOpts, run_warnings: &mut Vec<Finding>) -> Result<ListOutpu
             if opts.unused_only && id.kind == "E2E" && !opts.kind_filter.contains("E2E") {
                 continue;
             }
-            let mut homes: Vec<&Declaration> = decls
-                .iter()
-                .filter(|decl| !is_stub_for_inline_decl(&project.config.root, decl, decls))
-                .collect();
+            // §FS-declarations.checks.broken-stub.4: the homes every command counts. A stub
+            // whose target declares the ID twice is one row, and two homes
+            // (§FS-declarations.checks.duplicate.2).
+            let id_homes = id_homes(decls);
+            let duplicate = id_homes.len() > 1;
+            let mut homes: Vec<&Declaration> = id_homes.stand_ins().collect();
             homes.sort_by(|a, b| {
                 (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
             });
-            // §FS-declarations.checks.duplicate.2: a stub whose target declares the ID
-            // twice is one row, and two homes.
-            let duplicate = homes.iter().flat_map(|home| home.home_sites()).count() > 1;
             for home in homes {
                 entries.push(Entry {
                     project_alias: project.alias.as_str(),

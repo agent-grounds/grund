@@ -59,7 +59,7 @@ pub(super) fn expand_local_section_citations(
         let end = start + cite.text.len();
         output.push_str(&line[cursor..start]);
         // §FS-fmt.2.4.6: a refused site is copied through byte-identical.
-        if expandable(cite, findings, config) {
+        if expandable(cite, findings) {
             let written_start = output.len();
             output.push_str(&config.marker);
             output.push_str(&render_id(&config.grammar, &cite.id));
@@ -87,12 +87,10 @@ pub(super) fn expand_local_section_citations(
 /// permit, and a cited section its owner records a heading for (§FS-fmt.2.4.6),
 /// asked of the lookup `check` withholds the command on (§FS-check.3.24.1), which
 /// reads a stub's sections from its target (§FS-check.3.2.1).
-fn expandable(cite: &Citation, findings: &Catalog, config: &Config) -> bool {
+fn expandable(cite: &Citation, findings: &Catalog) -> bool {
     cite.shorthand_rewritable
         && section_resolves(
             findings,
-            config.schema(),
-            config.frame(),
             &cite.id,
             cite.section.as_deref().unwrap_or_default(),
         )

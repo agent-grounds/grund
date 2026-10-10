@@ -20,9 +20,7 @@ use super::lsp_report::{editor_report, editor_run_warnings, widen_for_path_ancho
 use super::report::{public_lsp_report, public_lsp_run_warnings};
 use crate::config::{ProjectRecords, display_path};
 use crate::grammar::render_id;
-use crate::model::{
-    Declaration, TextOverlays, canonical_snapshot_path, is_stub_for_inline_decl, sort_path_key,
-};
+use crate::model::{Declaration, TextOverlays, canonical_snapshot_path, id_homes, sort_path_key};
 use crate::queries::{
     LspCitation, LspCompletionContext, LspDeclaration, LspFindingRange, LspSnapshot,
     LspSnapshotOpts, LspSnapshotWithCompletion, LspSnapshotWithMetadata, LspStub,
@@ -160,14 +158,14 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
                     );
                 }
             }
-            let mut homes: Vec<&Declaration> = decls
-                .iter()
-                .filter(|decl| !is_stub_for_inline_decl(&project.config.root, decl, decls))
-                .collect();
+            // §FS-declarations.checks.broken-stub.4: a title for each declaration that
+            // stands for a home, and a stub title for each stub that points at one.
+            let id_homes = id_homes(decls);
+            let mut homes: Vec<&Declaration> = id_homes.stand_ins().collect();
             homes.sort_by(|a, b| {
                 (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
             });
-            for home in homes {
+            for &home in &homes {
                 let display = if context.workspace_loaded {
                     display_path(context.render_config(), &home.file)
                 } else {
@@ -203,9 +201,9 @@ pub fn lsp_snapshot_with_completion(opts: LspSnapshotOpts) -> Result<LspSnapshot
             }
             for stub in decls
                 .iter()
-                .filter(|decl| is_stub_for_inline_decl(&project.config.root, decl, decls))
+                .filter(|decl| decl.is_stub && !homes.iter().any(|home| std::ptr::eq(*home, *decl)))
             {
-                let target = lsp_target_for_stub(project, stub, decls);
+                let target = lsp_target_for_stub(stub);
                 if let Some((target_path, target_line)) = target {
                     let (column, text) = declaration_range_parts(stub, &rendered, &overlays);
                     stubs.push(LspStub {

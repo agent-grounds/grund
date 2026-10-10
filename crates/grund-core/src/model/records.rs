@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 use super::e2e::E2eCase;
 use super::headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
 use super::line_owners::FileLineOwnership;
-use super::paths::{normalize_path_lexically, paths_same_location, sort_path_key};
-use super::stub_targets::StubTargets;
+use super::paths::normalize_path_lexically;
+use super::stub_resolution::StubResolution;
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
 };
@@ -71,13 +71,12 @@ pub struct Declaration {
     pub duplicate_sections: Vec<(String, SectionInfo)>,
     pub is_stub: bool,
     pub defined_in: Option<PathBuf>,
-    /// On a stub, a lone one too, every line the home it points at declares the ID
-    /// on — read after the walk, so a target the walk never reached still has them
-    /// (§AR-scanner.4.6), and a target that declares the ID twice has two
-    /// (§FS-declarations.checks.duplicate.1). `None` on every other declaration, on
-    /// a stub whose target does not declare the ID, and on one that links to its
-    /// own file.
-    pub(crate) stub_home: Option<StubHome>,
+    /// On a stub, the verdict the scan reached on its target once the walk was
+    /// done (§AR-scanner.4.6): whether the target is missing, not read, lacking the
+    /// ID, or which records of it are the stub's homes. `None` on every other
+    /// declaration. Every command reads it rather than the target
+    /// (§FS-declarations.checks.broken-stub.4).
+    pub(crate) stub_resolution: Option<StubResolution>,
     pub e2e_case: Option<E2eCase>,
     /// Heading text after `<ID>:` — the one-line title an author wrote
     /// (§AR-scanner.2.1). `None` when the heading carries no `: <text>` tail, or
@@ -106,30 +105,6 @@ pub struct Declaration {
     /// a readable declaration with invalid value grammar, and `None` for an
     /// ordinary declaration (§FS-values.2, §FS-values.5.1).
     pub value_valid: Option<bool>,
-}
-
-impl Declaration {
-    /// Where a duplicate or an ambiguity names this home: a stub that stands for
-    /// the home it points at is named at each of that home's declarations, exactly
-    /// as it would be were the target scanned, and every other home at its own line
-    /// (§FS-declarations.checks.duplicate.3). So a stub whose target declares the ID
-    /// twice stands for two homes (§FS-declarations.checks.duplicate.1).
-    pub(crate) fn home_sites(&self) -> impl Iterator<Item = (&Path, usize)> {
-        let (path, lines) = match &self.stub_home {
-            Some(home) => (home.path.as_path(), home.lines.as_slice()),
-            None => (self.file.as_path(), std::slice::from_ref(&self.line)),
-        };
-        lines.iter().map(move |&line| (path, line))
-    }
-}
-
-/// The `path` a stub's target is and every line of it that declares the stub's ID,
-/// ascending and never empty (§AR-scanner.4.6): each line is a home
-/// (§FS-declarations.checks.duplicate.1).
-#[derive(Debug, Clone)]
-pub(crate) struct StubHome {
-    pub(crate) path: PathBuf,
-    pub(crate) lines: Vec<usize>,
 }
 
 /// One numeric or explicitly named subsection heading recorded inside a
@@ -361,10 +336,6 @@ pub struct Catalog {
     /// per scanned file (§FS-cover.6, §AR-scanner.2.4.4). Empty — and never
     /// computed — unless `Config::owner_lines` is set.
     pub(crate) line_ownership: Vec<FileLineOwnership>,
-    /// The stub targets outside the walk that this run has read, each once, and
-    /// the overlays it read them under (§FS-check.3.2.1, §AR-resolver.5). Empty
-    /// until a reader asks for a section no recorded declaration holds.
-    pub(crate) stub_targets: StubTargets,
 }
 
 /// ID-query slice mode (§FS-show.1.6): each rung adds to the previous one —
@@ -396,50 +367,6 @@ pub struct ShowOutput {
     pub line: usize,
     pub json: Option<String>,
     pub sections: Vec<ShowSection>,
-}
-
-/// Whether this stub heading is the one-line pointer to an inline declaration in
-/// code (`# <ID>: [text](src/foo.rs)` whose target also declares `<ID>`) — such a
-/// stub does not count as a second home, so it is not a duplicate (§AR-scanner.4,
-/// §FS-show.2.3).
-///
-/// Where no record of `<ID>` sits at the target because the walk did not reach it,
-/// the stub still pairs with it (§FS-declarations.checks.duplicate.1): the first of
-/// the stubs recording that home, in `path:line` order, stands for it, and every
-/// later one is its pointer, so stubs to one target are one home and a lone stub
-/// stands for its own (§FS-declarations.checks.duplicate.2, §AR-scanner.4.6). The
-/// stub that stands for a target declaring the ID twice stands for both lines,
-/// once, and `Declaration::home_sites` names each.
-pub(crate) fn is_stub_for_inline_decl(
-    root: &Path,
-    decl: &Declaration,
-    decls: &[Declaration],
-) -> bool {
-    if !decl.is_stub {
-        return false;
-    }
-    let Some(target) = &decl.defined_in else {
-        return false;
-    };
-    let resolved = resolve_stub_target(root, &decl.file, target);
-    if decls
-        .iter()
-        .any(|other| paths_same_location(&other.file, &resolved) && other.file != decl.file)
-    {
-        return true;
-    }
-    let Some(home) = &decl.stub_home else {
-        return false;
-    };
-    let site = (sort_path_key(&decl.file), decl.line);
-    decls.iter().any(|other| {
-        other.is_stub
-            && (sort_path_key(&other.file), other.line) < site
-            && other
-                .stub_home
-                .as_ref()
-                .is_some_and(|theirs| paths_same_location(&theirs.path, &home.path))
-    })
 }
 
 pub(crate) fn resolve_stub_target(root: &Path, stub_file: &Path, target: &Path) -> PathBuf {

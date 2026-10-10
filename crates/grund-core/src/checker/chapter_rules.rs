@@ -4,14 +4,14 @@
 
 use crate::config::{Form, Frame, Rules, Schema, known_kinds_line};
 use crate::grammar::render_id;
-use crate::model::{Catalog, CheckReport, Declaration, Diagnostic, Id};
-use crate::resolver::{SectionHome, WorkspaceCheckTarget, section_home};
+use crate::model::{Catalog, CheckReport, Declaration, Diagnostic};
+use crate::resolver::WorkspaceCheckTarget;
 use crate::rules::RuleAnchor;
 use crate::rules::engine::{
     citation_precedence, evaluate, evaluate_suggestions, one_rules_authority,
     unresolved_subject_diagnostic,
 };
-use crate::rules::markdown::{MarkdownProject, SectionHomes, adapt_markdown, adapt_workspace};
+use crate::rules::markdown::{MarkdownProject, adapt_markdown, adapt_workspace};
 use crate::rules::sentence::{ParsedRule, RuleVocabulary, parse_rule};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -26,23 +26,8 @@ pub(crate) fn markdown_project<'a>(
 ) -> MarkdownProject<'a> {
     MarkdownProject {
         name,
-        root: &target.run.root,
         grammar: &target.compiled.grammar,
         section_separator: &target.schema.ids.section_separator,
-        homes: target,
-    }
-}
-
-/// A project's sections resolve as `check` resolves them, a stub's in its target
-/// read under this project's scan settings (§FS-check.3.2.1, §AR-resolver.5).
-impl SectionHomes for WorkspaceCheckTarget<'_> {
-    fn section_home<'c>(
-        &self,
-        findings: &'c Catalog,
-        id: &Id,
-        section: &str,
-    ) -> Option<SectionHome<'c>> {
-        section_home(findings, self.schema, self.frame(), id, section)
     }
 }
 

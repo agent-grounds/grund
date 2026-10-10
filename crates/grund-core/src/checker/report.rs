@@ -32,36 +32,21 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 /// A rule judges what the scan recorded in `Findings`. These read a file's text
 /// after the scan as well — the text an editor's overlay can stand in for, which
 /// a probe for whether a path exists or a scope path made canonical never reads —
-/// and `tests_post_scan_readers.rs` holds the list to the code. A stub's
-/// unscanned target, below, is a stub's target the walk did not reach, read for
-/// its declaration of the ID through the resolver's lookup (§AR-resolver.5),
-/// overlay first and disk second, once per target per run:
+/// and `tests_post_scan_readers.rs` holds the list to the code. A stub's target is
+/// not among them: the scan reads it once and records its verdict on the stub
+/// (§AR-scanner.4.6), so the broken-stub rule, a cited section, a value's home and
+/// a rule's `cites` fact read that record instead of the file (§AR-resolver.5):
 ///
 /// - §AR-checker.2.3's hint: the line of a dangling Markdown citation, from disk.
-/// - §AR-checker.2.4: a stub's unscanned target, for a cited section.
-/// - §FS-check.3.24.1: a stub's unscanned target, for the section of a local
-///   section citation, before the finding offers `grund fmt --write`.
-/// - §FS-check.3.24.3: the same read, for the escape that finding offers in place
-///   of a full citation of a section its owner lacks.
-/// - §AR-checker.2.5: a stub's target, through the scanner's reader
-///   (§AR-scanner.4.6), overlay first and disk second.
 /// - §AR-checker.2.6: every configured kind index, from disk, through
 ///   §AR-checker.2.16's membership derivation, so that an index entry is not
 ///   counted as an inbound citation (§DF-index-not-an-inbound-citation).
-/// - §AR-checker.2.7: each agent entrypoint, from disk, and where a kind sets
-///   `rules = true`, a stub's unscanned target, through the rule facts
-///   (§AR-rules.3) built to re-render the entrypoint's rules section. Its
-///   companions are listed, and read, by the writers before the check, in
-///   `Expected` (§AR-checker.1.3).
-/// - §AR-checker.2.16: every configured kind index, from disk, and a stub's
-///   unscanned target, for an entry's section.
-/// - §AR-checker.2.18: a stub's unscanned target, for the home a value binding is
-///   compared against and the value authority a malformed binding is refused by.
+/// - §AR-checker.2.7: each agent entrypoint, from disk. Its companions are listed,
+///   and read, by the writers before the check, in `Expected` (§AR-checker.1.3).
+/// - §AR-checker.2.16: every configured kind index, from disk.
 /// - The opt-in lead budget (§FS-declarations.checks.oversized-lead): every
 ///   Markdown or doc-comment home, through the resolver's point-body slicer
 ///   (§AR-system.2.10), overlay first and disk second.
-/// - §AR-rules.3: a stub's unscanned target, for the cited section of a `cites`
-///   fact the chapter rules read, minting that home's chapters from it.
 ///
 /// ## terms: Terms
 ///
