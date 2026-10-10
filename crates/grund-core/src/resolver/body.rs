@@ -20,8 +20,8 @@ use std::path::{Path, PathBuf};
 
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    PythonDocstringScanState, declaration_id_on_line, markdown_fence_delimiter, render_id,
-    section_path, source_scan_line,
+    MarkdownBlocks, PythonDocstringScanState, declaration_id_on_line, render_id, section_path,
+    source_scan_line,
 };
 use crate::model::{Declaration, Id, ShowOutput, ShowRenderMode, TextOverlays};
 
@@ -204,7 +204,7 @@ pub(super) fn extract_declaration_body_cached(
     let mut lines = Vec::new();
     let mut sections = Vec::new();
     let mut output_line = 1;
-    let mut markdown_fence = None;
+    let mut markdown_blocks = MarkdownBlocks::default();
 
     for (idx, line) in text.lines().enumerate() {
         let lineno = idx + 1;
@@ -233,12 +233,10 @@ pub(super) fn extract_declaration_body_cached(
         {
             break;
         }
-        // §FS-show.2.5: inside a Markdown fence nothing is structure. The
-        // delimiters and their contents are body text and still reach `lines`
-        // below.
-        let was_fenced = markdown_fence.is_some();
-        let fence_delimiter = is_md && markdown_fence_delimiter(&mut markdown_fence, line);
-        let fenced = was_fenced || fence_delimiter;
+        // §FS-show.2.5: inside a Markdown fence or a raw-text HTML block nothing is
+        // structure (§FS-check.1.1.5.1). Such lines are body text and still reach
+        // `lines` below.
+        let fenced = is_md && !markdown_blocks.line(line).may_be_heading();
         if !fenced
             && let Some((found, _)) =
                 declaration_id_on_line(frame.grammar(), scan_line, scan.in_py_docstring, is_md)

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use super::fetch_write::{write_file_home, write_folder_home};
 use crate::config::run_warning_findings;
-use crate::grammar::parse_id_arg;
+use crate::grammar::{MarkdownBlocks, parse_id_arg};
 use crate::model::Finding;
 use crate::resolver::settled_run_warnings;
 use crate::workspace::{expand_workspace_tree, resolve_workspace_config};
@@ -230,25 +230,21 @@ fn validate_fetched_declaration(
     requested: &str,
     native_depth: usize,
 ) -> std::result::Result<(), FetchFailure> {
-    let mut fence: Option<String> = None;
+    // §FS-check.1.1.5.1: the output is read by the one fence and raw-text block
+    // machine the scanner reads its snapshot with, so a heading shown inside
+    // either is content, never the declaration or one of its sections.
+    let mut blocks = MarkdownBlocks::default();
     let mut declaration_count = 0usize;
     let mut first_content = true;
     for line in text.lines() {
         let trimmed = line.trim_start();
-        if let Some(open) = &fence {
-            if trimmed.starts_with(open) {
-                fence = None;
-            }
-            first_content = false;
-            continue;
-        }
-        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
-            fence = Some(trimmed.chars().take(3).collect());
+        let block = blocks.line(line);
+        if block.in_fence() {
             first_content = false;
             continue;
         }
         let hashes = trimmed.bytes().take_while(|byte| *byte == b'#').count();
-        if hashes > 0 && trimmed.as_bytes().get(hashes) == Some(&b' ') {
+        if block.may_be_heading() && hashes > 0 && trimmed.as_bytes().get(hashes) == Some(&b' ') {
             if hashes == native_depth {
                 let tail = &trimmed[hashes + 1..];
                 let Some((id, title)) = tail.split_once(':') else {

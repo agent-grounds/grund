@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use super::fetch::{FetchFailure, fetch_io, fetch_operational};
 use crate::config::Config;
 use crate::grammar::{
-    Grammar, markdown_fence_delimiter, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
+    Grammar, MarkdownBlocks, near_miss_heading, parse_id_arg, parse_longest_id_prefix,
 };
 use crate::model::{Id, OperationDiagnostic, format_path};
 use crate::scanner::{markdown_heading_level, walk_scannable_files_with_sources};
@@ -70,18 +70,15 @@ fn declarations_at_depth(
         .map_err(|_| fetch_operational("snapshot home is not UTF-8 Markdown"))?;
     let mut headings = Vec::<(usize, Option<Id>)>::new();
     let mut offset = 0usize;
-    let mut fence = None;
+    let mut blocks = MarkdownBlocks::default();
     for line in text.split_inclusive('\n') {
         let without_newline = line.strip_suffix('\n').unwrap_or(line);
         let content = without_newline
             .strip_suffix('\r')
             .unwrap_or(without_newline);
         let trimmed = content.trim_start();
-        if markdown_fence_delimiter(&mut fence, content) {
-            offset += line.len();
-            continue;
-        }
-        if fence.is_some() {
+        // §FS-check.1.1.5.1: neither a fence nor a raw-text HTML block holds a heading.
+        if !blocks.line(content).may_be_heading() {
             offset += line.len();
             continue;
         }

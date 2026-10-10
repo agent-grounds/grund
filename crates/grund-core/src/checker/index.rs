@@ -14,7 +14,8 @@ use super::index_entries::KindIndexEntries;
 use super::index_mention::index_mentions;
 use crate::config::{Frame, Schema};
 use crate::grammar::{
-    declaration_id_on_line, is_inside_inline_code, never_rewrite_context, render_id,
+    declaration_id_on_line, is_inside_inline_code, markdown_line_kinds, never_rewrite_context,
+    render_id,
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, Id, configured_home_path_key,
@@ -329,6 +330,8 @@ pub(super) fn check_kind_indexes(
             .as_deref()
             .map(|text| text.lines().collect())
             .unwrap_or_default();
+        // §FS-check.1.1.5.1: which of those lines may hold a heading at all.
+        let kinds = markdown_line_kinds(lines.iter().copied());
         // §FS-check.3.17.4: a bare citation is an entry only where `fmt --write`
         // may wrap it. A link through this index path to a target outside the
         // physical config root is readable but not writable by the formatter.
@@ -344,8 +347,14 @@ pub(super) fn check_kind_indexes(
             };
             // §FS-fmt.6.4: `fmt` leaves a declaration heading alone, so a citation
             // riding on one is no more repairable than one in inline code. Fenced
-            // blocks need no test here — the scanner records no citation inside one.
-            if declaration_id_on_line(frame.grammar(), line, false, true).is_some() {
+            // blocks need no test here — the scanner records no citation inside one —
+            // and a raw-text HTML block holds no heading (§FS-check.1.1.5.1).
+            let heading_position = kinds
+                .get(citation.line.saturating_sub(1))
+                .is_some_and(|kind| kind.may_be_heading());
+            if heading_position
+                && declaration_id_on_line(frame.grammar(), line, false, true).is_some()
+            {
                 continue;
             }
             // An `Ignored` form creates no entry: a citation `fmt` will not wrap

@@ -1,7 +1,7 @@
 //! The grammar component (§AR-system.2.1): the lexical facts every other
 //! component shares — the ID grammar compiled from `[id] format` and its
 //! near-miss detection, comment-line and comment-block recognition,
-//! fenced-block boundaries, the number-only shorthand, inline-note layout, the
+//! fenced-block and raw-text HTML block boundaries, the number-only shorthand, inline-note layout, the
 //! never-rewrite predicates and the formatter's own syntax — its cross-reference
 //! wrapper and its suppression directives (§FS-fmt.2.3, §FS-fmt.2.5). It
 //! consumes text and knows no
@@ -75,6 +75,7 @@ mod id_rules;
 mod ids;
 mod inline_note_layout;
 mod managed_block;
+mod markdown_blocks;
 mod near_miss;
 mod never_rewrite;
 mod section_paths;
@@ -96,6 +97,9 @@ pub(crate) use comment_line::{comment_strip_prefixes, strip_block_closer};
 pub(crate) use compiled::{
     AGENTS_BLOCK_END, QUALIFIED_CITATION_PREFIX, STUB_LINK_HEADING, section_path,
 };
+// The bare fence reader stays visible to the template tests, which look for a
+// fenced example rather than for a heading (§FS-check.1.1.5).
+#[cfg(test)]
 pub(crate) use fence::markdown_fence_delimiter;
 pub(crate) use fmt_cross_refs::flatten_cross_ref_links;
 pub(crate) use fmt_suppress::{FMT_DIRECTIVE, FmtDirectives, FmtExcluded};
@@ -117,6 +121,7 @@ pub(crate) use managed_block::{
     AGENT_GUIDANCE_BLOCK_VERSION, AGENTS_BLOCK_VERSION, AgentsBlockLookup, agent_guidance_markers,
     find_agent_guidance_block, find_agents_block, find_managed_block, integrations_block_markers,
 };
+pub(crate) use markdown_blocks::{MarkdownBlocks, MarkdownLine, markdown_line_kinds};
 // The version a managed integrations block is written and read at: the command
 // that installs one stamps it, and that command is the CLI's
 // (§FS-integrations.4.2, §AR-bindings.3).
@@ -155,6 +160,8 @@ mod tests_fmt_suppression;
 mod tests_inline_code_span;
 #[cfg(test)]
 mod tests_inline_note_layout;
+#[cfg(test)]
+mod tests_markdown_blocks;
 #[cfg(test)]
 mod tests_never_rewrite;
 #[cfg(test)]

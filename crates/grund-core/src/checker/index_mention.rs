@@ -7,7 +7,7 @@
 use std::collections::BTreeSet;
 
 use crate::config::Frame;
-use crate::grammar::{declaration_id_on_line, markdown_fence_delimiter, parse_id};
+use crate::grammar::{MarkdownBlocks, declaration_id_on_line, parse_id};
 use crate::model::{Declaration, Id};
 
 /// Whether `line` names `file_name` as a **whole** file name
@@ -60,12 +60,17 @@ pub(super) fn index_mentions<'a>(
     unentered: &[(&'a Id, &'a Declaration)],
 ) -> BTreeSet<&'a Id> {
     let mut mentioned: BTreeSet<&Id> = BTreeSet::new();
-    let mut fence = None;
+    let mut blocks = MarkdownBlocks::default();
     for line in lines {
-        if markdown_fence_delimiter(&mut fence, line) || fence.is_some() {
+        let block = blocks.line(line);
+        if block.in_fence() {
             continue;
         }
-        if declaration_id_on_line(frame.grammar(), line, false, true).is_some() {
+        // §FS-check.1.1.5.1: a heading-shaped line in a raw-text HTML block
+        // declares nothing, so what it names is a mention like any prose.
+        if block.may_be_heading()
+            && declaration_id_on_line(frame.grammar(), line, false, true).is_some()
+        {
             continue;
         }
         // The grammar's own notion of an ID-shaped token, parsed the way the

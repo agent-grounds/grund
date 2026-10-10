@@ -3,9 +3,9 @@ use std::path::Path;
 
 use crate::config::{Config, fmt_excluded};
 use crate::grammar::{
-    DocstringContent, DocstringCursor, FmtDirectives, declaration_id_on_line, id_token_end_at,
-    is_inside_inline_code, is_inside_markdown_link_destination, markdown_fence_delimiter,
-    never_rewrite_context_in, string_literal_in,
+    DocstringContent, DocstringCursor, FmtDirectives, MarkdownBlocks, MarkdownLine,
+    declaration_id_on_line, id_token_end_at, is_inside_inline_code,
+    is_inside_markdown_link_destination, never_rewrite_context_in, string_literal_in,
 };
 use crate::model::canonical_snapshot_path;
 use crate::resolver::shorthand_token_expansion;
@@ -181,7 +181,7 @@ pub(super) fn line_is_rewritable(
     is_md: bool,
     is_py: bool,
 ) -> bool {
-    let mut markdown_fence = None;
+    let mut markdown_blocks = MarkdownBlocks::default();
     // §FS-fmt.2.3.1.1: `rewrite_file` reads a docstring line's content when it asks
     // whether the line is a declaration heading, so this walk does too.
     let mut docstrings = DocstringCursor::new(is_py, config.docstring_python);
@@ -189,7 +189,12 @@ pub(super) fn line_is_rewritable(
     // carries across files, so the walk starts at the top of this one.
     let mut directives = FmtDirectives::new(config.lexical(), is_md);
     for (index, line) in text.lines().enumerate() {
-        if is_md && markdown_fence_delimiter(&mut markdown_fence, line) {
+        let block = if is_md {
+            markdown_blocks.line(line)
+        } else {
+            MarkdownLine::Text
+        };
+        if block == MarkdownLine::FenceDelimiter {
             if index == line_index {
                 return false;
             }
@@ -198,7 +203,7 @@ pub(super) fn line_is_rewritable(
         let docstring = docstrings.advance(line);
         // §FS-fmt.2.5.2.2: inside a fence nothing is rewritten and a directive is an
         // illustration, so the fence is asked first here exactly as it is there.
-        if markdown_fence.is_some() {
+        if block.in_fence() {
             if index == line_index {
                 return false;
             }
@@ -213,14 +218,16 @@ pub(super) fn line_is_rewritable(
             continue;
         }
         if index == line_index {
+            // §FS-check.1.1.5.1: a raw-text HTML block holds no declaration heading.
             return directives.rewriting()
-                && declaration_id_on_line(
-                    &config.grammar,
-                    docstring.text_of(line),
-                    docstring.is_docstring(),
-                    is_md,
-                )
-                .is_none();
+                && (!block.may_be_heading()
+                    || declaration_id_on_line(
+                        &config.grammar,
+                        docstring.text_of(line),
+                        docstring.is_docstring(),
+                        is_md,
+                    )
+                    .is_none());
         }
     }
     false
