@@ -141,6 +141,18 @@ the marker does not make a fenced example or assigned Python data into a citatio
 The compatibility impact is recorded in
 [§DF-word-character-citation-markers](../decisions/functional/DF-word-character-citation-markers.md#df-word-character-citation-markers-recognize-accepted-word-character-markers).
 
+#### 1.1.11 A glob operator never shortens a marked citation
+
+A citation names one exact point, so a glob operator — `*`, `?`, a `[` class, or a `{` alternation — never ends a marked token early to leave a citation of its prefix. The marked **candidate** runs from the marker over every address character, section separator, and operator that follows; a `[` is an operator only when an address character or `!` follows it, a `{` only when an address character or `,` follows it, and `[^…]` is a Markdown footnote reference, never a class. The candidate is then read in this order:
+
+1. **Catalog first.** A candidate that is a declared ID, with or without a section path, is that citation whatever characters it holds: under `{kind}*-{slug}`, `<§>FS*-login` cites `FS*-login`, and under a slug pattern admitting `*`, `<§>FS-tail*` cites `FS-tail*` ([§FS-declarations.line.configured-slug](FS-declarations.md#lineconfigured-slug-characters-admitted-by-the-slug-pattern-belong-to-the-canonical-id)).
+2. **Grammatical but undeclared.** A candidate the effective address grammar ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) accepts whole is a citation with the ordinary verdicts: an undeclared `<§>FS*-logout` dangles ([§FS-check.3.1](FS-check.md#31-dangling-citation)), and a missing section is [§FS-check.3.2](FS-check.md#32-missing-section).
+3. **A pattern.** Any other candidate holding an operator that opens a component (`<§>FS-login.*`, `<§>FS-login.requirements.**`, `<§>FS-*.requirements`, `<§>FS-[a,b]`) or sits inside one (`<§>FS-log*in.requirements`) is consumed whole and is a pattern, not a citation. No edge to its prefix or to anything else is recorded, so `refs`, `cover`, inbound counts, grounding, citation directions, and chapter rules never see it; `grund fmt` never rewrites it; and its escaped form earns no `escaped-citation-resolves` suggestion ([§FS-check.2.3.1](FS-check.md#231-escaped-citation-resolves)). It is reported as [§FS-check.checks.glob-citation](FS-check.md#checksglob-citation-glob-citation).
+
+**Punctuation stays punctuation.** A `*` or `?` run that directly follows a complete ID or section path, and is followed by no address character, operator, or section separator leading to one, is not part of the candidate. Terminal emphasis `*<§>FS-login*` and `**<§>FS-login**.`, a sentence-final `<§>FS-login?`, a footnote `<§>FS-login[^1]`, and a trailing `<§>FS-c*` stay ordinary citations of the ID before them, exactly as before.
+
+Under `strict = false` an **unmarked** candidate holding an operator by the same reading is one prose token, suppressed whole like the letter-bearing tail of [§FS-check.1.1.2](FS-check.md#112-named-section-candidates): no citation and no finding. Escapes and the context exclusions of [§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code) apply first. No configured ID grammar is restricted: an operator character a format or slug pattern admits is read by rules 1 and 2. Removing the prefix edge is the correction recorded in [§DF-glob-citation](../decisions/functional/DF-glob-citation.md#df-glob-citation-a-glob-operator-ends-no-citation-and-the-prefix-it-left-behind-is-removed).
+
 ### 1.2 The number-only shorthand
 
 When a kind's effective format carries **both** `{number}` and `{slug}` ([§FS-config.3.2](FS-config.md#32-id--id-grammar)) — the default `{kind}-{number}-{slug}` that `grund init` writes — the number alone already identifies a declaration within its kind, so `§FS-042` is an abbreviation of `§FS-042-user-login` rather than a different ID. `check` **recognizes** and resolves that shape independently of the project's persisted-form policy. Under the default `[reference] shorthand = "canonical"` it reports a unique shorthand to be rewritten; under `"accepted"` the same resolved edge may persist ([§FS-check.3.13](FS-check.md#313-number-only-shorthand-citation)). It is never silently ignored, which is what [§GOAL-no-dangling-refs](../goals.md#goal-no-dangling-refs-every-cited-id-resolves-to-a-declaration) means by "false negatives are bugs".
@@ -1600,3 +1612,21 @@ Return the most recently completed run's status (`0`/`1`/`2`). If none has compl
 ### 6.4 Scope
 
 `--watch` is a `check` flag spelled as `grund check --watch [<path>]` ([§FS-cli](FS-cli.md#fs-cli-grunds-command-line-surface-conventions)). Other subcommands reject it. Parse and validate static invocation choices once, preserving ordinary validation diagnostics and their precedence; reuse those choices for every run. Config-dependent validity and output defaults are re-evaluated with the tree, rather than frozen at startup. There is no daemon/service protocol, public binding watch API, incremental engine or LSP dependency.
+
+## checks: Checks
+
+Each section below is one check named by its finding code, as [§REQ-spec-section-names.code](../requirements/REQ-spec-section-names.md#code-a-check-is-named-by-its-diagnostic-code) requires; its severity is its row in [§FS-errors.5.5](FS-errors.md#55-the-check-code-catalog), so a promotion edits that cell and moves no coordinate.
+
+### checks.glob-citation: Glob citation
+
+A marked candidate that [§FS-check.1.1.11](FS-check.md#1111-a-glob-operator-never-shortens-a-marked-citation) reads as a pattern is reported once, located at its marker's line and column, with code `glob-citation` and this message:
+
+```text
+glob citation §<token>: a citation names one exact point, not a pattern; cite the point, or escape it as <§><token>; this warning becomes an error in grund 0.19.0
+```
+
+`<token>` is the candidate as written after the marker, and both `§` and `<§>` are spelled with the configured marker. Text output is `<path>:<line>: warning: <message>`; JSON carries the same path, line, code, and message with `"severity":"warning"` and `"sites":null`; the LSP carries the same finding over the candidate ([§FS-lsp.1.1](FS-lsp.md#11-diagnostics)), and the Python binding reports it with the same code ([§GOAL-multi-language](../goals.md#goal-multi-language-same-engine-three-platforms)). `--only glob-citation` and `--ignore glob-citation` select it by the ordinary rules ([§FS-check.1.4](FS-check.md#14-selecting-findings-with---only-and---ignore)). `--full` keeps it narrowed to the configured scan scope, as other convention findings are; outside that scope the pattern still records no citation.
+
+#### checks.glob-citation.1: A warning before 0.19.0, an error in it
+
+Every release before grund 0.19.0 reports the finding as a warning at exit `0`, so a repository that wrote a pattern where a citation belongs has a release to cite the point or escape it ([§REQ-backwards-compatibility.2](../requirements/REQ-backwards-compatibility.md#2-the-deprecation-path)). In grund 0.19.0 only the severity moves to error, contributing exit `1`, and the closing clause becomes `this became an error in grund 0.19.0`; the site, code, and every other byte stay. The prefix edge is gone in both: that is not this ramp but the correction of [§DF-glob-citation](../decisions/functional/DF-glob-citation.md#df-glob-citation-a-glob-operator-ends-no-citation-and-the-prefix-it-left-behind-is-removed).
