@@ -1,5 +1,6 @@
 //! The controlled-English sentence front end (§FS-rules.2–4, §AR-rules.2).
 
+mod conjunction;
 mod count;
 mod forms;
 mod predicate;
@@ -10,6 +11,7 @@ mod targets;
 
 use super::RuleAnchor;
 use crate::grammar::Grammar;
+use conjunction::conjunction_forms;
 use forms::{Form, Refusal, refuse};
 use predicate::parse_predicate;
 use std::collections::{BTreeMap, BTreeSet};
@@ -226,6 +228,13 @@ fn read(
     if let Some(refusal) = quantified(title, split.map(|(subject, ..)| subject), vocabulary) {
         return Err(refusal);
     }
+    // §FS-rules.3.5.5: clauses joined by `and` are refused before any subject is read.
+    if let Some(forms) = conjunction_forms(sentence) {
+        return Err(refuse(
+            "conjunctions are not accepted",
+            Form::Many(forms, "and"),
+        ));
+    }
     let Some((subject_text, level, polarity, predicate)) = split else {
         return Err(match sentence.split_once(" may not ") {
             // §FS-rules.3.5.4.5: `must not`, the rest as typed.
@@ -282,7 +291,7 @@ fn read(
     ))
 }
 
-/// §FS-rules.3.5: three documented sentences are refused for their own
+/// §FS-rules.3.5: two documented sentences are refused for their own
 /// production whatever the vocabulary reads of the rest, and offer themselves
 /// with that production replaced (§FS-rules.3.5.4.5).
 fn documented(title: &str) -> Option<Refusal> {
@@ -294,22 +303,12 @@ fn documented(title: &str) -> Option<Refusal> {
         ),
         "Each FS must cite a GOAL." => refuse(
             "quantifier \"a\" is ambiguous",
-            Form::Two(
-                [
+            Form::Many(
+                vec![
                     form("Each FS must cite at least one GOAL."),
                     form("Each FS must cite exactly one GOAL."),
                 ],
                 "or",
-            ),
-        ),
-        "Each FS must cite at least one GOAL and must not cite any AR." => refuse(
-            "conjunctions are not accepted",
-            Form::Two(
-                [
-                    form("Each FS must cite at least one GOAL."),
-                    form("Each FS must not cite any AR."),
-                ],
-                "and",
             ),
         ),
         _ => return None,
@@ -333,6 +332,10 @@ fn quantified(title: &str, subject: Option<&str>, vocabulary: &RuleVocabulary) -
     };
     let head = subject.strip_prefix(quantifier).unwrap_or_default();
     let refusal = refused(fault, Spelling::Each, subject, head, None, "").rule_refusal(vocabulary);
+    // §FS-rules.3.5.4.2: a subject holding a clause of its own is two rules.
+    if holds_clause(subject) {
+        return Some(refusal.offering_none(true));
+    }
     let after_subject = &title[subject.len()..];
     Some(refusal.within(|subject| format!("{subject}{after_subject}")))
 }

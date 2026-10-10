@@ -59,7 +59,7 @@ pub(super) fn parse_predicate(
             let cite = |count| format!("cite {count} {kinds}");
             return Err(refuse(
                 "quantifier \"a\" is ambiguous",
-                Form::Two([cite("at least one"), cite("exactly one")], "or"),
+                Form::Many(vec![cite("at least one"), cite("exactly one")], "or"),
             ));
         }
         let (card, kinds, _) =

@@ -75,11 +75,11 @@ fn a_pass_that_only_turns_named_sections_on_reads_the_form_again() {
 #[test]
 fn a_pass_with_more_than_one_candidate_offers_no_form() {
     let (settled, passes) = settled("Each FS must cite at least 1 FS.", |_, _| {
-        let pair = [
+        let pair = vec![
             "Each FS must cite a FS.".into(),
             "Each FS must cite FS.".into(),
         ];
-        Some(refuse("ambiguous", Form::Two(pair, "or")))
+        Some(refuse("ambiguous", Form::Many(pair, "or")))
     });
     assert_eq!(settled, Err(false));
     assert_eq!(passes, 1);
