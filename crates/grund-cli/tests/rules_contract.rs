@@ -6,6 +6,8 @@
 mod authority;
 #[path = "rules_contract/chapter_path_reasons.rs"]
 mod chapter_path_reasons;
+#[path = "rules_contract/conjunctions.rs"]
+mod conjunctions;
 #[path = "rules_contract/documentation.rs"]
 mod documentation;
 #[path = "rules_contract/paste_back.rs"]

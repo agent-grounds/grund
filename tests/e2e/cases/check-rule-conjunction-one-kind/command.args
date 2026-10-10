@@ -1,0 +1,1 @@
+check --rule 'Each FS must cite at least one FS and must not cite any FS.' {repo}
