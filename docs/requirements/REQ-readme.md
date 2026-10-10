@@ -9,16 +9,19 @@ The README opens with what `grund` is: the two grounds, one bullet each, every b
 The README gives concise links to the existing traceability comparison and to performance
 evidence and its methodology. It reuses the introduction and section-retrieval examples
 rather than adding another slogan block or copying the detailed comparison.
+An early quick-start link leads to installation and a runnable example before a
+reader needs to learn the whole schema. Setup distinguishes adopting existing specs
+from scaffolding new ones.
 
 ### 1.1 The loop
 
-Declare, cite and check, as one row of cards. Each card names its step, says in one line
-what the step does, and carries one excerpt from this repository ([§REQ-readme.2](REQ-readme.md#2-every-example-is-real)): the
-declared section, the code that cites it, and `grund check` failing once that section is
-renumbered. The row is an HTML table, so it renders in either theme and its text stays
-under the scan: a citation a card shows is checked like any other ([§REQ-readme.3](REQ-readme.md#3-the-readmes-citations-are-checked)). A
-picture whose text the scan cannot read carries no excerpt, because nothing would notice
-it drift.
+Declare and cite sit side by side, with check spanning the row below. Each card names
+its step, says what it does, and carries one excerpt from a committed runnable example
+([§REQ-readme.2](REQ-readme.md#2-every-example-is-real)): a short requirement, the code that cites it, and
+`grund check` failing once that section is renumbered. The check card names the
+renumbering before showing its result. The HTML table keeps the excerpts readable
+as text in either theme. The example has its own configuration and checked citations;
+its IDs are escaped in the root README and linked to their example files.
 
 ### 1.2 The read ladder
 
@@ -26,20 +29,27 @@ What an agent reads in place of the file: the lead, one section, the section map
 full body of one real declaration, each beside its measured size, so what the ladder saves
 is a number rather than a claim ([§GOAL-token-economy](../goals.md#goal-token-economy-give-an-agent-the-right-amount-of-spec-not-the-whole-file)). Sizes are rounded, so that an
 ordinary edit to that declaration does not stale them.
+The measurements name their repository scope, and a short captured query shows
+what retrieval actually returns.
 
 ### 1.3 The map
 
 The repository's kinds and the directions their citations take, drawn as one diagram from
 its `[citations]`, with `must` and `should` told apart. The diagram summarizes; the rendered
 directions in `AGENTS.md` stay the complete statement.
+Kind labels explain their names, alternative targets remain alternatives, and the
+caption identifies this as one configurable schema, not a universal hierarchy.
 
 ## 2. Every example is real
 
-Code excerpts are verbatim from this repository, with elisions marked. Command output is captured from actually running the command against this tree — no invented IDs, no invented paths, no invented output. A change that invalidates a captured excerpt or output updates the README in the same change, per the co-change contract in [§FS-examples.4](../functional-spec/FS-examples.md#4-maintenance-contract).
+Code excerpts are verbatim from this repository or its committed runnable examples, with elisions marked. Command output is captured from actually running the command against the named repository or example — no invented IDs, no invented paths, no invented output. A change that invalidates a captured excerpt or output updates the README in the same change, per the co-change contract in [§FS-examples.4](../functional-spec/FS-examples.md#4-maintenance-contract).
 
 ## 3. The README's citations are checked
 
 `README.md` is named in `[scan] include` ([§FS-config.3.5](../functional-spec/FS-config.md#35-scan--what-gets-scanned)), so every `§`-marked citation in its prose resolves under `grund check` like any other scanned file's. Illustrations that must not resolve stay inside fenced code blocks, which the scanner ignores.
+HTML excerpts from a separate example repository encode the marker as `&#167;`;
+the example's own check resolves those citations, and relative links identify their
+source files. Such IDs are not declarations in the root repository's namespace.
 
 ## evidence: Positioning and performance claims have evidence
 

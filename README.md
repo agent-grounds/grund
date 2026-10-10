@@ -2,77 +2,82 @@
 
 [![CI](https://github.com/agent-grounds/grund/actions/workflows/ci.yml/badge.svg)](https://github.com/agent-grounds/grund/actions/workflows/ci.yml) [![crates.io](https://img.shields.io/crates/v/grund.svg)](https://crates.io/crates/grund) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Keep your agents grounded** — specs, docs, and code as one knowledge graph, always in sync.
+> **Keep your agents grounded** — connect code to the spec that explains it.
 
-`grund` exists so you always know *why* — why your agents did what they did, why a line is the way it is: all work stays grounded in the spec that called for it ([§GRUND-grund](docs/grund.md#grund-grund-agents-stay-grounded-in-the-spec)). Keeping the why means keeping a structure, and `grund` takes on the two parts of it that are hard:
+`grund` gives specs stable IDs, lets code cite them, and checks those citations in CI.
+Agents retrieve the section they need before editing ([§GRUND-grund](docs/grund.md#grund-grund-agents-stay-grounded-in-the-spec)).
 
-- **The shape of what your project knows** — its kinds of fact, where each lives, and how it is sectioned — declared once in `grund.toml`, with every fact at a stable ID that is fetched on demand in minimal tokens instead of re-read from whole files ([§GRUND-schema](docs/grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)).
+- **Structure:** define your kinds of fact, their homes and their IDs in `grund.toml`; retrieve one section at a time ([§GRUND-schema](docs/grund.md#grund-schema-the-shape-of-a-projects-knowledge-is-hard-to-define-and-to-keep)).
+- **Checks:** catch broken citations and violations of your declared rules in pre-commit and CI ([§GRUND-links](docs/grund.md#grund-links-the-cross-linking-rules-are-hard-to-define-and-to-hold)).
+
+[Quick start](#quick-start) · [Try the example](examples/quickstart/) · [Guides](docs/user-facing/README.md)
 
 ## How it works
 
 <!-- grund:fmt off -->
 <table>
 <tr>
-<td valign="top" width="31%">
+<td valign="top" width="50%">
 <b>1 · Declare</b><br>
-A spec point gets a stable ID
+Give a requirement an ID<br>
+<code>requirements.md</code>
 <pre>
-&#35; FS-check: …
-&#35;&#35;&#35; 3.2 Missing section
-A citation with a section
-suffix […] where the
-declaration exists but
-the requested section
-heading does not.
+&#35; FS-name: Display names&#10;
+&#35;&#35; 1. Trim whitespace&#10;
+Trim surrounding whitespace.
 </pre>
 </td>
-<td>➜</td>
-<td valign="top" width="31%">
+<td valign="top" width="50%">
 <b>2 · Cite</b><br>
-Code points back to the spec
+Point code at that requirement<br>
+<code>src/name.py</code>
 <pre>
-// §FS-check.3.2: the ID
-// resolves but no
-// declaration has a
-// heading at the cited
-// section path — …
-if let Some(sec) =
-    &amp;cite.section {
+def clean_name(name):
+    """&#167;FS-name.1"""
+    return name.strip()
 </pre>
 </td>
-<td>➜</td>
-<td valign="top" width="31%">
+</tr>
+<tr>
+<td colspan="2">
 <b>3 · Check</b><br>
-CI fails when they drift apart
+Rename section <b>1 → 2</b> without updating the citation.<br>
+CI catches the broken reference:
 <pre>
 $ grund check
-…
-…/references.rs:292:
-error: missing section
-FS-check.3.2
-…
+src/name.py:2: error: missing section FS-name.1
 </pre>
 </td>
 </tr>
 </table>
 <!-- grund:fmt on -->
 
-<sub>Excerpts from this repository, wrapped to fit: the section in
-[`FS-check.md`](docs/functional-spec/FS-check.md), the code in
-[`references.rs`](crates/grund-core/src/checker/references.rs), and `grund check`
-after the heading is renumbered to 3.99 — every site that cites it fails, this card's
-own citation among them.</sub>
+From the [runnable example](examples/quickstart/):
+[requirement](examples/quickstart/repo/requirements.md),
+[code](examples/quickstart/repo/src/name.py), and captured failure output.
+Its citations are checked inside that example's own repository.
 
-A link checker checks links; **`grund` checks intent.** [Lychee](https://lychee.cli.rs/)
-asks whether a URL answers; `grund` asks whether a `§`-citation still names the section
-the code was written against. Both belong in CI ([§GRUND-links.2](docs/grund.md#2-holding-every-edit-to-them)). The
+**A valid citation does not prove the code implements the requirement.** Returning
+`name` unchanged while keeping the citation would still pass this check; tests and review
+verify behavior. Grund checks citation targets and declared structural rules.
+[Lychee](https://lychee.cli.rs/) checks ordinary links; both belong in CI
+([§GRUND-links.2](docs/grund.md#2-holding-every-edit-to-them)). The
 [requirements-traceability comparison](docs/related-work/REL-traceability-tools.md#workmatrix-reader-tasks)
 sets `grund` beside the tools it descends from.
 
 ## What an agent reads
 
-Before an agent changes code, it reads the spec the code cites — `grund <ID>`, not
-whole files — and climbs only as far as it needs:
+Before editing, an agent retrieves the cited requirement. Inside the example:
+
+```console
+$ grund FS-name.1
+## 1. Trim whitespace
+
+Trim surrounding whitespace.
+```
+
+For a larger specification, it can choose how much to read. These rounded word
+counts are measured on Grund's own `FS-check` specification:
 
 | An agent runs | and reads |
 |---|---|
@@ -89,43 +94,47 @@ shows how to find and split a lead that grew too heavy.
 
 ## The map
 
-Every fact has a kind, every kind a home, and citations run one way — from code up
-to the reason it exists. This is `grund`'s own `[citations]`, drawn:
+Kinds and citation rules are configurable. Here is a simplified part of Grund's
+own schema, showing required targets and recommended alternatives:
 
 ```mermaid
 flowchart BT
-  GOAL["GOAL · where"] --> GRUND["GRUND · why"]
-  REQ["REQ · never break"] --> GOAL
-  FS["FS · what"] --> GOAL
-  AR["AR · how"] --> FS
-  DF["DF · product decisions"] --> FS
-  DA["DA · design decisions"] --> AR
-  code --> FS & AR
-  integration["tests/integration"] --> AR
-  e2e["tests/e2e"] == must ==> FS
-  examples == must ==> FS
+  code["Code"] -->|should cite either| implementation["FS · functional spec<br/>or AR · architecture"]
+  tests["End-to-end tests and examples"] == must cite ==> FS["FS · functional spec"]
+  FS -->|should cite either| purpose["GOAL · goal<br/>or another FS · functional spec"]
 ```
 
-A thin arrow is a `should` (`grund check --suggestions`); a thick one is a `must`, an
-error. FS, REQ and examples never cite AR: the *what* never leans on the *how*. The
+A thin arrow is a recommendation (`grund check --suggestions`); a thick one is a
+requirement, whose absence is an error. Same-kind citations are allowed; this is
+not a universal hierarchy. This repository also forbids functional specs,
+requirements and examples from citing architecture. The
 complete statement is the [citation directions in `AGENTS.md`](AGENTS.md#citation-directions);
 kinds, homes and the ID grammar are in the [structure guide](docs/user-facing/structure.md),
 and the `[citations]` grammar in [citation directions](docs/user-facing/citation-directions.md).
 
-## Start
+## Quick start
 
 ```bash
-cargo install grund   # the CLI
-grund init            # writes AGENTS.md and grund.toml
-grund init --docs     # also scaffolds docs/ and tests/
-grund check           # run it in pre-commit and CI
+cargo install grund
 ```
 
-`grund init` writes the block your agent reads: this page's loop, ladder and map,
-rendered from your `grund.toml`. Ours is [`AGENTS.md`](AGENTS.md). For a repository
-that already has specs, [setting up a repository](docs/user-facing/setup.md) maps them
-first. [Installation](docs/user-facing/installation.md) lists what installs today, the
-supported platforms, the Python and Node APIs, and how to build a local candidate.
+First, [try the display-name example](examples/quickstart/): retrieve its
+requirement, get a passing check, then break and repair the citation in a temporary copy.
+
+For your own project, run the following **inside its repository** if you are
+starting with new specs:
+
+```bash
+grund init --docs     # writes config, agent instructions, and doc scaffolds
+grund check
+```
+
+**Already have specs?** [Map their existing locations](docs/user-facing/setup.md)
+before running `grund init`; use `--docs` only when you want scaffolds.
+`init` writes your agent's instructions from `grund.toml` — ours is
+[`AGENTS.md`](AGENTS.md). Add `grund check` to [pre-commit and CI](docs/user-facing/checking.md#in-pre-commit-and-ci).
+[Installation](docs/user-facing/installation.md) covers prebuilt binaries, supported
+platforms, the Python and Node APIs, and local candidate builds.
 
 ## Go deeper
 
@@ -150,5 +159,5 @@ The [benchmark report](docs/benchmarks.md) preserves a 2026-05-20 local timing r
 
 `grund` follows its own scheme: [why](docs/grund.md), [goals](docs/goals.md),
 [roadmap](docs/roadmap.md), [changelog](docs/changelog.md). This README is under spec
-too — [§REQ-readme](docs/requirements/REQ-readme.md#req-readme-the-readme-is-the-grounded-shop-window): every excerpt above is captured from this repository, and its
-citations are checked like any other scanned file's.
+too — [§REQ-readme](docs/requirements/REQ-readme.md#req-readme-the-readme-is-the-grounded-shop-window): excerpts come from this repository or its runnable examples,
+whose citations are checked in their own repositories.
