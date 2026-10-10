@@ -22,6 +22,7 @@ use crate::grammar::{anchor_slug, reduce_heading_text, render_id};
 use crate::model::{
     Catalog, Declaration, Id, SectionInfo, is_stub_for_inline_decl, resolve_stub_target,
 };
+use crate::scanner::file_declares_inline_home;
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
 /// home file — following an inline-spec stub to its real source file — plus a
@@ -29,7 +30,8 @@ use crate::model::{
 /// `.<section>` citation, the declaration's own heading for a bare-ID citation
 /// (§FS-fmt.6.2, §DF-md-link-anchor-strategy, §DF-declaration-anchor). A source-file
 /// home (a stub's target) and the `none` profile both get a bare file link.
-/// `None` if the ID does not resolve (§FS-fmt.6.4), and `None` for a `.<section>`
+/// `None` if the ID does not resolve (§FS-fmt.6.4), `None` through a stub `check`
+/// reports broken (§FS-fmt.6.4.2), and `None` for a `.<section>`
 /// citation of a section the declaration does not have, whether or not the link
 /// takes a heading anchor (§FS-fmt.6.4.1).
 pub(crate) fn markdown_link_target(
@@ -63,7 +65,13 @@ pub(crate) fn markdown_link_target_with_root(
         .or_else(|| decls.first())?;
     let home = if let Some(stub) = stub {
         let target = stub.defined_in.as_ref()?;
-        resolve_stub_target(&config.root, &stub.file, target)
+        let resolved = resolve_stub_target(&config.root, &stub.file, target);
+        // §FS-fmt.6.4.2: a stub check calls broken leads nowhere, so nothing is linked.
+        let overlays = findings.stub_targets.overlays();
+        if !file_declares_inline_home(&resolved, id, config, overlays).unwrap_or(false) {
+            return None;
+        }
+        resolved
     } else {
         home_decl.file.clone()
     };
