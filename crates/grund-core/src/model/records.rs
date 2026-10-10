@@ -5,6 +5,7 @@ use super::e2e::E2eCase;
 use super::headings::{NearMissHeading, SectionHeadingOutsideDeclaration, UnmarkedHeading};
 use super::line_owners::FileLineOwnership;
 use super::paths::normalize_path_lexically;
+use super::patterns::GlobCitation;
 use super::stub_resolution::StubResolution;
 use super::values::{
     DeclarationSource, EmbeddedValueRoot, InvalidValueSite, ValueBinding, ValueComponent,
@@ -327,6 +328,9 @@ pub struct Catalog {
     /// resolves to a real declaration — a likely bracketed live citation rather
     /// than an intended illustration (§FS-check.2.3.1, §AR-checker.2.11).
     pub escaped_citations: Vec<Citation>,
+    /// Marked candidates read as patterns (§FS-check.1.1.11): no citation, only
+    /// the site §FS-check.checks.glob-citation reports.
+    pub(crate) glob_citations: Vec<GlobCitation>,
     /// Headings that open like a declaration and do not parse as one
     /// (§FS-declarations.checks.declaration-near-miss) — recorded where the scan already decided the line was
     /// not a declaration, so the rule costs one regex on heading-shaped lines

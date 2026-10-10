@@ -27,6 +27,7 @@
 use anyhow::{Result, anyhow};
 
 use super::compiled::Grammar;
+use super::glob_candidate::{CandidateReading, CitationTokens};
 use crate::model::Id;
 
 /// Pull an `Id` out of a `Grammar` regex match — the `kind` / `num` / `slug`
@@ -64,14 +65,13 @@ impl Grammar {
     /// matches keep theirs. An enclosing full ID owns its internal marker
     /// suffixes; an explicit marker owns the following token's whole span.
     /// Overlapping marker starts are tried until a full ID claims the span.
+    /// Every candidate is read whole first (§FS-check.1.1.11): a marked pattern
+    /// claims its span and is returned apart, an unmarked one is dropped whole.
     /// Context exclusions remain the caller's decision over these same captures.
-    pub(crate) fn citation_captures<'a>(
-        &self,
-        line: &'a str,
-        marker: &str,
-    ) -> Vec<(usize, regex::Captures<'a>)> {
+    pub(crate) fn citation_captures<'a>(&self, line: &'a str, marker: &str) -> CitationTokens<'a> {
         let bare_matches: Vec<_> = self.citation_re.captures_iter(line).collect();
         let mut matches = Vec::new();
+        let mut patterns = Vec::new();
         if !marker.is_empty() {
             let mut claimed_end = 0;
             for (marker_start, _) in line.char_indices() {
@@ -79,16 +79,29 @@ impl Grammar {
                     continue;
                 }
                 let offset = marker_start + marker.len();
-                if let Some(caps) = self.citation_prefix_re.captures(&line[offset..]) {
-                    let token_end = offset + caps.get(0).unwrap().end();
-                    // §FS-check.1.1.10: an internal marker cannot steal a containing full ID.
-                    if bare_matches.iter().any(|bare| {
+                let rest = &line[offset..];
+                let prefix = self.citation_prefix_re.captures(rest);
+                let prefix_len = prefix.as_ref().map_or(0, |caps| caps.get(0).unwrap().end());
+                // §FS-check.1.1.10: an internal marker cannot steal a containing full ID.
+                if prefix.is_some()
+                    && bare_matches.iter().any(|bare| {
                         let full = bare.get(0).unwrap();
-                        full.start() < marker_start && full.end() >= token_end
-                    }) {
+                        full.start() < marker_start && full.end() >= offset + prefix_len
+                    })
+                {
+                    continue;
+                }
+                let caps = match self.read_candidate(rest, prefix_len) {
+                    CandidateReading::Ordinary => prefix,
+                    CandidateReading::Address(len) => self.citation_whole_re.captures(&rest[..len]),
+                    CandidateReading::Pattern(len) => {
+                        claimed_end = offset + len;
+                        patterns.push(marker_start..claimed_end);
                         continue;
                     }
-                    claimed_end = token_end;
+                };
+                if let Some(caps) = caps {
+                    claimed_end = offset + caps.get(0).unwrap().end();
                     matches.push((offset, caps));
                 }
             }
@@ -99,13 +112,29 @@ impl Grammar {
             if matches[..marked_count].iter().any(|(offset, marked)| {
                 let token = marked.get(0).unwrap();
                 full.start() < offset + token.end() && full.end() > offset - marker.len()
-            }) {
+            }) || patterns
+                .iter()
+                .any(|span| full.start() < span.end && full.end() > span.start)
+            {
                 continue;
             }
-            matches.push((0, caps));
+            let rest = &line[full.start()..];
+            match self.read_candidate(rest, full.len()) {
+                CandidateReading::Ordinary => matches.push((0, caps)),
+                CandidateReading::Address(len) => {
+                    if let Some(whole) = self.citation_whole_re.captures(&rest[..len]) {
+                        matches.push((full.start(), whole));
+                    }
+                }
+                // §FS-check.1.1.11: an unmarked pattern is one prose token, suppressed whole.
+                CandidateReading::Pattern(_) => {}
+            }
         }
         matches.sort_by_key(|(offset, caps)| offset + caps.get(0).unwrap().start());
-        matches
+        CitationTokens {
+            captures: matches,
+            patterns,
+        }
     }
 
     /// Whether `raw` has the shape of an unqualified `<ID>[.<section>]` argument

@@ -74,6 +74,9 @@ pub struct Grammar {
     /// A full-ID prefix directly after an explicit marker needs no intervening
     /// word boundary (§FS-check.1.1.10); `citation_captures` merges both paths.
     pub(super) citation_prefix_re: Regex,
+    /// The same pattern anchored at both ends: whether a whole marked candidate is
+    /// one address the grammar accepts (§FS-check.1.1.11 rules 1 and 2).
+    pub(super) citation_whole_re: Regex,
     pub(super) id_input_re: Regex,
     /// The compiled grammar remembers the gate so every token consumer can
     /// enforce the same whole-token suppression rule (§AR-scanner.2.3.4).
@@ -304,6 +307,10 @@ impl Grammar {
         // §FS-check.1.1.10: only the explicit-marker path bypasses the bare boundary.
         let citation_prefix_re =
             Regex::new(&format!(r"\A{}{}{}", namespace_prefix, id_pat, sec_suffix))?;
+        let citation_whole_re = Regex::new(&format!(
+            r"\A{}{}{}\z",
+            namespace_prefix, id_pat, sec_suffix
+        ))?;
         let id_input_re = Regex::new(&format!(r"^{}{}$", id_pat, sec_suffix))?;
         let legacy = LegacyGrammar::build(kinds, format, &section_pattern, &comment_prefix)?;
 
@@ -391,6 +398,7 @@ impl Grammar {
             section_re,
             citation_re,
             citation_prefix_re,
+            citation_whole_re,
             id_input_re,
             named_sections,
             near_misses,

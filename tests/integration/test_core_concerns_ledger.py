@@ -138,9 +138,9 @@ class CoreConcernsLedgerTest(unittest.TestCase):
         problems = []
         for number in ("10.1", "10.2"):
             body = section(self.text, number)
-            self.assertIsNotNone(body, f"§DISC-core-concerns.{number} is missing")
+            self.assertIsNotNone(body, f"DISC-core-concerns.{number} is missing")
             listed = items(body)
-            self.assertTrue(listed, f"§DISC-core-concerns.{number} lists no choice")
+            self.assertTrue(listed, f"DISC-core-concerns.{number} lists no choice")
             problems += [
                 f"{number}({item}) carries neither `Open — owner #N` nor `Settled by`"
                 for item, text in listed if not OWNED.search(text)

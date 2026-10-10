@@ -19,8 +19,8 @@ use super::fmt_shorthand_links::{accepted_shorthand_link, collect_local_accepted
 use super::fmt_value_bindings::markdown_citation_is_value_binding;
 use crate::config::Config;
 use crate::grammar::{
-    MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, is_inside_inline_code, parse_id,
-    parse_longest_id_prefix,
+    CandidateReading, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, is_inside_inline_code,
+    parse_id, parse_longest_id_prefix,
 };
 use crate::model::{Catalog, Id};
 use crate::resolver::{
@@ -160,6 +160,13 @@ fn markdown_link_citations(
     for caps in config.grammar.citation_re.captures_iter(line) {
         let Some(full) = caps.get(0) else { continue };
         if config.grammar.has_reserved_named_tail(line, full.end()) {
+            continue;
+        }
+        // §FS-check.1.1.11: `fmt` never links a pattern's prefix.
+        if let CandidateReading::Pattern(_) = config
+            .grammar
+            .read_candidate(&line[full.start()..], full.len())
+        {
             continue;
         }
         let marker_start = full.start().saturating_sub(config.marker.len());

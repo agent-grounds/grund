@@ -2,10 +2,12 @@ use std::collections::BTreeSet;
 
 use super::citation_line::CitationLine;
 use crate::grammar::{
-    QUALIFIED_CITATION_PREFIX, never_rewrite_context_in, parse_id, parse_longest_id_prefix,
-    qualified_suppressed_in_source,
+    CandidateReading, QUALIFIED_CITATION_PREFIX, never_rewrite_context_in, parse_id,
+    parse_longest_id_prefix, qualified_suppressed_in_source,
 };
-use crate::model::{Catalog, Citation, LegacyCitationCandidate, LocalSectionCitationCandidate};
+use crate::model::{
+    Catalog, Citation, GlobCitation, LegacyCitationCandidate, LocalSectionCitationCandidate,
+};
 
 /// Whether `fmt` may rewrite the citation whose marker starts at `marker_start` —
 /// a **`scan_line`** offset, which is what every pass below holds — on the line
@@ -106,6 +108,12 @@ pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings:
     }
     for (marker_start, _) in line.scan_line.match_indices(&line.schema.citation.marker) {
         let column = line.column_offset + marker_start + 1;
+        // §FS-check.1.1.11: a pattern's marker yields no catalog-compatible prefix either.
+        if findings.glob_citations.iter().any(|pattern| {
+            pattern.line == line.lineno && pattern.column == column && pattern.file == line.path
+        }) {
+            continue;
+        }
         let token_start = marker_start + line.schema.citation.marker.len();
         let Some(rest) = line.scan_line.get(token_start..) else {
             continue;
@@ -138,6 +146,32 @@ pub(super) fn scan_legacy_citation_candidates(line: &CitationLine<'_>, findings:
                 enclosing_section: None,
             });
     }
+}
+
+/// §FS-check.1.1.11 / §AR-scanner.2.3.6: the line's full-ID captures, after
+/// recording each marked candidate they read as a pattern — at its marker's
+/// column and as written after the marker, for §FS-check.checks.glob-citation —
+/// and claiming its marker, so no later pass on the line reads a prefix there.
+pub(super) fn claim_citation_tokens<'a>(
+    line: &CitationLine<'a>,
+    claimed_markers: &mut Vec<usize>,
+    findings: &mut Catalog,
+) -> Vec<(usize, regex::Captures<'a>)> {
+    let marker = line.schema.citation.marker.as_str();
+    let tokens = line
+        .frame
+        .grammar()
+        .citation_captures(line.scan_line, marker);
+    for span in &tokens.patterns {
+        claimed_markers.push(span.start);
+        findings.glob_citations.push(GlobCitation {
+            file: line.path.to_path_buf(),
+            line: line.lineno,
+            column: line.column_offset + span.start + 1,
+            token: line.scan_line[span.start + marker.len()..span.end].to_string(),
+        });
+    }
+    tokens.captures
 }
 
 /// §AR-scanner.2.5: collect `<§>`-escaped citation illustrations. The literal
@@ -178,6 +212,12 @@ pub(super) fn scan_escaped_citations(line: &CitationLine<'_>, findings: &mut Cat
         let Some(parsed) = parse_longest_id_prefix(id_rest, line.frame.grammar()) else {
             continue;
         };
+        // §FS-check.1.1.11: an escaped pattern illustrates a pattern, never its prefix.
+        if let CandidateReading::Pattern(_) =
+            line.frame.grammar().read_candidate(id_rest, parsed.len)
+        {
+            continue;
+        }
         let token_end = token_start + alias_len + parsed.len;
         findings.escaped_citations.push(Citation {
             namespace,

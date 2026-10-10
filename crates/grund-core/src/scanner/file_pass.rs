@@ -16,8 +16,8 @@ use std::path::{Path, PathBuf};
 use super::after_pass::AfterPass;
 use super::citation_line::CitationLine;
 use super::citations::{
-    scan_escaped_citations, scan_legacy_citation_candidates, scan_local_section_candidates,
-    scan_shorthand_citations,
+    claim_citation_tokens, scan_escaped_citations, scan_legacy_citation_candidates,
+    scan_local_section_candidates, scan_shorthand_citations,
 };
 use super::context::{
     assign_declaration_bodies, inline_citation_sites, markdown_heading_level,
@@ -394,6 +394,21 @@ pub(super) fn scan_file_text(
             );
         }
 
+        let citation_line = CitationLine {
+            scan_line,
+            raw_line: line,
+            docstring: DocstringContent::of(&scan, line),
+            column_offset: scan.column_offset,
+            lineno,
+            path,
+            schema,
+            frame,
+            is_md,
+            may_be_heading: heading_position,
+            value_comment: source_value_context,
+            inline_sites: &inline_sites,
+            inline_block_lines: &inline_block_lines,
+        };
         let workspace_mode = !workspace_targets.is_empty();
         let citation_start = findings.citations.len();
         let mut qualified_marker_starts = BTreeSet::new();
@@ -402,7 +417,9 @@ pub(super) fn scan_file_text(
         // (§DF-number-only-citation-shorthand.2.6), so the full ID always wins.
         let mut claimed_markers: Vec<usize> = Vec::new();
         // §FS-check.1.1.10: explicit-marker and bare starts share the same policy gates.
-        for (offset, caps) in grammar.citation_captures(scan_line, marker) {
+        // §FS-check.1.1.11: a pattern is recorded and claims its marker, so no pass reads a prefix.
+        for (offset, caps) in claim_citation_tokens(&citation_line, &mut claimed_markers, findings)
+        {
             let Some(full) = caps.get(0) else { continue };
             let token_start = offset + full.start();
             let token_end = offset + full.end();
@@ -489,21 +506,6 @@ pub(super) fn scan_file_text(
                 enclosing_section: None,
             });
         }
-        let citation_line = CitationLine {
-            scan_line,
-            raw_line: line,
-            docstring: DocstringContent::of(&scan, line),
-            column_offset: scan.column_offset,
-            lineno,
-            path,
-            schema,
-            frame,
-            is_md,
-            may_be_heading: heading_position,
-            value_comment: source_value_context,
-            inline_sites: &inline_sites,
-            inline_block_lines: &inline_block_lines,
-        };
         if workspace_mode {
             scan_workspace_qualified_pass(&citation_line, workspace_targets, findings);
         } else {
