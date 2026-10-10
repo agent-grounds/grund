@@ -60,7 +60,7 @@ pub(super) fn enroll_json_member(
         duplicate_sections: Vec::new(),
         is_stub: false,
         defined_in: None,
-        stub_home: None,
+        stub_resolution: None,
         e2e_case: None,
         title: None,
         body_start: member_line,

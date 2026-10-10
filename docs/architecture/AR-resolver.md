@@ -253,11 +253,12 @@ input, or carries the editor's text: the one read of a target, its observation
 
 ## 6. A link target is handed presentation
 
-`markdown_link_target(from, id, section, &Presentation, &Schema, frame, catalog)` in
+`markdown_link_target(from, id, section, &Presentation, frame, catalog)` in
 `resolver/link_targets.rs` stays the one function that builds the canonical link
 target a citation's ID resolves to ([§FS-fmt.6.2](../functional-spec/FS-fmt.md#62-form)). The anchor profile is
-presentation's, so it is passed in as that record; the root, the grammar and the
-docstring reading come from the schema and the run's frame. It is one of the two
+presentation's, so it is passed in as that record; the root and the grammar come
+from the run's frame, and the home from the verdict the scan recorded on each stub
+([§AR-scanner.4.6](AR-scanner.md#46-a-stubs-home-is-recorded-once-after-the-walk)), so it reads no file and is handed no schema. It is one of the two
 places below the writers that name `Presentation` ([§AR-system.4](README.md#4-dependency-direction)). The checker never
 calls it: the canonical target of an index entry reaches the checker already built,
 as `Expected` ([§AR-checker.1.3](../../crates/grund-core/src/checker/report.rs)), so an anchor-format change moves a drift comparison

@@ -6,10 +6,9 @@
 //! because the text and JSON shapes belong to the frontends.
 //! `ambiguity.rs` shares show's scanner-recorded home and section refusals with
 //! refs (§FS-refs.4), without making a citation query read a declaration body.
-//! `stub_home.rs` is the record both read for a stub: its target's, found by the
-//! ID whether or not the walk reached the target (§FS-show.2.3.7). Reading a
-//! target the walk did not reach is `resolver/stub_home.rs`, because `check`'s
-//! section lookup reads it too (§FS-check.3.2.1, §AR-resolver.5).
+//! Both read a stub's home off the verdict the scan recorded on it, whether or not
+//! the walk reached the target (§FS-show.2.3.7, §AR-scanner.4.6), and decide
+//! nothing about the stub themselves (§FS-declarations.checks.broken-stub.4).
 //!
 //! Three files left when §AR-system.2.10 became a component, all one fact: a
 //! declaration's body sliced by the spans a scan recorded is a function of the
@@ -65,7 +64,6 @@ pub(crate) use show_metadata::show_metadata;
 mod show_query;
 mod size_output;
 mod sizes;
-mod stub_home;
 
 pub use batch::{BatchShowFailure, BatchShowQuery, BatchShowRecord, show_batch_with_scope};
 pub use editor_completion::{CitationCompletion, LspCompletionContext};

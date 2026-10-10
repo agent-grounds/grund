@@ -18,7 +18,7 @@ use crate::grammar::{
 };
 use crate::model::{
     Catalog, CheckReport, Citation, Declaration, Diagnostic, Id, configured_home_path_key,
-    is_stub_for_inline_decl, physical_path_key, scanned_decl_relative_path, scanned_path_key,
+    id_homes, physical_path_key, scanned_decl_relative_path, scanned_path_key,
 };
 use crate::resolver::section_resolves;
 
@@ -176,14 +176,8 @@ impl IndexEntryState {
 /// The declaration a finding about `id` points at — the same home `grund list`
 /// and the unused warning pick, so a collapsed stub-and-inline pair is named at
 /// the body rather than twice (§FS-list.2.5, §DF-index-entry-form.2.5).
-fn index_home_declaration<'a>(
-    frame: Frame<'_>,
-    decls: &'a [Declaration],
-) -> Option<&'a Declaration> {
-    decls
-        .iter()
-        .find(|decl| !is_stub_for_inline_decl(frame.root(), decl, decls))
-        .or_else(|| decls.first())
+fn index_home_declaration(decls: &[Declaration]) -> Option<&Declaration> {
+    id_homes(decls).stand_ins().next()
 }
 
 /// Whether any of `decls` sits under `folder_key` — the recursive membership
@@ -315,7 +309,7 @@ pub(super) fn check_kind_indexes(
             .iter()
             .filter(|(id, _)| id.kind == target.kind)
             .filter(|(id, _)| owed.contains(*id))
-            .filter_map(|(id, decls)| Some((id, index_home_declaration(frame, decls)?)))
+            .filter_map(|(id, decls)| Some((id, index_home_declaration(decls)?)))
             .collect();
         if covered.is_empty() {
             continue;
@@ -360,9 +354,10 @@ pub(super) fn check_kind_indexes(
             let form = index_citation_form(line, &citation.text, &schema.citation.marker);
             // §FS-check.3.2.1: §FS-check.3.2's own test, so a stub's section in a
             // target outside the walk admits the entry.
-            let section_known = citation.section.as_deref().is_none_or(|section| {
-                section_resolves(findings, schema, frame, &citation.id, section)
-            });
+            let section_known = citation
+                .section
+                .as_deref()
+                .is_none_or(|section| section_resolves(findings, &citation.id, section));
             // §FS-fmt.6.2.1: `fmt` skips a section citation with no link target and
             // reports `rewrote 0 lines`. The physical-root predicate above is the
             // other §FS-check.3.17.4 gate; only the bare form is gated.

@@ -7,10 +7,9 @@ use super::selector_refusal::require_unique_literal;
 use crate::config::{Config, display_path, measure_point_text, run_warning_findings};
 use crate::grammar::render_id;
 use crate::model::{
-    Declaration, Finding, Id, SectionInfo, TextOverlays, format_path, is_stub_for_inline_decl,
-    sort_path_key,
+    Declaration, Finding, Id, SectionInfo, TextOverlays, format_path, id_homes, sort_path_key,
 };
-use crate::resolver::{PointBodyCache, home_as_scanned, load_workspace_context, point_body_pair};
+use crate::resolver::{PointBodyCache, load_workspace_context, point_body_pair};
 use crate::rules::sentence::RuleSubject;
 use crate::scanner::api_scan_error;
 
@@ -56,6 +55,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
         declaration: &'a Declaration,
         section: Option<(&'a str, &'a SectionInfo)>,
         duplicate: bool,
+        broken_stub: bool,
     }
 
     let counts = ListCitationCounts::new(&context);
@@ -81,27 +81,13 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
             if opts.unused_only && id.kind == "E2E" && !opts.kind_filter.contains("E2E") {
                 continue;
             }
-            // §FS-list.3.4.6: a healthy stub whose home is outside the walk is that home.
-            let mut homes: Vec<&Declaration> = declarations
-                .iter()
-                .filter(|decl| !is_stub_for_inline_decl(&project.config.root, decl, declarations))
-                .map(|decl| {
-                    home_as_scanned(
-                        &project.findings,
-                        project.config.schema(),
-                        project.config.frame(),
-                        id,
-                        decl,
-                    )
-                })
-                .collect();
-            homes.sort_by(|a, b| {
-                (sort_path_key(&a.file), a.line).cmp(&(sort_path_key(&b.file), b.line))
-            });
-            // §FS-declarations.checks.duplicate.2: a stub whose target declares the ID
-            // twice is one row, and two homes.
-            let duplicate_declaration = homes.iter().flat_map(|home| home.home_sites()).count() > 1;
-            for declaration in homes {
+            // §FS-list.3.4.6: one row per home, at its record, so a healthy stub whose
+            // home is outside the walk is that home, and a target declaring the ID
+            // twice is two rows (§FS-declarations.checks.broken-stub.4).
+            let homes = id_homes(declarations);
+            let duplicate_declaration = homes.len() > 1;
+            for home in homes.iter() {
+                let declaration = home.record;
                 pending.push(Pending {
                     project_alias: &project.alias,
                     project_config: &project.config,
@@ -109,6 +95,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                     declaration,
                     section: None,
                     duplicate: duplicate_declaration,
+                    broken_stub: home.is_broken_stub(),
                 });
 
                 let mut section_sites: BTreeMap<&str, Vec<&SectionInfo>> = BTreeMap::new();
@@ -129,6 +116,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                             declaration,
                             section: Some((section, info)),
                             duplicate: duplicate_section,
+                            broken_stub: false,
                         });
                     }
                 }
@@ -246,7 +234,7 @@ fn list_sizes_run(opts: ListSizeOpts, cautions: &mut Vec<Finding>) -> Result<Lis
                 .section
                 .map(|(_, info)| info.line)
                 .unwrap_or(row.declaration.line),
-            stub: row.declaration.is_stub,
+            stub: row.broken_stub,
             defines: row
                 .declaration
                 .defined_in

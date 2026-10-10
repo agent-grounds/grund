@@ -1,8 +1,8 @@
 //! A stub's home outside the walk answers a citation into it and nothing else
 //! (§FS-check.3.2.1): a citation of one of its chapters counts for that chapter,
 //! as on the scanned tree (§FS-rules.5.1), through a node no subject or count of
-//! chapters reaches (§AR-rules.3), and rules read the home only where a section
-//! citation misses, out of the read the section lookup makes (§AR-resolver.5).
+//! chapters reaches (§AR-rules.3), and rules read the home out of the scan's one
+//! reading of the stub's target (§AR-scanner.4.6), never a reading of their own.
 
 use super::facts::{NodeKey, RuleFacts};
 use super::markdown::adapt_markdown;
@@ -68,7 +68,7 @@ fn cited_by_uses(facts: &RuleFacts) -> Vec<String> {
 }
 
 #[test]
-fn rules_read_no_target_without_a_section_citation() {
+fn a_bare_citation_mints_no_chapter_node() {
     let (config, findings) = stub_repo("rules_unscanned_home_bare", "\u{a7}AR-second");
     let facts = adapt_markdown(
         &findings,
@@ -77,11 +77,6 @@ fn rules_read_no_target_without_a_section_citation() {
             &WorkspaceCheckTarget::of(&findings, config.schema(), config.frame()),
         ),
         true,
-    );
-    assert_eq!(
-        findings.stub_targets.read_count(),
-        0,
-        "§AR-resolver.5: no section asks, so no target is read"
     );
     assert_eq!(cited_by_uses(&facts), ["AR-second"]);
     assert!(
@@ -135,18 +130,13 @@ fn a_chapter_of_an_unscanned_home_is_a_node_without_a_chapter_row() {
 }
 
 #[test]
-fn a_section_citation_reads_its_target_once_for_the_whole_check() {
+fn a_section_citation_answers_from_the_scans_reading() {
     let uses = "\u{a7}AR-second.goals and \u{a7}AR-second.goals.1";
     let (config, findings) = stub_repo("rules_unscanned_home_read_once", uses);
     let mut report = check_findings(&findings, &config);
-    assert_eq!(
-        findings.stub_targets.read_count(),
-        1,
-        "the section lookup reads the target on its miss"
-    );
 
     // A second read would find no `goals` chapter now, so what the rules count
-    // comes from the lookup's read.
+    // comes from the scan's reading of the target (§AR-scanner.4.6).
     write(
         &config.root.join("source.rs"),
         &SOURCE.replace("goals", "aims"),
@@ -160,11 +150,6 @@ fn a_section_citation_reads_its_target_once_for_the_whole_check() {
         None,
         None,
         &mut report,
-    );
-    assert_eq!(
-        findings.stub_targets.read_count(),
-        1,
-        "§AR-resolver.5: one read for the lookup and the rules together"
     );
     let errors: Vec<&str> = report
         .errors

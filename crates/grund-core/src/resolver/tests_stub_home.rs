@@ -1,7 +1,7 @@
-//! Test module: a stub's sections are read from its target outside the walk on a
-//! miss, once per target per run, through the input observation a watching run
-//! subscribes from (§FS-check.3.2.1, §FS-check.6.1.1). The e2e cases pin what
-//! `check` reports; these pin what it reads to report it.
+//! Test module: a stub's sections are read from its target outside the walk,
+//! once per target per scan, through the input observation a watching run
+//! subscribes from (§FS-check.3.2.1, §FS-check.6.1.1, §AR-scanner.4.6). The e2e
+//! cases pin what `check` reports; these pin what the scan reads to report it.
 
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -63,57 +63,58 @@ fn rescan(root: &Path) -> (Config, Catalog) {
     (config, findings)
 }
 
-#[test]
-fn a_target_is_read_on_a_miss_and_once_per_run() {
-    let (config, findings) = stub_repo("stub_home_read_once");
-    let resolves = |slug: &str, section: &str| {
-        section_resolves(
-            &findings,
-            config.schema(),
-            config.frame(),
-            &id(slug),
-            section,
-        )
-    };
-    let reads = || findings.stub_targets.read_count();
+/// One scan of `root` under an observer that refuses `refused`'s read, and every
+/// input it was asked to cover.
+fn observed_scan(root: &Path, refused: Option<&Path>) -> (Catalog, Vec<CheckInput>) {
+    let config = load_config(root).expect("load config");
+    let seen: Arc<Mutex<Vec<CheckInput>>> = Arc::default();
+    let sink = seen.clone();
+    let refused = refused.map(Path::to_path_buf);
+    let observer = Arc::new(move |input: CheckInput| {
+        let covered = refused.as_ref() != Some(&input.path);
+        sink.lock().expect("observer").push(input);
+        covered
+    });
+    let (findings, _) = with_check_input_observer(Some(observer), || {
+        scan_tree(&config, None, false).expect("scan")
+    });
+    let seen = seen.lock().expect("observer").clone();
+    (findings, seen)
+}
 
-    assert!(resolves("first", "1"), "a recorded section resolves");
+#[test]
+fn a_target_is_read_once_per_scan() {
+    let (config, _) = stub_repo("stub_home_read_once");
+    let source = normalize_path_lexically(&config.root.join("source.rs"));
+    let (findings, seen) = observed_scan(&config.root, None);
+    let resolves = |slug: &str, section: &str| section_resolves(&findings, &id(slug), section);
+
     assert_eq!(
-        reads(),
-        0,
-        "a section a recorded declaration holds reads nothing"
+        seen.iter().filter(|input| input.path == source).count(),
+        3,
+        "§FS-check.6.1.1: each of the two stubs covers its target as it resolves it, \
+         and the scan reads the target once, however many stubs and IDs name it"
     );
+    assert!(resolves("first", "1"), "a recorded section resolves");
     assert!(
         resolves("second", "1"),
         "§FS-check.3.2.1: the target's section"
     );
-    assert_eq!(reads(), 1, "the miss reads the stub's target");
     assert!(resolves("third", "1"), "another ID in the same target");
     assert!(
         !resolves("second", "2"),
         "a section the target does not declare"
     );
-    assert_eq!(
-        reads(),
-        1,
-        "one read per target, however many IDs and sections ask"
-    );
 
     write(&config.root.join("source.rs"), SOURCE_WITHOUT_SECTION);
     assert!(
         resolves("second", "1"),
-        "this run answers from the text it read"
+        "this scan answers from the text it read"
     );
-    let (config, findings) = rescan(&config.root);
+    let (_, findings) = rescan(&config.root);
     assert!(
-        !section_resolves(
-            &findings,
-            config.schema(),
-            config.frame(),
-            &id("second"),
-            "1"
-        ),
-        "the next run, as `--watch` makes one, reads the target again"
+        !section_resolves(&findings, &id("second"), "1"),
+        "the next scan, as `--watch` makes one, reads the target again"
     );
 }
 
@@ -121,30 +122,11 @@ fn a_target_is_read_on_a_miss_and_once_per_run() {
 fn the_target_read_is_observed_before_it_is_made() {
     let observe = |refuse: bool| {
         let name = format!("stub_home_observed_{refuse}");
-        let (config, findings) = stub_repo(&name);
+        let (config, _) = stub_repo(&name);
         let source = normalize_path_lexically(&config.root.join("source.rs"));
-        let seen: Arc<Mutex<Vec<CheckInput>>> = Arc::default();
-        let sink = seen.clone();
-        let target = source.clone();
-        let observer = Arc::new(move |input: CheckInput| {
-            let covered = !(refuse && input.path == target);
-            sink.lock().expect("observer").push(input);
-            covered
-        });
-        let resolved = with_check_input_observer(Some(observer), || {
-            section_resolves(
-                &findings,
-                config.schema(),
-                config.frame(),
-                &id("second"),
-                "1",
-            )
-        });
-        let observed = seen
-            .lock()
-            .expect("observer")
-            .iter()
-            .any(|input| input.path == source);
+        let (findings, seen) = observed_scan(&config.root, refuse.then_some(source.as_path()));
+        let resolved = section_resolves(&findings, &id("second"), "1");
+        let observed = seen.iter().any(|input| input.path == source);
         (resolved, observed)
     };
 

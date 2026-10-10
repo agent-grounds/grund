@@ -11,8 +11,8 @@
 //! traversal of §AR-scanner.1 in `walk*`, the per-file line pass of
 //! §AR-scanner.2 in `file_pass`, the passes it calls out to for citations,
 //! values and grounding structure, the tree-level driver that merges one
-//! `Catalog` out of many in `tree`, the record of each stub's home that driver
-//! makes once the walk is done (§AR-scanner.4.6) in `stub_homes`, and the
+//! `Catalog` out of many in `tree`, the verdict on each stub that driver reaches
+//! once the walk is done (§AR-scanner.4.6) in `stub_homes`, and the
 //! off-grammar reconciliation of §FS-config.3.2 in `legacy*`.
 //!
 //! What the component does **not** hold any more: the `FileStructure` records
@@ -106,10 +106,8 @@ pub(crate) use legacy::{
 };
 pub(crate) use scan_error::api_scan_error;
 pub(crate) use scope_probe::effective_scope_reads_any_file;
-pub(crate) use stub_homes::{file_declares_inline_home, scan_reads_target};
 pub(crate) use tree::{
     ScanError, overlay_text, scan_tree, scan_tree_strict, scan_tree_with_workspace_overlays,
-    scan_unwalked_file,
 };
 pub(crate) use walk::{scan_roots_for, walk_reads_any_file};
 pub(crate) use walk_reporting::{

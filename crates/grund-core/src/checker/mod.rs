@@ -19,16 +19,17 @@
 //! `grounding.rs`, which the scanner below read upward, went down into `model/`
 //! and `config/`, and the candidate joiner went down into `workspace/` and on
 //! into `resolver/` with the clause that reads it. Two more went down when
-//! §AR-system.2.10 became a component: `is_stub_for_inline_decl` into
-//! `model/records.rs`, a predicate over a `Declaration` beside the stub target
-//! it resolves, and the resolver of §AR-resolver.1 itself — the
-//! citation-to-target lookup with the `WorkspaceCheckTarget` pair it answers
+//! §AR-system.2.10 became a component: the test of which stub points at another
+//! declaration's home, into `model/`, and the resolver of §AR-resolver.1 itself —
+//! the citation-to-target lookup with the `WorkspaceCheckTarget` pair it answers
 //! with, which every rule here now reads downward and which the grammar's
 //! shorthand resolution had been reading upward out of this component
 //! (§AR-system.4). The broken-stub rule's reading of a stub's target followed,
-//! out of `homes.rs` into `scanner/stub_homes.rs`, when the scan came to record
-//! each stub's home with it (§AR-scanner.4.6): one reading, so the stub that rule
-//! accepts is the stub the count of homes pairs.
+//! out of `homes.rs` into the scanner, which reaches each stub's verdict once and
+//! records it on the stub (§AR-scanner.4.6); the homes of an ID are derived from
+//! those verdicts in `model/stub_resolution.rs`. The broken-stub, duplicate and
+//! unused rules read both and read no target, so the stub one accepts is the stub
+//! the others pair (§FS-declarations.checks.broken-stub.4).
 //!
 //! `plural`, the plural `s` a count earns, came here from the writers' template
 //! renderer with §AR-system.2.8 and left again with §AR-system.2.11: the

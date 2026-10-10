@@ -1,12 +1,15 @@
 //! Test module: a stub whose target lies outside scan scope reads the target's
 //! declaration by its ID, and reads it from an editor's overlay where there is
-//! one, as the scanned target would (§FS-show.2.3.7). The e2e cases pin the
-//! disk read; an overlay reaches `show` only through the engine.
+//! one, as the scanned target would (§FS-show.2.3.7). The scan that records the
+//! stub's verdict reads the overlay too (§FS-declarations.checks.broken-stub.1),
+//! as every engine query scans before it shows. The e2e cases pin the disk read;
+//! an overlay reaches `show` only through the engine.
 
 use super::*;
 use crate::config::load_config;
 use crate::model::{Id, ShowRenderMode, TextOverlays};
-use crate::testing::{scan_tree, test_root, write};
+use crate::scanner::scan_tree_with_workspace_overlays;
+use crate::testing::{test_root, write};
 
 const CONFIG: &str = "grund_config_version = 1\n\n[reference]\nstrict = true\n\n\
 [id]\nformat = \"{kind}-{slug}\"\n\n[[kinds]]\nkind = \"FS\"\nfolder = \"docs\"\n\
@@ -57,8 +60,16 @@ fn unscanned_stub_target_reads_the_overlay_by_its_id() {
     );
     write(&root.join("source.rs"), ON_DISK);
     let config = load_config(&root).expect("load config");
-    let (findings, _) = scan_tree(&config, None, false).expect("scan");
     let overlays = TextOverlays::from([(config.root.join("source.rs"), UNSAVED.to_string())]);
+    let (findings, _) = scan_tree_with_workspace_overlays(
+        config.schema(),
+        config.frame(),
+        None,
+        false,
+        &[],
+        &overlays,
+    )
+    .expect("scan");
     let show = |section| {
         show_declaration_with_overlays(
             &config,

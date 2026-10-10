@@ -17,9 +17,8 @@
 
 use std::collections::BTreeMap;
 
-use super::stub_home::unscanned_stub_home;
 use crate::config::{Compiled, Display, Frame, Run, Schema};
-use crate::model::{Catalog, Citation, Declaration, Id};
+use crate::model::{Catalog, Citation, Declaration, Id, id_homes};
 
 /// One project a citation can resolve against, as a rule needs it: the catalog
 /// the ID is looked up in and the schema and grammar that spell it, because a
@@ -99,37 +98,28 @@ pub(crate) fn citation_resolves(
 /// `id` has no sections, and an owner with no numbered headings, a wholly absent
 /// path and a partially resolving one all answer `false`. It is `section_home`,
 /// asked as a yes/no.
-pub(crate) fn section_resolves(
-    findings: &Catalog,
-    schema: &Schema,
-    frame: Frame<'_>,
-    id: &Id,
-    section: &str,
-) -> bool {
-    section_home(findings, schema, frame, id, section).is_some()
+pub(crate) fn section_resolves(findings: &Catalog, id: &Id, section: &str) -> bool {
+    section_home(findings, id, section).is_some()
 }
 
 /// Which record holds a section a citation resolves to (§FS-check.3.2.1).
 pub(crate) enum SectionHome<'a> {
     /// A declaration the walk recorded.
     Recorded,
-    /// The one declaration of the ID in a stub's target the walk did not reach.
+    /// The one declaration of the ID in a stub's target, the record the scan kept
+    /// on the stub because the catalog holds no record of it.
     Unscanned(&'a Declaration),
 }
 
 /// Where `section` of `id` resolves, or `None` where it does not. A stub's sections
 /// are its target's, scanned or not (§FS-check.3.2.1): where no recorded declaration
-/// holds the path, a stub of `id` whose target the walk did not record answers from
-/// that target's one declaration of `id`, read once per run; an ID `show` refuses as
-/// ambiguous lends no section there. A rule's `cites` fact asks here rather than
+/// holds the path, the ID's one home answers from the record the scan kept on the
+/// stub that stands for it (§AR-scanner.4.6); an ID `show` refuses as ambiguous, and
+/// a broken stub, lend no section there. A rule's `cites` fact asks here rather than
 /// `section_resolves`, because a citation into a home outside the walk counts for
-/// that home's chapter (§FS-rules.5.1). `schema` and `frame` are the project's
-/// `findings` belong to, the target's for a workspace citation, because the stub's link resolves
-/// against its root.
+/// that home's chapter (§FS-rules.5.1).
 pub(crate) fn section_home<'a>(
     findings: &'a Catalog,
-    schema: &Schema,
-    frame: Frame<'_>,
     id: &Id,
     section: &str,
 ) -> Option<SectionHome<'a>> {
@@ -137,9 +127,7 @@ pub(crate) fn section_home<'a>(
     if decls.iter().any(|decl| decl.sections.contains_key(section)) {
         return Some(SectionHome::Recorded);
     }
-    decls
-        .iter()
-        .filter_map(|stub| unscanned_stub_home(findings, schema, frame, id, stub))
-        .find(|home| home.sections.contains_key(section))
-        .map(SectionHome::Unscanned)
+    let home = id_homes(decls).sole()?;
+    (!std::ptr::eq(home.record, home.stand_in) && home.record.sections.contains_key(section))
+        .then_some(SectionHome::Unscanned(home.record))
 }

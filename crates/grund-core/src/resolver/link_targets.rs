@@ -17,12 +17,11 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::stub_home::home_as_scanned;
 use crate::config::{Frame, Presentation, Schema};
 use crate::grammar::{Grammar, anchor_slug, reduce_heading_text, render_id};
 use crate::model::{
-    Catalog, Declaration, Id, SectionInfo, is_stub_for_inline_decl, physical_path_key,
-    resolve_stub_target, scanned_decl_relative_path, scanned_path_key,
+    Catalog, Declaration, Id, SectionInfo, id_homes, physical_path_key, scanned_decl_relative_path,
+    scanned_path_key,
 };
 
 /// Compute the link URL for a citation: a repo-relative path to the declaration's
@@ -31,7 +30,8 @@ use crate::model::{
 /// `.<section>` citation, the declaration's own heading for a bare-ID citation
 /// (§FS-fmt.6.2, §DF-md-link-anchor-strategy, §DF-declaration-anchor). A source-file
 /// home (a stub's target) and the `none` profile both get a bare file link.
-/// `None` if the ID does not resolve (§FS-fmt.6.4), and `None` for a `.<section>`
+/// `None` if the ID does not resolve (§FS-fmt.6.4), `None` for a broken stub and
+/// for an ID with more than one home (§FS-fmt.6.4.2), and `None` for a `.<section>`
 /// citation of a section the declaration does not have, whether or not the link
 /// takes a heading anchor (§FS-fmt.6.4.1).
 ///
@@ -42,20 +42,10 @@ pub(crate) fn markdown_link_target(
     id: &Id,
     section: Option<&str>,
     presentation: &Presentation,
-    schema: &Schema,
     frame: Frame<'_>,
     findings: &Catalog,
 ) -> Option<String> {
-    markdown_link_target_with_root(
-        from_file,
-        id,
-        section,
-        presentation,
-        schema,
-        frame,
-        findings,
-        None,
-    )
+    markdown_link_target_with_root(from_file, id, section, presentation, frame, findings, None)
 }
 
 /// The canonical bare-ID link of every citation an index file records, keyed by
@@ -119,7 +109,6 @@ pub(crate) fn index_link_targets(
             &citation.id,
             None,
             presentation,
-            schema,
             frame,
             findings,
         ) {
@@ -130,55 +119,40 @@ pub(crate) fn index_link_targets(
 }
 
 /// §FS-workspace.8.5: same as `markdown_link_target`, but with an explicit
-/// `path_root` override for relative-path computation. The target's schema and frame
-/// still drive anchor profile (§FS-fmt.6.7.1) and stub resolution, but the
-/// link path is anchored at `path_root` (the workspace root) when the
-/// citing file and the target's home live in different projects.
+/// `path_root` override for relative-path computation. The target's presentation
+/// and frame still drive the anchor profile (§FS-fmt.6.7.1), and its catalog the
+/// stub verdicts, but the link path is anchored at `path_root` (the workspace
+/// root) when the citing file and the target's home live in different projects.
 pub(crate) fn markdown_link_target_with_root(
     from_file: &Path,
     id: &Id,
     section: Option<&str>,
     presentation: &Presentation,
-    schema: &Schema,
     frame: Frame<'_>,
     findings: &Catalog,
     path_root: Option<&Path>,
 ) -> Option<String> {
-    let decls = findings.declarations.get(id)?;
-    let stub = decls.iter().find(|decl| decl.is_stub);
-    let home_decl = decls
-        .iter()
-        .find(|decl| !is_stub_for_inline_decl(frame.root(), decl, decls))
-        .or_else(|| decls.first())?;
-    let home = if let Some(stub) = stub {
-        let target = stub.defined_in.as_ref()?;
-        resolve_stub_target(frame.root(), &stub.file, target)
-    } else {
-        home_decl.file.clone()
-    };
+    // §FS-fmt.6.4.2: only an ID with one home that is not a broken stub is linked, read
+    // off the verdict the scan recorded on each stub (§FS-declarations.checks.broken-stub.4).
+    let home = id_homes(findings.declarations.get(id)?).sole()?;
+    if home.is_broken_stub() {
+        return None;
+    }
+    let record = home.record;
     let rel = match path_root {
-        Some(root) => relative_url_under(from_file, &home, root),
-        None => relative_url(from_file, &home, frame.root()),
+        Some(root) => relative_url_under(from_file, &record.file, root),
+        None => relative_url(from_file, &record.file, frame.root()),
     };
     // §FS-fmt.6.4.1: a cited section is one the scan records, in a stub's target
     // outside the walk too (§FS-check.3.2.1); one it lacks gets no link, anchor or not.
-    let scanned = match section {
-        Some(sec) => {
-            let scanned = home_as_scanned(findings, schema, frame, id, home_decl);
-            if !scanned.sections.contains_key(sec) {
-                return None;
-            }
-            Some(scanned)
-        }
-        None => None,
-    };
-    if !takes_heading_anchor(&home, presentation) {
+    if section.is_some_and(|sec| !record.sections.contains_key(sec)) {
+        return None;
+    }
+    if !takes_heading_anchor(&record.file, presentation) {
         return Some(rel);
     }
     // §FS-fmt.6.2.1.1: a bare ID's heading is the scan's record too.
-    let anchor_decl =
-        scanned.unwrap_or_else(|| home_as_scanned(findings, schema, frame, id, home_decl));
-    let anchor = heading_anchor(anchor_decl, section, presentation, frame)?;
+    let anchor = heading_anchor(record, section, presentation, frame)?;
     Some(format!("{}#{}", rel, anchor))
 }
 

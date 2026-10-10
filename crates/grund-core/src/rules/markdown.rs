@@ -4,10 +4,9 @@
 use super::RuleAnchor;
 use super::facts::{Completeness, FactHeader, NodeKey, NodeMeta, RuleFacts, SiteKey, SiteMeta};
 use crate::grammar::{Grammar, render_id, section_display_name};
-use crate::model::{Catalog, Declaration, Id, is_stub_for_inline_decl};
-use crate::resolver::SectionHome;
+use crate::model::{Catalog, Declaration, Id, id_homes};
+use crate::resolver::{SectionHome, section_home};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
 
 /// What the adapter reads of one project, and nothing more: the rules
 /// component holds no configuration façade (§AR-config.5, §AR-rules.3). The
@@ -16,29 +15,10 @@ use std::path::Path;
 pub(crate) struct MarkdownProject<'a> {
     /// The stable project name, the selected scope of a standalone adaptation.
     pub(crate) name: Option<&'a str>,
-    /// The config root a stub's inline declaration resolves under.
-    pub(crate) root: &'a Path,
     /// The ID grammar labels render through.
     pub(crate) grammar: &'a Grammar,
     /// The separator between an ID and its section in a chapter label.
     pub(crate) section_separator: &'a str,
-    /// Where a section of an ID resolves, a stub's target the walk did not
-    /// reach included (§FS-check.3.2.1).
-    pub(crate) homes: &'a dyn SectionHomes,
-}
-
-/// The one question the adapter asks of a project's scan settings: where a
-/// cited section of `id` resolves, which for a stub whose target the walk did
-/// not record means reading that target as the scan would. The checker answers
-/// it from the project it checks, so the façade stays out of this component
-/// (§AR-config.5, §AR-rules.3).
-pub(crate) trait SectionHomes {
-    fn section_home<'c>(
-        &self,
-        findings: &'c Catalog,
-        id: &Id,
-        section: &str,
-    ) -> Option<SectionHome<'c>>;
 }
 
 /// Adapt one standalone project. The producer-neutral schema uses the stable
@@ -101,11 +81,8 @@ pub(crate) fn adapt_workspace(
             // A healthy Markdown stub and its inline declaration are one catalog home.
             // Canonicalize before minting keys so relations share a node (§FS-rules.5.1,
             // §FS-list.2.5).
-            for (ordinal, home) in homes
-                .iter()
-                .filter(|home| !is_stub_for_inline_decl(project.root, home, homes))
-                .enumerate()
-            {
+            let id_homes = id_homes(homes);
+            for (ordinal, home) in id_homes.stand_ins().enumerate() {
                 let key = NodeKey(format!(
                     "{selected}:markdown:{alias}:decl:{bare_label}:{ordinal}"
                 ));
@@ -184,15 +161,11 @@ pub(crate) fn adapt_workspace(
             };
             // A stub whose target declares the ID twice stands for two homes, so its
             // ID is ambiguous here as it is to `check` (§FS-declarations.checks.duplicate.1).
-            let mut resolved = target_homes
-                .iter()
-                .filter(|home| !is_stub_for_inline_decl(target_project.root, home, target_homes))
-                .flat_map(Declaration::home_sites);
-            let (Some(_), None) = (resolved.next(), resolved.next()) else {
+            if id_homes(target_homes).len() != 1 {
                 // Unknown and ambiguous targets retain their ordinary resolver
                 // findings but never become logical edges (§FS-rules.5.1).
                 continue;
-            };
+            }
             let Some(target_declaration) = declarations
                 .get(&(target_alias.to_string(), citation.id.clone()))
                 .cloned()
@@ -204,11 +177,7 @@ pub(crate) fn adapt_workspace(
             // finds it, a stub's in its target, scanned or not (§FS-check.3.2.1).
             let (target, newly_counted) = match citation.section.as_ref() {
                 Some(section) => {
-                    let Some(home) =
-                        target_project
-                            .homes
-                            .section_home(target_findings, &citation.id, section)
-                    else {
+                    let Some(home) = section_home(target_findings, &citation.id, section) else {
                         continue;
                     };
                     // §FS-check.3.2.1: the lookup read the home on this miss; mint from that.
