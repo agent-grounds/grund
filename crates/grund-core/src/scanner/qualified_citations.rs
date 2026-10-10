@@ -6,10 +6,10 @@
 use std::collections::BTreeSet;
 
 use super::citation_line::CitationLine;
-use super::citations::scanned_citation_rewritable;
+use super::citations::{glob_claimed, record_glob_citation, scanned_citation_rewritable};
 use crate::grammar::{
-    QUALIFIED_CITATION_PREFIX, parse_longest_id_prefix, parse_qualified_id_prefix,
-    qualified_suppressed_in_source,
+    CandidateReading, QUALIFIED_CITATION_PREFIX, parse_longest_id_prefix,
+    parse_qualified_id_prefix, qualified_suppressed_in_source, read_loose_candidate,
 };
 use crate::model::{Catalog, Citation};
 use crate::workspace::WorkspaceCitationTarget;
@@ -46,7 +46,7 @@ pub(super) fn scan_fallback_qualified_citations(
         return;
     }
     for (marker_start, _) in line.scan_line.match_indices(&line.schema.citation.marker) {
-        if qualified_claimed.contains(&marker_start) {
+        if qualified_claimed.contains(&marker_start) || glob_claimed(line, marker_start, findings) {
             continue;
         }
         if qualified_suppressed_in_source(line.scan_line, line.is_md, marker_start) {
@@ -73,8 +73,8 @@ pub(super) fn scan_fallback_qualified_citations(
 /// `id_start`, is read with the loose `KIND[-NUM]-SLUG` shape rather than any
 /// project's grammar. Both runs that have no target to read a tail with use it:
 /// a run that loads no workspace (§FS-workspace.5.2), and a workspace run whose
-/// alias names no loaded project (§FS-workspace.1.2.1). Returns whether a
-/// citation was pushed.
+/// alias names no loaded project (§FS-workspace.1.2.1). Returns whether the
+/// marker was claimed — by a citation, or by a pattern read whole.
 fn push_fallback_qualified_citation(
     line: &CitationLine<'_>,
     marker_start: usize,
@@ -88,7 +88,14 @@ fn push_fallback_qualified_citation(
     // §FS-workspace.5.2: the tail grammar does not decide recognition — a
     // tail outside `KIND[-NUM]-SLUG` is an `unknown project alias` error
     // all the same, at its own site.
-    let Some((id, section, id_len)) = parse_qualified_id_prefix(id_rest) else {
+    let parsed = parse_qualified_id_prefix(id_rest);
+    // §FS-check.1.1.11: a pattern is consumed whole, never read as its prefix.
+    let prefix_len = parsed.as_ref().map_or(0, |(_, _, len)| *len);
+    if let CandidateReading::Pattern(len) = read_loose_candidate(id_rest, prefix_len) {
+        record_glob_citation(line, marker_start..id_start + len, findings);
+        return true;
+    }
+    let Some((id, section, id_len)) = parsed else {
         return false;
     };
     let token_end = id_start + id_len;
@@ -157,7 +164,22 @@ pub(super) fn scan_workspace_qualified_pass(
         // §FS-fmt.2.4.1 asks the numeric-run question with the *target's* number
         // shape, the same grammar that claimed the token.
         let target_grammar = &target.compiled.grammar;
-        let Some(parsed) = parse_longest_id_prefix(id_rest, target_grammar) else {
+        let parsed = parse_longest_id_prefix(id_rest, target_grammar);
+        // §FS-check.1.1.11: the target's grammar reads the tail whole, so a
+        // pattern is recorded at the marker and no prefix becomes an edge.
+        let prefix_len = parsed.as_ref().map_or(0, |parsed| parsed.len);
+        let parsed = match target_grammar.read_candidate(id_rest, prefix_len) {
+            CandidateReading::Ordinary => parsed,
+            CandidateReading::Address(len) => {
+                parse_longest_id_prefix(&id_rest[..len], target_grammar)
+                    .filter(|whole| whole.len == len)
+            }
+            CandidateReading::Pattern(len) => {
+                record_glob_citation(line, marker_start..id_start + len, findings);
+                continue;
+            }
+        };
+        let Some(parsed) = parsed else {
             continue;
         };
         if target_grammar.has_reserved_named_tail(id_rest, parsed.len) {

@@ -526,7 +526,9 @@ pub(crate) fn id_token_end_at(line: &str, at: usize, grammar: &Grammar) -> Optio
         .filter(|found| !grammar.has_reserved_named_tail(line, found.end()))
     {
         // §FS-check.1.1.11: a pattern has no ID to mark, so its trigger stays as written.
-        if let CandidateReading::Pattern(_) = grammar.read_candidate(&line[at..], found.len()) {
+        if let CandidateReading::Pattern(_) =
+            grammar.read_qualified_candidate(&line[at..], found.len())
+        {
             return None;
         }
         return Some(found.end());

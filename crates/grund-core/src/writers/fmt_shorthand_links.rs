@@ -5,8 +5,8 @@
 
 use crate::config::{Config, ShorthandPolicy};
 use crate::grammar::{
-    MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, ShorthandIndex, is_inside_inline_code,
-    is_inside_markdown_link_destination, parse_id,
+    CandidateReading, MarkdownLineCitation, QUALIFIED_CITATION_PREFIX, ShorthandIndex,
+    is_inside_inline_code, is_inside_markdown_link_destination, parse_id,
 };
 use crate::model::Id;
 
@@ -75,6 +75,11 @@ pub(super) fn accepted_shorthand_link(
             &citing_config.marker,
             rest,
             consumed,
+        )
+        // §FS-check.1.1.11: a pattern's shorthand prefix is never linked.
+        || matches!(
+            target_config.grammar.read_candidate(rest, consumed),
+            CandidateReading::Pattern(_)
         )
     {
         return None;

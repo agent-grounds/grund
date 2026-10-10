@@ -162,10 +162,14 @@ fn markdown_link_citations(
         if config.grammar.has_reserved_named_tail(line, full.end()) {
             continue;
         }
-        // §FS-check.1.1.11: `fmt` never links a pattern's prefix.
-        if let CandidateReading::Pattern(_) = config
-            .grammar
-            .read_candidate(&line[full.start()..], full.len())
+        // §FS-check.1.1.11: `fmt` never links a pattern's prefix; a qualified
+        // tail is read with the grammar of the project its alias names.
+        let grammar = caps
+            .name("namespace")
+            .and_then(|alias| workspace?.project_by_alias(alias.as_str()))
+            .map_or(&config.grammar, |target| &target.config.grammar);
+        if let CandidateReading::Pattern(_) =
+            grammar.read_qualified_candidate(&line[full.start()..], full.len())
         {
             continue;
         }
@@ -247,6 +251,15 @@ fn collect_workspace_markdown_link_citations(
                     .grammar
                     .has_reserved_named_tail(id_rest, parsed.len)
             });
+        // §FS-check.1.1.11: the target's grammar reads the tail whole; a pattern stays text.
+        let prefix_len = parsed_prefix.as_ref().map_or(0, |parsed| parsed.len);
+        if let CandidateReading::Pattern(_) = target_project
+            .config
+            .grammar
+            .read_candidate(id_rest, prefix_len)
+        {
+            continue;
+        }
         // §FS-workspace.8.5 / §FS-fmt.6.2: resolve a parsed shorthand through the
         // target's policy/index before lookup; its slugless parse cannot name a home.
         // Full IDs have already won longest-prefix parsing and remain byte-identical.

@@ -418,8 +418,12 @@ pub(super) fn scan_file_text(
         let mut claimed_markers: Vec<usize> = Vec::new();
         // §FS-check.1.1.10: explicit-marker and bare starts share the same policy gates.
         // §FS-check.1.1.11: a pattern is recorded and claims its marker, so no pass reads a prefix.
-        for (offset, caps) in claim_citation_tokens(&citation_line, &mut claimed_markers, findings)
-        {
+        for (offset, caps) in claim_citation_tokens(
+            &citation_line,
+            workspace_mode,
+            &mut claimed_markers,
+            findings,
+        ) {
             let Some(full) = caps.get(0) else { continue };
             let token_start = offset + full.start();
             let token_end = offset + full.end();

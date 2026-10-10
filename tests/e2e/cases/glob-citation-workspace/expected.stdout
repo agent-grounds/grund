@@ -1,0 +1,5 @@
+api/docs/FS-m.md:5: warning: glob citation §root/FS-ro*t.x: a citation names one exact point, not a pattern; cite the point, or escape it as <§>root/FS-ro*t.x; this warning becomes an error in grund 0.19.0
+api/docs/FS-m.md:7: warning: glob citation §root/FS-*.x: a citation names one exact point, not a pattern; cite the point, or escape it as <§>root/FS-*.x; this warning becomes an error in grund 0.19.0
+docs/FS-root.md:5: warning: glob citation §api/FS-log*in.requirements: a citation names one exact point, not a pattern; cite the point, or escape it as <§>api/FS-log*in.requirements; this warning becomes an error in grund 0.19.0
+docs/FS-root.md:6: warning: glob citation §api/FS-login.*: a citation names one exact point, not a pattern; cite the point, or escape it as <§>api/FS-login.*; this warning becomes an error in grund 0.19.0
+docs/FS-root.md:7: warning: glob citation §api/FS-*.requirements: a citation names one exact point, not a pattern; cite the point, or escape it as <§>api/FS-*.requirements; this warning becomes an error in grund 0.19.0
