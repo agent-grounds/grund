@@ -1,0 +1,2 @@
+docs/a.md:1: error: duplicate declaration of FS-a (also declared at notes/a.md:1)
+docs/a.md:1: error: stub link target lacks FS-a: ../notes/.a.md

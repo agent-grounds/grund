@@ -115,6 +115,11 @@ can read is the same silence in a new spelling.
   file that declares the ID twice is two homes ([grund#556](https://github.com/agent-grounds/grund/issues/556)), a duplicate named at both of the
   target's lines in text and JSON, all three lines named beside a scanned second declaration,
   and the stub's `list` row tagged
+- a stub whose target is a symlink named so the scan does not read it — hidden (`notes/.a.md`) or
+  of an unlisted extension (`notes/a.zz`) — resolving to the scanned file that declares the ID,
+  judged by the name the stub wrote ([§FS-declarations.checks.broken-stub.3](../../docs/functional-spec/FS-declarations.md#checksbroken-stub3-a-target-the-scan-does-not-read-declares-nothing), [grund#567](https://github.com/agent-grounds/grund/issues/567)):
+  the stub is broken and pairs with nothing, so `check` reports the duplicate beside it and `refs`
+  refuses the ID as ambiguous, exactly as for a regular hidden copy of the file, the control beside them
 - a section citation of a stub whose target is outside `[scan] include`, resolved in that target
   as the scanned tree resolves it ([§FS-check.3.2.1](../../docs/functional-spec/FS-check.md#321-a-stubs-sections-are-its-targets-scanned-or-not), [grund#529](https://github.com/agent-grounds/grund/issues/529)):
   a section the target declares is clean for one stub, for two stubs to the target, and under
