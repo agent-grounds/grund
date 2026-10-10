@@ -69,6 +69,7 @@ pub(crate) fn judge(
     // §FS-check.3.1 / §FS-check.3.2 / §FS-check.3.8 / §FS-check.3.13: the
     // reference-resolution family, in `references.rs` (§AR-checker.2.13,
     // §FS-check.3.14) because `check --full` reruns it outside `[scan] include`.
+
     // §FS-check.4.12: a kind's `resolve` policy is its own project's rule.
     let resolve = |namespace: Option<&str>, kind: &str| -> Option<KindResolution> {
         let rules = match namespace {
