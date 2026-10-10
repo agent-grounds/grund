@@ -10,7 +10,7 @@ use super::grounding::finest_grounding_level_for_kind;
 use super::project::{Project, Schema};
 use super::record::DEFAULT_GROUNDING_LEVEL;
 use super::rows::Row;
-use crate::grammar::{Grammar, GrammarKind, LexicalSettings};
+use crate::grammar::{Grammar, GrammarKind, LexicalSettings, require_kinds};
 
 /// §AR-config.1.5: `compile(&Project)`.
 #[derive(Clone)]
@@ -65,9 +65,14 @@ impl Compiled {
 /// §AR-config.1.5: compile the grammar and the scan demand of `project`.
 pub(crate) fn compile(project: &Project) -> Result<Compiled> {
     let ids = &project.schema.ids;
+    let kinds = grammar_kinds(&project.schema.rows);
+    // §FS-config-v2.defaults.1: only v1 refuses a table with no citable kind.
+    if project.version != 2 {
+        require_kinds(&kinds)?;
+    }
     let grammar = Grammar::build(
         &ids.format,
-        &grammar_kinds(&project.schema.rows),
+        &kinds,
         &ids.number_pattern,
         &ids.slug_pattern,
         &ids.section_separator,

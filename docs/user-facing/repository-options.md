@@ -143,6 +143,13 @@ warn = ["GOAL"]
 warn = "file"
 ```
 
+`[rules.citations.<KIND>]` writes the same lists as v1's
+[citation directions](citation-directions.md), with two more levels: `warn` is
+the `must` obligation and `warn-not` the `must-not` prohibition, each reported
+as a standing warning that leaves the exit code at 0. A v2 `default` may
+forbid, as `should-not`, `warn-not` or `must-not`, but never obliges:
+`default = "must"` is refused.
+
 Each row is its own `[schema.kinds.<NAME>]` table, and a key is read only in
 the table written above it. Its defaults are fixed by the version rather than
 by the binary, and a version-1 file keeps its meaning unchanged.

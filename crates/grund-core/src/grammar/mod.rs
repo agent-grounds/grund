@@ -135,7 +135,7 @@ pub(crate) use never_rewrite::{
     never_rewrite_context_in, qualified_suppressed_in_source, string_literal_in,
 };
 pub(crate) use section_paths::path_at_or_under;
-pub(crate) use settings::{AliasGrammar, GrammarKind, LexicalSettings};
+pub(crate) use settings::{AliasGrammar, GrammarKind, LexicalSettings, require_kinds};
 pub(crate) use shorthand::{
     IdArgError, ParsedId, ShorthandIndex, parse_id_arg_with_shorthand, resolve_shorthand_citations,
     shorthand_candidates, shorthand_names,

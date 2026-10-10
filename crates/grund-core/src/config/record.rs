@@ -308,9 +308,11 @@ impl Config {
     /// compiled once, from its `Project` (§AR-config.1.5).
     #[cfg(test)]
     pub(crate) fn rebuild_grammar(&mut self) -> Result<()> {
+        let kinds = grammar_kinds(&self.kinds);
+        crate::grammar::require_kinds(&kinds)?;
         self.grammar = Grammar::build(
             &self.id_format,
-            &grammar_kinds(&self.kinds),
+            &kinds,
             &self.number_pattern,
             &self.slug_pattern,
             &self.section_separator,
