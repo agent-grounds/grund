@@ -11,14 +11,16 @@
 
 use super::recovery::enabled;
 use super::{RuleParseError, RuleVocabulary};
+use crate::model::format_list;
 
 /// What a refusing production offers in place of the text it read.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum Form {
     /// The text with the failed production replaced (§FS-rules.3.5.4.1).
     One(String),
-    /// A two-form refusal's pair, and the word that joins them.
-    Two([String; 2], &'static str),
+    /// The forms a refusal offers together, such as a two-form refusal's pair
+    /// or one per clause of a conjunction, and the word that joins them.
+    Many(Vec<String>, &'static str),
     /// Nothing can be supplied, and whether what is missing is a kind
     /// (§FS-rules.3.5.4.4).
     None { kind: bool },
@@ -49,7 +51,9 @@ impl Refusal {
     pub(super) fn within(mut self, wrap: impl Fn(&str) -> String) -> Self {
         self.form = match self.form {
             Form::One(form) => Form::One(wrap(&form)),
-            Form::Two([first, second], joiner) => Form::Two([wrap(&first), wrap(&second)], joiner),
+            Form::Many(forms, joiner) => {
+                Form::Many(forms.iter().map(|form| wrap(form)).collect(), joiner)
+            }
             none @ Form::None { .. } => none,
         };
         self
@@ -76,7 +80,7 @@ impl Refusal {
 
     /// The refusal as both rule surfaces print it (§FS-rules.3.5.4), `read`
     /// being the parser a form is read again with. A form is offered only once
-    /// it is accepted, and a pair only where both are (§FS-rules.3.5.4.3).
+    /// it is accepted, and several only where every one is (§FS-rules.3.5.4.3).
     pub(super) fn offer(
         self,
         vocabulary: &RuleVocabulary,
@@ -95,14 +99,17 @@ impl Refusal {
         } = self;
         let offered = match form {
             Form::One(form) => {
-                settle(form, enabling, &mut reread).map(|(form, enabled)| (form, enabled, None))
+                settle(form, enabling, &mut reread).map(|(form, enabled)| (vec![form], enabled, ""))
             }
-            Form::Two([first, second], joiner) => {
-                settle(first, enabling, &mut reread).and_then(|(first, enabled)| {
-                    let (second, also) = settle(second, enabling, &mut reread)?;
-                    Ok((first, enabled || also, Some((joiner, second))))
-                })
-            }
+            Form::Many(forms, joiner) => forms
+                .into_iter()
+                .map(|form| settle(form, enabling, &mut reread))
+                .collect::<Result<Vec<_>, _>>()
+                .map(|settled| {
+                    let enabled = settled.iter().any(|(_, enabled)| *enabled);
+                    let forms = settled.into_iter().map(|(form, _)| form).collect();
+                    (forms, enabled, joiner)
+                }),
             Form::None { kind } => Err(kind),
         };
         let alone = |kind: bool| RuleParseError {
@@ -112,25 +119,24 @@ impl Refusal {
             },
             unrecovered: kind,
         };
-        let (first, enabled, second) = match offered {
+        let (forms, enabled, joiner) = match offered {
             Ok(offered) => offered,
             // §FS-rules.3.5.4.4: the reason alone, and the kinds where one is missing.
             Err(kind) => return alone(kind),
         };
-        let forms = [Some(&first), second.as_ref().map(|(_, second)| second)];
         // §FS-rules.3.5.2 step 3: the label is decided on the whole offered sentence.
-        let after = enabled
-            && forms
-                .into_iter()
-                .flatten()
-                .any(|form| read(form, vocabulary).is_some());
+        let after = enabled && forms.iter().any(|form| read(form, vocabulary).is_some());
         // §FS-rules.3.5.2 step 3: only a reason about named sections may carry the label.
         if after && !enabling {
             return alone(false);
         }
-        let (plural, forms) = match second {
-            None => ("", first),
-            Some((joiner, second)) => ("s", format!("\"{first}\" {joiner} \"{second}\"")),
+        let (plural, forms) = match forms.as_slice() {
+            [only] => ("", only.clone()),
+            many => {
+                let quoted: Vec<String> = many.iter().map(|form| format!("\"{form}\"")).collect();
+                let quoted: Vec<&str> = quoted.iter().map(String::as_str).collect();
+                ("s", format_list(&quoted, joiner))
+            }
         };
         let after = if after { " after enabling it" } else { "" };
         let trailer = trailer.map_or(String::new(), |trailer| format!(" {trailer}"));
@@ -166,7 +172,7 @@ pub(super) fn settle(
         };
         let next = match refusal.form {
             Form::One(next) => next,
-            Form::Two(..) => return Err(false),
+            Form::Many(..) => return Err(false),
             Form::None { kind } => return Err(kind),
         };
         if next == form && (enabled || !refusal.enabling) {
