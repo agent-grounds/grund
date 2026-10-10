@@ -50,6 +50,7 @@ fn link_of_a_1(name: &str, files: &[(&str, &str)]) -> (Catalog, Option<String>) 
         &root.join("docs/uses.md"),
         &id_a(),
         Some("1"),
+        &config.project().presentation,
         &config,
         &findings,
     );

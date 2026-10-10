@@ -41,7 +41,10 @@ fn anchor_of_a_1(name: &str, home: &str) -> (bool, Option<String>) {
     assert_eq!(decls.len(), 1, "one declaration of FS-a: {decls:?}");
     let decl = &decls[0];
     let recorded = decl.sections.contains_key("1");
-    (recorded, heading_anchor(decl, Some("1"), &config))
+    (
+        recorded,
+        heading_anchor(decl, Some("1"), &config.project().presentation, &config),
+    )
 }
 
 fn assert_no_anchor(name: &str, home: &str) {

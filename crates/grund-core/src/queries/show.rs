@@ -301,7 +301,8 @@ impl ShowAnchors {
             selected: None,
             sections: vec![None; output.sections.len()],
         };
-        if !takes_heading_anchor(&output.path, config)
+        let presentation = &config.project().presentation;
+        if !takes_heading_anchor(&output.path, presentation)
             || decl.is_stub
             || !paths_same_location(&decl.file, &output.path)
         {
@@ -337,11 +338,11 @@ impl ShowAnchors {
                     }
                     None => decl.sections.get(&entry.path),
                 };
-                site.map(|site| section_site_anchor(site, config))
+                site.map(|site| section_site_anchor(site, presentation))
             })
             .collect();
         Self {
-            selected: heading_anchor(decl, section, config),
+            selected: heading_anchor(decl, section, presentation, config),
             sections,
         }
     }

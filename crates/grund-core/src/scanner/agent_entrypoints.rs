@@ -22,7 +22,7 @@ use anyhow::Result;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::config::Config;
+use crate::config::Presentation;
 use crate::grammar::{AgentsBlockLookup, find_agents_block};
 use crate::model::normalize_path_lexically;
 use crate::templates::ConversationSurface;
@@ -161,8 +161,10 @@ pub(crate) enum CanonicalSurfaceReach {
 }
 
 impl CanonicalSurfaceReach {
-    pub(crate) fn for_config(config: &Config) -> Self {
-        if config.conversation.as_deref() == Some("link") {
+    /// §AR-scanner.7: decided from the one presentation setting it turns on,
+    /// handed in as that record rather than read off a `Config`.
+    pub(crate) fn for_presentation(presentation: &Presentation) -> Self {
+        if presentation.conversation.as_deref() == Some("link") {
             Self::PlainEntrypointsOnly
         } else {
             Self::EveryEntrypoint

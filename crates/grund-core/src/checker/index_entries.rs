@@ -180,9 +180,14 @@ fn enroll_external_inline_declarations(
         let Some(written_target) = link_target_at_citation(line, citation) else {
             continue;
         };
-        let Some(canonical_target) =
-            markdown_link_target(&target.index_file, &citation.id, None, config, findings)
-        else {
+        let Some(canonical_target) = markdown_link_target(
+            &target.index_file,
+            &citation.id,
+            None,
+            &config.project().presentation,
+            config,
+            findings,
+        ) else {
             continue;
         };
         if written_target != canonical_target {
