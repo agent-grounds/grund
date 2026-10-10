@@ -1,6 +1,8 @@
 //! The controlled-English sentence front end (§FS-rules.2–4, §AR-rules.2).
 
 mod count;
+mod forms;
+mod predicate;
 mod recovery;
 mod selectors;
 mod subjects;
@@ -8,10 +10,10 @@ mod targets;
 
 use super::RuleAnchor;
 use crate::grammar::Grammar;
-use count::{CountSpelling, count_prefix, positive};
+use forms::{Form, Refusal, refuse};
+use predicate::parse_predicate;
 use std::collections::{BTreeMap, BTreeSet};
-use subjects::{parse_subject, split_modality};
-use targets::kind_targets;
+use subjects::{Spelling, SubjectFault, parse_subject, refused, split_modality};
 
 pub(crate) use selectors::parse_selector;
 
@@ -130,8 +132,9 @@ impl RuleVocabulary {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct RuleParseError {
     pub(crate) message: String,
-    /// The refusal offers no form because nothing could be recovered, so
-    /// `check --rule` follows it with the `known kinds:` line (§FS-rules.3.5.2).
+    /// The refusal offers no form and what could not be supplied is a kind, so
+    /// `check --rule` follows it with the `known kinds:` line
+    /// (§FS-rules.3.5.4.4).
     pub(crate) unrecovered: bool,
 }
 
@@ -142,15 +145,9 @@ impl std::fmt::Display for RuleParseError {
 }
 impl std::error::Error for RuleParseError {}
 
-fn error(message: impl Into<String>) -> RuleParseError {
-    RuleParseError {
-        message: message.into(),
-        unrecovered: false,
-    }
-}
-
-/// Parse exactly the five released families (§FS-rules.3). Near misses receive
-/// their fixed accepted rewrite before generic production parsing.
+/// Parse exactly the five released families (§FS-rules.3). A refusal offers
+/// the sentence as typed with the failed production replaced, read again
+/// before it is offered (§FS-rules.3.5.4).
 ///
 /// `Err` is the invalid rule and nothing else. The second half of `Ok` is
 /// §FS-rules.4.1's *unverifiable here*: the reason this scope could say neither
@@ -165,77 +162,92 @@ pub(crate) fn parse_rule(
     anchor: RuleAnchor,
     vocabulary: &RuleVocabulary,
 ) -> Result<(ParsedRule, Option<String>), RuleParseError> {
-    match title {
-        "Each FS may not cite any AR." => {
-            return Err(error(
-                "modality \"may not\" is not accepted; accepted form: Each FS must not cite any AR.",
-            ));
-        }
-        "Each FS must cite no AR." => {
-            return Err(error(
-                "\"cite no\" is not accepted; accepted form: Each FS must not cite any AR.",
-            ));
-        }
-        "Each FS must cite a GOAL." => {
-            return Err(error(
-                "quantifier \"a\" is ambiguous; accepted forms: \"Each FS must cite at least one GOAL.\" or \"Each FS must cite exactly one GOAL.\"",
-            ));
-        }
-        "Each FS must cite at least one GOAL and must not cite any AR." => {
-            return Err(error(
-                "conjunctions are not accepted; accepted forms: \"Each FS must cite at least one GOAL.\" and \"Each FS must not cite any AR.\"",
-            ));
-        }
-        _ => {}
+    read(title, origin, anchor, vocabulary).map_err(|refusal| {
+        refusal.offer(vocabulary, |form, vocabulary| {
+            let anchor = RuleAnchor {
+                path: String::new(),
+                line: 0,
+                column: None,
+            };
+            read(form, String::new(), anchor, vocabulary).err()
+        })
+    })
+}
+
+/// Read a sentence, or refuse it with what its refusing production offers in
+/// place of what it read, wrapped back into the whole sentence
+/// (§FS-rules.3.5.4.1).
+fn read(
+    title: &str,
+    origin: String,
+    anchor: RuleAnchor,
+    vocabulary: &RuleVocabulary,
+) -> Result<(ParsedRule, Option<String>), Refusal> {
+    if let Some(refusal) = documented(title) {
+        return Err(refusal);
     }
+    // §FS-rules.3.5.4.5: the terminal `.` is appended, and `Each` capitalized.
     if !title.ends_with('.') {
-        return Err(error(format!(
-            "rule must end with \".\"; accepted form: {title}."
-        )));
-    }
-    if title.starts_with("each ") {
-        return Err(error(
-            "fixed word \"Each\" is case-sensitive; accepted form: Each FS must cite at least one GOAL.",
+        return Err(refuse(
+            "rule must end with \".\"",
+            Form::One(format!("{title}.")),
         ));
     }
+    if let Some(rest) = title.strip_prefix("each ") {
+        return Err(refuse(
+            "fixed word \"Each\" is case-sensitive",
+            Form::One(format!("Each {rest}")),
+        ));
+    }
+    // §FS-rules.3.5.4.4: a path names no kind to put in its place.
     if title.starts_with("Each file in ") {
-        return Err(error(
-            "path subjects are not accepted in phase 1; accepted form: Each FS must cite at least one GOAL.",
-        ));
-    }
-    if title.starts_with("Each */") {
-        return Err(error(
-            "subject namespaces must be local in phase 1; accepted form: Each FS must cite at least one GOAL.",
-        ));
-    }
-    if title.starts_with("Each chapter of each ") {
-        return Err(error(
-            "chapter-quantified subjects are not accepted in phase 1; accepted form: The requirements chapter of each FS must cite at least one REQ.",
+        return Err(refuse(
+            "path subjects are not accepted in phase 1",
+            Form::None { kind: true },
         ));
     }
     let sentence = &title[..title.len() - 1];
     // §FS-rules.3.6: the subject ends at the modality found first in a fixed order.
-    let Some((subject_text, level, polarity, predicate)) = split_modality(sentence) else {
-        return Err(error(if sentence.contains(" may not ") {
-            "modality \"may not\" is not accepted; accepted form: Each FS must not cite any AR."
-        } else {
-            "rule has no accepted modality; accepted form: Each FS must cite at least one GOAL."
-        }));
+    let split = split_modality(sentence);
+    if let Some(refusal) = quantified(title, split.map(|(subject, ..)| subject), vocabulary) {
+        return Err(refusal);
+    }
+    let Some((subject_text, level, polarity, predicate)) = split else {
+        return Err(match sentence.split_once(" may not ") {
+            // §FS-rules.3.5.4.5: `must not`, the rest as typed.
+            Some((before, after)) => refuse(
+                "modality \"may not\" is not accepted",
+                Form::One(format!("{before} must not {after}.")),
+            ),
+            // §FS-rules.3.5.4.4: the sentence does not say which modality it meant.
+            None => refuse("rule has no accepted modality", Form::None { kind: false }),
+        });
     };
-    let subject = parse_subject(subject_text, vocabulary)
-        .map_err(|refusal| refusal.rule_error(vocabulary))?;
+    // What follows the subject and what precedes the predicate, both as typed.
+    let after_subject = &title[subject_text.len()..];
+    let before_predicate = &sentence[..sentence.len() - predicate.len()];
+    let subject = parse_subject(subject_text, vocabulary).map_err(|refusal| {
+        let refusal = refusal.rule_refusal(vocabulary);
+        refusal.within(|subject| format!("{subject}{after_subject}"))
+    })?;
     let mut unverifiable = None;
     let (relation, targets, cardinality) =
-        parse_predicate(predicate, polarity, vocabulary, &mut unverifiable)?;
-    if relation == RuleRelation::HaveChapter
-        && matches!(
-            subject,
-            RuleSubject::ChapterOfKind { .. } | RuleSubject::ExactChapter { .. }
-        )
-    {
-        return Err(error(
-            "chapter subjects cannot have chapters; accepted form: Each FS must have exactly one requirements chapter.",
-        ));
+        parse_predicate(predicate, polarity, vocabulary, &mut unverifiable).map_err(|refusal| {
+            refusal.within(|predicate| format!("{before_predicate}{predicate}."))
+        })?;
+    if relation == RuleRelation::HaveChapter {
+        // §FS-rules.3.5.4.5: a chapter subject becomes its declaration, or `Each KIND`.
+        let declaration = match &subject {
+            RuleSubject::ChapterOfKind { kind, .. } => Some(format!("Each {kind}")),
+            RuleSubject::ExactChapter { declaration, .. } => Some(declaration.clone()),
+            RuleSubject::Kind(_) | RuleSubject::ExactDeclaration(_) => None,
+        };
+        if let Some(declaration) = declaration {
+            return Err(refuse(
+                "chapter subjects cannot have chapters",
+                Form::One(format!("{declaration}{after_subject}")),
+            ));
+        }
     }
     Ok((
         ParsedRule {
@@ -252,155 +264,57 @@ pub(crate) fn parse_rule(
     ))
 }
 
-fn parse_predicate(
-    text: &str,
-    polarity: RulePolarity,
-    vocab: &RuleVocabulary,
-    unverifiable: &mut Option<String>,
-) -> Result<(RuleRelation, RuleTargets, Cardinality), RuleParseError> {
-    if polarity == RulePolarity::Prohibiting {
-        let rest = text.strip_prefix("cite any ").ok_or_else(|| {
-            error(
-                "a prohibition must use \"cite any\"; accepted form: Each FS must not cite any AR.",
-            )
-        })?;
-        return Ok((
-            RuleRelation::Cite,
-            kind_targets(rest, TargetMode::Aggregate, vocab, unverifiable)?,
-            Cardinality::NONE,
-        ));
-    }
-    if let Some(rest) = text.strip_prefix("have ") {
-        let (card, object, spelling) = count_prefix(rest)?;
-        let (name, plural) = if let Some(name) = object.strip_suffix(" chapters") {
-            (name, true)
-        } else if let Some(name) = object.strip_suffix(" chapter") {
-            (name, false)
-        } else {
-            return Err(error(
-                "chapter presence must end in \"chapter\"; accepted form: Each FS must have exactly one requirements chapter.",
-            ));
-        };
-        if name.is_empty() || name.trim() != name || name.chars().any(char::is_whitespace) {
-            // §FS-rules.3.5.1: append whitespace guidance to the released refusal prefix.
-            return Err(error(
-                "chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter. NAME forbids whitespace anywhere.",
-            ));
-        }
-        let expects_plural = match spelling {
-            CountSpelling::AtLeastOne | CountSpelling::ExactlyOne => false,
-            CountSpelling::AtMost(n) => n != 1,
-            // §FS-rules.3.1: a numeric floor is never one, so it is always plural.
-            CountSpelling::AtLeast(_) | CountSpelling::Exactly(_) => true,
-        };
-        if plural != expects_plural {
-            let count = match spelling {
-                CountSpelling::AtLeastOne => "at least one".to_string(),
-                CountSpelling::ExactlyOne => "exactly one".to_string(),
-                CountSpelling::AtLeast(n) => format!("at least {n}"),
-                CountSpelling::AtMost(n) => format!("at most {n}"),
-                CountSpelling::Exactly(n) => format!("exactly {n}"),
-            };
-            let noun = if expects_plural {
-                "chapters"
-            } else {
-                "chapter"
-            };
-            return Err(error(format!(
-                "chapter count has the wrong singular/plural spelling; accepted form: Each FS must have {count} {name} {noun}."
-            )));
-        }
-        return Ok((
-            RuleRelation::HaveChapter,
-            RuleTargets::Chapter(name.into()),
-            card,
-        ));
-    }
-    if let Some(rest) = text.strip_prefix("cite each ") {
-        if let Some(kind) = rest.strip_suffix(" at least once") {
-            return Ok((
-                RuleRelation::Cite,
-                kind_targets(kind, TargetMode::PerTarget, vocab, unverifiable)?,
-                Cardinality::AT_LEAST_ONE,
-            ));
-        }
-        if let Some(kind) = rest.strip_suffix(" exactly once") {
-            return Ok((
-                RuleRelation::Cite,
-                kind_targets(kind, TargetMode::PerTarget, vocab, unverifiable)?,
-                Cardinality {
-                    minimum: Some(1),
-                    maximum: Some(1),
-                },
-            ));
-        }
-        for marker in [" at least ", " at most ", " exactly "] {
-            if let Some((kind, raw)) = rest.split_once(marker) {
-                let n = positive(
-                    raw.strip_suffix(" times")
-                        .ok_or_else(|| error("per-target counts must end in \"times\"; accepted form: AR-overview.system-overview must cite each AR exactly 2 times."))?,
-                )?;
-                // §FS-rules.3: a floor and an exact count of one are spelled
-                // `once`, so the numeral is refused for both.
-                let card = match marker {
-                    " at least " if n == 1 => {
-                        return Err(error(
-                            "numeric \"at least 1 times\" is not canonical; accepted form: AR-overview.system-overview must cite each AR at least once.",
-                        ));
-                    }
-                    " exactly " if n == 1 => {
-                        return Err(error(
-                            "numeric \"exactly 1 times\" is not canonical; accepted form: AR-overview.system-overview must cite each AR exactly once.",
-                        ));
-                    }
-                    " at least " => Cardinality {
-                        minimum: Some(n),
-                        maximum: None,
-                    },
-                    " at most " => Cardinality {
-                        minimum: None,
-                        maximum: Some(n),
-                    },
-                    _ => Cardinality {
-                        minimum: Some(n),
-                        maximum: Some(n),
-                    },
-                };
-                return Ok((
-                    RuleRelation::Cite,
-                    kind_targets(kind, TargetMode::PerTarget, vocab, unverifiable)?,
-                    card,
-                ));
-            }
-        }
-    }
-    if let Some(rest) = text.strip_prefix("cite ") {
-        if rest.starts_with("no ") {
-            return Err(error(
-                "\"cite no\" is not accepted; accepted form: Each FS must not cite any AR.",
-            ));
-        }
-        if rest.starts_with("a ") {
-            return Err(error(
-                "quantifier \"a\" is ambiguous; accepted forms: \"Each FS must cite at least one GOAL.\" or \"Each FS must cite exactly one GOAL.\"",
-            ));
-        }
-        let (card, kinds, _) = count_prefix(rest)?;
-        return Ok((
-            RuleRelation::Cite,
-            kind_targets(kinds, TargetMode::Aggregate, vocab, unverifiable)?,
-            card,
-        ));
-    }
-    if let Some(rest) = text.strip_prefix("be cited by ") {
-        let (card, kinds, _) = count_prefix(rest)?;
-        return Ok((
-            RuleRelation::BeCitedBy,
-            kind_targets(kinds, TargetMode::Aggregate, vocab, unverifiable)?,
-            card,
-        ));
-    }
-    Err(error(
-        "verb is not accepted; accepted form: Each FS must cite at least one GOAL.",
-    ))
+/// §FS-rules.3.5: three documented sentences are refused for their own
+/// production whatever the vocabulary reads of the rest, and offer themselves
+/// with that production replaced (§FS-rules.3.5.4.5).
+fn documented(title: &str) -> Option<Refusal> {
+    let form = String::from;
+    Some(match title {
+        "Each FS must cite no AR." => refuse(
+            "\"cite no\" is not accepted",
+            Form::One(form("Each FS must not cite any AR.")),
+        ),
+        "Each FS must cite a GOAL." => refuse(
+            "quantifier \"a\" is ambiguous",
+            Form::Two(
+                [
+                    form("Each FS must cite at least one GOAL."),
+                    form("Each FS must cite exactly one GOAL."),
+                ],
+                "or",
+            ),
+        ),
+        "Each FS must cite at least one GOAL and must not cite any AR." => refuse(
+            "conjunctions are not accepted",
+            Form::Two(
+                [
+                    form("Each FS must cite at least one GOAL."),
+                    form("Each FS must not cite any AR."),
+                ],
+                "and",
+            ),
+        ),
+        _ => return None,
+    })
+}
+
+/// §FS-rules.12: a namespaced or chapter-quantified subject is refused for its
+/// own production before the modality is sought. Its form is the subject
+/// rebuilt as §FS-rules.3.5.4.2 says, and there is none where no modality
+/// says where the subject ends.
+fn quantified(title: &str, subject: Option<&str>, vocabulary: &RuleVocabulary) -> Option<Refusal> {
+    let (fault, quantifier) = if title.starts_with("Each */") {
+        (SubjectFault::Namespace, "Each ")
+    } else if title.starts_with("Each chapter of each ") {
+        (SubjectFault::ChapterQuantified, "Each chapter of each ")
+    } else {
+        return None;
+    };
+    let Some(subject) = subject else {
+        return Some(refuse(fault.reason(title), Form::None { kind: false }));
+    };
+    let head = subject.strip_prefix(quantifier).unwrap_or_default();
+    let refusal = refused(fault, Spelling::Each, subject, head, None, "").rule_refusal(vocabulary);
+    let after_subject = &title[subject.len()..];
+    Some(refusal.within(|subject| format!("{subject}{after_subject}")))
 }

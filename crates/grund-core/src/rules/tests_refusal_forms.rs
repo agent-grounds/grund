@@ -379,3 +379,37 @@ fn a_form_is_repaired_until_the_parser_accepts_it() {
         ),
     ]);
 }
+
+/// §FS-rules.3.5.4.3: a sentence refused for several productions at once is
+/// repaired one production per pass, the reason staying the first refusal's,
+/// and the passes end in a form or in none rather than looping.
+#[test]
+fn a_many_fault_sentence_ends_without_looping() {
+    assert_rows(&[
+        (
+            "each FS should have exactly 01  requirements section",
+            "rule must end with \".\"; accepted form: Each FS should have exactly one requirements chapter.",
+            false,
+        ),
+        (
+            "each FS.* may not cite at least 1 FS",
+            "rule must end with \".\"; accepted form: Each FS must not cite any FS.",
+            false,
+        ),
+        (
+            "FS-login should cite each FS exactly 01",
+            "rule must end with \".\"; accepted form: FS-login should cite each FS exactly once.",
+            false,
+        ),
+        (
+            "each FS.* may not cite at least 1 POLICY",
+            "rule must end with \".\"",
+            true,
+        ),
+        (
+            "each FS should have exactly 01 Goal and hypothesis section",
+            "rule must end with \".\"",
+            false,
+        ),
+    ]);
+}

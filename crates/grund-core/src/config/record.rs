@@ -378,8 +378,9 @@ pub(crate) fn kind_prefixes(kinds: &[KindConfig]) -> Vec<String> {
 
 /// The `known kinds:` line that ends an unknown `--kind` (§FS-list.1.1), a
 /// `--selector` refusal that recovers no kind (§FS-rules.8.1), and a
-/// `check --rule` refusal that offers no form (§FS-rules.3.5.2): every citable
-/// kind named in `citable`, once, in configuration order.
+/// `check --rule` refusal that offers no form where a kind is missing
+/// (§FS-rules.3.5.4.4): every citable kind named in `citable`, once, in
+/// configuration order.
 pub(crate) fn known_kinds_line<'a>(citable: impl IntoIterator<Item = &'a str>) -> String {
     let mut seen = std::collections::BTreeSet::new();
     let known = citable
