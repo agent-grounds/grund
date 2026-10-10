@@ -69,6 +69,7 @@ The rules that make this file, and the ones beside it, checked rather than hoped
 - [§DF-rule-after-enabling-rewrites](DF-rule-after-enabling-rewrites.md#df-rule-after-enabling-rewrites-a-rule-subject-that-needs-named-sections-is-answered-with-one-they-make-valid-in-place) — a rule subject that needs named sections is answered with one they make valid, in place
 - [§DF-local-section-absent-target-escape](DF-local-section-absent-target-escape.md#df-local-section-absent-target-escape-an-owned-local-section-citation-whose-section-is-absent-is-answered-with-the-escape-in-place) — an owned local section citation whose section is absent is answered with the escape, in place
 - [§DF-rule-refusal-reasons](DF-rule-refusal-reasons.md#df-rule-refusal-reasons-a-chapter-path-is-refused-for-the-component-that-failed-corrected-in-place) — a chapter path is refused for the component that failed, corrected in place
+- [§DF-rule-refusal-rewrites](DF-rule-refusal-rewrites.md#df-rule-refusal-rewrites-a-refused-rules-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced-in-place) — a refused rule's accepted form is the typed sentence with the failed part replaced, in place
 - [§DF-stub-target-fenced-heading](DF-stub-target-fenced-heading.md#df-stub-target-fenced-heading-a-heading-inside-a-fence-of-a-stubs-target-does-not-declare-its-id) — a heading inside a fence of a stub's target does not declare its ID
 
 ## Config, discovery, and workspaces

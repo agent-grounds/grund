@@ -1,1 +1,1 @@
-docs/rules/RULE-seg-operations-workshop.md:1: error: RULE-seg-operations-workshop is not a valid rule: unknown kind "OP" in namespace "typo"; accepted form: Each FS must cite at least one GOAL.
+docs/rules/RULE-seg-operations-workshop.md:1: error: RULE-seg-operations-workshop is not a valid rule: unknown kind "OP" in namespace "typo"

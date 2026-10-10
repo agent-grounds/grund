@@ -77,7 +77,8 @@ pub(crate) fn parse_ad_hoc_with_workspace(
 }
 
 /// `schema` is the one whose kinds the subject is read against, so it is the
-/// one whose kinds a refusal that offers no form lists (§FS-rules.3.5.2).
+/// one whose kinds a refusal that offers no form lists (§FS-rules.3.5.2,
+/// §FS-rules.3.5.4.4).
 fn parse_ad_hoc_with_vocabulary(
     schema: &Schema,
     sentence: &str,
@@ -94,7 +95,7 @@ fn parse_ad_hoc_with_vocabulary(
         &vocabulary,
     )
     .map_err(|error| {
-        // §FS-rules.3.5.2: nothing to paste back, so the kinds follow the reason.
+        // §FS-rules.3.5.4.4: no form, and a kind is missing, so the kinds follow.
         if error.unrecovered {
             anyhow::anyhow!(
                 "{}\n{}",

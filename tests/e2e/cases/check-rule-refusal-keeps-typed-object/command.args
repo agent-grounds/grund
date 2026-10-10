@@ -1,0 +1,1 @@
+check --rule 'FS-*.requirements must cite at least one FS.' {repo}

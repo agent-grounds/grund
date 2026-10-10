@@ -40,9 +40,11 @@ fn every_released_family_subject_modality_and_count_spelling_is_accepted() {
     }
 }
 
-/// §FS-rules.12: the deliberate phase-1 absences a sentence can spell - path
-/// subjects, wildcard namespaces, component wildcards, chapter quantification -
-/// are refused by name with the accepted rewrite.
+/// §FS-rules.3.5, §FS-rules.12: the deliberate phase-1 absences a sentence can
+/// spell - path subjects, wildcard namespaces, component wildcards, chapter
+/// quantification - are refused by name, with the typed sentence repaired or,
+/// where it does not say what belongs in the gap, the known kinds
+/// (§FS-rules.3.5.4.5).
 #[test]
 fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
     let rows = [
@@ -64,7 +66,7 @@ fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
         ),
         (
             "Each FS must have exactly one  chapter.",
-            "chapter name must be a non-empty NAME with no surrounding whitespace; accepted form: Each FS must have exactly one requirements chapter. NAME forbids whitespace anywhere.",
+            "chapter name must be a non-empty NAME with no surrounding whitespace; NAME forbids whitespace anywhere.",
         ),
         (
             "Each FS must cite at least one GOAL",
@@ -76,7 +78,7 @@ fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
         ),
         (
             "Each file in vendor/ must cite at least one FS.",
-            "path subjects are not accepted in phase 1; accepted form: Each FS must cite at least one GOAL.",
+            "path subjects are not accepted in phase 1\nknown kinds: GOAL, REQ, FS, AR, RULE",
         ),
         (
             "Each */FS must cite at least one GOAL.",
@@ -84,26 +86,40 @@ fn every_listed_refusal_has_its_exact_rewrite_and_exit_two() {
         ),
         (
             "FS-demo.* must cite at least one REQ.",
-            "section-component wildcards are not accepted in phase 1; accepted form: FS-demo.requirements must cite at least one REQ.",
+            "section-component wildcards are not accepted in phase 1; accepted form: FS-demo must cite at least one REQ.",
         ),
         (
             "Each chapter of each FS must cite at least one REQ.",
-            "chapter-quantified subjects are not accepted in phase 1; accepted form: The requirements chapter of each FS must cite at least one REQ.",
+            "chapter-quantified subjects are not accepted in phase 1; accepted form: Each FS must cite at least one REQ.",
         ),
         (
             "FS-demo.2 must cite at least one REQ.",
-            "numbered chapter subjects can detach when headings move; accepted form: FS-demo.requirements must cite at least one REQ.",
+            "numbered chapter subjects can detach when headings move; accepted form: FS-demo must cite at least one REQ.",
         ),
         (
             "Each POLICY must cite at least one GOAL.",
-            "unknown kind \"POLICY\"; accepted form: Each FS must cite at least one GOAL.",
+            "unknown kind \"POLICY\"\nknown kinds: GOAL, REQ, FS, AR, RULE",
         ),
     ];
 
+    let mut wrong = Vec::new();
     for (sentence, refusal) in rows {
         let output = run(&fixture(), &["check", ".", "--rule", sentence]);
-        assert_run(&output, 2, "", &format!("error: {refusal}\n"));
+        let expected = format!("error: {refusal}\n");
+        let stderr = text(&output.stderr);
+        if output.status.code() != Some(2) || !output.stdout.is_empty() || stderr != expected {
+            wrong.push(format!(
+                "--rule {sentence:?}\n  stderr   {stderr:?}\n  expected {expected:?}"
+            ));
+        }
     }
+    assert!(
+        wrong.is_empty(),
+        "{} of {} FS-rules.3.5 rows were not exact:\n{}",
+        wrong.len(),
+        rows.len(),
+        wrong.join("\n")
+    );
 }
 
 #[test]
@@ -286,6 +302,9 @@ fn every_named_off_rule_suggestion_is_accepted_where_its_label_says() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
+/// §FS-rules.4, §FS-rules.3.5.4.4: each is refused before the scan, and each
+/// offers a form but `FSbogus`, from which no configured kind is recovered, so
+/// it is answered with the known kinds instead.
 #[test]
 fn malformed_counts_ids_and_named_paths_are_pre_scan_refusals() {
     for sentence in [
@@ -305,10 +324,18 @@ fn malformed_counts_ids_and_named_paths_are_pre_scan_refusals() {
             "non-production was accepted: {sentence}"
         );
         let stderr = text(&output.stderr);
-        assert!(
-            stderr.contains("accepted form:"),
-            "refusal has no accepted rewrite: {sentence}: {stderr}"
-        );
+        if sentence.starts_with("FSbogus") {
+            assert!(
+                !stderr.contains("accepted form")
+                    && stderr.ends_with("\nknown kinds: GOAL, REQ, FS, AR, RULE\n"),
+                "an unrecovered subject offers a form or lists no kinds: {stderr}"
+            );
+        } else {
+            assert!(
+                stderr.contains("accepted form:"),
+                "refusal has no accepted rewrite: {sentence}: {stderr}"
+            );
+        }
     }
 }
 
@@ -333,24 +360,26 @@ fn numeric_at_least_one_is_refused_in_both_count_shapes() {
 }
 
 /// §FS-rules.3.5: the four sentences `at least` could not reach before it had a
-/// numeric production. Each stays refused and lands on the message its two
+/// numeric production. Each stays refused and lands on the reason its two
 /// sibling bounds already answer with, so widening the grammar cannot quietly
-/// leave a near miss on the generic `count is not accepted` catch-all.
+/// leave a near miss on the generic `count is not accepted` catch-all. The form
+/// keeps the typed bound, and a count that is no numeral or is zero gets none
+/// (§FS-rules.3.5.4.5).
 #[test]
 fn at_least_reaches_the_refusals_its_sibling_bounds_already_answer_with() {
     for (sentence, refusal) in [
         (
             "Each FS must cite at least two GOAL.",
-            "count must be a canonical positive base-10 integer; accepted form: Each FS must cite exactly 2 GOAL.",
+            "count must be a canonical positive base-10 integer",
         ),
         (
             "Each FS must cite at least 0 GOAL.",
-            "count must be a canonical positive base-10 integer; accepted form: Each FS must cite exactly 2 GOAL.",
+            "count must be a canonical positive base-10 integer",
         ),
         ("Each FS must cite at least GOAL.", "count has no object"),
         (
             "AR-overview.system-overview must cite each AR at least 2 AR.",
-            "per-target counts must end in \"times\"; accepted form: AR-overview.system-overview must cite each AR exactly 2 times.",
+            "per-target counts must end in \"times\"; accepted form: AR-overview.system-overview must cite each AR at least 2 times.",
         ),
     ] {
         let output = run(&fixture(), &["check", ".", "--rule", sentence]);
@@ -381,9 +410,10 @@ fn a_chapter_floor_above_one_takes_the_plural_noun() {
 }
 
 /// §FS-rules.3, §FS-errors.3: the catch-all a sentence reaches when its count is
-/// spelled some other way now names the five canonical counts, appended after
-/// the clause it already printed - so `count is not accepted;` stays a verbatim
-/// contiguous prefix and no shipped bytes are rewritten.
+/// spelled some other way names the five canonical counts, appended after the
+/// clause it already printed - so `count is not accepted;` stays a verbatim
+/// contiguous prefix. The sentence does not say which count it meant, so no
+/// form follows the list (§FS-rules.3.5.4.5).
 #[test]
 fn the_catch_all_count_refusal_names_every_canonical_count() {
     let output = run(
@@ -394,6 +424,6 @@ fn the_catch_all_count_refusal_names_every_canonical_count() {
         &output,
         2,
         "",
-        "error: count is not accepted; the canonical counts are \"at least one\", \"at least N\", \"at most N\", \"exactly one\" and \"exactly N\" for a base-10 N; accepted form: Each FS must cite at least one GOAL.\n",
+        "error: count is not accepted; the canonical counts are \"at least one\", \"at least N\", \"at most N\", \"exactly one\" and \"exactly N\" for a base-10 N\n",
     );
 }

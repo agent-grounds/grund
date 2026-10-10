@@ -1,0 +1,1 @@
+check --rule 'Each FS must cite at least one POLICY.' {repo}
