@@ -45,12 +45,11 @@ const READ_CALLS: &[&str] = &[
 const READERS: &[(&str, &str, &str)] = &[
     // The inline-code hint on a dangling Markdown citation.
     ("support.rs", "input_read_to_string", "AR-checker.2.3"),
-    ("report.rs", "file_declares_inline_home", "AR-checker.2.5"),
+    ("conform.rs", "file_declares_inline_home", "AR-checker.2.5"),
     // The unused-declaration rule, which reads every index to tell an index entry
     // from an inbound citation.
-    ("report.rs", "KindIndexEntries::new", "AR-checker.2.6"),
+    ("judge.rs", "KindIndexEntries::new", "AR-checker.2.6"),
     ("agents.rs", "input_read_to_string", "AR-checker.2.7"),
-    ("agents.rs", "companion_agent_entrypoints", "AR-checker.2.7"),
     ("index.rs", "input_read_to_string", "AR-checker.2.16"),
     ("index.rs", "KindIndexEntries::new", "AR-checker.2.16"),
     (

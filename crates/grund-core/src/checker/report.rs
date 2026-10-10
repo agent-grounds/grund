@@ -1,6 +1,6 @@
 use super::conform::conform;
 use super::judge::{CheckWorkspace, judge};
-use super::support::sort_diagnostics;
+use super::support::{diagnostic_cmp, sort_diagnostics};
 use crate::config::{Frame, Rules, Schema};
 use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 
@@ -50,7 +50,9 @@ use crate::model::{Catalog, CheckReport, Diagnostic, Expected, TextOverlays};
 ///   counted as an inbound citation (§DF-index-not-an-inbound-citation).
 /// - §AR-checker.2.7: each agent entrypoint, from disk, and where a kind sets
 ///   `rules = true`, a stub's unscanned target, through the rule facts
-///   (§AR-rules.3) built to re-render the entrypoint's rules section.
+///   (§AR-rules.3) built to re-render the entrypoint's rules section. Its
+///   companions are listed, and read, by the writers before the check, in
+///   `Expected` (§AR-checker.1.3).
 /// - §AR-checker.2.16: every configured kind index, from disk, and a stub's
 ///   unscanned target, for an entry's section.
 /// - §AR-checker.2.18: a stub's unscanned target, for the home a value binding is
@@ -534,11 +536,9 @@ fn merge_channel(mut conformed: Vec<Diagnostic>, judged: Vec<Diagnostic>) -> Vec
 
 /// Whether no finding of one half sorts equal to one of the other (§AR-checker.1.4).
 fn no_cross_half_tie(conformed: &[Diagnostic], judged: &[Diagnostic]) -> bool {
-    let keys = conformed
-        .iter()
-        .map(|d| (d.path.as_deref(), d.line, d.message.as_str()))
-        .collect::<std::collections::BTreeSet<_>>();
+    let mut keys: Vec<&Diagnostic> = conformed.iter().collect();
+    keys.sort_by(|a, b| diagnostic_cmp(a, b));
     judged
         .iter()
-        .all(|d| !keys.contains(&(d.path.as_deref(), d.line, d.message.as_str())))
+        .all(|j| keys.binary_search_by(|c| diagnostic_cmp(c, j)).is_err())
 }

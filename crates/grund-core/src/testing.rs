@@ -24,10 +24,9 @@ use crate::writers::{block_version, expected, expected_entrypoint, render_agents
 #[cfg(unix)]
 use crate::writers::GRUND_OPEN_RESOLVER;
 
-// The stages' entry points as a case with only a façade calls them: a stage
-// below the writers is handed concerns and a `Frame` rather than `Config`
-// (§AR-checker.1), and a façade a case edited hands back what it shows
-// (§AR-config.5), so the cases keep the shape they were written in.
+// The stages' entry points for a case holding only a façade: a stage below the
+// writers takes concerns and a `Frame`, not `Config` (§AR-checker.1), and an
+// edited façade hands back what it shows (§AR-config.5).
 
 /// `scanner::scan_tree` over a façade's schema and frame (§AR-scanner.1).
 pub(crate) fn scan_tree(
