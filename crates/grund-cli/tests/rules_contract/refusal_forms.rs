@@ -104,7 +104,13 @@ fn fs_only_rows() -> Vec<(&'static str, &'static str, &'static str)> {
         ),
         (
             "Each FS must cite at least one FS and must not cite any FS.",
-            "unknown kind \"FS must cite at least one FS and\"",
+            "conjunctions are not accepted; accepted forms: \"Each FS must cite at least one FS.\" \
+             and \"Each FS must not cite any FS.\"",
+            "",
+        ),
+        (
+            "Each FS must cite at least one FS or must not cite any FS.",
+            "unknown kind \"FS must cite at least one FS or\"",
             kinds,
         ),
         (
@@ -321,15 +327,15 @@ fn only_a_named_sections_reason_carries_the_after_enabling_label() {
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
 }
 
-/// §FS-rules.3.5.4.2: a refused subject holding a clause of its own, an
-/// undocumented conjunction split at its second modality, is offered no form,
-/// never one that drops the first clause.
+/// §FS-rules.3.5.4.2: a refused subject holding a clause of its own, two
+/// clauses joined by anything but §FS-rules.3.5.5's ` and ` and split at the
+/// second modality, is offered no form, never one that drops the first clause.
 #[test]
 fn a_subject_holding_a_clause_is_offered_no_form() {
     let rows: Vec<_> = fs_only_rows()
         .into_iter()
         .filter(|(sentence, ..)| {
-            *sentence == "Each FS must cite at least one FS and must not cite any FS."
+            *sentence == "Each FS must cite at least one FS or must not cite any FS."
         })
         .collect();
     assert_eq!(rows.len(), 1, "the clause row is in the table");

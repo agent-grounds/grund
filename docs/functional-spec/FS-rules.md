@@ -485,9 +485,9 @@ declaration or to `Each KIND`. So an empty component keeps what was typed
 before it and nothing after it, as `list --selector` does: `FS-login..requirements`
 is offered `FS-login` and `FS-login.requirements.` is offered
 `FS-login.requirements`. A refused subject that holds a modality followed
-by a verb is the first clause of a conjunction that the modality split read
-into the subject ([§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends)), so it is not rebuilt: a form built from it would
-drop a clause. No form is offered, and `known kinds:` follows.
+by a verb is the first of two clauses the modality split read into the subject
+([§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends)), joined by anything but the ` and ` that [§FS-rules.3.5.5](FS-rules.md#355-any-clauses-joined-by-and-are-refused-as-a-conjunction) refuses first, so
+it is not rebuilt: a form built from it would drop a clause. No form is offered, and `known kinds:` follows.
 
 ##### 3.5.4.3 A form is parsed before it is offered
 
@@ -497,7 +497,8 @@ pass replaces one refused production, so the passes end within the number of
 productions a sentence has, and a pass that would leave the sentence as it was
 ends them with no form. A form is offered only once the parser accepts it.
 Where a pass has nothing to put in, or more than one candidate, no form is
-offered. A two-form refusal offers its pair only where both forms are accepted.
+offered. A refusal that offers several forms offers them only where every one
+is accepted.
 
 ##### 3.5.4.4 Where no form is offered
 
@@ -521,7 +522,7 @@ is anything else, nothing follows the reason. A configured rule declaration's
 | a per-target count without `times` | the count typed after the bound, then `times` | that count is not a numeral |
 | a count with leading zeros | the count without them | the count is zero or is not a numeral |
 | quantifier `a` | two forms, `at least one` and `exactly one` | either form is refused |
-| the documented conjunction | two forms, one per clause | either form is refused |
+| clauses joined by `and` ([§FS-rules.3.5.5](FS-rules.md#355-any-clauses-joined-by-and-are-refused-as-a-conjunction)) | one form per clause | any form is refused |
 | a prohibition without `cite any` | `cite [count] KINDS` becomes `cite any KINDS` | the predicate is anything else |
 | a presence object not ending in `chapter` | its last word becomes `chapter` or `chapters`, as the count takes | no word precedes it |
 | a presence noun of the wrong number | `chapter` or `chapters`, as the count takes | — |
@@ -561,7 +562,8 @@ configured rule declaration's finding carries the same text after
 | `Each FS must cite exactly 02 FS.` | `count must be a canonical positive base-10 integer; accepted form: Each FS must cite exactly 2 FS.` | none |
 | `Each FS must cite a FS.` | `quantifier "a" is ambiguous; accepted forms: "Each FS must cite at least one FS." or "Each FS must cite exactly one FS."` | none |
 | `Each FS must cite at least one GOAL and must not cite any AR.` | `conjunctions are not accepted` | `known kinds: FS` |
-| `Each FS must cite at least one FS and must not cite any FS.` | `unknown kind "FS must cite at least one FS and"` | `known kinds: FS` |
+| `Each FS must cite at least one FS and must not cite any FS.` | `conjunctions are not accepted; accepted forms: "Each FS must cite at least one FS." and "Each FS must not cite any FS."` | none |
+| `Each FS must cite at least one FS or must not cite any FS.` | `unknown kind "FS must cite at least one FS or"` | `known kinds: FS` |
 | `Each FS should not cite at least one FS.` | `a prohibition must use "cite any"; accepted form: Each FS should not cite any FS.` | none |
 | `FS-login must have exactly one requirements section.` | `chapter presence must end in "chapter"; accepted form: FS-login must have exactly one requirements chapter.` | none |
 | `FS-login should have at most 2 requirements chapter.` | `chapter count has the wrong singular/plural spelling; accepted form: FS-login should have at most 2 requirements chapters.` | none |
@@ -588,6 +590,57 @@ leaves `at least 1`, which the next pass rewrites. The conjunction and the last
 `FS-*.requirements` row are offered none for the opposite reason: the first
 pass rebuilds what failed, and the form it leaves names a kind this repository
 does not configure, which no pass may guess.
+
+#### 3.5.5 Any clauses joined by `and` are refused as a conjunction
+
+The table's conjunction row is one instance of a general refusal, not the only
+sentence it covers: one sentence states one rule ([§FS-rules.3](FS-rules.md#3-the-five-sentence-families)), so a predicate
+that joins clauses is refused as a conjunction, whatever its subject, counts
+and kinds. A sentence is a conjunction when it contains ` and ` immediately
+followed by a modality word, `must ` or `should `. Every such ` and ` ends one
+clause and starts the next, which begins with its own modality. No accepted
+sentence contains one: a chapter `NAME` is a single token and an object joins
+its kinds with ` or `, so `The and chapter of each FS must cite at least one
+FS.` stays a sentence.
+
+The reason is `conjunctions are not accepted`. Its forms are one sentence per
+clause: the first is the first clause, and each later one is the first clause's
+subject, read by [§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends), followed by that clause, each ending in `.`. Each form
+is then built and read again as [§FS-rules.3.5.4](FS-rules.md#354-an-accepted-form-is-the-typed-sentence-with-the-failed-part-replaced) says, and they are offered only
+where every one is accepted, after `; accepted forms: `, quoted, two joined as
+`"A." and "B."` and more as `"A.", "B.", and "C."`. Where any one is not, the
+reason stands alone ([§FS-rules.3.5.4.4](FS-rules.md#3544-where-no-form-is-offered)).
+
+The check runs after the terminal `.` and the fixed-word and phase-1 subject
+refusals of the table, which are read from the sentence's start, and before
+the modality split of [§FS-rules.3.6](FS-rules.md#36-where-a-sentences-subject-ends). So the subject is never read from a
+fragment, and no refusal names part of a sentence as a kind. Both rule surfaces
+carry the same reason: `check --rule` prints `error: <reason>`, writes nothing
+to stdout and exits 2 ([§FS-rules.4](FS-rules.md#4-validation-lifecycle)), and a configured rule declaration's
+finding is `<RULE-ID> is not a valid rule: <reason>` ([§FS-rules.7.1](FS-rules.md#71-invalid-rule)).
+
+In a repository whose one kind is `FS`, these are the exact reasons. On
+`check --rule` the line after it follows the reason, and a configured rule
+declaration's finding carries the reason alone:
+
+| Refused sentence | Exact reason | Line after it |
+|---|---|---|
+| `Each FS must cite at least one FS and must not cite any FS.` | `conjunctions are not accepted; accepted forms: "Each FS must cite at least one FS." and "Each FS must not cite any FS."` | none |
+| `Each FS must cite exactly one FS and must not cite any FS.` | `conjunctions are not accepted; accepted forms: "Each FS must cite exactly one FS." and "Each FS must not cite any FS."` | none |
+| `Each FS must cite at least one FS and must cite at most one FS.` | `conjunctions are not accepted` | none |
+| `Each FS must not cite any FS and must cite at least one FS.` | `conjunctions are not accepted; accepted forms: "Each FS must not cite any FS." and "Each FS must cite at least one FS."` | none |
+| `The requirements chapter of each FS must cite at least one FS and should not cite any FS.` | `conjunctions are not accepted; accepted forms: "The requirements chapter of each FS must cite at least one FS." and "The requirements chapter of each FS should not cite any FS."` | none |
+| `Each FS must cite at least one FS and must not cite any FS and should cite at most 2 FS.` | `conjunctions are not accepted; accepted forms: "Each FS must cite at least one FS.", "Each FS must not cite any FS.", and "Each FS should cite at most 2 FS."` | none |
+| `Each FS must cite at least one GOAL and must not cite any AR.` | `conjunctions are not accepted` | `known kinds: FS` |
+| `Each */FS must cite at least one FS and must not cite any FS.` | `subject namespaces must be local in phase 1` | `known kinds: FS` |
+
+The third row's second clause spells a ceiling of one as a word, which
+[§FS-rules.3](FS-rules.md#3-the-five-sentence-families) refuses with no form to put in its place, so the pair is not offered;
+the sentence is still answered as a conjunction, because the conjunction is
+the first production it fails. The seventh row's forms name kinds this
+repository does not configure. The last row is refused first for its phase-1
+subject, which holds the first clause and so is not rebuilt
+([§FS-rules.3.5.4.2](FS-rules.md#3542-only-what-can-be-recovered-is-supplied)).
 
 ### 3.6 Where a sentence's subject ends
 
