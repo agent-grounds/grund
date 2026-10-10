@@ -57,6 +57,14 @@ release, under the pre-release licence of
   [§FS-rules.3.5.1](../../functional-spec/FS-rules.md#351-presence-name-whitespace-refusal) refusal keeps its reason as a verbatim prefix and its
   explanation as the end of the message, and the example between them becomes
   the typed sentence with the `NAME` trimmed, or nothing.
+- Three rows of [§FS-rules.3.5.3](../../functional-spec/FS-rules.md#353-a-chapter-path-is-refused-for-the-component-that-failed)'s table move with them, for the same
+  reason. `The requirements.1 chapter of each FS` and
+  `The requirements.* chapter of each FS` are answered with
+  `The requirements chapter of each FS` rather than with `FS-login`, a
+  declaration they never named. `FS-login..requirements` is answered with
+  `FS-login`, the selector `list --selector` gives it, rather than with
+  `FS-login.requirements`: an empty component keeps what was typed before it,
+  and a name after it is not one the parser read as a chapter.
 - A consumer of the `invalid-rule` finding keeps its code, its path, line,
   severity and authority, the exit code, selection by `--only invalid-rule`,
   and the text through the reason. Only what follows the reason changes.
@@ -81,8 +89,9 @@ Neither that record nor [§DF-rule-after-enabling-rewrites](DF-rule-after-enabli
 - Exit codes, stdout, finding codes, locations and the set of accepted
   sentences do not move, and no repository that passed starts failing, because
   every line this touches is already a failure.
-- The reasons, the text before the `;`, do not move. A reason that names the
-  wrong failure is agent-grounds/grund#507's to correct.
+- The reasons, the text before the `;`, do not move. Those that named the
+  wrong failure were corrected separately, by
+  [§DF-rule-refusal-reasons](DF-rule-refusal-reasons.md#df-rule-refusal-reasons-a-chapter-path-is-refused-for-the-component-that-failed-corrected-in-place).
 
 ## 4. Alternatives considered
 
@@ -109,7 +118,9 @@ Neither that record nor [§DF-rule-after-enabling-rewrites](DF-rule-after-enabli
   `check --rule` prints the reason and then `known kinds: …`, and the finding
   ends at the reason. Five documented refusals change: the path subject and
   `Each POLICY` now offer no form, and `FS-login.*`, `FS-login.2` and
-  `Each chapter of each FS` are answered with `FS-login` or `Each FS`. The
+  `Each chapter of each FS` are answered with `FS-login` or `Each FS`, and a
+  chapter path with a numbered, wildcard or empty component keeps the chapter
+  names typed before it. The
   whitespace refusal for a presence `NAME` offers the sentence with the `NAME`
   trimmed, or nothing. **Who this breaks:** a script matching the exact stderr
   of `check --rule`, the exact `message` of an `invalid-rule` finding, or the

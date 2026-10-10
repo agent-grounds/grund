@@ -1,16 +1,14 @@
 //! A chapter subject refused for its chapter path names the component that
-//! failed, whichever spelling reached it, and keeps every byte after that
-//! reason (§FS-rules.3.5.3). The fixture is the `check-rules-chapter-path-reasons`
-//! e2e case's: kinds `FS`, `REQ` and `RULE`, named sections on, `FS-login`
-//! holding a named `requirements` chapter that cites `REQ-password`, and one
-//! `rules = true` declaration per sentence below.
+//! failed, whichever spelling reached it (§FS-rules.3.5.3), and is offered the
+//! typed sentence with that subject rebuilt (§FS-rules.3.5.4.2), the subject
+//! `list --selector` gives it. The fixture is the
+//! `check-rules-chapter-path-reasons` e2e case's: kinds `FS`, `REQ` and `RULE`,
+//! named sections on, `FS-login` holding a named `requirements` chapter that
+//! cites `REQ-password`, and one `rules = true` declaration per sentence below.
 
 use super::support::{assert_run, case_repo, fixture, run, scratch_from, text};
 use std::fs;
 use std::path::{Path, PathBuf};
-
-/// The accepted form every row of §FS-rules.3.5.3's table ends in.
-const TAIL: &str = "; accepted form: FS-login.requirements must cite at least one REQ.";
 
 fn repo() -> PathBuf {
     case_repo("check-rules-chapter-path-reasons")
@@ -29,35 +27,37 @@ fn unconfigured() -> PathBuf {
     root
 }
 
-/// §FS-rules.3.5.3: every row of the exact table, as the fixture's rule
-/// declaration that writes it, its subject, and the reason and accepted form
-/// both rule surfaces print.
+/// §FS-rules.3.5.3, §FS-rules.3.5.4.2: every row of the exact table, as the
+/// fixture's rule declaration that writes it, its subject, and the reason and
+/// accepted form both rule surfaces print.
 fn rows() -> Vec<(&'static str, &'static str, String)> {
-    let grammar = |subject: &str| {
-        format!(
-            "named chapter subject \"{subject}\" does not match the configured section grammar{TAIL}"
-        )
+    let refusal = |reason: &str, subject: &str| {
+        format!("{reason}; accepted form: {subject} must cite at least one REQ.")
     };
+    let grammar = |typed: &str| {
+        format!("named chapter subject \"{typed}\" does not match the configured section grammar")
+    };
+    let chapter = "The requirements chapter of each FS";
     vec![
         (
             "RULE-numbered",
             "The requirements.1 chapter of each FS",
-            format!("numbered chapter subjects can detach when headings move{TAIL}"),
+            refusal("numbered chapter subjects can detach when headings move", chapter),
         ),
         (
             "RULE-wildcard",
             "The requirements.* chapter of each FS",
-            format!("section-component wildcards are not accepted in phase 1{TAIL}"),
+            refusal("section-component wildcards are not accepted in phase 1", chapter),
         ),
         (
             "RULE-trailing",
             "FS-login.requirements.",
-            grammar("FS-login.requirements."),
+            refusal(&grammar("FS-login.requirements."), "FS-login.requirements"),
         ),
         (
             "RULE-doubled",
             "FS-login..requirements",
-            grammar("FS-login..requirements"),
+            refusal(&grammar("FS-login..requirements"), "FS-login"),
         ),
     ]
 }
@@ -152,32 +152,35 @@ fn the_unnumbered_spellings_of_the_same_chapter_are_accepted() {
     }
 }
 
-/// §FS-rules.3.5.3: only the reason follows the component. A literal subject
-/// refused for an empty component is offered the accepted form its typed
-/// declaration gives a numbered literal, here `FS-demo`, not `FS-login`.
+/// §FS-rules.3.5.4.2: a literal keeps the named components typed before the
+/// one that failed, and its own declaration where none was typed, here
+/// `FS-demo`, not `FS-login`.
 #[test]
-fn an_empty_component_keeps_the_accepted_form_its_declaration_gives() {
-    for (subject, numbered) in [
-        ("FS-demo.requirements.", false),
-        ("FS-demo..requirements", false),
-        ("FS-demo.2", true),
+fn a_literal_keeps_its_declaration_and_the_components_before_the_failed_one() {
+    for (subject, reason, form) in [
+        (
+            "FS-demo.requirements.",
+            "named chapter subject \"FS-demo.requirements.\" does not match the configured section grammar",
+            "FS-demo.requirements",
+        ),
+        (
+            "FS-demo..requirements",
+            "named chapter subject \"FS-demo..requirements\" does not match the configured section grammar",
+            "FS-demo",
+        ),
+        (
+            "FS-demo.2",
+            "numbered chapter subjects can detach when headings move",
+            "FS-demo",
+        ),
     ] {
         let sentence = format!("{subject} must cite at least one REQ.");
-        let reason = if numbered {
-            "numbered chapter subjects can detach when headings move".to_string()
-        } else {
-            format!(
-                "named chapter subject \"{subject}\" does not match the configured section grammar"
-            )
-        };
         let output = run(&fixture(), &["check", ".", "--rule", &sentence]);
         assert_run(
             &output,
             2,
             "",
-            &format!(
-                "error: {reason}; accepted form: FS-demo.requirements must cite at least one REQ.\n"
-            ),
+            &format!("error: {reason}; accepted form: {form} must cite at least one REQ.\n"),
         );
     }
 }

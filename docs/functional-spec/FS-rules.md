@@ -422,14 +422,9 @@ sections off `FS-login.requirements.` still gets the section-grammar reason,
 while `The requirements.1 chapter of each FS`, which asks first, keeps its
 named-sections-off refusal.
 
-This point decides the reason alone. The accepted form after `; ` does not
-follow the component. A literal subject refused for an empty component is
-offered `<ID>.requirements`, where `<ID>` is the declaration it typed, as a
-numbered literal is: `FS-demo.requirements.` is offered
-`FS-demo.requirements must cite at least one REQ.`. A
-`The PATH chapter of each KIND` subject refused for a numbered or wildcard
-component is offered `FS-login.requirements must cite at least one REQ.`, as
-every other refusal of that spelling's path is.
+This point decides the reason alone. The accepted form after `; ` is the typed
+sentence with its subject rebuilt as [§FS-rules.3.5.4.2](FS-rules.md#3542-only-what-can-be-recovered-is-supplied) says, the subject
+`list --selector` gives the same path written as a rule subject.
 
 In a repository whose kinds are `FS` and `REQ`, with named sections on and
 `FS-login` holding a named `requirements` chapter, these are the exact refusals.
@@ -438,10 +433,10 @@ In a repository whose kinds are `FS` and `REQ`, with named sections on and
 
 | Refused sentence (`… must cite at least one REQ.`) | Exact reason and accepted form |
 |---|---|
-| `The requirements.1 chapter of each FS` | `numbered chapter subjects can detach when headings move; accepted form: FS-login.requirements must cite at least one REQ.` |
-| `The requirements.* chapter of each FS` | `section-component wildcards are not accepted in phase 1; accepted form: FS-login.requirements must cite at least one REQ.` |
+| `The requirements.1 chapter of each FS` | `numbered chapter subjects can detach when headings move; accepted form: The requirements chapter of each FS must cite at least one REQ.` |
+| `The requirements.* chapter of each FS` | `section-component wildcards are not accepted in phase 1; accepted form: The requirements chapter of each FS must cite at least one REQ.` |
 | `FS-login.requirements.` | `named chapter subject "FS-login.requirements." does not match the configured section grammar; accepted form: FS-login.requirements must cite at least one REQ.` |
-| `FS-login..requirements` | `named chapter subject "FS-login..requirements" does not match the configured section grammar; accepted form: FS-login.requirements must cite at least one REQ.` |
+| `FS-login..requirements` | `named chapter subject "FS-login..requirements" does not match the configured section grammar; accepted form: FS-login must cite at least one REQ.` |
 
 In the same repository `The requirements chapter of each FS` and
 `FS-login.requirements` are accepted. A selector is read by the same parse, so
@@ -478,7 +473,10 @@ where a selector would get a bare `KIND` the rule gets `Each KIND`. An object
 kind is never guessed. A chapter name is never invented: the front end reads
 the configuration and not the scan, so a subject keeps the named components
 typed before the refused one, and where none was typed it falls back to its
-declaration or to `Each KIND`.
+declaration or to `Each KIND`. So an empty component keeps what was typed
+before it and nothing after it, as `list --selector` does: `FS-login..requirements`
+is offered `FS-login` and `FS-login.requirements.` is offered
+`FS-login.requirements`.
 
 ##### 3.5.4.3 A form is parsed before it is offered
 
