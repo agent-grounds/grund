@@ -71,10 +71,6 @@ CONFIG_FACADE = {
     "writers",
 }
 
-# agent-grounds/grund#454: off CONFIG_FACADE once the checker splits (§AR-config.5).
-# Until then the list tests read them as on it; the change that takes them off
-# deletes this set and the expectedFailure on the test that says they are off.
-LEAVING_WITH_454 = {"checker", "resolver", "scanner"}
 
 # §AR-system.4's concern ledger: `Rules` in no scanner or node-local checker file
 # (§AR-checker.1.1); `Presentation` in no checker file, and in the scanner and the
@@ -277,17 +273,15 @@ class ConfigFacadeTests(unittest.TestCase):
         )
 
     def test_no_component_off_the_list_names_config(self):
-        self.assertEqual([], sorted(components_naming_config() - CONFIG_FACADE - LEAVING_WITH_454))
+        self.assertEqual([], sorted(components_naming_config() - CONFIG_FACADE))
 
     def test_every_component_on_the_list_still_names_config(self):
         """Remove a component from CONFIG_FACADE in the change that moves it off."""
         self.assertEqual([], sorted(CONFIG_FACADE - components_naming_config()))
 
-    # agent-grounds/grund#454: lands failing, one commit before the split.
-    @unittest.expectedFailure
     def test_the_checker_resolver_and_scanner_name_no_config(self):
         """§AR-config.5: the split hands each of them records, not the façade."""
-        self.assertEqual([], sorted(components_naming_config() & LEAVING_WITH_454))
+        self.assertEqual([], sorted(components_naming_config() & {"checker", "resolver", "scanner"}))
 
     def test_no_config_field_is_written_outside_config(self):
         """A per-run change is made to the `Run`, and the façade is rebuilt from it."""
@@ -348,15 +342,11 @@ class ConcernLedgerTests(unittest.TestCase):
         hits += _names(PRESENTATION_NAME, "resolver", PRESENTATION_HANDED)
         self.assertEqual([], hits)
 
-    # agent-grounds/grund#454: lands failing, one commit before the split.
-    @unittest.expectedFailure
     def test_link_targets_and_surface_reach_are_handed_presentation(self):
         """§AR-resolver.6, §AR-scanner.7: each takes `&Presentation` explicitly."""
         missing = [file for file in PRESENTATION_HANDED if not PRESENTATION_NAME.search(_code(CORE / file))]
         self.assertEqual([], missing)
 
-    # agent-grounds/grund#454: lands failing, one commit before the split.
-    @unittest.expectedFailure
     def test_conform_and_judge_are_handed_their_concerns_only(self):
         """§AR-checker.1.1, §AR-checker.1.2: conform names no `Rules` and no
         `Presentation`; judge names `Rules`, `Schema` and `Expected`, and no

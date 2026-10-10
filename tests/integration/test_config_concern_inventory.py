@@ -277,8 +277,6 @@ class ConfigConcernInventoryTests(unittest.TestCase):
             "inventory rows repeating one key, so one key has two concerns",
         )
 
-    # agent-grounds/grund#454: lands failing, one commit before the split.
-    @unittest.expectedFailure
     def test_each_stage_is_handed_the_concerns_its_signature_derives(self):
         """§AR-checker.1: the concerns each stage names are the ones it is
         handed, presentation reaches judge only as `Expected`, and every
