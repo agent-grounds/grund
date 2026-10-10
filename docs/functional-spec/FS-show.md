@@ -397,6 +397,8 @@ In a Markdown body, a line inside a fenced block (```` ``` ````, `~~~`) is conte
 
 This is the carve-out [§FS-check.1.1.5](FS-check.md#115-contexts-read-as-neither-prose-nor-code) already makes for citations, applied to headings and post-slice flattening for the same reason and for one more: the scan bounds a declaration's sections by exactly this rule, so a slice that disagreed would cut a body where the recorded section map says no section starts. The shared grammar recognizes both backtick and tilde fences, their close/resume rules, and an unclosed fence through end of body; a short or wrong-character would-be closer leaves the fence open. A declaration whose [§FS-show.1](FS-show.md#1-inputs) opens with a fenced `# FS-001-login: …` example — the shape these documents are written in — would otherwise print three lines and stop.
 
+A line inside a raw-text HTML block such as `<pre>` ([§FS-check.1.1.5.1](FS-check.md#1151-a-raw-html-block-holds-no-heading)) is likewise never structure, by the same four clauses and for the same reason: the scan does not read a heading there either. Citations in it stay live, so flattening is not suspended inside it.
+
 The rule is Markdown's. Inside a code or docstring comment block ([§FS-show.2.3](FS-show.md#23-source-declarations-in-code-and-doc-comments)) a fence is not tracked, on either side: the scan does not track it there either, so the two still agree.
 
 ### 2.6 Batch resolution

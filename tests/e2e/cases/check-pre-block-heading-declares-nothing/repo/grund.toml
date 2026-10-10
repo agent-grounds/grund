@@ -1,0 +1,14 @@
+grund_config_version = 1
+
+[reference]
+strict = true
+
+[id]
+format = "{kind}-{slug}"
+
+[[kinds]]
+kind = "FS"
+file = "spec.md"
+
+[scan]
+include = ["spec.md", "README.md"]
