@@ -1,0 +1,8 @@
+grund_config_version = 2
+project_name = "example"
+[workspace]
+members = ["pkg"]
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.FS]
+files = ["requirements.md"]

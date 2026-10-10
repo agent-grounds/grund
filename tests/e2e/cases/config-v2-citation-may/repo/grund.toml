@@ -1,0 +1,10 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.FS]
+files = ["requirements.md"]
+[schema.kinds.GOAL]
+files = ["docs/goals.md"]
+[rules.citations.FS]
+may = ["GOAL"]

@@ -409,6 +409,9 @@ The `should` / `should-not` levels of `[citations]` ([§FS-config.3.9](FS-config
 
 `--only` and `--ignore` select suggestions only after `--suggestions` has enabled this channel; that selection, the text and JSON rendering, and the exit code suggestions never affect are [§FS-check.2.3.2](FS-check.md#232-selecting-and-printing-suggestions). `grund gap` is the standing home for these records once it ships ([§FS-check.2.3.3](FS-check.md#233-grund-gap-is-their-standing-home)).
 
+Under v2, `should` and `should-not` are the strengths that reach this channel, wherever they are written: a citation rule, a measure, a ladder rung or `heading_depth` ([§FS-config-v2.rules.strengths](FS-config-v2.md#rulesstrengths-one-strength-vocabulary-two-severities)). `warn` and `warn-not` reach the warning channel instead, and `may` reaches none.
+
+
 #### 2.3.1 Escaped citation resolves
 
 A citation whose marker is bracketed — the schematic `<§>alias/ID` shape — is deliberately inert: the `§` is not immediately followed by the ID, so no pass treats it as a citation ([§FS-workspace.1](FS-workspace.md#1-citation-syntax)). That is how a citation's *shape* is written in prose without `grund check` resolving it. It also makes an escape of an ID that *does* exist ambiguous: usually a deliberate illustration, but also exactly what a live citation looks like once the marker is bracketed by accident, a slip that raises no dangling error ([§FS-check.3.1](FS-check.md#31-dangling-citation)) and navigates nowhere. So when an escaped citation's ID resolves to a real declaration, grund emits an `escaped-citation-resolves` suggestion at the escape site, naming the live `§`-form to switch to. It never replaces `success` or changes the exit code ([§FS-check.2.3.1.1](FS-check.md#2311-never-a-warning-or-error)), and it reads both escape forms ([§FS-check.2.3.1.2](FS-check.md#2312-both-escape-forms)).
@@ -551,6 +554,9 @@ Off by default. Two config keys decide it, each written in `[reference]` as the 
 
 A unit is **grounded** when it contains at least one recognized citation ([§FS-check.1.1](FS-check.md#11-recognized-citations)) whose ID resolves to a declaration — **or**, in a source file outside every non-citable home, when it declares an ID inline (a declaring file is grounded in the declaration it *is*, [AR-scanner.4](../architecture/AR-scanner.md#4-inline-declarations-in-language-doc-comments)). A unit that is neither is an error ([§FS-check.3.6.3](FS-check.md#363-findings)). A unit whose only citation is dangling ([§FS-check.3.1](FS-check.md#31-dangling-citation)) is *not* grounded — it gets both findings; fixing the citation clears both. The rule is a pure function of `(tree, config)`: it reads no git history and parses no code ([§FS-check.3.6.4](FS-check.md#364-a-pure-function-of-the-tree)). Decided in [§DF-require-grounding](../decisions/functional/DF-require-grounding.md#df-require-grounding-an-opt-in-check-that-every-source-file-cites-a-spec).
 
+Under v2 the two keys are one ladder of strength-and-unit rungs, executed in order: each rung reports the units of its size that are ungrounded on its strength's channel, so a `warn` rung's ungrounded unit is a `warning:` with this message and code, and a narrower ladder replaces the wider one whole ([§FS-config-v2.rules.grounding](FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole)). Inline declarations ground a unit as above, and the scanner still collects heading structure only for files a rung finer than `file` governs.
+
+
 #### 3.6.1 Which files a row governs
 
 Every scanned file resolves to exactly one `[[kinds]]` row, and that row's effective `require_grounding` decides whether the file is checked at all:
@@ -678,6 +684,9 @@ config-to-rule bridge deduplicate as
 [§FS-rules.6](FS-rules.md#6-semantic-deduplication) specifies; when config
 participates, this section's existing message stays byte-for-byte unchanged.
 
+Under v2 the obligation is written as `must`, `warn` or `should` ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)). `must` is this error; `warn` is the same finding, code and message on the warning channel, exit `0`; `should` is the suggestion of [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in). v1's `[citations]` keeps exactly the channels above.
+
+
 #### 3.11.1 The homeless kind
 
 A **homeless-kind** obligation ([§FS-config.3.9.2](FS-config.md#392-the-homeless-kind)) — `code`, or whatever the project named it — is per file rather than per declaration: a source file that contains at least one citation but none satisfying the obligation is the error, located at line 1.
@@ -720,6 +729,9 @@ A rule sentence `<subject> must not cite any <target-set>.` reuses this code and
 the exact citation-site anchor. Its message replaces only the fixed `(citation
 direction)` authority tail with `(<RULE-ID>)`; a config-derived duplicate keeps
 this section's bytes unchanged ([§FS-rules.6](FS-rules.md#6-semantic-deduplication)).
+
+Under v2 the prohibition is written as `must-not`, `warn-not` or `should-not` ([§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations)). `must-not` is this error; `warn-not` is the same finding, code and message on the warning channel, exit `0`; `should-not` is the suggestion of [§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in).
+
 
 #### 3.12.1 How the two kinds are read
 
@@ -1486,6 +1498,9 @@ A recognized citation has no declaration and targets a fetch-enabled kind whose 
 ```
 
 The em-dash remedy tail is exactly `— run grund fetch <qualified-ID>`, with no inner backticks. The JSON code is `missing-snapshot`, severity is `warning`, and the message field is the text after `<path>:<line>: `. A warning-only run exits 0 and prints no `success` line. Every site gets one finding, remains in what `refs` and `cover` report, and may resolve after an explicit [§FS-fetch](FS-fetch.md#fs-fetch-grund-materializes-one-external-fact-snapshot). The hints that take the fetch tail's place are [§FS-check.4.12.1](FS-check.md#4121-a-hint-takes-the-fetch-tails-place), and its workspace spelling is [§FS-check.4.12.2](FS-check.md#4122-in-a-workspace).
+
+Under v2 the same warning is selected by `[rules.resolution] <KIND> = "warn"`, and `must` selects the error; v1's `resolve = "should"` keeps selecting it. An explicit v2 entry needs `fetch` on the kind's row ([§FS-config-v2.rules.resolution](FS-config-v2.md#rulesresolution-rulesresolution)).
+
 
 #### 4.12.1 A hint takes the fetch tail's place
 

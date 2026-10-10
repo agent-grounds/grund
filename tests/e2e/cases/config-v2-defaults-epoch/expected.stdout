@@ -1,0 +1,2 @@
+requirements.md:9: error: section FS-login.1 heading level mismatch: expected ### (level 3), found ##### (level 5)
+docs/goals.md:3: warning: declared but never cited: GOAL-purpose

@@ -1,0 +1,2 @@
+tests/a.md:5: error: ungrounded section `## Setup` in kind home tests/: no § citation to a declared ID
+tests/b.md:1: error: ungrounded file in kind home tests/: no § citation to a declared ID

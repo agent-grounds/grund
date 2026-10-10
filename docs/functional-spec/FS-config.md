@@ -33,6 +33,9 @@ Where a setting is admitted at more than one committed scope, the value written 
 
 Two units, and they are not the same one. What overrides is a single **leaf key**: writing one key at a narrower scope leaves every other key that scope inherits exactly as it was, which is why a `[reference]` table naming one key does not discard the rest of the `[reference]` defaults — every key is optional and an omitted key takes the default value ([§FS-config.3](FS-config.md#3-keys)). What is overridden is the **whole value**, an array included: a key whose value is a list replaces the inherited list rather than merging into it. Writing `[[kinds]]` at all replaces the built-in kind list entirely ([§FS-config.3.4.4](FS-config.md#344-the-default-kinds)) — that is this whole-value rule applied to the list of rows, not a second rule beside it.
 
+In v2 a grounding ladder is one setting, so a narrower ladder replaces the wider one whole and inherits none of its rungs ([§FS-config-v2.rules.grounding](FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole)). v1 spells grounding as two leaf keys, `require_grounding` and `grounding_level`, and a v1 row still inherits each of them independently ([§FS-config.3.4.8.3](FS-config.md#3483-precedence-is-row-over-global)).
+
+
 ### principle.admission: The relation reaches only scopes that admit the setting
 
 A scope **admits** a fixed set of keys, and the relation above holds only between the scopes that admit the same setting. A key written at a scope that does not admit it is not a weaker override: it is not a key there at all, and it is refused as an unknown key pointing at its line ([§FS-config.3](FS-config.md#3-keys), [§FS-config.4.3](FS-config.md#43-invalid-config-behavior)). So `inline_style` under `[reference]` and `inline_style` on a `[[kinds]]` row are not a wide and a narrow spelling of one setting ([§FS-config.3.1.8](FS-config.md#318-inline_style-and-the-note-budgets)) — the second does not exist. A key's own section states its scopes only where it is admitted at more than one; where it is admitted at one, the table it is documented under is that statement. This chapter says where a key may be written, and what is not a key at all stays [§FS-config.6](FS-config.md#6-what-is-not-configured-here)'s: a thing named there has no scopes, because it is not a setting.
@@ -70,6 +73,9 @@ Four settings are admitted at both the project scope and the kind scope, and for
 
 Every other key of [§FS-config.3](FS-config.md#3-keys) is admitted at one committed scope only, so [§FS-config.principle.rungs](FS-config.md#principlerungs-the-committed-scopes-are-a-relation-not-a-closed-list) never reaches it and its table section is the whole statement of where it may be written. The list is derived from the parse sites and the resolution sites rather than read off this prose, and the derivation is recorded with the decision behind this chapter ([§DF-config-scope-override.2.2](../decisions/functional/DF-config-scope-override.md#22-the-inventory-is-derived-in-two-stages)), so that a reader re-runs it instead of trusting it. A key that gains a second scope is added here in the same change, and that is additive surface ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)).
 
+The table is the v1 reader's. The v2 reader has its own inventory, derived the same way from its own parse sites: `id_format`, the citation `default` and the grounding ladder are each admitted at the project and at the kind ([§FS-config-v2.schema.places](FS-config-v2.md#schemaplaces-rows-and-their-places), [§FS-config-v2.rules.citations](FS-config-v2.md#rulescitations-rulescitations), [§FS-config-v2.rules.grounding](FS-config-v2.md#rulesgrounding-grounding-is-a-ladder-replaced-whole)).
+
+
 ## concerns: Every key belongs to exactly one concern
 
 A key of [§FS-config.3](FS-config.md#3-keys) is one of three kinds of thing, and what tells the three apart is what a finding from the key can be about. **Schema** is what exists and what a well-formed one looks like: a finding from a schema key is about **one node** on its own. **Rules** are how nodes relate: a finding from a rules key needs **at least two**. **Presentation** is the **bytes** `grund` writes or shows: a presentation key produces no finding of its own, and reaches one only where a written byte has drifted from what the config now renders, which is a rule over the generated region rather than a finding of the key ([§FS-check.3.5](FS-check.md#35-invalid-agent-entrypoint-init-block)). Every key belongs to exactly one of the three, and the test is the definition: a key added later is classified by asking what a finding from it would be about, not by which table it happens to be written in.
@@ -81,6 +87,9 @@ Outside the three sits the **envelope** — `grund_config_version`, `project_nam
 **A rule's unit is its subject's node.** A rules key is applied once per node its subject selects, and the finding names that node. That is stated once here and has two instances already written: [§FS-config.3.9.1.1](FS-config.md#3911-obligations-and-prohibitions), where an obligation is asked of each declaration of the citing kind and a prohibition fires at each citation site, and [§FS-config.3.9.2.4](FS-config.md#3924-obligations-apply-per-source-file), where the unit of a place that declares nothing is each source file in it. Neither is a rule of its own; both are this one read at the node its subject names.
 
 The complete assignment is one row per key of the format in force. It is derived from the reader's parse sites rather than read off this prose, and it is recorded with the decision that argues it — the decision record [§DF-config-concerns](../decisions/functional/DF-config-concerns.md#df-config-concerns-a-keys-concern-is-derived-from-what-a-finding-from-it-can-be-about), in the two-stage shape [§DF-config-scope-override.2.2](../decisions/functional/DF-config-scope-override.md#22-the-inventory-is-derived-in-two-stages) already uses — so that a reader re-runs it instead of trusting it. `tests/integration/test_config_concern_inventory.py` holds that inventory to the parse sites, so a key added later cannot silently miss a concern; adding the row is part of adding the key, and that is additive surface ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)).
+
+Each reader has its own assignment, derived from its own parse sites. The one above is v1's. The v2 format is spelled by concern, so a v2 key's table names its concern and the envelope is the same five keys ([§FS-config-v2](FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults)).
+
 
 ## requirements: What the config contract holds to
 
@@ -1114,6 +1123,9 @@ When the discovered config declares `[workspace]` ([§FS-config.3.8](FS-config.m
 
 Prints the **effective** configuration — defaults merged with the config discovered by walking up from `path` (or `.` when omitted), plus CLI flags — as TOML, and the TOML that comes out loads back to the same effective values it went in with: every rule below about which keys are printed keeps that so. Useful for debugging "why did grund recognize this citation" or "what does my config actually evaluate to." A redundant config pair at the config root is reported as a `warning:` on stderr before the TOML ([§FS-config.1.1](FS-config.md#11-when-one-directory-carries-both), [§FS-check.4.3](FS-check.md#43-redundant-config-pair)), so the answer to "why is this key not taking effect" is on screen next to the effective value.
 
+A v2 config prints in v2 spelling, and what it prints loads back as v2 to the same effective values. A v1 config prints the bytes it printed before v2 existed ([§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered)).
+
+
 #### 4.2.1 `[[kinds]]` rows print what they do not inherit
 
 Every `[[kinds]]` entry is printed under the canonical `kind` key, and `citable` is printed **only where it is `false`**: absence *is* `citable = true`. `require_grounding` and `grounding_level` follow the same rule one scope down: a row prints either key only where its effective value differs from the effective global, which is printed under `[reference]` ([§FS-config.3.4.8](FS-config.md#348-require_grounding-and-grounding_level--grounding-per-place-and-per-level)). A row that inherits both prints neither.
@@ -1137,9 +1149,14 @@ For concrete stderr examples and the distinction between `config validate` exit 
 
 In `check --watch`, invalid config ends a run with those same error bytes and status `2`, while the process remains resident for repair ([§FS-check.6.3.1](FS-check.md#631-recoverable-runs)). Discovery coverage survives an invalid initial config; later failures retain the last usable inventory and anchors. This exception changes no one-shot command's refusal.
 
+Under v2, a clause the format defines but this grund does not execute is refused at its authored line, and an omitted default this grund cannot execute is refused at the `grund_config_version` line ([§FS-config-v2.rollout](FS-config-v2.md#rollout-what-this-grund-executes-and-what-it-refuses), [§FS-config-v2.defaults.2](FS-config-v2.md#defaults2-the-language-set-is-fixed-before-it-is-executed)). Neither is accepted and ignored.
+
+
 ## 5. Schema versioning
 
-The TOML file may include a top-level `grund_config_version = N`. The current version is **1**. Future incompatible schema changes increment this; grund refuses to load a config whose version is greater than the grund binary's known maximum, with an error suggesting an upgrade. Configs with no version key are interpreted as version 1. A new key is not a new version ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)), and an older version keeps its meaning ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)).
+The TOML file may include a top-level `grund_config_version = N`. This grund reads versions **1** and **2**, each by its own reader. Future incompatible schema changes increment this; grund refuses to load a config whose version is greater than the grund binary's known maximum, with an error suggesting an upgrade: `unsupported config version `<N>` (this grund understands grund_config_version = 1 or 2; upgrade grund if the config is newer)`.
+
+Which reader reads a project is decided by its own file. An explicit `2` selects the v2 reader ([§FS-config-v2](FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults)). An omitted version and an explicit `1` select v1, and so does a project with no config file at all: discovery that finds none, and a workspace member with no config of its own. Each of those gets the fixed v1 defaults, so zero-config keeps every default it had ([§GOAL-zero-config](../goals.md#goal-zero-config-works-on-any-conformant-tree)). Only a newly written explicit `2` opts into v2's defaults and its stricter validation. A workspace member is read by the reader its own file selects, so a v2 root may list v1 members, and the reverse. A new key is not a new version ([§FS-config.5.1](FS-config.md#51-new-keys-are-not-a-new-version)), and an older version keeps its meaning ([§FS-config.5.2](FS-config.md#52-every-older-version-keeps-its-meaning)).
 
 ### 5.1 New keys are not a new version
 
@@ -1148,6 +1165,9 @@ The version tracks **incompatible** changes to the meaning of existing keys, not
 ### 5.2 Every older version keeps its meaning
 
 In the backward direction the gate is what [§REQ-backwards-compatibility.1](../requirements/REQ-backwards-compatibility.md#1-what-is-covered) rests on: a binary that supports version `N` keeps interpreting every version `≤ N` under the semantics that version shipped with, so upgrading the binary never re-reads a config it already understood.
+
+That holds of the records, not only of the reports. A v1 state that v2 cannot spell, such as a positive citation default or `strict = false`, keeps its meaning in the records the engine reads, and the tests that hold it read the records ([§FS-config-v2.mapping](FS-config-v2.md#mapping-what-the-records-keep-apart)). The v1 reader keeps v1's validation too: v2's stricter rules never refuse a file v1 accepts.
+
 
 ## 6. What is NOT configured here
 
@@ -1163,6 +1183,13 @@ Per [§GOAL-friendliness-first.2](../goals.md#2-what-this-rules-out), the follow
 
 The `should` and `should-not` citation-direction suggestions ([§FS-config.3.9](FS-config.md#39-citations--citation-direction-rules)) do **not** add a third severity: they are carried on a separate non-severity advisory channel ([§FS-check.2.3](FS-check.md#23-suggestions-channel-opt-in)), so this frozen `{error, warning}` set stays exactly two.
 
+v2 keeps the set at two. `warn` and `warn-not` reach the warning channel, and `should` and `should-not` the suggestion channel ([§FS-config-v2.rules.strengths](FS-config-v2.md#rulesstrengths-one-strength-vocabulary-two-severities)).
+
+
 ### 6.2 The repository's conversation opinion
 
 A repository may commit the `link`-only *opinion* via `[reference] conversation` ([§FS-config.3.1](FS-config.md#31-reference--citation-form), [§DF-repo-conversation-opinion](../decisions/functional/DF-repo-conversation-opinion.md#df-repo-conversation-opinion-repositories-may-commit-a-link-only-conversation-rendering-opinion)), the fallback for machines that never stated a preference; an explicitly recorded user preference wins over it ([§DF-repo-conversation-opinion.2.3](../decisions/functional/DF-repo-conversation-opinion.md#23-precedence)). Repository-web guidance stays fixed in the generated agent entrypoint ([§FS-init.2.3.6](FS-init.md#236-clickable-citations)).
+
+## v2: The version-2 format
+
+Version 2 spells the same project by concern, with one strength vocabulary and fixed defaults. It is specified in its own declaration, [§FS-config-v2](FS-config-v2.md#fs-config-v2-grund-reads-a-version-2-config-by-concern-with-one-strength-vocabulary-and-fixed-defaults), so every section above keeps its ID and its meaning. A section here that says what a key means is about v1 unless it names v2.

@@ -1,0 +1,11 @@
+grund_config_version = 2
+project_name = "example"
+[schema.sources]
+languages = ["markdown"]
+[schema.kinds.FS]
+files = ["requirements.md"]
+[schema.kinds.TICKET]
+files = ["docs/tickets.md"]
+id_format = "{kind}-{number}"
+[rules.resolution]
+TICKET = "warn"

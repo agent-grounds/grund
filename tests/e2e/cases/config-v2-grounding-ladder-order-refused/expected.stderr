@@ -1,0 +1,1 @@
+error: grund.toml:8: grounding ladder: `must` (h2) is finer than `warn` (file); a stronger rung never uses a finer unit

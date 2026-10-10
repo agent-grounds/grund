@@ -1,0 +1,4 @@
+requirements.md:5: error: FS must not cite AR (citation direction) — re-point the citation or downgrade it to a plain Markdown link
+requirements.md:3: warning: declared but never cited: FS-example
+requirements.md:5: warning: FS must not cite DF (citation direction) — re-point the citation or downgrade it to a plain Markdown link
+requirements.md:5: suggestion: FS should not cite GOAL (citation direction)
