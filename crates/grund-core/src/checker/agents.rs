@@ -281,7 +281,14 @@ pub(crate) fn chapter_rules_section(
             .fmt_cross_refs_enabled
             .then(|| {
                 let (id, _) = parse_id_arg(origin, &config.grammar).ok()?;
-                markdown_link_target(path, &id, None, config, findings)
+                markdown_link_target(
+                    path,
+                    &id,
+                    None,
+                    &config.project().presentation,
+                    config,
+                    findings,
+                )
             })
             .flatten();
         let citation = match target {

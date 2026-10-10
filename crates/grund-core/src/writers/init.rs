@@ -155,7 +155,7 @@ fn init_run(
     // boundary used by scanner commands. Keep this best-effort: the existing
     // workspace renderer owns init's diagnostics and error-tolerant behavior.
     let _ = populate_workspace_boundary(&mut init_config);
-    let reach = CanonicalSurfaceReach::for_config(&init_config);
+    let reach = CanonicalSurfaceReach::for_presentation(&init_config.project().presentation);
     // §FS-rules.4 / §FS-init.2.3.5: validate scanned rule declarations before
     // any entrypoint write, then reuse their exact titles in managed guidance.
     let rule_kind_enabled = init_config.kinds.iter().any(|kind| kind.rules);

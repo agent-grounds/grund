@@ -17,7 +17,7 @@
 use std::path::Path;
 
 use super::stub_home::home_as_scanned;
-use crate::config::Config;
+use crate::config::{Config, Presentation};
 use crate::grammar::{anchor_slug, reduce_heading_text, render_id};
 use crate::model::{
     Catalog, Declaration, Id, SectionInfo, is_stub_for_inline_decl, resolve_stub_target,
@@ -32,14 +32,18 @@ use crate::model::{
 /// `None` if the ID does not resolve (§FS-fmt.6.4), and `None` for a `.<section>`
 /// citation of a section the declaration does not have, whether or not the link
 /// takes a heading anchor (§FS-fmt.6.4.1).
+///
+/// The anchor profile is presentation's, so the record is handed in rather than
+/// read off a `Config` (§AR-resolver.6).
 pub(crate) fn markdown_link_target(
     from_file: &Path,
     id: &Id,
     section: Option<&str>,
+    presentation: &Presentation,
     config: &Config,
     findings: &Catalog,
 ) -> Option<String> {
-    markdown_link_target_with_root(from_file, id, section, config, findings, None)
+    markdown_link_target_with_root(from_file, id, section, presentation, config, findings, None)
 }
 
 /// §FS-workspace.8.5: same as `markdown_link_target`, but with an explicit
@@ -51,6 +55,7 @@ pub(crate) fn markdown_link_target_with_root(
     from_file: &Path,
     id: &Id,
     section: Option<&str>,
+    presentation: &Presentation,
     config: &Config,
     findings: &Catalog,
     path_root: Option<&Path>,
@@ -83,12 +88,12 @@ pub(crate) fn markdown_link_target_with_root(
         }
         None => None,
     };
-    if !takes_heading_anchor(&home, config) {
+    if !takes_heading_anchor(&home, presentation) {
         return Some(rel);
     }
     // §FS-fmt.6.2.1.1: a bare ID's heading is the scan's record too.
     let anchor_decl = scanned.unwrap_or_else(|| home_as_scanned(findings, config, id, home_decl));
-    let anchor = heading_anchor(anchor_decl, section, config)?;
+    let anchor = heading_anchor(anchor_decl, section, presentation, config)?;
     Some(format!("{}#{}", rel, anchor))
 }
 
@@ -96,9 +101,9 @@ pub(crate) fn markdown_link_target_with_root(
 /// home does, and not under the `none` profile (§FS-fmt.6.2, §FS-fmt.6.7.1).
 /// `show --format=json` asks the same question for its `anchor` field, so a
 /// `null` there is exactly a bare file link here (§FS-show.3.1.3.1).
-pub(crate) fn takes_heading_anchor(home: &Path, config: &Config) -> bool {
+pub(crate) fn takes_heading_anchor(home: &Path, presentation: &Presentation) -> bool {
     home.extension().and_then(|e| e.to_str()) == Some("md")
-        && config.cross_ref_anchor_format != "none"
+        && presentation.fmt.anchor_format != "none"
 }
 
 /// The heading anchor, without its `#`, of `decl` in its Markdown home: the
@@ -117,6 +122,7 @@ pub(crate) fn takes_heading_anchor(home: &Path, config: &Config) -> bool {
 pub(crate) fn heading_anchor(
     decl: &Declaration,
     section: Option<&str>,
+    presentation: &Presentation,
     config: &Config,
 ) -> Option<String> {
     let heading = match section {
@@ -125,14 +131,14 @@ pub(crate) fn heading_anchor(
         // that declaration's own heading anchor, not just the file.
         None => declaration_heading_text(decl, config),
     };
-    Some(anchor_slug(&heading, &config.cross_ref_anchor_format))
+    Some(anchor_slug(&heading, &presentation.fmt.anchor_format))
 }
 
 /// The anchor of one recorded section heading site, from the heading text the
 /// scanner stored for it (§FS-show.3.1.3.1): each `--toc` entry reads its own
 /// site, so a duplicated path still carries the anchor of the heading listed.
-pub(crate) fn section_site_anchor(site: &SectionInfo, config: &Config) -> String {
-    anchor_slug(&site.title, &config.cross_ref_anchor_format)
+pub(crate) fn section_site_anchor(site: &SectionInfo, presentation: &Presentation) -> String {
+    anchor_slug(&site.title, &presentation.fmt.anchor_format)
 }
 
 /// The text content of a Markdown declaration's `# <ID>: <title>` heading — the
